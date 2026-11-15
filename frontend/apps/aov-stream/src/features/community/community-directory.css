@@ -1,0 +1,153 @@
+/* The page directory: filters, then one compact card per page. The cards also list pages to follow on the home feed. */
+.pg-filters {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+/* A chip's count reads as part of its label, in the chip's own colour. */
+.pg-filters .hub-pills > button > small {
+  min-width: 0;
+  padding: 0;
+  background: none;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.pg-filters .hub-pills > [aria-pressed="true"] > small {
+  color: inherit;
+}
+.pg-filters .hub-pills > .hub-skeleton {
+  width: 104px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--aov-radius-pill);
+}
+.pg-filters .hub-pills > .hub-skeleton:first-child {
+  width: 120px;
+}
+.pg-region-menu {
+  min-width: 220px;
+  max-height: min(60vh, 420px);
+  padding: 6px;
+  overflow-y: auto;
+}
+.pg-region-menu .hub-menu-item {
+  justify-content: space-between;
+}
+.pg-region-menu .hub-menu-item > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.pg-region-menu .pg-region-current {
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.pg-region-more > svg {
+  transform: rotate(90deg);
+}
+
+/* A short list (a search, a small region) stretches its cards across the row instead of leaving empty columns. */
+.cp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 10px;
+}
+.cp-grid > .pg-card:only-child {
+  max-width: 560px;
+}
+.cp-card-skeleton {
+  height: 72px;
+  border-radius: var(--hub-radius-sm);
+}
+.pg-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  container-type: inline-size;
+  transition: background-color 120ms;
+}
+.pg-card:hover,
+.pg-card:focus-within {
+  background: var(--hub-hover);
+}
+/* The whole card opens the page; the follow button sits above this link. */
+.pg-card-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+.pg-card > .cp-avatar {
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: var(--hub-radius-sm);
+  font-size: 16px;
+}
+/* People are round, as on their own pages; teams, organizers and circuits keep the shape of a logo tile. */
+.pg-card[data-person] > .cp-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+.pg-card-body {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+/* Up to three lines: university teams differ only at the end of a long name. */
+.pg-card-name {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.pg-card-name > svg {
+  margin-left: 4px;
+  vertical-align: -3px;
+}
+.pg-card-meta {
+  overflow: hidden;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pg-card > .cp-follow-chip {
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+}
+.pg-card .cp-follow-label {
+  display: none;
+}
+/* A card with room to spare names its follow button. */
+@container (min-width: 340px) {
+  .pg-card > .cp-follow-chip {
+    width: auto;
+    padding: 0 12px;
+  }
+  .pg-card .cp-follow-label {
+    display: inline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-card {
+    transition: none;
+  }
+}

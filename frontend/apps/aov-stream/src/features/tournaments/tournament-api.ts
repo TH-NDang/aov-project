@@ -1,11 +1,5 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
-import type {
-  CompetitionView,
-  PageSlice,
-  PublishedGame,
-  TournamentContent,
-  SeriesContent,
-} from "@aov/community-contracts"
+import type { CompetitionView, PageSlice, PublishedGame, TournamentContent } from "@aov/community-contracts"
 
 export interface PublishedSummary<T> {
   id: string
@@ -81,14 +75,3 @@ export const tournamentsQuery = queryOptions({
   staleTime: 60_000,
   retry: 1,
 })
-export const seriesQuery = (tournamentId?: string) =>
-  queryOptions({
-    queryKey: ["community", "series", tournamentId],
-    queryFn: ({ signal }) =>
-      read<PageSlice<PublishedSummary<SeriesContent>>>(
-        `/series?${new URLSearchParams({ size: "100", ...(tournamentId ? { tournamentId } : {}) })}`,
-        signal,
-      ),
-    staleTime: 60_000,
-    retry: 1,
-  })

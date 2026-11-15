@@ -1,242 +1,259 @@
-import { useRef, useState } from "react"
+import { Fragment, useEffect, useRef, type CSSProperties, type ReactNode } from "react"
 import { Link } from "react-router"
-import { useQuery } from "@tanstack/react-query"
-import { slotLabel, type PublishedGame } from "@aov/community-contracts"
-import { useIsMobile } from "@aov/ui/hooks/use-mobile"
+import type { PublishedGame } from "@aov/community-contracts"
 import { LocalTime } from "@aov/ui/components/local-time"
-import { shownTimeZoneLabel, useUserTimeZone } from "@aov/ui/lib/time-zone"
-import { PublicDrawer, PublicDrawerContent } from "@aov/ui/components/public-overlay"
 import { StreamImage } from "../../components/stream-image"
-import { StreamIcon } from "../../components/stream-icon"
-import { GameCard } from "./game-card"
-import { matchGamesQuery } from "./tournament-api"
-import {
-  competitionMatchHref,
-  matchSeriesId,
-  matchState,
-  orderedMatchGames,
-  type CompetitionMatch,
-} from "./match-model"
+import { hueOf } from "../community/community-ui"
+import { matchUnderway } from "./competition-model"
+import { competitionMatchHref, matchState, type CompetitionMatch } from "./match-model"
+import { matchRound, matchSides, type MatchSide } from "./match-schedule"
+import { seriesRound, seriesTeams, unbroken } from "./tournament-model"
+
+const clockTime: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" }
+
+/** Full names up to this length fit a row on a wide screen; longer ones keep the short name everywhere. */
+const ROW_NAME = 24
+/** Full names longer than this give way to the short name under a logo on a narrow screen. */
+const HEAD_NAME = 20
+
+/** A name with a longer form for wide screens and a shorter one for narrow screens, when the two differ. */
+function TeamName({ wide, compact }: { wide: string; compact: string }) {
+  if (wide === compact) return <>{unbroken(wide)}</>
+  return (
+    <>
+      <span className="tn-name-wide">{unbroken(wide)}</span>
+      <span className="tn-name-compact">{unbroken(compact)}</span>
+    </>
+  )
+}
 
 export const matchStateLabels = {
+  LIVE: "Đang diễn ra",
   FINISHED: "Đã kết thúc",
-  SCORED: "Có tỷ số",
+  SCORED: "Đã có tỷ số",
   UPCOMING: "Sắp diễn ra",
-  PENDING: "Chờ cập nhật kết quả",
+  PENDING: "Chờ kết quả",
   UNSCHEDULED: "Chờ lịch",
+} as const
+
+/** Where a match stands in one word: on now, done, ahead, or waiting for its result or its date. */
+export function matchStatus(entry: CompetitionMatch) {
+  return matchUnderway(entry) ? "LIVE" : matchState(entry)
 }
 
-export function MatchSummary({ entry, compact = false }: { entry: CompetitionMatch; compact?: boolean }) {
-  useUserTimeZone()
-  const { competition, match, result } = entry
-  const { teams, plan } = competition.content
-  const a = result?.teamAId || match.a.teamId
-  const b = result?.teamBId || match.b.teamId
-  const state = matchState(entry)
-  const team = (id: string | null | undefined, side: "a" | "b") => {
-    const name = (id && (teams[id]?.shortName || teams[id]?.name)) || slotLabel(match[side], teams)
-    return (
-      <span className="match-team">
-        <StreamImage src={id ? teams[id]?.logoUrl : undefined} name={name} />
-        <strong>{name}</strong>
-      </span>
-    )
-  }
+function FixtureTeam({ team }: { team: MatchSide }) {
   return (
-    <div className={compact ? "match-summary match-summary-compact" : "match-summary"}>
-      <div className="match-meta">
-        <span>
-          {plan.stages.find((stage) => stage.code === match.stageCode)?.name || match.stageCode} · {match.label} · BO
-          {match.bestOf}
-        </span>
-        <span className="match-state" data-state={state}>
-          {matchStateLabels[state]}
-        </span>
-      </div>
-      <div className="match-scoreboard">
-        {team(a, "a")}
-        <strong className="match-score">
-          {result?.scoreA != null && result?.scoreB != null ? `${result.scoreA} : ${result.scoreB}` : "VS"}
-        </strong>
-        {team(b, "b")}
-      </div>
-      <div className="match-meta">
-        <span>{competition.content.tournament.name}</span>
-        <span>
-          <LocalTime
-            value={match.scheduledAt}
-            sourceTimeZone={plan.timezone}
-            format={{ dateStyle: "short", timeStyle: "short" }}
-            fallback="Chưa có giờ thi đấu"
-          />
-          {!compact && ` · ${shownTimeZoneLabel(match.scheduledAt || Date.now())}`}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-/** Keep a real link for keyboards and new tabs; a normal phone tap opens the quick preview. */
-export function MatchRow({ entry }: { entry: CompetitionMatch }) {
-  const mobile = useIsMobile()
-  const [open, setOpen] = useState(false)
-  const trigger = useRef<HTMLAnchorElement>(null)
-  const href = competitionMatchHref(entry.competition.id, entry.match.key)
-  return (
-    <>
-      <Link
-        ref={trigger}
-        className="match-row"
-        to={href}
-        onClick={(event) => {
-          if (
-            mobile &&
-            event.detail > 0 &&
-            !event.ctrlKey &&
-            !event.metaKey &&
-            !event.shiftKey &&
-            !event.altKey &&
-            event.button === 0
-          ) {
-            event.preventDefault()
-            setOpen(true)
-          }
-        }}
-      >
-        <MatchSummary entry={entry} compact />
-        <StreamIcon name="chevronRight" size={17} />
-      </Link>
-      <PublicDrawer open={open} onOpenChange={setOpen}>
-        <PublicDrawerContent
-          title="Chi tiết trận đấu"
-          aria-describedby={undefined}
-          onCloseAutoFocus={(event) => {
-            event.preventDefault()
-            trigger.current?.focus({ preventScroll: true })
-          }}
-        >
-          {open && (
-            <div className="match-preview">
-              <MatchSummary entry={entry} />
-              <MatchGamesPanel seriesId={matchSeriesId(entry)} compact onNavigate={() => setOpen(false)} />
-              <Link className="cp-button cp-primary" to={href} onClick={() => setOpen(false)}>
-                Mở trang trận đấu <StreamIcon name="arrow" size={15} />
-              </Link>
-            </div>
-          )}
-        </PublicDrawerContent>
-      </PublicDrawer>
-    </>
-  )
-}
-
-export function MatchGamesPanel({
-  seriesId,
-  compact = false,
-  onNavigate,
-}: {
-  seriesId?: string
-  compact?: boolean
-  onNavigate?: () => void
-}) {
-  const query = useQuery(matchGamesQuery(seriesId))
-  if (!seriesId) return <p className="cp-muted">Các ván sẽ xuất hiện khi trận được ghi nhận và công bố.</p>
-  if (query.isPending)
-    return (
-      <p className="cp-muted" role="status">
-        Đang tải các ván của trận…
-      </p>
-    )
-  if (query.isError && !query.data)
-    return (
-      <div className="match-query-error" role="alert">
-        <p>Chưa tải được các ván của trận.</p>
-        <button className="cp-button" onClick={() => void query.refetch()}>
-          Thử lại
-        </button>
-      </div>
-    )
-  const games = orderedMatchGames(query.data || [], seriesId)
-  return (
-    <>
-      {query.isError && (
-        <p className="cp-error" role="alert">
-          Chưa cập nhật được dữ liệu. Đang hiển thị bản đã tải.{" "}
-          <button onClick={() => void query.refetch()}>Thử lại</button>
-        </p>
-      )}
-      {!games.length ? (
-        <p className="cp-muted">Chưa có ván được công bố cho trận này. Lịch và tỷ số trận vẫn được hiển thị ở trên.</p>
-      ) : compact ? (
-        <div className="match-game-links">
-          {games.map((game) => (
-            <Link key={game.id} to={`/games/${game.id}`} onClick={onNavigate}>
-              <span>Ván {game.content.number}</span>
-              <StreamIcon name="arrow" size={15} />
-            </Link>
-          ))}
-        </div>
+    <span
+      className="tn-fixture-team"
+      data-side={team.side}
+      data-won={team.won || undefined}
+      data-lost={team.lost || undefined}
+      data-open={!team.known || undefined}
+    >
+      {team.known ? (
+        <StreamImage src={team.logoUrl} name={team.name} />
       ) : (
-        <div className="game-card-grid">
-          {games.map((game) => (
-            <GameCard key={game.id} game={game} />
-          ))}
-        </div>
+        <span className="tn-fixture-blank" aria-hidden="true" />
       )}
-    </>
+      <strong title={team.fullName}>
+        <TeamName wide={team.fullName.length <= ROW_NAME ? team.fullName : team.name} compact={team.name} />
+      </strong>
+    </span>
   )
 }
 
-export function MatchGameNavigation({
-  seriesId,
-  matchHref,
-  activeGameId,
-}: {
-  seriesId: string
-  matchHref?: string
-  activeGameId?: string
-}) {
-  const query = useQuery(matchGamesQuery(seriesId))
-  const games = orderedMatchGames(query.data || [], seriesId)
+/**
+ * One match on a line of a schedule: its time, both teams around the score, its round and how many games decide it.
+ * The whole row opens the match. `competition` adds the competition's name, for a list that mixes several.
+ */
+export function MatchRow({ entry, competition = false }: { entry: CompetitionMatch; competition?: boolean }) {
+  const { match, competition: view } = entry
+  const { plan, tournament } = view.content
+  const [a, b] = matchSides(entry)
+  const status = matchStatus(entry)
+  const round = matchRound(entry)
+  const meta = [
+    status === "PENDING" && <em>{matchStateLabels.PENDING}</em>,
+    round,
+    competition && (
+      <>
+        {tournament.logoUrl && <img src={tournament.logoUrl} alt="" loading="lazy" />}
+        {tournament.name}
+      </>
+    ),
+  ].filter(Boolean)
   return (
-    <nav className="match-game-nav" aria-label="Các ván trong trận">
-      <Link
-        to={matchHref || `/matches/${encodeURIComponent(seriesId)}`}
-        aria-current={!activeGameId ? "page" : undefined}
-      >
+    <Link
+      className="tn-fixture"
+      to={competitionMatchHref(view.id, match.key)}
+      data-live={status === "LIVE" || undefined}
+    >
+      <span className="tn-fixture-time">
+        <LocalTime value={match.scheduledAt} sourceTimeZone={plan.timezone} format={clockTime} fallback="–" />
+      </span>
+      <FixtureTeam team={a} />
+      <span className="tn-fixture-score">
+        {a.score != null && b.score != null ? (
+          <>
+            <b data-won={a.won || undefined} data-lost={a.lost || undefined}>
+              {a.score}
+            </b>
+            <i aria-hidden="true">–</i>
+            <b data-won={b.won || undefined} data-lost={b.lost || undefined}>
+              {b.score}
+            </b>
+          </>
+        ) : (
+          <i>vs</i>
+        )}
+      </span>
+      <FixtureTeam team={b} />
+      <span className="tn-fixture-meta">
+        {meta.map((item, index) => (
+          <Fragment key={index}>
+            {index > 0 && " · "}
+            {item}
+          </Fragment>
+        ))}
+      </span>
+      <span className="tn-fixture-format">BO{match.bestOf}</span>
+    </Link>
+  )
+}
+
+export type HeadTeam = {
+  name: string
+  shortName?: string
+  logoUrl?: string | null
+  score: number | null
+  won: boolean
+  lost: boolean
+  /** False while the place waits for a seed or for the result of another match. */
+  known?: boolean
+}
+
+type Head = { tint: string; kicker: string; teams: [HeadTeam, HeadTeam] }
+
+/** The head of a match of a competition's plan: its round, how many games decide it, and both sides in full. */
+export function matchHeadOf(entry: CompetitionMatch): Head {
+  const [a, b] = matchSides(entry)
+  const team = (side: MatchSide): HeadTeam => ({ ...side, name: side.fullName, shortName: side.name })
+  return {
+    tint: entry.competition.content.tournament.name,
+    kicker: [matchRound(entry), `BO${entry.match.bestOf}`].filter(Boolean).join(" · "),
+    teams: [team(a), team(b)],
+  }
+}
+
+/** The same head read from a published game, which carries its series, for a match opened without its competition. */
+export function seriesHeadOf(game: PublishedGame): Head {
+  return {
+    tint: game.tournament.name,
+    kicker: [seriesRound(game.series.name), `BO${game.series.bestOf}`].filter(Boolean).join(" · "),
+    teams: seriesTeams(game),
+  }
+}
+
+function DuelTeam({ team, side }: { team: HeadTeam; side: "a" | "b" }) {
+  const open = team.known === false
+  return (
+    <span className="tn-duel-team" data-side={side} data-lost={team.lost || undefined} data-open={open || undefined}>
+      {open ? (
+        <span className="tn-duel-blank" aria-hidden="true" />
+      ) : (
+        <StreamImage src={team.logoUrl} name={team.name} />
+      )}
+      <span>
+        <TeamName
+          wide={team.name}
+          compact={team.shortName && team.name.length > HEAD_NAME ? team.shortName : team.name}
+        />
+      </span>
+    </span>
+  )
+}
+
+/**
+ * The head a match shares with each of its games: both teams large around the score of the match, on the tint of the
+ * competition. `kicker` names the round, `scoreNote` says what the score counts when the page is about one game, and
+ * `children` are the facts under the board. `more` is a second group of facts: where the row is too narrow for both,
+ * the group moves to the next line whole, so nothing ends up there alone.
+ */
+export function MatchHead({
+  tint,
+  kicker,
+  teams: [a, b],
+  scoreNote,
+  children,
+  more,
+}: {
+  tint: string
+  kicker?: ReactNode
+  teams: [HeadTeam, HeadTeam]
+  scoreNote?: string
+  children?: ReactNode
+  more?: ReactNode
+}) {
+  const scored = a.score != null && b.score != null
+  return (
+    <header className="tn-duel hub-art" style={{ "--hub-hue": hueOf(tint) } as CSSProperties}>
+      {kicker && <p className="hub-kicker">{kicker}</p>}
+      <h1 className="tn-duel-board">
+        <DuelTeam team={a} side="a" />
+        <span className="tn-duel-score">
+          {scored ? (
+            <>
+              <b data-lost={a.lost || undefined}>{a.score}</b>
+              <i aria-hidden="true">–</i>
+              <b data-lost={b.lost || undefined}>{b.score}</b>
+            </>
+          ) : (
+            <i>vs</i>
+          )}
+          {scored && scoreNote && <small>{scoreNote}</small>}
+        </span>
+        <DuelTeam team={b} side="b" />
+      </h1>
+      {children && (
+        <div className="tn-duel-facts">
+          <div className="hub-banner-stats">{children}</div>
+          {more && <div className="hub-banner-stats">{more}</div>}
+        </div>
+      )}
+    </header>
+  )
+}
+
+/**
+ * The way between the games of a match: the match itself first, then each game by its number, on one row that scrolls
+ * sideways and keeps the page being read in view.
+ */
+export function MatchTabs({
+  games,
+  overviewHref,
+  active,
+}: {
+  games: { id: string; number: number }[]
+  overviewHref: string
+  /** The game being read; absent on the page of the match. */
+  active?: string
+}) {
+  const strip = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const row = strip.current
+    const tab = row?.querySelector<HTMLElement>("[aria-current]")
+    if (row && tab) row.scrollLeft = tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2
+  }, [active, games.length])
+  return (
+    <nav ref={strip} className="tn-game-tabs" aria-label="Các ván trong trận">
+      <Link to={overviewHref} aria-current={!active ? "page" : undefined}>
         Tổng quan trận
       </Link>
       {games.map((game) => (
-        <Link key={game.id} to={`/games/${game.id}`} aria-current={activeGameId === game.id ? "page" : undefined}>
-          Ván {game.content.number}
+        <Link key={game.id} to={`/games/${game.id}`} aria-current={active === game.id ? "page" : undefined}>
+          Ván {game.number}
         </Link>
       ))}
-      {query.isPending && <span role="status">Đang tải ván…</span>}
-      {query.isError && <button onClick={() => void query.refetch()}>Tải lại danh sách ván</button>}
     </nav>
-  )
-}
-
-export function ArchivedMatchSummary({ game }: { game: PublishedGame }) {
-  const { series, teams } = game
-  return (
-    <div className="match-summary">
-      <div className="match-meta">
-        <span>
-          {series.stage} · BO{series.bestOf}
-        </span>
-        <span>Thông tin từ ván đã công bố</span>
-      </div>
-      <div className="match-scoreboard match-scoreboard-archived">
-        {[series.teamAId, series.teamBId].map((id, index) => (
-          <span key={id} className="match-team">
-            <StreamImage src={teams[id]?.logoUrl} name={teams[id]?.name || "Đội"} />
-            <strong>{teams[id]?.shortName || teams[id]?.name || "Chờ đội"}</strong>
-            {series.result && <b>{index === 0 ? series.result.scoreA : series.result.scoreB}</b>}
-          </span>
-        ))}
-      </div>
-      <p className="cp-meta">{series.name || game.tournament.name}</p>
-    </div>
   )
 }

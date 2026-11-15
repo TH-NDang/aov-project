@@ -3,7 +3,7 @@ const paths = {
   arrow: "M4 12h16m-6-6 6 6-6 6",
   back: "M20 12H4m6-6-6 6 6 6",
   clock: "M12 7v5l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
-  play: "m9 5 11 7-11 7V5Z",
+  play: "m8 5 11 7-11 7V5Z",
   users: "M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-6 9v-2a6 6 0 0 1 12 0v2m2-17a4 4 0 0 1 0 8m1 3a6 6 0 0 1 5 6",
   sword: "m4 3 14 14-2 2L2 5V3h2m11 12 5 5m-7-3 5 5m-2-2 3 3",
   shield: "m12 3 8 4v5c0 4-3 7-8 10-5-3-8-6-8-10V7l8-4Z",
@@ -30,7 +30,7 @@ const paths = {
   eye: "M3 12s4-6 9-6 9 6 9 6-4 6-9 6-9-6-9-6Zm12 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
   sun: "M12 2.5v2m0 15v2M2.5 12h2m15 0h2M5.3 5.3l1.4 1.4m10.6 10.6 1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
   moon: "M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z",
-  bell: "M6 16v-5a6 6 0 1 1 12 0v5l2 2H4l2-2Zm4 4a2 2 0 0 0 4 0",
+  bell: "M6 14.5v-5a6 6 0 1 1 12 0v5l2 2H4l2-2Zm4 4a2 2 0 0 0 4 0",
   calendar: "M4 6h16v15H4V6Zm0 5h16M8 3v5m8-5v5",
   chevronLeft: "m15 5-7 7 7 7",
   chevronRight: "m9 5 7 7-7 7",
@@ -43,9 +43,12 @@ const paths = {
   bracket: "M3 5h5v4H3m0 6h5v4H3m5-12h4v10H8m4-5h9",
   close: "M6 6l12 12M18 6 6 18",
   send: "M4 12 20 4l-6 16-3-7-7-1Z",
-  pin: "M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Zm2.5-11.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0",
+  /** A pushpin: a post pinned to the top of a page. */
+  pin: "M8.5 3.5h7M10 3.5v6L6.5 14h11L14 9.5v-6M12 14v7",
   more: "M6.5 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm6.5 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm6.5 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z",
-  feed: "M4 5h16v4H4V5Zm0 7h10m-10 4h16m-16 3h7",
+  feed: "M4 4.5h16v6H4v-6Zm0 10h16m-16 5h10",
+  /** A megaphone: news posts, kept apart from the whole feed (feed) and from discussion posts (message). */
+  news: "M3.5 10v4a1 1 0 0 0 1 1H8l8 4.5v-15L8 9H4.5a1 1 0 0 0-1 1ZM8 15l1.5 5H12l-1-4.5M19 9.5a3.5 3.5 0 0 1 0 5",
 } as const
 
 export type StreamIconName = keyof typeof paths

@@ -26,10 +26,15 @@ export function AccountSettings() {
   })
 
   return (
-    <section className="cp-panel account-settings" aria-labelledby="account-settings-title">
-      <h2 id="account-settings-title">Cài đặt</h2>
-      <p>Ngôn ngữ, múi giờ, cách hiển thị ngày và tiền tệ áp dụng trên cả Wiki, Stream và Admin.</p>
-      <div className="cp-form-grid">
+    <section className="cp-section account-settings" aria-labelledby="account-settings-title">
+      <div className="tn-heading">
+        <h2 id="account-settings-title">Cài đặt</h2>
+      </div>
+      <p className="cp-section-lead">
+        Ngôn ngữ, múi giờ, cách hiển thị ngày và tiền tệ áp dụng trên cả Wiki, Stream và Admin. Thay đổi có hiệu lực
+        ngay.
+      </p>
+      <div className="cp-field-pair">
         <label>
           Ngôn ngữ
           <Select
@@ -62,7 +67,11 @@ export function AccountSettings() {
           <PublicCurrencySelect locale={locale} product="stream" triggerClassName="account-settings-select" />
         </label>
       </div>
-      {saveLanguage.isError && <p role="alert">Chưa lưu được ngôn ngữ. Hãy thử lại.</p>}
+      {saveLanguage.isError && (
+        <p className="cp-field-error" role="alert">
+          Chưa lưu được ngôn ngữ. Hãy thử lại.
+        </p>
+      )}
     </section>
   )
 }

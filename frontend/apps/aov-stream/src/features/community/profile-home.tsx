@@ -1,111 +1,81 @@
 import { useState } from "react"
-import { Link } from "react-router"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import type { CommunityProfile, PageLive } from "@aov/community-contracts"
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
-import { StreamIcon } from "../../components/stream-icon"
-import { communityApi } from "./community-api"
-import { competitionsQuery, timeAgo } from "./community-ui"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import type { CommunityProfile, CompetitionView, PageLive } from "@aov/community-contracts"
 import { LocalTime } from "@aov/ui/components/local-time"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { StreamIcon } from "../../components/stream-icon"
+import { matchStrip } from "../tournaments/competition-model"
+import { MatchCard } from "../tournaments/match-card"
+import { communityApi } from "./community-api"
+import { timeAgo } from "./community-ui"
 import { PostVideo } from "./post-media"
-import { MATCH_WINDOW, scheduledMatches } from "./schedule-model"
-import { competitionMatchHref } from "../tournaments/match-model"
+import { profileMatches } from "./public-competitions"
 
-/** The broadcast pinned to the top of a page while it is live. */
+/** The broadcast at the top of a page while it is live. The page head carries the live mark. */
 export function LiveBlock({ live, name }: { live: PageLive; name: string }) {
   return (
-    <section className="cp-panel cp-live-block" aria-labelledby="page-live">
-      <div className="cp-live-heading">
-        <span className="cp-live-badge">Trực tiếp</span>
-        <h2 id="page-live">{live.title}</h2>
-        <span className="cp-meta">
+    <section className="pf-live" aria-labelledby="page-live">
+      <h2 id="page-live">{live.title}</h2>
+      <p>
+        <span>
           Bắt đầu{" "}
           <LocalTime value={live.startedAt} label={(zone) => timeAgo(live.startedAt, Date.now(), zone).toLowerCase()} />
         </span>
-      </div>
+      </p>
       <PostVideo url={live.url} title={`${name} · ${live.title}`} />
     </section>
   )
 }
 
-/** The competitions a page takes part in or organizes, as filters for the published competition list. */
-function competitionFilter(profile: CommunityProfile): Record<string, string> | null {
-  if (profile.kind === "ORGANIZATION") return { organizerPageId: profile.id }
-  if (profile.kind === "TEAM" && profile.entityId) return { teamId: profile.entityId }
-  if (profile.kind === "PLAYER" && profile.entityId) return { playerId: profile.entityId }
-  return null
-}
-
-/** The page's next matches; teams only see the matches they play. */
-export function PageUpcoming({ profile }: { profile: CommunityProfile }) {
-  const filter = competitionFilter(profile)
-  const competitions = useQuery({ ...competitionsQuery(filter || {}, 0, 24), enabled: !!filter })
-  const now = Date.now()
-  const team = profile.kind === "TEAM" ? profile.entityId : null
-  const upcoming = scheduledMatches(competitions.data?.items || [])
-    .filter((match) => match.at + MATCH_WINDOW > now)
-    .filter((match) => !team || match.teamAId === team || match.teamBId === team)
-    .sort((a, b) => a.at - b.at)
-    .slice(0, 3)
-  if (!upcoming.length) return null
-  const format: Intl.DateTimeFormatOptions = {
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }
+/**
+ * The matches a page's reader wants first: what is on or ahead, then the latest results, as on the home page.
+ * `views` are the page's newest competitions; `pending` holds the block's place while they load. `more` opens the
+ * full list. Matches of one competition name it once in the heading instead of on every card.
+ */
+export function ProfileMatches({
+  profile,
+  views,
+  pending,
+  more,
+}: {
+  profile: CommunityProfile
+  views: CompetitionView[]
+  pending: boolean
+  more: () => void
+}) {
+  // A row of four on a wide layout; two on a compact one, where each match takes a row of its own.
+  const compact = usePageLayout() === "compact"
+  const count = compact ? 2 : 4
+  if (pending)
+    return (
+      <div className="tn-match-grid" role="status" aria-label="Đang tải trận đấu">
+        {Array.from({ length: count }, (_, index) => (
+          <span key={index} className="tn-match hub-skeleton pf-match-skeleton" />
+        ))}
+      </div>
+    )
+  const shown = matchStrip(profileMatches(profile, views), Date.now(), count, count).slice(0, count)
+  if (!shown.length) return null
+  const single = shown.every((entry) => entry.competition.id === shown[0]!.competition.id)
+  const competition = single ? shown[0]!.competition.content.tournament.name : null
   return (
-    <section className="cp-panel" aria-labelledby="page-upcoming">
-      <h2 id="page-upcoming">Sắp diễn ra</h2>
-      <ul className="cp-schedule">
-        {upcoming.map((match) => {
-          const scored = match.scoreA != null && match.scoreB != null
-          return (
-            <li key={match.key}>
-              <Link to={competitionMatchHref(match.competitionId, match.matchKey)}>
-                <span className="cp-schedule-time">
-                  {!scored && match.at <= now ? (
-                    <span className="cp-live-badge">Đang diễn ra</span>
-                  ) : (
-                    <LocalTime value={match.at} sourceTimeZone={match.timeZone} format={format} />
-                  )}
-                </span>
-                <span className="cp-schedule-match">
-                  <strong>
-                    {match.teamA} {scored ? `${match.scoreA} – ${match.scoreB}` : "vs"} {match.teamB}
-                  </strong>
-                  <small>{match.tournament}</small>
-                </span>
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
+    <section aria-labelledby="profile-matches">
+      <div className="tn-heading">
+        <h2 id="profile-matches">Trận đấu {competition && !compact && <small>{competition}</small>}</h2>
+        <button type="button" onClick={more}>
+          {profile.kind === "ORGANIZATION" ? "Giải đấu" : "Lịch & kết quả"}
+          <StreamIcon name="arrow" size={15} />
+        </button>
+      </div>
+      {/* Beside the title a long name would break in two on a narrow screen, so there it takes its own line. */}
+      {competition && compact && <p className="pf-heading-note">{competition}</p>}
+      <div className="tn-match-grid">
+        {shown.map((entry) => (
+          <MatchCard key={`${entry.competition.id}:${entry.match.key}`} entry={entry} context={!single} brief />
+        ))}
+      </div>
     </section>
-  )
-}
-
-/** Three numbers under the header of team and player pages. */
-export function ProfileStats({ profile }: { profile: CommunityProfile }) {
-  const filter = competitionFilter(profile)
-  const competitions = useQuery({ ...competitionsQuery(filter || {}, 0, 1), enabled: !!filter })
-  const content = profile.content!
-  if (profile.kind !== "TEAM" && profile.kind !== "PLAYER") return null
-  const stats: [string, number | string][] = [
-    ["Giải đã tham gia", competitions.data?.totalElements ?? "—"],
-    ["Thành tích", content.achievements.length],
-    profile.kind === "TEAM" ? ["Thành viên", content.roster.length] : ["Mốc sự nghiệp", content.history.length],
-  ]
-  return (
-    <dl className="cp-profile-stats">
-      {stats.map(([label, value]) => (
-        <div key={label}>
-          <dt>{label}</dt>
-          <dd>{typeof value === "number" ? value.toLocaleString("vi-VN") : value}</dd>
-        </div>
-      ))}
-    </dl>
   )
 }
 
@@ -138,7 +108,7 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
     <>
       <button
         type="button"
-        className={profile.live ? "cp-button cp-live-button" : "cp-button"}
+        className={profile.live ? "cp-button pf-live-button" : "cp-button"}
         onClick={() => {
           setUrl(profile.live?.url || "")
           setTitle(profile.live?.title || "")
@@ -149,7 +119,7 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
         {profile.live ? "Đang phát" : "Phát trực tiếp"}
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="cp-live-dialog">
+        <DialogContent className="pf-live-dialog">
           <DialogTitle className="cp-dialog-title">
             {profile.live ? "Đang phát trực tiếp" : "Phát trực tiếp"}
           </DialogTitle>
@@ -158,7 +128,7 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
             tự tắt sau 12 giờ.
           </DialogDescription>
           <form
-            className="cp-live-form"
+            className="pf-live-form"
             onSubmit={(event) => {
               event.preventDefault()
               start.mutate()

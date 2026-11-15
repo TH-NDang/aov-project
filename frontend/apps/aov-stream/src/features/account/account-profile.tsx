@@ -18,6 +18,7 @@ import {
   type ProfileDraft,
   type UserProfile,
 } from "./profile-model"
+import { StreamIcon } from "../../components/stream-icon"
 import "./account.css"
 import { Link } from "react-router"
 
@@ -38,7 +39,7 @@ const fieldLabels: Record<keyof ProfileDraft, string> = {
   avatarAssetId: "ảnh đại diện",
 }
 
-export function AccountAvatar({ url, name, large = false }: { url?: string | null; name: string; large?: boolean }) {
+function AccountAvatar({ url, name, large = false }: { url?: string | null; name: string; large?: boolean }) {
   const [failed, setFailed] = useState<string | null>(null)
   return (
     <span className={large ? "account-avatar account-avatar-large" : "account-avatar"} aria-hidden="true">
@@ -55,8 +56,10 @@ export function AccountProfile() {
       <ProfileEditor profile={profile.data} reloading={profile.isFetching} onReload={() => void profile.refetch()} />
     )
   return (
-    <section className="cp-panel account-profile">
-      <h2>Hồ sơ dùng chung</h2>
+    <section className="cp-section account-profile" aria-labelledby="account-profile-title">
+      <div className="tn-heading">
+        <h2 id="account-profile-title">Hồ sơ dùng chung</h2>
+      </div>
       {profile.isError ? (
         <div className="cp-error" role="alert">
           <p>{profileError(profile.error)}</p>
@@ -65,9 +68,7 @@ export function AccountProfile() {
           </button>
         </div>
       ) : (
-        <p className="cp-muted" role="status">
-          Đang tải hồ sơ…
-        </p>
+        <div className="hub-skeleton-rows" role="status" aria-label="Đang tải hồ sơ" />
       )}
     </section>
   )
@@ -182,14 +183,14 @@ function ProfileEditor({
   }
 
   return (
-    <form className="cp-panel account-profile" aria-labelledby="account-profile-title" onSubmit={save}>
-      <div className="account-profile-intro">
+    <form className="cp-section account-profile" aria-labelledby="account-profile-title" onSubmit={save}>
+      <div className="tn-heading">
         <h2 id="account-profile-title">Hồ sơ dùng chung</h2>
-        <p className="cp-muted">
-          Tên và ảnh đại diện dùng chung cho AOV Stream, WiKi và cộng đồng. Mật khẩu và email được quản lý ở trang đăng
-          nhập.
-        </p>
       </div>
+      <p className="cp-section-lead">
+        Tên và ảnh đại diện dùng chung cho AOV Stream, Wiki và cộng đồng. Mật khẩu và email được quản lý ở trang đăng
+        nhập.
+      </p>
       <div className="account-avatar-field">
         <AccountAvatar url={avatarUrl} name={draft.displayName || session.name} large />
         <div>
@@ -275,12 +276,10 @@ function ProfileEditor({
             {draft.biography.length}/{PROFILE_LIMITS.biography}
           </span>
         </label>
-        <div className="cp-form-grid">
-          <div className="account-profile-fact">
-            <span>Ngôn ngữ và khu vực</span>
-            <strong>{languageLabel(draft.locale)}</strong>
-            <Link to="/account?tab=settings">Đổi trong Cài đặt</Link>
-          </div>
+        <div className="account-profile-fact">
+          <span>Ngôn ngữ và khu vực</span>
+          <strong>{languageLabel(draft.locale)}</strong>
+          <Link to="/account?tab=settings">Đổi trong Cài đặt</Link>
         </div>
       </fieldset>
       {newer && (
@@ -309,20 +308,21 @@ function ProfileEditor({
           )}
         </div>
       )}
-      {saved && (
-        <p className="cp-success" role="status">
-          Đã lưu hồ sơ.
-        </p>
-      )}
-      <div className="cp-actions account-profile-actions">
-        {dirty && (
-          <button type="button" className="cp-button" disabled={locked} onClick={() => resolve(base, false)}>
-            Hoàn tác
-          </button>
-        )}
+      <div className="cp-form-actions">
         <button className="cp-button cp-primary" disabled={!canSave}>
           {busy ? "Đang lưu…" : "Lưu thay đổi"}
         </button>
+        {dirty && (
+          <button type="button" className="cp-button cp-quiet" disabled={locked} onClick={() => resolve(base, false)}>
+            Hoàn tác
+          </button>
+        )}
+        {saved && (
+          <span className="cp-success" role="status">
+            <StreamIcon name="check" size={15} />
+            Đã lưu hồ sơ.
+          </span>
+        )}
       </div>
     </form>
   )

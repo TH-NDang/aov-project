@@ -1,27 +1,49 @@
+import { useState } from "react"
 import { StreamIcon } from "../../components/stream-icon"
-import { videoEmbed } from "./post-media-model"
+import { videoEmbed, videoPoster } from "./post-media-model"
 
-/** A post's video: the YouTube player inline, a card that opens the video elsewhere for other platforms. */
+/**
+ * A post's video. A YouTube video shows its own picture with a play mark and loads the player only when pressed, so a
+ * feed of videos stays light and never shows an empty black frame; other platforms get a card that opens the video in
+ * a new tab. `title` names the video for assistive technology; the post shows it as its heading.
+ */
 export function PostVideo({ url, title }: { url: string; title: string }) {
+  const [playing, setPlaying] = useState(false)
   const embed = videoEmbed(url)
   if (!embed) return null
   if (embed.kind === "youtube")
     return (
       <div className="cp-post-video">
-        <iframe
-          src={embed.src}
-          title={title}
-          loading="lazy"
-          allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-        />
+        {playing ? (
+          <iframe
+            src={`${embed.src}?autoplay=1`}
+            title={title}
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
+        ) : (
+          <button
+            type="button"
+            className="cp-video-poster"
+            aria-label={`Phát video: ${title}`}
+            onClick={() => setPlaying(true)}
+          >
+            <img src={videoPoster(embed)!} alt="" loading="lazy" />
+            <span className="cp-video-play" aria-hidden="true">
+              <StreamIcon name="play" size={26} />
+            </span>
+            <span className="cp-video-source" aria-hidden="true">
+              YouTube
+            </span>
+          </button>
+        )}
       </div>
     )
   return (
     <a className="cp-post-video-link" href={embed.href} target="_blank" rel="noreferrer">
       <span className="cp-post-video-play" aria-hidden="true">
-        <StreamIcon name="play" size={22} />
+        <StreamIcon name="play" size={20} />
       </span>
       <span>
         <strong>Xem video trên {embed.platform}</strong>

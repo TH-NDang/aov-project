@@ -1,46 +1,12 @@
-.competition-hub-header {
-  display: flex;
-  align-items: center;
-  gap: var(--hub-space-3);
-}
-.competition-hub-mark {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border: 1px solid var(--hub-border);
-  border-radius: 14px;
-  background: var(--hub-surface);
-  color: var(--hub-accent-strong);
-}
-.competition-hub-header h1 {
-  margin: 3px 0;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.3;
-}
-.competition-hub-header p {
-  margin: 0;
-  color: var(--hub-text-soft);
-  font-size: 13px;
-}
-.competition-lookup {
-  margin-left: auto;
-  flex-shrink: 0;
-}
-.competition-hub-body > .cp-tabs {
-  margin: 0;
-  padding: 0 var(--hub-panel-padding);
-  border-bottom: 1px solid var(--hub-border);
-}
+/* The filters of the competition directory, schedules and the head a match shares with its games. Section headings
+   and the small match card come from tournaments.css; game rows and cards from games.css. */
+
+/* ---------- Filters of the competition directory ---------- */
 .competition-filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
-  padding: var(--hub-space-3) var(--hub-panel-padding);
-  border-bottom: 1px solid var(--hub-border);
+  gap: 8px;
 }
 .competition-filters .stream-search {
   flex: 999 1 210px;
@@ -78,285 +44,648 @@
   font-size: 12px;
   font-weight: 600;
 }
-.competition-hub-results {
-  padding: var(--hub-panel-padding);
-}
-.competition-group + .competition-group {
-  margin-top: var(--hub-space-5);
-}
-.competition-group-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.competition-group-heading h2 {
-  margin: 0;
-  font-size: 15px;
-}
-.competition-group-heading > span {
-  color: var(--hub-muted);
-  font-size: 12px;
-}
-.competition-group-heading > a {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-left: auto;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--hub-accent-strong);
-}
-.competition-schedule-toolbar,
-.competition-schedule-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.competition-schedule-toolbar {
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-.competition-schedule-toolbar .hub-pills {
-  margin: 0;
-}
-.match-day {
-  margin-top: var(--hub-space-4);
-}
-.match-day > h3 {
-  margin: 0 0 8px;
-  color: var(--hub-text-soft);
-  font-size: 12px;
-  font-weight: 650;
-  text-transform: capitalize;
-}
-.match-list {
+
+/* ---------- Schedule: what is ahead, then what was played, one row per match under its day ---------- */
+.tn-schedule-view {
   display: grid;
-  gap: 8px;
-}
-.match-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: var(--hub-space-3);
-  border: 1px solid var(--hub-border);
-  border-radius: 10px;
-  background: var(--hub-surface);
-  color: var(--hub-text);
-  transition:
-    border-color 120ms,
-    background-color 120ms;
-}
-.match-row:hover,
-.match-row:focus-visible {
-  border-color: var(--hub-accent);
-  background: var(--hub-hover);
-}
-.match-row > svg {
-  flex-shrink: 0;
-  color: var(--hub-muted);
-}
-.match-summary {
-  display: grid;
-  flex: 1;
   min-width: 0;
-  gap: var(--hub-space-3);
-}
-.match-summary-compact {
-  gap: 8px;
-}
-.match-meta {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  color: var(--hub-muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-.match-state {
-  font-weight: 650;
-}
-.match-state[data-state="FINISHED"],
-.match-state[data-state="SCORED"] {
-  color: var(--hub-accent-strong);
-}
-.match-scoreboard {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
   gap: 16px;
 }
-.match-team {
+/* One row of controls: the quick switch first, the selects at the far end. */
+.tn-schedule-bar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.tn-schedule-bar > .hub-pills {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.tn-schedule-bar > .public-filter-button {
+  margin-left: auto;
+}
+.tn-schedule-bar > .competition-filter-group {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.tn-schedule-bar .competition-select {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.tn-schedule-bar .competition-select > [data-slot="select-value"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.competition-filters > .hub-pills {
+  flex: none;
+}
+/* The sentence wraps in its own column, so the way out stays beside it instead of dropping to a line of its own. */
+.tn-schedule-note {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-schedule-note > span {
   min-width: 0;
+}
+.tn-schedule-note > button {
+  min-height: 36px;
+  flex: none;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tn-schedule-note > button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tn-schedule {
+  display: grid;
+  min-width: 0;
+  gap: 32px;
+}
+.tn-schedule-part {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+.tn-schedule-part > .tn-heading {
+  margin-bottom: -4px;
+}
+.tn-day {
+  min-width: 0;
+}
+.tn-day-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  margin: 0 0 8px;
+  color: var(--hub-text-soft);
   font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
 }
-.match-scoreboard-archived {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.tn-day-title > b {
+  color: var(--hub-text);
+  font-weight: 700;
 }
-.match-team > img,
-.match-team > .stream-image,
-.match-team > .stream-image-fallback {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  object-fit: contain;
-  border-radius: 8px;
+.tn-day-title > span::first-letter {
+  text-transform: uppercase;
 }
-.match-scoreboard > .match-team:last-child {
+/* Room for the halo of the live dot, so it stays inside the column. */
+.tn-day-title > .tn-live {
+  margin-left: 3px;
+}
+.tn-fixtures {
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-fixture {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 200px) 60px minmax(0, 200px) minmax(0, 1fr) auto;
+  grid-template-areas: "time a score b meta format";
+  align-items: center;
+  gap: 2px 12px;
+  min-height: 48px;
+  padding: 8px 16px;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+  transition: background-color 120ms;
+}
+.tn-fixture + .tn-fixture {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-fixture:hover,
+.tn-fixture:focus-visible {
+  background: var(--hub-hover);
+}
+/* The list clips its corners, so the ring is drawn inside the row. */
+.tn-fixture:focus-visible {
+  outline-offset: -2px;
+}
+.tn-fixture-time {
+  grid-area: time;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tn-fixture[data-live] > .tn-fixture-time {
+  color: var(--hub-red);
+  font-weight: 700;
+}
+.tn-fixture-team {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.tn-fixture-team[data-side="a"] {
+  grid-area: a;
   flex-direction: row-reverse;
   text-align: right;
 }
-.match-team strong {
+.tn-fixture-team[data-side="b"] {
+  grid-area: b;
+}
+.tn-fixture-team > .stream-image,
+.tn-fixture-blank {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--aov-radius-control);
+}
+.tn-fixture-blank {
+  border: 1px dashed var(--hub-border-strong);
+}
+.tn-fixture-team > strong {
+  min-width: 0;
+  font-weight: 600;
   overflow-wrap: anywhere;
-  font-weight: 650;
 }
-.match-score {
-  min-width: 54px;
-  text-align: center;
-  font-size: 18px;
-  font-variant-numeric: tabular-nums;
+.tn-fixture-team:is([data-lost], [data-open]) {
+  color: var(--hub-muted);
 }
-.match-page {
-  max-width: 1120px;
-  margin: 0 auto;
+.tn-fixture-team:is([data-lost], [data-open]) > strong {
+  font-weight: 400;
 }
-.match-page-header {
-  padding: var(--hub-panel-padding);
+/* A name written twice: the longer form shows on a wide screen, the shorter one on a narrow screen. */
+.tn-name-compact {
+  display: none;
 }
-.match-page-header h1 {
-  margin: 0 0 16px;
-  font-size: 20px;
-  font-weight: 700;
-}
-.match-game-nav {
-  display: flex;
+.tn-fixture-score {
+  display: grid;
+  grid-area: score;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  padding: var(--hub-space-2);
-  border-bottom: 1px solid var(--hub-border);
-  background: var(--hub-surface);
-  border-radius: 10px;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
-.match-game-nav a,
-.match-game-nav button,
-.match-game-nav > span {
-  flex-shrink: 0;
-  padding: 9px 12px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 650;
-  color: var(--hub-text-soft);
+.tn-fixture-score > b:first-child {
+  text-align: right;
 }
-.match-game-nav a:hover,
-.match-game-nav button:hover {
-  background: var(--hub-hover);
+.tn-fixture-score > b:last-child {
+  text-align: left;
 }
-.match-game-nav a[aria-current] {
-  background: var(--hub-accent-soft);
+.tn-fixture-score > b[data-won] {
   color: var(--hub-accent-strong);
 }
-.match-games-body {
-  display: grid;
-  gap: 12px;
-  padding: var(--hub-panel-padding);
+.tn-fixture-score > b[data-lost],
+.tn-fixture-score > i {
+  color: var(--hub-muted);
 }
-.match-games-body h2 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-}
-.match-games-body > p {
-  margin: 0;
-}
-.match-games-body .game-card-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
-}
-.match-preview {
-  display: grid;
-  gap: var(--hub-space-4);
-}
-.match-game-links {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-.match-game-links a {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--hub-border);
-  border-radius: 8px;
+.tn-fixture-score > i {
   font-size: 13px;
+  font-style: normal;
+}
+.tn-fixture-score > i:only-child {
+  grid-column: 1 / -1;
+}
+.tn-fixture-meta {
+  grid-area: meta;
+  min-width: 0;
+  padding-left: 12px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+.tn-fixture-meta > em {
+  color: var(--hub-text-soft);
+  font-style: normal;
   font-weight: 600;
 }
-.match-game-links a:hover {
+.tn-fixture-meta img {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  border-radius: 4px;
+  object-fit: contain;
+  vertical-align: -3px;
+}
+.tn-fixture-format {
+  grid-area: format;
+  min-width: 32px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ---------- A match or one of its games: back link, head, tabs, content ---------- */
+.tn-match-page {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--hub-layout-gap);
+}
+.tn-match-page > .cp-back {
+  align-self: flex-start;
+  margin: 0;
+}
+.tn-match-page[aria-busy="true"] > :not(.cp-back, .tn-duel, .tn-game-tabs) {
+  opacity: 0.5;
+}
+
+/* Head: both teams large around the score, on the tint of the competition. */
+.tn-duel {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px;
+  border-radius: var(--hub-radius);
+  text-align: center;
+}
+.tn-duel > .hub-kicker {
+  margin: 0;
+  color: var(--hub-art-accent);
+}
+.tn-duel-board {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  margin: 0;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 28px;
+}
+.tn-duel-team {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+}
+.tn-duel-team[data-side="a"] {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.tn-duel-team > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.tn-duel-team:is([data-lost], [data-open]) > span:last-child {
+  color: rgb(255 255 255 / 72%);
+  font-weight: 600;
+}
+.tn-duel-team > .stream-image,
+.tn-duel-blank {
+  width: 72px;
+  height: 72px;
+  flex: none;
+  border-radius: var(--hub-radius);
+}
+.tn-duel-team > .stream-image {
+  background: rgb(255 255 255 / 10%);
+}
+.tn-duel-team > .stream-image > span {
+  color: rgb(255 255 255 / 82%);
+  font-size: 20px;
+}
+.tn-duel-blank {
+  border: 1px dashed rgb(255 255 255 / 40%);
+}
+.tn-duel-score {
+  display: grid;
+  min-width: 132px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0 12px;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 48px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.tn-duel-score > b:first-of-type {
+  text-align: right;
+}
+.tn-duel-score > b:last-of-type {
+  text-align: left;
+}
+.tn-duel-score > b[data-lost] {
+  color: rgb(255 255 255 / 60%);
+}
+.tn-duel-score > i {
+  color: rgb(255 255 255 / 45%);
+  font-style: normal;
+  font-weight: 400;
+}
+.tn-duel-score > i:first-child {
+  grid-column: 1 / -1;
+  color: rgb(255 255 255 / 72%);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tn-duel-score > small {
+  grid-column: 1 / -1;
+  color: rgb(255 255 255 / 72%);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0;
+}
+/* Facts under the board, in groups that wrap whole. */
+.tn-duel-facts,
+.tn-duel-facts > .hub-banner-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0;
+}
+/* Which game the page is about, the one fact the match head does not already say. */
+.tn-duel .hub-banner-stats > .tn-duel-game {
+  background: #fff;
+  color: var(--aov-stream-ink);
+  font-weight: 700;
+}
+.tn-duel .hub-banner-stats > a {
+  position: relative;
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 55%);
+  border-radius: var(--aov-radius-pill);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+/* As tall as the facts beside it, with a taller area to press. */
+.tn-duel .hub-banner-stats > a::after {
+  content: "";
+  position: absolute;
+  inset: -5px 0;
+}
+.tn-duel .hub-banner-stats > a:hover {
+  background: rgb(255 255 255 / 14%);
+}
+.tn-duel-skeleton {
+  height: 188px;
+  border-radius: var(--hub-radius);
+}
+
+/* Tabs: the match first, then each of its games; one row that scrolls sideways, drawn as the page tabs (.cp-tabs). */
+.tn-game-tabs {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--hub-border);
+  scrollbar-width: none;
+}
+.tn-game-tabs::-webkit-scrollbar {
+  display: none;
+}
+.tn-game-tabs > a {
+  position: relative;
+  display: inline-flex;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: var(--aov-radius-control) var(--aov-radius-control) 0 0;
+  color: var(--hub-muted);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background-color 160ms,
+    color 160ms;
+}
+.tn-game-tabs > a:hover {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.tn-game-tabs > a:focus-visible {
+  outline-offset: -2px;
+}
+.tn-game-tabs > a[aria-current] {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.tn-game-tabs > a[aria-current]::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: 0;
+  left: 12px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--hub-accent);
+}
+
+/* The games of a match: rows in one list, then what was noted about the match. */
+.tn-match-games {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+.tn-match-games > .tn-heading {
+  margin-bottom: 0;
+}
+.tn-game-list {
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-game-list > .tn-game {
+  border-radius: 0;
+  background: none;
+}
+.tn-game-list > .tn-game + .tn-game {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-game-list > .tn-game:hover,
+.tn-game-list > .tn-game:focus-visible {
   background: var(--hub-hover);
 }
-.cp-bracket-round .match-row {
-  padding: 10px;
+.tn-game-list > .tn-game:focus-visible {
+  outline-offset: -2px;
 }
-.cp-bracket-round .match-meta {
-  font-size: 12px;
+.tn-game-list > .hub-skeleton {
+  display: block;
+  height: 64px;
+  border-radius: 0;
 }
-.cp-bracket-round .match-scoreboard {
-  gap: 6px;
+.tn-game-list > .hub-skeleton + .hub-skeleton {
+  margin-top: 1px;
 }
-.cp-bracket-round .match-team {
-  flex-direction: column;
-  text-align: center;
-  font-size: 12px;
+/* What is not there, said once. */
+.tn-quiet {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
 }
-@media (max-width: 767px) {
-  .competition-hub-header {
-    padding: var(--hub-panel-padding);
+.tn-quiet > button {
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.tn-footnote {
+  display: grid;
+  max-width: 72ch;
+  gap: 4px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+.tn-footnote > p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.tn-footnote > a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-self: start;
+  gap: 5px;
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.tn-footnote > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 1179.98px) {
+  .tn-fixture {
+    grid-template-columns: 52px minmax(0, 184px) 56px minmax(0, 184px) minmax(0, 1fr) auto;
   }
-  .competition-hub-header > div {
-    flex: 1;
-    min-width: 0;
-  }
-  .competition-hub-header h1 {
-    font-size: 20px;
-  }
+}
+@media (max-width: 899.98px) {
   .competition-select {
     min-height: 40px;
     min-width: 0;
   }
-  .match-row {
+  /* Two lines: the pairing with its time and format, then where the match belongs. */
+  .tn-name-wide {
+    display: none;
+  }
+  .tn-name-compact {
+    display: inline;
+  }
+  .tn-fixture {
+    grid-template-columns: 36px minmax(0, 1fr) auto minmax(0, 1fr) 36px;
+    grid-template-areas:
+      "time a score b format"
+      "meta meta meta meta meta";
+    gap: 4px 6px;
     padding: 10px;
   }
-  .match-scoreboard {
-    gap: 8px;
+  .tn-fixture-format {
+    min-width: 0;
   }
-  .match-team {
+  .tn-fixture-team {
     gap: 6px;
-    font-size: 13px;
   }
-  .match-team > img,
-  .match-team > .stream-image,
-  .match-team > .stream-image-fallback {
-    width: 26px;
-    height: 26px;
+  .tn-fixture-team > .stream-image,
+  .tn-fixture-blank {
+    width: 22px;
+    height: 22px;
   }
-  .match-score {
-    min-width: 42px;
-    font-size: 16px;
+  .tn-fixture-score {
+    min-width: 44px;
+    gap: 4px;
   }
-  .match-game-nav a {
-    min-height: 40px;
+  .tn-fixture-meta {
+    padding-left: 0;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: center;
+    text-wrap: balance;
+  }
+  .tn-schedule {
+    gap: 24px;
+  }
+  .tn-duel {
+    gap: 10px;
+    padding: 16px 12px;
+  }
+  .tn-duel-board {
+    align-items: start;
+    gap: 8px;
+    font-size: 15px;
+    line-height: 20px;
+  }
+  .tn-duel-team,
+  .tn-duel-team[data-side="a"] {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  .tn-duel-team > .stream-image,
+  .tn-duel-blank {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--hub-radius);
+  }
+  .tn-duel-score {
+    min-width: 92px;
+    gap: 0 8px;
+    font-size: 32px;
+    line-height: 56px;
+  }
+  .tn-duel-score > small {
+    line-height: 16px;
+  }
+  .tn-duel-skeleton {
+    height: 176px;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-game-tabs > a {
+    height: 44px;
+  }
+}
+@media (max-width: 389.98px) {
+  .tn-duel-season {
+    display: none;
+  }
+}
+/* The narrowest phones: the pairing takes the whole first line, and the time and the format move beside the round. */
+@media (max-width: 379.98px) {
+  .tn-fixture {
+    grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "a a score b b"
+      "time meta meta meta format";
+    gap: 4px 8px;
+  }
+  .tn-fixture-time,
+  .tn-fixture-format {
+    min-width: 36px;
+    align-self: start;
+    font-size: 12px;
+    line-height: 16px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .match-row {
+  .tn-fixture,
+  .tn-game-tabs > a {
     transition: none;
   }
 }

@@ -4,7 +4,7 @@
   align-items: center;
   gap: 4px;
 }
-@media (max-width: 767px) {
+@media (max-width: 899.98px) {
   .hub-brand-group .public-app-wordmark {
     font-size: 18px;
   }
@@ -13,7 +13,7 @@
     padding-inline: 4px;
   }
 }
-@media (max-width: 360px) {
+@media (max-width: 359.98px) {
   .hub-brand-group .public-app-wordmark {
     display: none;
   }

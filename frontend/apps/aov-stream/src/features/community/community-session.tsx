@@ -84,7 +84,7 @@ export function CommunitySessionButton() {
             <a className="public-preferences-app" href={WIKI_URL}>
               <img src={wikiLogoUrl} alt="" width={30} height={30} />
               <span>
-                <strong>AOV Wiki</strong>
+                <strong>AOV WiKi</strong>
                 <small>{text("Mở ứng dụng", "Open app")}</small>
               </span>
               <StreamIcon name="chevronRight" size={13} />
@@ -168,7 +168,7 @@ const accountLinks: { to: string; label: string; english: string; icon: StreamIc
   { to: "/account", label: "Hồ sơ của tôi", english: "My profile", icon: "user" },
   { to: "/account?tab=follows", label: "Trang đang theo dõi", english: "Following", icon: "heart" },
   { to: "/account?tab=notifications", label: "Thông báo", english: "Notifications", icon: "bell" },
-  { to: "/account?tab=pages", label: "Trang tôi quản lý", english: "My pages", icon: "shield" },
+  { to: "/account?tab=pages", label: "Trang tôi quản lý", english: "My pages", icon: "building" },
 ]
 
 export function CommunityLoginCallback() {
@@ -192,7 +192,6 @@ export function CommunityLoginCallback() {
     <StreamShell>
       <div className="cp-container">
         <section className="hub-state">
-          <StreamIcon name={error ? "info" : "clock"} size={32} />
           <h1>
             {error
               ? text("Đăng nhập chưa hoàn tất", "Sign-in incomplete")

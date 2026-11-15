@@ -1,62 +1,80 @@
+import { Fragment } from "react"
 import { Link } from "react-router"
 import type { GameSide, PublishedGame } from "@aov/community-contracts"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
 import { ReferenceArt } from "./reference-art"
-import { clock, orderedParticipants } from "./tournament-model"
+import { clock, orderedParticipants, seriesRound, seriesSides, unbroken } from "./tournament-model"
 
-function CardTeam({ game, side }: { game: PublishedGame; side: GameSide }) {
-  const team = game.teams[side.teamId]
+/** The five picks of one side in lane order, underlined in the colour of the side it played on. */
+export function PickStrip({ game, side, slot }: { game: PublishedGame; side: GameSide; slot?: "a" | "b" }) {
   return (
-    <div className="game-card-team" data-side={side.side}>
-      <div className="game-card-team-name">
-        <StreamImage src={team?.logoUrl} name={team?.shortName || team?.name || "Đội"} />
-        <strong>{team?.shortName || team?.name}</strong>
-        {game.content.winner === side.side && (
-          <span className="game-card-winner" title="Đội thắng">
-            <StreamIcon name="trophy" size={12} />
-            Thắng
-          </span>
-        )}
-      </div>
-      <span className="game-card-picks">
-        {orderedParticipants(side.participants).map((participant) => (
-          <ReferenceArt key={participant.lane} catalog={game.catalog} kind="heroes" selection={participant.hero} />
-        ))}
-      </span>
-    </div>
+    <span className="tn-picks" data-side={side.side} data-slot={slot}>
+      <span className="sr-only">{side.side === "BLUE" ? "Phe xanh:" : "Phe đỏ:"}</span>
+      {orderedParticipants(side.participants).map((participant) => (
+        <ReferenceArt key={participant.lane} catalog={game.catalog} kind="heroes" selection={participant.hero} />
+      ))}
+    </span>
   )
 }
 
-export function GameCard({ game }: { game: PublishedGame }) {
-  const [first, second] = game.content.sides
+/**
+ * One game: its number, how long it lasted, both teams with the winner marked and the five picks of each. Teams keep
+ * the order of the series. A card names the round unless the list holds one match only (`round` false) and, in a list
+ * that mixes competitions, the competition; `row` is for the games of one match, which the page already names, and
+ * lies on one line on a wide screen.
+ */
+export function GameCard({
+  game,
+  layout = "card",
+  competition = false,
+  round: named = true,
+}: {
+  game: PublishedGame
+  layout?: "card" | "row"
+  competition?: boolean
+  round?: boolean
+}) {
+  const { number, durationSeconds, winner } = game.content
+  const round = layout === "card" && named ? seriesRound(game.series.name) : null
   return (
-    <Link className="game-card" to={`/games/${game.id}`}>
-      <div className="game-card-meta">
-        <span>{game.tournament.name}</span>
-        <span>
-          {game.series.stage || `BO${game.series.bestOf}`} · Ván {game.content.number}
-        </span>
-      </div>
-      <div className="game-card-matchup">
-        {first && <CardTeam game={game} side={first} />}
-        <span className="game-card-versus" aria-hidden="true">
-          VS
-        </span>
-        {second && <CardTeam game={game} side={second} />}
-      </div>
-      <div className="game-card-bottom">
-        <span>
-          <StreamIcon name="clock" size={14} />
-          {game.content.durationSeconds ? clock(game.content.durationSeconds) : "Chưa rõ thời lượng"}
-        </span>
-        <span title={game.resolvedContext?.patchTitle || undefined}>
-          {game.resolvedContext?.unknown
-            ? "Chưa xác định patch"
-            : `${game.resolvedContext?.seasonName || ""} · ${game.resolvedContext?.patchCode || "Patch đã lưu"}`}
-        </span>
-        <StreamIcon name="arrow" size={16} />
-      </div>
+    <Link className="tn-game" data-layout={layout} to={`/games/${game.id}`}>
+      <span className="tn-game-title">
+        {round && <span>{round}</span>}
+        <b>Ván {number}</b>
+      </span>
+      <span className="tn-game-time">
+        <StreamIcon name="clock" size={13} />
+        <span className="sr-only">Thời lượng</span>
+        {durationSeconds ? clock(durationSeconds) : "—"}
+      </span>
+      {seriesSides(game).map((side, index) => {
+        const team = game.teams[side.teamId]
+        const name = team?.shortName || team?.name || "Đội"
+        const slot = index === 0 ? "a" : "b"
+        return (
+          <Fragment key={side.side}>
+            <span
+              className="tn-game-team"
+              data-slot={slot}
+              data-won={winner === side.side || undefined}
+              data-lost={(winner && winner !== side.side) || undefined}
+            >
+              <StreamImage src={team?.logoUrl} name={name} />
+              <strong title={team?.name}>{unbroken(name)}</strong>
+              {winner === side.side && (
+                <span className="tn-win">
+                  <StreamIcon name="trophy" size={12} />
+                  <span>Thắng</span>
+                </span>
+              )}
+            </span>
+            <PickStrip game={game} side={side} slot={slot} />
+          </Fragment>
+        )
+      })}
+      {competition && <span className="tn-game-context">{game.tournament.name}</span>}
+      {layout === "row" && <StreamIcon name="chevronRight" size={16} />}
     </Link>
   )
 }

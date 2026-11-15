@@ -56,7 +56,7 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
           <button
             ref={trigger}
             type="button"
-            className="cp-button cp-profile-options-trigger"
+            className="cp-button pf-options"
             aria-label="Tùy chọn trang"
             title="Tùy chọn trang"
           >
@@ -134,15 +134,15 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
                     : "Hồ sơ do AthaHub tổng hợp từ nguồn công khai."}
               </p>
               {sources.length ? (
-                <ul className="cp-profile-sources">
+                <ul className="pf-links">
                   {sources.map((source, i) => (
                     <li key={i}>
                       <a href={source.url} target="_blank" rel="noreferrer">
                         <span>
-                          <strong>{source.label}</strong>
+                          {source.label}
                           {source.checkedOn && <small>Đối chiếu {formatDay(source.checkedOn)}</small>}
                         </span>
-                        <StreamIcon name="external" size={15} />
+                        <StreamIcon name="external" size={14} />
                       </a>
                     </li>
                   ))}

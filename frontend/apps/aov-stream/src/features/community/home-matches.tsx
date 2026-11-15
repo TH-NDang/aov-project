@@ -1,0 +1,92 @@
+import { Link } from "react-router"
+import type { CSSProperties } from "react"
+import { StreamIcon } from "../../components/stream-icon"
+import { matchStrip } from "../tournaments/competition-model"
+import { MatchCard } from "../tournaments/match-card"
+import { competitionMatches } from "../tournaments/match-model"
+import { competitionStatus, competitionStatusLabels, dayRange, hueOf, useFeaturedCompetitions } from "./community-ui"
+
+/**
+ * The first thing on the home page: matches on now, the next ones, then the latest results, in one row that scrolls
+ * sideways. Nothing is rendered while no published competition has a dated match.
+ */
+export function HomeMatches() {
+  const competitions = useFeaturedCompetitions()
+  if (competitions.isPending)
+    return (
+      <div className="tn-strip" role="status" aria-label="Đang tải trận đấu">
+        <div className="tn-strip-row">
+          {Array.from({ length: 4 }, (_, index) => (
+            <span key={index} className="tn-match hub-skeleton" />
+          ))}
+        </div>
+      </div>
+    )
+  const entries = matchStrip(competitionMatches(competitions.data?.items ?? []))
+  if (!entries.length) return null
+  return (
+    <section className="tn-strip" aria-labelledby="home-matches">
+      <div className="tn-heading">
+        <h2 id="home-matches">Trận đấu</h2>
+        <Link to="/competitions?tab=schedule">
+          Lịch & kết quả
+          <StreamIcon name="arrow" size={15} />
+        </Link>
+      </div>
+      <div className="tn-strip-row" tabIndex={0} role="group" aria-label="Trận sắp diễn ra và kết quả mới nhất">
+        {entries.map((entry) => (
+          <MatchCard key={`${entry.competition.id}:${entry.match.key}`} entry={entry} context />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/** The side column's list of competitions that are on or about to start, so the home page always leads to them. */
+export function HomeCompetitions() {
+  const competitions = useFeaturedCompetitions()
+  const order = ["ONGOING", "UPCOMING", "ANNOUNCED"]
+  const items = (competitions.data?.items ?? [])
+    .filter((view) => order.includes(competitionStatus(view.content.tournament) ?? ""))
+    .sort(
+      (a, b) =>
+        order.indexOf(competitionStatus(a.content.tournament)!) -
+        order.indexOf(competitionStatus(b.content.tournament)!),
+    )
+    .slice(0, 5)
+  if (!items.length) return null
+  return (
+    <section className="hub-card hub-card-padded" aria-labelledby="home-competitions">
+      <div className="hub-card-heading">
+        <h2 id="home-competitions" className="hub-card-title">
+          Giải đang và sắp diễn ra
+        </h2>
+        <Link to="/competitions" className="hub-card-more">
+          Tất cả
+        </Link>
+      </div>
+      <ul className="tn-mini-list">
+        {items.map((view) => {
+          const { tournament } = view.content
+          const status = competitionStatus(tournament)
+          return (
+            <li key={view.id}>
+              <Link to={`/competitions/${view.id}`}>
+                <span className="tn-logo hub-art" style={{ "--hub-hue": hueOf(tournament.name) } as CSSProperties}>
+                  {tournament.logoUrl ? <img src={tournament.logoUrl} alt="" loading="lazy" /> : null}
+                </span>
+                <span>
+                  <strong>{tournament.name}</strong>
+                  <small>
+                    {status && <b data-status={status}>{competitionStatusLabels[status]}</b>}
+                    {dayRange(tournament.startsOn, tournament.endsOn, "Chờ lịch")}
+                  </small>
+                </span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
+}

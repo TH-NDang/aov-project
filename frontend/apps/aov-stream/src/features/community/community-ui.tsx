@@ -1,24 +1,42 @@
 import type { CSSProperties } from "react"
 import { infiniteQueryOptions, useQuery } from "@tanstack/react-query"
-import type {
-  CommunityProfile,
-  CompetitionView,
-  PageSlice,
-  ProfileKind,
-  TournamentContent,
-} from "@aov/community-contracts"
-import type { StreamIconName } from "../../components/stream-icon"
+import type { CommunityProfile, CompetitionView, PageSlice, TournamentContent } from "@aov/community-contracts"
 import { communityApi } from "./community-api"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { currentTimeZone, formatCalendarDate, formatInZone } from "@aov/ui/lib/time-zone"
 
-export const kindIcons: Record<ProfileKind, StreamIconName> = {
-  CIRCUIT: "trophy",
-  ORGANIZATION: "building",
-  TEAM: "shield",
-  PLAYER: "user",
-  PERSON: "user",
+const regionNames = new Intl.DisplayNames(["vi"], { type: "region", style: "short" })
+const regionCode = /^[A-Z]{2}$/
+
+/** The Vietnamese name of a two-letter country code; a country written out in words is kept as written. */
+export function regionName(country?: string | null) {
+  const value = country?.trim()
+  if (!value) return null
+  return regionCode.test(value) ? regionNames.of(value) || value : value
+}
+
+/** Countries some pages spell out instead of giving their code, so both spellings count as one region. */
+const regionCodesByName = new Map(
+  ["VN", "TH", "TW", "HK", "MO", "ID", "SG", "MY", "PH", "JP", "KR", "CN", "LA", "KH", "MM", "IN", "US", "GB"].map(
+    (code) => [regionNames.of(code)!.toLowerCase(), code],
+  ),
+)
+
+/** What a page's country is filed under: its code when it has one, the written name otherwise, "" when unrecorded. */
+export function regionKey(country?: string | null) {
+  const value = country?.trim()
+  if (!value) return ""
+  return regionCode.test(value) ? value : (regionCodesByName.get(value.toLowerCase()) ?? value)
+}
+
+/** How the competition list is narrowed to one page: its seasons, what it organizes or what it took part in. */
+export function profileCompetitionFilter(profile: CommunityProfile): Record<string, string> | null {
+  if (profile.kind === "CIRCUIT") return { circuitPageId: profile.id }
+  if (profile.kind === "ORGANIZATION") return { organizerPageId: profile.id }
+  if (profile.kind === "TEAM" && profile.entityId) return { teamId: profile.entityId }
+  if (profile.kind === "PLAYER" && profile.entityId) return { playerId: profile.entityId }
+  return null
 }
 
 /** A stable hue per name, so pages and competitions without artwork still get distinct covers. */
@@ -38,6 +56,7 @@ export function dayRange(startsOn?: string | null, endsOn?: string | null, fallb
   const start = formatDay(startsOn)
   const end = formatDay(endsOn)
   if (!start && !end) return fallback
+  if (start === end) return start
   return `${start || "Chưa rõ"} – ${end || "Chưa rõ"}`
 }
 

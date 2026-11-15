@@ -32,3 +32,12 @@ export function videoEmbed(url: string): VideoEmbed | null {
           : host
   return { kind: "link", platform, href: parsed.toString() }
 }
+
+/**
+ * The picture YouTube keeps for a video. `hqdefault` exists for every video; it is 4:3 with bars above and below a
+ * 16:9 frame, which a 16:9 box with `object-fit: cover` crops away. `mqdefault` is smaller and 16:9 without bars,
+ * for tiles of any shape.
+ */
+export function videoPoster(embed: VideoEmbed, size: "hqdefault" | "mqdefault" = "hqdefault") {
+  return embed.kind === "youtube" ? `https://i.ytimg.com/vi/${embed.src.split("/").pop()}/${size}.jpg` : null
+}

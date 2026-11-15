@@ -5,7 +5,6 @@ import {
   competitionMatches,
   competitionMatchHref,
   findSeriesMatch,
-  groupMatchesByDay,
   matchSeriesId,
   matchState,
   orderedMatchGames,
@@ -48,26 +47,6 @@ test("incomplete scores and past scheduled times do not claim a live or finished
   assert.equal(matchState(entry), "FINISHED")
   entry.result.scoreB = 3
   assert.equal(matchState(entry), "SCORED")
-})
-
-test("schedule groups by the displayed time zone, preserves undated fixtures, and does not mutate source order", () => {
-  const entries = competitionMatches([
-    view([
-      planned("unknown"),
-      planned("late", { scheduledAt: "2026-11-03T18:30:00Z" }),
-      planned("early", { scheduledAt: "2026-11-03T16:30:00Z" }),
-    ]),
-  ])
-  const groups = groupMatchesByDay(entries, "Asia/Ho_Chi_Minh")
-  assert.deepEqual(
-    groups.map((group) => group.key),
-    ["2026-11-03", "2026-11-04", "unscheduled"],
-  )
-  assert.deepEqual(
-    groups.map((group) => group.items[0]?.match.key),
-    ["early", "late", "unknown"],
-  )
-  assert.equal(entries[0]?.match.key, "unknown")
 })
 
 test("game navigation keeps only the exact series and sorts by game number rather than publication order", () => {

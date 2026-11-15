@@ -1,30 +1,48 @@
-import { useState, type CSSProperties } from "react"
-import { Link, useParams } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useState } from "react"
+import { Link, useParams, useSearchParams } from "react-router"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import {
   isIndividualProfile,
   personRoleLabels,
   profileKindLabels,
   type CommunityProfile,
+  type CompetitionView,
+  type PageRole,
   type PageSlice,
   type PageViewer,
+  type ProfileHistory,
 } from "@aov/community-contracts"
-import { OfficialBadge } from "@aov/ui/components/official-badge"
+import { usePageLayout, type PageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
+import { CompetitionCard } from "../tournaments/competition-card"
 import { communityApi } from "./community-api"
 import { useCommunitySession } from "./community-auth"
-import { Avatar, followersLabel, hueOf, kindIcons } from "./community-ui"
 import { CommunityFeed } from "./community-feed"
 import { useFollowPage } from "./community-queries"
 import { useSignedInAction } from "./community-signin"
-import { ProfileCompetitionSummary } from "./public-competitions"
-import { ProfileTeams } from "./profile-teams"
-import { ProfileOptions } from "./profile-options"
-import { ProfileSocials } from "./profile-socials"
+import { competitionsFeedQuery, followersLabel, profileCompetitionFilter, regionName } from "./community-ui"
 import { CircuitProfile } from "./circuit-profile"
-import { ProfileAside, regionName } from "./profile-aside"
-import { LiveBlock, LiveControl, PageUpcoming, ProfileStats } from "./profile-home"
+import { ProfileAside } from "./profile-aside"
+import { ProfileHead } from "./profile-head"
+import { LiveBlock, LiveControl, ProfileMatches } from "./profile-home"
+import { ProfileOptions } from "./profile-options"
+import {
+  AchievementRows,
+  HistoryRows,
+  TeamRoster,
+  achievementCount,
+  achievementGroups,
+  competitionLinks,
+  distinctHistory,
+  type AchievementGroup,
+  type CompetitionLinks,
+} from "./profile-records"
+import { ProfileSocials } from "./profile-socials"
+import { ProfileTeams } from "./profile-teams"
+import { CompetitionList, ProfileCompetitionSummary } from "./public-competitions"
+import "./community.css"
+import "./community-profile.css"
 
 export function CommunityProfilePage() {
   const { code = "" } = useParams()
@@ -38,13 +56,21 @@ export function CommunityProfilePage() {
   return (
     <StreamShell>
       {profile.isPending ? (
-        <div className="cp-container" role="status" aria-label="Đang tải hồ sơ">
-          <div className="hub-skeleton cp-header-skeleton" />
+        <div className="cp-container pf-page" role="status" aria-label="Đang tải hồ sơ">
+          <div className="pf-skeleton-head">
+            <span className="hub-skeleton" />
+            <div>
+              <span className="hub-skeleton" />
+              <span className="hub-skeleton" />
+              <span className="hub-skeleton" />
+            </div>
+          </div>
+          <div className="pf-skeleton-tabs" />
+          <div className="hub-skeleton-rows" />
         </div>
       ) : profile.isError ? (
         <div className="cp-container">
           <div className="hub-state">
-            <StreamIcon name="info" size={28} />
             <h1>Chưa mở được hồ sơ</h1>
             <p role="alert">{profile.error.message}</p>
             <Link className="cp-button" to="/explore">
@@ -60,105 +86,96 @@ export function CommunityProfilePage() {
     </StreamShell>
   )
 }
-type ProfileTab = "home" | "video" | "roster" | "history" | "competitions" | "achievements" | "overview"
 
-/** Content first, introduction last; each kind of page gets the sections that make sense for it. */
-function profileTabs(kind: CommunityProfile["kind"]): [ProfileTab, string][] {
-  if (kind === "ORGANIZATION")
-    return [
-      ["home", "Trang chủ"],
-      ["video", "Video"],
-      ["competitions", "Giải đấu"],
-      ["history", "Lịch sử hoạt động"],
-      ["overview", "Giới thiệu"],
-    ]
-  if (kind === "TEAM")
-    return [
-      ["home", "Trang chủ"],
-      ["video", "Video"],
-      ["roster", "Đội hình"],
-      ["competitions", "Thi đấu"],
-      ["achievements", "Thành tích"],
-      ["history", "Lịch sử"],
-      ["overview", "Giới thiệu"],
-    ]
-  if (kind === "PLAYER")
-    return [
-      ["home", "Trang chủ"],
-      ["video", "Video"],
-      ["history", "Sự nghiệp"],
-      ["competitions", "Thi đấu"],
-      ["achievements", "Thành tích"],
-      ["overview", "Giới thiệu"],
-    ]
-  return [
-    ["home", "Trang chủ"],
-    ["video", "Video"],
-    ["history", "Sự nghiệp & hoạt động"],
-    ["overview", "Giới thiệu"],
-  ]
+type ProfileTab = "home" | "history" | "competitions" | "achievements" | "overview"
+
+/** Rows of a record the overview shows in full; a longer record gets a tab of its own. */
+const PREVIEW = 3
+
+/**
+ * The overview first, then only the sections that hold more than the overview already shows. The introduction and
+ * its sources are the column beside the content on a wide layout and a tab of their own on a compact one.
+ */
+function profileTabs(
+  profile: CommunityProfile,
+  layout: PageLayout,
+  records: { history: number; achievements: number; competitions: number | undefined },
+): [ProfileTab, string][] {
+  const individual = isIndividualProfile(profile.kind)
+  const tabs: [ProfileTab, string][] = [["home", "Tổng quan"]]
+  if (individual && records.history > PREVIEW) tabs.push(["history", "Sự nghiệp"])
+  // Shown while the count is still loading, so the row does not shift for the many pages that have competitions.
+  if (profileCompetitionFilter(profile) && records.competitions !== 0)
+    tabs.push(["competitions", profile.kind === "ORGANIZATION" ? "Giải đấu" : "Thi đấu"])
+  if (profile.kind !== "ORGANIZATION" && records.achievements > PREVIEW) tabs.push(["achievements", "Thành tích"])
+  if (!individual && records.history > 0) tabs.push(["history", "Lịch sử"])
+  if (layout === "compact") tabs.push(["overview", "Giới thiệu"])
+  return tabs
 }
 
 function Profile({ profile }: { profile: CommunityProfile }) {
+  const layout = usePageLayout()
   const session = useCommunitySession()
   const signedIn = useSignedInAction()
-  const [picked, setTab] = useState<ProfileTab | null>(null)
-  // A page without posts or a broadcast opens on its introduction instead of an empty feed.
-  const postCount = useQuery({
-    queryKey: ["page-post-count", profile.id],
-    queryFn: () => communityApi<PageSlice<unknown>>(`/pages/${profile.id}/posts?size=1`),
-    enabled: profile.kind !== "CIRCUIT",
-  })
-  const tab: ProfileTab = picked ?? (!profile.live && postCount.data?.totalElements === 0 ? "overview" : "home")
+  const [params, setParams] = useSearchParams()
+  const content = profile.content!
+  const authenticated = session.status === "authenticated"
   const viewer = useQuery({
     queryKey: ["page-viewer", session.revision, profile.id],
     queryFn: () => communityApi<PageViewer>(`/me/pages/${profile.id}`),
-    enabled: session.status === "authenticated",
+    enabled: authenticated,
   })
   const follow = useFollowPage()
-  const content = profile.content!
-  const isOrganization = profile.kind === "ORGANIZATION"
-  const tabs = profileTabs(profile.kind)
-  const authenticated = session.status === "authenticated"
   const following = authenticated && !!viewer.data?.following
+  // The newest competitions of the page serve its head, its overview and the links of its records.
+  const filter = profileCompetitionFilter(profile)
+  const competitions = useInfiniteQuery({ ...competitionsFeedQuery(filter || {}), enabled: !!filter })
+  const views = competitions.data?.pages.flatMap((page) => page.items) ?? []
+  const competitionCount = competitions.data?.pages[0]?.totalElements
+  const links = competitionLinks(views)
+  const achievements = achievementGroups(content.achievements, links)
+  const history = distinctHistory(content.history)
+  const individual = isIndividualProfile(profile.kind)
+  const organization = profile.kind === "ORGANIZATION"
+
+  const tabs = profileTabs(profile, layout, {
+    history: history.length,
+    achievements: achievements.length,
+    competitions: competitionCount,
+  })
+  const requested = params.get("tab")
+  const tab = tabs.find(([key]) => key === requested)?.[0] ?? "home"
+  const setTab = (next: ProfileTab) =>
+    setParams((current) => {
+      const updated = new URLSearchParams(current)
+      if (next === "home") updated.delete("tab")
+      else updated.set("tab", next)
+      return updated
+    })
+
+  const region = regionName(content.country)
+  const kind =
+    (profile.kind === "PERSON" && content.personRoles?.map((role) => personRoleLabels[role]).join(", ")) ||
+    profileKindLabels[profile.kind]
+  const facts = [
+    profile.followers > 0 && followersLabel(profile.followers),
+    !!competitionCount &&
+      `${competitionCount.toLocaleString("vi-VN")} ${organization ? "giải đấu" : "giải đã tham gia"}`,
+    achievements.length > 0 && `${achievementCount(achievements).toLocaleString("vi-VN")} thành tích`,
+    profile.kind === "TEAM" && content.roster.length > 0 && `${content.roster.length} thành viên`,
+    individual && history.length > 0 && `${history.length} mốc sự nghiệp`,
+  ].filter((fact) => !!fact)
   return (
-    <div className="cp-container">
+    <div className="cp-container pf-page">
       <title>{`${content.name} — AOV Stream`}</title>
-      <header className="hub-card cp-page-header">
-        <div
-          className="cp-cover hub-art"
-          style={
-            {
-              "--hub-hue": hueOf(content.name),
-              ...(content.coverUrl ? { backgroundImage: `url(${JSON.stringify(content.coverUrl)})` } : {}),
-            } as CSSProperties
-          }
-        >
-          <ProfileSocials links={content.links} />
-        </div>
-        <div className="cp-identity" data-live={profile.live ? true : undefined}>
-          <Avatar profile={profile} />
-          <div className="cp-identity-title">
-            <span className="hub-kicker">
-              <StreamIcon name={kindIcons[profile.kind]} size={14} />
-              {(profile.kind === "PERSON"
-                ? content.personRoles?.map((role) => personRoleLabels[role]).join(" · ")
-                : null) || profileKindLabels[profile.kind]}{" "}
-              {content.country ? `· ${regionName(content.country)}` : ""}
-            </span>
-            <h1>
-              {content.name}
-              {profile.represented && <OfficialBadge className="cp-official" label="Đại diện đã xác minh" />}
-              {profile.live && <span className="cp-live-badge cp-title-live">Trực tiếp</span>}
-            </h1>
-            <p className="cp-identity-meta">
-              <span>
-                <StreamIcon name="users" size={14} />
-                {followersLabel(profile.followers)}
-              </span>
-            </p>
-          </div>
-          <div className="cp-actions cp-profile-actions">
+      <ProfileHead
+        profile={profile}
+        kicker={region ? `${kind} · ${region}` : kind}
+        lines={individual && <ProfileTeams pageId={profile.id} />}
+        facts={facts}
+        channels={layout === "compact" && <ProfileSocials links={content.links} />}
+        actions={
+          <>
             <button
               type="button"
               className={following ? "cp-button" : "cp-button cp-primary"}
@@ -175,168 +192,203 @@ function Profile({ profile }: { profile: CommunityProfile }) {
             </button>
             {["OWNER", "EDITOR"].includes(viewer.data?.role || "") && <LiveControl profile={profile} />}
             <ProfileOptions profile={profile} role={authenticated ? viewer.data?.role || undefined : undefined} />
-          </div>
-        </div>
-        <nav className="cp-tabs cp-header-tabs" aria-label="Nội dung hồ sơ">
+          </>
+        }
+      />
+      {tabs.length > 1 && (
+        <nav className="cp-tabs" aria-label="Nội dung hồ sơ">
           {tabs.map(([value, label]) => (
-            <button key={value} aria-current={tab === value ? "page" : undefined} onClick={() => setTab(value)}>
+            <button
+              key={value}
+              type="button"
+              aria-current={tab === value ? "page" : undefined}
+              onClick={() => setTab(value)}
+            >
               {label}
             </button>
           ))}
         </nav>
-      </header>
-      <ProfileStats profile={profile} />
+      )}
       {(follow.isError || viewer.isError) && (
         <p className="cp-error" role="alert">
           {follow.error?.message || viewer.error?.message}
         </p>
       )}
-      <div className="cp-columns">
-        <div className="cp-main-column">
-          {tab === "competitions" && <ProfileCompetitionSummary profile={profile} />}
-          {tab === "overview" && (
-            <>
-              <section className="cp-panel">
-                <h2>Giới thiệu</h2>
-                <p className="cp-prose">
-                  {content.biography || "Thông tin giới thiệu đang được bổ sung từ các nguồn công khai."}
-                </p>
-              </section>
-              <ProfileAside profile={profile} inline />
-              {!isOrganization &&
-                content.achievements.slice(0, 3).map((item, i) => (
-                  <article className="cp-panel cp-highlight" key={i}>
-                    <span className="cp-highlight-icon" aria-hidden="true">
-                      <StreamIcon name="trophy" size={22} />
-                    </span>
-                    <div>
-                      <span className="hub-kicker">{item.placement}</span>
-                      <h2>{item.title}</h2>
-                      <p className="cp-meta">{item.date || "Chưa xác định ngày"}</p>
-                    </div>
-                  </article>
-                ))}
-            </>
-          )}
-          {tab === "roster" && profile.kind === "TEAM" && (
-            <section className="cp-panel">
-              <h2>Thành viên và ban huấn luyện</h2>
-              {!content.roster.length && <p className="cp-muted">Thông tin thành viên đang được bổ sung.</p>}
-              {content.roster.map((item, i) => (
-                <article className="cp-list-row" key={i}>
-                  <div>
-                    <h3>{item.pageId ? <Link to={`/pages/${item.pageId}`}>{item.name}</Link> : item.name}</h3>
-                    <p>
-                      {item.role} · {item.status || "Chưa rõ trạng thái"}
-                    </p>
-                    <p className="cp-meta">
-                      {item.startsOn || "Chưa rõ ngày bắt đầu"} → {item.endsOn || "Chưa ghi nhận kết thúc"}
-                    </p>
-                  </div>
-                  {item.sourceUrl && (
-                    <a className="cp-source" href={item.sourceUrl} target="_blank" rel="noreferrer">
-                      Nguồn
-                      <StreamIcon name="external" size={12} />
-                    </a>
-                  )}
-                </article>
-              ))}
-            </section>
-          )}
-          {tab === "history" && (
-            <>
-              {isIndividualProfile(profile.kind) && <ProfileTeams pageId={profile.id} />}
-              <section className="cp-panel">
-                <h2>
-                  {isIndividualProfile(profile.kind)
-                    ? "Sự nghiệp & hoạt động"
-                    : isOrganization
-                      ? "Lịch sử hoạt động"
-                      : "Lịch sử đội tuyển"}
-                </h2>
-                {!content.history.length && (
-                  <p className="cp-muted">Các mốc có nguồn đối chiếu sẽ được bổ sung tại đây.</p>
-                )}
-                <div className="cp-timeline">
-                  {content.history.map((item, i) => (
-                    <article key={i}>
-                      <span className="cp-meta">
-                        {item.startsOn || "Chưa rõ ngày"}
-                        {item.endsOn ? ` — ${item.endsOn}` : ""}
-                      </span>
-                      <h3>
-                        {item.relatedPageId ? (
-                          <Link to={`/pages/${item.relatedPageId}`}>{item.title}</Link>
-                        ) : (
-                          item.title
-                        )}
-                      </h3>
-                      {item.role && <p>{item.role}</p>}
-                      {item.sourceUrl && (
-                        <a className="cp-source" href={item.sourceUrl} target="_blank" rel="noreferrer">
-                          Nguồn đối chiếu
-                          <StreamIcon name="external" size={12} />
-                        </a>
-                      )}
-                    </article>
-                  ))}
-                </div>
-              </section>
-            </>
-          )}
-          {tab === "achievements" && !isOrganization && (
-            <section className="cp-panel">
-              <h2>Thành tích và danh hiệu</h2>
-              {!content.achievements.length && <p className="cp-muted">Chưa có thành tích được ghi nhận.</p>}
-              {content.achievements.map((item, i) => (
-                <article className="cp-list-row" key={i}>
-                  <span className="cp-placement">{item.placement}</span>
-                  <div>
-                    <h3>
-                      {item.tournamentId ? (
-                        <Link to={`/competitions/${item.tournamentId}`}>{item.title}</Link>
-                      ) : (
-                        item.title
-                      )}
-                    </h3>
-                    <p className="cp-meta">{item.date || "Chưa xác định ngày"}</p>
-                  </div>
-                  {item.sourceUrl && (
-                    <a className="cp-source" href={item.sourceUrl} target="_blank" rel="noreferrer">
-                      Nguồn
-                      <StreamIcon name="external" size={12} />
-                    </a>
-                  )}
-                </article>
-              ))}
-            </section>
-          )}
+      <div className="pf-layout">
+        <div className="pf-main">
           {tab === "home" && (
-            <>
-              {profile.live && <LiveBlock live={profile.live} name={content.name} />}
-              <PageUpcoming profile={profile} />
-              <CommunityFeed
-                pageId={profile.id}
-                pageName={content.name}
-                role={viewer.data?.role || ""}
-                represented={profile.represented}
-              />
-            </>
-          )}
-          {tab === "video" && (
-            <CommunityFeed
-              key="video"
-              pageId={profile.id}
-              pageName={content.name}
+            <ProfileHome
+              profile={profile}
+              views={views}
+              competitionsPending={!!filter && competitions.isPending}
+              competitionCount={competitionCount}
+              achievements={achievements}
+              history={history}
+              links={links}
               role={viewer.data?.role || ""}
-              represented={profile.represented}
-              kind="VIDEO"
-              composer={false}
+              authenticated={authenticated}
+              open={setTab}
             />
           )}
+          {tab === "history" && (
+            <section aria-label={individual ? "Sự nghiệp" : "Lịch sử"}>
+              <HistoryRows items={history} links={links} />
+            </section>
+          )}
+          {tab === "competitions" &&
+            (organization ? <CompetitionList profile={profile} /> : <ProfileCompetitionSummary profile={profile} />)}
+          {tab === "achievements" && (
+            <section aria-label="Thành tích">
+              <AchievementRows groups={achievements} />
+            </section>
+          )}
+          {tab === "overview" && <ProfileAside profile={profile} channels={false} />}
         </div>
-        <ProfileAside profile={profile} />
+        {layout === "wide" && <ProfileAside profile={profile} />}
       </div>
     </div>
+  )
+}
+
+/**
+ * What a reader comes to the page for, in the order they ask it: a broadcast that is on, the matches around now,
+ * the squad or the latest of a career, the best of the record, then the page's posts. What the page does not
+ * record is said once at the end.
+ */
+function ProfileHome({
+  profile,
+  views,
+  competitionsPending,
+  competitionCount,
+  achievements,
+  history,
+  links,
+  role,
+  authenticated,
+  open,
+}: {
+  profile: CommunityProfile
+  views: CompetitionView[]
+  competitionsPending: boolean
+  competitionCount: number | undefined
+  achievements: AchievementGroup[]
+  history: ProfileHistory[]
+  links: CompetitionLinks
+  role: PageRole | ""
+  authenticated: boolean
+  open: (tab: ProfileTab) => void
+}) {
+  const content = profile.content!
+  const individual = isIndividualProfile(profile.kind)
+  const organization = profile.kind === "ORGANIZATION"
+  // Competition cards take a row each on a compact layout, so fewer of them stand before the posts.
+  const organized = views.slice(0, usePageLayout() === "compact" ? 3 : 6)
+  const [onlyVideo, setOnlyVideo] = useState(false)
+  const posts = useQuery({
+    queryKey: ["page-post-count", profile.id],
+    queryFn: () => communityApi<PageSlice<unknown>>(`/pages/${profile.id}/posts?size=1`),
+  })
+  const videos = useQuery({
+    queryKey: ["page-post-count", profile.id, "VIDEO"],
+    queryFn: () => communityApi<PageSlice<unknown>>(`/pages/${profile.id}/posts?kind=VIDEO&size=1`),
+  })
+  const postCount = posts.data?.totalElements
+  const hasVideos = !!videos.data?.totalElements
+  // Readers who are signed in can write on the page, so they get the feed even while it is empty.
+  const feed = authenticated || !!postCount
+  const missing = [
+    profile.kind === "TEAM" && !content.roster.length && "đội hình",
+    (profile.kind === "TEAM" || profile.kind === "PLAYER") && !achievements.length && "thành tích",
+    competitionCount === 0 && (organization ? "giải đấu đã tổ chức" : "giải đấu đã tham gia"),
+    !content.biography && "phần giới thiệu",
+    !content.sources.length && "nguồn đối chiếu",
+  ].filter((entry) => !!entry)
+  return (
+    <>
+      {profile.live && <LiveBlock live={profile.live} name={content.name} />}
+      <ProfileMatches profile={profile} views={views} pending={competitionsPending} more={() => open("competitions")} />
+      {profile.kind === "TEAM" && content.roster.length > 0 && <TeamRoster roster={content.roster} />}
+      {organization && views.length > 0 && (
+        <section aria-labelledby="profile-organized">
+          <div className="tn-heading">
+            <h2 id="profile-organized">
+              Giải đấu tổ chức {!!competitionCount && <small>{competitionCount.toLocaleString("vi-VN")}</small>}
+            </h2>
+            {(competitionCount ?? 0) > organized.length && (
+              <button type="button" onClick={() => open("competitions")}>
+                Xem tất cả
+                <StreamIcon name="arrow" size={15} />
+              </button>
+            )}
+          </div>
+          <div className="tn-card-grid">
+            {organized.map((entry) => (
+              <CompetitionCard key={entry.id} entry={entry} />
+            ))}
+          </div>
+        </section>
+      )}
+      {individual && history.length > 0 && (
+        <section aria-labelledby="profile-career">
+          <div className="tn-heading">
+            <h2 id="profile-career">Sự nghiệp</h2>
+            {history.length > PREVIEW && (
+              <button type="button" onClick={() => open("history")}>
+                Tất cả {history.length} mốc
+                <StreamIcon name="arrow" size={15} />
+              </button>
+            )}
+          </div>
+          <HistoryRows items={history.slice(0, PREVIEW)} links={links} />
+        </section>
+      )}
+      {!organization && achievements.length > 0 && (
+        <section aria-labelledby="profile-achievements">
+          <div className="tn-heading">
+            <h2 id="profile-achievements">Thành tích</h2>
+            {achievements.length > PREVIEW && (
+              <button type="button" onClick={() => open("achievements")}>
+                Tất cả thành tích
+                <StreamIcon name="arrow" size={15} />
+              </button>
+            )}
+          </div>
+          <AchievementRows groups={achievements.slice(0, PREVIEW)} />
+        </section>
+      )}
+      {feed && (
+        <section className="pf-posts" aria-labelledby="profile-posts">
+          <div className="tn-heading">
+            <h2 id="profile-posts">Bài viết</h2>
+          </div>
+          {hasVideos && (
+            <div className="hub-pills" role="group" aria-label="Loại bài viết">
+              <button type="button" aria-pressed={!onlyVideo} onClick={() => setOnlyVideo(false)}>
+                Tất cả
+              </button>
+              <button type="button" aria-pressed={onlyVideo} onClick={() => setOnlyVideo(true)}>
+                <StreamIcon name="play" size={14} />
+                Video
+              </button>
+            </div>
+          )}
+          <CommunityFeed
+            key={onlyVideo ? "video" : "all"}
+            pageId={profile.id}
+            pageName={content.name}
+            role={role}
+            represented={profile.represented}
+            kind={onlyVideo ? "VIDEO" : undefined}
+            composer={!onlyVideo}
+          />
+        </section>
+      )}
+      {missing.length > 0 && (
+        <p className="pf-note">
+          Trang này chưa ghi nhận {missing.join(", ")}.
+          {!profile.represented && " Bạn có thông tin? Chọn nút ⋯ ở đầu trang để đề xuất chỉnh sửa."}
+        </p>
+      )}
+    </>
   )
 }

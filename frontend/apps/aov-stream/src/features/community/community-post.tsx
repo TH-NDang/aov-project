@@ -38,24 +38,27 @@ function AuthorMark({ name, small = false }: { name: string; small?: boolean }) 
 
 const longPost = (body: string) => body.length > 420 || body.split("\n").length > 7
 
-/**
- * One post with its likes, comments and actions. With `page` it introduces the page it belongs to (cross-page feeds);
- * without it, the page is the surrounding profile. `following` is null for signed-out viewers, who see no follow
- * buttons; their likes, comments and reports open the sign-in prompt instead.
- */
 const REPORT_REASONS = ["Spam hoặc quảng cáo", "Thông tin sai", "Ngôn từ xúc phạm", "Nội dung phản cảm", "Mạo danh"]
 
+/**
+ * One post with its likes, comments and actions. With `page` it introduces the page it belongs to (cross-page feeds);
+ * without it, the page is the surrounding profile, and `pictureUrl` is that page's picture for posts made as the page.
+ * `following` is null for signed-out viewers, who see no follow buttons; their likes, comments and reports open the
+ * sign-in prompt instead.
+ */
 export function PostCard({
   post,
   role,
   represented,
   page,
+  pictureUrl,
   following = null,
 }: {
   post: CommunityPost
   role: PageRole | ""
   represented: boolean
   page?: PageCard
+  pictureUrl?: string | null
   following?: Set<string> | null
 }) {
   const session = useCommunitySession()
@@ -163,42 +166,42 @@ export function PostCard({
     <article className="cp-post">
       <header className="cp-post-header">
         {page ? (
-          <Link to={`/pages/${page.code}`} className="cp-post-page" aria-label={page.name}>
+          <Link to={`/pages/${page.code}`} className="cp-post-avatar" aria-label={page.name}>
             <CardAvatar name={page.name} url={page.avatarUrl} />
           </Link>
+        ) : post.asPage ? (
+          <CardAvatar name={post.authorName} url={pictureUrl} className="cp-post-avatar" />
         ) : (
           <AuthorMark name={post.authorName} />
         )}
         <div className="cp-post-author">
-          {page ? (
-            <>
-              <strong>
-                <Link to={`/pages/${page.code}`}>{page.name}</Link>
-                {page.represented && <OfficialBadge label="Đại diện đã xác minh" />}
-              </strong>
-              <span className="cp-meta">
-                {post.asPage ? profileKindLabels[page.kind] : `${post.authorName} · Thành viên cộng đồng`} ·{" "}
-                <TimeAgo value={post.createdAt} />
+          <strong>
+            {page ? <Link to={`/pages/${page.code}`}>{page.name}</Link> : <span>{post.authorName}</span>}
+            {(page ? page.represented : post.asPage && represented) && (
+              <OfficialBadge label={page ? "Đại diện đã xác minh" : "Bài đăng của đại diện đã xác minh"} />
+            )}
+          </strong>
+          <span className="cp-post-meta">
+            <span>
+              {page
+                ? post.asPage
+                  ? profileKindLabels[page.kind]
+                  : `${post.authorName} · Thành viên cộng đồng`
+                : post.asPage
+                  ? "Đăng bởi đại diện trang"
+                  : "Thành viên cộng đồng"}
+            </span>
+            <span>
+              <TimeAgo value={post.createdAt} />
+            </span>
+            {post.pinned && (
+              <span className="cp-post-pinned">
+                <StreamIcon name="pin" size={12} />
+                <span>Đã ghim</span>
               </span>
-            </>
-          ) : (
-            <>
-              <strong>
-                {post.authorName}
-                {post.asPage && represented && <OfficialBadge label="Bài đăng của đại diện đã xác minh" />}
-              </strong>
-              <span className="cp-meta">
-                {post.asPage ? "Đăng bởi đại diện trang" : "Thành viên cộng đồng"} · <TimeAgo value={post.createdAt} />
-              </span>
-            </>
-          )}
-        </div>
-        {post.pinned && (
-          <span className="cp-badge cp-pin-badge">
-            <StreamIcon name="pin" size={12} />
-            Đã ghim
+            )}
           </span>
-        )}
+        </div>
         {post.status !== "PUBLISHED" && (
           <span className="cp-badge" data-status={post.status}>
             {post.status === "HIDDEN" ? "Đã ẩn" : "Bản nháp"}
@@ -218,7 +221,7 @@ export function PostCard({
         {(published || canEdit || canModerate) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="hub-icon-button cp-post-more" aria-label="Thao tác với bài viết">
+              <button className="hub-icon-button cp-more" aria-label="Thao tác với bài viết">
                 <StreamIcon name="more" size={18} />
               </button>
             </DropdownMenuTrigger>
@@ -268,13 +271,13 @@ export function PostCard({
           {post.body}
         </p>
       )}
-      {post.videoUrl && <PostVideo url={post.videoUrl} title={post.title || `Video của ${post.authorName}`} />}
-      <PostImages urls={post.imageUrls || []} alt={post.title || post.authorName} />
       {long && (
-        <button className="cp-text-button" onClick={() => setUnfolded(!unfolded)}>
+        <button className="cp-text-button cp-post-fold" aria-expanded={unfolded} onClick={() => setUnfolded(!unfolded)}>
           {unfolded ? "Thu gọn" : "Xem thêm"}
         </button>
       )}
+      {post.videoUrl && <PostVideo url={post.videoUrl} title={post.title || `Video của ${post.authorName}`} />}
+      <PostImages urls={post.imageUrls || []} alt={post.title || post.authorName} />
       {editing && (
         <form
           className="cp-inline-form"
@@ -330,25 +333,25 @@ export function PostCard({
       <div className="cp-post-actions">
         {published && (
           <button
-            className="cp-like"
+            className="cp-post-action"
             aria-pressed={session.status === "authenticated" ? shown.liked : undefined}
             aria-label={`${shown.liked ? "Bỏ thích" : "Thích"} · ${shown.likes.toLocaleString("vi-VN")} lượt thích`}
             disabled={like.isPending}
             onClick={() => signedIn("Đăng nhập để thích bài viết này.", () => like.mutate(!shown.liked))}
           >
-            <StreamIcon name="heart" size={16} />
-            <span className="cp-like-count">{shown.likes.toLocaleString("vi-VN")}</span>
+            <StreamIcon name="heart" size={18} />
+            <span>{shown.likes.toLocaleString("vi-VN")}</span>
           </button>
         )}
         <button
-          className="cp-like"
+          className="cp-post-action"
           aria-expanded={expanded}
           aria-label={`Bình luận · ${post.comments.toLocaleString("vi-VN")}`}
           disabled={!published}
           onClick={() => setExpanded(!expanded)}
         >
-          <StreamIcon name="message" size={16} />
-          <span className="cp-like-count">{post.comments.toLocaleString("vi-VN")}</span>
+          <StreamIcon name="message" size={18} />
+          <span>{post.comments.toLocaleString("vi-VN")}</span>
         </button>
       </div>
       {reporting && (
@@ -359,17 +362,27 @@ export function PostCard({
             report.mutate()
           }}
         >
-          <label>
-            {reportedComment ? "Lý do báo cáo bình luận" : "Lý do báo cáo bài viết"}
-            <span className="cp-reason-chips">
+          <fieldset>
+            <legend>{reportedComment ? "Lý do báo cáo bình luận" : "Lý do báo cáo bài viết"}</legend>
+            <div className="hub-pills cp-reason-chips">
               {REPORT_REASONS.map((option) => (
                 <button type="button" key={option} aria-pressed={reason === option} onClick={() => setReason(option)}>
                   {option}
                 </button>
               ))}
-            </span>
-            <textarea required maxLength={2000} value={reason} onChange={(event) => setReason(event.target.value)} />
-          </label>
+            </div>
+            <label>
+              <span className="sr-only">Mô tả lý do</span>
+              <textarea
+                required
+                rows={2}
+                maxLength={2000}
+                placeholder="Chọn một lý do ở trên hoặc tự mô tả…"
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+              />
+            </label>
+          </fieldset>
           <div className="cp-actions">
             <button className="cp-button cp-primary" disabled={report.isPending}>
               Gửi báo cáo
@@ -405,15 +418,13 @@ export function PostCard({
             <div className="cp-comment" key={comment.id}>
               <AuthorMark name={comment.authorName} small />
               <div className="cp-comment-body">
-                <div className="cp-comment-bubble">
-                  <strong>
-                    {comment.authorName}
-                    {comment.asPage ? " · Đại diện trang" : ""}
-                  </strong>
-                  <p className="cp-prose">{comment.body}</p>
-                </div>
+                <p className="cp-comment-head">
+                  <strong>{comment.authorName}</strong>
+                  {comment.asPage && <span>Đại diện trang</span>}
+                  <TimeAgo value={comment.createdAt} />
+                </p>
+                <p className="cp-prose">{comment.body}</p>
                 <div className="cp-comment-tools">
-                  <TimeAgo className="cp-meta" value={comment.createdAt} />
                   <button className="cp-text-button" onClick={() => startReport(comment.id)}>
                     Báo cáo
                   </button>
@@ -448,12 +459,12 @@ export function PostCard({
               </label>
               <div className="cp-actions cp-reply-actions">
                 {role && (
-                  <label className="cp-inline-label">
+                  <label className="cp-check">
                     <input type="checkbox" checked={asPage} onChange={(event) => setAsPage(event.target.checked)} />
                     Trả lời với tư cách trang
                   </label>
                 )}
-                <button className="cp-button cp-primary" disabled={reply.isPending}>
+                <button className="cp-button cp-primary" disabled={reply.isPending || !body.trim()}>
                   <StreamIcon name="send" size={16} />
                   Gửi bình luận
                 </button>
@@ -461,7 +472,7 @@ export function PostCard({
             </form>
           ) : (
             <button
-              className="cp-reply-prompt"
+              className="cp-button cp-reply-prompt"
               onClick={() => signedIn("Đăng nhập để bình luận và tham gia thảo luận.", () => undefined)}
             >
               <StreamIcon name="message" size={16} />

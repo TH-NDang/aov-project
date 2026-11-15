@@ -7,10 +7,13 @@ import { CommunityProfilePage } from "./features/community/community-profile"
 import { CommunityAccount, CommunityPageManager, CommunityInvitation } from "./features/community/community-account"
 import { CommunityLoginCallback } from "./features/community/community-session"
 import "./features/community/community.css"
-import { PublicCompetitionPage } from "./features/community/public-competitions"
+import { PublicCompetitionPage } from "./features/tournaments/competition-page"
 import { CompetitionDirectory } from "./features/tournaments/competition-hub"
 import { MatchPage } from "./features/tournaments/match-page"
 import "./features/tournaments/competition.css"
+import "./features/tournaments/tournaments.css"
+import "./features/tournaments/competition-pages.css"
+import "./features/tournaments/games.css"
 export default function App() {
   return (
     <Routes>

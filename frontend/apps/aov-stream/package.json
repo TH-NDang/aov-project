@@ -8,9 +8,9 @@
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview --port 5174 --strictPort",
     "typecheck": "tsc -p tsconfig.json",
-    "test:tournaments": "node --experimental-strip-types --test tests/tournament-model.test.ts tests/match-model.test.ts",
+    "test:tournaments": "node --experimental-strip-types --test tests/tournament-model.test.ts tests/match-model.test.ts tests/competition-model.test.ts tests/match-schedule.test.ts",
     "test:account": "node --experimental-strip-types --test tests/account-profile.test.ts",
-    "test:community": "node --experimental-strip-types --test tests/schedule-model.test.ts tests/post-media-model.test.ts tests/time-zone-days.test.ts"
+    "test:community": "node --experimental-strip-types --test tests/post-media-model.test.ts tests/time-zone-days.test.ts"
   },
   "dependencies": {
     "@aov/community-contracts": "workspace:*",

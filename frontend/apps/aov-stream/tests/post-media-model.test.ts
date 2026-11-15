@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { videoEmbed } from "../src/features/community/post-media-model.ts"
+import { videoEmbed, videoPoster } from "../src/features/community/post-media-model.ts"
 
 test("YouTube watch, short, live and youtu.be links play in the privacy-enhanced player", () => {
   const src = "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
@@ -28,4 +28,11 @@ test("malformed and non-web links are not embedded", () => {
   assert.equal(videoEmbed("not a url"), null)
   assert.equal(videoEmbed("javascript:alert(1)"), null)
   assert.equal(videoEmbed("https://www.youtube.com/watch?v=short")?.kind, "link")
+})
+
+test("a YouTube video has its own picture, large with bars or small without; other platforms have none", () => {
+  const embed = videoEmbed("https://youtu.be/dQw4w9WgXcQ")!
+  assert.equal(videoPoster(embed), "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg")
+  assert.equal(videoPoster(embed, "mqdefault"), "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg")
+  assert.equal(videoPoster(videoEmbed("https://www.tiktok.com/@a/video/1")!), null)
 })
