@@ -7,7 +7,7 @@ import {
   type Request,
 } from "../src/features/publishing/publishing-api"
 import { contentBlockers, publicationPatchIssue } from "../src/features/publishing/publish-rules"
-import type { Content, Revision } from "../src/features/publishing/types"
+import type { Revision } from "../src/features/publishing/types"
 import { observedAttributes } from "../src/features/publishing/combat-attributes"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { mediaPath } from "../../../tooling/media-proxy.mts"

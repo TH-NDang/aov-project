@@ -4,6 +4,7 @@ import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
 import type { MediaOwner } from "../src/features/media/media-owners"
 
 const garena: MediaOwner = {
@@ -112,7 +113,7 @@ test("owner suggestions fill the field only on request and the catalog renames a
       field.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
   }
-  let source = { type: "OTHER", label: "Ảnh chụp từ game Liên Quân", ownerName: null as string | null }
+  let source: MediaSourceInput = { type: "OTHER", label: "Ảnh chụp từ game Liên Quân", ownerName: null }
   function Form() {
     const [value, setValue] = React.useState(source)
     source = value

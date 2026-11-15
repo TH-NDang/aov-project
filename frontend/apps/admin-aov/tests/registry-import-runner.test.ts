@@ -152,7 +152,7 @@ test("preview performs no writes; import restores only payload matches, preserve
   })
   const plan = payload()
   const preview = await prepareRegistryImport(plan, api)
-  assert.deepEqual(writes, [])
+  assert.deepEqual<typeof writes>(writes, [])
   assert.equal(preview.filter((entry) => entry.operation === "restore").length, 4)
   assert.equal(preview.find((entry) => entry.row.kind === "roster-memberships")?.operation, "restore")
   assert.deepEqual(await runRegistryImport(plan, { api }), { completed: 6, stopped: false })

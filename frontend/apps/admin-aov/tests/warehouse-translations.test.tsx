@@ -944,10 +944,10 @@ test("warehouse sheets fork or resume a draft only from their single pencil and 
           .click()
       })
     await render(<SecondaryEditor {...props} readOnly onCreateDraft={create} />)
-    assert.deepEqual(calls, [])
+    assert.deepEqual<string[]>(calls, [])
     assert.equal(document.querySelector('button[aria-label="Hệ phù hiệu"]'), null)
     await openMenu("Tạo nháp và sửa phù hiệu")
-    assert.deepEqual(calls, [])
+    assert.deepEqual<string[]>(calls, [])
     assert.ok(document.body.textContent?.includes("Cập nhật theo patch"))
     await choose("Sửa nội dung")
     await render(

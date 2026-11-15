@@ -35,24 +35,25 @@ const acquisition = (key: string, extra: Partial<SkinAcquisition> = {}): SkinAcq
   ...extra,
 })
 
-const card = (key: string, reading: string): CaptureImage =>
-  ({
-    id: `card-${key}`,
-    fileName: `${key}.jpg`,
-    archive: "shop",
-    member: `${key}.jpg`,
-    section: "SHOP",
-    link: "SHOP",
-    notes: [],
-    url: `/shop/${key}.jpg`,
-    kind: "skin",
-    skinKey: key,
-    entryName: key,
-    reading,
-    card: 1,
-    box: { x: 0, y: 0, width: 10, height: 20, imageWidth: 100, imageHeight: 100 },
-    capturedOn: "2026-09-16",
-  }) as CaptureImage
+const card = (key: string, reading: string): CaptureImage => ({
+  id: `card-${key}`,
+  fileName: `${key}.jpg`,
+  archive: "shop",
+  member: `${key}.jpg`,
+  section: "SHOP",
+  link: "SHOP",
+  skillKey: null,
+  skillName: null,
+  notes: [],
+  url: `/shop/${key}.jpg`,
+  kind: "skin",
+  skinKey: key,
+  entryName: key,
+  reading,
+  card: 1,
+  box: { x: 0, y: 0, width: 10, height: 20, imageWidth: 100, imageHeight: 100 },
+  capturedOn: "2026-09-16",
+})
 
 const skins = [skin("a", 0, "Trang phục A"), skin("b", 1, "Trang phục B"), skin("c", 2, "Trang phục C")]
 

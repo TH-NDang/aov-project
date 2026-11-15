@@ -327,6 +327,9 @@ const hero = (code: string, patch: Partial<HeroPublishReadiness>): HeroPublishRe
   headUrl: null,
   revisions: [],
   drafts: [],
+  holderId: null,
+  formKey: null,
+  formIds: [],
   ...patch,
 })
 const variant = (id: string, patchCode: string) => ({

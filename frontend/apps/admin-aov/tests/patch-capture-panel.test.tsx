@@ -5,7 +5,6 @@ import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@aov/ui/components/tooltip"
-import type { CaptureImage } from "../server/patch-capture-manifest"
 import {
   buildCaptureGroups,
   captureBoxOnScreen,

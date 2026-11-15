@@ -4,7 +4,12 @@ import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query"
-import { createEntityIndex, parseRichText, type EntityReference } from "@aov/ui/lib/entity-rich-text"
+import {
+  createEntityIndex,
+  parseRichText,
+  type EntityReference,
+  type SkillReferenceOwner,
+} from "@aov/ui/lib/entity-rich-text"
 import type { ReferenceSearchPage } from "@aov/ui/lib/entity-rich-text-editor"
 import type { Request } from "../src/features/publishing/publishing-api"
 import type { SkillReferenceScope } from "../src/features/terminology/skill-reference-api"
@@ -259,7 +264,7 @@ test("readers share explicit lookups and resolve only unambiguous owner-qualifie
     id: "00000000-0000-4000-8000-000000000003",
     translations: [{ ...owner.translations[0]!, name: "Florentino", aliases: ["Flo"] }],
   }
-  const heroes: EntityReference[] = [
+  const heroes: SkillReferenceOwner[] = [
     florentino,
     { ...owner, translations: [{ ...owner.translations[0]!, aliases: ["Ninja", "Shared"] }] },
     {

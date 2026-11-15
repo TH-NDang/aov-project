@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { readFileSync } from "node:fs"
 import { JSDOM } from "jsdom"
-import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { EntityRichText, EntityReferenceIcon } from "@aov/ui/components/entity-rich-text"
 import {

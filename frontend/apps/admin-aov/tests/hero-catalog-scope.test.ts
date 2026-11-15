@@ -29,8 +29,11 @@ const overview: PublicationOverview = {
       regionId: "vn",
       seasonId: "season-new",
       effectiveAt: "2026-10-15T00:00:00Z",
+      sourceUrl: null,
       status: "SCHEDULED",
       phase: "CURRENT",
+      effectiveOn: null,
+      confirmedAt: null,
     },
   ],
 }

@@ -12,24 +12,8 @@ export const catalogOverview: PublicationOverview = {
   assignments: [],
   seasonSchedules: [],
   seasons: [
-    {
-      id: "season-old",
-      rulesetId: "standard",
-      code: "s3",
-      displayName: "S3",
-      phase: "PAST",
-      startsAt: null,
-      endsAt: null,
-    },
-    {
-      id: "season-new",
-      rulesetId: "standard",
-      code: "s4",
-      displayName: "S4",
-      phase: "CURRENT",
-      startsAt: null,
-      endsAt: null,
-    },
+    { id: "season-old", code: "s3", displayName: "S3", ordinal: 3 },
+    { id: "season-new", code: "s4", displayName: "S4", ordinal: 4 },
   ],
   variants: [
     {

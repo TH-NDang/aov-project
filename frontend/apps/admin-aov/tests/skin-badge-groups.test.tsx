@@ -112,7 +112,6 @@ test("badge group APIs isolate group filters and locales, and send versioned met
 })
 
 async function withUi(
-  request: Request,
   run: (ui: {
     document: Document
     client: QueryClient
@@ -312,7 +311,7 @@ test("badge accordions page independently, retain loaded rows when collapsed and
       return { revision: fixtureRevision, content: fixtureContent } as T
     throw new Error(`Unexpected request: ${path}`)
   }
-  await withUi(request, async ({ document, render, waitFor, click, button, intersect }) => {
+  await withUi(async ({ document, render, waitFor, click, button, intersect }) => {
     const { BadgesPage } = await import("../src/features/media/badges-page")
     await render(<BadgesPage request={request} />)
     await waitFor(() => !!document.querySelector('[aria-label="Mở nhóm A"]'))
@@ -391,7 +390,7 @@ test("theme editor preserves translations, creation chooses a group and moving u
     if (path === "/regions") return [{ id: "vn", code: "VN", displayName: "Việt Nam", available: true }] as T
     throw new Error(`Unexpected request: ${path}`)
   }
-  await withUi(request, async ({ client, render, waitFor, click, button, input, select, document }) => {
+  await withUi(async ({ client, render, waitFor, click, button, input, select, document }) => {
     const { SkinBadgeGroupEditor, SkinBadgeGroupAssignment } =
       await import("../src/features/media/skin-badge-group-editor")
     const { SkinBadgeEditor } = await import("../src/features/media/skin-badge-editor")
@@ -487,7 +486,7 @@ test("grouped picker keeps selected-code cache and chooses a badge from an expan
     if (path.startsWith("/admin/skin-badges?")) return page([{ ...badge, code: "aic", groupId: theme.id }]) as T
     throw new Error(`Unexpected request: ${path}`)
   }
-  await withUi(request, async ({ client, document, render, waitFor, click }) => {
+  await withUi(async ({ client, document, render, waitFor, click }) => {
     const { SkinBadgePicker } = await import("../src/features/media/skin-badge-picker")
     let chosen: string | null = null
     await render(
@@ -521,7 +520,7 @@ test("badge labels distinguish pending metadata from an unnamed source label", a
     await new Promise<void>((resolve) => (finish = resolve))
     return page([{ ...badge, code: "pending", displayName: "Bậc S" }]) as T
   }
-  await withUi(request, async ({ document, render, waitFor }) => {
+  await withUi(async ({ document, render, waitFor }) => {
     const { SkinBadgeLabel } = await import("../src/features/media/skin-badge-label")
     try {
       await render(<SkinBadgeLabel code="pending" locale="vi-VN" request={request} />)
@@ -578,7 +577,7 @@ test("badge artwork previews the exact locale image in place, closes with Escape
       } as T
     throw new Error(`Unexpected artwork request: ${path}`)
   }
-  await withUi(request, async ({ client, document, render, waitFor, click }) => {
+  await withUi(async ({ client, document, render, waitFor, click }) => {
     client.setQueryDefaults(["user-profile", "me"], { staleTime: Infinity })
     client.setQueryData(["user-profile", "me", "fixture", "editor"], { locale: "en-US" })
     const { BadgesPage } = await import("../src/features/media/badges-page")

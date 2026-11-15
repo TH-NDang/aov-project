@@ -9,6 +9,7 @@ const profile: UserProfile = {
   biography: "",
   locale: "vi-VN",
   timeZone: "Asia/Ho_Chi_Minh",
+  currency: null,
   avatarAssetId: null,
   avatarUrl: null,
   version: 0,

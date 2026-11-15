@@ -18,7 +18,7 @@ async function withView(
   const dom = new JSDOM('<section data-slot="sheet-content"><div id="root"></div></section>')
   const timers = new Map<number, () => void>()
   let sequence = 0
-  dom.window.matchMedia = (() => ({ matches: reducedMotion })) as typeof dom.window.matchMedia
+  dom.window.matchMedia = () => ({ matches: reducedMotion }) as MediaQueryList
   dom.window.setTimeout = ((callback: () => void) => {
     timers.set(++sequence, callback)
     return sequence

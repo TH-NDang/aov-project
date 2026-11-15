@@ -46,7 +46,7 @@ export const teams = teamNames.map(([id, name, shortName]) =>
 
 const lanes: Lane[] = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"]
 export const players = teamNames.flatMap(([teamId, , short]) =>
-  lanes.map((lane, index) =>
+  lanes.map((_, index) =>
     doc<PlayerContent>(`${teamId}-p${index}`, {
       code: `${teamId}-p${index}`,
       nickname: `${short} ${["Rock", "Shade", "Nova", "Volt", "Halo"][index]}`,

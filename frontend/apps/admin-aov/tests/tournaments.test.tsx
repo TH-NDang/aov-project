@@ -4,7 +4,7 @@ import React, { act, useState } from "react"
 import { JSDOM } from "jsdom"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { Catalog, GameContent, Participant, SeriesContent } from "@aov/community-contracts"
+import type { Catalog, SeriesContent } from "@aov/community-contracts"
 import {
   emptyParticipant,
   emptySnapshot,
@@ -236,7 +236,7 @@ test("changing one game's season keeps its already observed picks and leaves oth
 })
 
 test("team regions filter independently from name search", async () => {
-  await withUi(async ({ render, document, change, click }) => {
+  await withUi(async ({ render, document, change }) => {
     const { TeamRegistry } = await import("../src/features/tournaments/team-registry")
     const entry = <T,>(id: string, content: T) => ({
       id,

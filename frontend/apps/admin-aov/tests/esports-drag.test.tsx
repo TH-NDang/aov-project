@@ -47,15 +47,16 @@ test("the moments a broadcast showed loadouts are one mark per team, part and se
         : {}),
     }),
   )
-  const content = {
+  const content: GameContent = {
     seriesId: "s",
     number: 1,
     region: "VN",
+    locale: "vi-VN",
     sides: [
       { side: "BLUE", teamId: "a", bans: [], participants: blue },
       { side: "RED", teamId: "b", bans: [], participants: lanes.map((lane) => player(lane)) },
     ],
-  } as GameContent
+  }
 
   const marks = observationMarks(content, 2400)
   assert.deepEqual(
