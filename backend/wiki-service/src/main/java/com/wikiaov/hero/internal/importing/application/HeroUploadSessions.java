@@ -9,12 +9,14 @@ import com.wikiaov.platform.ApiException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @Service
+@PreAuthorize("hasAuthority('hero:write')")
 public class HeroUploadSessions {
     private final HeroUploadSessionRepository repository;
     private final CurrentActor actors;

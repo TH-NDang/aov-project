@@ -12,6 +12,7 @@ import com.wikiaov.hero.internal.importing.persistence.entity.HeroImportJob;
 import com.wikiaov.platform.ApiException;
 import java.time.Instant;
 import java.util.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -34,10 +35,9 @@ public class HeroImportJobs {
     }
 
     @Transactional
+    @PreAuthorize("hasAuthority('hero:write')")
     public HeroImportJobView enqueue(HeroImportJobRequest request) {
         var actor = actors.require();
-        if (!actor.has("hero:write"))
-            throw new org.springframework.security.access.AccessDeniedException("Hero write required");
 
         String payload = json.writeValueAsString(request.rows());
         if (payload.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 5 * 1024 * 1024
@@ -59,6 +59,7 @@ public class HeroImportJobs {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('hero:write')")
     public List<HeroImportJobView> list() {
         var actor = actors.require();
         return repository.visible(actor.issuer(), actor.subject())
@@ -66,16 +67,15 @@ public class HeroImportJobs {
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('hero:write')")
     public HeroImportJobView get(UUID id) {
         return view(owned(id));
     }
 
     @Transactional
+    @PreAuthorize("hasAuthority('hero:write')")
     public HeroImportJobView dismissNotification(UUID id) {
         var actor = actors.require();
-        if (!actor.has("hero:write"))
-            throw new org.springframework.security.access.AccessDeniedException("Hero write required");
-
         var job = owned(id);
         if (job.getCompleted() < job.getTotal()
                 || repository.dismissNotification(id, actor.issuer(), actor.subject()) != 1) {
@@ -99,6 +99,7 @@ public class HeroImportJobs {
     ) {
     }
 
+    /** Called by HeroImportWorker, which runs without a signed-in user, so the worker steps need no capability. */
     @Transactional(readOnly = true)
     public List<Pending> pending() {
         return repository.pending().stream().map(j -> new Pending(j.getId(), j.getCompleted())).toList();
