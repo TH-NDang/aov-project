@@ -380,7 +380,7 @@ test("translation progress uses exact locale and source tables preserve conflict
   const originalReact = Object.getOwnPropertyDescriptor(globalThis, "React")
   Object.defineProperty(globalThis, "React", { configurable: true, writable: true, value: React })
   try {
-    const { translationStatus } = await import("../src/features/publishing/hero-translation-status")
+    const { translationStatus } = await import("../src/features/publishing/hero-translation-model")
     const { heroReviewNotes, SkillSourceDetails } = await import("../src/features/publishing/hero-source-details")
     const { renderToStaticMarkup } = await import("react-dom/server")
     assert.deepEqual(translationStatus(fixtureContent, "vi-VN"), {

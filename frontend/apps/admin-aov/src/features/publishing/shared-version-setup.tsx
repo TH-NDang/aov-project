@@ -195,9 +195,6 @@ export function SharedPatchSetup({
   )
 }
 
-export function SeasonScheduleForm({ seasonId, data }: { seasonId: string; data: PublicationOverview }) {
-  return <ScheduleForm endpoint={`/admin/seasons/${seasonId}/schedules`} data={data} seasonId={seasonId} />
-}
 export function PatchReleaseForm({ variant, data }: { variant: Variant; data: PublicationOverview }) {
   const cache = useQueryClient()
   const [error, setError] = useState("")

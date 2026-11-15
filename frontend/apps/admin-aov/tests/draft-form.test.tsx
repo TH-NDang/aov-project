@@ -94,7 +94,7 @@ test("season forms restore invalid input and saving one market preserves another
   }
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { SeasonSetup } = await import("../src/features/publishing/season-setup")
-  const { SeasonScheduleForm } = await import("../src/features/publishing/shared-version-setup")
+  const { ScheduleForm } = await import("../src/features/publishing/shared-version-setup")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -104,7 +104,7 @@ test("season forms restore invalid input and saving one market preserves another
         <MemoryRouter>
           <QueryClientProvider client={cache}>
             {showSchedule ? (
-              <SeasonScheduleForm seasonId="season" data={scheduleData} />
+              <ScheduleForm endpoint="/admin/seasons/season/schedules" data={scheduleData} seasonId="season" />
             ) : (
               <SeasonSetup onDone={() => saved++} />
             )}
