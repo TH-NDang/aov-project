@@ -29,23 +29,23 @@
 
   --aov-chart: light-dark(#8a6414, #b98c35);
 
-  /* AOV Wiki: slate panels on a deep navy page, headings and marks in a soft gold. Fixed, not themed. */
-  --aov-wiki-night: #171e2c;
-  --aov-wiki-bar: #10141e;
-  --aov-wiki-panel: #364156;
-  --aov-wiki-panel-high: #435068;
-  --aov-wiki-panel-deep: #2b3447;
-  --aov-wiki-line: #4b566c;
-  --aov-wiki-line-strong: #68728a;
-  --aov-wiki-gold: #d3bc8e;
-  --aov-wiki-gold-bright: #efdfba;
-  --aov-wiki-text: #eeeae1;
-  --aov-wiki-text-soft: #d5d4d0;
-  --aov-wiki-text-muted: #c1c5ce;
-  --aov-wiki-success: #74dcae;
-  --aov-wiki-danger: #ff9f9f;
-  --aov-wiki-warning: #f2c474;
-  --aov-wiki-info: #a9c9ff;
+  /* AOV Wiki: a deep ink-blue page like the game's lobby, cards one step lighter, marks in a rich gold. Fixed, not themed. */
+  --aov-wiki-night: #0d1322;
+  --aov-wiki-bar: #080c16;
+  --aov-wiki-panel: #1d2840;
+  --aov-wiki-panel-high: #26344f;
+  --aov-wiki-panel-deep: #161f33;
+  --aov-wiki-line: #26324b;
+  --aov-wiki-line-strong: #3b4b6b;
+  --aov-wiki-gold: #f2c26a;
+  --aov-wiki-gold-bright: #ffdf9e;
+  --aov-wiki-text: #f5f0e6;
+  --aov-wiki-text-soft: #c8d0de;
+  --aov-wiki-text-muted: #8f9cb5;
+  --aov-wiki-success: #52e0a0;
+  --aov-wiki-danger: #ff7d7d;
+  --aov-wiki-warning: #ffc75e;
+  --aov-wiki-info: #8db9ff;
 
   /* AOV Stream, from its owl logo: night indigo, periwinkle feathers, gold eyes, cream face. */
   --aov-stream-night: #141d31;
