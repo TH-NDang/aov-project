@@ -2,17 +2,8 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { CalendarCog } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@aov/ui/components/alert-dialog"
 import { backendRequest } from "@/app/auth/session"
+import { confirmAction } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
 import { Box, control } from "./fields"
 import { createPublishingApi } from "./publishing-api"
@@ -45,7 +36,6 @@ export function BaselineContextForm({
   const [contextId, setContextId] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
-  const [confirming, setConfirming] = useState(false)
   const contexts = useQuery({
     queryKey: ["baseline-contexts"],
     queryFn: () => loadBaselineContexts((path) => backendRequest(path)),
@@ -57,46 +47,36 @@ export function BaselineContextForm({
     <Box title="Đổi patch của bản nhập dữ liệu">
       <form
         className="space-y-3"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault()
-          if (available.some((item) => item.contextId === contextId)) setConfirming(true)
+          if (!chosen) return
+
+          const accepted = await confirmAction({
+            title: "Đổi patch của bản nhập dữ liệu?",
+            description: `Chuyển sang ${chosen.seasonName} / ${chosen.patchCode}. Giữ nguyên nội dung và ảnh đã nhập.`,
+            confirmLabel: "Đổi patch",
+            cancelLabel: "Quay lại",
+          })
+          if (!accepted) return
+
+          setBusy(true)
+          onBusyChange?.(true)
+          setError("")
+          try {
+            const result = await api.send<Revision>(
+              `/admin/heroes/${revision.heroId}/drafts/${revision.id}/baseline-context`,
+              "POST",
+              { expectedVersion: revision.version, contextId: chosen.contextId },
+            )
+            await onMove(result)
+          } catch (failure) {
+            setError(errorMessage(failure))
+          } finally {
+            setBusy(false)
+            onBusyChange?.(false)
+          }
         }}
       >
-        <AlertDialog open={confirming} onOpenChange={setConfirming}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Đổi patch của bản nhập dữ liệu?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Chuyển sang {chosen?.seasonName} / {chosen?.patchCode}. Giữ nguyên nội dung và ảnh đã nhập.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Quay lại</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  setBusy(true)
-                  onBusyChange?.(true)
-                  setError("")
-                  try {
-                    const result = await api.send<Revision>(
-                      `/admin/heroes/${revision.heroId}/drafts/${revision.id}/baseline-context`,
-                      "POST",
-                      { expectedVersion: revision.version, contextId },
-                    )
-                    await onMove(result)
-                  } catch (failure) {
-                    setError(errorMessage(failure))
-                  } finally {
-                    setBusy(false)
-                    onBusyChange?.(false)
-                  }
-                }}
-              >
-                Đổi patch
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
         <p className="text-sm leading-6 text-muted-foreground">
           Dùng khi dữ liệu nhập lần đầu bị gắn nhầm patch. Chỉ đổi được khi tướng chưa có bản nào đã xuất bản; nội dung
           và ảnh giữ nguyên.

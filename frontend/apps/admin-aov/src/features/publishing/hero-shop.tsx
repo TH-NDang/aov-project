@@ -7,6 +7,7 @@ import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
+import { confirmAction } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
 import {
   createPublishingApi,
@@ -318,8 +319,15 @@ function PriceHistory({ heroId, rows, canWrite }: { heroId: string; rows: HeroSh
                 aria-label={`Xóa mốc giá ${capturedDate(row.capturedOn)}`}
                 title="Xóa mốc này nếu ghi nhầm"
                 disabled={remove.isPending}
-                onClick={() => {
-                  if (row.capturedOn) remove.mutate(row.capturedOn)
+                onClick={async () => {
+                  if (!row.capturedOn) return
+
+                  const accepted = await confirmAction({
+                    title: `Xóa mốc giá ${capturedDate(row.capturedOn)}?`,
+                    description: "Mốc này sẽ bị xóa khỏi các mốc giá của tướng và không lấy lại được.",
+                    confirmLabel: "Xóa mốc giá",
+                  })
+                  if (accepted) remove.mutate(row.capturedOn)
                 }}
               >
                 <Trash2 className="size-3.5" />
@@ -452,8 +460,15 @@ export function SkinAcquisitionEditor({
                 aria-label={`Xóa mốc ${capturedDate(row.capturedOn)}`}
                 title="Xóa mốc này nếu ghi nhầm"
                 disabled={remove.isPending}
-                onClick={() => {
-                  if (row.capturedOn) remove.mutate(row.capturedOn)
+                onClick={async () => {
+                  if (!row.capturedOn) return
+
+                  const accepted = await confirmAction({
+                    title: `Xóa mốc cách nhận ${capturedDate(row.capturedOn)}?`,
+                    description: "Mốc này sẽ bị xóa khỏi các mốc cách nhận của trang phục và không lấy lại được.",
+                    confirmLabel: "Xóa mốc",
+                  })
+                  if (accepted) remove.mutate(row.capturedOn)
                 }}
               >
                 <Trash2 className="size-3.5" />
