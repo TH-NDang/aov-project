@@ -40,6 +40,7 @@ import { ChangeKindBadges, HeroChangeSummary } from "./hero-change-badges"
 import { MarketBadge } from "./market-badge"
 import { languageOptions } from "../users/profile-preference-picker"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { closeHeroLocation, heroLocationId, openHeroLocation, patchHeroLocation } from "./hero-location"
 import { HeroNavigationGuard } from "./hero-navigation-guard"
 import { HeroQuickViewBody } from "./hero-quick-view-body"
@@ -146,7 +147,7 @@ export function HeroCatalog({
     queryKey: heroCatalogKey(query),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => api.heroes(pageParam, query, signal),
-    getNextPageParam: (last) => ((last.page + 1) * last.size < last.totalElements ? last.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
   })
   const data = useMemo(
     () =>

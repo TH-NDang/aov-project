@@ -5,6 +5,7 @@ import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { EntityReferenceIcon } from "@aov/ui/components/entity-rich-text"
 import { cn } from "@aov/ui/lib/utils"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { backendRequest, getSession, subscribeSession } from "@/app/auth/session"
 import { InfiniteScroll } from "@/components/infinite-scroll"
 import { errorMessage } from "@/lib/api/errors"
@@ -90,7 +91,7 @@ function HeroQuickSwitcherPanel({ heroId, locale, rulesetId = "", onSelect }: He
       api.heroes(pageParam, { q: query, locale, rulesetId, includeUnchanged: "true", sort: "code" }, signal),
     enabled: !!session.actor,
     staleTime: 60000,
-    getNextPageParam: (last) => ((last.page + 1) * last.size < last.totalElements ? last.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
   })
   const references = useQuery({
     queryKey: referenceCatalogKeys.catalog(session.actor?.issuer, session.actor?.subject, rulesetId),
