@@ -36,10 +36,16 @@ aov-project/
 - Architecture decisions live in `backend/docs/adr/`. Read them before changing what they cover.
 - When code and spec disagree, stop and ask instead of silently picking one.
 
-## Backend conventions (`backend/wiki-service`)
+## Backend conventions (both services)
 
-- Root package `com.wikiaov`. One deployable, modular monolith (Spring Modulith).
-- Modules: `hero`, `media`, `patch`, `item`, `arcana`, `spell`, `enchantment`, `gamemode`, `query`, `access`, `platform`, `user`, `terminology`, `video`, `build`.
+The rules below apply to `backend/wiki-service` and `backend/community-service`; `backend/AGENTS.md` adds the
+engineering details. A rule that names one service applies to that service only. A difference that is deliberate is
+listed here; anything not listed follows the common rule.
+
+- Each service is one deployable, a modular monolith (Spring Modulith). wiki-service: root package `com.wikiaov`,
+  modules `hero`, `media`, `patch`, `item`, `arcana`, `spell`, `enchantment`, `gamemode`, `query`, `access`,
+  `platform`, `user`, `terminology`, `video`, `build`. community-service: root package `com.wikiaov.community`,
+  modules `community`, `currency`, `platform`, `tournament`.
 - Each module exposes public contracts at its package root. Large modules group implementation by function first:
   `internal/<capability>/{application,domain,persistence/entity,infrastructure}`. Examples: Hero `skills`, `skins`,
   `importing`; Patch `season`, `ruleset`, `release`; Media `asset`, `upload`, `storage`.
@@ -53,11 +59,23 @@ aov-project/
   behind a store or collect every module repository in one facade.
 - Never use another module's entity, repository or `internal` package. Call its public contract.
 - IDs are `UUID`; human-readable identifiers are `code` slugs.
-- API paths: map `ApiPaths.ROOT + "/..."` (or `ApiPaths.ADMIN`) and declare `version = "1"` on the mapping.
-  Spring MVC native API versioning reads the version from `/api/wiki/{apiVersion}`. Never hard-code `/api/wiki/v1` in mappings.
+- API paths: controllers map paths under `ApiPaths.ROOT + "/..."` (or `ApiPaths.ADMIN`) and declare `version = "1"`
+  on each method mapping. Spring MVC native API versioning reads the version from `/api/wiki/{apiVersion}`
+  (`/api/community/{apiVersion}` in community-service). Never hard-code `/api/wiki/v1` in mappings.
 - Errors: throw `ApiException` with a module-owned enum implementing `ApiErrorCode` (placed in `internal/application`),
   e.g. `HeroErrorCode.HERO_NOT_FOUND`. Never build error `ResponseEntity`s by hand. Codes must be unique across modules.
 - Query strings of public endpoints are whitelisted with `QueryParameters.requireOnly`; pages are returned as `PageSlice`.
+- Shared HTTP contracts have one shape in both services: `ApiPaths`, `ApiException` with a module-owned `ApiErrorCode`
+  enum, `PageSlice`, `QueryParameters.requireOnly`, RFC 9457 problem details with a request id, and
+  `fail-on-unknown-properties: true` for request bodies. Each lives once in the service's `platform` module; do not
+  re-implement them per module. community-service still keeps per-module page types and query checks (move them to
+  its `platform` when those modules are reworked) and still accepts unknown properties.
+- An exception handler never maps `IllegalArgumentException` or another unexpected exception to a 4xx answer.
+  Unexpected errors are logged and answered with 500.
+- Both services run `ModuleArchitectureTests` and `LayerArchitectureTests`. community-service has only its module test
+  (`ModuleArchitectureTest`) so far.
+- Deliberate difference: community-service may use native PostgreSQL queries for reads over its `jsonb` documents
+  (ADR-015).
 - Schema changes only through Flyway migrations in `src/main/resources/db/migration`. Never edit an applied migration. JPA `ddl-auto` stays `validate`.
 - Object storage only through the `ObjectStorage` port and `S3ObjectStorage` (AWS SDK for Java 2.x). No MinIO SDK.
 - Media bytes never pass through the backend: presigned upload to `incoming/`, then `complete` validates and copies to
@@ -71,7 +89,8 @@ aov-project/
   together. These rules also apply to AI-generated code: a formatter cannot infer semantic phases.
   Run `./mvnw.cmd spotless:apply` before building; `verify` fails on unformatted code.
 
-Commands (run inside `backend/wiki-service`):
+Commands (run inside `backend/wiki-service`; community-service has its own Maven Wrapper with the same `verify` and
+`spotless:apply` goals):
 
 ```powershell
 ./mvnw.cmd verify                                             # build + tests + format check
@@ -94,6 +113,8 @@ Do not run concurrent builds against the same output directory or edit shared so
 
 ## Frontend conventions (`frontend`)
 
+`frontend/AGENTS.md` adds the rules for the data layer, folder structure and stylesheets.
+
 - React + TypeScript + Vite. Shared UI from `@aov/ui` (`packages/ui`).
 - Commands: `pnpm dev`, `pnpm typecheck`, `pnpm build`, `pnpm format` (run inside `frontend`).
 - Formatting is owned by Prettier (`frontend/.prettierrc.json`: no semicolons, double quotes, 120 columns).
@@ -110,8 +131,12 @@ Do not run concurrent builds against the same output directory or edit shared so
   tournament's end date, so it reads at the rate of that day. Pass every unit a prize was recorded in; use
   `LocalPrizeText` for free text such as `plan.prizePool`. A missing rate keeps the original amount. Gold and vouchers
   are in-game currencies and never go through it.
+- Format numbers with the reader's locale, never a hard-coded `"vi-VN"` in `toLocaleString` or `Intl.NumberFormat`.
 - Colors, radius and the font family come from `packages/ui/src/styles/tokens.css` (see `frontend/docs/DESIGN-TOKENS.md`).
   App stylesheets alias those tokens; do not declare new palette values, except for overlays on artwork.
+  Status colors use the token utilities (`text-destructive`, `bg-destructive/10`) or the token itself where no utility
+  exists (`text-(--aov-warning)`, `bg-(--aov-success-soft)`), never Tailwind palette classes with hand-written `dark:`
+  variants.
 - Typography (admin) follows a 12/14/16/24 reading scale. Never use text smaller than 12px (`text-xs`), in Tailwind
   classes, inline styles or CSS; `pnpm run test:typography` in `apps/admin-aov` fails otherwise. Reading text is
   regular weight, titles bold. Use the role styles from `packages/ui/src/styles/typography.css` instead of picking
@@ -122,13 +147,37 @@ Do not run concurrent builds against the same output directory or edit shared so
   `window.confirm`. Both resolve with the answer, so a handler awaits them; a link click that asks must prevent the
   default first and navigate itself once accepted.
 
+## Tests
+
+These rules apply to new and touched tests; existing tests keep their names and set-up until their suite is reworked.
+
+- Backend: `*Test` is a unit or slice test that needs no container. `*IntegrationTest` needs PostgreSQL or object
+  storage and uses the one shared container configuration and the one shared Docker gate. No other suffix; the
+  architecture tests keep their existing names.
+- Frontend: every package needs a `test` script that runs every file under `tests/`. CI must run
+  `pnpm format:check`, `pnpm typecheck` (which includes `tests/`) and `pnpm -r test`; a test that none of these runs
+  is a gap to fix.
+- Shared set-up lives in one place per suite (`tests/kit/` in each frontend package, a test support package in each
+  service). Do not paste a bootstrap block into a test file.
+- A test waits for a condition with the suite's shared `waitFor` helper or uses fake timers. No fixed sleeps.
+- One behavior per test, named as a sentence. Do not assert on source text or on file hashes.
+
 ## Git
 
-- Conventional Commits with a scope: `feat(wiki/hero): ...`, `fix(fe/aov-wiki): ...`, `docs(spec): ...`, `chore(infra): ...`.
+- Conventional Commits with a scope from this list: `wiki/<module>`, `community/<module>`, `wiki` or `community` for
+  a change across one service, `fe/admin-aov`, `fe/aov-wiki`, `fe/aov-stream`, `fe/ui`, `fe/community-contracts`, `fe`
+  for the whole frontend workspace, `infra`, `ci`, `hooks`, `spec`, `agents`, `resources`. Examples:
+  `feat(wiki/hero): ...`, `fix(fe/aov-wiki): ...`, `docs(spec): ...`, `chore(infra): ...`.
 - One logical change per commit. Commit spec changes separately from code.
 - Never commit secrets (`.env`, keys, tokens). Only `.env.example` is tracked.
 - Images under `resources/` are stored with Git LFS (`.gitattributes`). Do not change those rules without asking.
 - CI: `.github/workflows/backend.yml` runs `mvnw verify` (with Docker, so Testcontainers tests run) on every push touching `backend/wiki-service`.
+- A Flyway version number is taken when the branch is merged, not when the migration is written: use the next free
+  number on the target branch and rename the file in the merge. A gap is fine. Never reuse or renumber a version that
+  a shared database has applied; a branch's own local database is repaired or reset instead.
+- The pre-commit hook must format staged Java of both services and staged frontend files, and check comments in
+  every tracked source folder. Until it formats community-service Java, run `./mvnw.cmd spotless:apply` there before
+  committing.
 
 ## Git hooks
 
@@ -148,6 +197,16 @@ git lfs install --skip-repo
 - Skip formatting once: `SKIP_FORMAT=1 git commit ...` (PowerShell: `$env:SKIP_FORMAT=1; git commit ...; Remove-Item Env:SKIP_FORMAT`).
 - `pre-push`, `post-checkout`, `post-commit`, `post-merge`: Git LFS hooks.
 - Bypass only for a genuine exception: `git commit --no-verify`.
+
+## Scratch output
+
+- Write command output, screenshots, browser profiles and throwaway builds outside the repository: the session's
+  scratch directory or the OS temp folder. Never write `*.log` files into a module root.
+- When a tool needs a path inside the repository, use `.local-state/<task>/` and delete that folder when the task is
+  done. Reuse `.local-state/verification/target` for isolated Maven builds instead of creating one directory per task.
+- Delete a headless browser profile as soon as its screenshots are saved.
+- Do not create empty package folders ahead of code. A `.gitkeep` may only hold a folder that has no other file;
+  remove it together with the first real file.
 
 ## Do not
 

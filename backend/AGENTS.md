@@ -2,6 +2,7 @@
 
 These rules supplement the repository instructions. See [the backend guide](README.md),
 [the documentation index](docs/README.md), and ADR-013 for the current layout.
+They apply to both services unless a rule names one.
 
 ## Changes and compatibility
 
@@ -14,7 +15,10 @@ These rules supplement the repository instructions. See [the backend guide](READ
 
 - Each `com.wikiaov.<module>` owns its data and publishes contracts at its package root.
 - Keep domain rules independent of Spring, JPA, JDBC, HTTP clients and cloud SDKs.
-- Keep HTTP annotations and documentation on the module's `*Api` interface; controllers implement the contract and delegate workflows.
+- The module's `*Api` interface owns the OpenAPI documentation and the parameter constraints. The controller
+  implements it and owns the Spring mappings and the request binding (paths and versions as in the repository
+  `AGENTS.md`). Controllers delegate to an application facade and hold no logic. Both services follow this for new
+  controllers; most community-service controllers still map on the interface and move when their module is reworked.
 - Application facades own authorization and transaction boundaries. Internal collaborators run within the facade's transaction.
 - Group large modules by function before layer: `internal/<capability>/{application,domain,persistence/entity,infrastructure}`.
   Examples are Hero `authoring`, `skills`, `skins`, `importing`; Patch `season`, `ruleset`, `release`; Media `asset`,
@@ -35,6 +39,20 @@ These rules supplement the repository instructions. See [the backend guide](READ
 - Do not create an interface for every class or replace concrete workflows with a generic CRUD framework.
 - `ModuleArchitectureTests` checks module boundaries. `LayerArchitectureTests` checks domain, controller and direct-IO dependencies.
 
+## Entities, input and write use cases
+
+- New entities follow the `media` module: `@Getter`, a protected no-args constructor, a static factory, methods named
+  after the business action, no public setters, `@Version` for optimistic locking. Existing entities are moved when
+  their module is reworked, not in bulk.
+- A request body is a record named `*Command` in the owning capability's `application` package, validated with Bean
+  Validation and `@Valid`. Check by hand only what needs data. Page limits are declared on the `*Api` parameters
+  (`@Min(0) int page, @Min(1) @Max(100) int size`). Existing module-level commands keep their place (see above).
+- Every admin write use case, after validation: locks or version-checks the row, writes, then records an `AuditEntry`.
+- A missing row is the module's `*_NOT_FOUND` error. Never call `orElseThrow()` without a supplier. A bad query
+  parameter is `PlatformErrorCode.INVALID_QUERY_PARAMETER`, not the module's content error.
+- User-facing sentences are not built in the backend. Return a code and let the frontend choose the words; e-mail
+  text lives in per-locale templates.
+
 ## Function layout and generated code
 
 - Leave one blank line between methods and constructors, including abstract methods in repository interfaces. The shared Eclipse profile enforces this in Maven, hooks and VS Code.
@@ -42,6 +60,22 @@ These rules supplement the repository instructions. See [the backend guide](READ
 - Keep a use case at one level of abstraction. Extract a coherent validation, mapping or persistence step into a named method or capability when its details obscure the workflow.
 - Do not insert a blank line after every statement, decorate methods with section banners or add comments that merely repeat the code.
 - These rules also apply to AI-generated code. Formatting preserves structural spacing; agents must choose and review semantic groups rather than expecting the formatter to infer business phases.
+
+## Java style beyond Spotless
+
+These rules apply to new and touched code; existing code is brought in line when its module is reworked, not in bulk.
+
+- Imports are explicit. No wildcard imports and no fully qualified names inside code.
+- `if`, `for` and `while` always use braces, including one-line bodies.
+- Beans declare their constructor explicitly. Lombok stays for entity accessors.
+- Every method that implements an interface method carries `@Override`.
+- Nullable parameters, fields and return values carry jspecify `@Nullable`. Only repositories return `Optional`.
+- A closed set of values is an enum mapped with `@Enumerated(EnumType.STRING)`. Never compare a state with a string
+  literal, in Java or inside a query.
+- A limit, a default locale or a regular expression needed in more than one class is a named constant: in the root
+  package of `platform` when several modules need it, in the owning rule class otherwise.
+- The name `*Repository` is reserved for Spring Data interfaces. A hand-written persistence class is named after what
+  it reads or writes (`HeroSectionSnapshots`, `SeasonOrderLock`).
 
 ## Configuration and tools
 
@@ -74,4 +108,5 @@ Keep shared source/configuration stable while tests run and never run concurrent
 Run the launcher regression script when changing the environment loader. Validate Compose with
 `docker compose config --quiet` after changing mounts or service configuration.
 Use Docker for the integration tests and report skipped tests explicitly.
-Do not weaken, disable or replace behavior assertions with source-code hashes to make a refactor pass.
+Do not weaken or disable behavior assertions to make a refactor pass; the test rules in the repository `AGENTS.md`
+also forbid asserting on source text or file hashes.
