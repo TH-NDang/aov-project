@@ -1,14 +1,15 @@
 import { useState } from "react"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
-import { wikiText } from "../../context/wiki-context"
 import type { HeroDetail, PublicSkill } from "./hero-api"
-import { skillIllustration } from "./skill-illustration"
 
+/**
+ * The picture of a skill from the hero detail: its state picture, its own icon, or the hero's skill library picture
+ * that the API already puts in `skillMedia` for skills without an icon (ADR-030). Nothing is read from `resources/`.
+ */
 export function SkillIcon({
   hero,
   skill,
-  locale,
   stateAssetId,
 }: {
   hero: HeroDetail
@@ -17,25 +18,10 @@ export function SkillIcon({
   /** Shows the skill in one of its states instead of its own picture. */
   stateAssetId?: string | null
 }) {
-  const [failed, setFailed] = useState<string[]>([])
-  const bound =
+  const [failed, setFailed] = useState<string | null>(null)
+  const url =
     (stateAssetId && hero.skillStateMedia?.[stateAssetId]?.currentVersion?.url) ||
     hero.skillMedia?.[skill.skillKey]?.currentVersion?.url
-  const reference = skillIllustration(hero.code, skill)
-  const url = [bound, reference].find((value): value is string => !!value && !failed.includes(value))
-  if (!url) return <WikiIcon name={skill.kind === "PASSIVE" ? "spark" : "items"} size={20} />
-  return (
-    <WikiImage
-      src={url}
-      alt=""
-      width={36}
-      height={36}
-      title={
-        url === bound
-          ? undefined
-          : wikiText(locale, "Ảnh tham khảo · Garena / Liên Quân Mobile", "Reference artwork · Garena / Arena of Valor")
-      }
-      onError={() => setFailed((previous) => [...previous, url])}
-    />
-  )
+  if (!url || url === failed) return <WikiIcon name={skill.kind === "PASSIVE" ? "spark" : "items"} size={20} />
+  return <WikiImage src={url} alt="" width={36} height={36} onError={() => setFailed(url)} />
 }

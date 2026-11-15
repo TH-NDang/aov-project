@@ -316,7 +316,6 @@ services:
       dockerfile: ../infra/proxy/Dockerfile
       additional_contexts:
         proxy: ./proxy
-        skill-artwork: ../resources/Lien-Quan-v3/assets/skill
       args:
         VITE_AUTH_ISSUER: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
         VITE_WIKI_URL: ${PUBLIC_ORIGIN:?set in .env}/

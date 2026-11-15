@@ -1,5 +1,4 @@
 import { mediaPath } from "../../tooling/media-proxy.mts"
-import { skillArtwork } from "./skill-artwork.mts"
 import { seoShell } from "./seo-shell.mts"
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
@@ -45,6 +44,6 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react(), tailwindcss(), skillArtwork(), seoShell()],
+  plugins: [react(), tailwindcss(), seoShell()],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
 })
