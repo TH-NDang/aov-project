@@ -330,7 +330,8 @@ function CollectionDetail({
   return (
     <div ref={scrollRef} className="grid h-full content-start gap-4 overflow-y-auto p-4 md:p-5">
       <div className="grid gap-2">
-        <div className="flex items-start gap-3">
+        {/* The detail pane's close button sits over the top-right corner, so the menu and a long title stop short of it. */}
+        <div className="flex items-start gap-3 pr-8">
           <span className="grid size-10 shrink-0 place-items-center rounded-md bg-[var(--aov-raised)]" aria-hidden>
             <Icon className="size-5" />
           </span>
