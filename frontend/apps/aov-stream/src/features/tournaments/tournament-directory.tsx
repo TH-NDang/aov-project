@@ -1,58 +1,64 @@
-import { useDeferredValue, useEffect, useRef, type CSSProperties } from "react"
+import { useDeferredValue } from "react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
+import type { PublishedGame } from "@aov/community-contracts"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamShell } from "../../components/stream-shell"
-import { gamesQuery, tournamentsQuery } from "./tournament-api"
+import { FilterSelect, ScheduleNote } from "./competition-schedule"
 import { GameCard } from "./game-card"
-import { CommunityAside } from "../community/community-aside"
-import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { searchKey } from "./match-schedule"
+import { gamesQuery, tournamentsQuery } from "./tournament-api"
+import { seriesRound, seriesTeams } from "./tournament-model"
 
+/** The match a game belongs to in a few words: both teams and, where the match has one, its round. */
+function matchName(game: PublishedGame) {
+  const round = seriesRound(game.series.name)
+  const teams = seriesTeams(game)
+    .map((team) => team.shortName)
+    .join(" vs ")
+  return round ? `${teams} (${round})` : teams
+}
+
+/**
+ * Every published game, newest first, as a grid that keeps loading while the reader scrolls. The search reads the
+ * teams and the round of the games loaded so far and goes on loading until the list is exhausted.
+ */
 export function TournamentDirectory() {
-  const layout = usePageLayout()
   const [params, setParams] = useSearchParams()
   const tournament = params.get("tournament") || ""
   const seriesId = params.get("series") || ""
   const q = params.get("q") || ""
-  const search = useDeferredValue(
-    q
-      .trim()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase("vi-VN"),
-  )
+  const search = useDeferredValue(searchKey(q.trim()))
   const games = useInfiniteQuery(gamesQuery({ tournamentId: tournament || undefined, seriesId: seriesId || undefined }))
   const tournaments = useQuery(tournamentsQuery)
-  const sentinel = useRef<HTMLDivElement>(null)
+  const competitions = tournaments.data?.items ?? []
   const entries = games.data?.pages.flatMap((page) => page.items) || []
   const visible = entries.filter(
     (game) =>
       !search ||
-      [game.tournament.name, game.series.name, game.series.stage, ...Object.values(game.teams).map((team) => team.name)]
-        .filter(Boolean)
-        .join(" ")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLocaleLowerCase("vi-VN")
-        .includes(search),
+      searchKey(
+        [
+          game.tournament.name,
+          game.series.name,
+          ...Object.values(game.teams).flatMap((team) => [team.name, team.shortName]),
+        ]
+          .filter(Boolean)
+          .join(" "),
+      ).includes(search),
   )
-  useEffect(() => {
-    if (!sentinel.current || !games.hasNextPage || games.isFetching || games.isFetchNextPageError) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) void games.fetchNextPage()
-      },
-      { rootMargin: "300px" },
-    )
-    observer.observe(sentinel.current)
-    return () => observer.disconnect()
-  }, [games.hasNextPage, games.isFetching, games.isFetchNextPageError, games.fetchNextPage, visible.length])
+  const total = games.data?.pages[0]?.totalElements
+  // A list that holds one competition names it once in the head instead of on every card.
+  const only = competitions.length === 1 ? competitions[0]!.content.name : null
+  const mixed = !tournament && !seriesId && competitions.length > 1
+  const series = seriesId ? entries[0] : undefined
+  const filtered = !!(q || tournament || seriesId)
   function filter(key: string, value: string) {
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
         if (key === "tournament") next.delete("series")
-        if (value) next.set(key, value)
+        if (value && value !== "all") next.set(key, value)
         else next.delete(key)
         return next
       },
@@ -60,119 +66,88 @@ export function TournamentDirectory() {
     )
   }
   return (
-    <StreamShell aside={<CommunityAside schedule />}>
+    <StreamShell>
       <title>Tra cứu ván đấu — AOV Stream</title>
-      <Link className="cp-back" to="/competitions">
-        <StreamIcon name="back" size={16} />
-        Giải đấu
-      </Link>
-      <header className="hub-banner hub-art" style={{ "--hub-hue": 252 } as CSSProperties}>
-        <div className="hub-banner-copy">
-          {layout === "wide" && <span className="hub-kicker">Đấu trường trong tầm ngắm</span>}
-          <h1>Tra cứu ván đấu</h1>
-          {layout === "wide" && <p>Theo dấu đội hình, cách lên đồ và những lựa chọn làm nên ván đấu.</p>}
-          <div className="hub-banner-stats">
-            <span>
-              <StreamIcon name="gamepad" size={14} />
-              {games.data?.pages[0]?.totalElements ?? "—"} ván đã biên tập
-            </span>
-            <span>
-              <StreamIcon name="trophy" size={14} />
-              {tournaments.data?.items.length ?? "—"} giải đấu
-            </span>
+      <div className="tn-games">
+        <Link className="cp-back" to="/competitions">
+          <StreamIcon name="back" size={16} />
+          Giải đấu
+        </Link>
+        <header className="tn-page-head">
+          <div>
+            <h1>Tra cứu ván đấu</h1>
+            <p>
+              {total == null
+                ? "Cấm chọn và đội hình của từng ván đã công bố."
+                : [`${total.toLocaleString("vi-VN")} ván đã công bố`, !seriesId && only].filter(Boolean).join(" · ")}
+            </p>
           </div>
+        </header>
+        <div className="tn-games-bar">
+          <label className="stream-search">
+            <StreamIcon name="search" size={16} />
+            <input
+              aria-label="Tìm ván đấu theo đội hoặc vòng đấu"
+              placeholder="Tìm đội, vòng đấu…"
+              value={q}
+              onChange={(event) => filter("q", event.target.value)}
+            />
+          </label>
+          {competitions.length > 1 && (
+            <FilterSelect
+              label="Giải đấu"
+              value={tournament || "all"}
+              onChange={(value) => filter("tournament", value)}
+              all="Mọi giải đấu"
+              options={competitions.map((entry) => [entry.id, `${entry.content.name} (${entry.gameCount})`])}
+            />
+          )}
         </div>
-      </header>
-      <section className="stream-directory" id="matches">
-        <div className="stream-toolbar">
-          <div className="stream-toolbar-row">
-            <div className="hub-section-heading">
-              <h2>
-                <StreamIcon name="trophy" size={20} />
-                Ván đấu đã công bố
-              </h2>
-            </div>
-            <label className="stream-search">
-              <StreamIcon name="search" size={16} />
-              <input
-                aria-label="Tìm giải đấu hoặc đội tuyển"
-                placeholder="Tìm giải đấu, đội tuyển…"
-                value={q}
-                onChange={(event) => filter("q", event.target.value)}
-              />
-            </label>
-          </div>
-          <div className="hub-pills" role="group" aria-label="Chọn giải đấu">
-            <button type="button" aria-pressed={!tournament} onClick={() => filter("tournament", "")}>
-              <StreamIcon name="list" size={15} />
-              Tất cả
-            </button>
-            {tournaments.data?.items.map((entry) => (
-              <button
-                type="button"
-                key={entry.id}
-                aria-pressed={entry.id === tournament}
-                onClick={() => filter("tournament", entry.id)}
-              >
-                {entry.content.name}
-                <small>{entry.gameCount}</small>
-              </button>
-            ))}
-          </div>
-        </div>
+        <ScheduleNote
+          filters={seriesId ? [series ? `các ván của trận ${matchName(series)}` : "các ván của một trận"] : []}
+          onClear={() => filter("series", "")}
+        />
         {games.isPending ? (
-          <div className="game-card-grid" role="status" aria-label="Đang tải ván đấu">
-            {Array.from({ length: 4 }, (_, index) => (
-              <div className="game-card-skeleton" key={index} aria-hidden="true" />
+          <div className="tn-game-grid" role="status" aria-label="Đang tải ván đấu">
+            {Array.from({ length: 6 }, (_, index) => (
+              <span className="hub-skeleton" key={index} aria-hidden="true" />
             ))}
           </div>
-        ) : games.isError && !games.data ? (
-          <div className="hub-state">
-            <StreamIcon name="reset" size={28} />
-            <h3>Chưa kết nối được dữ liệu</h3>
-            <p>Thử lại sau khi máy chủ giải đấu đã sẵn sàng.</p>
+        ) : games.isLoadingError ? (
+          <div className="hub-state" role="alert">
+            <h2>Chưa tải được ván đấu</h2>
+            <p>Kho dữ liệu giải đấu chưa phản hồi. Thử lại sau ít phút.</p>
             <button type="button" className="cp-button" onClick={() => void games.refetch()}>
               Thử lại
             </button>
           </div>
         ) : visible.length ? (
-          <div className="game-card-grid">
+          <div className="tn-game-grid">
             {visible.map((game) => (
-              <GameCard game={game} key={game.id} />
+              <GameCard game={game} key={game.id} competition={mixed} round={!seriesId} />
             ))}
           </div>
-        ) : (
+        ) : games.hasNextPage ? null : (
           <div className="hub-state">
-            <StreamIcon name="gamepad" size={28} />
-            <h3>{q ? "Chưa tìm thấy ván phù hợp" : "Chưa có ván đấu được công bố"}</h3>
+            <h2>{filtered ? "Không tìm thấy ván phù hợp" : "Chưa có ván đấu được công bố"}</h2>
             <p>
-              {q ? "Thử tên đội hoặc chọn giải khác." : "Các ván đã được rà soát và xuất bản sẽ xuất hiện tại đây."}
+              {filtered
+                ? "Thử tên đội khác hoặc bỏ bộ lọc đang chọn."
+                : "Các ván đã được rà soát và xuất bản sẽ xuất hiện tại đây."}
             </p>
-            {!q && (
+            {filtered ? (
+              <button type="button" className="cp-button" onClick={() => setParams({}, { replace: true })}>
+                Xóa bộ lọc
+              </button>
+            ) : (
               <Link className="cp-button" to="/competitions">
                 Xem giải đấu <StreamIcon name="arrow" size={15} />
               </Link>
             )}
           </div>
         )}
-        <div ref={sentinel} className="stream-load-more" role="status">
-          {games.isFetchingNextPage ? (
-            "Đang tải thêm ván đấu…"
-          ) : games.isFetchNextPageError ? (
-            <button type="button" onClick={() => void games.fetchNextPage()}>
-              Tải lại phần tiếp theo
-            </button>
-          ) : null}
-        </div>
-        {games.isError && games.data && (
-          <p className="stream-connection-note">
-            Đang hiển thị dữ liệu đã tải.{" "}
-            <button type="button" onClick={() => void games.refetch()}>
-              Kết nối lại
-            </button>
-          </p>
-        )}
-      </section>
+        <InfiniteScroll query={games} label="Đang tải thêm ván đấu" />
+      </div>
     </StreamShell>
   )
 }

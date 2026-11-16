@@ -8,28 +8,37 @@ import type { ModeAvailability, ModeDuration } from "./mode-api"
 
 export const GROUP_LABEL = { PVP: "PVP", ENTERTAINMENT: "Chế độ giải trí" } as const
 
-const AVAILABILITY: Record<ModeAvailability["status"], { label: string; tone: string }> = {
+/** A mode that can be played now reads green; one that cannot, or whose schedule is not recorded, stays muted. */
+const AVAILABILITY: Record<ModeAvailability["status"], { label: string; tone: "open" | "closed" | "unknown" }> = {
   ALWAYS_OPEN: { label: "Đang mở", tone: "open" },
-  LIMITED: { label: "Mở có thời hạn", tone: "limited" },
-  SPECIAL: { label: "Mở đặc biệt", tone: "limited" },
+  LIMITED: { label: "Mở có thời hạn", tone: "open" },
+  SPECIAL: { label: "Mở đặc biệt", tone: "open" },
   CLOSED: { label: "Tạm đóng", tone: "closed" },
   LOCKED: { label: "Chưa mở khóa", tone: "closed" },
   UNKNOWN: { label: "Chưa rõ lịch mở", tone: "unknown" },
 }
 
-const OPEN = new Set<ModeAvailability["status"]>(["ALWAYS_OPEN", "LIMITED", "SPECIAL"])
+const toneOf = (availability: ModeAvailability) => (AVAILABILITY[availability.status] ?? AVAILABILITY.UNKNOWN).tone
 
 export function isOpen(availability?: ModeAvailability | null) {
-  return !!availability && OPEN.has(availability.status)
+  return !!availability && toneOf(availability) === "open"
 }
 
-export function availabilityLabel(availability?: ModeAvailability | null) {
-  if (!availability) return null
-  return availability.gameLabel || AVAILABILITY[availability.status]?.label || null
+/** Closed or locked in the game. An unrecorded schedule is not a closed mode. */
+export function isClosed(availability?: ModeAvailability | null) {
+  return !!availability && toneOf(availability) === "closed"
 }
 
-/** `quiet` leaves out an unknown status, which only adds noise to a list. */
-export function AvailabilityBadge({
+/** Whether the game's schedule for the mode has been recorded at all. */
+export function hasSchedule(availability?: ModeAvailability | null) {
+  return !!availability && toneOf(availability) !== "unknown"
+}
+
+/**
+ * Whether the mode is open, as a dot and the game's own wording. `quiet` leaves out an unrecorded schedule, which
+ * only adds noise to a list.
+ */
+export function AvailabilityState({
   availability,
   quiet,
 }: {
@@ -40,7 +49,7 @@ export function AvailabilityBadge({
   const known = AVAILABILITY[availability.status] ?? AVAILABILITY.UNKNOWN
   if (quiet && known.tone === "unknown") return null
   return (
-    <span className="mode-badge" data-tone={known.tone} title={known.label}>
+    <span className="mode-state" data-tone={known.tone} title={availability.gameLabel ? known.label : undefined}>
       {availability.gameLabel || known.label}
     </span>
   )
@@ -53,35 +62,32 @@ export function durationText(duration?: ModeDuration | null) {
   return `${duration.minMinutes ?? duration.maxMinutes} phút`
 }
 
-export function formatDay(value?: string | null) {
-  if (!value) return null
-  const [year, month, day] = value.split("-")
-  return year && month && day ? `${day}/${month}/${year}` : value
-}
-
-/** Mode art with the image credit, or the mode's emblem while no art is published yet. */
+/**
+ * Mode art with the image credit, or the section's emblem on a quiet tone while no art is published yet. Inside a
+ * card that already names the mode the picture is decoration, so it carries no text of its own and no credit: an
+ * interactive credit cannot be nested in a link.
+ */
 export function ModeArt({
   image,
   name,
   eager,
   children,
   className,
-  showCredit = true,
+  inCard,
 }: {
   image?: ModeImage | null
   name: string
   eager?: boolean
-  /** Off inside links, where an interactive credit cannot be nested. */
-  showCredit?: boolean
+  inCard?: boolean
   children?: ReactNode
   className: string
 }) {
   return (
-    <div className={className} data-empty={!image || undefined}>
+    <span className={`mode-art ${className}`} data-empty={!image || undefined}>
       {image ? (
         <img
           src={image.url}
-          alt={`Ảnh chế độ ${name}`}
+          alt={inCard ? "" : `Ảnh chế độ ${name}`}
           width={image.width}
           height={image.height}
           loading={eager ? "eager" : "lazy"}
@@ -98,13 +104,45 @@ export function ModeArt({
         </span>
       )}
       {children}
-      {showCredit && image && image.credits.length > 0 && (
+      {!inCard && image && image.credits.length > 0 && (
         <WikiImageCredit
           sources={image.credits}
           contactHref={`/contact?assetId=${encodeURIComponent(image.assetId)}&versionId=${encodeURIComponent(image.versionId)}`}
         />
       )}
-    </div>
+    </span>
+  )
+}
+
+/**
+ * A section's heading: its name in the accent color with an optional icon and count, one muted line under it, and at
+ * most one action on the right.
+ */
+export function ModeHeading({
+  id,
+  title,
+  count,
+  note,
+  icon,
+  action,
+}: {
+  id?: string
+  title: string
+  count?: number
+  note?: string
+  icon?: ReactNode
+  action?: ReactNode
+}) {
+  return (
+    <header className="mode-heading" data-action={action ? "" : undefined}>
+      <h2 id={id}>
+        {icon && <span className="mode-heading-icon">{icon}</span>}
+        {title}
+        {count !== undefined && <small>{count}</small>}
+      </h2>
+      {action && <div className="mode-heading-action">{action}</div>}
+      {note && <p>{note}</p>}
+    </header>
   )
 }
 
@@ -135,9 +173,11 @@ export function RuleList({ rules, collapsible }: { rules: RuleSection[]; collaps
   return (
     <div className="mode-rules">
       {[...groups.entries()].map(([group, entries], index) => {
+        // A rule sits under its group's h3; where the group folds behind a summary, or there is none, it is the h3.
+        const Title = group && !collapsible ? "h4" : "h3"
         const items = entries.map((rule, at) => (
           <div key={`${rule.title}-${at}`} className="mode-rule">
-            <h4>{rule.title}</h4>
+            <Title>{rule.title}</Title>
             <RuleBody body={rule.body} />
           </div>
         ))

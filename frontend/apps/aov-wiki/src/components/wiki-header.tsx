@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react"
-import { Link, useLocation, useNavigate } from "react-router"
+import { useEffect, useRef, useState, type RefObject } from "react"
+import { Link } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
-import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +14,10 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import "./wiki-header.css"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { WikiPreferenceControls } from "../context/wiki-preferences"
-import { wikiSections, type WikiSectionKey } from "../layout/wiki-sections"
-import { warehouseListPath } from "../lib/wiki-catalog"
-import { LibraryContents } from "../layout/library-contents"
+import { wikiSections, type WikiSectionKey } from "../lib/wiki-sections"
+import { LibraryContents } from "./library-contents"
 import { WikiIcon } from "./wiki-icon"
-import { WikiSearchSuggestions } from "./wiki-search-suggestions"
+import { WikiSearch } from "./wiki-search"
 import { WikiAccountMenu } from "../features/auth/wiki-account"
 import { useWikiAccountPreferences } from "../features/auth/wiki-auth"
 
@@ -30,14 +28,7 @@ function Icon({ name, className }: { name: IconName; className?: string }) {
   return <WikiIcon name={name} className={cn("size-5 shrink-0", className)} />
 }
 
-/**
- * Translucent dark surface shared by the header dropdown and popovers, like HoYoWiki.
- * Radii are written in px: rounded-md/lg/xl follow the shadcn --radius token, not Tailwind's defaults.
- */
-const PANEL_SURFACE =
-  "rounded-[12px] border border-white/10 bg-[#0b0d11e6] text-header-text shadow-[0_12px_40px_#0006] backdrop-blur-xl"
-
-const WIKI_LOGO_URL = "/images/mole-logo-v4.png"
+const WIKI_LOGO_URL = "/images/mole-logo-v4-160.png"
 const STREAM_URL = publicSiteUrl(import.meta.env.VITE_STREAM_URL, 5174, window.location.origin)
 
 type Section = {
@@ -49,7 +40,7 @@ type Section = {
   href: string
 }
 
-/** Areas of the AOV site, like the game selector on HoYoWiki. */
+/** The two public apps; the switcher beside the wordmark moves between them. */
 const SECTIONS: Section[] = [
   {
     id: "wiki",
@@ -160,7 +151,7 @@ function MoreMenu() {
       locale={locale}
       trigger={
         <button type="button" className="wiki-compact-button" aria-label={t("more")}>
-          <Icon name="more" className="size-4" />
+          <Icon name="more" />
         </button>
       }
     >
@@ -196,163 +187,95 @@ function MoreMenu() {
   )
 }
 
-function PanelTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mb-2.5 type-section-title">{children}</h2>
-}
+const WAREHOUSE_KEYS = ["items", "enchantments", "arcana", "spells"] as const
+const sectionOf = (key: WikiSectionKey) => wikiSections.find((section) => section.key === key)!
 
-const SEARCH_SCOPES = {
-  heroes: { path: "/hero", titleKey: "searchHeroes" },
-  skins: { path: "/skins", titleKey: "searchSkins" },
-  warehouse: { path: "/warehouse", titleKey: "searchWarehouse" },
-} as const
-
-function LibrarySearch({
-  mobile = false,
-  chooseSection = false,
-  scope,
-}: {
-  mobile?: boolean
-  chooseSection?: boolean
-  scope: keyof typeof SEARCH_SCOPES
-}) {
-  const navigate = useNavigate()
+/** The main sections, always in the top bar on wide screens; the four parts of the armory share one menu. */
+function TopNavigation({ active }: { active?: WikiSectionKey }) {
   const { t, href, locale } = useWikiContext()
-  const { pathname } = useLocation()
-  const [search, setSearch] = useState("")
-  const [open, setOpen] = useState(false)
-  const [focused, setFocused] = useState(false)
-  const [sectionKey, setSectionKey] = useState<string>("heroes")
-  const section = wikiSections.find((entry) => entry.key === sectionKey) ?? wikiSections[0]
-  const target = SEARCH_SCOPES[scope]
-  const title = chooseSection ? t(section.key) : t(target.titleKey)
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    // Inside the armory a search stays on the current tab.
-    const path = chooseSection ? section.path : scope === "warehouse" ? warehouseListPath(pathname) : target.path
-    const destination = new URL(path, window.location.origin)
-    if (search.trim()) destination.searchParams.set("q", search.trim())
-    navigate(href(destination.pathname + destination.search))
-    setOpen(false)
-  }
-
-  const form = (
-    <form
-      role="search"
-      onSubmit={submit}
-      className={cn(
-        "relative flex h-8 min-w-0 items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 text-header-muted focus-within:border-gold/50",
-        !mobile && "col-start-2 w-full",
-      )}
-    >
-      <Icon name="search" className="size-4" />
-      {chooseSection && (
-        <select
-          className="wiki-search-domain"
-          aria-label={wikiText(locale, "Danh mục tìm kiếm", "Search category")}
-          value={sectionKey}
-          onChange={(event) => setSectionKey(event.target.value)}
-        >
-          {wikiSections
-            .filter((entry) => entry.key !== "updates")
-            .map((entry) => (
-              <option key={entry.key} value={entry.key}>
-                {t(entry.key)}
-              </option>
-            ))}
-        </select>
-      )}
-      <input
-        type="search"
-        enterKeyHint="search"
-        aria-label={chooseSection ? `${t("search")} · ${title}` : title}
-        placeholder={`${chooseSection ? t("search") : title}…`}
-        maxLength={120}
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        className={cn(
-          "h-full min-w-0 flex-1 bg-transparent text-sm text-white/85 outline-none placeholder:text-white/45",
-          mobile && "text-base",
-        )}
-      />
-      {focused && (
-        <WikiSearchSuggestions
-          search={search}
-          onPick={() => {
-            setSearch("")
-            setOpen(false)
-          }}
-        />
-      )}
-    </form>
+  const inWarehouse = WAREHOUSE_KEYS.some((key) => key === active)
+  const link = (key: WikiSectionKey, label = t(key)) => (
+    <Link key={key} to={href(sectionOf(key).path)} aria-current={active === key ? "page" : undefined}>
+      {label}
+    </Link>
   )
-
-  if (!mobile) return form
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="wiki-compact-button" aria-label={t("search")}>
-        <Icon name="search" className="size-[18px]" />
-      </PopoverTrigger>
-      <PopoverContent
-        drawerTitle={chooseSection ? t("search") : title}
-        align="end"
-        sideOffset={12}
-        className={cn(PANEL_SURFACE, "w-[min(320px,calc(100vw-24px))] p-4")}
-      >
-        <PanelTitle>{chooseSection ? t("search") : title}</PanelTitle>
-        {form}
-      </PopoverContent>
-    </Popover>
+    <nav className="wiki-topnav" aria-label={wikiText(locale, "Các mục của Wiki", "Wiki sections")}>
+      {link("heroes")}
+      {link("skins")}
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger className="wiki-topnav-menu" data-current={inWarehouse || undefined}>
+          {t("warehouse")}
+          <Icon name="chevron" className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" sideOffset={6} className="wiki-topnav-panel" drawerTitle={t("warehouse")}>
+          {WAREHOUSE_KEYS.map((key) => (
+            <DropdownMenuItem key={key} asChild>
+              <Link to={href(sectionOf(key).path)} aria-current={active === key ? "page" : undefined}>
+                <WikiIcon name={sectionOf(key).icon} size={28} className="size-7" />
+                {t(key)}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {link("modes")}
+      {link("updates", t("updatesShort"))}
+      {link("terms")}
+    </nav>
   )
 }
 
 interface WikiHeaderProps {
   variant?: "home" | "library" | "hero"
   pageTitle?: string
+  /** The compact title names the page (its h1) unless the page below it is one item of the section with its own h1. */
+  pageTitleIsHeading?: boolean
   /** Where the compact layout's back button leads, for a page below the main sections. */
   backTo?: string
-  /** The section to mark in the compact layout's contents. */
+  /** The section to mark in the navigation. */
   section?: WikiSectionKey
-  searchScope?: keyof typeof SEARCH_SCOPES
-  /** The page has its own search box, so the compact header leaves it out. */
-  ownSearch?: boolean
 }
 
 /** One row: the way back, where you are, then search, the contents and the sheet with everything else. */
 function WikiHeaderCompact({
   variant = "home",
   pageTitle,
+  pageTitleIsHeading = true,
   backTo,
   section,
-  searchScope = "heroes",
-  ownSearch,
 }: WikiHeaderProps) {
   const { t, href, locale } = useWikiContext()
+  const [searching, setSearching] = useState(false)
+  const Title = pageTitleIsHeading ? "h1" : "p"
   // Over artwork the row starts clear and darkens during the first 100px of scroll.
   const headerRef = useRef<HTMLElement>(null)
   useScrollProgressVar(headerRef, 100)
+  const searchButton = useRef<HTMLButtonElement>(null)
+  useFocusAfterClose(searching, searchButton)
+  if (searching)
+    return (
+      <header ref={headerRef} className="wiki-compact-header" data-variant="library" data-searching>
+        <button
+          type="button"
+          className="wiki-compact-button"
+          aria-label={wikiText(locale, "Đóng tìm kiếm", "Close search")}
+          onClick={() => setSearching(false)}
+        >
+          <WikiIcon name="chevronLeft" size={22} />
+        </button>
+        <WikiSearch size="sheet" autoFocus onDone={() => setSearching(false)} />
+      </header>
+    )
   return (
     <header ref={headerRef} className="wiki-compact-header" data-variant={variant}>
       {backTo ? (
         <Link className="wiki-compact-button" to={href(backTo)} aria-label={wikiText(locale, "Quay lại", "Back")}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            aria-hidden="true"
-          >
-            <path d="m14 5-7 7 7 7" />
-          </svg>
+          <WikiIcon name="chevronLeft" size={22} />
         </Link>
       ) : pageTitle ? (
         <a className="wiki-compact-button" href={href("/")} aria-label={t("home")}>
-          <Icon name="home" className="size-[18px]" />
+          <Icon name="home" />
         </a>
       ) : (
         <a className="wiki-compact-brand" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
@@ -361,12 +284,20 @@ function WikiHeaderCompact({
         </a>
       )}
       {pageTitle ? (
-        <h1 className="wiki-compact-title">{pageTitle.replace(/^Thư viện\s+/u, "")}</h1>
+        <Title className="wiki-compact-title">{pageTitle.replace(/^Thư viện\s+/u, "")}</Title>
       ) : (
         <span className="flex-1" />
       )}
       <nav className="wiki-compact-utilities" aria-label={t("utilities")}>
-        {!ownSearch && <LibrarySearch mobile scope={searchScope} chooseSection={variant === "home"} />}
+        <button
+          ref={searchButton}
+          type="button"
+          className="wiki-compact-button"
+          aria-label={t("search")}
+          onClick={() => setSearching(true)}
+        >
+          <Icon name="search" />
+        </button>
         <LibraryContents active={section} />
         <MoreMenu />
       </nav>
@@ -374,44 +305,53 @@ function WikiHeaderCompact({
   )
 }
 
-function WikiHeaderWide({ variant = "home", searchScope = "heroes" }: WikiHeaderProps) {
-  const { t, href } = useWikiContext()
+function WikiHeaderWide({ variant = "home", section }: WikiHeaderProps) {
+  const { t, href, locale } = useWikiContext()
   // Hero headers darken over the first 100px of scroll, as they start on top of the artwork.
   const headerRef = useRef<HTMLElement>(null)
   useScrollProgressVar(headerRef, 100)
+  // A narrow bar shows the search as a button; pressing it swaps the sections for the field.
+  const [searching, setSearching] = useState(false)
+  const searchButton = useRef<HTMLButtonElement>(null)
+  useFocusAfterClose(searching, searchButton)
   return (
-    <header
-      ref={headerRef}
-      data-variant={variant}
-      className={cn(
-        "wiki-header sticky top-0 z-40 h-12 border-b border-header-line bg-header backdrop-blur-[20px] backdrop-saturate-[1.4]",
-      )}
-    >
-      {/* Three columns: equal 1fr sides keep the search centered; max-content stops it overlapping the brand or tools. */}
-      <div className="relative grid h-full grid-cols-[minmax(max-content,1fr)_minmax(0,540px)_minmax(max-content,1fr)] items-center gap-9 px-6 max-[1100px]:gap-6 max-[1100px]:px-5">
-        <div className="public-app-theme flex min-w-0 shrink-0 items-center gap-1" data-appearance="wiki">
-          <a className="group shrink-0 rounded-[9px]" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
-            <img
-              src={WIKI_LOGO_URL}
-              alt=""
-              width={32}
-              height={32}
-              className="block size-8 rounded-[8px] border border-[#efc78480] bg-[#bd843f] object-cover transition-opacity group-hover:opacity-80"
-              fetchPriority="high"
-            />
+    <header ref={headerRef} data-variant={variant} className="wiki-header">
+      <div className="wiki-header-inner" data-searching={searching || undefined}>
+        <div className="public-app-theme wiki-header-brand" data-appearance="wiki">
+          <a className="wiki-header-logo" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
+            <img src={WIKI_LOGO_URL} alt="" width={32} height={32} fetchPriority="high" />
           </a>
           <SectionSelector />
         </div>
-
-        {searchScope !== "warehouse" && <LibrarySearch scope={searchScope} chooseSection={variant === "home"} />}
-
-        <nav className="col-start-3 flex items-center gap-3 justify-self-end" aria-label={t("utilities")}>
+        <TopNavigation active={section} />
+        {/* A new field for each opening, so it takes focus as it mounts. */}
+        {searching ? <WikiSearch key="open" autoFocus onDone={() => setSearching(false)} /> : <WikiSearch key="bar" />}
+        <button
+          ref={searchButton}
+          type="button"
+          className="wiki-header-search-toggle"
+          aria-label={searching ? wikiText(locale, "Đóng tìm kiếm", "Close search") : t("search")}
+          aria-expanded={searching}
+          onClick={() => setSearching((value) => !value)}
+        >
+          <Icon name={searching ? "close" : "search"} />
+        </button>
+        <nav className="wiki-header-tools" aria-label={t("utilities")}>
           <WikiPreferenceControls />
           <WikiAccountMenu />
         </nav>
       </div>
     </header>
   )
+}
+
+/** Returns keyboard focus to the button that opened a search once that search has closed. */
+function useFocusAfterClose(open: boolean, button: RefObject<HTMLButtonElement | null>) {
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    if (wasOpen.current && !open) button.current?.focus()
+    wasOpen.current = open
+  }, [open, button])
 }
 
 export function WikiHeader(props: WikiHeaderProps) {

@@ -1,14 +1,18 @@
-import { useMemo, type ReactNode } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { queryOptions, useQuery } from "@tanstack/react-query"
 import { EntityReferenceIcon, EntityReferencePopover } from "@aov/ui/components/entity-rich-text"
+import { LocalTime } from "@aov/ui/components/local-time"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import {
   createEntityIndex,
   referenceTranslation,
   type EntityKind,
   type EntityReference,
 } from "@aov/ui/lib/entity-rich-text"
+import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
+import { PatchName } from "./hero-patch-name"
 import "./hero-builds.css"
 
 interface PublicBuild {
@@ -56,6 +60,10 @@ export function heroBuildsQuery(heroCode: string, region: string) {
 }
 
 const MARKETS: Record<string, [string, string]> = { VN: ["Việt Nam", "Vietnam"] }
+const CAPTURE_DAY: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
+
+type Entities = Map<string, EntityReference>
+type EntityIndex = ReturnType<typeof createEntityIndex>
 
 /** One item, enchantment, arcana or spell: its icon opens the same card as a mention in Wiki text. */
 function Piece({
@@ -68,8 +76,8 @@ function Piece({
 }: {
   kind: EntityKind
   id: string
-  entities: Map<string, EntityReference>
-  index: ReturnType<typeof createEntityIndex>
+  entities: Entities
+  index: EntityIndex
   round?: boolean
   children?: ReactNode
 }) {
@@ -96,19 +104,34 @@ function Piece({
   )
 }
 
-function BuildCard({
+/** What a build is made of, named once: above the first build when they line up in columns, on each build otherwise. */
+function useBuildLabels() {
+  const { locale } = useWikiContext()
+  return {
+    items: wikiText(locale, "Trang bị theo thứ tự lên đồ", "Items in buying order"),
+    enchantments: wikiText(locale, "Phù hiệu", "Enchantments"),
+    arcana: wikiText(locale, "Ngọc", "Arcana"),
+    spell: wikiText(locale, "Phụ trợ", "Spell"),
+  }
+}
+
+function BuildRow({
   build,
   number,
+  withArcana,
   entities,
   index,
 }: {
   build: PublicBuild
   number: number
-  entities: Map<string, EntityReference>
-  index: ReturnType<typeof createEntityIndex>
+  /** Whether the list has a column for arcana at all. */
+  withArcana: boolean
+  entities: Entities
+  index: EntityIndex
 }) {
   const { locale } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const labels = useBuildLabels()
   const spell = build.spellId ? entities.get(`spell:${build.spellId}`) : undefined
   const piece = (kind: EntityKind, id: string, round?: boolean, extra?: ReactNode) => (
     <Piece key={`${kind}:${id}`} kind={kind} id={id} entities={entities} index={index} round={round}>
@@ -116,8 +139,8 @@ function BuildCard({
     </Piece>
   )
   return (
-    <article className="wiki-build-card">
-      <header>
+    <li className="wiki-build">
+      <div className="wiki-build-name">
         <h3>{text(`Bộ ${number}`, `Build ${number}`)}</h3>
         {build.positions.length > 1 && (
           <span>
@@ -127,41 +150,131 @@ function BuildCard({
             )}
           </span>
         )}
-      </header>
+      </div>
       <dl>
-        <dt>{text("Trang bị (thứ tự lên đồ)", "Items (in buying order)")}</dt>
-        <dd className="wiki-build-items">
-          {build.items.map((item) =>
-            piece("item", item.itemId, false, <span className="wiki-build-order">{item.slot}</span>),
-          )}
-        </dd>
-        <dt>{text("Phù hiệu", "Enchantments")}</dt>
-        <dd className="wiki-build-enchantments">
-          {build.enchantments
-            .filter((entry) => entry.slot <= 3)
-            .map((entry) => piece("enchantment", entry.enchantmentId, true))}
-          <span className="wiki-build-split" aria-hidden="true" />
-          {build.enchantments
-            .filter((entry) => entry.slot > 3)
-            .map((entry) => piece("enchantment", entry.enchantmentId, true))}
-        </dd>
-        <dt>{text("Ngọc", "Arcana")}</dt>
-        <dd>
-          {build.arcana.length ? (
-            build.arcana.map((entry) =>
-              piece("arcana", entry.arcanaId, true, <span className="wiki-build-count">×{entry.quantity}</span>),
-            )
-          ) : (
-            <span className="wiki-build-missing">{text("Chưa có bảng ngọc", "No arcana page yet")}</span>
-          )}
-        </dd>
-        <dt>{text("Phụ trợ", "Spell")}</dt>
-        <dd>
-          {build.spellId && piece("spell", build.spellId, true)}
-          {spell && <span>{referenceTranslation(spell, locale)?.name}</span>}
-        </dd>
+        <div data-part="items">
+          <dt>{labels.items}</dt>
+          <dd>
+            {build.items.map((item) =>
+              piece("item", item.itemId, false, <span className="wiki-build-order">{item.slot}</span>),
+            )}
+          </dd>
+        </div>
+        <div data-part="enchantments">
+          <dt>{labels.enchantments}</dt>
+          <dd>
+            {build.enchantments
+              .filter((entry) => entry.slot <= 3)
+              .map((entry) => piece("enchantment", entry.enchantmentId, true))}
+            <span className="wiki-build-split" aria-hidden="true" />
+            {build.enchantments
+              .filter((entry) => entry.slot > 3)
+              .map((entry) => piece("enchantment", entry.enchantmentId, true))}
+          </dd>
+        </div>
+        {withArcana && (
+          <div data-part="arcana">
+            <dt>{labels.arcana}</dt>
+            <dd>
+              {build.arcana.length ? (
+                build.arcana.map((entry) =>
+                  piece("arcana", entry.arcanaId, true, <span className="wiki-build-count">×{entry.quantity}</span>),
+                )
+              ) : (
+                <span className="wiki-build-missing">{text("Chưa có bảng ngọc", "No arcana page yet")}</span>
+              )}
+            </dd>
+          </div>
+        )}
+        <div data-part="spell">
+          <dt>{labels.spell}</dt>
+          <dd>
+            {build.spellId && piece("spell", build.spellId, true)}
+            {spell && <span>{referenceTranslation(spell, locale)?.name}</span>}
+          </dd>
+        </div>
       </dl>
-    </article>
+    </li>
+  )
+}
+
+/** The builds of one tab of the game's recommendations, with where and when they were read. */
+function BuildSourceBlock({
+  source,
+  regionCode,
+  entities,
+  index,
+}: {
+  source: BuildSource
+  regionCode: string
+  entities: Entities
+  index: EntityIndex
+}) {
+  const { locale, options } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const labels = useBuildLabels()
+  const market = MARKETS[regionCode] ?? [regionCode, regionCode]
+  const patch = options?.patches.find((item) => item.code === source.patchCode)
+  // A phone starts from the first build, the one the game lists first; the rest open on request.
+  const limit = usePageLayout() === "compact" ? 1 : source.builds.length
+  const [expanded, setExpanded] = useState(false)
+  const shown = expanded ? source.builds : source.builds.slice(0, limit)
+  const withArcana = source.builds.some((build) => build.arcana.length > 0)
+  const hidden = source.builds.length - limit
+
+  return (
+    <div className="wiki-builds-source">
+      <p className="wiki-builds-origin">
+        {text(
+          `${source.sourceLabel} trong game · máy chủ ${market[0]} · chụp ngày `,
+          `In-game ${source.sourceLabel} · ${market[1]} server · captured `,
+        )}
+        <LocalTime
+          value={source.capturedAt}
+          sourceTimeZone={source.sourceTimeZone}
+          format={CAPTURE_DAY}
+          locale={locale}
+        />
+        {source.patchCode && (
+          <>
+            {` · ${text("bản", "version")} `}
+            {patch ? <PatchName patch={patch} /> : source.patchCode}
+          </>
+        )}
+        {/* Said once for the whole list instead of on every build. */}
+        {!withArcana && ` · ${text("chưa ghi nhận bảng ngọc", "arcana pages not recorded yet")}`}
+      </p>
+      <ol className="wiki-build-list" data-arcana={withArcana || undefined}>
+        {/* The column names when the builds line up as rows; each build still names its own parts for assistive technology. */}
+        <li className="wiki-build-columns" aria-hidden="true">
+          <span />
+          <span>{labels.items}</span>
+          <span>{labels.enchantments}</span>
+          <span>{labels.spell}</span>
+        </li>
+        {shown.map((build, position) => (
+          <BuildRow
+            key={build.contentKey}
+            build={build}
+            number={position + 1}
+            withArcana={withArcana}
+            entities={entities}
+            index={index}
+          />
+        ))}
+      </ol>
+      {hidden > 0 && (
+        <button
+          type="button"
+          className="wiki-hero-more"
+          aria-expanded={expanded}
+          onClick={() => setExpanded(!expanded)}
+        >
+          <WikiIcon name="chevron" size={16} />
+          {expanded ? text("Thu gọn", "Show less") : text(`Xem thêm ${hidden} bộ`, `Show ${hidden} more`)}
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -172,7 +285,6 @@ function BuildCard({
 export function HeroBuilds({ heroCode }: { heroCode: string }) {
   const scope = useWikiContext()
   const { locale, region } = scope
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const builds = useQuery(heroBuildsQuery(heroCode, region))
   const references = useQuery(wikiReferencesQuery(scope))
   const settings = references.data
@@ -189,38 +301,21 @@ export function HeroBuilds({ heroCode }: { heroCode: string }) {
 
   return (
     <section className="wiki-builds" aria-labelledby="wiki-hero-builds">
-      <h2 id="wiki-hero-builds" className="wiki-night-title" tabIndex={-1}>
-        {text("Build đề cử", "Recommended builds")}
-      </h2>
-      {sources.map((source) => {
-        const code = builds.data!.regionCode
-        const market = MARKETS[code] ?? [code, code]
-        const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: source.sourceTimeZone }).format(
-          new Date(source.capturedAt),
-        )
-        return (
-          <div key={source.captureId} className="wiki-builds-source">
-            <p className="wiki-builds-origin">
-              {text(
-                `${source.sourceLabel} trong game · máy chủ ${market[0]} · chụp ngày ${date}`,
-                `In-game ${source.sourceLabel} · ${market[1]} server · captured ${date}`,
-              )}
-              {source.patchCode && ` · ${text("bản", "patch")} ${source.patchCode}`}
-            </p>
-            <div className="wiki-builds-list">
-              {source.builds.map((build, position) => (
-                <BuildCard
-                  key={build.contentKey}
-                  build={build}
-                  number={position + 1}
-                  entities={entities}
-                  index={index}
-                />
-              ))}
-            </div>
-          </div>
-        )
-      })}
+      <header className="wiki-hero-section-head">
+        <h2 id="wiki-hero-builds" tabIndex={-1}>
+          {wikiText(locale, "Build đề cử", "Recommended builds")}
+          <small>{sources.reduce((total, source) => total + source.builds.length, 0)}</small>
+        </h2>
+      </header>
+      {sources.map((source) => (
+        <BuildSourceBlock
+          key={source.captureId}
+          source={source}
+          regionCode={builds.data!.regionCode}
+          entities={entities}
+          index={index}
+        />
+      ))}
     </section>
   )
 }

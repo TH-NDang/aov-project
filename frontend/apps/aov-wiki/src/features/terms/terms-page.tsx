@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, type CSSProperties } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams, useSearchParams } from "react-router"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
@@ -17,6 +17,24 @@ import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { notFoundMeta, termMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import "./terms.css"
+
+/** An explanation this long, or one that holds a table, needs a row of its own instead of a third of one. */
+const LONG_EXPLANATION = 320
+const readsWide = (description: string) =>
+  description.includes("<exampletable>") || description.length > LONG_EXPLANATION
+
+/**
+ * How the last short terms share their rows, so no term is left alone in one. `fromEnd` is 1 for the last short term.
+ * In two columns a single last term takes the whole row. In three columns a last row of two is split in halves, and a
+ * last row of one is avoided by setting the last four terms two to a row.
+ */
+function lastRowShare(short: number, fromEnd: number) {
+  const left = short % 3
+  return {
+    two: short % 2 === 1 && fromEnd === 1 ? "full" : undefined,
+    three: short === 1 ? "full" : (left === 1 && fromEnd <= 4) || (left === 2 && fromEnd <= 2) ? "half" : undefined,
+  }
+}
 
 /** The public glossary. Term mentions anywhere in the wiki link to /terms/{id}. */
 export function TermsPage() {
@@ -39,16 +57,21 @@ export function TermsPage() {
         .filter((entity) => entity.kind === "term")
         .flatMap((entity) => {
           const translation = referenceTranslation(entity, locale, fallback)
-          return translation ? [{ entity, translation }] : []
+          return translation ? [{ entity, translation, wide: readsWide(translation.description) }] : []
         })
-        .sort((a, b) => a.translation.name.localeCompare(b.translation.name, locale)),
+        // By name; the few long explanations follow the short ones, where a full row does not break the grid.
+        .sort(
+          (a, b) => Number(a.wide) - Number(b.wide) || a.translation.name.localeCompare(b.translation.name, locale),
+        ),
     [settings, locale, fallback],
   )
   const needle = foldEntitySearch(search.trim())
   const visible = terms.filter(({ translation }) =>
     foldEntitySearch([translation.name, ...translation.aliases, translation.description].join(" ")).includes(needle),
   )
-  const target = useRef<HTMLElement>(null)
+  // Short terms come first; the styles need their number to fill the last row of the grid instead of leaving one alone.
+  const short = visible.filter(({ wide }) => !wide).length
+  const target = useRef<HTMLLIElement>(null)
   const known = !termId || terms.some(({ entity }) => entity.id === termId)
   const opened = terms.find(({ entity }) => entity.id === termId)
   usePageHead(
@@ -59,7 +82,10 @@ export function TermsPage() {
         : null,
   )
   useEffect(() => {
-    if (termId && terms.length) target.current?.scrollIntoView({ block: "center" })
+    if (!termId || !terms.length) return
+    // The app returns to the top of the page on every new address after this runs; the term is shown once it has.
+    const frame = requestAnimationFrame(() => target.current?.scrollIntoView({ block: "center" }))
+    return () => cancelAnimationFrame(frame)
   }, [termId, terms.length])
 
   function updateSearch(value: string) {
@@ -70,30 +96,54 @@ export function TermsPage() {
   }
 
   return (
-    <div className="wiki-terms wiki-document public-panel">
-      <CatalogHeading title={t("terms")} section={t("news")} />
-      <p className="wiki-terms-lead">
-        {text(
+    <>
+      <CatalogHeading
+        title={t("terms")}
+        lead={text(
           "Giải thích các từ dùng trong mô tả kỹ năng, trang bị và ghi chú cập nhật.",
           "Explains the words used in ability, item and patch descriptions.",
         )}
-      </p>
-      <label className="wiki-hero-search wiki-terms-search">
-        <WikiIcon name="search" size={18} />
-        <span className="sr-only">{text("Tìm thuật ngữ", "Search terms")}</span>
-        <input
-          type="search"
-          value={search}
-          maxLength={120}
-          onChange={(event) => updateSearch(event.target.value)}
-          placeholder={text("Tìm thuật ngữ…", "Search terms…")}
-        />
-      </label>
+      />
+      <div className="wiki-terms-tools">
+        <label className="wiki-terms-search">
+          <WikiIcon name="search" size={18} />
+          <input
+            type="search"
+            aria-label={text("Tìm thuật ngữ", "Search terms")}
+            value={search}
+            maxLength={120}
+            onChange={(event) => updateSearch(event.target.value)}
+            placeholder={text("Tìm thuật ngữ…", "Search terms…")}
+          />
+          {search && (
+            <button
+              type="button"
+              className="wiki-terms-clear"
+              aria-label={text("Xóa tìm kiếm", "Clear search")}
+              onClick={() => updateSearch("")}
+            >
+              <WikiIcon name="close" size={16} />
+            </button>
+          )}
+        </label>
+        {references.isSuccess && (
+          <p className="wiki-terms-count" role="status">
+            {text(`${visible.length} thuật ngữ`, visible.length === 1 ? "1 term" : `${visible.length} terms`)}
+          </p>
+        )}
+      </div>
 
       {references.isPending ? (
-        <p role="status" className="wiki-terms-state">
-          {t("loading")}
-        </p>
+        <>
+          <p className="sr-only" role="status">
+            {t("loading")}
+          </p>
+          <ul className="wiki-terms-list" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, position) => (
+              <li className="wiki-term-skeleton" key={position} />
+            ))}
+          </ul>
+        </>
       ) : references.isError ? (
         <div role="status" className="wiki-terms-state">
           <p>{text("Chưa tải được thuật ngữ.", "Could not load the glossary.")}</p>
@@ -104,7 +154,7 @@ export function TermsPage() {
       ) : (
         <>
           {!known && (
-            <p role="status" className="wiki-terms-state">
+            <p role="status" className="wiki-terms-notice">
               {text(
                 "Không tìm thấy thuật ngữ này. Bạn có thể xem danh sách bên dưới.",
                 "This term was not found. See the list below.",
@@ -113,57 +163,69 @@ export function TermsPage() {
           )}
           {visible.length ? (
             <ul className="wiki-terms-list">
-              {visible.map(({ entity, translation }) => {
+              {visible.map(({ entity, translation, wide }, position) => {
                 const current = entity.id === termId
                 const color = entity.display?.color ?? defaultEntityColor(entity)
                 const Art = termIcon(entity) ?? navArtIcons.glossary
+                const share = wide ? undefined : lastRowShare(short, short - position)
                 return (
-                  <li key={entity.id} id={`term-${entity.id}`} ref={current ? (target as never) : undefined}>
-                    <article className="wiki-term" aria-current={current ? "true" : undefined}>
+                  <li
+                    key={entity.id}
+                    id={`term-${entity.id}`}
+                    ref={current ? target : undefined}
+                    data-wide={wide ? "" : undefined}
+                    data-two={share?.two}
+                    data-three={share?.three}
+                  >
+                    <article
+                      className="wiki-term"
+                      aria-current={current ? "true" : undefined}
+                      style={color ? ({ "--term-color": color } as CSSProperties) : undefined}
+                    >
                       <Art size={40} className="wiki-term-art" />
-                      <div className="wiki-term-copy">
+                      <div className="wiki-term-head">
                         <h2>
-                          <Link
-                            to={href(`/terms/${encodeURIComponent(entity.id)}`)}
-                            style={color ? { color } : undefined}
-                          >
-                            {translation.name}
-                          </Link>
+                          <Link to={href(`/terms/${encodeURIComponent(entity.id)}`)}>{translation.name}</Link>
                         </h2>
                         {translation.aliases.length > 0 && (
                           <p className="wiki-term-aliases">
                             {text("Còn gọi là", "Also called")} {translation.aliases.join(", ")}
                           </p>
                         )}
-                        <div className="wiki-term-body">
-                          {translation.description ? (
-                            <EntityRichText
-                              text={translation.description}
-                              index={index}
-                              locale={locale}
-                              fallbackLocale={fallback}
-                              autoRecognize={false}
-                              context="wiki"
-                            />
-                          ) : (
-                            text("Chưa có giải thích cho thuật ngữ này.", "This term has no explanation yet.")
-                          )}
-                        </div>
+                      </div>
+                      <div className="wiki-term-body">
+                        {translation.description ? (
+                          <EntityRichText
+                            text={translation.description}
+                            index={index}
+                            locale={locale}
+                            fallbackLocale={fallback}
+                            autoRecognize={false}
+                            context="wiki"
+                          />
+                        ) : (
+                          text("Chưa có giải thích cho thuật ngữ này.", "This term has no explanation yet.")
+                        )}
                       </div>
                     </article>
                   </li>
                 )
               })}
             </ul>
+          ) : terms.length ? (
+            <div role="status" className="wiki-terms-state wiki-mascot-state">
+              <p>{text("Không có thuật ngữ phù hợp.", "No matching terms.")}</p>
+              <button type="button" onClick={() => updateSearch("")}>
+                {text("Xóa tìm kiếm", "Clear search")}
+              </button>
+            </div>
           ) : (
             <p role="status" className="wiki-terms-state wiki-mascot-state">
-              {terms.length
-                ? text("Không có thuật ngữ phù hợp.", "No matching terms.")
-                : text("Chưa có thuật ngữ được công bố.", "No terms have been published yet.")}
+              {text("Chưa có thuật ngữ được công bố.", "No terms have been published yet.")}
             </p>
           )}
         </>
       )}
-    </div>
+    </>
   )
 }

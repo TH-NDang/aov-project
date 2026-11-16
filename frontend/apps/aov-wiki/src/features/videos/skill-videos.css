@@ -1,3 +1,4 @@
+/* Videos of the ability being read, inside its panel: a row of small pressable entries, no frames of their own. */
 .wiki-skill-videos {
   display: grid;
   min-width: 0;
@@ -25,7 +26,7 @@
 .wiki-skill-video-bar button {
   font: var(--wiki-type-meta);
   display: inline-flex;
-  min-height: 32px;
+  min-height: 36px;
   align-items: center;
   gap: 6px;
   color: var(--aov-muted);
@@ -37,7 +38,7 @@
   display: flex;
   gap: 8px;
   margin: 0;
-  padding: 0 0 2px;
+  padding: 2px;
   overflow-x: auto;
   list-style: none;
   scrollbar-width: thin;
@@ -50,12 +51,13 @@
   display: grid;
   grid-template-columns: 84px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
   height: 100%;
-  border: 1px solid var(--aov-line);
+  border: 1px solid transparent;
   border-radius: var(--aov-radius-control);
   padding: 4px;
+  background: var(--aov-raised);
   color: inherit;
   text-align: left;
   text-decoration: none;
@@ -64,8 +66,12 @@
   border-color: var(--aov-line-strong);
 }
 .wiki-skill-video-list li > button[aria-pressed="true"] {
-  border-color: var(--aov-accent);
-  background: var(--aov-accent-soft);
+  border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 12%, var(--aov-raised));
+}
+/* Muted text is too faint on the tint of the entry being played. */
+.wiki-skill-video-list li > button[aria-pressed="true"] .wiki-video-meta {
+  color: var(--aov-text-soft);
 }
 .wiki-skill-videos :is(button, a):focus-visible {
   outline: 2px solid var(--aov-accent);

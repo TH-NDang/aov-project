@@ -1,7 +1,7 @@
 import { Link } from "react-router"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { useWikiContext, wikiText } from "../context/wiki-context"
-import { FeedbackDialog } from "../layout/feedback-dialog"
+import { FeedbackDialog } from "./feedback-dialog"
 import { WikiIcon } from "./wiki-icon"
 import "./wiki-footer.css"
 
@@ -18,7 +18,7 @@ export function WikiFooter() {
       <div className="wiki-footer-main">
         <div className="wiki-footer-about">
           <Link to={href("/")} className="wiki-footer-brand">
-            <img src="/images/mole-logo-v4.png" width="28" height="28" alt="" /> AOV Wiki
+            <img src="/images/mole-logo-v4-160.png" width="28" height="28" alt="" /> AOV Wiki
           </Link>
           <p>
             {text(

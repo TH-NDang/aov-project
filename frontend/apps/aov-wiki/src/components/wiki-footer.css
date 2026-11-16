@@ -1,15 +1,15 @@
+/* One quiet band under every page; its text and its rule line up with the page column. */
 .wiki-site-footer {
   margin-top: auto;
-  border-top: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 18%, transparent);
+  border-top: 1px solid var(--header-line);
   background: var(--aov-wiki-bar);
 }
 .wiki-footer-main,
 .wiki-footer-note {
-  width: min(100%, 1280px);
+  width: min(calc(100% - 2 * var(--wiki-gutter)), calc(var(--aov-page-max) - 2 * var(--wiki-gutter)));
   margin-inline: auto;
-  padding-inline: var(--wiki-gutter);
 }
-/* The introduction on the left, the support links on the right; the links drop below when they no longer fit. */
+/* The introduction on the left, the support links on the right. */
 .wiki-footer-main {
   display: flex;
   flex-wrap: wrap;
@@ -76,19 +76,26 @@
   justify-content: space-between;
   gap: 4px 24px;
   padding-block: 12px 16px;
-  border-top: 1px solid var(--wiki-line);
+  border-top: 1px solid var(--aov-line);
 }
 .wiki-footer-note p {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
 
-/* Three links do not fit one line on a phone: a list reads better than one link left alone on a second line. */
-@media (max-width: 560px) {
+/* Compact: the links become a list under the introduction, each one an easy target. */
+@media (max-width: 899.98px) {
   .wiki-footer-main {
     padding-block: 24px 16px;
   }
+  .wiki-footer-brand {
+    min-height: 36px;
+  }
   .wiki-footer-links ul {
     flex-direction: column;
+  }
+  .wiki-footer-links li > a,
+  .wiki-footer-links li > .wiki-feedback-trigger.with-label {
+    min-height: 40px;
   }
 }

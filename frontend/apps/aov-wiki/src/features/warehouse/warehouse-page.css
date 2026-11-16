@@ -1,45 +1,334 @@
+/* The armory: search and filters, then the catalog at full width. An open entry stands in a panel beside it. */
 .wiki-warehouse-page {
-  --warehouse-accent: #dfc18b;
-  max-width: 980px;
   color: var(--aov-text);
 }
-.wiki-warehouse-enchantments .enchantment-node:not([aria-pressed="true"]) {
-  border-color: transparent;
-  background: var(--aov-wiki-panel);
+.wiki-warehouse-page :is(button, a) {
+  -webkit-tap-highlight-color: transparent;
 }
-.wiki-warehouse-enchantments {
-  --warehouse-accent: #9acbb0;
+/* The version stands at the right of the title on wide layouts and in a line of its own under the tabs on compact. */
+.wiki-warehouse-version {
+  display: flex;
+  min-width: 0;
+  align-items: center;
 }
-.wiki-warehouse-arcana {
-  --warehouse-accent: #c6a5e9;
+.wiki-warehouse-version > .wiki-version-picker {
+  margin: 0;
 }
-.wiki-warehouse-spells {
-  --warehouse-accent: #91c5e0;
+/* Runs edge to edge under the header on the compact layout. */
+.wiki-warehouse-page > .public-tab-bar {
+  margin: -12px calc(-1 * var(--wiki-gutter)) 12px;
+}
+.wiki-warehouse-page > .wiki-warehouse-version {
+  min-height: 28px;
+  margin-bottom: 8px;
+}
+
+/* ---------- Controls ---------- */
+.wiki-warehouse-controls {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 .wiki-warehouse-toolbar {
   display: flex;
   min-width: 0;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
-  margin: 4px 0 10px;
+  gap: 12px;
 }
-.wiki-warehouse-toolbar > .wiki-version-picker {
+.wiki-warehouse-toolbar-end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+/* Second line of the controls: its chips wrap as one group that starts at the same left edge on every line. */
+.wiki-warehouse-subbar {
+  display: flex;
   min-width: 0;
-  flex: 1;
-  margin: 0;
+  min-height: 32px;
+  align-items: flex-start;
+  gap: 10px;
 }
+/* Where the line runs short the field gives up its width first; the filters scroll only after it is at its least. */
+.wiki-warehouse-search {
+  display: flex;
+  min-width: 200px;
+  height: 36px;
+  flex: 0 1000 280px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 4px 0 10px;
+  background: var(--aov-surface);
+  color: var(--aov-muted);
+}
+.wiki-warehouse-search:focus-within {
+  border-color: var(--aov-accent);
+  background: var(--aov-sunken);
+}
+.wiki-warehouse-search > svg {
+  flex: none;
+}
+.wiki-warehouse-search input {
+  font: var(--wiki-type-body);
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--aov-text);
+  text-overflow: ellipsis;
+}
+.wiki-warehouse-search input::placeholder {
+  color: var(--aov-muted);
+}
+.wiki-warehouse-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.wiki-warehouse-search button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-muted);
+}
+.wiki-warehouse-search button:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+/* Several filter groups on one line; where the line is too short they scroll sideways together. */
+.wiki-warehouse-filters {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wiki-warehouse-filters > .wiki-warehouse-chips {
+  flex: none;
+  overflow: visible;
+}
+.wiki-warehouse-filters > .wiki-warehouse-chips + .wiki-warehouse-chips {
+  border-left: 1px solid var(--aov-line);
+  padding-left: 12px;
+}
+.wiki-warehouse-chips {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wiki-warehouse-chips::-webkit-scrollbar,
+.wiki-warehouse-filters::-webkit-scrollbar {
+  display: none;
+}
+.wiki-warehouse-chips[data-wrap] {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.wiki-warehouse-chip-pair {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+}
+.wiki-warehouse-chip {
+  font: var(--wiki-type-meta);
+  position: relative;
+  display: inline-flex;
+  height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-pill);
+  padding: 0 11px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+  white-space: nowrap;
+  transition:
+    color 140ms,
+    background 140ms,
+    border-color 140ms;
+}
+.wiki-warehouse-chip > svg {
+  flex: none;
+}
+.wiki-warehouse-chip small {
+  font: inherit;
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-warehouse-chip[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+/* Muted text loses its contrast on the tint, so the count follows the chip. */
+.wiki-warehouse-chip[aria-pressed="true"] small {
+  color: inherit;
+}
+/* A ring drawn outside would be cut by a row that scrolls sideways. */
+.wiki-warehouse-chip:focus-visible,
+.wiki-warehouse-clear:focus-visible {
+  outline-offset: -2px;
+}
+.wiki-warehouse-chip-art,
+.wiki-warehouse-art.wiki-warehouse-chip-art {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 4px;
+}
+.wiki-warehouse-clear {
+  font: var(--wiki-type-meta);
+  min-height: 32px;
+  flex: none;
+  padding: 0 6px;
+  color: var(--aov-accent);
+  white-space: nowrap;
+}
+.wiki-warehouse-switch {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  border-radius: var(--aov-radius-control);
+  padding: 2px;
+  background: var(--aov-surface);
+}
+.wiki-warehouse-switch button {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 4px;
+  padding: 0 7px;
+  color: var(--aov-muted);
+}
+.wiki-warehouse-switch button > span {
+  display: none;
+}
+.wiki-warehouse-switch[data-labels] button {
+  padding: 0 10px;
+}
+.wiki-warehouse-switch[data-labels] button > span {
+  display: inline;
+}
+.wiki-warehouse-switch button[aria-pressed="true"] {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-warehouse-select[data-slot="select-trigger"] {
+  font: var(--wiki-type-meta);
+  height: 36px;
+  min-width: 148px;
+  flex: none;
+  gap: 8px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 10px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+  box-shadow: none;
+}
+.wiki-warehouse-select[data-slot="select-trigger"][data-active] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+/* Choices in the filter sheet: full names, two to a row, sized for a thumb. */
+.wiki-warehouse-sheet-group {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+.wiki-warehouse-sheet-group > legend {
+  font: var(--wiki-type-meta);
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--aov-muted);
+}
+.wiki-warehouse-sheet-group > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 8px;
+}
+.wiki-warehouse-sheet-choice {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding-inline: 10px;
+  color: var(--aov-text-soft);
+  font-weight: 400;
+  text-align: left;
+}
+.wiki-warehouse-sheet-choice > svg {
+  flex: none;
+}
+.wiki-warehouse-sheet-choice small {
+  font: var(--wiki-type-meta);
+  margin-left: auto;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-warehouse-sheet-choice[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+@media (hover: hover) {
+  .wiki-warehouse-chip:not([aria-pressed="true"]):hover,
+  .wiki-warehouse-switch button:not([aria-pressed="true"]):hover {
+    background: var(--aov-raised);
+    color: var(--aov-text);
+  }
+  .wiki-warehouse-clear:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+/* A finger gets a taller target than the 32px the chip shows. */
+@media (pointer: coarse) {
+  .wiki-warehouse-chips {
+    margin-block: -4px;
+    padding-block: 4px;
+  }
+  .wiki-warehouse-chip::after {
+    content: "";
+    position: absolute;
+    inset: -5px 0;
+  }
+}
+
+/* ---------- Notices and empty states ---------- */
 .wiki-warehouse-notice {
+  font: var(--wiki-type-meta);
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 14%, transparent);
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: var(--aov-accent);
-  font-size: 0.8125rem;
+  gap: 6px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--aov-radius-card);
+  padding: 10px 14px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
 }
 .wiki-warehouse-notice button {
   color: var(--aov-accent);
@@ -48,496 +337,593 @@
 }
 .wiki-warehouse-empty {
   display: grid;
-  min-height: 350px;
+  min-height: 320px;
   place-content: center;
   justify-items: center;
-  gap: 13px;
-  padding: 28px 14px;
+  gap: 8px;
+  padding: 28px 16px;
   text-align: center;
-}
-.wiki-warehouse-empty > svg {
-  color: var(--warehouse-accent);
-  opacity: 0.55;
 }
 .wiki-warehouse-empty h2 {
   font: var(--wiki-type-section);
-  margin: 6px 0 0;
-  color: var(--aov-accent);
+  color: var(--aov-text);
 }
 .wiki-warehouse-empty p {
   font: var(--wiki-type-body);
-  max-width: 300px;
+  max-width: 340px;
   color: var(--aov-muted);
 }
 .wiki-warehouse-empty button {
-  margin-top: 5px;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 27%, transparent);
-  border-radius: 8px;
-  padding: 8px 16px;
-  color: var(--aov-accent);
-  font-size: 0.8125rem;
+  font: var(--wiki-type-category);
+  min-height: 36px;
+  margin-top: 8px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  padding: 6px 16px;
+  color: var(--aov-text);
 }
+.wiki-warehouse-empty button:hover {
+  background: var(--aov-raised);
+}
+.wiki-warehouse-empty button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+/* ---------- Artwork ---------- */
 .wiki-warehouse-art {
   display: block;
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
-  border-radius: 9px;
+  border-radius: var(--aov-radius-control);
   object-fit: contain;
 }
 .wiki-warehouse-art-fallback {
   display: grid;
   place-items: center;
-  background: linear-gradient(145deg, #4b617633, #17273b);
-  color: #b3b18e;
+  background: var(--aov-raised);
+  color: var(--aov-muted);
 }
-.wiki-warehouse-page button,
-.wiki-warehouse-page a {
-  -webkit-tap-highlight-color: transparent;
-}
-.wiki-warehouse-page button:focus-visible,
-.wiki-warehouse-page a:focus-visible {
-  outline: 2px solid var(--warehouse-accent);
-  outline-offset: 3px;
-}
-.wiki-warehouse-skeleton-grid {
+
+/* ---------- Loading ---------- */
+/* The placeholders take the sizes and the columns of the catalog they stand for, so nothing moves when it arrives. */
+.wiki-warehouse-skeleton {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 10px;
 }
-.wiki-warehouse-skeleton-card {
-  display: flex;
-  min-height: 100px;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid var(--aov-line);
-  border-radius: 12px;
-  padding: 16px;
-  background: #1120313b;
+.wiki-warehouse-skeleton > span {
+  display: block;
+  height: 74px;
+  border-radius: var(--aov-radius-card);
+  background-color: var(--aov-surface);
 }
-.wiki-warehouse-skeleton-card > span:first-child {
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: 50%;
+/* The heading of the first group: its title, then the space down to the first row. */
+.wiki-warehouse-skeleton > .wiki-warehouse-skeleton-heading {
+  grid-column: 1 / -1;
+  width: 160px;
+  height: 24px;
+  margin-bottom: 17px;
+  border-radius: var(--aov-radius-control);
 }
-.wiki-warehouse-skeleton-card > span:last-child {
-  width: 70%;
-  height: 30px;
-  border-radius: 5px;
+/* The board's columns start under its one line of hints. */
+.wiki-warehouse-skeleton[data-layout="shop"] {
+  column-gap: 24px;
+  padding-top: 28px;
+}
+.wiki-warehouse-skeleton[data-layout="list"] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.wiki-warehouse-skeleton[data-layout="list"] > span:not(.wiki-warehouse-skeleton-heading) {
+  height: 82px;
+}
+/* Below the tier heading the arcana take a title per color and a label per stat family before their first row. */
+.wiki-warehouse-skeleton[data-kind="arcana"] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px 24px;
+}
+.wiki-warehouse-skeleton[data-kind="arcana"] > span:not(.wiki-warehouse-skeleton-heading) {
+  height: 57px;
+}
+.wiki-warehouse-skeleton[data-kind="arcana"] > .wiki-warehouse-skeleton-heading {
+  margin-bottom: 73px;
+}
+.wiki-warehouse-skeleton[data-kind="spells"] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.wiki-warehouse-skeleton[data-kind="spells"] > span {
+  height: 144px;
+}
+.wiki-warehouse-skeleton[data-kind="enchantments"] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+.wiki-warehouse-skeleton[data-kind="enchantments"] > span {
+  height: 400px;
+}
+@container wiki-warehouse (min-width: 640px) {
+  .wiki-warehouse-skeleton[data-kind="arcana"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container wiki-warehouse (min-width: 680px) {
+  .wiki-warehouse-skeleton[data-layout="list"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container wiki-warehouse (min-width: 720px) {
+  .wiki-warehouse-skeleton[data-kind="spells"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .wiki-warehouse-skeleton[data-kind="enchantments"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+  }
+  .wiki-warehouse-skeleton[data-kind="enchantments"] > span {
+    height: 280px;
+  }
+}
+@container wiki-warehouse (min-width: 1040px) {
+  .wiki-warehouse-skeleton[data-layout="list"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 .wiki-warehouse-loading-heading {
-  width: 220px;
-  height: 48px;
-  margin: 24px 0 22px;
-  border-radius: 8px;
+  width: 180px;
+  height: 36px;
+  margin: 4px 0 16px;
+  border-radius: var(--aov-radius-control);
 }
+.wiki-warehouse-search.wiki-skeleton {
+  border-color: transparent;
+}
+
+/* ---------- Catalog and detail side by side ---------- */
+.wiki-warehouse-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+/* At the full page width the panel leaves the shop board its three columns at their narrow size. */
+.wiki-warehouse-body[data-detail] {
+  grid-template-columns: minmax(0, 1fr) clamp(320px, 31%, 380px);
+}
+.wiki-warehouse-main {
+  min-width: 0;
+  container: wiki-warehouse / inline-size;
+}
+.wiki-warehouse-panel {
+  position: sticky;
+  top: calc(var(--wiki-header-height) + 12px);
+  display: flex;
+  min-width: 0;
+  max-height: calc(100svh - var(--wiki-header-height) - 24px);
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+
+/* ---------- Detail: the same parts in the panel and in the sheet ---------- */
 .wiki-warehouse-detail[data-slot="sheet-content"] {
   width: min(480px, 100vw);
   max-width: 480px;
   gap: 0;
-  border-left: 1px solid var(--aov-wiki-gold);
+  border: 0;
   padding: 0;
-  background: var(--aov-wiki-panel);
-  color: var(--wiki-text);
+  background: var(--aov-surface);
+  color: var(--aov-text);
 }
-.wiki-warehouse-detail-close {
-  position: absolute;
-  z-index: 2;
-  top: 18px;
-  right: 18px;
+/* The sheet takes the focus when it opens so the reader starts inside it; it is not a control, so it draws no ring. */
+.wiki-warehouse-detail[data-slot="sheet-content"]:focus-visible {
+  outline: none;
+}
+.wiki-warehouse-detail-bar {
+  display: flex;
+  min-height: 48px;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px 6px 20px;
+}
+.wiki-warehouse-detail-bar > span:first-child {
+  font: var(--wiki-type-meta);
+  min-width: 0;
+  flex: 1;
+  color: var(--aov-muted);
+}
+/* The tools of the detail: where its picture comes from, suggesting a correction, and putting it away. */
+.wiki-warehouse-detail-tool {
+  position: static;
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  flex: none;
   place-items: center;
-  border: 1px solid var(--wiki-line);
-  border-radius: 50%;
-  background: var(--background);
-  color: var(--wiki-muted);
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: transparent;
+  box-shadow: none;
+  color: var(--aov-muted);
 }
-.wiki-warehouse-detail-close:hover {
-  background: var(--accent);
+.wiki-warehouse-detail-tool:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
 }
 .wiki-warehouse-detail-scroll {
   min-height: 0;
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 20px;
+  padding: 2px 20px 20px;
+  scrollbar-width: thin;
 }
 .wiki-warehouse-detail-identity {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding-right: 40px;
+  gap: 14px;
 }
-/* The item is lit by the same amber light as the logo. */
 .wiki-warehouse-detail-identity > .wiki-warehouse-art {
-  width: 64px;
-  height: 64px;
-  border: 1px solid var(--aov-wiki-gold);
-  border-radius: 12px;
-  box-shadow: 0 0 26px -6px rgb(211 188 142 / 55%);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--aov-radius-card);
 }
-.wiki-warehouse-detail-eyebrow {
-  font: var(--wiki-type-meta);
-  color: var(--wiki-muted);
-  letter-spacing: 0.04em;
+.wiki-warehouse-detail-identity > div {
+  min-width: 0;
 }
 .wiki-warehouse-detail [data-slot="sheet-title"] {
-  font: var(--wiki-type-page);
-  margin-top: 6px;
-  color: var(--wiki-text);
+  color: var(--aov-text);
+  font: 700 1.375rem/1.75rem var(--wiki-font-reading);
+  letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
 .wiki-warehouse-detail-price {
   font: var(--wiki-type-category);
-  margin-top: 4px;
+  margin-top: 2px;
   color: var(--aov-accent);
 }
+/* The price takes the page's gold instead of the shared catalog's own. */
+.wiki-warehouse-page .item-price-text,
+.wiki-warehouse-detail .item-price-text {
+  color: inherit;
+}
+.wiki-warehouse-detail-price svg,
+.wiki-item-row-price svg {
+  color: currentColor;
+}
+/* Sections follow one another with a thin rule between them; nothing inside the panel is boxed again. */
 .wiki-warehouse-detail-body {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  display: grid;
+  min-width: 0;
+  gap: 16px;
   margin-top: 16px;
 }
-.wiki-warehouse-baseline-note {
+.wiki-warehouse-detail-body > * {
+  min-width: 0;
+}
+.wiki-warehouse-detail-body > section {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--aov-line);
+  padding-top: 16px;
+}
+.wiki-warehouse-detail-body > section > * {
+  min-width: 0;
+  margin-block: 0;
+}
+.wiki-warehouse-detail .wiki-warehouse-detail-body h3 {
+  margin: 0;
+  color: var(--aov-accent);
+  font: var(--wiki-type-entry);
+}
+.wiki-warehouse-detail .wiki-warehouse-detail-body h3 :is(small, .type-meta) {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-warehouse-detail-body h4 {
+  color: var(--aov-text);
+  font: var(--wiki-type-category);
+}
+/* "Show more" under a list reads as a link at the list's left edge. */
+.wiki-warehouse-detail-body > section > button {
+  justify-self: start;
+  min-height: 32px;
+  color: var(--aov-accent);
+}
+/* The last line of a list of facts meets the rule of the next section. */
+.wiki-warehouse-detail-body dl > div:last-child {
+  border-bottom: 0;
+}
+/* A name in a recipe wraps instead of ending in dots. */
+.wiki-warehouse-detail-body .truncate {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+.wiki-warehouse-facts {
+  margin: 0;
+}
+.wiki-warehouse-facts > div {
+  font: var(--wiki-type-body);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--aov-line);
+  padding: 7px 0;
+}
+.wiki-warehouse-facts > div:first-child {
+  padding-top: 0;
+}
+.wiki-warehouse-facts > div:last-child {
+  padding-bottom: 0;
+}
+.wiki-warehouse-facts dt {
+  color: var(--aov-text-soft);
+}
+.wiki-warehouse-facts dd {
+  flex: none;
+  color: var(--aov-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-warehouse-detail-prose {
+  font: var(--wiki-type-body);
+  color: var(--aov-text);
+  overflow-wrap: anywhere;
+}
+.wiki-warehouse-detail-effect {
+  display: grid;
+  gap: 2px;
+}
+.wiki-warehouse-detail-note {
   font: var(--wiki-type-meta);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  color: var(--wiki-muted);
+  gap: 4px 6px;
+  color: var(--aov-muted);
 }
-.wiki-warehouse-baseline-note svg {
+.wiki-warehouse-detail-note svg {
   flex: none;
+}
+.wiki-warehouse-detail-note button {
+  color: var(--aov-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wiki-warehouse-state-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wiki-warehouse-state-switch button {
+  font: var(--wiki-type-category);
+  display: flex;
+  min-height: 44px;
+  flex: 1 1 140px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  padding: 5px 10px 5px 6px;
+  background: var(--aov-raised);
+  color: var(--aov-text-soft);
+  text-align: left;
+}
+.wiki-warehouse-state-switch button[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 10%, var(--aov-raised));
+  color: var(--aov-text);
+}
+.wiki-warehouse-state-switch .wiki-warehouse-art {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
 }
 .wiki-warehouse-siblings {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 2px 12px;
+  margin: 0 -6px;
+  padding: 0;
+  list-style: none;
 }
 .wiki-warehouse-siblings button {
+  font: var(--wiki-type-body);
   display: flex;
   width: 100%;
   min-width: 0;
+  min-height: 40px;
   align-items: center;
-  gap: 8px;
-  border-radius: 6px;
-  padding: 3px 4px;
-  font: var(--wiki-type-body);
+  gap: 10px;
+  border-radius: var(--aov-radius-control);
+  padding: 4px 6px;
   text-align: left;
 }
 .wiki-warehouse-siblings button:hover {
-  background: var(--accent);
+  background: var(--aov-raised);
 }
 .wiki-warehouse-siblings .wiki-warehouse-art {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 50%;
+}
+.wiki-warehouse-update {
+  display: grid;
+  gap: 4px;
+}
+.wiki-warehouse-update h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+}
+.wiki-warehouse-update h4 a:hover {
+  color: var(--aov-accent);
+}
+.wiki-warehouse-update h4 small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-warehouse-update ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-warehouse-update li {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  padding: 8px 0;
+}
+.wiki-warehouse-update li + li {
+  border-top: 1px solid var(--aov-line);
+}
+.wiki-warehouse-update li strong {
+  font: var(--wiki-type-meta);
+  color: var(--aov-text-soft);
+  font-weight: 600;
+}
+.wiki-warehouse-update li p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text);
+  white-space: pre-line;
+}
+.wiki-warehouse-update li a {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wiki-warehouse-update li a:hover {
+  color: var(--aov-accent);
+}
+.wiki-warehouse-detail-missing {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 24px 20px 40px;
+  text-align: center;
+}
+.wiki-warehouse-detail-missing p {
+  font: var(--wiki-type-entry);
+}
+.wiki-warehouse-detail-missing small {
+  font: var(--wiki-type-meta);
+  max-width: 280px;
+  color: var(--aov-muted);
+}
+/* The suggestion form takes the place of the entry's text; its buttons stay in reach while it scrolls. */
+.wiki-warehouse-suggestion {
+  margin-top: 16px;
+  border-top: 1px solid var(--aov-line);
+  padding-top: 12px;
+}
+.wiki-warehouse-suggestion .wiki-feedback-actions {
+  position: sticky;
+  bottom: -20px;
+  padding-block: 8px;
+  background: var(--aov-surface);
 }
 .wiki-warehouse-step {
   display: grid;
   flex: none;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 6px;
-  border-top: 1px solid var(--wiki-line);
-  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  gap: 8px;
+  border-top: 1px solid var(--aov-line);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
 }
 .wiki-warehouse-step small {
   font: var(--wiki-type-meta);
-  color: var(--wiki-muted);
+  color: var(--aov-muted);
   font-variant-numeric: tabular-nums;
 }
 .wiki-warehouse-step button {
   font: var(--wiki-type-meta);
   display: flex;
   min-width: 0;
-  min-height: 36px;
+  min-height: 40px;
   align-items: center;
   gap: 4px;
   border-radius: var(--aov-radius-control);
-  padding: 4px 6px;
-  color: var(--wiki-text);
+  padding: 2px 6px;
+  color: var(--aov-text-soft);
+  text-align: left;
 }
 .wiki-warehouse-step button:last-child {
   justify-content: flex-end;
+  text-align: right;
 }
 .wiki-warehouse-step button:hover {
-  background: var(--accent);
+  background: var(--aov-raised);
+  color: var(--aov-text);
 }
+/* Two lines keep the end of a long name, which is where neighbouring entries differ. */
 .wiki-warehouse-step span {
+  display: -webkit-box;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 .wiki-warehouse-step svg {
   flex: none;
 }
-.wiki-warehouse-search.wiki-hero-search {
-  width: min(100%, 300px);
-  flex: none;
-}
-.wiki-warehouse-panel-empty {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  padding: 48px 20px;
-  color: var(--wiki-muted);
-  text-align: center;
-}
-.wiki-warehouse-panel-empty h2 {
-  font: var(--wiki-type-entry);
-  color: var(--wiki-text);
-}
-.wiki-warehouse-panel-empty p {
-  font: var(--wiki-type-body);
-}
-.wiki-warehouse-main {
-  min-width: 0;
-}
-.wiki-warehouse-panel {
-  display: none;
-}
-/* Runs edge to edge under the header on the compact layout. */
-.wiki-warehouse-page > .public-tab-bar {
-  margin: -12px calc(-1 * var(--wiki-gutter)) 10px;
-}
-@media (max-width: 640px) {
-  .wiki-warehouse-search.wiki-hero-search {
-    width: auto;
-    max-width: none;
-    flex: 1 1 100%;
+
+/* ---------- Compact layout ---------- */
+@media (max-width: 899.98px) {
+  .wiki-warehouse-controls {
+    gap: 8px;
+    margin-bottom: 14px;
   }
-}
-@media (min-width: 1400px) {
-  .wiki-library-body:has(.wiki-warehouse-page) {
-    width: min(100%, 1560px);
-  }
-  .wiki-warehouse-page {
-    max-width: none;
-  }
-  .wiki-warehouse-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 372px;
-    align-items: start;
-    gap: 20px;
-  }
-  .wiki-warehouse-panel {
-    position: sticky;
-    top: 60px;
-    display: flex;
-    max-height: calc(100svh - 72px);
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid var(--wiki-line);
-    border-radius: var(--aov-radius-card);
-    background: var(--aov-surface);
-  }
-}
-.wiki-warehouse-suggestion {
-  margin-top: 16px;
-  border-top: 1px solid var(--wiki-line);
-  padding-top: 12px;
-}
-.wiki-warehouse-suggestion .wiki-feedback-actions {
-  position: sticky;
-  bottom: 0;
-  padding-block: 8px;
-  background: var(--background);
-}
-.wiki-warehouse-detail-section {
-  margin-top: 26px;
-}
-.wiki-warehouse-detail-section > h3::before {
-  content: "";
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 8px;
-  background: var(--aov-wiki-gold);
-  transform: rotate(45deg) translateY(-1px);
-}
-.wiki-warehouse-detail-section > h3 {
-  font: var(--wiki-type-section);
-  margin-bottom: 12px;
-  color: var(--aov-accent);
-}
-.wiki-warehouse-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-.wiki-warehouse-stat-grid > div {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border-radius: 9px;
-  padding: 13px;
-  background: #0f1e304d;
-}
-.wiki-warehouse-stat-grid dt {
-  font: var(--wiki-type-meta);
-  color: var(--aov-muted);
-}
-.wiki-warehouse-stat-grid dd {
-  font: var(--wiki-type-entry);
-  color: var(--aov-text);
-}
-.wiki-warehouse-rich-description {
-  font: var(--wiki-type-prose);
-  color: var(--aov-text-soft);
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-.wiki-warehouse-rich-description strong {
-  color: var(--aov-accent-strong);
-}
-.wiki-warehouse-effect {
-  margin-top: 18px;
-  border-left: 2px solid color-mix(in srgb, var(--aov-accent) 34%, transparent);
-  padding: 5px 0 5px 13px;
-}
-.wiki-warehouse-effect > h3 {
-  font: var(--wiki-type-category);
-  margin-bottom: 7px;
-  color: var(--aov-accent);
-}
-.wiki-warehouse-recipe-list {
-  display: grid;
-  gap: 8px;
-}
-.wiki-warehouse-recipe-item {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 11px;
-  border: 1px solid var(--aov-line);
-  border-radius: 10px;
-  padding: 10px;
-  background: #0e1e303d;
-  text-align: left;
-}
-.wiki-warehouse-recipe-item:hover {
-  border-color: color-mix(in srgb, var(--aov-accent) 32%, transparent);
-  background: color-mix(in srgb, var(--aov-accent) 4%, transparent);
-}
-.wiki-warehouse-recipe-item > .wiki-warehouse-art {
-  width: 38px;
-  height: 38px;
-  border-radius: 7px;
-}
-.wiki-warehouse-recipe-item > span {
-  flex: 1;
-  color: var(--aov-text);
-  font-size: 0.8125rem;
-}
-.wiki-warehouse-recipe-item small {
-  color: var(--aov-accent);
-}
-.wiki-warehouse-recipe-item > svg {
-  color: var(--aov-accent);
-}
-.wiki-warehouse-recipe-unavailable {
-  border-radius: 9px;
-  padding: 12px;
-  background: #142235;
-  color: var(--aov-muted);
-  font-size: 0.8125rem;
-}
-.wiki-warehouse-state-switch {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-block: 18px 26px;
-}
-.wiki-warehouse-state-switch button {
-  display: flex;
-  flex: 1 0 100px;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--wiki-line);
-  border-radius: 10px;
-  padding: 8px;
-  background: var(--background);
-  color: var(--wiki-muted);
-  font-size: 0.8125rem;
-  text-align: left;
-}
-.wiki-warehouse-state-switch button[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--aov-accent) 40%, transparent);
-  background: var(--muted);
-  color: var(--wiki-text);
-}
-.wiki-warehouse-state-switch .wiki-warehouse-art {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-}
-.wiki-warehouse-detail-muted {
-  margin-top: 30px;
-  color: var(--aov-muted);
-  font-size: 0.8125rem;
-}
-.wiki-warehouse-detail-placeholder {
-  display: grid;
-  min-height: 280px;
-  place-content: center;
-  justify-items: center;
-  gap: 14px;
-  text-align: center;
-}
-.wiki-warehouse-detail-placeholder > svg {
-  color: var(--aov-accent);
-}
-.wiki-warehouse-detail-placeholder p {
-  max-width: 270px;
-  color: var(--aov-muted);
-  font-size: 0.8125rem;
-  line-height: 1.7;
-}
-@media (max-width: 900px) {
   .wiki-warehouse-toolbar {
-    flex-wrap: wrap;
+    gap: 8px;
   }
-  .wiki-warehouse-toolbar > .wiki-version-picker {
-    flex-basis: 100%;
+  .wiki-warehouse-search {
+    min-width: 0;
+    height: 40px;
+    flex: 1 1 0;
+    padding-right: 1px;
   }
-  .wiki-warehouse-skeleton-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Below 16px, iPhones zoom the page when the field takes focus. */
+  .wiki-warehouse-search input {
+    font-size: 16px;
+  }
+  /* Small controls grow to what a finger needs. */
+  .wiki-warehouse-search button,
+  .wiki-warehouse-switch button {
+    min-width: 36px;
+    height: 36px;
+  }
+  .wiki-warehouse-detail-body > section > button {
+    min-height: 40px;
+  }
+  /* The row of chips scrolls out to the screen's edge. */
+  .wiki-warehouse-controls > .wiki-warehouse-chips {
+    margin-inline: calc(-1 * var(--wiki-gutter));
+    padding-inline: var(--wiki-gutter);
+  }
+  .wiki-warehouse-skeleton[data-layout="list"] > span:not(.wiki-warehouse-skeleton-heading) {
+    height: 80px;
   }
 }
+/* On a phone the detail comes up from the bottom, as tall as the entry needs. */
 @media (max-width: 640px) {
-  .wiki-warehouse-toolbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
-    margin: 0;
-  }
-  .wiki-warehouse-toolbar > .wiki-version-picker {
-    margin: 6px 0 8px;
-  }
-  .wiki-warehouse-empty {
-    min-height: 320px;
-  }
-  .wiki-warehouse-skeleton-card {
-    min-height: 110px;
-    flex-direction: column;
-    gap: 9px;
-    padding: 12px;
-  }
-  .wiki-warehouse-skeleton-card > span:last-child {
-    height: 15px;
-  }
   .wiki-warehouse-detail[data-slot="sheet-content"] {
     inset: auto 0 0;
     width: 100%;
     max-width: none;
-    height: min(90dvh, 780px);
-    border: 1px solid var(--wiki-line);
-    border-bottom: 0;
-    border-radius: 20px 20px 0 0;
+    height: auto;
+    min-height: 240px;
+    max-height: min(90dvh, 780px);
+    border-radius: var(--aov-radius-media) var(--aov-radius-media) 0 0;
   }
   .wiki-warehouse-detail[data-state="open"] {
     animation: wiki-warehouse-rise 220ms ease-out;
@@ -545,22 +931,15 @@
   .wiki-warehouse-detail[data-state="closed"] {
     animation: wiki-warehouse-fall 180ms ease-in;
   }
+  .wiki-warehouse-detail-bar {
+    padding-left: 16px;
+  }
+  .wiki-warehouse-detail-tool {
+    width: 40px;
+    height: 40px;
+  }
   .wiki-warehouse-detail-scroll {
-    padding: 16px 16px max(20px, env(safe-area-inset-bottom));
-  }
-  .wiki-warehouse-detail-close {
-    top: 13px;
-    right: 16px;
-    width: 30px;
-    height: 30px;
-  }
-  .wiki-warehouse-detail-identity {
-    gap: 14px;
-  }
-  .wiki-warehouse-detail-identity > .wiki-warehouse-art {
-    width: 52px;
-    height: 52px;
-    border-radius: 13px;
+    padding: 2px 16px max(20px, env(safe-area-inset-bottom));
   }
 }
 @keyframes wiki-warehouse-rise {

@@ -1,0 +1,204 @@
+import { useContext, type ReactNode } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Link } from "react-router"
+import { ModeHeading } from "./mode-ui"
+import { insightsQuery } from "./mode-api"
+import { GuideLinks, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
+
+type Row = { key: string; label: ReactNode; value: number }
+
+/** Plain bars, the longest row full width, each with its exact number at the end. */
+function Bars({ rows, label }: { rows: Row[]; label: string }) {
+  const max = Math.max(1, ...rows.map((row) => row.value))
+  return (
+    <ol className="insight-bars" aria-label={label}>
+      {rows.map((row) => (
+        <li key={row.key} className="insight-bar">
+          <span className="insight-label">{row.label}</span>
+          <span className="insight-track" aria-hidden="true">
+            <i style={{ width: `${(row.value / max) * 100}%` }} />
+          </span>
+          <b>{row.value.toLocaleString("vi-VN")}</b>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/** Rows of empty bars while the numbers load, so the section keeps its shape. */
+function BarsLoading({ rows }: { rows: number }) {
+  return (
+    <ol className="insight-bars" role="status" aria-label="Đang tải thống kê">
+      {Array.from({ length: rows }, (_, at) => (
+        <li key={at} className="insight-bar" data-loading="">
+          <span className="insight-label" />
+          <span className="insight-track" />
+          <b />
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/** How often units and traits appear in the lineups editors and readers build, and how the units compare. */
+export function InsightsTab({
+  code,
+  index,
+  onOpen,
+}: {
+  code: string
+  index: GuideIndex
+  onOpen: (code: string) => void
+}) {
+  const insights = useQuery(insightsQuery(code))
+  const links = useContext(GuideLinks)
+  const { units, traits } = index.content
+  const byCost = new Map<number, number>()
+  units.forEach((unit) => byCost.set(unit.cost, (byCost.get(unit.cost) ?? 0) + 1))
+  const leaders = (key: "health" | "physicalAttack") =>
+    [...units]
+      .filter((unit) => unit.stats?.[key]?.length === 3)
+      .sort((a, b) => (b.stats![key][2] ?? 0) - (a.stats![key][2] ?? 0))
+      .slice(0, 5)
+  const unitLabel = (unitCode: string) => {
+    const unit = index.units.get(unitCode)
+    return unit ? (
+      <button type="button" className="guide-name-button" onClick={() => onOpen(unit.code)}>
+        <UnitPortrait unit={unit} index={index} size="xs" />
+        {unit.name}
+      </button>
+    ) : (
+      unitCode
+    )
+  }
+  const traitLabel = (traitCode: string) => {
+    const trait = index.traits.get(traitCode)
+    if (!trait) return traitCode
+    const body = (
+      <>
+        <TraitIcon trait={trait} index={index} size={22} />
+        {trait.name}
+      </>
+    )
+    return links ? (
+      <Link className="guide-name-button" to={links.traitHref(trait.code)}>
+        {body}
+      </Link>
+    ) : (
+      <span className="guide-name-button">{body}</span>
+    )
+  }
+  const failed = (
+    <div className="guide-state" role="alert">
+      <p>Chưa tải được thống kê đội hình.</p>
+      <button type="button" className="mode-chip" onClick={() => void insights.refetch()}>
+        Thử lại
+      </button>
+    </div>
+  )
+  const editorial = insights.data ? insights.data.lineupCount - insights.data.communityLineupCount : 0
+
+  return (
+    <div className="guide-tab-body">
+      <p className="insights-lead">
+        {insights.data
+          ? `Tính từ ${editorial} đội hình đề xuất và ${insights.data.communityLineupCount} đội hình cộng đồng. `
+          : ""}
+        Đây là xu hướng xếp đội hình của biên tập viên và người đọc, không phải tỷ lệ thắng.
+      </p>
+      {/* Phones read the sections in this order; wide screens place them in two columns (see guide.css). */}
+      <div className="insights">
+        <section className="mode-section" data-area="units" aria-labelledby="insight-units">
+          <ModeHeading
+            id="insight-units"
+            title="Quân cờ được dùng nhiều"
+            note="Điểm = số lần có trong đội hình × (1 + lượt thích)."
+          />
+          {insights.isPending ? (
+            <BarsLoading rows={12} />
+          ) : insights.isError ? (
+            failed
+          ) : (
+            <Bars
+              label="Quân cờ được dùng nhiều"
+              rows={insights.data.units.slice(0, 12).map((row) => ({
+                key: row.code,
+                label: unitLabel(row.code),
+                value: row.weighted,
+              }))}
+            />
+          )}
+        </section>
+        <section className="mode-section" data-area="traits" aria-labelledby="insight-traits">
+          <ModeHeading
+            id="insight-traits"
+            title="Phe & Nghề hay kích hoạt"
+            note="Số đội hình đạt ít nhất một mốc của Phe/Nghề."
+          />
+          {insights.isPending ? (
+            <BarsLoading rows={10} />
+          ) : insights.isError ? (
+            failed
+          ) : (
+            <Bars
+              label="Phe & Nghề hay kích hoạt"
+              rows={insights.data.traits.slice(0, 10).map((row) => ({
+                key: row.code,
+                label: traitLabel(row.code),
+                value: row.activations,
+              }))}
+            />
+          )}
+        </section>
+        <section className="mode-section" data-area="costs" aria-labelledby="insight-costs">
+          <ModeHeading id="insight-costs" title="Số quân cờ theo giá" />
+          <Bars
+            label="Số quân cờ theo giá"
+            rows={[...byCost.entries()]
+              .sort((a, b) => a[0] - b[0])
+              .map(([cost, count]) => ({ key: String(cost), label: `${cost} vàng`, value: count }))}
+          />
+        </section>
+        <section className="mode-section" data-area="health" aria-labelledby="insight-health">
+          <ModeHeading id="insight-health" title="Máu cao nhất ở 3 sao" />
+          <Bars
+            label="Máu cao nhất ở 3 sao"
+            rows={leaders("health").map((unit) => ({
+              key: unit.code,
+              label: unitLabel(unit.code),
+              value: unit.stats!.health[2]!,
+            }))}
+          />
+        </section>
+        <section className="mode-section" data-area="attack" aria-labelledby="insight-attack">
+          <ModeHeading id="insight-attack" title="Công vật lý cao nhất ở 3 sao" />
+          <Bars
+            label="Công vật lý cao nhất ở 3 sao"
+            rows={leaders("physicalAttack").map((unit) => ({
+              key: unit.code,
+              label: unitLabel(unit.code),
+              value: unit.stats!.physicalAttack[2]!,
+            }))}
+          />
+        </section>
+        <section className="mode-section" data-area="members" aria-labelledby="insight-members">
+          <ModeHeading
+            id="insight-members"
+            title="Phe & Nghề theo số quân cờ"
+            note="Bao nhiêu quân cờ mang mỗi Phe/Nghề trong bản Bách khoa."
+          />
+          <Bars
+            label="Phe & Nghề theo số quân cờ"
+            rows={[...traits]
+              .map((trait) => ({
+                key: trait.code,
+                label: traitLabel(trait.code),
+                value: index.membersOf(trait.code).length,
+              }))
+              .sort((a, b) => b.value - a.value)}
+          />
+        </section>
+      </div>
+    </div>
+  )
+}

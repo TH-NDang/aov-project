@@ -1,0 +1,2357 @@
+/*
+ * The auto chess guide tabs. Shared pieces first, then each tab in the order of the tab row. Game colors (prices,
+ * blessing tiers, item stones) reach these rules as custom properties set by the components, never as values here.
+ */
+
+/* A tab: its controls, then its content straight on the page, then the edition the data comes from. */
+.guide-tab-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+}
+.guide-edition {
+  font: var(--wiki-type-meta);
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--aov-line);
+  color: var(--aov-muted);
+}
+
+/* Controls: a search, then filters on one row that never wraps; a chip row that runs out of room scrolls. */
+.guide-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px 12px;
+  min-width: 0;
+}
+.guide-toolbar > .mode-chip-row {
+  flex: 0 1 auto;
+}
+.guide-toolbar-end {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  margin-left: auto;
+}
+.guide-search {
+  display: flex;
+  flex: 0 1 280px;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  height: 36px;
+  padding: 0 4px 0 10px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+  color: var(--aov-muted);
+}
+.guide-search:focus-within {
+  border-color: var(--aov-accent);
+}
+.guide-search > svg {
+  flex: none;
+}
+.guide-search input {
+  font: var(--wiki-type-body);
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--aov-text);
+  text-overflow: ellipsis;
+}
+.guide-search input::placeholder {
+  color: var(--aov-muted);
+}
+.guide-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.guide-search button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  color: var(--aov-muted);
+  cursor: pointer;
+}
+.guide-search button:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.guide-select {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--aov-muted);
+}
+.guide-select select {
+  font: var(--wiki-type-body);
+  height: 36px;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+/* Ways to show the same thing: a quiet segmented switch, as in the warehouse. */
+.guide-switch {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
+.guide-switch button {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: calc(var(--aov-radius-control) - 2px);
+  background: none;
+  color: var(--aov-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.guide-switch[data-labels] button {
+  padding: 0 10px;
+}
+.guide-switch button:hover {
+  color: var(--aov-text);
+}
+.guide-switch button[aria-pressed="true"] {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.guide-switch button:focus-visible {
+  outline-offset: -2px;
+}
+/* A price chip: the coin, then the number in the price's color. */
+.guide-cost-chip {
+  gap: 5px;
+  padding-inline: 10px 12px;
+}
+.guide-cost-chip b {
+  color: var(--cost-color);
+  font-variant-numeric: tabular-nums;
+}
+/* A chip that opens a list of choices; it takes the chosen look once something in it is chosen. */
+.guide-menu-chip > svg {
+  opacity: 0.7;
+}
+.guide-menu-chip[data-active] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.guide-menu-chip[data-active] small {
+  color: inherit;
+}
+.guide-menu-chip[data-state="open"] {
+  background: var(--aov-raised);
+}
+.guide-trait-menu[data-slot="popover-content"] {
+  width: min(480px, calc(100vw - 32px));
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-popover);
+  box-shadow: var(--aov-shadow-lg);
+  color: var(--aov-text);
+}
+/* Choices with their names written out: in the popover, the filter sheet and the unit drawer. */
+.guide-choices {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.guide-choices legend {
+  font: var(--wiki-type-category);
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--aov-text);
+}
+.guide-choices > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.guide-choices > .mode-chip-row {
+  flex-wrap: nowrap;
+}
+.guide-trait-choice {
+  padding-left: 6px;
+}
+.guide-trait-choice[data-empty] {
+  opacity: 0.45;
+}
+.guide-filter-stack {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+/* What the filters left, and the chosen traits as chips that remove themselves. */
+.guide-summary {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-height: 32px;
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.guide-summary > span {
+  margin-right: 4px;
+}
+.guide-clear {
+  font: var(--wiki-type-meta);
+  flex: none;
+  min-height: 32px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--aov-accent);
+  cursor: pointer;
+}
+.guide-clear:hover {
+  text-decoration: underline;
+}
+
+/* Pieces every tab draws: game icons, prices, trait tags and a trait's tiers. */
+.guide-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--aov-radius-card);
+  object-fit: cover;
+  background: var(--aov-sunken);
+}
+.guide-cost {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--cost-color, var(--aov-accent));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.gold-icon {
+  flex: none;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 35%));
+}
+.star-level {
+  display: inline-flex;
+  gap: 1px;
+  align-items: center;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 40%));
+}
+.guide-trait-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.guide-trait-tag {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 2px 9px 2px 3px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-sunken);
+  color: var(--aov-text-soft);
+  white-space: nowrap;
+}
+.guide-trait-tag b {
+  font-weight: 700;
+  color: var(--aov-text);
+}
+.guide-trait-tag[data-active="true"] {
+  border-color: color-mix(in srgb, var(--aov-accent) 50%, transparent);
+  color: var(--aov-text);
+}
+a.guide-trait-tag {
+  text-decoration: none;
+}
+a.guide-trait-tag:hover {
+  border-color: var(--aov-accent);
+  color: var(--aov-text);
+}
+.guide-name-button {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--aov-text);
+  text-align: left;
+  cursor: pointer;
+}
+.guide-name-button:hover {
+  color: var(--aov-accent-strong);
+}
+.guide-name-button > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+/* A unit's factions and classes: icons on a tile, names in a phone's table row, tags in the detail. */
+.unit-traits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+.unit-trait-part {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.unit-trait-divider {
+  align-self: stretch;
+  width: 1px;
+  min-height: 12px;
+  margin: 0 3px;
+  background: var(--aov-line-strong);
+}
+.unit-traits[data-as="names"] {
+  font: var(--wiki-type-meta);
+  justify-content: flex-start;
+  color: var(--aov-muted);
+}
+.unit-traits[data-as="tags"] {
+  justify-content: flex-start;
+}
+/* A trait icon names itself on hover; the name only exists while shown, so it never widens the page. */
+.trait-tip {
+  position: relative;
+  display: inline-grid;
+}
+.trait-tip::after {
+  content: attr(data-tip);
+  display: none;
+  font: var(--wiki-type-meta);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 10;
+  padding: 4px 8px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-popover);
+  box-shadow: var(--aov-shadow-lg);
+  color: var(--aov-text);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+.trait-tip:hover::after {
+  display: block;
+}
+/* A trait's tiers as small steps: the count in a ring that fills one step per tier, the effect beside it. */
+.guide-tiers {
+  display: grid;
+  gap: 8px;
+}
+.guide-tier {
+  font: var(--wiki-type-body);
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--aov-text-soft);
+}
+.guide-tier > b {
+  font: var(--wiki-type-meta);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--aov-text);
+  font-weight: 700;
+}
+.guide-tier > b::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--aov-accent) calc(var(--tier-progress, 1) * 1turn),
+    color-mix(in srgb, var(--aov-text) 16%, transparent) 0
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+}
+.guide-tier > span {
+  padding-top: 1px;
+}
+.guide-tier span b,
+.guide-tier strong {
+  color: var(--aov-text);
+}
+.guide-tier[data-reached="true"] > b {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.guide-tier[data-reached="true"] {
+  color: var(--aov-text);
+}
+.guide-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.guide-members button {
+  padding: 0;
+  border: 0;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  cursor: pointer;
+}
+.guide-members button[aria-current] .guide-portrait {
+  box-shadow: 0 0 0 2px var(--aov-accent);
+}
+.guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Units: one row per price on wide screens, the price at the start; a heading over each price on phones. */
+/* A name shown near the column's edge may reach into the gutter, never past the screen. */
+.unit-ladder {
+  display: grid;
+  overflow-x: clip;
+  overflow-clip-margin: var(--wiki-gutter);
+}
+.unit-rank {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 12px 0;
+  border-top: 1px solid var(--aov-line);
+}
+.unit-rank:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.unit-rank-label {
+  display: grid;
+  gap: 2px;
+  padding-top: 22px;
+}
+.unit-rank-label .guide-cost {
+  font: var(--wiki-type-section);
+  gap: 6px;
+}
+.unit-rank-label small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.unit-grid {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 4px;
+}
+.unit-tile {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 2px;
+  border: 0;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  color: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.unit-tile:hover {
+  background: var(--aov-surface);
+}
+.unit-tile strong {
+  font: var(--wiki-type-meta);
+  max-width: 100%;
+  color: var(--aov-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.unit-tile .unit-traits {
+  gap: 3px;
+}
+.unit-tile .guide-trait-icon {
+  width: 16px;
+  height: 16px;
+}
+.unit-tile .unit-trait-divider {
+  margin: 0 2px;
+}
+.unit-tile:hover .trait-tip::after {
+  z-index: 11;
+}
+.unit-incomplete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--aov-muted);
+}
+
+/* Tables: straight on the page, rows split by rules, numbers aligned on the right. */
+.guide-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+.guide-table {
+  font: var(--wiki-type-body);
+  width: 100%;
+  border-collapse: collapse;
+}
+.guide-table th,
+.guide-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--aov-line);
+  text-align: left;
+  vertical-align: middle;
+}
+.guide-table th:first-child,
+.guide-table td:first-child {
+  padding-left: 0;
+}
+.guide-table th:last-child,
+.guide-table td:last-child {
+  padding-right: 0;
+}
+.guide-table thead th {
+  font: var(--wiki-type-category);
+  border-bottom-color: var(--aov-line-strong);
+  color: var(--aov-muted);
+  white-space: nowrap;
+}
+.guide-table tbody th {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+.guide-table .num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.guide-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.unit-table td:last-child .unit-traits {
+  flex-wrap: nowrap;
+}
+.unit-table .unit-trait-part {
+  flex-wrap: nowrap;
+}
+/* A sortable column: a muted ↕ until it sorts, then the direction and, with several, its rank. */
+.sort-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  margin: -6px -8px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.sort-head:hover {
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+.sort-head[data-active="true"] {
+  color: var(--aov-accent-strong);
+}
+.sort-mark {
+  opacity: 0.45;
+}
+.sort-head[data-active="true"] .sort-mark {
+  opacity: 1;
+}
+.sort-rank {
+  font: var(--wiki-type-meta);
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+  font-weight: 700;
+}
+.sort-rules {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.sort-rules > span:first-child {
+  font: var(--wiki-type-meta);
+  margin-right: 2px;
+  color: var(--aov-muted);
+}
+.sort-rule {
+  display: inline-flex;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--aov-accent);
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-accent-soft);
+}
+.sort-rule button {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--aov-accent-strong);
+  cursor: pointer;
+}
+.sort-rule button + button {
+  padding: 0 10px;
+  border-left: 1px solid color-mix(in srgb, var(--aov-accent) 40%, transparent);
+}
+.sort-rule button:focus-visible {
+  outline-offset: -2px;
+}
+
+/* A unit in the drawer: its head, then its skill, stats and traits split by rules. */
+.guide-detail {
+  display: grid;
+  gap: 16px;
+}
+.guide-detail-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.guide-detail-head > div {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  min-width: 0;
+}
+.guide-detail-head h2 {
+  font: var(--wiki-type-page);
+  color: var(--aov-text);
+}
+.guide-skill {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+}
+.guide-skill .guide-icon {
+  width: 48px;
+  height: 48px;
+}
+.guide-skill > div {
+  display: grid;
+  gap: 4px;
+}
+.guide-skill h3,
+.guide-detail-block h3 {
+  font: var(--wiki-type-entry);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--aov-text);
+}
+.guide-skill p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+  white-space: pre-line;
+}
+.guide-skill .guide-values {
+  font: var(--wiki-type-category);
+  color: var(--aov-accent-strong);
+}
+.guide-note {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.guide-detail-block {
+  display: grid;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--aov-line);
+}
+
+/*
+ * Between the wide and the compact layout a price row holds half as many units, and the switch at the end of a
+ * toolbar keeps its icons only; its names stay for screen readers.
+ */
+@media (max-width: 1179.98px) {
+  .unit-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .guide-search {
+    flex-basis: 200px;
+  }
+  .guide-toolbar-end .guide-switch[data-labels] button {
+    position: relative;
+    padding: 0 8px;
+  }
+  .guide-toolbar-end .guide-switch[data-labels] button > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media (max-width: 899.98px) {
+  .guide-toolbar {
+    gap: 8px;
+  }
+  .guide-search {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 40px;
+  }
+  /* The clear button is as tall as the field, so it is easy to hit. */
+  .guide-search button {
+    width: 40px;
+    height: auto;
+    align-self: stretch;
+  }
+  .builder-slot .builder-actions button {
+    min-width: 36px;
+    height: 36px;
+  }
+  /* 16px so an iPhone does not zoom into the field. */
+  .guide-search input,
+  .guide-select select {
+    font-size: 16px;
+  }
+  .guide-select select {
+    height: 40px;
+  }
+  .guide-switch button {
+    min-width: 36px;
+    height: 36px;
+  }
+  .guide-summary {
+    flex-wrap: nowrap;
+    margin: -5px;
+    padding: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .guide-choice-row .guide-choices > div {
+    flex-wrap: nowrap;
+    margin: -5px;
+    padding: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .guide-choice-row .guide-choices legend {
+    font: var(--wiki-type-meta);
+    margin-bottom: 4px;
+    color: var(--aov-muted);
+  }
+  .unit-rank {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 14px 0 10px;
+  }
+  .unit-rank-label {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-top: 0;
+  }
+  .unit-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+  }
+  .unit-tile {
+    padding: 6px 1px;
+  }
+}
+@media (min-width: 600px) and (max-width: 899.98px) {
+  .unit-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .unit-tile {
+    transition: none;
+  }
+}
+
+/* Traits: the index of every trait beside the chosen one in full, or the faction × class table. */
+.trait-browser {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.trait-index {
+  display: grid;
+  gap: 28px;
+  min-width: 0;
+}
+.trait-index-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.trait-index-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.trait-index-item > span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.trait-index-item strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.trait-index-item small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.trait-index-item:hover {
+  background: var(--aov-surface);
+}
+.trait-index-item[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+}
+.trait-index-item[aria-pressed="true"] small {
+  color: var(--aov-text-soft);
+}
+.trait-index-item:disabled:not([aria-pressed="true"]) {
+  cursor: default;
+  opacity: 0.45;
+}
+/* The chosen trait stays in view under the tab row while the index scrolls. */
+.trait-detail {
+  position: sticky;
+  top: calc(var(--wiki-header-height) + var(--guide-tabs-height) + 16px);
+  display: grid;
+  gap: 16px;
+  max-height: calc(100dvh - var(--wiki-header-height) - var(--guide-tabs-height) - 32px);
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.trait-detail-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.trait-detail-head > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.trait-detail-head h2 {
+  font: var(--wiki-type-section);
+  color: var(--aov-text);
+}
+.trait-detail .guide-detail-block h3 {
+  font: var(--wiki-type-category);
+}
+.trait-members {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 4px;
+}
+.trait-member {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.trait-member:hover {
+  background: var(--aov-raised);
+}
+.trait-member span {
+  font: var(--wiki-type-meta);
+  max-width: 100%;
+  color: var(--aov-text);
+  font-weight: 600;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.trait-member small {
+  gap: 3px;
+}
+.mode-dialog .trait-detail {
+  position: static;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  background: none;
+}
+.trait-table-scroll {
+  min-width: 0;
+  overflow-x: auto;
+}
+.trait-table {
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.trait-table th,
+.trait-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--aov-line);
+  background: var(--aov-bg);
+  vertical-align: middle;
+}
+.trait-table td + td,
+.trait-table th + td,
+.trait-table thead th + th {
+  border-left: 1px solid var(--aov-line);
+}
+.trait-table thead th {
+  min-width: 76px;
+  border-bottom-color: var(--aov-line-strong);
+  vertical-align: bottom;
+}
+.trait-table th button {
+  font: var(--wiki-type-meta);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  color: var(--aov-text-soft);
+  cursor: pointer;
+}
+.trait-table th button span {
+  max-width: 88px;
+  text-align: center;
+}
+.trait-table th button:hover {
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+/* The class column stays in view while the table scrolls sideways. */
+.trait-table tbody th,
+.trait-table thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 140px;
+}
+.trait-table tbody th button {
+  grid-template-columns: 28px minmax(0, 1fr);
+  justify-items: start;
+  align-items: center;
+  gap: 8px;
+}
+.trait-table tbody th button span {
+  text-align: start;
+}
+.trait-table td {
+  text-align: center;
+}
+.trait-table td button {
+  margin: 1px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  cursor: pointer;
+}
+.trait-table tbody tr:hover > * {
+  background: var(--aov-surface);
+}
+.trait-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+/* Below the widest layout a trait's name sits under its icon, so long names keep two lines at most. */
+@media (max-width: 1179.98px) {
+  .trait-index-item {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    align-content: start;
+    gap: 4px;
+    padding: 8px 2px;
+    text-align: center;
+  }
+  .trait-index-item > span {
+    justify-items: center;
+  }
+}
+@media (max-width: 899.98px) {
+  .trait-browser {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .trait-index {
+    gap: 24px;
+  }
+  .trait-index-grid {
+    gap: 2px;
+  }
+  .trait-table tbody th,
+  .trait-table thead th:first-child {
+    min-width: 96px;
+  }
+  .trait-table thead th {
+    min-width: 64px;
+  }
+  .trait-table tbody th button {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .trait-table tbody th button span {
+    text-align: center;
+  }
+}
+
+/*
+ * Entries that are read, not pressed (items, blessings, quests): rows straight on the page split by rules, in as many
+ * columns as the screen gives. The first row sits right under its heading's rule.
+ */
+.guide-entries {
+  display: grid;
+  grid-template-columns: repeat(var(--entry-columns, 1), minmax(0, 1fr));
+  column-gap: 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.guide-entries[data-columns="2"] {
+  --entry-columns: 2;
+}
+.guide-entries[data-columns="3"] {
+  --entry-columns: 3;
+}
+.guide-entry,
+.quest {
+  min-width: 0;
+  padding-block: var(--entry-pad, 14px);
+  border-top: 1px solid var(--aov-line);
+}
+.guide-entries[data-columns="2"] > :nth-child(-n + 2),
+.guide-entries[data-columns="3"] > :nth-child(-n + 3) {
+  padding-top: 0;
+  border-top: 0;
+}
+.guide-entry {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.guide-entry > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.guide-entry h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.guide-entry p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+  white-space: pre-line;
+}
+.guide-entry .guide-icon {
+  width: 44px;
+  height: 44px;
+}
+/* Items: the icon wears a ring in its stone's color; the stone marks the group. */
+.item-entry .guide-icon {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--stone-color) 55%, transparent);
+}
+.item-stone {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  transform: rotate(45deg);
+  background: var(--stone-color);
+}
+.item-stone-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.stone-chip .item-stone-icon {
+  width: 20px;
+  height: 20px;
+}
+/*
+ * Blessings: the game ships each icon as a white drawing on black; screen blending drops the black, so the drawing
+ * sits on its tier's card color, the way the game shows it.
+ */
+.blessing-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--tier-bg, var(--aov-sunken));
+}
+.blessing-icon img {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+.tier-icon {
+  flex: none;
+  color: var(--tier-color);
+}
+/* Quests: the number, the task, then the reward at the row's end. */
+.quest {
+  --entry-pad: 12px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+/* Number and reward take the task's line height, so all three read on one line. */
+.quest > b {
+  font: var(--wiki-type-meta);
+  line-height: 1.5rem;
+  color: var(--aov-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.quest p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text);
+}
+.quest-reward {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  max-width: 220px;
+  min-height: 1.5rem;
+  color: var(--aov-accent-strong);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.quest-reward > svg {
+  align-self: center;
+}
+.quest-reward[data-missing] {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+@media (max-width: 1179.98px) {
+  .guide-entries[data-columns="3"] {
+    --entry-columns: 2;
+  }
+  .guide-entries[data-columns="3"] > :nth-child(3) {
+    padding-top: var(--entry-pad, 14px);
+    border-top: 1px solid var(--aov-line);
+  }
+}
+@media (max-width: 899.98px) {
+  .guide-toolbar[data-stack] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .guide-entries[data-columns] {
+    --entry-columns: 1;
+  }
+  .guide-entries[data-columns] > :nth-child(-n + 3) {
+    padding-top: var(--entry-pad, 12px);
+    border-top: 1px solid var(--aov-line);
+  }
+  .guide-entries[data-columns] > :first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+  .guide-entry {
+    --entry-pad: 12px;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .guide-entry .guide-icon,
+  .guide-entry .blessing-icon {
+    width: 40px;
+    height: 40px;
+  }
+  .quest {
+    grid-template-columns: 24px minmax(0, 1fr);
+    row-gap: 4px;
+  }
+  .quest-reward {
+    grid-column: 2;
+    justify-content: flex-start;
+    max-width: none;
+    text-align: left;
+  }
+}
+
+/* Lineups: one card per lineup (a group that stands apart, with its own actions), two side by side on wide screens. */
+.lineup-tab {
+  gap: 36px;
+}
+.lineup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+/* Cards of one row share its height; their content starts at the top. */
+.lineup-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.lineup-skeleton {
+  height: 360px;
+  animation: lineup-pulse 1.4s ease-in-out infinite;
+}
+@keyframes lineup-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+.lineup-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+/* The name with the lineup's strengths under it, as the game lists its recommended lineups. */
+.lineup-title {
+  display: grid;
+  flex: 1 1 0;
+  gap: 2px;
+  min-width: 0;
+}
+.lineup-title h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.lineup-title p {
+  font: var(--wiki-type-meta);
+  color: var(--aov-text-soft);
+}
+/* The editors' rank: S in the accent, A on its tint, the rest quiet. */
+.lineup-tier {
+  font: var(--wiki-type-category);
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  color: var(--aov-text-soft);
+}
+.lineup-tier[data-tier="S"] {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.lineup-tier[data-tier="A"] {
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.lineup-head-actions {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+.lineup-title .lineup-recent {
+  color: var(--aov-accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+.like-button {
+  gap: 6px;
+  padding-inline: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.like-button > span {
+  font-size: 1rem;
+  line-height: 1;
+}
+.lineup-icon-button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: transparent;
+  color: var(--aov-text-soft);
+  cursor: pointer;
+}
+.lineup-icon-button:is(:hover, [data-state="open"]) {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.lineup-icon-button[data-done] {
+  color: var(--aov-success);
+}
+.lineup-icon-button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+.lineup-menu {
+  min-width: 270px;
+  padding: 6px;
+}
+.lineup-menu-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-text);
+  cursor: pointer;
+}
+.lineup-menu-item b {
+  font: var(--wiki-type-category);
+  display: block;
+}
+.lineup-menu-item small {
+  font: var(--wiki-type-meta);
+  display: block;
+  color: var(--aov-muted);
+}
+.lineup-facts {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  color: var(--aov-muted);
+}
+.lineup-facts .guide-trait-tags {
+  align-items: center;
+}
+.lineup-stages {
+  display: flex;
+  gap: 6px;
+}
+.lineup-stage-note {
+  font: var(--wiki-type-meta);
+  color: var(--aov-text-soft);
+}
+/* Priority items and blessings: numbered chips in build order. */
+.lineup-side {
+  display: grid;
+  gap: 12px;
+}
+.lineup-extra {
+  display: grid;
+  gap: 6px;
+}
+.lineup-extra h4 {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.lineup-priority {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.lineup-priority li {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 4px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.lineup-priority li > b {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+  font-weight: 700;
+}
+.lineup-priority li > img,
+.lineup-priority .blessing-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--aov-radius-control);
+}
+.lineup-tips {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--aov-line);
+  color: var(--aov-accent);
+}
+.lineup-tips p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+.lineup-tips b {
+  color: var(--aov-accent-strong);
+}
+/* An empty or failed list says what happened and offers the next step. */
+.guide-state {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 20px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.guide-state p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+
+/* The list view: every unit with its name, five to a row as in the game's lineup screen, then the free slots. */
+.lineup-units {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px 8px;
+}
+.lineup-unit {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.lineup-portrait {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  max-width: 56px;
+}
+.lineup-unit .guide-portrait {
+  width: 100%;
+  max-width: 56px;
+  height: auto;
+  aspect-ratio: 1;
+}
+.lineup-unit-name {
+  font: var(--wiki-type-meta);
+  max-width: 100%;
+  color: var(--aov-text-soft);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.lineup-unit[data-carry="true"] .guide-portrait {
+  box-shadow: 0 0 0 2px var(--aov-accent);
+}
+.lineup-unit[data-extra] .guide-portrait {
+  outline: 2px dashed var(--aov-accent);
+  outline-offset: 2px;
+}
+.lineup-items {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+.lineup-items img {
+  width: 18px;
+  height: 18px;
+  border-radius: calc(var(--aov-radius-control) - 2px);
+}
+.lineup-slot-empty {
+  justify-self: center;
+  width: 100%;
+  max-width: 56px;
+  aspect-ratio: 1;
+  border: 1px dashed var(--aov-line-strong);
+  border-radius: var(--aov-radius-card);
+  opacity: 0.55;
+}
+/* The main unit: an "M" tab on the portrait's top edge, where the game puts its own badge. */
+.carry-mark {
+  font: var(--wiki-type-meta);
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-accent);
+  box-shadow: 0 0 0 2px var(--aov-surface);
+  color: var(--aov-on-accent);
+  font-style: normal;
+  font-weight: 800;
+  transform: translateX(-50%);
+}
+
+/* The board: three rows of seven square cells straight on the card, the stone floor in alternating tones. */
+.board-wrap {
+  container-type: inline-size;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+.board-enemy {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.board {
+  display: grid;
+  gap: 4px;
+  width: min(100%, 560px);
+}
+.board-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.board-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+}
+.board-row:nth-of-type(odd) .board-cell:nth-child(even),
+.board-row:nth-of-type(even) .board-cell:nth-child(odd) {
+  background: color-mix(in srgb, var(--aov-raised) 55%, var(--aov-surface));
+}
+.board-cell[data-over] {
+  box-shadow: inset 0 0 0 2px var(--aov-accent);
+}
+.board-piece {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.board-piece[draggable="true"] {
+  cursor: grab;
+}
+.board-piece .guide-portrait {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--aov-radius-control);
+}
+.board-piece .carry-mark {
+  top: -7px;
+  min-width: 18px;
+  height: 18px;
+}
+.board-piece[aria-pressed="true"] .guide-portrait {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+/* Names fit once the board is wide; they sit on a scrim over the portrait. */
+.board-name {
+  display: none;
+}
+@container (min-width: 480px) {
+  .board-name {
+    font: var(--wiki-type-meta);
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    left: 2px;
+    display: block;
+    padding: 8px 2px 1px;
+    overflow: hidden;
+    border-radius: 0 0 calc(var(--aov-radius-control) - 2px) calc(var(--aov-radius-control) - 2px);
+    background: linear-gradient(transparent, rgb(0 0 0 / 78%));
+    color: #fff;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.board-bench {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  width: min(100%, 560px);
+}
+.board-bench .board-piece {
+  width: 44px;
+  height: 44px;
+}
+.board-bench .board-name {
+  display: none;
+}
+
+@media (max-width: 1179.98px) {
+  .lineup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 899.98px) {
+  .lineup-tab {
+    gap: 28px;
+  }
+  .lineup-card {
+    gap: 12px;
+    padding: 12px;
+  }
+  .lineup-units {
+    gap: 10px 4px;
+  }
+  .board,
+  .board-row {
+    gap: 3px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lineup-skeleton {
+    animation: none;
+  }
+}
+
+/* Builder: the board card and the unit pool in the main column, what the lineup turns on beside them. */
+.builder {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 32px;
+  align-items: start;
+}
+.builder-main,
+.builder-side {
+  display: grid;
+  gap: 28px;
+  min-width: 0;
+}
+.builder-card {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.builder-card .board,
+.builder-card .board-bench,
+.builder-card .board-selected {
+  width: min(100%, 640px);
+}
+.builder-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.builder-count {
+  font: var(--wiki-type-category);
+  color: var(--aov-muted);
+}
+.builder-count b {
+  color: var(--aov-text);
+  font-variant-numeric: tabular-nums;
+}
+.builder-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.builder-tools > .guide-switch {
+  margin-right: 4px;
+}
+.builder-tools > .guide-primary {
+  margin-left: 8px;
+}
+.builder-main .guide-search {
+  flex-basis: 220px;
+}
+.builder-post {
+  justify-self: start;
+}
+.lineup-icon-button[data-tone="danger"]:not(:disabled):hover {
+  color: var(--aov-danger);
+}
+/* The page's main action: the one filled button. */
+.guide-primary {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+  cursor: pointer;
+}
+.guide-primary:hover {
+  background: var(--aov-accent-strong);
+}
+.guide-primary:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.guide-field {
+  font: var(--wiki-type-body);
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-sunken);
+  color: var(--aov-text);
+}
+.guide-field::placeholder {
+  color: var(--aov-muted);
+}
+.guide-field:focus-visible {
+  border-color: var(--aov-accent);
+  outline: 0;
+}
+/* Free cells invite a unit; with a unit picked up, or a cell chosen for the next one, they light up. */
+.board-empty {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 1px dashed transparent;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  color: var(--aov-muted);
+  cursor: pointer;
+}
+.board-empty span {
+  font: var(--wiki-type-section);
+  opacity: 0.4;
+}
+.board-empty:is(:hover, :focus-visible) {
+  border-color: var(--aov-line-strong);
+}
+.board-empty:is(:hover, :focus-visible) span {
+  opacity: 1;
+}
+.board-empty:disabled {
+  cursor: default;
+}
+.board-empty:disabled span {
+  opacity: 0;
+}
+.board-empty[data-target] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+}
+.board-empty[data-target] span {
+  color: var(--aov-accent-strong);
+  opacity: 1;
+}
+.board-empty[aria-pressed="true"] {
+  border-style: solid;
+}
+/* The picked-up unit: its name and what can be done with it, under the board. */
+.board-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--aov-line);
+}
+.board-selected > span:first-child {
+  display: grid;
+  min-width: 0;
+}
+.board-selected strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.board-selected small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.builder-actions {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+}
+.builder-actions button {
+  font: var(--wiki-type-meta);
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  color: var(--aov-text);
+  cursor: pointer;
+}
+.builder-actions button:hover {
+  color: var(--aov-accent-strong);
+}
+.carry-toggle {
+  font-weight: 800;
+}
+.builder-actions .carry-toggle[aria-pressed="true"] {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+/* The list view of the builder: the game's ten slots, five to a row, and the extra slot an item opens. */
+.builder-slots {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.builder-slot {
+  font: var(--wiki-type-meta);
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 112px;
+  padding: 8px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-raised);
+  color: var(--aov-muted);
+  text-align: center;
+}
+.builder-slot strong {
+  font: var(--wiki-type-meta);
+  max-width: 100%;
+  color: var(--aov-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.builder-slot .builder-actions button {
+  min-width: 32px;
+  height: 32px;
+  background: var(--aov-surface);
+}
+.builder-slot-portrait {
+  padding: 0;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  cursor: pointer;
+}
+.builder-slot-empty {
+  border-style: dashed;
+  border-color: var(--aov-line-strong);
+  background: transparent;
+  cursor: pointer;
+}
+.builder-slot-empty:is(:hover, :focus-visible) {
+  border-color: var(--aov-accent);
+  color: var(--aov-text);
+}
+.builder-slot-plus {
+  font: var(--wiki-type-section);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.builder-slot[data-extra] {
+  border-color: color-mix(in srgb, var(--aov-accent) 55%, transparent);
+}
+.builder-extra {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.builder-extra .builder-slot {
+  flex: none;
+  width: 112px;
+}
+/* Emblems at the foot of the board card: what they do and a +, then the chosen ones as tags that remove themselves. */
+.builder-emblems {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--aov-line);
+}
+.builder-emblems-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 10px;
+}
+.builder-emblems-head .lineup-icon-button {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+.builder-emblems .guide-trait-tag {
+  cursor: pointer;
+}
+.builder-emblems .guide-trait-tag:hover {
+  border-color: var(--aov-danger);
+}
+.builder-paste {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.builder-paste .guide-field {
+  flex: 1 1 auto;
+}
+/* Every unit under the board on wide screens (in a sheet on phones): tap to add, drag onto a cell. */
+.builder-pool {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 4px;
+}
+.builder-pool-unit {
+  font: var(--wiki-type-meta);
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 2px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  color: var(--aov-text-soft);
+  cursor: pointer;
+}
+.builder-pool-unit[draggable="true"] {
+  cursor: grab;
+}
+.builder-pool-unit span {
+  max-width: 100%;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.builder-pool-unit:hover {
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+.builder-pool-unit[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-text);
+}
+.builder-pool-unit:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+.unit-picker {
+  display: grid;
+  gap: 12px;
+}
+.unit-picker .builder-pool-unit:hover {
+  background: var(--aov-raised);
+}
+/* The drawer's filters stay at its top while the units scroll under them. */
+.unit-picker > .guide-filter-stack {
+  position: sticky;
+  top: -18px;
+  z-index: 2;
+  margin-top: -18px;
+  padding-block: 18px 10px;
+  border-bottom: 1px solid var(--aov-line);
+  background: var(--aov-popover);
+}
+/* What the lineup turns on: each trait with its count, its effect or what it still needs, and its tiers as steps. */
+.builder-traits {
+  display: grid;
+}
+.builder-trait {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--aov-line);
+}
+.builder-trait:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.builder-trait > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.builder-trait strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text-soft);
+}
+.builder-trait strong b {
+  color: var(--aov-text);
+  font-variant-numeric: tabular-nums;
+}
+.builder-trait p {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.builder-trait[data-active="true"] strong {
+  color: var(--aov-text);
+}
+.builder-trait[data-active="true"] p {
+  color: var(--aov-text-soft);
+}
+.builder-steps {
+  font: var(--wiki-type-meta);
+  display: flex;
+  gap: 3px;
+}
+.builder-steps i {
+  min-width: 20px;
+  padding: 0 4px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  color: var(--aov-muted);
+  font-style: normal;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.builder-steps i[data-on="true"] {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+  font-weight: 700;
+}
+.builder-suggestions {
+  display: grid;
+  gap: 2px;
+}
+.builder-suggestion {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.builder-suggestion:hover {
+  background: var(--aov-surface);
+}
+.builder-suggestion:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.builder-suggestion > span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.builder-suggestion strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.builder-suggestion small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+/* Saving: the fields, the one filled button, then the reader's own lineups. */
+.lineup-post {
+  display: grid;
+  gap: 16px;
+}
+.lineup-post > .guide-primary {
+  justify-self: start;
+}
+.builder-form {
+  display: grid;
+  gap: 12px;
+}
+.builder-form label {
+  display: grid;
+  gap: 4px;
+}
+.builder-form label > span {
+  font: var(--wiki-type-category);
+  color: var(--aov-text-soft);
+}
+.builder-form .guide-primary {
+  justify-self: start;
+}
+.my-lineups {
+  display: grid;
+}
+.my-lineups li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--aov-line);
+}
+.my-lineups li:first-child {
+  border-top: 0;
+}
+.my-lineups a {
+  font: var(--wiki-type-category);
+  flex: 1 1 auto;
+  color: var(--aov-text);
+}
+.my-lineups a:hover {
+  color: var(--aov-accent-strong);
+}
+
+@media (max-width: 899.98px) {
+  .builder {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .builder-card {
+    gap: 12px;
+    padding: 12px;
+  }
+  .guide-field,
+  .builder-form .guide-field {
+    font-size: 16px;
+    min-height: 40px;
+  }
+  .guide-primary {
+    min-height: 40px;
+  }
+  .builder-slots {
+    gap: 4px;
+  }
+  .builder-slot {
+    min-height: 96px;
+    padding: 6px 2px;
+  }
+  .builder-slot .guide-portrait {
+    width: 32px;
+    height: 32px;
+  }
+  .builder-slots .builder-slot-empty > span:not(.builder-slot-plus) {
+    display: none;
+  }
+  .builder-extra .builder-slot {
+    width: 88px;
+  }
+  .builder-pool {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+  }
+  .builder-pool-unit {
+    padding: 6px 1px;
+  }
+  .unit-picker > .guide-filter-stack {
+    top: -14px;
+    margin-top: -14px;
+    padding-top: 14px;
+  }
+}
+
+/*
+ * Between the compact and the widest layout the main column is narrow: the side column gives up some width, and the
+ * pool's search takes its own line above the price chips and the trait menus.
+ */
+@media (min-width: 900px) and (max-width: 1179.98px) {
+  .builder {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 290px);
+    gap: 24px;
+  }
+  .builder-main .guide-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 10px 8px;
+  }
+  .builder-main .guide-toolbar > .guide-search {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Analysis: two columns of sections, each a list of plain bars with exact numbers. */
+.insights-lead {
+  font: var(--wiki-type-body);
+  max-width: 72ch;
+  color: var(--aov-text-soft);
+}
+/* The long list of traits by unit count takes the left column under the most used units; the short lists stack right. */
+.insights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto auto auto auto 1fr;
+  grid-template-areas:
+    "units traits"
+    "members costs"
+    "members health"
+    "members attack"
+    "members .";
+  gap: 36px 48px;
+  align-items: start;
+}
+.insights > [data-area] {
+  min-width: 0;
+}
+.insights > [data-area="units"] {
+  grid-area: units;
+}
+.insights > [data-area="traits"] {
+  grid-area: traits;
+}
+.insights > [data-area="costs"] {
+  grid-area: costs;
+}
+.insights > [data-area="health"] {
+  grid-area: health;
+}
+.insights > [data-area="attack"] {
+  grid-area: attack;
+}
+.insights > [data-area="members"] {
+  grid-area: members;
+}
+.insight-bars {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.insight-bar {
+  font: var(--wiki-type-body);
+  display: grid;
+  grid-template-columns: minmax(150px, 2fr) minmax(0, 3fr) 56px;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  color: var(--aov-text-soft);
+}
+.insight-label {
+  min-width: 0;
+}
+.insight-label .guide-name-button {
+  font: var(--wiki-type-body);
+  text-decoration: none;
+}
+.insight-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-surface);
+}
+.insight-track > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--aov-chart);
+}
+.insight-bar > b {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.insight-bar[data-loading] .insight-label {
+  height: 14px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
+@media (max-width: 899.98px) {
+  .insights {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas: none;
+    gap: 32px;
+  }
+  .insights > [data-area] {
+    grid-area: auto;
+  }
+  .insight-bar {
+    grid-template-columns: minmax(120px, 1.4fr) minmax(0, 1fr) 52px;
+    gap: 8px;
+  }
+}

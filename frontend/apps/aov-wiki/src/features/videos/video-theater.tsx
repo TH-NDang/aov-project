@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
@@ -43,14 +43,14 @@ export function VideoTheater({
   video,
   playlist,
   heading,
-  patchCode,
+  patchName,
   onSelect,
   onClose,
 }: {
   video: PublicVideo | null
   playlist: readonly PublicVideo[]
   heading: string
-  patchCode?: (video: PublicVideo) => string | undefined
+  patchName?: (video: PublicVideo) => ReactNode
   onSelect: (video: PublicVideo) => void
   onClose: () => void
 }) {
@@ -68,7 +68,7 @@ export function VideoTheater({
   const playback = shown ? videoPlayback(shown, window.location.hostname) : null
   const portrait = playback?.kind === "frame" && playback.portrait
   const provider = shown ? providerName(shown) : ""
-  const patch = shown ? patchCode?.(shown) : undefined
+  const patch = shown ? patchName?.(shown) : undefined
   const date = shown?.publishedOn ? formatVideoDate(shown.publishedOn, locale) : null
 
   useEffect(() => {

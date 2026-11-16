@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useVideoParam } from "./subject-videos"
@@ -14,11 +14,11 @@ import "./skill-videos.css"
 export function SkillVideos({
   skillKey,
   videos,
-  patchCode,
+  patchName,
 }: {
   skillKey: string
   videos: readonly PublicVideo[]
-  patchCode?: (video: PublicVideo) => string | undefined
+  patchName?: (video: PublicVideo) => ReactNode
 }) {
   const { locale } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
@@ -112,7 +112,7 @@ export function SkillVideos({
         video={enlarged}
         playlist={playable}
         heading={text("Video kỹ năng", "Ability videos")}
-        patchCode={patchCode}
+        patchName={patchName}
         onSelect={videoParam.select}
         onClose={videoParam.close}
       />

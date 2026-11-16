@@ -1,11 +1,11 @@
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import type { HeroLaterObservation } from "./hero-api"
-import "./hero-later-observation.css"
+import { PatchName } from "./hero-patch-name"
 
 /**
  * Says that the selected patch has no observation of this hero yet, so the page shows what a later patch recorded;
- * the selected patch's own changes still come from its notes (ADR-016).
+ * the selected patch's own changes still come from its notes (ADR-016). It reads as a line under the version picker.
  */
 export function HeroLaterObservationNote({ later }: { later: HeroLaterObservation }) {
   const scope = useWikiContext()
@@ -13,6 +13,7 @@ export function HeroLaterObservationNote({ later }: { later: HeroLaterObservatio
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const selected = options?.patches.find((patch) => patch.id === patchVariantId)
   const target = options?.patches.find((patch) => patch.id === later.patchVariantId)
+  const recorded = target ? <PatchName patch={target} /> : later.patchCode
   const open = () =>
     setScope(
       !target || target.isCurrent
@@ -21,21 +22,20 @@ export function HeroLaterObservationNote({ later }: { later: HeroLaterObservatio
     )
 
   return (
-    <p className="wiki-hero-later" role="note">
+    <p className="wiki-hero-scope-note" role="note">
       <WikiIcon name="clock" size={16} />
       <span>
+        {text("Kỹ năng bên dưới được ghi nhận ở bản ", "The abilities below were recorded in ")}
+        {recorded}
         {selected
-          ? text(
-              `Kỹ năng bên dưới được ghi nhận ở bản ${later.patchCode}; bản ${selected.code} chưa có bản ghi riêng.`,
-              `The abilities below were recorded in ${later.patchCode}; ${selected.code} has no record of its own yet.`,
-            )
-          : text(
-              `Kỹ năng bên dưới được ghi nhận ở bản ${later.patchCode}.`,
-              `The abilities below were recorded in ${later.patchCode}.`,
-            )}
+          ? text("; bản đang xem chưa có bản ghi riêng.", "; the version being read has no record of its own yet.")
+          : "."}
       </span>
       <button type="button" onClick={open}>
-        {text(`Xem bản ${later.patchCode}`, `Open ${later.patchCode}`)}
+        <span>
+          {text("Xem bản ", "Open ")}
+          {recorded}
+        </span>
       </button>
     </p>
   )

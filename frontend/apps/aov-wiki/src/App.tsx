@@ -1,6 +1,6 @@
 import { WikiHeader } from "./components/wiki-header"
 import { WikiHome } from "./features/home/wiki-home"
-import { Link, Navigate, Route, Routes, useLocation, useParams, useSearchParams } from "react-router"
+import { Navigate, Route, Routes, useLocation, useParams, useSearchParams } from "react-router"
 import { lazy, Suspense, useEffect } from "react"
 import { HeroDirectoryLoading, HeroDetailLoading } from "./features/hero/hero-loading"
 import { WikiLibraryLayout } from "./layout/wiki-library-layout"
@@ -10,8 +10,9 @@ import { useWikiContext, wikiText } from "./context/wiki-context"
 import { ContactPage } from "./features/contact/contact-page"
 import { WikiLoginCallback } from "./features/auth/wiki-account"
 import { WikiFooter } from "./components/wiki-footer"
+import { NotFoundPage } from "./features/not-found/not-found-page"
 import { legacyWarehouseTarget, WAREHOUSE_TABS, wikiScrollKey } from "./lib/wiki-catalog"
-import { homeMeta, notFoundMeta } from "./lib/seo/page-meta"
+import { homeMeta } from "./lib/seo/page-meta"
 import { usePageHead } from "./lib/seo/use-page-head"
 
 const TermsPage = lazy(() => import("./features/terms/terms-page").then((module) => ({ default: module.TermsPage })))
@@ -62,24 +63,6 @@ function WarehouseRoute() {
 function LegacyWarehouseRedirect() {
   const { search } = useLocation()
   return <Navigate to={legacyWarehouseTarget(search)} replace />
-}
-
-function NotFoundPage() {
-  const { t, href, locale } = useWikiContext()
-  const { pathname } = useLocation()
-  usePageHead(notFoundMeta(locale, pathname))
-  return (
-    <>
-      <WikiHeader />
-      <main
-        id="main"
-        className="wiki-mascot-state mx-auto grid flex-1 content-center justify-items-center gap-4 p-8 text-center"
-      >
-        <h1 className="text-xl text-gold">{wikiText(locale, "Không tìm thấy trang", "Page not found")}</h1>
-        <Link to={href("/")}>{t("backHome")}</Link>
-      </main>
-    </>
-  )
 }
 
 /** Term links used to point at the home page; they now open the glossary. */

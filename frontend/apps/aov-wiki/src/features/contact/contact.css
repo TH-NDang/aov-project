@@ -1,0 +1,98 @@
+/* The contact page: the head on the page column, then the form in a reading column under it. */
+.wiki-contact-page {
+  width: min(100%, var(--aov-page-max));
+  flex: 1;
+  margin-inline: auto;
+  padding: 20px var(--wiki-gutter) 56px;
+  outline: none;
+}
+.wiki-contact-body {
+  display: grid;
+  max-width: 640px;
+  gap: 16px;
+}
+.wiki-contact-note {
+  font: var(--wiki-type-body);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: var(--aov-radius-control);
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--aov-accent) 10%, transparent);
+  color: var(--aov-text);
+}
+.wiki-contact-note > svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--aov-accent);
+}
+.wiki-contact-warning {
+  font: var(--wiki-type-body);
+  color: var(--aov-warning);
+}
+/* Name and email side by side, everything else across the column. */
+.wiki-contact-form fieldset {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 16px;
+}
+.wiki-contact-form [data-wide] {
+  grid-column: 1 / -1;
+}
+.wiki-contact-privacy {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+.wiki-contact-error {
+  font: var(--wiki-type-body);
+  color: var(--aov-danger);
+}
+/* What was sent stands apart as one surface until the reader starts another request. */
+.wiki-contact-receipt {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  border-radius: var(--aov-radius-card);
+  padding: 20px;
+  background: var(--aov-surface);
+}
+.wiki-contact-receipt h2 {
+  font: var(--wiki-type-section);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--aov-text);
+}
+.wiki-contact-receipt h2 > svg {
+  color: var(--aov-success);
+}
+.wiki-contact-receipt p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+.wiki-contact-receipt .wiki-contact-receipt-id {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-contact-receipt .wiki-button {
+  margin-top: 8px;
+}
+
+@media (max-width: 899.98px) {
+  .wiki-contact-page {
+    padding: 12px var(--wiki-gutter) 32px;
+  }
+  .wiki-contact-form fieldset {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}

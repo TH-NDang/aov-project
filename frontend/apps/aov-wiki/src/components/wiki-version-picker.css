@@ -1,71 +1,183 @@
+/* Which game version the page shows: a label, the version and, where there is a choice, a menu of the others. */
 .wiki-version-picker {
   display: flex;
-  align-items: center;
   min-width: 0;
-  gap: 6px;
-  margin: 8px 0 10px;
-}
-.wiki-version-picker > [role="group"] {
-  flex: 1;
-}
-.wiki-version-group {
-  display: flex;
+  min-height: 32px;
   align-items: center;
-  gap: 4px;
-  padding-inline: 4px;
-  background: var(--background);
+  gap: 8px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
   white-space: nowrap;
 }
-.wiki-version-group + .wiki-version-group {
-  border-inline-start: 1px solid var(--border);
+.wiki-version-label {
+  flex: none;
 }
-.wiki-version-group button {
+.wiki-version-static,
+.wiki-version-trigger {
   display: inline-flex;
+  min-width: 0;
   align-items: center;
-  gap: 5px;
-  min-height: 30px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 3px 9px;
-  font-size: 0.8125rem;
-  color: var(--muted-foreground);
-  background: var(--background);
+  gap: 8px;
+  color: var(--aov-text-soft);
 }
-.wiki-version-group [data-season] {
+/* Where versions can be chosen the value only gains a chevron, so the control reads the same on every page and pulls
+   no attention from the list; it is drawn as a control on hover, while open and while an earlier version is shown. */
+.wiki-version-trigger {
+  height: 32px;
+  margin-left: -9px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-control);
+  padding: 0 4px 0 8px;
+  transition:
+    border-color 160ms,
+    background 160ms;
+}
+.wiki-version-trigger:is(:hover, [data-state="open"]) {
+  border-color: var(--aov-line-strong);
+  background: var(--aov-surface);
+}
+.wiki-version-trigger > svg {
+  flex: none;
+  color: var(--aov-muted);
+  transition: transform 160ms ease-out;
+}
+.wiki-version-trigger[data-state="open"] > svg {
+  transform: rotate(180deg);
+}
+/* An earlier version is a filter on the whole page, so it is marked the way a chosen filter is. */
+.wiki-version-picker[data-historical] .wiki-version-trigger {
+  border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 10%, transparent);
+}
+.wiki-version-value {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--aov-text);
   font-weight: 600;
-  border-color: transparent;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
 }
-.wiki-version-group [data-active-season] {
-  color: var(--wiki-text);
+.wiki-version-live {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--aov-success);
+  font-weight: 400;
 }
-.wiki-version-group button:hover {
-  background: var(--accent);
-  color: var(--foreground);
-}
-.wiki-version-group button[aria-pressed="true"] {
-  color: var(--foreground);
-  border-color: var(--primary);
-  background: var(--card);
-}
-.wiki-version-current {
+.wiki-version-live::before {
+  content: "";
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #34d399;
+  background: currentColor;
 }
-@media (max-width: 640px) {
-  .wiki-version-group {
-    gap: 3px;
+.wiki-version-reset {
+  display: inline-flex;
+  min-height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--aov-accent);
+}
+.wiki-version-reset:hover {
+  color: var(--aov-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wiki-version-loading {
+  width: 168px;
+  max-width: 100%;
+  height: 14px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
+
+.wiki-version-menu[data-slot="dropdown-menu-content"] {
+  width: min(320px, calc(100vw - 24px));
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 6px;
+  background: var(--aov-popover);
+  color: var(--aov-text);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-version-note {
+  padding: 6px 10px 8px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-version-season + .wiki-version-season {
+  margin-top: 6px;
+  border-top: 1px solid var(--aov-line);
+  padding-top: 6px;
+}
+.wiki-version-season-name {
+  padding: 6px 10px 2px;
+  color: var(--aov-accent);
+  font: var(--wiki-type-category);
+}
+.wiki-version-menu .wiki-version-option {
+  display: grid;
+  width: 100%;
+  min-height: 44px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 10px;
+  border-radius: var(--aov-radius-control);
+  padding: 6px 10px;
+  color: var(--aov-text);
+  font: var(--wiki-type-meta);
+  text-align: left;
+  cursor: pointer;
+}
+.wiki-version-menu .wiki-version-option:is(:hover, :focus, [data-highlighted]) {
+  background: var(--aov-raised);
+  outline: 0;
+}
+.wiki-version-option-name {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 10px;
+  font: var(--wiki-type-category);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-version-option:has(.wiki-version-option-check) .wiki-version-option-name {
+  color: var(--aov-accent);
+}
+.wiki-version-option-name .wiki-version-live {
+  font: var(--wiki-type-meta);
+}
+.wiki-version-option-check {
+  position: relative;
+  display: grid;
+  grid-row: span 2;
+}
+.wiki-version-option-check > svg {
+  color: var(--aov-accent);
+}
+.wiki-version-option-title {
+  grid-column: 1;
+  color: var(--aov-muted);
+}
+
+@media (max-width: 899.98px) {
+  .wiki-version-picker,
+  .wiki-version-reset {
+    min-height: 36px;
   }
-  .wiki-version-group button {
-    min-height: 28px;
-    padding-inline: 6px;
+  .wiki-version-trigger {
+    height: 36px;
   }
 }
-.wiki-version-changed {
-  width: 5px;
-  height: 5px;
-  margin-inline-start: 5px;
-  border-radius: 50%;
-  background: var(--aov-accent);
+/* The narrowest phones: the label keeps only its noun, so the version itself is never cut short. */
+@media (max-width: 339.98px) {
+  .wiki-version-label {
+    text-transform: capitalize;
+  }
+  .wiki-version-label > span {
+    display: none;
+  }
 }

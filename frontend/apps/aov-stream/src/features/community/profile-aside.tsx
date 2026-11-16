@@ -1,7 +1,7 @@
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import {
-  isCommunityProfile,
+  isIndividualProfile,
   profileKindLabels,
   type CommunityProfile,
   type PageSlice,
@@ -11,14 +11,7 @@ import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
-import { Avatar, formatDay } from "./community-ui"
-
-/** Display a name for recognized country codes and preserve free-form country names. */
-export function regionName(country?: string | null) {
-  const value = country?.trim()
-  if (!value) return null
-  return /^[A-Z]{2}$/.test(value) ? new Intl.DisplayNames(["vi"], { type: "region" }).of(value) || value : value
-}
+import { Avatar, followersLabel, formatDay, regionKey, regionName } from "./community-ui"
 
 function linkName(link: ProfileLink) {
   if (link.label) return link.label
@@ -30,26 +23,19 @@ function linkName(link: ProfileLink) {
 }
 
 /**
- * The reference column of an organization, team or player page: facts, channels, sources and related pages. Wide
- * screens show it beside the content; narrow ones show the `inline` copy inside the introduction tab instead of
- * pushing the column below the posts.
+ * What a page says about itself and where that comes from: introduction and facts, channels, sources and related
+ * pages. A wide layout shows it as the column beside the content; a compact one as the content of its own tab,
+ * where `channels` is off because the page head already carries them as icons.
  */
-export function ProfileAside({ profile, inline = false }: { profile: CommunityProfile; inline?: boolean }) {
+export function ProfileAside({ profile, channels = true }: { profile: CommunityProfile; channels?: boolean }) {
   const content = profile.content!
   const region = regionName(content.country)
-  const Wrapper = inline ? "div" : "aside"
   return (
-    <Wrapper
-      className={inline ? "cp-profile-aside-inline" : "cp-side-column cp-profile-aside"}
-      aria-label={inline ? undefined : "Thông tin tham khảo"}
-    >
-      <section className="cp-panel">
+    <aside className="pf-side" aria-label="Giới thiệu và nguồn thông tin">
+      <section className="tn-side-card pf-about">
         <h2>Thông tin chung</h2>
-        <dl className="cp-profile-facts">
-          <div>
-            <dt>Loại trang</dt>
-            <dd>{profileKindLabels[profile.kind]}</dd>
-          </div>
+        {content.biography && <p className="pf-bio">{content.biography}</p>}
+        <dl className="tn-facts">
           {content.shortName && (
             <div>
               <dt>Tên viết tắt</dt>
@@ -63,10 +49,6 @@ export function ProfileAside({ profile, inline = false }: { profile: CommunityPr
             </div>
           )}
           <div>
-            <dt>Người theo dõi</dt>
-            <dd>{profile.followers.toLocaleString("vi-VN")}</dd>
-          </div>
-          <div>
             <dt>Quản lý trang</dt>
             <dd>
               {profile.represented ? (
@@ -74,19 +56,19 @@ export function ProfileAside({ profile, inline = false }: { profile: CommunityPr
                   Đại diện đã xác minh <OfficialBadge label="Đại diện đã xác minh" />
                 </>
               ) : (
-                "AthaHub tổng hợp"
+                "AthaHub tổng hợp từ nguồn công khai"
               )}
             </dd>
           </div>
         </dl>
         {!profile.represented && (
-          <p className="cp-meta">Bạn là người đại diện? Chọn nút ⋯ rồi gửi yêu cầu quản lý trang.</p>
+          <p className="cp-meta">Bạn là người đại diện? Chọn nút ⋯ ở đầu trang để gửi yêu cầu quản lý.</p>
         )}
       </section>
-      {content.links.length > 0 && (
-        <section className="cp-panel">
+      {channels && content.links.length > 0 && (
+        <section className="tn-side-card">
           <h2>Kênh liên hệ</h2>
-          <ul className="cp-link-list">
+          <ul className="pf-links">
             {content.links.map((link, index) => (
               <li key={`${link.url}-${index}`}>
                 <a href={link.url} target="_blank" rel="noreferrer">
@@ -100,59 +82,56 @@ export function ProfileAside({ profile, inline = false }: { profile: CommunityPr
           </ul>
         </section>
       )}
-      <section className="cp-panel">
-        <h2>Nguồn thông tin</h2>
-        {content.sources.length ? (
-          <ul className="cp-link-list">
+      {content.sources.length > 0 && (
+        <section className="tn-side-card">
+          <h2>Nguồn thông tin</h2>
+          <ul className="pf-links">
             {content.sources.map((source, index) => (
               <li key={`${source.url}-${index}`}>
                 <a href={source.url} target="_blank" rel="noreferrer">
-                  <StreamIcon name="link" size={16} />
-                  <span>{linkName(source)}</span>
+                  <span>
+                    {linkName(source)}
+                    {source.checkedOn && <small>Đối chiếu {formatDay(source.checkedOn)}</small>}
+                  </span>
                   <StreamIcon name="external" size={14} />
                 </a>
-                {source.checkedOn && <p className="cp-meta">Đối chiếu {formatDay(source.checkedOn)}</p>}
               </li>
             ))}
           </ul>
-        ) : (
-          <p className="cp-muted">Chưa có nguồn được công bố.</p>
-        )}
-      </section>
+        </section>
+      )}
       <RelatedPages profile={profile} />
-    </Wrapper>
+    </aside>
   )
 }
 
-/** Other community pages from the same country, so a visitor can move between a region's channels. */
+/**
+ * Other pages of the same kind from the same country, so a visitor can move between a region's teams or players.
+ * They come from the most recently updated pages of that kind, the only order the service lists pages in.
+ */
 function RelatedPages({ profile }: { profile: CommunityProfile }) {
+  const region = regionKey(profile.content?.country)
   const pages = useQuery({
-    queryKey: ["page-regions"],
-    queryFn: () => communityApi<PageSlice<CommunityProfile>>("/pages?size=100"),
-    staleTime: 60_000,
+    queryKey: ["related-pages", profile.kind],
+    queryFn: () => communityApi<PageSlice<CommunityProfile>>(`/pages?kind=${profile.kind}&size=40`),
+    staleTime: 5 * 60_000,
+    enabled: !!region,
   })
-  const region = regionName(profile.content?.country)
   const related = (pages.data?.items || [])
-    .filter(
-      (page) =>
-        page.id !== profile.id &&
-        isCommunityProfile(page.kind) &&
-        region &&
-        regionName(page.content?.country) === region,
-    )
+    .filter((page) => page.id !== profile.id && regionKey(page.content?.country) === region)
     .slice(0, 4)
   if (!related.length) return null
   return (
-    <section className="cp-panel">
-      <h2>Trang liên quan</h2>
-      <ul className="cp-related">
+    <section className="tn-side-card pf-related">
+      <h2>{profileKindLabels[profile.kind]} cùng khu vực</h2>
+      <ul className="tn-mini-list">
         {related.map((page) => (
           <li key={page.id}>
-            <Link to={`/pages/${page.code}`}>
+            <Link to={`/pages/${page.code}`} data-person={isIndividualProfile(page.kind) || undefined}>
               <Avatar profile={page} />
               <span>
                 <strong>{page.content?.name || page.code}</strong>
-                <small>{profileKindLabels[page.kind]}</small>
+                {page.followers > 0 && <small>{followersLabel(page.followers)}</small>}
               </span>
             </Link>
           </li>

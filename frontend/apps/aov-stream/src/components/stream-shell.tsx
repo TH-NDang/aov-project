@@ -27,7 +27,7 @@ const destinations: Destination[] = [
     label: "Bảng tin",
     english: "Feed",
     icon: "feed",
-    active: (path) => path === "/" || path.startsWith("/pages"),
+    active: (path) => path === "/",
   },
   {
     to: "/competitions",
@@ -41,15 +41,17 @@ const destinations: Destination[] = [
     label: "Khám phá",
     english: "Explore",
     icon: "compass",
-    active: (path) => path.startsWith("/explore"),
+    // Profile pages are found from Explore, so they belong to it.
+    active: (path) => path.startsWith("/explore") || path.startsWith("/pages"),
   },
 ]
 
 /**
  * The portal frame: a top bar with the main tabs, the page content and, on wide screens, an `aside` column that
- * follows the content on narrower ones. On phones only the tab row stays pinned while scrolling.
+ * follows the content on narrower ones. `lead` runs across the full width above both. On phones only the tab row
+ * stays pinned while scrolling.
  */
-export function StreamShell({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
+export function StreamShell({ children, aside, lead }: { children: ReactNode; aside?: ReactNode; lead?: ReactNode }) {
   const { text } = useStreamLocale()
   const { pathname, search } = useLocation()
   const [searchOpen, setSearchOpen] = useState(pathname === "/explore" && !!new URLSearchParams(search).get("q"))
@@ -75,7 +77,7 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
         <div className="hub-topbar-inner">
           <div className="hub-brand-group">
             <Link to="/" className="hub-brand-link" aria-label="AOV Stream — Bảng tin">
-              <StreamBrand compact />
+              <StreamBrand />
             </Link>
             <StreamAppSwitcher wikiUrl={WIKI_URL} />
           </div>
@@ -112,20 +114,19 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
           </div>
         </div>
       </header>
-      <div className="hub-body">
+      <main id="main" className="hub-body" tabIndex={-1}>
+        {lead}
         <div className={aside ? "hub-content hub-content-split" : "hub-content"}>
-          <main id="main" className="hub-main">
-            {children}
-          </main>
+          <div className="hub-main">{children}</div>
           {aside && (
             <aside className="hub-aside" aria-label="Gợi ý và tài khoản">
               {aside}
             </aside>
           )}
         </div>
-      </div>
+      </main>
       <footer className="hub-footer">
-        <StreamBrand compact />
+        <StreamBrand />
         <p>
           <strong>AOV Stream</strong> · Quan sát trận đấu, khám phá cách chơi. Dữ liệu được biên tập từ nguồn đối chiếu.
         </p>
@@ -139,7 +140,7 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
   )
 }
 
-/** The bell only exists for signed-in viewers; the dot shows unread notifications. */
+/** The search of the bar; on Explore it starts from the words already searched for. */
 function HeaderSearch({
   inputRef,
   onDismiss,

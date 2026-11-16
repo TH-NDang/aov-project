@@ -1,0 +1,28 @@
+/* The page a sign-in returns to: one short state in the middle of the page while the session is restored. */
+.wiki-login-callback {
+  display: grid;
+  width: min(100%, 520px);
+  flex: 1;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  margin-inline: auto;
+  padding: 48px var(--wiki-gutter);
+  outline: none;
+  text-align: center;
+}
+.wiki-login-callback h1 {
+  font: var(--wiki-type-page);
+  color: var(--aov-text);
+}
+.wiki-login-callback p {
+  font: var(--wiki-type-body);
+  color: var(--aov-muted);
+}
+.wiki-login-callback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}

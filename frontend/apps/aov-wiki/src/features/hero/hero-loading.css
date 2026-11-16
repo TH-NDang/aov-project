@@ -1,47 +1,156 @@
+/* The tone every loading shape in the Wiki pulses in. */
 .wiki-skeleton {
-  background: #dce4f10d;
+  background: color-mix(in srgb, var(--aov-text-soft) 6%, transparent);
   animation: wiki-skeleton-pulse 1.6s ease-in-out infinite;
 }
 
 @keyframes wiki-skeleton-pulse {
   50% {
-    background-color: #dce4f11a;
+    background-color: color-mix(in srgb, var(--aov-text-soft) 12%, transparent);
   }
 }
 
-.wiki-hero-skeleton-name,
-.wiki-hero-skeleton-role {
-  display: block;
-  height: 14px;
-  width: 65%;
-  border-radius: 4px;
+/* A hero card while the list loads: the same box and lines as a loaded card, with bars where the words will be. */
+.wiki-hero-card-skeleton {
+  pointer-events: none;
 }
-.wiki-hero-skeleton-role {
-  height: 11px;
-  width: 45%;
+.wiki-hero-card-skeleton :is(.wiki-hero-card-name, .wiki-hero-card-roles)::before {
+  content: "";
+  display: inline-block;
+  width: 64%;
+  height: 0.7em;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  vertical-align: middle;
+}
+.wiki-hero-card-skeleton .wiki-hero-card-roles::before {
+  width: 44%;
+}
+/* A narrow card holds its roles and lanes as a line of marks, which is as tall as one mark. */
+@container hero-card (max-width: 127.98px) {
+  .wiki-hero-card-skeleton .wiki-hero-card-roles {
+    width: 44%;
+    min-height: 14px;
+    align-items: center;
+  }
+  .wiki-hero-card-skeleton .wiki-hero-card-roles::before {
+    width: 100%;
+    height: 8px;
+  }
+}
+/* The filter button of the compact toolbar. */
+.wiki-hero-filter-skeleton {
+  width: 76px;
+  height: 40px;
+  flex: none;
+  border-radius: var(--aov-radius-control);
+}
+
+/*
+ * A hero's page while it loads. Wide: the opening's box with the way back, the name and the first chips on the left
+ * and the artwork's place on the right. Compact: the artwork's box with the name at its foot.
+ */
+.wiki-hero-loading {
+  position: relative;
+  display: flex;
+  min-height: 480px;
+  overflow: hidden;
+  padding-top: var(--wiki-header-height);
+}
+.wiki-hero-loading-art {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 66%;
+}
+.wiki-hero-loading-info {
+  position: relative;
+  display: grid;
+  width: min(100%, var(--aov-page-max));
+  align-content: start;
+  justify-items: start;
+  gap: 14px;
+  margin-inline: auto;
+  padding: 40px var(--wiki-gutter) 28px;
+}
+.wiki-hero-loading-back {
+  width: 112px;
+  height: 14px;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-hero-loading-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.wiki-hero-loading-head {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
 }
 .wiki-hero-title-skeleton {
   width: 180px;
   max-width: 50vw;
   height: 44px;
-  border-radius: 5px;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-hero-loading-line {
+  width: 160px;
+  height: 16px;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-hero-loading-chips {
+  display: flex;
+  gap: 8px;
+}
+.wiki-hero-loading-chips > span {
+  width: 84px;
+  height: 28px;
+  border-radius: var(--aov-radius-control);
+}
+/* The price and the videos, which a compact page puts on a line of their own. */
+.wiki-hero-loading-chips[data-compact] {
+  display: none;
 }
 .wiki-hero-art-skeleton {
-  background: linear-gradient(125deg, transparent 20%, #dce4f10d, transparent 85%);
+  background: linear-gradient(
+    125deg,
+    transparent 20%,
+    color-mix(in srgb, var(--aov-text-soft) 6%, transparent),
+    transparent 85%
+  );
 }
 
-@media (max-width: 640px) {
-  .wiki-hero-skeleton-name {
-    height: 28px;
-    width: 85%;
+@media (max-width: 899.98px) {
+  .wiki-hero-loading {
+    min-height: 280px;
+    padding-top: 0;
   }
-  .wiki-hero-skeleton-role {
-    height: 13px;
-    width: 35%;
-    margin-top: auto;
+  .wiki-hero-loading-art {
+    width: 100%;
+  }
+  .wiki-hero-loading-info {
+    align-content: end;
+    gap: 10px;
+    padding: 60px var(--wiki-gutter) 12px;
+  }
+  .wiki-hero-loading-back {
+    display: none;
+  }
+  .wiki-hero-loading-identity {
+    gap: 10px;
+  }
+  .wiki-hero-loading-head {
+    width: 40px;
+    height: 40px;
   }
   .wiki-hero-title-skeleton {
     height: 32px;
+  }
+  .wiki-hero-loading-chips[data-compact] {
+    display: flex;
+  }
+  .wiki-hero-loading-chips[data-compact] > span:first-child {
+    width: 168px;
   }
 }
 

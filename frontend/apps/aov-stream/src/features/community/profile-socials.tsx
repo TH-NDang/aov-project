@@ -11,7 +11,7 @@ export function ProfileSocials({ links }: { links: ProfileLink[] }) {
   if (!links.length) return null
 
   return (
-    <nav className="cp-profile-socials" aria-label="Mạng xã hội và website">
+    <nav className="pf-socials" aria-label="Mạng xã hội và website">
       {links.map((link, i) => (
         <SocialChannel
           key={`${link.url}-${i}`}
@@ -87,12 +87,12 @@ function SocialChannel({
           }}
         >
           <SocialPlatformIcon url={link.url} />
-          {link.official && <OfficialBadge className="cp-social-official" label="Kênh chính thức" />}
+          {link.official && <OfficialBadge className="pf-social-official" label="Kênh chính thức" />}
         </button>
       </PopoverTrigger>
       <PopoverContent
         ref={panel}
-        className="cp-social-popover"
+        className="pf-social-popover"
         drawerTitle="Mạng xã hội và website"
         side="top"
         align="end"
@@ -114,7 +114,7 @@ function SocialChannel({
           pinned.current = false
         }}
       >
-        <div className="cp-social-popover-heading">
+        <div className="pf-social-popover-heading">
           <SocialPlatformIcon url={link.url} size={22} />
           <strong id={titleId}>{link.label}</strong>
           <button
@@ -126,9 +126,9 @@ function SocialChannel({
             <StreamIcon name="close" size={14} />
           </button>
         </div>
-        <p className="cp-social-host">{host}</p>
+        <p className="pf-social-host">{host}</p>
         {link.official && (
-          <p className="cp-social-status">
+          <p className="pf-social-status">
             <OfficialBadge /> Kênh chính thức
           </p>
         )}
@@ -137,7 +137,7 @@ function SocialChannel({
           href={link.url}
           target="_blank"
           rel="noreferrer"
-          className="cp-button cp-primary cp-social-open"
+          className="cp-button cp-primary pf-social-open"
         >
           Mở liên kết
           <StreamIcon name="external" size={14} />

@@ -1,73 +1,236 @@
-.wiki-terms {
-  max-width: 960px;
+/* The glossary: a search, then every term as a card on the page. */
+.wiki-terms-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
-.wiki-terms-lead {
-  font: var(--wiki-type-body);
-  margin-top: 4px;
+.wiki-terms-search {
+  display: flex;
+  min-width: 0;
+  height: 36px;
+  flex: 0 1 340px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 4px 0 12px;
+  background: var(--aov-surface);
   color: var(--aov-muted);
 }
-.wiki-terms-search.wiki-hero-search {
-  max-width: 340px;
+.wiki-terms-search:focus-within {
+  border-color: var(--aov-accent);
+  background: var(--aov-sunken);
+}
+.wiki-terms-search > svg {
+  flex: none;
+}
+.wiki-terms-search input {
+  font: var(--wiki-type-body);
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--aov-text);
+}
+.wiki-terms-search input::placeholder {
+  color: var(--aov-muted);
+}
+.wiki-terms-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.wiki-terms-clear {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-muted);
+}
+.wiki-terms-clear:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-terms-count {
+  font: var(--wiki-type-meta);
+  flex: none;
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wiki-terms-notice {
+  font: var(--wiki-type-body);
   margin-top: 14px;
+  color: var(--aov-text-soft);
 }
 .wiki-terms-state {
   font: var(--wiki-type-body);
   display: grid;
   justify-items: start;
   gap: 10px;
-  padding: 16px 0;
+  padding: 24px 0;
   color: var(--aov-muted);
 }
 .wiki-terms-state button {
   font: var(--wiki-type-category);
-  border: 1px solid var(--aov-line-strong);
+  min-height: 36px;
   border-radius: var(--aov-radius-control);
-  padding: 6px 14px;
+  padding: 0 14px;
+  background: var(--aov-raised);
   color: var(--aov-text);
 }
+
 .wiki-terms-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin-top: 16px;
 }
-.wiki-term {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  height: 100%;
-  padding: 14px 16px;
-  border: 1px solid transparent;
+.wiki-terms-list > li {
+  min-width: 0;
+  scroll-margin-top: calc(var(--wiki-header-height) + 24px);
+}
+.wiki-term-skeleton {
+  height: 112px;
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
-  scroll-margin-top: 72px;
 }
+/* One term: its picture, its name with the other names it goes by, then what it means. */
+.wiki-term {
+  display: grid;
+  height: 100%;
+  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "art head"
+    "art body";
+  align-items: start;
+  gap: 6px 12px;
+  border-radius: var(--aov-radius-card);
+  padding: 14px 16px;
+  background: var(--aov-surface);
+}
+/* The term a link opened: outlined and tinted like the ability chosen on a hero's page. */
 .wiki-term[aria-current="true"] {
-  border-color: var(--aov-accent);
+  outline: 1px solid color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  outline-offset: -1px;
+  background: color-mix(in srgb, var(--aov-accent) 10%, var(--aov-surface));
+}
+/* The picture is one colour and takes the colour the term has wherever a description mentions it. */
+.wiki-term-art {
+  grid-area: art;
+  color: var(--term-color, var(--aov-text-soft));
+}
+.wiki-term-head {
+  display: grid;
+  grid-area: head;
+  min-height: 40px;
+  align-content: center;
 }
 .wiki-term h2 {
   font: var(--wiki-type-entry);
 }
+/* The name leads to the term's own address: its target is taller than its line without moving anything. */
 .wiki-term h2 a {
-  color: var(--aov-text);
+  display: inline-block;
+  margin-block: -8px;
+  padding-block: 8px;
+  color: var(--term-color, var(--aov-text));
   text-decoration: none;
 }
 .wiki-term h2 a:hover {
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .wiki-term-aliases {
   font: var(--wiki-type-meta);
-  margin-top: 2px;
   color: var(--aov-muted);
 }
 .wiki-term-body {
   font: var(--wiki-type-body);
-  margin-top: 6px;
+  grid-area: body;
+  min-width: 0;
   color: var(--aov-text-soft);
 }
-.wiki-term-art {
-  flex: none;
+/* A table inside an explanation is ruled between its rows; the card around it is frame enough. */
+.wiki-term-body :has(> [role="table"]) {
+  border: 0;
+  border-radius: 0;
 }
-.wiki-term-copy {
-  min-width: 0;
+.wiki-term-body [role="row"]:first-child {
+  background: none;
+}
+.wiki-term-body [role="columnheader"] {
+  border-bottom: 1px solid var(--aov-line-strong);
+  color: var(--aov-muted);
+}
+.wiki-term-body :is([role="columnheader"], [role="cell"]):first-child {
+  padding-left: 0;
+}
+/* On a phone a long explanation runs under the picture, so its table has the whole card to fit in. */
+.wiki-terms-list > li[data-wide] .wiki-term {
+  grid-template-areas:
+    "art head"
+    "body body";
+}
+
+/* Two columns, then three. A long explanation takes a whole row, and the last short terms share theirs evenly. */
+@media (min-width: 720px) {
+  .wiki-terms-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wiki-terms-list > li[data-wide] {
+    grid-column: 1 / -1;
+  }
+  .wiki-terms-list > li[data-wide] .wiki-term {
+    grid-template-areas:
+      "art head"
+      "art body";
+  }
+  /*
+   * With a row to itself, the parts of a long explanation stand side by side: the rule, its example, its note. A part
+   * is never narrower than an example table needs to keep each level on one line; what does not fit moves down.
+   */
+  .wiki-terms-list > li[data-wide] [data-slot="entity-rich-text"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    align-items: start;
+    gap: 4px 28px;
+  }
+}
+@media (min-width: 720px) and (max-width: 1099.98px) {
+  .wiki-terms-list > li[data-two="full"] {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 1100px) {
+  .wiki-terms-list {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .wiki-terms-list > li {
+    grid-column: span 2;
+  }
+  .wiki-terms-list > li[data-three="half"] {
+    grid-column: span 3;
+  }
+  .wiki-terms-list > li:is([data-wide], [data-three="full"]) {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-terms-search {
+    height: 40px;
+    flex: 1 1 auto;
+  }
+  /* 16px keeps iPhones from zooming the page when the field takes focus. */
+  .wiki-terms-search input {
+    font-size: 16px;
+  }
+  .wiki-terms-clear {
+    width: 36px;
+    height: 36px;
+  }
 }

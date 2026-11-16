@@ -1,3 +1,4 @@
+/* The round button beside a hero's name; on compact screens it stands on the artwork. */
 .wiki-hero-switch-trigger {
   position: relative;
   isolation: isolate;
@@ -16,9 +17,9 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  border: 1px solid color-mix(in srgb, var(--hero-accent, #d8c28e) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hero-accent, var(--aov-accent)) 35%, transparent);
   border-radius: 50%;
-  background: #17202a66;
+  background: color-mix(in srgb, var(--aov-sunken) 40%, transparent);
   transition:
     background 160ms,
     border-color 160ms;
@@ -29,413 +30,106 @@
 }
 .wiki-hero-switch-trigger:hover::before,
 .wiki-hero-switch-trigger[data-state="open"]::before {
-  border-color: var(--hero-accent, #d8c28e);
-  background: #17202ab3;
+  border-color: var(--hero-accent, var(--aov-accent));
+  background: color-mix(in srgb, var(--aov-sunken) 70%, transparent);
 }
+
+/* The list of heroes: a sheet from the left with the search and the filters above a grid of hero cards. */
 .wiki-hero-switch-panel[data-slot="sheet-content"] {
   width: min(760px, calc(100vw - 44px));
   max-width: 760px;
   height: 100dvh;
   gap: 0;
-  overflow: visible;
   border-color: var(--aov-line);
-  background: var(--aov-surface);
+  background: var(--aov-bg);
   color: var(--aov-text);
-  box-shadow: 16px 0 80px #080e1955;
+  box-shadow: var(--aov-shadow-lg);
 }
 .wiki-hero-switch-controls {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
   flex-shrink: 0;
-  align-items: center;
-  gap: 6px 16px;
-  padding: 12px 16px 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 20px 14px;
   border-bottom: 1px solid var(--aov-line);
 }
 .wiki-hero-switch-heading {
   display: flex;
   min-width: 0;
-  min-height: 44px;
+  min-height: 36px;
   align-items: center;
+  gap: 10px;
 }
-.wiki-hero-switch-title-row {
+.wiki-hero-switch-title {
   display: flex;
-  align-items: center;
-  gap: 7px;
+  min-width: 0;
+  align-items: baseline;
+  gap: 10px;
 }
-.wiki-hero-switch-heading [data-slot="sheet-title"] {
+.wiki-hero-switch-title [data-slot="sheet-title"] {
+  color: var(--aov-text);
   font: var(--wiki-type-section);
-  color: var(--aov-accent);
+}
+.wiki-hero-switch-title small {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  font-variant-numeric: tabular-nums;
 }
 .wiki-hero-switch-close {
-  position: absolute;
-  top: 50%;
-  right: -43px;
-  z-index: 1;
   display: grid;
-  width: 44px;
-  height: 68px;
+  width: 36px;
+  height: 36px;
+  flex: none;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 20%, transparent);
-  border-radius: 0 12px 12px 0;
-  background: var(--aov-raised);
-  color: var(--aov-accent);
-  box-shadow: 6px 0 18px #11182244;
-  transform: translateY(-50%);
+  margin: 0 -8px 0 auto;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-text-soft);
   touch-action: manipulation;
 }
 .wiki-hero-switch-close:hover {
   background: var(--aov-raised);
-  border-color: color-mix(in srgb, var(--aov-accent) 53%, transparent);
-}
-.wiki-hero-switch-tools {
-  display: contents;
-}
-.wiki-hero-switch-search {
-  display: flex;
-  width: 100%;
-  min-width: 0;
-  height: 36px;
-  align-items: center;
-  gap: 9px;
-  border: 1px solid var(--aov-line);
-  border-radius: 24px;
-  padding-inline: 12px;
-  background: #20293699;
-  color: var(--aov-muted);
-}
-.wiki-hero-switch-search > svg {
-  flex-shrink: 0;
-}
-.wiki-hero-switch-search input {
-  width: 100%;
-  min-width: 0;
-  height: 100%;
-  border: 0;
-  outline: none;
-  background: transparent;
   color: var(--aov-text);
-  font-size: 13px;
 }
-.wiki-hero-switch-search input::placeholder {
-  color: var(--aov-muted);
+.wiki-hero-switch-search.wiki-hero-search {
+  max-width: none;
 }
-.wiki-hero-switch-search:focus-within {
-  border-color: color-mix(in srgb, var(--aov-accent) 53%, transparent);
-  box-shadow: 0 0 0 2px #d8c28e1a;
-}
-.wiki-hero-switch-filter-row {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  margin-top: 0;
-}
+/* Each group of chips keeps one line and scrolls sideways when the sheet is narrower than the group. */
 .wiki-hero-switch-filters {
   display: flex;
-  width: max-content;
-  max-width: 100%;
   min-width: 0;
-  flex-wrap: nowrap;
-  gap: 3px;
   overflow-x: auto;
-  overflow-y: hidden;
-  padding: 3px;
-  border-radius: 12px;
-  background: #1e29384d;
-  scrollbar-width: none;
   overscroll-behavior-x: contain;
+  scrollbar-width: none;
   touch-action: pan-x;
-  cursor: grab;
-}
-.wiki-hero-switch-filters[data-dragging],
-.wiki-hero-switch-lanes[data-dragging] {
-  cursor: grabbing;
-  user-select: none;
-}
-.wiki-hero-switch-filters[data-dragging] *,
-.wiki-hero-switch-lanes[data-dragging] * {
-  cursor: grabbing;
 }
 .wiki-hero-switch-filters::-webkit-scrollbar {
   display: none;
 }
-.wiki-hero-switch-filters button {
-  font: var(--wiki-type-meta);
-  display: grid;
-  width: 32px;
-  min-width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--aov-text-soft);
+.wiki-hero-switch-filters[data-dragging] {
+  cursor: grabbing;
+  user-select: none;
 }
-.wiki-hero-switch-filters button[data-filter-all="true"] {
-  position: relative;
-  margin-right: 6px;
+.wiki-hero-switch-filters[data-dragging] * {
+  cursor: grabbing;
 }
-.wiki-hero-switch-filters button[data-filter-all="true"]::after {
-  content: "";
-  position: absolute;
-  top: 6px;
-  right: -5px;
-  bottom: 6px;
-  width: 1px;
-  pointer-events: none;
-  background: linear-gradient(180deg, transparent, #c4c7c947, transparent);
-}
-.wiki-hero-switch-filters button:focus-visible,
-.wiki-hero-switch-lane-filters button:focus-visible {
+/* The row clips what leaves it, so the focus ring is drawn inside the chip. */
+.wiki-hero-switch-filters .wiki-hero-chip:focus-visible {
   outline-offset: -2px;
-}
-.wiki-hero-switch-filters button:hover,
-.wiki-hero-switch-filters button[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--aov-accent) 47%, transparent);
-  background: color-mix(in srgb, var(--aov-accent) 8%, transparent);
-  color: var(--aov-accent);
-}
-.wiki-hero-switch-filters .wiki-hero-glyph {
-  width: 20px;
-  height: 20px;
-}
-.wiki-hero-switch-count {
-  font: var(--wiki-type-meta);
-  min-width: 24px;
-  border-radius: 12px;
-  padding: 2px 6px;
-  background: #1b273966;
-  color: var(--aov-text-soft);
-  text-align: center;
-}
-.wiki-hero-switch-active-filters {
-  font: var(--wiki-type-meta);
-  color: var(--aov-text-soft);
-}
-.wiki-hero-switch-workspace {
-  display: grid;
-  min-height: 0;
-  flex: 1;
-  grid-template-columns: 52px minmax(0, 1fr);
-  overflow: hidden;
-}
-.wiki-hero-switch-lanes {
-  align-self: start;
-  max-height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  padding: 10px 6px max(16px, env(safe-area-inset-bottom));
-  scrollbar-width: none;
-  touch-action: pan-y;
-  cursor: grab;
-}
-.wiki-hero-switch-lanes::-webkit-scrollbar {
-  display: none;
-}
-.wiki-hero-switch-lane-filters {
-  display: grid;
-  width: max-content;
-  max-width: 100%;
-  justify-items: center;
-  gap: 4px;
-  margin-inline: auto;
-  padding: 2px;
-  border-radius: 12px;
-  background: #1e29384d;
-}
-.wiki-hero-switch-lane-filters button {
-  font: var(--wiki-type-meta);
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--aov-text-soft);
-}
-.wiki-hero-switch-lane-filters button[data-filter-all="true"] {
-  position: relative;
-  margin-bottom: 6px;
-}
-.wiki-hero-switch-lane-filters button[data-filter-all="true"]::after {
-  content: "";
-  position: absolute;
-  right: 6px;
-  bottom: -5px;
-  left: 6px;
-  height: 1px;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, #c4c7c947, transparent);
-}
-.wiki-hero-switch-lane-filters button:hover,
-.wiki-hero-switch-lane-filters button[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--aov-accent) 47%, transparent);
-  background: color-mix(in srgb, var(--aov-accent) 8%, transparent);
-  color: var(--aov-accent);
-}
-.wiki-hero-switch-lane-filters .wiki-hero-glyph {
-  width: 21px;
-  height: 21px;
 }
 .wiki-hero-switch-scroll {
   min-width: 0;
   min-height: 0;
+  flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 16px 12px max(28px, env(safe-area-inset-bottom));
+  padding: 16px 20px max(28px, env(safe-area-inset-bottom));
   scrollbar-width: thin;
-  scrollbar-color: #77829566 transparent;
+  scrollbar-color: var(--aov-line-strong) transparent;
 }
 .wiki-hero-switch-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px 10px;
-}
-.wiki-hero-switch-choice {
-  position: relative;
-  display: block;
-  isolation: isolate;
-  min-width: 0;
-  aspect-ratio: 7 / 10;
-  overflow: hidden;
-  border-radius: 0 22px 0 0;
-  background: var(--aov-raised);
-  color: var(--aov-text);
-  text-decoration: none;
-}
-.wiki-hero-switch-choice::before {
-  content: "";
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, transparent 32%, #111b2b33 58%, #111b2be8 100%);
-}
-.wiki-hero-switch-choice:hover .wiki-hero-switch-portrait img {
-  filter: brightness(1.08);
-}
-.wiki-hero-switch-choice[aria-current="page"] {
-  color: var(--aov-accent);
-}
-.wiki-hero-switch-choice[aria-current="page"]::after {
-  content: "";
-  position: absolute;
-  z-index: 3;
-  bottom: 0;
-  left: 8px;
-  width: 36px;
-  height: 3px;
-  background: #e5cd95;
-}
-.wiki-hero-switch-portrait {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #202b3c;
-}
-.wiki-hero-switch-portrait img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 15%;
-  transition:
-    opacity 180ms ease-out,
-    filter 150ms;
-}
-.wiki-hero-switch-placeholder {
-  display: grid;
-  height: 100%;
-  place-items: center;
-  color: var(--aov-accent);
-  font: 32px var(--wiki-font-display);
-}
-.wiki-hero-switch-name {
-  font: var(--wiki-type-category);
-  position: absolute;
-  z-index: 2;
-  inset: auto 8px 11px;
-  color: var(--aov-text);
-  text-shadow: 0 1px 5px #0c1424;
-  overflow-wrap: anywhere;
-}
-.wiki-hero-switch-choice[aria-current="page"] .wiki-hero-switch-name {
-  color: var(--aov-accent);
-}
-.wiki-hero-switch-classifications {
-  position: absolute;
-  z-index: 2;
-  top: 7px;
-  left: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  gap: 5px;
-}
-.wiki-hero-switch-icon-stack {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.wiki-hero-switch-icon-stack > span {
-  display: grid;
-  width: 24px;
-  height: 24px;
-  place-items: center;
-  border-radius: 50%;
-  background: rgb(14 26 40 / 35%);
-  backdrop-filter: blur(2px);
-  color: var(--aov-accent);
-  box-shadow: 0 1px 3px #101b2b20;
-}
-.wiki-hero-switch-icon-stack .wiki-hero-glyph {
-  width: 18px;
-  height: 18px;
-}
-.wiki-hero-switch-selected {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  z-index: 3;
-  display: grid;
-  width: 23px;
-  height: 23px;
-  place-items: center;
-  border-radius: 50%;
-  color: #293240;
-  background: var(--aov-accent);
-}
-.wiki-hero-switch-skeleton {
-  position: relative;
-  aspect-ratio: 7 / 10;
-  overflow: hidden;
-  border-radius: 0 22px 0 0;
-  background: #d6e1ef0b;
-}
-.wiki-hero-switch-skeleton > span {
-  display: block;
-  width: 100%;
-  height: 80%;
-  background: #d6e1ef05;
-}
-.wiki-hero-switch-skeleton > i {
-  position: absolute;
-  bottom: 13px;
-  left: 10%;
-  display: block;
-  width: 70%;
-  height: 8px;
-  border-radius: 5px;
-  background: #d6e1ef0b;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
 }
 .wiki-hero-switch-state {
   font: var(--wiki-type-body);
@@ -443,22 +137,27 @@
   min-height: 220px;
   justify-items: center;
   align-content: center;
-  gap: 18px;
-  color: var(--aov-text-soft);
+  gap: 16px;
+  color: var(--aov-muted);
   text-align: center;
 }
 .wiki-hero-switch-state button {
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 40%, transparent);
-  border-radius: 20px;
-  padding: 8px 18px;
-  color: var(--aov-accent);
-  font-size: 0.8125rem;
+  font: var(--wiki-type-category);
+  min-height: 36px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  padding: 8px 16px;
+  color: var(--aov-text);
+}
+.wiki-hero-switch-state button:hover {
+  background: var(--aov-raised);
 }
 .wiki-hero-switch-state button:disabled {
   opacity: 0.5;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 899.98px) {
+  /* A larger target around the same small disc. */
   .wiki-hero-switch-trigger {
     width: 44px;
     height: 44px;
@@ -468,74 +167,35 @@
   .wiki-hero-switch-trigger::before {
     inset: 8px;
   }
-  .wiki-hero-switch-controls {
-    gap: 4px 10px;
-    padding: max(8px, env(safe-area-inset-top)) 10px 6px;
+  .wiki-hero-switch-close {
+    width: 40px;
+    height: 40px;
   }
-
-  .wiki-hero-switch-search {
-    height: 44px;
+  .wiki-hero-switch-search.wiki-hero-search {
+    height: 40px;
   }
-  .wiki-hero-switch-search input {
+  /* 16px keeps iOS from zooming the page when the field gets focus. */
+  .wiki-hero-switch-search.wiki-hero-search input {
     font-size: 16px;
   }
-  .wiki-hero-switch-filter-row {
-    flex-wrap: wrap;
-    gap: 3px;
-    margin-top: 0;
-  }
-  .wiki-hero-switch-filters {
-    gap: 2px;
-  }
-  .wiki-hero-switch-filters .wiki-hero-glyph {
-    width: 18px;
-    height: 18px;
-  }
-
-  .wiki-hero-switch-workspace {
-    grid-template-columns: 44px minmax(0, 1fr);
-  }
-  .wiki-hero-switch-lanes {
-    padding: 10px 2px max(16px, env(safe-area-inset-bottom));
-  }
-  .wiki-hero-switch-scroll {
-    padding: 8px 8px max(24px, env(safe-area-inset-bottom));
-  }
-  .wiki-hero-switch-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px 8px;
-  }
-  .wiki-hero-switch-choice,
-  .wiki-hero-switch-skeleton {
-    border-top-right-radius: 18px;
-  }
-  .wiki-hero-switch-name {
-    inset-inline: 6px;
-  }
-  .wiki-hero-switch-classifications {
-    top: 5px;
-    left: 4px;
-    gap: 4px;
-  }
-  .wiki-hero-switch-icon-stack > span {
-    width: 20px;
-    height: 20px;
-  }
-  .wiki-hero-switch-icon-stack {
-    gap: 3px;
-  }
-  .wiki-hero-switch-icon-stack .wiki-hero-glyph {
-    width: 14px;
-    height: 14px;
-  }
-  .wiki-hero-switch-selected {
-    width: 19px;
-    height: 19px;
+  .wiki-hero-switch-filters .wiki-hero-chip {
+    height: 36px;
   }
 }
-
-@media (max-width: 359px) {
+@media (max-width: 640px) {
+  .wiki-hero-switch-controls {
+    gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) 12px 12px;
+  }
+  /* The chips scroll out to the edges of the sheet. */
+  .wiki-hero-switch-filters {
+    margin-inline: -12px;
+    padding-inline: 12px;
+  }
+  .wiki-hero-switch-scroll {
+    padding: 12px 12px max(24px, env(safe-area-inset-bottom));
+  }
   .wiki-hero-switch-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 }

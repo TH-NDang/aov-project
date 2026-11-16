@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react"
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import {
@@ -8,6 +7,8 @@ import {
   type PageSlice,
   type PostKind,
 } from "@aov/community-contracts"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
@@ -16,17 +17,18 @@ import { useCommunitySession } from "./community-auth"
 import { ProfileCard } from "./community-directory"
 import { PostCard } from "./community-post"
 import { LiveRow } from "./community-live"
+import { HomeCompetitions, HomeMatches } from "./home-matches"
 import { useFollowedIds } from "./community-queries"
 import { useSignedInAction } from "./community-signin"
 import "./community.css"
 
 type Tab = "latest" | "following" | "video" | "news"
 
-const filters: { value: Tab; label: string; icon: "feed" | "heart" | "play" | "message" }[] = [
+const filters: { value: Tab; label: string; icon: "feed" | "heart" | "play" | "news" }[] = [
   { value: "latest", label: "Tất cả", icon: "feed" },
   { value: "following", label: "Đang theo dõi", icon: "heart" },
   { value: "video", label: "Video", icon: "play" },
-  { value: "news", label: "Tin tức", icon: "message" },
+  { value: "news", label: "Tin tức", icon: "news" },
 ]
 const tabKinds: Partial<Record<Tab, PostKind>> = { video: "VIDEO", news: "NEWS" }
 
@@ -51,12 +53,24 @@ export function CommunityHome() {
       : filters.find((filter) => filter.value === requested)?.value || "latest"
   const open = (next: Tab) => setParams(next === "latest" ? {} : { tab: next })
   return (
-    <StreamShell aside={<CommunityAside guest suggestions schedule />}>
+    <StreamShell
+      lead={
+        <>
+          <h1 className="sr-only">Bảng tin cộng đồng</h1>
+          <HomeMatches />
+        </>
+      }
+      aside={
+        <>
+          <HomeCompetitions />
+          <CommunityAside />
+        </>
+      }
+    >
       <title>Bảng tin — AOV Stream</title>
       <div className="cp-container">
-        <h1 className="sr-only">Bảng tin cộng đồng</h1>
-        <section className="hub-card hub-feed">
-          <div className="hub-feed-header cp-feed-filters">
+        <section>
+          <div className="hub-feed-header">
             <div className="hub-pills" role="group" aria-label="Lọc bảng tin">
               {filters.map((filter) => (
                 <button
@@ -90,7 +104,6 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
   const session = useCommunitySession()
   const followedIds = useFollowedIds()
   const signedIn = session.status === "authenticated"
-  const sentinel = useRef<HTMLDivElement>(null)
   const feed = useInfiniteQuery({
     queryKey: ["community-feed", following, kind, signedIn ? session.revision : 0],
     initialPageParam: 0,
@@ -103,21 +116,9 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
           size: "10",
         })}`,
       ),
-    getNextPageParam: (last) => ((last.page + 1) * last.size < last.totalElements ? last.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
   })
   const items = feed.data?.pages.flatMap((page) => page.items) || []
-  useEffect(() => {
-    if (!sentinel.current || !feed.hasNextPage || feed.isFetching || feed.isFetchNextPageError) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) void feed.fetchNextPage()
-      },
-      { rootMargin: "400px" },
-    )
-    observer.observe(sentinel.current)
-    return () => observer.disconnect()
-  }, [feed.hasNextPage, feed.isFetching, feed.isFetchNextPageError, feed.fetchNextPage, items.length])
-
   if (feed.isPending)
     return (
       <div className="cp-post-list" role="status" aria-label="Đang tải bảng tin">
@@ -125,10 +126,9 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
         <div className="hub-skeleton cp-post-skeleton" />
       </div>
     )
-  if (feed.isError && !items.length)
+  if (feed.isLoadingError)
     return (
       <div className="hub-state" role="alert">
-        <StreamIcon name="reset" size={28} />
         <h3>Chưa tải được bảng tin</h3>
         <p>{feed.error.message}</p>
         <button className="cp-button" onClick={() => void feed.refetch()}>
@@ -139,7 +139,6 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
   if (!items.length)
     return following ? (
       <div className="hub-state">
-        <StreamIcon name="heart" size={28} />
         <h3>Chưa có bài mới từ trang bạn theo dõi</h3>
         <p>Theo dõi tổ chức, đội tuyển hoặc tuyển thủ để thấy bài viết của họ tại đây.</p>
         <button className="cp-button cp-primary" onClick={() => navigate("/explore")}>
@@ -148,7 +147,6 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
       </div>
     ) : kind ? (
       <div className="hub-state">
-        <StreamIcon name={kind === "VIDEO" ? "play" : "feed"} size={28} />
         <h3>{kind === "VIDEO" ? "Chưa có video" : "Chưa có tin tức"}</h3>
         <p>Bài {kind === "VIDEO" ? "video" : "tin tức"} của các trang sẽ xuất hiện tại đây ngay khi được đăng.</p>
       </div>
@@ -167,17 +165,8 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
           following={followedIds}
         />
       ))}
-      <div ref={sentinel} className="stream-load-more" role="status">
-        {feed.isFetchingNextPage ? (
-          "Đang tải thêm bài viết…"
-        ) : feed.isFetchNextPageError ? (
-          <button type="button" onClick={() => void feed.fetchNextPage()}>
-            Tải lại phần tiếp theo
-          </button>
-        ) : !feed.hasNextPage && items.length > 10 ? (
-          "Bạn đã xem hết bài viết."
-        ) : null}
-      </div>
+      <InfiniteScroll query={feed} label="Đang tải thêm bài viết" />
+      {!feed.hasNextPage && items.length > 10 && <p className="stream-load-more">Bạn đã xem hết bài viết.</p>}
     </div>
   )
 }

@@ -1,17 +1,21 @@
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
-import { catalogIcons } from "@aov/ui/components/catalog-icons"
-import { Link, useParams } from "react-router"
+import { changeKindIcon } from "@aov/ui/components/change-kind-icons"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { Link, useLocation, useNavigate, useParams } from "react-router"
+import { patchChangeLabel } from "../../components/patch-changes-row"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { CatalogHeading } from "../../layout/catalog-heading"
 import { changeKind } from "../../lib/published-change-subjects"
 import { changeSetKind, parseChangeSummary } from "../../lib/wiki-change-format"
 import type { ChangeDomain } from "../../lib/wiki-patch-changes"
 import { notFoundMeta, patchMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
-import { heroDetailQuery } from "../hero/hero-api"
+import { heroDetailQuery, type HeroDetail } from "../hero/hero-api"
+import { activeSection } from "../hero/hero-section-position"
 import { ChangeDisclosure, ChangeKind, ChangeList } from "./change-list"
 import { ReleaseDate } from "./release-date"
 import {
@@ -23,123 +27,307 @@ import {
 } from "./updates-api"
 import "./updates.css"
 
-const DOMAINS: {
-  domain: ChangeDomain
-  title: [string, string]
-  tab?: string
-  Icon: (typeof catalogIcons)[keyof typeof catalogIcons]
-}[] = [
-  { domain: "HERO", title: ["Tướng", "Heroes"], Icon: catalogIcons.heroes },
-  { domain: "ITEM", title: ["Trang bị", "Equipment"], tab: "items", Icon: catalogIcons.items },
-  { domain: "ENCHANTMENT", title: ["Phù hiệu", "Enchantments"], tab: "enchantments", Icon: catalogIcons.enchantments },
-  { domain: "ARCANA", title: ["Bảng ngọc", "Arcana"], tab: "arcana", Icon: catalogIcons.arcana },
-  { domain: "SPELL", title: ["Phụ trợ", "Talents"], tab: "spells", Icon: catalogIcons.spells },
+const DOMAINS: { domain: ChangeDomain; title: [string, string]; tab?: string }[] = [
+  { domain: "HERO", title: ["Tướng", "Heroes"] },
+  { domain: "ITEM", title: ["Trang bị", "Equipment"], tab: "items" },
+  { domain: "ENCHANTMENT", title: ["Phù hiệu", "Enchantments"], tab: "enchantments" },
+  { domain: "ARCANA", title: ["Bảng ngọc", "Arcana"], tab: "arcana" },
+  { domain: "SPELL", title: ["Phụ trợ", "Talents"], tab: "spells" },
 ]
+
+/** Far enough below the sticky header that a hero counts as being read once its name settles under it. */
+const READING_LINE = 120
 
 const titleCase = (code: string) => code.charAt(0).toUpperCase() + code.slice(1)
 
-function HeroRow({
-  row,
-  variantId,
-  open,
-  onToggle,
-}: {
+/** A line of an imported update that names the page it was checked against, followed by a remark for its editors. */
+const CHECKED_AGAINST = /^Nguồn đối chiếu:\s*(https:\/\/\S+)/i
+
+/**
+ * The update's own summary, read like the notes of its entries. An imported update can also hold a single line that
+ * gives the page its notes were checked against and what is left for editors to verify: readers get the page as the
+ * source, and the remark stays out of their way.
+ */
+function releaseSummary(summary: string | null | undefined) {
+  const parsed = parseChangeSummary(summary)
+  let source = parsed.source
+  const text = parsed.text
+    .split("\n")
+    .filter((line) => {
+      const checked = CHECKED_AGAINST.exec(line)
+      if (checked) source ??= checked[1]
+      return !checked
+    })
+    .join("\n")
+  return { text, source }
+}
+
+/** One line of the index: something the patch changed and where its notes start on the page. */
+interface IndexEntry {
+  id: string
+  name: string
+  kind?: string | null
+  image?: string
+}
+
+interface IndexGroup {
+  id: string
+  title: string
+  /** Heroes show their picture; armory entries are listed by name. */
+  pictured: boolean
+  entries: IndexEntry[]
+}
+
+/** A hero's row with what its notes need: the hero as of this update, its name, its picture and its place on the page. */
+interface HeroEntry extends IndexEntry {
+  key: string
   row: PatchChangeRow
-  variantId: string
-  open: boolean
-  onToggle: () => void
-}) {
-  const scope = useWikiContext()
-  const variant = scope.options?.patches.find((patch) => patch.id === variantId)
-  // The hero as of this update gives its name and picture, names its skills and tells how many levels each has.
-  // It is read straight from the row's hero, without waiting for the whole hero list.
-  const detail = useQuery({
-    ...heroDetailQuery(row.heroId ?? "", {
-      region: scope.region,
-      locale: scope.locale,
-      seasonId: variant?.seasonId,
-      patchVariantId: variantId,
-      includeUnscoped: false,
-    }),
-    enabled: !!row.heroId && !!variant,
-  })
-  const hero = detail.data
-  const count = row.changes?.length ?? 0
-  const name = hero?.content.profile?.name ?? titleCase(row.heroCode ?? "")
-  const summary = parseChangeSummary(row.summary).text
-  const image = hero?.media.HEAD?.currentVersion?.url ?? hero?.media.PORTRAIT?.currentVersion?.url
-  const heading = (
+  hero?: HeroDetail
+  summary: string
+}
+
+/** Goes to a place on the page and writes it into the address, so the place can be shared. */
+function useJump() {
+  const navigate = useNavigate()
+  const { search } = useLocation()
+  return (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+    const target = document.getElementById(id)
+    if (!target) return
+    event.preventDefault()
+    void navigate({ search, hash: `#${id}` }, { replace: true })
+    // Instant on purpose: an animated scroll stops partway when pictures load in the sections it passes.
+    target.scrollIntoView({ block: "start" })
+    target.focus({ preventScroll: true })
+  }
+}
+
+/** The entry being read: the last one, going down the page, whose start has passed under the header. */
+function useReadingPlace(ids: string[]) {
+  const [active, setActive] = useState<string>()
+  const list = ids.join(" ")
+  useEffect(() => {
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      const positions = list.split(" ").flatMap((id) => {
+        const box = document.getElementById(id)?.getBoundingClientRect()
+        return box ? [{ id, top: box.top }] : []
+      })
+      const page = document.documentElement
+      const atEnd =
+        page.scrollHeight > window.innerHeight && window.scrollY + window.innerHeight >= page.scrollHeight - 2
+      setActive(activeSection(positions, READING_LINE, atEnd))
+    }
+    const schedule = () => {
+      frame ||= requestAnimationFrame(measure)
+    }
+    measure()
+    window.addEventListener("scroll", schedule, { passive: true })
+    window.addEventListener("resize", schedule)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener("scroll", schedule)
+      window.removeEventListener("resize", schedule)
+    }
+  }, [list])
+  return active
+}
+
+function KindMark({ kind, size }: { kind?: string | null; size: number }) {
+  const { locale } = useWikiContext()
+  const Art = kind ? changeKindIcon(kind) : undefined
+  if (!kind || !Art) return null
+  return (
     <>
-      <span className="wiki-patch-subject-art">{image ? <WikiImage src={image} alt="" /> : name.charAt(0)}</span>
-      <span className="wiki-patch-subject-name">
-        <strong>
-          {name}
-          {row.introducesHero && (
-            <span className="wiki-patch-new">{wikiText(scope.locale, "Tướng mới", "New hero")}</span>
-          )}
-        </strong>
-        {count > 0 && <small>{wikiText(scope.locale, `${count} thay đổi`, `${count} changes`)}</small>}
-      </span>
+      <Art size={size} />
+      <span className="sr-only">{patchChangeLabel(kind, locale)}</span>
     </>
   )
+}
+
+function EntryArt({ entry }: { entry: IndexEntry }) {
   return (
-    <article className="wiki-patch-subject">
-      <header>
-        {hero ? (
-          <Link to={scope.href(`/hero/${hero.code}`)} className="wiki-patch-subject-link">
-            {heading}
+    <span className="wiki-patch-subject-art">
+      {entry.image ? <WikiImage src={entry.image} alt="" /> : entry.name.charAt(0)}
+    </span>
+  )
+}
+
+/** Wide screens: the index stays beside the notes and marks the entry being read. */
+function PatchRail({ groups, title }: { groups: IndexGroup[]; title: string }) {
+  const jump = useJump()
+  const rail = useRef<HTMLElement>(null)
+  const active = useReadingPlace(groups.flatMap((group) => group.entries.map((entry) => entry.id)))
+
+  useEffect(() => {
+    // A long index scrolls on its own, and the marked entry has to stay in sight.
+    const box = rail.current
+    const link = box?.querySelector<HTMLElement>("[aria-current]")
+    if (!box || !link) return
+    const frame = box.getBoundingClientRect()
+    const row = link.getBoundingClientRect()
+    if (row.top < frame.top) box.scrollTop -= frame.top - row.top + 8
+    else if (row.bottom > frame.bottom) box.scrollTop += row.bottom - frame.bottom + 8
+  }, [active])
+
+  return (
+    <nav ref={rail} className="wiki-patch-rail" aria-label={title}>
+      <h2>{title}</h2>
+      {groups.map((group) => (
+        <div className="wiki-patch-rail-group" key={group.id}>
+          <a className="wiki-patch-rail-label" href={`#${group.id}`} onClick={(event) => jump(event, group.id)}>
+            {group.title} <span>{group.entries.length}</span>
+          </a>
+          <ul>
+            {group.entries.map((entry) => (
+              <li key={entry.id}>
+                <a
+                  href={`#${entry.id}`}
+                  aria-current={entry.id === active ? "location" : undefined}
+                  data-plain={group.pictured ? undefined : ""}
+                  onClick={(event) => jump(event, entry.id)}
+                >
+                  {group.pictured && <EntryArt entry={entry} />}
+                  <span>{entry.name}</span>
+                  <KindMark kind={entry.kind} size={18} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  )
+}
+
+/** Compact screens: the same index under the head, as rows that scroll sideways. */
+function PatchStrip({ groups, title }: { groups: IndexGroup[]; title: string }) {
+  const { locale } = useWikiContext()
+  const jump = useJump()
+  const heroes = groups.find((group) => group.pictured)
+  return (
+    <>
+      {groups.length > 1 && (
+        <nav className="wiki-patch-jump" aria-label={title}>
+          {groups.map((group) => (
+            <a key={group.id} href={`#${group.id}`} onClick={(event) => jump(event, group.id)}>
+              {group.title} <span>{group.entries.length}</span>
+            </a>
+          ))}
+        </nav>
+      )}
+      {heroes && heroes.entries.length > 1 && (
+        <nav className="wiki-patch-strip" aria-label={wikiText(locale, "Tướng thay đổi", "Heroes changed")}>
+          <ul>
+            {heroes.entries.map((entry) => (
+              <li key={entry.id}>
+                <a href={`#${entry.id}`} onClick={(event) => jump(event, entry.id)}>
+                  <span className="wiki-patch-strip-art">
+                    <EntryArt entry={entry} />
+                    <KindMark kind={entry.kind} size={16} />
+                  </span>
+                  {entry.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+    </>
+  )
+}
+
+function HeroNotes({
+  entry,
+  variantId,
+  showSummary,
+  open,
+  onToggle,
+  onLongChange,
+}: {
+  entry: HeroEntry
+  variantId: string
+  /** False when every hero of the update carries the same sentence, which the section then says once. */
+  showSummary: boolean
+  open: boolean
+  onToggle: () => void
+  onLongChange: (long: boolean) => void
+}) {
+  const scope = useWikiContext()
+  const layout = usePageLayout()
+  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const { row, hero, name, kind } = entry
+  const variant = scope.options?.patches.find((patch) => patch.id === variantId)
+  const count = row.changes?.length ?? 0
+  const page = hero ? scope.href(`/hero/${hero.code}`) : null
+  const nameId = `${entry.id}-name`
+  return (
+    <article className="wiki-patch-subject wiki-patch-hero" id={entry.id} tabIndex={-1} aria-labelledby={nameId}>
+      <header className="wiki-patch-hero-head">
+        {page ? (
+          // The name beside it is the link readers and screen readers use; the picture is a second way to press it.
+          <Link to={page} className="wiki-patch-subject-art" tabIndex={-1} aria-hidden="true">
+            {entry.image ? <WikiImage src={entry.image} alt="" /> : name.charAt(0)}
           </Link>
         ) : (
-          <span className="wiki-patch-subject-link">{heading}</span>
+          <EntryArt entry={entry} />
         )}
-        <span className="wiki-patch-overall">
-          {row.overallKind && <small>{wikiText(scope.locale, "Tổng thể", "Overall")}</small>}
-          <ChangeKind kind={changeSetKind(row)} />
-        </span>
+        <div>
+          <h3 id={nameId}>{page ? <Link to={page}>{name}</Link> : name}</h3>
+          <p className="wiki-patch-hero-meta">
+            {row.introducesHero && kind !== "RELEASE" && <ChangeKind kind="RELEASE" />}
+            {kind && (
+              <>
+                {row.overallKind && <span className="sr-only">{text("Tổng thể", "Overall")}:</span>}
+                <ChangeKind kind={kind} />
+              </>
+            )}
+            {count > 0 && <span>{text(`${count} thay đổi`, count === 1 ? "1 change" : `${count} changes`)}</span>}
+          </p>
+        </div>
       </header>
-      {summary && <p lang={row.actualLocale ?? undefined}>{summary}</p>}
-      {count > 0 && (
-        <ChangeDisclosure count={count} open={open} onToggle={onToggle}>
-          <ChangeList
-            changes={row.changes ?? []}
-            hero={hero}
-            skillAction={
-              hero
-                ? (key) => (
-                    <Link
-                      className="wiki-change-skill-link"
-                      to={scope.href(
-                        `/hero/${hero.code}?${variant && !variant.isCurrent ? `season=${variant.seasonId}&patch=${variantId}&` : ""}skill=${encodeURIComponent(key)}#wiki-kit-title`,
-                      )}
-                    >
-                      {wikiText(scope.locale, "Xem kỹ năng đầy đủ", "See full ability")}
-                      <WikiIcon name="arrow" size={14} />
-                    </Link>
-                  )
-                : undefined
-            }
-          />
-        </ChangeDisclosure>
-      )}
+      <div className="wiki-patch-hero-body">
+        {showSummary && entry.summary && <p lang={row.actualLocale ?? undefined}>{entry.summary}</p>}
+        {count > 0 && (
+          <ChangeDisclosure count={count} open={open} onToggle={onToggle} onLongChange={onLongChange}>
+            <ChangeList
+              changes={row.changes ?? []}
+              hero={hero}
+              overallKind={kind}
+              skillAction={
+                hero
+                  ? (key) => (
+                      <Link
+                        className="wiki-change-skill-link"
+                        to={scope.href(
+                          `/hero/${hero.code}?${variant && !variant.isCurrent ? `season=${variant.seasonId}&patch=${variantId}&` : ""}skill=${encodeURIComponent(key)}#wiki-kit-title`,
+                        )}
+                      >
+                        {layout === "compact"
+                          ? text("Xem kỹ năng", "See ability")
+                          : text("Xem kỹ năng đầy đủ", "See full ability")}
+                        <WikiIcon name="arrow" size={14} />
+                      </Link>
+                    )
+                  : undefined
+              }
+            />
+          </ChangeDisclosure>
+        )}
+      </div>
     </article>
   )
 }
 
-function CatalogRow({ row, tab }: { row: PatchChangeRow; tab?: string }) {
+function CatalogNotes({ id, row, tab }: { id: string; row: PatchChangeRow; tab?: string }) {
   const { href } = useWikiContext()
-  const id = row.subject?.id ?? row.spellId
+  const entry = row.subject?.id ?? row.spellId
   const name = row.subject?.displayName ?? row.name ?? row.subject?.code ?? row.code ?? ""
   const summary = parseChangeSummary(row.summary).text
   return (
-    <article className="wiki-patch-subject">
+    <article className="wiki-patch-subject" id={id} tabIndex={-1}>
       <header>
-        {id && tab ? (
-          <Link to={href(warehousePath(tab, id))} className="wiki-patch-subject-link">
-            <strong>{name}</strong>
-          </Link>
-        ) : (
-          <strong>{name}</strong>
-        )}
+        <h3>{entry && tab ? <Link to={href(warehousePath(tab, entry))}>{name}</Link> : name}</h3>
         <ChangeKind kind={changeKind(row)} />
       </header>
       {summary && <p lang={row.actualLocale ?? undefined}>{summary}</p>}
@@ -150,122 +338,265 @@ function CatalogRow({ row, tab }: { row: PatchChangeRow; tab?: string }) {
 function PatchContent({ release }: { release: PatchRelease }) {
   const scope = useWikiContext()
   const { locale, t, href } = scope
+  const layout = usePageLayout()
+  const { hash } = useLocation()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const results = useQueries({
     queries: DOMAINS.map(({ domain }) => patchChangesQuery(scope, release, domain)),
   })
+  const variant = scope.options?.patches.find((patch) => patch.id === release.variantId)
+  const season = scope.options?.seasons.find((item) => item.id === variant?.seasonId)
+  const sections = DOMAINS.map((domain, index) => ({
+    ...domain,
+    id: `patch-${domain.domain.toLowerCase()}`,
+    rows: results[index].data ?? [],
+  }))
+  const filled = sections.filter((section) => section.rows.length)
+  const pending = results.some((result) => result.isPending)
+  const failed = results.some((result) => result.isError)
+
+  const heroRows = sections.find((section) => section.domain === "HERO")?.rows ?? []
+  // The hero as of this update gives its name and picture, names its skills and tells how many levels each has.
+  // Each is read straight from the row's hero, without waiting for the whole hero list.
+  const details = useQueries({
+    queries: heroRows.map((row) => ({
+      ...heroDetailQuery(row.heroId ?? "", {
+        region: scope.region,
+        locale: scope.locale,
+        seasonId: variant?.seasonId,
+        patchVariantId: release.variantId,
+        includeUnscoped: false,
+      }),
+      enabled: !!row.heroId && !!variant,
+    })),
+  })
+  const taken = new Set<string>()
+  // A place on the page for each entry; a hero listed twice in one update still gets a place of its own.
+  const place = (wanted: string) => {
+    let id = wanted
+    for (let copy = 2; taken.has(id); copy++) id = `${wanted}-${copy}`
+    taken.add(id)
+    return id
+  }
+  const heroes: HeroEntry[] = heroRows.map((row, index) => {
+    const hero = details[index]?.data
+    return {
+      key: String(row.id ?? index),
+      id: place(`patch-hero-${row.heroCode ?? index}`),
+      row,
+      hero,
+      name: hero?.content.profile?.name ?? titleCase(row.heroCode ?? ""),
+      kind: changeSetKind(row),
+      image: hero?.media.HEAD?.currentVersion?.url ?? hero?.media.PORTRAIT?.currentVersion?.url,
+      summary: parseChangeSummary(row.summary).text,
+    }
+  })
+  // Imported notes can carry one sentence for every hero; said once, it does not have to be read eight times.
+  const sharedSummary =
+    heroes.length > 1 && heroes.every((entry) => entry.summary === heroes[0].summary) ? heroes[0].summary : ""
+  const catalogEntries = new Map(
+    filled
+      .filter((section) => section.domain !== "HERO")
+      .map((section) => [
+        section.domain,
+        section.rows.map((row, index) => ({
+          id: place(`${section.id}-${row.subject?.code ?? row.code ?? index}`),
+          name: row.subject?.displayName ?? row.name ?? row.subject?.code ?? row.code ?? "",
+          kind: changeKind(row),
+        })),
+      ]),
+  )
+  const groups: IndexGroup[] = filled.map((section) => ({
+    id: section.id,
+    title: text(...section.title),
+    pictured: section.domain === "HERO",
+    entries: section.domain === "HERO" ? heroes : (catalogEntries.get(section.domain) ?? []),
+  }))
+  const indexed = groups.reduce((total, group) => total + group.entries.length, 0) > 1
+  const indexTitle = text("Trong bản cập nhật này", "In this update")
+
   const [openHeroes, setOpenHeroes] = useState<ReadonlySet<string>>(new Set())
+  const [longHeroes, setLongHeroes] = useState<ReadonlySet<string>>(new Set())
   const toggleHero = (key: string) =>
     setOpenHeroes((current) => {
       const next = new Set(current)
       if (!next.delete(key)) next.add(key)
       return next
     })
-  const variant = scope.options?.patches.find((patch) => patch.id === release.variantId)
-  const season = scope.options?.seasons.find((item) => item.id === variant?.seasonId)
-  const sections = DOMAINS.map((domain, index) => ({ ...domain, rows: results[index].data ?? [] }))
-  const filled = sections.filter((section) => section.rows.length)
-  const pending = results.some((result) => result.isPending)
-  const failed = results.some((result) => result.isError)
-  const heroKey = (row: PatchChangeRow, index: number) => String(row.id ?? index)
-  const heroKeys = (sections.find((section) => section.domain === "HERO")?.rows ?? [])
-    .map((row, index) => (row.changes?.length ? heroKey(row, index) : null))
-    .filter((key): key is string => !!key)
-  const allHeroesOpen = heroKeys.length > 0 && heroKeys.every((key) => openHeroes.has(key))
-  const source = sections
-    .flatMap((section) => section.rows)
-    .map((row) => row.sourceUrl ?? parseChangeSummary(row.summary).source)
-    .find((url) => url && /^https:\/\//i.test(url))
+  const markLong = useCallback(
+    (key: string, long: boolean) =>
+      setLongHeroes((current) => {
+        if (current.has(key) === long) return current
+        const next = new Set(current)
+        if (long) next.add(key)
+        else next.delete(key)
+        return next
+      }),
+    [],
+  )
+  const longKeys = heroes.filter((entry) => longHeroes.has(entry.key)).map((entry) => entry.key)
+  const allHeroesOpen = longKeys.length > 0 && longKeys.every((key) => openHeroes.has(key))
+
+  const summary = releaseSummary(release.summary)
+  const source = [
+    ...sections
+      .flatMap((section) => section.rows)
+      .map((row) => row.sourceUrl ?? parseChangeSummary(row.summary).source),
+    summary.source,
+  ].find((url) => url && /^https:\/\//i.test(url))
+
+  // An address that names a place on the page is followed once the notes that hold the place have arrived.
+  const arrived = useRef(false)
+  const ready = !pending && filled.length > 0
+  useEffect(() => {
+    if (arrived.current || !ready || hash.length < 2) return
+    // After the app's own return to the top of a new address, which runs once this effect has.
+    const frame = requestAnimationFrame(() => {
+      arrived.current = true
+      document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: "start" })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [ready, hash])
+
+  const title = release.title || release.code
+  const meta = (
+    <span className="wiki-patch-meta">
+      {season?.displayName && <span>{season.displayName}</span>}
+      {season?.displayName && releaseDateValue(variant?.regionalDate, release.effectiveAt) && (
+        <span aria-hidden="true">·</span>
+      )}
+      <ReleaseDate regionalDate={variant?.regionalDate} effectiveAt={release.effectiveAt} />
+      {variant?.isCurrent && <span className="wiki-updates-current">{text("Đang áp dụng", "Current")}</span>}
+    </span>
+  )
+  const sourceLink = source && (
+    <a className="wiki-patch-source" href={source} target="_blank" rel="noopener noreferrer">
+      {text("Nguồn công bố", "Publication source")} <WikiIcon name="open" size={16} />
+    </a>
+  )
 
   return (
-    <div className="wiki-document public-panel">
-      <header className="wiki-patch-header">
-        <nav aria-label={text("Đường dẫn", "Breadcrumb")}>
-          <Link to={href("/updates")}>{t("updates")}</Link>
-          <span aria-hidden="true">/</span>
-          <span>{release.code}</span>
-        </nav>
-        <h1>{release.title || release.code}</h1>
-        <p className="wiki-patch-meta">
-          {season?.displayName}
-          {season?.displayName && releaseDateValue(variant?.regionalDate, release.effectiveAt) && " · "}
-          <ReleaseDate regionalDate={variant?.regionalDate} effectiveAt={release.effectiveAt} />
-          {variant?.isCurrent && <span className="wiki-updates-current">{text("Đang áp dụng", "Current")}</span>}
-          {source && (
-            <a href={source} target="_blank" rel="noopener noreferrer">
-              {text("Nguồn công bố", "Publication source")} <WikiIcon name="open" size={14} />
-            </a>
-          )}
-        </p>
-        {release.summary && <p lang={release.actualLocale ?? undefined}>{release.summary}</p>}
-        {filled.length > 1 && (
-          <nav className="wiki-patch-jump" aria-label={text("Trong bản cập nhật này", "In this update")}>
-            {filled.map((section) => (
-              <a key={section.domain} href={`#patch-${section.domain.toLowerCase()}`}>
-                <section.Icon size={18} />
-                {text(...section.title)} <span>{section.rows.length}</span>
-              </a>
-            ))}
-          </nav>
-        )}
-      </header>
+    <>
+      {layout === "compact" ? (
+        <header className="wiki-patch-compact-head">
+          <div className="wiki-patch-compact-links">
+            {/* The header already names the section, so the way back says where it leads. */}
+            <Link className="wiki-patch-back" to={href("/updates")}>
+              <WikiIcon name="chevronLeft" size={16} />
+              {text("Tất cả bản cập nhật", "All updates")}
+            </Link>
+            {sourceLink}
+          </div>
+          <h1 className="wiki-patch-title">{title}</h1>
+          <p>{meta}</p>
+        </header>
+      ) : (
+        <CatalogHeading
+          title={title}
+          back={{ to: href("/updates"), label: t("updates") }}
+          lead={meta}
+          action={sourceLink}
+        />
+      )}
 
-      {filled.map((section) => (
-        <section key={section.domain} id={`patch-${section.domain.toLowerCase()}`} className="wiki-patch-section">
-          <h2>
-            <section.Icon size={24} />
-            {text(...section.title)} <span>{section.rows.length}</span>
-            {section.domain === "HERO" && heroKeys.length > 1 && (
+      <div className="wiki-patch-layout" data-rail={layout === "wide" && indexed ? "" : undefined}>
+        <div className="wiki-patch-main">
+          {summary.text && (
+            <p className="wiki-patch-summary" lang={release.actualLocale ?? undefined}>
+              {summary.text}
+            </p>
+          )}
+          {layout === "compact" && indexed && <PatchStrip groups={groups} title={indexTitle} />}
+
+          {filled.map((section) => (
+            <section
+              key={section.domain}
+              id={section.id}
+              tabIndex={-1}
+              className="wiki-patch-section"
+              aria-labelledby={`${section.id}-title`}
+            >
+              <header className="wiki-updates-heading">
+                <div>
+                  <h2 id={`${section.id}-title`}>
+                    {text(...section.title)} <small>{section.rows.length}</small>
+                  </h2>
+                  {section.domain === "HERO" && sharedSummary && (
+                    <p lang={heroes[0].row.actualLocale ?? undefined}>{sharedSummary}</p>
+                  )}
+                </div>
+                {section.domain === "HERO" && longKeys.length > 0 && (
+                  <button
+                    type="button"
+                    className="wiki-patch-expand"
+                    aria-pressed={allHeroesOpen}
+                    onClick={() => setOpenHeroes(allHeroesOpen ? new Set() : new Set(longKeys))}
+                  >
+                    {allHeroesOpen ? text("Thu gọn tất cả", "Collapse all") : text("Mở rộng tất cả", "Expand all")}
+                  </button>
+                )}
+              </header>
+              <div className="wiki-patch-subjects">
+                {section.domain === "HERO"
+                  ? heroes.map((entry) => (
+                      <HeroNotes
+                        key={entry.key}
+                        entry={entry}
+                        variantId={release.variantId}
+                        showSummary={!sharedSummary}
+                        open={openHeroes.has(entry.key)}
+                        onToggle={() => toggleHero(entry.key)}
+                        onLongChange={(long) => markLong(entry.key, long)}
+                      />
+                    ))
+                  : section.rows.map((row, index) => (
+                      <CatalogNotes
+                        key={row.changeSetId ?? row.id ?? index}
+                        id={catalogEntries.get(section.domain)?.[index]?.id ?? `${section.id}-${index}`}
+                        row={row}
+                        tab={section.tab}
+                      />
+                    ))}
+              </div>
+            </section>
+          ))}
+
+          {pending &&
+            (filled.length ? (
+              <p role="status" className="wiki-updates-state">
+                {t("loading")}
+              </p>
+            ) : (
+              <div className="wiki-updates-skeleton" role="status">
+                <span className="sr-only">{t("loading")}</span>
+                <span />
+                <span />
+                <span />
+              </div>
+            ))}
+          {failed && (
+            <div role="status" className="wiki-updates-state">
+              <p>{text("Chưa tải được hết ghi chú của bản cập nhật.", "Some notes could not be loaded.")}</p>
               <button
                 type="button"
-                className="wiki-patch-expand"
-                aria-pressed={allHeroesOpen}
-                onClick={() => setOpenHeroes(allHeroesOpen ? new Set() : new Set(heroKeys))}
+                onClick={() => results.forEach((result) => result.isError && void result.refetch())}
               >
-                {allHeroesOpen ? text("Thu gọn tất cả", "Collapse all") : text("Mở rộng tất cả", "Expand all")}
+                {t("retry")}
               </button>
-            )}
-          </h2>
-          <div className="wiki-patch-subjects">
-            {section.rows.map((row, index) =>
-              section.domain === "HERO" ? (
-                <HeroRow
-                  key={row.id ?? index}
-                  row={row}
-                  variantId={release.variantId}
-                  open={openHeroes.has(heroKey(row, index))}
-                  onToggle={() => toggleHero(heroKey(row, index))}
-                />
-              ) : (
-                <CatalogRow key={row.changeSetId ?? row.id ?? index} row={row} tab={section.tab} />
-              ),
-            )}
-          </div>
-        </section>
-      ))}
-
-      {pending && (
-        <p role="status" className="wiki-updates-state">
-          {t("loading")}
-        </p>
-      )}
-      {failed && (
-        <div role="status" className="wiki-updates-state">
-          <p>{text("Chưa tải được hết ghi chú của bản cập nhật.", "Some notes could not be loaded.")}</p>
-          <button type="button" onClick={() => results.forEach((result) => result.isError && void result.refetch())}>
-            {t("retry")}
-          </button>
-        </div>
-      )}
-      {!pending && !failed && !filled.length && (
-        <p role="status" className="wiki-updates-state wiki-mascot-state">
-          {text(
-            "Bản cập nhật này chưa có ghi chú gameplay được công bố.",
-            "This update has no published gameplay notes yet.",
+            </div>
           )}
-        </p>
-      )}
-    </div>
+          {!pending && !failed && !filled.length && (
+            <p role="status" className="wiki-updates-state wiki-mascot-state">
+              {text(
+                "Bản cập nhật này chưa có ghi chú gameplay được công bố.",
+                "This update has no published gameplay notes yet.",
+              )}
+            </p>
+          )}
+        </div>
+        {layout === "wide" && indexed && <PatchRail groups={groups} title={indexTitle} />}
+      </div>
+    </>
   )
 }
 
@@ -284,13 +615,16 @@ export function PatchDetailPage() {
   )
 
   return (
-    <div className="wiki-updates">
+    <>
       {release ? (
         <PatchContent key={release.id} release={release} />
       ) : releases.isPending ? (
-        <p role="status" className="wiki-updates-state">
-          {t("loading")}
-        </p>
+        <div className="wiki-updates-skeleton" role="status">
+          <span className="sr-only">{t("loading")}</span>
+          <span />
+          <span />
+          <span />
+        </div>
       ) : releases.isError ? (
         <div role="status" className="wiki-updates-state">
           <p>{wikiText(locale, "Chưa tải được bản cập nhật.", "Could not load this update.")}</p>
@@ -304,6 +638,6 @@ export function PatchDetailPage() {
           <Link to={href("/updates")}>{wikiText(locale, "Xem tất cả bản cập nhật", "See all updates")}</Link>
         </div>
       )}
-    </div>
+    </>
   )
 }

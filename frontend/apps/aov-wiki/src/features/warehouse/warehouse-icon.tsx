@@ -1,9 +1,7 @@
 import { WikiIcon } from "../../components/wiki-icon"
 import type { WarehouseKind } from "./warehouse-types"
 
-type WarehouseIconName =
-  WarehouseKind | "search" | "close" | "arrow" | "clock" | "spark" | "reset" | "all" | "switch" | "chevron"
-
-export function WarehouseIcon({ name, size = 20 }: { name: WarehouseIconName; size?: number }) {
+/** The mark of one of the armory's catalogs, shown where an entry has no picture of its own. */
+export function WarehouseIcon({ name, size = 20 }: { name: WarehouseKind; size?: number }) {
   return <WikiIcon name={name} size={size} />
 }

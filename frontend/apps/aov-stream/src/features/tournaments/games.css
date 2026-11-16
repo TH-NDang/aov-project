@@ -1,0 +1,734 @@
+/* Games: the picture tiles of the catalogue, a game as a card or a row, the games directory and the game page. The
+   head and the tabs a game shares with its match are in competition.css. */
+
+/* ---------- A hero, item or spell: its picture, or two letters of its name where the picture is missing ---------- */
+.reference-art {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--aov-radius-control);
+  vertical-align: middle;
+}
+.reference-art-initials {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border-radius: inherit;
+  background: var(--hub-sunken);
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Five picks in lane order, underlined in the colour of the side the team played on. */
+.tn-picks {
+  --side: var(--hub-blue);
+  display: grid;
+  grid-template-columns: repeat(5, var(--pick, 40px));
+  gap: 4px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--side);
+}
+.tn-picks[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-picks > .reference-art {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+.tn-win {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--hub-accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+/* ---------- A game: title and length, then one line per team with its picks ---------- */
+.tn-game {
+  --pick: clamp(32px, 9.4vw, 40px);
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "head head"
+    "a picks-a"
+    "b picks-b";
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 16px 14px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  transition: background-color 120ms;
+}
+.tn-game:hover {
+  background: var(--hub-hover);
+}
+/* The title and the length share the first line: the title leaves room at its end for the length. */
+.tn-game-title {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  grid-area: head;
+  gap: 0 5px;
+  padding-right: 64px;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-game-title > span::after {
+  content: " ·";
+}
+.tn-game-title > b {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.tn-game-time {
+  display: inline-flex;
+  height: 18px;
+  grid-area: head;
+  align-items: center;
+  align-self: start;
+  justify-self: end;
+  gap: 4px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+}
+.tn-game-team {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-game-team[data-slot="a"] {
+  grid-area: a;
+}
+.tn-game-team[data-slot="b"] {
+  grid-area: b;
+}
+.tn-game-team > .stream-image {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--aov-radius-control);
+}
+.tn-game-team > strong {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.tn-game-team[data-lost] {
+  color: var(--hub-muted);
+}
+.tn-game-team[data-lost] > strong {
+  font-weight: 400;
+}
+.tn-picks[data-slot="a"] {
+  grid-area: picks-a;
+}
+.tn-picks[data-slot="b"] {
+  grid-area: picks-b;
+}
+.tn-game-context {
+  grid-column: 1 / -1;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-game > svg {
+  display: none;
+}
+
+/* ---------- Games directory ---------- */
+.tn-games {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+.tn-games > .cp-back {
+  align-self: flex-start;
+  margin: 0;
+}
+.tn-games-bar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.tn-games-bar > .stream-search {
+  max-width: 480px;
+  flex: 1 1 240px;
+  margin: 0;
+}
+.tn-games-bar > .competition-select {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.tn-game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 12px;
+}
+.tn-game-grid > .hub-skeleton {
+  height: 138px;
+}
+
+/* ---------- Game page: both drafts, then what each player built ---------- */
+.tn-draft-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--hub-layout-gap);
+}
+.tn-draft {
+  --side: var(--hub-blue);
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-draft[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-draft-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+.tn-draft-head > .stream-image {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: var(--hub-radius-sm);
+}
+.tn-draft-head > div {
+  display: grid;
+  min-width: 0;
+}
+.tn-draft-head h2 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+}
+.tn-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--side);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.tn-side::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 2px;
+  background: var(--side);
+}
+.tn-draft-head > .tn-win {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent-soft);
+}
+.tn-draft-picks {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--side);
+}
+.tn-pick {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 6px;
+  margin: 0;
+}
+.tn-pick-art {
+  position: relative;
+  display: block;
+}
+.tn-pick-art > .reference-art:first-child {
+  display: flex;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: var(--hub-radius-sm);
+}
+/* The letters sit low in the tile, clear of the lane label in its corner. */
+.tn-pick-art > .reference-art:first-child > .reference-art-initials {
+  place-items: end center;
+  padding-bottom: 16%;
+  font-size: 18px;
+}
+.tn-pick-lane {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 0 6px;
+  border-radius: var(--aov-radius-control);
+  background: rgb(8 12 22 / 75%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.tn-pick-art > .tn-pick-spell {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgb(255 255 255 / 55%);
+  border-radius: 50%;
+}
+.tn-pick > figcaption {
+  display: grid;
+  min-width: 0;
+}
+/* A name of several words wraps; a single word too long for its column ends in an ellipsis instead of breaking. */
+.tn-pick strong,
+.tn-pick figcaption > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tn-pick strong {
+  color: var(--hub-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.tn-pick figcaption > span {
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-draft-bans {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-draft-bans > b {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.tn-ban {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+.tn-ban > .reference-art {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--aov-radius-control);
+  filter: grayscale(0.85);
+  opacity: 0.8;
+}
+
+/* Loadouts: only the players a source showed something for. */
+.tn-loadouts {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+.tn-loadouts > .tn-heading {
+  margin-bottom: 0;
+}
+.tn-loadout-list {
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-loadout {
+  --side: var(--hub-blue);
+  display: grid;
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 16px;
+}
+.tn-loadout[data-side="RED"] {
+  --side: var(--hub-red);
+}
+.tn-loadout + .tn-loadout {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-loadout-who {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+.tn-loadout-who > .reference-art {
+  width: 36px;
+  height: 36px;
+}
+.tn-loadout-who > span:last-child {
+  display: grid;
+  min-width: 0;
+}
+.tn-loadout-who strong {
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.tn-loadout-who .tn-side {
+  color: var(--hub-muted);
+  font-weight: 400;
+}
+.tn-loadout-what {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-loadout-what strong {
+  color: var(--hub-text-soft);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.tn-slots {
+  display: flex;
+  gap: 4px;
+}
+.tn-slot {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-sunken);
+  color: var(--hub-muted);
+  font-size: 14px;
+}
+.tn-slot[data-unknown] {
+  border: 1px dashed var(--hub-border-strong);
+  background: none;
+}
+.tn-slot > .reference-art {
+  width: 100%;
+  height: 100%;
+}
+.tn-arcana,
+.tn-enchantments,
+.tn-enchantments > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.tn-arcana > span,
+.tn-enchantments > span > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--hub-text-soft);
+  font-weight: 600;
+}
+.tn-arcana .reference-art,
+.tn-enchantments .reference-art {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+.tn-enchantments > span + span {
+  padding-left: 10px;
+  border-left: 1px solid var(--hub-border);
+}
+.tn-timeline {
+  display: grid;
+  gap: 6px;
+}
+.tn-timeline > label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-timeline > label > strong {
+  color: var(--hub-text);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  line-height: 22px;
+}
+.tn-timeline > label > span {
+  margin-left: auto;
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+.tn-timeline > input {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  accent-color: var(--hub-accent);
+  cursor: ew-resize;
+}
+.tn-timeline-ticks {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tn-timeline-ticks > button {
+  height: 32px;
+  flex: none;
+  padding: 0 10px;
+  border-radius: var(--aov-radius-pill);
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-timeline-ticks > button[aria-pressed="true"] {
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+  font-weight: 700;
+}
+.tn-events {
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.tn-events > summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+.tn-events > summary::-webkit-details-marker {
+  display: none;
+}
+.tn-events > summary > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.tn-events > p {
+  margin: 0;
+  padding: 0 16px 8px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.tn-events > ol {
+  max-height: 320px;
+  margin: 0;
+  padding: 0 16px 8px;
+  overflow-y: auto;
+  list-style: none;
+}
+.tn-events li {
+  display: flex;
+  min-height: 40px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--hub-border);
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+}
+.tn-events time {
+  min-width: 40px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.tn-events strong {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.tn-events .reference-art {
+  width: 26px;
+  height: 26px;
+}
+
+/* On a wide screen a game of a match lies on one line, a team on each side of the two drafts. */
+@media (min-width: 900px) {
+  .tn-game[data-layout="row"] {
+    --pick: clamp(36px, 3.4vw, 48px);
+    grid-template-columns: 56px minmax(0, 1fr) auto auto minmax(0, 1fr) 56px 16px;
+    grid-template-areas: "title a picks-a picks-b b time go";
+    gap: 12px;
+    min-height: 64px;
+    padding: 8px 16px;
+  }
+  .tn-game[data-layout="row"] > .tn-game-title {
+    grid-area: title;
+    padding-right: 0;
+  }
+  .tn-game[data-layout="row"] > .tn-game-title > b {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+  }
+  .tn-game[data-layout="row"] > .tn-game-time {
+    grid-area: time;
+    align-self: center;
+  }
+  .tn-game[data-layout="row"] > .tn-game-team[data-slot="a"] {
+    flex-direction: row-reverse;
+    text-align: right;
+  }
+  .tn-game[data-layout="row"] > .tn-picks[data-slot="b"] {
+    margin-left: 12px;
+  }
+  .tn-game[data-layout="row"] > svg {
+    display: block;
+    grid-area: go;
+    color: var(--hub-muted);
+  }
+  /* A short name keeps its letters together beside the picks instead of breaking one per line. */
+  .tn-game[data-layout="row"] > .tn-game-team > strong {
+    overflow: hidden;
+    overflow-wrap: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+/* Between the two layouts the picks take most of a row: the cup alone marks the winner. */
+@media (min-width: 900px) and (max-width: 1079.98px) {
+  .tn-game[data-layout="row"] .tn-win > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media (max-width: 899.98px) {
+  .tn-game {
+    padding: 12px;
+  }
+  .tn-games .tn-page-head p {
+    display: block;
+    font-size: 13px;
+  }
+  .tn-games-bar > .stream-search {
+    max-width: none;
+  }
+  .tn-draft-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tn-draft {
+    gap: 12px;
+    padding: 12px;
+  }
+  .tn-draft-picks {
+    gap: 4px;
+  }
+  .tn-pick-lane {
+    top: 4px;
+    left: 4px;
+    padding: 0 4px;
+    line-height: 18px;
+  }
+  .tn-pick-art > .tn-pick-spell {
+    right: 4px;
+    bottom: 4px;
+    width: 20px;
+    height: 20px;
+  }
+  /* Bans share one row in equal columns, the name under its picture, so none is left alone on a second line. */
+  .tn-draft-bans {
+    display: grid;
+    grid-template-columns: auto;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    align-items: start;
+    gap: 8px;
+  }
+  .tn-draft-bans > b {
+    line-height: 24px;
+  }
+  .tn-ban {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: center;
+  }
+  .tn-ban > span:last-child {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .tn-loadout {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px 12px;
+  }
+  .tn-slots {
+    flex: 1 1 100%;
+    gap: 6px;
+  }
+  .tn-slot {
+    width: auto;
+    max-width: 44px;
+    height: auto;
+    flex: 1 1 0;
+    aspect-ratio: 1;
+  }
+}
+/* Too narrow for the word beside a team: the cup alone marks the winner. */
+@media (max-width: 359.98px) {
+  .tn-win > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tn-game {
+    transition: none;
+  }
+}

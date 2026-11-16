@@ -1,0 +1,52 @@
+/* A missing page: what happened and the search in a narrow centred block, then every section across the page column. */
+.wiki-not-found {
+  display: grid;
+  width: min(100%, var(--aov-page-max));
+  flex: 1;
+  align-content: start;
+  gap: 48px;
+  margin-inline: auto;
+  padding: 56px var(--wiki-gutter) 64px;
+  outline: none;
+}
+.wiki-not-found-head {
+  display: grid;
+  width: min(100%, 600px);
+  justify-items: center;
+  gap: 10px;
+  margin-inline: auto;
+  text-align: center;
+}
+.wiki-not-found-head h1 {
+  font: var(--wiki-type-page);
+  color: var(--aov-text);
+}
+.wiki-not-found-head p {
+  font: var(--wiki-type-body);
+  max-width: 48ch;
+  color: var(--aov-muted);
+}
+/* The list of matches opens over the tiles below. */
+.wiki-not-found-search {
+  position: relative;
+  z-index: 2;
+  justify-self: stretch;
+  margin-top: 14px;
+}
+.wiki-not-found-sections {
+  display: grid;
+  gap: 16px;
+}
+.wiki-not-found-sections h2 {
+  font: var(--wiki-type-section);
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--aov-accent) 24%, transparent);
+  color: var(--aov-accent);
+}
+
+@media (max-width: 899.98px) {
+  .wiki-not-found {
+    gap: 32px;
+    padding: 32px var(--wiki-gutter) 40px;
+  }
+}

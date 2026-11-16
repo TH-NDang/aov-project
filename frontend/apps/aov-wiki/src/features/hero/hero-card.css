@@ -1,0 +1,214 @@
+/* A hero as a card: the portrait, then the name with the lane marks beside it and the roles below. */
+.wiki-hero-card-cell {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  container: hero-card / inline-size;
+}
+.wiki-hero-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  text-decoration: none;
+  transition: background 160ms;
+}
+.wiki-hero-card:focus-visible {
+  outline-offset: 2px;
+}
+.wiki-hero-card-portrait {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  flex: none;
+  overflow: hidden;
+  background: var(--aov-raised);
+}
+.wiki-hero-card-portrait img {
+  object-fit: cover;
+  object-position: center 15%;
+  transition:
+    opacity 180ms ease-out,
+    transform 320ms ease-out;
+}
+.wiki-hero-card-portrait[data-image-kind="head"] img {
+  object-position: center;
+}
+.wiki-hero-card-placeholder {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: var(--aov-accent);
+  font: var(--wiki-type-hero);
+}
+.wiki-hero-card-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+  padding: 8px 10px 10px;
+}
+.wiki-hero-card-name {
+  grid-area: 1 / 1;
+  font: var(--wiki-type-entry);
+  overflow-wrap: anywhere;
+}
+/* As tall as one line of the name, so the marks stay beside its first line when the name takes two. */
+.wiki-hero-card-lanes {
+  display: inline-flex;
+  height: 1lh;
+  grid-area: 1 / 2;
+  align-items: center;
+  gap: 4px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-entry);
+}
+.wiki-hero-card-roles {
+  display: block;
+  grid-area: 2 / 1 / auto / -1;
+  overflow: hidden;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-hero-card-roles > span + span::before {
+  content: " · ";
+}
+.wiki-hero-card-note {
+  grid-column: 1 / -1;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-hero-card .wiki-hero-glyph {
+  width: 16px;
+  height: 16px;
+}
+.wiki-hero-card-roles .wiki-hero-glyph {
+  display: none;
+}
+
+/* A card too narrow for the roles in words centres the name and draws roles and lanes as one line of marks. */
+@container hero-card (max-width: 127.98px) {
+  .wiki-hero-card-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2px 6px;
+    padding: 6px 6px 8px;
+    text-align: center;
+  }
+  .wiki-hero-card-name {
+    flex: 0 0 100%;
+    font: var(--wiki-type-category);
+  }
+  .wiki-hero-card-roles {
+    display: inline-flex;
+    gap: 3px;
+    overflow: visible;
+    color: var(--aov-text-soft);
+  }
+  .wiki-hero-card-roles > span {
+    display: inline-flex;
+  }
+  .wiki-hero-card-roles > span > span,
+  .wiki-hero-card-roles > span + span::before {
+    display: none;
+  }
+  .wiki-hero-card-roles .wiki-hero-glyph {
+    display: inline-block;
+  }
+  .wiki-hero-card-lanes {
+    height: auto;
+    gap: 3px;
+    border-left: 1px solid var(--aov-line-strong);
+    padding-left: 6px;
+  }
+  .wiki-hero-card-note {
+    flex: 0 0 100%;
+  }
+  .wiki-hero-card .wiki-hero-glyph {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (hover: hover) {
+  .wiki-hero-card:hover {
+    background: var(--aov-raised);
+  }
+  .wiki-hero-card:hover .wiki-hero-card-portrait img {
+    transform: scale(1.04);
+  }
+}
+
+/* The hero whose page is open: an accent outline with a faint tint and a tick on the portrait. */
+.wiki-hero-card[aria-current="page"] {
+  background: color-mix(in srgb, var(--aov-accent) 10%, var(--aov-surface));
+}
+.wiki-hero-card[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.wiki-hero-card[aria-current="page"] .wiki-hero-card-name {
+  color: var(--aov-accent);
+}
+.wiki-hero-card-current {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+
+/* The source of the picture: a quiet button on the portrait's corner, laid over artwork. */
+.wiki-hero-card-credit {
+  top: 5px;
+  right: 5px;
+  bottom: auto;
+  width: 22px;
+  height: 22px;
+  border-color: transparent;
+  background: rgb(0 0 0 / 40%);
+  box-shadow: none;
+  color: rgb(255 255 255 / 80%);
+}
+.wiki-hero-card-credit:is(:hover, [data-state="open"]) {
+  background: rgb(0 0 0 / 80%);
+  color: rgb(255 255 255);
+}
+/* The target reaches past the small disc. */
+.wiki-hero-card-credit::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+}
+.wiki-hero-card-credit > svg {
+  width: 14px;
+  height: 14px;
+}
+/* With a pointer it waits for the card to be pointed at or reached by keyboard; touch screens keep it in view. */
+@media (hover: hover) {
+  .wiki-hero-card-credit {
+    background: rgb(0 0 0 / 55%);
+    opacity: 0;
+    transition: opacity 160ms;
+  }
+  .wiki-hero-card-cell:is(:hover, :focus-within) .wiki-hero-card-credit,
+  .wiki-hero-card-credit[data-state="open"] {
+    opacity: 1;
+  }
+}

@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
-import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
+import { WikiImageCredit } from "../../components/wiki-image-credit"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { FeedbackDialog } from "../../layout/feedback-dialog"
+import { FeedbackDialog } from "../../components/feedback-dialog"
+import type { HeroMedia } from "../hero/hero-api"
+import { SkinAcquisitionText } from "../hero/hero-shop"
 import { SkinVideoList, useSkinVideos } from "../videos/subject-videos"
 import { VideoPlayer } from "../videos/video-player"
-import { SkinAcquisitionText } from "../hero/hero-shop"
 import type { SkinBadge, SkinEntry } from "./skin-api"
 import { SkinIcon } from "./skin-icon"
-import "./skin-directory.css"
+import "./skin-preview.css"
 
 export const skinId = (skin: SkinEntry) => `${skin.heroId}:${skin.skinKey}`
 
@@ -32,53 +33,6 @@ export function SkinBadgeImage({ badge }: { badge?: SkinBadge }) {
   )
 }
 
-export function SkinArtwork({
-  skin,
-  preview = false,
-  eager = preview,
-}: {
-  skin: SkinEntry
-  preview?: boolean
-  eager?: boolean
-}) {
-  const { locale } = useWikiContext()
-  const [failed, setFailed] = useState<string[]>([])
-  const portrait = { kind: "portrait", url: skin.portrait?.currentVersion?.url }
-  const head = { kind: "head", url: skin.head?.currentVersion?.url }
-  const art = { kind: "art", url: skin.art?.currentVersion?.url }
-  const candidates = preview ? [art, portrait, head] : [portrait, head, art]
-  const artwork = candidates.find(({ url }) => url && !failed.includes(url))
-  const shown = artwork?.kind === "art" ? skin.art : artwork?.kind === "head" ? skin.head : skin.portrait
-
-  return artwork?.url ? (
-    <WikiImage
-      className={
-        preview
-          ? `wiki-skin-preview-art wiki-skin-preview-art-${artwork.kind}`
-          : `wiki-skin-art wiki-skin-art-${artwork.kind}`
-      }
-      src={artwork.url}
-      focus={shown?.currentVersion?.focalPoint}
-      media={
-        preview ? (artwork.kind === "art" ? skin.art : artwork.kind === "head" ? skin.head : skin.portrait) : undefined
-      }
-      alt={preview ? `${skin.name} — ${skin.heroName}` : ""}
-      width="278"
-      height="436"
-      loading={eager ? "eager" : "lazy"}
-      onError={() => setFailed((current) => [...current, artwork.url!])}
-    />
-  ) : (
-    <span
-      className="wiki-skin-missing"
-      aria-label={wikiText(locale, "Chưa có ảnh trang phục", "Skin artwork unavailable")}
-    >
-      <span aria-hidden="true">{skin.name.charAt(0)}</span>
-      {preview && <span>{wikiText(locale, "Chưa có ảnh", "No artwork")}</span>}
-    </span>
-  )
-}
-
 export function HeroHead({ skin }: { skin: SkinEntry }) {
   const [failedSource, setFailedSource] = useState<string>()
   const source = skin.heroHead?.currentVersion?.url
@@ -96,9 +50,80 @@ export function HeroHead({ skin }: { skin: SkinEntry }) {
   )
 }
 
+export function SkinArtwork({
+  skin,
+  preview = false,
+  card = false,
+  eager = preview,
+  credit = preview,
+  onShown,
+}: {
+  skin: SkinEntry
+  preview?: boolean
+  /** A card is too large for the small head picture, so a skin without a portrait shows a part of its artwork. */
+  card?: boolean
+  eager?: boolean
+  /** Whether the picture carries its own source button; off where the source is written out beside it. */
+  credit?: boolean
+  /** Reports which picture is on screen, as a later one takes over when the first cannot load. */
+  onShown?: (media: HeroMedia | undefined) => void
+}) {
+  const { locale } = useWikiContext()
+  const [failed, setFailed] = useState<string[]>([])
+  const portrait = { kind: "portrait", media: skin.portrait }
+  const head = { kind: "head", media: skin.head }
+  const art = { kind: "art", media: skin.art }
+  const candidates = preview ? [art, portrait, head] : card ? [portrait, art, head] : [portrait, head, art]
+  const artwork = candidates.find(({ media }) => {
+    const url = media?.currentVersion?.url
+    return url && !failed.includes(url)
+  })
+  const shown = artwork?.media
+  const source = shown?.currentVersion?.url
+  useEffect(() => onShown?.(shown), [onShown, shown])
+
+  if (artwork && source)
+    return (
+      <WikiImage
+        className={
+          preview
+            ? `wiki-skin-preview-art wiki-skin-preview-art-${artwork.kind}`
+            : `wiki-skin-art wiki-skin-art-${artwork.kind}`
+        }
+        src={source}
+        focus={shown?.currentVersion?.focalPoint}
+        media={credit ? shown : undefined}
+        alt={preview ? `${skin.name} — ${skin.heroName}` : ""}
+        width="278"
+        height="436"
+        loading={eager ? "eager" : "lazy"}
+        onError={() => setFailed((current) => [...current, source])}
+      />
+    )
+
+  // No picture is recorded: the hero's own face, dimmed, keeps the tile from reading as broken.
+  return (
+    <span className="wiki-skin-missing" data-preview={preview || undefined} aria-hidden={!preview || undefined}>
+      {skin.heroHead?.currentVersion?.url ? (
+        <HeroHead skin={skin} />
+      ) : (
+        <span className="wiki-skin-missing-initial" aria-hidden="true">
+          {skin.name.charAt(0)}
+        </span>
+      )}
+      {preview && <span>{wikiText(locale, "Chưa có ảnh của trang phục này", "No picture of this skin yet")}</span>}
+    </span>
+  )
+}
+
+/** The picture the viewer opens on. */
+function previewMedia(skin: SkinEntry) {
+  return [skin.art, skin.portrait, skin.head].find((media) => media?.currentVersion?.url)
+}
+
 /** The image the viewer opens first; fetched ahead of time so stepping through skins does not flash. */
 export function previewSource(skin: SkinEntry) {
-  return skin.art?.currentVersion?.url ?? skin.portrait?.currentVersion?.url ?? skin.head?.currentVersion?.url
+  return previewMedia(skin)?.currentVersion?.url
 }
 
 export function SkinPreview({
@@ -110,6 +135,7 @@ export function SkinPreview({
   heroLink = true,
 }: {
   skin: SkinEntry | null
+  /** The lists a reader can step through; stepping stays inside the list that holds the open skin. */
   groups: SkinEntry[][]
   open: boolean
   onClose: () => void
@@ -119,19 +145,24 @@ export function SkinPreview({
 }) {
   const scope = useWikiContext()
   const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
-  const queue = useMemo(() => groups.flat(), [groups])
-  const index = skin ? queue.findIndex((entry) => skinId(entry) === skinId(skin)) : -1
-  const canStep = index >= 0 && queue.length > 1
-  const heroIndex = skin ? groups.findIndex((group) => group[0].heroId === skin.heroId) : -1
-  const heroSkins = groups[heroIndex] ?? []
-  const previousHero = heroIndex >= 0 && groups.length > 1 ? groups.at(heroIndex - 1)?.[0] : undefined
-  const nextHero = heroIndex >= 0 && groups.length > 1 ? groups[(heroIndex + 1) % groups.length][0] : undefined
-  const activeThumb = useRef<HTMLButtonElement>(null)
+  const current = skin ? skinId(skin) : ""
+  const list = useMemo(
+    () => groups.find((group) => group.some((entry) => skinId(entry) === current)) ?? [],
+    [groups, current],
+  )
+  const index = list.findIndex((entry) => skinId(entry) === current)
+  const canStep = index >= 0 && list.length > 1
+  const oneHero = list.every((entry) => entry.heroId === skin?.heroId)
   const swipe = useRef<{ x: number; y: number } | null>(null)
   const skinVideos = useSkinVideos(skin)
+  const [shown, setShown] = useState<{ skin: string; media?: HeroMedia }>()
+  const reportShown = useCallback((media: HeroMedia | undefined) => setShown({ skin: current, media }), [current])
+  const media = (shown?.skin === current ? shown.media : undefined) ?? (skin ? previewMedia(skin) : undefined)
+  const sources = media?.currentVersion?.sources ?? []
+  const owner = sources.map((source) => source.ownerName?.trim() || source.label.trim()).find(Boolean)
 
   function step(delta: number) {
-    if (canStep) onMove(queue[(index + delta + queue.length) % queue.length])
+    if (canStep) onMove(list[(index + delta + list.length) % list.length])
   }
 
   useEffect(() => {
@@ -143,23 +174,32 @@ export function SkinPreview({
       if (target !== document.body && !target.closest(".wiki-skin-preview")) return
       if (target.closest("input, textarea, select, [contenteditable='true']")) return
       event.preventDefault()
-      onMove(queue[(index + (event.key === "ArrowRight" ? 1 : -1) + queue.length) % queue.length])
+      onMove(list[(index + (event.key === "ArrowRight" ? 1 : -1) + list.length) % list.length])
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [open, canStep, index, queue, onMove])
+  }, [open, canStep, index, list, onMove])
 
   useEffect(() => {
     if (!open || !canStep) return
     for (const delta of [1, -1, 2]) {
-      const source = previewSource(queue[(index + delta + queue.length) % queue.length])
+      const source = previewSource(list[(index + delta + list.length) % list.length])
       if (source) new Image().src = source
     }
-  }, [open, canStep, index, queue])
+  }, [open, canStep, index, list])
 
-  useEffect(() => {
-    activeThumb.current?.scrollIntoView({ block: "nearest", inline: "nearest" })
-  }, [skin])
+  /**
+   * Runs when the small picture of the skin on show enters the page or takes over from another one. The viewer's
+   * content mounts a moment after it opens, which an effect on the open skin would miss.
+   */
+  const followThumb = useCallback((thumb: HTMLButtonElement | null) => {
+    const rail = thumb?.parentElement
+    if (!thumb || !rail) return
+    // Only the rail moves, so choosing a skin never scrolls the viewer itself.
+    rail.scrollTo({ left: thumb.offsetLeft - (rail.clientWidth - thumb.offsetWidth) / 2 })
+    // The rail is one stop for the Tab key; while the focus is in it, the focus follows the skin on show.
+    if (rail.contains(document.activeElement)) thumb.focus({ preventScroll: true })
+  }, [])
 
   return (
     <Dialog
@@ -172,7 +212,7 @@ export function SkinPreview({
         className="wiki-skin-preview"
         showCloseButton={false}
         onCloseAutoFocus={(event) => {
-          // Return to the skin last viewed, which may be several heroes away from the card that opened the viewer.
+          // Return to the skin last viewed, which may be several cards away from the one that opened the viewer.
           const card = skin && document.querySelector<HTMLElement>(`[data-skin-card="${CSS.escape(skinId(skin))}"]`)
           if (card?.isConnected) {
             event.preventDefault()
@@ -205,7 +245,8 @@ export function SkinPreview({
                 if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(event.clientY - start.y) * 1.5) step(dx < 0 ? 1 : -1)
               }}
             >
-              {previewSource(skin) && (
+              {/* A skin with only a tall portrait leaves the stage's sides empty; a blurred copy fills them. */}
+              {!skin.art?.currentVersion?.url && !skinVideos.playing && previewSource(skin) && (
                 <span
                   className="wiki-skin-preview-backdrop"
                   style={{ backgroundImage: `url("${previewSource(skin)}")` }}
@@ -215,7 +256,7 @@ export function SkinPreview({
               {skinVideos.playing ? (
                 <VideoPlayer key={skinVideos.playing.id} video={skinVideos.playing} onEnded={skinVideos.onEnded} />
               ) : (
-                <SkinArtwork key={skinId(skin)} skin={skin} preview />
+                <SkinArtwork key={current} skin={skin} preview credit={false} onShown={reportShown} />
               )}
               {canStep && !skinVideos.playing && (
                 <>
@@ -224,10 +265,11 @@ export function SkinPreview({
                     className="wiki-skin-preview-step"
                     data-side="previous"
                     aria-label={text("Trang phục trước", "Previous skin")}
+                    title={text("Trang phục trước (←)", "Previous skin (←)")}
                     onClick={() => step(-1)}
                   >
                     <span>
-                      <WikiIcon name="chevronLeft" size={22} />
+                      <SkinIcon name="chevronLeft" size={22} />
                     </span>
                   </button>
                   <button
@@ -235,17 +277,52 @@ export function SkinPreview({
                     className="wiki-skin-preview-step"
                     data-side="next"
                     aria-label={text("Trang phục sau", "Next skin")}
+                    title={text("Trang phục sau (→)", "Next skin (→)")}
                     onClick={() => step(1)}
                   >
                     <span>
-                      <WikiIcon name="chevronRight" size={22} />
+                      <SkinIcon name="chevronRight" size={22} />
                     </span>
                   </button>
+                  <span className="wiki-skin-preview-count" aria-live="polite">
+                    <span className="sr-only">{skin.name} </span>
+                    {index + 1}/{list.length}
+                  </span>
                 </>
               )}
             </div>
+            {list.length > 1 && (
+              <div
+                className="wiki-skin-preview-set"
+                role="group"
+                aria-label={
+                  oneHero
+                    ? text(`Trang phục khác của ${skin.heroName}`, `Other skins of ${skin.heroName}`)
+                    : text("Trang phục trong kết quả", "Skins in the results")
+                }
+              >
+                {list.map((entry) => {
+                  const active = skinId(entry) === current
+                  const name = oneHero ? entry.name : `${entry.name} — ${entry.heroName}`
+                  return (
+                    <button
+                      key={skinId(entry)}
+                      ref={active ? followThumb : undefined}
+                      type="button"
+                      className="wiki-skin-thumb"
+                      aria-current={active || undefined}
+                      aria-label={`${text("Xem", "View")} ${name}`}
+                      title={name}
+                      tabIndex={active ? 0 : -1}
+                      onClick={() => onMove(entry)}
+                    >
+                      <SkinArtwork skin={entry} />
+                    </button>
+                  )
+                })}
+              </div>
+            )}
             <div className="wiki-skin-preview-info">
-              <span className="wiki-skin-preview-eyebrow">{scope.t("skins").toLocaleUpperCase(scope.locale)}</span>
               <div className="wiki-edit-heading">
                 <DialogTitle>{skin.name}</DialogTitle>
                 <FeedbackDialog
@@ -257,28 +334,58 @@ export function SkinPreview({
                   ]}
                 />
               </div>
-              <DialogDescription>
+              <DialogDescription className="sr-only">
                 {text("Trang phục của", "Skin for")} {skin.heroName}
               </DialogDescription>
-              <SkinAcquisitionText
-                heroId={skin.heroId}
-                skinKey={skin.skinKey}
-                className="wiki-skin-preview-acquisition"
-              />
-              {skin.badge && (
-                <div className="wiki-skin-preview-badge">
-                  <SkinBadgeImage key={skin.badge.icon?.currentVersion?.url} badge={skin.badge} />
-                  <span>{skin.badge.name}</span>
+              <dl className="wiki-skin-preview-facts">
+                <div>
+                  <dt>{text("Tướng", "Hero")}</dt>
+                  <dd>
+                    {heroLink ? (
+                      <Link className="wiki-skin-preview-hero" to={scope.href(`/hero/${skin.heroCode}`)}>
+                        <HeroHead skin={skin} />
+                        {skin.heroName}
+                        <SkinIcon name="arrow" size={14} />
+                      </Link>
+                    ) : (
+                      <span className="wiki-skin-preview-hero">
+                        <HeroHead skin={skin} />
+                        {skin.heroName}
+                      </span>
+                    )}
+                  </dd>
                 </div>
-              )}
-              {heroLink && (
-                <Link className="wiki-skin-preview-hero" to={scope.href(`/hero/${skin.heroCode}`)}>
-                  <HeroHead skin={skin} />
+                {skin.badge && (
+                  <div>
+                    <dt>{text("Bậc", "Tier")}</dt>
+                    <dd>
+                      <SkinBadgeImage key={skin.badge.icon?.currentVersion?.url} badge={skin.badge} />
+                      <span>{skin.badge.name}</span>
+                    </dd>
+                  </div>
+                )}
+                {/* The row hides itself while no way to obtain the skin is recorded. */}
+                <div>
+                  <dt>{text("Cách sở hữu", "How to get it")}</dt>
+                  <dd>
+                    <SkinAcquisitionText
+                      heroId={skin.heroId}
+                      skinKey={skin.skinKey}
+                      className="wiki-skin-preview-acquisition"
+                    />
+                  </dd>
+                </div>
+              </dl>
+              {media?.currentVersion && (
+                <p className="wiki-skin-preview-credit">
                   <span>
-                    {text("Xem tướng", "View hero")} {skin.heroName}
+                    {text("Nguồn ảnh", "Picture source")}: {owner ?? text("chưa xác minh", "not verified yet")}
                   </span>
-                  <SkinIcon name="open" size={14} />
-                </Link>
+                  <WikiImageCredit
+                    sources={sources}
+                    contactHref={`/contact?assetId=${encodeURIComponent(media.assetId)}&versionId=${encodeURIComponent(media.currentVersion.versionId)}`}
+                  />
+                </p>
               )}
               <SkinVideoList
                 videos={skinVideos.videos}
@@ -290,55 +397,6 @@ export function SkinPreview({
                 }}
                 onStop={skinVideos.stop}
               />
-              {heroSkins.length > 1 && (
-                <section className="wiki-skin-preview-set" aria-label={text("Các trang phục khác", "Other skins")}>
-                  <h3>
-                    {text("Cùng tướng", "Same hero")}
-                    <span aria-live="polite">
-                      {heroSkins.findIndex((entry) => skinId(entry) === skinId(skin)) + 1}/{heroSkins.length}
-                    </span>
-                  </h3>
-                  <ul>
-                    {heroSkins.map((entry) => {
-                      const active = skinId(entry) === skinId(skin)
-                      return (
-                        <li key={skinId(entry)}>
-                          <button
-                            ref={active ? activeThumb : undefined}
-                            type="button"
-                            className="wiki-skin-thumb"
-                            aria-current={active || undefined}
-                            aria-label={`${text("Xem", "View")} ${entry.name}`}
-                            title={entry.name}
-                            onClick={() => onMove(entry)}
-                          >
-                            <SkinArtwork skin={entry} />
-                          </button>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </section>
-              )}
-              {previousHero && nextHero && (
-                <nav className="wiki-skin-preview-heroes" aria-label={text("Chuyển tướng", "Switch hero")}>
-                  <button type="button" onClick={() => onMove(previousHero)}>
-                    <WikiIcon name="chevronLeft" size={16} />
-                    <HeroHead skin={previousHero} />
-                    <span>{previousHero.heroName}</span>
-                  </button>
-                  <button type="button" onClick={() => onMove(nextHero)}>
-                    <span>{nextHero.heroName}</span>
-                    <HeroHead skin={nextHero} />
-                    <WikiIcon name="chevronRight" size={16} />
-                  </button>
-                </nav>
-              )}
-              {canStep && (
-                <p className="wiki-skin-preview-hint">
-                  {text("Dùng phím ← → để xem tiếp", "Use the ← → keys to keep browsing")}
-                </p>
-              )}
             </div>
           </>
         )}

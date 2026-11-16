@@ -1,172 +1,135 @@
-.wiki-warehouse-catalog-filters {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  overflow-x: auto;
-  padding: 3px 1px 14px;
-  scrollbar-width: none;
-}
-.wiki-warehouse-catalog-filter {
-  --catalog-accent: #dbc18b;
-  display: inline-flex;
-  min-height: 36px;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 7px;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 7%, transparent);
-  border-radius: 9px;
-  padding: 6px 10px;
-  background: #101e2c55;
-  color: var(--aov-text-soft);
-  font-size: 0.8125rem;
-  white-space: nowrap;
-  transition:
-    color 160ms,
-    background 160ms,
-    border-color 160ms;
-}
-.wiki-warehouse-catalog-filter > svg {
-  color: var(--catalog-accent);
-}
-.wiki-warehouse-catalog-filter small {
-  min-width: 16px;
-  color: var(--aov-muted);
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-.wiki-warehouse-catalog-filter[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--catalog-accent) 50%, transparent);
-  background: color-mix(in srgb, var(--catalog-accent) 12%, #142131);
-  color: var(--catalog-accent);
-}
-.wiki-warehouse-catalog-filter-all {
-  width: 36px;
-  justify-content: center;
-  padding: 6px;
-}
-.wiki-warehouse-catalog-filter-art {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: contain;
-}
-.wiki-warehouse-catalog-empty {
-  padding: 54px 12px;
-  color: var(--aov-muted);
-  font-size: 0.8125rem;
-  text-align: center;
-}
-.wiki-item-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px 12px;
-}
-.wiki-item-toolbar > [role="group"]:not(.wiki-item-layout) {
+/* ---------- Groups of a catalog ---------- */
+.wiki-warehouse-section,
+.wiki-warehouse-fold {
+  display: grid;
   min-width: 0;
-  flex: 1 1 320px;
+  gap: 14px;
 }
-/* On a phone the view switch and the sort share one line, with the stat filters under them. */
-@media (max-width: 640px) {
-  .wiki-item-toolbar {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-  }
-  .wiki-item-toolbar > .wiki-item-layout {
-    grid-area: 1 / 1;
-  }
-  .wiki-item-toolbar > .wiki-item-toolbar-end {
-    grid-area: 1 / 2;
-    justify-content: flex-end;
-  }
-  .wiki-item-toolbar > :not(.wiki-item-layout, .wiki-item-toolbar-end) {
-    grid-column: 1 / -1;
-    min-width: 0;
-  }
+.wiki-warehouse-section,
+.wiki-warehouse-fold[data-open] {
+  padding-bottom: 20px;
 }
-.wiki-item-toolbar-end {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-}
-.wiki-item-clear {
-  font: var(--wiki-type-meta);
-  color: var(--aov-accent);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.wiki-item-sort[data-slot="select-trigger"] {
-  width: 148px;
-}
-.wiki-item-layout {
-  display: inline-flex;
-  flex: none;
-  justify-self: start;
-  gap: 2px;
-  border-radius: var(--aov-radius-control);
-  padding: 2px;
-  background: var(--aov-surface);
-}
-.wiki-item-layout button {
-  font: var(--wiki-type-meta);
-  display: inline-flex;
-  min-height: 28px;
-  align-items: center;
-  gap: 4px;
-  border-radius: calc(var(--aov-radius-control) - 2px);
-  padding: 2px 8px;
-  color: var(--aov-muted);
-}
-.wiki-item-layout button[aria-pressed="true"] {
-  background: var(--aov-raised);
-  color: var(--aov-text);
-}
-.wiki-item-tier {
-  margin-top: 14px;
-}
-.wiki-item-tier > h2 {
+.wiki-warehouse-heading {
   font: var(--wiki-type-section);
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--aov-accent) 24%, transparent);
+  padding-bottom: 10px;
+  color: var(--aov-accent);
 }
-.wiki-item-tier > h2 small {
+.wiki-warehouse-heading small,
+.wiki-warehouse-fold > h2 small {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-warehouse-fold > h2 {
+  margin: 0;
+}
+.wiki-warehouse-fold > h2 > button {
+  font: var(--wiki-type-section);
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: baseline;
+  gap: 10px;
+  border-bottom: 1px solid var(--aov-line);
+  padding: 9px 0;
+  color: var(--aov-text);
+  text-align: left;
+}
+.wiki-warehouse-fold[data-open] > h2 > button {
+  border-bottom-color: color-mix(in srgb, var(--aov-accent) 24%, transparent);
+  color: var(--aov-accent);
+}
+.wiki-warehouse-fold > h2 > button > svg {
+  flex: none;
+  align-self: center;
+  margin-right: -4px;
+  color: var(--aov-muted);
+  transition: transform 160ms ease-out;
+}
+.wiki-warehouse-fold[data-open] > h2 > button > svg {
+  transform: rotate(90deg);
+}
+.wiki-warehouse-fold > h2 > button > span {
+  font: var(--wiki-type-meta);
+  margin-left: auto;
+  color: var(--aov-accent);
+}
+@media (hover: hover) {
+  .wiki-warehouse-fold > h2 > button:hover > span {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+.wiki-warehouse-catalog-empty {
+  font: var(--wiki-type-body);
+  padding: 48px 12px;
+  color: var(--aov-muted);
+  text-align: center;
+}
+/* A grid that takes as many columns as its cards fill; the counts come from `fillStyle`. */
+[data-fill] {
+  --fill: 1;
+}
+@container wiki-warehouse (min-width: 520px) {
+  [data-fill] {
+    --fill: var(--fill-2);
+  }
+}
+@container wiki-warehouse (min-width: 760px) {
+  [data-fill] {
+    --fill: var(--fill-3);
+  }
+}
+@container wiki-warehouse (min-width: 1040px) {
+  [data-fill] {
+    --fill: var(--fill-4);
+  }
+}
+
+/* ---------- Equipment as a list ---------- */
+.wiki-item-tiers {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
 }
 .wiki-item-rows {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-  gap: 6px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+/* Two or three rows abreast where there is room; a row left alone at the end takes the whole line. */
+@container wiki-warehouse (min-width: 680px) and (max-width: 1039.98px) {
+  .wiki-item-rows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wiki-item-rows > :last-child:nth-child(2n + 1) {
+    grid-column: 1 / -1;
+  }
+}
+@container wiki-warehouse (min-width: 1040px) {
+  .wiki-item-rows {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .wiki-item-rows > :last-child:nth-child(3n + 1) {
+    grid-column: 1 / -1;
+  }
 }
 .wiki-item-row {
   display: flex;
   min-width: 0;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
   border: 1px solid transparent;
   border-radius: var(--aov-radius-card);
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: var(--aov-surface);
   text-align: left;
   transition: background 140ms;
-}
-.wiki-item-row:hover {
-  background: var(--aov-raised);
-}
-.wiki-item-row[data-selected="true"] {
-  border-color: var(--aov-accent);
-}
-.wiki-item-row .wiki-warehouse-art {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
 }
 .wiki-item-row-main {
   display: flex;
@@ -174,10 +137,12 @@
   flex: 1;
   flex-direction: column;
   gap: 2px;
+  color: var(--aov-text-soft);
 }
 .wiki-item-row-main strong {
   font: var(--wiki-type-entry);
   color: var(--aov-text);
+  overflow-wrap: anywhere;
 }
 .wiki-item-row-main small {
   font: var(--wiki-type-meta);
@@ -186,24 +151,549 @@
 .wiki-item-row-price {
   font: var(--wiki-type-meta);
   flex: none;
-  align-self: flex-start;
+  color: var(--aov-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* One look for every entry of a catalog that can be opened: a quiet surface, and a gold outline once chosen. */
+:is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 10%, var(--aov-surface));
+}
+/* Muted text is for the page and for plain cards; on the tint of the chosen one it takes the softer text colour. */
+:is(.wiki-item-row, .wiki-enchantment-node)[aria-pressed="true"] small,
+.wiki-spell-card[aria-pressed="true"] .wiki-spell-card-meta {
+  color: var(--aov-text-soft);
+}
+@media (hover: hover) {
+  :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card):not([aria-pressed="true"]):hover {
+    background: var(--aov-raised);
+  }
+}
+
+/* ---------- Equipment as the shop board ---------- */
+/* The board comes from the shared catalog of the editors; here it is dressed for readers. */
+.wiki-item-board {
+  min-width: 0;
+}
+/* The groups are chosen in the page's own controls. A group with branches keeps its branch choice, at the right end
+   of the line above the board. */
+.wiki-item-board > section {
+  position: relative;
+}
+.wiki-item-board > section > div:first-child > [role="group"],
+.wiki-item-board > section > div:first-child > span {
+  display: none;
+}
+.wiki-item-board > section > div:first-child {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+}
+.wiki-item-board select {
+  font: var(--wiki-type-meta);
+  height: 36px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 10px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+}
+/* One line above the board: how to use it, then what the lines mean once an item is chosen. It is always there, so
+   choosing an item moves nothing. */
+.wiki-item-board div:has(> .shop-viewport) {
+  --board-line: 20px;
+  position: relative;
+  padding-top: calc(var(--board-line) + 8px);
+}
+.wiki-item-board > section:has(> div:first-child select) div:has(> .shop-viewport) {
+  --board-line: 36px;
+  --board-line-end: 140px;
+}
+.wiki-item-board div:has(> .shop-viewport)::before {
+  content: var(--board-hint);
+  position: absolute;
+  inset: 0 var(--board-line-end, 0px) auto 0;
+  overflow: hidden;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  line-height: var(--board-line);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-item-board div:has(> .shop-legend)::before {
+  content: none;
+}
+.wiki-item-board .shop-legend {
+  position: absolute;
+  inset: 0 var(--board-line-end, 0px) auto 0;
+  display: flex;
+  height: var(--board-line);
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+}
+.wiki-item-board .shop-legend > div {
+  display: block;
+  max-width: none;
+  margin: 0;
+}
+.wiki-item-board .shop-legend > div > div {
+  font: var(--wiki-type-meta);
+  flex-wrap: nowrap;
+  gap: 16px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--aov-muted);
+  line-height: 20px;
+  white-space: nowrap;
+  backdrop-filter: none;
+}
+/* The panel beside the board already has the control that puts the item away. */
+.wiki-item-board .shop-legend button {
+  display: none;
+}
+/* Three columns across the room the board has; its cards start on the page's left edge. */
+.wiki-warehouse-page .wiki-item-board .shop-viewport {
+  --shop-gap: 24px;
+  --shop-padding: 0px;
+  --shop-column-width: clamp(87px, calc((100cqi + 4px - 2 * var(--shop-gap)) / 3), 400px);
+  width: auto;
+  max-width: calc(100% + 4px);
+  margin-inline: -2px;
+}
+/* Columns too narrow for a picture beside three lines of text stack the picture over them. */
+@container warehouse (max-width: 620px) {
+  .wiki-item-board .shop-item-select {
+    flex-direction: column;
+    align-self: stretch;
+    gap: 6px;
+    text-align: center;
+  }
+  .wiki-item-board .shop-item-select > :last-child {
+    width: 100%;
+    flex: none;
+  }
+  .wiki-item-board .shop-item-stats {
+    justify-content: center;
+  }
+}
+/* On a phone the board is the shop at a glance: picture, price and name. The rest is one tap away. */
+@container warehouse (max-width: 500px) {
+  .wiki-warehouse-page .wiki-item-board .shop-viewport {
+    --shop-gap: 22px;
+  }
+  .wiki-item-board .shop-item-select > span:last-child > .shop-item-summary {
+    display: none;
+  }
+  .wiki-item-board [data-item-node] {
+    padding: 8px 4px;
+  }
+}
+/* The column labels stay as headings for assistive technology; the board shows its columns without them. */
+.wiki-item-board .shop-column-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.wiki-item-board .shop-cell {
+  border-color: transparent;
+}
+/* The cards of a row share its height. Where a cell holds two items, a card alone in the next cell keeps its own
+   height at the top instead of growing to match the pair. */
+.wiki-item-board .shop-viewport:has(.shop-cell > [data-item-node] + [data-item-node]) .shop-cell {
+  grid-auto-rows: max-content;
+  align-content: start;
+}
+/* Below the shared utilities, so the outline of the chosen item and of its ingredients still shows. */
+@layer components {
+  .wiki-item-board [data-item-node] {
+    border-color: transparent;
+  }
+}
+.wiki-item-board [data-item-node] {
+  min-height: 60px;
+  border-radius: var(--aov-radius-card);
+  padding: 6px 10px 6px 8px;
+  box-shadow: none;
+  transition: background 140ms;
+}
+.wiki-item-board [data-item-node]:has(> .shop-item-select[aria-pressed="true"]) {
+  border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 10%, var(--aov-surface));
+}
+.wiki-item-board .shop-item-select[aria-pressed="true"] > span:last-child > .shop-item-summary {
+  color: var(--aov-text-soft);
+}
+@media (hover: hover) {
+  .wiki-item-board [data-item-node]:not(:has(> .shop-item-select[aria-pressed="true"])):hover {
+    background: var(--aov-raised);
+  }
+}
+.wiki-item-board .shop-item-select {
+  gap: 10px;
+}
+/* The price stands under the picture, as in the game's shop, instead of over it. */
+.wiki-item-board .shop-item-art {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.wiki-item-board .shop-item-art > :first-child {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-item-board .shop-item-price {
+  position: static;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--aov-accent);
+  font: 600 0.75rem/0.875rem var(--wiki-font-reading);
+  font-variant-numeric: tabular-nums;
+}
+/* The name, then what the item is for, then its stats: one weight and colour each. */
+.wiki-item-board .shop-item-select > span:last-child > span:first-child {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-item-board .shop-item-select > span:last-child > span:first-child[data-condensed] {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+.wiki-item-board .shop-item-select > span:last-child > .shop-item-summary {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-item-board .shop-item-select > span:last-child > .shop-item-summary[data-condensed] {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.wiki-item-board .shop-item-stats {
+  color: var(--aov-text-soft);
+}
+/* The question mark beside a region's label keeps a target a finger can hit. */
+.wiki-item-board button[data-item-region-help] {
+  width: 32px;
+  height: 32px;
+  margin-block: -6px;
+}
+/* Finished items of the middle column: a rule and a label instead of a frame around cards. */
+.wiki-item-board .shop-viewport section > section {
+  border-top: 1px solid var(--aov-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.wiki-item-board .shop-viewport section > section > h4 {
+  font: var(--wiki-type-meta);
+  padding: 6px 0 0;
+  color: var(--aov-muted);
+}
+
+/* ---------- Arcana ---------- */
+.wiki-arcana,
+.wiki-spells {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+/* A column for each color, each a plain list: no row of a grid is left half empty. */
+.wiki-arcana-columns {
+  display: grid;
+  grid-template-columns: repeat(var(--columns, 3), minmax(0, 1fr));
+  align-items: start;
+  gap: 20px 24px;
+}
+.wiki-arcana-column {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 10px;
+}
+.wiki-arcana-column > h3 {
+  font: var(--wiki-type-entry);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--aov-text);
+}
+.wiki-arcana-column > h3 small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-arcana-column > h3 .wiki-warehouse-art {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+.wiki-arcana-group {
+  display: grid;
+  gap: 6px;
+}
+.wiki-arcana-group > h4 {
+  margin: 0;
+  color: var(--aov-muted);
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.wiki-arcana-group + .wiki-arcana-group > h4 {
+  margin-top: 6px;
+}
+.wiki-arcana-rows {
+  display: grid;
+  gap: 6px;
+}
+.wiki-arcana-rows[data-fill] {
+  grid-template-columns: repeat(var(--fill), minmax(0, 1fr));
+}
+.wiki-arcana-row {
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  padding: 8px 12px 8px 8px;
+  background: var(--aov-surface);
+  text-align: left;
+  transition: background 140ms;
+}
+.wiki-arcana-row .wiki-warehouse-art {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+.wiki-arcana-row-text {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.wiki-arcana-row-text strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+  overflow-wrap: anywhere;
+}
+.wiki-arcana-row-stats {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  color: var(--aov-text-soft);
+}
+.wiki-arcana-row-stats b {
+  color: var(--aov-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+@container wiki-warehouse (max-width: 639.98px) {
+  .wiki-arcana-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Enchantments ---------- */
+.wiki-enchantments {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 32px;
+}
+.wiki-enchantments[data-single] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.wiki-enchantment-branch {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  container: wiki-branch / inline-size;
+}
+.wiki-enchantment-branch > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--aov-accent) 24%, transparent);
+  padding-bottom: 10px;
+}
+.wiki-enchantment-branch-art {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+.wiki-enchantment-branch > header > div {
+  min-width: 0;
+}
+.wiki-enchantment-branch h2 {
+  font: var(--wiki-type-section);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
   color: var(--aov-accent);
 }
-@media (max-width: 767px) {
-  .wiki-item-toolbar > [role="group"]:not(.wiki-item-layout) {
-    flex-basis: 100%;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
+.wiki-enchantment-branch h2 small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-enchantment-branch > header p {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-enchantment-tier {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 8px;
+}
+/* The tier, as the game numbers it, beside the enchantments a player chooses between. */
+.wiki-enchantment-tier > span {
+  display: grid;
+  place-items: center;
+  color: var(--aov-muted);
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  letter-spacing: 0.04em;
+}
+.wiki-enchantment-tier > div {
+  display: grid;
+  grid-template-columns: repeat(var(--nodes, 3), minmax(0, 1fr));
+  gap: 8px;
+}
+/* A narrow branch stacks the picture over the name; a wide one sets them side by side. */
+.wiki-enchantment-node {
+  display: flex;
+  min-width: 0;
+  min-height: 60px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  padding: 8px 6px;
+  background: var(--aov-surface);
+  text-align: center;
+  transition: background 140ms;
+}
+.wiki-enchantment-node .wiki-warehouse-art {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.wiki-enchantment-node > span {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.wiki-enchantment-node strong {
+  color: var(--aov-text);
+  font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
+  overflow-wrap: anywhere;
+}
+.wiki-enchantment-node small {
+  color: var(--aov-muted);
+  font: 400 0.75rem/1rem var(--wiki-font-reading);
+  overflow-wrap: anywhere;
+}
+@container wiki-branch (min-width: 500px) {
+  .wiki-enchantment-node {
+    flex-direction: row;
+    gap: 10px;
+    padding: 8px 12px 8px 8px;
+    text-align: left;
   }
-  .wiki-item-toolbar > [role="group"]:not(.wiki-item-layout) button {
-    flex: none;
-    white-space: nowrap;
+  .wiki-enchantment-node strong {
+    font: var(--wiki-type-category);
+  }
+  .wiki-enchantment-node small {
+    font: var(--wiki-type-meta);
   }
 }
-@media (hover: hover) and (pointer: fine) {
-  .wiki-warehouse-catalog-filter:hover {
-    border-color: color-mix(in srgb, var(--catalog-accent) 35%, transparent);
-    color: var(--catalog-accent);
+@container wiki-warehouse (max-width: 719.98px) {
+  .wiki-enchantments {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
   }
+}
+
+/* ---------- Talents ---------- */
+.wiki-spell-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.wiki-spells > .wiki-spell-grid {
+  padding-bottom: 20px;
+}
+@container wiki-warehouse (min-width: 720px) {
+  .wiki-spell-grid {
+    grid-template-columns: repeat(var(--fill-3, 3), minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+.wiki-spell-card {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  padding: 12px 14px 12px 12px;
+  background: var(--aov-surface);
+  text-align: left;
+  transition: background 140ms;
+}
+.wiki-spell-card .wiki-warehouse-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+.wiki-spell-card-text {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.wiki-spell-card-text strong {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.wiki-spell-card-meta {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 6px;
+  color: var(--aov-muted);
+}
+.wiki-spell-card-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+/* The dot closes the fact before it, so a wrapped line never starts with one. */
+.wiki-spell-card-meta > span:not(:last-child)::after {
+  content: "·";
+  margin-left: 2px;
+}
+/* What the talent does, kept to three lines; the whole text is one press away. */
+.wiki-spell-card-description {
+  font: var(--wiki-type-body);
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 4px;
+  color: var(--aov-text-soft);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }

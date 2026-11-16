@@ -1,159 +1,90 @@
 import { Link, useSearchParams } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
 import {
-  isCommunityProfile,
+  profileKindLabels,
   type CommunityProfile,
+  type CompetitionView,
   type FeedPost,
   type PageSlice,
   type ProfileKind,
 } from "@aov/community-contracts"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
-import { PageDirectory } from "./community-directory"
-import { LiveRow } from "./community-live"
+import { PageDirectory, ProfileCard, profileKinds } from "./community-directory"
+import { LiveCards, useLivePages, videoThumbnail } from "./community-live"
 import { PostCard } from "./community-post"
 import { useFollowedIds } from "./community-queries"
-import { Avatar, competitionStatus } from "./community-ui"
-import { CompetitionEvent } from "./public-competitions"
+import { competitionStatus, TimeAgo } from "./community-ui"
+import { CompetitionCard } from "../tournaments/competition-card"
 import { competitionCatalogQuery } from "../tournaments/tournament-api"
-import { videoEmbed } from "./post-media-model"
 import "./community.css"
+import "./community-explore.css"
+
+/** The order search results come in: who plays, who works around them, then who organizes. */
+const SEARCH_KINDS: ProfileKind[] = ["TEAM", "PLAYER", "PERSON", "ORGANIZATION", "CIRCUIT"]
+/** Pages a search shows per kind before the link to all of them: two rows of the widest grid. */
+const GROUP_SIZE = 8
 
 /**
- * Content grouped by type: live channels, new videos, teams and players, regions, then the searchable page
- * directory. The shared header search (`q`) lists matching tournaments, posts and pages.
+ * Without a search: who is live, the newest videos, then the page directory with its kind and region filters. The
+ * header search (`q`) turns the page into results: pages by kind, competitions, then posts. `kind` beside `q` opens
+ * one kind of page in full.
  */
 export function CommunityExplore() {
   const [params] = useSearchParams()
   const query = params.get("q")?.trim() || ""
+  const requested = params.get("kind") as ProfileKind | null
+  const kind = requested && profileKinds.includes(requested) ? requested : null
   return (
     <StreamShell>
       <title>Khám phá — AOV Stream</title>
-      <div className="cp-container cp-explore">
-        <h1 className="cp-explore-title">{query ? `Kết quả cho “${query}”` : "Khám phá"}</h1>
-        {query ? (
-          <>
-            <ExploreTournaments search={query} />
-            <PostResults query={query} />
-          </>
-        ) : (
-          <>
-            <section className="hub-card hub-card-padded cp-explore-live">
-              <LiveRow title="Trực tiếp" />
-            </section>
-            <VideoHighlights />
-            <PeopleRow kind="TEAM" title="Đội tuyển" />
-            <PeopleRow kind="PLAYER" title="Tuyển thủ" />
-          </>
-        )}
-        {!query && <Regions />}
-        <section className="hub-card hub-feed" aria-labelledby="explore-directory">
-          <div className="hub-feed-body">
-            <h2 id="explore-directory" className="cp-explore-heading">
-              Danh bạ trang
-            </h2>
-            <PageDirectory />
-          </div>
-        </section>
+      <div className="cp-container ex-page">
+        {!query ? <Browse /> : kind ? <KindResults query={query} kind={kind} /> : <SearchResults query={query} />}
       </div>
     </StreamShell>
   )
 }
 
-/** Include published tournaments only when the shared search has a query. */
-function ExploreTournaments({ search }: { search: string }) {
-  const query = useQuery(competitionCatalogQuery)
-  const normalize = (value: string) =>
-    value
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/đ/g, "d")
-  const entries = (query.data || []).filter(
-    (entry) =>
-      !search ||
-      normalize(`${entry.content.tournament.name} ${entry.content.plan.circuit}`).includes(normalize(search)),
-  )
-  const ranked = [...entries].sort(
-    (a, b) =>
-      Number(competitionStatus(a.content.tournament) === "FINISHED") -
-        Number(competitionStatus(b.content.tournament) === "FINISHED") ||
-      (b.content.tournament.year || 0) - (a.content.tournament.year || 0),
-  )
+function Browse() {
   return (
-    <section className="hub-card hub-card-padded" aria-labelledby="explore-competitions">
-      <div className="hub-card-heading">
-        <h2 id="explore-competitions" className="hub-card-title">
-          Giải đấu
-        </h2>
-        <Link className="hub-card-more" to={`/competitions?${new URLSearchParams({ q: search })}`}>
-          Xem tất cả
-        </Link>
-      </div>
-      {query.isPending ? (
-        <div className="hub-skeleton-rows" role="status" aria-label="Đang tải giải đấu" />
-      ) : query.isError && !query.data ? (
-        <p className="cp-error" role="alert">
-          Chưa tải được giải đấu. <button onClick={() => void query.refetch()}>Thử lại</button>
-        </p>
-      ) : (
-        <>
-          {!entries.length && <p className="cp-muted">Chưa tìm thấy giải đấu phù hợp.</p>}
-          <div className="hub-event-list">
-            {ranked.slice(0, 3).map((entry) => (
-              <CompetitionEvent key={entry.id} entry={entry} />
-            ))}
-          </div>
-        </>
-      )}
-    </section>
-  )
-}
-
-/** Posts whose title or text matches the search, first five. */
-function PostResults({ query }: { query: string }) {
-  const following = useFollowedIds()
-  const posts = useQuery({
-    queryKey: ["post-search", query],
-    queryFn: () => communityApi<PageSlice<FeedPost>>(`/posts?${new URLSearchParams({ q: query, size: "5" })}`),
-  })
-  return (
-    <section className="hub-card hub-card-padded" aria-labelledby="explore-posts">
-      <h2 id="explore-posts" className="hub-card-title">
-        Bài viết{posts.data && <span className="cp-meta"> · {posts.data.totalElements}</span>}
-      </h2>
-      {posts.isPending ? (
-        <div className="hub-skeleton cp-post-skeleton" role="status" aria-label="Đang tìm bài viết" />
-      ) : posts.isError ? (
-        <p className="cp-error" role="alert">
-          Chưa tìm được bài viết. Bạn vẫn có thể xem các trang phù hợp bên dưới.{" "}
-          <button type="button" onClick={() => void posts.refetch()}>
-            Thử lại
-          </button>
-        </p>
-      ) : !posts.data.items.length ? (
-        <p className="cp-muted">Chưa có bài viết nào khớp. Các trang phù hợp nằm trong danh bạ bên dưới.</p>
-      ) : (
-        <div className="cp-post-list">
-          {posts.data.items.map(({ post, page }) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              page={page}
-              role=""
-              represented={page.represented}
-              following={following}
-            />
-          ))}
+    <>
+      <header className="tn-page-head">
+        <div>
+          <h1>Khám phá</h1>
+          <p>Trang của các hệ thống giải, tổ chức, đội tuyển, tuyển thủ và ban huấn luyện.</p>
         </div>
-      )}
+      </header>
+      <LiveNow />
+      <NewVideos />
+      <PageDirectory />
+    </>
+  )
+}
+
+/** Pages broadcasting now; the section is absent while nobody is live. */
+function LiveNow() {
+  const live = useLivePages()
+  const pages = (live.data?.items || []).filter((page) => page.live)
+  if (!pages.length) return null
+  return (
+    <section aria-labelledby="explore-live">
+      <div className="tn-heading">
+        <h2 id="explore-live">
+          Đang trực tiếp <small>{pages.length} kênh</small>
+        </h2>
+      </div>
+      <LiveCards pages={pages} />
     </section>
   )
 }
 
-/** The newest video posts as compact cards; YouTube videos show their thumbnail. */
-function VideoHighlights() {
+/** The newest video posts, each opening the page that posted it. YouTube videos show their own picture. */
+function NewVideos() {
+  const layout = usePageLayout()
   const videos = useQuery({
     queryKey: ["video-highlights"],
     queryFn: () => communityApi<PageSlice<FeedPost>>("/posts?kind=VIDEO&size=4"),
@@ -161,31 +92,34 @@ function VideoHighlights() {
   })
   const items = videos.data?.items || []
   if (!items.length) return null
+  // Two columns on a compact layout: an odd video would stand alone in its row.
+  const shown = layout === "compact" && items.length > 1 ? items.slice(0, items.length - (items.length % 2)) : items
   return (
-    <section className="hub-card hub-card-padded" aria-labelledby="explore-videos">
-      <div className="hub-card-heading">
-        <h2 id="explore-videos" className="hub-card-title">
-          Video mới
-        </h2>
-        <Link to="/?tab=video" className="hub-card-more">
-          Xem tất cả
+    <section aria-labelledby="explore-videos">
+      <div className="tn-heading">
+        <h2 id="explore-videos">Video mới</h2>
+        <Link to="/?tab=video">
+          Tất cả video
+          <StreamIcon name="arrow" size={15} />
         </Link>
       </div>
-      <div className="cp-video-cards">
-        {items.map(({ post, page }) => {
-          const embed = post.videoUrl ? videoEmbed(post.videoUrl) : null
-          const youtube = embed?.kind === "youtube" ? embed.src.split("/").pop() : null
+      <div className="ex-video-grid">
+        {shown.map(({ post, page }) => {
+          const picture = videoThumbnail(post.videoUrl)
           return (
-            <Link key={post.id} to={`/pages/${page.code}`} className="cp-video-card">
-              <span className="cp-video-thumb">
-                {youtube ? (
-                  <img src={`https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`} alt="" loading="lazy" />
-                ) : (
-                  <StreamIcon name="play" size={24} />
-                )}
+            <Link key={post.id} to={`/pages/${page.code}`} className="ex-video">
+              <span className="ex-video-thumb">
+                {picture ? <img src={picture} alt="" loading="lazy" /> : <StreamIcon name="play" size={24} />}
               </span>
-              <strong>{post.title || post.body || "Video"}</strong>
-              <small>{page.name}</small>
+              <span className="ex-video-body">
+                <strong>{post.title || post.body || "Video"}</strong>
+                <small>
+                  <span>{page.name}</span>
+                  <span>
+                    <TimeAgo value={post.createdAt} />
+                  </span>
+                </small>
+              </span>
             </Link>
           )
         })}
@@ -194,74 +128,252 @@ function VideoHighlights() {
   )
 }
 
-/** Published pages of one kind as a row of avatars to browse. */
-function PeopleRow({ kind, title }: { kind: ProfileKind; title: string }) {
-  const pages = useQuery({
-    queryKey: ["people-row", kind],
-    queryFn: () => communityApi<PageSlice<CommunityProfile>>(`/pages?kind=${kind}&size=12`),
-    staleTime: 60_000,
-  })
-  const items = pages.data?.items || []
-  if (!items.length) return null
-  return (
-    <section className="hub-card hub-card-padded" aria-label={title}>
-      <div className="hub-card-heading">
-        <h2 className="hub-card-title">{title}</h2>
-        <Link to={`/explore?kind=${kind}`} className="hub-card-more">
-          Xem tất cả
-        </Link>
-      </div>
-      <div className="cp-people-row">
-        {items.map((page) => (
-          <Link key={page.id} to={`/pages/${page.code}`} className="cp-person" title={page.content?.name}>
-            <Avatar profile={page} />
-            <span>{page.content?.shortName || page.content?.name || page.code}</span>
-          </Link>
-        ))}
-      </div>
-    </section>
-  )
+const normalize = (value: string) => value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d")
+
+/** Published competitions whose name or circuit holds the search, those not yet finished first, then the newest. */
+function matchingCompetitions(catalog: CompetitionView[], search: string) {
+  return catalog
+    .filter((entry) =>
+      normalize(`${entry.content.tournament.name} ${entry.content.plan.circuit}`).includes(normalize(search)),
+    )
+    .sort(
+      (a, b) =>
+        Number(competitionStatus(a.content.tournament) === "FINISHED") -
+          Number(competitionStatus(b.content.tournament) === "FINISHED") ||
+        (b.content.tournament.year || 0) - (a.content.tournament.year || 0),
+    )
 }
 
-const OTHER_REGION = "Khu vực khác"
-
-/** Published community pages grouped by their country, with Vietnam first. */
-function Regions() {
-  const pages = useQuery({
-    queryKey: ["page-regions"],
-    queryFn: () => communityApi<PageSlice<CommunityProfile>>("/pages?size=100"),
-    staleTime: 60_000,
+/** Everything a search found: pages by kind, competitions, then posts, which keep loading as the reader scrolls. */
+function SearchResults({ query }: { query: string }) {
+  const layout = usePageLayout()
+  const following = useFollowedIds()
+  const pages = useQueries({
+    queries: SEARCH_KINDS.map((kind) => ({
+      queryKey: ["page-search", kind, query],
+      queryFn: () =>
+        communityApi<PageSlice<CommunityProfile>>(
+          `/pages?${new URLSearchParams({ kind, q: query, size: String(GROUP_SIZE) })}`,
+        ),
+      staleTime: 60_000,
+    })),
   })
-  const groups = new Map<string, CommunityProfile[]>()
-  for (const page of pages.data?.items || []) {
-    if (!isCommunityProfile(page.kind)) continue
-    const country = page.content?.country?.trim() || OTHER_REGION
-    groups.set(country, [...(groups.get(country) || []), page])
+  const catalog = useQuery(competitionCatalogQuery)
+  const posts = useInfiniteQuery({
+    queryKey: ["post-search", query],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      communityApi<PageSlice<FeedPost>>(
+        `/posts?${new URLSearchParams({ q: query, page: String(pageParam), size: "10" })}`,
+      ),
+    getNextPageParam: nextPageOf,
+  })
+  const competitions = matchingCompetitions(catalog.data || [], query)
+  const postItems = posts.data?.pages.flatMap((page) => page.items) ?? []
+  const totals = {
+    pages: pages.reduce((sum, group) => sum + (group.data?.totalElements ?? 0), 0),
+    competitions: competitions.length,
+    posts: posts.data?.pages[0]?.totalElements ?? 0,
   }
-  const rank = (country: string) => (country === "Việt Nam" ? 0 : country === OTHER_REGION ? 2 : 1)
-  const regions = [...groups].sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b, "vi"))
-  if (!regions.length) return null
+  const searching = pages.some((group) => group.isPending) || catalog.isPending || posts.isPending
+  const failed = pages.some((group) => group.isError) || (catalog.isError && !catalog.data) || posts.isLoadingError
+  const nothing = !searching && !failed && !totals.pages && !totals.competitions && !totals.posts
+  const summary = [
+    totals.pages && `${totals.pages.toLocaleString("vi-VN")} trang`,
+    totals.competitions && `${totals.competitions.toLocaleString("vi-VN")} giải đấu`,
+    totals.posts && `${totals.posts.toLocaleString("vi-VN")} bài viết`,
+  ].filter(Boolean)
+  const preview = layout === "compact" ? { pages: 4, competitions: 3 } : { pages: GROUP_SIZE, competitions: 6 }
   return (
-    <section className="hub-card hub-card-padded cp-regions" aria-labelledby="explore-regions">
-      <h2 id="explore-regions" className="hub-card-title">
-        Cộng đồng theo khu vực
-      </h2>
-      {regions.map(([country, items]) => (
-        <div key={country} className="cp-region">
-          <span className="cp-region-name">
-            {country}
-            <small>{items.length} trang</small>
-          </span>
-          <div className="cp-region-pages">
-            {items.map((page) => (
-              <Link key={page.id} to={`/pages/${page.code}`} className="cp-channel" title={page.content?.name}>
-                <Avatar profile={page} />
-                <span>{page.content?.name || page.code}</span>
-              </Link>
+    <>
+      <header className="tn-page-head">
+        <div>
+          <h1>Kết quả cho “{query}”</h1>
+          {!searching && summary.length > 0 && <p>{summary.join(" · ")}</p>}
+        </div>
+      </header>
+      {nothing && (
+        <div className="hub-state">
+          <h2>Không tìm thấy gì cho “{query}”</h2>
+          <p>Thử một phần của tên, gõ có dấu như cách tên được viết.</p>
+          <Link className="cp-button" to="/explore">
+            Xem danh bạ trang
+          </Link>
+        </div>
+      )}
+      {SEARCH_KINDS.map((kind, index) => {
+        const group = pages[index]!
+        if (group.isError)
+          return (
+            <p key={kind} className="cp-error" role="alert">
+              Chưa tìm được {profileKindLabels[kind].toLowerCase()}.{" "}
+              <button type="button" onClick={() => void group.refetch()}>
+                Thử lại
+              </button>
+            </p>
+          )
+        if (!group.data?.items.length) return null
+        const total = group.data.totalElements
+        const shown = group.data.items.slice(0, preview.pages)
+        return (
+          <section key={kind} aria-labelledby={`search-${kind}`}>
+            <div className="tn-heading">
+              <h2 id={`search-${kind}`}>
+                {profileKindLabels[kind]} <small>{total.toLocaleString("vi-VN")}</small>
+              </h2>
+              {total > shown.length && (
+                <Link to={`/explore?${new URLSearchParams({ q: query, kind })}`}>
+                  Xem tất cả
+                  <StreamIcon name="arrow" size={15} />
+                </Link>
+              )}
+            </div>
+            <div className="cp-grid">
+              {shown.map((profile) => (
+                <ProfileCard key={profile.id} profile={profile} following={following} hideKind />
+              ))}
+            </div>
+          </section>
+        )
+      })}
+      {catalog.isError && !catalog.data ? (
+        <p className="cp-error" role="alert">
+          Chưa tìm được trong các giải đấu.{" "}
+          <button type="button" onClick={() => void catalog.refetch()}>
+            Thử lại
+          </button>
+        </p>
+      ) : (
+        competitions.length > 0 && (
+          <section aria-labelledby="search-competitions">
+            <div className="tn-heading">
+              <h2 id="search-competitions">
+                Giải đấu <small>{competitions.length.toLocaleString("vi-VN")}</small>
+              </h2>
+              {competitions.length > preview.competitions && (
+                <Link to={`/competitions?${new URLSearchParams({ q: query })}`}>
+                  Xem tất cả
+                  <StreamIcon name="arrow" size={15} />
+                </Link>
+              )}
+            </div>
+            <div className="tn-card-grid">
+              {competitions.slice(0, preview.competitions).map((entry) => (
+                <CompetitionCard key={entry.id} entry={entry} />
+              ))}
+            </div>
+          </section>
+        )
+      )}
+      {posts.isLoadingError ? (
+        <p className="cp-error" role="alert">
+          Chưa tìm được bài viết.{" "}
+          <button type="button" onClick={() => void posts.refetch()}>
+            Thử lại
+          </button>
+        </p>
+      ) : (
+        postItems.length > 0 && (
+          <section className="ex-posts" aria-labelledby="search-posts">
+            <div className="tn-heading">
+              <h2 id="search-posts">
+                Bài viết <small>{totals.posts.toLocaleString("vi-VN")}</small>
+              </h2>
+            </div>
+            <div className="cp-post-list">
+              {postItems.map(({ post, page }) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  page={page}
+                  role=""
+                  represented={page.represented}
+                  following={following}
+                />
+              ))}
+            </div>
+            <InfiniteScroll query={posts} label="Đang tải thêm bài viết" />
+          </section>
+        )
+      )}
+      {searching && (
+        <div className="ex-searching" role="status" aria-label={`Đang tìm “${query}”`}>
+          <span className="hub-skeleton" />
+          <div className="cp-grid">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div className="hub-skeleton cp-card-skeleton" key={index} />
             ))}
           </div>
         </div>
-      ))}
-    </section>
+      )}
+    </>
+  )
+}
+
+/** Every page of one kind that matches the search, loading as the reader scrolls. */
+function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
+  const following = useFollowedIds()
+  const pages = useInfiniteQuery({
+    queryKey: ["page-search-list", kind, query],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      communityApi<PageSlice<CommunityProfile>>(
+        `/pages?${new URLSearchParams({ kind, q: query, page: String(pageParam), size: "24" })}`,
+      ),
+    getNextPageParam: nextPageOf,
+  })
+  const items = pages.data?.pages.flatMap((page) => page.items) ?? []
+  const total = pages.data?.pages[0]?.totalElements
+  const back = `/explore?${new URLSearchParams({ q: query })}`
+  return (
+    <>
+      <Link className="cp-back" to={back}>
+        <StreamIcon name="back" size={16} />
+        Tất cả kết quả
+      </Link>
+      <header className="tn-page-head">
+        <div>
+          <h1>Kết quả cho “{query}”</h1>
+        </div>
+      </header>
+      <section aria-labelledby="search-kind">
+        <div className="tn-heading">
+          <h2 id="search-kind">
+            {profileKindLabels[kind]} {total != null && <small>{total.toLocaleString("vi-VN")}</small>}
+          </h2>
+        </div>
+        {pages.isPending ? (
+          <div className="cp-grid" role="status" aria-label="Đang tìm trang">
+            {Array.from({ length: 8 }, (_, index) => (
+              <div className="hub-skeleton cp-card-skeleton" key={index} />
+            ))}
+          </div>
+        ) : pages.isLoadingError ? (
+          <div className="hub-state" role="alert">
+            <h3>Chưa tìm được trang</h3>
+            <p>{pages.error.message}</p>
+            <button type="button" className="cp-button" onClick={() => void pages.refetch()}>
+              Thử lại
+            </button>
+          </div>
+        ) : !items.length ? (
+          <div className="hub-state">
+            <h3>
+              Không có {profileKindLabels[kind].toLowerCase()} nào khớp “{query}”
+            </h3>
+            <Link className="cp-button" to={back}>
+              Xem tất cả kết quả
+            </Link>
+          </div>
+        ) : (
+          <div className="cp-grid">
+            {items.map((profile) => (
+              <ProfileCard key={profile.id} profile={profile} following={following} hideKind />
+            ))}
+          </div>
+        )}
+        <InfiniteScroll query={pages} label="Đang tải thêm trang" />
+      </section>
+    </>
   )
 }

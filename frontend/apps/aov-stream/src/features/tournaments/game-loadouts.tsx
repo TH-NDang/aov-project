@@ -1,30 +1,40 @@
+import { useState } from "react"
 import type { Participant, PublishedGame } from "@aov/community-contracts"
 import { StreamIcon } from "../../components/stream-icon"
 import { ReferenceArt } from "./reference-art"
 import {
   clock,
-  LANE_SHORT,
+  hasLoadout,
   LANES,
   OBSERVATIONS,
+  observationTimes,
   orderedParticipants,
+  recordedLoadouts,
   referenceName,
+  seriesSides,
   snapshotAt,
+  type LoadoutKind,
 } from "./tournament-model"
 
-export type LoadoutTab = "equipment" | "arcana" | "enchantments"
+const KIND_LABELS: Record<LoadoutKind, string> = {
+  equipment: "Trang bị",
+  arcana: "Bảng ngọc",
+  enchantments: "Phù hiệu",
+}
+const ALL_KINDS = "Trang bị, ngọc và phù hiệu"
 
 function Inventory({ participant, game, time }: { participant: Participant; game: PublishedGame; time: number }) {
   const snapshot = snapshotAt(participant.equipmentSnapshots, time)
   return (
-    <div className="inventory-observation">
-      <div className="inventory-slots">
+    <>
+      <span className="tn-slots">
         {Array.from({ length: 6 }, (_, slot) => {
           const value = snapshot?.slots.find((value) => value.slot === slot + 1)
           const known = value?.known === true
           return (
             <span
               key={slot}
-              className="inventory-slot"
+              className="tn-slot"
               data-unknown={!known || undefined}
               title={
                 !known
@@ -39,123 +49,74 @@ function Inventory({ participant, game, time }: { participant: Participant; game
               ) : (
                 <span aria-hidden="true">{known ? "·" : "?"}</span>
               )}
-              <small className="sr-only">Ô {slot + 1}</small>
+              <span className="sr-only">Ô {slot + 1}</span>
             </span>
           )
         })}
-      </div>
-      <span className="inventory-observed-at">
-        {snapshot ? (
-          <>
-            Ghi nhận lúc <strong>{clock(snapshot.atSeconds)}</strong>
-            {snapshot.note && (
-              <span title={snapshot.note}>
-                <StreamIcon name="info" size={12} />
-              </span>
-            )}
-          </>
-        ) : (
-          "Chưa có mốc ghi nhận"
-        )}
       </span>
-    </div>
+      {snapshot && (
+        <span>
+          Ghi nhận lúc <strong>{clock(snapshot.atSeconds)}</strong>
+          {snapshot.note && ` · ${snapshot.note}`}
+        </span>
+      )}
+    </>
   )
 }
 
 function OptionalLoadout({
   participant,
   game,
-  tab,
+  kind,
 }: {
   participant: Participant
   game: PublishedGame
-  tab: Exclude<LoadoutTab, "equipment">
+  kind: Exclude<LoadoutKind, "equipment">
 }) {
-  const loadout = participant[tab]
-  // A partial observation still shows what the source showed.
-  if (loadout.status !== "KNOWN" && loadout.status !== "PARTIAL")
-    return (
-      <span className="loadout-unavailable">
-        <StreamIcon name="info" size={14} />
-        {OBSERVATIONS[loadout.status]}
-        {loadout.note && <small>{loadout.note}</small>}
-      </span>
-    )
-  if (tab === "arcana")
-    return (
-      <div className="arcana-observation">
-        {participant.arcana.entries.map((entry, index) => (
-          <span
-            key={index}
-            data-color={entry.color}
-            title={`${referenceName(game.catalog, "arcana", entry.selection)} × ${entry.count}`}
-          >
-            <ReferenceArt catalog={game.catalog} kind="arcana" selection={entry.selection} />
-            <b>×{entry.count}</b>
-          </span>
-        ))}
-      </div>
-    )
+  const loadout = participant[kind]
+  // A partial observation still shows what the source showed, and says that it is partial.
+  const caveat = [loadout.status === "PARTIAL" && OBSERVATIONS.PARTIAL, loadout.note].filter(Boolean).join(" · ")
   return (
-    <div className="enchantment-observation">
-      {[true, false].map((primary) => (
-        <div key={String(primary)} aria-label={primary ? "Nhánh chính" : "Nhánh phụ"}>
-          {participant.enchantments.entries
-            .filter((entry) => entry.primary === primary)
-            .map((entry, index) => (
-              <span
-                key={index}
-                title={`${referenceName(game.catalog, "enchantments", entry.selection)} · ${primary ? "Chính" : "Phụ"} · Bậc ${entry.tier}`}
-              >
-                <ReferenceArt catalog={game.catalog} kind="enchantments" selection={entry.selection} />
-                <small>{["", "I", "II", "III"][entry.tier] || entry.tier}</small>
-              </span>
-            ))}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-export function GameLoadouts({ game, tab, time }: { game: PublishedGame; tab: LoadoutTab; time: number }) {
-  return (
-    <div className="game-loadout-sides">
-      {game.content.sides.map((side) => (
-        <section className="game-loadout-team" data-side={side.side} key={side.side}>
-          <h3>
-            <i />
-            {game.teams[side.teamId]?.shortName || game.teams[side.teamId]?.name}
-          </h3>
-          {orderedParticipants(side.participants).map((participant) => (
-            <div className="game-loadout-player" key={participant.lane}>
-              <div className="game-loadout-identity">
-                <ReferenceArt catalog={game.catalog} kind="heroes" selection={participant.hero} />
-                <span>
-                  <strong>{game.players[participant.playerId || ""]?.nickname || "Chưa rõ tuyển thủ"}</strong>
-                  <small title={LANES[participant.lane]}>{LANE_SHORT[participant.lane]}</small>
-                </span>
-                <ReferenceArt
-                  catalog={game.catalog}
-                  kind="spells"
-                  selection={participant.spell}
-                  className="player-spell"
-                />
-              </div>
-              {tab === "equipment" ? (
-                <Inventory participant={participant} game={game} time={time} />
-              ) : (
-                <OptionalLoadout participant={participant} game={game} tab={tab} />
-              )}
-            </div>
+    <>
+      {kind === "arcana" ? (
+        <span className="tn-arcana">
+          {participant.arcana.entries.map((entry, index) => (
+            <span key={index} title={referenceName(game.catalog, "arcana", entry.selection)}>
+              <ReferenceArt catalog={game.catalog} kind="arcana" selection={entry.selection} />×{entry.count}
+            </span>
           ))}
-        </section>
-      ))}
-    </div>
+        </span>
+      ) : (
+        <span className="tn-enchantments">
+          {[true, false].map((primary) => {
+            const entries = participant.enchantments.entries.filter((entry) => entry.primary === primary)
+            return (
+              entries.length > 0 && (
+                <span key={String(primary)}>
+                  <span className="sr-only">{primary ? "Nhánh chính:" : "Nhánh phụ:"}</span>
+                  {entries.map((entry, index) => (
+                    <span
+                      key={index}
+                      title={`${referenceName(game.catalog, "enchantments", entry.selection)} · ${primary ? "Nhánh chính" : "Nhánh phụ"}`}
+                    >
+                      <ReferenceArt catalog={game.catalog} kind="enchantments" selection={entry.selection} />
+                      {["", "I", "II", "III"][entry.tier] || entry.tier}
+                    </span>
+                  ))}
+                </span>
+              )
+            )
+          })}
+        </span>
+      )}
+      {caveat && <span>{caveat}</span>}
+    </>
   )
 }
 
 const EVENT_NAMES = { BUY: "Mua", SELL: "Bán", UPGRADE: "Nâng cấp", SWAP: "Đổi ô" } as const
-export function EquipmentEvents({ game, time }: { game: PublishedGame; time: number }) {
+
+function EquipmentEvents({ game, time }: { game: PublishedGame; time: number }) {
   const events = game.content.sides
     .flatMap((side) =>
       side.participants.flatMap((participant) =>
@@ -167,20 +128,21 @@ export function EquipmentEvents({ game, time }: { game: PublishedGame; time: num
     .sort((a, b) => b.event.atSeconds - a.event.atSeconds)
   if (!events.length) return null
   return (
-    <details className="equipment-events">
+    <details className="tn-events">
       <summary>
         <StreamIcon name="list" size={16} />
-        Giao dịch đã ghi nhận <span>{events.length}</span>
+        Giao dịch đã ghi nhận <small>{events.length} lượt</small>
       </summary>
-      <p>Chỉ hiển thị giao dịch có ghi nhận riêng; không suy từ các ảnh chụp đồ.</p>
+      <p>Chỉ gồm giao dịch có ghi nhận riêng, không suy từ các ảnh chụp đồ.</p>
       <ol>
         {events.map(({ event, participant, key }) => (
           <li key={key}>
             <time>{clock(event.atSeconds)}</time>
-            <strong>{game.players[participant.playerId || ""]?.nickname}</strong>
-            <span className="equipment-event-type" data-type={event.type}>
-              {EVENT_NAMES[event.type]}
-            </span>
+            <strong>
+              {game.players[participant.playerId || ""]?.nickname ||
+                referenceName(game.catalog, "heroes", participant.hero)}
+            </strong>
+            <span>{EVENT_NAMES[event.type]}</span>
             {event.replacedItem && <ReferenceArt catalog={game.catalog} kind="items" selection={event.replacedItem} />}
             {event.replacedItem && event.item && <StreamIcon name="arrow" size={13} />}
             {event.item && <ReferenceArt catalog={game.catalog} kind="items" selection={event.item} />}
@@ -189,14 +151,115 @@ export function EquipmentEvents({ game, time }: { game: PublishedGame; time: num
                 Ô {event.fromSlot} ↔ {event.toSlot}
               </span>
             )}
-            {event.note && (
-              <span title={event.note}>
-                <StreamIcon name="info" size={13} />
-              </span>
-            )}
+            {event.note && <span>{event.note}</span>}
           </li>
         ))}
       </ol>
     </details>
+  )
+}
+
+/**
+ * What the players of a game built: equipment at a chosen moment, arcana and enchantments. Only players a source
+ * showed something for are listed, and only the kinds recorded for somebody are offered; a game with nothing recorded
+ * says so once.
+ */
+export function GameLoadouts({ game }: { game: PublishedGame }) {
+  const sides = seriesSides(game)
+  const kinds = recordedLoadouts(sides)
+  const times = observationTimes(sides)
+  const [chosen, setChosen] = useState<LoadoutKind | null>(null)
+  const [selectedTime, setSelectedTime] = useState<number | null>(null)
+  if (!kinds.length)
+    return (
+      <section className="tn-loadouts" aria-labelledby="game-loadouts">
+        <div className="tn-heading">
+          <h2 id="game-loadouts">{ALL_KINDS}</h2>
+        </div>
+        <p className="tn-quiet">Chưa ghi nhận trang bị, bảng ngọc hay phù hiệu của tuyển thủ nào trong ván này.</p>
+      </section>
+    )
+  const kind = chosen && kinds.includes(chosen) ? chosen : kinds[0]!
+  const last = times.at(-1) ?? 0
+  const time = selectedTime ?? last
+  const players = sides.flatMap((side) =>
+    orderedParticipants(side.participants).map((participant) => ({ side, participant })),
+  )
+  const recorded = players.filter(({ participant }) => hasLoadout(participant, kind))
+  const missing = players.length - recorded.length
+  return (
+    <section className="tn-loadouts" aria-labelledby="game-loadouts">
+      <div className="tn-heading">
+        <h2 id="game-loadouts">{kinds.length > 1 ? ALL_KINDS : KIND_LABELS[kind]}</h2>
+      </div>
+      {kinds.length > 1 && (
+        <div className="hub-pills" role="group" aria-label="Loại thông tin">
+          {kinds.map((item) => (
+            <button type="button" key={item} aria-pressed={kind === item} onClick={() => setChosen(item)}>
+              {KIND_LABELS[item]}
+            </button>
+          ))}
+        </div>
+      )}
+      {kind === "equipment" && times.length > 1 && (
+        <div className="tn-timeline">
+          <label htmlFor="game-time">
+            Mốc đang xem <strong>{clock(time)}</strong>
+            <span>{times.length} mốc ghi nhận</span>
+          </label>
+          <input
+            id="game-time"
+            type="range"
+            min="0"
+            max={Math.max(last, 1)}
+            step="1"
+            value={time}
+            onChange={(event) => setSelectedTime(Number(event.target.value))}
+          />
+          <div className="tn-timeline-ticks">
+            {times.map((value) => (
+              <button type="button" key={value} aria-pressed={time === value} onClick={() => setSelectedTime(value)}>
+                {clock(value)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {recorded.length > 0 && (
+        <div className="tn-loadout-list">
+          {recorded.map(({ side, participant }) => {
+            const team = game.teams[side.teamId]
+            const hero = referenceName(game.catalog, "heroes", participant.hero)
+            return (
+              <div className="tn-loadout" data-side={side.side} key={`${side.side}:${participant.lane}`}>
+                <span className="tn-loadout-who">
+                  <ReferenceArt catalog={game.catalog} kind="heroes" selection={participant.hero} />
+                  <span>
+                    <strong>{game.players[participant.playerId || ""]?.nickname || hero}</strong>
+                    <span className="tn-side">
+                      {[team?.shortName || team?.name, LANES[participant.lane]].filter(Boolean).join(" · ")}
+                    </span>
+                  </span>
+                </span>
+                <div className="tn-loadout-what">
+                  {kind === "equipment" ? (
+                    <Inventory participant={participant} game={game} time={time} />
+                  ) : (
+                    <OptionalLoadout participant={participant} game={game} kind={kind} />
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+      {recorded.length > 0 && (missing > 0 || kind === "equipment") && (
+        <p className="tn-quiet">
+          {missing > 0 && `Chưa ghi nhận cho ${missing} tuyển thủ còn lại. `}
+          {kind === "equipment" && "Ô “?” là chưa quan sát; ô trống là đã xác nhận không có đồ."}
+        </p>
+      )}
+      {kind === "equipment" && <EquipmentEvents game={game} time={time} />}
+    </section>
   )
 }

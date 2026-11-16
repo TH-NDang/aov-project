@@ -1,5 +1,5 @@
 .wiki-hero-detail-main {
-  margin-top: -48px;
+  margin-top: calc(-1 * var(--wiki-header-height));
 }
 .wiki-hero-profile {
   position: relative;
@@ -13,7 +13,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  color: var(--aov-wiki-gold);
+  color: var(--aov-accent);
   pointer-events: none;
 }
 .wiki-hero-profile::after {
@@ -23,8 +23,8 @@
   z-index: -1;
   pointer-events: none;
   background:
-    linear-gradient(0deg, var(--aov-wiki-night) 0%, transparent 70%),
-    linear-gradient(90deg, rgb(23 30 44 / 72%), transparent 74%);
+    linear-gradient(0deg, var(--aov-bg) 0%, transparent 70%),
+    linear-gradient(90deg, color-mix(in srgb, var(--aov-bg) 72%, transparent), transparent 74%);
 }
 .wiki-hero-profile::before {
   content: "";
@@ -74,22 +74,24 @@
   margin-inline: auto;
   padding: 72px var(--wiki-gutter) 24px;
 }
-.wiki-hero-profile-breadcrumb {
-  font: var(--wiki-type-meta);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  color: var(--aov-muted);
+/* Who the artwork belongs to: a small button in the corner of the picture. */
+.wiki-hero-art-credit {
+  right: 16px;
+  bottom: 16px;
 }
-.wiki-hero-profile-breadcrumb a {
+/* One quiet way back to the hero list: the header already marks the section. */
+.wiki-hero-profile-back {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 2px;
+  margin: 0 0 14px -4px;
   color: var(--aov-muted);
   text-decoration: none;
 }
-.wiki-hero-profile-breadcrumb a:hover {
-  color: var(--hero-accent);
-}
-.wiki-hero-profile-back {
-  display: none;
+.wiki-hero-profile-back:is(:hover, :focus-visible) {
+  color: var(--aov-accent);
 }
 .wiki-hero-profile-identity {
   display: flex;
@@ -107,15 +109,10 @@
   overflow: hidden;
   place-items: center;
   padding: 2px;
-  border: 1px solid color-mix(in srgb, var(--hero-accent, var(--aov-accent)) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 45%, transparent);
   border-radius: 50%;
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--hero-accent, #d6bd8e) 16%, transparent),
-    rgba(var(--hero-surface-rgb, 43, 49, 61), 0.8)
-  );
-  box-shadow: 0 4px 16px #080b122e;
-  color: var(--hero-accent, var(--aov-accent));
+  background: var(--aov-raised);
+  color: var(--aov-accent);
   font: 700 23px/1 var(--wiki-font-display);
 }
 .wiki-hero-profile-head img {
@@ -142,22 +139,6 @@
   text-wrap: balance;
   text-shadow: 0 2px 12px #080b1266;
 }
-.wiki-hero-profile-ornament {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 320px;
-  margin-top: 24px;
-  color: var(--hero-accent);
-  opacity: 0.6;
-  font-size: 0.8125rem;
-}
-.wiki-hero-profile-ornament::after {
-  content: "";
-  height: 1px;
-  flex: 1;
-  background: linear-gradient(90deg, var(--hero-accent), transparent);
-}
 .wiki-hero-profile-placeholder {
   position: absolute;
   right: 15%;
@@ -167,16 +148,10 @@
   align-items: center;
   gap: 18px;
   color: var(--aov-text);
-  font-size: 13px;
-}
-.wiki-hero-profile-placeholder img {
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  object-fit: cover;
+  font: var(--wiki-type-meta);
 }
 .wiki-hero-profile-placeholder button {
-  color: var(--hero-accent);
+  color: var(--aov-accent);
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -190,7 +165,7 @@
 }
 .wiki-hero-profile-state h1 {
   font: var(--wiki-type-page);
-  color: var(--gold);
+  color: var(--aov-text);
 }
 .wiki-hero-profile-state a,
 .wiki-hero-profile-state button {
@@ -200,11 +175,8 @@
 }
 /* The compact header sits on top of the artwork, so the page starts behind it. */
 @media (max-width: 899.98px) {
-  .wiki-hero-detail-main {
-    margin-top: -48px;
-  }
   .wiki-hero-profile {
-    min-height: 200px;
+    min-height: 280px;
   }
   .wiki-hero-profile-art {
     top: 55px;
@@ -222,14 +194,24 @@
     mask-image: linear-gradient(180deg, black 65%, transparent);
   }
   .wiki-hero-profile::after {
-    background: linear-gradient(180deg, transparent 0, transparent 18%, var(--hero-backdrop) 100%);
+    background: linear-gradient(180deg, transparent 0, transparent 22%, var(--aov-bg) 86%);
   }
+  /* The name stands at the foot of the artwork, where the fade has darkened it enough to read. */
   .wiki-hero-profile-content {
+    display: flex;
     min-height: inherit;
+    flex-direction: column;
+    justify-content: flex-end;
     padding: 60px var(--wiki-gutter) 12px;
   }
-  .wiki-hero-profile-breadcrumb {
+  /* The compact header holds the way back. */
+  .wiki-hero-profile-back {
     display: none;
+  }
+  /* The name and the chips fill the foot of the picture, so its credit moves up under the header. */
+  .wiki-hero-art-credit {
+    top: calc(var(--wiki-header-height) + 8px);
+    bottom: auto;
   }
   .wiki-hero-profile-identity {
     min-height: 44px;
@@ -244,17 +226,23 @@
   .wiki-hero-profile-heading {
     gap: 8px;
   }
-
-  .wiki-hero-profile-ornament {
-    width: 70%;
-    margin-top: 18px;
-  }
   .wiki-hero-profile-placeholder {
     top: 22%;
     right: 50%;
     transform: translateX(50%);
     width: 70%;
   }
+}
+.wiki-hero-baseline {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-self: flex-start;
+  justify-self: start;
+  margin-top: 8px;
+  border-radius: var(--aov-radius-pill);
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--aov-surface) 82%, transparent);
+  color: var(--aov-text-soft);
 }
 .wiki-hero-epithet {
   font: var(--wiki-type-subtitle);
@@ -267,28 +255,51 @@
   gap: 8px;
   margin-top: 12px;
 }
-.wiki-hero-role-strip > span {
+.wiki-hero-role-extras {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wiki-hero-role-extras:empty {
+  display: none;
+}
+.wiki-hero-role-strip > span,
+.wiki-hero-role-extras > span {
   font: var(--wiki-type-meta);
   display: flex;
   align-items: center;
   gap: 7px;
-  border-radius: 6px;
-  background: #11172199;
+  border-radius: var(--aov-radius-control);
+  background: color-mix(in srgb, var(--aov-surface) 82%, transparent);
   padding: 5px 9px;
 }
-.wiki-hero-role-strip > span > svg {
+.wiki-hero-role-extras > span > svg {
   flex: none;
-  color: var(--aov-wiki-gold);
+  color: var(--aov-accent);
 }
 .wiki-hero-role-strip .wiki-hero-glyph {
   width: 17px;
   height: 17px;
-  color: var(--hero-accent);
+  color: var(--aov-accent);
+}
+/* The narrowest phones: tighter chips, so the price and the videos still share a line. */
+@media (max-width: 359.98px) {
+  .wiki-hero-role-strip,
+  .wiki-hero-role-extras {
+    gap: 6px;
+  }
+  .wiki-hero-role-strip > span,
+  .wiki-hero-role-extras > span,
+  .wiki-hero-role-extras > .wiki-hero-video-button {
+    gap: 5px;
+    padding-inline: 7px;
+  }
 }
 .wiki-handbook-notice {
   padding: 26px var(--wiki-gutter);
 }
 .wiki-handbook-notice button {
-  color: var(--gold);
+  color: var(--aov-accent);
   text-decoration: underline;
 }

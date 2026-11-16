@@ -1,9 +1,11 @@
-import type { CSSProperties } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { CommunityProfile, PageSlice } from "@aov/community-contracts"
+import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
-import { Avatar, hueOf, TimeAgo } from "./community-ui"
+import { Avatar, TimeAgo } from "./community-ui"
+import { videoEmbed, videoPoster } from "./post-media-model"
+import "./community-live.css"
 
 /** Pages broadcasting now; refreshed every minute so ended broadcasts drop out. */
 export function useLivePages(size = 6) {
@@ -15,48 +17,53 @@ export function useLivePages(size = 6) {
   })
 }
 
-/** A row of live pages; nothing is rendered while nobody is live. */
-export function LiveRow({ title = "Đang trực tiếp" }: { title?: string }) {
+/** The 16:9 picture YouTube keeps for a video link. Other platforms offer none without asking them. */
+export function videoThumbnail(url?: string | null) {
+  const embed = url ? videoEmbed(url) : null
+  return embed ? videoPoster(embed, "mqdefault") : null
+}
+
+/** Each broadcast as a card: its picture, the live mark, the title and the page it is on. */
+export function LiveCards({ pages }: { pages: CommunityProfile[] }) {
+  return (
+    <div className="lv-cards">
+      {pages.map((page) => {
+        const live = page.live!
+        const picture = videoThumbnail(live.url) || page.content?.coverUrl
+        return (
+          <Link key={page.id} to={`/pages/${page.code}`} className="lv-card">
+            <div className="lv-thumb">
+              {picture ? <img src={picture} alt="" loading="lazy" /> : <StreamIcon name="play" size={24} />}
+            </div>
+            <div className="lv-body">
+              <span className="tn-live">Trực tiếp</span>
+              <strong>{live.title}</strong>
+              <div className="lv-page">
+                <Avatar profile={page} />
+                <span>{page.content?.name || page.code}</span>
+                <span className="lv-since">
+                  <TimeAgo value={live.startedAt} />
+                </span>
+              </div>
+            </div>
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
+
+/** The broadcasts above the home feed; nothing is rendered while nobody is live. */
+export function LiveRow() {
   const live = useLivePages()
   const items = (live.data?.items || []).filter((page) => page.live)
   if (!items.length) return null
   return (
-    <section className="cp-live-row" aria-labelledby="live-row">
-      <div className="hub-card-heading">
-        <h2 id="live-row" className="hub-card-title">
-          {title} <span className="cp-meta">· {items.length} kênh</span>
-        </h2>
-      </div>
-      <div className="cp-live-cards">
-        {items.map((page) => {
-          const name = page.content?.name || page.code
-          const cover = page.content?.coverUrl
-          return (
-            <Link key={page.id} to={`/pages/${page.code}`} className="cp-live-card">
-              <span
-                className="cp-live-thumb hub-art"
-                style={
-                  {
-                    "--hub-hue": hueOf(name),
-                    ...(cover ? { backgroundImage: `url(${JSON.stringify(cover)})` } : {}),
-                  } as CSSProperties
-                }
-              >
-                <span className="cp-live-badge">Trực tiếp</span>
-              </span>
-              <span className="cp-live-meta">
-                <Avatar profile={page} />
-                <span>
-                  <strong>{page.live!.title}</strong>
-                  <small>
-                    {name} · <TimeAgo value={page.live!.startedAt} />
-                  </small>
-                </span>
-              </span>
-            </Link>
-          )
-        })}
-      </div>
+    <section className="lv-row" aria-labelledby="live-row">
+      <h2 id="live-row" className="hub-card-title">
+        Đang trực tiếp <span className="cp-meta">· {items.length} kênh</span>
+      </h2>
+      <LiveCards pages={items} />
     </section>
   )
 }

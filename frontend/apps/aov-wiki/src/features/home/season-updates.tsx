@@ -3,7 +3,6 @@ import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { seasonUpdatesQuery, type SeasonPatch } from "./home-api"
 import { patchDayLabel } from "./patch-day-label"
-import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 
@@ -11,52 +10,42 @@ function PatchRow({ patch }: { patch: SeasonPatch }) {
   const { locale, href, region, regions } = useWikiContext()
   const date = patch.effectiveOn ?? patch.effectiveAt ?? ""
   return (
-    <li>
-      <Link to={href(`/updates/${patch.code}`)} className="wiki-home-patch-row">
-        <span className="wiki-home-patch-meta">
-          <LocalTime
-            className="wiki-home-patch-date"
-            value={date}
-            sourceTimeZone={regions.find((market) => market.code === region)?.timeZone}
-            label={(zone) => patchDayLabel(date, zone)}
-            fallback={<time className="wiki-home-patch-date">—</time>}
-          />
-          {patch.isCurrent && (
-            <span className="wiki-home-current-tag">{wikiText(locale, "Đang áp dụng", "Current")}</span>
-          )}
-        </span>
+    <li data-current={patch.isCurrent || undefined}>
+      <Link to={href(`/updates/${patch.code}`)}>
+        <LocalTime
+          className="wiki-home-patch-date"
+          value={date}
+          sourceTimeZone={regions.find((market) => market.code === region)?.timeZone}
+          label={(zone) => patchDayLabel(date, zone)}
+          fallback={<time className="wiki-home-patch-date">—</time>}
+        />
         <span className="wiki-home-patch-title">{patch.title || patch.code}</span>
+        {patch.isCurrent && (
+          <span className="wiki-home-current-tag">{wikiText(locale, "Đang áp dụng", "Current")}</span>
+        )}
       </Link>
     </li>
   )
 }
 
+/** The versions of the season in force, newest first. */
 export function SeasonUpdates() {
   const scope = useWikiContext()
-  const { locale, region, t } = scope
+  const { locale, t } = scope
   const query = useQuery(seasonUpdatesQuery(scope))
-  const marketName = scope.regions.find((market) => market.code === region)?.displayName ?? region
 
   return (
-    <aside className="wiki-home-updates" aria-labelledby="season-updates-title" aria-busy={query.isPending}>
-      <div className="wiki-home-updates-heading">
+    <section className="wiki-home-updates" aria-labelledby="season-updates-title" aria-busy={query.isPending}>
+      <header className="wiki-home-heading">
         <h2 id="season-updates-title">
-          {wikiText(locale, "Cập nhật mùa", "Season updates")}
+          {wikiText(locale, "Các bản cập nhật", "Updates")}
           {query.data?.season?.displayName && <small>{query.data.season.displayName}</small>}
         </h2>
-        <span className="wiki-home-market" aria-label={`${t("market")}: ${marketName}`}>
-          {["VN", "TH", "TW", "ID"].includes(region) ? (
-            <img src={`/icons/flags/${region.toLowerCase()}.svg`} alt="" width="18" height="12" />
-          ) : (
-            <WikiIcon name="globe" size={16} />
-          )}
-          {region}
-        </span>
-        <FeedbackDialog
-          target={query.data?.season?.displayName || wikiText(locale, "Cập nhật mùa", "Season updates")}
-          identity={query.data?.season?.id}
-        />
-      </div>
+        <Link className="wiki-home-more" to={scope.href("/updates")}>
+          {wikiText(locale, "Tất cả", "All")}
+          <WikiIcon name="arrow" size={16} />
+        </Link>
+      </header>
       {query.isPending ? (
         <div className="wiki-home-updates-loading" role="status">
           <span className="sr-only">{wikiText(locale, "Đang tải cập nhật mùa", "Loading season updates")}</span>
@@ -64,7 +53,7 @@ export function SeasonUpdates() {
           <span />
           <span />
         </div>
-      ) : query.isError ? (
+      ) : query.isLoadingError ? (
         <div className="wiki-home-updates-empty" role="status">
           <p>{wikiText(locale, "Chưa tải được cập nhật mùa.", "Could not load season updates.")}</p>
           <button className="wiki-home-retry" onClick={() => void query.refetch()} disabled={query.isFetching}>
@@ -84,17 +73,12 @@ export function SeasonUpdates() {
           )}
         </p>
       ) : (
-        <>
-          <ol className="wiki-home-patch-list">
-            {query.data.patches.map((patch) => (
-              <PatchRow key={patch.id} patch={patch} />
-            ))}
-          </ol>
-          <Link className="wiki-home-updates-all" to={scope.href("/updates")}>
-            {wikiText(locale, "Xem tất cả ghi chú cập nhật", "See all patch notes")}
-          </Link>
-        </>
+        <ol className="wiki-home-patch-list">
+          {query.data.patches.map((patch) => (
+            <PatchRow key={patch.id} patch={patch} />
+          ))}
+        </ol>
       )}
-    </aside>
+    </section>
   )
 }

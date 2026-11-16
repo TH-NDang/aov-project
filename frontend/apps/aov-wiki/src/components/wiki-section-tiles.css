@@ -1,0 +1,75 @@
+/* The sections of the Wiki as tiles: the mark, the name and an optional muted line. */
+.wiki-section-tiles ul {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-section-tiles a {
+  display: grid;
+  height: 100%;
+  align-content: start;
+  justify-items: center;
+  gap: 2px;
+  padding: 16px 6px 14px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  text-align: center;
+  text-decoration: none;
+  transition: background 150ms;
+}
+.wiki-section-tiles a:hover {
+  background: var(--aov-raised);
+}
+.wiki-section-tile-icon {
+  margin-bottom: 8px;
+}
+.wiki-section-tiles strong {
+  font: var(--wiki-type-category);
+}
+.wiki-section-tiles small {
+  font: var(--wiki-type-meta);
+  min-height: 1.125rem;
+  color: var(--aov-muted);
+}
+
+/* Five tiles then four would leave a gap; three rows of three fill the grid, the mark beside the name. */
+@media (max-width: 1179.98px) {
+  .wiki-section-tiles ul {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .wiki-section-tiles a {
+    grid-template-columns: 40px minmax(0, 1fr);
+    justify-items: start;
+    gap: 0 12px;
+    padding: 12px 14px;
+    text-align: left;
+  }
+  .wiki-section-tile-icon {
+    grid-row: span 2;
+    margin-bottom: 0;
+  }
+}
+/* The mark above the name, so three tiles fit a phone; the muted line gives way. */
+@media (max-width: 899.98px) {
+  .wiki-section-tiles ul {
+    gap: 8px;
+  }
+  .wiki-section-tiles a {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 2px;
+    padding: 12px 4px 10px;
+    text-align: center;
+  }
+  .wiki-section-tile-icon {
+    grid-row: auto;
+    margin-bottom: 6px;
+  }
+  .wiki-section-tiles small {
+    display: none;
+  }
+}

@@ -69,7 +69,30 @@ export function HeroPriceTag({ heroId, fallbackHeroId }: { heroId: string; fallb
   )
 }
 
-/** How a skin is obtained in the market being read, in the words a player would use. */
+/**
+ * How a skin is obtained in the market being read, in the words a player would use. Nothing comes back while the
+ * answer is loading or when it was never recorded.
+ */
+export function useSkinAcquisition(heroId: string, skinKey: string) {
+  const { locale, region } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { data } = useQuery(heroShopQuery(heroId, region))
+  const row = data?.skins.find((entry) => entry.skinKey === skinKey)
+  if (!row || row.method === "UNKNOWN") return null
+  return row.method === "VOUCHER"
+    ? row.voucherPrice == null
+      ? text("Mua bằng quân huy", "Bought with vouchers")
+      : `${row.voucherPrice.toLocaleString(locale)} ${text("quân huy", "vouchers")}`
+    : row.method === "EVENT"
+      ? row.eventName
+        ? `${text("Sự kiện", "Event")}: ${row.eventName}`
+        : text("Nhận từ sự kiện", "From an event")
+      : row.method === "NOT_OPEN"
+        ? text("Hiện chưa mở", "Not available now")
+        : text("Cách nhận khác", "Obtained another way")
+}
+
+/** The same answer as a line of its own, for the skin viewer. */
 export function SkinAcquisitionText({
   heroId,
   skinKey,
@@ -79,23 +102,8 @@ export function SkinAcquisitionText({
   skinKey: string
   className?: string
 }) {
-  const { locale, region } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
-  const { data } = useQuery(heroShopQuery(heroId, region))
-  const row = data?.skins.find((entry) => entry.skinKey === skinKey)
-  if (!row || row.method === "UNKNOWN") return null
-  const label =
-    row.method === "VOUCHER"
-      ? row.voucherPrice == null
-        ? text("Mua bằng quân huy", "Bought with vouchers")
-        : `${row.voucherPrice.toLocaleString(locale)} ${text("quân huy", "vouchers")}`
-      : row.method === "EVENT"
-        ? row.eventName
-          ? `${text("Sự kiện", "Event")}: ${row.eventName}`
-          : text("Nhận từ sự kiện", "From an event")
-        : row.method === "NOT_OPEN"
-          ? text("Hiện chưa mở", "Not available now")
-          : text("Cách nhận khác", "Obtained another way")
+  const label = useSkinAcquisition(heroId, skinKey)
+  if (!label) return null
   const Coin = gameplayIcons.coin
   return (
     <p className={className}>

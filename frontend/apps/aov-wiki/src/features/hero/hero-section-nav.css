@@ -1,3 +1,4 @@
+/* The hero page's contents: a column beside the page on wide screens, a floating button with a drawer below that. */
 .wiki-hero-nav {
   display: none;
 }
@@ -11,10 +12,11 @@
 .wiki-hero-nav-list a {
   font: var(--wiki-type-meta);
   display: flex;
+  min-height: 32px;
   align-items: center;
   gap: 8px;
   border-radius: var(--aov-radius-control);
-  padding: 7px 10px;
+  padding: 6px 10px;
   color: var(--aov-muted);
   text-decoration: none;
   transition:
@@ -25,25 +27,35 @@
   flex: none;
   opacity: 0.8;
 }
-.wiki-hero-nav-list a:is(:hover, :focus-visible) {
+.wiki-hero-nav-list a:hover {
+  background: var(--aov-surface);
   color: var(--aov-text);
 }
+.wiki-hero-nav-list a:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: -2px;
+  color: var(--aov-text);
+}
+/* The section being read: the accent with a faint tint, as a chosen card has. */
 .wiki-hero-nav-list a[aria-current] {
-  background: var(--aov-accent-soft);
+  background: color-mix(in srgb, var(--aov-accent) 12%, transparent);
   color: var(--aov-accent);
   font-weight: 600;
 }
 .wiki-hero-nav-list a[aria-current] > svg {
   opacity: 1;
 }
+/* The drawer sits on a raised surface, where muted text would be too faint for the entries it exists to offer. */
 .wiki-hero-nav-sheet .wiki-hero-nav-list a {
   font: var(--wiki-type-body);
   min-height: 48px;
   gap: 12px;
   padding-inline: 12px;
+  color: var(--aov-text-soft);
 }
 .wiki-hero-nav-sheet .wiki-hero-nav-list a[aria-current] {
   font-weight: 600;
+  color: var(--aov-accent);
 }
 .wiki-hero-nav-fab {
   position: fixed;
@@ -60,8 +72,12 @@
   color: var(--aov-accent);
   box-shadow: var(--aov-shadow-lg);
 }
-.wiki-hero-nav-fab:is(:hover, :focus-visible) {
+.wiki-hero-nav-fab:hover {
   border-color: var(--aov-accent);
+}
+.wiki-hero-nav-fab:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 3px;
 }
 
 /* Leaves room under the page's last links for the floating button. */
@@ -70,15 +86,16 @@ body:has(.wiki-hero-nav-fab) .wiki-site-footer {
 }
 
 @media (min-width: 1180px) {
+  /* Wide enough that the longest one-line entry stays on one line when it is the chosen, bolder one. */
   .wiki-handbook {
-    grid-template-columns: minmax(0, 1fr) 168px;
+    grid-template-columns: minmax(0, 1fr) 176px;
   }
   .wiki-hero-nav:not([hidden]) {
     position: sticky;
-    top: 64px;
+    top: calc(var(--wiki-header-height) + 16px);
     display: block;
     align-self: start;
-    max-height: calc(100dvh - 80px);
+    max-height: calc(100dvh - var(--wiki-header-height) - 32px);
     overflow-y: auto;
   }
   .wiki-hero-nav-fab {
@@ -88,9 +105,11 @@ body:has(.wiki-hero-nav-fab) .wiki-site-footer {
     padding-bottom: 0;
   }
   .wiki-handbook .wiki-hero-nav h2 {
-    font: var(--wiki-type-label);
+    font: 600 0.75rem/1rem var(--wiki-font-reading);
     margin: 0 0 8px;
     padding-inline: 10px;
     color: var(--aov-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 }

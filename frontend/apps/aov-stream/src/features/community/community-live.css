@@ -1,0 +1,127 @@
+/* Pages broadcasting now: the row above the home feed and the first section of Explore. */
+.lv-row {
+  display: grid;
+  gap: 10px;
+}
+.hub-feed-body > .lv-row {
+  margin-bottom: var(--hub-space-5);
+}
+/* One broadcast takes the whole row; several share it. */
+.lv-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 10px;
+}
+.lv-card {
+  display: grid;
+  grid-template-columns: 192px minmax(0, 1fr);
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  transition: background-color 120ms;
+}
+.lv-card:hover {
+  background: var(--hub-hover);
+}
+/* The picture fills the tile, which grows with the title beside it, whatever the picture's own shape. */
+.lv-thumb {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  min-height: 108px;
+  place-items: center;
+  background: var(--hub-sunken);
+  color: var(--hub-muted);
+}
+.lv-thumb > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lv-body {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 4px;
+  padding: 12px 16px;
+  font-size: 12px;
+  line-height: 16px;
+}
+/* A broadcast title names the match at its end, so it gets the lines it needs before it is cut. */
+.lv-body > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.lv-page {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.lv-page > .cp-avatar {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+}
+.lv-page > .cp-initial {
+  font-size: 12px;
+  font-weight: 700;
+}
+/* A long page name gives way; when the broadcast started always shows. */
+.lv-page > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lv-page > .lv-since {
+  flex: none;
+  overflow: visible;
+}
+.lv-since::before {
+  content: "·";
+  margin-right: 8px;
+}
+
+@media (max-width: 599.98px) {
+  .lv-card {
+    grid-template-columns: 128px minmax(0, 1fr);
+  }
+  .lv-thumb {
+    min-height: 88px;
+  }
+  .lv-body {
+    padding: 8px 12px;
+  }
+  .lv-body > strong {
+    font-size: 14px;
+    line-height: 20px;
+    -webkit-line-clamp: 5;
+  }
+  .lv-page {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .lv-page > .cp-avatar {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-card {
+    transition: none;
+  }
+}
