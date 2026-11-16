@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { test } from "node:test"
 import {
   guideContentFromManifest,
@@ -14,13 +14,19 @@ import {
   type ModeManifestEntry,
 } from "../src/features/game-modes/game-mode-import"
 
+// The data set lives in the private bucket since ADR-030. These checks run on a copy pulled to its old place, from
+// frontend/apps/admin-aov:
+//   pnpm sources:sync pull --collection sanh-che-do --to ../../../resources/Lien-Quan-v3/che-do-choi --apply
+//   pnpm sources:sync pull --collection co-lien-quan-2026-11-08-1503 --to ../../../resources/Lien-Quan-v3/che-do-choi --apply
 const resources = new URL("../../../../resources/Lien-Quan-v3/che-do-choi/", import.meta.url)
-const modes = JSON.parse(readFileSync(new URL("che-do.json", resources), "utf8")) as { modes: ModeManifestEntry[] }
-const guide = JSON.parse(
-  readFileSync(new URL("co-lien-quan/du-lieu/bach-khoa-2026-11-08-1503.json", resources), "utf8"),
-) as GuideManifest
+const modesFile = new URL("che-do.json", resources)
+const guideFile = new URL("co-lien-quan/du-lieu/bach-khoa-2026-11-08-1503.json", resources)
+const pulled = existsSync(modesFile) && existsSync(guideFile)
+const data = pulled ? false : "pull the sanh-che-do and co-lien-quan-2026-11-08-1503 source collections first"
+const modes = (pulled ? JSON.parse(readFileSync(modesFile, "utf8")) : { modes: [] }) as { modes: ModeManifestEntry[] }
+const guide = (pulled ? JSON.parse(readFileSync(guideFile, "utf8")) : {}) as GuideManifest
 
-test("the lobby manifest lists every mode once with the observed labels and no made-up dates", () => {
+test("the lobby manifest lists every mode once with the observed labels and no made-up dates", { skip: data }, () => {
   const codes = modes.modes.map((mode) => mode.code)
   assert.equal(codes.length, 26)
   assert.equal(new Set(codes).size, 26)
@@ -39,7 +45,7 @@ test("the lobby manifest lists every mode once with the observed labels and no m
   assert.ok(content.rules.length > 0)
 })
 
-test("the encyclopedia references only its own codes and every icon file exists", () => {
+test("the encyclopedia references only its own codes and every icon file exists", { skip: data }, () => {
   const traits = new Set(guide.traits.map((trait) => trait.code))
   const units = new Set(guide.units.map((unit) => unit.code))
   assert.equal(units.size, guide.units.length)
@@ -56,7 +62,7 @@ test("the encyclopedia references only its own codes and every icon file exists"
   for (const path of paths) readFileSync(new URL(`co-lien-quan/${path}`, resources))
 })
 
-test("icon paths become asset ids and missing uploads leave the image empty", () => {
+test("icon paths become asset ids and missing uploads leave the image empty", { skip: data }, () => {
   const paths = guideIconPaths(guide)
   const assets = new Map(paths.slice(1).map((path, at) => [path, `asset-${at}`]))
   const content = guideContentFromManifest(guide, assets)
@@ -99,22 +105,26 @@ test("missing fields read as Vietnamese labels", () => {
   assert.equal(missingLabel("units[0].stats", { units: [{ name: "Violet" }] } as never), "Violet: thiếu chỉ số")
 })
 
-test("every imported image says what it shows, which file it came from and when it was recorded", () => {
-  assert.deepEqual(iconsWithoutSource(guide), [])
-  for (const path of guideIconPaths(guide)) {
-    const source = importedImageSource(guide.imageSources![path])!
-    assert.equal(source.type, "GAME_CLIENT")
-    assert.ok(source.label.length <= 200 && source.note!.length <= 2000, path)
-    assert.ok(source.note!.includes(`co-v2.zip`) && source.note!.includes(path.slice(path.indexOf("/") + 1)), path)
-    assert.match(source.observedAt ?? "", /^2026-11-08T\d\d:\d\d:\d\dZ$/, path)
-  }
-  for (const mode of modes.modes.filter((entry) => entry.art)) {
-    const source = importedImageSource(mode.artSource)
-    assert.ok(source, mode.code)
-    assert.ok(source.note!.includes("goc-da-che-uid/sanh-") && source.note!.includes(mode.art!), mode.code)
-  }
-  assert.equal(importedImageSource({ label: "Ảnh", note: " " }), null, "a source without a note is not concrete")
-})
+test(
+  "every imported image says what it shows, which file it came from and when it was recorded",
+  { skip: data },
+  () => {
+    assert.deepEqual(iconsWithoutSource(guide), [])
+    for (const path of guideIconPaths(guide)) {
+      const source = importedImageSource(guide.imageSources![path])!
+      assert.equal(source.type, "GAME_CLIENT")
+      assert.ok(source.label.length <= 200 && source.note!.length <= 2000, path)
+      assert.ok(source.note!.includes(`co-v2.zip`) && source.note!.includes(path.slice(path.indexOf("/") + 1)), path)
+      assert.match(source.observedAt ?? "", /^2026-11-08T\d\d:\d\d:\d\dZ$/, path)
+    }
+    for (const mode of modes.modes.filter((entry) => entry.art)) {
+      const source = importedImageSource(mode.artSource)
+      assert.ok(source, mode.code)
+      assert.ok(source.note!.includes("goc-da-che-uid/sanh-") && source.note!.includes(mode.art!), mode.code)
+    }
+    assert.equal(importedImageSource({ label: "Ảnh", note: " " }), null, "a source without a note is not concrete")
+  },
+)
 
 test("a failed upload is tried again before the import gives up", async () => {
   let calls = 0
