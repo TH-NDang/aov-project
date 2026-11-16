@@ -21,7 +21,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: frontend
@@ -38,10 +38,13 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
       - run: pnpm generate:hero-api
       - run: git diff --exit-code -- apps/admin-aov/src/features/publishing/generated/hero-api.d.ts
+      # Includes the Admin test files (tests/tsconfig.json), which the test runner does not type-check.
       - run: pnpm typecheck
-      - run: pnpm --filter @aov/admin-aov test:publishing
+      # Every package runs all of its tests/*.test.* files, so a new test file is picked up without editing a list.
+      - run: pnpm test
       - run: pnpm build
       - uses: actions/upload-artifact@v4
         with:

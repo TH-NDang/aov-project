@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview --port 5174 --strictPort",
     "typecheck": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test \"tests/*.test.ts\"",
     "test:tournaments": "node --experimental-strip-types --test tests/tournament-model.test.ts tests/match-model.test.ts",
     "test:account": "node --experimental-strip-types --test tests/account-profile.test.ts",
     "test:community": "node --experimental-strip-types --test tests/schedule-model.test.ts tests/post-media-model.test.ts tests/time-zone-days.test.ts"

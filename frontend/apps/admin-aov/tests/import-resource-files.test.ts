@@ -37,7 +37,7 @@ test("resource references stay in the fixed asset namespace after repeated decod
     "/api/wiki/v1/admin/media/assets/test",
     "http://localhost:9000/assets/airi.jpg",
   ])
-    assert.throws(() => resolveImportImage(source, empty, ""), undefined, source)
+    assert.throws(() => resolveImportImage(source, empty, ""), Error, source)
 })
 
 test("selected resource files and ordinary relative files share MIME, size and empty-file validation", () => {

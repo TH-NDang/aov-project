@@ -116,6 +116,8 @@ test("focused skill editing preserves forms, effects and translations while addi
   const snapshot = structuredClone(original)
   let current = original
   let saved: Skills | undefined
+  // The submit handler assigns it, so an assertion on it must not narrow later reads.
+  const submitted = () => saved
   let setCurrent: React.Dispatch<React.SetStateAction<Skills>>
   let changeLanguage: React.Dispatch<React.SetStateAction<string>>
   function Harness() {
@@ -219,7 +221,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     await type(sourceLabel(), "Updated source")
     await act(async () => button("Áp dụng").click())
     assert.equal(current.sources[0].label, "Updated source")
-    assert.equal(saved, undefined, "Applying a sheet does not submit the surrounding section form")
+    assert.equal(submitted(), undefined, "Applying a sheet does not submit the surrounding section form")
     const rail = document.querySelector<HTMLElement>('[aria-label="Chọn kỹ năng"]')!
     Object.defineProperties(rail, { clientWidth: { value: 200 }, scrollWidth: { value: 360 } })
     rail.getBoundingClientRect = () => new dom.window.DOMRect(0, 0, 200, 100)

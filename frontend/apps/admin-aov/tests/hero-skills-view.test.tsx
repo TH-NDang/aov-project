@@ -21,9 +21,10 @@ import {
   parseRichText,
   resolveEntityRoute,
   type EntityReference,
+  type RichTextNode,
 } from "@aov/ui/lib/entity-rich-text"
 import { analyzeStat, statDistribution } from "../src/features/publishing/hero-stat-analysis"
-import { combatAttributeRows, type StatSample } from "../src/features/publishing/combat-attributes"
+import { combatAttributeRows, type StatDefault, type StatSample } from "../src/features/publishing/combat-attributes"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -44,7 +45,10 @@ test("hero descriptions resolve named and implicit skill slots in the viewed rev
     const index = () =>
       createEntityIndex([...catalog, ...revisionSkillReferences(revision, content, [])], "vi-VN", "vi-VN")
     const references = (text: string) =>
-      parseRichText(text, index()).filter((node) => node.type === "reference" && node.entity.kind === "skill")
+      parseRichText(text, index()).filter(
+        (node): node is Extract<RichTextNode, { type: "reference" }> =>
+          node.type === "reference" && node.entity.kind === "skill",
+      )
     const ultimate = references("Hãy cố gắng dùng chiêu cuối Dolia cho những chiêu quan trọng.")[0]!
     assert.equal(ultimate.label, "chiêu cuối Dolia")
     assert.equal(ultimate.entity.skillKey, "skill-3-1")
@@ -248,7 +252,7 @@ test("combat attributes keep observed crit damage, patch defaults and explicit o
         },
       },
     })
-    const rule = {
+    const rule: StatDefault = {
       statKey: "CRITICAL_DAMAGE",
       baseValue: 200,
       unit: "PERCENT",
@@ -422,7 +426,7 @@ test("a stat without a percent in the game drops one when the row switches to it
 test("a hero can override a shared stat and switch back without storing a copy", async () => {
   await withView(async ({ document, render, click }) => {
     const { HeroStatsEditor } = await import("../src/features/publishing/hero-stats-editor")
-    const rule = {
+    const rule: StatDefault = {
       statKey: "CRITICAL_DAMAGE",
       baseValue: 200,
       unit: "PERCENT",

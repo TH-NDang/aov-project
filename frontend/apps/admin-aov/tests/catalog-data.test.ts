@@ -32,15 +32,17 @@ const overview: PublicationOverview = {
       currentReleaseId: null,
     },
   ],
-  seasons: [
+  seasons: [{ id: "s4", code: "s4", displayName: "S4", ordinal: 4 }],
+  seasonSchedules: [
     {
-      id: "s4",
+      id: "s4-vn",
+      seasonId: "s4",
       regionId: "vn",
-      code: "s4",
-      displayName: "S4",
       startsAt: "2026-10-01T00:00:00Z",
       endsAt: "2027-01-01T00:00:00Z",
       phase: "CURRENT",
+      startsOn: null,
+      endsOn: null,
     },
   ],
   variants: [
@@ -73,6 +75,8 @@ const overview: PublicationOverview = {
       sourceUrl: null,
       status: "SCHEDULED",
       phase: "CURRENT",
+      effectiveOn: null,
+      confirmedAt: null,
     },
     {
       id: "r2",
@@ -83,6 +87,8 @@ const overview: PublicationOverview = {
       sourceUrl: null,
       status: "SCHEDULED",
       phase: "UPCOMING",
+      effectiveOn: null,
+      confirmedAt: null,
     },
   ],
 }

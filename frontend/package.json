@@ -18,6 +18,7 @@
     "dev:admin": "pnpm --filter @aov/admin-aov dev --host 0.0.0.0",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "test": "turbo test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate:hero-api": "openapi-typescript ../backend/wiki-service/src/main/resources/contracts/hero-authoring.openapi.json -o apps/admin-aov/src/features/publishing/generated/hero-api.d.ts && prettier --write apps/admin-aov/src/features/publishing/generated/hero-api.d.ts"

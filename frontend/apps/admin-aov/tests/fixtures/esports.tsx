@@ -5,7 +5,7 @@ import "@aov/ui/styles.css"
 import * as data from "./esports-data"
 
 // Every request is answered here; this page never reads or writes real tournament data.
-const lists: Record<string, { id: string }[]> = {
+const lists: Record<string, { id: string; content: object }[]> = {
   teams: data.teams,
   players: data.players,
   tournaments: [data.tournament],
@@ -70,8 +70,7 @@ window.fetch = async (input, init) => {
     const tournamentId = url.searchParams.get("tournamentId")
     return page(
       lists[kind].filter(
-        (entry) =>
-          !tournamentId || (entry as { content: { tournamentId?: string } }).content.tournamentId === tournamentId,
+        (entry) => !tournamentId || ("tournamentId" in entry.content && entry.content.tournamentId === tournamentId),
       ),
     )
   }

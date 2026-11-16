@@ -60,6 +60,9 @@ const hero = (code: string, name: string, patch: Partial<HeroPublishReadiness> =
   headUrl: null,
   revisions: [],
   drafts: [],
+  holderId: null,
+  formKey: null,
+  formIds: [],
   ...patch,
 })
 

@@ -32,7 +32,7 @@ test("overflowing tabs reveal the selection and adjacent content without scrolli
     }
     return new dom.window.DOMRect(0, 100, width, 44)
   }
-  prototype.scrollTo = function (options: ScrollToOptions | number) {
+  prototype.scrollTo = function (options?: ScrollToOptions | number) {
     assert.equal(this.dataset.slot, "tabs-scroll-viewport", "Only the strip should scroll")
     assert.equal(typeof options, "object")
     calls.push(options as ScrollToOptions)

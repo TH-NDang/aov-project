@@ -298,12 +298,12 @@ test("a saved profile sets the zone and takes new choices; a profile never saved
 
   await render(<Account profile={undefined} />)
   await act(async () => chooseTimeZone("Asia/Seoul"))
-  assert.deepEqual(saved, [], "nobody signed in: the choice stays in this browser")
+  assert.deepEqual<string[]>(saved, [], "nobody signed in: the choice stays in this browser")
 
   await render(<Account profile={{ id: null, timeZone: "Asia/Ho_Chi_Minh" }} />)
   assert.equal(currentTimeZone(), "Asia/Seoul", "a server default does not replace the choice")
   await act(async () => chooseTimeZone("Asia/Taipei"))
-  assert.deepEqual(saved, [], "a choice does not create a profile")
+  assert.deepEqual<string[]>(saved, [], "a choice does not create a profile")
 
   await render(<Account profile={{ id: "me", timeZone: "Asia/Tokyo" }} />)
   assert.equal(currentTimeZone(), "Asia/Tokyo", "the shared profile wins when it loads")

@@ -119,7 +119,9 @@ test("non-hero custom translations retain their existing behavior and invalid al
 test("supplemental hero aliases recognize complete words while preserving the writer's label", () => {
   const saved = updateHeroAliases(settings, hero, [{ locale: "vi-VN", aliases: ["flo"] }])
   const entries = mergeReferenceCatalog([hero], saved.entities)
-  const nodes = parseRichText("flo và FLO, overflow", createEntityIndex(entries, "vi-VN"), { autoRecognize: true })
+  const nodes = parseRichText("flo và FLO, overflow", createEntityIndex(entries, "vi-VN", settings.fallbackLocale), {
+    autoRecognize: true,
+  })
   const references = nodes.filter((node) => node.type === "reference")
   assert.deepEqual(
     references.map((node) => node.label),

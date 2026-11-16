@@ -9,7 +9,7 @@ const entity: EntityReference = {
   id: "hero",
   kind: "hero",
   iconAssetId: "head",
-  translations: [{ locale: "vi-VN", name: "Airi", aliases: [] }],
+  translations: [{ locale: "vi-VN", name: "Airi", aliases: [], description: "" }],
 }
 const asset = (version: number): AssetDetail => ({
   id: "head",

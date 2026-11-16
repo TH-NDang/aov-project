@@ -4,6 +4,7 @@ import { join } from "node:path"
 import { test } from "node:test"
 import React, { act } from "react"
 import { JSDOM } from "jsdom"
+import type { GameContent } from "@aov/community-contracts"
 import type { GameView } from "../src/features/esports/model/game-view"
 import type { TimelineEvent } from "../src/features/esports/model/timeline"
 import type { VodPlayerHandle } from "../src/features/esports/components/game/vod-player"
@@ -1028,8 +1029,14 @@ test("the loadout panel marks a whole team at the broadcast moment and keeps unk
         equipmentEvents: [],
       })),
     })
-    const content = { seriesId: "s", number: 1, region: "VN", locale: "vi-VN", sides: [sideOf("BLUE"), sideOf("RED")] }
-    const results: (typeof content)[] = []
+    const content: GameContent = {
+      seriesId: "s",
+      number: 1,
+      region: "VN",
+      locale: "vi-VN",
+      sides: [sideOf("BLUE"), sideOf("RED")],
+    }
+    const results: GameContent[] = []
     const fiveSeats = (side: "BLUE" | "RED") =>
       lanes.map((lane, index) => ({
         ...game.sides[side].seats[0]!,

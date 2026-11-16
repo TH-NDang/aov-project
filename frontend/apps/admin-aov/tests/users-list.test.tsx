@@ -17,6 +17,7 @@ test("users load on scroll, retain rows after errors and restart server search w
     biography: "",
     locale: "vi-VN",
     timeZone: "Asia/Ho_Chi_Minh",
+    currency: null,
     avatarAssetId: null,
     avatarUrl: null,
     version: 1,

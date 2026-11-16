@@ -197,6 +197,8 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
   const { createRoot } = await import("react-dom/client")
   const { EntityRichTextEditor } = await import("@aov/ui/components/entity-rich-text-editor")
   let saved = ""
+  // assert.equal narrows `saved` to the asserted text, but the editor reassigns it; read it fresh through a call.
+  const latestSaved = (): string => saved
   function Harness({
     initial = "",
     catalog = entities,
@@ -271,7 +273,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     await key("z", { ctrlKey: true })
     assert.equal(saved, "Xin @Lu")
     await key("z", { ctrlKey: true, shiftKey: true })
-    assert.ok(saved.includes("<ref=hero:hero-1>"))
+    assert.ok(latestSaved().includes("<ref=hero:hero-1>"))
     await type("Tiếng Việt")
     await act(async () => {
       selectReferenceInput(area(), 0, 5)
@@ -288,7 +290,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
       Object.defineProperty(event, "clipboardData", { value: { getData: () => "<script>alert(1)</script>" } })
       area().dispatchEvent(event)
     })
-    assert.ok(saved.endsWith("<script>alert(1)</script>"))
+    assert.ok(latestSaved().endsWith("<script>alert(1)</script>"))
     assert.equal(document.querySelector("script"), null)
     const roundTrip = saved
     await act(async () => root.render(<Harness key="reopen" initial={roundTrip} />))
@@ -308,7 +310,9 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     const catalog: EntityReference[] = Array.from({ length: 12 }, (_, index) => ({
       id: `item-${index + 1}`,
       kind: "item",
-      translations: [{ locale: "vi-VN", name: `Mục ${String(index + 1).padStart(2, "0")}`, aliases: [] }],
+      translations: [
+        { locale: "vi-VN", name: `Mục ${String(index + 1).padStart(2, "0")}`, aliases: [], description: "" },
+      ],
     }))
     await act(async () => root.render(<Harness key="all-results" catalog={catalog} />))
     await type("@Mục")

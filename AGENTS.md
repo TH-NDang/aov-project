@@ -140,7 +140,8 @@ git lfs install --skip-repo
 ```
 
 - `pre-commit` (requires Node.js):
-  1. Formats staged files: Java under `backend/wiki-service/src` with Spotless (needs Java, ~5-10 s),
+  1. Formats staged files: Java under `backend/wiki-service/src` and `backend/community-service/src` with that
+     service's Spotless (needs Java, ~5-10 s per service),
      frontend files with Prettier (skipped with a warning until `pnpm install` has installed it).
      Fully staged files are re-staged. A partially staged file is formatted in the working tree only and
      the commit stops: review it, `git add` it, commit again.

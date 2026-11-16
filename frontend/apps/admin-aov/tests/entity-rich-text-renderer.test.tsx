@@ -27,13 +27,13 @@ async function verifyAllowlistedFormatting() {
   const nested = render(`<b><i><color=#2563eb><ref=hero:hero-1>${name}</ref></color></i></b>`, false)
   assert.equal(nested.querySelectorAll('strong > em > span > [role="button"]').length, 1)
   assert.equal(nested.querySelector('[role="button"]')?.textContent, name)
-  assert.equal(nested.querySelector('[role="button"]')?.style.color, "rgb(37, 99, 235)")
-  assert.equal(nested.querySelector('[role="button"]')?.style.fontWeight, "inherit")
-  assert.equal(nested.querySelector('[role="button"]')?.style.fontStyle, "inherit")
+  assert.equal(nested.querySelector<HTMLElement>('[role="button"]')?.style.color, "rgb(37, 99, 235)")
+  assert.equal(nested.querySelector<HTMLElement>('[role="button"]')?.style.fontWeight, "inherit")
+  assert.equal(nested.querySelector<HTMLElement>('[role="button"]')?.style.fontStyle, "inherit")
   assert.equal(nested.querySelectorAll("button button, a a").length, 0)
 
   const inherited = render(`<color=#12ab34><b><i>${name}</i></b></color>`)
-  assert.equal(inherited.querySelector('strong > em > [role="button"]')?.style.color, "rgb(18, 171, 52)")
+  assert.equal(inherited.querySelector<HTMLElement>('strong > em > [role="button"]')?.style.color, "rgb(18, 171, 52)")
   const automatic = render(`<b>${name}</b> <i>${name}</i>`)
   assert.equal(automatic.querySelectorAll('strong > [role="button"]').length, 1)
   assert.equal(automatic.querySelectorAll('em > [role="button"]').length, 0)
@@ -147,7 +147,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
       />,
     )
     assert.equal(
-      new JSDOM(manualColor).window.document.querySelector('[role="button"]')?.style.color,
+      new JSDOM(manualColor).window.document.querySelector<HTMLElement>('[role="button"]')?.style.color,
       "rgb(37, 99, 235)",
     )
     assert.match(markup, /color:#ff0000/)
