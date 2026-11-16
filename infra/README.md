@@ -4,7 +4,7 @@ Thư mục này đóng gói Wiki, Stream, Admin, `wiki-service`, `community-serv
 reverse proxy Caddy. Không triển khai đi đâu cả và không đụng tới môi trường dev trong `backend/wiki-service/compose.yaml`.
 Lý do các lựa chọn nằm ở [ADR-021](../backend/docs/adr/ADR-021-dong-goi-chay-mot-may.md).
 
-Cần Docker kèm Compose, và Git LFS khi clone (bản build Wiki đóng gói ảnh kỹ năng từ `resources/`).
+Cần Docker kèm Compose. Bản build không đọc `resources/` (ADR-030), nên clone không cần Git LFS.
 
 ## Khởi động
 
@@ -25,12 +25,6 @@ Lần đầu phải tải dependency và build image: đo trên máy đang bận
 
 Tài khoản thử: `admin`, `editor`, `publisher`, mật khẩu là `TEST_USER_PASSWORD` trong `.env`. Hệ thống mới không có dữ liệu Wiki,
 danh mục trống là đúng; xem [Đưa dữ liệu vào](#đưa-dữ-liệu-vào).
-
-Lỗi `holds Git LFS pointers` khi build nghĩa là checkout chưa có ảnh thật:
-
-```bash
-git lfs pull --include="resources/Lien-Quan-v3/assets/skill/*"
-```
 
 ## Dừng và xóa
 
