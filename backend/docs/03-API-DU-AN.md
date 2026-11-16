@@ -3449,7 +3449,7 @@ GET    /api/wiki/v1/hero-traits?region=VN
   "expectedDraftVersion": 7,
   "traits": [
     { "code": "HARD_CC", "skillKeys": ["skill-1-1"],
-      "translations": [{ "locale": "vi-VN", "detail": "Hào hoa: choáng 0,75 giây" }] },
+      "translations": [{ "locale": "vi-VN", "detail": "Hào hoa (choáng 0.75 giây)" }] },
     { "code": "DASH", "skillKeys": ["skill-2-1"], "translations": [] }
   ],
   "changeNote": "Duyệt đặc điểm"

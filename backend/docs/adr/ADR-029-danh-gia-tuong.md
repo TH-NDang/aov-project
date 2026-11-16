@@ -91,8 +91,8 @@ Mỗi khối chỉ hiện khi có nội dung; không khối nào có thì Wiki k
   - Khống chế: `HARD_CC`, `DISPLACE`, `SILENCE`.
   - Đồng đội: `ALLY_HEAL`, `ALLY_SHIELD`, `ALLY_BUFF`, `VISION`.
   Thêm đặc điểm mới là thêm mã vào danh sách (đổi `CHECK` qua Flyway), không đổi cấu trúc.
-- **Mỗi đặc điểm có một dòng chi tiết** theo locale (không bắt buộc, tối đa 300 ký tự), ví dụ "Tài hoa: miễn khống
-  3 giây", "Hào hoa: choáng 0,75 giây", và danh sách khóa kỹ năng làm căn cứ (có thể rỗng).
+- **Mỗi đặc điểm có một dòng chi tiết** theo locale (không bắt buộc, tối đa 300 ký tự), ví dụ "Tài hoa (miễn khống
+  3 giây)", "Hào hoa (choáng 0.75 giây)", và danh sách khóa kỹ năng làm căn cứ (có thể rỗng).
 - **Lưu trong phần kỹ năng của bản nháp tướng** (V072), vì đặc điểm dẫn tới khóa kỹ năng và đổi cùng bộ kỹ năng:
   `hero.hero_skill_trait` (`skill_set_revision_id`, `trait_code`), `hero.hero_skill_trait_skill` (thêm `skill_key`,
   khóa ngoại tới kỹ năng của cùng phiên bản), `hero.hero_skill_trait_translation` (thêm `locale`, `detail`). Ba bảng
@@ -154,7 +154,7 @@ Mỗi khối chỉ hiện khi có nội dung; không khối nào có thì Wiki k
   định; người đọc phải đọc nhiều hơn một con số.
 - Số liệu trận thật phụ thuộc việc chụp lại định kỳ; tướng mới chưa có bản chụp thì trống khối này. Khoảng thời gian
   game dùng để thống kê không biết.
-- Đặc điểm có hay không không nói mức độ (miễn khống 0,5 giây và miễn khống mỗi lần tung chiêu cùng một nhãn); dòng chi
+- Đặc điểm có hay không không nói mức độ (miễn khống 0.5 giây và miễn khống mỗi lần tung chiêu cùng một nhãn); dòng chi
   tiết và nhận định bù phần này.
 - `WALL_CROSS` và mọi thứ mô tả không ghi cần người biết game điền.
 - Bộ gợi ý ở Admin không được backend kiểm tra; sai thì biên tập viên sửa trước khi xuất bản.

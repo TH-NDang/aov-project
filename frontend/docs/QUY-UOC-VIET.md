@@ -132,6 +132,9 @@ không ra.
 | Phép cộng trong câu có khoảng trắng hai bên dấu cộng | `(30% công vật lý + 80% công phép)` | `(30% công vật lý+80% công phép)` |
 | Hồi chiêu là câu cuối của hiệu ứng | `Hồi chiêu: 60 giây.` | `60 giây hồi chiêu`, `0.65 giây hồi`, `Thời gian hồi chiêu: 60 giây`, `hồi chiêu 120s` |
 
+Dòng chi tiết của đặc điểm tướng và nhận định của biên tập viên (ADR-029) cũng viết số theo bảng trên:
+`Hào hoa (choáng 0.75 giây)`, không viết `0,75 giây`.
+
 **Thời gian trong câu.** Mỗi số giây chỉ được đọc theo một cách. Trước khi viết, xác định nó thuộc loại nào:
 
 | Loại | Đúng | Sai |

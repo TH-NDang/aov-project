@@ -2689,8 +2689,8 @@ tính. Mục gồm ba khối, khối nào chưa có nội dung thì không hiệ
   nhất (ADR-025) của thị trường đang đọc; giá trị còn chờ duyệt không hiện. Ghi rõ nguồn là bảng xếp hạng trong game,
   chế độ, máy chủ và ngày chụp.
 - **Đặc điểm bộ kỹ năng:** danh sách cố định 22 đặc điểm có hay không, chia năm nhóm (Sát thương, Di chuyển, Sống sót,
-  Khống chế, Đồng đội). Mỗi đặc điểm có các kỹ năng làm căn cứ và một dòng chi tiết theo ngôn ngữ, ví dụ “Hào hoa: choáng
-  0,75 giây”. Đặc điểm thuộc phần kỹ năng của phiên bản tướng nên đổi theo bản cập nhật; xem bản cũ thì thấy đặc điểm
+  Khống chế, Đồng đội). Mỗi đặc điểm có các kỹ năng làm căn cứ và một dòng chi tiết theo ngôn ngữ, ví dụ “Hào hoa (choáng
+  0.75 giây)”. Đặc điểm thuộc phần kỹ năng của phiên bản tướng nên đổi theo bản cập nhật; xem bản cũ thì thấy đặc điểm
   của bản đó. Người đọc mở được danh sách các tướng khác có cùng đặc điểm.
 - **Nhận định:** điểm mạnh, điểm yếu và cách khắc chế do biên tập viên viết theo từng ngôn ngữ, mỗi ý một dòng, thuộc
   hồ sơ của phiên bản tướng. Ô chưa viết thì không hiện.
