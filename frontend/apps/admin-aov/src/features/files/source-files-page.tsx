@@ -107,7 +107,7 @@ export function SourceFilesPage() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => update({ orphans: "1" })}>
                   <Eraser />
-                  Dọn bytes mồ côi
+                  Dọn dữ liệu tệp mồ côi
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
@@ -318,7 +318,7 @@ function CollectionDetail({
   const remove = async () => {
     const accepted = await confirmAction({
       title: `Xóa bộ "${current.label}"?`,
-      description: `${formatCount(current.fileCount)} tệp sẽ rời khỏi danh mục. Bytes vẫn nằm trên R2 và thành bytes mồ côi nếu không còn chỗ nào dùng; chỉ thao tác Dọn bytes mồ côi mới xóa hẳn.`,
+      description: `${formatCount(current.fileCount)} tệp sẽ rời khỏi danh mục. Dữ liệu tệp vẫn nằm trên R2 và thành dữ liệu tệp mồ côi nếu không còn chỗ nào dùng; chỉ thao tác Dọn dữ liệu tệp mồ côi mới xóa hẳn.`,
       confirmLabel: "Xóa bộ",
     })
     if (!accepted) return

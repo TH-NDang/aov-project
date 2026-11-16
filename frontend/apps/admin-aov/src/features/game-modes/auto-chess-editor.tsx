@@ -300,7 +300,7 @@ function StartGuide({
       const absent = paths.filter((path) => !links.has(GUIDE_SOURCE.folder + path))
       if (absent.length)
         throw new Error(
-          `${absent.length} icon chưa có trong bộ tệp nguồn ${GUIDE_SOURCE.collection}, ví dụ ${absent[0]}. Chưa tải ảnh nào.`,
+          `${absent.length} biểu tượng chưa có trong bộ tệp nguồn ${GUIDE_SOURCE.collection}, ví dụ ${absent[0]}. Chưa tải ảnh nào.`,
         )
       let done = 0
       const assets = uploaded.current

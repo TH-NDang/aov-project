@@ -1,3 +1,4 @@
+import { imageTypeLabel } from "@/lib/image-types"
 import type { BucketRole, CapacityLevel, SourceCategory } from "./files-api"
 
 /** Names of the source file functions, as Admin shows them (ADR-030 section 4). */
@@ -17,7 +18,7 @@ export const CATEGORY_HINTS: Record<SourceCategory, string> = {
   SHOP_CAPTURE: "Giá tướng, cách nhận trang phục",
   BUILD_CAPTURE: "Màn hình Đề cử Pro",
   RANKING_CAPTURE: "Bảng Phân Bậc Tướng",
-  GAME_MODE_SOURCE: "Trang bách khoa Cờ Liên quân, sảnh đã che UID",
+  GAME_MODE_SOURCE: "Trang bách khoa Cờ Liên Quân, sảnh đã che UID",
   ESPORTS_SOURCE: "Ảnh và dữ liệu mẫu giải đấu",
   IMPORT_DATA: "JSON, CSV, Markdown, script của công cụ nhập",
   ARCHIVE: "Tệp gốc chỉ giữ để dựng lại",
@@ -26,7 +27,7 @@ export const CATEGORY_HINTS: Record<SourceCategory, string> = {
 export const BUCKET_LABELS: Record<BucketRole, string> = {
   MEDIA_ASSETS: "Ảnh công khai",
   SOURCES: "Tệp nguồn riêng tư",
-  STAGING: "Upload đang chờ",
+  STAGING: "Tải lên đang chờ",
 }
 
 export const BUCKET_HINTS: Record<BucketRole, string> = {
@@ -35,28 +36,8 @@ export const BUCKET_HINTS: Record<BucketRole, string> = {
   STAGING: "Tệp đã cấp URL tải lên nhưng chưa kiểm tra xong",
 }
 
-/** Media semantic types in Vietnamese; an unknown key is shown as it is. */
-const SEMANTIC_LABELS: Record<string, string> = {
-  USER_AVATAR: "Ảnh đại diện người dùng",
-  HERO_HEAD: "Head tướng",
-  HERO_PORTRAIT: "Portrait tướng",
-  HERO_SPLASH: "Cover tướng",
-  HERO_SKILL_ICON: "Icon kỹ năng",
-  HERO_SKIN_ART: "Ảnh trang phục",
-  SKIN_BADGE: "Bậc trang phục",
-  ITEM_ICON: "Icon trang bị",
-  ARCANA_ICON: "Icon ngọc",
-  SPELL_ICON: "Icon phụ trợ",
-  ENCHANTMENT_ICON: "Icon phù hiệu",
-  PATCH_ART: "Ảnh bản cập nhật",
-  CHIBI_STICKER: "Sticker chibi",
-  GAME_MODE_ART: "Ảnh chế độ chơi",
-  AUTO_CHESS_ICON: "Icon Cờ Liên quân",
-  OTHER: "Ảnh khác",
-}
-
 export function groupLabel(role: BucketRole, key: string) {
-  return role === "SOURCES" ? (CATEGORY_LABELS[key as SourceCategory] ?? key) : (SEMANTIC_LABELS[key] ?? key)
+  return role === "SOURCES" ? (CATEGORY_LABELS[key as SourceCategory] ?? key) : imageTypeLabel(key)
 }
 
 export const LEVEL_LABELS: Record<CapacityLevel, string> = {

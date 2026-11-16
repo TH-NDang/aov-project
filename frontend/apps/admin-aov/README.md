@@ -282,7 +282,7 @@ Khi mở phần ảnh, có thể chọn asset đã có hoặc upload file.
 HEAD/PORTRAIT/SPLASH là ba asset riêng; icon chiêu và artwork trang phục có semantic type riêng.
 Trong tab **Ảnh tướng** của tướng, **Nguồn ảnh** dưới mỗi ảnh hiển thị link và ghi chú từ Media provenance.
 
-Trong **Quản lý ảnh**, cột **Nguồn ảnh** đánh dấu **Cần bổ sung nguồn / credit** nếu phiên bản
+Trong **Quản lý tệp**, cột **Nguồn ảnh** đánh dấu **Cần bổ sung nguồn / credit** nếu phiên bản
 đang dùng chưa có nguồn kèm tên chủ sở hữu / credit. Bấm nhãn để mở chi tiết và bổ sung sau khi
 xác minh. Nguồn và URL đã biết vẫn được giữ lại; ảnh chụp game đã xác nhận không bắt buộc có URL.
 Sau khi bổ sung một nguồn đầy đủ, nhãn chuyển thành **Đã có nguồn & credit**.

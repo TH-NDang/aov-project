@@ -48,14 +48,15 @@ import {
   type MediaUsageTotals,
 } from "./media-usage"
 import { MediaBulkSourceEditor } from "./media-bulk-source-editor"
-import { ImageDetailSheet, imageStates, imageTypes } from "./image-detail-sheet"
+import { IMAGE_TYPE_LABELS } from "@/lib/image-types"
+import { ImageDetailSheet, imageStates } from "./image-detail-sheet"
 import { creditSummary, needsNoCredit, ownerCandidate, sourceGap, sourceGapLabels } from "./media-source-gaps"
 import { MediaOwnerBulkEditor, type OwnerTarget } from "./media-owner-bulk-editor"
 import { MediaOwnersSheet } from "./media-owners-sheet"
 import type { MediaSourceTarget } from "./bulk-media-sources"
 import { Link, useSearchParams } from "react-router"
 
-const types = imageTypes
+const types = IMAGE_TYPE_LABELS
 const states = imageStates
 type Row = Asset & { createdAt: string; updatedAt: string; usage?: MediaUsageSummary | null }
 const features = tableFeatures({})

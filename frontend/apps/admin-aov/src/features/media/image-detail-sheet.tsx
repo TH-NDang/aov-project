@@ -2,6 +2,7 @@ import { LocalTime } from "@aov/ui/components/local-time"
 import { useMemo, useState, type ReactNode } from "react"
 import { Link } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { imageTypeLabel } from "@/lib/image-types"
 import {
   ArrowUpRight,
   Check,
@@ -51,22 +52,6 @@ import {
   visibleSources,
 } from "./media-source-gaps"
 
-export const imageTypes: Record<string, string> = {
-  USER_AVATAR: "Ảnh đại diện người dùng",
-  HERO_HEAD: "Đại diện tướng",
-  HERO_PORTRAIT: "Chân dung tướng",
-  HERO_SPLASH: "Ảnh nền tướng",
-  HERO_SKILL_ICON: "Biểu tượng kỹ năng",
-  HERO_SKIN_ART: "Trang phục",
-  SKIN_BADGE: "Biểu tượng bậc / nhãn trang phục",
-  ITEM_ICON: "Trang bị",
-  ARCANA_ICON: "Ngọc",
-  SPELL_ICON: "Phụ trợ",
-  ENCHANTMENT_ICON: "Phù hiệu",
-  PATCH_ART: "Ảnh bản cập nhật",
-  CHIBI_STICKER: "Sticker chibi",
-  OTHER: "Khác",
-}
 /** Lifecycle of the image record; whether anything shows the image is the separate usage count. */
 export const imageStates: Record<string, string> = {
   ACTIVE: "Còn hiệu lực",
@@ -287,7 +272,7 @@ export function ImageDetailSheet({
   const userImage = needsNoCredit(data?.semanticType)
   const main = primarySource(sources)
   const ownerless = ownerCandidate(shown)
-  const typeLabel = data ? (imageTypes[data.semanticType] ?? data.semanticType) : ""
+  const typeLabel = data ? imageTypeLabel(data.semanticType) : ""
   const title = main?.label || typeLabel || "Chi tiết ảnh"
   const places = usagePlaces(usages.data?.items ?? [])
   const competitionCount = tournament.uses.length + tournament.others

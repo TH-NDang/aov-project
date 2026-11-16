@@ -77,10 +77,10 @@ function StorageReport({ summary }: { summary: StorageSummary }) {
             <CardTitle>Dung lượng đã dùng</CardTitle>
             <CardDescription>
               {storage.source === "CLOUDFLARE"
-                ? "Theo số liệu Cloudflare của ba bucket, gồm cả bytes chưa có trong danh mục."
+                ? "Theo số liệu Cloudflare của ba kho, gồm cả dữ liệu tệp chưa có trong danh mục."
                 : summary.cloudflare.state === "OK"
-                  ? "Theo danh mục trong database. Cloudflare chỉ cập nhật dung lượng theo chu kỳ, nên chưa tính lượt tải gần đây."
-                  : "Theo danh mục trong database: ảnh công khai, tệp nguồn và upload đang chờ."}
+                  ? "Theo danh mục trong cơ sở dữ liệu. Cloudflare chỉ cập nhật dung lượng theo chu kỳ, nên chưa tính lượt tải gần đây."
+                  : "Theo danh mục trong cơ sở dữ liệu: ảnh công khai, tệp nguồn và tệp tải lên đang chờ."}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
@@ -145,7 +145,7 @@ function StorageReport({ summary }: { summary: StorageSummary }) {
 
       <Card className="admin-section">
         <CardHeader>
-          <CardTitle>Theo bucket</CardTitle>
+          <CardTitle>Theo kho</CardTitle>
           <CardDescription>
             Mỗi thanh là phần của bucket trong {formatStorage(freeTier.storageBytes)} miễn phí.
           </CardDescription>
@@ -239,8 +239,8 @@ function LevelBanner({ level }: { level: CapacityLevel }) {
       <p className="type-body">
         <strong>{LEVEL_LABELS[level]}.</strong>{" "}
         {level === "OVER"
-          ? "Phần vượt đang được tính phí. Xem bucket nào lớn nhất bên dưới và dọn bytes mồ côi trước khi tải thêm."
-          : "Kiểm tra ước lượng trước mỗi đợt tải lên; dọn bytes mồ côi ở phần Tệp nguồn nếu cần chỗ."}
+          ? "Phần vượt đang được tính phí. Xem kho nào lớn nhất bên dưới và dọn dữ liệu tệp mồ côi trước khi tải thêm."
+          : "Kiểm tra ước lượng trước mỗi đợt tải lên; dọn dữ liệu tệp mồ côi ở phần Tệp nguồn nếu cần chỗ."}
       </p>
     </div>
   )
@@ -290,7 +290,7 @@ function BucketRow({
       {measured && (
         <p className="type-meta">
           Cloudflare đo {formatStorage(measured.bytes)} · {formatCount(measured.objects)} object
-          {measured.pendingUploads > 0 && ` · ${formatCount(measured.pendingUploads)} upload nhiều phần dở dang`}
+          {measured.pendingUploads > 0 && ` · ${formatCount(measured.pendingUploads)} lượt tải lên nhiều phần dở dang`}
         </p>
       )}
       {bucket.role === "SOURCES" && (bucket.orphanFiles ?? 0) > 0 && (
@@ -401,8 +401,8 @@ function CloudflareCard({ summary }: { summary: StorageSummary }) {
         </CardTitle>
         <CardDescription>
           {cloudflare.state === "UNAVAILABLE"
-            ? "Cloudflare không trả lời lần gần nhất; trang đang dùng số liệu database và sẽ thử lại sau một phút."
-            : "Database đã cho dung lượng theo loại và theo tháng. Số thật của Cloudflare thêm số thao tác thật và phần tệp không có trong danh mục, như upload bỏ dở."}
+            ? "Cloudflare không trả lời lần gần nhất; trang đang dùng số liệu cơ sở dữ liệu và sẽ thử lại sau một phút."
+            : "Cơ sở dữ liệu đã cho dung lượng theo loại và theo tháng. Số thật của Cloudflare thêm số thao tác thật và phần tệp không có trong danh mục, như lượt tải lên bỏ dở."}
         </CardDescription>
       </CardHeader>
       {cloudflare.state === "NOT_CONFIGURED" && (
@@ -411,7 +411,7 @@ function CloudflareCard({ summary }: { summary: StorageSummary }) {
             <li>Trong Cloudflare, tạo API token chỉ có quyền Account Analytics: Read.</li>
             <li>
               Thêm <code>CLOUDFLARE_ACCOUNT_ID</code> và <code>CLOUDFLARE_ANALYTICS_TOKEN</code> vào tệp môi trường
-              riêng của backend (<code>.env.r2</code>), rồi khởi động lại backend.
+              riêng của máy chủ (<code>.env.r2</code>), rồi khởi động lại máy chủ.
             </li>
           </ol>
         </CardContent>

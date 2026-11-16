@@ -114,7 +114,7 @@ Component dùng chung cho ngăn chi tiết: `SectionContents`, `ContentsSection`
 | Danh sách có bộ lọc | Ô tìm một khối, nhóm ô lọc một khối luôn nằm trên một hàng |
 | Hồ sơ (Đội tuyển, Tuyển thủ…) | Tab trên một hàng, thiếu chỗ thì ẩn icon rồi cuộn ngang |
 | Tuyển thủ | Ẩn cột theo độ rộng, tên đội chuyển xuống dòng phụ khi ẩn cột đội |
-| Quản lý ảnh | Lọc nguồn một khối, loại ảnh cùng số lượng và kiểu xem một khối |
+| Quản lý tệp | Lọc nguồn một khối, loại ảnh cùng số lượng và kiểu xem một khối |
 
 ## Phong cách: một khung, hai bảng màu
 

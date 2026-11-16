@@ -26,7 +26,7 @@ export function OrphansSheet({ open, writable, onClose }: { open: boolean; writa
 
   const remove = async (orphan: SourceOrphan) => {
     const accepted = await confirmAction({
-      title: "Xóa vĩnh viễn bytes này?",
+      title: "Xóa vĩnh viễn dữ liệu tệp này?",
       description: `${orphan.firstPath} (${formatStorage(orphan.sizeBytes)}) sẽ bị xóa khỏi R2 và không khôi phục được. Không bộ nào và không bản ghi nào còn dùng nó.`,
       confirmLabel: "Xóa vĩnh viễn",
     })
@@ -47,12 +47,12 @@ export function OrphansSheet({ open, writable, onClose }: { open: boolean; writa
         className={wide ? "w-[min(520px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
       >
         <SheetHeader>
-          <SheetTitle>Bytes mồ côi</SheetTitle>
+          <SheetTitle>Dữ liệu tệp mồ côi</SheetTitle>
           <SheetDescription>
             {orphans.isPending
               ? "Đang tải…"
               : total === 0
-                ? "Không có bytes nào thừa."
+                ? "Không có dữ liệu tệp nào thừa."
                 : `${formatCount(total)} tệp không còn trong bộ nào và không còn bản ghi nào dùng.`}
           </SheetDescription>
         </SheetHeader>
@@ -64,7 +64,7 @@ export function OrphansSheet({ open, writable, onClose }: { open: boolean; writa
           )}
           {orphans.isLoadingError && (
             <p role="alert" className="type-body text-destructive">
-              Không đọc được danh sách bytes mồ côi.
+              Không đọc được danh sách dữ liệu tệp mồ côi.
             </p>
           )}
           <ul className="grid gap-2">
@@ -87,7 +87,7 @@ export function OrphansSheet({ open, writable, onClose }: { open: boolean; writa
               </li>
             ))}
           </ul>
-          <InfiniteScroll query={orphans} label="bytes mồ côi" rootRef={scrollRef} enabled={open} />
+          <InfiniteScroll query={orphans} label="dữ liệu tệp mồ côi" rootRef={scrollRef} enabled={open} />
         </div>
       </SheetContent>
     </Sheet>

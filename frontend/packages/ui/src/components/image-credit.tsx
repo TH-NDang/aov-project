@@ -133,7 +133,7 @@ export function ImageCredit({
         )}
         {manageHref && (
           <a className="mt-4 block border-t pt-3 text-xs underline underline-offset-4" href={manageHref}>
-            {t("Sửa nguồn trong Quản lý ảnh", "Edit the source in Image management")}
+            {t("Sửa nguồn trong Quản lý tệp", "Edit the source in File management")}
           </a>
         )}
       </PopoverContent>

@@ -52,7 +52,7 @@ export function SourceFileSheet({
     }
     const accepted = await confirmAction({
       title: "Thay tệp này?",
-      description: `${details.path}: ${formatStorage(details.sizeBytes)} → ${picked.name}, ${formatStorage(picked.size)}. Đường dẫn trỏ sang bytes mới; bytes cũ còn lại cho tới khi được dọn như bytes mồ côi.`,
+      description: `${details.path}: ${formatStorage(details.sizeBytes)} → ${picked.name}, ${formatStorage(picked.size)}. Đường dẫn trỏ sang dữ liệu tệp mới; dữ liệu tệp cũ còn lại cho tới khi được dọn như dữ liệu tệp mồ côi.`,
       confirmLabel: "Thay tệp",
     })
     if (!accepted) return
@@ -81,8 +81,8 @@ export function SourceFileSheet({
     const accepted = await confirmAction({
       title: "Bỏ tệp khỏi bộ?",
       description: used
-        ? `${details.path} vẫn là ảnh dẫn chứng của ${details.usages.length} bản ghi. Bỏ khỏi bộ không xóa bytes, nên bản ghi vẫn xem được ảnh.`
-        : `${details.path} rời khỏi bộ. Bytes vẫn nằm trên R2 cho tới khi được dọn như bytes mồ côi.`,
+        ? `${details.path} vẫn là ảnh dẫn chứng của ${details.usages.length} bản ghi. Bỏ khỏi bộ không xóa dữ liệu tệp, nên bản ghi vẫn xem được ảnh.`
+        : `${details.path} rời khỏi bộ. Dữ liệu tệp vẫn nằm trên R2 cho tới khi được dọn như dữ liệu tệp mồ côi.`,
       confirmLabel: "Bỏ khỏi bộ",
     })
     if (!accepted) return
@@ -160,7 +160,7 @@ export function SourceFileSheet({
               )}
               {details.otherPlaces.length > 0 && (
                 <>
-                  <h3 className="mt-2 type-label">Cùng bytes ở</h3>
+                  <h3 className="mt-2 type-label">Cùng dữ liệu tệp ở</h3>
                   <ul className="grid gap-1">
                     {details.otherPlaces.map((place) => (
                       <li key={place.fileId} className="type-meta break-all">
