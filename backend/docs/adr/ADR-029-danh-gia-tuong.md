@@ -104,7 +104,8 @@ Mỗi khối chỉ hiện khi có nội dung; không khối nào có thì Wiki k
   điểm đang có, bỏ khóa kỹ năng không còn trong bộ kỹ năng; nội dung `traits` gửi kèm bị bỏ qua. Đổi đặc điểm tạo phiên
   bản kỹ năng mới (sao chép khi ghi), không đổi thì không tạo. Một tướng chứa các dạng (ADR-024) chỉ lưu đặc điểm ở
   từng dạng, như kỹ năng.
-- **Admin:** tab **Nhận định** của trang tướng (sau tab Kỹ năng) có khối **Đặc điểm**: 22 ô tick theo năm nhóm. Máy gợi
+- **Admin:** trang tướng là một trang cuộn; ngay sau phần Kỹ năng là khối **Đặc điểm**: 22 ô tick theo năm nhóm.
+  Máy gợi
   ý từ mô tả và nhãn kỹ năng tiếng Việt của bản đang xem, hiện câu làm căn cứ; tick một gợi ý thì điền sẵn kỹ năng, và
   với khống chế, lướt thì điền cả dòng chi tiết (loại, thời gian, diện rộng; hồi chiêu), chỉ khi đang sửa tiếng Việt.
   Các đặc điểm khác để trống dòng chi tiết cho biên tập viên viết, vì tên kỹ năng đã hiện bên dưới. Nút "Đánh dấu N gợi
@@ -130,7 +131,8 @@ Mỗi khối chỉ hiện khi có nội dung; không khối nào có thì Wiki k
 - **Chỉ endpoint riêng đổi nhận định:** `PUT /admin/heroes/{heroId}/drafts/{draftId}/notes` với
   `expectedDraftVersion`, `locale` (phải có sẵn trong hồ sơ), ba ô chữ và `changeNote`; chữ trống là xóa ô đó. Lưu hồ
   sơ bằng `PUT .../profile` (kể cả khi nhập dữ liệu) giữ nguyên nhận định của các locale còn trong hồ sơ.
-- **Admin:** khối **Mạnh, yếu và khắc chế** trong tab Nhận định, ba ô chữ theo locale đang đọc, kèm nút "Soạn nháp từ
+- **Admin:** khối **Mạnh, yếu và khắc chế** nằm ngay sau khối Đặc điểm, ba ô chữ theo locale đang đọc, kèm nút
+  "Soạn nháp từ
   dữ liệu" khi sửa tiếng Việt. Nút ghép câu từ số liệu đấu hạng của API công khai ở bước 1 (chỉ số thuộc một phần tư cao
   nhất hoặc thấp nhất, kèm nhãn chế độ và ngày chụp, ví dụ "Gánh nhiều sát thương: 32.452 sát thương gánh chịu mỗi
   trận, hạng 5/128 ở … ngày …"), thanh Sinh tồn của game và các đặc điểm đã lưu (ví dụ "Miễn khống (Tài hoa: miễn

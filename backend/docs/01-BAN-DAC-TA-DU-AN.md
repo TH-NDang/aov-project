@@ -2694,7 +2694,8 @@ tính. Mục gồm ba khối, khối nào chưa có nội dung thì không hiệ
   của bản đó. Người đọc mở được danh sách các tướng khác có cùng đặc điểm.
 - **Nhận định:** điểm mạnh, điểm yếu và cách khắc chế do biên tập viên viết theo từng ngôn ngữ, mỗi ý một dòng, thuộc
   hồ sơ của phiên bản tướng. Ô chưa viết thì không hiện.
-- **Admin:** tab **Nhận định** của trang tướng. Máy gợi ý đặc điểm từ mô tả và nhãn kỹ năng tiếng Việt kèm câu làm căn
+- **Admin:** khối **Đặc điểm** và **Mạnh, yếu và khắc chế** ngay sau phần Kỹ năng của trang tướng.
+  Máy gợi ý đặc điểm từ mô tả và nhãn kỹ năng tiếng Việt kèm câu làm căn
   cứ; biên tập viên xác nhận từng đặc điểm, chọn kỹ năng, sửa dòng chi tiết. “Lướt qua tường” do biên tập viên tự đánh
   dấu, vì mô tả kỹ năng hầu như không ghi. Nút “Soạn nháp từ dữ liệu” ghép bản nháp nhận định từ số liệu đấu hạng, thanh
   Sinh tồn của game và các đặc điểm đã lưu; biên tập viên viết lại rồi lưu. Ô đang có chữ thì hỏi trước khi thay.
