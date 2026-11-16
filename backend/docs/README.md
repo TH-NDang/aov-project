@@ -48,7 +48,7 @@ trong `target/openapi/`, không được xem là một đặc tả thủ công c
 | [026](adr/ADR-026-build-de-cu.md) | Build đề cử theo tướng: module `build`, trang ngọc và bộ phù hiệu dùng chung theo nội dung, lần chụp có duyệt và xác nhận |
 | [027](adr/ADR-027-thu-vien-anh-tuong.md) | Thư viện ảnh của tướng: ảnh theo bản tính khi đọc, ảnh gắn thêm cho icon chiêu trước khi làm lại, sticker và ảnh sự kiện |
 | [028](adr/ADR-028-account-security-settings.md) | Cài đặt bảo mật tài khoản: mã email đổi mật khẩu, phiên đăng nhập, xác thực hai bước |
-| [030](adr/ADR-030-tep-nguon-va-dung-luong-r2.md) | Tệp nguồn riêng tư trên R2 (ảnh đối chứng, dữ liệu nhập), theo dõi dung lượng so với gói miễn phí, bỏ dần `resources/` (đề xuất) |
+| [030](adr/ADR-030-tep-nguon-va-dung-luong-r2.md) | Tệp nguồn riêng tư trên R2 (ảnh đối chứng, dữ liệu nhập), theo dõi dung lượng so với gói miễn phí, bỏ `resources/` khỏi git |
 
 ADR mới cần nêu bối cảnh, quyết định, đánh đổi và cách kiểm chứng. Không dùng ADR để tuyên bố
 đã hoàn thành một tính năng hoặc một lượt kiểm thử chưa thực hiện.

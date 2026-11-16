@@ -178,6 +178,10 @@ không định nghĩa và cách này cảnh báo sớm hơn. Tháng tính theo l
 - Mỗi giai đoạn đã kiểm chứng thì bỏ phần tương ứng bằng commit mới. Không viết lại lịch sử.
 - Không xóa tệp cục bộ, nhất là `resources/raw`, khi người dùng chưa xác nhận sau khi bản trên R2 được kiểm chứng.
 - `resources/raw/` và `resources/extracted/` được thêm vào `.gitignore` ngay, để `git add -A` không đưa 4,3 GB vào git.
+- Sau giai đoạn 4 (16/11/2026), cả `resources/` rời git trong một commit. Git chỉ giữ `resources/README.md`, nói dữ
+  liệu của từng thư mục cũ nằm ở đâu và cách kéo bản sao về máy; `.gitignore` bỏ qua phần còn lại. Luật LFS trong
+  `.gitattributes` giữ nguyên. Ảnh công khai trong `assets/` không có bản trong bộ tệp nguồn: bản dùng là Media, bản
+  gốc còn trong lịch sử git.
 
 ### 14. Môi trường dev dùng thẳng R2
 
