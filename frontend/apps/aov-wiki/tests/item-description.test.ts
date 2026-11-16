@@ -254,6 +254,55 @@ test("active items are marked, and names may come last in angle brackets", () =>
   ])
 })
 
+test("an English description reads into the same stats and passives as the Vietnamese one", () => {
+  const vietnamese = parseItemDescription(
+    "+10% Giảm hồi chiêu\n+200 Giáp\n+800 Máu tối đa\n\nSức mạnh nguyên tố: Đòn đánh kế gây thêm sát thương – Nội tại duy nhất",
+  )
+  const english = parseItemDescription(
+    "+10% Cooldown Speed\n+200 Armor\n+800 Max HP\n\nElemental Power: The next normal attack deals bonus damage – Unique Passive",
+    "en-US",
+  )
+
+  const values = (content: typeof english) => content.stats.map((stat) => [stat.key, stat.value, stat.percent])
+  assert.deepEqual(values(english), values(vietnamese))
+  assert.deepEqual(
+    english.stats.map((stat) => stat.label),
+    ["Cooldown Speed", "Armor", "Max HP"],
+  )
+  assert.deepEqual(english.passives, [
+    { name: "Elemental Power", text: "The next normal attack deals bonus damage", unique: true },
+  ])
+})
+
+test("English markers for active effects and bare passive prefixes are read like the Vietnamese ones", () => {
+  const { passives } = parseItemDescription(
+    "Gain 35% damage reduction for 3 seconds. <Indomitable> – Unique Active\nActive Ability – Blood Recovery: Heals an ally\nPassive – Source Power: Grants armor to allies",
+    "en-US",
+  )
+
+  assert.deepEqual(passives, [
+    { name: "Indomitable", text: "Gain 35% damage reduction for 3 seconds.", unique: false, active: true },
+    { name: "Blood Recovery", text: "Heals an ally", unique: false, active: true },
+    { name: "Source Power", text: "Grants armor to allies", unique: false },
+  ])
+})
+
+test("stat names follow the reader's language, whatever language the description is in", () => {
+  const description = "+60 Công vật lý\n+12 Sức mạnh cổ"
+  assert.deepEqual(
+    parseItemDescription(description, "en-US").stats.map((stat) => stat.label),
+    ["Attack Damage", "Sức mạnh cổ"],
+  )
+  assert.deepEqual(
+    parseItemDescription(description).stats.map((stat) => stat.label),
+    ["Công vật lý", "Sức mạnh cổ"],
+  )
+  assert.equal(
+    itemReaderContent({ stats: [{ key: "armorPierce", value: 60, unit: "POINT" }] }, null, "en-US").stats[0]?.label,
+    "Armor Pierce",
+  )
+})
+
 test("values read as gains, except a stat stored as a penalty", () => {
   assert.equal(formatItemStatValue({ value: 30, percent: true }), "+30%")
   assert.equal(formatItemStatValue({ value: -5, percent: false }), "-5")

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react"
 import { WikiIcon } from "../../components/wiki-icon"
-import { BOARD_COLUMNS, BOARD_ROWS, ROW_LABEL, cellOf, type BoardRow, type LineupUnit } from "./auto-chess-model"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { BOARD_COLUMNS, BOARD_ROWS, ROW_NAMES, cellOf, type BoardRow, type LineupUnit } from "./auto-chess-model"
 import { UnitPortrait, type GuideIndex } from "./auto-chess-guide"
 
 /*
@@ -36,13 +37,15 @@ export function useLineupView() {
 
 /** Two icon buttons that switch a lineup between the board and the list. */
 export function LineupViewSwitch({ view, onChange }: { view: LineupView; onChange: (view: LineupView) => void }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   return (
-    <span className="view-switch" role="group" aria-label="Cách xem đội hình">
+    <span className="view-switch" role="group" aria-label={text("Cách xem đội hình", "Lineup view")}>
       <button
         type="button"
         aria-pressed={view === "board"}
-        title="Xem trên bàn cờ"
-        aria-label="Xem trên bàn cờ"
+        title={text("Xem trên bàn cờ", "View on the board")}
+        aria-label={text("Xem trên bàn cờ", "View on the board")}
         onClick={() => onChange("board")}
       >
         <WikiIcon name="chessboard" size={18} />
@@ -50,8 +53,8 @@ export function LineupViewSwitch({ view, onChange }: { view: LineupView; onChang
       <button
         type="button"
         aria-pressed={view === "list"}
-        title="Xem dạng danh sách"
-        aria-label="Xem dạng danh sách"
+        title={text("Xem dạng danh sách", "View as a list")}
+        aria-label={text("Xem dạng danh sách", "View as a list")}
         onClick={() => onChange("list")}
       >
         <WikiIcon name="all" size={18} />
@@ -70,16 +73,23 @@ export function BoardGrid({
   cell: (row: BoardRow, column: number) => ReactNode
   footer?: ReactNode
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   return (
     <div className="board-wrap">
       <span className="board-enemy" aria-hidden="true">
-        ↑ Phía đối thủ
+        {text("↑ Phía đối thủ", "↑ Opponent's side")}
       </span>
       <div className="board" role="grid" aria-label={label}>
         {BOARD_ROWS.map((row) => (
-          <div key={row} className="board-row" role="row" aria-label={ROW_LABEL[row]}>
+          <div key={row} className="board-row" role="row" aria-label={text(...ROW_NAMES[row])}>
             {COLUMNS.map((column) => (
-              <div key={column} className="board-cell" role="gridcell" aria-label={`${ROW_LABEL[row]}, ô ${column}`}>
+              <div
+                key={column}
+                className="board-cell"
+                role="gridcell"
+                aria-label={text(`${ROW_NAMES[row][0]}, ô ${column}`, `${ROW_NAMES[row][1]}, cell ${column}`)}
+              >
                 {cell(row, column)}
               </div>
             ))}
@@ -105,6 +115,8 @@ export function BoardPiece({
   onClick: () => void
   title?: string
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const unit = index.units.get(item.unitCode)
   if (!unit) return null
   return (
@@ -112,12 +124,12 @@ export function BoardPiece({
       type="button"
       className="board-piece"
       aria-pressed={selected}
-      title={title ?? `${unit.name}${item.carry ? " · chủ lực" : ""}`}
+      title={title ?? `${unit.name}${item.carry ? text(" · chủ lực", " · carry") : ""}`}
       onClick={onClick}
     >
       <UnitPortrait unit={unit} index={index} />
       {item.carry && (
-        <em className="carry-mark" aria-label="Chủ lực">
+        <em className="carry-mark" aria-label={text("Chủ lực", "Carry")}>
           M
         </em>
       )}
@@ -150,18 +162,20 @@ export function LineupBoard({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const { placed, bench } = placeUnits(units.filter((item) => index.units.has(item.unitCode)))
   return (
     <BoardGrid
-      label="Bàn cờ của đội hình"
+      label={text("Bàn cờ của đội hình", "Lineup board")}
       cell={(row, column) => {
         const item = placed.get(`${row}-${column}`)
         return item ? <BoardPiece item={item} index={index} onClick={() => onOpen(item.unitCode)} /> : null
       }}
       footer={
         bench.length > 0 && (
-          <div className="board-bench" aria-label="Chưa xếp chỗ">
-            <span className="mode-meta">Chưa xếp chỗ</span>
+          <div className="board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
+            <span className="mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
             {bench.map((item) => (
               <BoardPiece key={item.unitCode} item={item} index={index} onClick={() => onOpen(item.unitCode)} />
             ))}

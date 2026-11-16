@@ -5,12 +5,12 @@ import { wikiSections, type WikiSectionKey } from "../../layout/wiki-sections"
 import "./home-categories.css"
 
 const descriptions: Record<Exclude<WikiSectionKey, "updates" | "terms">, [string, string]> = {
-  heroes: ["Kỹ năng, chỉ số và lịch sử thay đổi", "Skills, stats and change history"],
+  heroes: ["Kỹ năng, chỉ số và lịch sử thay đổi", "Abilities, stats and change history"],
   skins: ["Trang phục theo tướng và bậc", "Skins by hero and tier"],
   items: ["Cửa hàng và công thức ghép", "Shop layout and recipes"],
   enchantments: ["Bốn hệ phù hiệu và các bậc", "The four trees and their tiers"],
   arcana: ["Ngọc theo màu và cấp", "Arcana by color and level"],
-  spells: ["Phép bổ trợ và thời gian hồi", "Spells and cooldowns"],
+  spells: ["Phép bổ trợ và thời gian hồi", "Talents and cooldowns"],
   modes: ["PVP, giải trí và cẩm nang Cờ Liên quân", "PVP, casual modes and the auto-chess guide"],
 }
 

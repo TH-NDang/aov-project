@@ -39,7 +39,7 @@ const PURPOSE_TEXT: Record<VideoPurpose, readonly [string, string]> = {
   INTRO: ["Giới thiệu", "Introduction"],
   GUIDE_BASIC: ["Cách chơi cơ bản", "Basics"],
   GUIDE_ADVANCED: ["Combo & nâng cao", "Combos & advanced"],
-  SKILL_DEMO: ["Minh họa kỹ năng", "Skill demo"],
+  SKILL_DEMO: ["Minh họa kỹ năng", "Ability demo"],
   SKIN_SHOWCASE: ["Hiệu ứng", "Effects"],
   SKIN_TRAILER: ["Trailer", "Trailer"],
   LORE: ["Cốt truyện", "Lore"],

@@ -5,15 +5,16 @@ import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext } from "../../context/wiki-context"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import {
-  BLESSING_TIER_LABEL,
+  BLESSING_TIER_NAMES,
   encodeLineup,
   foldText,
-  TRAIT_KIND_LABEL,
+  TRAIT_KIND_NAMES,
   type Blessing,
   type GuideContent,
+  type LabelNames,
   type ModeImage,
   type Trait,
   type Unit,
@@ -25,15 +26,15 @@ import { StarLevel } from "./star-level"
 import { formatDay, ModeDialog } from "./mode-ui"
 
 export const GUIDE_TABS = [
-  { key: "tong-quan", label: "Tổng quan" },
-  { key: "quan-co", label: "Quân cờ" },
-  { key: "phe-nghe", label: "Phe & Nghề" },
-  { key: "trang-bi", label: "Trang bị" },
-  { key: "chuc-phuc", label: "Chúc phúc" },
-  { key: "nhiem-vu", label: "Nhiệm vụ" },
-  { key: "doi-hinh", label: "Đội hình" },
-  { key: "xep-doi-hinh", label: "Xếp đội hình" },
-  { key: "phan-tich", label: "Phân tích" },
+  { key: "tong-quan", label: "Tổng quan", english: "Overview" },
+  { key: "quan-co", label: "Quân cờ", english: "Units" },
+  { key: "phe-nghe", label: "Phe & Nghề", english: "Factions & Classes" },
+  { key: "trang-bi", label: "Trang bị", english: "Equipment" },
+  { key: "chuc-phuc", label: "Chúc phúc", english: "Blessings" },
+  { key: "nhiem-vu", label: "Nhiệm vụ", english: "Quests" },
+  { key: "doi-hinh", label: "Đội hình", english: "Lineups" },
+  { key: "xep-doi-hinh", label: "Xếp đội hình", english: "Lineup builder" },
+  { key: "phan-tich", label: "Phân tích", english: "Analysis" },
 ] as const
 
 export type GuideTab = (typeof GUIDE_TABS)[number]["key"]
@@ -89,7 +90,13 @@ const plain = (value?: string | null) => (value ?? "").replace(/<[^>]+>/g, "")
  * The guide's own traits, units and items as references, so a name in a description gets a card like a term does.
  * Each points at its place in the guide.
  */
-function guideReferences(index: GuideIndex, modeCode: string, href: (path: string) => string): EntityReference[] {
+function guideReferences(
+  index: GuideIndex,
+  modeCode: string,
+  href: (path: string) => string,
+  locale: string,
+): EntityReference[] {
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const base = `/modes/${encodeURIComponent(modeCode)}`
   const translation = (name: string, description: string) => [{ locale: "vi-VN", name, aliases: [], description }]
   return [
@@ -99,7 +106,8 @@ function guideReferences(index: GuideIndex, modeCode: string, href: (path: strin
       translations: translation(
         trait.name,
         [
-          `${TRAIT_KIND_LABEL[trait.kind]} · ${index.membersOf(trait.code).length} quân cờ`,
+          `${text(...TRAIT_KIND_NAMES[trait.kind])} · ${index.membersOf(trait.code).length} ` +
+            text("quân cờ", index.membersOf(trait.code).length === 1 ? "unit" : "units"),
           ...trait.tiers.map((tier) => `(${tier.count}) ${plain(tier.effect)}`),
         ].join("\n"),
       ),
@@ -113,7 +121,8 @@ function guideReferences(index: GuideIndex, modeCode: string, href: (path: strin
       translations: translation(
         unit.name,
         [
-          `Quân cờ ${unit.cost} vàng · ${unit.traitCodes.map((code) => index.traits.get(code)?.name).join(", ")}`,
+          text(`Quân cờ ${unit.cost} vàng · `, `${unit.cost}-gold unit · `) +
+            unit.traitCodes.map((code) => index.traits.get(code)?.name).join(", "),
           unit.skill?.name ? `${unit.skill.name}: ${plain(unit.skill.description)}` : "",
         ]
           .filter(Boolean)
@@ -126,7 +135,10 @@ function guideReferences(index: GuideIndex, modeCode: string, href: (path: strin
     ...index.content.items.map((item) => ({
       id: `guide-item-${item.code}`,
       kind: "term" as const,
-      translations: translation(item.name, `Trang bị Cờ Liên quân · ${plain(item.effect)}`),
+      translations: translation(
+        item.name,
+        `${text("Trang bị Cờ Liên quân", "Auto-chess item")} · ${plain(item.effect)}`,
+      ),
       icon: index.image(item.iconAssetId) ?? null,
       autoMatch: true,
       destinations: { wiki: href(`${base}/trang-bi`) },
@@ -202,6 +214,7 @@ export function splitTraits(unit: Unit, index: GuideIndex) {
 
 /** Factions and classes of a unit with a divider between them, as icons, names or tags. */
 export function UnitTraits({ unit, index, as }: { unit: Unit; index: GuideIndex; as: "icons" | "names" | "tags" }) {
+  const { locale } = useWikiContext()
   const { factions, classes } = splitTraits(unit, index)
   const part = (traits: Trait[], kind: string) =>
     traits.length > 0 && (
@@ -214,8 +227,8 @@ export function UnitTraits({ unit, index, as }: { unit: Unit; index: GuideIndex;
                   key={trait.code}
                   className="trait-tip"
                   role="img"
-                  aria-label={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}
-                  data-tip={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}
+                  aria-label={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
+                  data-tip={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
                 >
                   <TraitIcon trait={trait} index={index} size={20} />
                 </span>
@@ -235,6 +248,7 @@ export function UnitTraits({ unit, index, as }: { unit: Unit; index: GuideIndex;
 }
 
 export function TraitTag({ code, index, count }: { code: string; index: GuideIndex; count?: number }) {
+  const { locale } = useWikiContext()
   const links = useContext(GuideLinks)
   const trait = index.traits.get(code)
   if (!trait) return null
@@ -250,12 +264,12 @@ export function TraitTag({ code, index, count }: { code: string; index: GuideInd
       className="guide-trait-tag"
       data-link="true"
       to={links.traitHref(trait.code)}
-      title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}
+      title={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
     >
       {body}
     </Link>
   ) : (
-    <span className="guide-trait-tag" title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}>
+    <span className="guide-trait-tag" title={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}>
       {body}
     </span>
   )
@@ -283,14 +297,15 @@ export function BlessingIcon({ blessing, index }: { blessing: Blessing; index: G
 
 export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideTab; guide: PublicGuide }) {
   const index = useGuideIndex(guide)
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const links = useMemo(
     () => ({
-      entities: guideReferences(index, code, href),
+      entities: guideReferences(index, code, href, locale),
       traitHref: (traitCode: string) =>
         href(`/modes/${encodeURIComponent(code)}/phe-nghe?trait=${encodeURIComponent(traitCode)}`),
     }),
-    [index, code, href],
+    [index, code, href, locale],
   )
   const [params, setParams] = useSearchParams()
   const openUnit = params.get("unit")
@@ -309,9 +324,10 @@ export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideT
   return (
     <GuideLinks.Provider value={links}>
       <p className="guide-edition">
-        {guide.content.edition ?? "Bách khoa Cờ Liên quân"}
-        {guide.content.observedOn && ` · ghi nhận ${formatDay(guide.content.observedOn)}`} · Dữ liệu và hình ảnh: Garena
-        / Liên Quân Mobile
+        {guide.content.edition ?? text("Bách khoa Cờ Liên quân", "Auto-chess encyclopedia")}
+        {guide.content.observedOn &&
+          ` · ${text("ghi nhận", "recorded")} ${formatDay(guide.content.observedOn, locale)}`}
+        {text(" · Dữ liệu và hình ảnh: ", " · Data and images: ")}Garena / Liên Quân Mobile
       </p>
       {tab === "quan-co" && <UnitsTab index={index} onOpen={showUnit} />}
       {tab === "phe-nghe" && <TraitsTab index={index} onOpen={showUnit} />}
@@ -321,7 +337,12 @@ export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideT
       {tab === "doi-hinh" && <LineupsTab code={code} guide={guide} index={index} onOpen={showUnit} />}
       {tab === "xep-doi-hinh" && <BuilderTab code={code} index={index} onOpen={showUnit} />}
       {tab === "phan-tich" && <InsightsTab code={code} index={index} onOpen={showUnit} />}
-      <ModeDialog open={!!selected} onClose={() => showUnit(null)} label={selected?.name ?? "Quân cờ"} title="Quân cờ">
+      <ModeDialog
+        open={!!selected}
+        onClose={() => showUnit(null)}
+        label={selected?.name ?? text("Quân cờ", "Unit")}
+        title={text("Quân cờ", "Unit")}
+      >
         {selected && <UnitDetail unit={selected} index={index} code={code} onOpen={showUnit} />}
       </ModeDialog>
     </GuideLinks.Provider>
@@ -329,18 +350,21 @@ export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideT
 }
 
 type StatKey = "health" | "physicalAttack" | "armor" | "magicResistance"
-const STATS: { key: StatKey; label: string }[] = [
-  { key: "health", label: "Máu" },
-  { key: "physicalAttack", label: "Công vật lý" },
-  { key: "armor", label: "Giáp" },
-  { key: "magicResistance", label: "Giáp phép" },
+const STATS: { key: StatKey; label: string; english: string }[] = [
+  { key: "health", label: "Máu", english: "HP" },
+  { key: "physicalAttack", label: "Công vật lý", english: "Attack Damage" },
+  { key: "armor", label: "Giáp", english: "Armor" },
+  { key: "magicResistance", label: "Giáp phép", english: "Magic Defense" },
 ]
 type SortKey = StatKey | "cost" | "name"
 type SortRule = { key: SortKey; desc: boolean }
-const SORT_LABEL: Record<SortKey, string> = {
-  name: "Tên",
-  cost: "Giá",
-  ...(Object.fromEntries(STATS.map((stat) => [stat.key, stat.label])) as Record<StatKey, string>),
+const SORT_LABEL: Record<SortKey, LabelNames> = {
+  name: ["Tên", "Name"],
+  cost: ["Giá", "Cost"],
+  ...(Object.fromEntries(STATS.map((stat) => [stat.key, [stat.label, stat.english] as const])) as Record<
+    StatKey,
+    LabelNames
+  >),
 }
 /** Stats read best from the highest; names and prices from the lowest. */
 const naturalDesc = (key: SortKey) => key !== "cost" && key !== "name"
@@ -355,10 +379,12 @@ export function CostChips({
   value: number | null
   onChange: (cost: number | null) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   return (
-    <div className="cost-bar" role="group" aria-label="Lọc theo giá">
+    <div className="cost-bar" role="group" aria-label={text("Lọc theo giá", "Filter by cost")}>
       <button type="button" aria-pressed={value === null} onClick={() => onChange(null)}>
-        Mọi giá
+        {text("Mọi giá", "Any cost")}
       </button>
       {costs.map((cost) => (
         <button
@@ -366,8 +392,8 @@ export function CostChips({
           type="button"
           style={costStyle(cost)}
           aria-pressed={value === cost}
-          aria-label={`${cost} vàng`}
-          title={`${cost} vàng`}
+          aria-label={text(`${cost} vàng`, `${cost} gold`)}
+          title={text(`${cost} vàng`, `${cost} gold`)}
           onClick={() => onChange(value === cost ? null : cost)}
         >
           <GoldIcon />
@@ -393,20 +419,25 @@ export function TraitFilter({
   onChange: (codes: string[]) => void
   countWith: (code: string) => number
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const toggle = (code: string) =>
     onChange(picked.includes(code) ? picked.filter((entry) => entry !== code) : [...picked, code])
   return (
-    <div className="trait-filter" role="group" aria-label="Lọc theo Phe/Nghề">
+    <div className="trait-filter" role="group" aria-label={text("Lọc theo Phe/Nghề", "Filter by Faction/Class")}>
       {(["FACTION", "CLASS"] as const).map((kind) => (
         <div key={kind} className="trait-filter-row">
-          <span>{TRAIT_KIND_LABEL[kind]}</span>
+          <span>{text(...TRAIT_KIND_NAMES[kind])}</span>
           <div className="trait-filter-icons">
             {index.content.traits
               .filter((trait) => trait.kind === kind)
               .map((trait) => {
                 const count = countWith(trait.code)
                 const on = picked.includes(trait.code)
-                const tip = `${TRAIT_KIND_LABEL[kind]}: ${trait.name} · ${count} quân`
+                const tip = text(
+                  `${TRAIT_KIND_NAMES[kind][0]}: ${trait.name} · ${count} quân`,
+                  `${TRAIT_KIND_NAMES[kind][1]}: ${trait.name} · ${count} ${count === 1 ? "unit" : "units"}`,
+                )
                 return (
                   <button
                     key={trait.code}
@@ -427,7 +458,7 @@ export function TraitFilter({
       ))}
       {picked.length > 0 && (
         <div className="trait-filter-active">
-          <span className="mode-meta">Đang lọc:</span>
+          <span className="mode-meta">{text("Đang lọc:", "Filtering by:")}</span>
           {picked.map((code) => {
             const trait = index.traits.get(code)
             return (
@@ -435,7 +466,7 @@ export function TraitFilter({
                 key={code}
                 type="button"
                 className="mode-chip"
-                aria-label={`Bỏ lọc ${trait?.name ?? code}`}
+                aria-label={text(`Bỏ lọc ${trait?.name ?? code}`, `Clear the ${trait?.name ?? code} filter`)}
                 onClick={() => toggle(code)}
               >
                 <TraitIcon trait={trait} index={index} size={16} />
@@ -444,7 +475,7 @@ export function TraitFilter({
             )
           })}
           <button type="button" className="mode-chip" onClick={() => onChange([])}>
-            Bỏ lọc
+            {text("Bỏ lọc", "Clear filters")}
           </button>
         </div>
       )}
@@ -453,6 +484,8 @@ export function TraitFilter({
 }
 
 function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string) => void }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const layout = usePageLayout()
   const [cost, setCost] = useState<number | null>(null)
   const [picked, setPicked] = useState<string[]>([])
@@ -499,7 +532,7 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
           type="button"
           className="sort-head"
           data-active={!!rule}
-          title="Bấm để sắp xếp, giữ Shift để thêm cột"
+          title={text("Bấm để sắp xếp, giữ Shift để thêm cột", "Click to sort, hold Shift to add a column")}
           onClick={(event) => sortBy(key, event.shiftKey)}
         >
           {label}
@@ -516,16 +549,16 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
     .filter((group) => group.units.length)
 
   return (
-    <section className="mode-stack" aria-label="Quân cờ">
+    <section className="mode-stack" aria-label={text("Quân cờ", "Units")}>
       <div className="mode-filter-bar">
-        <div className="mode-segment" role="group" aria-label="Kiểu xem">
+        <div className="mode-segment" role="group" aria-label={text("Kiểu xem", "View")}>
           <button type="button" aria-pressed={view === "cards"} onClick={() => setView("cards")}>
             <WikiIcon name="cards" size={16} />
-            Thẻ
+            {text("Thẻ", "Cards")}
           </button>
           <button type="button" aria-pressed={view === "table"} onClick={() => setView("table")}>
             <WikiIcon name="stats" size={16} />
-            Chỉ số
+            {text("Chỉ số", "Stats")}
           </button>
         </div>
       </div>
@@ -540,17 +573,21 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
         }}
       />
       <CostChips costs={costs} value={cost} onChange={setCost} />
-      <p className="mode-meta">{units.length} quân cờ</p>
+      <p className="mode-meta">
+        {units.length} {text("quân cờ", units.length === 1 ? "unit" : "units")}
+      </p>
 
       {view === "cards" ? (
         byCost.map((group) => (
           <section key={group.cost} className="unit-group" style={costStyle(group.cost)}>
             <h2 className="unit-group-title">
-              <span className="guide-cost" aria-label={`${group.cost} vàng`}>
+              <span className="guide-cost" aria-label={text(`${group.cost} vàng`, `${group.cost} gold`)}>
                 <GoldIcon size={16} />
                 {group.cost}
               </span>
-              <small>{group.units.length} quân</small>
+              <small>
+                {group.units.length} {text("quân", group.units.length === 1 ? "unit" : "units")}
+              </small>
             </h2>
             <div className="unit-grid" data-layout={layout}>
               {group.units.map((unit) => (
@@ -564,7 +601,9 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
                   <UnitPortrait unit={unit} index={index} size={layout === "compact" ? "md" : "lg"} />
                   <strong>{unit.name}</strong>
                   <UnitTraits unit={unit} index={index} as="icons" />
-                  {!unit.complete && <i className="unit-incomplete" title="Chưa đủ dữ liệu" />}
+                  {!unit.complete && (
+                    <i className="unit-incomplete" title={text("Chưa đủ dữ liệu", "Incomplete data")} />
+                  )}
                 </button>
               ))}
             </div>
@@ -573,20 +612,23 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
       ) : (
         <>
           <div className="sort-bar">
-            <div className="mode-segment" role="group" aria-label="Cấp sao">
+            <div className="mode-segment" role="group" aria-label={text("Cấp sao", "Star level")}>
               {[0, 1, 2].map((value) => (
                 <button key={value} type="button" aria-pressed={star === value} onClick={() => setStar(value)}>
                   <StarLevel level={value + 1} />
                 </button>
               ))}
             </div>
-            <div className="sort-rules" role="group" aria-label="Thứ tự sắp xếp">
-              <span className="mode-meta">Sắp xếp:</span>
+            <div className="sort-rules" role="group" aria-label={text("Thứ tự sắp xếp", "Sort order")}>
+              <span className="mode-meta">{text("Sắp xếp:", "Sort by:")}</span>
               {sorts.map((rule, at) => (
                 <span key={rule.key} className="sort-rule">
                   <button
                     type="button"
-                    aria-label={`${SORT_LABEL[rule.key]} ${rule.desc ? "giảm dần" : "tăng dần"}, bấm để đảo chiều`}
+                    aria-label={text(
+                      `${SORT_LABEL[rule.key][0]} ${rule.desc ? "giảm dần" : "tăng dần"}, bấm để đảo chiều`,
+                      `${SORT_LABEL[rule.key][1]} ${rule.desc ? "descending" : "ascending"}, click to reverse`,
+                    )}
                     onClick={() =>
                       setSorts((current) =>
                         current.map((entry, index) => (index === at ? { ...entry, desc: !entry.desc } : entry)),
@@ -594,12 +636,15 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
                     }
                   >
                     {sorts.length > 1 && <b className="sort-rank">{at + 1}</b>}
-                    {SORT_LABEL[rule.key]} {rule.desc ? "↓" : "↑"}
+                    {text(...SORT_LABEL[rule.key])} {rule.desc ? "↓" : "↑"}
                   </button>
                   {sorts.length > 1 && (
                     <button
                       type="button"
-                      aria-label={`Bỏ sắp xếp theo ${SORT_LABEL[rule.key]}`}
+                      aria-label={text(
+                        `Bỏ sắp xếp theo ${SORT_LABEL[rule.key][0]}`,
+                        `Stop sorting by ${SORT_LABEL[rule.key][1]}`,
+                      )}
                       onClick={() => setSorts((current) => current.filter((_, index) => index !== at))}
                     >
                       ✕
@@ -614,27 +659,36 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
                 onClick={() => setMultiSort(!multiSort)}
               >
                 <WikiIcon name="sort" size={16} />
-                Nhiều cột
+                {text("Nhiều cột", "Multiple columns")}
               </button>
             </div>
           </div>
           <p className="mode-meta">
             {multiSort
-              ? "Bấm thêm tiêu đề cột để sắp xếp tiếp theo cột đó; bấm lại để đảo chiều."
+              ? text(
+                  "Bấm thêm tiêu đề cột để sắp xếp tiếp theo cột đó; bấm lại để đảo chiều.",
+                  "Click another column heading to sort by that column next; click it again to reverse the order.",
+                )
               : layout === "compact"
-                ? "Bấm tiêu đề cột để sắp xếp. Bật “Nhiều cột” để sắp xếp theo nhiều cột."
-                : "Bấm tiêu đề cột để sắp xếp. Bật “Nhiều cột” hoặc giữ Shift khi bấm để sắp xếp theo nhiều cột."}
+                ? text(
+                    "Bấm tiêu đề cột để sắp xếp. Bật “Nhiều cột” để sắp xếp theo nhiều cột.",
+                    "Click a column heading to sort. Turn on “Multiple columns” to sort by several columns.",
+                  )
+                : text(
+                    "Bấm tiêu đề cột để sắp xếp. Bật “Nhiều cột” hoặc giữ Shift khi bấm để sắp xếp theo nhiều cột.",
+                    "Click a column heading to sort. Turn on “Multiple columns” or hold Shift while clicking to sort by several columns.",
+                  )}
           </p>
           <div className="guide-table-wrap">
             <table className="guide-table">
               <thead>
                 <tr>
-                  {sortHead("name", "Quân cờ")}
-                  {sortHead("cost", "Giá", "num")}
+                  {sortHead("name", text("Quân cờ", "Unit"))}
+                  {sortHead("cost", text("Giá", "Cost"), "num")}
                   {STATS.map((stat) => (
-                    <Fragment key={stat.key}>{sortHead(stat.key, stat.label, "num")}</Fragment>
+                    <Fragment key={stat.key}>{sortHead(stat.key, text(stat.label, stat.english), "num")}</Fragment>
                   ))}
-                  <th scope="col">Phe/Nghề</th>
+                  <th scope="col">{text("Phe/Nghề", "Faction/Class")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -651,7 +705,7 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
                     </td>
                     {STATS.map((stat) => (
                       <td key={stat.key} className="num">
-                        {unit.stats?.[stat.key]?.[star]?.toLocaleString("vi-VN") ?? "—"}
+                        {unit.stats?.[stat.key]?.[star]?.toLocaleString(locale) ?? "—"}
                       </td>
                     ))}
                     <td>
@@ -679,7 +733,8 @@ function UnitDetail({
   code: string
   onOpen: (code: string | null) => void
 }) {
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const skillIcon = index.image(unit.skill?.iconAssetId)
   const lineups = index.content.lineups.filter((lineup) => lineup.units.some((item) => item.unitCode === unit.code))
   return (
@@ -688,14 +743,21 @@ function UnitDetail({
         <UnitPortrait unit={unit} index={index} size="lg" />
         <div>
           <h2>{unit.name}</h2>
-          <span className="guide-cost" aria-label={`${unit.cost} vàng`}>
+          <span className="guide-cost" aria-label={text(`${unit.cost} vàng`, `${unit.cost} gold`)}>
             <GoldIcon />
             {unit.cost}
           </span>
           <UnitTraits unit={unit} index={index} as="tags" />
         </div>
       </header>
-      {!unit.complete && <p className="guide-note">Quân cờ này chưa có đủ dữ liệu trong bản Bách khoa đã thu thập.</p>}
+      {!unit.complete && (
+        <p className="guide-note">
+          {text(
+            "Quân cờ này chưa có đủ dữ liệu trong bản Bách khoa đã thu thập.",
+            "This unit does not have complete data in the collected edition of the Encyclopedia yet.",
+          )}
+        </p>
+      )}
       {unit.note && <p className="guide-note">{unit.note}</p>}
       {unit.skill?.name && (
         <section className="guide-skill">
@@ -709,7 +771,7 @@ function UnitDetail({
             )}
             {unit.skill.values.length === 3 && (
               <p className="guide-values">
-                {unit.skill.valueLabel ?? "Giá trị"}: {unit.skill.values.join(" / ")}
+                {unit.skill.valueLabel ?? text("Giá trị", "Values")}: {unit.skill.values.join(" / ")}
               </p>
             )}
           </div>
@@ -720,7 +782,7 @@ function UnitDetail({
           <table className="guide-table">
             <thead>
               <tr>
-                <th scope="col">Chỉ số</th>
+                <th scope="col">{text("Chỉ số", "Stat")}</th>
                 {[1, 2, 3].map((level) => (
                   <th key={level} scope="col" className="num">
                     <StarLevel level={level} />
@@ -731,10 +793,10 @@ function UnitDetail({
             <tbody>
               {STATS.map((stat) => (
                 <tr key={stat.key}>
-                  <th scope="row">{stat.label}</th>
+                  <th scope="row">{text(stat.label, stat.english)}</th>
                   {(unit.stats?.[stat.key] ?? []).map((value, at) => (
                     <td key={at} className="num">
-                      {value.toLocaleString("vi-VN")}
+                      {value.toLocaleString(locale)}
                     </td>
                   ))}
                 </tr>
@@ -750,7 +812,7 @@ function UnitDetail({
           <section key={traitCode} className="guide-detail-trait">
             <h3>
               <TraitIcon trait={trait} index={index} size={24} />
-              {TRAIT_KIND_LABEL[trait.kind]}: {trait.name}
+              {text(...TRAIT_KIND_NAMES[trait.kind])}: {trait.name}
             </h3>
             <TierList trait={trait} />
             <div className="guide-members">
@@ -770,7 +832,10 @@ function UnitDetail({
         )
       })}
       {lineups.length > 0 && (
-        <p className="mode-meta">Có trong đội hình đề xuất: {lineups.map((lineup) => lineup.name).join(", ")}</p>
+        <p className="mode-meta">
+          {text("Có trong đội hình đề xuất", "Appears in recommended lineups")}:{" "}
+          {lineups.map((lineup) => lineup.name).join(", ")}
+        </p>
       )}
       <div className="lineup-actions">
         <Link
@@ -780,11 +845,11 @@ function UnitDetail({
             `/modes/${encodeURIComponent(code)}/xep-doi-hinh?${encodeLineup([{ unitCode: unit.code, carry: true }], [])}`,
           )}
         >
-          Xếp đội hình với {unit.name}
+          {text(`Xếp đội hình với ${unit.name}`, `Build a lineup with ${unit.name}`)}
         </Link>
         {unit.heroCode && (
           <Link className="mode-chip" to={href(`/hero/${unit.heroCode}`)}>
-            Trang tướng {unit.name}
+            {text(`Trang tướng ${unit.name}`, `${unit.name} hero page`)}
           </Link>
         )}
       </div>
@@ -826,6 +891,8 @@ const TRAIT_KINDS = ["FACTION", "CLASS"] as const
  * drawer on phones), plus the game's table of units by faction and class. The choice lives in the address.
  */
 function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string) => void }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const layout = usePageLayout()
   const [params, setParams] = useSearchParams()
   const [kind, setKind] = useState<Trait["kind"] | null>(null)
@@ -851,40 +918,40 @@ function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string
     })
 
   return (
-    <section className="mode-stack" aria-label="Phe và Nghề">
+    <section className="mode-stack" aria-label={text("Phe và Nghề", "Factions and Classes")}>
       <div className="mode-filter-bar">
         {!table && (
           <>
-            <div className="mode-segment" role="group" aria-label="Loại">
+            <div className="mode-segment" role="group" aria-label={text("Loại", "Type")}>
               <button type="button" aria-pressed={kind === null} onClick={() => setKind(null)}>
-                Tất cả
+                {text("Tất cả", "All")}
               </button>
               {TRAIT_KINDS.map((value) => (
                 <button key={value} type="button" aria-pressed={kind === value} onClick={() => setKind(value)}>
-                  {TRAIT_KIND_LABEL[value]}
+                  {text(...TRAIT_KIND_NAMES[value])}
                 </button>
               ))}
             </div>
           </>
         )}
-        <div className="mode-segment trait-view" role="group" aria-label="Cách xem">
+        <div className="mode-segment trait-view" role="group" aria-label={text("Cách xem", "View")}>
           <button
             type="button"
-            aria-label="Chi tiết"
+            aria-label={text("Chi tiết", "Details")}
             aria-pressed={!table}
             onClick={() => change((next) => next.delete("xem"))}
           >
             <WikiIcon name="detail" size={16} />
-            <span className="segment-label">Chi tiết</span>
+            <span className="segment-label">{text("Chi tiết", "Details")}</span>
           </button>
           <button
             type="button"
-            aria-label="Bảng Phe × Nghề"
+            aria-label={text("Bảng Phe × Nghề", "Faction × Class table")}
             aria-pressed={table}
             onClick={() => change((next) => next.set("xem", "bang"))}
           >
             <WikiIcon name="table" size={16} />
-            <span className="segment-label">Bảng Phe × Nghề</span>
+            <span className="segment-label">{text("Bảng Phe × Nghề", "Faction × Class table")}</span>
           </button>
         </div>
       </div>
@@ -897,9 +964,9 @@ function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string
               const traits = visible.filter((trait) => trait.kind === value)
               if (!traits.length) return null
               return (
-                <section key={value} className="trait-index-group" aria-label={TRAIT_KIND_LABEL[value]}>
+                <section key={value} className="trait-index-group" aria-label={text(...TRAIT_KIND_NAMES[value])}>
                   <h2 className="mode-section-title">
-                    {TRAIT_KIND_LABEL[value]} <small>{traits.length}</small>
+                    {text(...TRAIT_KIND_NAMES[value])} <small>{traits.length}</small>
                   </h2>
                   <div className="trait-index-grid">
                     {traits.map((trait) => (
@@ -913,7 +980,8 @@ function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string
                         <TraitIcon trait={trait} index={index} size={layout === "compact" ? 40 : 44} />
                         <span>{trait.name}</span>
                         <small>
-                          {index.membersOf(trait.code).length} quân
+                          {index.membersOf(trait.code).length}{" "}
+                          {text("quân", index.membersOf(trait.code).length === 1 ? "unit" : "units")}
                           <span className="trait-index-tiers">
                             {" "}
                             · {trait.tiers.map((tier) => tier.count).join("/")}
@@ -930,7 +998,12 @@ function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string
         </div>
       )}
       {layout === "compact" && (
-        <ModeDialog open={!!linked} onClose={() => pick(null)} label={linked?.name ?? "Phe/Nghề"} title="Phe & Nghề">
+        <ModeDialog
+          open={!!linked}
+          onClose={() => pick(null)}
+          label={linked?.name ?? text("Phe/Nghề", "Faction/Class")}
+          title={text("Phe & Nghề", "Factions & Classes")}
+        >
           {linked && <TraitDetail trait={linked} index={index} onOpen={onOpen} />}
         </ModeDialog>
       )}
@@ -940,20 +1013,26 @@ function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string
 
 /** One trait in full: its tiers, the units that carry it and the traits those units bring along. */
 function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex; onOpen: (code: string) => void }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const members = [...index.membersOf(trait.code)].sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "vi"))
   const partners = new Map<string, number>()
   for (const member of members)
     for (const code of member.traitCodes) if (code !== trait.code) partners.set(code, (partners.get(code) ?? 0) + 1)
   const together = [...partners].sort((a, b) => b[1] - a[1])
   return (
-    <article className="trait-detail" aria-label={`${TRAIT_KIND_LABEL[trait.kind]} ${trait.name}`}>
+    <article className="trait-detail" aria-label={`${text(...TRAIT_KIND_NAMES[trait.kind])} ${trait.name}`}>
       <header className="trait-detail-head">
         <TraitIcon trait={trait} index={index} size={64} />
         <div>
-          <span className="mode-meta">{TRAIT_KIND_LABEL[trait.kind]}</span>
+          <span className="mode-meta">{text(...TRAIT_KIND_NAMES[trait.kind])}</span>
           <h2>{trait.name}</h2>
           <span className="mode-meta">
-            {members.length} quân cờ · mốc {trait.tiers.map((tier) => tier.count).join(" / ")}
+            {text(
+              `${members.length} quân cờ · mốc`,
+              `${members.length} ${members.length === 1 ? "unit" : "units"} · thresholds`,
+            )}{" "}
+            {trait.tiers.map((tier) => tier.count).join(" / ")}
           </span>
         </div>
       </header>
@@ -964,8 +1043,8 @@ function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex
       )}
       <TierList trait={trait} />
       {trait.note && <p className="guide-note">{trait.note}</p>}
-      <section className="trait-detail-block" aria-label="Quân cờ liên quan">
-        <h3>Quân cờ liên quan</h3>
+      <section className="trait-detail-block" aria-label={text("Quân cờ liên quan", "Related units")}>
+        <h3>{text("Quân cờ liên quan", "Related units")}</h3>
         {members.length ? (
           <div className="trait-members">
             {members.map((member) => (
@@ -978,7 +1057,7 @@ function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex
               >
                 <UnitPortrait unit={member} index={index} size="md" />
                 <span>{member.name}</span>
-                <small className="guide-cost" aria-label={`${member.cost} vàng`}>
+                <small className="guide-cost" aria-label={text(`${member.cost} vàng`, `${member.cost} gold`)}>
                   <GoldIcon size={12} />
                   {member.cost}
                 </small>
@@ -986,18 +1065,22 @@ function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex
             ))}
           </div>
         ) : (
-          <p className="mode-meta">Chưa có quân cờ trong bản đã thu thập.</p>
+          <p className="mode-meta">
+            {text("Chưa có quân cờ trong bản đã thu thập.", "No units in the collected edition yet.")}
+          </p>
         )}
       </section>
       {together.length > 0 && (
-        <section className="trait-detail-block" aria-label="Hay đi cùng">
-          <h3>Hay đi cùng</h3>
+        <section className="trait-detail-block" aria-label={text("Hay đi cùng", "Often paired with")}>
+          <h3>{text("Hay đi cùng", "Often paired with")}</h3>
           <div className="guide-trait-tags">
             {together.map(([code, count]) => (
               <TraitTag key={code} code={code} index={index} count={count} />
             ))}
           </div>
-          <p className="mode-meta">Số là số quân cờ có cả hai Phe/Nghề.</p>
+          <p className="mode-meta">
+            {text("Số là số quân cờ có cả hai Phe/Nghề.", "The number is how many units have both Factions/Classes.")}
+          </p>
         </section>
       )}
     </article>
@@ -1014,23 +1097,39 @@ function TraitTable({
   onOpen: (code: string) => void
   onPick: (code: string) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const factions = index.content.traits.filter((trait) => trait.kind === "FACTION")
   const classes = index.content.traits.filter((trait) => trait.kind === "CLASS")
   const head = (trait: Trait) => (
-    <button type="button" title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`} onClick={() => onPick(trait.code)}>
+    <button
+      type="button"
+      title={`${text(...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
+      onClick={() => onPick(trait.code)}
+    >
       <TraitIcon trait={trait} index={index} size={30} />
       <span>{trait.name}</span>
     </button>
   )
   return (
     <>
-      <p className="mode-meta">Hàng là Nghề, cột là Phe. Bấm icon để xem Phe/Nghề, bấm quân cờ để xem quân cờ.</p>
-      <div className="trait-table-scroll" role="region" aria-label="Bảng Phe × Nghề" tabIndex={0}>
+      <p className="mode-meta">
+        {text(
+          "Hàng là Nghề, cột là Phe. Bấm icon để xem Phe/Nghề, bấm quân cờ để xem quân cờ.",
+          "Rows are Classes, columns are Factions. Click an icon to see the Faction/Class, click a unit to see the unit.",
+        )}
+      </p>
+      <div
+        className="trait-table-scroll"
+        role="region"
+        aria-label={text("Bảng Phe × Nghề", "Faction × Class table")}
+        tabIndex={0}
+      >
         <table className="trait-table">
           <thead>
             <tr>
               <th scope="col">
-                <span className="mode-meta">Nghề \ Phe</span>
+                <span className="mode-meta">{text("Nghề \\ Phe", "Class \\ Faction")}</span>
               </th>
               {factions.map((trait) => (
                 <th key={trait.code} scope="col">
@@ -1052,7 +1151,7 @@ function TraitTable({
                         <button
                           key={unit.code}
                           type="button"
-                          title={`${unit.name} · ${unit.cost} vàng`}
+                          title={text(`${unit.name} · ${unit.cost} vàng`, `${unit.name} · ${unit.cost} gold`)}
                           aria-label={unit.name}
                           onClick={() => onOpen(unit.code)}
                         >
@@ -1100,11 +1199,13 @@ function StoneMark({
 }
 
 function ItemsTab({ index }: { index: GuideIndex }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const { itemGroups, items } = index.content
   const [stone, setStone] = useState<string | null>(null)
   const groups: { code: string; name: string; iconAssetId?: string | null }[] = [
     ...itemGroups,
-    ...(items.some((item) => !item.groupCode) ? [{ code: "", name: "Khác" }] : []),
+    ...(items.some((item) => !item.groupCode) ? [{ code: "", name: text("Khác", "Other") }] : []),
   ]
   const entriesOf = (code: string) =>
     items.filter((item) => (item.groupCode ?? "") === code).sort((a, b) => (a.slot ?? 99) - (b.slot ?? 99))
@@ -1114,10 +1215,10 @@ function ItemsTab({ index }: { index: GuideIndex }) {
     return short.charAt(0).toLocaleUpperCase("vi") + short.slice(1)
   }
   return (
-    <section className="mode-stack" aria-label="Trang bị">
-      <div className="mode-chip-row" role="group" aria-label="Nhóm trang bị">
+    <section className="mode-stack" aria-label={text("Trang bị", "Equipment")}>
+      <div className="mode-chip-row" role="group" aria-label={text("Nhóm trang bị", "Equipment groups")}>
         <button type="button" className="mode-chip" aria-pressed={stone === null} onClick={() => setStone(null)}>
-          Tất cả <span className="tier-count">{items.length}</span>
+          {text("Tất cả", "All")} <span className="tier-count">{items.length}</span>
         </button>
         {groups.map((group) => (
           <button
@@ -1147,7 +1248,9 @@ function ItemsTab({ index }: { index: GuideIndex }) {
               <h2 className="mode-section-title">
                 <StoneMark group={group} index={index} />
                 {group.name}
-                <small>{entries.length} trang bị</small>
+                <small>
+                  {entries.length} {text("trang bị", entries.length === 1 ? "item" : "items")}
+                </small>
               </h2>
               {entries.length ? (
                 <div className="guide-card-list">
@@ -1169,7 +1272,12 @@ function ItemsTab({ index }: { index: GuideIndex }) {
                   })}
                 </div>
               ) : (
-                <p className="guide-slots">Chưa có trang bị nào của nhóm này trong bản đã thu thập.</p>
+                <p className="guide-slots">
+                  {text(
+                    "Chưa có trang bị nào của nhóm này trong bản đã thu thập.",
+                    "No items of this group in the collected edition yet.",
+                  )}
+                </p>
               )}
             </section>
           )
@@ -1223,6 +1331,8 @@ export function TierIcon({ tier, size = 18 }: { tier: Blessing["tier"]; size?: n
 }
 
 function BlessingsTab({ index }: { index: GuideIndex }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [tier, setTier] = useState<Blessing["tier"] | null>(null)
   const [search, setSearch] = useState("")
   const needle = foldText(search.trim())
@@ -1235,20 +1345,20 @@ function BlessingsTab({ index }: { index: GuideIndex }) {
     }))
     .filter((section) => section.blessings.length)
   return (
-    <section className="mode-stack" aria-label="Chúc phúc">
+    <section className="mode-stack" aria-label={text("Chúc phúc", "Blessings")}>
       <div className="mode-filter-bar">
         <input
           className="mode-search"
           type="search"
-          placeholder="Tìm chúc phúc…"
-          aria-label="Tìm chúc phúc"
+          placeholder={text("Tìm chúc phúc…", "Search blessings…")}
+          aria-label={text("Tìm chúc phúc", "Search blessings")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
       </div>
-      <div className="mode-chip-row" role="group" aria-label="Bậc chúc phúc">
+      <div className="mode-chip-row" role="group" aria-label={text("Bậc chúc phúc", "Blessing tiers")}>
         <button type="button" className="mode-chip" aria-pressed={tier === null} onClick={() => setTier(null)}>
-          Tất cả <span className="tier-count">{index.content.blessings.length}</span>
+          {text("Tất cả", "All")} <span className="tier-count">{index.content.blessings.length}</span>
         </button>
         {BLESSING_TIERS.map((value) => (
           <button
@@ -1261,7 +1371,7 @@ function BlessingsTab({ index }: { index: GuideIndex }) {
             onClick={() => setTier(tier === value ? null : value)}
           >
             <TierIcon tier={value} />
-            {BLESSING_TIER_LABEL[value]}
+            {text(...BLESSING_TIER_NAMES[value])}
             <span className="tier-count">{index.content.blessings.filter((b) => b.tier === value).length}</span>
           </button>
         ))}
@@ -1270,8 +1380,10 @@ function BlessingsTab({ index }: { index: GuideIndex }) {
         <section key={section.tier} className="blessing-section" style={TIER_STYLE[section.tier]}>
           <h2 className="blessing-section-title">
             <TierIcon tier={section.tier} size={22} />
-            {BLESSING_TIER_LABEL[section.tier]}
-            <small>{section.blessings.length} chúc phúc</small>
+            {text(...BLESSING_TIER_NAMES[section.tier])}
+            <small>
+              {section.blessings.length} {text("chúc phúc", section.blessings.length === 1 ? "blessing" : "blessings")}
+            </small>
           </h2>
           <div className="blessing-list">
             {section.blessings.map((blessing) => (
@@ -1285,7 +1397,7 @@ function BlessingsTab({ index }: { index: GuideIndex }) {
                     </p>
                   )}
                 </div>
-                <span className="blessing-tier-mark" title={BLESSING_TIER_LABEL[blessing.tier]}>
+                <span className="blessing-tier-mark" title={text(...BLESSING_TIER_NAMES[blessing.tier])}>
                   <TierIcon tier={blessing.tier} size={16} />
                 </span>
               </article>
@@ -1293,20 +1405,31 @@ function BlessingsTab({ index }: { index: GuideIndex }) {
           </div>
         </section>
       ))}
-      {!sections.length && <p className="mode-empty">Không có chúc phúc khớp tìm kiếm.</p>}
+      {!sections.length && (
+        <p className="mode-empty">{text("Không có chúc phúc khớp tìm kiếm.", "No blessings match the search.")}</p>
+      )}
     </section>
   )
 }
 
 function QuestsTab({ index }: { index: GuideIndex }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   return (
-    <section className="mode-stack" aria-label="Nhiệm vụ">
-      <p className="mode-lead">Nhiệm vụ trong trận và phần thưởng khi hoàn thành.</p>
+    <section className="mode-stack" aria-label={text("Nhiệm vụ", "Quests")}>
+      <p className="mode-lead">
+        {text(
+          "Nhiệm vụ trong trận và phần thưởng khi hoàn thành.",
+          "In-match quests and the rewards for completing them.",
+        )}
+      </p>
       <ol className="quest-list">
         {index.content.quests.map((quest) => (
           <li key={quest.code}>
             <p>{quest.task}</p>
-            <span className="quest-reward">{quest.reward ?? "Chưa ghi phần thưởng"}</span>
+            <span className="quest-reward">
+              {quest.reward ?? text("Chưa ghi phần thưởng", "Reward not recorded yet")}
+            </span>
           </li>
         ))}
       </ol>

@@ -28,23 +28,24 @@ import {
 } from "./warehouse-types"
 
 const ROMAN = ["", "I", "II", "III"]
-const STAT_LABELS: Record<string, string> = {
-  physicalAttack: "Công vật lý",
-  magicAttack: "Công phép",
-  maxHealth: "Máu tối đa",
-  armor: "Giáp",
-  magicDefense: "Giáp phép",
-  attackSpeed: "Tốc đánh",
-  movementSpeed: "Tốc chạy",
-  cooldownReduction: "Giảm hồi chiêu",
-  criticalChance: "Tỷ lệ chí mạng",
-  criticalDamage: "Sát thương chí mạng",
-  armorPierce: "Xuyên giáp",
-  magicPierce: "Xuyên giáp phép",
+const STAT_LABELS: Record<string, [string, string]> = {
+  physicalAttack: ["Công vật lý", "Attack Damage"],
+  magicAttack: ["Công phép", "Ability Power"],
+  maxHealth: ["Máu tối đa", "Max HP"],
+  armor: ["Giáp", "Armor"],
+  magicDefense: ["Giáp phép", "Magic Defense"],
+  attackSpeed: ["Tốc đánh", "Attack Speed"],
+  movementSpeed: ["Tốc chạy", "Movement Speed"],
+  cooldownReduction: ["Giảm hồi chiêu", "Cooldown Speed"],
+  criticalChance: ["Tỷ lệ chí mạng", "Critical Chance"],
+  criticalDamage: ["Sát thương chí mạng", "Critical Damage"],
+  armorPierce: ["Xuyên giáp", "Armor Pierce"],
+  magicPierce: ["Xuyên giáp phép", "Magic Pierce"],
 }
 
-function statLabel(key: string, text?: WarehouseText) {
-  return text?.statLabels?.[key] ?? STAT_LABELS[key] ?? key.replace(/_/g, " ")
+function statLabel(key: string, text: WarehouseText | undefined, locale: string) {
+  const known = STAT_LABELS[key]
+  return text?.statLabels?.[key] ?? (known && wikiText(locale, ...known)) ?? key.replace(/_/g, " ")
 }
 
 function PanelTitle(props: ComponentProps<"h2">) {
@@ -97,7 +98,7 @@ function DetailContent({
   const description = text?.description || text?.summary
   const statRows = (content.stats ?? []).map((stat) => ({
     key: stat.key,
-    label: statLabel(stat.key, text),
+    label: statLabel(stat.key, text, scope.locale),
     value: warehouseStatValue(stat, scope.locale),
   }))
   const arcana = entry.kind === "arcana" ? entry.content : null

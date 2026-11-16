@@ -10,16 +10,16 @@ import {
 } from "@aov/ui/components/public-overlay"
 import { WikiIcon } from "../../components/wiki-icon"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { useWikiContext } from "../../context/wiki-context"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { signIn, useWikiSession } from "../auth/wiki-auth"
 import {
   decodeLineup,
-  DIFFICULTY_LABEL,
+  DIFFICULTY_NAMES,
   encodeLineup,
   MAX_EMBLEMS,
   BOARD_SLOTS,
   MAX_LINEUP_UNITS,
-  ROW_LABEL,
+  ROW_NAMES,
   cellOf,
   suggestUnits,
   traitCounts,
@@ -65,6 +65,7 @@ const TIER_ORDER: Record<string, number> = { S: 0, A: 1, B: 2, C: 3 }
 
 /** Likes of the signed-in reader, with the server's answer applied right away. */
 function useLikes(code: string) {
+  const { locale } = useWikiContext()
   const session = useWikiSession()
   const me = useQuery({ ...myStateQuery(code, session.revision), enabled: session.status === "authenticated" })
   const client = useQueryClient()
@@ -77,7 +78,7 @@ function useLikes(code: string) {
       setOverrides((current) => ({ ...current, [result.lineupId]: { liked: result.liked, likes: result.likes } }))
       void client.invalidateQueries({ queryKey: ["wiki", "game-mode", code, "insights"] })
     },
-    onError: (error) => setMessage(lineupErrorMessage(error)),
+    onError: (error) => setMessage(lineupErrorMessage(error, locale)),
   })
   return {
     session,
@@ -93,10 +94,17 @@ function useLikes(code: string) {
 type Likes = ReturnType<typeof useLikes>
 
 function LikeButton({ id, base, likes, own }: { id: string; base: number; likes: Likes; own?: boolean }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const count = likes.likes(id, base)
   if (likes.session.status !== "authenticated")
     return (
-      <button type="button" className="mode-chip" onClick={() => void signIn()} title="Đăng nhập để thích">
+      <button
+        type="button"
+        className="mode-chip"
+        onClick={() => void signIn()}
+        title={text("Đăng nhập để thích", "Sign in to like")}
+      >
         ♡ {count}
       </button>
     )
@@ -107,7 +115,13 @@ function LikeButton({ id, base, likes, own }: { id: string; base: number; likes:
       className="mode-chip like-button"
       aria-pressed={liked}
       disabled={own || likes.pending === id}
-      title={own ? "Đội hình của bạn" : liked ? "Bỏ thích" : "Thích đội hình này"}
+      title={
+        own
+          ? text("Đội hình của bạn", "Your lineup")
+          : liked
+            ? text("Bỏ thích", "Unlike")
+            : text("Thích đội hình này", "Like this lineup")
+      }
       onClick={() => likes.toggle(id, !liked)}
     >
       {liked ? "♥" : "♡"} {count}
@@ -124,9 +138,17 @@ function LineupUnits({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const shown = units.filter((item) => index.units.has(item.unitCode))
   return (
-    <div className="lineup-units" aria-label={`${Math.min(shown.length, BOARD_SLOTS)}/${BOARD_SLOTS} ô`}>
+    <div
+      className="lineup-units"
+      aria-label={text(
+        `${Math.min(shown.length, BOARD_SLOTS)}/${BOARD_SLOTS} ô`,
+        `${Math.min(shown.length, BOARD_SLOTS)}/${BOARD_SLOTS} slots`,
+      )}
+    >
       {shown.map((item, at) => {
         const unit = index.units.get(item.unitCode)!
         const extra = at >= BOARD_SLOTS
@@ -138,13 +160,13 @@ function LineupUnits({
             data-carry={item.carry}
             data-extra={extra || undefined}
             style={costStyle(unit.cost)}
-            title={`${unit.name}${item.row ? ` · ${ROW_LABEL[item.row]}` : ""}${item.carry ? " · chủ lực" : ""}${extra ? " · ô thêm từ trang bị" : ""}`}
+            title={`${unit.name}${item.row ? ` · ${text(...ROW_NAMES[item.row])}` : ""}${item.carry ? text(" · chủ lực", " · carry") : ""}${extra ? text(" · ô thêm từ trang bị", " · extra slot from an item") : ""}`}
             onClick={() => onOpen(unit.code)}
           >
             <span className="lineup-portrait">
               <UnitPortrait unit={unit} index={index} size="md" />
               {item.carry && (
-                <em className="carry-mark" title="Chủ lực" aria-label="Chủ lực">
+                <em className="carry-mark" title={text("Chủ lực", "Carry")} aria-label={text("Chủ lực", "Carry")}>
                   M
                 </em>
               )}
@@ -224,7 +246,8 @@ export function LineupsTab({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const likes = useLikes(code)
   const [view, setView] = useLineupView()
   const [sort, setSort] = useState<LineupSort>("popular")
@@ -242,11 +265,12 @@ export function LineupsTab({
     href(`/modes/${encodeURIComponent(code)}/xep-doi-hinh?${encodeLineup(units, emblems)}`)
 
   return (
-    <section className="mode-page" aria-label="Đội hình">
+    <section className="mode-page" aria-label={text("Đội hình", "Lineups")}>
       {likes.message && <p className="mode-message">{likes.message}</p>}
       <div className="lineup-section-head">
         <h2 className="mode-section-title">
-          Đội hình đề xuất <small>xếp theo hạng rồi lượt thích</small>
+          {text("Đội hình đề xuất", "Recommended lineups")}{" "}
+          <small>{text("xếp theo hạng rồi lượt thích", "sorted by tier, then likes")}</small>
         </h2>
         <LineupViewSwitch view={view} onChange={setView} />
       </div>
@@ -267,18 +291,21 @@ export function LineupsTab({
           ))}
         </div>
       ) : (
-        <p className="mode-empty">Chưa có đội hình đề xuất.</p>
+        <p className="mode-empty">{text("Chưa có đội hình đề xuất.", "No recommended lineups yet.")}</p>
       )}
 
       <h2 className="mode-section-title">
-        Đội hình cộng đồng <small>{communityTotal} đội hình</small>
+        {text("Đội hình cộng đồng", "Community lineups")}{" "}
+        <small>
+          {text(`${communityTotal} đội hình`, `${communityTotal} ${communityTotal === 1 ? "lineup" : "lineups"}`)}
+        </small>
       </h2>
       <div className="mode-toolbar">
         {(
           [
-            ["popular", "Nhiều lượt thích"],
-            ["trending", "Đang lên (7 ngày)"],
-            ["recent", "Mới cập nhật"],
+            ["popular", text("Nhiều lượt thích", "Most liked")],
+            ["trending", text("Đang lên (7 ngày)", "Trending (7 days)")],
+            ["recent", text("Mới cập nhật", "Recently updated")],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -293,11 +320,11 @@ export function LineupsTab({
         ))}
         <select
           className="mode-search"
-          aria-label="Lọc theo quân cờ"
+          aria-label={text("Lọc theo quân cờ", "Filter by unit")}
           value={unit ?? ""}
           onChange={(event) => setUnit(event.target.value || null)}
         >
-          <option value="">Mọi quân cờ</option>
+          <option value="">{text("Mọi quân cờ", "All units")}</option>
           {index.content.units.map((item) => (
             <option key={item.code} value={item.code}>
               {item.name}
@@ -306,18 +333,29 @@ export function LineupsTab({
         </select>
       </div>
       {community.isPending ? (
-        <p className="mode-empty">Đang tải…</p>
+        <p className="mode-empty">{text("Đang tải…", "Loading…")}</p>
       ) : community.isLoadingError ? (
-        <p className="mode-empty">Chưa tải được đội hình cộng đồng.</p>
+        <p className="mode-empty">
+          {text("Chưa tải được đội hình cộng đồng.", "Community lineups could not be loaded.")}
+        </p>
       ) : communityLineups.length === 0 ? (
-        <p className="mode-empty">Chưa có đội hình cộng đồng phù hợp. Hãy là người đầu tiên chia sẻ đội hình!</p>
+        <p className="mode-empty">
+          {text(
+            "Chưa có đội hình cộng đồng phù hợp. Hãy là người đầu tiên chia sẻ đội hình!",
+            "No matching community lineups yet. Be the first to share a lineup.",
+          )}
+        </p>
       ) : (
         <div className="lineup-list">
           {communityLineups.map((lineup) => (
             <article key={lineup.id} className="lineup-card">
               <header className="lineup-head">
                 <h3>{lineup.name}</h3>
-                {lineup.recentLikes > 0 && <span className="mode-badge">+{lineup.recentLikes} tuần này</span>}
+                {lineup.recentLikes > 0 && (
+                  <span className="mode-badge">
+                    {text(`+${lineup.recentLikes} tuần này`, `+${lineup.recentLikes} this week`)}
+                  </span>
+                )}
                 <span className="lineup-head-actions">
                   <LikeButton id={lineup.id} base={lineup.likes} likes={likes} own={own.has(lineup.id)} />
                   <LineupCopyMenu builder={builderLink(lineup.units, lineup.emblems)} />
@@ -332,25 +370,34 @@ export function LineupsTab({
               <LineupTips tip={lineup.note} />
             </article>
           ))}
-          <InfiniteScroll query={community} label="đội hình cộng đồng" />
+          <InfiniteScroll
+            query={community}
+            label={text("đội hình cộng đồng", "Community lineups")}
+            retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+          />
         </div>
       )}
-      <ModeFab label="Đăng đội hình" to={href(`/modes/${encodeURIComponent(code)}/xep-doi-hinh`)} />
+      <ModeFab
+        label={text("Đăng đội hình", "Post a lineup")}
+        to={href(`/modes/${encodeURIComponent(code)}/xep-doi-hinh`)}
+      />
     </section>
   )
 }
 
 const STAGES = [
-  { key: "EARLY", label: "Đầu trận" },
-  { key: "MID", label: "Giữa trận" },
-  { key: "LATE", label: "Cuối trận" },
+  { key: "EARLY", label: "Đầu trận", english: "Early game" },
+  { key: "MID", label: "Giữa trận", english: "Mid game" },
+  { key: "LATE", label: "Cuối trận", english: "Late game" },
 ] as const
 
 /** Items the lineup builds first, numbered in order, each naming itself and its effect on hover. */
 function PriorityItems({ codes, index }: { codes: string[]; index: GuideIndex }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   return (
-    <section className="lineup-extra" aria-label="Trang bị ưu tiên">
-      <h4>Trang bị ưu tiên</h4>
+    <section className="lineup-extra" aria-label={text("Trang bị ưu tiên", "Priority items")}>
+      <h4>{text("Trang bị ưu tiên", "Priority items")}</h4>
       <ol className="lineup-priority">
         {codes.map((code, at) => {
           const item = index.items.get(code)
@@ -370,10 +417,12 @@ function PriorityItems({ codes, index }: { codes: string[]; index: GuideIndex })
 
 /** Blessings to take with the lineup, in order, drawn on their tier's color. */
 function PriorityBlessings({ codes, index }: { codes: string[]; index: GuideIndex }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const blessings = new Map(index.content.blessings.map((blessing) => [blessing.code, blessing]))
   return (
-    <section className="lineup-extra" aria-label="Chúc phúc ưu tiên">
-      <h4>Chúc phúc ưu tiên</h4>
+    <section className="lineup-extra" aria-label={text("Chúc phúc ưu tiên", "Priority blessings")}>
+      <h4>{text("Chúc phúc ưu tiên", "Priority blessings")}</h4>
       <ol className="lineup-priority">
         {codes.map((code, at) => {
           const blessing = blessings.get(code)
@@ -398,6 +447,8 @@ function PriorityBlessings({ codes, index }: { codes: string[]; index: GuideInde
 
 /** Open a lineup in the builder, or copy it to paste there later with the builder's paste button. */
 function LineupCopyMenu({ builder }: { builder: string }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
   const copy = async () => {
@@ -409,25 +460,35 @@ function LineupCopyMenu({ builder }: { builder: string }) {
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         className="lineup-icon-button"
-        aria-label={copied ? "Đã sao chép đội hình" : "Sao chép đội hình"}
-        title={copied ? "Đã sao chép" : "Sao chép đội hình"}
+        aria-label={copied ? text("Đã sao chép đội hình", "Lineup copied") : text("Sao chép đội hình", "Copy lineup")}
+        title={copied ? text("Đã sao chép", "Copied") : text("Sao chép đội hình", "Copy lineup")}
         data-done={copied || undefined}
       >
         <WikiIcon name={copied ? "check" : "copy"} size={18} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={8} drawerTitle="Đội hình này" className="lineup-menu">
+      <DropdownMenuContent
+        align="end"
+        sideOffset={8}
+        drawerTitle={text("Đội hình này", "This lineup")}
+        className="lineup-menu"
+      >
         <DropdownMenuItem className="lineup-menu-item" onSelect={() => navigate(builder)}>
           <WikiIcon name="board" size={20} />
           <span>
-            <b>Mở trong Xếp đội hình</b>
-            <small>Xếp tiếp ngay từ đội hình này</small>
+            <b>{text("Mở trong Xếp đội hình", "Open in Lineup builder")}</b>
+            <small>{text("Xếp tiếp ngay từ đội hình này", "Keep building from this lineup")}</small>
           </span>
         </DropdownMenuItem>
         <DropdownMenuItem className="lineup-menu-item" onSelect={() => void copy()}>
           <WikiIcon name="copy" size={20} />
           <span>
-            <b>Sao chép đội hình</b>
-            <small>Dán vào Xếp đội hình bằng nút Dán, hoặc gửi cho bạn bè</small>
+            <b>{text("Sao chép đội hình", "Copy lineup")}</b>
+            <small>
+              {text(
+                "Dán vào Xếp đội hình bằng nút Dán, hoặc gửi cho bạn bè",
+                "Paste it into Lineup builder with the Paste button, or send it to friends",
+              )}
+            </small>
           </span>
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -447,11 +508,13 @@ function LineupFrame({
   onStage: (stage: "EARLY" | "MID" | "LATE") => void
   children: ReactNode
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   return (
-    <section className="lineup-frame" aria-label="Đội hình theo giai đoạn">
+    <section className="lineup-frame" aria-label={text("Đội hình theo giai đoạn", "Lineup by stage")}>
       <div className="lineup-frame-head">
         {stages.length > 0 ? (
-          <div className="lineup-stages" role="group" aria-label="Giai đoạn trận">
+          <div className="lineup-stages" role="group" aria-label={text("Giai đoạn trận", "Game stage")}>
             {STAGES.filter((entry) => entry.key === "LATE" || stages.some((item) => item.stage === entry.key)).map(
               (entry) => (
                 <button
@@ -460,13 +523,13 @@ function LineupFrame({
                   aria-pressed={stage === entry.key}
                   onClick={() => onStage(entry.key)}
                 >
-                  {entry.label}
+                  {text(entry.label, entry.english)}
                 </button>
               ),
             )}
           </div>
         ) : (
-          <span className="lineup-frame-label">Đội hình</span>
+          <span className="lineup-frame-label">{text("Đội hình", "Lineup")}</span>
         )}
       </div>
       {children}
@@ -476,12 +539,14 @@ function LineupFrame({
 
 /** Tips for playing the lineup. */
 function LineupTips({ tip }: { tip?: string | null }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   if (!tip) return null
   return (
-    <aside className="lineup-tips" aria-label="Mẹo">
+    <aside className="lineup-tips" aria-label={text("Mẹo", "Tips")}>
       <WikiIcon name="bulb" size={20} />
       <div>
-        <h4>Mẹo</h4>
+        <h4>{text("Mẹo", "Tips")}</h4>
         <p>{tip}</p>
       </div>
     </aside>
@@ -507,6 +572,8 @@ function EditorialLineup({
   onOpen: (code: string) => void
   builder: string
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const stages = lineup.stages ?? []
   const [stage, setStage] = useState<"EARLY" | "MID" | "LATE">("LATE")
   const current = stage === "LATE" ? null : stages.find((entry) => entry.stage === stage)
@@ -521,7 +588,7 @@ function EditorialLineup({
     <article className="lineup-card">
       <header className="lineup-head">
         {lineup.tier && (
-          <span className="lineup-tier" data-tier={lineup.tier} title="Hạng biên tập">
+          <span className="lineup-tier" data-tier={lineup.tier} title={text("Hạng biên tập", "Editorial tier")}>
             {lineup.tier}
           </span>
         )}
@@ -529,8 +596,12 @@ function EditorialLineup({
           <h3>{lineup.name}</h3>
           {lineup.summary && <p className="lineup-summary">{lineup.summary}</p>}
         </div>
-        {lineup.difficulty && <span className="mode-badge">Độ khó: {DIFFICULTY_LABEL[lineup.difficulty]}</span>}
-        {recent > 0 && <span className="mode-badge">+{recent} tuần này</span>}
+        {lineup.difficulty && (
+          <span className="mode-badge">
+            {text("Độ khó", "Difficulty")}: {text(...DIFFICULTY_NAMES[lineup.difficulty])}
+          </span>
+        )}
+        {recent > 0 && <span className="mode-badge">{text(`+${recent} tuần này`, `+${recent} this week`)}</span>}
         <span className="lineup-head-actions">
           <LikeButton id={lineup.id} base={base} likes={likes} />
           <LineupCopyMenu builder={builder} />
@@ -539,8 +610,8 @@ function EditorialLineup({
       <div className="lineup-tags">
         <ActiveTraits units={shown} emblems={lineup.emblems} index={index} />
         {lineup.emblems.length > 0 && (
-          <div className="guide-trait-tags" aria-label="Huy hiệu">
-            <span className="mode-meta">Huy hiệu</span>
+          <div className="guide-trait-tags" aria-label={text("Huy hiệu", "Emblems")}>
+            <span className="mode-meta">{text("Huy hiệu", "Emblems")}</span>
             {lineup.emblems.map((emblem, at) => (
               <TraitTag key={`${emblem}-${at}`} code={emblem} index={index} />
             ))}
@@ -575,6 +646,8 @@ export function BuilderTab({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [params, setParams] = useSearchParams()
   const { units, emblems } = useMemo(() => decodeLineup(params.toString(), index.content), [params, index])
   const [cost, setCost] = useState<number | null>(null)
@@ -601,11 +674,27 @@ export function BuilderTab({
     }
     const next = decodeLineup(query, index.content)
     if (!next.units.length) {
-      setPasting({ open: true, text: trimmed, message: "Không đọc được đội hình từ nội dung này." })
+      setPasting({
+        open: true,
+        text: trimmed,
+        message: wikiText(
+          locale,
+          "Không đọc được đội hình từ nội dung này.",
+          "No lineup could be read from this text.",
+        ),
+      })
       return
     }
     write(next.units, next.emblems)
-    setPasting({ open: false, text: "", message: `Đã dán ${next.units.length} quân.` })
+    setPasting({
+      open: false,
+      text: "",
+      message: wikiText(
+        locale,
+        `Đã dán ${next.units.length} quân.`,
+        `Pasted ${next.units.length} ${next.units.length === 1 ? "unit" : "units"}.`,
+      ),
+    })
   }
   async function paste() {
     try {
@@ -730,13 +819,17 @@ export function BuilderTab({
           type="button"
           className="builder-slot builder-slot-empty"
           data-extra={slot >= BOARD_SLOTS || undefined}
-          aria-label={slot >= BOARD_SLOTS ? "Thêm quân vào ô thêm" : "Thêm quân cờ"}
+          aria-label={
+            slot >= BOARD_SLOTS
+              ? text("Thêm quân vào ô thêm", "Add a unit to the extra slot")
+              : text("Thêm quân cờ", "Add a unit")
+          }
           onClick={() => setPicking(true)}
         >
           <span className="builder-slot-plus" aria-hidden="true">
             +
           </span>
-          <span>{slot >= BOARD_SLOTS ? "Ô thêm" : "Thêm quân"}</span>
+          <span>{slot >= BOARD_SLOTS ? text("Ô thêm", "Extra slot") : text("Thêm quân", "Add unit")}</span>
         </button>
       )
     return (
@@ -749,7 +842,7 @@ export function BuilderTab({
         <button
           type="button"
           style={{ border: 0, padding: 0 }}
-          title={`Xem ${unit.name}`}
+          title={text(`Xem ${unit.name}`, `View ${unit.name}`)}
           onClick={() => onOpen(unit.code)}
         >
           <UnitPortrait unit={unit} index={index} size="sm" />
@@ -759,8 +852,8 @@ export function BuilderTab({
           <button
             type="button"
             aria-pressed={item.carry}
-            aria-label={`${unit.name} là chủ lực`}
-            title="Chủ lực (M)"
+            aria-label={text(`${unit.name} là chủ lực`, `${unit.name} is a carry`)}
+            title={text("Chủ lực (M)", "Carry (M)")}
             className="carry-toggle"
             onClick={() => write(units.map((other) => (other === item ? { ...other, carry: !other.carry } : other)))}
           >
@@ -769,8 +862,8 @@ export function BuilderTab({
           <button
             type="button"
             onClick={() => toggleUnit(unit.code)}
-            aria-label={`Bỏ ${unit.name}`}
-            title="Bỏ khỏi đội hình"
+            aria-label={text(`Bỏ ${unit.name}`, `Remove ${unit.name}`)}
+            title={text("Bỏ khỏi đội hình", "Remove from the lineup")}
           >
             ✕
           </button>
@@ -780,25 +873,25 @@ export function BuilderTab({
   }
 
   return (
-    <section className="mode-page" aria-label="Xếp đội hình">
+    <section className="mode-page" aria-label={text("Xếp đội hình", "Lineup builder")}>
       <div className="builder">
         <div className="mode-page">
-          <section className="builder-board-card" aria-label="Đội hình đang xếp">
+          <section className="builder-board-card" aria-label={text("Đội hình đang xếp", "Lineup being built")}>
             <header className="builder-board-head">
               <span className="builder-board-title">
-                Đội hình{" "}
+                {text("Đội hình", "Lineup")}{" "}
                 <b>
                   {Math.min(units.length, BOARD_SLOTS)}/{BOARD_SLOTS}
                 </b>
-                {units.length > BOARD_SLOTS ? " + ô thêm" : ""}
+                {units.length > BOARD_SLOTS ? text(" + ô thêm", " + extra slot") : ""}
               </span>
               <span className="builder-board-actions">
                 <LineupViewSwitch view={view} onChange={setView} />
                 <button
                   type="button"
                   className="lineup-icon-button"
-                  aria-label="Thêm quân cờ"
-                  title="Thêm quân cờ"
+                  aria-label={text("Thêm quân cờ", "Add a unit")}
+                  title={text("Thêm quân cờ", "Add a unit")}
                   disabled={units.length >= MAX_LINEUP_UNITS}
                   onClick={() => setPicking(true)}
                 >
@@ -807,8 +900,16 @@ export function BuilderTab({
                 <button
                   type="button"
                   className="lineup-icon-button"
-                  aria-label={copied ? "Đã chép đường dẫn" : "Chép đường dẫn chia sẻ"}
-                  title={copied ? "Đã chép đường dẫn" : "Chép đường dẫn chia sẻ"}
+                  aria-label={
+                    copied
+                      ? text("Đã chép đường dẫn", "Link copied")
+                      : text("Chép đường dẫn chia sẻ", "Copy share link")
+                  }
+                  title={
+                    copied
+                      ? text("Đã chép đường dẫn", "Link copied")
+                      : text("Chép đường dẫn chia sẻ", "Copy share link")
+                  }
                   data-done={copied || undefined}
                   disabled={!units.length}
                   onClick={() => void copyLink()}
@@ -818,8 +919,8 @@ export function BuilderTab({
                 <button
                   type="button"
                   className="lineup-icon-button"
-                  aria-label="Dán đội hình đã sao chép"
-                  title="Dán đội hình đã sao chép"
+                  aria-label={text("Dán đội hình đã sao chép", "Paste a copied lineup")}
+                  title={text("Dán đội hình đã sao chép", "Paste a copied lineup")}
                   onClick={() => void paste()}
                 >
                   <WikiIcon name="clipboard" size={18} />
@@ -828,8 +929,8 @@ export function BuilderTab({
                   type="button"
                   className="lineup-icon-button"
                   data-tone="danger"
-                  aria-label="Xóa hết"
-                  title="Xóa hết"
+                  aria-label={text("Xóa hết", "Clear all")}
+                  title={text("Xóa hết", "Clear all")}
                   disabled={!units.length}
                   onClick={() => {
                     setSelected(null)
@@ -842,7 +943,7 @@ export function BuilderTab({
             </header>
             {view === "board" ? (
               <BoardGrid
-                label="Bàn cờ đang xếp"
+                label={text("Bàn cờ đang xếp", "Board being built")}
                 cell={(row, column) => {
                   const item = placed.get(`${row}-${column}`)
                   if (item)
@@ -865,8 +966,14 @@ export function BuilderTab({
                       data-target={selected ? true : undefined}
                       aria-label={
                         selected
-                          ? `Đặt vào ${ROW_LABEL[row]}, ô ${column}`
-                          : `Thêm quân vào ${ROW_LABEL[row]}, ô ${column}`
+                          ? text(
+                              `Đặt vào ${ROW_NAMES[row][0]}, ô ${column}`,
+                              `Place in the ${ROW_NAMES[row][1].toLowerCase()}, cell ${column}`,
+                            )
+                          : text(
+                              `Thêm quân vào ${ROW_NAMES[row][0]}, ô ${column}`,
+                              `Add a unit to the ${ROW_NAMES[row][1].toLowerCase()}, cell ${column}`,
+                            )
                       }
                       disabled={!selected && units.length >= MAX_LINEUP_UNITS}
                       onClick={() => {
@@ -882,8 +989,8 @@ export function BuilderTab({
                 footer={
                   <>
                     {bench.length > 0 && (
-                      <div className="board-bench" aria-label="Chưa xếp chỗ">
-                        <span className="mode-meta">Chưa xếp chỗ</span>
+                      <div className="board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
+                        <span className="mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
                         {bench.map((item) => (
                           <BoardPiece
                             key={item.unitCode}
@@ -896,15 +1003,18 @@ export function BuilderTab({
                       </div>
                     )}
                     {selectedUnit && selectedInfo && (
-                      <div className="board-selected" aria-label={`Đang chọn ${selectedInfo.name}`}>
+                      <div
+                        className="board-selected"
+                        aria-label={text(`Đang chọn ${selectedInfo.name}`, `${selectedInfo.name} selected`)}
+                      >
                         <strong>{selectedInfo.name}</strong>
                         <span className="builder-slot-actions">
                           <button
                             type="button"
                             aria-pressed={selectedUnit.carry}
                             className="carry-toggle"
-                            title="Chủ lực (M)"
-                            aria-label={`${selectedInfo.name} là chủ lực`}
+                            title={text("Chủ lực (M)", "Carry (M)")}
+                            aria-label={text(`${selectedInfo.name} là chủ lực`, `${selectedInfo.name} is a carry`)}
                             onClick={() =>
                               write(
                                 units.map((unit) => (unit === selectedUnit ? { ...unit, carry: !unit.carry } : unit)),
@@ -915,8 +1025,8 @@ export function BuilderTab({
                           </button>
                           <button
                             type="button"
-                            title={`Xem ${selectedInfo.name}`}
-                            aria-label={`Xem ${selectedInfo.name}`}
+                            title={text(`Xem ${selectedInfo.name}`, `View ${selectedInfo.name}`)}
+                            aria-label={text(`Xem ${selectedInfo.name}`, `View ${selectedInfo.name}`)}
                             onClick={() => onOpen(selectedInfo.code)}
                           >
                             <WikiIcon name="info" size={16} />
@@ -924,8 +1034,8 @@ export function BuilderTab({
                           {cellOf(selectedUnit) && (
                             <button
                               type="button"
-                              title="Đưa xuống hàng chờ"
-                              aria-label="Đưa xuống hàng chờ"
+                              title={text("Đưa xuống hàng chờ", "Move to the bench")}
+                              aria-label={text("Đưa xuống hàng chờ", "Move to the bench")}
                               onClick={() => moveTo(selectedUnit.unitCode, null)}
                             >
                               <WikiIcon name="chevron" size={16} />
@@ -933,8 +1043,8 @@ export function BuilderTab({
                           )}
                           <button
                             type="button"
-                            title="Bỏ khỏi đội hình"
-                            aria-label={`Bỏ ${selectedInfo.name}`}
+                            title={text("Bỏ khỏi đội hình", "Remove from the lineup")}
+                            aria-label={text(`Bỏ ${selectedInfo.name}`, `Remove ${selectedInfo.name}`)}
                             onClick={() => toggleUnit(selectedUnit.unitCode)}
                           >
                             ✕
@@ -952,7 +1062,11 @@ export function BuilderTab({
                 <div className="builder-extra">
                   {slotAt(BOARD_SLOTS)}
                   <p className="mode-meta">
-                    <b>Ô thêm</b> · cho quân thứ {BOARD_SLOTS + 1} khi có trang bị mở thêm ô.
+                    <b>{text("Ô thêm", "Extra slot")}</b>
+                    {text(
+                      ` · cho quân thứ ${BOARD_SLOTS + 1} khi có trang bị mở thêm ô.`,
+                      ` · for unit number ${BOARD_SLOTS + 1}, when an item opens one more slot.`,
+                    )}
                   </p>
                 </div>
               </>
@@ -961,17 +1075,22 @@ export function BuilderTab({
             <div className="builder-emblems">
               <div className="builder-emblems-head">
                 <span className="builder-board-title">
-                  Huy hiệu{" "}
+                  {text("Huy hiệu", "Emblems")}{" "}
                   <b>
                     {emblems.length}/{MAX_EMBLEMS}
                   </b>
                 </span>
-                <span className="mode-meta">+1 vào một Phe/Nghề, như khi có chúc phúc “Trái tim…”</span>
+                <span className="mode-meta">
+                  {text(
+                    "+1 vào một Phe/Nghề, như khi có chúc phúc “Trái tim…”",
+                    "+1 to a Faction/Class, as with a “Trái tim…” blessing",
+                  )}
+                </span>
                 <button
                   type="button"
                   className="lineup-icon-button"
-                  aria-label="Thêm huy hiệu"
-                  title="Thêm huy hiệu"
+                  aria-label={text("Thêm huy hiệu", "Add an emblem")}
+                  title={text("Thêm huy hiệu", "Add an emblem")}
                   disabled={emblems.length >= MAX_EMBLEMS}
                   onClick={() => setEmblemPicking(true)}
                 >
@@ -987,7 +1106,7 @@ export function BuilderTab({
                         key={`${emblem}-${at}`}
                         type="button"
                         className="guide-trait-tag"
-                        title="Bỏ huy hiệu"
+                        title={text("Bỏ huy hiệu", "Remove emblem")}
                         onClick={() =>
                           write(
                             units,
@@ -1018,19 +1137,19 @@ export function BuilderTab({
                 className="mode-search"
                 autoFocus
                 value={pasting.text}
-                placeholder="Dán đường dẫn hoặc mã đội hình…"
-                aria-label="Đội hình đã sao chép"
+                placeholder={text("Dán đường dẫn hoặc mã đội hình…", "Paste a lineup link or code…")}
+                aria-label={text("Đội hình đã sao chép", "Copied lineup")}
                 onChange={(event) => setPasting({ ...pasting, text: event.target.value })}
               />
               <button type="submit" className="mode-chip" disabled={!pasting.text.trim()}>
-                Dùng
+                {text("Dùng", "Use")}
               </button>
               <button
                 type="button"
                 className="mode-chip"
                 onClick={() => setPasting({ open: false, text: "", message: "" })}
               >
-                Hủy
+                {text("Hủy", "Cancel")}
               </button>
             </form>
           )}
@@ -1040,8 +1159,8 @@ export function BuilderTab({
           )}
         </div>
         <aside className="mode-page">
-          <section className="mode-panel" aria-label="Phe và Nghề kích hoạt">
-            <h2>Phe & Nghề</h2>
+          <section className="mode-panel" aria-label={text("Phe và Nghề kích hoạt", "Active Factions and Classes")}>
+            <h2>{text("Phe & Nghề", "Factions & Classes")}</h2>
             {counts.length ? (
               <div className="builder-active">
                 {counts.map((count) => (
@@ -1054,7 +1173,7 @@ export function BuilderTab({
                       <p>
                         {count.reachedTier >= 0
                           ? count.trait.tiers[count.reachedTier]?.effect
-                          : `Cần thêm ${count.missing} để kích hoạt`}
+                          : text(`Cần thêm ${count.missing} để kích hoạt`, `Needs ${count.missing} more to activate`)}
                       </p>
                     </div>
                     <span className="builder-steps">
@@ -1068,12 +1187,12 @@ export function BuilderTab({
                 ))}
               </div>
             ) : (
-              <p className="mode-meta">Chưa chọn quân cờ nào.</p>
+              <p className="mode-meta">{text("Chưa chọn quân cờ nào.", "No units chosen yet.")}</p>
             )}
           </section>
           {suggestions.length > 0 && (
-            <section className="mode-panel" aria-label="Gợi ý thêm">
-              <h2>Gợi ý thêm</h2>
+            <section className="mode-panel" aria-label={text("Gợi ý thêm", "Suggested additions")}>
+              <h2>{text("Gợi ý thêm", "Suggested additions")}</h2>
               <div className="builder-active">
                 {suggestions.map(({ unit, gains, shared }) => (
                   <button
@@ -1089,8 +1208,8 @@ export function BuilderTab({
                       <strong>{unit.name}</strong>
                       <span>
                         {gains.length
-                          ? `Mở mốc: ${gains.map((code) => index.traits.get(code)?.name).join(", ")}`
-                          : `Cùng ${shared.map((code) => index.traits.get(code)?.name).join(", ")}`}
+                          ? `${text("Mở mốc", "Unlocks a tier")}: ${gains.map((code) => index.traits.get(code)?.name).join(", ")}`
+                          : `${text("Cùng", "Shares")} ${shared.map((code) => index.traits.get(code)?.name).join(", ")}`}
                       </span>
                     </span>
                   </button>
@@ -1100,29 +1219,47 @@ export function BuilderTab({
           )}
         </aside>
       </div>
-      <ModeFab label="Đăng đội hình" onClick={() => setPosting(true)} />
+      <ModeFab label={text("Đăng đội hình", "Post a lineup")} onClick={() => setPosting(true)} />
       <ModeDialog
         open={picking}
         onClose={() => {
           setPicking(false)
           setTarget(null)
         }}
-        label="Chọn quân cờ"
-        title={target ? `Chọn quân cho ${ROW_LABEL[target.row].toLowerCase()}, ô ${target.column}` : "Chọn quân cờ"}
+        label={text("Chọn quân cờ", "Choose a unit")}
+        title={
+          target
+            ? text(
+                `Chọn quân cho ${ROW_NAMES[target.row][0].toLowerCase()}, ô ${target.column}`,
+                `Choose a unit for the ${ROW_NAMES[target.row][1].toLowerCase()}, cell ${target.column}`,
+              )
+            : text("Chọn quân cờ", "Choose a unit")
+        }
       >
         <div className="unit-picker">{unitPicker}</div>
       </ModeDialog>
       <ModeDialog
         open={emblemPicking}
         onClose={() => setEmblemPicking(false)}
-        label="Chọn huy hiệu"
-        title={`Chọn huy hiệu · ${emblems.length}/${MAX_EMBLEMS}`}
+        label={text("Chọn huy hiệu", "Choose emblems")}
+        title={`${text("Chọn huy hiệu", "Choose emblems")} · ${emblems.length}/${MAX_EMBLEMS}`}
       >
         <div className="trait-index">
-          <p className="mode-meta">Mỗi huy hiệu cộng 1 vào Phe/Nghề đó; có thể chọn cùng một Phe/Nghề nhiều lần.</p>
+          <p className="mode-meta">
+            {text(
+              "Mỗi huy hiệu cộng 1 vào Phe/Nghề đó; có thể chọn cùng một Phe/Nghề nhiều lần.",
+              "Each emblem adds 1 to that Faction/Class; the same Faction/Class can be chosen more than once.",
+            )}
+          </p>
           {(["FACTION", "CLASS"] as const).map((kind) => (
-            <section key={kind} className="trait-index-group" aria-label={kind === "FACTION" ? "Phe" : "Nghề"}>
-              <h2 className="mode-section-title">{kind === "FACTION" ? "Phe" : "Nghề"}</h2>
+            <section
+              key={kind}
+              className="trait-index-group"
+              aria-label={kind === "FACTION" ? text("Phe", "Faction") : text("Nghề", "Class")}
+            >
+              <h2 className="mode-section-title">
+                {kind === "FACTION" ? text("Phe", "Faction") : text("Nghề", "Class")}
+              </h2>
               <div className="trait-index-grid">
                 {index.content.traits
                   .filter((trait) => trait.kind === kind)
@@ -1148,7 +1285,12 @@ export function BuilderTab({
           ))}
         </div>
       </ModeDialog>
-      <ModeDialog open={posting} onClose={() => setPosting(false)} label="Đăng đội hình" title="Đăng đội hình">
+      <ModeDialog
+        open={posting}
+        onClose={() => setPosting(false)}
+        label={text("Đăng đội hình", "Post a lineup")}
+        title={text("Đăng đội hình", "Post a lineup")}
+      >
         <SaveLineup code={code} units={units} emblems={emblems} index={index} />
       </ModeDialog>
     </section>
@@ -1166,7 +1308,8 @@ function SaveLineup({
   emblems: string[]
   index: GuideIndex
 }) {
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const session = useWikiSession()
   const client = useQueryClient()
   const me = useQuery({ ...myStateQuery(code, session.revision), enabled: session.status === "authenticated" })
@@ -1183,25 +1326,30 @@ function SaveLineup({
         emblems,
       }),
     onSuccess: () => {
-      setMessage("Đã lưu và chia sẻ đội hình.")
+      setMessage(text("Đã lưu và chia sẻ đội hình.", "Lineup saved and shared."))
       setName("")
       setNote("")
       void refresh()
     },
-    onError: (error) => setMessage(lineupErrorMessage(error)),
+    onError: (error) => setMessage(lineupErrorMessage(error, locale)),
   })
   const remove = useMutation({
     mutationFn: ({ id, version }: { id: string; version: number }) => deleteLineup(code, id, version),
     onSuccess: () => void refresh(),
-    onError: (error) => setMessage(lineupErrorMessage(error)),
+    onError: (error) => setMessage(lineupErrorMessage(error, locale)),
   })
 
   if (session.status !== "authenticated")
     return (
       <section className="mode-panel lineup-post">
-        <p className="mode-meta">Đăng nhập để lưu đội hình, chia sẻ với cộng đồng và nhận lượt thích.</p>
+        <p className="mode-meta">
+          {text(
+            "Đăng nhập để lưu đội hình, chia sẻ với cộng đồng và nhận lượt thích.",
+            "Sign in to save lineups, share them with the community and get likes.",
+          )}
+        </p>
         <button type="button" className="mode-chip" onClick={() => void signIn()}>
-          Đăng nhập
+          {text("Đăng nhập", "Sign in")}
         </button>
       </section>
     )
@@ -1218,26 +1366,26 @@ function SaveLineup({
         <input
           value={name}
           maxLength={60}
-          placeholder="Tên đội hình"
-          aria-label="Tên đội hình"
+          placeholder={text("Tên đội hình", "Lineup name")}
+          aria-label={text("Tên đội hình", "Lineup name")}
           onChange={(event) => setName(event.target.value)}
         />
         <textarea
           value={note}
           maxLength={280}
           rows={3}
-          placeholder="Ghi chú lối chơi (tùy chọn)"
-          aria-label="Ghi chú"
+          placeholder={text("Ghi chú lối chơi (tùy chọn)", "Gameplay notes (optional)")}
+          aria-label={text("Ghi chú", "Notes")}
           onChange={(event) => setNote(event.target.value)}
         />
         <button type="submit" className="mode-chip" disabled={!name.trim() || !units.length || save.isPending}>
-          {save.isPending ? "Đang lưu…" : "Lưu và chia sẻ"}
+          {save.isPending ? text("Đang lưu…", "Saving…") : text("Lưu và chia sẻ", "Save and share")}
         </button>
         {message && <p className="mode-message">{message}</p>}
       </form>
       {me.data && me.data.lineups.length > 0 && (
         <>
-          <h3>Đội hình của tôi</h3>
+          <h3>{text("Đội hình của tôi", "My lineups")}</h3>
           <ul className="builder-active">
             {me.data.lineups.map((lineup) => (
               <li key={lineup.id} className="lineup-actions">
@@ -1250,7 +1398,7 @@ function SaveLineup({
                 </Link>
                 <span className="mode-meta">
                   ♥ {lineup.likes}
-                  {lineup.status === "HIDDEN" && " · đã bị ẩn"}
+                  {lineup.status === "HIDDEN" && text(" · đã bị ẩn", " · hidden")}
                 </span>
                 <button
                   type="button"
@@ -1258,7 +1406,7 @@ function SaveLineup({
                   disabled={remove.isPending}
                   onClick={() => remove.mutate({ id: lineup.id, version: lineup.version })}
                 >
-                  Xóa
+                  {text("Xóa", "Delete")}
                 </button>
               </li>
             ))}
@@ -1266,13 +1414,15 @@ function SaveLineup({
         </>
       )}
       <p className="mode-meta">
-        Quân trong đội: {units.map((unit) => index.units.get(unit.unitCode)?.name).join(", ") || "chưa có"}
+        {text("Quân trong đội", "Units in the lineup")}:{" "}
+        {units.map((unit) => index.units.get(unit.unitCode)?.name).join(", ") || text("chưa có", "none yet")}
       </p>
     </section>
   )
 }
 
 function Bars({ rows, unit }: { rows: { key: string; label: ReactNode; value: number }[]; unit?: string }) {
+  const { locale } = useWikiContext()
   const max = Math.max(1, ...rows.map((row) => row.value))
   return (
     <div className="insight-bars">
@@ -1283,7 +1433,7 @@ function Bars({ rows, unit }: { rows: { key: string; label: ReactNode; value: nu
             <i style={{ width: `${(row.value / max) * 100}%` }} />
           </div>
           <b>
-            {row.value.toLocaleString("vi-VN")}
+            {row.value.toLocaleString(locale)}
             {unit}
           </b>
         </div>
@@ -1301,6 +1451,8 @@ export function InsightsTab({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const insights = useQuery(insightsQuery(code))
   const { units, traits } = index.content
   const byCost = new Map<number, number>()
@@ -1323,20 +1475,25 @@ export function InsightsTab({
   }
 
   return (
-    <section className="mode-page" aria-label="Phân tích">
+    <section className="mode-page" aria-label={text("Phân tích", "Insights")}>
       <div className="mode-columns">
         <section className="mode-panel">
-          <h2>Quân cờ được dùng nhiều</h2>
+          <h2>{text("Quân cờ được dùng nhiều", "Most used units")}</h2>
           {insights.isPending ? (
-            <p className="mode-meta">Đang tải…</p>
+            <p className="mode-meta">{text("Đang tải…", "Loading…")}</p>
           ) : insights.isError ? (
-            <p className="mode-meta">Chưa tải được thống kê.</p>
+            <p className="mode-meta">{text("Chưa tải được thống kê.", "Statistics could not be loaded.")}</p>
           ) : (
             <>
               <p className="mode-meta">
-                Từ {insights.data.lineupCount - insights.data.communityLineupCount} đội hình đề xuất và{" "}
-                {insights.data.communityLineupCount} đội hình cộng đồng. Điểm = số lần xuất hiện × (1 + lượt thích). Đây
-                là xu hướng xếp đội hình, không phải tỷ lệ thắng.
+                {text(
+                  `Từ ${insights.data.lineupCount - insights.data.communityLineupCount} đội hình đề xuất và ${insights.data.communityLineupCount} đội hình cộng đồng.`,
+                  `Lineups counted: ${insights.data.lineupCount - insights.data.communityLineupCount} recommended, ${insights.data.communityLineupCount} community.`,
+                )}{" "}
+                {text(
+                  "Điểm = số lần xuất hiện × (1 + lượt thích). Đây là xu hướng xếp đội hình, không phải tỷ lệ thắng.",
+                  "Score = appearances × (1 + likes). This shows lineup-building trends, not win rates.",
+                )}
               </p>
               <Bars
                 rows={insights.data.units.slice(0, 12).map((row) => ({
@@ -1349,7 +1506,7 @@ export function InsightsTab({
           )}
         </section>
         <section className="mode-panel">
-          <h2>Phe & Nghề hay kích hoạt</h2>
+          <h2>{text("Phe & Nghề hay kích hoạt", "Most activated Factions & Classes")}</h2>
           {insights.data && (
             <Bars
               rows={insights.data.traits.slice(0, 10).map((row) => ({
@@ -1363,7 +1520,7 @@ export function InsightsTab({
       </div>
       <div className="mode-columns">
         <section className="mode-panel">
-          <h2>Phe & Nghề theo số quân cờ</h2>
+          <h2>{text("Phe & Nghề theo số quân cờ", "Factions & Classes by number of units")}</h2>
           <Bars
             rows={[...traits]
               .map((trait) => ({
@@ -1375,13 +1532,17 @@ export function InsightsTab({
           />
         </section>
         <section className="mode-panel">
-          <h2>Số quân cờ theo giá</h2>
+          <h2>{text("Số quân cờ theo giá", "Number of units by cost")}</h2>
           <Bars
             rows={[...byCost.entries()]
               .sort((a, b) => a[0] - b[0])
-              .map(([cost, count]) => ({ key: String(cost), label: `${cost} vàng`, value: count }))}
+              .map(([cost, count]) => ({
+                key: String(cost),
+                label: text(`${cost} vàng`, `${cost} gold`),
+                value: count,
+              }))}
           />
-          <h2>Máu cao nhất (3★)</h2>
+          <h2>{text("Máu cao nhất (3★)", "Highest HP (3★)")}</h2>
           <Bars
             rows={leaders("health").map((unit) => ({
               key: unit.code,
@@ -1389,7 +1550,7 @@ export function InsightsTab({
               value: unit.stats!.health[2]!,
             }))}
           />
-          <h2>Công vật lý cao nhất (3★)</h2>
+          <h2>{text("Công vật lý cao nhất (3★)", "Highest Attack Damage (3★)")}</h2>
           <Bars
             rows={leaders("physicalAttack").map((unit) => ({
               key: unit.code,

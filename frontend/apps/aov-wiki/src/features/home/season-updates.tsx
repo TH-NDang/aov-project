@@ -19,6 +19,7 @@ function PatchRow({ patch }: { patch: SeasonPatch }) {
             value={date}
             sourceTimeZone={regions.find((market) => market.code === region)?.timeZone}
             label={(zone) => patchDayLabel(date, zone)}
+            locale={locale}
             fallback={<time className="wiki-home-patch-date">—</time>}
           />
           {patch.isCurrent && (

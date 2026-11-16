@@ -33,10 +33,10 @@ const ENGLISH_LABELS: Record<HeroRole | HeroPosition, string> = {
   MAGE: "Mage",
   MARKSMAN: "Marksman",
   SUPPORT: "Support",
-  TOP: "Caesar lane",
+  TOP: "Dark Slayer lane",
   JUNGLE: "Jungle",
-  MID: "Middle lane",
-  DRAGON: "Dragon lane",
+  MID: "Mid lane",
+  DRAGON: "Abyssal Dragon lane",
 }
 
 export function localizedHeroOptions<Value extends HeroRole | HeroPosition>(

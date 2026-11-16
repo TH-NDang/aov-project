@@ -2,26 +2,27 @@ import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { useWikiContext } from "../../context/wiki-context"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { foldText } from "./auto-chess-model"
 import { modeCardsQuery, type ModeCard } from "./mode-api"
-import { AvailabilityBadge, durationText, GROUP_LABEL, isOpen, ModeArt } from "./mode-ui"
+import { AvailabilityBadge, durationText, GROUP_NAMES, isOpen, ModeArt } from "./mode-ui"
 import "./modes.css"
 
 type Filter = "all" | "PVP" | "ENTERTAINMENT" | "open" | "guide"
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "all", label: "Tất cả" },
-  { key: "open", label: "Đang mở" },
-  { key: "PVP", label: "PVP" },
-  { key: "ENTERTAINMENT", label: "Giải trí" },
-  { key: "guide", label: "Có cẩm nang" },
+const FILTERS: { key: Filter; label: string; english: string }[] = [
+  { key: "all", label: "Tất cả", english: "All" },
+  { key: "open", label: "Đang mở", english: "Open" },
+  { key: "PVP", label: "PVP", english: "PVP" },
+  { key: "ENTERTAINMENT", label: "Giải trí", english: "Casual" },
+  { key: "guide", label: "Có cẩm nang", english: "Has a guide" },
 ]
 
 /** Every published game mode: a guide first, then the game's groups, as a grid on wide screens and a list on phones. */
 export function ModesPage() {
-  const { href } = useWikiContext()
+  const { href, locale, t } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const layout = usePageLayout()
   const [params, setParams] = useSearchParams()
   const filter = (FILTERS.find((item) => item.key === params.get("loc"))?.key ?? "all") as Filter
@@ -57,20 +58,28 @@ export function ModesPage() {
 
   return (
     <div className="mode-page">
-      <CatalogHeading title="Chế độ chơi" section="Chế độ chơi" />
+      <CatalogHeading title={t("modes")} section={t("modes")} />
       {layout === "wide" && (
         <p className="mode-lead">
-          {all.length ? `${all.length} chế độ, ${openCount} đang mở. ` : ""}Thời lượng một trận, lịch mở, luật chơi và
-          cẩm nang chi tiết. Lịch mở là dữ liệu ghi nhận trong game nên có thể đã thay đổi.
+          {all.length
+            ? text(
+                `${all.length} chế độ, ${openCount} đang mở. `,
+                `${all.length} ${all.length === 1 ? "mode" : "modes"}, ${openCount} open. `,
+              )
+            : ""}
+          {text(
+            "Thời lượng một trận, lịch mở, luật chơi và cẩm nang chi tiết. Lịch mở là dữ liệu ghi nhận trong game nên có thể đã thay đổi.",
+            "Match length, opening schedule, rules and detailed guides. The opening schedule is data recorded in the game, so it may have changed.",
+          )}
         </p>
       )}
-      <div className="mode-filter-bar" role="group" aria-label="Lọc chế độ">
+      <div className="mode-filter-bar" role="group" aria-label={text("Lọc chế độ", "Filter modes")}>
         <input
           className="mode-search"
           type="search"
           value={search}
-          placeholder="Tìm chế độ…"
-          aria-label="Tìm chế độ"
+          placeholder={text("Tìm chế độ…", "Search modes…")}
+          aria-label={text("Tìm chế độ", "Search modes")}
           onChange={(event) => update("q", event.target.value || null)}
         />
         <div className="mode-chip-row">
@@ -82,23 +91,23 @@ export function ModesPage() {
               aria-pressed={filter === item.key}
               onClick={() => update("loc", item.key === "all" ? null : item.key)}
             >
-              {item.label}
+              {text(item.label, item.english)}
             </button>
           ))}
         </div>
       </div>
 
       {modes.isPending ? (
-        <p className="mode-empty">Đang tải danh sách chế độ…</p>
+        <p className="mode-empty">{text("Đang tải danh sách chế độ…", "Loading the list of modes…")}</p>
       ) : modes.isError ? (
         <p className="mode-empty">
-          Chưa tải được danh sách chế độ.{" "}
+          {text("Chưa tải được danh sách chế độ.", "The list of modes could not be loaded.")}{" "}
           <button type="button" className="mode-chip" onClick={() => modes.refetch()}>
-            Thử lại
+            {text("Thử lại", "Retry")}
           </button>
         </p>
       ) : visible.length === 0 ? (
-        <p className="mode-empty">Không có chế độ nào khớp bộ lọc.</p>
+        <p className="mode-empty">{text("Không có chế độ nào khớp bộ lọc.", "No modes match the filters.")}</p>
       ) : (
         <>
           {guides.map((mode) => (
@@ -110,7 +119,10 @@ export function ModesPage() {
             return (
               <section key={group} className="mode-group" aria-labelledby={`mode-group-${group}`}>
                 <h2 id={`mode-group-${group}`} className="mode-section-title">
-                  {GROUP_LABEL[group]} <small>{entries.length} chế độ</small>
+                  {text(GROUP_NAMES[group][0], GROUP_NAMES[group][1])}{" "}
+                  <small>
+                    {entries.length} {text("chế độ", entries.length === 1 ? "mode" : "modes")}
+                  </small>
                 </h2>
                 {layout === "compact" ? (
                   <ul className="mode-list">
@@ -137,7 +149,8 @@ export function ModesPage() {
 }
 
 function ModeMeta({ mode }: { mode: ModeCard }) {
-  const duration = durationText(mode.duration)
+  const { locale } = useWikiContext()
+  const duration = durationText(mode.duration, locale)
   if (!duration && !mode.playersLabel) return null
   return (
     <p className="mode-meta">
@@ -149,31 +162,35 @@ function ModeMeta({ mode }: { mode: ModeCard }) {
 
 /** A mode with a guide gets the first, widest place: it is where most of the reading happens. */
 function GuideSpotlight({ mode, to }: { mode: ModeCard; to: string }) {
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const tab = (key: string) => href(`/modes/${encodeURIComponent(mode.code)}/${key}`)
   return (
     <article className="mode-spotlight">
       <ModeArt className="mode-spotlight-art" image={mode.art} name={mode.name} showCredit={false} eager />
       <div className="mode-spotlight-body">
-        <span className="mode-eyebrow">Cẩm nang</span>
+        <span className="mode-eyebrow">{text("Cẩm nang", "Guide")}</span>
         <h2>
           <Link to={to}>{mode.name}</Link>
         </h2>
         <ModeMeta mode={mode} />
         {mode.summary && <p className="mode-prose mode-clamp">{mode.summary}</p>}
         {mode.guideKind === "AUTO_CHESS" && (
-          <nav className="mode-chip-row" aria-label={`Mục trong cẩm nang ${mode.name}`}>
+          <nav
+            className="mode-chip-row"
+            aria-label={text(`Mục trong cẩm nang ${mode.name}`, `Sections of the ${mode.name} guide`)}
+          >
             <Link className="mode-chip" data-tone="accent" to={to}>
-              Mở cẩm nang
+              {text("Mở cẩm nang", "Open the guide")}
             </Link>
             <Link className="mode-chip" to={tab("quan-co")}>
-              Quân cờ
+              {text("Quân cờ", "Units")}
             </Link>
             <Link className="mode-chip" to={tab("phe-nghe")}>
-              Phe & Nghề
+              {text("Phe & Nghề", "Factions & Classes")}
             </Link>
             <Link className="mode-chip" to={tab("xep-doi-hinh")}>
-              Xếp đội hình
+              {text("Xếp đội hình", "Lineup builder")}
             </Link>
           </nav>
         )}
@@ -183,6 +200,7 @@ function GuideSpotlight({ mode, to }: { mode: ModeCard; to: string }) {
 }
 
 function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
+  const { locale } = useWikiContext()
   return (
     <Link className="mode-card" to={to} data-closed={!isOpen(mode.availability) || undefined}>
       <ModeArt className="mode-card-art" image={mode.art} name={mode.name} showCredit={false}>
@@ -190,7 +208,7 @@ function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
           <AvailabilityBadge availability={mode.availability} quiet />
           {mode.hasGuide && (
             <span className="mode-badge" data-tone="guide">
-              Cẩm nang
+              {wikiText(locale, "Cẩm nang", "Guide")}
             </span>
           )}
         </span>
@@ -206,6 +224,7 @@ function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
 
 /** Phones scan a list faster than a grid of tall cards: a small picture, the name, the length and the status. */
 function ModeRow({ mode, to }: { mode: ModeCard; to: string }) {
+  const { locale } = useWikiContext()
   return (
     <Link className="mode-row" to={to} data-closed={!isOpen(mode.availability) || undefined}>
       <ModeArt className="mode-row-art" image={mode.art} name={mode.name} showCredit={false} />
@@ -216,7 +235,7 @@ function ModeRow({ mode, to }: { mode: ModeCard; to: string }) {
           <AvailabilityBadge availability={mode.availability} quiet />
           {mode.hasGuide && (
             <span className="mode-badge" data-tone="guide">
-              Cẩm nang
+              {wikiText(locale, "Cẩm nang", "Guide")}
             </span>
           )}
         </span>

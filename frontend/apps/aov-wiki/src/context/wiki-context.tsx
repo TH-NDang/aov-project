@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { supportedWikiLocale, warehouseListPath, wikiScopeHref, wikiSection } from "../lib/wiki-catalog"
@@ -109,6 +109,14 @@ const COPY: Record<string, [string, string]> = {
   account: ["Tài khoản", "Account"],
   feedback: ["Phản hồi vấn đề", "Report an issue"],
   signInNote: ["Đăng nhập để lưu nội dung yêu thích", "Sign in to save your favorites"],
+}
+/** The backend names each market in Vietnamese only; English readers get these names instead. */
+export const MARKET_NAMES: Record<string, string> = {
+  VN: "Vietnam",
+  TH: "Thailand",
+  TW: "Taiwan",
+  ID: "Indonesia",
+  GLOBAL: "Global",
 }
 const PREFERENCE_KEY = "aov-wiki:browsing:v1"
 const UI_LANGUAGES = new Set(["vi-VN", "en-US"])
@@ -264,6 +272,15 @@ function useWikiState() {
     [region, locale, seasonId, patchVariantId, includeUnscoped, section],
   )
   const t = useCallback((key: string) => COPY[key]?.[locale.startsWith("en") ? 1 : 0] ?? key, [locale])
+  const english = locale.startsWith("en")
+  const marketList = markets.data ?? context.data?.regions
+  const regions = useMemo(
+    () =>
+      (marketList ?? []).map((market) =>
+        english ? { ...market, displayName: MARKET_NAMES[market.code] ?? market.displayName } : market,
+      ),
+    [marketList, english],
+  )
   return {
     region,
     section,
@@ -280,7 +297,7 @@ function useWikiState() {
     optionsPending: context.isPending,
     optionsError: context.error,
     retryOptions: context.refetch,
-    regions: markets.data ?? context.data?.regions ?? [],
+    regions,
     regionsPending: markets.isPending,
     regionsError: markets.error,
     retryRegions: markets.refetch,
