@@ -247,7 +247,7 @@ export function StoragePage() {
       {!selected ? (
         <div className="grid justify-items-center gap-3 rounded-lg border border-dashed p-12 text-center">
           <Database className="size-8 text-muted-foreground" />
-          <p>Tạo một bảng rồi import JSON/CSV, hoặc chọn bảng đã có.</p>
+          <p>Tạo một bảng rồi nhập JSON/CSV, hoặc chọn bảng đã có.</p>
         </div>
       ) : query.isLoading ? (
         <p>Đang tải bảng…</p>
@@ -293,7 +293,7 @@ export function StoragePage() {
                   }}
                 >
                   <FileUp />
-                  Import
+                  Nhập
                 </Button>
                 <Button
                   variant="ghost"
@@ -325,7 +325,7 @@ export function StoragePage() {
                     disabled={mutation.isPending}
                     onChange={(event) => void run({ ...table, idColumn: event.target.value || null })}
                   >
-                    <option value="">Chọn khi import…</option>
+                    <option value="">Chọn khi nhập…</option>
                     {table.columns.map((column) => (
                       <option key={column}>{column}</option>
                     ))}

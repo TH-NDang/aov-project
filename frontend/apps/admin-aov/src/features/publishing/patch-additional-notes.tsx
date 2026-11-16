@@ -48,7 +48,7 @@ export function PatchAdditionalNotes({
         <h3 className="type-section-title">Ghi chú khác</h3>
         {onEdit && (
           <Button variant="ghost" size="sm" onClick={onEdit}>
-            Chỉnh sửa
+            Sửa
           </Button>
         )}
       </div>

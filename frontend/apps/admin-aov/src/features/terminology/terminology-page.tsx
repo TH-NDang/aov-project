@@ -315,7 +315,7 @@ export function TerminologyPage() {
         )}
         {catalog.settings.isError && (
           <p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 px-4 py-3 text-sm">
-            Không tải được thiết lập từ backend. Không thể lưu: {catalog.settings.error.message}
+            Không tải được thiết lập từ máy chủ. Không thể lưu: {catalog.settings.error.message}
           </p>
         )}
         {view === "settings" && (
@@ -368,7 +368,7 @@ export function TerminologyPage() {
             <details className="border-t pt-4 text-sm">
               <summary className="cursor-pointer text-muted-foreground">Chuyển thiết lập từ bản cũ</summary>
               <p className="my-3 text-muted-foreground">
-                Đọc JSON cũ vào bản nháp để kiểm tra trước khi lưu lên backend. Không xóa dữ liệu cũ.
+                Đọc JSON cũ vào bản nháp để kiểm tra trước khi lưu lên máy chủ. Không xóa dữ liệu cũ.
               </p>
               <Button
                 variant="outline"
@@ -642,7 +642,7 @@ export function TerminologyPage() {
                               update({ ...entity, display: { ...entity.display, showIcon: e.target.checked } })
                             }
                           />{" "}
-                          Hiện icon
+                          Hiện biểu tượng
                         </label>
                       </div>
                       <div className="space-y-2 rounded-lg bg-muted/30 p-3">
@@ -657,8 +657,8 @@ export function TerminologyPage() {
                         </label>
                         <p className="text-xs leading-5 text-muted-foreground">
                           {entity.kind === "item"
-                            ? "Trang bị mặc định chỉ liên kết khi chọn @, tránh nhầm tên vật phẩm với lời mô tả như “phi tiêu”. Chỉ bật nếu tên và alias đủ rõ nghĩa."
-                            : "Tắt nếu tên hoặc alias dễ nhầm với từ thông thường. Bạn vẫn có thể chọn @ để gắn tham chiếu chính xác."}
+                            ? "Trang bị mặc định chỉ liên kết khi chọn @, tránh nhầm tên vật phẩm với lời mô tả như “phi tiêu”. Chỉ bật nếu tên và tên gọi khác đủ rõ nghĩa."
+                            : "Tắt nếu tên hoặc tên gọi khác dễ nhầm với từ thông thường. Bạn vẫn có thể chọn @ để gắn tham chiếu chính xác."}
                         </p>
                       </div>
                     </details>

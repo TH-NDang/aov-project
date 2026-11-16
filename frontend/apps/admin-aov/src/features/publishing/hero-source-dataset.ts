@@ -177,7 +177,7 @@ export function captureDataset(value: unknown): SourceDataset | null {
     rows,
     reviewCount,
     warnings: [
-      "Đã nhận diện bộ dữ liệu ảnh chụp. Chọn mùa và patch của nội dung nguồn; ngày xuất file không phải ngày phát hành game.",
+      "Đã nhận diện bộ dữ liệu ảnh chụp. Chọn mùa và patch của nội dung nguồn; ngày xuất tệp không phải ngày phát hành game.",
       "Giữ nguyên tên, mô tả màu và nhãn bảng cấp chiêu. Không tự suy đoán vai trò, cấp tướng, đơn vị hoặc những dạng chiêu chưa thu thập.",
     ],
   }

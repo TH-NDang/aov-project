@@ -234,7 +234,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     const quickSwitcher = visibleButton("Chuyển tướng nhanh")
     await click(visibleButton("Chỉnh sửa ảnh kỹ năng"))
     const ownerField = [...document.querySelectorAll("label")]
-      .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần credit")!
+      .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần ghi công")!
       .querySelector("input")!
     await act(async () => {
       Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(

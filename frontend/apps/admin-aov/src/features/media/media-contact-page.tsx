@@ -72,7 +72,7 @@ export function MediaContactPage() {
                   <h2 className="type-section-title">
                     {entry.name} ·{" "}
                     {entry.topic === "SOURCE"
-                      ? "Nguồn / credit"
+                      ? "Nguồn / ghi công"
                       : entry.topic === "RIGHTS"
                         ? "Quyền sử dụng"
                         : "Liên hệ"}

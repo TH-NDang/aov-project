@@ -59,7 +59,7 @@ export function pageError(error: unknown, conflict?: string): string {
   const code = (error as { code?: string })?.code
   if (code === "PAGE_CONFLICT") return conflict ?? "Hồ sơ vừa thay đổi. Hãy tải lại để xem bản mới trước khi lưu."
   if (code === "PAGE_ACTION_FORBIDDEN") return "Bạn chưa có quyền thực hiện thao tác này trên trang."
-  if (code === "PAGE_NOT_FOUND") return "Không tìm thấy hồ sơ hoặc nội dung chưa được công bố."
+  if (code === "PAGE_NOT_FOUND") return "Không tìm thấy hồ sơ hoặc nội dung chưa được xuất bản."
   if (code === "TOURNAMENT_DUPLICATE_CODE") return "Mã hoặc hồ sơ liên kết đã tồn tại. Hãy kiểm tra lại danh sách."
   if (code === "PAGE_INVALID_CONTENT")
     return "Kiểm tra thông tin bắt buộc, đường dẫn nguồn và quyền đại diện. Yêu cầu phải do người khác xét duyệt."

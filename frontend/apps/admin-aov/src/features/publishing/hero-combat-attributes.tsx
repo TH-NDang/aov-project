@@ -110,7 +110,7 @@ function AttributeList({ rows, columns = false }: { rows: AttributeRow[]; column
       })}
       {rows.some((r) => r.key === "CRITICAL_DAMAGE") && (
         <p className="type-meta break-inside-avoid border-t pt-2">
-          Tỉ lệ chí mạng là xác suất đòn đánh gây chí mạng. Sát thương chí mạng là hệ số khi đòn đánh đó xảy ra (200% =
+          Tỷ lệ chí mạng là xác suất đòn đánh gây chí mạng. Sát thương chí mạng là hệ số khi đòn đánh đó xảy ra (200% =
           ×2, 175% = ×1,75).
         </p>
       )}

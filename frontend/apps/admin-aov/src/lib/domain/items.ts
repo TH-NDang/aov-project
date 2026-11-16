@@ -43,7 +43,7 @@ export function validateCatalog(catalog: Pick<ItemCatalog, "categories" | "items
     if (!item.name.trim()) fail("item", "Tên không được để trống.")
     if (!Number.isInteger(item.price) || item.price < 0) fail("item", "Giá phải là số nguyên không âm.")
     if (![1, 2, 3].includes(item.tier)) fail("item", "Cấp phải là 1, 2 hoặc 3.")
-    if (!item.shopPositions.length) fail("position", "Cần ít nhất một vị trí trong shop.")
+    if (!item.shopPositions.length) fail("position", "Cần ít nhất một vị trí trong cửa hàng.")
     for (const position of item.shopPositions) {
       if (!groups.has(position.group)) fail("position", `Nhóm không tồn tại: ${position.group}`)
       for (const value of [position.row, position.column]) {

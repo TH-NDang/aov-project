@@ -111,8 +111,8 @@ export function StorageDataTable({
       searchPlaceholder="Tìm trong bảng…"
       emptyMessage={
         table.columns.length
-          ? "Chưa có dòng phù hợp. Thêm dòng hoặc import dữ liệu."
-          : "Bảng chưa có cột. Thêm cột hoặc chọn file import."
+          ? "Chưa có dòng phù hợp. Thêm dòng hoặc nhập dữ liệu."
+          : "Bảng chưa có cột. Thêm cột hoặc chọn tệp nhập."
       }
     />
   )

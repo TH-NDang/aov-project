@@ -83,7 +83,7 @@ export function ImageDeleteAction({
     handled.current = true
     onBusyChange(false)
     setOpen(false)
-    toast.success("Đã xoá ảnh và dọn bản lưu đệm.")
+    toast.success("Đã xóa ảnh và dọn bản lưu đệm.")
     void invalidateMediaAsset(client, asset.id)
     onDeleted()
   }, [progress, client, asset.id, onBusyChange, onDeleted])
@@ -98,7 +98,7 @@ export function ImageDeleteAction({
       const result = await deleteMediaAsset(
         asset.id,
         progress?.expectedVersion ?? asset.version,
-        resuming ? "Tiếp tục yêu cầu xoá ảnh đã xác nhận." : reason,
+        resuming ? "Tiếp tục yêu cầu xóa ảnh đã xác nhận." : reason,
       )
       await client.cancelQueries({ queryKey: deletionKey(asset.id) })
       client.setQueryData(deletionKey(asset.id), result)
@@ -120,7 +120,7 @@ export function ImageDeleteAction({
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="type-meta flex-1">
-          {resuming ? "Yêu cầu xoá chưa hoàn tất." : "Chỉ xoá ảnh không còn được sử dụng."}
+          {resuming ? "Yêu cầu xóa chưa hoàn tất." : "Chỉ xóa ảnh không còn được sử dụng."}
         </p>
         <Button
           variant="outline"
@@ -134,7 +134,7 @@ export function ImageDeleteAction({
           }}
         >
           <Trash2 aria-hidden className="size-4" />
-          {resuming ? "Tiếp tục xoá" : "Xoá ảnh"}
+          {resuming ? "Tiếp tục xóa" : "Xóa ảnh"}
         </Button>
       </div>
       <Dialog
@@ -152,11 +152,11 @@ export function ImageDeleteAction({
           onInteractOutside={(event) => event.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle>{resuming ? "Tiếp tục xoá ảnh" : "Xoá ảnh vĩnh viễn?"}</DialogTitle>
+            <DialogTitle>{resuming ? "Tiếp tục xóa ảnh" : "Xóa ảnh vĩnh viễn?"}</DialogTitle>
             <DialogDescription>
               {resuming
-                ? "Tiến trình trước đã được lưu. Bạn có thể tiếp tục để hoàn tất việc xoá ảnh."
-                : "Tất cả phiên bản của ảnh và bản lưu đệm sẽ bị xoá. Không thể khôi phục ảnh sau thao tác này."}
+                ? "Tiến trình trước đã được lưu. Bạn có thể tiếp tục để hoàn tất việc xóa ảnh."
+                : "Tất cả phiên bản của ảnh và bản lưu đệm sẽ bị xóa. Không thể khôi phục ảnh sau thao tác này."}
             </DialogDescription>
           </DialogHeader>
           <div className="flex min-w-0 items-center gap-3 rounded-lg border p-3">
@@ -177,7 +177,7 @@ export function ImageDeleteAction({
             <p role="alert" className="type-body text-destructive">
               {access.me.isError
                 ? "Chưa kết nối được dịch vụ quản lý thi đấu. Hãy kiểm tra lại."
-                : "Cần quyền chỉnh sửa ảnh và quyền đọc, chỉnh sửa thi đấu để kiểm tra liên kết trước khi xoá."}
+                : "Cần quyền chỉnh sửa ảnh và quyền đọc, chỉnh sửa thi đấu để kiểm tra liên kết trước khi xóa."}
             </p>
           )}
           {permitted && checking && !busy && (
@@ -189,19 +189,19 @@ export function ImageDeleteAction({
           {linked && (
             <p role="alert" className="type-body rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
               Ảnh còn {references.data} liên kết, bao gồm bản nháp, lịch sử hoặc mục trong thùng rác. Gỡ liên kết trước
-              khi xoá.
+              khi xóa.
             </p>
           )}
           {progress && progress.state !== "COMPLETE" && (
             <div role="status" className="space-y-2 rounded-lg border bg-muted/30 p-3">
               <p className="type-body flex items-center gap-2">
                 <Check aria-hidden className="size-4 text-emerald-600" />
-                Đã ghi nhận yêu cầu và khóa ảnh để xoá
+                Đã ghi nhận yêu cầu và khóa ảnh để xóa
               </p>
               <p className="type-body">
                 {progress.state === "ORIGIN_DELETED"
-                  ? "Đã xoá các phiên bản ảnh khỏi kho."
-                  : "Đang chờ hoàn tất xoá các phiên bản ảnh."}
+                  ? "Đã xóa các phiên bản ảnh khỏi kho."
+                  : "Đang chờ hoàn tất xóa các phiên bản ảnh."}
               </p>
               <p className="type-meta">
                 {progress.state === "ORIGIN_DELETED"
@@ -220,13 +220,13 @@ export function ImageDeleteAction({
             <>
               <label className="grid gap-2">
                 <span className="type-label">
-                  Lý do xoá{" "}
+                  Lý do xóa{" "}
                   <span aria-hidden className="text-destructive">
                     *
                   </span>
                 </span>
                 <textarea
-                  aria-label="Lý do xoá"
+                  aria-label="Lý do xóa"
                   required
                   maxLength={2000}
                   rows={3}
@@ -245,7 +245,7 @@ export function ImageDeleteAction({
                   disabled={busy}
                   onChange={(event) => setConfirmed(event.target.checked)}
                 />
-                Tôi hiểu ảnh sẽ bị xoá vĩnh viễn.
+                Tôi hiểu ảnh sẽ bị xóa vĩnh viễn.
               </label>
             </>
           )}
@@ -253,19 +253,19 @@ export function ImageDeleteAction({
             <p role="alert" className="type-body flex items-start gap-2 text-destructive">
               <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
               {checkError
-                ? "Chưa xác minh được trạng thái ảnh. Kiểm tra kết nối và bảo đảm cả hai dịch vụ backend đã cập nhật, rồi thử lại."
-                : error || "Lần xoá trước chưa hoàn tất. Bạn có thể tiếp tục từ tiến trình đã lưu."}
+                ? "Chưa xác minh được trạng thái ảnh. Kiểm tra kết nối và bảo đảm cả hai dịch vụ máy chủ đã cập nhật, rồi thử lại."
+                : error || "Lần xóa trước chưa hoàn tất. Bạn có thể tiếp tục từ tiến trình đã lưu."}
             </p>
           )}
           {busy && (
             <p role="status" className="type-body flex items-center gap-2">
               <LoaderCircle aria-hidden className="size-4 animate-spin" />
-              {progress?.state === "ORIGIN_DELETED" ? "Đang dọn bản ảnh lưu đệm…" : "Đang xử lý yêu cầu xoá ảnh…"}
+              {progress?.state === "ORIGIN_DELETED" ? "Đang dọn bản ảnh lưu đệm…" : "Đang xử lý yêu cầu xóa ảnh…"}
             </p>
           )}
           <DialogFooter>
             <Button variant="ghost" disabled={busy} onClick={() => setOpen(false)}>
-              {resuming ? "Đóng" : "Huỷ"}
+              {resuming ? "Đóng" : "Hủy"}
             </Button>
             {(checkError || linked || access.me.isError) && (
               <Button
@@ -286,7 +286,7 @@ export function ImageDeleteAction({
               ) : (
                 <Trash2 aria-hidden className="size-4" />
               )}
-              {busy ? "Đang xoá…" : resuming ? "Tiếp tục xoá" : "Xoá vĩnh viễn"}
+              {busy ? "Đang xóa…" : resuming ? "Tiếp tục xóa" : "Xóa vĩnh viễn"}
             </Button>
           </DialogFooter>
         </DialogContent>

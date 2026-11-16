@@ -29,7 +29,7 @@ export function ImportHeroWorkspace() {
         ...activity,
         status: activity.status,
         id: "hero-import",
-        title: "Import tướng",
+        title: "Nhập tướng",
         path: "/hero/import",
       })
     },
@@ -38,7 +38,7 @@ export function ImportHeroWorkspace() {
   return (
     <Page>
       <PageHeader
-        title="Import tướng"
+        title="Nhập tướng"
         actions={
           <Button asChild variant="outline">
             <Link to="/hero">
@@ -49,13 +49,13 @@ export function ImportHeroWorkspace() {
         }
       />
       {!canWrite ? (
-        <p>Bạn chưa có quyền import tướng.</p>
+        <p>Bạn chưa có quyền nhập tướng.</p>
       ) : (
         <>
           <p className="flex items-start gap-2 text-sm text-muted-foreground">
             <Info className="mt-0.5 size-4 shrink-0" />
-            Sau khi máy chủ nhận tác vụ, bạn có thể tải lại hoặc đóng web. Tiến trình sẽ xuất hiện khi đăng nhập lại.
-            Upload ảnh sẽ tạm dừng nếu đóng trang; mở lại và tiếp tục phiên đã lưu bên dưới.
+            Sau khi máy chủ nhận tác vụ, bạn có thể tải lại hoặc đóng trang. Tiến trình sẽ xuất hiện khi đăng nhập lại.
+            Việc tải ảnh lên sẽ tạm dừng nếu đóng trang; mở lại và tiếp tục phiên đã lưu bên dưới.
           </p>
           {regions.error && (
             <p role="alert" className="text-destructive">

@@ -358,10 +358,10 @@ export function splitSkillRankValues(value: unknown, skill?: RankSkill | null) {
 }
 
 const partNames: Record<RankVariable, string> = {
-  physicalAttack: "Tỉ lệ Công vật lý",
-  bonusPhysicalAttack: "Tỉ lệ Công vật lý cộng thêm",
-  magicAttack: "Tỉ lệ Công phép",
-  maxHealth: "Tỉ lệ Máu tối đa",
+  physicalAttack: "Tỷ lệ Công vật lý",
+  bonusPhysicalAttack: "Tỷ lệ Công vật lý cộng thêm",
+  magicAttack: "Tỷ lệ Công phép",
+  maxHealth: "Tỷ lệ Máu tối đa",
   heroLevel: "Thêm mỗi cấp tướng",
 }
 

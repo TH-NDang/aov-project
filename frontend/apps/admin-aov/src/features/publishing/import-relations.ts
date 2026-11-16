@@ -119,7 +119,7 @@ export function mapRelation(
       const path = mapping.fields[field]
       if (path === "@slotKey") {
         if (!Number.isInteger(source.slot) || Number(source.slot) < 0)
-          throw new Error("Slot kỹ năng phải là số nguyên không âm.")
+          throw new Error("Vị trí kỹ năng phải là số nguyên không âm.")
         const variant = pathValue(source, "variant.index")
         if (mapping.variants && (!Number.isInteger(variant) || Number(variant) < 1))
           throw new Error("Biến thể cần index nguyên dương để tạo mã ổn định.")
@@ -128,7 +128,7 @@ export function mapRelation(
       if (path === "@order") return index
       if (path === "@slotKind") {
         if (!Number.isInteger(source.slot) || Number(source.slot) < 0)
-          throw new Error("Cần slot nguyên không âm để xác định loại kỹ năng.")
+          throw new Error("Cần vị trí là số nguyên không âm để xác định loại kỹ năng.")
         return source.slot === 0 ? "PASSIVE" : "ACTIVE"
       }
       return path ? pathValue(source, path) : undefined

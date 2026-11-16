@@ -238,7 +238,7 @@ export function BackendItemsPage() {
       }
       setUndo([])
       await refresh()
-      toast.success("Đã lưu thay đổi vào backend.")
+      toast.success("Đã lưu thay đổi lên máy chủ.")
     } catch (cause) {
       setError(errorMessage(cause))
       await refresh()
@@ -389,7 +389,7 @@ export function BackendItemsPage() {
       components: [...target.content.components, { itemId: from, quantity: 1 }],
     })
     setFocusId(to)
-    toast.success("Đã thêm nguyên liệu. Lưu thay đổi để ghi vào backend.")
+    toast.success("Đã thêm nguyên liệu. Lưu thay đổi để ghi lên máy chủ.")
   }
   return (
     <Page className="min-h-0 min-w-0 gap-4" data-item-selection-surface>
@@ -631,8 +631,8 @@ export function BackendItemsPage() {
             </AlertDialogTitle>
             <AlertDialogDescription>
               Món này đã xuất bản.{" "}
-              {draftRequest?.action.type === "connect" ? "Để thêm nguyên liệu" : "Để đổi vị trí trong shop"} cần một bản
-              nháp. Thay đổi chỉ hiện trên wiki sau khi bạn lưu và xuất bản lại.
+              {draftRequest?.action.type === "connect" ? "Để thêm nguyên liệu" : "Để đổi vị trí trong cửa hàng"} cần một
+              bản nháp. Thay đổi chỉ hiện trên wiki sau khi bạn lưu và xuất bản lại.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <label className="flex items-center gap-2 text-sm">
@@ -664,7 +664,7 @@ export function BackendItemsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Còn {pending} thay đổi chưa lưu</AlertDialogTitle>
             <AlertDialogDescription>
-              Lưu thay đổi vào backend trước khi rời trang, hoặc bỏ phần đang sửa.
+              Lưu thay đổi lên máy chủ trước khi rời trang, hoặc bỏ phần đang sửa.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

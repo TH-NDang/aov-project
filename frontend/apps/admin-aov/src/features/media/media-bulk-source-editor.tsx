@@ -120,7 +120,7 @@ export function MediaBulkSourceEditor({
         }}
       >
         <SheetHeader>
-          <SheetTitle>Bổ sung nguồn / credit hàng loạt</SheetTitle>
+          <SheetTitle>Bổ sung nguồn / ghi công hàng loạt</SheetTitle>
           <SheetDescription>
             Áp dụng cùng thông tin cho {targets.length} ảnh đã chọn. Nguồn hiện có vẫn được giữ lại.
           </SheetDescription>

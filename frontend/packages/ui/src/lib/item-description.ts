@@ -1,9 +1,11 @@
 import type { GameplayIconName } from "../components/gameplay-icons"
 
 /**
- * Item entries keep their stats and passives as free text in the description: a "+60 <stat>" line for each stat,
- * then "<passive name>: <effect>" lines. This turns that text into something a reader can scan and filter, without
- * changing what is stored. Lines the parser does not recognise stay as plain passive text, so nothing is ever lost.
+ * Item entries keep their stats and effects as free text in the description: a "+60 <stat>" line for each stat, then
+ * one line per effect. The house format (frontend/docs/QUY-UOC-VIET.md) puts the label first, "<unique passive label> –
+ * <name>: <effect>" or "<active label> – <name>: <effect>"; entries imported earlier put it last or leave it out, and
+ * both read the same here. This turns that text into something a reader can scan and filter, without changing what is
+ * stored. Lines the parser does not recognise stay as plain passive text, so nothing is ever lost.
  */
 export type ItemStatKey =
   | "physicalAttack"
@@ -114,7 +116,13 @@ function folded(value: string) {
 const UNIQUE = /n[oộ]i\s+t[aạ]i\s+duy\s+nh[aấ]t/i
 const STAT_LINE = /^["'“”\s]*(\+)?\s*(\d[\d.,]*)\s*(%?)\s+(.+)$/
 const SEPARATOR = /\s+[–—-]\s+/
-const ACTIVE = /k[ií]ch\s+ho[aạ]t\s+(?:duy\s+nh[aấ]t|ch[uủ]\s+đ[oộ]ng)/i
+const UNIQUE_ACTIVE = /k[ií]ch\s+ho[aạ]t\s+duy\s+nh[aấ]t/i
+/**
+ * The active label words (with or without "chu dong") also occur inside ordinary sentences, so they only count as the
+ * label where a label stands: opening the line before a dash or colon, or closing it after a dash.
+ */
+const ACTIVE_LABEL =
+  /^k[ií]ch\s+ho[aạ]t(?:\s+ch[uủ]\s+đ[oộ]ng)?\s*[:–—-]\s*|\s+[–—-]\s*k[ií]ch\s+ho[aạ]t(?:\s+ch[uủ]\s+đ[oộ]ng)?\s*\.?$/i
 
 function numberFrom(text: string) {
   if (/^\d{1,3}(\.\d{3})+$/.test(text)) return Number(text.replaceAll(".", ""))
@@ -167,8 +175,9 @@ function withoutMarker(line: string, marker: RegExp) {
 
 function passiveFrom(line: string): ItemTextPassive {
   const unique = UNIQUE.test(line)
-  const active = ACTIVE.test(line)
-  let text = withoutMarker(withoutMarker(line, UNIQUE), ACTIVE)
+  const active = UNIQUE_ACTIVE.test(line) || ACTIVE_LABEL.test(line)
+  let text = withoutMarker(withoutMarker(line, UNIQUE), UNIQUE_ACTIVE)
+    .replace(ACTIVE_LABEL, "")
     // A bare "passive" prefix says nothing the section heading does not; the real name, if any, follows it.
     .replace(/^n[oộ]i\s+t[aạ]i\s*[:–—-]\s*/i, "")
   const flags = { unique, ...(active ? { active } : {}) }
@@ -185,6 +194,18 @@ function passiveFrom(line: string): ItemTextPassive {
   return { name: null, text, ...flags }
 }
 
+/**
+ * A passive that only grants a stat, such as "<unique passive label> – <name>: +60 <stat>", is a stat to the reader: it
+ * belongs with the other numbers and answers the stat filters, wherever the label was written.
+ */
+function grantedStat(passive: ItemTextPassive): ItemTextStat | null {
+  if (passive.active || !passive.text.startsWith("+")) return null
+  const stat = statFrom(passive.text)
+  if (!stat?.key) return null
+  const note = [passive.name, stat.note].filter(Boolean).join(" · ")
+  return { ...stat, unique: passive.unique, note: note || null }
+}
+
 export function parseItemDescription(description: string | null | undefined): ItemTextContent {
   const content: ItemTextContent = { stats: [], passives: [], notes: [] }
   for (const raw of (description ?? "").split(/\r?\n/)) {
@@ -195,8 +216,14 @@ export function parseItemDescription(description: string | null | undefined): It
       continue
     }
     const stat = statFrom(line)
-    if (stat) content.stats.push(stat)
-    else content.passives.push(passiveFrom(line))
+    if (stat) {
+      content.stats.push(stat)
+      continue
+    }
+    const passive = passiveFrom(line)
+    const granted = grantedStat(passive)
+    if (granted) content.stats.push(granted)
+    else content.passives.push(passive)
   }
   return content
 }
@@ -316,7 +343,7 @@ export const ITEM_EFFECTS: { key: string; vi: string; en: string; pattern: RegEx
     key: "heal",
     vi: "Hồi máu",
     en: "Healing",
-    pattern: /(?<!giam (?:\d+% )?(?:hieu (?:ung|qua) )?)hoi (?:mau|phuc)|hoi \d+[^.;]{0,20} mau/,
+    pattern: /(?<!giam (?:\d+% )?(?:hieu (?:ung|qua) )?)hoi (?:mau|phuc)|hoi (?:tong cong )?\d+[^.;]{0,20} mau/,
   },
   { key: "shield", vi: "Lá chắn", en: "Shield", pattern: /la chan/ },
   { key: "slow", vi: "Làm chậm", en: "Slow", pattern: /lam cham/ },

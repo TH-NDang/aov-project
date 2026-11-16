@@ -383,7 +383,7 @@ async function withUi(
       upload: async (file) => {
         // New uploads must name their owner first.
         const ownerField = [...document.querySelectorAll("label")]
-          .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần credit")!
+          .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần ghi công")!
           .querySelector("input")!
         await act(async () => {
           Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(
@@ -1400,7 +1400,7 @@ test("archived spells stay separate, gameplay revisions require a patch, and lat
       patch.value = "patch-fixture"
       patch.dispatchEvent(new window.Event("change", { bubbles: true }))
       const source = [...document.querySelectorAll("label")]
-        .find((label) => label.textContent?.trim() === "Link nguồn xác nhận")!
+        .find((label) => label.textContent?.trim() === "Liên kết nguồn xác nhận")!
         .querySelector("input")!
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")!.set!.call(
         source,

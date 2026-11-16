@@ -10,7 +10,7 @@ export function ImportWorkspaceHost() {
       <Suspense
         fallback={
           <p className="p-6" role="status">
-            Đang mở import…
+            Đang mở phần nhập…
           </p>
         }
       >

@@ -34,11 +34,11 @@ async function collect(entries: (FileSystemEntry | null)[], fallback: File[]) {
   }
   if (entries.some(Boolean)) {
     if (entries.some((entry) => !entry))
-      throw new Error("Không đọc được mục đã thả. Hãy dùng nút chọn thư mục hoặc file.")
+      throw new Error("Không đọc được mục đã thả. Hãy dùng nút chọn thư mục hoặc tệp.")
     for (const entry of entries) await visit(entry!, "", 0)
   } else {
     for (const file of fallback) add(file.name, file)
   }
-  if (!files.size) throw new Error("Không đọc được file. Hãy dùng nút chọn thư mục hoặc file.")
+  if (!files.size) throw new Error("Không đọc được tệp. Hãy dùng nút chọn thư mục hoặc tệp.")
   return files
 }

@@ -1,0 +1,105 @@
+import assert from "node:assert/strict"
+import { test } from "node:test"
+import { itemProfile, itemReaderContent, parseItemDescription } from "../src/lib/item-description.ts"
+
+const HOUSE_FORMAT = [
+  "+90 Giáp phép",
+  "",
+  "Nội tại duy nhất – Gia tốc: +60 Tốc chạy",
+  "",
+  "Nội tại duy nhất: +35% Kháng hiệu ứng (giảm thời gian bị khống chế)",
+  "",
+  "Nội tại – Nguyên lực: Tăng 32–60 song giáp cho đồng đội lân cận.",
+  "",
+  "Kích hoạt – Hồi huyết: Hồi máu cho đồng minh. Hồi chiêu: 50 giây.",
+  "",
+  "Kích hoạt duy nhất – Bất khuất: Nhận 35% miễn thương trong 3 giây. Hồi chiêu: 90 giây.",
+  "",
+  "(Lời dẫn của trang bị.)",
+].join("\n")
+
+test("the house format puts the label first and reads into stats, passives and actives", () => {
+  const parsed = parseItemDescription(HOUSE_FORMAT)
+
+  assert.deepEqual(
+    parsed.stats.map((stat) => [stat.key, stat.value, stat.percent, stat.unique, stat.note]),
+    [
+      ["magicDefense", 90, false, false, null],
+      ["movementSpeed", 60, false, true, "Gia tốc"],
+      ["tenacity", 35, true, true, "giảm thời gian bị khống chế"],
+    ],
+  )
+  assert.deepEqual(parsed.passives, [
+    { name: "Nguyên lực", text: "Tăng 32–60 song giáp cho đồng đội lân cận.", unique: false },
+    { name: "Hồi huyết", text: "Hồi máu cho đồng minh. Hồi chiêu: 50 giây.", unique: false, active: true },
+    {
+      name: "Bất khuất",
+      text: "Nhận 35% miễn thương trong 3 giây. Hồi chiêu: 90 giây.",
+      unique: false,
+      active: true,
+    },
+  ])
+  assert.deepEqual(parsed.notes, ["Lời dẫn của trang bị."])
+})
+
+test("a stat granted by a passive reads the same wherever the label stands", () => {
+  const labelFirst = parseItemDescription("Nội tại duy nhất – Phá giáp: +60 Xuyên giáp")
+  const statFirst = parseItemDescription("+60 Xuyên giáp – Phá giáp – Nội tại duy nhất")
+  const labelLast = parseItemDescription("Phá giáp: +60 Xuyên giáp – Nội tại duy nhất")
+
+  for (const reading of [labelFirst, statFirst, labelLast]) {
+    assert.deepEqual(reading.passives, [])
+    assert.deepEqual(
+      reading.stats.map((stat) => [stat.key, stat.value, stat.unique, stat.note]),
+      [["armorPierce", 60, true, "Phá giáp"]],
+    )
+  }
+})
+
+test("a passive that does more than grant a stat stays a passive", () => {
+  const { stats, passives } = parseItemDescription(
+    "Nội tại duy nhất – Bảo hộ: +25% kháng hiệu ứng, tăng 30% tốc chạy trong 5 giây.\nNội tại – Cổ ngữ: +12 Sức mạnh cổ",
+  )
+
+  assert.deepEqual(stats, [])
+  assert.deepEqual(
+    passives.map((passive) => passive.name),
+    ["Bảo hộ", "Cổ ngữ"],
+  )
+})
+
+test("a bare active label names the effect after it, with a dash or a hyphen", () => {
+  const { passives } = parseItemDescription(
+    "Kích hoạt - Vô hình: Lập tức tàng hình.\nKích hoạt – Phản pháo: Phản sát thương.\nThần khiên: Tạo lá chắn. Hồi chiêu 60 giây – Kích hoạt chủ động",
+  )
+
+  assert.deepEqual(passives, [
+    { name: "Vô hình", text: "Lập tức tàng hình.", unique: false, active: true },
+    { name: "Phản pháo", text: "Phản sát thương.", unique: false, active: true },
+    { name: "Thần khiên", text: "Tạo lá chắn. Hồi chiêu 60 giây", unique: false, active: true },
+  ])
+})
+
+test("the words for activating inside a sentence do not make a passive an active", () => {
+  const [passive] = parseItemDescription(
+    'Nội tại – Hậu cần: Khi đủ 600 vàng sẽ mở khóa chiêu "Cộng hưởng", kích hoạt chủ động giúp đồng minh nhận vàng.',
+  ).passives
+
+  assert.deepEqual(passive, {
+    name: "Hậu cần",
+    text: 'Khi đủ 600 vàng sẽ mở khóa chiêu "Cộng hưởng", kích hoạt chủ động giúp đồng minh nhận vàng.',
+    unique: false,
+  })
+})
+
+test("a heal written as a total over time is still read as healing", () => {
+  // The published wording and the house wording that puts the duration after the heal.
+  for (const description of [
+    "Nội tại duy nhất – Huyết yến: Khi máu bản thân dưới 30%, trong 5 giây sẽ hồi tổng cộng 400–610 máu.",
+    "Nội tại duy nhất – Huyết yến: Khi máu bản thân dưới 30%, hồi tổng cộng 400–610 máu trong 5 giây.",
+  ]) {
+    const profile = itemProfile(itemReaderContent({}, { description }))
+
+    assert.deepEqual(profile.effects, ["heal"], description)
+  }
+})

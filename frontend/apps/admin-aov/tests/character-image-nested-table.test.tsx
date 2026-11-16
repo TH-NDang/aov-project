@@ -235,8 +235,8 @@ test("full-width hero groups load on scroll, keep every candidate and separate e
     const skinTable = document.querySelector('table[aria-label="Ảnh trang phục Airi"]')!
     assert.equal(heroTable.querySelectorAll(":scope > tbody > tr").length, 1)
     assert.equal(skinTable.querySelectorAll(":scope > tbody > tr").length, 2)
-    assert.deepEqual(headers(heroTable), ["Portrait", "Tên file"])
-    assert.deepEqual(headers(skinTable), ["Portrait", "Trang phục", "Tên file", "Bậc / Nhãn"])
+    assert.deepEqual(headers(heroTable), ["Portrait", "Tên tệp"])
+    assert.deepEqual(headers(skinTable), ["Portrait", "Trang phục", "Tên tệp", "Bậc / Nhãn"])
     assert.equal(document.querySelectorAll("table table").length, 0)
     assert.equal(document.querySelectorAll("button button").length, 0)
     assert.ok(skinTable.querySelector('[aria-label="Xem chi tiết trang phục Bạch Vân"]'))

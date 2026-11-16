@@ -124,7 +124,7 @@ test("offers the snapshot's stats and skills in display order with readable name
     statOptions(reference).map((option) => [option.key, option.label, option.unit, option.current]),
     [
       ["HP", "Máu", "UNKNOWN", 3500],
-      ["CRITICAL_CHANCE", "Tỉ lệ chí mạng", "PERCENT", 0],
+      ["CRITICAL_CHANCE", "Tỷ lệ chí mạng", "PERCENT", 0],
     ],
   )
   assert.deepEqual(

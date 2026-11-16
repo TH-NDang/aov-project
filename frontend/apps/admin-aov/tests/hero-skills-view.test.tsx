@@ -283,7 +283,7 @@ test("combat attributes keep observed crit damage, patch defaults and explicit o
 
     await mount("s4")
     assert.match(valueOf("Giáp")!, /140 \| 0%/)
-    assert.match(valueOf("Tỉ lệ chí mạng")!, /^0%/)
+    assert.match(valueOf("Tỷ lệ chí mạng")!, /^0%/)
     assert.match(valueOf("Sát thương chí mạng")!, /200%.*Khớp mặc định/)
     assert.match(valueOf("Công vật lý")!, /Chưa ghi nhận/)
     values.criticalDamagePercent = 175

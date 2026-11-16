@@ -1065,7 +1065,7 @@ export function PublishingWorkspace({
           search={<div ref={setSearchSlot} className="contents" />}
           actions={
             canWrite ? (
-              <PageActionsMenu label="Tạo và import tướng">
+              <PageActionsMenu label="Tạo và nhập tướng">
                 <DropdownMenuItem asChild>
                   <Link to="/hero/new">
                     <Plus />
@@ -1075,7 +1075,7 @@ export function PublishingWorkspace({
                 <DropdownMenuItem asChild>
                   <Link to="/hero/import">
                     <FileUp />
-                    Import tướng
+                    Nhập tướng
                   </Link>
                 </DropdownMenuItem>
               </PageActionsMenu>

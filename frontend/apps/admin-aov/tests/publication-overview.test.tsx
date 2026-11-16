@@ -339,7 +339,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
     await press("Thêm mới")
     assert.equal(document.querySelector('select[aria-label="Bản dữ liệu đã xuất bản"]'), null)
     const summary = document.querySelector<HTMLTextAreaElement>('[aria-label="Tóm tắt thay đổi"]')!
-    const source = document.querySelector<HTMLInputElement>('[aria-label="Link nguồn xác minh"]')!
+    const source = document.querySelector<HTMLInputElement>('[aria-label="Liên kết nguồn xác minh"]')!
     await act(async () => {
       for (const [node, prototype, value] of [
         [summary, dom.window.HTMLTextAreaElement.prototype, "Note A"],

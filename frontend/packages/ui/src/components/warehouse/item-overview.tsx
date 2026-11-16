@@ -98,7 +98,7 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
       {!readerView && (content.shopPositions.length > 0 || pencil) && (
         <section className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="type-section-title">{t("Vị trí trong shop", "Shop positions")}</h3>
+            <h3 className="type-section-title">{t("Vị trí trong cửa hàng", "Shop positions")}</h3>
             {pencil?.("positions")}
           </div>
           {!content.shopPositions.length && <p className="type-meta">Chưa xếp vị trí.</p>}

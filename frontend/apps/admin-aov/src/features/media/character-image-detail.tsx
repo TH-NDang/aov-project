@@ -347,7 +347,7 @@ export function CharacterMediaViewer({
             </section>
           )}
           <div className="space-y-2 text-sm">
-            <p className="break-all font-mono text-xs text-muted-foreground">{entry.label || "Chưa có tên file"}</p>
+            <p className="break-all font-mono text-xs text-muted-foreground">{entry.label || "Chưa có tên tệp"}</p>
             <HeroImageSource assetId={entry.assetId} />
           </div>
           {preview.isPending && (
@@ -410,7 +410,7 @@ export function CharacterMediaViewer({
                   onBusyChange={setUploading}
                 />
                 <Field
-                  label="Tên file / nhãn phân biệt"
+                  label="Tên tệp / nhãn phân biệt"
                   value={label}
                   onChange={setLabel}
                   placeholder="Ví dụ: airi-portrait-2.png"

@@ -443,7 +443,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
               {records.length ? "Không có kết quả phù hợp" : "Chưa có dữ liệu trong bộ quy tắc này"}
             </p>
             <p className="text-sm text-muted-foreground">
-              {records.length ? "Thử đổi điều kiện lọc hoặc từ khóa." : "Tạo mục mới hoặc nhập dữ liệu vào backend."}
+              {records.length ? "Thử đổi điều kiện lọc hoặc từ khóa." : "Tạo mục mới hoặc nhập dữ liệu lên máy chủ."}
             </p>
           </div>
         </div>

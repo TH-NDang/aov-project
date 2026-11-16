@@ -119,20 +119,20 @@ test("image deletion requires verified references and confirmation, survives rel
   try {
     await verifySession()
     await render("initial")
-    await waitFor(() => !!button("Xoá ảnh"))
-    await act(async () => button("Xoá ảnh").click())
+    await waitFor(() => !!button("Xóa ảnh"))
+    await act(async () => button("Xóa ảnh").click())
     await waitFor(() => !!document.querySelector('[role="alert"]'))
-    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    assert.equal(button("Xóa vĩnh viễn").disabled, true)
     assert.equal(posts.length, 0)
 
     statusUnavailable = false
     await act(async () => button("Kiểm tra lại").click())
     await waitFor(() => document.body.textContent!.includes("Ảnh còn 1 liên kết"))
-    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    assert.equal(button("Xóa vĩnh viễn").disabled, true)
     references = 0
     await act(async () => button("Kiểm tra lại").click())
     await waitFor(() => document.body.textContent!.includes("Ảnh không còn liên kết sử dụng."))
-    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    assert.equal(button("Xóa vĩnh viễn").disabled, true)
     await act(async () => {
       const textarea = document.querySelector("textarea")!
       Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!.call(
@@ -141,16 +141,16 @@ test("image deletion requires verified references and confirmation, survives rel
       )
       textarea.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
-    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    assert.equal(button("Xóa vĩnh viễn").disabled, true)
     await act(async () => document.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click())
-    await waitFor(() => !button("Xoá vĩnh viễn").disabled)
+    await waitFor(() => !button("Xóa vĩnh viễn").disabled)
     await act(async () => {
-      button("Xoá vĩnh viễn").click()
-      button("Xoá vĩnh viễn").click()
+      button("Xóa vĩnh viễn").click()
+      button("Xóa vĩnh viễn").click()
     })
     await waitFor(() => posts.length === 1)
     assert.deepEqual(posts[0], { expectedVersion: 7, reason: "Ảnh tải thử" })
-    assert.equal(button("Huỷ").disabled, true)
+    assert.equal(button("Hủy").disabled, true)
     await act(async () => releaseDeletion!())
     await waitFor(() => document.body.textContent!.includes("Còn bước dọn bản ảnh lưu đệm."))
     assert.equal(completeCount, 0)
@@ -160,11 +160,11 @@ test("image deletion requires verified references and confirmation, survives rel
     client.removeQueries({ queryKey: ["media-deletion", "sample"] })
     client.setQueryData(["managed-images", "infinite"], { pages: [] })
     await render("resumed", "BLOCKED", 8)
-    await waitFor(() => !!button("Tiếp tục xoá"))
-    await act(async () => button("Tiếp tục xoá").click())
-    await waitFor(() => !!dialog() && !button("Tiếp tục xoá", dialog()).disabled)
+    await waitFor(() => !!button("Tiếp tục xóa"))
+    await act(async () => button("Tiếp tục xóa").click())
+    await waitFor(() => !!dialog() && !button("Tiếp tục xóa", dialog()).disabled)
     assert.equal(document.querySelector("textarea"), null)
-    await act(async () => button("Tiếp tục xoá", dialog()).click())
+    await act(async () => button("Tiếp tục xóa", dialog()).click())
     await waitFor(() => posts.length === 2)
     assert.equal(posts[1].expectedVersion, 7)
     await act(async () => releaseDeletion!())
@@ -177,9 +177,9 @@ test("image deletion requires verified references and confirmation, survives rel
     competitionCapabilities = ["tournament:read"]
     client.setQueryData(["community", "tournaments", "me", "fixture:editor"], { capabilities: competitionCapabilities })
     await render("no-competition-write")
-    await act(async () => button("Xoá ảnh").click())
+    await act(async () => button("Xóa ảnh").click())
     await waitFor(() => document.body.textContent!.includes("Cần quyền chỉnh sửa ảnh"))
-    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    assert.equal(button("Xóa vĩnh viễn").disabled, true)
     assert.equal(posts.length, 2)
 
     capabilities = ["catalog:read"]
@@ -187,7 +187,7 @@ test("image deletion requires verified references and confirmation, survives rel
       await verifySession()
     })
     await render("reader")
-    assert.equal(button("Xoá ảnh"), undefined)
+    assert.equal(button("Xóa ảnh"), undefined)
     assert.equal(posts.length, 2)
   } finally {
     await act(async () => root.unmount())

@@ -52,13 +52,13 @@ import {
 } from "./media-source-gaps"
 
 export const imageTypes: Record<string, string> = {
-  USER_AVATAR: "Avatar người dùng",
+  USER_AVATAR: "Ảnh đại diện người dùng",
   HERO_HEAD: "Đại diện tướng",
   HERO_PORTRAIT: "Chân dung tướng",
   HERO_SPLASH: "Ảnh nền tướng",
-  HERO_SKILL_ICON: "Icon kỹ năng",
+  HERO_SKILL_ICON: "Biểu tượng kỹ năng",
   HERO_SKIN_ART: "Trang phục",
-  SKIN_BADGE: "Icon bậc / nhãn trang phục",
+  SKIN_BADGE: "Biểu tượng bậc / nhãn trang phục",
   ITEM_ICON: "Trang bị",
   ARCANA_ICON: "Ngọc",
   SPELL_ICON: "Phụ trợ",
@@ -469,7 +469,7 @@ export function ImageDetailSheet({
                   </div>
                 )}
                 {!data.currentVersionId && (
-                  <p className="text-sm text-muted-foreground">Ảnh chưa hoàn tất upload nên chưa nhận nguồn.</p>
+                  <p className="text-sm text-muted-foreground">Ảnh chưa tải lên xong nên chưa nhận nguồn.</p>
                 )}
                 {shown.map((source) => {
                   const completing = editing === "owner" && source === ownerless
@@ -486,11 +486,11 @@ export function ImageDetailSheet({
                               className="ml-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
                             >
                               <ExternalLink aria-hidden className="size-3" />
-                              Mở link nguồn
+                              Mở liên kết nguồn
                             </a>
                           )}
                         </Fact>
-                        <Fact ok={!!source.ownerName?.trim()} label="Chủ sở hữu / người cần credit">
+                        <Fact ok={!!source.ownerName?.trim()} label="Chủ sở hữu / người cần ghi công">
                           {source.ownerPageId ? (
                             <PageReference
                               id={source.ownerPageId}
@@ -739,7 +739,7 @@ function UpgradePanel({
       </p>
       <MediaSourceFields value={source} onChange={setSource} disabled={busy} />
       <label className="grid gap-1.5 text-sm font-medium">
-        Chọn file ảnh
+        Chọn tệp ảnh
         <input
           type="file"
           accept="image/png,image/jpeg,image/webp"

@@ -240,10 +240,13 @@ function GraphCard({
           ) : (
             <span
               className="relative flex size-11 items-center justify-center rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 text-amber-600"
-              title="Chưa có icon"
+              title="Chưa có biểu tượng"
             >
               <Fallback aria-hidden className="size-5 opacity-70" />
-              <ImageOff aria-label="Chưa có icon" className="absolute -top-1 -left-1 size-3.5 rounded-full bg-card" />
+              <ImageOff
+                aria-label="Chưa có biểu tượng"
+                className="absolute -top-1 -left-1 size-3.5 rounded-full bg-card"
+              />
             </span>
           )}
           <ItemPrice amount={item.content.price} locale={locale} badge />
@@ -733,11 +736,11 @@ export function ItemShopGraph({
             variant="ghost"
             size="sm"
             className="h-8 gap-1.5 text-amber-700 dark:text-amber-300"
-            title="Mở món đầu tiên chưa có icon"
+            title="Mở món đầu tiên chưa có biểu tượng"
             onClick={() => onSelect(missingIcons[0].id)}
           >
             <ImageOff className="size-4" />
-            {missingIcons.length} món thiếu icon
+            {missingIcons.length} món thiếu biểu tượng
           </Button>
         )}
         {!!variants.length && (

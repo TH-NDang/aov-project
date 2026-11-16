@@ -148,7 +148,7 @@ export function AutoChessEditorPage() {
   return (
     <Page>
       <PageHeader
-        title={`Cẩm nang Cờ Liên quân · ${data.modeCode}`}
+        title={`Cẩm nang Cờ Liên Quân · ${data.modeCode}`}
         description={
           <span className="flex flex-wrap items-center gap-2">
             <Back modeId={modeId} />
@@ -295,7 +295,7 @@ function StartGuide({
       const unsourced = iconsWithoutSource(manifest)
       if (unsourced.length)
         throw new Error(
-          `${unsourced.length} icon chưa có nguồn trong dữ liệu, ví dụ ${unsourced[0]}. Chưa tải ảnh nào.`,
+          `${unsourced.length} biểu tượng chưa có nguồn trong dữ liệu, ví dụ ${unsourced[0]}. Chưa tải ảnh nào.`,
         )
       const paths = guideIconPaths(manifest)
       let done = 0
@@ -334,8 +334,8 @@ function StartGuide({
     <Section title="Chưa có cẩm nang">
       <p className="type-body">
         Nhập bản chép Bách khoa 08/11/2026 (lượt 15:03) trong resources: 58 quân cờ, 27 Phe/Nghề, 22 trang bị, 82 chúc
-        phúc, 18 nhiệm vụ và 3 đội hình mẫu, cùng 247 icon. Mỗi icon mang nguồn riêng: ảnh thể hiện gì, tệp gốc trong bộ
-        thu thập và giờ ghi. Hoặc bắt đầu từ nháp trống. Kết quả là bản nháp để rà soát.
+        phúc, 18 nhiệm vụ và 3 đội hình mẫu, cùng 247 biểu tượng. Mỗi biểu tượng mang nguồn riêng: ảnh thể hiện gì, tệp
+        gốc trong bộ thu thập và giờ ghi. Hoặc bắt đầu từ nháp trống. Kết quả là bản nháp để rà soát.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button disabled={!canWrite || run.isPending} onClick={() => run.mutate(true)}>

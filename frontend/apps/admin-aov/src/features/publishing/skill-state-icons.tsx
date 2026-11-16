@@ -92,8 +92,8 @@ export function SkillStateIconsEditor({
         )}
       </div>
       <p className="type-meta">
-        Dùng khi chiêu chỉ đổi icon ở một trạng thái, còn tên, mô tả và thông số giữ nguyên. Ảnh chính là trạng thái
-        thường.
+        Dùng khi chiêu chỉ đổi biểu tượng ở một trạng thái, còn tên, mô tả và thông số giữ nguyên. Ảnh chính là trạng
+        thái thường.
       </p>
       <datalist id={listId}>
         {suggestions.map((label) => (
@@ -138,7 +138,7 @@ export function SkillStateIconsEditor({
       )}
       {adding && (
         <div className="space-y-2 rounded-lg border border-dashed p-3">
-          <p className="type-meta">Chọn hoặc tải icon của trạng thái, rồi đặt tên trạng thái.</p>
+          <p className="type-meta">Chọn hoặc tải biểu tượng của trạng thái, rồi đặt tên trạng thái.</p>
           <AssetPicker
             semanticType="HERO_SKILL_ICON"
             value={null}

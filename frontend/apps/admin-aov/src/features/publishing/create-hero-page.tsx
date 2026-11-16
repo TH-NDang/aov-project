@@ -112,7 +112,7 @@ export function CreateHeroPage() {
                   pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
                   placeholder="airi"
                 />
-                <span className="text-xs text-muted-foreground">Mã cố định dùng để ánh xạ khi import.</span>
+                <span className="text-xs text-muted-foreground">Mã cố định dùng để ánh xạ khi nhập.</span>
               </label>
               <label className="grid content-start gap-2 text-sm">
                 Tên tướng
@@ -120,7 +120,8 @@ export function CreateHeroPage() {
               </label>
             </fieldset>
             <p className="text-sm text-muted-foreground">
-              Tạo bản nháp để tiếp tục thiết lập mô tả, chỉ số, kỹ năng, icon chiêu và ảnh tướng trong trang biên tập.
+              Tạo bản nháp để tiếp tục thiết lập mô tả, chỉ số, kỹ năng, biểu tượng chiêu và ảnh tướng trong trang biên
+              tập.
             </p>
             <Button disabled={!context || busy || !draft.ready || draft.invalid}>
               <Plus className="size-4" />

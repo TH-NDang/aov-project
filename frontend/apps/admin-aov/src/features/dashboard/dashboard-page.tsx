@@ -176,14 +176,14 @@ export function DashboardPage() {
       to: "/enchantments",
     },
     { label: "Bảng ngọc", value: arcana.data?.length, hint: "Theo màu và cấp", icon: NAV_ICONS.arcana, to: "/arcana" },
-    { label: "Phụ trợ", value: spells.data?.length, hint: "Phép bổ trợ", icon: NAV_ICONS.spells, to: "/spells" },
+    { label: "Phụ trợ", value: spells.data?.length, hint: "Kỹ năng phụ trợ", icon: NAV_ICONS.spells, to: "/spells" },
   ]
 
   const coverage: CoverageRow[] = [
     ...(itemStats
       ? [
           { label: "Công thức trang bị đã chốt", done: itemStats.settled, total: itemStats.total },
-          { label: "Vị trí shop đầy đủ", done: itemStats.placed, total: itemStats.total },
+          { label: "Vị trí cửa hàng đầy đủ", done: itemStats.placed, total: itemStats.total },
         ]
       : []),
   ]
@@ -227,7 +227,7 @@ export function DashboardPage() {
         categories.isError ||
         branches.isError) && (
         <p role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
-          Chưa tải đầy đủ số liệu kho trang bị từ backend.
+          Chưa tải đầy đủ số liệu kho trang bị từ máy chủ.
         </p>
       )}
 
@@ -316,7 +316,7 @@ export function DashboardPage() {
         <Card className="admin-section xl:col-span-2">
           <CardHeader>
             <CardTitle>Độ phủ dữ liệu</CardTitle>
-            <CardDescription>Tỉ lệ hoàn thiện dữ liệu trang bị đã thu thập.</CardDescription>
+            <CardDescription>Tỷ lệ hoàn thiện dữ liệu trang bị đã thu thập.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {coverage.length === 0 && <Skeleton className="h-64 w-full" />}
@@ -340,7 +340,7 @@ export function DashboardPage() {
         </Card>
         <Card className="admin-section xl:col-span-3">
           <CardHeader>
-            <CardTitle>Trang bị theo nhóm shop</CardTitle>
+            <CardTitle>Trang bị theo nhóm cửa hàng</CardTitle>
             <CardDescription>Di chuột vào cột để xem phân bổ theo cấp.</CardDescription>
           </CardHeader>
           <CardContent>

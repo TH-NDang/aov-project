@@ -23,6 +23,6 @@ createRoot(document.getElementById("root")!).render(
         contactHref="http://localhost:5173/contact?assetId=00000000-0000-0000-0000-000000000001&versionId=00000000-0000-0000-0000-000000000002"
       />
     </div>
-    <p className="mt-5 text-sm text-white/60">Dữ liệu minh họa để kiểm tra giao diện, không gửi yêu cầu đến backend.</p>
+    <p className="mt-5 text-sm text-white/60">Dữ liệu minh họa để kiểm tra giao diện, không gửi yêu cầu đến máy chủ.</p>
   </main>,
 )

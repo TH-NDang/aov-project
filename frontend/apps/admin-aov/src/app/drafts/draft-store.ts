@@ -156,7 +156,7 @@ export function createDraftRepository(storage: DraftStorage, delay = 500) {
           ...slot(key),
           persistence: "error",
           error:
-            "Không lưu được nháp trên thiết bị. Nội dung vẫn còn trong phiên này; hãy lưu backend trước khi đóng web.",
+            "Không lưu được nháp trên thiết bị. Nội dung vẫn còn trong phiên này; hãy lưu lên máy chủ trước khi đóng trang.",
         })
     }
   }

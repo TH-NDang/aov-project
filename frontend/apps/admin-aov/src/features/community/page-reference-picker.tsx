@@ -93,7 +93,7 @@ export function PageReferencePicker({
         </p>
       )}
       {selected.data && !selected.data.published && (
-        <p className="type-meta">Hồ sơ nháp · chỉ hiển thị công khai sau khi được công bố.</p>
+        <p className="type-meta">Hồ sơ nháp · chỉ hiển thị công khai sau khi được xuất bản.</p>
       )}
       <Dialog open={open && canWrite} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-xl">
@@ -163,7 +163,7 @@ export function PageReferencePicker({
                   <span className="min-w-0 flex-1">
                     <span className="type-body block">{profile.content?.name || profile.code}</span>
                     <span className="type-meta block">
-                      {profileKindLabels[profile.kind]} · {profile.published ? "Đã công bố" : "Bản nháp"}
+                      {profileKindLabels[profile.kind]} · {profile.published ? "Đã xuất bản" : "Bản nháp"}
                     </span>
                     {profile.lastActiveOn && (
                       <span className="type-meta block">{activityLabel(profile.lastActiveOn)}</span>

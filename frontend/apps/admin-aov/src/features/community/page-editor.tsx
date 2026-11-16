@@ -156,7 +156,9 @@ function Editor({
       publish === undefined ? pageApi.save(entry, content) : pageApi.publish(entry, publish),
     onSuccess: async (_saved, publish) => {
       await client.invalidateQueries({ queryKey: pageKeys })
-      toast.success(publish === undefined ? "Đã lưu hồ sơ." : publish ? "Đã công bố hồ sơ." : "Đã gỡ công bố hồ sơ.")
+      toast.success(
+        publish === undefined ? "Đã lưu hồ sơ." : publish ? "Đã xuất bản hồ sơ." : "Đã ngừng xuất bản hồ sơ.",
+      )
     },
   })
   const remove = useMutation({
@@ -277,7 +279,7 @@ function Editor({
                     : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
                 )}
               >
-                {entry.published ? "Đã công bố" : "Bản nháp"}
+                {entry.published ? "Đã xuất bản" : "Bản nháp"}
               </span>
             </p>
             {community && (
@@ -367,11 +369,11 @@ function Editor({
               <Button
                 variant="outline"
                 disabled={dirty || uploading || update.isPending || !content.sources.length}
-                title={content.sources.length ? undefined : "Thêm ít nhất một nguồn trước khi công bố."}
+                title={content.sources.length ? undefined : "Thêm ít nhất một nguồn trước khi xuất bản."}
                 onClick={() => update.mutate(true)}
               >
                 <Send className="size-4" />
-                {entry.published ? "Công bố thay đổi" : "Công bố hồ sơ"}
+                {entry.published ? "Xuất bản thay đổi" : "Xuất bản hồ sơ"}
               </Button>
             )}
             {(access.canWrite || access.canPublish) && (
@@ -388,7 +390,7 @@ function Editor({
                       onSelect={() => update.mutate(false)}
                     >
                       <Undo2 />
-                      Thu hồi công bố
+                      Ngừng xuất bản
                     </DropdownMenuItem>
                   )}
                   {!entry.published && access.canWrite && (
@@ -400,7 +402,7 @@ function Editor({
                         const confirmed = await confirmAction({
                           title: `Xóa bản nháp \u201c${name}\u201d?`,
                           description:
-                            "Chỉ xóa được hồ sơ chưa từng công bố và chưa có người đại diện. Không hoàn tác được.",
+                            "Chỉ xóa được hồ sơ chưa từng xuất bản và chưa có người đại diện. Không hoàn tác được.",
                           confirmLabel: "Xóa bản nháp",
                         })
                         if (confirmed) remove.mutate()
@@ -475,7 +477,7 @@ function Editor({
         <p role="alert" className="type-body rounded-lg border border-destructive/30 p-4 text-destructive">
           {pageError(
             remove.error,
-            "Không xóa được: hồ sơ vừa thay đổi, đã từng công bố, hoặc đang có người đại diện, hoạt động cộng đồng, đội tuyển hay giải đấu dùng đến.",
+            "Không xóa được: hồ sơ vừa thay đổi, đã từng xuất bản, hoặc đang có người đại diện, hoạt động cộng đồng, đội tuyển hay giải đấu dùng đến.",
           )}
         </p>
       )}
@@ -587,7 +589,7 @@ function LiveSection({ entry }: { entry: CommunityProfile }) {
     <Section
       title="Phát trực tiếp"
       icon={Radio}
-      description="Dán link buổi phát trên YouTube, Facebook hoặc TikTok. Người theo dõi nhận thông báo khi bật; trạng thái tự tắt sau 12 giờ."
+      description="Dán liên kết buổi phát trên YouTube, Facebook hoặc TikTok. Người theo dõi nhận thông báo khi bật; trạng thái tự tắt sau 12 giờ."
     >
       {entry.live && (
         <p className="type-body">
@@ -603,7 +605,7 @@ function LiveSection({ entry }: { entry: CommunityProfile }) {
         }}
       >
         <label className="grid gap-1.5">
-          <span className="type-label">Link buổi phát</span>
+          <span className="type-label">Liên kết buổi phát</span>
           <Input
             required
             type="url"
@@ -671,7 +673,7 @@ function Representatives({ entry }: { entry: CommunityProfile }) {
           </p>
         ) : !members.data?.length ? (
           <p className="type-body text-muted-foreground">
-            Chưa có người đại diện. Hồ sơ vẫn có thể công bố từ nguồn đã đối chiếu.
+            Chưa có người đại diện. Hồ sơ vẫn có thể xuất bản từ nguồn đã đối chiếu.
           </p>
         ) : (
           members.data.map((member) => (
@@ -749,7 +751,7 @@ function Handover({ entry }: { entry: CommunityProfile }) {
       description="Trang đang do AthaHub quản lý. Khi tổ chức liên hệ qua kênh chính thức và đã được xác minh, tạo liên kết bàn giao để họ nhận quyền quản trị chính bằng tài khoản của chính họ."
     >
       {!entry.published ? (
-        <p className="type-body text-muted-foreground">Công bố hồ sơ trước khi bàn giao.</p>
+        <p className="type-body text-muted-foreground">Xuất bản hồ sơ trước khi bàn giao.</p>
       ) : link ? (
         <div className="grid gap-2 rounded-lg border border-primary/30 bg-primary/5 p-4">
           <span className="type-label">Liên kết bàn giao · dùng một lần, hết hạn sau 7 ngày</span>
@@ -797,7 +799,7 @@ function Handover({ entry }: { entry: CommunityProfile }) {
       )}
       {failure && (
         <p role="alert" className="type-body text-destructive">
-          {pageError(failure, "Trang đã có chủ hoặc chưa công bố. Tải lại để xem trạng thái mới.")}
+          {pageError(failure, "Trang đã có chủ hoặc chưa xuất bản. Tải lại để xem trạng thái mới.")}
         </p>
       )}
     </Section>

@@ -161,7 +161,7 @@ function OwnerEditForm({ owner, onDone }: { owner: MediaOwner; onDone: () => voi
       onSubmit={async (event) => {
         event.preventDefault()
         const url = contact.trim() || null
-        if (url && !creditHttpUrl(url)) return setError("Link liên hệ phải bắt đầu bằng http:// hoặc https://.")
+        if (url && !creditHttpUrl(url)) return setError("Trang liên hệ phải bắt đầu bằng http:// hoặc https://.")
         setBusy(true)
         setError("")
         try {
@@ -189,7 +189,7 @@ function OwnerEditForm({ owner, onDone }: { owner: MediaOwner; onDone: () => voi
         />
       </label>
       <label className="grid gap-1 text-sm">
-        Link liên hệ
+        Trang liên hệ
         <input
           className={control}
           type="url"
@@ -201,7 +201,7 @@ function OwnerEditForm({ owner, onDone }: { owner: MediaOwner; onDone: () => voi
         />
       </label>
       <p className="type-meta">
-        Áp dụng cho {owner.assetCount} ảnh. Link liên hệ riêng của từng nguồn được giữ nguyên.
+        Áp dụng cho {owner.assetCount} ảnh. Trang liên hệ riêng của từng nguồn được giữ nguyên.
       </p>
       {error && (
         <p role="alert" className="text-sm text-destructive">

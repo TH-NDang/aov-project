@@ -241,7 +241,7 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     assert.equal(document.querySelectorAll("tbody tr").length, 2)
     await changeLanguage("vi-VN")
     assert.equal(document.querySelectorAll("tbody tr").length, 0)
-    await act(async () => button("Bỏ bộ lọc").click())
+    await act(async () => button("Xóa bộ lọc").click())
     assert.ok(document.querySelectorAll("tbody tr").length > 2)
     assert.equal(button("Tất cả").getAttribute("aria-pressed"), "true")
     await act(async () => button("Trang bị").click())

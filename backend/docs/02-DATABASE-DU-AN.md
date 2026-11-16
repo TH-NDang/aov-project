@@ -47,6 +47,10 @@ External identity hiện chỉ có schema, chưa có admin API quản lý mappin
 8. Hibernate không tự `update` schema ở production.
 9. UUID là technical ID; `code` là stable readable identifier.
 10. `TIMESTAMPTZ` cho thời gian; lưu UTC.
+11. Chữ lưu ở dạng Unicode NFC (dấu dựng sẵn). Mọi chuỗi trong JSON gửi tới `wiki-service`, kể cả trong danh sách và
+    giá trị nhập tự do, được chuẩn hóa NFC trước khi lưu; khóa của object giữ nguyên. Chữ dạng tổ hợp (chữ cái kèm dấu
+    rời) nhìn giống hệt nhưng tìm kiếm và so khớp không ra. Lệnh chỉ đọc `scripts/dev/find-non-nfc-text.ps1` liệt kê
+    các cột còn chữ chưa ở dạng NFC.
 
 ---
 

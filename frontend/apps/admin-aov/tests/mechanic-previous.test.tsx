@@ -83,7 +83,7 @@ test("a mechanic change reads before and after with its source, and records the 
     await act(async () => form.requestSubmit())
     assert.equal(
       form.querySelector('[role="alert"]')?.textContent,
-      "Link nguồn phải bắt đầu bằng http:// hoặc https://.",
+      "Liên kết nguồn phải bắt đầu bằng http:// hoặc https://.",
     )
   } finally {
     await act(async () => root.unmount())

@@ -75,7 +75,7 @@ export function PatchStatDefaults({ variant }: { variant: Variant }) {
                 </a>
                 {canWrite && !edit && (
                   <Button size="sm" variant="ghost" onClick={() => start(rule.statKey)}>
-                    Chỉnh sửa
+                    Sửa
                   </Button>
                 )}
               </li>

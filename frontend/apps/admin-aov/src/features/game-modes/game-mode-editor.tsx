@@ -130,7 +130,7 @@ export function GameModeEditorPage() {
       {content.guideKind === "AUTO_CHESS" && (
         <p className="type-body">
           <Link to={`/game-modes/${modeId}/auto-chess`} className="underline">
-            Mở cẩm nang Cờ Liên quân →
+            Mở cẩm nang Cờ Liên Quân →
           </Link>
         </p>
       )}
@@ -212,7 +212,7 @@ export function GameModeEditorPage() {
                   onChange={(event) => set({ guideKind: event.target.value as ModeContent["guideKind"] })}
                 >
                   <option value="NONE">Không có</option>
-                  <option value="AUTO_CHESS">Cờ Liên quân</option>
+                  <option value="AUTO_CHESS">Cờ Liên Quân</option>
                 </select>
               </label>
             </div>

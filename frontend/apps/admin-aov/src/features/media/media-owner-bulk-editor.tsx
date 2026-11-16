@@ -80,8 +80,8 @@ export function MediaOwnerBulkEditor({
         <SheetHeader className="border-b">
           <SheetTitle>Bổ sung chủ sở hữu</SheetTitle>
           <SheetDescription>
-            {items.length} ảnh đã có nơi lấy nhưng chưa ghi chủ sở hữu. Điền chủ sở hữu cho từng ảnh; tên nguồn và link
-            của mỗi ảnh được giữ nguyên.
+            {items.length} ảnh đã có nơi lấy nhưng chưa ghi chủ sở hữu. Điền chủ sở hữu cho từng ảnh; tên nguồn và liên
+            kết của mỗi ảnh được giữ nguyên.
           </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pt-4 pb-6">
@@ -128,7 +128,7 @@ export function MediaOwnerBulkEditor({
                       className={control}
                       aria-label={`Chủ sở hữu của ${source.label}`}
                       disabled={busy || result?.state === "success"}
-                      placeholder="Chủ sở hữu / tên cần credit"
+                      placeholder="Chủ sở hữu / tên cần ghi công"
                       value={owners[target.assetId] ?? ""}
                       onValueChange={(owner) => setOwners((current) => ({ ...current, [target.assetId]: owner }))}
                     />

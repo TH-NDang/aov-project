@@ -115,11 +115,11 @@ function ImageRowsTable({
           : []),
         imageHelper.display({
           id: "file",
-          header: "Tên file",
+          header: "Tên tệp",
           cell: ({ row }) => (
             <div className="min-w-0 space-y-1">
               <p className="break-all font-mono text-xs text-muted-foreground" title={row.original.label ?? ""}>
-                {row.original.label || (row.original.assetId ? "Chưa có tên file" : "Chưa có ảnh")}
+                {row.original.label || (row.original.assetId ? "Chưa có tên tệp" : "Chưa có ảnh")}
               </p>
               {!row.original.assetId && row.original.main && (
                 <p className="text-xs text-muted-foreground">Chưa chọn ảnh chính</p>

@@ -698,7 +698,7 @@ export function UnitsSection({ content, setContent, image, upload }: SectionProp
             <div className="flex flex-wrap items-end gap-3">
               <IconUpload
                 src={image(unit.skill?.iconAssetId)}
-                label="Icon chiêu"
+                label="Biểu tượng chiêu"
                 onFile={async (file) =>
                   update({
                     ...unit,
@@ -900,7 +900,7 @@ export function TraitsSection({ content, setContent, image, upload }: SectionPro
                 size="lg"
                 round
                 src={image(trait.iconAssetId)}
-                label="Icon Phe/Nghề"
+                label="Biểu tượng Phe/Nghề"
                 onFile={async (file) => update({ ...trait, iconAssetId: await upload(file, "trait icon") })}
               />
             }
@@ -1186,7 +1186,7 @@ export function ItemsSection({ content, setContent, image, upload }: SectionProp
                 size="lg"
                 src={image(item.iconAssetId)}
                 color={stoneColor(groupOf(item.groupCode) ?? { code: "", name: "" })}
-                label="Icon trang bị"
+                label="Biểu tượng trang bị"
                 onFile={async (file) => update({ ...item, iconAssetId: await upload(file, "item icon") })}
               />
             }
@@ -1328,7 +1328,7 @@ export function BlessingsSection({ content, setContent, image, upload }: Section
         <>
           <DetailHeader
             icon={
-              <label className="relative cursor-pointer" title="Đổi icon">
+              <label className="relative cursor-pointer" title="Đổi biểu tượng">
                 <BlessingThumb src={image(blessing.iconAssetId)} tier={blessing.tier} size="lg" />
                 <input
                   type="file"
