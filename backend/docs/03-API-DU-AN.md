@@ -1,7 +1,8 @@
 # WikiAOV Backend — API dự án
 
 **Base path:** `/api/wiki/v1` (tiền tố theo service, xem mục 3.6 của `01-BAN-DAC-TA-DU-AN.md`; phiên bản theo mục 1.1)  
-**Format:** JSON UTF-8; lỗi dùng `application/problem+json`.  
+**Format:** JSON UTF-8; chuỗi gửi lên được chuẩn hóa Unicode NFC trước khi lưu (mục 1 của `02-DATABASE-DU-AN.md`);
+lỗi dùng `application/problem+json`.  
 **Phạm vi:** Public read APIs + authenticated admin APIs cho backend hiện hành.  
 **Tài liệu liên quan:** `01-BAN-DAC-TA-DU-AN.md`, `02-DATABASE-DU-AN.md`
 
