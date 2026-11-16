@@ -17,12 +17,12 @@ export function ItemShopHelp() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-9" aria-label="Cách dùng sơ đồ shop">
+        <Button variant="ghost" size="icon" className="size-9" aria-label="Cách dùng sơ đồ cửa hàng">
           <CircleHelp className="size-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 space-y-1.5 text-xs leading-5">
-        <p className="font-medium">Cách dùng sơ đồ shop</p>
+        <p className="font-medium">Cách dùng sơ đồ cửa hàng</p>
         <p>Chọn một món để xem các đường ghép tới nguyên liệu và món nâng cấp.</p>
         <p>Nối hai chấm ở hai bên thẻ, hoặc kéo từ chấm này sang chấm kia, để thêm nguyên liệu.</p>
         <p>Kéo tay nắm bên trái thẻ để đổi ô. Món đã xuất bản sẽ hỏi tạo bản nháp trước khi đổi.</p>

@@ -48,7 +48,7 @@ export const STAT_LABELS: Record<string, string> = {
   MAX_ENERGY: "Năng lượng tối đa",
   MAX_RESOURCE: "Tài nguyên tối đa",
   BONUS_ATTACK_SPEED: "Tốc đánh cộng thêm",
-  CRITICAL_CHANCE: "Tỉ lệ chí mạng",
+  CRITICAL_CHANCE: "Tỷ lệ chí mạng",
   CRITICAL_DAMAGE: "Sát thương chí mạng",
   PHYSICAL_LIFESTEAL: "Hút máu vật lý",
   MAGIC_LIFESTEAL: "Hút máu phép",

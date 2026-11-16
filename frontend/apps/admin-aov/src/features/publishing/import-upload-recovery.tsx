@@ -60,7 +60,7 @@ export function ImportUploadRecovery({
         if (candidates.length === 1) resolved.set(path, candidates[0][1])
       }
       setFiles(resolved)
-      setMessage(`Đã chọn ${index.size} file. Chỉ ảnh còn thiếu sẽ được upload.`)
+      setMessage(`Đã chọn ${index.size} tệp. Chỉ ảnh còn thiếu sẽ được tải lên.`)
     } catch (cause) {
       setError(errorMessage(cause))
     } finally {
@@ -76,7 +76,7 @@ export function ImportUploadRecovery({
         setMessage(description)
         updateTask({
           id: "hero-import",
-          title: "Import tướng",
+          title: "Nhập tướng",
           path: "/hero/import",
           status: "running",
           completed,
@@ -89,7 +89,7 @@ export function ImportUploadRecovery({
       setMessage("Đã gửi đến máy chủ. Bạn có thể đóng trang.")
       updateTask({
         id: "hero-import",
-        title: "Import tướng",
+        title: "Nhập tướng",
         path: "/hero/import",
         status: "completed",
         completed: 1,
@@ -101,12 +101,12 @@ export function ImportUploadRecovery({
       setError(errorMessage(cause))
       updateTask({
         id: "hero-import",
-        title: "Import tướng",
+        title: "Nhập tướng",
         path: "/hero/import",
         status: "error",
         completed: 0,
         total: 1,
-        description: "Upload tạm dừng · có thể tiếp tục",
+        description: "Tải lên tạm dừng · có thể tiếp tục",
       })
     } finally {
       setBusy(false)
@@ -116,10 +116,10 @@ export function ImportUploadRecovery({
   async function discard(session: UploadSession) {
     if (
       !(await confirmAction({
-        title: "Bỏ phiên upload này?",
+        title: "Bỏ phiên tải lên này?",
         description: "Các ảnh đã tải vẫn ở thư viện media; dữ liệu tướng chưa được nhập sẽ không tiếp tục.",
-        confirmLabel: "Bỏ phiên upload",
-        cancelLabel: "Giữ phiên upload",
+        confirmLabel: "Bỏ phiên tải lên",
+        cancelLabel: "Giữ phiên tải lên",
       }))
     )
       return
@@ -140,8 +140,8 @@ export function ImportUploadRecovery({
   }
   if (!sessions.data?.length && !active && !sessions.error && !message) return null
   return (
-    <section className="space-y-3 admin-section py-5" aria-label="Khôi phục upload">
-      <h2 className="type-section-title">Upload đang dở</h2>
+    <section className="space-y-3 admin-section py-5" aria-label="Khôi phục tải lên">
+      <h2 className="type-section-title">Tải lên đang dở</h2>
       <p className="text-sm text-muted-foreground">
         Ảnh đã hoàn tất được giữ trên máy chủ. Chọn lại folder/ZIP ban đầu nếu còn ảnh chưa tải; không cần ánh xạ lại.
       </p>
@@ -166,7 +166,7 @@ export function ImportUploadRecovery({
                 setMessage("")
               }}
             >
-              Tiếp tục upload
+              Tiếp tục tải lên
             </Button>
             <Button variant="ghost" disabled={busy || disabled} onClick={() => void discard(session)}>
               Bỏ phiên

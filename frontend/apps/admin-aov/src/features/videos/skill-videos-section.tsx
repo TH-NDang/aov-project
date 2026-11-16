@@ -51,8 +51,8 @@ export function SkillVideosSection({
       ))}
       {list.isSuccess && !videos.length && (
         <p className="type-meta">
-          Chưa có video. Dán link YouTube, Facebook, TikTok, Twitch hoặc tệp .mp4 để người đọc xem ngay trong kỹ năng
-          này.
+          Chưa có video. Dán liên kết YouTube, Facebook, TikTok, Twitch hoặc tệp .mp4 để người đọc xem ngay trong kỹ
+          năng này.
         </p>
       )}
       {!!videos.length && (

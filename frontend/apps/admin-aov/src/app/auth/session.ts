@@ -32,9 +32,9 @@ const messages: Record<string, string> = {
     "Tên đăng nhập, mật khẩu hoặc mã xác thực 2 bước chưa đúng. Tài khoản đã bật xác thực 2 bước cần nhập mã 6 số mới nhất.",
   AUTH_SESSION_EXPIRED: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
   AUTH_RATE_LIMITED: "Bạn đã thử quá nhiều lần. Vui lòng chờ một phút rồi thử lại.",
-  AUTH_PROVIDER_UNAVAILABLE: "Chưa kết nối được Keycloak. Hãy kiểm tra cấu hình backend.",
+  AUTH_PROVIDER_UNAVAILABLE: "Chưa kết nối được Keycloak. Hãy kiểm tra cấu hình máy chủ.",
   AUTH_GOOGLE_DISABLED: "Đăng nhập Google chưa được cấu hình.",
-  AUTH_ORIGIN_REJECTED: "Địa chỉ admin chưa được cho phép trong cấu hình backend.",
+  AUTH_ORIGIN_REJECTED: "Địa chỉ admin chưa được cho phép trong cấu hình máy chủ.",
   FORBIDDEN: "Tài khoản chưa được cấp quyền truy cập trang quản trị.",
 }
 export function authMessage(error: unknown): string {

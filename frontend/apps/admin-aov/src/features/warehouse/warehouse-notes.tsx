@@ -21,9 +21,9 @@ export function WarehouseNotes({
     <section className="space-y-3">
       {source && (
         <details className="rounded-lg border bg-muted/20 p-3 text-xs">
-          <summary className="cursor-pointer font-medium">Nguồn dữ liệu import</summary>
+          <summary className="cursor-pointer font-medium">Nguồn dữ liệu nhập</summary>
           <dl className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 text-muted-foreground">
-            <dt>File nguồn</dt>
+            <dt>Tệp nguồn</dt>
             <dd className="break-all">{String(source.sourceFile ?? "—")}</dd>
             <dt>Ngày thu thập</dt>
             <dd>{String(source.collectedOn ?? "Chưa xác định")}</dd>

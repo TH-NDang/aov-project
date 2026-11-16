@@ -146,11 +146,11 @@ export function resolveImportImage(source: string, files: Map<string, File>, bas
   }
   if (/^https:/i.test(source)) {
     const url = new URL(source)
-    if (url.username || url.password) throw new Error("Link ảnh không được chứa tài khoản hoặc mật khẩu.")
+    if (url.username || url.password) throw new Error("Liên kết ảnh không được chứa tài khoản hoặc mật khẩu.")
     return url.href
   }
   if (/^[a-z]+:/i.test(source) || source.startsWith("/") || source.startsWith("\\"))
-    throw new Error("Ảnh cần là link HTTPS hoặc đường dẫn tương đối.")
+    throw new Error("Ảnh cần là liên kết HTTPS hoặc đường dẫn tương đối.")
   const path = normalizeImportPath(`${base ? `${base}/` : ""}${source}`)
   const file = files.get(path)
   if (!file) throw new Error(`Không tìm thấy ảnh: ${path}. Chọn thư mục chứa ảnh hoặc sửa thư mục gốc.`)
@@ -168,10 +168,10 @@ export async function importImageFile(source: string, files: Map<string, File>, 
     })
     const file = await resourceImage(response, resourceImagePath(resolved).path)
     if ((await file.slice(0, 128).text()).startsWith("version https://git-lfs.github.com/spec/v1"))
-      throw new Error(`Ảnh ${resolved} mới là Git LFS pointer. Hãy tải ảnh thật bằng git lfs pull trước khi import.`)
+      throw new Error(`Ảnh ${resolved} mới là Git LFS pointer. Hãy tải ảnh thật bằng git lfs pull trước khi nhập.`)
     return file
   }
   if ((await resolved.slice(0, 128).text()).startsWith("version https://git-lfs.github.com/spec/v1"))
-    throw new Error(`Ảnh ${resolved.name} mới là Git LFS pointer. Hãy tải ảnh thật bằng git lfs pull trước khi import.`)
+    throw new Error(`Ảnh ${resolved.name} mới là Git LFS pointer. Hãy tải ảnh thật bằng git lfs pull trước khi nhập.`)
   return resolved
 }

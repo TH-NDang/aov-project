@@ -166,7 +166,7 @@ test("changed replacement files are rejected and job retry retains the idempoten
   const wrong = new Map([["b.png", new File(["changed"], "b.png", { type: "image/png" })]])
   await assert.rejects(
     resumeUploadSession(f.request, f.saved(), wrong, () => {}, f.fetcher),
-    /khác với file/,
+    /khác với tệp/,
   )
   f.succeed()
   f.loseJob()

@@ -53,8 +53,8 @@ export function PatchDataReview({ variant }: { variant: Variant }) {
       {confirm && (
         <div role="alert" className="space-y-2">
           <p>
-            Xác nhận đã nhập và rà soát đủ thay đổi của patch trong tất cả nhóm dữ liệu? Timeline từng nhóm sẽ ẩn mốc
-            không có thay đổi.
+            Xác nhận đã nhập và rà soát đủ thay đổi của patch trong tất cả nhóm dữ liệu? Dòng thời gian của từng nhóm sẽ
+            ẩn mốc không có thay đổi.
           </p>
           <Button type="button" size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
             Đã rà soát đủ · Hoàn tất

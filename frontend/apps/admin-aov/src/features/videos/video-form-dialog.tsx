@@ -196,7 +196,7 @@ function VideoForm({
             <span className="type-meta flex items-center gap-1">
               <ExternalLink className="size-3.5" />
               {preview.source?.provider === "TIKTOK"
-                ? "Link rút gọn không phát trên trang được. Hãy dán link đầy đủ dạng tiktok.com/@kenh/video/…"
+                ? "Liên kết rút gọn không phát trên trang được. Hãy dán liên kết đầy đủ dạng tiktok.com/@kenh/video/…"
                 : "Trang này không phát được trên wiki, người đọc sẽ mở liên kết ở tab mới."}
             </span>
           )}
@@ -284,7 +284,7 @@ function VideoForm({
               {variants.map((variant) => (
                 <SelectItem key={variant.id} value={variant.id}>
                   {variant.patchCode}
-                  {variant.status !== "PUBLISHED" && " (chưa công bố)"}
+                  {variant.status !== "PUBLISHED" && " (chưa xuất bản)"}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -324,7 +324,7 @@ function VideoForm({
           <span>Hiện trên wiki</span>
           <span className="type-meta">
             {subject && !canPublish
-              ? "Tài khoản này chưa có quyền công bố, video sẽ nằm ở mục Chờ duyệt."
+              ? "Tài khoản này chưa có quyền xuất bản, video sẽ nằm ở mục Chờ duyệt."
               : "Tắt để lưu vào mục Chờ duyệt."}
           </span>
         </span>

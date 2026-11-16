@@ -238,8 +238,8 @@ export function HeroImport({
   }
   async function load(file: File, path?: string) {
     setBusy(true)
-    setProgress("Đang đọc file")
-    setActivity({ status: "running", description: "Đang đọc file", completed: 0, total: 1 })
+    setProgress("Đang đọc tệp")
+    setActivity({ status: "running", description: "Đang đọc tệp", completed: 0, total: 1 })
     setError("")
     setEntries([])
     setArrayChoices({})
@@ -249,7 +249,7 @@ export function HeroImport({
     setCapture(null)
     setArtworkMerged(false)
     try {
-      if (file.size > 5 * 1024 * 1024) throw new Error("File tối đa 5 MB.")
+      if (file.size > 5 * 1024 * 1024) throw new Error("Tệp tối đa 5 MB.")
       const text = await file.text()
       const parsed = file.name.toLowerCase().endsWith(".csv") ? null : JSON.parse(text)
       const recognized = captureDataset(parsed)
@@ -264,7 +264,7 @@ export function HeroImport({
       const arrays = file.name.toLowerCase().endsWith(".csv") ? { rows: parseCsv(text) } : recordArrays(parsed)
       setFileName(path ?? file.name)
       const choices = Object.fromEntries(Object.entries(arrays).filter(([, rows]) => rows.length))
-      if (!Object.keys(choices).length) throw new Error("File không có mảng bản ghi để nhập.")
+      if (!Object.keys(choices).length) throw new Error("Tệp không có mảng bản ghi để nhập.")
       setBase(detectImportImageBase(choices, files, path ?? dataPath, base))
       if (Object.keys(choices).length !== 1) {
         setArrayChoices(choices)
@@ -277,7 +277,7 @@ export function HeroImport({
     } catch (cause) {
       setRows([])
       setError(errorMessage(cause))
-      setActivity({ status: "error", description: "Không đọc được file", completed: 0, total: 1 })
+      setActivity({ status: "error", description: "Không đọc được tệp", completed: 0, total: 1 })
     } finally {
       setBusy(false)
     }
@@ -307,7 +307,7 @@ export function HeroImport({
           policies,
         }
         try {
-          if (!code || seen.has(code)) throw new Error("Mã tướng trống hoặc bị trùng trong file.")
+          if (!code || seen.has(code)) throw new Error("Mã tướng trống hoặc bị trùng trong tệp.")
           seen.add(code)
           for (const field of fields.data ?? []) {
             const source = mapping[field.key]
@@ -335,7 +335,7 @@ export function HeroImport({
             )
               continue
             if (!relationFields.data?.[section])
-              throw new Error("Chưa tải được các trường ánh xạ liên quan từ backend.")
+              throw new Error("Chưa tải được các trường ánh xạ liên quan từ máy chủ.")
             const mapped = mapRelation(
               section,
               row[mapping[section]],
@@ -398,7 +398,7 @@ export function HeroImport({
     setError("")
     const selected = entries.filter((entry) => entry.selected && entry.plan && !entry.result)
     const total = selected.length
-    setActivity({ status: "running", description: "Đang chuẩn bị import", completed: 0, total })
+    setActivity({ status: "running", description: "Đang chuẩn bị nhập", completed: 0, total })
     try {
       if (!submission.current) {
         submission.current = await createUploadSession(
@@ -437,7 +437,7 @@ export function HeroImport({
         status: "error",
         description: submission.current
           ? "Chưa xác nhận đã nhận tác vụ. Gửi lại để kiểm tra."
-          : "Chuẩn bị import thất bại",
+          : "Chuẩn bị nhập thất bại",
         completed: 0,
         total,
       })
@@ -480,7 +480,7 @@ export function HeroImport({
     (e) => filter === "ALL" || (filter === "ERROR" ? !!e.error : e.plan?.classification === filter),
   )
   return (
-    <section className="overflow-hidden admin-section" aria-label="Import tướng">
+    <section className="overflow-hidden admin-section" aria-label="Nhập tướng">
       <div className="border-b bg-muted/30 px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 type-section-title">
@@ -488,7 +488,7 @@ export function HeroImport({
           </h2>
           <span className="text-xs text-muted-foreground">JSON / CSV · Tối đa 5 MB / 200 tướng</span>
         </div>
-        <ol className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm" aria-label="Tiến trình import">
+        <ol className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm" aria-label="Tiến trình nhập">
           {["Chọn dữ liệu", "Ánh xạ trường", "Duyệt & lưu"].map((label, i) => (
             <li
               key={label}
@@ -514,11 +514,11 @@ export function HeroImport({
           <p className="font-medium">
             {pendingTransfer
               ? "Chưa xác nhận chuyển xong tác vụ đến máy chủ — hãy giữ trang mở."
-              : "Upload ảnh cần giữ trang mở"}
+              : "Tải ảnh lên cần giữ trang mở"}
           </p>
           <p className="mt-1 text-muted-foreground">
-            Khi đang chuẩn bị hoặc upload ảnh, đừng tải lại trang, đóng tab trình duyệt hoặc đóng tab import. Tiến trình
-            upload sẽ tạm dừng khi đóng trang. Phiên đã lưu cho phép chọn lại gói ảnh và tiếp tục, không tải lại ảnh đã
+            Khi đang chuẩn bị hoặc tải ảnh lên, đừng tải lại trang, đóng tab trình duyệt hoặc đóng tab nhập. Tiến trình
+            tải lên sẽ tạm dừng khi đóng trang. Phiên đã lưu cho phép chọn lại gói ảnh và tiếp tục, không tải lại ảnh đã
             xong. Sau khi hiện “Đã gửi đến máy chủ”, bạn có thể đóng trang và xem lại tiến trình nhập dữ liệu khi quay
             lại.
           </p>
@@ -612,7 +612,7 @@ export function HeroImport({
               : "Ghép ảnh tướng, kỹ năng và trang phục từ tài nguyên"}
           </Button>
           <p className="text-xs leading-5 text-muted-foreground">
-            Ghép theo mã tướng và vị trí kỹ năng. Chỉ những trường ảnh giữ trong ánh xạ mới được upload; dữ liệu và ảnh
+            Ghép theo mã tướng và vị trí kỹ năng. Chỉ những trường ảnh giữ trong ánh xạ mới được tải lên; dữ liệu và ảnh
             sẵn có vẫn tuân theo lựa chọn ghi đè hoặc bỏ qua.
           </p>
         </section>
@@ -722,7 +722,7 @@ export function HeroImport({
             {!!files.size && (
               <>
                 <label className="block text-sm">
-                  File dữ liệu trong gói
+                  Tệp dữ liệu trong gói
                   <select
                     className={control}
                     value={dataPath}
@@ -731,7 +731,7 @@ export function HeroImport({
                       if (file) void load(file, event.target.value)
                     }}
                   >
-                    <option value="">Chọn JSON hoặc CSV ({files.size} file trong thư mục)</option>
+                    <option value="">Chọn JSON hoặc CSV ({files.size} tệp trong thư mục)</option>
                     {[...files.keys()]
                       .filter((path) => /\.(json|csv)$/i.test(path))
                       .map((path) => (
@@ -775,7 +775,7 @@ export function HeroImport({
               </>
             )}
             <p className="text-xs text-muted-foreground">
-              Chỉ upload ảnh đã ánh xạ. ZIP tối đa 256 MB; bộ lớn hơn chọn thư mục.
+              Chỉ tải lên ảnh đã ánh xạ. ZIP tối đa 256 MB; bộ lớn hơn chọn thư mục.
             </p>
           </div>
         )}
@@ -851,7 +851,7 @@ export function HeroImport({
                 </p>
               </div>
               <Button type="button" variant="ghost" onClick={() => setStep(1)}>
-                Đổi file / loại nhập
+                Đổi tệp / loại nhập
               </Button>
             </div>
             <label className="grid gap-2 rounded-lg bg-muted/40 p-4 text-sm sm:grid-cols-2 sm:items-center">
@@ -877,7 +877,7 @@ export function HeroImport({
             </label>
             <div className="hidden grid-cols-3 gap-4 px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
               <span>Trường dữ liệu</span>
-              <span>Cột trong file</span>
+              <span>Cột trong tệp</span>
               <span>Khi đã có giá trị</span>
             </div>
             <div className="divide-y rounded-lg border">
@@ -965,7 +965,7 @@ export function HeroImport({
               ))}
             {relationFields.error && (
               <p role="alert" className="text-sm text-destructive">
-                Không tải được trường ánh xạ kỹ năng/trang phục. Hãy cập nhật backend.
+                Không tải được trường ánh xạ kỹ năng/trang phục. Hãy cập nhật máy chủ.
               </p>
             )}
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1100,7 +1100,7 @@ export function HeroImport({
                         }}
                       >
                         <summary className="cursor-pointer">
-                          Sẽ upload {entry.relatedImages.length} ảnh liên quan
+                          Sẽ tải lên {entry.relatedImages.length} ảnh liên quan
                         </summary>
                         {expandedImages.has(i) && (
                           <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
@@ -1172,7 +1172,7 @@ export function HeroImport({
       </fieldset>
       {fields.error && (
         <p role="alert" className="px-5 pb-4 text-sm text-destructive">
-          Không tải được trường nhập liệu. Kiểm tra backend đã cập nhật. {errorMessage(fields.error)}
+          Không tải được trường nhập liệu. Kiểm tra máy chủ đã cập nhật. {errorMessage(fields.error)}
         </p>
       )}
       {busy && (

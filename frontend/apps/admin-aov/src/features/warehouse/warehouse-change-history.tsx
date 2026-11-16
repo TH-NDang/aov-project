@@ -240,9 +240,9 @@ export function WarehouseChangeHistory({
             />
           </label>
           <label className="grid gap-1.5 text-sm">
-            Link nguồn xác minh
+            Liên kết nguồn xác minh
             <input
-              aria-label="Link nguồn xác minh"
+              aria-label="Liên kết nguồn xác minh"
               type="url"
               className={control}
               value={source}

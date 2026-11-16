@@ -51,8 +51,8 @@ const ROLE_NAMES: Record<string, string> = {
   SKIN_ART: "Ảnh trang phục",
   SKIN_HEAD: "Đại diện trang phục",
   SKIN_PORTRAIT: "Chân dung trang phục",
-  SKILL_ICON: "Icon kỹ năng",
-  SKILL_STATE: "Icon trạng thái kỹ năng",
+  SKILL_ICON: "Biểu tượng kỹ năng",
+  SKILL_STATE: "Biểu tượng trạng thái kỹ năng",
   SKILL_LIBRARY: "Ảnh thư viện kỹ năng",
 }
 
@@ -64,7 +64,7 @@ const UPLOAD_TYPES: Record<GalleryKind, { value: string; label: string }[]> = {
     { value: "HERO_HEAD", label: "Ảnh đại diện" },
   ],
   SKIN: [{ value: "HERO_SKIN_ART", label: "Ảnh trang phục" }],
-  SKILL: [{ value: "HERO_SKILL_ICON", label: "Icon kỹ năng" }],
+  SKILL: [{ value: "HERO_SKILL_ICON", label: "Biểu tượng kỹ năng" }],
   STICKER: [{ value: "CHIBI_STICKER", label: "Sticker chibi" }],
   OTHER: [{ value: "OTHER", label: "Khác" }],
 }
@@ -537,7 +537,7 @@ function AttachmentForm({
         <input
           className={control}
           maxLength={500}
-          placeholder="Ví dụ: Icon Chiêu 1 trước khi làm lại"
+          placeholder="Ví dụ: Biểu tượng Chiêu 1 trước khi làm lại"
           value={value.caption}
           disabled={busy}
           onChange={(event) => setValue({ ...value, caption: event.target.value })}

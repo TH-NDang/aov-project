@@ -14,10 +14,10 @@ export const sourceGapLabels: Record<SourceGap, string> = {
 }
 
 export const sourceGapHints: Record<SourceGap, string> = {
-  none: "Ảnh đã có nơi lấy và người cần credit.",
+  none: "Ảnh đã có nơi lấy và người cần ghi công.",
   "missing-source": "Chưa biết ảnh lấy từ đâu. Thêm tên nguồn và chủ sở hữu.",
   unverified: "Nguồn đang ghi là chưa xác minh. Xác minh lại rồi thêm nguồn và chủ sở hữu.",
-  "missing-owner": "Đã biết ảnh lấy từ đâu nhưng chưa ghi ai là chủ sở hữu cần credit.",
+  "missing-owner": "Đã biết ảnh lấy từ đâu nhưng chưa ghi ai là chủ sở hữu cần ghi công.",
 }
 
 /** User avatars belong to the user who uploaded them and never need a source or owner (03, needsCredit). */

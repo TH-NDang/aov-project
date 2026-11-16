@@ -43,7 +43,7 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
     .map((job) => ({
       id: job.id,
       serverJob: true,
-      title: "Import tướng",
+      title: "Nhập tướng",
       path: "/hero/import",
       status: job.status === "RUNNING" ? "running" : job.status === "COMPLETED" ? "completed" : "error",
       description: jobs.error ? "Mất kết nối · đang thử tải lại tiến trình" : jobDescription(job),
@@ -122,7 +122,7 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
               <button
                 className="absolute right-1 top-1 rounded p-1 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground group-data-[collapsible=icon]:hidden"
                 aria-label={`Ẩn thông báo ${task.title}`}
-                title="Ẩn thông báo, vẫn giữ lịch sử import"
+                title="Ẩn thông báo, vẫn giữ lịch sử nhập"
                 onClick={() => dismiss(task)}
                 disabled={dismissal.isPending && !!task.serverJob}
               >

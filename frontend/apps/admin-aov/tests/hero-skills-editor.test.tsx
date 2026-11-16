@@ -302,7 +302,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     await act(async () => button("Chọn từ kho ảnh").click())
     await waitFor(() => !!document.querySelector('[aria-label="Chọn ảnh skill-icon"]'))
     const downloadUrl = [...imageSheet.querySelectorAll("label")]
-      .find((label) => label.textContent?.trim() === "Link file ảnh để tải")!
+      .find((label) => label.textContent?.trim() === "Liên kết tệp ảnh để tải")!
       .querySelector("input")!
     await type(downloadUrl, "unfinished-url")
     assert.equal(downloadUrl.validity.typeMismatch, true)
@@ -311,7 +311,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     assert.equal(current.skills[1].iconAssetId, "skill-icon")
     // New uploads must name their owner first.
     const ownerField = [...imageSheet.querySelectorAll("label")]
-      .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần credit")!
+      .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần ghi công")!
       .querySelector("input")!
     await act(async () => {
       Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(

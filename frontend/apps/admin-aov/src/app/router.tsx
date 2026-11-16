@@ -107,7 +107,7 @@ const routes: RouteObject[] = [
           },
           {
             path: "hero/import",
-            handle: title("Import tướng"),
+            handle: title("Nhập tướng"),
             element: null,
           },
           {
@@ -181,7 +181,7 @@ const routes: RouteObject[] = [
           },
           {
             path: "game-modes/:modeId/auto-chess",
-            handle: title("Cẩm nang Cờ Liên quân"),
+            handle: title("Cẩm nang Cờ Liên Quân"),
             lazy: async () => ({
               Component: (await import("@/features/game-modes/auto-chess-editor")).AutoChessEditorPage,
             }),

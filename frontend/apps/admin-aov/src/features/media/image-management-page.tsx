@@ -265,7 +265,7 @@ export function ImageManagementPage() {
               type="button"
               className="block w-full min-w-0 rounded text-left outline-none transition-opacity hover:opacity-70 focus-visible:ring-2 focus-visible:ring-ring"
               onClick={() => setSelected(row.original.id)}
-              aria-label={`Nguồn và credit ảnh ${row.original.id}`}
+              aria-label={`Nguồn và ghi công ảnh ${row.original.id}`}
             >
               <LibraryOwner
                 sources={row.original.sources}
@@ -429,7 +429,7 @@ export function ImageManagementPage() {
               }}
             >
               <X aria-hidden className="size-3.5" />
-              Bỏ bộ lọc
+              Xóa bộ lọc
             </Button>
           )}
           {/* Phones keep the view switch beside the type filter and move the count to a short line below. */}
@@ -606,9 +606,7 @@ export function ImageManagementPage() {
                         aria-label={`Chọn ảnh ${row.original.id}`}
                         checked={marked.has(row.original.id)}
                         disabled={!canSelect(row.original)}
-                        title={
-                          canSelect(row.original) ? undefined : "Ảnh chưa hoàn tất upload hoặc không còn hoạt động."
-                        }
+                        title={canSelect(row.original) ? undefined : "Ảnh chưa tải lên xong hoặc không còn hoạt động."}
                         onChange={() => toggleRow(row.original)}
                       />
                     </td>
@@ -643,7 +641,7 @@ export function ImageManagementPage() {
           </span>
           <h2 className="type-section-title">{needsCredit ? "Không có ảnh cần bổ sung" : "Chưa có ảnh"}</h2>
           <p className="text-xs text-muted-foreground">
-            {needsCredit ? "Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này." : "Chưa có ảnh thuộc loại này."}
+            {needsCredit ? "Không có ảnh thiếu nguồn hoặc ghi công trong bộ lọc này." : "Chưa có ảnh thuộc loại này."}
           </p>
           {(type || needsCredit || usage) && (
             <Button
@@ -695,7 +693,7 @@ export function ImageManagementPage() {
             </Button>
           )}
           <Button size="sm" disabled={!marked.size} onClick={() => setBulkTargets([...marked.values()])}>
-            Bổ sung nguồn / credit hàng loạt
+            Bổ sung nguồn / ghi công hàng loạt
           </Button>
         </div>
       )}
@@ -749,7 +747,7 @@ export function ImageManagementPage() {
         >
           <SheetHeader>
             <SheetTitle>Thêm ảnh</SheetTitle>
-            <SheetDescription>Chọn loại ảnh rồi tải file hoặc dùng link ảnh.</SheetDescription>
+            <SheetDescription>Chọn loại ảnh rồi tải tệp hoặc dùng liên kết ảnh.</SheetDescription>
           </SheetHeader>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-6">
             <label className="grid gap-2 text-sm">

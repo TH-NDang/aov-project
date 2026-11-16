@@ -33,8 +33,8 @@ export function OrganizationCompetitions({
       icon={CalendarDays}
       description={
         circuit
-          ? "Các mùa giải thuộc hệ thống giải này, gồm bản nháp và bản đã công bố."
-          : "Tự động hiển thị các mùa giải chọn tổ chức này làm đơn vị tổ chức, gồm bản nháp và bản đã công bố."
+          ? "Các mùa giải thuộc hệ thống giải này, gồm bản nháp và bản đã xuất bản."
+          : "Tự động hiển thị các mùa giải chọn tổ chức này làm đơn vị tổ chức, gồm bản nháp và bản đã xuất bản."
       }
     >
       {query.isPending ? (
@@ -85,7 +85,7 @@ export function OrganizationCompetitions({
                   </p>
                 </div>
                 <span className="type-label rounded-md bg-muted px-2 py-1">
-                  {entry.publishedAt ? "Đã công bố" : "Bản nháp"}
+                  {entry.publishedAt ? "Đã xuất bản" : "Bản nháp"}
                 </span>
                 <ArrowRight className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
               </Link>

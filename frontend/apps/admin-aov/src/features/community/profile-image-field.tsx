@@ -87,7 +87,7 @@ export function ProfileImageField({
             ? "Ảnh chưa có đường dẫn hợp lệ. Hãy thử tải lại."
             : cause instanceof ApiError && cause.status === 403
               ? "Cần quyền media:write để tải ảnh lên kho."
-              : errorMessage(cause).replace("Asset chưa được gắn vào tướng.", "Ảnh chưa được gắn vào hồ sơ."),
+              : errorMessage(cause).replace("Ảnh chưa được gắn vào tướng.", "Ảnh chưa được gắn vào hồ sơ."),
         )
     } finally {
       if (!signal.signal.aborted) {

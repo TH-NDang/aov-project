@@ -81,7 +81,7 @@ export function ImportDialog({
       setFilename(file.name)
       chooseArray(Object.keys(data)[0]!, data)
     } catch (cause) {
-      setError(cause instanceof Error ? storageErrorMessage(cause.message) : "Không đọc được file.")
+      setError(cause instanceof Error ? storageErrorMessage(cause.message) : "Không đọc được tệp.")
     }
   }
 
@@ -93,7 +93,7 @@ export function ImportDialog({
       setError("")
       setFilter("all")
     } catch (cause) {
-      setError(cause instanceof Error ? storageErrorMessage(cause.message) : "Không thể chuẩn bị import.")
+      setError(cause instanceof Error ? storageErrorMessage(cause.message) : "Không thể chuẩn bị nhập.")
     }
   }
 
@@ -120,7 +120,7 @@ export function ImportDialog({
         onInteractOutside={(event) => busy && event.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Import vào {table.name}</DialogTitle>
+          <DialogTitle>Nhập vào {table.name}</DialogTitle>
           <DialogDescription>
             {result
               ? "Đã lưu vào kho JSON của dự án."
@@ -137,7 +137,7 @@ export function ImportDialog({
           <div className="space-y-4">
             <p className="flex items-center gap-2 font-medium">
               <Check className="size-5 text-green-600" />
-              Import hoàn tất
+              Đã nhập xong
             </p>
             <p>
               {result.added} dòng mới · {result.updated} cập nhật · {result.skipped} bỏ qua
@@ -147,7 +147,7 @@ export function ImportDialog({
         ) : !plan ? (
           <div className="space-y-5">
             <label className="grid gap-2 text-sm font-medium">
-              File JSON hoặc CSV
+              Tệp JSON hoặc CSV
               <Input
                 type="file"
                 accept=".json,.csv,application/json,text/csv"
@@ -161,7 +161,7 @@ export function ImportDialog({
               <>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-2 text-sm">
-                    Danh sách trong file
+                    Danh sách trong tệp
                     <select
                       className={SELECT_CLASS}
                       value={arrayName}
@@ -200,7 +200,7 @@ export function ImportDialog({
                 <div className="rounded-lg border">
                   <div className="grid grid-cols-[2rem_1fr_1fr] gap-3 border-b bg-muted/40 px-3 py-2 text-sm font-medium">
                     <span />
-                    <span>Cột trong file</span>
+                    <span>Cột trong tệp</span>
                     <span>Cột trong bảng</span>
                   </div>
                   {columns
@@ -209,7 +209,7 @@ export function ImportDialog({
                       <div key={column} className="grid grid-cols-[2rem_1fr_1fr] items-center gap-3 px-3 py-2">
                         <input
                           type="checkbox"
-                          aria-label={`Import cột ${column}`}
+                          aria-label={`Nhập cột ${column}`}
                           checked={Boolean(mapping[column])}
                           onChange={(event) => setMapping({ ...mapping, [column]: event.target.checked ? column : "" })}
                         />
@@ -232,7 +232,7 @@ export function ImportDialog({
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Nhập tên cột đích có sẵn để ánh xạ, hoặc tên mới để thêm cột. Cột không chọn được giữ nguyên; ô thiếu
-                  trong file không xóa dữ liệu cũ.
+                  trong tệp không xóa dữ liệu cũ.
                 </p>
                 <Button onClick={preview} disabled={!sourceId || !rows.length}>
                   <FileUp />
@@ -249,12 +249,12 @@ export function ImportDialog({
               <Badge variant="outline">{counts!.same} giống hiện tại</Badge>
             </div>
             <p className="text-sm">
-              Dòng mới sẽ được thêm. Với ID đã có, tích chọn để cập nhật; không chọn sẽ bỏ qua. ID và các cột không
-              import luôn được giữ nguyên.
+              Dòng mới sẽ được thêm. Với ID đã có, tích chọn để cập nhật; không chọn sẽ bỏ qua. ID và các cột không nhập
+              luôn được giữ nguyên.
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <select
-                aria-label="Lọc kết quả import"
+                aria-label="Lọc kết quả nhập"
                 className={`${SELECT_CLASS} w-auto`}
                 value={filter}
                 onChange={(event) => {

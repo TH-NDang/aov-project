@@ -201,7 +201,7 @@ export function planPortraitMove(heroes: Hero[], request: PortraitMoveRequest): 
   }
   if (request.target.kind === "hero") syncDefaultSkin(target)
   changed.add(target.id)
-  steps.push(`Tên file đích: ${request.fileName}`)
+  steps.push(`Tên tệp đích: ${request.fileName}`)
 
   return {
     heroes: next,

@@ -18,7 +18,7 @@ export interface MediaSourceResult {
 
 export function bulkSourceValidation(source: MediaSourceInput) {
   if (!source.label.trim() || source.label.trim().length > 200) return "Điền tên nguồn, tối đa 200 ký tự."
-  if ((source.ownerName?.trim().length ?? 0) > 200) return "Tên chủ sở hữu / credit tối đa 200 ký tự."
+  if ((source.ownerName?.trim().length ?? 0) > 200) return "Tên chủ sở hữu / ghi công tối đa 200 ký tự."
   if (
     [source.url, source.contactUrl].some(
       (url) => url?.trim() && (!creditHttpUrl(url.trim()) || url.trim().length > 2048),
@@ -94,7 +94,7 @@ export async function addSourcesPerTarget(
           index,
           "success",
           saved.currentVersionId === target.versionId
-            ? "Đã bổ sung nguồn / credit."
+            ? "Đã bổ sung nguồn / ghi công."
             : "Đã lưu cho phiên bản đã chọn; ảnh đang dùng vừa thay đổi, cần kiểm tra lại.",
         )
       } catch (error) {

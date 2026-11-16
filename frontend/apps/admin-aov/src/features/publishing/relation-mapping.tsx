@@ -37,7 +37,7 @@ export function RelationMappingFields({
       )}
       <p className="text-xs text-muted-foreground">
         Chỉ trường ảnh có ánh xạ mới được tải. Trường không ánh xạ giữ giá trị đang có theo mã kỹ năng/trang phục. Ghi
-        đè danh sách sẽ loại các mã không có trong file.
+        đè danh sách sẽ loại các mã không có trong tệp.
       </p>
       {problem && (
         <p role="alert" className="text-sm text-destructive">

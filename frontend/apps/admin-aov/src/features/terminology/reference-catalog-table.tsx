@@ -440,7 +440,7 @@ export function ReferenceCatalogTable({
             </p>
             {filtered && (
               <Button size="sm" variant="outline" className="mt-2" onClick={resetFilters}>
-                Bỏ bộ lọc
+                Xóa bộ lọc
               </Button>
             )}
             <p className="text-xs text-muted-foreground">

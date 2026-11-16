@@ -67,7 +67,7 @@ export function ImportJobHistory() {
           Không tải được tiến trình. {errorMessage(jobs.error)}
         </p>
       )}
-      {jobs.data?.length === 0 && <p className="text-sm text-muted-foreground">Chưa có tác vụ import.</p>}
+      {jobs.data?.length === 0 && <p className="text-sm text-muted-foreground">Chưa có tác vụ nhập.</p>}
       {jobs.data?.map((job) => (
         <details key={job.id} className="admin-section py-4" open={job.status === "RUNNING"}>
           <summary className="cursor-pointer text-sm font-medium">
@@ -80,7 +80,7 @@ export function ImportJobHistory() {
             className="mt-3 h-2 w-full accent-primary"
             max={job.total}
             value={job.completed}
-            aria-label="Tiến trình import trên máy chủ"
+            aria-label="Tiến trình nhập trên máy chủ"
           />
           <ul className="mt-3 max-h-80 space-y-2 overflow-auto text-sm">
             {job.results.map((row) => (

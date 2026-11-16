@@ -206,7 +206,7 @@ export function CountryLabel({ country }: { country?: string | null }) {
 /** A compact published mark: almost every record is a draft, so only the exception is worth the space. */
 export function PublishedMark({ published }: { published?: boolean }) {
   if (!published) return null
-  return <span className="type-label rounded-md bg-muted px-2 py-0.5">Đã công bố</span>
+  return <span className="type-label rounded-md bg-muted px-2 py-0.5">Đã xuất bản</span>
 }
 
 /** One figure of a directory entry, labelled below it. */

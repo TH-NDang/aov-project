@@ -36,7 +36,7 @@ test("hero image sources share the image request and retain current provenance, 
       source("old", { versionId: "v1", label: "Nguồn phiên bản cũ" }),
       source("unsafe", { label: "Nguồn thủ công", url: "javascript:alert(1)", note: "Không có URL hợp lệ." }),
       source("credentials", {
-        label: "Không mở link có thông tin đăng nhập",
+        label: "Không mở liên kết có thông tin đăng nhập",
         url: "https://name:secret@source.test/hero",
         note: null,
       }),

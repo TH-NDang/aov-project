@@ -170,8 +170,8 @@ test("a formula change splits into plain numbers: its base by rank, then each st
         ["500", "600", "700", "800", "900", "1000"],
         { before: "350 (+110/cấp chiêu)", after: "500 (+100/cấp chiêu)" },
       ],
-      ["Tỉ lệ Công phép", Array(6).fill("40%"), Array(6).fill("50%"), { before: "40%", after: "50%" }],
-      ["Tỉ lệ Máu tối đa", Array(6).fill("4%"), Array(6).fill("5%"), { before: "4%", after: "5%" }],
+      ["Tỷ lệ Công phép", Array(6).fill("40%"), Array(6).fill("50%"), { before: "40%", after: "50%" }],
+      ["Tỷ lệ Máu tối đa", Array(6).fill("4%"), Array(6).fill("5%"), { before: "4%", after: "5%" }],
     ],
   )
   assert.deepEqual(splitSkillRanks(damage.oldValue, damage.newValue, skill(), skill())!.parts[0].changed, [

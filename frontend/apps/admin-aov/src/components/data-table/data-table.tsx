@@ -133,7 +133,7 @@ export function DataTable<TData extends RowData>({
           />
           {globalFilter && (
             <InputGroupAddon align="inline-end">
-              <InputGroupButton size="icon-xs" onClick={() => table.setGlobalFilter("")} aria-label="Xoá tìm kiếm">
+              <InputGroupButton size="icon-xs" onClick={() => table.setGlobalFilter("")} aria-label="Xóa tìm kiếm">
                 <X />
               </InputGroupButton>
             </InputGroupAddon>
@@ -157,7 +157,7 @@ export function DataTable<TData extends RowData>({
               table.setGlobalFilter("")
             }}
           >
-            Xoá lọc <X />
+            Xóa bộ lọc <X />
           </Button>
         )}
         <div className="ml-auto flex items-center gap-2">

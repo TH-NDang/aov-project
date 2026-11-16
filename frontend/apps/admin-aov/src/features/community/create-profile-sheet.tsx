@@ -80,7 +80,7 @@ export function CreateProfileSheet({
       <SheetContent className="overflow-y-auto sm:max-w-lg" showCloseButton={!busy}>
         <SheetHeader>
           <SheetTitle>Tạo hồ sơ {profileKindLabels[kind].toLowerCase()}</SheetTitle>
-          <SheetDescription>Lưu nháp trước, bổ sung thông tin và công bố khi đã sẵn sàng.</SheetDescription>
+          <SheetDescription>Lưu nháp trước, bổ sung thông tin và xuất bản khi đã sẵn sàng.</SheetDescription>
         </SheetHeader>
         <form
           className="space-y-5 px-4 py-6"

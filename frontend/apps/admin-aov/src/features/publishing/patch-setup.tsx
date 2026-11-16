@@ -139,7 +139,7 @@ export function PatchSetup({
   return (
     <Container title={mode === "assignment" ? "Liên kết gameplay" : "Patch và lịch phát hành"}>
       <p className="text-sm text-muted-foreground">
-        Nội dung gameplay dùng chung theo ruleset. Mỗi thị trường có lịch mùa và lịch phát hành patch riêng.
+        Nội dung gameplay dùng chung theo bộ quy tắc. Mỗi thị trường có lịch mùa và lịch phát hành patch riêng.
       </p>
       {error && (
         <p role="alert" className="text-sm text-destructive">
@@ -168,7 +168,7 @@ export function PatchSetup({
                       validTo: f.validTo ? new Date(f.validTo).toISOString() : null,
                     })
                     await assignmentDraft.draft.discard()
-                  }, "Đã gán ruleset cho vùng.")
+                  }, "Đã gán bộ quy tắc cho vùng.")
                 }}
               >
                 <h3 className="font-medium">Thị trường dùng chung gameplay</h3>
@@ -210,7 +210,7 @@ export function PatchSetup({
                     type="datetime-local"
                   />
                 </label>
-                <Button disabled={assignmentLocked}>Gán ruleset</Button>
+                <Button disabled={assignmentLocked}>Gán bộ quy tắc</Button>
                 {assignments.data?.map((a) => (
                   <p key={a.id} className="text-xs">
                     {rulesets.find((r) => r.id === a.rulesetId)?.code}:{" "}
@@ -315,7 +315,7 @@ export function PatchSetup({
                       )}
                     </select>
                     <span className="text-xs text-muted-foreground">
-                      Chọn mốc cùng ruleset; thứ tự các mốc sau sẽ tự dịch chuyển.
+                      Chọn mốc cùng bộ quy tắc; thứ tự các mốc sau sẽ tự dịch chuyển.
                     </span>
                   </label>
                   <Button disabled={busy}>Thêm variant</Button>
@@ -328,7 +328,7 @@ export function PatchSetup({
                     {choosable ? ` · ${rulesets.find((r) => r.id === v.rulesetId)?.code ?? ""}` : ""} · #
                     {v.rulesetOrdinal} · {v.status}
                   </p>
-                  <p className="select-all break-all font-mono text-xs text-muted-foreground">Variant ID: {v.id}</p>
+                  <p className="select-all break-all font-mono text-xs text-muted-foreground">Mã biến thể: {v.id}</p>
                   {capabilities.includes("patch:publish") &&
                     (v.status !== "PUBLISHED" ? (
                       <Button
@@ -336,11 +336,11 @@ export function PatchSetup({
                         onClick={() =>
                           void perform(
                             () => api.send(`/admin/patch-variants/${v.id}/publish`, "POST"),
-                            "Đã publish variant.",
+                            "Đã xuất bản biến thể.",
                           )
                         }
                       >
-                        Publish variant
+                        Xuất bản biến thể
                       </Button>
                     ) : (
                       <form

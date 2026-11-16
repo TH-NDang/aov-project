@@ -122,7 +122,7 @@ test("owner suggestions fill the field only on request and the catalog renames a
   }
   const ownerField = () =>
     [...document.querySelectorAll("label")]
-      .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần credit")!
+      .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần ghi công")!
       .querySelector("input")!
 
   try {

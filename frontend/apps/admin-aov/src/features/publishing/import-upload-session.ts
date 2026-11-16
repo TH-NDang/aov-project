@@ -103,7 +103,7 @@ export async function resumeUploadSession(
   const save = () => saveUploadSession(request, session)
   const run = async () => {
     const { state } = session
-    if (state.schemaVersion !== 1) throw new Error("Phiên upload không tương thích. Hãy cập nhật trang.")
+    if (state.schemaVersion !== 1) throw new Error("Phiên tải lên không tương thích. Hãy cập nhật trang.")
     if (!state.prepared) {
       await save()
       for (const entry of state.entries) {
@@ -113,7 +113,7 @@ export async function resumeUploadSession(
           latest.revisionId !== entry.input.expectedRevisionId ||
           latest.version !== entry.input.expectedVersion
         )
-          throw new Error("Dữ liệu tướng đã thay đổi. Hãy tạo bản xem trước mới trước khi import.")
+          throw new Error("Dữ liệu tướng đã thay đổi. Hãy tạo bản xem trước mới trước khi nhập.")
       }
       const images = Object.values(state.images)
       for (const image of images) {
@@ -147,7 +147,7 @@ export async function resumeUploadSession(
         const file = await importImageFile(image.source, files, state.base)
         const digest = await fingerprint(file)
         if (image.digest && digest !== image.digest)
-          throw new Error(`Ảnh ${image.source} khác với file của phiên đã lưu. Hãy chọn lại gói ban đầu.`)
+          throw new Error(`Ảnh ${image.source} khác với tệp của phiên đã lưu. Hãy chọn lại gói ban đầu.`)
         image.digest = digest
         if (!image.assetId) {
           const asset = await send<{ id: string }>("/admin/media/assets", {
@@ -173,7 +173,7 @@ export async function resumeUploadSession(
           redirect: "error",
           signal: AbortSignal.timeout(120000),
         })
-        if (!response.ok) throw new Error("Upload ảnh chưa xong. Phiên đã lưu; bạn có thể tiếp tục sau.")
+        if (!response.ok) throw new Error("Tải ảnh lên chưa xong. Phiên đã lưu; bạn có thể tiếp tục sau.")
         await complete()
       }
       state.entries = state.entries.map((entry) => {
@@ -203,7 +203,7 @@ export async function resumeUploadSession(
   }
   if (typeof navigator !== "undefined" && navigator.locks)
     return navigator.locks.request(`hero-upload:${session.id}`, { ifAvailable: true }, (lock) => {
-      if (!lock) throw new Error("Phiên này đang upload trong tab khác.")
+      if (!lock) throw new Error("Phiên này đang tải lên trong tab khác.")
       return run()
     })
   return run()

@@ -382,5 +382,5 @@ test("ZIP rejects traversal, duplicate normalized paths, corrupt archives and fi
   await assert.rejects(readImportZip(archive({ "a.json": strToU8("[]"), "x/../a.json": strToU8("[]") })), /Trùng/)
   await assert.rejects(readImportZip(archive({ "heroes.json": new Uint8Array(5 * 1024 * 1024 + 1) })), /giới hạn/)
   await assert.rejects(readImportZip(new File(["bad zip"], "bad.zip")))
-  await assert.rejects(readImportZip(archive({ "image.png": strToU8("image") })), /không có file/)
+  await assert.rejects(readImportZip(archive({ "image.png": strToU8("image") })), /không có tệp/)
 })

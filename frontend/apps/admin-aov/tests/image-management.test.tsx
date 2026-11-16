@@ -128,7 +128,7 @@ test("image management loads on scroll, retries without losing rows and filters 
     )
     await waitFor(() => rows().length === 20)
     assert.equal(document.querySelector('[aria-label="Chọn tất cả ảnh đã tải"]'), null)
-    assert.ok(!document.body.textContent?.includes("Bổ sung nguồn / credit hàng loạt"))
+    assert.ok(!document.body.textContent?.includes("Bổ sung nguồn / ghi công hàng loạt"))
     assert.equal(calls.length, 1)
     const sourceTab = (label: string) =>
       [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Lọc theo nguồn"] button')].find((button) =>
@@ -200,11 +200,11 @@ test("image management loads on scroll, retries without losing rows and filters 
     await selectType("ITEM_ICON")
     await waitFor(() => document.body.textContent!.includes("Chưa có ảnh thuộc loại này."))
     await act(async () => sourceTab("Thiếu nguồn").click())
-    await waitFor(() => document.body.textContent!.includes("Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này."))
+    await waitFor(() => document.body.textContent!.includes("Không có ảnh thiếu nguồn hoặc ghi công trong bộ lọc này."))
     assert.equal(document.querySelector('[aria-label="Đang tải thêm ảnh…"]'), null)
     await act(async () => viewButton("Lưới").click())
     assert.equal(document.querySelector("table"), null)
-    assert.match(document.body.textContent!, /Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này/)
+    assert.match(document.body.textContent!, /Không có ảnh thiếu nguồn hoặc ghi công trong bộ lọc này/)
     const reset = [...document.querySelectorAll("button")].find((button) => button.textContent === "Xem tất cả ảnh")!
     await act(async () => reset.click())
     await waitFor(() => document.querySelectorAll('[aria-label="Lưới ảnh"] > li').length === 45)

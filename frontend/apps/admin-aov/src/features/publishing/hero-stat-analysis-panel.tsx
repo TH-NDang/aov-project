@@ -160,7 +160,7 @@ export function HeroStatAnalysisPanel({
                 {row.reading && analysis?.primary && <Distribution result={analysis.primary} unit={row.reading.unit} />}
                 {analysis?.secondary && (
                   <div className="space-y-0.5">
-                    <p className="type-label">Tỉ lệ đi kèm · {analysis.secondary.label}</p>
+                    <p className="type-label">Tỷ lệ đi kèm · {analysis.secondary.label}</p>
                     <Distribution result={analysis.secondary} unit="PERCENT" />
                   </div>
                 )}

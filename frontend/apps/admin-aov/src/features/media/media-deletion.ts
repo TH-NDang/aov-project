@@ -18,12 +18,12 @@ export async function readMediaDeletion(assetId: string, signal?: AbortSignal): 
   try {
     const result = await backendRequest<MediaDeletion>(`/admin/media/assets/${assetId}/deletion`, { signal })
     if (!Number.isSafeInteger(result.expectedVersion) || result.expectedVersion < 0)
-      throw new Error("Backend cần được cập nhật để tiếp tục yêu cầu xoá ảnh. Hãy khởi động lại dịch vụ Wiki.")
+      throw new Error("Máy chủ cần được cập nhật để tiếp tục yêu cầu xóa ảnh. Hãy khởi động lại dịch vụ Wiki.")
     return result
   } catch (error) {
     if (isApiError(error, "MEDIA_DELETION_NOT_FOUND")) return null
     if (isApiError(error) && error.status === 404)
-      throw new Error("Chức năng xoá ảnh chưa sẵn sàng. Hãy khởi động lại dịch vụ Wiki với phiên bản mới.")
+      throw new Error("Chức năng xóa ảnh chưa sẵn sàng. Hãy khởi động lại dịch vụ Wiki với phiên bản mới.")
     throw error
   }
 }
@@ -39,7 +39,7 @@ export async function readDeletionReferences(assetId: string, signal?: AbortSign
   ])
   const counts = [wiki.counts.current, wiki.counts.draft, wiki.counts.historical, competition.references]
   if (counts.some((count) => !Number.isSafeInteger(count) || count < 0))
-    throw new Error("Chưa xác minh được nơi sử dụng ảnh. Hãy kiểm tra lại trước khi xoá.")
+    throw new Error("Chưa xác minh được nơi sử dụng ảnh. Hãy kiểm tra lại trước khi xóa.")
   return counts.reduce((total, count) => total + count, 0)
 }
 

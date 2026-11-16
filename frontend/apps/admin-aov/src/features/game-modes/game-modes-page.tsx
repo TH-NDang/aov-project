@@ -329,7 +329,7 @@ function ImportModesDialog({
           <DialogTitle>Nhập chế độ từ resources</DialogTitle>
         </DialogHeader>
         <p className="type-body">
-          Đọc che-do-choi/che-do.json (26 chế độ từ ảnh sảnh), tải ảnh đã gỡ giao diện vào kho ảnh với credit Garena /
+          Đọc che-do-choi/che-do.json (26 chế độ từ ảnh sảnh), tải ảnh đã gỡ giao diện vào kho ảnh với ghi công Garena /
           Liên Quân Mobile và nguồn riêng của từng ảnh (ảnh sảnh gốc, bước xử lý), rồi tạo bản nháp cho chế độ chưa có.
           Chế độ đã có được giữ nguyên.
         </p>

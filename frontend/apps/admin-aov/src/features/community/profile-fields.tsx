@@ -230,7 +230,7 @@ export function ProfileFields({
         <Section
           title="Nguồn thông tin"
           icon={BookOpenText}
-          description="Cần ít nhất một nguồn trước khi công bố hồ sơ."
+          description="Cần ít nhất một nguồn trước khi xuất bản hồ sơ."
         >
           {content.sources.map((item, index) => {
             const update = (key: string, value: string) =>

@@ -69,7 +69,7 @@ export const NAV_GROUPS: NavGroup[] = [
             title: "Tướng",
             icon: "heroes",
             to: "/hero",
-            description: "Draft, publish và lịch sử phiên bản tướng",
+            description: "Bản nháp, xuất bản và lịch sử phiên bản của tướng",
             capability: "catalog:read",
           },
           {
@@ -104,7 +104,7 @@ export const NAV_GROUPS: NavGroup[] = [
             title: "Trang bị",
             icon: "items",
             to: "/items",
-            description: "Shop, công thức ghép",
+            description: "Cửa hàng, công thức ghép",
             capability: "catalog:read",
           },
           {
@@ -125,7 +125,7 @@ export const NAV_GROUPS: NavGroup[] = [
             title: "Phụ trợ",
             icon: "spells",
             to: "/spells",
-            description: "Phép phụ trợ cho tướng",
+            description: "Kỹ năng phụ trợ của tướng",
             capability: "catalog:read",
           },
         ],
@@ -138,7 +138,7 @@ export const NAV_GROUPS: NavGroup[] = [
             title: "Chế độ chơi",
             icon: "gameModes",
             to: "/game-modes",
-            description: "Chế độ PVP, giải trí và cẩm nang Cờ Liên quân",
+            description: "Chế độ PVP, giải trí và cẩm nang Cờ Liên Quân",
             capability: "catalog:read",
           },
         ],
@@ -166,7 +166,7 @@ export const NAV_GROUPS: NavGroup[] = [
         title: "Thuật ngữ & tham chiếu",
         to: "/terminology",
         icon: "glossary",
-        description: "Alias, hiển thị và xem trước tham chiếu",
+        description: "Tên gọi khác, cách hiển thị và xem trước tham chiếu",
       },
     ],
   },
@@ -177,7 +177,7 @@ export const NAV_GROUPS: NavGroup[] = [
         title: "Livestream",
         icon: "streams",
         to: "/streams",
-        description: "Kênh và trạng thái live",
+        description: "Kênh và trạng thái phát trực tiếp",
         soon: true,
       },
     ],
@@ -222,7 +222,7 @@ export const MEDIA_NAV: NavItem[] = [
     title: "Head",
     to: "/hero/media?tab=head",
     icon: "head",
-    description: "Head của tướng và icon danh sách",
+    description: "Head của tướng và biểu tượng danh sách",
   },
   {
     title: "Cover",
@@ -234,7 +234,7 @@ export const MEDIA_NAV: NavItem[] = [
     title: "Bậc trang phục",
     to: "/hero/media?tab=badges",
     icon: "badges",
-    description: "Tên, icon theo ngôn ngữ và trang phục liên quan",
+    description: "Tên, biểu tượng theo ngôn ngữ và trang phục liên quan",
   },
 ]
 
@@ -244,7 +244,7 @@ export const NAV_ITEMS: NavItem[] = [
     title: "Hồ sơ của tôi",
     icon: "profile",
     to: "/profile",
-    description: "Tên hiển thị, avatar và thông tin cá nhân",
+    description: "Tên hiển thị, ảnh đại diện và thông tin cá nhân",
   },
 ]
 

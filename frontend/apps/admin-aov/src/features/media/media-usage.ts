@@ -138,7 +138,7 @@ function describe(item: MediaUsageItem) {
     if (kind === "SKILL_ICON" || kind === "SKILL_STATE")
       return {
         title: `${item.ownerName ?? "Tướng"} · ${item.partName ?? key}`,
-        detail: kind === "SKILL_STATE" ? "Kỹ năng · Ảnh theo trạng thái" : "Kỹ năng · Icon",
+        detail: kind === "SKILL_STATE" ? "Kỹ năng · Ảnh theo trạng thái" : "Kỹ năng · Biểu tượng",
         href: `${heroPath}tab=skills&skill=${encodeURIComponent(key ?? "")}`,
       }
     if (kind.startsWith("SKIN_"))
@@ -180,7 +180,7 @@ function storedNote(item: MediaUsageItem) {
   if (item.propertyRole.startsWith("SKIN_HEAD:"))
     return "Head trang phục đã bỏ khỏi Admin. Wiki chỉ dùng ảnh này khi trang phục thiếu chân dung, nên ở đây chỉ còn lưu mã."
   if (item.ownerType === "HERO_SKILL_IMAGE")
-    return "Chỉ hiện trong Admin khi kỹ năng chưa gắn icon riêng; người đọc không thấy ảnh này."
+    return "Chỉ hiện trong Admin khi kỹ năng chưa gắn biểu tượng riêng; người đọc không thấy ảnh này."
   if (item.ownerType === "HERO_UPLOAD_SESSION" || item.ownerType === "HERO_IMPORT")
     return "Chưa nhập xong nên chưa hiện ở đâu."
   return "Ảnh bổ sung chưa được chọn làm ảnh chính nên không hiện ra."

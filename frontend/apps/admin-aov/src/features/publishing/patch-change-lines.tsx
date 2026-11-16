@@ -321,10 +321,10 @@ function MechanicChangeText({
   async function save() {
     const value = { description: description.trim(), sourceUrl: sourceUrl.trim() }
     if (!value.description) return setError("Viết mô tả trước khi đổi.")
-    if (!isHttpUrl(value.sourceUrl)) return setError("Link nguồn phải bắt đầu bằng http:// hoặc https://.")
+    if (!isHttpUrl(value.sourceUrl)) return setError("Liên kết nguồn phải bắt đầu bằng http:// hoặc https://.")
     const accepted = await confirmAction({
       title: "Lưu mô tả trước khi đổi?",
-      description: "Lịch sử thay đổi chỉ cho thêm: sau khi lưu, mô tả và link nguồn không sửa hay xóa được.",
+      description: "Lịch sử thay đổi chỉ cho thêm: sau khi lưu, mô tả và liên kết nguồn không sửa hay xóa được.",
       confirmLabel: "Lưu",
     })
     if (!accepted) return
@@ -371,7 +371,7 @@ function MechanicChangeText({
             />
           </label>
           <label className="grid gap-1.5">
-            <span className="type-label">Link nguồn</span>
+            <span className="type-label">Liên kết nguồn</span>
             <input
               className={control}
               type="url"

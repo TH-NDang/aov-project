@@ -58,7 +58,7 @@ export function MediaSourceFields({
       </div>
       <div className="grid gap-1">
         <label className="grid gap-1 text-sm">
-          Chủ sở hữu / tên cần credit
+          Chủ sở hữu / tên cần ghi công
           <OwnerNameInput
             form={form}
             className={control}

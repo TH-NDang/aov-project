@@ -92,7 +92,7 @@ export function AssetPicker({
       await upgradeHeroImage(backendRequest, value, file, fetch, source)
       await invalidateMediaAsset(queryClient, value)
       if (!alive.current) return
-      setMessage("Đã nâng chất lượng trên cùng asset. Không cần sửa hoặc publish lại tướng.")
+      setMessage("Đã nâng chất lượng ngay trên ảnh này. Không cần sửa hoặc xuất bản lại tướng.")
     } catch (error) {
       setError(errorMessage(error))
     } finally {
@@ -228,17 +228,17 @@ export function AssetPicker({
           </div>
           {writable && (
             <fieldset disabled={busy} className="space-y-3 border-t pt-3">
-              <Field label="Link file ảnh để tải" type="url" form="" value={downloadUrl} onChange={setDownloadUrl} />
+              <Field label="Liên kết tệp ảnh để tải" type="url" form="" value={downloadUrl} onChange={setDownloadUrl} />
               <Button
                 type="button"
                 variant="outline"
                 disabled={!downloadUrl || busy || !validSource}
                 onClick={() => void upload(imageFromUrl(downloadUrl))}
               >
-                Tải ảnh từ link và chọn
+                Tải ảnh từ liên kết và chọn
               </Button>
               <p className="text-xs text-muted-foreground">
-                Link ảnh trực tiếp HTTPS. Nếu nguồn không cho tải, chọn file từ máy bên dưới.
+                Liên kết ảnh trực tiếp HTTPS. Nếu nguồn không cho tải, chọn tệp từ máy bên dưới.
               </p>
               <label className="grid gap-1 text-sm">
                 Tải ảnh mới

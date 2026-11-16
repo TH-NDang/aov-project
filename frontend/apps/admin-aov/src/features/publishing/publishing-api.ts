@@ -246,7 +246,7 @@ export async function uploadHeroImage(
     redirect: "error",
     signal: AbortSignal.timeout(120000),
   })
-  if (!response.ok) throw new Error("Tải ảnh thất bại. Asset chưa được gắn vào tướng.")
+  if (!response.ok) throw new Error("Tải ảnh thất bại. Ảnh chưa được gắn vào tướng.")
   const result = await api.send<{ assetId: string; current: boolean }>(
     `/admin/media/uploads/${ticket.uploadId}/complete`,
     "POST",

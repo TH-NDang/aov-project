@@ -33,7 +33,7 @@ export function ComingSoon({ icon: Icon, title, description, service, modules }:
           <EmptyTitle>Chưa có dữ liệu</EmptyTitle>
           <EmptyDescription>
             Khu vực này dùng <code className="font-mono text-foreground">{service}</code>, sẽ được triển khai sau AOV
-            Wiki. Bố cục bên dưới là phạm vi dự kiến.
+            WiKi. Bố cục bên dưới là phạm vi dự kiến.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

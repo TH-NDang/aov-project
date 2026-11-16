@@ -6,7 +6,7 @@ export function StreamsPage() {
     <ComingSoon
       icon={Radio}
       title="Livestream"
-      description="Danh sách kênh, trạng thái đang live và nhúng player của nền tảng stream."
+      description="Danh sách kênh, trạng thái đang phát trực tiếp và trình phát nhúng của từng nền tảng."
       service="community-service · module livestream"
       modules={[
         {
@@ -18,7 +18,7 @@ export function StreamsPage() {
           ],
         },
         {
-          title: "Trạng thái live",
+          title: "Trạng thái phát trực tiếp",
           items: ["Đồng bộ trạng thái theo lịch", "Lịch phát sóng sắp tới", "Không tự host video, chỉ nhúng player"],
         },
         { title: "Kiểm duyệt", items: ["Báo cáo nội dung", "Danh sách chặn", "Nhật ký thao tác quản trị"] },

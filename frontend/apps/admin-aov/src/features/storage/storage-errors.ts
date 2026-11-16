@@ -17,9 +17,9 @@ const MESSAGES: Record<string, string> = {
   "Table exceeds 20 MB.": "Dung lượng bảng vượt quá 20 MB.",
   "Table was changed elsewhere. Reload before saving.": "Bảng đã được sửa ở nơi khác. Hãy tải lại trước khi lưu.",
   "Cannot change the ID column of a populated table.": "Không thể đổi cột ID khi bảng đã có dữ liệu.",
-  "Import file exceeds 10 MB.": "File import tối đa 10 MB.",
-  "Import exceeds 10000 rows.": "Mỗi lần import tối đa 10.000 dòng.",
-  "Import file has no records.": "File không có bản ghi để import.",
+  "Import file exceeds 10 MB.": "Tệp nhập tối đa 10 MB.",
+  "Import exceeds 10000 rows.": "Mỗi lần nhập tối đa 10.000 dòng.",
+  "Import file has no records.": "Tệp không có bản ghi để nhập.",
   "JSON storage requires the local dev or preview server.":
     "Kho JSON chỉ hoạt động khi chạy admin bằng dev server hoặc preview tại máy này.",
   "Storage request failed.": "Không thể lưu dữ liệu.",

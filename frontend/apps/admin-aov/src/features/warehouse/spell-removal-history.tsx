@@ -123,7 +123,7 @@ export function SpellRemovalHistory({
             hint="Chọn patch theo nguồn, không dùng ngày nhập dữ liệu làm ngày loại bỏ."
           />
           <Field
-            label="Link nguồn xác nhận"
+            label="Liên kết nguồn xác nhận"
             type="url"
             value={sourceUrl}
             onChange={setSourceUrl}

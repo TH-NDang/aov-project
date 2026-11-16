@@ -44,7 +44,7 @@ export function LibraryOwner({
   /** A user's own avatar, which needs no owner. */
   userImage?: boolean
 }) {
-  if (!versionId) return <span className="type-meta">Chờ hoàn tất upload</span>
+  if (!versionId) return <span className="type-meta">Chờ tải lên xong</span>
   if (userImage)
     return (
       <span className="type-meta flex min-w-0 items-center gap-1.5" title="Ảnh đại diện không cần ghi chủ sở hữu.">
@@ -95,7 +95,7 @@ export function LibraryStateBadge({ state, label, ready }: { state: string; labe
             : "text-muted-foreground",
       )}
     >
-      {ready ? label : "Chờ upload"}
+      {ready ? label : "Chờ tải lên"}
     </span>
   )
 }

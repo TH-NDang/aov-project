@@ -69,8 +69,8 @@ export function BaselineMigration({
       </summary>
       <div className="mt-3 space-y-3 text-sm">
         <p className="leading-6 text-muted-foreground">
-          Nếu trước đây bạn chọn nhầm mùa / patch, có thể chuyển các bản nháp ban đầu về mốc đang chọn rồi kiểm tra
-          import lại. Chỉ áp dụng cho tướng chưa có bản đã xuất bản; giữ các ảnh và nội dung đã nhập.
+          Nếu trước đây bạn chọn nhầm mùa / patch, có thể chuyển các bản nháp ban đầu về mốc đang chọn rồi kiểm tra lại
+          phần nhập. Chỉ áp dụng cho tướng chưa có bản đã xuất bản; giữ các ảnh và nội dung đã nhập.
         </p>
         {candidates.isPending ? (
           <p role="status">Đang kiểm tra các bản nháp…</p>
@@ -125,7 +125,7 @@ export function BaselineMigration({
                     await cache.invalidateQueries({ queryKey: ["baseline-migration"] })
                     await cache.invalidateQueries({ queryKey: ["publishing-revisions"] })
                     setProgress(
-                      `Đã chuyển ${completed}/${rows.length} bản nháp. Kiểm tra lại bản xem trước import để dùng phiên bản mới.`,
+                      `Đã chuyển ${completed}/${rows.length} bản nháp. Kiểm tra lại bản xem trước của lần nhập để dùng phiên bản mới.`,
                     )
                     setErrors(failures)
                     onMoved()

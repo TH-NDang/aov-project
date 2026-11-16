@@ -63,7 +63,7 @@ export function RegionSelector() {
           </p>
         ) : regions.isError ? (
           <div role="alert" className="space-y-2 p-2 text-sm">
-            <p>Không tải được danh mục thị trường. Vui lòng kiểm tra backend đã cập nhật.</p>
+            <p>Không tải được danh mục thị trường. Vui lòng kiểm tra máy chủ đã cập nhật.</p>
             <Button size="sm" variant="outline" onClick={() => void regions.refetch()}>
               Thử lại
             </Button>

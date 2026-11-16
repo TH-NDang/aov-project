@@ -83,7 +83,7 @@ export function PatchChangeEditor({
       rowProblem(row, source) ?? (duplicates.has(row.id) ? "Dòng này trùng với một dòng phía trên." : null),
     ]),
   )
-  const urlProblem = notes && !isHttpUrl(sourceUrl) ? "Dán link ghi chú cập nhật chính thức (http/https)." : null
+  const urlProblem = notes && !isHttpUrl(sourceUrl) ? "Dán liên kết ghi chú cập nhật chính thức (http/https)." : null
   const invalid = !summary.trim() || !!urlProblem || [...problems.values()].some(Boolean)
   const skills = notes ? [...(reference?.SKILLS?.skills ?? [])].sort((a, b) => a.displayOrder - b.displayOrder) : []
   // A skill without an icon of its own shows the hero's library picture, as the skills editor does.

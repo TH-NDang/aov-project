@@ -268,7 +268,7 @@ export function HeroSharedPart({
                 form="hero-shared-part"
                 disabled={busy || !(textChanged || imagesChanged) || !shown.name.trim()}
               >
-                {save.isPending ? "Đang lưu…" : canPublish ? "Lưu và xuất bản" : "Lưu bản nháp"}
+                {save.isPending ? "Đang lưu…" : canPublish ? "Lưu và xuất bản" : "Lưu nháp"}
               </Button>
             </div>
           </DialogFooter>

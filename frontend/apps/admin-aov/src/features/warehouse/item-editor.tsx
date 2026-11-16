@@ -374,7 +374,7 @@ export function ItemEditor({
                     { id: ITEM_SECTIONS.overview, label: "Tổng quan", icon: Info },
                     { id: ITEM_SECTIONS.text, label: "Mô tả", icon: FileText },
                     { id: ITEM_SECTIONS.recipe, label: "Công thức", icon: Hammer },
-                    { id: ITEM_SECTIONS.positions, label: "Vị trí trong shop", icon: LayoutGrid },
+                    { id: ITEM_SECTIONS.positions, label: "Vị trí trong cửa hàng", icon: LayoutGrid },
                     { id: ITEM_SECTIONS.videos, label: "Video", icon: Clapperboard },
                   ]}
                 >
@@ -390,7 +390,7 @@ export function ItemEditor({
                           />
                           <div className="min-w-0 flex-1">
                             <p className="type-label">Biểu tượng</p>
-                            <p className="type-meta">Ảnh vuông dùng trong shop và trên Wiki.</p>
+                            <p className="type-meta">Ảnh vuông dùng trong cửa hàng và trên Wiki.</p>
                           </div>
                           <Button type="button" size="sm" variant="outline" onClick={() => setPicking(true)}>
                             <ImagePlus /> {value.iconAssetId ? "Đổi ảnh" : "Chọn ảnh"}
@@ -525,7 +525,7 @@ export function ItemEditor({
                       )}
                     </div>
                   </ContentsSection>
-                  <ContentsSection id={ITEM_SECTIONS.positions} title="Vị trí trong shop" icon={LayoutGrid}>
+                  <ContentsSection id={ITEM_SECTIONS.positions} title="Vị trí trong cửa hàng" icon={LayoutGrid}>
                     {editsContent ? (
                       <fieldset disabled={busy || uploading} className="min-w-0 space-y-2 disabled:opacity-60">
                         {value.shopPositions.map((position, index) => (
