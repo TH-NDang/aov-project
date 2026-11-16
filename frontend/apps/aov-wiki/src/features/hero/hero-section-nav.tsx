@@ -16,6 +16,7 @@ const SECTIONS = [
   { id: "wiki-hero-lore", Icon: navArtIcons.glossary, vi: "Cốt truyện", en: "Lore" },
   { id: "wiki-version-changes", Icon: navArtIcons.releases, vi: "Thay đổi ở bản này", en: "This version's changes" },
   { id: "wiki-kit-title", Icon: gameplayIcons.bolt, vi: "Bộ kỹ năng", en: "Abilities" },
+  { id: "wiki-hero-evaluation", Icon: gameplayIcons.crit, vi: "Đánh giá", en: "Assessment" },
   { id: "wiki-hero-builds", Icon: catalogIcons.items, vi: "Build đề cử", en: "Recommended builds" },
   { id: "wiki-hero-skins", Icon: catalogIcons.skins, vi: "Trang phục", en: "Skins" },
   { id: "hero-videos", Icon: navArtIcons.videos, vi: "Video", en: "Videos" },

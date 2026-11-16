@@ -1,0 +1,333 @@
+import { useMemo } from "react"
+import { queryOptions, useQuery } from "@tanstack/react-query"
+import { Link } from "react-router"
+import { HERO_TRAIT_GROUPS, heroTraitInfo, heroTraitOrder } from "@aov/ui/lib/hero-traits"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { WikiImage } from "../../components/wiki-image"
+import { heroCatalogQuery, type HeroDetail, type HeroMedia, type PublicSkill } from "./hero-api"
+import { heroFormPath } from "./hero-forms"
+import "./hero-evaluation.css"
+
+/** A trait an editor confirmed, with its detail line in the reader's language when one is written. */
+export interface PublicHeroTrait {
+  code: string
+  skillKeys: string[]
+  detail?: string | null
+}
+
+/** The hero in the latest confirmed ranked snapshot of the game's boards (ADR-025, ADR-029). */
+export interface HeroRankingReading {
+  snapshot: {
+    code: string
+    regionCode: string
+    modeCode: string
+    modeLabel: string
+    periodLabel: string | null
+    capturedAt: string
+    sourceTimeZone: string | null
+    heroes: number
+  } | null
+  entry: {
+    heroId: string
+    heroCode: string
+    tier: string | null
+    winRate: number | null
+    pickRate: number | null
+    banRate: number | null
+    figures: { metric: string; value: number | null; rank: number | null; of: number }[]
+    counters: { heroId: string | null; heroCode: string }[]
+  } | null
+}
+
+/** The parts of a published hero this section reads: the profile's notes and the skills' traits (ADR-029). */
+type EvaluatedContent = HeroDetail["content"] & {
+  profile?: { strengths?: string | null; weaknesses?: string | null; counterTips?: string | null }
+  skills?: { traits?: PublicHeroTrait[] } | null
+}
+
+interface HeroTraitIndex {
+  region: string
+  traits: { code: string; heroes: { id: string; code: string }[] }[]
+}
+
+async function readEvaluation<T>(path: string, signal: AbortSignal): Promise<T> {
+  const response = await fetch(`/api/wiki/v1${path}`, { signal, credentials: "omit" })
+  if (!response.ok) throw new Error("Hero evaluation data is unavailable.")
+  return response.json()
+}
+
+export function heroRankingQuery(heroId: string, region: string) {
+  return queryOptions({
+    queryKey: ["wiki", "hero-ranking", heroId, region] as const,
+    queryFn: ({ signal }) =>
+      readEvaluation<HeroRankingReading>(
+        `/heroes/${encodeURIComponent(heroId)}/ranking?region=${encodeURIComponent(region)}`,
+        signal,
+      ),
+    staleTime: 300000,
+    retry: false,
+  })
+}
+
+export function heroTraitIndexQuery(region: string) {
+  return queryOptions({
+    queryKey: ["wiki", "hero-traits", region] as const,
+    queryFn: ({ signal }) =>
+      readEvaluation<HeroTraitIndex>(`/hero-traits?region=${encodeURIComponent(region)}`, signal),
+    staleTime: 300000,
+    retry: false,
+  })
+}
+
+const MARKETS: Record<string, [string, string]> = { VN: ["Việt Nam", "Vietnam"] }
+const FIGURES: Record<string, [string, string]> = {
+  DAMAGE_DEALT: ["Sát thương mỗi trận", "Damage per match"],
+  DAMAGE_TAKEN: ["Sát thương phải chịu", "Damage taken"],
+  KILLS: ["Hạ gục", "Kills"],
+  ASSISTS: ["Hỗ trợ", "Assists"],
+  GOLD: ["Vàng", "Gold"],
+}
+const NOTES = [
+  ["strengths", "Điểm mạnh", "Strengths"],
+  ["weaknesses", "Điểm yếu", "Weaknesses"],
+  ["counterTips", "Cách khắc chế", "How to play against"],
+] as const
+
+interface HeroLink {
+  name: string
+  path: string
+  head?: HeroMedia
+}
+
+/** Every hero and form readers can open, by id, so lists of other heroes can name and link them. */
+function useHeroLinks() {
+  const scope = useWikiContext()
+  const catalog = useQuery(heroCatalogQuery(scope))
+  return useMemo(() => {
+    const links = new Map<string, HeroLink>()
+    for (const hero of catalog.data?.items ?? []) {
+      links.set(hero.id, { name: hero.name, path: `/hero/${hero.code}`, head: hero.head })
+      for (const form of hero.forms ?? [])
+        links.set(form.id, {
+          name: form.name,
+          path: heroFormPath(hero.code, form.formKey, hero.forms),
+          head: form.head ?? hero.head,
+        })
+    }
+    return links
+  }, [catalog.data])
+}
+
+function HeroChip({ id, code, links }: { id: string | null; code: string; links: Map<string, HeroLink> }) {
+  const { href } = useWikiContext()
+  const link = id ? links.get(id) : undefined
+  if (!link) return <span className="wiki-evaluation-hero">{code}</span>
+  const image = link.head?.currentVersion?.url
+  return (
+    <Link className="wiki-evaluation-hero" to={href(link.path)}>
+      {image ? (
+        <WikiImage src={image} alt="" width="28" height="28" loading="lazy" decoding="async" />
+      ) : (
+        <span className="wiki-evaluation-hero-initial" aria-hidden="true">
+          {link.name.charAt(0)}
+        </span>
+      )}
+      {link.name}
+    </Link>
+  )
+}
+
+function RankingCard({ reading, links }: { reading: HeroRankingReading; links: Map<string, HeroLink> }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const snapshot = reading.snapshot!
+  const entry = reading.entry!
+  const percent = (value: number | null) =>
+    value == null ? "—" : `${value.toLocaleString(locale, { maximumFractionDigits: 2 })}%`
+  const amount = (value: number | null) =>
+    value == null ? "—" : value.toLocaleString(locale, { maximumFractionDigits: value >= 1000 ? 0 : 2 })
+  const market = MARKETS[snapshot.regionCode] ?? [snapshot.regionCode, snapshot.regionCode]
+  const date = new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeZone: snapshot.sourceTimeZone ?? undefined,
+  }).format(new Date(snapshot.capturedAt))
+  const figures = entry.figures.filter((figure) => figure.value != null && FIGURES[figure.metric])
+
+  return (
+    <article className="wiki-evaluation-card" aria-label={text("Số liệu đấu hạng", "Ranked figures")}>
+      <dl className="wiki-evaluation-rates">
+        {entry.tier && (
+          <div>
+            <dt>{text("Hạng sức mạnh", "Tier")}</dt>
+            <dd className="wiki-evaluation-tier">{entry.tier}</dd>
+          </div>
+        )}
+        <div>
+          <dt>{text("Tỷ lệ thắng", "Win rate")}</dt>
+          <dd>{percent(entry.winRate)}</dd>
+        </div>
+        <div>
+          <dt>{text("Tỷ lệ chọn", "Pick rate")}</dt>
+          <dd>{percent(entry.pickRate)}</dd>
+        </div>
+        <div>
+          <dt>{text("Tỷ lệ cấm", "Ban rate")}</dt>
+          <dd>{percent(entry.banRate)}</dd>
+        </div>
+      </dl>
+      {!!figures.length && (
+        <dl className="wiki-evaluation-figures">
+          {figures.map((figure) => (
+            <div key={figure.metric}>
+              <dt>{text(...FIGURES[figure.metric]!)}</dt>
+              <dd>
+                <span>{amount(figure.value)}</span>
+                {figure.rank != null && (
+                  <span className="wiki-evaluation-rank">
+                    {text(`hạng ${figure.rank}/${figure.of}`, `#${figure.rank} of ${figure.of}`)}
+                  </span>
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {!!entry.counters.length && (
+        <div className="wiki-evaluation-counters">
+          <p>{text("Thắng nhiều hơn khi gặp", "Wins more often against")}</p>
+          <div>
+            {entry.counters.map((counter) => (
+              <HeroChip key={counter.heroCode} id={counter.heroId} code={counter.heroCode} links={links} />
+            ))}
+          </div>
+        </div>
+      )}
+      <p className="wiki-evaluation-origin">
+        {text(
+          `Bảng xếp hạng trong game · ${snapshot.modeLabel} · máy chủ ${market[0]} · chụp ngày ${date}`,
+          `In-game ranking boards · ${snapshot.modeLabel} · ${market[1]} server · captured ${date}`,
+        )}
+        {snapshot.periodLabel && ` · ${snapshot.periodLabel}`}
+      </p>
+    </article>
+  )
+}
+
+function TraitList({
+  hero,
+  traits,
+  links,
+}: {
+  hero: HeroDetail
+  traits: PublicHeroTrait[]
+  links: Map<string, HeroLink>
+}) {
+  const { locale, region } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const index = useQuery(heroTraitIndexQuery(region))
+  const skills = hero.content.skills?.skills ?? []
+  const skillName = (key: string) => skills.find((skill: PublicSkill) => skill.skillKey === key)?.name
+  const others = (code: string) =>
+    index.data?.traits.find((entry) => entry.code === code)?.heroes.filter((entry) => entry.id !== hero.id) ?? []
+
+  return (
+    <div className="wiki-evaluation-traits">
+      {HERO_TRAIT_GROUPS.map((group) => {
+        const rows = traits.filter((trait) => heroTraitInfo(trait.code)?.group === group.key)
+        if (!rows.length) return null
+        return (
+          <section key={group.key} className="wiki-evaluation-group" aria-label={text(group.vi, group.en)}>
+            <h3>{text(group.vi, group.en)}</h3>
+            <ul>
+              {rows.map((trait) => {
+                const info = heroTraitInfo(trait.code)!
+                const names = trait.skillKeys.map(skillName).filter(Boolean)
+                const same = others(trait.code)
+                return (
+                  <li key={trait.code}>
+                    <p className="wiki-evaluation-trait">{text(info.vi, info.en)}</p>
+                    {(trait.detail || names.length > 0) && (
+                      <p className="wiki-evaluation-detail">{trait.detail || names.join(", ")}</p>
+                    )}
+                    {same.length > 0 && (
+                      <details className="wiki-evaluation-same">
+                        <summary>
+                          {text(`${same.length} tướng khác cũng có`, `${same.length} other heroes share it`)}
+                        </summary>
+                        <div>
+                          {same.map((entry) => (
+                            <HeroChip key={entry.id} id={entry.id} code={entry.code} links={links} />
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        )
+      })}
+    </div>
+  )
+}
+
+/** One point per line, as editors write them; a leading dash is dropped since the list draws its own marks. */
+const points = (value: string) =>
+  value
+    .split("\n")
+    .map((line) => line.replace(/^\s*[-•]\s*/, "").trim())
+    .filter(Boolean)
+
+/**
+ * How the hero fares (ADR-029): the game's ranked figures with their source and day, the traits an editor confirmed
+ * from the skill kit, and the editor's own strengths, weaknesses and counter tips. Each part shows only when it has
+ * something to say, and the whole section stays away when none does.
+ */
+export function HeroEvaluation({ hero }: { hero: HeroDetail }) {
+  const { locale, region } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const ranking = useQuery(heroRankingQuery(hero.id, region))
+  const links = useHeroLinks()
+  const content = hero.content as EvaluatedContent
+  const traits = [...(content.skills?.traits ?? [])]
+    .filter((trait) => heroTraitInfo(trait.code))
+    .sort((left, right) => heroTraitOrder(left.code) - heroTraitOrder(right.code))
+  const profile = content.profile
+  const notes = NOTES.map(([key, vi, en]) => ({
+    key,
+    label: text(vi, en),
+    points: points(profile?.[key] ?? ""),
+  })).filter((note) => note.points.length)
+  const rankingShown = !!ranking.data?.snapshot && !!ranking.data.entry
+  if (!rankingShown && !traits.length && !notes.length) return null
+
+  return (
+    <section className="wiki-evaluation" aria-labelledby="wiki-hero-evaluation">
+      <h2 id="wiki-hero-evaluation" className="wiki-night-title" tabIndex={-1}>
+        {text("Đánh giá", "Assessment")}
+      </h2>
+      {rankingShown && <RankingCard reading={ranking.data!} links={links} />}
+      {!!notes.length && (
+        <div className="wiki-evaluation-notes">
+          {notes.map((note) => (
+            <article key={note.key} className="wiki-evaluation-card" data-note={note.key}>
+              <h3>{note.label}</h3>
+              <ul>
+                {note.points.map((point, position) => (
+                  <li key={position}>{point}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      )}
+      {!!traits.length && (
+        <>
+          <h3 className="wiki-evaluation-subtitle">{text("Đặc điểm bộ kỹ năng", "What the kit can do")}</h3>
+          <TraitList hero={hero} traits={traits} links={links} />
+        </>
+      )}
+    </section>
+  )
+}

@@ -19,6 +19,8 @@ import { HeroGallery } from "./hero-gallery"
 import { HeroSkinsView } from "./hero-skins-view"
 import { visibleSkins } from "./hero-skins"
 import { heroContentSectionId, heroContentTabs } from "./hero-content-tabs"
+import { HeroEvaluation } from "./hero-evaluation"
+import type { Revision } from "./types"
 export { HeroAsset } from "./hero-asset"
 
 /** An editor open on the page: it takes the place of the section it changes, the rest of the page stays readable. */
@@ -93,9 +95,12 @@ function HeroContentBody({
   reveal,
   editing,
   sharedTitle = false,
+  revision,
 }: {
   /** The hero is a form: its own title is not shown, since the shared one of the hero that holds it is. */
   sharedTitle?: boolean
+  /** The version on screen; the evaluation saves straight into it while it is a draft. */
+  revision?: Revision
   /** The editor open on the page, if any. */
   editing?: HeroSectionEditing | null
   /** A part of the overview to bring into view, such as the one a source image was picked for; `at` makes it new. */
@@ -280,6 +285,19 @@ function HeroContentBody({
           </div>
         )}
       </TabSection>
+    ),
+    // Traits and notes save through their own endpoints, so they keep their own pencils and never take the page editor.
+    evaluation: () => (
+      <HeroEvaluation
+        heroId={heroId}
+        revision={revision}
+        content={content}
+        locale={locale}
+        editable={editable && !!heroId && !!revision}
+        busy={busy}
+        locked={!!editing}
+        onNeedsDraft={onNeedsDraft}
+      />
     ),
     skins: () => (
       <TabSection

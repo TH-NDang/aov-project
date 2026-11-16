@@ -1,0 +1,176 @@
+/* How the hero fares on the hero page: ranked figures, editor notes and kit traits (ADR-029). */
+.wiki-evaluation {
+  display: grid;
+  gap: 12px;
+  scroll-margin-top: 60px;
+}
+.wiki-evaluation > h2 {
+  margin: 0;
+}
+#wiki-hero-evaluation:focus {
+  outline: none;
+}
+.wiki-evaluation-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--wiki-line);
+  border-radius: 10px;
+  background: var(--wiki-panel);
+}
+.wiki-evaluation-card h3,
+.wiki-evaluation-subtitle,
+.wiki-evaluation-group h3 {
+  margin: 0;
+  font: var(--wiki-type-entry);
+}
+.wiki-evaluation-subtitle {
+  margin-top: 4px;
+}
+.wiki-evaluation-card dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+  gap: 10px 16px;
+  margin: 0;
+}
+.wiki-evaluation-card dt {
+  font: var(--wiki-type-meta);
+  color: var(--wiki-muted);
+}
+.wiki-evaluation-card dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0;
+  font: var(--wiki-type-entry);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-evaluation-tier {
+  color: var(--aov-wiki-gold, var(--wiki-text));
+}
+.wiki-evaluation-rank {
+  font: var(--wiki-type-meta);
+  color: var(--wiki-muted);
+}
+.wiki-evaluation-figures {
+  padding-top: 12px;
+  border-top: 1px solid var(--wiki-line);
+}
+.wiki-evaluation-counters {
+  display: grid;
+  gap: 8px;
+}
+.wiki-evaluation-counters > p,
+.wiki-evaluation-origin {
+  margin: 0;
+  font: var(--wiki-type-meta);
+  color: var(--wiki-muted);
+}
+.wiki-evaluation-counters > div,
+.wiki-evaluation-same > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wiki-evaluation-hero {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 3px 10px 3px 4px;
+  border: 1px solid var(--wiki-line);
+  border-radius: 999px;
+  font: var(--wiki-type-body);
+  color: var(--wiki-text);
+  text-decoration: none;
+}
+a.wiki-evaluation-hero:hover {
+  border-color: var(--aov-wiki-gold, currentColor);
+}
+a.wiki-evaluation-hero:focus-visible {
+  outline: 2px solid var(--aov-wiki-gold, currentColor);
+  outline-offset: 2px;
+}
+.wiki-evaluation-hero img,
+.wiki-evaluation-hero-initial {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+.wiki-evaluation-hero-initial {
+  display: inline-grid;
+  place-items: center;
+  background: var(--wiki-line);
+  font: var(--wiki-type-meta);
+}
+.wiki-evaluation-notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+.wiki-evaluation-notes ul,
+.wiki-evaluation-group ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+.wiki-evaluation-notes ul {
+  padding-left: 18px;
+  list-style: disc outside;
+  font: var(--wiki-type-body);
+}
+.wiki-evaluation-notes li::marker {
+  color: var(--aov-wiki-gold, var(--wiki-muted));
+}
+.wiki-evaluation-traits {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 12px;
+}
+.wiki-evaluation-group {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.wiki-evaluation-group h3 {
+  color: var(--wiki-muted);
+}
+.wiki-evaluation-group li {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--wiki-line);
+  border-radius: 10px;
+  background: var(--wiki-panel);
+  list-style: none;
+}
+.wiki-evaluation-trait {
+  margin: 0;
+  font: var(--wiki-type-entry);
+}
+.wiki-evaluation-detail {
+  margin: 0;
+  font: var(--wiki-type-body);
+  color: var(--wiki-muted);
+}
+.wiki-evaluation-same {
+  margin-top: 4px;
+}
+.wiki-evaluation-same > summary {
+  width: fit-content;
+  min-height: 32px;
+  padding: 6px 0;
+  font: var(--wiki-type-meta);
+  color: var(--aov-wiki-gold, var(--wiki-muted));
+  cursor: pointer;
+}
+.wiki-evaluation-same > summary:focus-visible {
+  outline: 2px solid var(--aov-wiki-gold, currentColor);
+  outline-offset: 2px;
+}
+.wiki-evaluation-same > div {
+  padding-top: 6px;
+}

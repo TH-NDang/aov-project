@@ -77,6 +77,8 @@ export function captureFocus({
   const tabSections: Record<HeroContentTab, Section> = {
     overview: "PROFILE",
     skills: "SKILLS",
+    // Traits are read from the skills, so their pictures are the skills' own.
+    evaluation: "SKILLS",
     skins: "SKINS",
     media: "MEDIA_BINDINGS",
     videos: "MEDIA_BINDINGS",

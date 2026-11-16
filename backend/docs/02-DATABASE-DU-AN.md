@@ -307,8 +307,12 @@ Không khẳng định taxonomy này là duy nhất của game; nó là canonica
 | title | VARCHAR(200) NULL |
 | summary | TEXT NULL |
 | lore | TEXT NULL |
+| strengths | VARCHAR(4000) NULL |
+| weaknesses | VARCHAR(4000) NULL |
+| counter_tips | VARCHAR(4000) NULL |
 
-PK `(profile_revision_id, locale)`.
+PK `(profile_revision_id, locale)`. `strengths`, `weaknesses`, `counter_tips` là nhận định của biên tập viên (V072,
+ADR-029): null hoặc có chữ (`btrim <> ''`), mỗi ý một dòng.
 
 Không tạo `name_vi`, `name_en` columns.
 
@@ -2114,3 +2118,29 @@ duy nhất trong mỗi bảng của một bản (chỉ mục duy nhất một ph
 Ràng buộc: mỗi chỉ số chỉ dùng đúng một cột giá trị theo loại; giá trị rỗng phải `needs_review = true` (chỉ bỏ cờ được
 bằng cách nhập giá trị). Chỉ mục một phần `(snapshot_id) WHERE needs_review` phục vụ đếm giá trị chờ duyệt. Thao tác
 ghi khóa dòng `ranking_snapshot` bằng `SELECT … FOR UPDATE` trước khi sửa giá trị hoặc xác nhận bản.
+
+## Đánh giá tướng — V072 (ADR-029)
+
+Migration V072 thêm ba bảng con của phần kỹ năng (`hero.hero_skill_set_revision`) và ba cột nhận định của
+`hero.hero_profile_translation` (xem mục hồ sơ). Không thêm cột vào `hero_revision`, không có bảng phiên bản riêng: đặc
+điểm thuộc phiên bản kỹ năng, nên đổi đặc điểm tạo phiên bản kỹ năng mới như mọi thay đổi khác của phần này.
+
+`hero.hero_skill_trait` — một đặc điểm có hay không đã được biên tập viên xác nhận:
+
+| Cột | Ý nghĩa |
+|---|---|
+| `skill_set_revision_id` | FK `hero_skill_set_revision` |
+| `trait_code` | `VARCHAR(32)`, `CHECK` trong 22 mã: `TRUE_DAMAGE`, `PERCENT_HP_DAMAGE`, `MISSING_HP_DAMAGE`, `ARMOR_SHRED`, `DASH`, `WALL_CROSS`, `UNTARGETABLE`, `STEALTH`, `GLOBAL`, `CC_IMMUNE`, `CLEANSE`, `SELF_HEAL`, `SHIELD`, `DAMAGE_REDUCTION`, `REVIVE`, `HARD_CC`, `DISPLACE`, `SILENCE`, `ALLY_HEAL`, `ALLY_SHIELD`, `ALLY_BUFF`, `VISION` |
+
+Khóa chính `(skill_set_revision_id, trait_code)`; chỉ mục `trait_code` phục vụ danh sách tướng theo đặc điểm. Thêm mã
+mới là đổi `CHECK` bằng migration mới.
+
+`hero.hero_skill_trait_skill` — kỹ năng làm căn cứ: `skill_set_revision_id`, `trait_code`, `skill_key`. Khóa chính cả
+ba cột; FK `(skill_set_revision_id, trait_code)` tới `hero_skill_trait` và FK `(skill_set_revision_id, skill_key)` tới
+`hero_skill_snapshot`, nên đặc điểm không chỉ tới kỹ năng mà phiên bản đó không có.
+
+`hero.hero_skill_trait_translation` — dòng chi tiết: `skill_set_revision_id`, `trait_code`, `locale`, `detail`
+(`VARCHAR(300)`, có chữ). Khóa chính `(skill_set_revision_id, trait_code, locale)`; FK tới `hero_skill_trait`.
+
+Ba bảng dùng trigger `hero.guard_section_child('hero_skill_set_revision', 'skill_set_revision_id')` như các bảng con
+khác của phần kỹ năng: không ghi được khi phiên bản kỹ năng đã xuất bản.

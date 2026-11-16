@@ -10,6 +10,9 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillEffectRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillSnapshotRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillStateIconRow;
+import com.wikiaov.hero.internal.skills.persistence.entity.SkillTraitRow;
+import com.wikiaov.hero.internal.skills.persistence.entity.SkillTraitSkillRow;
+import com.wikiaov.hero.internal.skills.persistence.entity.SkillTraitTranslationRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTranslationRow;
 import java.util.*;
 import org.junit.jupiter.api.Test;
@@ -22,9 +25,38 @@ class HeroSkillSnapshotsTest {
     private final SkillTranslationRepository translations = mock(SkillTranslationRepository.class);
     private final SkillEffectRepository effects = mock(SkillEffectRepository.class);
     private final SkillStateIconRepository stateIcons = mock(SkillStateIconRepository.class);
+    private final SkillTraitRepository traits = mock(SkillTraitRepository.class);
+    private final SkillTraitSkillRepository traitSkills = mock(SkillTraitSkillRepository.class);
+    private final SkillTraitTranslationRepository traitTexts = mock(SkillTraitTranslationRepository.class);
     private final HeroSectionSources sources = mock(HeroSectionSources.class);
     private final HeroSkillSnapshots store = new HeroSkillSnapshots(revisions, identities, snapshots,
-            translations, effects, stateIcons, new HeroSectionLifecycle(), sources);
+            translations, effects, stateIcons, traits, traitSkills, traitTexts, new HeroSectionLifecycle(), sources);
+
+    @Test
+    void readsTraitsPerSkillSetInTheFixedTraitOrderWithTheirSkillsAndDetails() {
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        var ids = List.of(first, second);
+        when(traits.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
+                new SkillTraitRow(first, "HARD_CC"), new SkillTraitRow(first, "TRUE_DAMAGE"),
+                new SkillTraitRow(second, "DASH")));
+        when(traitSkills.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
+                new SkillTraitSkillRow(first, "HARD_CC", "skill-2"),
+                new SkillTraitSkillRow(first, "HARD_CC", "skill-1"),
+                new SkillTraitSkillRow(second, "DASH", "skill-1")));
+        when(traitTexts.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
+                new SkillTraitTranslationRow(first, "HARD_CC", "vi-VN", "Hào hoa: choáng 0,75 giây")));
+
+        var result = store.traits(ids);
+
+        assertThat(result.get(first)).extracting(Trait::code).containsExactly(TraitCode.TRUE_DAMAGE,
+                TraitCode.HARD_CC);
+        assertThat(result.get(first).getLast().skillKeys()).containsExactly("skill-1", "skill-2");
+        assertThat(result.get(first).getLast().translations()).extracting(TraitTranslation::detail)
+                .containsExactly("Hào hoa: choáng 0,75 giây");
+        assertThat(result.get(first).getFirst().skillKeys()).isEmpty();
+        assertThat(result.get(second)).extracting(Trait::code).containsExactly(TraitCode.DASH);
+    }
 
     @Test
     void loadsTranslationsAndEffectsOnceForTheWholeSkillSetWithoutMixingSkillKeys() {

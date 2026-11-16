@@ -1,7 +1,7 @@
 import type { PublishBlockerKey } from "./publish-rules"
 import type { Section } from "./types"
 
-export type HeroContentTab = "overview" | "skills" | "skins" | "media" | "videos"
+export type HeroContentTab = "overview" | "skills" | "evaluation" | "skins" | "media" | "videos"
 export type HeroWorkspaceView = "overview" | "translations" | "history"
 const heroKeys = [
   "hero",
@@ -25,7 +25,7 @@ const heroKeys = [
   "anchorRevision",
   "fix",
 ] as const
-const contentTabs: HeroContentTab[] = ["overview", "skills", "skins", "media", "videos"]
+const contentTabs: HeroContentTab[] = ["overview", "skills", "evaluation", "skins", "media", "videos"]
 const sections: Section[] = ["PROFILE", "OVERVIEW_RATINGS", "COMBAT_STATS", "SKILLS", "SKINS", "MEDIA_BINDINGS"]
 const locales = ["vi-VN", "en-US", "th-TH", "zh-TW", "id-ID"]
 const localeValue = (value: string | null, fallback: string) => (value && locales.includes(value) ? value : fallback)

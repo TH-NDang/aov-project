@@ -35,8 +35,17 @@ export interface Translation {
   locale: string
   name: string
 }
+/**
+ * The editor's own reading of a hero in one language (ADR-029). It is saved through its own endpoint, so profile edits
+ * keep it; missing in content saved before it existed.
+ */
+export interface HeroNotes {
+  strengths?: string | null
+  weaknesses?: string | null
+  counterTips?: string | null
+}
 export interface Profile {
-  translations: (Translation & { title: string | null; summary: string | null; lore: string | null })[]
+  translations: (Translation & { title: string | null; summary: string | null; lore: string | null } & HeroNotes)[]
   roles: Role[]
   /** Missing in drafts saved in this browser before lanes became part of the profile. */
   positions?: Position[]
@@ -78,9 +87,18 @@ export interface Skill {
   /** Read as empty when missing; content saved before states existed has none. */
   stateIcons?: SkillStateIcon[]
 }
+export type TraitCode = import("@aov/ui/lib/hero-traits").HeroTraitCode
+/** A yes/no trait an editor confirmed, the skills that give it and a one-line detail per language (ADR-029). */
+export interface Trait {
+  code: TraitCode
+  skillKeys: string[]
+  translations: { locale: string; detail: string }[]
+}
 export interface Skills {
   skills: Skill[]
   sources: Source[]
+  /** Saved through its own endpoint, so skill edits keep it; missing in content saved before traits existed. */
+  traits?: Trait[]
 }
 export interface Skin {
   skinKey: string

@@ -22,7 +22,17 @@ const imageOptions = z.partialRecord(
 const contentSchema = z.object({
   PROFILE: z
     .object({
-      translations: z.array(translation.extend({ title: nullableText, summary: nullableText, lore: nullableText })),
+      // The notes are saved on their own (ADR-029) but stay in the working copy, so it keeps matching the server.
+      translations: z.array(
+        translation.extend({
+          title: nullableText,
+          summary: nullableText,
+          lore: nullableText,
+          strengths: nullableText.optional(),
+          weaknesses: nullableText.optional(),
+          counterTips: nullableText.optional(),
+        }),
+      ),
       roles: z.array(z.enum(["TANK", "WARRIOR", "ASSASSIN", "MAGE", "MARKSMAN", "SUPPORT"])),
       positions: z.array(z.enum(["TOP", "MID", "JUNGLE", "DRAGON", "SUPPORT"])).optional(),
       sources: z.array(source),
@@ -69,6 +79,15 @@ const contentSchema = z.object({
         }),
       ),
       sources: z.array(source),
+      traits: z
+        .array(
+          z.object({
+            code: text,
+            skillKeys: z.array(text),
+            translations: z.array(z.object({ locale: text, detail: text })),
+          }),
+        )
+        .optional(),
     })
     .nullable(),
   SKINS: z

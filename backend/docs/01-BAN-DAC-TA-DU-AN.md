@@ -2617,8 +2617,8 @@ tướng của Wiki. Module `build`, quyết định ở ADR-026.
 ## Thống kê đấu hạng (ADR-025)
 
 Phạm vi theo yêu cầu ngày 11/11/2026: lưu số liệu của **Bảng Phân Bậc Tướng** trong game (Cộng đồng → Bảng Phân Bậc
-Tướng) đọc từ ảnh chụp, để biên tập viên duyệt và so sánh theo thời gian trong Admin. Chưa hiển thị trên Wiki; đề xuất
-hiển thị nằm ở ADR-025.
+Tướng) đọc từ ảnh chụp, để biên tập viên duyệt và so sánh theo thời gian trong Admin. Wiki chỉ hiện bản chụp đã xác
+nhận mới nhất, trong mục Đánh giá của trang tướng (ADR-029).
 
 - **Bản chụp** là một lần chụp hai bảng của game cho một bộ lọc: thị trường (`VN`), chế độ (`RANKED_ELITE` = “Đấu hạng
   (Tinh Anh trở lên)”, giữ đúng chữ trên game), thời điểm chụp kèm múi giờ của máy chụp, khoảng thời gian thống kê nếu
@@ -2640,3 +2640,27 @@ hiển thị nằm ở ADR-025.
 - Admin so sánh hai bản chụp theo từng tướng: đổi tier, chênh lệch từng chỉ số; tướng chỉ có ở một bản được ghi rõ.
 - Nhập bản chụp qua API từ tệp `ranking-manifest.json` do script đọc ảnh tạo ra; không nhập bằng migration.
 - Quyền: xem cần `catalog:read`; nhập, duyệt, xác nhận, xóa cần `hero:write`. Mọi thao tác ghi có audit.
+
+## Đánh giá tướng (ADR-029)
+
+Phạm vi theo yêu cầu ngày 13–16/11/2026: trang tướng có mục **Đánh giá** dựa trên dữ liệu có căn cứ, không có điểm tự
+tính. Mục gồm ba khối, khối nào chưa có nội dung thì không hiện; không khối nào có thì không hiện cả mục.
+
+- **Số liệu trận thật:** bậc, tỷ lệ thắng, chọn, cấm, năm chỉ số mỗi trận kèm thứ hạng trong các tướng của bản chụp,
+  và tối đa ba tướng mà game ghi là tướng này thắng nhiều hơn khi gặp. Lấy từ bản chụp đấu hạng **đã xác nhận** mới
+  nhất (ADR-025) của thị trường đang đọc; giá trị còn chờ duyệt không hiện. Ghi rõ nguồn là bảng xếp hạng trong game,
+  chế độ, máy chủ và ngày chụp.
+- **Đặc điểm bộ kỹ năng:** danh sách cố định 22 đặc điểm có hay không, chia năm nhóm (Sát thương, Di chuyển, Sống sót,
+  Khống chế, Đồng đội). Mỗi đặc điểm có các kỹ năng làm căn cứ và một dòng chi tiết theo ngôn ngữ, ví dụ “Hào hoa: choáng
+  0,75 giây”. Đặc điểm thuộc phần kỹ năng của phiên bản tướng nên đổi theo bản cập nhật; xem bản cũ thì thấy đặc điểm
+  của bản đó. Người đọc mở được danh sách các tướng khác có cùng đặc điểm.
+- **Nhận định:** điểm mạnh, điểm yếu và cách khắc chế do biên tập viên viết theo từng ngôn ngữ, mỗi ý một dòng, thuộc
+  hồ sơ của phiên bản tướng. Ô chưa viết thì không hiện.
+- **Admin:** tab **Nhận định** của trang tướng. Máy gợi ý đặc điểm từ mô tả và nhãn kỹ năng tiếng Việt kèm câu làm căn
+  cứ; biên tập viên xác nhận từng đặc điểm, chọn kỹ năng, sửa dòng chi tiết. “Lướt qua tường” do biên tập viên tự đánh
+  dấu, vì mô tả kỹ năng hầu như không ghi. Nút “Soạn nháp từ dữ liệu” ghép bản nháp nhận định từ số liệu đấu hạng, thanh
+  Sinh tồn của game và các đặc điểm đã lưu; biên tập viên viết lại rồi lưu. Ô đang có chữ thì hỏi trước khi thay.
+- Đặc điểm và nhận định chỉ đổi qua thao tác riêng của chúng; lưu kỹ năng, hồ sơ hay nhập dữ liệu giữ nguyên chúng (kỹ
+  năng đã xóa thì tự bỏ khỏi đặc điểm). Chúng là phần của bản nháp, xuất bản cùng tướng, không bắt buộc khi xuất bản.
+- Quyền như bản nháp tướng: sửa cần `hero:write`, xuất bản cần `hero:publish`. Mọi thao tác ghi có audit.
+- Không làm: điểm 0–10, biểu đồ năm trục, danh sách “trên kèo / dưới kèo” suy từ kỹ năng, thống kê tướng ở giải đấu.

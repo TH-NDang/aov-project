@@ -426,7 +426,34 @@ public class HeroQueries {
             for (var item : (List<Map<String, Object>>) content.get(key))
                 localize(item, locale);
         }
+        if (section == HeroSection.SKILLS)
+            for (var trait : (List<Map<String, Object>>) content.getOrDefault("traits", List.of()))
+                localizeDetail(trait, locale);
         return content;
+    }
+
+    /** A trait may have no detail line yet; it is still shown, without one. */
+    private void localizeDetail(Map<String, Object> trait, String locale) {
+        var translations = (List<?>) trait.get("translations");
+        if (translations != null && !translations.isEmpty()) {
+            localize(trait, locale);
+            return;
+        }
+        trait.remove("translations");
+        trait.put("detail", null);
+        trait.put("actualLocale", null);
+        trait.put("fallbackApplied", false);
+    }
+
+    /** The published revision readers see today of every hero in a market, keyed by hero, in code order. */
+    public Map<HeroIdentity, HeroRevisionView> published(String region) {
+        Instant at = clock.instant();
+        var moment = moments.resolve(region, at, null, null, false);
+
+        Map<HeroIdentity, HeroRevisionView> result = new LinkedHashMap<>();
+        for (var hero : store.heroes(false))
+            choose(hero.getId(), moment, at).ifPresent(choice -> result.put(hero, choice.revision()));
+        return result;
     }
 
     private void localize(Map<String, Object> object, String locale) {

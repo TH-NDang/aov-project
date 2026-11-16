@@ -101,4 +101,54 @@ public final class HeroRankingViews {
             Summary snapshot
     ) {
     }
+
+    /**
+     * What readers see of one hero in the latest confirmed snapshot of a market and mode (ADR-029). Both parts are null
+     * when no snapshot is confirmed; the entry is null when the snapshot lacks the hero.
+     */
+    public record Published(
+            PublishedSnapshot snapshot,
+            PublishedEntry entry
+    ) {
+    }
+
+    public record PublishedSnapshot(
+            String code,
+            String regionCode,
+            String modeCode,
+            String modeLabel,
+            String periodLabel,
+            Instant capturedAt,
+            String sourceTimeZone,
+            int heroes
+    ) {
+    }
+
+    /** Values still waiting for review are null and have no rank. */
+    public record PublishedEntry(
+            UUID heroId,
+            String heroCode,
+            String tier,
+            BigDecimal winRate,
+            BigDecimal pickRate,
+            BigDecimal banRate,
+            List<Figure> figures,
+            List<Counter> counters
+    ) {
+    }
+
+    /** A per-match figure and its rank among the snapshot's heroes that have it, highest first. */
+    public record Figure(
+            String metric,
+            BigDecimal value,
+            Integer rank,
+            int of
+    ) {
+    }
+
+    public record Counter(
+            UUID heroId,
+            String heroCode
+    ) {
+    }
 }

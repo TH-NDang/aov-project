@@ -94,6 +94,25 @@ public class HeroValidation {
             asset(skill.iconAssetId(), MediaSemanticType.HERO_SKILL_ICON);
             stateIcons(skill);
         }
+
+        traits(skills);
+    }
+
+    /** A trait appears once and names only skills of the same set; its detail lines use canonical locales. */
+    private static void traits(Skills skills) {
+        if (skills.traits() == null)
+            return;
+
+        unique(skills.traits().stream().map(Trait::code).toList());
+        var keys = new HashSet<String>();
+        skills.skills().forEach(skill -> keys.add(skill.skillKey()));
+        for (var trait : skills.traits()) {
+            unique(trait.skillKeys().stream().map(String::strip).toList());
+            if (!keys.containsAll(trait.skillKeys().stream().map(String::strip).toList()))
+                throw invalid("A trait can only name skills of the same skill set.");
+            unique(trait.translations().stream().map(TraitTranslation::locale).toList());
+            trait.translations().forEach(text -> locale(text.locale()));
+        }
     }
 
     /** Each state names a different look of the same skill, so labels and pictures never repeat, the main icon included. */

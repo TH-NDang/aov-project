@@ -65,6 +65,8 @@ class OpenApiMvcTest extends OpenApiContractChecks {
                     controllers.add("com.wikiaov.hero.internal.web.HeroPublishReadinessController");
                     controllers.add("com.wikiaov.hero.internal.web.HeroFormsController");
                     controllers.add("com.wikiaov.hero.internal.web.HeroRankingController");
+                    controllers.add("com.wikiaov.hero.internal.web.HeroEvaluationController");
+                    controllers.add("com.wikiaov.hero.internal.web.HeroEvaluationPublicController");
                     controllers.add("com.wikiaov.user.internal.web.AccountSecurityController");
                     for (String controllerName : controllers) {
                         Class<?> controller = Class.forName(controllerName);
