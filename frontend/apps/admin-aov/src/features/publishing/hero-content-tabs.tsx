@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react"
-import { Clapperboard, ImageIcon, LayoutDashboard, Shirt, Swords } from "lucide-react"
+import { Clapperboard, ImageIcon, LayoutDashboard, ListChecks, Shirt, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import type { HeroContentTab } from "./hero-location"
@@ -16,6 +16,7 @@ export const heroContentTabId = (tab: HeroContentTab) => `hero-content-tab-${tab
 export const HERO_CONTENT_TABS: readonly { key: HeroContentTab; icon: Icon; label: string }[] = [
   { key: "overview", icon: LayoutDashboard, label: "Tổng quan" },
   { key: "skills", icon: Swords, label: "Kỹ năng" },
+  { key: "evaluation", icon: ListChecks, label: "Nhận định" },
   { key: "skins", icon: Shirt, label: "Trang phục" },
   { key: "media", icon: ImageIcon, label: "Ảnh" },
   { key: "videos", icon: Clapperboard, label: "Video" },
@@ -193,6 +194,7 @@ export function HeroContentTabs({
 }) {
   const counts: Partial<Record<HeroContentTab, number>> = {
     skills: content?.SKILLS?.skills.length ?? 0,
+    evaluation: content?.SKILLS?.traits?.length ?? 0,
     skins: visibleSkins(content?.SKINS?.skins ?? []).length,
   }
   return (

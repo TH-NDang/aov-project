@@ -155,7 +155,7 @@ test("the content tabs follow the hero picture and switcher once the bars stick"
     const tabList = [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
     assert.deepEqual(
       tabList.map((tab) => tab.getAttribute("aria-controls")),
-      ["overview", "skills", "skins", "media", "videos"].map((tab) => `hero-content-${tab}`),
+      ["overview", "skills", "evaluation", "skins", "media", "videos"].map((tab) => `hero-content-${tab}`),
     )
     assert.equal(tabList[0]!.getAttribute("aria-selected"), "true")
 

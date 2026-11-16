@@ -3,6 +3,7 @@ import type {
   AssetDetail,
   Cause,
   Content,
+  HeroNotes,
   HeroRow,
   PageSlice,
   Preview,
@@ -10,6 +11,7 @@ import type {
   Revision,
   Ruleset,
   Section,
+  Trait,
 } from "./types"
 import { SECTIONS } from "./types"
 import type { UploadTicket } from "../users/avatar-upload"
@@ -128,6 +130,31 @@ export interface HeroShop {
   skinHistory: SkinAcquisition[]
 }
 
+/** The hero in the latest confirmed ranked snapshot readers see (ADR-025, ADR-029); `null` parts were not found. */
+export interface HeroRankingReading {
+  snapshot: {
+    code: string
+    regionCode: string
+    modeCode: string
+    modeLabel: string
+    periodLabel: string | null
+    capturedAt: string
+    sourceTimeZone: string | null
+    heroes: number
+  } | null
+  entry: {
+    heroId: string
+    heroCode: string
+    tier: string | null
+    winRate: number | null
+    pickRate: number | null
+    banRate: number | null
+    /** Per-match figures with their rank among the snapshot's heroes, the largest first. */
+    figures: { metric: string; value: number | null; rank: number | null; of: number }[]
+    counters: { heroId: string | null; heroCode: string }[]
+  } | null
+}
+
 type AssetResponse = Omit<AssetDetail, "currentUrl"> & { versions: { id: string; url: string }[] }
 
 const assetDetail = (detail: AssetResponse): AssetDetail => ({
@@ -166,6 +193,26 @@ export function createPublishingApi(request: Request) {
         `/admin/heroes/${heroId}/shop/skins/${encodeURIComponent(skinKey)}/${capturedOn}?region=${region}`,
         "DELETE",
       ),
+    /** The ranked figures readers see for the hero, the basis of the notes' machine draft. */
+    ranking: (heroId: string, region = "VN") =>
+      request<HeroRankingReading>(`/heroes/${heroId}/ranking?region=${encodeURIComponent(region)}`),
+    /** Replaces the confirmed traits of a draft; the rest of its skills stay as saved (ADR-029). */
+    saveTraits: (revision: Revision, traits: Trait[], changeNote: string) =>
+      send<Revision>(`/admin/heroes/${revision.heroId}/drafts/${revision.id}/traits`, "PUT", {
+        expectedDraftVersion: revision.version,
+        traits,
+        changeNote,
+      }),
+    /** Replaces the notes of one language of a draft's profile; blank text clears a note. */
+    saveNotes: (revision: Revision, locale: string, notes: HeroNotes, changeNote: string) =>
+      send<Revision>(`/admin/heroes/${revision.heroId}/drafts/${revision.id}/notes`, "PUT", {
+        expectedDraftVersion: revision.version,
+        locale,
+        strengths: notes.strengths ?? null,
+        weaknesses: notes.weaknesses ?? null,
+        counterTips: notes.counterTips ?? null,
+        changeNote,
+      }),
     revisions: (heroId: string) => request<Revision[]>(`/admin/heroes/${heroId}/revisions`),
     read: async (heroId: string, revisionId: string) =>
       previewFromApi(await request<WirePreview>(`/admin/heroes/${heroId}/revisions/${revisionId}`)),

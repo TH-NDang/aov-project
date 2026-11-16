@@ -1287,6 +1287,7 @@ export function PublishingWorkspace({
               <div role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
                 {view === "overview" && (
                   <HeroContent
+                    revision={revision}
                     sharedTitle={!!formHolder}
                     editing={editing && editorPanel ? { section, title: editorTitle, node: editorPanel } : null}
                     variantId={statPatch?.id}
