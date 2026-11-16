@@ -284,6 +284,60 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    void keepsASkillSummaryBesideItsDescriptionForEditorsAndReaders() throws Exception {
+        var draft = create();
+        var hero = uuid(draft, "heroId");
+        var draftId = id(draft);
+        var path = path(hero, draftId);
+        draft = complete(hero, draftId, draft);
+        var version = number(draft, "version");
+
+        send(put(path + "/skills"), summaryBody(version, "x".repeat(301)), 422);
+        send(put(path + "/skills"), summaryBody(version, "Lướt tới.\nHất tung mục tiêu."), 422);
+
+        draft = send(put(path + "/skills"), summaryBody(version, "  Lướt tới và hất tung mục tiêu.  "), 200);
+
+        mvc.perform(get(ROOT + "/admin/heroes/" + hero + "/revisions/" + draftId)
+                .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.skills.skills[0].translations[0].summary")
+                        .value("Lướt tới và hất tung mục tiêu."));
+        send(post(path + "/publish"), Map.of("expectedVersion", number(draft, "version")), 200);
+        mvc.perform(get(ROOT + "/heroes/" + hero)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.skills.skills[0].description").value("Mô tả đã kiểm chứng"))
+                .andExpect(jsonPath("$.content.skills.skills[0].summary").value("Lướt tới và hất tung mục tiêu."));
+
+        var correction = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"), Map.of("rulesetId", ruleset,
+                "sourceRevisionId", draftId, "cause", "CONTENT_CORRECTION"), 201);
+        var correctionPath = path(hero, id(correction));
+        correction = send(put(correctionPath + "/skills"), summaryBody(number(correction, "version"), " "), 200);
+        send(post(correctionPath + "/publish"), Map.of("expectedVersion", number(correction, "version")), 200);
+        mvc.perform(get(ROOT + "/heroes/" + hero)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.revisionId").value(id(correction).toString()))
+                .andExpect(jsonPath("$.content.skills.skills[0].summary").doesNotExist());
+
+        assertThat(jdbc.sql("SELECT summary FROM hero.hero_skill_translation ORDER BY summary NULLS LAST")
+                .query(String.class).list()).containsExactly("Lướt tới và hất tung mục tiêu.", null, null);
+        for (var malformed : List.of(" ", "Lướt tới.\nHất tung mục tiêu."))
+            assertThatThrownBy(() -> jdbc.sql("""
+                    INSERT INTO hero.hero_skill_translation (skill_set_revision_id, skill_key, locale, name,
+                        description, summary)
+                    VALUES (?, 'skill-1', 'en-US', 'Skill', 'Description', ?)
+                    """).param(UUID.randomUUID()).param(malformed).update())
+                    .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+                    .hasMessageContaining("hero_skill_translation_summary_check");
+    }
+
+    private Map<String, Object> summaryBody(Number version, String summary) {
+        return Map.of("expectedDraftVersion", version, "skills",
+                List.of(Map.of("skillKey", "skill-1", "kind", "ACTIVE", "displayOrder", 0, "iconAssetId",
+                        assets.get(MediaSemanticType.HERO_SKILL_ICON), "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Chiêu 1", "description", "Mô tả đã kiểm chứng",
+                                "summary", summary)),
+                        "effects", List.of())));
+    }
+
+    @Test
     void completeHeroLifecycleReusesSectionsAndKeepsImmutableResourcesStable() throws Exception {
         var draft = create();
         UUID hero = uuid(draft, "heroId"), draftId = uuid(draft, "id");

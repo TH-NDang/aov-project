@@ -11,6 +11,7 @@ import jakarta.validation.Validation;
 import java.math.BigDecimal;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
 class HeroDraftValidationTest {
     @Test
@@ -111,6 +112,36 @@ class HeroDraftValidationTest {
                     .validate(skills(icon, tooMany.toArray(SkillStateIcon[]::new)).skills().getFirst()))
                     .anyMatch(v -> v.getPropertyPath().toString().equals("stateIcons"));
         }
+    }
+
+    @Test
+    void aSkillSummaryIsOneShortParagraphAndABlankOneIsNoSummary() {
+        try (var factory = Validation.buildDefaultValidatorFactory()) {
+            var validation = new HeroValidation(null, factory.getValidator(), null);
+
+            assertThat(new SkillTranslation("vi-VN", "Chiêu", "Mô tả", "  Lướt tới.  ").summary())
+                    .isEqualTo("Lướt tới.");
+            assertThat(new SkillTranslation("vi-VN", "Chiêu", "Mô tả", " \n ").summary()).isNull();
+            assertThat(new SkillTranslation("vi-VN", "Chiêu", "Mô tả").summary()).isNull();
+            assertThat(new JsonMapper().readValue("""
+                    {"locale":"vi-VN","name":"Chiêu","description":"Mô tả"}
+                    """, SkillTranslation.class))
+                    .as("Content saved before summaries existed reads as having none")
+                    .isEqualTo(new SkillTranslation("vi-VN", "Chiêu", "Mô tả", null));
+
+            assertThatCode(() -> validation.validatePublication(HeroSection.SKILLS, summarized(null)))
+                    .as("A summary is optional, also for publication").doesNotThrowAnyException();
+            assertThatCode(() -> validation.validate(HeroSection.SKILLS, summarized("x".repeat(300))))
+                    .doesNotThrowAnyException();
+            for (var refused : List.of("x".repeat(301), "Lướt tới.\nHất tung.", "Lướt tới.\r\nHất tung."))
+                assertThatThrownBy(() -> validation.validate(HeroSection.SKILLS, summarized(refused)))
+                        .isInstanceOf(ApiException.class);
+        }
+    }
+
+    private static Skills summarized(String summary) {
+        return new Skills(List.of(new Skill("skill-1-1", SkillKind.ACTIVE, null, 0, null,
+                List.of(new SkillTranslation("vi-VN", "Chiêu", "Mô tả", summary)), List.of())), List.of());
     }
 
     private static Skills skills(UUID icon, SkillStateIcon... states) {

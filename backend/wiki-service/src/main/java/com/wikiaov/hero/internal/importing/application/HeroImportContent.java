@@ -7,10 +7,11 @@ import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroImages;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.hero.internal.domain.HeroSkillSummaries;
 import java.util.*;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Maps import fields to hero content while retaining existing translations, sources and artwork. */
+/** Maps import fields to hero content while retaining existing translations, sources, artwork and skill summaries. */
 final class HeroImportContent {
     private final HeroValidation validation;
     private final JsonMapper json;
@@ -61,6 +62,7 @@ final class HeroImportContent {
         // Normalize collections before comparison so a repeated import remains a no-op.
         after.put("roles", json.convertValue(after.get("roles"), Role[].class));
         after.put("skills", json.convertValue(after.get("skills"), Skill[].class));
+        retainSkillSummaries((Skills) sections.get(HeroSection.SKILLS), after);
         normalizeSkinsAndRetainArtwork(heroId, (Skins) sections.get(HeroSection.SKINS), after);
         retainHeroArtwork((Bindings) sections.get(HeroSection.MEDIA_BINDINGS), after);
         normalizeStatistics(after);
@@ -75,6 +77,14 @@ final class HeroImportContent {
                 after.put(key, value);
         });
         return after;
+    }
+
+    /** Imported skills carry the game's text only, so the summaries editors wrote stay with their skills. */
+    private static void retainSkillSummaries(Skills existing, Map<String, Object> after) {
+        if (existing == null)
+            return;
+        var incoming = Arrays.asList((Skill[]) after.get("skills"));
+        after.put("skills", HeroSkillSummaries.retain(existing.skills(), incoming).toArray(Skill[]::new));
     }
 
     private void normalizeSkinsAndRetainArtwork(UUID heroId, Skins existing, Map<String, Object> after) {

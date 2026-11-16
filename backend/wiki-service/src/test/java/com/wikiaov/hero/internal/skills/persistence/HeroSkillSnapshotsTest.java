@@ -1,8 +1,11 @@
 package com.wikiaov.hero.internal.skills.persistence;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.wikiaov.access.Actor;
+import com.wikiaov.access.ActorType;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
@@ -11,8 +14,10 @@ import com.wikiaov.hero.internal.skills.persistence.entity.SkillEffectRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillSnapshotRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillStateIconRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTranslationRow;
+import java.time.Instant;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Sort;
 
 class HeroSkillSnapshotsTest {
@@ -36,9 +41,10 @@ class HeroSkillSnapshotsTest {
                 new SkillSnapshotRow(id, hero, "passive", "PASSIVE", null, 0, null),
                 new SkillSnapshotRow(id, hero, "skill-1", "ACTIVE", null, 1, null)));
         when(translations.findBySkillSetRevisionIdIn(ids, Sort.by("locale"))).thenReturn(List.of(
-                new SkillTranslationRow(id, "skill-1", "en-US", "Strike", "Active skill"),
-                new SkillTranslationRow(id, "passive", "vi-VN", "Nội tại", "Passive skill"),
-                new SkillTranslationRow(id, "skill-1", "vi-VN", "Chiêu một", "Active skill")));
+                new SkillTranslationRow(id, "skill-1", "en-US", "Strike", "Active skill", null),
+                new SkillTranslationRow(id, "passive", "vi-VN", "Nội tại", "Passive skill", null),
+                new SkillTranslationRow(id, "skill-1", "vi-VN", "Chiêu một", "Active skill",
+                        "Lướt tới và hất tung mục tiêu.")));
         when(effects.findBySkillSetRevisionIdIn(ids, Sort.by("effectOrder"))).thenReturn(List.of(
                 new SkillEffectRow(id, "skill-1", 0, "DAMAGE", Map.of("amount", 10)),
                 new SkillEffectRow(id, "passive", 0, "HEAL", Map.of("amount", 5))));
@@ -55,6 +61,8 @@ class HeroSkillSnapshotsTest {
                 .containsExactly("Nội tại");
         assertThat(content.skills().getLast().translations()).extracting(SkillTranslation::locale)
                 .containsExactly("en-US", "vi-VN");
+        assertThat(content.skills().getLast().translations()).extracting(SkillTranslation::summary)
+                .containsExactly(null, "Lướt tới và hất tung mục tiêu.");
         assertThat(content.skills().getFirst().effects()).extracting(Effect::effectType).containsExactly("HEAL");
         assertThat(content.skills().getLast().effects()).extracting(Effect::effectType).containsExactly("DAMAGE");
         assertThat(content.skills().getFirst().stateIcons()).isEmpty();
@@ -77,8 +85,8 @@ class HeroSkillSnapshotsTest {
                 new SkillSnapshotRow(first, hero, "same-key", "ACTIVE", null, 0, null),
                 new SkillSnapshotRow(second, hero, "same-key", "ACTIVE", null, 0, null)));
         when(translations.findBySkillSetRevisionIdIn(ids, Sort.by("locale"))).thenReturn(List.of(
-                new SkillTranslationRow(first, "same-key", "vi-VN", "Trước", "Bản trước"),
-                new SkillTranslationRow(second, "same-key", "vi-VN", "Sau", "Bản sau")));
+                new SkillTranslationRow(first, "same-key", "vi-VN", "Trước", "Bản trước", "Tóm tắt trước"),
+                new SkillTranslationRow(second, "same-key", "vi-VN", "Sau", "Bản sau", null)));
         when(effects.findBySkillSetRevisionIdIn(ids, Sort.by("effectOrder"))).thenReturn(List.of(
                 new SkillEffectRow(second, "same-key", 0, "DAMAGE", Map.of())));
 
@@ -86,6 +94,9 @@ class HeroSkillSnapshotsTest {
 
         assertThat(contents.get(first).skills().getFirst().translations()).extracting(SkillTranslation::name)
                 .containsExactly("Trước");
+        assertThat(contents.get(first).skills().getFirst().translations().getFirst().summary())
+                .isEqualTo("Tóm tắt trước");
+        assertThat(contents.get(second).skills().getFirst().translations().getFirst().summary()).isNull();
         assertThat(contents.get(first).skills().getFirst().effects()).isEmpty();
         assertThat(contents.get(first).sources()).isEmpty();
         assertThat(contents.get(second).skills().getFirst().translations()).extracting(SkillTranslation::name)
@@ -93,6 +104,27 @@ class HeroSkillSnapshotsTest {
         assertThat(contents.get(second).skills().getFirst().effects()).hasSize(1);
         assertThat(contents.get(second).sources()).hasSize(1);
         assertThat(contents.get(empty).skills()).isEmpty();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void savesTheSummaryOfEachTranslationAndLeavesAMissingOneEmpty() {
+        var hero = UUID.randomUUID();
+        when(revisions.saveAndFlush(any())).thenAnswer(call -> call.getArgument(0));
+        when(identities.findById(any())).thenReturn(Optional.empty());
+        var skill = new Skill("skill-1", SkillKind.ACTIVE, null, 0, null,
+                List.of(new SkillTranslation("vi-VN", "Chiêu một", "Mô tả", "Lướt tới và hất tung mục tiêu."),
+                        new SkillTranslation("en-US", "Strike", "Description")),
+                List.of());
+
+        store.create(hero, new Skills(List.of(skill), List.of()),
+                new Actor("issuer", "editor", ActorType.HUMAN, null, Set.of()), Instant.EPOCH);
+
+        var rows = ArgumentCaptor.forClass(List.class);
+        verify(translations).saveAll(rows.capture());
+        assertThat((List<SkillTranslationRow>) rows.getValue())
+                .extracting(SkillTranslationRow::getLocale, SkillTranslationRow::getSummary)
+                .containsExactly(tuple("vi-VN", "Lướt tới và hất tung mục tiêu."), tuple("en-US", null));
     }
 
     @Test

@@ -115,7 +115,7 @@ public class HeroImports {
                 original, normalized, changed,
                 classification(input.mode(), hero.isEmpty(), revision, changed),
                 !missing, revision == null ? null : revision.effectiveFromPatchVariantId(),
-                warnings.forImport(input.mode(), normalized, revision, missing));
+                warnings.forImport(input.mode(), original, normalized, revision, missing));
     }
 
     private AuthoringContext requireMatchingContext(HeroImportRequest input) {
