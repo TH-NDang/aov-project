@@ -205,8 +205,8 @@ Giai đoạn 4 đổi từng chỗ còn đọc `/__resources` theo cách sau. Mi
   bộ ảnh chụp, thư mục và ZIP vẫn giữ.
 - **Nhập chế độ chơi và cẩm nang Cờ Liên quân** đọc JSON và ảnh qua link ký sẵn từ bộ `sanh-che-do` và
   `co-lien-quan-2026-11-08-1503`, nên chạy được cả trên bản build. Bộ tệp nguồn giữ nguyên bố cục thư mục
-  `che-do-choi` cũ. Ảnh sảnh đã xử lý và icon Bách khoa vì vậy có thêm bản sao trong bộ của lượt chụp (250 nội dung,
-  39 MB), dù đã là Media.
+  `che-do-choi` cũ. Ảnh sảnh đã xử lý và icon Bách khoa vì vậy có thêm bản sao trong bộ của lượt chụp (456 tệp, 240
+  nội dung, 37 MB), dù đã là Media.
 - **Script và test dữ liệu** (nhập giải đấu, chế độ chơi, script trong `research/`) đọc bản kéo về đúng chỗ cũ trong
   `resources/` bằng `pnpm sources:sync pull`. Git bỏ qua bản kéo về. Test tự bỏ qua khi chưa kéo dữ liệu.
 - 10 ảnh công khai chưa là Media (2 GIF, 8 portrait chưa khớp trang phục) vào bộ `lien-quan-v3-data`. 6 icon vai trò bỏ,
