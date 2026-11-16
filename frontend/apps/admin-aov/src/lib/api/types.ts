@@ -1,6 +1,6 @@
 /**
- * Domain types for the admin app. They mirror the working data set in `resources/Lien-Quan-v3/data`
- * until the wiki-service admin API publishes its OpenAPI contract.
+ * Domain types of the admin app's older screens. They follow the JSON of the Lien-Quan-v3 data set, kept since ADR-030
+ * in the `lien-quan-v3-data` source collection, until those screens read the wiki-service admin API.
  */
 
 /** Every mutable record carries an optimistic concurrency version (spec 01, section 9.1). */

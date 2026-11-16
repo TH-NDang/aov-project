@@ -275,11 +275,10 @@ Từ `/publishing`, mở **Gameplay context** để tạo ruleset, gán timeline
 publish variant và nhập lịch phát hành có URL nguồn. Các danh mục này đọc lại được sau khi tải trang.
 Ngôn ngữ không quyết định ruleset; lịch phát hành dùng ngày giờ máy bạn và được gửi dưới dạng UTC.
 
-Chọn ruleset rồi tạo một Hero, ví dụ `nakroth`. Trong draft, mở **Nhập từ tài nguyên**, chọn Nakroth,
-bấm **Điền vào biểu mẫu**. Nguồn và đường dẫn `resources/Lien-Quan-v3/data/heroes.json` được giữ lại.
-Import chỉ điền thông tin đã có: không suy đoán vai trò, chỉ số, đánh giá hoặc mô tả chiêu còn thiếu.
+Chọn ruleset rồi tạo một Hero, ví dụ `nakroth`. Dữ liệu hàng loạt đi qua **Nhập tướng**: bộ ảnh chụp đã đọc, thư
+mục hoặc ZIP. Import chỉ điền thông tin đã có: không suy đoán vai trò, chỉ số, đánh giá hoặc mô tả chiêu còn thiếu.
 Điền các trường thiếu và lưu từng phần; backend kiểm tra đầy đủ nội dung trước khi nhận section.
-Khi mở phần ảnh, có thể chọn asset đã có, upload file, hoặc nhập ảnh đúng vai trò từ resources.
+Khi mở phần ảnh, có thể chọn asset đã có hoặc upload file.
 HEAD/PORTRAIT/SPLASH là ba asset riêng; icon chiêu và artwork trang phục có semantic type riêng.
 Trong tab **Ảnh tướng** của tướng, **Nguồn ảnh** dưới mỗi ảnh hiển thị link và ghi chú từ Media provenance.
 
@@ -791,8 +790,8 @@ Mục Nhập dữ liệu nhận JSON `schemaVersion: 1`, tối đa 1 MB, có bư
 từng mục trước khi ghi. Gói hồ sơ chứa `teams`, `players`, `tournament` và `rosters`; gói trận chứa
 `series`. Mỗi mục có `content`; liên kết dùng `tournamentCode`, `teamCode`, `playerCode`, `teamACode`
 và `teamBCode` thay vì UUID của máy khác. Đội hình có thể lấy mã giải chung từ `scope.eventCode`.
-Nhập gói hồ sơ trước gói trận nếu các danh tính cha chưa có. Gói mẫu và bằng chứng nằm trong
-`resources/esports/2026-post-apl/aog-sample/` tại gốc repository.
+Nhập gói hồ sơ trước gói trận nếu các danh tính cha chưa có. Gói mẫu và bằng chứng nằm trong bộ tệp nguồn
+`esports-2026-post-apl` (thư mục `aog-sample/`); `pnpm sources:sync pull` kéo về `resources/esports/2026-post-apl/` khi cần.
 
 Chương trình đối chiếu cả dữ liệu đang dùng và thùng rác theo mã; riêng đội hình đối chiếu bộ ba
 giải/đội/tuyển thủ. Chỉ khôi phục những mục có trong file, giữ UUID và giữ ảnh hiện có nếu URL ảnh

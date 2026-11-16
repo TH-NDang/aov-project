@@ -94,15 +94,13 @@ Thêm: tìm kiếm toàn cục Ctrl+K (không phân biệt dấu), giao diện s
 
 Danh mục tướng, phiên bản, bản dịch, trang phục của từng tướng và media đã upload đọc từ backend `wiki-service`. Các đường dẫn cũ `/heroes`, `/heroes/:slug`, `/skins` và `/reference/skins` chuyển về `/publishing`; mã tướng trong tài nguyên không được xem là UUID backend.
 
-Các công cụ ảnh và danh mục trang bị/phù hiệu hiện vẫn dùng adapter tài nguyên: Vite (dev/preview) phục vụ `resources/Lien-Quan-v3` tại `/__resources/`, lớp `src/lib/api/mock-api.ts` đọc JSON và lưu chỉnh sửa cục bộ trong trình duyệt. Những chỉnh sửa đó không ghi vào `resources/` hay tự đồng bộ sang danh mục tướng backend. Tìm kiếm toàn cục chuyển truy vấn tướng sang `/publishing`, không đưa ra trang chi tiết tài nguyên cũ.
+Admin không còn đọc thư mục `resources/` (ADR-030). Ảnh công khai là Media. Ảnh đối chứng và dữ liệu nhập nằm trong **Quản lý tệp › Tệp nguồn**, đọc qua link ký sẵn nên bản build cũng dùng được. Hộp tìm Ctrl-K lấy trang bị và phù hiệu từ kho backend.
 
-Ảnh trong `resources/` lưu bằng Git LFS. Muốn xem ảnh thật khi chạy admin:
+Script hoặc test cần bản cục bộ thì kéo bộ tệp nguồn về đúng chỗ cũ, ví dụ trong `apps/admin-aov`:
 
 ```sh
-git lfs pull --include "resources/Lien-Quan-v3/assets/**,resources/Lien-Quan-v3/temp/**"
+pnpm sources:sync pull --collection lien-quan-v3-data --to ../../../resources/Lien-Quan-v3 --apply
 ```
-
-Thiếu ảnh thì giao diện hiển thị ô thay thế, không lỗi.
 
 ### Cấu trúc `apps/admin-aov/src`
 

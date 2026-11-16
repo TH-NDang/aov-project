@@ -210,7 +210,7 @@ test("icons allow local development object storage and reject remote HTTP or SVG
     "http://127.0.0.1:9000/a.png",
     "http://192.168.1.20:9000/a.png",
     "https://cdn.example.com/a.png",
-    "/__resources/a.png",
+    "/media/a.png",
   ])
     assert.equal(safeEntityIconUrl(url), url)
   for (const url of [

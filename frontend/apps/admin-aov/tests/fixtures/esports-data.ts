@@ -18,7 +18,8 @@ import { readTimeline, withPlayback, writeTimeline } from "../../src/features/es
 import type { TimelineEvent } from "../../src/features/esports/model/timeline"
 
 // Synthetic teams, players and events for UI checks only. Not real results.
-const R = "/__resources/assets"
+// Icon addresses are placeholders: the resources folder that served them left the app with ADR-030.
+const R = "/fixture-icons"
 const doc = <T>(id: string, content: T, extra: Partial<DocumentView<T>> = {}): DocumentView<T> => ({
   id,
   version: 1,
