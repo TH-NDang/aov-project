@@ -1,10 +1,19 @@
 import { useMemo } from "react"
-import { queryOptions, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { HERO_TRAIT_GROUPS, heroTraitInfo, heroTraitOrder } from "@aov/ui/lib/hero-traits"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiImage } from "../../components/wiki-image"
-import { heroCatalogQuery, type HeroDetail, type HeroMedia, type PublicSkill } from "./hero-api"
+import {
+  heroCatalogQuery,
+  heroRankingQuery,
+  heroTraitIndexQuery,
+  type HeroDetail,
+  type HeroMedia,
+  type HeroRankingReading,
+  type PublicSkill,
+} from "./hero-api"
 import { heroFormPath } from "./hero-forms"
 import "./hero-evaluation.css"
 
@@ -15,69 +24,14 @@ export interface PublicHeroTrait {
   detail?: string | null
 }
 
-/** The hero in the latest confirmed ranked snapshot of the game's boards (ADR-025, ADR-029). */
-export interface HeroRankingReading {
-  snapshot: {
-    code: string
-    regionCode: string
-    modeCode: string
-    modeLabel: string
-    periodLabel: string | null
-    capturedAt: string
-    sourceTimeZone: string | null
-    heroes: number
-  } | null
-  entry: {
-    heroId: string
-    heroCode: string
-    tier: string | null
-    winRate: number | null
-    pickRate: number | null
-    banRate: number | null
-    figures: { metric: string; value: number | null; rank: number | null; of: number }[]
-    counters: { heroId: string | null; heroCode: string }[]
-  } | null
-}
-
 /** The parts of a published hero this section reads: the profile's notes and the skills' traits (ADR-029). */
 type EvaluatedContent = HeroDetail["content"] & {
   profile?: { strengths?: string | null; weaknesses?: string | null; counterTips?: string | null }
   skills?: { traits?: PublicHeroTrait[] } | null
 }
 
-interface HeroTraitIndex {
-  region: string
-  traits: { code: string; heroes: { id: string; code: string }[] }[]
-}
-
-async function readEvaluation<T>(path: string, signal: AbortSignal): Promise<T> {
-  const response = await fetch(`/api/wiki/v1${path}`, { signal, credentials: "omit" })
-  if (!response.ok) throw new Error("Hero evaluation data is unavailable.")
-  return response.json()
-}
-
-export function heroRankingQuery(heroId: string, region: string) {
-  return queryOptions({
-    queryKey: ["wiki", "hero-ranking", heroId, region] as const,
-    queryFn: ({ signal }) =>
-      readEvaluation<HeroRankingReading>(
-        `/heroes/${encodeURIComponent(heroId)}/ranking?region=${encodeURIComponent(region)}`,
-        signal,
-      ),
-    staleTime: 300000,
-    retry: false,
-  })
-}
-
-export function heroTraitIndexQuery(region: string) {
-  return queryOptions({
-    queryKey: ["wiki", "hero-traits", region] as const,
-    queryFn: ({ signal }) =>
-      readEvaluation<HeroTraitIndex>(`/hero-traits?region=${encodeURIComponent(region)}`, signal),
-    staleTime: 300000,
-    retry: false,
-  })
-}
+/** The capture day reads like the one under the recommended builds. */
+const CAPTURE_DAY: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
 
 const MARKETS: Record<string, [string, string]> = { VN: ["Việt Nam", "Vietnam"] }
 const FIGURES: Record<string, [string, string]> = {
@@ -147,10 +101,6 @@ function RankingCard({ reading, links }: { reading: HeroRankingReading; links: M
   const amount = (value: number | null) =>
     value == null ? "—" : value.toLocaleString(locale, { maximumFractionDigits: value >= 1000 ? 0 : 2 })
   const market = MARKETS[snapshot.regionCode] ?? [snapshot.regionCode, snapshot.regionCode]
-  const date = new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeZone: snapshot.sourceTimeZone ?? undefined,
-  }).format(new Date(snapshot.capturedAt))
   const figures = entry.figures.filter((figure) => figure.value != null && FIGURES[figure.metric])
 
   return (
@@ -204,9 +154,15 @@ function RankingCard({ reading, links }: { reading: HeroRankingReading; links: M
       )}
       <p className="wiki-evaluation-origin">
         {text(
-          `Bảng xếp hạng trong game · ${snapshot.modeLabel} · máy chủ ${market[0]} · chụp ngày ${date}`,
-          `In-game ranking boards · ${snapshot.modeLabel} · ${market[1]} server · captured ${date}`,
+          `Bảng xếp hạng trong game · ${snapshot.modeLabel} · máy chủ ${market[0]} · chụp ngày `,
+          `In-game ranking boards · ${snapshot.modeLabel} · ${market[1]} server · captured `,
         )}
+        <LocalTime
+          value={snapshot.capturedAt}
+          sourceTimeZone={snapshot.sourceTimeZone}
+          format={CAPTURE_DAY}
+          locale={locale}
+        />
         {snapshot.periodLabel && ` · ${snapshot.periodLabel}`}
       </p>
     </article>
@@ -304,9 +260,11 @@ export function HeroEvaluation({ hero }: { hero: HeroDetail }) {
 
   return (
     <section className="wiki-evaluation" aria-labelledby="wiki-hero-evaluation">
-      <h2 id="wiki-hero-evaluation" className="wiki-night-title" tabIndex={-1}>
-        {text("Đánh giá", "Assessment")}
-      </h2>
+      <header className="wiki-hero-section-head">
+        <h2 id="wiki-hero-evaluation" tabIndex={-1}>
+          {text("Đánh giá", "Assessment")}
+        </h2>
+      </header>
       {rankingShown && <RankingCard reading={ranking.data!} links={links} />}
       {!!notes.length && (
         <div className="wiki-evaluation-notes">

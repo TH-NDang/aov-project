@@ -177,3 +177,55 @@ export function heroDetailQuery(heroId: string, scope: WikiCatalogScope) {
     retry: 1,
   })
 }
+
+/** The hero in the latest confirmed ranked snapshot of the game's boards (ADR-025, ADR-029). */
+export interface HeroRankingReading {
+  snapshot: {
+    code: string
+    regionCode: string
+    modeCode: string
+    modeLabel: string
+    periodLabel: string | null
+    capturedAt: string
+    sourceTimeZone: string | null
+    heroes: number
+  } | null
+  entry: {
+    heroId: string
+    heroCode: string
+    tier: string | null
+    winRate: number | null
+    pickRate: number | null
+    banRate: number | null
+    figures: { metric: string; value: number | null; rank: number | null; of: number }[]
+    counters: { heroId: string | null; heroCode: string }[]
+  } | null
+}
+
+/** Every hero that has each kit trait in a market, so a trait can list the other heroes that share it. */
+export interface HeroTraitIndex {
+  region: string
+  traits: { code: string; heroes: { id: string; code: string }[] }[]
+}
+
+export function heroRankingQuery(heroId: string, region: string) {
+  return queryOptions({
+    queryKey: ["wiki", "hero-ranking", heroId, region] as const,
+    queryFn: ({ signal }) =>
+      readHeroApi<HeroRankingReading>(
+        `/heroes/${encodeURIComponent(heroId)}/ranking?region=${encodeURIComponent(region)}`,
+        signal,
+      ),
+    staleTime: 300_000,
+    retry: false,
+  })
+}
+
+export function heroTraitIndexQuery(region: string) {
+  return queryOptions({
+    queryKey: ["wiki", "hero-traits", region] as const,
+    queryFn: ({ signal }) => readHeroApi<HeroTraitIndex>(`/hero-traits?region=${encodeURIComponent(region)}`, signal),
+    staleTime: 300_000,
+    retry: false,
+  })
+}
