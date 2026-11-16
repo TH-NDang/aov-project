@@ -26,9 +26,9 @@ function gridColumns(count: number) {
   } as CSSProperties
 }
 
-/** The match length and the team size, the two facts a reader compares modes by. */
-export function modeMetaText(mode: Pick<ModeCard, "duration" | "playersLabel">) {
-  return [durationText(mode.duration), mode.playersLabel].filter(Boolean).join(" · ")
+/** The match length in `locale` and the team size, the two facts a reader compares modes by. */
+export function modeMetaText(mode: Pick<ModeCard, "duration" | "playersLabel">, locale: string) {
+  return [durationText(mode.duration, locale), mode.playersLabel].filter(Boolean).join(" · ")
 }
 
 function ModeTags({ mode }: { mode: ModeCard }) {
@@ -41,7 +41,8 @@ function ModeTags({ mode }: { mode: ModeCard }) {
 }
 
 function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
-  const meta = modeMetaText(mode)
+  const { locale } = useWikiContext()
+  const meta = modeMetaText(mode, locale)
   return (
     <Link className="mode-card" to={to} data-closed={isClosed(mode.availability) || undefined}>
       <ModeArt className="mode-card-art" image={mode.art} name={mode.name} inCard>
@@ -59,7 +60,8 @@ function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
 
 /** Phones scan a list faster than a grid of tall cards: a small picture, the name, the length and the status. */
 function ModeRow({ mode, to }: { mode: ModeCard; to: string }) {
-  const meta = modeMetaText(mode)
+  const { locale } = useWikiContext()
+  const meta = modeMetaText(mode, locale)
   return (
     <Link className="mode-row" to={to} data-closed={isClosed(mode.availability) || undefined}>
       <ModeArt className="mode-row-art" image={mode.art} name={mode.name} inCard />

@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import type { CSSProperties } from "react"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { matchStrip } from "../tournaments/competition-model"
 import { MatchCard } from "../tournaments/match-card"
 import { competitionMatches } from "../tournaments/match-model"
@@ -11,6 +12,7 @@ import { competitionStatus, competitionStatusLabels, dayRange, hueOf, useFeature
  * sideways. Nothing is rendered while no published competition has a dated match.
  */
 export function HomeMatches() {
+  const { text } = useStreamLocale()
   const competitions = useFeaturedCompetitions()
   if (competitions.isPending)
     return (
@@ -27,9 +29,9 @@ export function HomeMatches() {
   return (
     <section className="tn-strip" aria-labelledby="home-matches">
       <div className="tn-heading">
-        <h2 id="home-matches">Trận đấu</h2>
+        <h2 id="home-matches">{text("Trận đấu", "Matches")}</h2>
         <Link to="/competitions?tab=schedule">
-          Lịch & kết quả
+          {text("Lịch & kết quả", "Schedule & results")}
           <StreamIcon name="arrow" size={15} />
         </Link>
       </div>
@@ -44,6 +46,7 @@ export function HomeMatches() {
 
 /** The side column's list of competitions that are on or about to start, so the home page always leads to them. */
 export function HomeCompetitions() {
+  const { text } = useStreamLocale()
   const competitions = useFeaturedCompetitions()
   const order = ["ONGOING", "UPCOMING", "ANNOUNCED"]
   const items = (competitions.data?.items ?? [])
@@ -62,7 +65,7 @@ export function HomeCompetitions() {
           Giải đang và sắp diễn ra
         </h2>
         <Link to="/competitions" className="hub-card-more">
-          Tất cả
+          {text("Tất cả", "All")}
         </Link>
       </div>
       <ul className="tn-mini-list">
@@ -78,8 +81,8 @@ export function HomeCompetitions() {
                 <span>
                   <strong>{tournament.name}</strong>
                   <small>
-                    {status && <b data-status={status}>{competitionStatusLabels[status]}</b>}
-                    {dayRange(tournament.startsOn, tournament.endsOn, "Chờ lịch")}
+                    {status && <b data-status={status}>{competitionStatusLabels()[status]}</b>}
+                    {dayRange(tournament.startsOn, tournament.endsOn, text("Chờ lịch", "To be scheduled"))}
                   </small>
                 </span>
               </Link>

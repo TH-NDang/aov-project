@@ -4,7 +4,8 @@ import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { foldText, TRAIT_KIND_LABEL, type Trait, type Unit } from "./auto-chess-model"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { foldText, TRAIT_KIND_NAMES, type Trait, type Unit } from "./auto-chess-model"
 import { GoldIcon } from "./gold-icon"
 import { costStyle, GuideSearch, TraitIcon, type GuideIndex } from "./guide-ui"
 
@@ -72,8 +73,10 @@ export type UnitFilter = ReturnType<typeof useUnitFilter>
 
 /** One chip per price, the coin and its number in the price's color; the chosen price again clears it. */
 function CostChips({ filter }: { filter: UnitFilter }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   return (
-    <div className="mode-chip-row" role="group" aria-label="Giá">
+    <div className="mode-chip-row" role="group" aria-label={text("Giá", "Cost")}>
       {filter.costs.map((cost) => (
         <button
           key={cost}
@@ -81,8 +84,8 @@ function CostChips({ filter }: { filter: UnitFilter }) {
           className="mode-chip guide-cost-chip"
           style={costStyle(cost)}
           aria-pressed={filter.cost === cost}
-          aria-label={`${cost} vàng`}
-          title={`${cost} vàng`}
+          aria-label={text(`${cost} vàng`, `${cost} gold`)}
+          title={text(`${cost} vàng`, `${cost} gold`)}
           onClick={() => filter.setCost(filter.cost === cost ? null : cost)}
         >
           <GoldIcon size={16} />
@@ -105,9 +108,10 @@ function TraitChoices({
   filter: UnitFilter
   legend?: boolean
 }) {
+  const { locale } = useWikiContext()
   return (
     <fieldset className="guide-choices">
-      <legend className={legend ? undefined : "sr-only"}>{TRAIT_KIND_LABEL[kind]}</legend>
+      <legend className={legend ? undefined : "sr-only"}>{wikiText(locale, ...TRAIT_KIND_NAMES[kind])}</legend>
       <div>
         {index.content.traits
           .filter((trait) => trait.kind === kind)
@@ -136,17 +140,19 @@ function TraitChoices({
 
 /** On wide screens each kind of trait waits behind one chip that names it and counts the chosen ones. */
 function TraitMenu({ kind, index, filter }: { kind: Trait["kind"]; index: GuideIndex; filter: UnitFilter }) {
+  const { locale } = useWikiContext()
+  const name = wikiText(locale, ...TRAIT_KIND_NAMES[kind])
   const chosen = filter.pickedOf(kind).length
   return (
     <Popover mobileDrawer={false}>
       <PopoverTrigger asChild>
         <button type="button" className="mode-chip guide-menu-chip" data-active={chosen > 0 || undefined}>
-          {TRAIT_KIND_LABEL[kind]}
+          {name}
           {chosen > 0 && <small>{chosen}</small>}
           <WikiIcon name="chevron" size={14} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={8} drawerTitle={TRAIT_KIND_LABEL[kind]} className="guide-trait-menu">
+      <PopoverContent align="start" sideOffset={8} drawerTitle={name} className="guide-trait-menu">
         <TraitChoices kind={kind} index={index} filter={filter} legend={false} />
       </PopoverContent>
     </Popover>
@@ -170,6 +176,8 @@ export function UnitFilters({
   inline?: boolean
 }) {
   const layout = usePageLayout()
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const search = (
     <GuideSearch value={filter.search} onChange={filter.setSearch} label="Tìm quân cờ" placeholder="Tìm quân cờ…" />
   )
@@ -191,14 +199,14 @@ export function UnitFilters({
         {search}
         <PublicFilterSheet
           title="Lọc quân cờ"
-          triggerLabel="Lọc"
+          triggerLabel={text("Lọc", "Filter")}
           count={filter.active}
-          resetLabel="Xóa lọc"
+          resetLabel={text("Xóa lọc", "Clear filters")}
           onReset={filter.reset}
           resultLabel={`Xem ${filter.units.length} quân cờ`}
         >
           <fieldset className="guide-choices">
-            <legend>Giá</legend>
+            <legend>{text("Giá", "Cost")}</legend>
             <CostChips filter={filter} />
           </fieldset>
           {KINDS.map((kind) => (
@@ -222,11 +230,14 @@ export function UnitFilters({
 
 /** How many units show, and the chosen traits as chips that remove themselves. */
 export function FilterSummary({ index, filter }: { index: GuideIndex; filter: UnitFilter }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const any = filter.active > 0 || !!filter.search.trim()
   return (
     <div className="guide-summary" role="status">
       <span>
-        {filter.units.length} quân cờ{any && ` / ${index.content.units.length}`}
+        {filter.units.length} {text("quân cờ", filter.units.length === 1 ? "unit" : "units")}
+        {any && ` / ${index.content.units.length}`}
       </span>
       {filter.picked.map((code) => {
         const trait = index.traits.get(code)
@@ -235,7 +246,7 @@ export function FilterSummary({ index, filter }: { index: GuideIndex; filter: Un
             key={code}
             type="button"
             className="mode-chip"
-            aria-label={`Bỏ lọc ${trait?.name ?? code}`}
+            aria-label={text(`Bỏ lọc ${trait?.name ?? code}`, `Clear the ${trait?.name ?? code} filter`)}
             onClick={() => filter.toggle(code)}
           >
             <TraitIcon trait={trait} index={index} size={18} />
@@ -246,7 +257,7 @@ export function FilterSummary({ index, filter }: { index: GuideIndex; filter: Un
       })}
       {any && (
         <button type="button" className="guide-clear" onClick={filter.clear}>
-          Bỏ lọc
+          {text("Bỏ lọc", "Clear filters")}
         </button>
       )}
     </div>

@@ -3,6 +3,7 @@ import { Link } from "react-router"
 import type { CompetitionView } from "@aov/community-contracts"
 import { LocalPrizeText } from "@aov/ui/components/local-money"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import {
   competitionStatus,
   competitionStatusLabels,
@@ -22,9 +23,11 @@ const monogram = (name: string) =>
     .join("")
 
 export function StatusBadge({ status }: { status: CompetitionStatus | null }) {
+  // The status names are read in the reader's language, so the badge follows a change of language.
+  useStreamLocale()
   return status ? (
     <span className="hub-status" data-status={status}>
-      {competitionStatusLabels[status]}
+      {competitionStatusLabels()[status]}
     </span>
   ) : null
 }
@@ -47,9 +50,14 @@ export function CompetitionLogo({
 }
 
 /** How many teams and matches a competition has, leaving out what is not planned yet. */
-function scale(entry: CompetitionView) {
+function scale(entry: CompetitionView, text: (vi: string, en: string) => string) {
   const { plan } = entry.content
-  return [plan.entrants.length && `${plan.entrants.length} đội`, plan.matches.length && `${plan.matches.length} trận`]
+  return [
+    plan.entrants.length &&
+      text(`${plan.entrants.length} đội`, `${plan.entrants.length} ${plan.entrants.length === 1 ? "team" : "teams"}`),
+    plan.matches.length &&
+      text(`${plan.matches.length} trận`, `${plan.matches.length} ${plan.matches.length === 1 ? "match" : "matches"}`),
+  ]
     .filter(Boolean)
     .join(" · ")
 }
@@ -66,6 +74,7 @@ export function seasonName(name: string, circuit?: string | null) {
  * editor has recorded the result, who won it. `within` names the circuit the card is listed under.
  */
 export function CompetitionCard({ entry, within }: { entry: CompetitionView; within?: string | null }) {
+  const { text } = useStreamLocale()
   const { tournament, teams } = entry.content
   const status = competitionStatus(tournament)
   const won = champion(tournament, teams)
@@ -75,7 +84,7 @@ export function CompetitionCard({ entry, within }: { entry: CompetitionView; wit
       <span className="tn-card-body">
         <strong title={tournament.name}>{seasonName(tournament.name, within)}</strong>
         <span className="tn-card-meta">
-          {dayRange(tournament.startsOn, tournament.endsOn, "Chờ lịch")}
+          {dayRange(tournament.startsOn, tournament.endsOn, text("Chờ lịch", "To be scheduled"))}
           {tournament.region && ` · ${tournament.region}`}
         </span>
         <span className="tn-card-foot">
@@ -85,9 +94,9 @@ export function CompetitionCard({ entry, within }: { entry: CompetitionView; wit
               {won.winner.name}
             </span>
           ) : (
-            status && status !== "FINISHED" && <b data-status={status}>{competitionStatusLabels[status]}</b>
+            status && status !== "FINISHED" && <b data-status={status}>{competitionStatusLabels()[status]}</b>
           )}
-          {scale(entry) && <span>{scale(entry)}</span>}
+          {scale(entry, text) && <span>{scale(entry, text)}</span>}
         </span>
       </span>
     </Link>
@@ -96,6 +105,7 @@ export function CompetitionCard({ entry, within }: { entry: CompetitionView; wit
 
 /** A competition that is on or about to start, shown larger above the directory. */
 export function CompetitionFeature({ entry }: { entry: CompetitionView }) {
+  const { text, languageTag } = useStreamLocale()
   const { tournament, plan } = entry.content
   return (
     <Link className="tn-feature" to={`/competitions/${entry.id}`}>
@@ -110,19 +120,19 @@ export function CompetitionFeature({ entry }: { entry: CompetitionView }) {
         <span className="tn-feature-line">
           <StatusBadge status={competitionStatus(tournament)} />
           <span className="hub-kicker">
-            {[plan.circuit, tournament.region].filter(Boolean).join(" · ") || "Giải đấu"}
+            {[plan.circuit, tournament.region].filter(Boolean).join(" · ") || text("Giải đấu", "Tournament")}
           </span>
         </span>
         <strong>{tournament.name}</strong>
         <span className="tn-card-meta">
           <StreamIcon name="calendar" size={14} />
-          {dayRange(tournament.startsOn, tournament.endsOn, "Chờ lịch")}
+          {dayRange(tournament.startsOn, tournament.endsOn, text("Chờ lịch", "To be scheduled"))}
         </span>
         <span className="tn-card-meta">
-          {scale(entry) && (
+          {scale(entry, text) && (
             <span>
               <StreamIcon name="users" size={14} />
-              {scale(entry)}
+              {scale(entry, text)}
             </span>
           )}
           {plan.prizePool && (
@@ -132,6 +142,7 @@ export function CompetitionFeature({ entry }: { entry: CompetitionView }) {
                 text={plan.prizePool}
                 currency={plan.currency}
                 on={tournament.endsOn ?? tournament.startsOn}
+                locale={languageTag}
               />
             </span>
           )}

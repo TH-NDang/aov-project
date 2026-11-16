@@ -17,12 +17,13 @@ export function ReleaseDate({
   fallback?: ReactNode
   className?: string
 }) {
-  const { region, regions } = useWikiContext()
+  const { locale, region, regions } = useWikiContext()
   return (
     <LocalTime
       value={releaseDateValue(regionalDate, effectiveAt)}
       sourceTimeZone={regions.find((market) => market.code === region)?.timeZone}
       format={DAY}
+      locale={locale}
       fallback={fallback}
       className={className}
     />

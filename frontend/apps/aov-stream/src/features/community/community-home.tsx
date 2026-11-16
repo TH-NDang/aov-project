@@ -11,6 +11,7 @@ import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { CommunityAside } from "./community-aside"
 import { useCommunitySession } from "./community-auth"
@@ -24,15 +25,16 @@ import "./community.css"
 
 type Tab = "latest" | "following" | "video" | "news"
 
-const filters: { value: Tab; label: string; icon: "feed" | "heart" | "play" | "news" }[] = [
-  { value: "latest", label: "Tất cả", icon: "feed" },
-  { value: "following", label: "Đang theo dõi", icon: "heart" },
-  { value: "video", label: "Video", icon: "play" },
-  { value: "news", label: "Tin tức", icon: "news" },
+const filters: { value: Tab; label: string; english: string; icon: "feed" | "heart" | "play" | "news" }[] = [
+  { value: "latest", label: "Tất cả", english: "All", icon: "feed" },
+  { value: "following", label: "Đang theo dõi", english: "Following", icon: "heart" },
+  { value: "video", label: "Video", english: "Videos", icon: "play" },
+  { value: "news", label: "Tin tức", english: "News", icon: "news" },
 ]
 const tabKinds: Partial<Record<Tab, PostKind>> = { video: "VIDEO", news: "NEWS" }
 
 export function CommunityHome() {
+  const { text } = useStreamLocale()
   const session = useCommunitySession()
   const signedIn = useSignedInAction()
   const [params, setParams] = useSearchParams()
@@ -56,7 +58,7 @@ export function CommunityHome() {
     <StreamShell
       lead={
         <>
-          <h1 className="sr-only">Bảng tin cộng đồng</h1>
+          <h1 className="sr-only">{text("Bảng tin cộng đồng", "Community feed")}</h1>
           <HomeMatches />
         </>
       }
@@ -67,11 +69,11 @@ export function CommunityHome() {
         </>
       }
     >
-      <title>Bảng tin — AOV Stream</title>
+      <title>{text("Bảng tin — AOV Stream", "Feed — AOV Stream")}</title>
       <div className="cp-container">
         <section>
           <div className="hub-feed-header">
-            <div className="hub-pills" role="group" aria-label="Lọc bảng tin">
+            <div className="hub-pills" role="group" aria-label={text("Lọc bảng tin", "Filter the feed")}>
               {filters.map((filter) => (
                 <button
                   key={filter.value}
@@ -79,12 +81,18 @@ export function CommunityHome() {
                   aria-pressed={tab === filter.value}
                   onClick={() =>
                     filter.value === "following"
-                      ? signedIn("Đăng nhập để xem bài mới từ các trang bạn theo dõi.", () => open("following"))
+                      ? signedIn(
+                          text(
+                            "Đăng nhập để xem bài mới từ các trang bạn theo dõi.",
+                            "Sign in to see new posts from the pages you follow.",
+                          ),
+                          () => open("following"),
+                        )
                       : open(filter.value)
                   }
                 >
                   <StreamIcon name={filter.icon} size={15} />
-                  {filter.label}
+                  {text(filter.label, filter.english)}
                 </button>
               ))}
             </div>
@@ -100,6 +108,7 @@ export function CommunityHome() {
 }
 
 function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind }) {
+  const { text } = useStreamLocale()
   const navigate = useNavigate()
   const session = useCommunitySession()
   const followedIds = useFollowedIds()
@@ -121,7 +130,7 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
   const items = feed.data?.pages.flatMap((page) => page.items) || []
   if (feed.isPending)
     return (
-      <div className="cp-post-list" role="status" aria-label="Đang tải bảng tin">
+      <div className="cp-post-list" role="status" aria-label={text("Đang tải bảng tin", "Loading the feed")}>
         <div className="hub-skeleton cp-post-skeleton" />
         <div className="hub-skeleton cp-post-skeleton" />
       </div>
@@ -129,26 +138,36 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
   if (feed.isLoadingError)
     return (
       <div className="hub-state" role="alert">
-        <h3>Chưa tải được bảng tin</h3>
+        <h3>{text("Chưa tải được bảng tin", "The feed could not be loaded")}</h3>
         <p>{feed.error.message}</p>
         <button className="cp-button" onClick={() => void feed.refetch()}>
-          Thử lại
+          {text("Thử lại", "Retry")}
         </button>
       </div>
     )
   if (!items.length)
     return following ? (
       <div className="hub-state">
-        <h3>Chưa có bài mới từ trang bạn theo dõi</h3>
-        <p>Theo dõi tổ chức, đội tuyển hoặc tuyển thủ để thấy bài viết của họ tại đây.</p>
+        <h3>{text("Chưa có bài mới từ trang bạn theo dõi", "No new posts from the pages you follow yet")}</h3>
+        <p>
+          {text(
+            "Theo dõi tổ chức, đội tuyển hoặc tuyển thủ để thấy bài viết của họ tại đây.",
+            "Follow organizations, teams or players to see their posts here.",
+          )}
+        </p>
         <button className="cp-button cp-primary" onClick={() => navigate("/explore")}>
-          Khám phá trang
+          {text("Khám phá trang", "Explore pages")}
         </button>
       </div>
     ) : kind ? (
       <div className="hub-state">
-        <h3>{kind === "VIDEO" ? "Chưa có video" : "Chưa có tin tức"}</h3>
-        <p>Bài {kind === "VIDEO" ? "video" : "tin tức"} của các trang sẽ xuất hiện tại đây ngay khi được đăng.</p>
+        <h3>{kind === "VIDEO" ? text("Chưa có video", "No videos yet") : text("Chưa có tin tức", "No news yet")}</h3>
+        <p>
+          {text(
+            `Bài ${kind === "VIDEO" ? "video" : "tin tức"} của các trang sẽ xuất hiện tại đây ngay khi được đăng.`,
+            `${kind === "VIDEO" ? "Video" : "News"} posts from pages will appear here as soon as they are posted.`,
+          )}
+        </p>
       </div>
     ) : (
       <FeaturedPages />
@@ -165,14 +184,21 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
           following={followedIds}
         />
       ))}
-      <InfiniteScroll query={feed} label="Đang tải thêm bài viết" />
-      {!feed.hasNextPage && items.length > 10 && <p className="stream-load-more">Bạn đã xem hết bài viết.</p>}
+      <InfiniteScroll
+        query={feed}
+        label={text("Đang tải thêm bài viết", "Loading more posts")}
+        retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+      />
+      {!feed.hasNextPage && items.length > 10 && (
+        <p className="stream-load-more">{text("Bạn đã xem hết bài viết.", "You have seen all the posts.")}</p>
+      )}
     </div>
   )
 }
 
 /** An empty feed still gives visitors somewhere to go: the published community pages, ready to follow. */
 function FeaturedPages() {
+  const { text } = useStreamLocale()
   const following = useFollowedIds()
   const pages = useQuery({
     queryKey: ["page-channels"],
@@ -183,11 +209,16 @@ function FeaturedPages() {
   return (
     <div className="cp-featured">
       <div className="cp-featured-intro">
-        <h2>Bắt đầu với các trang chính thức</h2>
-        <p>Chưa có bài viết công khai. Theo dõi trang để thấy bài mới ngay khi được đăng.</p>
+        <h2>{text("Bắt đầu với các trang chính thức", "Start with the official pages")}</h2>
+        <p>
+          {text(
+            "Chưa có bài viết công khai. Theo dõi trang để thấy bài mới ngay khi được đăng.",
+            "No public posts yet. Follow pages to see new posts as soon as they are posted.",
+          )}
+        </p>
       </div>
       {pages.isPending ? (
-        <div className="cp-grid" role="status" aria-label="Đang tải trang nổi bật">
+        <div className="cp-grid" role="status" aria-label={text("Đang tải trang nổi bật", "Loading featured pages")}>
           {Array.from({ length: 3 }, (_, index) => (
             <div className="hub-skeleton cp-card-skeleton" key={index} />
           ))}
@@ -200,7 +231,7 @@ function FeaturedPages() {
         </div>
       ) : null}
       <Link className="cp-button" to="/explore">
-        Xem tất cả trong Khám phá
+        {text("Xem tất cả trong Khám phá", "See all in Explore")}
         <StreamIcon name="arrow" size={15} />
       </Link>
     </div>

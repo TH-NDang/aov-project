@@ -1,7 +1,15 @@
 export const paragraphStyles = {
-  note: { label: "Chú thích", classes: "block text-xs leading-5 text-muted-foreground" },
-  info: { label: "Thông tin", classes: "my-2 block border-l-2 border-sky-500/50 pl-3 text-sm" },
-  example: { label: "Ví dụ", classes: "my-2 block border-l-2 border-primary/30 pl-3 text-sm" },
+  note: { label: "Chú thích", labelEnglish: "Note", classes: "block text-xs leading-5 text-muted-foreground" },
+  info: {
+    label: "Thông tin",
+    labelEnglish: "Info",
+    classes: "my-2 block border-l-2 border-sky-500/50 pl-3 text-sm",
+  },
+  example: {
+    label: "Ví dụ",
+    labelEnglish: "Example",
+    classes: "my-2 block border-l-2 border-primary/30 pl-3 text-sm",
+  },
 } as const
 /** The color the imported skill descriptions use most for each meaning. */
 export const gameTextColors = [

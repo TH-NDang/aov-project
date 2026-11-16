@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { ScheduleDays } from "./competition-schedule"
 import { GameCard } from "./game-card"
 import { MatchHead, MatchTabs, matchHeadOf, matchStateLabels, matchStatus, seriesHeadOf } from "./match-components"
@@ -61,6 +62,7 @@ const NO_GAMES = {
 } as const
 
 export function MatchPage() {
+  const { text, languageTag } = useStreamLocale()
   const { id, matchKey, seriesId } = useParams()
   const competition = useQuery({ ...competitionQuery(id || ""), enabled: !!id })
   const planned = competition.data
@@ -75,7 +77,7 @@ export function MatchPage() {
   const loading = id ? competition.isPending : games.isPending
   const tournamentId = id || first?.series.tournamentId
   const competitionName = entry?.competition.content.tournament.name || first?.tournament.name
-  const head = entry ? matchHeadOf(entry) : first ? seriesHeadOf(first) : null
+  const head = entry ? matchHeadOf(entry, languageTag) : first ? seriesHeadOf(first) : null
   const status = entry ? matchStatus(entry) : null
   const series = entry ? entry.competition.content.series[matchSeriesId(entry) || ""] : first?.series
   const note = plainNote(series?.note || "")
@@ -87,20 +89,24 @@ export function MatchPage() {
     : `/matches/${encodeURIComponent(linkedSeriesId || "")}`
   return (
     <StreamShell>
-      <title>{`${head ? `${head.teams[0].name} vs ${head.teams[1].name}` : "Trận đấu"} — AOV Stream`}</title>
+      <title>{`${head ? `${head.teams[0].name} vs ${head.teams[1].name}` : text("Trận đấu", "Match")} — AOV Stream`}</title>
       <div className="tn-match-page">
         <Link
           className="cp-back"
           to={tournamentId ? `/competitions/${tournamentId}?tab=matches` : "/competitions?tab=schedule"}
         >
           <StreamIcon name="back" size={16} />
-          {competitionName || "Lịch & kết quả"}
+          {competitionName || text("Lịch & kết quả", "Schedule & results")}
         </Link>
         {loading ? (
-          <div className="tn-duel-skeleton hub-skeleton" role="status" aria-label="Đang mở trận đấu" />
+          <div
+            className="tn-duel-skeleton hub-skeleton"
+            role="status"
+            aria-label={text("Đang mở trận đấu", "Opening the match")}
+          />
         ) : !head ? (
           <div className="hub-state" role="alert">
-            <h1>Chưa mở được trận đấu</h1>
+            <h1>{text("Chưa mở được trận đấu", "The match could not be opened")}</h1>
             <p>Trận chưa được công bố hoặc liên kết không còn dùng được.</p>
             <div className="hub-state-actions">
               <button
@@ -108,7 +114,7 @@ export function MatchPage() {
                 className="cp-button cp-primary"
                 onClick={() => void (id ? competition.refetch() : games.refetch())}
               >
-                Thử lại
+                {text("Thử lại", "Retry")}
               </button>
               <Link className="cp-button" to="/competitions?tab=schedule">
                 Xem lịch & kết quả
@@ -120,15 +126,21 @@ export function MatchPage() {
             <MatchHead tint={head.tint} kicker={head.kicker} teams={head.teams}>
               {status ? (
                 <span className="hub-status" data-status={status}>
-                  {matchStateLabels[status]}
+                  {text(matchStateLabels[status][0], matchStateLabels[status][1])}
                 </span>
               ) : (
-                head.teams.some((team) => team.won) && <span className="hub-status">{matchStateLabels.FINISHED}</span>
+                head.teams.some((team) => team.won) && (
+                  <span className="hub-status">{text(...matchStateLabels.FINISHED)}</span>
+                )
               )}
               {scheduledAt && (
                 <span>
                   <StreamIcon name="calendar" size={14} />
-                  <LocalTime value={scheduledAt} sourceTimeZone={entry?.competition.content.plan.timezone} />
+                  <LocalTime
+                    value={scheduledAt}
+                    sourceTimeZone={entry?.competition.content.plan.timezone}
+                    locale={languageTag}
+                  />
                 </span>
               )}
             </MatchHead>
@@ -143,16 +155,20 @@ export function MatchPage() {
                 <h2 id="match-games">Các ván đấu {list.length > 0 && <small>{list.length} ván</small>}</h2>
               </div>
               {linkedSeriesId && games.isPending ? (
-                <div className="tn-game-list" role="status" aria-label="Đang tải các ván của trận">
+                <div
+                  className="tn-game-list"
+                  role="status"
+                  aria-label={text("Đang tải các ván của trận", "Loading the games of this match")}
+                >
                   {Array.from({ length: 3 }, (_, index) => (
                     <span key={index} className="hub-skeleton" />
                   ))}
                 </div>
               ) : games.isError && !games.data ? (
                 <p className="tn-quiet" role="alert">
-                  Chưa tải được các ván của trận.{" "}
+                  {text("Chưa tải được các ván của trận.", "The games of this match could not be loaded.")}{" "}
                   <button type="button" onClick={() => void games.refetch()}>
-                    Thử lại
+                    {text("Thử lại", "Retry")}
                   </button>
                 </p>
               ) : list.length ? (
@@ -169,7 +185,7 @@ export function MatchPage() {
                   {note && <p>{note}</p>}
                   {source && (
                     <a href={source} target="_blank" rel="noreferrer noopener">
-                      Nguồn trận đấu <StreamIcon name="external" size={13} />
+                      {text("Nguồn trận đấu", "Match source")} <StreamIcon name="external" size={13} />
                     </a>
                   )}
                 </footer>

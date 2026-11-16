@@ -18,6 +18,18 @@ public final class CatalogText {
                 .map(List::of).orElseGet(List::of);
     }
 
+    /**
+     * A decimal in the form used to compare gameplay values: stored numbers keep their scale ({@code 9.0}) while JSON
+     * clients send them back as {@code 9}, and {@link BigDecimal#equals} would tell the two apart.
+     */
+    public static BigDecimal comparable(BigDecimal value) {
+        return value == null ? null : value.stripTrailingZeros();
+    }
+
+    public static List<Stat> comparable(List<Stat> stats) {
+        return stats.stream().map(stat -> new Stat(stat.key(), comparable(stat.value()), stat.unit())).toList();
+    }
+
     public record Effect(
             String key,
             String name,

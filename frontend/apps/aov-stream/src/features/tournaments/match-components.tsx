@@ -3,6 +3,7 @@ import { Link } from "react-router"
 import type { PublishedGame } from "@aov/community-contracts"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { StreamImage } from "../../components/stream-image"
+import { useStreamLocale } from "../../components/stream-locale"
 import { hueOf } from "../community/community-ui"
 import { matchUnderway } from "./competition-model"
 import { competitionMatchHref, matchState, type CompetitionMatch } from "./match-model"
@@ -27,13 +28,14 @@ function TeamName({ wide, compact }: { wide: string; compact: string }) {
   )
 }
 
+/** Where a match stands, in Vietnamese and in English. */
 export const matchStateLabels = {
-  LIVE: "Đang diễn ra",
-  FINISHED: "Đã kết thúc",
-  SCORED: "Đã có tỷ số",
-  UPCOMING: "Sắp diễn ra",
-  PENDING: "Chờ kết quả",
-  UNSCHEDULED: "Chờ lịch",
+  LIVE: ["Đang diễn ra", "Ongoing"],
+  FINISHED: ["Đã kết thúc", "Finished"],
+  SCORED: ["Đã có tỷ số", "Score available"],
+  UPCOMING: ["Sắp diễn ra", "Upcoming"],
+  PENDING: ["Chờ kết quả", "Awaiting result"],
+  UNSCHEDULED: ["Chờ lịch", "To be scheduled"],
 } as const
 
 /** Where a match stands in one word: on now, done, ahead, or waiting for its result or its date. */
@@ -67,13 +69,14 @@ function FixtureTeam({ team }: { team: MatchSide }) {
  * The whole row opens the match. `competition` adds the competition's name, for a list that mixes several.
  */
 export function MatchRow({ entry, competition = false }: { entry: CompetitionMatch; competition?: boolean }) {
+  const { text, languageTag } = useStreamLocale()
   const { match, competition: view } = entry
   const { plan, tournament } = view.content
-  const [a, b] = matchSides(entry)
+  const [a, b] = matchSides(entry, languageTag)
   const status = matchStatus(entry)
   const round = matchRound(entry)
   const meta = [
-    status === "PENDING" && <em>{matchStateLabels.PENDING}</em>,
+    status === "PENDING" && <em>{text(...matchStateLabels.PENDING)}</em>,
     round,
     competition && (
       <>
@@ -89,7 +92,13 @@ export function MatchRow({ entry, competition = false }: { entry: CompetitionMat
       data-live={status === "LIVE" || undefined}
     >
       <span className="tn-fixture-time">
-        <LocalTime value={match.scheduledAt} sourceTimeZone={plan.timezone} format={clockTime} fallback="–" />
+        <LocalTime
+          value={match.scheduledAt}
+          sourceTimeZone={plan.timezone}
+          format={clockTime}
+          locale={languageTag}
+          fallback="–"
+        />
       </span>
       <FixtureTeam team={a} />
       <span className="tn-fixture-score">
@@ -134,9 +143,12 @@ export type HeadTeam = {
 
 type Head = { tint: string; kicker: string; teams: [HeadTeam, HeadTeam] }
 
-/** The head of a match of a competition's plan: its round, how many games decide it, and both sides in full. */
-export function matchHeadOf(entry: CompetitionMatch): Head {
-  const [a, b] = matchSides(entry)
+/**
+ * The head of a match of a competition's plan: its round, how many games decide it, and both sides in full. A side
+ * still open is named in `locale`.
+ */
+export function matchHeadOf(entry: CompetitionMatch, locale: string): Head {
+  const [a, b] = matchSides(entry, locale)
   const team = (side: MatchSide): HeadTeam => ({ ...side, name: side.fullName, shortName: side.name })
   return {
     tint: entry.competition.content.tournament.name,
@@ -238,6 +250,7 @@ export function MatchTabs({
   /** The game being read; absent on the page of the match. */
   active?: string
 }) {
+  const { text } = useStreamLocale()
   const strip = useRef<HTMLElement>(null)
   useEffect(() => {
     const row = strip.current
@@ -245,13 +258,13 @@ export function MatchTabs({
     if (row && tab) row.scrollLeft = tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2
   }, [active, games.length])
   return (
-    <nav ref={strip} className="tn-game-tabs" aria-label="Các ván trong trận">
+    <nav ref={strip} className="tn-game-tabs" aria-label={text("Các ván trong trận", "Games in this match")}>
       <Link to={overviewHref} aria-current={!active ? "page" : undefined}>
-        Tổng quan trận
+        {text("Tổng quan trận", "Match overview")}
       </Link>
       {games.map((game) => (
         <Link key={game.id} to={`/games/${game.id}`} aria-current={active === game.id ? "page" : undefined}>
-          Ván {game.number}
+          {text(`Ván ${game.number}`, `Game ${game.number}`)}
         </Link>
       ))}
     </nav>

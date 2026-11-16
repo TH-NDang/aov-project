@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router"
-import { useWikiContext } from "../../context/wiki-context"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { TraitIcon, UnitPortrait, useGuideIndex, type GuideIndex } from "./guide-ui"
 import type { PublicGuide } from "./mode-api"
 import { ModeHeading } from "./mode-ui"
@@ -91,12 +91,18 @@ function HeartIcon() {
 
 /** Eight players, knocked out one by one until one is left: the goal of a match in one picture. */
 function GoalSection() {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   // Steps 0–6 knock a player out each; step 7 holds the winner a moment before the match starts again.
   const step = useCycle(PLAYERS + 1, 900, PLAYERS - 1)
   const out = Math.min(step, PLAYERS - 1)
   return (
     <section className="mode-section" aria-labelledby="ov-goal">
-      <ModeHeading id="ov-goal" title="Mục tiêu" note="Trụ lại cuối cùng" />
+      <ModeHeading
+        id="ov-goal"
+        title={text("Mục tiêu", "Goal")}
+        note={text("Trụ lại cuối cùng", "Be the last one standing")}
+      />
       <div className="ov-split">
         <div className="ov-figure">
           <div className="ov-players" aria-hidden="true">
@@ -112,7 +118,14 @@ function GoalSection() {
               )
             })}
           </div>
-          <div className="ov-ranks" role="img" aria-label="Hạng 1 đến 4 tính là thắng, 5 đến 8 tính là thua">
+          <div
+            className="ov-ranks"
+            role="img"
+            aria-label={text(
+              "Hạng 1 đến 4 tính là thắng, 5 đến 8 tính là thua",
+              "Ranks 1 to 4 count as a win, 5 to 8 as a loss",
+            )}
+          >
             {Array.from({ length: PLAYERS }, (_, at) => (
               <span key={at} data-win={at < 4 || undefined}>
                 {at + 1}
@@ -122,8 +135,13 @@ function GoalSection() {
         </div>
         <div className="ov-copy">
           <p className="ov-text">
-            <strong>{PLAYERS} người chơi</strong>, mỗi người <strong>{START_HEALTH} máu</strong>. Thua một hiệp đối
-            kháng bị trừ máu; hết máu thì bị loại. Người còn lại cuối cùng thắng.
+            <strong>{text(`${PLAYERS} người chơi`, `${PLAYERS} players`)}</strong>
+            {text(", mỗi người ", ", each with ")}
+            <strong>{text(`${START_HEALTH} máu`, `${START_HEALTH} HP`)}</strong>
+            {text(
+              ". Thua một hiệp đối kháng bị trừ máu; hết máu thì bị loại. Người còn lại cuối cùng thắng.",
+              ". Losing a PvP round costs HP; a player who runs out of HP is eliminated. The last player left wins.",
+            )}
           </p>
           <ul className="ov-rank-legend">
             <li data-win="true">Hạng 1–4 tính là thắng, hạng càng cao càng nhiều điểm.</li>
@@ -137,7 +155,8 @@ function GoalSection() {
 
 /** One round as a loop of three steps, the current one lit, with the guide's own pictures. */
 function RoundSection({ index, code }: { index: GuideIndex; code: string }) {
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const step = useCycle(3, 2400, -1)
   const base = `/modes/${encodeURIComponent(code)}`
   const lineup = index.content.lineups[0]
@@ -148,12 +167,16 @@ function RoundSection({ index, code }: { index: GuideIndex; code: string }) {
   const itemSrc = index.image(item?.iconAssetId)
   return (
     <section className="mode-section" aria-labelledby="ov-round">
-      <ModeHeading id="ov-round" title="Mỗi hiệp" note="Xếp đội hình → giao tranh → tính máu" />
+      <ModeHeading
+        id="ov-round"
+        title={text("Mỗi hiệp", "Each round")}
+        note={text("Xếp đội hình → giao tranh → tính máu", "Build a lineup → fight → count HP")}
+      />
       <ol className="ov-steps">
         <li className="ov-step" data-active={step === 0 || undefined}>
           <h3>
             <span className="ov-step-number">1</span>
-            Xếp đội hình
+            {text("Xếp đội hình", "Build a lineup")}
           </h3>
           <div className="ov-step-art" aria-hidden="true">
             {unit && <UnitPortrait unit={unit} index={index} size="md" />}
@@ -163,33 +186,41 @@ function RoundSection({ index, code }: { index: GuideIndex; code: string }) {
             {itemSrc ? <img className="ov-item" src={itemSrc} alt="" /> : null}
           </div>
           <p>
-            Kết hợp <Link to={href(`${base}/quan-co`)}>quân cờ</Link>,{" "}
-            <Link to={href(`${base}/phe-nghe`)}>Phe/Nghề</Link> và <Link to={href(`${base}/trang-bi`)}>trang bị</Link>.
+            {text("Kết hợp ", "Combine ")}
+            <Link to={href(`${base}/quan-co`)}>{text("quân cờ", "units")}</Link>,{" "}
+            <Link to={href(`${base}/phe-nghe`)}>{text("Phe/Nghề", "Factions/Classes")}</Link>
+            {text(" và ", " and ")}
+            <Link to={href(`${base}/trang-bi`)}>{text("trang bị", "items")}</Link>.
           </p>
         </li>
         <li className="ov-step" data-active={step === 1 || undefined}>
           <h3>
             <span className="ov-step-number">2</span>
-            Giao tranh
+            {text("Giao tranh", "Fight")}
           </h3>
           <div className="ov-step-art ov-fights">
             <div className="ov-fight">
               <SwordsIcon />
-              <b>Đối kháng</b>
-              <small>Ghép cặp với người chơi khác</small>
+              <b>{text("Đối kháng", "PvP round")}</b>
+              <small>{text("Ghép cặp với người chơi khác", "Paired with another player")}</small>
             </div>
             <div className="ov-fight">
               <MonsterIcon />
-              <b>Quái</b>
-              <small>Rơi trang bị, thẻ tăng sao…</small>
+              <b>{text("Quái", "Monster round")}</b>
+              <small>{text("Rơi trang bị, thẻ tăng sao…", "Drops items, star upgrade cards…")}</small>
             </div>
           </div>
-          <p>Hai loại vòng đấu: gặp người chơi khác hoặc đánh quái lấy chiến lợi phẩm.</p>
+          <p>
+            {text(
+              "Hai loại vòng đấu: gặp người chơi khác hoặc đánh quái lấy chiến lợi phẩm.",
+              "Two kinds of rounds: face another player or fight monsters for loot.",
+            )}
+          </p>
         </li>
         <li className="ov-step" data-active={step === 2 || undefined}>
           <h3>
             <span className="ov-step-number">3</span>
-            Tính máu
+            {text("Tính máu", "Count HP")}
           </h3>
           <div className="ov-step-art ov-hit" aria-hidden="true">
             <HeartIcon />
@@ -197,7 +228,12 @@ function RoundSection({ index, code }: { index: GuideIndex; code: string }) {
               <i />
             </span>
           </div>
-          <p>Bên thua bị trừ máu. Hết giờ mà chưa phân thắng bại thì cả hai cùng bị trừ.</p>
+          <p>
+            {text(
+              "Bên thua bị trừ máu. Hết giờ mà chưa phân thắng bại thì cả hai cùng bị trừ.",
+              "The losing side loses HP. If time runs out with no winner, both sides lose HP.",
+            )}
+          </p>
         </li>
       </ol>
     </section>
@@ -206,23 +242,33 @@ function RoundSection({ index, code }: { index: GuideIndex; code: string }) {
 
 /** The health formula as something to play with: pick how many units the winner kept and the stage damage. */
 function DamageSection() {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [alive, setAlive] = useState(3)
   const [stage, setStage] = useState(2)
   const lost = alive < 5 ? alive * 2 + stage : 9 + (alive - 5) + stage
   const left = Math.max(0, START_HEALTH - lost)
   return (
     <section className="mode-section" aria-labelledby="ov-damage">
-      <ModeHeading id="ov-damage" title="Khi thua" note="Bị trừ bao nhiêu máu?" />
+      <ModeHeading
+        id="ov-damage"
+        title={text("Khi thua", "When you lose")}
+        note={text("Bị trừ bao nhiêu máu?", "How much HP do you lose?")}
+      />
       <div className="ov-split">
         <div className="ov-figure">
           <div className="ov-field">
-            <span className="ov-label">Quân còn sống của bên thắng</span>
-            <div className="ov-alive" role="group" aria-label="Số quân còn sống của bên thắng">
+            <span className="ov-label">{text("Quân còn sống của bên thắng", "Winner's surviving units")}</span>
+            <div
+              className="ov-alive"
+              role="group"
+              aria-label={text("Số quân còn sống của bên thắng", "Number of the winner's surviving units")}
+            >
               {Array.from({ length: BOARD_SLOTS }, (_, at) => (
                 <button
                   key={at}
                   type="button"
-                  aria-label={`${at + 1} quân`}
+                  aria-label={text(`${at + 1} quân`, `${at + 1} ${at === 0 ? "unit" : "units"}`)}
                   aria-pressed={at + 1 === alive}
                   data-on={at < alive || undefined}
                   onClick={() => setAlive(at + 1)}
@@ -232,13 +278,28 @@ function DamageSection() {
             </div>
           </div>
           <div className="ov-field">
-            <span className="ov-label">Sát thương người chơi · tăng dần theo giai đoạn trận</span>
+            <span className="ov-label">
+              {text(
+                "Sát thương người chơi · tăng dần theo giai đoạn trận",
+                "Player damage · rises with each stage of the match",
+              )}
+            </span>
             <div className="ov-stepper">
-              <button type="button" aria-label="Giảm" disabled={stage <= 0} onClick={() => setStage(stage - 1)}>
+              <button
+                type="button"
+                aria-label={text("Giảm", "Decrease")}
+                disabled={stage <= 0}
+                onClick={() => setStage(stage - 1)}
+              >
                 −
               </button>
               <b>{stage}</b>
-              <button type="button" aria-label="Tăng" disabled={stage >= 30} onClick={() => setStage(stage + 1)}>
+              <button
+                type="button"
+                aria-label={text("Tăng", "Increase")}
+                disabled={stage >= 30}
+                onClick={() => setStage(stage + 1)}
+              >
                 +
               </button>
             </div>
@@ -253,9 +314,13 @@ function DamageSection() {
                 9 + ({alive} − 5) + {stage}
               </span>
             )}
-            <strong>= −{lost} máu</strong>
+            <strong>{text(`= −${lost} máu`, `= −${lost} HP`)}</strong>
           </div>
-          <div className="ov-health" role="img" aria-label={`Còn ${left} trên ${START_HEALTH} máu`}>
+          <div
+            className="ov-health"
+            role="img"
+            aria-label={text(`Còn ${left} trên ${START_HEALTH} máu`, `${left} of ${START_HEALTH} HP left`)}
+          >
             <i style={{ width: `${left}%` }} />
             <i className="ov-health-lost" style={{ left: `${left}%`, width: `${Math.min(lost, START_HEALTH)}%` }} />
             <span>
@@ -264,9 +329,24 @@ function DamageSection() {
           </div>
         </div>
         <ul className="ov-notes">
-          <li>Dưới 5 quân: số quân còn sống × 2 + sát thương người chơi.</li>
-          <li>Từ 5 quân: 9 + (số quân − 5) + sát thương người chơi.</li>
-          <li>Thua bản sao (ghép trận khi số người lẻ) thì không chịu sát thương người chơi.</li>
+          <li>
+            {text(
+              "Dưới 5 quân: số quân còn sống × 2 + sát thương người chơi.",
+              "Fewer than 5 units: surviving units × 2 + player damage.",
+            )}
+          </li>
+          <li>
+            {text(
+              "Từ 5 quân: 9 + (số quân − 5) + sát thương người chơi.",
+              "5 units or more: 9 + (units − 5) + player damage.",
+            )}
+          </li>
+          <li>
+            {text(
+              "Thua bản sao (ghép trận khi số người lẻ) thì không chịu sát thương người chơi.",
+              "Losing to a copy (the pairing used when the number of players is odd) takes no player damage.",
+            )}
+          </li>
         </ul>
       </div>
     </section>

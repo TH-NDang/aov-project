@@ -8,9 +8,11 @@ import {
 import owlMark from "../assets/stream-owl.svg"
 import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
 import { useIsMobile } from "@aov/ui/hooks/use-mobile"
+import { useStreamLocale } from "./stream-locale"
 import "./stream-app-switcher.css"
 
 export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
+  const { text } = useStreamLocale()
   const mobile = useIsMobile()
   const wikiLogoUrl = new URL("images/mole-logo-v4.png", `${wikiUrl.replace(/\/$/, "")}/`).href
 
@@ -26,7 +28,7 @@ export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
       <DropdownMenuTrigger
         className="public-app-theme public-app-trigger"
         data-product="stream"
-        aria-label="Chọn ứng dụng — AOV Stream"
+        aria-label={text("Chọn ứng dụng — AOV Stream", "Choose application — AOV Stream")}
       >
         <PublicAppWordmark product="Stream" />
         <span className="public-app-chevron">
@@ -46,12 +48,16 @@ export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
         alignOffset={-40}
         sideOffset={10}
         className="public-app-theme public-app-menu"
-        drawerTitle="Chọn ứng dụng"
+        drawerTitle={text("Chọn ứng dụng", "Choose application")}
       >
-        <div className="public-app-menu-title">Chọn ứng dụng</div>
+        <div className="public-app-menu-title">{text("Chọn ứng dụng", "Choose application")}</div>
         <DropdownMenuItem asChild className="public-app-option" data-product="wiki">
           <a href={wikiUrl}>
-            <PublicAppOptionBody product="Wiki" image={wikiLogoUrl} description="Tra cứu tướng, trang bị, phù hiệu" />
+            <PublicAppOptionBody
+              product="Wiki"
+              image={wikiLogoUrl}
+              description={text("Tra cứu tướng, trang bị, phù hiệu", "Look up heroes, equipment and enchantments")}
+            />
           </a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="public-app-option" data-product="stream" data-current="true">
@@ -59,8 +65,12 @@ export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
             <PublicAppOptionBody
               product="Stream"
               image={owlMark}
-              description="Khám phá giải đấu, ván đấu và cộng đồng"
+              description={text(
+                "Khám phá giải đấu, ván đấu và cộng đồng",
+                "Explore tournaments, games and the community",
+              )}
               current
+              currentLabel={text("Đang xem", "Current")}
             />
           </Link>
         </DropdownMenuItem>

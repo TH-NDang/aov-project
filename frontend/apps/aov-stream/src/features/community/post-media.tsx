@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { videoEmbed, videoPoster } from "./post-media-model"
 
 /**
@@ -8,6 +9,7 @@ import { videoEmbed, videoPoster } from "./post-media-model"
  * a new tab. `title` names the video for assistive technology; the post shows it as its heading.
  */
 export function PostVideo({ url, title }: { url: string; title: string }) {
+  const { text } = useStreamLocale()
   const [playing, setPlaying] = useState(false)
   const frame = useRef<HTMLIFrameElement>(null)
   // The pressed poster gives way to the player; keyboard focus moves into it.
@@ -52,7 +54,7 @@ export function PostVideo({ url, title }: { url: string; title: string }) {
         <StreamIcon name="play" size={20} />
       </span>
       <span>
-        <strong>Xem video trên {embed.platform}</strong>
+        <strong>{text(`Xem video trên ${embed.platform}`, `Watch the video on ${embed.platform}`)}</strong>
         <small>{embed.href}</small>
       </span>
       <StreamIcon name="external" size={14} />
@@ -62,12 +64,13 @@ export function PostVideo({ url, title }: { url: string; title: string }) {
 
 /** Up to four images in a grid that adapts to how many there are. */
 export function PostImages({ urls, alt }: { urls: string[]; alt: string }) {
+  const { text } = useStreamLocale()
   if (!urls.length) return null
   return (
     <div className="cp-post-images" data-count={Math.min(urls.length, 4)}>
       {urls.slice(0, 4).map((url, index) => (
         <a key={`${url}-${index}`} href={url} target="_blank" rel="noreferrer">
-          <img src={url} alt={`${alt} · ảnh ${index + 1}`} loading="lazy" />
+          <img src={url} alt={text(`${alt} · ảnh ${index + 1}`, `${alt} · image ${index + 1}`)} loading="lazy" />
         </a>
       ))}
     </div>

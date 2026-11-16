@@ -20,7 +20,7 @@ const FIELDS: Record<string, [string, string]> = {
   physicalDamage: ["Sát thương vật lý", "Physical damage"],
   trueDamage: ["Sát thương chuẩn", "True damage"],
   cooldownSeconds: ["Hồi chiêu (giây)", "Cooldown (seconds)"],
-  attackSpeedPercent: ["Tốc đánh (%)", "Attack speed (%)"],
+  attackSpeedPercent: ["Tốc đánh (%)", "Attack Speed (%)"],
   empoweredPhysicalDamage: ["Sát thương vật lý cường hóa", "Empowered physical damage"],
   baseMagicDamage: ["Sát thương phép cơ bản", "Base magic damage"],
   hitMagicDamage: ["Sát thương phép khi trúng", "Magic damage on hit"],
@@ -28,19 +28,19 @@ const FIELDS: Record<string, [string, string]> = {
   triangleMagicDamage: ["Sát thương phép vùng tam giác", "Magic damage in the triangle"],
   initialMagicDamage: ["Sát thương phép ban đầu", "Initial magic damage"],
   periodicMagicDamage: ["Sát thương phép theo thời gian", "Periodic magic damage"],
-  magicDefenseReduction: ["Giảm giáp phép", "Magic defense reduction"],
+  magicDefenseReduction: ["Giảm giáp phép", "Magic Defense reduction"],
   empoweredAttackDash: ["Lướt khi đánh cường hóa", "Empowered attack dash"],
-  energyCost: ["Năng lượng tiêu hao", "Energy cost"],
+  energyCost: ["Năng lượng tiêu hao", "Mana cost"],
   stackDecay: ["Mất tầng cộng dồn", "Stack decay"],
   cannonSeparation: ["Tách pháo thành chiêu riêng", "Separate cannon ability"],
   doliaRefreshImmortality: ["Miễn tử sau khi làm mới chiêu", "Immortality after a refresh"],
 }
 
 const STATS: Record<string, [string, string]> = {
-  physicalAttack: ["Công vật lý", "physical attack"],
-  bonusPhysicalAttack: ["Công vật lý cộng thêm", "bonus physical attack"],
-  magicAttack: ["Công phép", "magic attack"],
-  maxHealth: ["Máu tối đa", "max health"],
+  physicalAttack: ["Công vật lý", "Attack Damage"],
+  bonusPhysicalAttack: ["Công vật lý cộng thêm", "bonus Attack Damage"],
+  magicAttack: ["Công phép", "Ability Power"],
+  maxHealth: ["Máu tối đa", "Max HP"],
 }
 
 export function changeFieldLabel(key: string | null | undefined, locale: string) {
@@ -59,7 +59,7 @@ export function changeSkillLabel(key: string | null | undefined, locale: string)
   if (key === "passive" || key === "capture-passive") return text(locale, "Nội tại", "Passive")
   const slot = /^(?:capture-)?skill-(\d+)/.exec(key ?? "")?.[1]
   if (slot === undefined) return null
-  return slot === "0" ? text(locale, "Nội tại", "Passive") : `${text(locale, "Chiêu", "Skill")} ${slot}`
+  return slot === "0" ? text(locale, "Nội tại", "Passive") : `${text(locale, "Chiêu", "Ability")} ${slot}`
 }
 
 /** Reads rank and ratio terms as words: "21*(rank-1)" becomes 21 per rank, "0.2*physicalAttack" becomes 20% of the stat. */
@@ -69,7 +69,7 @@ export function formatChangeValue(value: string | null | undefined, locale: stri
   const terms = parts.map((part, index) => {
     if (index % 2) return part === "-" ? "−" : "+"
     const perRank = /^([\d.]+)\*\(rank-1\)$/.exec(part)
-    if (perRank) return `${perRank[1]} ${text(locale, "mỗi cấp", "per rank")}`
+    if (perRank) return `${perRank[1]} ${text(locale, "mỗi cấp", "per level")}`
     const ratio = /^([\d.]+)\*([a-zA-Z]+)$/.exec(part)
     const stat = ratio && STATS[ratio[2]]
     if (ratio && stat) return `${Number((Number(ratio[1]) * 100).toFixed(2))}% ${text(locale, ...stat)}`

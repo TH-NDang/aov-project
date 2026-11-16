@@ -3,7 +3,8 @@ import { Link } from "react-router"
 import type { CompetitionView, Lane, ProfileAchievement, ProfileHistory, ProfileMember } from "@aov/community-contracts"
 import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
 import { StreamIcon } from "../../components/stream-icon"
-import { LANES } from "../tournaments/tournament-model"
+import { useStreamLocale } from "../../components/stream-locale"
+import { LANE_NAMES } from "../tournaments/tournament-model"
 import { dayRange, formatDay } from "./community-ui"
 
 const fold = (value: string) => value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").trim()
@@ -35,14 +36,15 @@ export function competitionLinks(views: CompetitionView[]) {
 export type CompetitionLinks = ReturnType<typeof competitionLinks>
 
 function SourceLink({ url }: { url: string }) {
+  const { text } = useStreamLocale()
   return (
     <a
       className="pf-row-source"
       href={url}
       target="_blank"
       rel="noreferrer"
-      aria-label="Nguồn đối chiếu"
-      title="Nguồn đối chiếu"
+      aria-label={text("Nguồn đối chiếu", "Reference source")}
+      title={text("Nguồn đối chiếu", "Reference source")}
     >
       <StreamIcon name="external" size={14} />
     </a>
@@ -222,15 +224,16 @@ const laneOfRole = (role: string) => laneWords.find(([, words]) => words.test(ro
 
 /**
  * A team's members grouped by their standing in the squad. A status reads "standing · note · season"; when every
- * member carries the same season it is returned once instead of on each row.
+ * member carries the same season it is returned once instead of on each row. Members without a standing go under
+ * `unnamed`.
  */
-function rosterGroups(roster: ProfileMember[]) {
+function rosterGroups(roster: ProfileMember[], unnamed: string) {
   const parts = roster.map((member) => (member.status || "").split(" · ").filter(Boolean))
   const last = parts[0]?.at(-1)
   const season = last && parts.every((entry) => entry.length > 1 && entry.at(-1) === last) ? last : null
   const groups = new Map<string, { member: ProfileMember; note: string }[]>()
   roster.forEach((member, index) => {
-    const [standing = "Thành viên", ...rest] = parts[index]!
+    const [standing = unnamed, ...rest] = parts[index]!
     const note = (season ? rest.slice(0, -1) : rest).join(" · ")
     groups.set(standing, [...(groups.get(standing) || []), { member, note }])
   })
@@ -239,12 +242,15 @@ function rosterGroups(roster: ProfileMember[]) {
 
 /** The squad in the cards of a competition's team list: lane icon, member, role. */
 export function TeamRoster({ roster }: { roster: ProfileMember[] }) {
-  const { season, groups } = rosterGroups(roster)
+  const { text } = useStreamLocale()
+  const { season, groups } = rosterGroups(roster, text("Thành viên", "Members"))
   const sources = [...new Set(roster.map((member) => member.sourceUrl).filter(Boolean))] as string[]
   return (
     <section className="pf-roster" aria-labelledby="profile-roster">
       <div className="tn-heading">
-        <h2 id="profile-roster">Đội hình {season && <small>{season}</small>}</h2>
+        <h2 id="profile-roster">
+          {text("Đội hình", "Roster")} {season && <small>{season}</small>}
+        </h2>
       </div>
       <div className="tn-team-grid">
         {groups.map(([standing, members]) => (
@@ -261,7 +267,7 @@ export function TeamRoster({ roster }: { roster: ProfileMember[] }) {
                   <li key={index} data-bench={/dự bị|rời/i.test(standing) || undefined}>
                     <span className="tn-lane">
                       {lane ? (
-                        <HeroLaneIcon lane={lane} size={18} label={LANES[lane]} />
+                        <HeroLaneIcon lane={lane} size={18} label={text(LANE_NAMES[lane][0], LANE_NAMES[lane][1])} />
                       ) : (
                         <StreamIcon name="user" size={16} />
                       )}
@@ -280,7 +286,8 @@ export function TeamRoster({ roster }: { roster: ProfileMember[] }) {
       </div>
       {sources.map((url, index) => (
         <a key={url} className="pf-source" href={url} target="_blank" rel="noreferrer">
-          Nguồn đối chiếu{sources.length > 1 && ` ${index + 1}`}
+          {text("Nguồn đối chiếu", "Reference source")}
+          {sources.length > 1 && ` ${index + 1}`}
           <StreamIcon name="external" size={13} />
         </a>
       ))}

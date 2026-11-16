@@ -1,9 +1,10 @@
 import { useState, type DragEvent, type ReactNode } from "react"
 import { WikiIcon } from "../../components/wiki-icon"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import {
   BOARD_COLUMNS,
   BOARD_ROWS,
-  ROW_LABEL,
+  ROW_NAMES,
   cellOf,
   traitCounts,
   type BoardRow,
@@ -52,15 +53,17 @@ export function LineupViewSwitch({
   onChange: (view: LineupView) => void
   labels?: boolean
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   return (
     <ChoiceSwitch
-      label="Cách xem đội hình"
+      label={text("Cách xem đội hình", "Lineup view")}
       value={view}
       onChange={onChange}
       labels={labels}
       options={[
-        { value: "board", label: "Bàn cờ", icon: <WikiIcon name="chessboard" size={16} /> },
-        { value: "list", label: "Danh sách", icon: <WikiIcon name="all" size={16} /> },
+        { value: "board", label: text("Bàn cờ", "Board"), icon: <WikiIcon name="chessboard" size={16} /> },
+        { value: "list", label: text("Danh sách", "List"), icon: <WikiIcon name="all" size={16} /> },
       ]}
     />
   )
@@ -75,18 +78,26 @@ export const dragUnit = (code: string) => (event: DragEvent) => {
   event.dataTransfer.effectAllowed = "move"
 }
 
-/** The grid itself; `cell` draws what stands on each cell, `onDropUnit` lets units be dragged onto cells. */
+/**
+ * The grid itself; `cell` draws what stands on each cell, `onDropUnit` lets units be dragged onto cells. The labels
+ * follow the reader's language, so code that looks for a cell reads `data-cell` (`FRONT-3`) inside the board that
+ * `slot` names.
+ */
 export function BoardGrid({
   label,
+  slot,
   cell,
   footer,
   onDropUnit,
 }: {
   label: string
+  slot?: string
   cell: (row: BoardRow, column: number) => ReactNode
   footer?: ReactNode
   onDropUnit?: (code: string, row: BoardRow, column: number) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [over, setOver] = useState<string | null>(null)
   const drop = (row: BoardRow, column: number) =>
     onDropUnit && {
@@ -108,17 +119,18 @@ export function BoardGrid({
   return (
     <div className="board-wrap">
       <span className="board-enemy" aria-hidden="true">
-        ↑ Phía đối thủ
+        {text("↑ Phía đối thủ", "↑ Opponent's side")}
       </span>
-      <div className="board" role="grid" aria-label={label}>
+      <div className="board" role="grid" aria-label={label} data-slot={slot}>
         {BOARD_ROWS.map((row) => (
-          <div key={row} className="board-row" role="row" aria-label={ROW_LABEL[row]}>
+          <div key={row} className="board-row" role="row" aria-label={text(...ROW_NAMES[row])}>
             {COLUMNS.map((column) => (
               <div
                 key={column}
                 className="board-cell"
                 role="gridcell"
-                aria-label={`${ROW_LABEL[row]}, ô ${column}`}
+                aria-label={text(`${ROW_NAMES[row][0]}, ô ${column}`, `${ROW_NAMES[row][1]}, cell ${column}`)}
+                data-cell={`${row}-${column}`}
                 data-over={over === `${row}-${column}` || undefined}
                 {...drop(row, column)}
               >
@@ -149,6 +161,8 @@ export function BoardPiece({
   title?: string
   draggable?: boolean
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const unit = index.units.get(item.unitCode)
   if (!unit) return null
   return (
@@ -156,14 +170,14 @@ export function BoardPiece({
       type="button"
       className="board-piece"
       aria-pressed={selected}
-      title={title ?? `${unit.name}${item.carry ? " · chủ lực" : ""}`}
+      title={title ?? `${unit.name}${item.carry ? text(" · chủ lực", " · carry") : ""}`}
       draggable={draggable || undefined}
       onDragStart={draggable ? dragUnit(unit.code) : undefined}
       onClick={onClick}
     >
       <UnitPortrait unit={unit} index={index} />
       {item.carry && (
-        <em className="carry-mark" aria-label="Chủ lực">
+        <em className="carry-mark" aria-label={text("Chủ lực", "Carry")}>
           M
         </em>
       )}
@@ -196,18 +210,20 @@ export function LineupBoard({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const { placed, bench } = placeUnits(units.filter((item) => index.units.has(item.unitCode)))
   return (
     <BoardGrid
-      label="Bàn cờ của đội hình"
+      label={text("Bàn cờ của đội hình", "Lineup board")}
       cell={(row, column) => {
         const item = placed.get(`${row}-${column}`)
         return item ? <BoardPiece item={item} index={index} onClick={() => onOpen(item.unitCode)} /> : null
       }}
       footer={
         bench.length > 0 && (
-          <div className="board-bench" aria-label="Chưa xếp chỗ">
-            <span className="mode-meta">Chưa xếp chỗ</span>
+          <div className="board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
+            <span className="mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
             {bench.map((item) => (
               <BoardPiece key={item.unitCode} item={item} index={index} onClick={() => onOpen(item.unitCode)} />
             ))}
@@ -220,6 +236,7 @@ export function LineupBoard({
 
 /** The factions and classes a lineup turns on, each with how many of its units count toward it. */
 export function ActiveTraits({ units, emblems, index }: { units: LineupUnit[]; emblems: string[]; index: GuideIndex }) {
+  const { locale } = useWikiContext()
   const counts = traitCounts(
     index.content,
     units.map((unit) => unit.unitCode),
@@ -227,7 +244,10 @@ export function ActiveTraits({ units, emblems, index }: { units: LineupUnit[]; e
   ).filter((count) => count.reachedTier >= 0)
   if (!counts.length) return null
   return (
-    <div className="guide-trait-tags" aria-label="Phe và Nghề kích hoạt">
+    <div
+      className="guide-trait-tags"
+      aria-label={wikiText(locale, "Phe và Nghề kích hoạt", "Active Factions and Classes")}
+    >
       {counts.map((count) => (
         <span
           key={count.trait.code}

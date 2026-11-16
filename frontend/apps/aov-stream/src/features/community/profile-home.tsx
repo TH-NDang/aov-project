@@ -5,6 +5,7 @@ import { LocalTime } from "@aov/ui/components/local-time"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { matchStrip } from "../tournaments/competition-model"
 import { MatchCard } from "../tournaments/match-card"
 import { communityApi } from "./community-api"
@@ -14,13 +15,18 @@ import { profileMatches } from "./public-competitions"
 
 /** The broadcast at the top of a page while it is live. The page head carries the live mark. */
 export function LiveBlock({ live, name }: { live: PageLive; name: string }) {
+  const { text, languageTag } = useStreamLocale()
   return (
     <section className="pf-live" aria-labelledby="page-live">
       <h2 id="page-live">{live.title}</h2>
       <p>
         <span>
-          Bắt đầu{" "}
-          <LocalTime value={live.startedAt} label={(zone) => timeAgo(live.startedAt, Date.now(), zone).toLowerCase()} />
+          {text("Bắt đầu", "Started")}{" "}
+          <LocalTime
+            value={live.startedAt}
+            locale={languageTag}
+            label={(zone) => timeAgo(live.startedAt, Date.now(), zone, languageTag).toLowerCase()}
+          />
         </span>
       </p>
       <PostVideo url={live.url} title={`${name} · ${live.title}`} />
@@ -44,6 +50,7 @@ export function ProfileMatches({
   pending: boolean
   more: () => void
 }) {
+  const { text } = useStreamLocale()
   // A row of four on a wide layout; two on a compact one, where each match takes a row of its own.
   const compact = usePageLayout() === "compact"
   const count = compact ? 2 : 4
@@ -62,9 +69,13 @@ export function ProfileMatches({
   return (
     <section aria-labelledby="profile-matches">
       <div className="tn-heading">
-        <h2 id="profile-matches">Trận đấu {competition && !compact && <small>{competition}</small>}</h2>
+        <h2 id="profile-matches">
+          {text("Trận đấu", "Matches")} {competition && !compact && <small>{competition}</small>}
+        </h2>
         <button type="button" onClick={more}>
-          {profile.kind === "ORGANIZATION" ? "Giải đấu" : "Lịch & kết quả"}
+          {profile.kind === "ORGANIZATION"
+            ? text("Giải đấu", "Tournaments")
+            : text("Lịch & kết quả", "Schedule & results")}
           <StreamIcon name="arrow" size={15} />
         </button>
       </div>
@@ -81,6 +92,7 @@ export function ProfileMatches({
 
 /** Lets a page's owner or editor announce, change or end a live broadcast. */
 export function LiveControl({ profile }: { profile: CommunityProfile }) {
+  const { text } = useStreamLocale()
   const client = useQueryClient()
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState("")
@@ -116,16 +128,18 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
         }}
       >
         <StreamIcon name="play" size={16} />
-        {profile.live ? "Đang phát" : "Phát trực tiếp"}
+        {profile.live ? text("Đang phát", "Broadcasting") : text("Phát trực tiếp", "Go live")}
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="pf-live-dialog">
           <DialogTitle className="cp-dialog-title">
-            {profile.live ? "Đang phát trực tiếp" : "Phát trực tiếp"}
+            {profile.live ? text("Đang phát trực tiếp", "Broadcasting live") : text("Phát trực tiếp", "Go live")}
           </DialogTitle>
           <DialogDescription className="cp-dialog-text">
-            Dán link buổi phát trên YouTube, Facebook hoặc TikTok. Người theo dõi nhận thông báo khi bạn bật; trạng thái
-            tự tắt sau 12 giờ.
+            {text(
+              "Dán link buổi phát trên YouTube, Facebook hoặc TikTok. Người theo dõi nhận thông báo khi bạn bật; trạng thái tự tắt sau 12 giờ.",
+              "Paste the link to the broadcast on YouTube, Facebook or TikTok. Followers are notified when you turn it on; the status turns itself off after 12 hours.",
+            )}
           </DialogDescription>
           <form
             className="pf-live-form"
@@ -135,7 +149,7 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
             }}
           >
             <label>
-              Link buổi phát
+              {text("Link buổi phát", "Broadcast link")}
               <input
                 required
                 type="url"
@@ -146,22 +160,22 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
               />
             </label>
             <label>
-              Tiêu đề
+              {text("Tiêu đề", "Title")}
               <input
                 required
                 maxLength={200}
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="ĐTDV mùa Đông · Tuần 3"
+                placeholder={text("ĐTDV mùa Đông · Tuần 3", "AOG Winter · Week 3")}
               />
             </label>
             <div className="cp-dialog-actions">
               <button className="cp-button cp-primary" disabled={start.isPending}>
-                {profile.live ? "Cập nhật" : "Bật trực tiếp"}
+                {profile.live ? text("Cập nhật", "Update") : text("Bật trực tiếp", "Turn live on")}
               </button>
               {profile.live && (
                 <button type="button" className="cp-button" disabled={end.isPending} onClick={() => end.mutate()}>
-                  Tắt trực tiếp
+                  {text("Tắt trực tiếp", "Turn live off")}
                 </button>
               )}
             </div>

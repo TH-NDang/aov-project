@@ -3,19 +3,27 @@ import { PopoverPortalContainer } from "@aov/ui/components/popover"
 import { Link } from "react-router"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImageCredit } from "../../components/wiki-image-credit"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { ruleBlocks, type ModeImage, type RuleSection } from "./auto-chess-model"
 import type { ModeAvailability, ModeDuration } from "./mode-api"
 
-export const GROUP_LABEL = { PVP: "PVP", ENTERTAINMENT: "Chế độ giải trí" } as const
+/** The game's two groups of modes, in Vietnamese and in English. */
+export const GROUP_NAMES = {
+  PVP: ["PVP", "PVP"],
+  ENTERTAINMENT: ["Chế độ giải trí", "Casual modes"],
+} as const
 
 /** A mode that can be played now reads green; one that cannot, or whose schedule is not recorded, stays muted. */
-const AVAILABILITY: Record<ModeAvailability["status"], { label: string; tone: "open" | "closed" | "unknown" }> = {
-  ALWAYS_OPEN: { label: "Đang mở", tone: "open" },
-  LIMITED: { label: "Mở có thời hạn", tone: "open" },
-  SPECIAL: { label: "Mở đặc biệt", tone: "open" },
-  CLOSED: { label: "Tạm đóng", tone: "closed" },
-  LOCKED: { label: "Chưa mở khóa", tone: "closed" },
-  UNKNOWN: { label: "Chưa rõ lịch mở", tone: "unknown" },
+const AVAILABILITY: Record<
+  ModeAvailability["status"],
+  { label: string; english: string; tone: "open" | "closed" | "unknown" }
+> = {
+  ALWAYS_OPEN: { label: "Đang mở", english: "Open", tone: "open" },
+  LIMITED: { label: "Mở có thời hạn", english: "Limited-time", tone: "open" },
+  SPECIAL: { label: "Mở đặc biệt", english: "Special opening", tone: "open" },
+  CLOSED: { label: "Tạm đóng", english: "Temporarily closed", tone: "closed" },
+  LOCKED: { label: "Chưa mở khóa", english: "Locked", tone: "closed" },
+  UNKNOWN: { label: "Chưa rõ lịch mở", english: "Schedule unknown", tone: "unknown" },
 }
 
 const toneOf = (availability: ModeAvailability) => (AVAILABILITY[availability.status] ?? AVAILABILITY.UNKNOWN).tone
@@ -45,21 +53,25 @@ export function AvailabilityState({
   availability?: ModeAvailability | null
   quiet?: boolean
 }) {
+  const { locale } = useWikiContext()
   if (!availability) return null
   const known = AVAILABILITY[availability.status] ?? AVAILABILITY.UNKNOWN
   if (quiet && known.tone === "unknown") return null
+  const label = wikiText(locale, known.label, known.english)
   return (
-    <span className="mode-state" data-tone={known.tone} title={availability.gameLabel ? known.label : undefined}>
-      {availability.gameLabel || known.label}
+    <span className="mode-state" data-tone={known.tone} title={availability.gameLabel ? label : undefined}>
+      {availability.gameLabel || label}
     </span>
   )
 }
 
-export function durationText(duration?: ModeDuration | null) {
+export function durationText(duration?: ModeDuration | null, locale = "vi-VN") {
   if (!duration?.minMinutes && !duration?.maxMinutes) return null
-  if (duration.minMinutes && duration.maxMinutes && duration.minMinutes !== duration.maxMinutes)
-    return `${duration.minMinutes}–${duration.maxMinutes} phút`
-  return `${duration.minMinutes ?? duration.maxMinutes} phút`
+  const minutes =
+    duration.minMinutes && duration.maxMinutes && duration.minMinutes !== duration.maxMinutes
+      ? `${duration.minMinutes}–${duration.maxMinutes}`
+      : `${duration.minMinutes ?? duration.maxMinutes}`
+  return wikiText(locale, `${minutes} phút`, `${minutes} min`)
 }
 
 /**
@@ -82,12 +94,13 @@ export function ModeArt({
   children?: ReactNode
   className: string
 }) {
+  const { locale } = useWikiContext()
   return (
     <span className={`mode-art ${className}`} data-empty={!image || undefined}>
       {image ? (
         <img
           src={image.url}
-          alt={inCard ? "" : `Ảnh chế độ ${name}`}
+          alt={inCard ? "" : wikiText(locale, `Ảnh chế độ ${name}`, `${name} mode artwork`)}
           width={image.width}
           height={image.height}
           loading={eager ? "eager" : "lazy"}
@@ -217,6 +230,7 @@ export function ModeDialog({
   title?: string
   children: ReactNode
 }) {
+  const { t } = useWikiContext()
   const dialog = useRef<HTMLDialogElement>(null)
   // Term cards inside the drawer mount in it: the modal drawer is in the top layer and would cover them otherwise.
   const [host, setHost] = useState<HTMLDialogElement | null>(null)
@@ -273,7 +287,7 @@ export function ModeDialog({
       >
         <span className="mode-dialog-grip" aria-hidden="true" />
         <h2 className="mode-dialog-title">{title ?? label}</h2>
-        <button type="button" className="mode-dialog-close" aria-label="Đóng" onClick={onClose}>
+        <button type="button" className="mode-dialog-close" aria-label={t("close")} onClick={onClose}>
           <WikiIcon name="close" size={20} />
         </button>
       </header>

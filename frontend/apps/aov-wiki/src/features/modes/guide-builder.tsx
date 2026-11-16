@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext } from "../../context/wiki-context"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { signIn, useWikiSession } from "../auth/wiki-auth"
 import {
   BOARD_SLOTS,
@@ -12,7 +12,7 @@ import {
   encodeLineup,
   MAX_EMBLEMS,
   MAX_LINEUP_UNITS,
-  ROW_LABEL,
+  ROW_NAMES,
   suggestUnits,
   traitCounts,
   type BoardRow,
@@ -26,8 +26,8 @@ import { deleteLineup, lineupErrorMessage, myStateQuery, saveLineup } from "./mo
 
 type Cell = { row: BoardRow; column: number }
 
-/** The name of the board being built, which also finds its cells. */
-const BOARD_LABEL = "Bàn cờ đang xếp"
+/** Marks the board being built, so its cells are found by their place and not by labels in the reader's language. */
+const BOARD_SLOT = "builder-board"
 
 /**
  * The lineup builder: the board is the screen's main thing, with what the lineup turns on beside it. On wide screens
@@ -44,6 +44,8 @@ export function BuilderTab({
   onOpen: (code: string) => void
 }) {
   const compact = usePageLayout() === "compact"
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [params, setParams] = useSearchParams()
   const { units, emblems } = useMemo(() => decodeLineup(params.toString(), index.content), [params, index])
   const filter = useUnitFilter(index)
@@ -69,11 +71,28 @@ export function BuilderTab({
     }
     const next = decodeLineup(query, index.content)
     if (!next.units.length) {
-      setPasting({ open: true, text: trimmed, message: "Không đọc được đội hình từ nội dung này." })
+      setPasting({
+        open: true,
+        text: trimmed,
+        // `text` here is the pasted text, so the label helper is called by its full name.
+        message: wikiText(
+          locale,
+          "Không đọc được đội hình từ nội dung này.",
+          "No lineup could be read from this text.",
+        ),
+      })
       return
     }
     write(next.units, next.emblems)
-    setPasting({ open: false, text: "", message: `Đã dán ${next.units.length} quân.` })
+    setPasting({
+      open: false,
+      text: "",
+      message: wikiText(
+        locale,
+        `Đã dán ${next.units.length} quân.`,
+        `Pasted ${next.units.length} ${next.units.length === 1 ? "unit" : "units"}.`,
+      ),
+    })
   }
   async function paste() {
     try {
@@ -114,7 +133,7 @@ export function BuilderTab({
     pieceToFocus.current = null
     document
       .querySelector<HTMLElement>(
-        `[aria-label="${BOARD_LABEL}"] .board-cell[aria-label="${ROW_LABEL[cell.row]}, ô ${cell.column}"] .board-piece`,
+        `[data-slot="${BOARD_SLOT}"] .board-cell[data-cell="${cell.row}-${cell.column}"] .board-piece`,
       )
       ?.focus()
   })
@@ -220,13 +239,17 @@ export function BuilderTab({
           type="button"
           className="builder-slot builder-slot-empty"
           data-extra={slot >= BOARD_SLOTS || undefined}
-          aria-label={slot >= BOARD_SLOTS ? "Thêm quân vào ô thêm" : "Thêm quân cờ"}
+          aria-label={
+            slot >= BOARD_SLOTS
+              ? text("Thêm quân vào ô thêm", "Add a unit to the extra slot")
+              : text("Thêm quân cờ", "Add a unit")
+          }
           onClick={() => (compact ? setPicking(true) : focusPool())}
         >
           <span className="builder-slot-plus" aria-hidden="true">
             +
           </span>
-          <span>{slot >= BOARD_SLOTS ? "Ô thêm" : "Thêm quân"}</span>
+          <span>{slot >= BOARD_SLOTS ? text("Ô thêm", "Extra slot") : text("Thêm quân", "Add unit")}</span>
         </button>
       )
     return (
@@ -239,7 +262,7 @@ export function BuilderTab({
         <button
           type="button"
           className="builder-slot-portrait"
-          title={`Xem ${unit.name}`}
+          title={text(`Xem ${unit.name}`, `View ${unit.name}`)}
           onClick={() => onOpen(unit.code)}
         >
           <UnitPortrait unit={unit} index={index} size="sm" />
@@ -249,8 +272,8 @@ export function BuilderTab({
           <button
             type="button"
             aria-pressed={item.carry}
-            aria-label={`${unit.name} là chủ lực`}
-            title="Chủ lực (M)"
+            aria-label={text(`${unit.name} là chủ lực`, `${unit.name} is a carry`)}
+            title={text("Chủ lực (M)", "Carry (M)")}
             className="carry-toggle"
             onClick={() => toggleCarry(item)}
           >
@@ -259,8 +282,8 @@ export function BuilderTab({
           <button
             type="button"
             onClick={() => toggleUnit(unit.code)}
-            aria-label={`Bỏ ${unit.name}`}
-            title="Bỏ khỏi đội hình"
+            aria-label={text(`Bỏ ${unit.name}`, `Remove ${unit.name}`)}
+            title={text("Bỏ khỏi đội hình", "Remove from the lineup")}
           >
             <WikiIcon name="close" size={14} />
           </button>
@@ -273,14 +296,14 @@ export function BuilderTab({
     <div className="guide-tab-body">
       <div className="builder">
         <div className="builder-main">
-          <section className="builder-card" aria-label="Đội hình đang xếp">
+          <section className="builder-card" aria-label={text("Đội hình đang xếp", "Lineup being built")}>
             <header className="builder-card-head">
               <span className="builder-count">
-                Đội hình{" "}
+                {text("Đội hình", "Lineup")}{" "}
                 <b>
                   {Math.min(units.length, BOARD_SLOTS)}/{BOARD_SLOTS}
                 </b>
-                {units.length > BOARD_SLOTS ? " + ô thêm" : ""}
+                {units.length > BOARD_SLOTS ? text(" + ô thêm", " + extra slot") : ""}
               </span>
               <span className="builder-tools">
                 <LineupViewSwitch view={view} onChange={setView} />
@@ -288,8 +311,8 @@ export function BuilderTab({
                   <button
                     type="button"
                     className="lineup-icon-button"
-                    aria-label="Thêm quân cờ"
-                    title="Thêm quân cờ"
+                    aria-label={text("Thêm quân cờ", "Add a unit")}
+                    title={text("Thêm quân cờ", "Add a unit")}
                     disabled={full}
                     onClick={() => setPicking(true)}
                   >
@@ -299,8 +322,16 @@ export function BuilderTab({
                 <button
                   type="button"
                   className="lineup-icon-button"
-                  aria-label={copied ? "Đã chép đường dẫn" : "Chép đường dẫn chia sẻ"}
-                  title={copied ? "Đã chép đường dẫn" : "Chép đường dẫn chia sẻ"}
+                  aria-label={
+                    copied
+                      ? text("Đã chép đường dẫn", "Link copied")
+                      : text("Chép đường dẫn chia sẻ", "Copy share link")
+                  }
+                  title={
+                    copied
+                      ? text("Đã chép đường dẫn", "Link copied")
+                      : text("Chép đường dẫn chia sẻ", "Copy share link")
+                  }
                   data-done={copied || undefined}
                   disabled={!units.length}
                   onClick={() => void copyLink()}
@@ -310,8 +341,8 @@ export function BuilderTab({
                 <button
                   type="button"
                   className="lineup-icon-button"
-                  aria-label="Dán đội hình đã sao chép"
-                  title="Dán đội hình đã sao chép"
+                  aria-label={text("Dán đội hình đã sao chép", "Paste a copied lineup")}
+                  title={text("Dán đội hình đã sao chép", "Paste a copied lineup")}
                   onClick={() => void paste()}
                 >
                   <WikiIcon name="clipboard" size={18} />
@@ -320,8 +351,8 @@ export function BuilderTab({
                   type="button"
                   className="lineup-icon-button"
                   data-tone="danger"
-                  aria-label="Xóa hết"
-                  title="Xóa hết"
+                  aria-label={text("Xóa hết", "Clear all")}
+                  title={text("Xóa hết", "Clear all")}
                   disabled={!units.length}
                   onClick={() => {
                     setSelected(null)
@@ -332,14 +363,15 @@ export function BuilderTab({
                 </button>
                 {!compact && (
                   <button type="button" className="guide-primary" onClick={() => setPosting(true)}>
-                    Đăng đội hình
+                    {text("Đăng đội hình", "Post a lineup")}
                   </button>
                 )}
               </span>
             </header>
             {view === "board" ? (
               <BoardGrid
-                label={BOARD_LABEL}
+                label={text("Bàn cờ đang xếp", "Board being built")}
+                slot={BOARD_SLOT}
                 onDropUnit={compact ? undefined : placeAt}
                 cell={(row, column) => {
                   const item = placed.get(`${row}-${column}`)
@@ -366,8 +398,14 @@ export function BuilderTab({
                       aria-pressed={targeted || undefined}
                       aria-label={
                         selected
-                          ? `Đặt vào ${ROW_LABEL[row]}, ô ${column}`
-                          : `Thêm quân vào ${ROW_LABEL[row]}, ô ${column}`
+                          ? text(
+                              `Đặt vào ${ROW_NAMES[row][0]}, ô ${column}`,
+                              `Place in the ${ROW_NAMES[row][1].toLowerCase()}, cell ${column}`,
+                            )
+                          : text(
+                              `Thêm quân vào ${ROW_NAMES[row][0]}, ô ${column}`,
+                              `Add a unit to the ${ROW_NAMES[row][1].toLowerCase()}, cell ${column}`,
+                            )
                       }
                       disabled={!selected && full}
                       onClick={() => (selected ? moveTo(selected, { row, column }) : chooseCell({ row, column }))}
@@ -379,8 +417,8 @@ export function BuilderTab({
                 footer={
                   <>
                     {bench.length > 0 && (
-                      <div className="board-bench" aria-label="Chưa xếp chỗ">
-                        <span className="mode-meta">Chưa xếp chỗ</span>
+                      <div className="board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
+                        <span className="mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
                         {bench.map((item) => (
                           <BoardPiece
                             key={item.unitCode}
@@ -394,7 +432,10 @@ export function BuilderTab({
                       </div>
                     )}
                     {selectedUnit && selectedInfo && (
-                      <div className="board-selected" aria-label={`Đang chọn ${selectedInfo.name}`}>
+                      <div
+                        className="board-selected"
+                        aria-label={text(`Đang chọn ${selectedInfo.name}`, `${selectedInfo.name} selected`)}
+                      >
                         <span>
                           <strong>{selectedInfo.name}</strong>
                           <small>Bấm một ô để chuyển tới đó</small>
@@ -404,16 +445,16 @@ export function BuilderTab({
                             type="button"
                             aria-pressed={selectedUnit.carry}
                             className="carry-toggle"
-                            title="Chủ lực (M)"
-                            aria-label={`${selectedInfo.name} là chủ lực`}
+                            title={text("Chủ lực (M)", "Carry (M)")}
+                            aria-label={text(`${selectedInfo.name} là chủ lực`, `${selectedInfo.name} is a carry`)}
                             onClick={() => toggleCarry(selectedUnit)}
                           >
                             M
                           </button>
                           <button
                             type="button"
-                            title={`Xem ${selectedInfo.name}`}
-                            aria-label={`Xem ${selectedInfo.name}`}
+                            title={text(`Xem ${selectedInfo.name}`, `View ${selectedInfo.name}`)}
+                            aria-label={text(`Xem ${selectedInfo.name}`, `View ${selectedInfo.name}`)}
                             onClick={() => onOpen(selectedInfo.code)}
                           >
                             <WikiIcon name="info" size={16} />
@@ -421,8 +462,8 @@ export function BuilderTab({
                           {cellOf(selectedUnit) && (
                             <button
                               type="button"
-                              title="Đưa xuống hàng chờ"
-                              aria-label="Đưa xuống hàng chờ"
+                              title={text("Đưa xuống hàng chờ", "Move to the bench")}
+                              aria-label={text("Đưa xuống hàng chờ", "Move to the bench")}
                               onClick={() => moveTo(selectedUnit.unitCode, null)}
                             >
                               <WikiIcon name="chevron" size={16} />
@@ -430,8 +471,8 @@ export function BuilderTab({
                           )}
                           <button
                             type="button"
-                            title="Bỏ khỏi đội hình"
-                            aria-label={`Bỏ ${selectedInfo.name}`}
+                            title={text("Bỏ khỏi đội hình", "Remove from the lineup")}
+                            aria-label={text(`Bỏ ${selectedInfo.name}`, `Remove ${selectedInfo.name}`)}
                             onClick={() => toggleUnit(selectedUnit.unitCode)}
                           >
                             <WikiIcon name="close" size={16} />
@@ -449,7 +490,11 @@ export function BuilderTab({
                 <div className="builder-extra">
                   {slotAt(BOARD_SLOTS)}
                   <p className="mode-meta">
-                    <b>Ô thêm</b> · cho quân thứ {BOARD_SLOTS + 1} khi có trang bị mở thêm ô.
+                    <b>{text("Ô thêm", "Extra slot")}</b>
+                    {text(
+                      ` · cho quân thứ ${BOARD_SLOTS + 1} khi có trang bị mở thêm ô.`,
+                      ` · for unit number ${BOARD_SLOTS + 1}, when an item opens one more slot.`,
+                    )}
                   </p>
                 </div>
               </>
@@ -458,17 +503,22 @@ export function BuilderTab({
             <div className="builder-emblems">
               <div className="builder-emblems-head">
                 <span className="builder-count">
-                  Huy hiệu{" "}
+                  {text("Huy hiệu", "Emblems")}{" "}
                   <b>
                     {emblems.length}/{MAX_EMBLEMS}
                   </b>
                 </span>
-                <span className="mode-meta">+1 vào một Phe/Nghề, như khi có chúc phúc “Trái tim…”</span>
+                <span className="mode-meta">
+                  {text(
+                    "+1 vào một Phe/Nghề, như khi có chúc phúc “Trái tim…”",
+                    "+1 to a Faction/Class, as with a “Trái tim…” blessing",
+                  )}
+                </span>
                 <button
                   type="button"
                   className="lineup-icon-button"
-                  aria-label="Thêm huy hiệu"
-                  title="Thêm huy hiệu"
+                  aria-label={text("Thêm huy hiệu", "Add an emblem")}
+                  title={text("Thêm huy hiệu", "Add an emblem")}
                   disabled={emblems.length >= MAX_EMBLEMS}
                   onClick={() => setEmblemPicking(true)}
                 >
@@ -484,8 +534,11 @@ export function BuilderTab({
                         key={`${emblem}-${at}`}
                         type="button"
                         className="guide-trait-tag"
-                        aria-label={`Bỏ huy hiệu ${trait?.name ?? emblem}`}
-                        title="Bỏ huy hiệu"
+                        aria-label={text(
+                          `Bỏ huy hiệu ${trait?.name ?? emblem}`,
+                          `Remove emblem ${trait?.name ?? emblem}`,
+                        )}
+                        title={text("Bỏ huy hiệu", "Remove emblem")}
                         onClick={() =>
                           write(
                             units,
@@ -515,19 +568,19 @@ export function BuilderTab({
                   className="guide-field"
                   autoFocus
                   value={pasting.text}
-                  placeholder="Dán đường dẫn hoặc mã đội hình…"
-                  aria-label="Đội hình đã sao chép"
+                  placeholder={text("Dán đường dẫn hoặc mã đội hình…", "Paste a lineup link or code…")}
+                  aria-label={text("Đội hình đã sao chép", "Copied lineup")}
                   onChange={(event) => setPasting({ ...pasting, text: event.target.value })}
                 />
                 <button type="submit" className="guide-primary" disabled={!pasting.text.trim()}>
-                  Dùng
+                  {text("Dùng", "Use")}
                 </button>
                 <button
                   type="button"
                   className="mode-chip"
                   onClick={() => setPasting({ open: false, text: "", message: "" })}
                 >
-                  Hủy
+                  {text("Hủy", "Cancel")}
                 </button>
               </form>
             )}
@@ -539,7 +592,7 @@ export function BuilderTab({
           </section>
           {compact && (
             <button type="button" className="guide-primary builder-post" onClick={() => setPosting(true)}>
-              Đăng đội hình
+              {text("Đăng đội hình", "Post a lineup")}
             </button>
           )}
 
@@ -547,11 +600,14 @@ export function BuilderTab({
             <section className="mode-section" aria-labelledby="builder-pool-title">
               <ModeHeading
                 id="builder-pool-title"
-                title="Quân cờ"
+                title={text("Quân cờ", "Units")}
                 count={filter.units.length}
                 note={
                   target
-                    ? `Chọn quân cho ${ROW_LABEL[target.row].toLowerCase()}, ô ${target.column}.`
+                    ? text(
+                        `Chọn quân cho ${ROW_NAMES[target.row][0].toLowerCase()}, ô ${target.column}.`,
+                        `Choose a unit for the ${ROW_NAMES[target.row][1].toLowerCase()}, cell ${target.column}.`,
+                      )
                     : "Bấm để thêm vào đội hình, hoặc kéo thả lên một ô của bàn cờ."
                 }
                 action={
@@ -570,7 +626,11 @@ export function BuilderTab({
 
         <aside className="builder-side">
           <section className="mode-section" aria-labelledby="builder-traits">
-            <ModeHeading id="builder-traits" title="Phe & Nghề" count={counts.length || undefined} />
+            <ModeHeading
+              id="builder-traits"
+              title={text("Phe & Nghề", "Factions & Classes")}
+              count={counts.length || undefined}
+            />
             {counts.length ? (
               <ul className="builder-traits">
                 {counts.map((count) => (
@@ -583,7 +643,7 @@ export function BuilderTab({
                       <p>
                         {count.reachedTier >= 0
                           ? count.trait.tiers[count.reachedTier]?.effect
-                          : `Cần thêm ${count.missing} để kích hoạt`}
+                          : text(`Cần thêm ${count.missing} để kích hoạt`, `Needs ${count.missing} more to activate`)}
                       </p>
                     </div>
                     <span className="builder-steps" aria-label="Các mốc">
@@ -602,7 +662,7 @@ export function BuilderTab({
           </section>
           {suggestions.length > 0 && (
             <section className="mode-section" aria-labelledby="builder-suggestions">
-              <ModeHeading id="builder-suggestions" title="Gợi ý thêm" />
+              <ModeHeading id="builder-suggestions" title={text("Gợi ý thêm", "Suggested additions")} />
               <div className="builder-suggestions">
                 {suggestions.map(({ unit, gains, shared }) => (
                   <button
@@ -618,8 +678,8 @@ export function BuilderTab({
                       <strong>{unit.name}</strong>
                       <small>
                         {gains.length
-                          ? `Mở mốc: ${gains.map((code) => index.traits.get(code)?.name).join(", ")}`
-                          : `Cùng ${shared.map((code) => index.traits.get(code)?.name).join(", ")}`}
+                          ? `${text("Mở mốc", "Unlocks a tier")}: ${gains.map((code) => index.traits.get(code)?.name).join(", ")}`
+                          : `${text("Cùng", "Shares")} ${shared.map((code) => index.traits.get(code)?.name).join(", ")}`}
                       </small>
                     </span>
                   </button>
@@ -635,8 +695,15 @@ export function BuilderTab({
           setPicking(false)
           setTarget(null)
         }}
-        label="Chọn quân cờ"
-        title={target ? `Chọn quân cho ${ROW_LABEL[target.row].toLowerCase()}, ô ${target.column}` : "Chọn quân cờ"}
+        label={text("Chọn quân cờ", "Choose a unit")}
+        title={
+          target
+            ? text(
+                `Chọn quân cho ${ROW_NAMES[target.row][0].toLowerCase()}, ô ${target.column}`,
+                `Choose a unit for the ${ROW_NAMES[target.row][1].toLowerCase()}, cell ${target.column}`,
+              )
+            : text("Chọn quân cờ", "Choose a unit")
+        }
       >
         <div className="unit-picker">
           <UnitFilters index={index} filter={filter} inline />
@@ -646,14 +713,22 @@ export function BuilderTab({
       <ModeDialog
         open={emblemPicking}
         onClose={() => setEmblemPicking(false)}
-        label="Chọn huy hiệu"
-        title={`Chọn huy hiệu · ${emblems.length}/${MAX_EMBLEMS}`}
+        label={text("Chọn huy hiệu", "Choose emblems")}
+        title={`${text("Chọn huy hiệu", "Choose emblems")} · ${emblems.length}/${MAX_EMBLEMS}`}
       >
         <div className="trait-index">
-          <p className="mode-meta">Mỗi huy hiệu cộng 1 vào Phe/Nghề đó; có thể chọn cùng một Phe/Nghề nhiều lần.</p>
+          <p className="mode-meta">
+            {text(
+              "Mỗi huy hiệu cộng 1 vào Phe/Nghề đó; có thể chọn cùng một Phe/Nghề nhiều lần.",
+              "Each emblem adds 1 to that Faction/Class; the same Faction/Class can be chosen more than once.",
+            )}
+          </p>
           {(["FACTION", "CLASS"] as const).map((kind) => (
             <section key={kind} className="mode-section" aria-labelledby={`emblem-kind-${kind}`}>
-              <ModeHeading id={`emblem-kind-${kind}`} title={kind === "FACTION" ? "Phe" : "Nghề"} />
+              <ModeHeading
+                id={`emblem-kind-${kind}`}
+                title={kind === "FACTION" ? text("Phe", "Faction") : text("Nghề", "Class")}
+              />
               <div className="trait-index-grid">
                 {index.content.traits
                   .filter((trait) => trait.kind === kind)
@@ -681,7 +756,12 @@ export function BuilderTab({
           ))}
         </div>
       </ModeDialog>
-      <ModeDialog open={posting} onClose={() => setPosting(false)} label="Đăng đội hình" title="Đăng đội hình">
+      <ModeDialog
+        open={posting}
+        onClose={() => setPosting(false)}
+        label={text("Đăng đội hình", "Post a lineup")}
+        title={text("Đăng đội hình", "Post a lineup")}
+      >
         <SaveLineup code={code} units={units} emblems={emblems} index={index} />
       </ModeDialog>
     </div>
@@ -700,7 +780,8 @@ function SaveLineup({
   emblems: string[]
   index: GuideIndex
 }) {
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const session = useWikiSession()
   const client = useQueryClient()
   const me = useQuery({ ...myStateQuery(code, session.revision), enabled: session.status === "authenticated" })
@@ -717,26 +798,31 @@ function SaveLineup({
         emblems,
       }),
     onSuccess: () => {
-      setMessage("Đã lưu và chia sẻ đội hình.")
+      setMessage(text("Đã lưu và chia sẻ đội hình.", "Lineup saved and shared."))
       setName("")
       setNote("")
       void refresh()
     },
-    onError: (error) => setMessage(lineupErrorMessage(error)),
+    onError: (error) => setMessage(lineupErrorMessage(error, locale)),
   })
   const remove = useMutation({
     mutationFn: ({ id, version }: { id: string; version: number }) => deleteLineup(code, id, version),
     onSuccess: () => void refresh(),
-    onError: (error) => setMessage(lineupErrorMessage(error)),
+    onError: (error) => setMessage(lineupErrorMessage(error, locale)),
   })
   const members = units.map((unit) => index.units.get(unit.unitCode)?.name).filter(Boolean)
 
   if (session.status !== "authenticated")
     return (
       <div className="lineup-post">
-        <p className="mode-prose">Đăng nhập để lưu đội hình, chia sẻ với cộng đồng và nhận lượt thích.</p>
+        <p className="mode-prose">
+          {text(
+            "Đăng nhập để lưu đội hình, chia sẻ với cộng đồng và nhận lượt thích.",
+            "Sign in to save lineups, share them with the community and get likes.",
+          )}
+        </p>
         <button type="button" className="guide-primary" onClick={() => void signIn()}>
-          Đăng nhập
+          {text("Đăng nhập", "Sign in")}
         </button>
       </div>
     )
@@ -744,7 +830,12 @@ function SaveLineup({
   return (
     <div className="lineup-post">
       <p className="mode-meta">
-        {members.length ? `${members.length} quân: ${members.join(", ")}` : "Đội hình chưa có quân cờ nào."}
+        {members.length
+          ? text(
+              `${members.length} quân: ${members.join(", ")}`,
+              `${members.length} ${members.length === 1 ? "unit" : "units"}: ${members.join(", ")}`,
+            )
+          : "Đội hình chưa có quân cờ nào."}
       </p>
       <form
         className="builder-form"
@@ -754,7 +845,7 @@ function SaveLineup({
         }}
       >
         <label>
-          <span>Tên đội hình</span>
+          <span>{text("Tên đội hình", "Lineup name")}</span>
           <input
             className="guide-field"
             value={name}
@@ -764,7 +855,7 @@ function SaveLineup({
           />
         </label>
         <label>
-          <span>Ghi chú lối chơi (tùy chọn)</span>
+          <span>{text("Ghi chú lối chơi (tùy chọn)", "Gameplay notes (optional)")}</span>
           <textarea
             className="guide-field"
             value={note}
@@ -774,7 +865,7 @@ function SaveLineup({
           />
         </label>
         <button type="submit" className="guide-primary" disabled={!name.trim() || !units.length || save.isPending}>
-          {save.isPending ? "Đang lưu…" : "Lưu và chia sẻ"}
+          {save.isPending ? text("Đang lưu…", "Saving…") : text("Lưu và chia sẻ", "Save and share")}
         </button>
         {message && (
           <p className="mode-message" role="status">
@@ -784,7 +875,7 @@ function SaveLineup({
       </form>
       {me.data && me.data.lineups.length > 0 && (
         <section className="guide-detail-block" aria-labelledby="my-lineups">
-          <h3 id="my-lineups">Đội hình của tôi</h3>
+          <h3 id="my-lineups">{text("Đội hình của tôi", "My lineups")}</h3>
           <ul className="my-lineups">
             {me.data.lineups.map((lineup) => (
               <li key={lineup.id}>
@@ -797,7 +888,7 @@ function SaveLineup({
                 </Link>
                 <span className="mode-meta">
                   ♥ {lineup.likes}
-                  {lineup.status === "HIDDEN" && " · đã bị ẩn"}
+                  {lineup.status === "HIDDEN" && text(" · đã bị ẩn", " · hidden")}
                 </span>
                 <button
                   type="button"
@@ -805,7 +896,7 @@ function SaveLineup({
                   disabled={remove.isPending}
                   onClick={() => remove.mutate({ id: lineup.id, version: lineup.version })}
                 >
-                  Xóa
+                  {text("Xóa", "Delete")}
                 </button>
               </li>
             ))}

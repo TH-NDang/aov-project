@@ -12,14 +12,16 @@ import { formatChangeValue, type HeroChangeItem } from "../../lib/wiki-change-fo
 const PLAIN_CELL = 8
 
 const ENGLISH_RANK_TERMS: [RegExp, string][] = [
-  [/Công vật lý cộng thêm/g, "bonus physical attack"],
-  [/Công vật lý/g, "physical attack"],
-  [/Công phép/g, "magic attack"],
-  [/Máu tối đa/g, "max HP"],
-  [/cấp chiêu/g, "skill level"],
+  [/Công vật lý cộng thêm/g, "bonus Attack Damage"],
+  [/Công vật lý/g, "Attack Damage"],
+  [/Công phép/g, "Ability Power"],
+  [/Máu tối đa/g, "Max HP"],
+  [/cấp chiêu/g, "ability level"],
   [/cấp tướng/g, "hero level"],
   [/Cấp (\d+)/g, "Lv $1"],
   [/^Thêm mỗi /, "Per "],
+  // The shared reader writes decimals the Vietnamese way.
+  [/(\d),(\d)/g, "$1.$2"],
 ]
 
 /** Rank values are worded in Vietnamese by the shared formula reader. */

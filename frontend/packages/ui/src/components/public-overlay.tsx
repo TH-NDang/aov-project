@@ -9,6 +9,13 @@ import * as PopoverBase from "./popover"
 import * as MenuBase from "./dropdown-menu"
 import { DrawerContent, DrawerHandle, DrawerTitle, DrawerClose, DrawerTrigger } from "./drawer"
 
+/**
+ * These overlays sit under every app, so the close button reads the language of the page instead of taking it from each
+ * caller. All three apps keep that language on the document element.
+ */
+const closeLabel = () =>
+  typeof document !== "undefined" && document.documentElement.lang.startsWith("en") ? "Close" : "Đóng"
+
 const DrawerDepth = createContext(false)
 const OverlayContext = createContext({ mobile: false, close: () => {} })
 
@@ -39,7 +46,7 @@ export function PublicDrawerContent({
       {title && (
         <div className="public-bottom-heading">
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerClose aria-label="Đóng" className="public-bottom-close">
+          <DrawerClose aria-label={closeLabel()} className="public-bottom-close">
             <X size={18} aria-hidden="true" />
           </DrawerClose>
         </div>
@@ -147,7 +154,7 @@ export function DialogContent({
     <PublicDrawerContent {...props}>
       {children}
       {showCloseButton && (
-        <DrawerClose className="public-bottom-close" aria-label="Đóng">
+        <DrawerClose className="public-bottom-close" aria-label={closeLabel()}>
           <X size={18} />
         </DrawerClose>
       )}

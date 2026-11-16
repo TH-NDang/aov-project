@@ -1,5 +1,6 @@
 package com.wikiaov.arcana.internal.domain;
 
+import com.wikiaov.platform.CatalogText;
 import com.wikiaov.platform.CatalogText.*;
 import java.util.*;
 
@@ -16,8 +17,9 @@ public record ArcanaContent(
         stats = stats == null ? List.of() : List.copyOf(stats);
     }
 
+    /** The gameplay fields alone, with numbers in comparable form, to tell a translation from a gameplay change. */
     public ArcanaContent mechanics() {
-        return new ArcanaContent(iconAssetId, color, tier, stats, List.of(), null);
+        return new ArcanaContent(iconAssetId, color, tier, CatalogText.comparable(stats), List.of(), null);
     }
 
     public ArcanaContent publicCopy(String locale) {

@@ -156,21 +156,26 @@ export const BOARD_SLOTS = 10
 export const MAX_LINEUP_UNITS = BOARD_SLOTS + 1
 export const MAX_EMBLEMS = 3
 
-export const TRAIT_KIND_LABEL: Record<Trait["kind"], string> = { FACTION: "Phe", CLASS: "Nghề" }
-export const BLESSING_TIER_LABEL: Record<Blessing["tier"], string> = {
-  NORMAL: "Thường",
-  EPIC: "Huyền thoại / Sử thi",
-  LEGENDARY: "Truyền thuyết",
+/** A label in Vietnamese and in English; pages pick one with `wikiText(locale, ...names)`. */
+export type LabelNames = readonly [vietnamese: string, english: string]
+export const TRAIT_KIND_NAMES: Record<Trait["kind"], LabelNames> = {
+  FACTION: ["Phe", "Faction"],
+  CLASS: ["Nghề", "Class"],
 }
-export const ROW_LABEL: Record<NonNullable<LineupUnit["row"]>, string> = {
-  FRONT: "Hàng đầu",
-  MIDDLE: "Hàng giữa",
-  BACK: "Hàng sau",
+export const BLESSING_TIER_NAMES: Record<Blessing["tier"], LabelNames> = {
+  NORMAL: ["Thường", "Common"],
+  EPIC: ["Huyền thoại / Sử thi", "Epic"],
+  LEGENDARY: ["Truyền thuyết", "Legendary"],
 }
-export const DIFFICULTY_LABEL: Record<NonNullable<Lineup["difficulty"]>, string> = {
-  EASY: "Dễ",
-  MEDIUM: "Vừa",
-  HARD: "Khó",
+export const ROW_NAMES: Record<NonNullable<LineupUnit["row"]>, LabelNames> = {
+  FRONT: ["Hàng đầu", "Front row"],
+  MIDDLE: ["Hàng giữa", "Middle row"],
+  BACK: ["Hàng sau", "Back row"],
+}
+export const DIFFICULTY_NAMES: Record<NonNullable<Lineup["difficulty"]>, LabelNames> = {
+  EASY: ["Dễ", "Easy"],
+  MEDIUM: ["Vừa", "Medium"],
+  HARD: ["Khó", "Hard"],
 }
 
 export interface TraitCount {

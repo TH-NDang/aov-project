@@ -5,6 +5,7 @@ import type { CommunityProfile, CompetitionView } from "@aov/community-contracts
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { CompetitionCard } from "../tournaments/competition-card"
 import { matchWinner } from "../tournaments/competition-model"
 import { MatchCard } from "../tournaments/match-card"
@@ -17,28 +18,40 @@ import { competitionsFeedQuery, dayRange, profileCompetitionFilter } from "./com
  * heads the list where the tab around it does not already name it.
  */
 export function CompetitionList({ profile, title }: { profile: CommunityProfile; title?: string }) {
+  const { text, languageTag } = useStreamLocale()
   const filter = profileCompetitionFilter(profile)
   const query = useInfiniteQuery({ ...competitionsFeedQuery(filter || {}), enabled: !!filter })
   const competitions = query.data?.pages.flatMap((page) => page.items) ?? []
   const total = query.data?.pages[0]?.totalElements
   const seasons = profile.kind === "CIRCUIT"
   return (
-    <section aria-label={title ? undefined : "Giải đấu"} aria-labelledby={title ? "profile-competitions" : undefined}>
+    <section
+      aria-label={title ? undefined : text("Giải đấu", "Tournaments")}
+      aria-labelledby={title ? "profile-competitions" : undefined}
+    >
       {title && (
         <div className="tn-heading">
           <h2 id="profile-competitions">
-            {title} {!!total && <small>{total.toLocaleString("vi-VN")}</small>}
+            {title} {!!total && <small>{total.toLocaleString(languageTag)}</small>}
           </h2>
         </div>
       )}
       {query.isPending ? (
-        <div className="hub-skeleton-rows" role="status" aria-label="Đang tải giải đấu" />
+        <div
+          className="hub-skeleton-rows"
+          role="status"
+          aria-label={text("Đang tải giải đấu", "Loading tournaments")}
+        />
       ) : query.isLoadingError ? (
         <div className="hub-state" role="alert">
-          {title ? <h3>Chưa tải được giải đấu</h3> : <h2>Chưa tải được giải đấu</h2>}
+          {title ? (
+            <h3>{text("Chưa tải được giải đấu", "Tournaments could not be loaded")}</h3>
+          ) : (
+            <h2>{text("Chưa tải được giải đấu", "Tournaments could not be loaded")}</h2>
+          )}
           <p>{query.error.message}</p>
           <button type="button" className="cp-button" onClick={() => void query.refetch()}>
-            Thử lại
+            {text("Thử lại", "Retry")}
           </button>
         </div>
       ) : !competitions.length ? (
@@ -54,7 +67,11 @@ export function CompetitionList({ profile, title }: { profile: CommunityProfile;
           ))}
         </div>
       )}
-      <InfiniteScroll query={query} label="Đang tải thêm giải đấu" />
+      <InfiniteScroll
+        query={query}
+        label={text("Đang tải thêm giải đấu", "Loading more tournaments")}
+        retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+      />
     </section>
   )
 }
@@ -102,6 +119,7 @@ const startOf = (entry: CompetitionMatch) => Date.parse(entry.match.scheduledAt 
  * registered in without a match of its own close the list as cards.
  */
 export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfile }) {
+  const { text } = useStreamLocale()
   const filter = profileCompetitionFilter(profile)
   const query = useInfiniteQuery({ ...competitionsFeedQuery(filter || {}), enabled: !!filter })
   const views = query.data?.pages.flatMap((page) => page.items) ?? []
@@ -118,7 +136,7 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
         <h2>Chưa tải được lịch và kết quả</h2>
         <p>{query.error.message}</p>
         <button type="button" className="cp-button" onClick={() => void query.refetch()}>
-          Thử lại
+          {text("Thử lại", "Retry")}
         </button>
       </div>
     )
@@ -127,8 +145,10 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
     <>
       {profile.kind === "PLAYER" && (
         <p className="pf-note">
-          Các trận của đội có tuyển thủ trong danh sách đăng ký mùa giải. Danh sách này không khẳng định tuyển thủ đã ra
-          sân từng trận.
+          {text(
+            "Các trận của đội có tuyển thủ trong danh sách đăng ký mùa giải. Danh sách này không khẳng định tuyển thủ đã ra sân từng trận.",
+            "Matches of the teams that registered the player for the season. This list does not confirm that the player played in each match.",
+          )}
         </p>
       )}
       {played.map(({ view, entries }) => (
@@ -153,7 +173,11 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
           </div>
         </section>
       )}
-      <InfiniteScroll query={query} label="Đang tải thêm giải đấu" />
+      <InfiniteScroll
+        query={query}
+        label={text("Đang tải thêm giải đấu", "Loading more tournaments")}
+        retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+      />
     </>
   )
 }
@@ -171,6 +195,7 @@ function CompetitionMatches({
   entries: CompetitionMatch[]
   team?: string | null
 }) {
+  const { text } = useStreamLocale()
   const [open, setOpen] = useState(false)
   const preview = usePageLayout() === "compact" ? 2 : 4
   const { tournament } = view.content
@@ -182,7 +207,7 @@ function CompetitionMatches({
         <h2>
           <Link to={`/competitions/${view.id}`}>{tournament.name}</Link>{" "}
           <small>
-            {dayRange(tournament.startsOn, tournament.endsOn, "Chờ lịch")}
+            {dayRange(tournament.startsOn, tournament.endsOn, text("Chờ lịch", "To be scheduled"))}
             {record && ` · ${record}`}
           </small>
         </h2>
@@ -194,7 +219,7 @@ function CompetitionMatches({
       </div>
       {entries.length > preview && (
         <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open ? "Thu gọn" : `Xem thêm ${entries.length - preview} trận`}
+          {open ? text("Thu gọn", "Show less") : `Xem thêm ${entries.length - preview} trận`}
           <StreamIcon name={open ? "chevronLeft" : "chevronRight"} size={14} />
         </button>
       )}

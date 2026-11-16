@@ -5,6 +5,7 @@ import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
+import { useStreamLocale } from "../../components/stream-locale"
 import { GameLoadouts } from "./game-loadouts"
 import { MatchHead, MatchTabs, seriesHeadOf } from "./match-components"
 import { orderedMatchGames } from "./match-model"
@@ -13,12 +14,13 @@ import { gameQuery, matchGamesQuery } from "./tournament-api"
 import {
   clock,
   findReference,
-  LANES,
+  LANE_NAMES,
   LANE_SHORT,
   orderedParticipants,
   plainNote,
   referenceName,
   seriesSides,
+  UNKNOWN_REFERENCE,
 } from "./tournament-model"
 
 /** A patch code that is the day the patch came out. */
@@ -26,15 +28,18 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/
 
 /** One side of the draft: the team, its five picks in lane order and the heroes it banned. */
 function Draft({ game, side }: { game: PublishedGame; side: GameSide }) {
+  const { text } = useStreamLocale()
   const team = game.teams[side.teamId]
-  const name = team?.name || team?.shortName || "Đội chưa có thông tin"
+  const name = team?.name || team?.shortName || text("Đội chưa có thông tin", "No team information yet")
   return (
     <section className="tn-draft" data-side={side.side}>
       <header className="tn-draft-head">
         <StreamImage src={team?.logoUrl} name={team?.shortName || name} />
         <div>
           <h2>{name}</h2>
-          <span className="tn-side">{side.side === "BLUE" ? "Phe xanh" : "Phe đỏ"}</span>
+          <span className="tn-side">
+            {side.side === "BLUE" ? text("Phe xanh", "Blue side") : text("Phe đỏ", "Red side")}
+          </span>
         </div>
         {game.content.winner === side.side && (
           <span className="tn-win">
@@ -50,7 +55,10 @@ function Draft({ game, side }: { game: PublishedGame; side: GameSide }) {
             <figure className="tn-pick" key={participant.lane}>
               <span className="tn-pick-art">
                 <ReferenceArt catalog={game.catalog} kind="heroes" selection={participant.hero} />
-                <span className="tn-pick-lane" title={LANES[participant.lane]}>
+                <span
+                  className="tn-pick-lane"
+                  title={text(LANE_NAMES[participant.lane][0], LANE_NAMES[participant.lane][1])}
+                >
                   {LANE_SHORT[participant.lane]}
                 </span>
                 {findReference(game.catalog, "spells", participant.spell)?.iconUrl && (
@@ -63,7 +71,7 @@ function Draft({ game, side }: { game: PublishedGame; side: GameSide }) {
                 )}
               </span>
               <figcaption>
-                <strong>{referenceName(game.catalog, "heroes", participant.hero)}</strong>
+                <strong>{referenceName(game.catalog, "heroes", participant.hero, text(...UNKNOWN_REFERENCE))}</strong>
                 {player && <span>{player}</span>}
               </figcaption>
             </figure>
@@ -72,11 +80,11 @@ function Draft({ game, side }: { game: PublishedGame; side: GameSide }) {
       </div>
       {side.bans.length > 0 && (
         <p className="tn-draft-bans">
-          <b>Cấm</b>
+          <b>{text("Cấm", "Bans")}</b>
           {side.bans.map((selection, index) => (
             <span className="tn-ban" key={index}>
               <ReferenceArt catalog={game.catalog} kind="heroes" selection={selection} />
-              <span>{referenceName(game.catalog, "heroes", selection)}</span>
+              <span>{referenceName(game.catalog, "heroes", selection, text(...UNKNOWN_REFERENCE))}</span>
             </span>
           ))}
         </p>
@@ -99,6 +107,7 @@ function PublishedGameView({
   siblings: PublishedGame[]
   busy: boolean
 }) {
+  const { text, languageTag } = useStreamLocale()
   const { number, durationSeconds, seriesId, sourceUrl, note } = game.content
   const scope = game.resolvedContext
   const head = seriesHeadOf(game)
@@ -108,7 +117,7 @@ function PublishedGameView({
   const patchCode =
     scope?.patchCode &&
     (DAY.test(scope.patchCode)
-      ? `Bản ${scope.seasonName ? formatCalendarDate(scope.patchCode, { day: "2-digit", month: "2-digit" }) : formatCalendarDate(scope.patchCode)}`
+      ? `Bản ${scope.seasonName ? formatCalendarDate(scope.patchCode, { day: "2-digit", month: "2-digit" }, languageTag) : formatCalendarDate(scope.patchCode, undefined, languageTag)}`
       : scope.patchCode)
   const patch = (
     <span title={scope?.patchTitle || undefined}>
@@ -126,7 +135,7 @@ function PublishedGameView({
   )
   return (
     <StreamShell>
-      <title>{`${head.teams[0].name} vs ${head.teams[1].name} · Ván ${number} — AOV Stream`}</title>
+      <title>{`${head.teams[0].name} vs ${head.teams[1].name} · ${text(`Ván ${number}`, `Game ${number}`)} — AOV Stream`}</title>
       <div className="tn-match-page" aria-busy={busy || undefined}>
         <Link className="cp-back" to={`/competitions/${game.series.tournamentId}?tab=matches`}>
           <StreamIcon name="back" size={16} />
@@ -150,10 +159,10 @@ function PublishedGameView({
             </>
           }
         >
-          <span className="tn-duel-game">Ván {number}</span>
+          <span className="tn-duel-game">{text(`Ván ${number}`, `Game ${number}`)}</span>
           <span title="Thời lượng ván đấu">
             <StreamIcon name="clock" size={14} />
-            {durationSeconds ? clock(durationSeconds) : "Chưa rõ thời lượng"}
+            {durationSeconds ? clock(durationSeconds) : text("Chưa rõ thời lượng", "Unknown duration")}
           </span>
         </MatchHead>
         <MatchTabs
@@ -171,7 +180,11 @@ function PublishedGameView({
           {note && <p>{plainNote(note)}</p>}
           <p>
             Tên và ảnh giữ theo dữ liệu đã xuất bản cho ván này.
-            {scope?.includeUnscoped && " Một số mục được đối chiếu từ dữ liệu nền chưa xác định ngày áp dụng."}
+            {scope?.includeUnscoped &&
+              text(
+                " Một số mục được đối chiếu từ dữ liệu nền chưa xác định ngày áp dụng.",
+                " Some entries were matched against baseline data with no known effective date.",
+              )}
           </p>
         </footer>
       </div>
@@ -180,6 +193,7 @@ function PublishedGameView({
 }
 
 export function GamePage() {
+  const { text } = useStreamLocale()
   const { id = "" } = useParams()
   const query = useQuery({ ...gameQuery(id), placeholderData: keepPreviousData })
   const seriesId = query.data?.content.seriesId
@@ -192,14 +206,18 @@ export function GamePage() {
     <StreamShell>
       <div className="tn-match-page">
         {query.isPending ? (
-          <div className="tn-duel-skeleton hub-skeleton" role="status" aria-label="Đang mở ván đấu" />
+          <div
+            className="tn-duel-skeleton hub-skeleton"
+            role="status"
+            aria-label={text("Đang mở ván đấu", "Opening the game")}
+          />
         ) : (
           <div className="hub-state" role="alert">
-            <h1>Chưa mở được ván đấu</h1>
+            <h1>{text("Chưa mở được ván đấu", "The game could not be opened")}</h1>
             <p>{query.error?.message}</p>
             <div className="hub-state-actions">
               <button type="button" className="cp-button cp-primary" onClick={() => void query.refetch()}>
-                Thử lại
+                {text("Thử lại", "Retry")}
               </button>
               <Link className="cp-button" to="/games">
                 Về danh sách ván đấu

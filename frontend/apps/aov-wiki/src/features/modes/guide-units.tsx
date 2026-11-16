@@ -2,8 +2,8 @@ import { useState } from "react"
 import { Link } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext } from "../../context/wiki-context"
-import { encodeLineup, TRAIT_KIND_LABEL, type Unit } from "./auto-chess-model"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { encodeLineup, TRAIT_KIND_NAMES, type LabelNames, type Unit } from "./auto-chess-model"
 import { GoldIcon } from "./gold-icon"
 import { StarLevel } from "./star-level"
 import { FilterSummary, UnitFilters, useUnitFilter } from "./guide-filters"
@@ -19,18 +19,21 @@ import {
 } from "./guide-ui"
 
 type StatKey = "health" | "physicalAttack" | "armor" | "magicResistance"
-const STATS: { key: StatKey; label: string }[] = [
-  { key: "health", label: "Máu" },
-  { key: "physicalAttack", label: "Công vật lý" },
-  { key: "armor", label: "Giáp" },
-  { key: "magicResistance", label: "Giáp phép" },
+const STATS: { key: StatKey; label: string; english: string }[] = [
+  { key: "health", label: "Máu", english: "HP" },
+  { key: "physicalAttack", label: "Công vật lý", english: "Attack Damage" },
+  { key: "armor", label: "Giáp", english: "Armor" },
+  { key: "magicResistance", label: "Giáp phép", english: "Magic Defense" },
 ]
 type SortKey = StatKey | "cost" | "name"
 type SortRule = { key: SortKey; desc: boolean }
-const SORT_LABEL: Record<SortKey, string> = {
-  name: "Tên",
-  cost: "Giá",
-  ...(Object.fromEntries(STATS.map((stat) => [stat.key, stat.label])) as Record<StatKey, string>),
+const SORT_LABEL: Record<SortKey, LabelNames> = {
+  name: ["Tên", "Name"],
+  cost: ["Giá", "Cost"],
+  ...(Object.fromEntries(STATS.map((stat) => [stat.key, [stat.label, stat.english] as const])) as Record<
+    StatKey,
+    LabelNames
+  >),
 }
 /** Stats read best from the highest; names and prices from the lowest. */
 const naturalDesc = (key: SortKey) => key !== "cost" && key !== "name"
@@ -42,6 +45,8 @@ const isStat = (key: SortKey): key is StatKey => key !== "cost" && key !== "name
  */
 export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string) => void }) {
   const compact = usePageLayout() === "compact"
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const filter = useUnitFilter(index)
   const [view, setView] = useState<"cards" | "table">("cards")
   const [star, setStar] = useState(0)
@@ -83,7 +88,11 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
           type="button"
           className="sort-head"
           data-active={!!rule}
-          title={compact ? undefined : "Bấm để sắp xếp, giữ Shift để thêm cột"}
+          title={
+            compact
+              ? undefined
+              : text("Bấm để sắp xếp, giữ Shift để thêm cột", "Click to sort, hold Shift to add a column")
+          }
           onClick={(event) => sortBy(key, event.shiftKey)}
         >
           {label}
@@ -103,19 +112,19 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
     .filter((group) => group.units.length)
 
   return (
-    <section className="guide-tab-body" aria-label="Quân cờ">
+    <section className="guide-tab-body" aria-label={text("Quân cờ", "Units")}>
       <UnitFilters
         index={index}
         filter={filter}
         end={
           <ChoiceSwitch
-            label="Kiểu xem"
+            label={text("Kiểu xem", "View")}
             value={view}
             onChange={setView}
             labels={!compact}
             options={[
               { value: "cards", label: "Theo giá", icon: <WikiIcon name="cards" size={16} /> },
-              { value: "table", label: "Chỉ số", icon: <WikiIcon name="stats" size={16} /> },
+              { value: "table", label: text("Chỉ số", "Stats"), icon: <WikiIcon name="stats" size={16} /> },
             ]}
           />
         }
@@ -132,9 +141,11 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
                 <span className="guide-cost">
                   <GoldIcon size={18} />
                   {group.cost}
-                  <span className="sr-only"> vàng</span>
+                  <span className="sr-only">{text(" vàng", " gold")}</span>
                 </span>
-                <small>{group.units.length} quân</small>
+                <small>
+                  {group.units.length} {text("quân", group.units.length === 1 ? "unit" : "units")}
+                </small>
               </h2>
               <div className="unit-grid">
                 {group.units.map((unit) => (
@@ -143,8 +154,8 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
                     <strong>{unit.name}</strong>
                     {!compact && <UnitTraits unit={unit} index={index} as="icons" />}
                     {!unit.complete && (
-                      <i className="unit-incomplete" title="Chưa đủ dữ liệu">
-                        <span className="sr-only">Chưa đủ dữ liệu</span>
+                      <i className="unit-incomplete" title={text("Chưa đủ dữ liệu", "Incomplete data")}>
+                        <span className="sr-only">{text("Chưa đủ dữ liệu", "Incomplete data")}</span>
                       </i>
                     )}
                   </button>
@@ -157,38 +168,41 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
         <>
           <div className="guide-toolbar">
             <ChoiceSwitch
-              label="Cấp sao"
+              label={text("Cấp sao", "Star level")}
               value={star}
               onChange={setStar}
               labels={false}
               options={[0, 1, 2].map((level) => ({
                 value: level,
-                label: `${level + 1} sao`,
+                label: text(`${level + 1} sao`, `${level + 1}-star`),
                 icon: <StarLevel level={level + 1} />,
               }))}
             />
             {compact ? (
               <label className="guide-select">
-                <span>Chỉ số</span>
+                <span>{text("Chỉ số", "Stat")}</span>
                 <select
                   value={phoneStat}
                   onChange={(event) => setSorts([{ key: event.target.value as StatKey, desc: true }])}
                 >
                   {STATS.map((stat) => (
                     <option key={stat.key} value={stat.key}>
-                      {stat.label}
+                      {text(stat.label, stat.english)}
                     </option>
                   ))}
                 </select>
               </label>
             ) : (
-              <div className="sort-rules" role="group" aria-label="Thứ tự sắp xếp">
-                <span>Sắp xếp</span>
+              <div className="sort-rules" role="group" aria-label={text("Thứ tự sắp xếp", "Sort order")}>
+                <span>{text("Sắp xếp", "Sort")}</span>
                 {sorts.map((rule, at) => (
                   <span key={rule.key} className="sort-rule">
                     <button
                       type="button"
-                      aria-label={`${SORT_LABEL[rule.key]} ${rule.desc ? "giảm dần" : "tăng dần"}, bấm để đảo chiều`}
+                      aria-label={text(
+                        `${SORT_LABEL[rule.key][0]} ${rule.desc ? "giảm dần" : "tăng dần"}, bấm để đảo chiều`,
+                        `${SORT_LABEL[rule.key][1]} ${rule.desc ? "descending" : "ascending"}, click to reverse`,
+                      )}
                       onClick={() =>
                         setSorts((current) =>
                           current.map((entry, index) => (index === at ? { ...entry, desc: !entry.desc } : entry)),
@@ -196,12 +210,15 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
                       }
                     >
                       {sorts.length > 1 && <b className="sort-rank">{at + 1}</b>}
-                      {SORT_LABEL[rule.key]} {rule.desc ? "↓" : "↑"}
+                      {text(...SORT_LABEL[rule.key])} {rule.desc ? "↓" : "↑"}
                     </button>
                     {sorts.length > 1 && (
                       <button
                         type="button"
-                        aria-label={`Bỏ sắp xếp theo ${SORT_LABEL[rule.key]}`}
+                        aria-label={text(
+                          `Bỏ sắp xếp theo ${SORT_LABEL[rule.key][0]}`,
+                          `Stop sorting by ${SORT_LABEL[rule.key][1]}`,
+                        )}
                         onClick={() => setSorts((current) => current.filter((_, index) => index !== at))}
                       >
                         <WikiIcon name="close" size={14} />
@@ -217,7 +234,7 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
                   onClick={() => setMultiSort(!multiSort)}
                 >
                   <WikiIcon name="sort" size={16} />
-                  Nhiều cột
+                  {text("Nhiều cột", "Multiple columns")}
                 </button>
               </div>
             )}
@@ -226,10 +243,10 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
             <table className="guide-table unit-table">
               <thead>
                 <tr>
-                  {sortHead("name", "Quân cờ")}
-                  {sortHead("cost", "Giá", "num")}
-                  {shownStats.map((stat) => sortHead(stat.key, stat.label, "num"))}
-                  {!compact && <th scope="col">Phe/Nghề</th>}
+                  {sortHead("name", text("Quân cờ", "Unit"))}
+                  {sortHead("cost", text("Giá", "Cost"), "num")}
+                  {shownStats.map((stat) => sortHead(stat.key, text(stat.label, stat.english), "num"))}
+                  {!compact && <th scope="col">{text("Phe/Nghề", "Faction/Class")}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -249,7 +266,7 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
                     </td>
                     {shownStats.map((stat) => (
                       <td key={stat.key} className="num">
-                        {unit.stats?.[stat.key]?.[star]?.toLocaleString("vi-VN") ?? "—"}
+                        {unit.stats?.[stat.key]?.[star]?.toLocaleString(locale) ?? "—"}
                       </td>
                     ))}
                     {!compact && (
@@ -280,7 +297,8 @@ export function UnitDetail({
   code: string
   onOpen: (code: string | null) => void
 }) {
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const skillIcon = index.image(unit.skill?.iconAssetId)
   const lineups = index.content.lineups.filter((lineup) => lineup.units.some((item) => item.unitCode === unit.code))
   return (
@@ -291,12 +309,19 @@ export function UnitDetail({
           <h2>{unit.name}</h2>
           <span className="guide-cost">
             <GoldIcon />
-            {unit.cost} vàng
+            {text(`${unit.cost} vàng`, `${unit.cost} gold`)}
           </span>
           <UnitTraits unit={unit} index={index} as="tags" />
         </div>
       </header>
-      {!unit.complete && <p className="guide-note">Quân cờ này chưa có đủ dữ liệu trong bản Bách khoa đã thu thập.</p>}
+      {!unit.complete && (
+        <p className="guide-note">
+          {text(
+            "Quân cờ này chưa có đủ dữ liệu trong bản Bách khoa đã thu thập.",
+            "This unit does not have complete data in the collected edition of the Encyclopedia yet.",
+          )}
+        </p>
+      )}
       {unit.note && <p className="guide-note">{unit.note}</p>}
       {unit.skill?.name && (
         <section className="guide-skill">
@@ -310,18 +335,18 @@ export function UnitDetail({
             )}
             {unit.skill.values.length === 3 && (
               <p className="guide-values">
-                {unit.skill.valueLabel ?? "Giá trị"}: {unit.skill.values.join(" / ")}
+                {unit.skill.valueLabel ?? text("Giá trị", "Values")}: {unit.skill.values.join(" / ")}
               </p>
             )}
           </div>
         </section>
       )}
       {unit.stats && unit.stats.health.length === 3 && (
-        <section className="guide-detail-block" aria-label="Chỉ số">
+        <section className="guide-detail-block" aria-label={text("Chỉ số", "Stats")}>
           <table className="guide-table">
             <thead>
               <tr>
-                <th scope="col">Chỉ số</th>
+                <th scope="col">{text("Chỉ số", "Stat")}</th>
                 {[1, 2, 3].map((level) => (
                   <th key={level} scope="col" className="num">
                     <StarLevel level={level} />
@@ -332,10 +357,10 @@ export function UnitDetail({
             <tbody>
               {STATS.map((stat) => (
                 <tr key={stat.key}>
-                  <th scope="row">{stat.label}</th>
+                  <th scope="row">{text(stat.label, stat.english)}</th>
                   {(unit.stats?.[stat.key] ?? []).map((value, at) => (
                     <td key={at} className="num">
-                      {value.toLocaleString("vi-VN")}
+                      {value.toLocaleString(locale)}
                     </td>
                   ))}
                 </tr>
@@ -351,7 +376,7 @@ export function UnitDetail({
           <section key={traitCode} className="guide-detail-block">
             <h3>
               <TraitIcon trait={trait} index={index} size={24} />
-              {TRAIT_KIND_LABEL[trait.kind]}: {trait.name}
+              {text(...TRAIT_KIND_NAMES[trait.kind])}: {trait.name}
             </h3>
             <TierList trait={trait} />
             <div className="guide-members">
@@ -373,7 +398,8 @@ export function UnitDetail({
       })}
       {lineups.length > 0 && (
         <p className="guide-detail-block mode-meta">
-          Có trong đội hình đề xuất: {lineups.map((lineup) => lineup.name).join(", ")}
+          {text("Có trong đội hình đề xuất", "Appears in recommended lineups")}:{" "}
+          {lineups.map((lineup) => lineup.name).join(", ")}
         </p>
       )}
       <div className="guide-actions">
@@ -384,11 +410,11 @@ export function UnitDetail({
             `/modes/${encodeURIComponent(code)}/xep-doi-hinh?${encodeLineup([{ unitCode: unit.code, carry: true }], [])}`,
           )}
         >
-          Xếp đội hình với {unit.name}
+          {text(`Xếp đội hình với ${unit.name}`, `Build a lineup with ${unit.name}`)}
         </Link>
         {unit.heroCode && (
           <Link className="mode-chip" to={href(`/hero/${unit.heroCode}`)}>
-            Trang tướng {unit.name}
+            {text(`Trang tướng ${unit.name}`, `${unit.name} hero page`)}
           </Link>
         )}
       </div>

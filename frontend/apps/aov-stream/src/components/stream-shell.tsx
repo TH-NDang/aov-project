@@ -71,17 +71,17 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
   return (
     <div className="hub-shell">
       <a href="#main" className="stream-skip">
-        Đến nội dung chính
+        {text("Đến nội dung chính", "Skip to content")}
       </a>
       <header className={`hub-topbar${searchOpen ? " hub-search-open" : ""}`}>
         <div className="hub-topbar-inner">
           <div className="hub-brand-group">
-            <Link to="/" className="hub-brand-link" aria-label="AOV Stream — Bảng tin">
+            <Link to="/" className="hub-brand-link" aria-label={text("AOV Stream — Bảng tin", "AOV Stream — Feed")}>
               <StreamBrand />
             </Link>
             <StreamAppSwitcher wikiUrl={WIKI_URL} />
           </div>
-          <nav className="hub-topnav" aria-label="Điều hướng chính">
+          <nav className="hub-topnav" aria-label={text("Điều hướng chính", "Main navigation")}>
             {destinations.map((item) => (
               <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
                 <StreamIcon name={item.icon} size={16} />
@@ -93,7 +93,7 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
             type="button"
             className="hub-icon-button hub-search-back"
             onClick={closeSearch}
-            aria-label="Đóng tìm kiếm"
+            aria-label={text("Đóng tìm kiếm", "Close search")}
           >
             <StreamIcon name="back" size={20} />
           </button>
@@ -103,7 +103,7 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
               ref={searchTrigger}
               type="button"
               className="hub-icon-button hub-search-link"
-              aria-label="Mở tìm kiếm"
+              aria-label={text("Mở tìm kiếm", "Open search")}
               aria-expanded={searchOpen}
               aria-controls="stream-global-search"
               onClick={openSearch}
@@ -119,7 +119,7 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
         <div className={aside ? "hub-content hub-content-split" : "hub-content"}>
           <div className="hub-main">{children}</div>
           {aside && (
-            <aside className="hub-aside" aria-label="Gợi ý và tài khoản">
+            <aside className="hub-aside" aria-label={text("Gợi ý và tài khoản", "Suggestions and account")}>
               {aside}
             </aside>
           )}
@@ -128,11 +128,15 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
       <footer className="hub-footer">
         <StreamBrand />
         <p>
-          <strong>AOV Stream</strong> · Quan sát trận đấu, khám phá cách chơi. Dữ liệu được biên tập từ nguồn đối chiếu.
+          <strong>AOV Stream</strong>{" "}
+          {text(
+            "· Quan sát trận đấu, khám phá cách chơi. Dữ liệu được biên tập từ nguồn đối chiếu.",
+            "· Watch matches, explore how the game is played. Data is compiled from reference sources.",
+          )}
         </p>
-        <nav aria-label="Liên kết cuối trang">
+        <nav aria-label={text("Liên kết cuối trang", "Footer links")}>
           <a href={WIKI_URL}>AOV WiKi</a>
-          <a href={`${ADMIN_URL}/tournaments`}>Đóng góp dữ liệu</a>
+          <a href={`${ADMIN_URL}/tournaments`}>{text("Đóng góp dữ liệu", "Contribute data")}</a>
         </nav>
       </footer>
       <SignInDialog />
@@ -162,6 +166,7 @@ function SearchForm({
   inputRef: RefObject<HTMLInputElement | null>
   onDismiss: () => void
 }) {
+  const { text } = useStreamLocale()
   const navigate = useNavigate()
   const [value, setValue] = useState(initialValue)
   function submit(event: FormEvent) {
@@ -171,21 +176,27 @@ function SearchForm({
     inputRef.current?.blur()
   }
   return (
-    <form id="stream-global-search" className="hub-search" role="search" aria-label="Tìm kiếm chung" onSubmit={submit}>
+    <form
+      id="stream-global-search"
+      className="hub-search"
+      role="search"
+      aria-label={text("Tìm kiếm chung", "Global search")}
+      onSubmit={submit}
+    >
       <input
         ref={inputRef}
         type="search"
         enterKeyHint="search"
         maxLength={100}
-        aria-label="Tìm kiếm trên AOV Stream"
-        placeholder="Tìm trang, bài viết, giải đấu…"
+        aria-label={text("Tìm kiếm trên AOV Stream", "Search AOV Stream")}
+        placeholder={text("Tìm trang, bài viết, giải đấu…", "Search pages, posts, tournaments…")}
         value={value}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Escape") onDismiss()
         }}
       />
-      <button type="submit" aria-label="Tìm kiếm">
+      <button type="submit" aria-label={text("Tìm kiếm", "Search")}>
         <StreamIcon name="search" size={16} />
       </button>
     </form>

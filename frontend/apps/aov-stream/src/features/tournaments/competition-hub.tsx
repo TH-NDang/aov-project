@@ -6,6 +6,7 @@ import type { CompetitionView } from "@aov/community-contracts"
 import { useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { competitionStatus, competitionStatusLabels, type CompetitionStatus } from "../community/community-ui"
 import { competitionCatalogQuery } from "./tournament-api"
 import { competitionMatches } from "./match-model"
@@ -29,6 +30,7 @@ const GROUP_PREVIEW = { wide: 6, compact: 3 }
 const AHEAD = ["ONGOING", "UPCOMING", "ANNOUNCED"]
 
 export function CompetitionDirectory() {
+  const { text, languageTag } = useStreamLocale()
   const query = useQuery(competitionCatalogQuery)
   const layout = usePageLayout()
   const [params, setParams] = useSearchParams()
@@ -64,19 +66,19 @@ export function CompetitionDirectory() {
   const clearFilters = () => setParams(tab === "schedule" ? { tab: "schedule" } : {})
   const regionFilter = (
     <FilterSelect
-      label="Khu vực"
+      label={text("Khu vực", "Region")}
       value={region}
       onChange={(value) => update("region", value)}
-      all="Mọi khu vực"
+      all={text("Mọi khu vực", "All regions")}
       options={regions.map((value) => [value, value])}
     />
   )
   const yearFilter = (
     <FilterSelect
-      label="Năm"
+      label={text("Năm", "Year")}
       value={year}
       onChange={(value) => update("year", value)}
-      all="Mọi năm"
+      all={text("Mọi năm", "All years")}
       options={years.map((value) => [String(value), String(value)])}
     />
   )
@@ -85,11 +87,11 @@ export function CompetitionDirectory() {
       {regionFilter}
       {yearFilter}
       <FilterSelect
-        label="Trạng thái giải"
+        label={text("Trạng thái giải", "Tournament status")}
         value={status}
         onChange={(value) => update("status", value)}
-        all="Mọi trạng thái"
-        options={Object.entries(competitionStatusLabels)}
+        all={text("Mọi trạng thái", "All statuses")}
+        options={Object.entries(competitionStatusLabels())}
       />
     </>
   )
@@ -135,11 +137,11 @@ export function CompetitionDirectory() {
   const scheduleSelects = Number(regions.length > 1) + Number(years.length > 1)
   const scheduleFiltered = region !== "all" || year !== "all" || !!needle
   const linked = [
-    status !== "all" && `giải ${(competitionStatusLabels[status as CompetitionStatus] ?? status).toLowerCase()}`,
+    status !== "all" && `giải ${(competitionStatusLabels()[status as CompetitionStatus] ?? status).toLowerCase()}`,
     stage &&
       `giai đoạn ${items.flatMap((entry) => entry.content.plan.stages).find((item) => item.code === stage)?.name ?? stage}`,
-    day && scheduleDayLabel(day),
-  ].filter((text): text is string => !!text)
+    day && scheduleDayLabel(day, languageTag),
+  ].filter((label): label is string => !!label)
   const clearLinked = () =>
     setParams((current) => {
       const next = new URLSearchParams(current)
@@ -177,35 +179,37 @@ export function CompetitionDirectory() {
   )
   return (
     <StreamShell>
-      <title>Giải đấu & lịch thi đấu — AOV Stream</title>
+      <title>{text("Giải đấu & lịch thi đấu — AOV Stream", "Tournaments & schedule — AOV Stream")}</title>
       <div className="competition-hub cp-container">
         <header className="tn-page-head">
           <div>
-            <h1>Giải đấu</h1>
+            <h1>{text("Giải đấu", "Tournaments")}</h1>
             <p>Mùa giải, lịch thi đấu và kết quả từng trận.</p>
           </div>
           <Link className="cp-button" to="/games">
             <StreamIcon name="search" size={15} />
-            Tra cứu ván đấu
+            {text("Tra cứu ván đấu", "Game lookup")}
           </Link>
         </header>
-        <nav className="cp-tabs" aria-label="Nội dung giải đấu">
+        <nav className="cp-tabs" aria-label={text("Nội dung giải đấu", "Tournament content")}>
           <button
             aria-current={tab === "competitions" ? "page" : undefined}
             onClick={() => update("tab", "competitions")}
           >
-            Các giải đấu
+            {text("Các giải đấu", "Tournaments")}
           </button>
           <button aria-current={tab === "schedule" ? "page" : undefined} onClick={() => update("tab", "schedule")}>
-            Lịch & kết quả
+            {text("Lịch & kết quả", "Schedule & results")}
           </button>
         </nav>
         <div className="competition-filters">
           <label className="stream-search">
             <StreamIcon name="search" size={16} />
             <input
-              aria-label={schedule ? "Tìm trận đấu theo đội hoặc giải" : "Tìm giải đấu"}
-              placeholder={schedule ? "Tìm đội, giải đấu…" : "Tìm giải đấu, hệ thống giải…"}
+              aria-label={schedule ? "Tìm trận đấu theo đội hoặc giải" : text("Tìm giải đấu", "Search tournaments")}
+              placeholder={
+                schedule ? "Tìm đội, giải đấu…" : text("Tìm giải đấu, hệ thống giải…", "Search tournaments, circuits…")
+              }
               value={search}
               onChange={(event) => update("q", event.target.value)}
             />
@@ -216,13 +220,18 @@ export function CompetitionDirectory() {
           {layout === "compact" ? (
             (!schedule || scheduleSelects > 0) && (
               <PublicFilterSheet
-                title={schedule ? "Lọc trận đấu" : "Lọc giải đấu"}
-                triggerLabel="Lọc"
+                title={schedule ? "Lọc trận đấu" : text("Lọc giải đấu", "Filter tournaments")}
+                triggerLabel={text("Lọc", "Filter")}
                 count={[region, year, ...(schedule ? [] : [status])].filter((value) => value !== "all").length}
-                resetLabel="Xóa lọc"
+                resetLabel={text("Xóa lọc", "Clear filters")}
                 onReset={clearFilters}
                 resultLabel={
-                  schedule ? `Xem ${fixtureCount.toLocaleString("vi-VN")} trận` : `Xem ${visible.length} giải đấu`
+                  schedule
+                    ? `Xem ${fixtureCount.toLocaleString(languageTag)} trận`
+                    : text(
+                        `Xem ${visible.length} giải đấu`,
+                        `Show ${visible.length} ${visible.length === 1 ? "tournament" : "tournaments"}`,
+                      )
                 }
               >
                 <div className="competition-sheet-filters">{schedule ? scheduleFilters : filters}</div>
@@ -233,7 +242,7 @@ export function CompetitionDirectory() {
               {schedule ? scheduleFilters : filters}
               {(schedule ? scheduleFiltered : filtered) && (
                 <button className="competition-clear" onClick={clearFilters}>
-                  Xóa bộ lọc
+                  {text("Xóa bộ lọc", "Clear filters")}
                 </button>
               )}
             </div>
@@ -244,20 +253,27 @@ export function CompetitionDirectory() {
         )}
         <div className="competition-hub-results">
           {query.isPending ? (
-            <div className="hub-skeleton-rows" role="status" aria-label="Đang tải giải đấu" />
+            <div
+              className="hub-skeleton-rows"
+              role="status"
+              aria-label={text("Đang tải giải đấu", "Loading tournaments")}
+            />
           ) : query.isError && !query.data ? (
             <div className="hub-state" role="alert">
-              <h2>Chưa tải được giải đấu</h2>
+              <h2>{text("Chưa tải được giải đấu", "Tournaments could not be loaded")}</h2>
               <button className="cp-button" onClick={() => void query.refetch()}>
-                Thử lại
+                {text("Thử lại", "Retry")}
               </button>
             </div>
           ) : (
             <>
               {query.isError && (
                 <p className="cp-error" role="alert">
-                  Chưa cập nhật được dữ liệu. Đang hiển thị bản đã tải.{" "}
-                  <button onClick={() => void query.refetch()}>Thử lại</button>
+                  {text(
+                    "Chưa cập nhật được dữ liệu. Đang hiển thị bản đã tải.",
+                    "The data could not be updated. Showing the version already loaded.",
+                  )}{" "}
+                  <button onClick={() => void query.refetch()}>{text("Thử lại", "Retry")}</button>
                 </p>
               )}
               {schedule ? (
@@ -299,11 +315,18 @@ export function CompetitionDirectory() {
                 </>
               ) : (
                 <div className="hub-state">
-                  <h2>{items.length ? "Không có giải phù hợp" : "Chưa có giải đấu được công bố"}</h2>
+                  <h2>
+                    {items.length
+                      ? text("Không có giải phù hợp", "No matching tournaments")
+                      : text("Chưa có giải đấu được công bố", "No tournaments published yet")}
+                  </h2>
                   <p>
                     {items.length
-                      ? "Thử khu vực, năm hoặc trạng thái khác."
-                      : "Các mùa giải và lịch thi đấu sẽ xuất hiện tại đây."}
+                      ? text("Thử khu vực, năm hoặc trạng thái khác.", "Try another region, year or status.")
+                      : text(
+                          "Các mùa giải và lịch thi đấu sẽ xuất hiện tại đây.",
+                          "Seasons and schedules will appear here.",
+                        )}
                   </p>
                 </div>
               )}
@@ -317,6 +340,7 @@ export function CompetitionDirectory() {
 
 /** One circuit and its seasons, newest first. Older seasons fold away until asked for; a filtered list shows them all. */
 function CircuitGroup({ entries, open, other }: { entries: CompetitionView[]; open: boolean; other: boolean }) {
+  const { text } = useStreamLocale()
   const [expanded, setExpanded] = useState(false)
   const toggle = useRef<HTMLButtonElement>(null)
   const preview = GROUP_PREVIEW[usePageLayout()]
@@ -327,7 +351,7 @@ function CircuitGroup({ entries, open, other }: { entries: CompetitionView[]; op
     if (expanded) window.scrollBy({ top: after - before, behavior: "instant" })
   }
   const { circuit, plan } = entries[0]!.content
-  const name = other ? "Các giải đấu khác" : circuit?.name || plan.circuit
+  const name = other ? text("Các giải đấu khác", "Other tournaments") : circuit?.name || plan.circuit
   const shown = open || expanded ? entries : entries.slice(0, preview)
   const hidden = entries.length - shown.length
   return (
@@ -336,12 +360,14 @@ function CircuitGroup({ entries, open, other }: { entries: CompetitionView[]; op
         <h2>
           {name}{" "}
           <small>
-            {entries.length} {other ? "giải" : "mùa giải"}
+            {other
+              ? `${entries.length} giải`
+              : text(`${entries.length} mùa giải`, `${entries.length} ${entries.length === 1 ? "season" : "seasons"}`)}
           </small>
         </h2>
         {!other && circuit?.published && (
           <Link to={`/pages/${circuit.code}`}>
-            Hệ thống giải <StreamIcon name="arrow" size={14} />
+            {text("Hệ thống giải", "Tournament circuit")} <StreamIcon name="arrow" size={14} />
           </Link>
         )}
       </div>
@@ -352,7 +378,7 @@ function CircuitGroup({ entries, open, other }: { entries: CompetitionView[]; op
       </div>
       {(hidden > 0 || (expanded && !open && entries.length > preview)) && (
         <button ref={toggle} type="button" className="tn-more" aria-expanded={expanded} onClick={fold}>
-          {expanded ? "Thu gọn" : `Xem thêm ${hidden} ${other ? "giải" : "mùa giải"}`}
+          {expanded ? text("Thu gọn", "Show less") : `Xem thêm ${hidden} ${other ? "giải" : "mùa giải"}`}
           <StreamIcon name={expanded ? "chevronLeft" : "chevronRight"} size={14} />
         </button>
       )}

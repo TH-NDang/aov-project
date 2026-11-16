@@ -1,25 +1,69 @@
 import type { CSSProperties } from "react"
 import { infiniteQueryOptions, useQuery } from "@tanstack/react-query"
-import type { CommunityProfile, CompetitionView, PageSlice, TournamentContent } from "@aov/community-contracts"
+import type {
+  CommunityProfile,
+  CompetitionView,
+  PageSlice,
+  PersonRole,
+  ProfileKind,
+  TournamentContent,
+} from "@aov/community-contracts"
+import { streamLanguageTag, streamText, useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { LocalTime } from "@aov/ui/components/local-time"
+import { knownCountryName } from "@aov/ui/lib/country-references"
 import { currentTimeZone, formatCalendarDate, formatInZone } from "@aov/ui/lib/time-zone"
 
-const regionNames = new Intl.DisplayNames(["vi"], { type: "region", style: "short" })
-const regionCode = /^[A-Z]{2}$/
-
-/** The Vietnamese name of a two-letter country code; a country written out in words is kept as written. */
-export function regionName(country?: string | null) {
-  const value = country?.trim()
-  if (!value) return null
-  return regionCode.test(value) ? regionNames.of(value) || value : value
+/** The English name of each page kind; `profileKindLabels` in the shared contracts holds the Vietnamese one. */
+export const profileKindEnglish: Record<ProfileKind, string> = {
+  CIRCUIT: "Tournament circuit",
+  ORGANIZATION: "Organization",
+  TEAM: "Team",
+  PLAYER: "Player",
+  PERSON: "Staff",
 }
 
-/** Countries some pages spell out instead of giving their code, so both spellings count as one region. */
+/** English names of the staff roles: `personRoleLabels` in the shared contracts carries the Vietnamese ones only. */
+export const personRoleEnglish: Record<PersonRole, string> = {
+  COACH: "Coach",
+  TEAM_ANALYST: "Team analyst",
+  HOST: "Host",
+  INTERVIEWER: "Interviewer",
+  CASTER: "Caster",
+  GUEST_ANALYST: "Guest analyst",
+}
+
+const regionCode = /^[A-Z]{2}$/
+const regionNamesByLocale = new Map<string, Intl.DisplayNames>()
+function regionNamesIn(locale: string) {
+  let names = regionNamesByLocale.get(locale)
+  if (!names) {
+    names = new Intl.DisplayNames([locale], { type: "region", style: "short" })
+    regionNamesByLocale.set(locale, names)
+  }
+  return names
+}
+
+/**
+ * The name of a two-letter country code in the reader's language. A country written out in words is kept as written,
+ * except that English readers get the countries this app knows in English.
+ */
+export function regionName(country?: string | null, locale: string = streamLanguageTag()) {
+  const value = country?.trim()
+  if (!value) return null
+  if (regionCode.test(value)) return regionNamesIn(locale).of(value) || value
+  // Editors also type the name in Vietnamese; English readers get the countries this app knows in English.
+  return locale.startsWith("en") ? (knownCountryName(value, locale) ?? value) : value
+}
+
+/**
+ * Countries some pages spell out instead of giving their code, so both spellings count as one region. Pages store the
+ * Vietnamese spelling, so the names are matched in Vietnamese whatever the reader's language.
+ */
 const regionCodesByName = new Map(
   ["VN", "TH", "TW", "HK", "MO", "ID", "SG", "MY", "PH", "JP", "KR", "CN", "LA", "KH", "MM", "IN", "US", "GB"].map(
-    (code) => [regionNames.of(code)!.toLowerCase(), code],
+    (code) => [regionNamesIn("vi").of(code)!.toLowerCase(), code],
   ),
 )
 
@@ -49,23 +93,35 @@ export function hueOf(text: string) {
 /** Formats an ISO calendar date (yyyy-mm-dd) without shifting it through the viewer's time zone. */
 export function formatDay(value?: string | null) {
   if (!value) return ""
-  return formatCalendarDate(value.slice(0, 10))
+  return formatCalendarDate(value.slice(0, 10), undefined, streamLanguageTag())
 }
 
-export function dayRange(startsOn?: string | null, endsOn?: string | null, fallback = "Chưa xác định lịch") {
+export function dayRange(
+  startsOn?: string | null,
+  endsOn?: string | null,
+  fallback = streamText("Chưa xác định lịch", "Schedule to be announced"),
+) {
   const start = formatDay(startsOn)
   const end = formatDay(endsOn)
   if (!start && !end) return fallback
   if (start === end) return start
-  return `${start || "Chưa rõ"} – ${end || "Chưa rõ"}`
+  const unknown = streamText("Chưa rõ", "Unknown")
+  return `${start || unknown} – ${end || unknown}`
 }
 
 export type CompetitionStatus = "ONGOING" | "UPCOMING" | "ANNOUNCED" | "FINISHED"
-export const competitionStatusLabels: Record<CompetitionStatus, string> = {
-  ONGOING: "Đang diễn ra",
-  UPCOMING: "Sắp diễn ra",
-  ANNOUNCED: "Đã công bố",
-  FINISHED: "Đã kết thúc",
+const COMPETITION_STATUS_NAMES: Record<CompetitionStatus, readonly [string, string]> = {
+  ONGOING: ["Đang diễn ra", "Ongoing"],
+  UPCOMING: ["Sắp diễn ra", "Upcoming"],
+  ANNOUNCED: ["Đã công bố", "Announced"],
+  FINISHED: ["Đã kết thúc", "Finished"],
+}
+
+/** The status names in the reader's language. Call it while rendering so a language change shows at once. */
+export function competitionStatusLabels() {
+  return Object.fromEntries(
+    Object.entries(COMPETITION_STATUS_NAMES).map(([status, names]) => [status, streamText(...names)]),
+  ) as Record<CompetitionStatus, string>
 }
 
 /** Uses the edited status when there is one; otherwise reads it from the published dates. */
@@ -122,7 +178,8 @@ export function Avatar({ profile, className = "" }: { profile: CommunityProfile;
 }
 
 export function followersLabel(count: number) {
-  return `${count.toLocaleString("vi-VN")} người theo dõi`
+  const value = count.toLocaleString(streamLanguageTag())
+  return streamText(`${value} người theo dõi`, `${value} ${count === 1 ? "follower" : "followers"}`)
 }
 
 /** A page's avatar from its feed card; pages without artwork get initials on a colour from their name. */
@@ -140,20 +197,39 @@ export function CardAvatar({ name, url, className = "" }: { name: string; url?: 
   )
 }
 
-const relativeTime = new Intl.RelativeTimeFormat("vi-VN", { numeric: "auto" })
+const relativeTimes = new Map<string, Intl.RelativeTimeFormat>()
+function relativeTimeIn(locale: string) {
+  let format = relativeTimes.get(locale)
+  if (!format) relativeTimes.set(locale, (format = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })))
+  return format
+}
 
 /** Recent moments read as relative minutes, hours or days; anything older than a week shows its date. */
-export function timeAgo(value: string, now = Date.now(), timeZone = currentTimeZone()) {
+export function timeAgo(
+  value: string,
+  now = Date.now(),
+  timeZone = currentTimeZone(),
+  locale: string = streamLanguageTag(),
+) {
   const seconds = Math.round((new Date(value).getTime() - now) / 1000)
   if (Number.isNaN(seconds)) return ""
-  if (seconds > -60) return "Vừa xong"
+  const relativeTime = relativeTimeIn(locale)
+  if (seconds > -60) return locale.startsWith("en") ? "Just now" : "Vừa xong"
   if (seconds > -3600) return relativeTime.format(Math.round(seconds / 60), "minute")
   if (seconds > -86400) return relativeTime.format(Math.round(seconds / 3600), "hour")
   if (seconds > -7 * 86400) return relativeTime.format(Math.round(seconds / 86400), "day")
-  return formatInZone(value, timeZone, { day: "2-digit", month: "2-digit", year: "numeric" })
+  return formatInZone(value, timeZone, { day: "2-digit", month: "2-digit", year: "numeric" }, locale)
 }
 
 /** The relative time of a post or notification, which opens its exact time. These moments have no zone of their own. */
 export function TimeAgo({ value, className }: { value: string; className?: string }) {
-  return <LocalTime value={value} className={className} label={(zone) => timeAgo(value, Date.now(), zone)} />
+  const { languageTag } = useStreamLocale()
+  return (
+    <LocalTime
+      value={value}
+      className={className}
+      locale={languageTag}
+      label={(zone) => timeAgo(value, Date.now(), zone, languageTag)}
+    />
+  )
 }

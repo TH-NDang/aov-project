@@ -5,8 +5,8 @@ import type { HeroDetail } from "./hero-api"
 
 const RATINGS = [
   ["survivability", "Sinh tồn", "Survivability", "shield"],
-  ["attackDamage", "Đánh thường", "Basic attack", "sword"],
-  ["skillEffects", "Hiệu ứng kỹ năng", "Skill effects", "orb"],
+  ["attackDamage", "Đánh thường", "Normal attack", "sword"],
+  ["skillEffects", "Hiệu ứng kỹ năng", "Ability effects", "orb"],
   ["difficulty", "Độ khó", "Difficulty", "flame"],
 ] as const satisfies readonly (readonly [string, string, string, GameplayIconName])[]
 

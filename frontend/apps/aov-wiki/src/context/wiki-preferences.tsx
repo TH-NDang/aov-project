@@ -5,16 +5,9 @@ import { PublicDateFormatSelect } from "@aov/ui/components/public-date-format-se
 import { PublicCurrencySelect } from "@aov/ui/components/public-currency-select"
 import { PublicTimeZoneSelect } from "@aov/ui/components/public-time-zone-select"
 import { WikiIcon } from "../components/wiki-icon"
-import { useWikiContext, type WikiRegion } from "./wiki-context"
+import { MARKET_NAMES, useWikiContext, type WikiRegion } from "./wiki-context"
 
 const FLAGS = new Set(["VN", "US", "TH", "TW", "ID"])
-const MARKET_NAMES: Record<string, string> = {
-  VN: "Vietnam",
-  TH: "Thailand",
-  TW: "Taiwan",
-  ID: "Indonesia",
-  GLOBAL: "Global",
-}
 
 function MarketFlag({ code }: { code: string }) {
   return FLAGS.has(code) ? (

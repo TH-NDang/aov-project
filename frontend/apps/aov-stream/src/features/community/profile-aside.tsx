@@ -10,8 +10,9 @@ import {
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
-import { Avatar, followersLabel, formatDay, regionKey, regionName } from "./community-ui"
+import { Avatar, followersLabel, formatDay, profileKindEnglish, regionKey, regionName } from "./community-ui"
 
 function linkName(link: ProfileLink) {
   if (link.label) return link.label
@@ -28,53 +29,60 @@ function linkName(link: ProfileLink) {
  * where `channels` is off because the page head already carries them as icons.
  */
 export function ProfileAside({ profile, channels = true }: { profile: CommunityProfile; channels?: boolean }) {
+  const { text, languageTag } = useStreamLocale()
   const content = profile.content!
-  const region = regionName(content.country)
+  const region = regionName(content.country, languageTag)
   return (
-    <aside className="pf-side" aria-label="Giới thiệu và nguồn thông tin">
+    <aside className="pf-side" aria-label={text("Giới thiệu và nguồn thông tin", "Introduction and sources")}>
       <section className="tn-side-card pf-about">
-        <h2>Thông tin chung</h2>
+        <h2>{text("Thông tin chung", "General information")}</h2>
         {content.biography && <p className="pf-bio">{content.biography}</p>}
         <dl className="tn-facts">
           {content.shortName && (
             <div>
-              <dt>Tên viết tắt</dt>
+              <dt>{text("Tên viết tắt", "Short name")}</dt>
               <dd>{content.shortName}</dd>
             </div>
           )}
           {region && (
             <div>
-              <dt>Quốc gia / khu vực</dt>
+              <dt>{text("Quốc gia / khu vực", "Country / region")}</dt>
               <dd>{region}</dd>
             </div>
           )}
           <div>
-            <dt>Quản lý trang</dt>
+            <dt>{text("Quản lý trang", "Page management")}</dt>
             <dd>
               {profile.represented ? (
                 <>
-                  Đại diện đã xác minh <OfficialBadge label="Đại diện đã xác minh" />
+                  {text("Đại diện đã xác minh", "Verified representative")}{" "}
+                  <OfficialBadge label={text("Đại diện đã xác minh", "Verified representative")} />
                 </>
               ) : (
-                "AthaHub tổng hợp từ nguồn công khai"
+                text("AthaHub tổng hợp từ nguồn công khai", "Compiled by AthaHub from public sources")
               )}
             </dd>
           </div>
         </dl>
         {!profile.represented && (
-          <p className="cp-meta">Bạn là người đại diện? Chọn nút ⋯ ở đầu trang để gửi yêu cầu quản lý.</p>
+          <p className="cp-meta">
+            {text(
+              "Bạn là người đại diện? Chọn nút ⋯ ở đầu trang để gửi yêu cầu quản lý.",
+              "Are you a representative? Select the ⋯ button at the top of the page to send a request to manage it.",
+            )}
+          </p>
         )}
       </section>
       {channels && content.links.length > 0 && (
         <section className="tn-side-card">
-          <h2>Kênh liên hệ</h2>
+          <h2>{text("Kênh liên hệ", "Contact channels")}</h2>
           <ul className="pf-links">
             {content.links.map((link, index) => (
               <li key={`${link.url}-${index}`}>
                 <a href={link.url} target="_blank" rel="noreferrer">
                   <SocialPlatformIcon url={link.url} size={18} />
                   <span>{linkName(link)}</span>
-                  {link.official && <OfficialBadge label="Kênh chính thức" />}
+                  {link.official && <OfficialBadge label={text("Kênh chính thức", "Official channel")} />}
                   <StreamIcon name="external" size={14} />
                 </a>
               </li>
@@ -84,14 +92,18 @@ export function ProfileAside({ profile, channels = true }: { profile: CommunityP
       )}
       {content.sources.length > 0 && (
         <section className="tn-side-card">
-          <h2>Nguồn thông tin</h2>
+          <h2>{text("Nguồn thông tin", "Sources")}</h2>
           <ul className="pf-links">
             {content.sources.map((source, index) => (
               <li key={`${source.url}-${index}`}>
                 <a href={source.url} target="_blank" rel="noreferrer">
                   <span>
                     {linkName(source)}
-                    {source.checkedOn && <small>Đối chiếu {formatDay(source.checkedOn)}</small>}
+                    {source.checkedOn && (
+                      <small>
+                        {text("Đối chiếu", "Checked on")} {formatDay(source.checkedOn)}
+                      </small>
+                    )}
                   </span>
                   <StreamIcon name="external" size={14} />
                 </a>
@@ -110,6 +122,7 @@ export function ProfileAside({ profile, channels = true }: { profile: CommunityP
  * They come from the most recently updated pages of that kind, the only order the service lists pages in.
  */
 function RelatedPages({ profile }: { profile: CommunityProfile }) {
+  const { text } = useStreamLocale()
   const region = regionKey(profile.content?.country)
   const pages = useQuery({
     queryKey: ["related-pages", profile.kind],
@@ -123,7 +136,12 @@ function RelatedPages({ profile }: { profile: CommunityProfile }) {
   if (!related.length) return null
   return (
     <section className="tn-side-card pf-related">
-      <h2>{profileKindLabels[profile.kind]} cùng khu vực</h2>
+      <h2>
+        {text(
+          `${profileKindLabels[profile.kind]} cùng khu vực`,
+          `${profileKindEnglish[profile.kind]} pages in the same region`,
+        )}
+      </h2>
       <ul className="tn-mini-list">
         {related.map((page) => (
           <li key={page.id}>

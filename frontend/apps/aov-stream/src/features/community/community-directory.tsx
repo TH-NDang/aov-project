@@ -22,9 +22,10 @@ import {
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { useFollowedIds, useFollowPage } from "./community-queries"
-import { Avatar, followersLabel, regionKey, regionName } from "./community-ui"
+import { Avatar, followersLabel, personRoleEnglish, profileKindEnglish, regionKey, regionName } from "./community-ui"
 import "./community.css"
 import "./community-directory.css"
 
@@ -60,17 +61,17 @@ type Region = { key: string; name: string; count: number }
 
 const regionOf = (profile: CommunityProfile) => regionKey(profile.content?.country) || UNRECORDED
 
-/** The regions of a list of pages, largest first; pages without a country close the list. */
-function regionFacet(profiles: CommunityProfile[]): Region[] {
+/** The regions of a list of pages, largest first, named in the reader's language; pages without a country close it. */
+function regionFacet(profiles: CommunityProfile[], locale: string): Region[] {
   const counts = new Map<string, number>()
   for (const profile of profiles) counts.set(regionOf(profile), (counts.get(regionOf(profile)) || 0) + 1)
   return [...counts]
-    .map(([key, count]) => ({ key, count, name: key === UNRECORDED ? "Chưa ghi khu vực" : regionName(key)! }))
+    .map(([key, count]) => ({ key, count, name: key === UNRECORDED ? "Chưa ghi khu vực" : regionName(key, locale)! }))
     .sort(
       (a, b) =>
         Number(a.key === UNRECORDED) - Number(b.key === UNRECORDED) ||
         b.count - a.count ||
-        a.name.localeCompare(b.name, "vi"),
+        a.name.localeCompare(b.name, locale),
     )
 }
 
@@ -96,6 +97,7 @@ function useChosenChipInView(choice: string) {
  * download starts only when the regions are asked for, so a visit that does not filter by region stays light.
  */
 export function PageDirectory() {
+  const { text, languageTag } = useStreamLocale()
   const [params, setParams] = useSearchParams()
   const requested = params.get("kind") as ProfileKind | null
   const kind = requested && profileKinds.includes(requested) ? requested : null
@@ -124,7 +126,7 @@ export function PageDirectory() {
 
   const profiles = query.data?.pages.flatMap((page) => page.items) ?? []
   const complete = !!query.data && !hasNextPage
-  const regions = complete ? regionFacet(profiles) : null
+  const regions = complete ? regionFacet(profiles, languageTag) : null
   // The button that asked for the regions gives way to them; keyboard focus moves to the first region chip.
   const regionsReady = !!regions
   useEffect(() => {
@@ -159,19 +161,27 @@ export function PageDirectory() {
     <section ref={section} aria-labelledby="page-directory">
       <div className="tn-heading">
         <h2 id="page-directory">
-          Danh bạ trang {count != null && <small>{count.toLocaleString("vi-VN")} trang</small>}
+          {text("Danh bạ trang", "Page directory")}{" "}
+          {count != null && (
+            <small>
+              {text(
+                `${count.toLocaleString(languageTag)} trang`,
+                `${count.toLocaleString(languageTag)} ${count === 1 ? "page" : "pages"}`,
+              )}
+            </small>
+          )}
         </h2>
       </div>
       <div className="pg-filters">
-        <div ref={kindRow} className="hub-pills" role="group" aria-label="Loại trang">
+        <div ref={kindRow} className="hub-pills" role="group" aria-label={text("Loại trang", "Page type")}>
           <button type="button" aria-pressed={!kind} onClick={() => update({ kind: "" })}>
             <StreamIcon name="grid" size={16} />
-            Tất cả
+            {text("Tất cả", "All")}
           </button>
           {profileKinds.map((type) => (
             <button key={type} type="button" aria-pressed={kind === type} onClick={() => update({ kind: type })}>
               <KindArt kind={type} />
-              {profileKindLabels[type]}
+              {text(profileKindLabels[type], profileKindEnglish[type])}
             </button>
           ))}
         </div>
@@ -197,7 +207,7 @@ export function PageDirectory() {
           ))}
       </div>
       {query.isPending || (!rows.length && !complete && !query.isError) ? (
-        <div className="cp-grid" role="status" aria-label="Đang tải danh bạ">
+        <div className="cp-grid" role="status" aria-label={text("Đang tải danh bạ", "Loading the directory")}>
           {Array.from({ length: 12 }, (_, index) => (
             <div className="hub-skeleton cp-card-skeleton" key={index} />
           ))}
@@ -207,20 +217,27 @@ export function PageDirectory() {
           <h3>Chưa tải được danh bạ</h3>
           <p>{query.error.message}</p>
           <button type="button" className="cp-button" onClick={() => void query.refetch()}>
-            Thử lại
+            {text("Thử lại", "Retry")}
           </button>
         </div>
       ) : !rows.length && complete ? (
         <div className="hub-state">
-          <h3>{kind || narrowed ? "Không có trang nào khớp bộ lọc" : "Danh bạ đang được xây dựng"}</h3>
+          <h3>
+            {kind || narrowed
+              ? "Không có trang nào khớp bộ lọc"
+              : text("Danh bạ đang được xây dựng", "The directory is being built")}
+          </h3>
           <p>
             {kind || narrowed
               ? "Thử một loại trang hoặc một khu vực khác."
-              : "Trang đã đối chiếu và công bố sẽ xuất hiện tại đây."}
+              : text(
+                  "Trang đã đối chiếu và công bố sẽ xuất hiện tại đây.",
+                  "Pages that have been cross-checked and published will appear here.",
+                )}
           </p>
           {(kind || narrowed) && (
             <button type="button" className="cp-button" onClick={() => update({ kind: "", region: "" })}>
-              Xóa bộ lọc
+              {text("Xóa bộ lọc", "Clear filters")}
             </button>
           )}
         </div>
@@ -237,7 +254,11 @@ export function PageDirectory() {
           ))}
         </div>
       )}
-      <InfiniteScroll query={more} label="Đang tải thêm trang" />
+      <InfiniteScroll
+        query={more}
+        label={text("Đang tải thêm trang", "Loading more pages")}
+        retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+      />
     </section>
   )
 }
@@ -255,6 +276,7 @@ function RegionChips({
   value: string
   onChange: (value: string) => void
 }) {
+  const { text, languageTag } = useStreamLocale()
   const row = useChosenChipInView(value)
   const recorded = regions.filter((entry) => entry.key !== UNRECORDED)
   // One region, or none, leaves nothing to choose between.
@@ -265,13 +287,13 @@ function RegionChips({
   const rest = regions.filter((entry) => !top.includes(entry))
   const other = rest.find((entry) => entry.key === value)
   return (
-    <div ref={row} className="hub-pills" role="group" aria-label="Khu vực" data-regions="">
+    <div ref={row} className="hub-pills" role="group" aria-label={text("Khu vực", "Region")} data-regions="">
       <button type="button" aria-pressed={!value} onClick={() => onChange("")}>
-        Mọi khu vực
+        {text("Mọi khu vực", "All regions")}
       </button>
       {top.map((entry) => (
         <button key={entry.key} type="button" aria-pressed={value === entry.key} onClick={() => onChange(entry.key)}>
-          {entry.name} <small>{entry.count.toLocaleString("vi-VN")}</small>
+          {entry.name} <small>{entry.count.toLocaleString(languageTag)}</small>
         </button>
       ))}
       {rest.length > 0 && (
@@ -280,10 +302,10 @@ function RegionChips({
             <button type="button" className="pg-region-more" aria-current={other ? "true" : undefined}>
               {other ? (
                 <>
-                  {other.name} <small>{other.count.toLocaleString("vi-VN")}</small>
+                  {other.name} <small>{other.count.toLocaleString(languageTag)}</small>
                 </>
               ) : (
-                "Khu vực khác"
+                text("Khu vực khác", "Other regions")
               )}
               <StreamIcon name="chevronRight" size={12} />
             </button>
@@ -293,7 +315,7 @@ function RegionChips({
             sideOffset={6}
             collisionPadding={12}
             className="hub-popover pg-region-menu"
-            drawerTitle="Khu vực khác"
+            drawerTitle={text("Khu vực khác", "Other regions")}
           >
             {rest.map((entry) => (
               <DropdownMenuItem
@@ -302,7 +324,7 @@ function RegionChips({
                 onSelect={() => onChange(entry.key)}
               >
                 {entry.name}
-                <small>{entry.count.toLocaleString("vi-VN")}</small>
+                <small>{entry.count.toLocaleString(languageTag)}</small>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -328,6 +350,7 @@ export function ProfileCard({
   hideKind?: boolean
   hideRegion?: boolean
 }) {
+  const { text, languageTag } = useStreamLocale()
   const follow = useFollowPage()
   const name = profile.content?.name || profile.code
   const followed = following?.has(profile.id) ?? false
@@ -335,11 +358,11 @@ export function ProfileCard({
   // A person's own role says more than the generic staff label, also in a list of people.
   const roles = (profile.kind === "PERSON" && profile.content?.personRoles) || []
   const what = roles.length
-    ? roles.map((role) => personRoleLabels[role]).join(", ")
+    ? roles.map((role) => text(personRoleLabels[role], personRoleEnglish[role])).join(", ")
     : hideKind
       ? null
-      : profileKindLabels[profile.kind]
-  const where = hideRegion ? null : regionName(profile.content?.country)
+      : text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])
+  const where = hideRegion ? null : regionName(profile.content?.country, languageTag)
   return (
     <article className="pg-card" data-person={isIndividualProfile(profile.kind) || undefined}>
       <Link className="pg-card-link" to={`/pages/${profile.code}`} aria-label={name} />
@@ -347,7 +370,9 @@ export function ProfileCard({
       <div className="pg-card-body">
         <strong className="pg-card-name" title={name}>
           {name}
-          {community && profile.represented && <OfficialBadge label="Đại diện đã xác minh" />}
+          {community && profile.represented && (
+            <OfficialBadge label={text("Đại diện đã xác minh", "Verified representative")} />
+          )}
         </strong>
         {(what || where) && <span className="pg-card-meta">{[what, where].filter(Boolean).join(" · ")}</span>}
         {community && profile.followers > 0 && (
@@ -359,13 +384,15 @@ export function ProfileCard({
           type="button"
           className={followed ? "cp-follow-chip" : "cp-follow-chip cp-follow-primary"}
           aria-pressed={followed}
-          aria-label={`Theo dõi ${name}`}
-          title={followed ? "Đang theo dõi" : "Theo dõi"}
+          aria-label={text(`Theo dõi ${name}`, `Follow ${name}`)}
+          title={followed ? text("Đang theo dõi", "Following") : text("Theo dõi", "Follow")}
           disabled={follow.isPending}
           onClick={() => follow.mutate({ pageId: profile.id, following: !followed })}
         >
           <StreamIcon name={followed ? "check" : "plus"} size={14} />
-          <span className="cp-follow-label">{followed ? "Đang theo dõi" : "Theo dõi"}</span>
+          <span className="cp-follow-label">
+            {followed ? text("Đang theo dõi", "Following") : text("Theo dõi", "Follow")}
+          </span>
         </button>
       )}
     </article>

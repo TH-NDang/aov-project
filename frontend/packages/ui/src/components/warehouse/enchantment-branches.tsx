@@ -146,7 +146,9 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
               {canWrite && (
                 <Button variant="ghost" size="sm" className="shrink-0" onClick={() => onEditBranch?.(branch)}>
                   <Pencil className="size-3.5" />
-                  <span className="sr-only @min-[520px]/enchantments:not-sr-only">Chỉnh sửa hệ</span>
+                  <span className="sr-only @min-[520px]/enchantments:not-sr-only">
+                    {t("Chỉnh sửa hệ", "Edit branch")}
+                  </span>
                 </Button>
               )}
             </header>
@@ -179,7 +181,10 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
                         tierIndex !== tiers.length - 1 && "pb-3",
                       )}
                       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-                      aria-label={`Phù hiệu cấp ${["I", "II", "III"][tier - 1]}`}
+                      aria-label={t(
+                        `Phù hiệu cấp ${["I", "II", "III"][tier - 1]}`,
+                        `Tier ${["I", "II", "III"][tier - 1]} enchantments`,
+                      )}
                     >
                       {nodes.map((entry) => {
                         const label = warehouseText(entry.content.translations, locale)
@@ -234,7 +239,9 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
                               <div className="mt-auto flex w-full flex-wrap items-center justify-center gap-1 border-t border-border/50 pt-2">
                                 {entry.revision.state === "DRAFT" && (
                                   <Badge variant="outline" className="text-xs">
-                                    {entry.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
+                                    {entry.revision.effectiveFromPatchVariantId
+                                      ? t("Nháp", "Draft")
+                                      : t("Nháp · Chưa gắn patch", "Draft · No patch yet")}
                                   </Badge>
                                 )}
                                 <CatalogChangeBadges kinds={changeKinds} />
@@ -245,7 +252,10 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
                       })}
                       {!nodes.length && (
                         <p className="col-span-full rounded-xl border border-dashed py-8 text-center text-xs text-muted-foreground">
-                          Chưa có phù hiệu cấp {["I", "II", "III"][tier - 1]}.
+                          {t(
+                            `Chưa có phù hiệu cấp ${["I", "II", "III"][tier - 1]}.`,
+                            `No tier ${["I", "II", "III"][tier - 1]} enchantments yet.`,
+                          )}
                         </p>
                       )}
                     </div>

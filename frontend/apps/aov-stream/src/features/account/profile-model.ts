@@ -88,25 +88,52 @@ export const profileRequest = (draft: ProfileDraft, expectedVersion: number): Pr
   expectedVersion,
 })
 
-export function profileError(error: unknown) {
+export function profileError(error: unknown, locale = "vi-VN") {
+  const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
   if (error instanceof WikiApiError) {
-    const messages: Record<string, string> = {
-      USER_PROFILE_CONFLICT:
+    const messages: Record<string, [string, string]> = {
+      USER_PROFILE_CONFLICT: [
         "Hồ sơ đã thay đổi ở nơi khác. Hãy tải bản mới nhất để xem lại trước khi lưu; nội dung đang nhập vẫn được giữ.",
-      USER_PROFILE_INVALID: "Tên, ngôn ngữ hoặc múi giờ chưa hợp lệ. Hãy kiểm tra lại.",
-      USER_AVATAR_INVALID: "Ảnh chưa được xác nhận hoặc không thuộc lượt tải lên của bạn. Hãy chọn lại ảnh.",
-      STORAGE_UNAVAILABLE: "Kho ảnh đang không kết nối được. Bạn có thể thử lại sau.",
-      INVALID_MEDIA_OBJECT: "Ảnh không hợp lệ. Hãy chọn PNG, JPEG hoặc WebP, tối đa 25 MB.",
-      MEDIA_UPLOAD_EXPIRED: "Lượt tải ảnh đã hết hạn. Vui lòng chọn lại ảnh.",
+        "Your profile was changed somewhere else. Load the latest version and review it before saving; what you have typed is kept.",
+      ],
+      USER_PROFILE_INVALID: [
+        "Tên, ngôn ngữ hoặc múi giờ chưa hợp lệ. Hãy kiểm tra lại.",
+        "The name, language or time zone is not valid. Please check again.",
+      ],
+      USER_AVATAR_INVALID: [
+        "Ảnh chưa được xác nhận hoặc không thuộc lượt tải lên của bạn. Hãy chọn lại ảnh.",
+        "The image was not confirmed or does not belong to your upload. Please choose the image again.",
+      ],
+      STORAGE_UNAVAILABLE: [
+        "Kho ảnh đang không kết nối được. Bạn có thể thử lại sau.",
+        "Image storage cannot be reached right now. You can try again later.",
+      ],
+      INVALID_MEDIA_OBJECT: [
+        "Ảnh không hợp lệ. Hãy chọn PNG, JPEG hoặc WebP, tối đa 25 MB.",
+        "The image is not valid. Choose a PNG, JPEG or WebP of up to 25 MB.",
+      ],
+      MEDIA_UPLOAD_EXPIRED: [
+        "Lượt tải ảnh đã hết hạn. Vui lòng chọn lại ảnh.",
+        "The image upload has expired. Please choose the image again.",
+      ],
     }
-    if (messages[error.code]) return messages[error.code]
-    if (error.status === 401) return "Phiên đăng nhập không còn hiệu lực. Vui lòng đăng nhập lại."
-    if (error.status === 403) return "Tài khoản này chưa được phép chỉnh sửa hồ sơ."
-    return "Chưa xử lý được yêu cầu. Vui lòng thử lại."
+    const known = messages[error.code]
+    if (known) return text(...known)
+    if (error.status === 401)
+      return text(
+        "Phiên đăng nhập không còn hiệu lực. Vui lòng đăng nhập lại.",
+        "Your session is no longer valid. Please sign in again.",
+      )
+    if (error.status === 403)
+      return text(
+        "Tài khoản này chưa được phép chỉnh sửa hồ sơ.",
+        "This account is not allowed to edit the profile yet.",
+      )
+    return text("Chưa xử lý được yêu cầu. Vui lòng thử lại.", "The request could not be handled. Please try again.")
   }
   if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError"))
-    return "Máy chủ phản hồi quá lâu. Vui lòng thử lại."
-  return error instanceof Error ? error.message : "Chưa kết nối được máy chủ."
+    return text("Máy chủ phản hồi quá lâu. Vui lòng thử lại.", "The server took too long to answer. Please try again.")
+  return error instanceof Error ? error.message : text("Chưa kết nối được máy chủ.", "The server could not be reached.")
 }
 
 export function readBrowserPreferences(): BrowserPreferences {

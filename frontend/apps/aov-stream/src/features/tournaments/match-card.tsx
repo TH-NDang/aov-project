@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { StreamImage } from "../../components/stream-image"
+import { useStreamLocale } from "../../components/stream-locale"
 import { matchUnderway } from "./competition-model"
 import { competitionMatchHref, matchState, type CompetitionMatch } from "./match-model"
 import { matchRound, matchSides } from "./match-schedule"
@@ -12,15 +13,23 @@ const when: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", hou
  * out "finished", which the score already shows, for narrow places such as a bracket.
  */
 function MatchStatus({ entry, brief = false }: { entry: CompetitionMatch; brief?: boolean }) {
+  const { text, languageTag } = useStreamLocale()
   const { match, competition } = entry
   const state = matchState(entry)
-  if (matchUnderway(entry)) return <span className="tn-live">Đang diễn ra</span>
-  if (state === "UNSCHEDULED") return <span>Chờ lịch</span>
-  const time = <LocalTime value={match.scheduledAt} sourceTimeZone={competition.content.plan.timezone} format={when} />
+  if (matchUnderway(entry)) return <span className="tn-live">{text("Đang diễn ra", "Ongoing")}</span>
+  if (state === "UNSCHEDULED") return <span>{text("Chờ lịch", "To be scheduled")}</span>
+  const time = (
+    <LocalTime
+      value={match.scheduledAt}
+      sourceTimeZone={competition.content.plan.timezone}
+      format={when}
+      locale={languageTag}
+    />
+  )
   if (state === "UPCOMING" || (brief && state !== "PENDING")) return time
   return (
     <span>
-      {state === "PENDING" ? "Chờ kết quả" : "Đã kết thúc"} · {time}
+      {state === "PENDING" ? text("Chờ kết quả", "Awaiting result") : text("Đã kết thúc", "Finished")} · {time}
     </span>
   )
 }
@@ -38,6 +47,7 @@ export function MatchCard({
   context?: boolean
   brief?: boolean
 }) {
+  const { languageTag } = useStreamLocale()
   const { competition, match } = entry
   const { tournament } = competition.content
   const round = matchRound(entry)
@@ -62,7 +72,7 @@ export function MatchCard({
           </span>
         )
       )}
-      {matchSides(entry).map((team) => (
+      {matchSides(entry, languageTag).map((team) => (
         <span
           key={team.side}
           className="tn-match-team"

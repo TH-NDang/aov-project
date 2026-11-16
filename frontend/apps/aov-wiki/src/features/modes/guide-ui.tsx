@@ -4,10 +4,10 @@ import { Link } from "react-router"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext } from "../../context/wiki-context"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import {
-  TRAIT_KIND_LABEL,
+  TRAIT_KIND_NAMES,
   type Blessing,
   type GuideContent,
   type ModeImage,
@@ -136,6 +136,7 @@ function splitTraits(unit: Unit, index: GuideIndex) {
 
 /** Factions, then classes of a unit: icons with a divider between the two kinds, one line of names, or tags. */
 export function UnitTraits({ unit, index, as }: { unit: Unit; index: GuideIndex; as: "icons" | "names" | "tags" }) {
+  const { locale } = useWikiContext()
   const { factions, classes } = splitTraits(unit, index)
   // Names read as one line of text; tags wrap freely, so neither needs the divider the icons use.
   if (as === "names")
@@ -153,8 +154,8 @@ export function UnitTraits({ unit, index, as }: { unit: Unit; index: GuideIndex;
               key={trait.code}
               className="trait-tip"
               role="img"
-              aria-label={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}
-              data-tip={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}
+              aria-label={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
+              data-tip={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
             >
               <TraitIcon trait={trait} index={index} size={20} />
             </span>
@@ -176,6 +177,7 @@ export function UnitTraits({ unit, index, as }: { unit: Unit; index: GuideIndex;
 }
 
 export function TraitTag({ code, index, count }: { code: string; index: GuideIndex; count?: number }) {
+  const { locale } = useWikiContext()
   const links = useContext(GuideLinks)
   const trait = index.traits.get(code)
   if (!trait) return null
@@ -191,12 +193,12 @@ export function TraitTag({ code, index, count }: { code: string; index: GuideInd
       className="guide-trait-tag"
       data-link="true"
       to={links.traitHref(trait.code)}
-      title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}
+      title={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
     >
       {body}
     </Link>
   ) : (
-    <span className="guide-trait-tag" title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}>
+    <span className="guide-trait-tag" title={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}>
       {body}
     </span>
   )

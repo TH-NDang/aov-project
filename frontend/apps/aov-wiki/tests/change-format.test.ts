@@ -15,7 +15,7 @@ test("change formulas read as ranks and stat percentages", () => {
   )
   assert.equal(
     formatChangeValue("500 + 100*(rank-1) + 0.5*magicAttack + 0.05*maxHealth", "en-US"),
-    "500 + 100 per rank + 50% magic attack + 5% max health",
+    "500 + 100 per level + 50% Ability Power + 5% Max HP",
   )
   assert.equal(formatChangeValue("0.07*bonusPhysicalAttack", "vi-VN"), "7% Công vật lý cộng thêm")
   assert.equal(formatChangeValue("50 - 5*(rank-1)", "vi-VN"), "50 − 5 mỗi cấp")
@@ -30,7 +30,7 @@ test("values the formatter does not understand stay as published", () => {
 
 test("skill keys and field keys become labels with a readable fallback", () => {
   assert.equal(changeSkillLabel("skill-0-1", "vi-VN"), "Nội tại")
-  assert.equal(changeSkillLabel("skill-2-1", "en-US"), "Skill 2")
+  assert.equal(changeSkillLabel("skill-2-1", "en-US"), "Ability 2")
   assert.equal(changeSkillLabel("capture-1", "vi-VN"), null)
   assert.equal(changeFieldLabel("trueDamage", "vi-VN"), "Sát thương chuẩn")
   assert.equal(changeFieldLabel("slowDurationSeconds", "en-US"), "Slow duration seconds")

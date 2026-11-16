@@ -1,7 +1,8 @@
 import { useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { TRAIT_KIND_LABEL, type Trait } from "./auto-chess-model"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { TRAIT_KIND_NAMES, type Trait } from "./auto-chess-model"
 import { GoldIcon } from "./gold-icon"
 import { ModeDialog, ModeHeading } from "./mode-ui"
 import {
@@ -23,6 +24,8 @@ const TRAIT_KINDS = ["FACTION", "CLASS"] as const
  */
 export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string) => void }) {
   const layout = usePageLayout()
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [params, setParams] = useSearchParams()
   const table = params.get("xem") === "bang"
   const linked = index.traits.get(params.get("trait") ?? "")
@@ -45,15 +48,19 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
     })
 
   return (
-    <section className="guide-tab-body" aria-label="Phe và Nghề">
+    <section className="guide-tab-body" aria-label={text("Phe và Nghề", "Factions and Classes")}>
       <div className="guide-toolbar">
         <ChoiceSwitch
-          label="Cách xem"
+          label={text("Cách xem", "View")}
           value={table ? "table" : "detail"}
           onChange={(view) => change((next) => (view === "table" ? next.set("xem", "bang") : next.delete("xem")))}
           options={[
             { value: "detail", label: "Từng Phe/Nghề", icon: <WikiIcon name="detail" size={16} /> },
-            { value: "table", label: "Bảng Phe × Nghề", icon: <WikiIcon name="table" size={16} /> },
+            {
+              value: "table",
+              label: text("Bảng Phe × Nghề", "Faction × Class table"),
+              icon: <WikiIcon name="table" size={16} />,
+            },
           ]}
         />
       </div>
@@ -67,7 +74,11 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
               if (!traits.length) return null
               return (
                 <section key={kind} className="mode-section" aria-labelledby={`trait-kind-${kind}`}>
-                  <ModeHeading id={`trait-kind-${kind}`} title={TRAIT_KIND_LABEL[kind]} count={traits.length} />
+                  <ModeHeading
+                    id={`trait-kind-${kind}`}
+                    title={text(...TRAIT_KIND_NAMES[kind])}
+                    count={traits.length}
+                  />
                   <div className="trait-index-grid">
                     {traits.map((trait) => (
                       <button
@@ -81,7 +92,8 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
                         <span>
                           <strong>{trait.name}</strong>
                           <small>
-                            {index.membersOf(trait.code).length} quân ·{" "}
+                            {index.membersOf(trait.code).length}{" "}
+                            {text("quân", index.membersOf(trait.code).length === 1 ? "unit" : "units")} ·{" "}
                             {trait.tiers.map((tier) => tier.count).join("/")}
                           </small>
                         </span>
@@ -96,7 +108,12 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
         </div>
       )}
       {layout === "compact" && (
-        <ModeDialog open={!!linked} onClose={() => pick(null)} label={linked?.name ?? "Phe/Nghề"} title="Phe & Nghề">
+        <ModeDialog
+          open={!!linked}
+          onClose={() => pick(null)}
+          label={linked?.name ?? text("Phe/Nghề", "Faction/Class")}
+          title={text("Phe & Nghề", "Factions & Classes")}
+        >
           {linked && <TraitDetail trait={linked} index={index} onOpen={onOpen} />}
         </ModeDialog>
       )}
@@ -106,20 +123,26 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
 
 /** One trait in full: its tiers, the units that carry it and the traits those units bring along. */
 function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex; onOpen: (code: string) => void }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const members = [...index.membersOf(trait.code)].sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "vi"))
   const partners = new Map<string, number>()
   for (const member of members)
     for (const code of member.traitCodes) if (code !== trait.code) partners.set(code, (partners.get(code) ?? 0) + 1)
   const together = [...partners].sort((a, b) => b[1] - a[1])
   return (
-    <article className="trait-detail" aria-label={`${TRAIT_KIND_LABEL[trait.kind]} ${trait.name}`}>
+    <article className="trait-detail" aria-label={`${text(...TRAIT_KIND_NAMES[trait.kind])} ${trait.name}`}>
       <header className="trait-detail-head">
         <TraitIcon trait={trait} index={index} size={56} />
         <div>
-          <span className="mode-meta">{TRAIT_KIND_LABEL[trait.kind]}</span>
+          <span className="mode-meta">{text(...TRAIT_KIND_NAMES[trait.kind])}</span>
           <h2>{trait.name}</h2>
           <span className="mode-meta">
-            {members.length} quân cờ · mốc {trait.tiers.map((tier) => tier.count).join(" / ")}
+            {text(
+              `${members.length} quân cờ · mốc`,
+              `${members.length} ${members.length === 1 ? "unit" : "units"} · thresholds`,
+            )}{" "}
+            {trait.tiers.map((tier) => tier.count).join(" / ")}
           </span>
         </div>
       </header>
@@ -130,8 +153,8 @@ function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex
       )}
       <TierList trait={trait} />
       {trait.note && <p className="guide-note">{trait.note}</p>}
-      <section className="guide-detail-block" aria-label="Quân cờ liên quan">
-        <h3>Quân cờ liên quan</h3>
+      <section className="guide-detail-block" aria-label={text("Quân cờ liên quan", "Related units")}>
+        <h3>{text("Quân cờ liên quan", "Related units")}</h3>
         {members.length ? (
           <div className="trait-members">
             {members.map((member) => (
@@ -144,7 +167,7 @@ function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex
               >
                 <UnitPortrait unit={member} index={index} size="md" />
                 <span>{member.name}</span>
-                <small className="guide-cost" aria-label={`${member.cost} vàng`}>
+                <small className="guide-cost" aria-label={text(`${member.cost} vàng`, `${member.cost} gold`)}>
                   <GoldIcon size={12} />
                   {member.cost}
                 </small>
@@ -152,18 +175,22 @@ function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex
             ))}
           </div>
         ) : (
-          <p className="mode-meta">Chưa có quân cờ trong bản đã thu thập.</p>
+          <p className="mode-meta">
+            {text("Chưa có quân cờ trong bản đã thu thập.", "No units in the collected edition yet.")}
+          </p>
         )}
       </section>
       {together.length > 0 && (
-        <section className="guide-detail-block" aria-label="Hay đi cùng">
-          <h3>Hay đi cùng</h3>
+        <section className="guide-detail-block" aria-label={text("Hay đi cùng", "Often paired with")}>
+          <h3>{text("Hay đi cùng", "Often paired with")}</h3>
           <div className="guide-trait-tags">
             {together.map(([code, count]) => (
               <TraitTag key={code} code={code} index={index} count={count} />
             ))}
           </div>
-          <p className="mode-meta">Số là số quân cờ có cả hai Phe/Nghề.</p>
+          <p className="mode-meta">
+            {text("Số là số quân cờ có cả hai Phe/Nghề.", "The number is how many units have both Factions/Classes.")}
+          </p>
         </section>
       )}
     </article>
@@ -180,10 +207,16 @@ function TraitTable({
   onOpen: (code: string) => void
   onPick: (code: string) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const factions = index.content.traits.filter((trait) => trait.kind === "FACTION")
   const classes = index.content.traits.filter((trait) => trait.kind === "CLASS")
   const head = (trait: Trait) => (
-    <button type="button" title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`} onClick={() => onPick(trait.code)}>
+    <button
+      type="button"
+      title={`${text(...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
+      onClick={() => onPick(trait.code)}
+    >
       <TraitIcon trait={trait} index={index} size={28} />
       <span>{trait.name}</span>
     </button>
@@ -191,12 +224,17 @@ function TraitTable({
   return (
     <>
       <p className="mode-meta">Hàng là Nghề, cột là Phe. Bấm tên để xem Phe/Nghề, bấm quân cờ để xem quân cờ.</p>
-      <div className="trait-table-scroll" role="region" aria-label="Bảng Phe × Nghề" tabIndex={0}>
+      <div
+        className="trait-table-scroll"
+        role="region"
+        aria-label={text("Bảng Phe × Nghề", "Faction × Class table")}
+        tabIndex={0}
+      >
         <table className="trait-table">
           <thead>
             <tr>
               <th scope="col">
-                <span className="mode-meta">Nghề \ Phe</span>
+                <span className="mode-meta">{text("Nghề \\ Phe", "Class \\ Faction")}</span>
               </th>
               {factions.map((trait) => (
                 <th key={trait.code} scope="col">
@@ -218,7 +256,7 @@ function TraitTable({
                         <button
                           key={unit.code}
                           type="button"
-                          title={`${unit.name} · ${unit.cost} vàng`}
+                          title={text(`${unit.name} · ${unit.cost} vàng`, `${unit.name} · ${unit.cost} gold`)}
                           aria-label={unit.name}
                           onClick={() => onOpen(unit.code)}
                         >

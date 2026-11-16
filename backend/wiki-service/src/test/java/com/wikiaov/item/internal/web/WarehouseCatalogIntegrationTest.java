@@ -226,6 +226,9 @@ class WarehouseCatalogIntegrationTest {
         content.put("translations",
                 List.of(text("vi-VN", "Ngọc công", "Mô tả gốc"), text("en-US", "Attack", "Attack modifier")));
         send(put(draftPath("arcana", fork)), Map.of("expectedVersion", 1, "content", content), 200);
+        var sameValue = new HashMap<>(content);
+        sameValue.put("stats", List.of(Map.of("key", "physical-attack", "value", 3.0, "unit", "points")));
+        send(put(draftPath("arcana", fork)), Map.of("expectedVersion", 2, "content", sameValue), 200);
         var old = send(get(ROOT + "/arcana/" + created.get("id") + "/revisions/" + revision), null, 200);
         assertThat((List<?>) map(old.get("content")).get("translations")).hasSize(1);
         assertThat(map(old.get("content")).get("stats")).isEqualTo(content.get("stats"));

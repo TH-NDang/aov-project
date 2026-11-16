@@ -69,7 +69,7 @@ export function useItemCatalog({
       new Map(
         items.map((item) => [
           item.id,
-          itemReaderContent(item.content, warehouseText(item.content.translations, locale)).stats,
+          itemReaderContent(item.content, warehouseText(item.content.translations, locale), locale).stats,
         ]),
       ),
     [items, locale],

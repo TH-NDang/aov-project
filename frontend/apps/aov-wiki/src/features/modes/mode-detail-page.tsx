@@ -4,7 +4,7 @@ import { Link, Navigate, useParams } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext } from "../../context/wiki-context"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { modeMeta, notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
@@ -16,7 +16,7 @@ import { ModeCards } from "./mode-cards"
 import {
   AvailabilityState,
   durationText,
-  GROUP_LABEL,
+  GROUP_NAMES,
   hasSchedule,
   isOpen,
   ModeArt,
@@ -32,7 +32,8 @@ import "./mode-pages.css"
  */
 export function ModeDetailPage() {
   const { code = "", tab } = useParams()
-  const { href, locale } = useWikiContext()
+  const { href, locale, t } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const layout = usePageLayout()
   const mode = useQuery(modeQuery(code))
   const hasGuide = !!mode.data?.hasGuide
@@ -63,10 +64,14 @@ export function ModeDetailPage() {
     return (
       <div className="mode-page mode-detail">
         <div className="mode-notice wiki-mascot-state" role={missing ? "status" : "alert"}>
-          <h1>{missing ? "Chế độ này chưa có trên Wiki" : "Chưa tải được chế độ"}</h1>
+          <h1>
+            {missing
+              ? text("Chế độ này chưa có trên Wiki", "This mode is not on the Wiki yet")
+              : text("Chưa tải được chế độ", "The mode could not be loaded")}
+          </h1>
           {!missing && (
             <button type="button" className="mode-chip" onClick={() => mode.refetch()}>
-              Thử lại
+              {text("Thử lại", "Retry")}
             </button>
           )}
           <Link to={listHref}>Xem tất cả chế độ</Link>
@@ -86,13 +91,13 @@ export function ModeDetailPage() {
 
   return (
     <div className="mode-page mode-detail">
-      <CatalogHeading title={content.name} back={{ to: listHref, label: "Chế độ chơi" }} />
+      <CatalogHeading title={content.name} back={{ to: listHref, label: t("modes") }} />
       {/* The compact header names the section only, so the page carries the way back and the mode's name itself. */}
       {layout === "compact" && (
         <header className="mode-compact-head">
           <Link className="mode-back" to={listHref}>
             <WikiIcon name="chevronLeft" size={16} />
-            Tất cả chế độ
+            {text("Tất cả chế độ", "All modes")}
           </Link>
           <h1>{content.name}</h1>
         </header>
@@ -114,9 +119,9 @@ export function ModeDetailPage() {
           {guide.data && <AutoChessOverview guide={guide.data} code={code} />}
           {guide.isError && (
             <div className="mode-notice" role="alert">
-              <p>Chưa tải được cẩm nang.</p>
+              <p>{text("Chưa tải được cẩm nang.", "The guide could not be loaded.")}</p>
               <button type="button" className="mode-chip" onClick={() => guide.refetch()}>
-                Thử lại
+                {text("Thử lại", "Retry")}
               </button>
             </div>
           )}
@@ -125,21 +130,25 @@ export function ModeDetailPage() {
             (hasGuide ? (
               <details className="mode-fold">
                 <summary>
-                  Luật chơi đầy đủ
+                  {text("Luật chơi đầy đủ", "Full rules")}
                   <WikiIcon name="chevron" size={20} />
                 </summary>
                 <RuleList rules={rules} collapsible={layout === "compact"} />
               </details>
             ) : (
               <section className="mode-section" aria-labelledby="mode-rules">
-                <ModeHeading id="mode-rules" title="Luật chơi" />
+                <ModeHeading id="mode-rules" title={text("Luật chơi", "Rules")} />
                 <RuleList rules={rules} collapsible={layout === "compact"} />
               </section>
             ))}
 
           {content.heroes.length > 0 && (
             <section className="mode-section" aria-labelledby="mode-heroes">
-              <ModeHeading id="mode-heroes" title="Tướng của chế độ" count={content.heroes.length} />
+              <ModeHeading
+                id="mode-heroes"
+                title={text("Tướng của chế độ", "Heroes of this mode")}
+                count={content.heroes.length}
+              />
               <ul className="mode-hero-list">
                 {content.heroes.map((hero) => (
                   <li key={hero.name}>
@@ -157,7 +166,11 @@ export function ModeDetailPage() {
 
           {content.specialItems.length > 0 && (
             <section className="mode-section" aria-labelledby="mode-items">
-              <ModeHeading id="mode-items" title="Vật phẩm riêng" count={content.specialItems.length} />
+              <ModeHeading
+                id="mode-items"
+                title={text("Vật phẩm riêng", "Special items")}
+                count={content.specialItems.length}
+              />
               <ul className="mode-item-list">
                 {content.specialItems.map((item) => {
                   const icon = item.iconAssetId ? images[item.iconAssetId] : null
@@ -182,9 +195,9 @@ export function ModeDetailPage() {
         <GuideTabSkeleton />
       ) : guide.isError ? (
         <div className="mode-notice" role="alert">
-          <p>Chưa tải được cẩm nang.</p>
+          <p>{text("Chưa tải được cẩm nang.", "The guide could not be loaded.")}</p>
           <button type="button" className="mode-chip" onClick={() => guide.refetch()}>
-            Thử lại
+            {text("Thử lại", "Retry")}
           </button>
         </div>
       ) : (
@@ -196,7 +209,7 @@ export function ModeDetailPage() {
 
 /** The guide's parts as one row of tabs under the mode's name; a narrow row scrolls sideways and never wraps. */
 function GuideTabs({ code, active }: { code: string; active: GuideTab }) {
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
   const row = useRef<HTMLElement>(null)
   // On a narrow row the open tab may sit past the edge: bring it into view without moving the page.
   useEffect(() => {
@@ -205,7 +218,7 @@ function GuideTabs({ code, active }: { code: string; active: GuideTab }) {
     row.current.scrollLeft = current.offsetLeft - (row.current.clientWidth - current.offsetWidth) / 2
   }, [active])
   return (
-    <nav ref={row} className="guide-tabs" aria-label="Mục cẩm nang">
+    <nav ref={row} className="guide-tabs" aria-label={wikiText(locale, "Mục cẩm nang", "Guide sections")}>
       {GUIDE_TABS.map((item) => (
         <Link
           key={item.key}
@@ -214,7 +227,7 @@ function GuideTabs({ code, active }: { code: string; active: GuideTab }) {
           to={href(`/modes/${encodeURIComponent(code)}${item.key === "tong-quan" ? "" : `/${item.key}`}`)}
           preventScrollReset
         >
-          {item.label}
+          {wikiText(locale, item.label, item.english)}
         </Link>
       ))}
     </nav>
@@ -227,28 +240,32 @@ function GuideTabs({ code, active }: { code: string; active: GuideTab }) {
  */
 function ModeFacts({ content, edition }: { content: ModeContent; edition?: string | null }) {
   const { locale } = useWikiContext()
-  const duration = durationText(content.duration)
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const duration = durationText(content.duration, locale)
   const availability = content.availability
   // The schedule's days are calendar dates: they read as written, in the date format the reader chose.
   const day = (value: string) => <LocalTime value={value} locale={locale} />
-  const short: [string, ReactNode][] = [["Nhóm", GROUP_LABEL[content.group]]]
-  if (duration) short.push(["Thời lượng", `${duration} / trận`])
-  if (content.playersLabel) short.push(["Số người", content.playersLabel])
-  if (hasSchedule(availability)) short.push(["Tình trạng", <AvailabilityState availability={availability} />])
-  if (availability?.observedOn) short.push(["Ghi nhận", day(availability.observedOn)])
+  const short: [string, ReactNode][] = [
+    [text("Nhóm", "Group"), text(GROUP_NAMES[content.group][0], GROUP_NAMES[content.group][1])],
+  ]
+  if (duration) short.push([text("Thời lượng", "Duration"), text(`${duration} / trận`, `${duration} / match`)])
+  if (content.playersLabel) short.push([text("Số người", "Players"), content.playersLabel])
+  if (hasSchedule(availability))
+    short.push([text("Tình trạng", "Availability"), <AvailabilityState availability={availability} />])
+  if (availability?.observedOn) short.push([text("Ghi nhận", "Recorded"), day(availability.observedOn)])
   const long: [string, ReactNode][] = []
   const { startsOn, endsOn } = availability ?? {}
   if (startsOn && endsOn)
     long.push([
-      "Thời gian mở",
+      text("Thời gian mở", "Open period"),
       <>
         {day(startsOn)} – {day(endsOn)}
       </>,
     ])
-  else if (startsOn) long.push(["Thời gian mở", <>Từ {day(startsOn)}</>])
-  else if (endsOn) long.push(["Thời gian mở", <>Đến {day(endsOn)}</>])
-  if (edition) long.push(["Cẩm nang", edition])
-  if (availability?.note) long.push(["Ghi chú", availability.note])
+  else if (startsOn) long.push([text("Thời gian mở", "Open period"), <>Từ {day(startsOn)}</>])
+  else if (endsOn) long.push([text("Thời gian mở", "Open period"), <>Đến {day(endsOn)}</>])
+  if (edition) long.push([text("Cẩm nang", "Guide"), edition])
+  if (availability?.note) long.push([text("Ghi chú", "Note"), availability.note])
   return (
     <dl className="mode-facts">
       {[...short, ...long].map(([term, value], at) => (
@@ -281,10 +298,12 @@ function MissingNote({ content, art, hasGuide }: { content: ModeContent; art?: M
 }
 
 function Sources({ content }: { content: ModeContent }) {
+  const { locale } = useWikiContext()
   if (!content.sources.length) return null
   return (
     <p className="mode-sources">
-      Nguồn: {content.sources.map((source) => source.label).join("; ")}. Hình ảnh: Garena / Liên Quân Mobile.
+      {wikiText(locale, "Nguồn", "Sources")}: {content.sources.map((source) => source.label).join("; ")}.{" "}
+      {wikiText(locale, "Hình ảnh", "Images")}: Garena / Liên Quân Mobile.
     </p>
   )
 }
@@ -311,8 +330,13 @@ function OtherModes({ code, group }: { code: string; group: ModeContent["group"]
 
 /** A guide tab while the guide loads: a heading, the row of controls and a grid of entries, as most tabs are drawn. */
 function GuideTabSkeleton() {
+  const { locale } = useWikiContext()
   return (
-    <div className="guide-skeleton" role="status" aria-label="Đang tải cẩm nang">
+    <div
+      className="guide-skeleton"
+      role="status"
+      aria-label={wikiText(locale, "Đang tải cẩm nang", "Loading the guide")}
+    >
       <div className="mode-heading" data-skeleton="" />
       <span className="guide-skeleton-bar" />
       <div className="guide-skeleton-grid">
@@ -326,8 +350,13 @@ function GuideTabSkeleton() {
 
 /** The loading state keeps the page's shape: the name, then the art beside the facts. */
 function ModeDetailSkeleton() {
+  const { locale } = useWikiContext()
   return (
-    <div className="mode-page mode-detail" role="status" aria-label="Đang tải chế độ">
+    <div
+      className="mode-page mode-detail"
+      role="status"
+      aria-label={wikiText(locale, "Đang tải chế độ", "Loading the mode")}
+    >
       <div className="mode-skeleton-title" />
       <div className="mode-intro" data-art="" data-skeleton="true">
         <span className="mode-art mode-intro-art" />

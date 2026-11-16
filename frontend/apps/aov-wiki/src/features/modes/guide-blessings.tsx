@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { BLESSING_TIER_LABEL, foldText, type Blessing } from "./auto-chess-model"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { BLESSING_TIER_NAMES, foldText, type Blessing } from "./auto-chess-model"
 import { ModeHeading } from "./mode-ui"
 import { BlessingIcon, GuideSearch, GuideText, TIER_STYLE, type GuideIndex } from "./guide-ui"
 
@@ -51,6 +52,8 @@ function TierIcon({ tier, size = 18 }: { tier: Blessing["tier"]; size?: number }
 /** Blessings by tier, each a row with the game's card icon; a search and one chip per tier narrow them. */
 export function BlessingsTab({ index }: { index: GuideIndex }) {
   const compact = usePageLayout() === "compact"
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [tier, setTier] = useState<Blessing["tier"] | null>(null)
   const [search, setSearch] = useState("")
   const needle = foldText(search.trim())
@@ -63,10 +66,15 @@ export function BlessingsTab({ index }: { index: GuideIndex }) {
     }))
     .filter((section) => section.blessings.length)
   return (
-    <section className="guide-tab-body" aria-label="Chúc phúc">
+    <section className="guide-tab-body" aria-label={text("Chúc phúc", "Blessings")}>
       <div className="guide-toolbar" data-stack={compact || undefined}>
-        <GuideSearch value={search} onChange={setSearch} label="Tìm chúc phúc" placeholder="Tìm tên, hiệu ứng…" />
-        <div className="mode-chip-row" role="group" aria-label="Bậc chúc phúc">
+        <GuideSearch
+          value={search}
+          onChange={setSearch}
+          label={text("Tìm chúc phúc", "Search blessings")}
+          placeholder="Tìm tên, hiệu ứng…"
+        />
+        <div className="mode-chip-row" role="group" aria-label={text("Bậc chúc phúc", "Blessing tiers")}>
           {BLESSING_TIERS.map((value) => (
             <button
               key={value}
@@ -76,7 +84,7 @@ export function BlessingsTab({ index }: { index: GuideIndex }) {
               onClick={() => setTier(tier === value ? null : value)}
             >
               <TierIcon tier={value} />
-              {BLESSING_TIER_LABEL[value]}
+              {text(...BLESSING_TIER_NAMES[value])}
               <small>{index.content.blessings.filter((blessing) => blessing.tier === value).length}</small>
             </button>
           ))}
@@ -86,7 +94,7 @@ export function BlessingsTab({ index }: { index: GuideIndex }) {
         <section key={section.tier} className="mode-section" aria-labelledby={`blessing-tier-${section.tier}`}>
           <ModeHeading
             id={`blessing-tier-${section.tier}`}
-            title={BLESSING_TIER_LABEL[section.tier]}
+            title={text(...BLESSING_TIER_NAMES[section.tier])}
             count={section.blessings.length}
             icon={<TierIcon tier={section.tier} size={20} />}
           />

@@ -9,6 +9,7 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { FeedbackDialog } from "../../components/feedback-dialog"
 import { HeroHistory } from "./hero-history"
 import { HeroVersionChanges, HeroVersionUnchanged, useHeroVersion } from "./hero-version-changes"
+import { localizedFormName, localizedRankLabel, localizedSkillCost, localizedStateName } from "./hero-skill-labels"
 import { localizedStatText, statText } from "./hero-stat-text"
 import { HeroRatings } from "./hero-ratings"
 import { useHeroVideos, useVideoParam, VideoGallery } from "../videos/subject-videos"
@@ -31,16 +32,18 @@ function skillLabel(skill: PublicSkill, locale: string) {
   const source = skill.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata?.sourceSlot
   const slot = typeof source === "number" ? source : /^skill_(\d+)$/.exec(String(source))?.[1]
   const number = slot ?? /^(?:skill|capture-skill)-(\d+)(?:-\d+)?$/.exec(skill.skillKey)?.[1]
-  return Number(number) > 0 ? `${wikiText(locale, "Chiêu", "Skill")} ${number}` : wikiText(locale, "Kỹ năng", "Ability")
+  return Number(number) > 0
+    ? `${wikiText(locale, "Chiêu", "Ability")} ${number}`
+    : wikiText(locale, "Kỹ năng", "Ability")
 }
 
 const baseStats = [
-  ["HP", "Máu", "Health", gameplayIcons.heart],
-  ["ATTACK_DAMAGE", "Công vật lý", "Physical attack", gameplayIcons.sword],
-  ["ABILITY_POWER", "Công phép", "Ability power", gameplayIcons.orb],
+  ["HP", "Máu", "HP", gameplayIcons.heart],
+  ["ATTACK_DAMAGE", "Công vật lý", "Attack Damage", gameplayIcons.sword],
+  ["ABILITY_POWER", "Công phép", "Ability Power", gameplayIcons.orb],
   ["ARMOR", "Giáp", "Armor", gameplayIcons.shield],
-  ["MAGIC_DEFENSE", "Giáp phép", "Magic defense", gameplayIcons.runeShield],
-  ["MOVEMENT_SPEED", "Tốc chạy", "Movement speed", gameplayIcons.boot],
+  ["MAGIC_DEFENSE", "Giáp phép", "Magic Defense", gameplayIcons.runeShield],
+  ["MOVEMENT_SPEED", "Tốc chạy", "Movement Speed", gameplayIcons.boot],
 ] as const
 
 function scrollToAbilities() {
@@ -127,7 +130,7 @@ function useHandbook(hero: HeroDetail) {
   const table = source?.levelTable
   const columns = Array.isArray(table?.column_labels) ? table.column_labels : []
   const tableLabel = columns.some((label) => /^(?:Lv\.?|Cấp)\s*\d+$/i.test(label))
-    ? text("Thông số theo cấp chiêu", "Stats by ability rank")
+    ? text("Thông số theo cấp chiêu", "Stats by ability level")
     : text("Thông số kỹ năng", "Ability stats")
   const rows = Array.isArray(table?.rows)
     ? table.rows.filter((row) => row?.label && Array.isArray(row.display_values) && row.display_values.length)
@@ -178,7 +181,11 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
   const state = chosenState.skillKey === active?.skillKey ? chosenState.index : null
   const stateIcons = active?.stateIcons ?? []
   const cooldownRange = active ? skillCooldownRange(active) : null
-  const formName = (skill: PublicSkill) => skillFormName(skill, (n) => text(`Biến thể ${n}`, `Form ${n}`))
+  const formName = (skill: PublicSkill) =>
+    localizedFormName(
+      skillFormName(skill, (n) => text(`Biến thể ${n}`, `Form ${n}`)),
+      locale,
+    )
   if (!active)
     return (
       <p>
@@ -269,12 +276,14 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
           {/* The cooldown from the first to the last rank says more than the first rank alone. */}
           {[
             source?.tags,
-            cooldownRange ? `${text("Hồi chiêu", "Cooldown")}: ${cooldownRange}` : source?.cooldown?.display,
-            source?.energyCost?.display,
+            cooldownRange
+              ? `${text("Hồi chiêu", "Cooldown")}: ${cooldownRange}`
+              : source?.cooldown?.display && localizedSkillCost(source.cooldown.display, locale),
+            source?.energyCost?.display && localizedSkillCost(source.energyCost.display, locale),
           ].map((value, i) => (typeof value === "string" && value.trim() ? <span key={i}>{rich(value)}</span> : null))}
         </div>
         <SkillStateToggle
-          states={stateIcons.map((icon) => icon.label)}
+          states={stateIcons.map((icon) => localizedStateName(icon.label, locale))}
           value={state}
           onChange={(index) => setChosenState({ skillKey: active.skillKey, index })}
           normalLabel={text("Thường", "Normal")}
@@ -309,7 +318,7 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
                   <th scope="col">{text("Thông số", "Stat")}</th>
                   {columns.map((label, i) => (
                     <th scope="col" key={i}>
-                      {String(label).replace(/^(?:Lv\.?|Cấp)\s*(\d+)$/i, text("Cấp $1", "Rank $1"))}
+                      {String(label).replace(/^(?:Lv\.?|Cấp)\s*(\d+)$/i, text("Cấp $1", "Lv $1"))}
                     </th>
                   ))}
                 </tr>
@@ -317,7 +326,7 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
               <tbody>
                 {rows.map((row, i) => (
                   <tr key={i}>
-                    <th scope="row">{rich(row.label!)}</th>
+                    <th scope="row">{rich(localizedRankLabel(row.label!, locale))}</th>
                     {columns.map((_, j) => (
                       <td key={j}>{row.display_values?.[j] == null ? "—" : rich(String(row.display_values[j]))}</td>
                     ))}

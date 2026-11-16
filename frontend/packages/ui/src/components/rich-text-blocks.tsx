@@ -3,11 +3,22 @@ import { paragraphStyles, tableLimits, type ParagraphStyle } from "../lib/rich-t
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./dialog"
 import { Button } from "./button"
 
-export function RichParagraph({ style, children }: { style: ParagraphStyle; children: ReactNode }) {
+export function RichParagraph({
+  style,
+  children,
+  locale = "vi-VN",
+}: {
+  style: ParagraphStyle
+  children: ReactNode
+  locale?: string
+}) {
+  const names = paragraphStyles[style]
   return (
-    <span className={paragraphStyles[style].classes}>
+    <span className={names.classes}>
       {style !== "note" && (
-        <span className="block text-xs font-semibold text-foreground">{paragraphStyles[style].label}</span>
+        <span className="block text-xs font-semibold text-foreground">
+          {locale.startsWith("en") ? names.labelEnglish : names.label}
+        </span>
       )}
       {children}
     </span>
@@ -15,10 +26,14 @@ export function RichParagraph({ style, children }: { style: ParagraphStyle; chil
 }
 
 /** Phrasing elements allow the same accessible grid inside descriptions, including paragraph hosts. */
-export function ExampleTable({ rows }: { rows: string[][] }) {
+export function ExampleTable({ rows, locale = "vi-VN" }: { rows: string[][]; locale?: string }) {
   return (
     <span className="my-2 block max-w-full overflow-x-auto rounded-md border text-left text-sm text-foreground">
-      <span role="table" aria-label="Bảng ví dụ" className="table w-full border-collapse tabular-nums">
+      <span
+        role="table"
+        aria-label={locale.startsWith("en") ? "Example table" : "Bảng ví dụ"}
+        className="table w-full border-collapse tabular-nums"
+      >
         {rows.map((row, r) => (
           <span key={r} role="row" className={r ? "table-row border-t" : "table-row bg-muted"}>
             {row.map((cell, c) => (

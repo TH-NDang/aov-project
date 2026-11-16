@@ -16,9 +16,9 @@ const colorDetails = {
 }
 const tierLabels = ["I", "II", "III"]
 const combatGroups = [
-  { key: "physical", label: "Công vật lý", icon: Swords, colorLabel: "Công vật lý" },
-  { key: "magic", label: "Phép", icon: Sparkles, colorLabel: "Công phép" },
-  { key: "neutral", label: "Trung tính", icon: CircleDot, colorLabel: "" },
+  { key: "physical", label: "Công vật lý", labelEnglish: "Physical", icon: Swords, colorLabel: "Công vật lý" },
+  { key: "magic", label: "Phép", labelEnglish: "Magic", icon: Sparkles, colorLabel: "Công phép" },
+  { key: "neutral", label: "Trung tính", labelEnglish: "Neutral", icon: CircleDot, colorLabel: "" },
 ] as const
 const gridClass =
   "grid grid-cols-1 gap-2 @min-[460px]/arcana:grid-cols-2 @min-[720px]/arcana:grid-cols-3 @min-[960px]/arcana:grid-cols-4"
@@ -63,11 +63,7 @@ export function ArcanaCollection<E extends WarehouseEntry<ArcanaContent>>({
       const details = colorDetails[color]
       const grouped = items.map((entry) => ({ entry, group: arcanaCombatGroup(entry.content) }))
       return (
-        <section
-          key={color}
-          aria-label={`Ngọc ${details.label} bậc ${tierLabels[tier - 1]}`}
-          className="overflow-hidden"
-        >
+        <section key={color} aria-label={arcanaGroupLabel(color, tier, locale)} className="overflow-hidden">
           <header className={cn("flex items-center gap-2 rounded-md px-3 py-2", details.header)}>
             <Gem aria-hidden className={cn("size-4", details.icon)} />
             <h3 className="text-xs font-semibold">
@@ -78,14 +74,14 @@ export function ArcanaCollection<E extends WarehouseEntry<ArcanaContent>>({
             </span>
           </header>
           <div className="space-y-4 p-2">
-            {combatGroups.map(({ key, label, icon: Icon, colorLabel }) => {
+            {combatGroups.map(({ key, label, labelEnglish, icon: Icon, colorLabel }) => {
               const members = grouped.filter((item) => item.group === key)
               if (!members.length) return null
               return (
                 <section
                   key={key}
                   className="space-y-2"
-                  aria-label={`${label} · Ngọc ${details.label} bậc ${tierLabels[tier - 1]}`}
+                  aria-label={`${t(label, labelEnglish)} · ${arcanaGroupLabel(color, tier, locale)}`}
                 >
                   <div className="flex items-center gap-2 px-1 pt-1">
                     <Icon
@@ -93,9 +89,7 @@ export function ArcanaCollection<E extends WarehouseEntry<ArcanaContent>>({
                       className="size-3.5 text-muted-foreground"
                       style={{ color: statColor(colorLabel) }}
                     />
-                    <h4 className="text-xs font-semibold">
-                      {t(label, { physical: "Physical", magic: "Magic", neutral: "Neutral" }[key])}
-                    </h4>
+                    <h4 className="text-xs font-semibold">{t(label, labelEnglish)}</h4>
                     <span className="text-xs text-muted-foreground tabular-nums">{members.length}</span>
                     <div aria-hidden className="h-px flex-1 bg-border/60" />
                   </div>
@@ -123,7 +117,7 @@ export function ArcanaCollection<E extends WarehouseEntry<ArcanaContent>>({
   return (
     <div className="@container/arcana min-w-0 space-y-3">
       {highest.length > 0 && (
-        <section className="space-y-3" aria-label="Ngọc bậc III">
+        <section className="space-y-3" aria-label={t("Ngọc bậc III", "Tier III arcana")}>
           <h2 className="flex items-center gap-2 px-1 type-section-title">
             {t("Ngọc bậc III", "Tier III arcana")} <span className="ml-1 text-muted-foreground">{highest.length}</span>
           </h2>
@@ -233,7 +227,9 @@ function ArcanaCard({
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
           {entry.revision.state === "DRAFT" && (
             <Badge variant="outline" className="w-fit text-xs">
-              {entry.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
+              {entry.revision.effectiveFromPatchVariantId
+                ? t("Nháp", "Draft")
+                : t("Nháp · Chưa gắn patch", "Draft · No patch yet")}
             </Badge>
           )}
           <span className="ml-auto">

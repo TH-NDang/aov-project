@@ -2,6 +2,7 @@ import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { CommunityProfile, PageSlice } from "@aov/community-contracts"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { Avatar, TimeAgo } from "./community-ui"
 import { videoEmbed, videoPoster } from "./post-media-model"
@@ -25,6 +26,7 @@ export function videoThumbnail(url?: string | null) {
 
 /** Each broadcast as a card: its picture, the live mark, the title and the page it is on. */
 export function LiveCards({ pages }: { pages: CommunityProfile[] }) {
+  const { text } = useStreamLocale()
   return (
     <div className="lv-cards">
       {pages.map((page) => {
@@ -36,7 +38,7 @@ export function LiveCards({ pages }: { pages: CommunityProfile[] }) {
               {picture ? <img src={picture} alt="" loading="lazy" /> : <StreamIcon name="play" size={24} />}
             </div>
             <div className="lv-body">
-              <span className="tn-live">Trực tiếp</span>
+              <span className="tn-live">{text("Trực tiếp", "Live")}</span>
               <strong>{live.title}</strong>
               <div className="lv-page">
                 <Avatar profile={page} />
@@ -55,13 +57,17 @@ export function LiveCards({ pages }: { pages: CommunityProfile[] }) {
 
 /** The broadcasts above the home feed; nothing is rendered while nobody is live. */
 export function LiveRow() {
+  const { text } = useStreamLocale()
   const live = useLivePages()
   const items = (live.data?.items || []).filter((page) => page.live)
   if (!items.length) return null
   return (
     <section className="lv-row" aria-labelledby="live-row">
       <h2 id="live-row" className="hub-card-title">
-        Đang trực tiếp <span className="cp-meta">· {items.length} kênh</span>
+        {text("Đang trực tiếp", "Live now")}{" "}
+        <span className="cp-meta">
+          {text(`· ${items.length} kênh`, `· ${items.length} ${items.length === 1 ? "channel" : "channels"}`)}
+        </span>
       </h2>
       <LiveCards pages={items} />
     </section>

@@ -1,6 +1,7 @@
 import type { Catalog, Selection } from "@aov/community-contracts"
 import { StreamImage } from "../../components/stream-image"
-import { findReference, nameInitials, referenceName, type CatalogKind } from "./tournament-model"
+import { useStreamLocale } from "../../components/stream-locale"
+import { findReference, nameInitials, referenceName, UNKNOWN_REFERENCE, type CatalogKind } from "./tournament-model"
 
 /**
  * The picture of a hero, an item or another catalogue entry. An entry without a picture shows two letters of its name
@@ -17,8 +18,9 @@ export function ReferenceArt({
   selection?: Selection | null
   className?: string
 }) {
+  const { text } = useStreamLocale()
   const reference = findReference(catalog, kind, selection)
-  const name = referenceName(catalog, kind, selection)
+  const name = referenceName(catalog, kind, selection, text(...UNKNOWN_REFERENCE))
   return (
     <span className={`reference-art ${className}`} title={name}>
       {reference?.iconUrl ? (

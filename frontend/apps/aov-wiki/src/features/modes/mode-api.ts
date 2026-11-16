@@ -239,17 +239,32 @@ export function deleteLineup(code: string, lineupId: string, expectedVersion: nu
   )
 }
 
-/** Vietnamese messages for the errors a reader can cause. */
-export function lineupErrorMessage(error: unknown) {
-  if (!(error instanceof ModeRequestError)) return "Không kết nối được máy chủ. Thử lại sau."
-  if (error.status === 401) return "Đăng nhập để thích hoặc lưu đội hình."
-  if (error.status === 429) return "Bạn thao tác quá nhanh. Đợi một lát rồi thử lại."
-  if (error.status === 403) return "Tài khoản này không được thao tác với đội hình."
-  if (error.status === 409) return "Đội hình vừa thay đổi ở nơi khác. Tải lại trang rồi thử lại."
-  if (error.code === "GAME_MODE_LINEUP_NOT_FOUND") return "Đội hình không còn hiển thị."
+/** Messages for the errors a reader can cause, in the reader's language. */
+export function lineupErrorMessage(error: unknown, locale = "vi-VN") {
+  const text = (vietnamese: string, english: string) => (locale.startsWith("en") ? english : vietnamese)
+  if (!(error instanceof ModeRequestError))
+    return text("Không kết nối được máy chủ. Thử lại sau.", "The server could not be reached. Try again later.")
+  if (error.status === 401) return text("Đăng nhập để thích hoặc lưu đội hình.", "Sign in to like or save lineups.")
+  if (error.status === 429)
+    return text(
+      "Bạn thao tác quá nhanh. Đợi một lát rồi thử lại.",
+      "You are going too fast. Wait a moment, then try again.",
+    )
+  if (error.status === 403)
+    return text("Tài khoản này không được thao tác với đội hình.", "This account is not allowed to change lineups.")
+  if (error.status === 409)
+    return text(
+      "Đội hình vừa thay đổi ở nơi khác. Tải lại trang rồi thử lại.",
+      "This lineup has just changed somewhere else. Reload the page, then try again.",
+    )
+  if (error.code === "GAME_MODE_LINEUP_NOT_FOUND")
+    return text("Đội hình không còn hiển thị.", "This lineup is no longer shown.")
   if (error.status === 422)
     return error.message.includes("own")
-      ? "Bạn không thể thích đội hình của chính mình."
-      : "Đội hình chưa hợp lệ hoặc bạn đã lưu tối đa 30 đội hình."
-  return "Có lỗi xảy ra. Thử lại sau."
+      ? text("Bạn không thể thích đội hình của chính mình.", "You cannot like your own lineup.")
+      : text(
+          "Đội hình chưa hợp lệ hoặc bạn đã lưu tối đa 30 đội hình.",
+          "The lineup is not valid, or you have already saved the maximum of 30 lineups.",
+        )
+  return text("Có lỗi xảy ra. Thử lại sau.", "Something went wrong. Try again later.")
 }

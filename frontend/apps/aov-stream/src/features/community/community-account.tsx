@@ -20,6 +20,7 @@ import { SOCIAL_PLATFORM_NAMES, SocialPlatformIcon, socialPlatformName } from "@
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { AccountProfile } from "../account/account-profile"
 import { AccountSettings } from "../account/account-settings"
 import { initials } from "../account/profile-model"
@@ -34,21 +35,30 @@ import {
   useReadNotifications,
   useUnreadCount,
 } from "./community-queries"
-import { Avatar, followersLabel, hueOf } from "./community-ui"
+import { Avatar, followersLabel, hueOf, profileKindEnglish } from "./community-ui"
 
-const roleLabels = { OWNER: "Quản trị chính", EDITOR: "Biên tập viên", MODERATOR: "Kiểm duyệt viên" } as const
-const claimLabels = { PENDING: "Đang chờ xét duyệt", APPROVED: "Đã chấp thuận", REJECTED: "Chưa được chấp thuận" }
+const roleLabels: Record<PageManager["role"], readonly [string, string]> = {
+  OWNER: ["Quản trị chính", "Owner"],
+  EDITOR: ["Biên tập viên", "Editor"],
+  MODERATOR: ["Kiểm duyệt viên", "Moderator"],
+}
+const claimLabels: Record<PageClaim["status"], readonly [string, string]> = {
+  PENDING: ["Đang chờ xét duyệt", "Pending review"],
+  APPROVED: ["Đã chấp thuận", "Approved"],
+  REJECTED: ["Chưa được chấp thuận", "Not approved"],
+}
 
 type AccountTab = "profile" | "settings" | "follows" | "notifications" | "pages"
-const accountTabs: [AccountTab, string][] = [
-  ["profile", "Hồ sơ"],
-  ["settings", "Cài đặt"],
-  ["follows", "Đang theo dõi"],
-  ["notifications", "Thông báo"],
-  ["pages", "Trang & yêu cầu"],
+const accountTabs: [AccountTab, [string, string]][] = [
+  ["profile", ["Hồ sơ", "Profile"]],
+  ["settings", ["Cài đặt", "Settings"]],
+  ["follows", ["Đang theo dõi", "Following"]],
+  ["notifications", ["Thông báo", "Notifications"]],
+  ["pages", ["Trang & yêu cầu", "Pages & requests"]],
 ]
 
 export function CommunityAccount() {
+  const { text } = useStreamLocale()
   const session = useCommunitySession()
   const [params, setParams] = useSearchParams()
   const requested = params.get("tab") as AccountTab | null
@@ -69,11 +79,11 @@ export function CommunityAccount() {
   }, [tab, enabled, unread.data?.unread])
   return (
     <StreamShell>
-      <title>Tài khoản — AOV Stream</title>
+      <title>{text("Tài khoản — AOV Stream", "Account — AOV Stream")}</title>
       <div className="cp-container">
         <header className="tn-page-head">
           <div>
-            <h1>Tài khoản</h1>
+            <h1>{text("Tài khoản", "Account")}</h1>
             <p>
               {enabled
                 ? `${session.name} · hồ sơ và cài đặt dùng chung cho AOV Stream, Wiki và Admin`
@@ -82,16 +92,19 @@ export function CommunityAccount() {
           </div>
         </header>
         {enabled && (
-          <nav ref={tabRow} className="cp-tabs" aria-label="Mục tài khoản">
+          <nav ref={tabRow} className="cp-tabs" aria-label={text("Mục tài khoản", "Account sections")}>
             {accountTabs.map(([value, label]) => (
               <button
                 key={value}
                 aria-current={tab === value ? "page" : undefined}
                 onClick={() => setParams(value === "profile" ? {} : { tab: value })}
               >
-                {label}
+                {text(...label)}
                 {value === "notifications" && !!unread.data?.unread && (
-                  <span className="cp-tab-count" aria-label={`${unread.data.unread} chưa đọc`}>
+                  <span
+                    className="cp-tab-count"
+                    aria-label={text(`${unread.data.unread} chưa đọc`, `${unread.data.unread} unread`)}
+                  >
                     {unread.data.unread}
                   </span>
                 )}
@@ -120,6 +133,7 @@ export function CommunityAccount() {
 }
 
 function FollowedPages() {
+  const { text, languageTag } = useStreamLocale()
   const follows = useFollowedPages()
   const follow = useFollowPage()
   const items = follows.data?.items ?? []
@@ -127,17 +141,29 @@ function FollowedPages() {
     <section className="cp-section" aria-labelledby="account-follows">
       <div className="tn-heading">
         <h2 id="account-follows">
-          Trang đang theo dõi {!!items.length && <small>{items.length.toLocaleString("vi-VN")}</small>}
+          {text("Trang đang theo dõi", "Pages you follow")}{" "}
+          {!!items.length && <small>{items.length.toLocaleString(languageTag)}</small>}
         </h2>
       </div>
-      <p className="cp-section-lead">Bài mới của các trang này có ở mục Đang theo dõi trên bảng tin.</p>
-      {follows.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải trang theo dõi" />}
+      <p className="cp-section-lead">
+        {text(
+          "Bài mới của các trang này có ở mục Đang theo dõi trên bảng tin.",
+          "New posts from these pages appear under Following in the feed.",
+        )}
+      </p>
+      {follows.isPending && (
+        <div
+          className="hub-skeleton-rows"
+          role="status"
+          aria-label={text("Đang tải trang theo dõi", "Loading followed pages")}
+        />
+      )}
       {follows.isError && <p className="cp-error">{follows.error.message}</p>}
       {follows.data && !items.length && (
         <div className="cp-empty">
-          <p>Bạn chưa theo dõi trang nào.</p>
+          <p>{text("Bạn chưa theo dõi trang nào.", "You are not following any pages yet.")}</p>
           <Link className="cp-button cp-primary" to="/explore">
-            Khám phá trang
+            {text("Khám phá trang", "Explore pages")}
           </Link>
         </div>
       )}
@@ -149,16 +175,20 @@ function FollowedPages() {
               <Link to={`/pages/${profile.code}`} className="cp-row-text">
                 <strong>{profile.content?.name || profile.code}</strong>
                 <small>
-                  {profileKindLabels[profile.kind]} · {followersLabel(profile.followers)}
+                  {text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])} ·{" "}
+                  {followersLabel(profile.followers)}
                 </small>
               </Link>
               <button
                 className="cp-button cp-quiet"
                 disabled={follow.isPending}
                 onClick={() => follow.mutate({ pageId: profile.id, following: false })}
-                aria-label={`Bỏ theo dõi ${profile.content?.name || profile.code}`}
+                aria-label={text(
+                  `Bỏ theo dõi ${profile.content?.name || profile.code}`,
+                  `Unfollow ${profile.content?.name || profile.code}`,
+                )}
               >
-                Bỏ theo dõi
+                {text("Bỏ theo dõi", "Unfollow")}
               </button>
             </li>
           ))}
@@ -174,6 +204,7 @@ function FollowedPages() {
 }
 
 function NotificationInbox() {
+  const { text, languageTag } = useStreamLocale()
   const inbox = useNotificationInbox(24)
   const notifications = inbox.data?.pages.flatMap((page) => page.items) ?? []
   const unread = useUnreadCount()
@@ -182,15 +213,21 @@ function NotificationInbox() {
   return (
     <section className="cp-section" aria-labelledby="account-notifications">
       <div className="tn-heading">
-        <h2 id="account-notifications">Thông báo</h2>
+        <h2 id="account-notifications">{text("Thông báo", "Notifications")}</h2>
         {count > 0 && (
           <button type="button" disabled={read.all.isPending} onClick={() => read.all.mutate()}>
             <StreamIcon name="check" size={15} />
-            Đánh dấu đã đọc tất cả
+            {text("Đánh dấu đã đọc tất cả", "Mark all as read")}
           </button>
         )}
       </div>
-      {inbox.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải thông báo" />}
+      {inbox.isPending && (
+        <div
+          className="hub-skeleton-rows"
+          role="status"
+          aria-label={text("Đang tải thông báo", "Loading notifications")}
+        />
+      )}
       {inbox.isLoadingError && <p className="cp-error">{inbox.error.message}</p>}
       {inbox.data && !notifications.length && (
         <p className="cp-section-lead">Chưa có thông báo. Theo dõi trang để nhận tin khi có bài mới.</p>
@@ -202,11 +239,11 @@ function NotificationInbox() {
               <span className="cp-note-dot" aria-hidden="true" />
               <span className="cp-row-text">
                 <Link to={`/pages/${item.pageId}`} onClick={() => !item.read && read.one.mutate(item.id)}>
-                  {!item.read && <span className="sr-only">Chưa đọc: </span>}
+                  {!item.read && <span className="sr-only">{text("Chưa đọc: ", "Unread: ")}</span>}
                   {item.message}
                 </Link>
                 <small>
-                  <LocalTime value={item.createdAt} />
+                  <LocalTime value={item.createdAt} locale={languageTag} />
                 </small>
               </span>
               {!item.read && (
@@ -214,8 +251,8 @@ function NotificationInbox() {
                   className="hub-icon-button cp-note-read"
                   disabled={read.one.isPending}
                   onClick={() => read.one.mutate(item.id)}
-                  aria-label="Đánh dấu đã đọc"
-                  title="Đánh dấu đã đọc"
+                  aria-label={text("Đánh dấu đã đọc", "Mark as read")}
+                  title={text("Đánh dấu đã đọc", "Mark as read")}
                 >
                   <StreamIcon name="check" size={16} />
                 </button>
@@ -224,12 +261,17 @@ function NotificationInbox() {
           ))}
         </ul>
       )}
-      <InfiniteScroll query={inbox} label="Đang tải thêm thông báo" />
+      <InfiniteScroll
+        query={inbox}
+        label={text("Đang tải thêm thông báo", "Loading more notifications")}
+        retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+      />
     </section>
   )
 }
 
 function ManagedPages() {
+  const { text } = useStreamLocale()
   const session = useCommunitySession()
   const managed = useQuery({
     queryKey: ["managed-pages", session.revision],
@@ -243,7 +285,7 @@ function ManagedPages() {
     <div className="cp-section-pair">
       <section className="cp-section" aria-labelledby="account-managed">
         <div className="tn-heading">
-          <h2 id="account-managed">Trang bạn quản lý</h2>
+          <h2 id="account-managed">{text("Trang bạn quản lý", "Pages you manage")}</h2>
         </div>
         {managed.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải trang quản lý" />}
         {managed.isError && <p className="cp-error">{managed.error.message}</p>}
@@ -256,10 +298,10 @@ function ManagedPages() {
                     <Avatar profile={profile} className="cp-row-avatar" />
                     <span className="cp-row-text">
                       <strong>{profile.content?.name || profile.code}</strong>
-                      <small>{profileKindLabels[profile.kind]}</small>
+                      <small>{text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])}</small>
                     </span>
                     <span className="cp-row-go">
-                      Quản lý
+                      {text("Quản lý", "Manage")}
                       <StreamIcon name="chevronRight" size={16} />
                     </span>
                   </Link>
@@ -268,13 +310,16 @@ function ManagedPages() {
             </ul>
           ) : (
             <p className="cp-section-lead">
-              Bạn chưa quản lý trang nào. Mở trang của đội hoặc tuyển thủ bạn đại diện và gửi yêu cầu quản lý từ nút ⋯.
+              {text(
+                "Bạn chưa quản lý trang nào. Mở trang của đội hoặc tuyển thủ bạn đại diện và gửi yêu cầu quản lý từ nút ⋯.",
+                "You do not manage any pages yet. Open the page of the team or player you represent and send a management request from the ⋯ button.",
+              )}
             </p>
           ))}
       </section>
       <section className="cp-section" aria-labelledby="account-claims">
         <div className="tn-heading">
-          <h2 id="account-claims">Yêu cầu đại diện</h2>
+          <h2 id="account-claims">{text("Yêu cầu đại diện", "Representation requests")}</h2>
         </div>
         {claims.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải yêu cầu" />}
         {claims.isError && <p className="cp-error">{claims.error.message}</p>}
@@ -290,13 +335,15 @@ function ManagedPages() {
                     {claim.resolution && <small>{claim.resolution}</small>}
                   </span>
                   <span className="cp-badge" data-status={claim.status}>
-                    {claimLabels[claim.status]}
+                    {text(...claimLabels[claim.status])}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="cp-section-lead">Bạn chưa gửi yêu cầu nào.</p>
+            <p className="cp-section-lead">
+              {text("Bạn chưa gửi yêu cầu nào.", "You have not sent any requests yet.")}
+            </p>
           ))}
       </section>
     </div>
@@ -305,6 +352,7 @@ function ManagedPages() {
 
 /** What an account gives a visitor, with the two ways in. The one prompt of the account screens. */
 export function SignInPrompt({ title = "Đăng nhập để tham gia cộng đồng" }: { title?: string }) {
+  const { text } = useStreamLocale()
   const [error, setError] = useState("")
   return (
     <section className="cp-signin" aria-labelledby="signin-title">
@@ -312,10 +360,10 @@ export function SignInPrompt({ title = "Đăng nhập để tham gia cộng đ�
       <SignInBenefits />
       <div className="cp-signin-actions">
         <button className="cp-button cp-primary" onClick={() => openSignIn(false, setError)}>
-          Đăng nhập
+          {text("Đăng nhập", "Sign in")}
         </button>
         <button className="cp-button" onClick={() => openSignIn(true, setError)}>
-          Tạo tài khoản
+          {text("Tạo tài khoản", "Create account")}
         </button>
       </div>
       {error && (
@@ -323,12 +371,18 @@ export function SignInPrompt({ title = "Đăng nhập để tham gia cộng đ�
           {error}
         </p>
       )}
-      <p className="cp-signin-note">Đăng nhập qua trang tài khoản AOV; AOV Stream không lưu mật khẩu.</p>
+      <p className="cp-signin-note">
+        {text(
+          "Đăng nhập qua trang tài khoản AOV; AOV Stream không lưu mật khẩu.",
+          "Sign in through the AOV account page; AOV Stream does not store passwords.",
+        )}
+      </p>
     </section>
   )
 }
 
 export function CommunityPageManager() {
+  const { text } = useStreamLocale()
   const { id = "" } = useParams()
   const session = useCommunitySession()
   const enabled = session.status === "authenticated"
@@ -349,10 +403,10 @@ export function CommunityPageManager() {
           <ManagerSkeleton />
         ) : !enabled ? (
           <>
-            <title>Quản lý trang — AOV Stream</title>
+            <title>{text("Quản lý trang — AOV Stream", "Manage page — AOV Stream")}</title>
             <header className="tn-page-head">
               <div>
-                <h1>Quản lý trang</h1>
+                <h1>{text("Quản lý trang", "Manage page")}</h1>
                 <p>Người đại diện cập nhật giới thiệu, đăng bài và mời người cùng quản lý trang.</p>
               </div>
             </header>
@@ -366,11 +420,11 @@ export function CommunityPageManager() {
           <ManagerSkeleton />
         ) : !viewer.data.role ? (
           <div className="hub-state">
-            <h2>Bạn chưa có quyền quản lý trang này.</h2>
+            <h2>{text("Bạn chưa có quyền quản lý trang này.", "You are not allowed to manage this page yet.")}</h2>
             <p>Trang bạn quản lý được liệt kê trong tài khoản, mục Trang & yêu cầu.</p>
             <div className="hub-state-actions">
               <Link className="cp-button" to="/account?tab=pages">
-                Về Trang & yêu cầu
+                {text("Về Trang & yêu cầu", "Back to Pages & requests")}
               </Link>
             </div>
           </div>
@@ -383,8 +437,9 @@ export function CommunityPageManager() {
 }
 
 function ManagerSkeleton() {
+  const { text } = useStreamLocale()
   return (
-    <div className="cp-manage-skeleton" role="status" aria-label="Đang tải trang">
+    <div className="cp-manage-skeleton" role="status" aria-label={text("Đang tải trang", "Loading page")}>
       <span className="hub-skeleton" />
       <span className="hub-skeleton" />
       <div className="hub-skeleton-rows" />
@@ -395,21 +450,22 @@ function ManagerSkeleton() {
 type ProfileLink = ProfilePresentation["links"][number]
 
 type ManagerTab = "presentation" | "posts" | "members"
-const managerTabs: [ManagerTab, string][] = [
-  ["presentation", "Giới thiệu"],
-  ["posts", "Bài viết"],
-  ["members", "Người quản lý"],
+const managerTabs: [ManagerTab, readonly [string, string]][] = [
+  ["presentation", ["Giới thiệu", "About"]],
+  ["posts", ["Bài viết", "Posts"]],
+  ["members", ["Người quản lý", "Managers"]],
 ]
 
 function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageViewer }) {
+  const { text } = useStreamLocale()
   const [tab, setTab] = useState<ManagerTab>("presentation")
   const name = profile.content?.name || profile.code
   return (
     <>
-      <title>{`Quản lý ${name} — AOV Stream`}</title>
+      <title>{text(`Quản lý ${name} — AOV Stream`, `Manage ${name} — AOV Stream`)}</title>
       <Link className="cp-back" to="/account?tab=pages">
         <StreamIcon name="back" size={16} />
-        Trang bạn quản lý
+        {text("Trang bạn quản lý", "Pages you manage")}
       </Link>
       <header className="tn-page-head cp-manage-head">
         <div className="cp-manage-identity">
@@ -417,19 +473,24 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
           <div>
             <h1>{name}</h1>
             <p>
-              {profileKindLabels[profile.kind]} · bạn là {viewer.role ? roleLabels[viewer.role].toLowerCase() : ""}
+              {text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])} · {text("bạn là", "your role:")}{" "}
+              {viewer.role ? text(...roleLabels[viewer.role]).toLowerCase() : ""}
             </p>
           </div>
         </div>
-        <Link className="cp-button cp-manage-public" to={`/pages/${profile.code}`} aria-label="Xem trang công khai">
-          <span>Xem trang công khai</span>
+        <Link
+          className="cp-button cp-manage-public"
+          to={`/pages/${profile.code}`}
+          aria-label={text("Xem trang công khai", "View public page")}
+        >
+          <span>{text("Xem trang công khai", "View public page")}</span>
           <StreamIcon name="arrow" size={15} />
         </Link>
       </header>
-      <nav className="cp-tabs" aria-label="Mục quản lý">
+      <nav className="cp-tabs" aria-label={text("Mục quản lý", "Management sections")}>
         {managerTabs.map(([value, label]) => (
           <button key={value} aria-current={tab === value ? "page" : undefined} onClick={() => setTab(value)}>
-            {label}
+            {text(...label)}
           </button>
         ))}
       </nav>
@@ -464,6 +525,7 @@ function useManagerRefresh() {
 }
 
 function PresentationForm({ profile, viewer }: { profile: CommunityProfile; viewer: PageViewer }) {
+  const { text } = useStreamLocale()
   const refresh = useManagerRefresh()
   const [presentation, setPresentation] = useState<ProfilePresentation>({
     biography: profile.content?.biography,
@@ -497,11 +559,14 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
       <p className="cp-section-lead">
         {readOnly
           ? "Kiểm duyệt viên xem được phần này; quản trị chính và biên tập viên mới sửa được."
-          : "Lịch sử và kết quả thi đấu được biên tập riêng; bạn có thể đề xuất chỉnh sửa từ trang công khai."}
+          : text(
+              "Lịch sử và kết quả thi đấu được biên tập riêng; bạn có thể đề xuất chỉnh sửa từ trang công khai.",
+              "History and competition results are edited separately; you can suggest edits from the public page.",
+            )}
       </p>
       <fieldset disabled={readOnly || save.isPending}>
         <label>
-          Giới thiệu
+          {text("Giới thiệu", "Introduction")}
           <textarea
             rows={6}
             maxLength={10000}
@@ -511,7 +576,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
         </label>
         <div className="cp-field-pair">
           <label>
-            Ảnh đại diện
+            {text("Ảnh đại diện", "Avatar")}
             <input
               type="url"
               placeholder="https://…"
@@ -521,7 +586,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
             <ImageLinkPreview url={presentation.avatarUrl} />
           </label>
           <label>
-            Ảnh bìa
+            {text("Ảnh bìa", "Cover image")}
             <input
               type="url"
               placeholder="https://…"
@@ -531,7 +596,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
             <ImageLinkPreview url={presentation.coverUrl} wide />
           </label>
         </div>
-        <h3 className="cp-subheading">Kênh liên hệ</h3>
+        <h3 className="cp-subheading">{text("Kênh liên hệ", "Contact channels")}</h3>
         <datalist id="cp-channel-names">
           {SOCIAL_PLATFORM_NAMES.map((platform) => (
             <option key={platform} value={platform} />
@@ -541,7 +606,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
         {presentation.links.map((link, index) => (
           <div className="cp-link-field" key={index}>
             <label>
-              <span className="cp-link-label">Đường dẫn</span>
+              <span className="cp-link-label">{text("Đường dẫn", "Link")}</span>
               <input
                 type="url"
                 required
@@ -563,12 +628,12 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
             <label>
               <span className="cp-link-label">
                 {link.url && <SocialPlatformIcon url={link.url} size={15} />}
-                Tên kênh
+                {text("Tên kênh", "Channel name")}
               </span>
               <input
                 required
                 list="cp-channel-names"
-                placeholder="Tự điền theo đường dẫn"
+                placeholder={text("Tự điền theo đường dẫn", "Auto-filled from the link")}
                 value={link.label}
                 onChange={(event) => setLink(index, (item) => ({ ...item, label: event.target.value }))}
               />
@@ -576,8 +641,11 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
             <button
               type="button"
               className="hub-icon-button cp-link-remove"
-              aria-label={`Gỡ kênh ${link.label || link.url || index + 1}`}
-              title="Gỡ kênh"
+              aria-label={text(
+                `Gỡ kênh ${link.label || link.url || index + 1}`,
+                `Remove channel ${link.label || link.url || index + 1}`,
+              )}
+              title={text("Gỡ kênh", "Remove channel")}
               onClick={() =>
                 setPresentation({
                   ...presentation,
@@ -596,7 +664,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
             onClick={() => setPresentation({ ...presentation, links: [...presentation.links, { label: "", url: "" }] })}
           >
             <StreamIcon name="plus" size={15} />
-            Thêm kênh
+            {text("Thêm kênh", "Add channel")}
           </button>
         )}
       </fieldset>
@@ -608,7 +676,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
       {!readOnly && (
         <div className="cp-form-actions">
           <button className="cp-button cp-primary" disabled={save.isPending}>
-            {save.isPending ? "Đang lưu…" : "Lưu giới thiệu"}
+            {save.isPending ? text("Đang lưu…", "Saving…") : text("Lưu giới thiệu", "Save introduction")}
           </button>
         </div>
       )}
@@ -617,6 +685,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
 }
 
 function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageViewer }) {
+  const { text } = useStreamLocale()
   const session = useCommunitySession()
   const refresh = useManagerRefresh()
   const [inviteRole, setInviteRole] = useState("EDITOR")
@@ -650,7 +719,9 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
   return (
     <section className="cp-section" aria-labelledby="manage-members">
       <div className="tn-heading">
-        <h2 id="manage-members">Người quản lý {!!members.data?.length && <small>{members.data.length}</small>}</h2>
+        <h2 id="manage-members">
+          {text("Người quản lý", "Managers")} {!!members.data?.length && <small>{members.data.length}</small>}
+        </h2>
       </div>
       <p className="cp-section-lead">
         Biên tập viên đăng bài dưới tên trang; kiểm duyệt viên ẩn nội dung vi phạm. Chỉ quản trị chính mời và thu hồi.
@@ -672,9 +743,9 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
                 <span className="cp-row-text">
                   <strong>
                     {member.name}
-                    {member.self && " (bạn)"}
+                    {member.self && text(" (bạn)", " (you)")}
                   </strong>
-                  <small>{roleLabels[member.role]}</small>
+                  <small>{text(...roleLabels[member.role])}</small>
                 </span>
                 {owner && !member.self && (
                   <DropdownMenu>
@@ -689,7 +760,7 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
                         onSelect={() => setConfirmation({ id: member.id, action: "transfer" })}
                       >
                         <StreamIcon name="shield" size={16} />
-                        Chuyển quyền chính
+                        {text("Chuyển quyền chính", "Transfer ownership")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="hub-menu-item"
@@ -697,7 +768,7 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
                         onSelect={() => setConfirmation({ id: member.id, action: "revoke" })}
                       >
                         <StreamIcon name="close" size={16} />
-                        Thu hồi quyền
+                        {text("Thu hồi quyền", "Revoke access")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -707,8 +778,14 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
                 <div className="cp-confirm" role="group" aria-label="Xác nhận thay đổi quyền">
                   <p>
                     {confirmation.action === "transfer"
-                      ? `${member.name} sẽ trở thành quản trị chính; bạn chuyển thành biên tập viên. Các lời mời cũ hết hiệu lực.`
-                      : `${member.name} sẽ mất quyền quản lý trang này.`}
+                      ? text(
+                          `${member.name} sẽ trở thành quản trị chính; bạn chuyển thành biên tập viên. Các lời mời cũ hết hiệu lực.`,
+                          `${member.name} will become the owner; you will become an editor. Old invitations will no longer be valid.`,
+                        )
+                      : text(
+                          `${member.name} sẽ mất quyền quản lý trang này.`,
+                          `${member.name} will lose management access to this page.`,
+                        )}
                   </p>
                   <div className="cp-actions">
                     <button
@@ -716,10 +793,12 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
                       disabled={membership.isPending}
                       onClick={() => membership.mutate()}
                     >
-                      {confirmation.action === "revoke" ? "Thu hồi quyền" : "Chuyển quyền chính"}
+                      {confirmation.action === "revoke"
+                        ? text("Thu hồi quyền", "Revoke access")
+                        : text("Chuyển quyền chính", "Transfer ownership")}
                     </button>
                     <button className="cp-button cp-quiet" onClick={() => setConfirmation(null)}>
-                      Hủy
+                      {text("Hủy", "Cancel")}
                     </button>
                   </div>
                   {membership.isError && (
@@ -735,20 +814,23 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
       )}
       {owner && (
         <div className="cp-invite">
-          <h3 className="cp-subheading">Mời người quản lý</h3>
+          <h3 className="cp-subheading">{text("Mời người quản lý", "Invite a manager")}</h3>
           <p className="cp-section-lead">
-            Tạo một liên kết dùng một lần, có hiệu lực 7 ngày, rồi gửi riêng cho người bạn muốn cấp quyền.
+            {text(
+              "Tạo một liên kết dùng một lần, có hiệu lực 7 ngày, rồi gửi riêng cho người bạn muốn cấp quyền.",
+              "Create a single-use link, valid for 7 days, then send it privately to the person you want to grant access to.",
+            )}
           </p>
           <div className="cp-invite-row">
             <label className="cp-invite-role">
-              Quyền
+              {text("Quyền", "Role")}
               <select value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}>
-                <option value="EDITOR">Biên tập viên</option>
-                <option value="MODERATOR">Kiểm duyệt viên</option>
+                <option value="EDITOR">{text("Biên tập viên", "Editor")}</option>
+                <option value="MODERATOR">{text("Kiểm duyệt viên", "Moderator")}</option>
               </select>
             </label>
             <button className="cp-button cp-primary" disabled={invite.isPending} onClick={() => invite.mutate()}>
-              Tạo liên kết mời
+              {text("Tạo liên kết mời", "Create invitation link")}
             </button>
           </div>
           {invite.isError && (
@@ -759,12 +841,12 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
           {invitation && (
             <div className="cp-invite-row">
               <label>
-                Liên kết mời
+                {text("Liên kết mời", "Invitation link")}
                 <input readOnly value={invitation} onFocus={(event) => event.target.select()} />
               </label>
               <button type="button" className="cp-button" onClick={copy}>
                 <StreamIcon name={copied ? "check" : "link"} size={15} />
-                {copied ? "Đã sao chép" : "Sao chép"}
+                {copied ? text("Đã sao chép", "Copied") : text("Sao chép", "Copy")}
               </button>
             </div>
           )}
@@ -775,6 +857,7 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
 }
 
 export function CommunityInvitation() {
+  const { text } = useStreamLocale()
   const session = useCommunitySession()
   const navigate = useNavigate()
   const [token] = useState(() => location.hash.slice(1))
@@ -784,16 +867,16 @@ export function CommunityInvitation() {
   })
   return (
     <StreamShell>
-      <title>Lời mời quản lý trang — AOV Stream</title>
+      <title>{text("Lời mời quản lý trang — AOV Stream", "Invitation to manage a page — AOV Stream")}</title>
       <div className="cp-container">
         <header className="tn-page-head">
           <div>
-            <h1>Lời mời quản lý trang</h1>
+            <h1>{text("Lời mời quản lý trang", "Invitation to manage a page")}</h1>
             <p>Người quản trị chính của một trang mời bạn cùng quản lý trang đó.</p>
           </div>
         </header>
         {session.status === "loading" ? (
-          <div className="hub-skeleton-rows" role="status" aria-label="Đang tải" />
+          <div className="hub-skeleton-rows" role="status" aria-label={text("Đang tải", "Loading")} />
         ) : session.status !== "authenticated" ? (
           <SignInPrompt title="Đăng nhập để nhận lời mời" />
         ) : !token ? (
@@ -808,12 +891,18 @@ export function CommunityInvitation() {
           <section className="cp-signin" aria-labelledby="invitation-title">
             <h2 id="invitation-title">Nhận quyền quản lý</h2>
             <p className="cp-section-lead">
-              Chấp nhận để liên kết quyền quản lý với tài khoản <strong>{session.name}</strong>. Liên kết chỉ dùng được
-              một lần.
+              {text(
+                "Chấp nhận để liên kết quyền quản lý với tài khoản",
+                "Accept to link management access to the account",
+              )}{" "}
+              <strong>{session.name}</strong>.{" "}
+              {text("Liên kết chỉ dùng được một lần.", "The link can be used only once.")}
             </p>
             <div className="cp-signin-actions">
               <button className="cp-button cp-primary" disabled={accept.isPending} onClick={() => accept.mutate()}>
-                {accept.isPending ? "Đang chấp nhận…" : "Chấp nhận lời mời"}
+                {accept.isPending
+                  ? text("Đang chấp nhận…", "Accepting…")
+                  : text("Chấp nhận lời mời", "Accept invitation")}
               </button>
             </div>
             {accept.isError && (
@@ -830,10 +919,16 @@ export function CommunityInvitation() {
 
 /** Shows what an image link points to, so a wrong link is noticed before saving. */
 function ImageLinkPreview({ url, wide = false }: { url?: string | null; wide?: boolean }) {
+  const { text } = useStreamLocale()
   const [failed, setFailed] = useState<string | null>(null)
   const value = url?.trim()
   if (!value || !/^https?:\/\//i.test(value)) return null
-  if (failed === value) return <span className="cp-field-error">Không xem trước được ảnh từ liên kết này.</span>
+  if (failed === value)
+    return (
+      <span className="cp-field-error">
+        {text("Không xem trước được ảnh từ liên kết này.", "The image from this link could not be previewed.")}
+      </span>
+    )
   return (
     <img
       className={wide ? "cp-image-preview cp-image-preview-wide" : "cp-image-preview"}

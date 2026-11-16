@@ -23,9 +23,10 @@ public record ItemContent(
         recipeStatus = recipeStatus == null ? "UNKNOWN" : recipeStatus;
     }
 
+    /** The gameplay fields alone, with numbers in comparable form, to tell a translation from a gameplay change. */
     public ItemContent mechanics() {
-        return new ItemContent(iconAssetId, tier, price, categoryCode, shopPositions, recipeStatus, components, stats,
-                List.of(), null);
+        return new ItemContent(iconAssetId, tier, price, categoryCode, shopPositions, recipeStatus, components,
+                com.wikiaov.platform.CatalogText.comparable(stats), List.of(), null);
     }
 
     public ItemContent publicCopy(String locale) {

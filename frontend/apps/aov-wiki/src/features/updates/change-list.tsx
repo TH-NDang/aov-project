@@ -102,7 +102,7 @@ function LevelView({ label, table }: { label: string; table: LevelTable }) {
       >
         <table>
           <caption className="sr-only">
-            {label}: {text("trước và sau theo từng cấp chiêu", "before and after at each skill level")}
+            {label}: {text("trước và sau theo từng cấp chiêu", "before and after at each ability level")}
           </caption>
           <thead>
             <tr>
@@ -177,7 +177,7 @@ function ChangeRow({ change, skill, marked }: { change: HeroChangeItem; skill?: 
       type="button"
       className="wiki-rank-toggle"
       aria-pressed={byLevel}
-      aria-label={`${text("Bảng theo cấp chiêu", "Table by skill level")}: ${label}`}
+      aria-label={`${text("Bảng theo cấp chiêu", "Table by ability level")}: ${label}`}
       onClick={() => setByLevel(!byLevel)}
     >
       <WikiIcon name="table" size={14} />

@@ -109,6 +109,7 @@ export function CommunitySessionButton() {
 }
 
 function NotificationBell() {
+  const { text } = useStreamLocale()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const unread = useUnreadCount()
@@ -120,24 +121,46 @@ function NotificationBell() {
       <PopoverTrigger asChild>
         <button
           className="hub-icon-button hub-bell"
-          aria-label={count ? `Thông báo, ${count} chưa đọc` : "Thông báo"}
-          title="Thông báo"
+          aria-label={
+            count
+              ? text(`Thông báo, ${count} chưa đọc`, `Notifications, ${count} unread`)
+              : text("Thông báo", "Notifications")
+          }
+          title={text("Thông báo", "Notifications")}
         >
           <StreamIcon name="bell" size={18} />
           {count > 0 && <span className="hub-badge">{count > 99 ? "99+" : count}</span>}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={8} className="hub-popover hub-notifications" drawerTitle="Thông báo">
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        className="hub-popover hub-notifications"
+        drawerTitle={text("Thông báo", "Notifications")}
+      >
         <div className="hub-popover-header">
-          <strong>Thông báo</strong>
+          <strong>{text("Thông báo", "Notifications")}</strong>
           <button className="cp-text-button" disabled={!count || read.all.isPending} onClick={() => read.all.mutate()}>
-            Đánh dấu đã đọc tất cả
+            {text("Đánh dấu đã đọc tất cả", "Mark all as read")}
           </button>
         </div>
-        {latest.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải thông báo" />}
-        {latest.isError && <p className="hub-popover-empty">Chưa tải được thông báo.</p>}
+        {latest.isPending && (
+          <div
+            className="hub-skeleton-rows"
+            role="status"
+            aria-label={text("Đang tải thông báo", "Loading notifications")}
+          />
+        )}
+        {latest.isError && (
+          <p className="hub-popover-empty">{text("Chưa tải được thông báo.", "Notifications could not be loaded.")}</p>
+        )}
         {latest.data && !latest.data.items.length && (
-          <p className="hub-popover-empty">Bạn chưa có thông báo. Theo dõi trang để nhận tin bài mới.</p>
+          <p className="hub-popover-empty">
+            {text(
+              "Bạn chưa có thông báo. Theo dõi trang để nhận tin bài mới.",
+              "You have no notifications yet. Follow pages to hear about new posts.",
+            )}
+          </p>
         )}
         <div className="hub-notification-list">
           {latest.data?.items.map((item) => (
@@ -157,7 +180,7 @@ function NotificationBell() {
           ))}
         </div>
         <Link className="hub-popover-footer" to="/account?tab=notifications" onClick={() => setOpen(false)}>
-          Xem tất cả thông báo
+          {text("Xem tất cả thông báo", "See all notifications")}
         </Link>
       </PopoverContent>
     </Popover>

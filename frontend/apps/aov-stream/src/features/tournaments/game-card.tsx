@@ -3,14 +3,18 @@ import { Link } from "react-router"
 import type { GameSide, PublishedGame } from "@aov/community-contracts"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
+import { useStreamLocale } from "../../components/stream-locale"
 import { ReferenceArt } from "./reference-art"
 import { clock, orderedParticipants, seriesRound, seriesSides, unbroken } from "./tournament-model"
 
 /** The five picks of one side in lane order, underlined in the colour of the side it played on. */
 function PickStrip({ game, side, slot }: { game: PublishedGame; side: GameSide; slot?: "a" | "b" }) {
+  const { text } = useStreamLocale()
   return (
     <span className="tn-picks" data-side={side.side} data-slot={slot}>
-      <span className="sr-only">{side.side === "BLUE" ? "Phe xanh:" : "Phe đỏ:"}</span>
+      <span className="sr-only">
+        {side.side === "BLUE" ? text("Phe xanh:", "Blue side:") : text("Phe đỏ:", "Red side:")}
+      </span>
       {orderedParticipants(side.participants).map((participant) => (
         <ReferenceArt key={participant.lane} catalog={game.catalog} kind="heroes" selection={participant.hero} />
       ))}
@@ -35,22 +39,23 @@ export function GameCard({
   competition?: boolean
   round?: boolean
 }) {
+  const { text } = useStreamLocale()
   const { number, durationSeconds, winner } = game.content
   const round = layout === "card" && named ? seriesRound(game.series.name) : null
   return (
     <Link className="tn-game" data-layout={layout} to={`/games/${game.id}`}>
       <span className="tn-game-title">
         {round && <span>{round}</span>}
-        <b>Ván {number}</b>
+        <b>{text(`Ván ${number}`, `Game ${number}`)}</b>
       </span>
       <span className="tn-game-time">
         <StreamIcon name="clock" size={13} />
-        <span className="sr-only">Thời lượng</span>
+        <span className="sr-only">{text("Thời lượng", "Duration")}</span>
         {durationSeconds ? clock(durationSeconds) : "—"}
       </span>
       {seriesSides(game).map((side, index) => {
         const team = game.teams[side.teamId]
-        const name = team?.shortName || team?.name || "Đội"
+        const name = team?.shortName || team?.name || text("Đội", "Team")
         const slot = index === 0 ? "a" : "b"
         return (
           <Fragment key={side.side}>
@@ -65,7 +70,7 @@ export function GameCard({
               {winner === side.side && (
                 <span className="tn-win">
                   <StreamIcon name="trophy" size={12} />
-                  <span>Thắng</span>
+                  <span>{text("Thắng", "Win")}</span>
                 </span>
               )}
             </span>

@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import type { CommunityProfile } from "@aov/community-contracts"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { competitionsFeedQuery, formatDay, regionName } from "./community-ui"
 import { ProfileHead } from "./profile-head"
@@ -20,6 +21,7 @@ import "./community-profile.css"
  * on a competition's own page. The history tab only exists for circuits that have milestones.
  */
 export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
+  const { text, languageTag } = useStreamLocale()
   const content = profile.content!
   const [params, setParams] = useSearchParams()
   const history = distinctHistory(content.history)
@@ -27,7 +29,7 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
   const tab = params.get("tab") === "history" && history.length ? "history" : "overview"
   const seasons = useInfiniteQuery(competitionsFeedQuery({ circuitPageId: profile.id }))
   const seasonCount = seasons.data?.pages[0]?.totalElements
-  const region = regionName(content.country)
+  const region = regionName(content.country, languageTag)
   const selectTab = (value: "overview" | "history") =>
     setParams((current) => {
       const next = new URLSearchParams(current)
@@ -37,42 +39,48 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
     })
   return (
     <article className="cp-container pf-page">
-      <title>{`${content.name} — Hệ thống giải · AOV Stream`}</title>
+      <title>
+        {text(`${content.name} — Hệ thống giải · AOV Stream`, `${content.name} — Tournament circuit · AOV Stream`)}
+      </title>
       <Link className="cp-back" to="/competitions">
         <StreamIcon name="back" size={16} />
-        Tất cả giải đấu
+        {text("Tất cả giải đấu", "All tournaments")}
       </Link>
       <ProfileHead
         profile={profile}
         kicker={
           <>
-            <Link to="/explore?kind=CIRCUIT">Hệ thống giải</Link>
+            <Link to="/explore?kind=CIRCUIT">{text("Hệ thống giải", "Tournament circuit")}</Link>
             {region && ` · ${region}`}
           </>
         }
-        facts={[content.shortName, !!seasonCount && `${seasonCount} mùa giải`].filter((fact) => !!fact)}
+        facts={[
+          content.shortName,
+          !!seasonCount &&
+            text(`${seasonCount} mùa giải`, `${seasonCount} ${seasonCount === 1 ? "season" : "seasons"}`),
+        ].filter((fact) => !!fact)}
         actions={<ProfileOptions profile={profile} />}
       />
       {history.length > 0 && (
-        <nav className="cp-tabs" aria-label="Nội dung hệ thống giải">
+        <nav className="cp-tabs" aria-label={text("Nội dung hệ thống giải", "Tournament circuit content")}>
           <button
             type="button"
             aria-current={tab === "overview" ? "page" : undefined}
             onClick={() => selectTab("overview")}
           >
-            Tổng quan
+            {text("Tổng quan", "Overview")}
           </button>
           <button
             type="button"
             aria-current={tab === "history" ? "page" : undefined}
             onClick={() => selectTab("history")}
           >
-            Lịch sử
+            {text("Lịch sử", "History")}
           </button>
         </nav>
       )}
       {tab === "history" ? (
-        <section aria-label="Lịch sử hệ thống giải">
+        <section aria-label={text("Lịch sử hệ thống giải", "Tournament circuit history")}>
           <HistoryRows items={history} />
         </section>
       ) : (
@@ -80,9 +88,9 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
           <div className="tn-overview-main">
             {profile.live && <LiveBlock live={profile.live} name={content.name} />}
             {content.biography && <CircuitIntro text={content.biography} />}
-            <CompetitionList profile={profile} title="Các mùa giải" />
+            <CompetitionList profile={profile} title={text("Các mùa giải", "Seasons")} />
           </div>
-          <aside className="tn-overview-side" aria-label="Thông tin tham khảo">
+          <aside className="tn-overview-side" aria-label={text("Thông tin tham khảo", "Reference information")}>
             <CircuitFacts content={content} region={region} />
           </aside>
         </div>
@@ -99,6 +107,8 @@ const INTRO_FOLD = 240
  * stay close to the top of the page.
  */
 function CircuitIntro({ text }: { text: string }) {
+  // `text` is the introduction here, so the wording picker goes by `ui`.
+  const { text: ui } = useStreamLocale()
   const [open, setOpen] = useState(false)
   const foldable = usePageLayout() === "compact" && text.length > INTRO_FOLD
   return (
@@ -108,7 +118,7 @@ function CircuitIntro({ text }: { text: string }) {
       </p>
       {foldable && (
         <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open ? "Thu gọn" : "Xem thêm"}
+          {open ? ui("Thu gọn", "Show less") : ui("Xem thêm", "Show more")}
         </button>
       )}
     </div>
@@ -123,25 +133,26 @@ function CircuitFacts({
   content: NonNullable<CommunityProfile["content"]>
   region: string | null | undefined
 }) {
+  const { text } = useStreamLocale()
   return (
     <section className="tn-side-card pf-about">
-      <h2>Thông tin</h2>
+      <h2>{text("Thông tin", "Information")}</h2>
       <dl className="tn-facts">
         {content.shortName && (
           <div>
-            <dt>Tên viết tắt</dt>
+            <dt>{text("Tên viết tắt", "Short name")}</dt>
             <dd>{content.shortName}</dd>
           </div>
         )}
         {region && (
           <div>
-            <dt>Quốc gia / khu vực</dt>
+            <dt>{text("Quốc gia / khu vực", "Country / region")}</dt>
             <dd>{region}</dd>
           </div>
         )}
         {content.links.length > 0 && (
           <div>
-            <dt>Kênh chính thức</dt>
+            <dt>{text("Kênh chính thức", "Official channels")}</dt>
             <dd>
               <ProfileSocials links={content.links} />
             </dd>
@@ -149,15 +160,15 @@ function CircuitFacts({
         )}
         {content.channelOrganizationId && (
           <div>
-            <dt>Kênh dùng chung với tổ chức</dt>
+            <dt>{text("Kênh dùng chung với tổ chức", "Channels shared with the organization")}</dt>
             <dd>
               <CircuitChannelOrganization id={content.channelOrganizationId} />
             </dd>
           </div>
         )}
         <div>
-          <dt>Biên tập</dt>
-          <dd>AthaHub, từ nguồn công khai</dd>
+          <dt>{text("Biên tập", "Edited by")}</dt>
+          <dd>{text("AthaHub, từ nguồn công khai", "AthaHub, from public sources")}</dd>
         </div>
       </dl>
       {content.sources.length > 0 && (
@@ -168,7 +179,11 @@ function CircuitFacts({
                 href={source.url}
                 target="_blank"
                 rel="noreferrer"
-                title={source.checkedOn ? `Đối chiếu ${formatDay(source.checkedOn)}` : undefined}
+                title={
+                  source.checkedOn
+                    ? text(`Đối chiếu ${formatDay(source.checkedOn)}`, `Checked on ${formatDay(source.checkedOn)}`)
+                    : undefined
+                }
               >
                 {source.label || hostOf(source.url)}
                 <StreamIcon name="external" size={13} />
@@ -190,12 +205,14 @@ function hostOf(url: string) {
 }
 
 function CircuitChannelOrganization({ id }: { id: string }) {
+  const { text } = useStreamLocale()
   const organization = useQuery({
     queryKey: ["public-page", id],
     queryFn: () => communityApi<CommunityProfile>(`/pages/${encodeURIComponent(id)}`),
   })
-  if (organization.isPending) return <span role="status">Đang tải…</span>
-  if (organization.isError || organization.data.kind !== "ORGANIZATION") return <span>Chưa được công bố</span>
+  if (organization.isPending) return <span role="status">{text("Đang tải…", "Loading…")}</span>
+  if (organization.isError || organization.data.kind !== "ORGANIZATION")
+    return <span>{text("Chưa được công bố", "Not published yet")}</span>
   const profile = organization.data
   return (
     <Link className="cp-organizer" to={`/pages/${profile.code}`}>

@@ -71,12 +71,20 @@ export function knownScheduleDay(entries: CompetitionMatch[], timeZone: string, 
   return day && entries.some((entry) => scheduleDay(entry, timeZone) === day) ? day : ""
 }
 
-/** A day written for a heading, with the word a reader uses for the days next to today. */
-export function dayHeading(at: number, timeZone: string, now = Date.now()) {
+/** The words a reader uses for the days next to today, in Vietnamese and in English. */
+const NEAR_DAYS = {
+  yesterday: ["Hôm qua", "Yesterday"],
+  today: ["Hôm nay", "Today"],
+  tomorrow: ["Ngày mai", "Tomorrow"],
+} as const
+
+/** A day written for a heading in `locale`, with the word a reader uses for the days next to today. */
+export function dayHeading(at: number, timeZone: string, now = Date.now(), locale = "vi-VN") {
   const away = calendarDaysBetween(now, at, timeZone)
+  const near = away === 0 ? NEAR_DAYS.today : away === 1 ? NEAR_DAYS.tomorrow : away === -1 ? NEAR_DAYS.yesterday : null
   return {
-    near: away === 0 ? "Hôm nay" : away === 1 ? "Ngày mai" : away === -1 ? "Hôm qua" : null,
-    date: formatInZone(at, timeZone, { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }),
+    near: near && near[locale.startsWith("en") ? 1 : 0],
+    date: formatInZone(at, timeZone, { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }, locale),
   }
 }
 
@@ -94,10 +102,16 @@ export type MatchSide = {
   lost: boolean
 }
 
+/** Names of a slot still open, in Vietnamese and in English. */
+const OPEN_SLOT = {
+  team: ["Đội chưa có thông tin", "No team information yet"],
+  undecided: ["Chờ xác định", "TBD"],
+} as const
+
 /** How an open slot will be filled, named after the round of the match that feeds it rather than its key. */
-function slotName(entry: CompetitionMatch, slot: CompetitionSlot) {
-  if (slot.type === "TEAM") return "Đội chưa có thông tin"
-  if (slot.type === "SEED" && slot.seed != null) return `Hạt giống ${slot.seed}`
+function slotName(entry: CompetitionMatch, slot: CompetitionSlot, english: boolean) {
+  if (slot.type === "TEAM") return OPEN_SLOT.team[english ? 1 : 0]
+  if (slot.type === "SEED" && slot.seed != null) return english ? `Seed ${slot.seed}` : `Hạt giống ${slot.seed}`
   if (slot.type === "WINNER" || slot.type === "LOSER") {
     const { matches, stages } = entry.competition.content.plan
     const source = matches.find((match) => match.key === slot.matchKey)
@@ -108,15 +122,20 @@ function slotName(entry: CompetitionMatch, slot: CompetitionSlot) {
         stages.find((stage) => stage.code === source.stageCode),
       ) ??
         source.label)
-    const outcome = slot.type === "WINNER" ? "Thắng" : "Thua"
-    return round ? `${outcome} ${round}` : `${outcome} trận trước`
+    const outcome = slot.type === "WINNER" ? (english ? "Winner of" : "Thắng") : english ? "Loser of" : "Thua"
+    if (round) return `${outcome} ${round}`
+    return english ? `${outcome} the previous match` : `${outcome} trận trước`
   }
-  return slot.label || "Chờ xác định"
+  return slot.label || OPEN_SLOT.undecided[english ? 1 : 0]
 }
 
-/** Both sides of a match as a row shows them: the resolved team, its score and whether it won. */
-export function matchSides(entry: CompetitionMatch): [MatchSide, MatchSide] {
+/**
+ * Both sides of a match as a row shows them: the resolved team, its score and whether it won. An open slot is named
+ * in `locale`.
+ */
+export function matchSides(entry: CompetitionMatch, locale = "vi-VN"): [MatchSide, MatchSide] {
   const { match, result, competition } = entry
+  const english = locale.startsWith("en")
   const winner = matchWinner(entry)
   const side = (key: "a" | "b"): MatchSide => {
     const teamId = (key === "a" ? result?.teamAId : result?.teamBId) || match[key].teamId || null
@@ -124,8 +143,8 @@ export function matchSides(entry: CompetitionMatch): [MatchSide, MatchSide] {
     return {
       side: key,
       teamId,
-      name: team?.shortName || team?.name || slotName(entry, match[key]),
-      fullName: team?.name || slotName(entry, match[key]),
+      name: team?.shortName || team?.name || slotName(entry, match[key], english),
+      fullName: team?.name || slotName(entry, match[key], english),
       logoUrl: team?.logoUrl,
       known: !!team,
       score: (key === "a" ? result?.scoreA : result?.scoreB) ?? null,

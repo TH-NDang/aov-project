@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { formatCalendarDate, useUserTimeZone } from "@aov/ui/lib/time-zone"
+import { useStreamLocale } from "../../components/stream-locale"
 import { MatchRow } from "./match-components"
 import type { CompetitionMatch } from "./match-model"
 import {
@@ -22,19 +23,20 @@ import {
 /** Matches shown before the reader scrolls for more. */
 const STEP = 40
 
-const SCOPES: [ScheduleScope, string][] = [
-  ["all", "Tất cả"],
-  ["upcoming", "Lịch đấu"],
-  ["results", "Kết quả"],
+/** Each part of a schedule, with its name in Vietnamese and in English. */
+const SCOPES: [ScheduleScope, readonly [string, string]][] = [
+  ["all", ["Tất cả", "All"]],
+  ["upcoming", ["Lịch đấu", "Schedule"]],
+  ["results", ["Kết quả", "Results"]],
 ]
 
 export function scheduleScope(value: string | null): ScheduleScope {
   return value === "upcoming" || value === "results" ? value : "all"
 }
 
-/** How a day picked from an address reads in a sentence. */
-export function scheduleDayLabel(day: string) {
-  return day === "unscheduled" ? "các trận chờ xếp lịch" : `ngày ${formatCalendarDate(day)}`
+/** How a day picked from an address reads in a sentence, its date written in `locale`. */
+export function scheduleDayLabel(day: string, locale: string) {
+  return day === "unscheduled" ? "các trận chờ xếp lịch" : `ngày ${formatCalendarDate(day, undefined, locale)}`
 }
 
 /** The quick switch between everything, what is ahead and what was played. */
@@ -45,11 +47,12 @@ export function ScheduleScopePills({
   value: ScheduleScope
   onChange: (scope: ScheduleScope) => void
 }) {
+  const { text } = useStreamLocale()
   return (
-    <div className="hub-pills" role="group" aria-label="Trạng thái trận đấu">
+    <div className="hub-pills" role="group" aria-label={text("Trạng thái trận đấu", "Match status")}>
       {SCOPES.map(([key, label]) => (
         <button type="button" key={key} aria-pressed={value === key} onClick={() => onChange(key)}>
-          {label}
+          {text(...label)}
         </button>
       ))}
     </div>
@@ -89,26 +92,33 @@ export function FilterSelect({
 
 /** A filter that came with the address and has no control of its own: said in words, with the way out beside it. */
 export function ScheduleNote({ filters, onClear }: { filters: string[]; onClear: () => void }) {
+  const { text } = useStreamLocale()
   if (!filters.length) return null
   return (
     <p className="tn-schedule-note">
       <span>Đang xem {filters.join(", ")}.</span>
       <button type="button" onClick={onClear}>
-        Xem tất cả
+        {text("Xem tất cả", "See all")}
       </button>
     </p>
   )
 }
 
 function DayTitle({ group, part, timeZone, now }: { group: ScheduleGroup; part: Part; timeZone: string; now: number }) {
+  const { text, languageTag } = useStreamLocale()
   if (group.key === "live")
     return (
       <h3 className="tn-day-title">
-        <span className="tn-live">Đang diễn ra</span>
+        <span className="tn-live">{text("Đang diễn ra", "Ongoing")}</span>
       </h3>
     )
-  if (group.at == null) return <h3 className="tn-day-title">{part === "upcoming" ? "Chờ xếp lịch" : "Chưa rõ ngày"}</h3>
-  const { near, date } = dayHeading(group.at, timeZone, now)
+  if (group.at == null)
+    return (
+      <h3 className="tn-day-title">
+        {part === "upcoming" ? text("Chờ xếp lịch", "To be scheduled") : text("Chưa rõ ngày", "Unknown date")}
+      </h3>
+    )
+  const { near, date } = dayHeading(group.at, timeZone, now, languageTag)
   return (
     <h3 className="tn-day-title">
       {near && <b>{near}</b>}
@@ -118,7 +128,10 @@ function DayTitle({ group, part, timeZone, now }: { group: ScheduleGroup; part: 
 }
 
 type Part = "upcoming" | "results"
-const PART_TITLES: Record<Part, string> = { upcoming: "Lịch đấu", results: "Kết quả" }
+const PART_TITLES: Record<Part, readonly [string, string]> = {
+  upcoming: ["Lịch đấu", "Schedule"],
+  results: ["Kết quả", "Results"],
+}
 
 /**
  * Matches already in reading order, under a heading for each day of the reader's zone. `part` says which side of
@@ -168,6 +181,7 @@ export function ScheduleList({
   listKey: string
   empty: ReactNode
 }) {
+  const { text, languageTag } = useStreamLocale()
   const ahead = scope === "results" ? [] : upcoming
   const played = scope === "upcoming" ? [] : results
   const { rows, loader } = useRevealedRows([...ahead, ...played], `${listKey}:${scope}`, STEP)
@@ -184,14 +198,24 @@ export function ScheduleList({
             <section className="tn-schedule-part" key={part} aria-labelledby={`schedule-${part}`}>
               <div className="tn-heading">
                 <h2 id={`schedule-${part}`}>
-                  {PART_TITLES[part]} <small>{total.toLocaleString("vi-VN")} trận</small>
+                  {text(...PART_TITLES[part])}{" "}
+                  <small>
+                    {text(
+                      `${total.toLocaleString(languageTag)} trận`,
+                      `${total.toLocaleString(languageTag)} ${total === 1 ? "match" : "matches"}`,
+                    )}
+                  </small>
                 </h2>
               </div>
               <ScheduleDays entries={shown} part={part} competition={competition} />
             </section>
           ),
       )}
-      <InfiniteScroll query={loader} label="Đang tải thêm trận đấu" />
+      <InfiniteScroll
+        query={loader}
+        label="Đang tải thêm trận đấu"
+        retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+      />
     </div>
   )
 }
@@ -201,6 +225,7 @@ export function ScheduleList({
  * everything; a page that already shows its own "clear filters" beside the controls leaves it out.
  */
 export function ScheduleEmpty({ filtered, onClear }: { filtered: boolean; onClear?: () => void }) {
+  const { text } = useStreamLocale()
   return (
     <div className="hub-state">
       <h2>{filtered ? "Không có trận phù hợp" : "Chưa có lịch thi đấu"}</h2>
@@ -211,7 +236,7 @@ export function ScheduleEmpty({ filtered, onClear }: { filtered: boolean; onClea
       </p>
       {filtered && onClear && (
         <button type="button" className="cp-button" onClick={onClear}>
-          Xóa bộ lọc
+          {text("Xóa bộ lọc", "Clear filters")}
         </button>
       )}
     </div>
@@ -226,6 +251,7 @@ const FILTER_KEYS = ["scope", "stage", "team", "date"]
  * matches played.
  */
 export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }) {
+  const { text, languageTag } = useStreamLocale()
   const layout = usePageLayout()
   const timeZone = useUserTimeZone()
   const [params, setParams] = useSearchParams()
@@ -271,16 +297,16 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
     <>
       {stages.length > 1 && (
         <FilterSelect
-          label="Giai đoạn"
+          label={text("Giai đoạn", "Stage")}
           value={stage}
           onChange={(value) => update("stage", value)}
-          all="Mọi giai đoạn"
+          all={text("Mọi giai đoạn", "All stages")}
           options={stages.map((item) => [item.code, item.name])}
         />
       )}
       {teamIds.length > 2 && (
         <FilterSelect
-          label="Đội"
+          label={text("Đội", "Team")}
           value={team}
           onChange={(value) => update("team", value)}
           all="Mọi đội"
@@ -304,11 +330,11 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
             (folded ? (
               <PublicFilterSheet
                 title="Lọc trận đấu"
-                triggerLabel="Lọc"
+                triggerLabel={text("Lọc", "Filter")}
                 count={active}
-                resetLabel="Xóa lọc"
+                resetLabel={text("Xóa lọc", "Clear filters")}
                 onReset={clear}
-                resultLabel={`Xem ${total.toLocaleString("vi-VN")} trận`}
+                resultLabel={`Xem ${total.toLocaleString(languageTag)} trận`}
               >
                 <div className="competition-sheet-filters">{selects}</div>
               </PublicFilterSheet>
@@ -317,14 +343,14 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
                 {selects}
                 {active > 0 && (
                   <button type="button" className="competition-clear" onClick={clear}>
-                    Xóa bộ lọc
+                    {text("Xóa bộ lọc", "Clear filters")}
                   </button>
                 )}
               </div>
             ))}
         </div>
       )}
-      <ScheduleNote filters={day ? [scheduleDayLabel(day)] : []} onClear={() => update("date", "")} />
+      <ScheduleNote filters={day ? [scheduleDayLabel(day, languageTag)] : []} onClear={() => update("date", "")} />
       <ScheduleList
         upcoming={shown.upcoming}
         results={shown.results}

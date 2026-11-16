@@ -14,6 +14,7 @@ import { LocalTime } from "@aov/ui/components/local-time"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
+import { useStreamLocale } from "../../components/stream-locale"
 import { competitionStatus, dayRange, hueOf } from "../community/community-ui"
 import { EntityPageLink } from "../community/public-competitions"
 import { CompetitionLogo, StatusBadge } from "./competition-card"
@@ -31,13 +32,14 @@ import { CompetitionSchedule } from "./competition-schedule"
 import { MatchCard } from "./match-card"
 import { competitionMatches, type CompetitionMatch } from "./match-model"
 import { competitionQuery } from "./tournament-api"
-import { LANES } from "./tournament-model"
+import { LANE_NAMES } from "./tournament-model"
 
+/** The tabs of a competition, each named in Vietnamese and in English. */
 const TABS = [
-  ["overview", "Tổng quan"],
-  ["matches", "Lịch & kết quả"],
-  ["standings", "BXH & nhánh đấu"],
-  ["teams", "Đội tham dự"],
+  ["overview", ["Tổng quan", "Overview"]],
+  ["matches", ["Lịch & kết quả", "Schedule & results"]],
+  ["standings", ["BXH & nhánh đấu", "Standings & bracket"]],
+  ["teams", ["Đội tham dự", "Participating teams"]],
 ] as const
 type Tab = (typeof TABS)[number][0]
 
@@ -46,6 +48,7 @@ const ROSTER_ORDER = ["ACTIVE", "SUBSTITUTE", "UNKNOWN", "INACTIVE"]
 const hue = (name: string) => ({ "--hub-hue": hueOf(name) }) as CSSProperties
 
 export function PublicCompetitionPage() {
+  const { text, languageTag } = useStreamLocale()
   const { id = "" } = useParams()
   const query = useQuery(competitionQuery(id))
   const [params, setParams] = useSearchParams()
@@ -77,13 +80,13 @@ export function PublicCompetitionPage() {
       <StreamShell>
         <Link className="cp-back" to="/competitions">
           <StreamIcon name="back" size={16} />
-          Tất cả giải đấu
+          {text("Tất cả giải đấu", "All tournaments")}
         </Link>
         <div className="hub-state" role={query.isError ? "alert" : "status"}>
-          <h1>{query.isError ? query.error.message : "Đang tải giải đấu…"}</h1>
+          <h1>{query.isError ? query.error.message : text("Đang tải giải đấu…", "Loading tournament…")}</h1>
           {query.isLoadingError && (
             <button className="cp-button" onClick={() => void query.refetch()}>
-              Thử lại
+              {text("Thử lại", "Retry")}
             </button>
           )}
         </div>
@@ -101,13 +104,17 @@ export function PublicCompetitionPage() {
       <div className="cp-container tn-comp">
         <Link className="cp-back" to="/competitions">
           <StreamIcon name="back" size={16} />
-          Tất cả giải đấu
+          {text("Tất cả giải đấu", "All tournaments")}
         </Link>
         <header className="tn-comp-head hub-art" style={hue(tournament.name)}>
           <CompetitionLogo name={tournament.name} url={tournament.logoUrl} className="tn-logo-large" />
           <div className="tn-comp-title">
             <span className="hub-kicker">
-              {circuit ? <Link to={`/pages/${circuit.code}`}>{circuit.name}</Link> : plan.circuit || "Giải đấu"}
+              {circuit ? (
+                <Link to={`/pages/${circuit.code}`}>{circuit.name}</Link>
+              ) : (
+                plan.circuit || text("Giải đấu", "Tournament")
+              )}
               {kicker && ` · ${kicker}`}
             </span>
             <h1>{tournament.name}</h1>
@@ -120,7 +127,10 @@ export function PublicCompetitionPage() {
               {plan.entrants.length > 0 && (
                 <span>
                   <StreamIcon name="users" size={14} />
-                  {plan.entrants.length} đội
+                  {text(
+                    `${plan.entrants.length} đội`,
+                    `${plan.entrants.length} ${plan.entrants.length === 1 ? "team" : "teams"}`,
+                  )}
                 </span>
               )}
               {plan.prizePool && (
@@ -130,6 +140,7 @@ export function PublicCompetitionPage() {
                     text={plan.prizePool}
                     currency={plan.currency}
                     on={tournament.endsOn ?? tournament.startsOn}
+                    locale={languageTag}
                   />
                 </span>
               )}
@@ -144,14 +155,14 @@ export function PublicCompetitionPage() {
               </span>
               {won.runnerUp && (
                 <span>
-                  {won.score ? `Thắng ${won.score} trước ` : "Á quân: "}
+                  {won.score ? `Thắng ${won.score} trước ` : text("Á quân: ", "Runner-up: ")}
                   {won.runnerUp.name}
                 </span>
               )}
             </div>
           )}
         </header>
-        <nav className="cp-tabs" aria-label="Nội dung giải đấu">
+        <nav className="cp-tabs" aria-label={text("Nội dung giải đấu", "Tournament content")}>
           {TABS.map(([key, label]) => (
             <button
               key={key}
@@ -162,7 +173,7 @@ export function PublicCompetitionPage() {
               aria-current={tab === key ? "page" : undefined}
               onClick={() => setTab(key)}
             >
-              {label}
+              {text(label[0], label[1])}
             </button>
           ))}
         </nav>
@@ -229,6 +240,7 @@ function Overview({
   matches: CompetitionMatch[]
   openTab: (tab: Tab) => void
 }) {
+  const { text } = useStreamLocale()
   const { plan, standings } = view.content
   const { table, knockout } = mainStages(view)
   const strip = matchStrip(matches, Date.now(), 4, 4)
@@ -251,8 +263,8 @@ function Overview({
         )}
         {shown.length > 0 && (
           <Block
-            title={ahead.length ? "Sắp diễn ra" : "Trận gần nhất"}
-            more={{ label: "Lịch & kết quả", open: () => openTab("matches") }}
+            title={ahead.length ? text("Sắp diễn ra", "Upcoming") : "Trận gần nhất"}
+            more={{ label: text("Lịch & kết quả", "Schedule & results"), open: () => openTab("matches") }}
           >
             <div className="tn-match-grid">
               {shown.map((entry) => (
@@ -263,7 +275,7 @@ function Overview({
         )}
         {table && (
           <Block
-            title="Bảng xếp hạng"
+            title={text("Bảng xếp hạng", "Standings")}
             note={plan.stages.find((stage) => stage.code === table.stageCode)?.name}
             more={
               table.rows.length > 10 || standings.length > 1
@@ -290,6 +302,7 @@ function Overview({
 }
 
 function Standings({ view, matches }: { view: CompetitionView; matches: CompetitionMatch[] }) {
+  const { text } = useStreamLocale()
   const { plan } = view.content
   const stages = playedOrder(plan.stages, plan.matches)
   const position = (code: string) => stages.findIndex((stage) => stage.code === code)
@@ -308,7 +321,9 @@ function Standings({ view, matches }: { view: CompetitionView; matches: Competit
       {standings.map((table) => (
         <Block
           key={table.stageCode}
-          title={plan.stages.find((stage) => stage.code === table.stageCode)?.name ?? "Bảng xếp hạng"}
+          title={
+            plan.stages.find((stage) => stage.code === table.stageCode)?.name ?? text("Bảng xếp hạng", "Standings")
+          }
           note={table.complete ? "Đã hoàn tất" : "Tạm tính"}
         >
           <StandingsTable view={view} table={table} />
@@ -332,6 +347,7 @@ function StandingsTable({
   table: CompetitionView["content"]["standings"][number]
   limit?: number
 }) {
+  const { text } = useStreamLocale()
   const { teams } = view.content
   const rows = limit ? table.rows.slice(0, limit) : table.rows
   const anyQualified = table.rows.some((row) => row.qualified)
@@ -343,33 +359,35 @@ function StandingsTable({
             <th scope="col" className="tn-rank">
               #
             </th>
-            <th scope="col">Đội</th>
+            <th scope="col">{text("Đội", "Team")}</th>
             <th scope="col" className="tn-wide-only">
-              Trận
+              {text("Trận", "Matches")}
             </th>
             <th scope="col">
               <abbr title="Trận thắng – trận thua">T–B</abbr>
             </th>
             <th scope="col" className="tn-wide-only">
-              <abbr title="Ván thắng – ván thua">Ván</abbr>
+              <abbr title="Ván thắng – ván thua">{text("Ván", "Games")}</abbr>
             </th>
             <th scope="col">
-              <abbr title="Hiệu số ván">HS</abbr>
+              <abbr title={text("Hiệu số ván", "Game difference")}>HS</abbr>
             </th>
-            <th scope="col">Điểm</th>
+            <th scope="col">{text("Điểm", "Points")}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => {
             const team = teams[row.teamId]
-            const name = team?.name || "Đội chưa có thông tin"
+            const name = team?.name || text("Đội chưa có thông tin", "No team information yet")
             const difference = row.gameWins - row.gameLosses
             return (
               <tr key={row.teamId} data-qualified={row.qualified || undefined}>
                 <td className="tn-rank">
                   {row.rank}
                   {row.tied && <span title="Đồng hạng">=</span>}
-                  {row.qualified && <span className="sr-only">, đã giành suất đi tiếp</span>}
+                  {row.qualified && (
+                    <span className="sr-only">{text(", đã giành suất đi tiếp", ", secured a spot to advance")}</span>
+                  )}
                 </td>
                 <th scope="row">
                   <span className="tn-team">
@@ -396,20 +414,26 @@ function StandingsTable({
       {anyQualified && (
         <p className="tn-table-note">
           <i aria-hidden="true" />
-          Đã giành suất đi tiếp
+          {text("Đã giành suất đi tiếp", "Secured a spot to advance")}
         </p>
       )}
     </div>
   )
 }
 
-const LANE_TITLES = { upper: "Nhánh thắng", lower: "Nhánh thua", final: "Chung kết tổng" } as const
+/** The lanes of a double elimination, in Vietnamese and in English. */
+const LANE_TITLES = {
+  upper: ["Nhánh thắng", "Upper bracket"],
+  lower: ["Nhánh thua", "Lower bracket"],
+  final: ["Chung kết tổng", "Grand final"],
+} as const
 
 /**
  * An elimination stage read from left to right. Rounds share their columns across the lanes, so a match of the lower
  * lane stands under the upper-lane round played at the same point, and the final closes the row on its own.
  */
 function Bracket({ stage, matches }: { stage: CompetitionStage; matches: CompetitionMatch[] }) {
+  const { text } = useStreamLocale()
   const entries = matches.filter((entry) => entry.match.stageCode === stage.code)
   const byKey = new Map(entries.map((entry) => [entry.match.key, entry]))
   const lanes = bracketLanes(entries.map((entry) => entry.match))
@@ -430,12 +454,14 @@ function Bracket({ stage, matches }: { stage: CompetitionStage; matches: Competi
                 {!laned && (
                   <h3 className="tn-bracket-title" style={{ gridColumn: column + 1 }}>
                     {rounds.length > 1 && column === rounds.length - 1 && list.length === 1
-                      ? "Chung kết"
-                      : `Vòng ${column + 1}`}
+                      ? text("Chung kết", "Final")
+                      : text(`Vòng ${column + 1}`, `Round ${column + 1}`)}
                   </h3>
                 )}
                 <div className="tn-bracket-round" data-lane={lane.key} style={{ gridColumn: column + 1 }}>
-                  {laned && index === 0 && <h3 className="tn-bracket-title">{LANE_TITLES[lane.key as "upper"]}</h3>}
+                  {laned && index === 0 && (
+                    <h3 className="tn-bracket-title">{text(...LANE_TITLES[lane.key as "upper"])}</h3>
+                  )}
                   {list.map((match) => (
                     <MatchCard key={match.key} entry={byKey.get(match.key)!} brief />
                   ))}
@@ -450,11 +476,12 @@ function Bracket({ stage, matches }: { stage: CompetitionStage; matches: Competi
 }
 
 function Teams({ view }: { view: CompetitionView }) {
+  const { text } = useStreamLocale()
   const { plan, teams, players, rosters } = view.content
   if (!plan.entrants.length)
     return (
       <div className="hub-state">
-        <h2>Chưa có đội tham dự được công bố</h2>
+        <h2>{text("Chưa có đội tham dự được công bố", "No participating teams published yet")}</h2>
       </div>
     )
   const order = (row: RosterMembershipContent) =>
@@ -472,37 +499,52 @@ function Teams({ view }: { view: CompetitionView }) {
       <div className="tn-team-grid">
         {plan.entrants.map((entrant) => {
           const team = teams[entrant.teamId]
-          const name = team?.name || "Đội chưa có thông tin"
+          const name = team?.name || text("Đội chưa có thông tin", "No team information yet")
           const roster = rosters.filter((row) => row.teamId === entrant.teamId).sort((a, b) => order(a) - order(b))
           return (
             <section className="tn-team-card" key={entrant.teamId}>
               <h2>
                 <StreamImage src={team?.logoUrl} name={team?.shortName || name} />
                 <EntityPageLink kind="TEAM" id={entrant.teamId} name={name} />
-                {entrant.status === "WITHDRAWN" && <span className="cp-badge">Đã rút lui</span>}
+                {entrant.status === "WITHDRAWN" && <span className="cp-badge">{text("Đã rút lui", "Withdrawn")}</span>}
               </h2>
               {roster.length > 0 && (
                 <ul>
                   {roster.map((row) => (
                     <li key={row.playerId} data-bench={(row.status && row.status !== "ACTIVE") || undefined}>
-                      <span className="tn-lane" title={row.lane ? LANES[row.lane] : "Chưa rõ vị trí"}>
-                        {row.lane ? <HeroLaneIcon lane={row.lane} size={18} label={LANES[row.lane]} /> : "?"}
+                      <span
+                        className="tn-lane"
+                        title={
+                          row.lane
+                            ? text(LANE_NAMES[row.lane][0], LANE_NAMES[row.lane][1])
+                            : text("Chưa rõ vị trí", "Unknown position")
+                        }
+                      >
+                        {row.lane ? (
+                          <HeroLaneIcon
+                            lane={row.lane}
+                            size={18}
+                            label={text(LANE_NAMES[row.lane][0], LANE_NAMES[row.lane][1])}
+                          />
+                        ) : (
+                          "?"
+                        )}
                       </span>
                       <EntityPageLink
                         kind="PLAYER"
                         id={row.playerId}
-                        name={players[row.playerId]?.nickname || "Tuyển thủ"}
+                        name={players[row.playerId]?.nickname || text("Tuyển thủ", "Player")}
                       />
                       <small>
                         {row.status === "SUBSTITUTE"
-                          ? "Dự bị"
+                          ? text("Dự bị", "Substitute")
                           : row.status === "INACTIVE"
                             ? "Không thi đấu"
                             : row.status === "ACTIVE"
                               ? row.lane
-                                ? LANES[row.lane]
+                                ? text(LANE_NAMES[row.lane][0], LANE_NAMES[row.lane][1])
                                 : ""
-                              : "Chưa xác nhận"}
+                              : text("Chưa xác nhận", "Unconfirmed")}
                       </small>
                     </li>
                   ))}
@@ -517,11 +559,12 @@ function Teams({ view }: { view: CompetitionView }) {
 }
 
 function Facts({ view }: { view: CompetitionView }) {
+  const { text, languageTag } = useStreamLocale()
   const { tournament, plan, organizer } = view.content
   const venues = plan.venues.filter((venue) => venue.name || venue.city)
   const rows: [string, ReactNode][] = [
     [
-      "Đơn vị tổ chức",
+      text("Đơn vị tổ chức", "Organizer"),
       organizer ? (
         <Link className="cp-organizer" to={`/pages/${organizer.code}`}>
           {organizer.logoUrl && <img src={organizer.logoUrl} alt="" />}
@@ -532,9 +575,14 @@ function Facts({ view }: { view: CompetitionView }) {
       ),
     ],
     [
-      "Quỹ giải thưởng",
+      text("Quỹ giải thưởng", "Prize pool"),
       plan.prizePool && (
-        <LocalPrizeText text={plan.prizePool} currency={plan.currency} on={tournament.endsOn ?? tournament.startsOn} />
+        <LocalPrizeText
+          text={plan.prizePool}
+          currency={plan.currency}
+          on={tournament.endsOn ?? tournament.startsOn}
+          locale={languageTag}
+        />
       ),
     ],
     [
@@ -547,7 +595,7 @@ function Facts({ view }: { view: CompetitionView }) {
         .join(" · "),
     ],
     [
-      "Địa điểm",
+      text("Địa điểm", "Venue"),
       venues.length > 0 &&
         venues.map((venue, index) => <div key={index}>{[venue.name, venue.city].filter(Boolean).join(", ")}</div>),
     ],
@@ -556,12 +604,12 @@ function Facts({ view }: { view: CompetitionView }) {
   const links = [
     ...(tournament.links ?? []),
     ...(plan.sourceUrl && !(tournament.links ?? []).some((link) => link.url === plan.sourceUrl)
-      ? [{ label: "Nguồn kiểm chứng", url: plan.sourceUrl }]
+      ? [{ label: text("Nguồn kiểm chứng", "Verification source"), url: plan.sourceUrl }]
       : []),
   ]
   return (
     <section className="tn-side-card">
-      <h2>Thông tin</h2>
+      <h2>{text("Thông tin", "Information")}</h2>
       <dl className="tn-facts">
         {rows.map(([label, value]) =>
           value ? (
@@ -585,24 +633,26 @@ function Facts({ view }: { view: CompetitionView }) {
         </ul>
       )}
       <p className="cp-meta">
-        Cập nhật: <LocalTime value={view.publishedAt} />
+        {text("Cập nhật:", "Updated:")} <LocalTime value={view.publishedAt} locale={languageTag} />
       </p>
     </section>
   )
 }
 
-const TIE_BREAKERS: Record<string, string> = {
-  HEAD_TO_HEAD: "đối đầu",
-  GAME_DIFF: "hiệu số ván",
-  GAME_WINS: "số ván thắng",
+/** The rules that order teams level on points, in Vietnamese and in English. */
+const TIE_BREAKERS: Record<string, readonly [string, string]> = {
+  HEAD_TO_HEAD: ["đối đầu", "head-to-head"],
+  GAME_DIFF: ["hiệu số ván", "game difference"],
+  GAME_WINS: ["số ván thắng", "game wins"],
 }
 
 function Format({ view }: { view: CompetitionView }) {
+  const { text } = useStreamLocale()
   const { plan } = view.content
   if (!plan.stages.length) return null
   return (
     <section className="tn-side-card">
-      <h2>Thể thức</h2>
+      <h2>{text("Thể thức", "Format")}</h2>
       <ol className="tn-stages">
         {playedOrder(plan.stages, plan.matches).map((stage) => (
           <li key={stage.code}>
@@ -618,7 +668,10 @@ function Format({ view }: { view: CompetitionView }) {
                 .join(" · ")}
             </span>
             {stage.format === "ROUND_ROBIN" && stage.tieBreakers.length > 0 && (
-              <small>Xếp hạng phụ: {stage.tieBreakers.map((rule) => TIE_BREAKERS[rule] || rule).join(" → ")}</small>
+              <small>
+                Xếp hạng phụ:{" "}
+                {stage.tieBreakers.map((rule) => (TIE_BREAKERS[rule] ? text(...TIE_BREAKERS[rule]) : rule)).join(" → ")}
+              </small>
             )}
             {stage.patchNote && <small>{stage.patchNote}</small>}
           </li>
@@ -630,6 +683,7 @@ function Format({ view }: { view: CompetitionView }) {
 
 /** Awards grouped by title, since a weekly award names several players. The first few show; the rest unfold. */
 function Awards({ view }: { view: CompetitionView }) {
+  const { text, languageTag } = useStreamLocale()
   const { tournament } = view.content
   const [open, setOpen] = useState(false)
   const groups = new Map<string, TournamentAward[]>()
@@ -661,6 +715,7 @@ function Awards({ view }: { view: CompetitionView }) {
                       { amount: award.prizeLocal, currency: tournament.localCurrency },
                     ]}
                     on={tournament.endsOn ?? tournament.startsOn}
+                    locale={languageTag}
                     compact
                   />
                 )}
@@ -671,7 +726,7 @@ function Awards({ view }: { view: CompetitionView }) {
       </dl>
       {all.length > 4 && (
         <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open ? "Thu gọn" : `Xem thêm ${all.length - 4} giải thưởng`}
+          {open ? text("Thu gọn", "Show less") : `Xem thêm ${all.length - 4} giải thưởng`}
         </button>
       )}
     </section>

@@ -5,13 +5,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/publ
 import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
 import { useIsMobile } from "@aov/ui/hooks/use-mobile"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 
 export function ProfileSocials({ links }: { links: ProfileLink[] }) {
+  const { text } = useStreamLocale()
   const [active, setActive] = useState<number | null>(null)
   if (!links.length) return null
 
   return (
-    <nav className="pf-socials" aria-label="Mạng xã hội và website">
+    <nav className="pf-socials" aria-label={text("Mạng xã hội và website", "Social media and website")}>
       {links.map((link, i) => (
         <SocialChannel
           key={`${link.url}-${i}`}
@@ -33,6 +35,7 @@ function SocialChannel({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { text } = useStreamLocale()
   const titleId = useId()
   const mobile = useIsMobile()
   const panel = useRef<HTMLDivElement>(null)
@@ -67,7 +70,10 @@ function SocialChannel({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`Xem kênh ${link.label}${link.official ? " — Kênh chính thức" : ""}`}
+          aria-label={text(
+            `Xem kênh ${link.label}${link.official ? " — Kênh chính thức" : ""}`,
+            `View the ${link.label} channel${link.official ? " — Official channel" : ""}`,
+          )}
           onPointerEnter={(event) => {
             if (mobile || event.pointerType !== "mouse") return
             cancelClose()
@@ -87,13 +93,15 @@ function SocialChannel({
           }}
         >
           <SocialPlatformIcon url={link.url} />
-          {link.official && <OfficialBadge className="pf-social-official" label="Kênh chính thức" />}
+          {link.official && (
+            <OfficialBadge className="pf-social-official" label={text("Kênh chính thức", "Official channel")} />
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent
         ref={panel}
         className="pf-social-popover"
-        drawerTitle="Mạng xã hội và website"
+        drawerTitle={text("Mạng xã hội và website", "Social media and website")}
         side="top"
         align="end"
         sideOffset={8}
@@ -120,7 +128,7 @@ function SocialChannel({
           <button
             type="button"
             className="hub-icon-button"
-            aria-label="Đóng thông tin kênh"
+            aria-label={text("Đóng thông tin kênh", "Close channel details")}
             onClick={() => onOpenChange(false)}
           >
             <StreamIcon name="close" size={14} />
@@ -129,7 +137,7 @@ function SocialChannel({
         <p className="pf-social-host">{host}</p>
         {link.official && (
           <p className="pf-social-status">
-            <OfficialBadge /> Kênh chính thức
+            <OfficialBadge label={text("Chính thức", "Official")} /> {text("Kênh chính thức", "Official channel")}
           </p>
         )}
         <a
@@ -139,7 +147,7 @@ function SocialChannel({
           rel="noreferrer"
           className="cp-button cp-primary pf-social-open"
         >
-          Mở liên kết
+          {text("Mở liên kết", "Open link")}
           <StreamIcon name="external" size={14} />
         </a>
       </PopoverContent>

@@ -13,12 +13,13 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { PageDirectory, ProfileCard, profileKinds } from "./community-directory"
 import { LiveCards, useLivePages, videoThumbnail } from "./community-live"
 import { PostCard } from "./community-post"
 import { useFollowedIds } from "./community-queries"
-import { competitionStatus, TimeAgo } from "./community-ui"
+import { competitionStatus, profileKindEnglish, TimeAgo } from "./community-ui"
 import { CompetitionCard } from "../tournaments/competition-card"
 import { competitionCatalogQuery } from "../tournaments/tournament-api"
 import "./community.css"
@@ -35,13 +36,14 @@ const GROUP_SIZE = 8
  * one kind of page in full.
  */
 export function CommunityExplore() {
+  const { text } = useStreamLocale()
   const [params] = useSearchParams()
   const query = params.get("q")?.trim() || ""
   const requested = params.get("kind") as ProfileKind | null
   const kind = requested && profileKinds.includes(requested) ? requested : null
   return (
     <StreamShell>
-      <title>Khám phá — AOV Stream</title>
+      <title>{text("Khám phá — AOV Stream", "Explore — AOV Stream")}</title>
       <div className="cp-container ex-page">
         {!query ? <Browse /> : kind ? <KindResults query={query} kind={kind} /> : <SearchResults query={query} />}
       </div>
@@ -50,11 +52,12 @@ export function CommunityExplore() {
 }
 
 function Browse() {
+  const { text } = useStreamLocale()
   return (
     <>
       <header className="tn-page-head">
         <div>
-          <h1>Khám phá</h1>
+          <h1>{text("Khám phá", "Explore")}</h1>
           <p>Trang của các hệ thống giải, tổ chức, đội tuyển, tuyển thủ và ban huấn luyện.</p>
         </div>
       </header>
@@ -67,6 +70,7 @@ function Browse() {
 
 /** Pages broadcasting now; the section is absent while nobody is live. */
 function LiveNow() {
+  const { text } = useStreamLocale()
   const live = useLivePages()
   const pages = (live.data?.items || []).filter((page) => page.live)
   if (!pages.length) return null
@@ -74,7 +78,10 @@ function LiveNow() {
     <section aria-labelledby="explore-live">
       <div className="tn-heading">
         <h2 id="explore-live">
-          Đang trực tiếp <small>{pages.length} kênh</small>
+          {text("Đang trực tiếp", "Live now")}{" "}
+          <small>
+            {text(`${pages.length} kênh`, `${pages.length} ${pages.length === 1 ? "channel" : "channels"}`)}
+          </small>
         </h2>
       </div>
       <LiveCards pages={pages} />
@@ -84,6 +91,7 @@ function LiveNow() {
 
 /** The newest video posts, each opening the page that posted it. YouTube videos show their own picture. */
 function NewVideos() {
+  const { text } = useStreamLocale()
   const layout = usePageLayout()
   const videos = useQuery({
     queryKey: ["video-highlights"],
@@ -97,7 +105,7 @@ function NewVideos() {
   return (
     <section aria-labelledby="explore-videos">
       <div className="tn-heading">
-        <h2 id="explore-videos">Video mới</h2>
+        <h2 id="explore-videos">{text("Video mới", "New videos")}</h2>
         <Link to="/?tab=video">
           Tất cả video
           <StreamIcon name="arrow" size={15} />
@@ -146,6 +154,7 @@ function matchingCompetitions(catalog: CompetitionView[], search: string) {
 
 /** Everything a search found: pages by kind, competitions, then posts, which keep loading as the reader scrolls. */
 function SearchResults({ query }: { query: string }) {
+  const { text, languageTag } = useStreamLocale()
   const layout = usePageLayout()
   const following = useFollowedIds()
   const pages = useQueries({
@@ -178,17 +187,24 @@ function SearchResults({ query }: { query: string }) {
   const searching = pages.some((group) => group.isPending) || catalog.isPending || posts.isPending
   const failed = pages.some((group) => group.isError) || (catalog.isError && !catalog.data) || posts.isLoadingError
   const nothing = !searching && !failed && !totals.pages && !totals.competitions && !totals.posts
+  const pageCount = totals.pages.toLocaleString(languageTag)
+  const competitionCount = totals.competitions.toLocaleString(languageTag)
+  const postCount = totals.posts.toLocaleString(languageTag)
   const summary = [
-    totals.pages && `${totals.pages.toLocaleString("vi-VN")} trang`,
-    totals.competitions && `${totals.competitions.toLocaleString("vi-VN")} giải đấu`,
-    totals.posts && `${totals.posts.toLocaleString("vi-VN")} bài viết`,
+    totals.pages && text(`${pageCount} trang`, `${pageCount} ${totals.pages === 1 ? "page" : "pages"}`),
+    totals.competitions &&
+      text(
+        `${competitionCount} giải đấu`,
+        `${competitionCount} ${totals.competitions === 1 ? "tournament" : "tournaments"}`,
+      ),
+    totals.posts && text(`${postCount} bài viết`, `${postCount} ${totals.posts === 1 ? "post" : "posts"}`),
   ].filter(Boolean)
   const preview = layout === "compact" ? { pages: 4, competitions: 3 } : { pages: GROUP_SIZE, competitions: 6 }
   return (
     <>
       <header className="tn-page-head">
         <div>
-          <h1>Kết quả cho “{query}”</h1>
+          <h1>{text(`Kết quả cho “${query}”`, `Results for “${query}”`)}</h1>
           {!searching && summary.length > 0 && <p>{summary.join(" · ")}</p>}
         </div>
       </header>
@@ -208,7 +224,7 @@ function SearchResults({ query }: { query: string }) {
             <p key={kind} className="cp-error" role="alert">
               Chưa tìm được {profileKindLabels[kind].toLowerCase()}.{" "}
               <button type="button" onClick={() => void group.refetch()}>
-                Thử lại
+                {text("Thử lại", "Retry")}
               </button>
             </p>
           )
@@ -219,11 +235,12 @@ function SearchResults({ query }: { query: string }) {
           <section key={kind} aria-labelledby={`search-${kind}`}>
             <div className="tn-heading">
               <h2 id={`search-${kind}`}>
-                {profileKindLabels[kind]} <small>{total.toLocaleString("vi-VN")}</small>
+                {text(profileKindLabels[kind], profileKindEnglish[kind])}{" "}
+                <small>{total.toLocaleString(languageTag)}</small>
               </h2>
               {total > shown.length && (
                 <Link to={`/explore?${new URLSearchParams({ q: query, kind })}`}>
-                  Xem tất cả
+                  {text("Xem tất cả", "See all")}
                   <StreamIcon name="arrow" size={15} />
                 </Link>
               )}
@@ -240,7 +257,7 @@ function SearchResults({ query }: { query: string }) {
         <p className="cp-error" role="alert">
           Chưa tìm được trong các giải đấu.{" "}
           <button type="button" onClick={() => void catalog.refetch()}>
-            Thử lại
+            {text("Thử lại", "Retry")}
           </button>
         </p>
       ) : (
@@ -248,11 +265,11 @@ function SearchResults({ query }: { query: string }) {
           <section aria-labelledby="search-competitions">
             <div className="tn-heading">
               <h2 id="search-competitions">
-                Giải đấu <small>{competitions.length.toLocaleString("vi-VN")}</small>
+                {text("Giải đấu", "Tournaments")} <small>{competitions.length.toLocaleString(languageTag)}</small>
               </h2>
               {competitions.length > preview.competitions && (
                 <Link to={`/competitions?${new URLSearchParams({ q: query })}`}>
-                  Xem tất cả
+                  {text("Xem tất cả", "See all")}
                   <StreamIcon name="arrow" size={15} />
                 </Link>
               )}
@@ -269,7 +286,7 @@ function SearchResults({ query }: { query: string }) {
         <p className="cp-error" role="alert">
           Chưa tìm được bài viết.{" "}
           <button type="button" onClick={() => void posts.refetch()}>
-            Thử lại
+            {text("Thử lại", "Retry")}
           </button>
         </p>
       ) : (
@@ -277,7 +294,7 @@ function SearchResults({ query }: { query: string }) {
           <section className="ex-posts" aria-labelledby="search-posts">
             <div className="tn-heading">
               <h2 id="search-posts">
-                Bài viết <small>{totals.posts.toLocaleString("vi-VN")}</small>
+                {text("Bài viết", "Posts")} <small>{totals.posts.toLocaleString(languageTag)}</small>
               </h2>
             </div>
             <div className="cp-post-list">
@@ -292,7 +309,11 @@ function SearchResults({ query }: { query: string }) {
                 />
               ))}
             </div>
-            <InfiniteScroll query={posts} label="Đang tải thêm bài viết" />
+            <InfiniteScroll
+              query={posts}
+              label={text("Đang tải thêm bài viết", "Loading more posts")}
+              retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+            />
           </section>
         )
       )}
@@ -312,6 +333,7 @@ function SearchResults({ query }: { query: string }) {
 
 /** Every page of one kind that matches the search, loading as the reader scrolls. */
 function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
+  const { text, languageTag } = useStreamLocale()
   const following = useFollowedIds()
   const pages = useInfiniteQuery({
     queryKey: ["page-search-list", kind, query],
@@ -333,13 +355,14 @@ function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
       </Link>
       <header className="tn-page-head">
         <div>
-          <h1>Kết quả cho “{query}”</h1>
+          <h1>{text(`Kết quả cho “${query}”`, `Results for “${query}”`)}</h1>
         </div>
       </header>
       <section aria-labelledby="search-kind">
         <div className="tn-heading">
           <h2 id="search-kind">
-            {profileKindLabels[kind]} {total != null && <small>{total.toLocaleString("vi-VN")}</small>}
+            {text(profileKindLabels[kind], profileKindEnglish[kind])}{" "}
+            {total != null && <small>{total.toLocaleString(languageTag)}</small>}
           </h2>
         </div>
         {pages.isPending ? (
@@ -353,7 +376,7 @@ function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
             <h3>Chưa tìm được trang</h3>
             <p>{pages.error.message}</p>
             <button type="button" className="cp-button" onClick={() => void pages.refetch()}>
-              Thử lại
+              {text("Thử lại", "Retry")}
             </button>
           </div>
         ) : !items.length ? (
@@ -372,7 +395,11 @@ function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
             ))}
           </div>
         )}
-        <InfiniteScroll query={pages} label="Đang tải thêm trang" />
+        <InfiniteScroll
+          query={pages}
+          label={text("Đang tải thêm trang", "Loading more pages")}
+          retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+        />
       </section>
     </>
   )

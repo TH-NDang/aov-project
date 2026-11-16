@@ -30,13 +30,15 @@ public record SpellContent(
         unlockType = unlockType == null ? "UNKNOWN" : unlockType;
     }
 
+    /** The gameplay fields alone, with numbers in comparable form, to tell a translation from a gameplay change. */
     public SpellContent mechanics() {
         var cleanStates = states.stream().map(state -> new SpellState(state.key(), state.iconAssetId(), List.of()))
                 .toList();
         var cleanReferences = referenceImages.stream().map(image -> new ReferenceImage(image.assetId(), null)).toList();
-        return new SpellContent(iconAssetId, cooldownSeconds, unlockLevel, unlockType, availability, legacy,
-                displayOrder, chargeRechargeSeconds, maxCharges, defaultStateKey, cleanStates, cleanReferences,
-                List.of(), null);
+        return new SpellContent(iconAssetId, com.wikiaov.platform.CatalogText.comparable(cooldownSeconds), unlockLevel,
+                unlockType, availability, legacy, displayOrder,
+                com.wikiaov.platform.CatalogText.comparable(chargeRechargeSeconds), maxCharges, defaultStateKey,
+                cleanStates, cleanReferences, List.of(), null);
     }
 
     public SpellContent publicCopy(String locale) {
