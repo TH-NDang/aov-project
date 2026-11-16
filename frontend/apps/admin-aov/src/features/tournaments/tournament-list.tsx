@@ -1,22 +1,39 @@
-import { CalendarDays, ChevronRight } from "lucide-react"
-import type { DocumentView, TournamentContent } from "@aov/community-contracts"
+import { Link } from "react-router"
+import { CalendarDays, ChevronRight, Layers } from "lucide-react"
+import type { DocumentView, TournamentContent, TournamentPart } from "@aov/community-contracts"
 import { TableCell, TableRow } from "@aov/ui/components/table"
 import { StatusPill } from "@/features/esports/components/primitives"
 import type { TournamentStats } from "@/features/esports/components/tournament-cards"
 import { dateRange, TIER_LABELS } from "@/features/esports/model/labels"
 import { ManagementTable } from "./management-list"
+import { PartPhaseDot } from "./part-phase-dot"
 import { tournamentTiming } from "./record-reason"
 import { RegistryLogo } from "./registry-logo"
 import { TeamRegionBadge } from "./team-region"
+import { partLabel, partsOnLine } from "./tournament-parts"
 
+const NO_PARTS: TournamentPart[] = []
+
+/**
+ * A list of main events. Their parts (qualifiers, wildcard, weekly stops, show matches) are not rows of their own:
+ * each main event names them on a line under its dates, where a part opens with one click.
+ */
 export function TournamentList({
   entries,
   stats,
   onOpen,
+  parts,
+  search = "",
+  partHref = (id) => `/tournaments/${id}`,
 }: {
   entries: DocumentView<TournamentContent>[]
   stats: Map<string, TournamentStats>
   onOpen: (entry: DocumentView<TournamentContent>) => void
+  /** Parts by the id of their main event. */
+  parts?: ReadonlyMap<string, TournamentPart[]>
+  /** What the list was searched for: a part it names moves to the front of its line. */
+  search?: string
+  partHref?: (id: string) => string
 }) {
   return (
     <ManagementTable
@@ -70,6 +87,13 @@ export function TournamentList({
                   aria-hidden="true"
                 />
               </button>
+              <PartLinks
+                main={content}
+                parts={parts?.get(entry.id) ?? NO_PARTS}
+                search={search}
+                href={partHref}
+                onMore={() => onOpen(entry)}
+              />
             </TableCell>
             <TableCell className="hidden @4xl:table-cell">
               <TeamRegionBadge code={content.region} />
@@ -95,5 +119,52 @@ export function TournamentList({
         )
       })}
     </ManagementTable>
+  )
+}
+
+/** How many parts a main event has and the few its line has room for, each a link; the rest wait inside the event. */
+function PartLinks({
+  main,
+  parts,
+  search,
+  href,
+  onMore,
+}: {
+  main: TournamentContent
+  parts: TournamentPart[]
+  search: string
+  href: (id: string) => string
+  onMore: () => void
+}) {
+  if (!parts.length) return null
+  const { shown, hidden } = partsOnLine(parts, search)
+  return (
+    // Indented by the logo and its gap, so the line starts under the tournament's name.
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 pl-[54px]">
+      <span className="type-meta inline-flex shrink-0 items-center gap-1">
+        <Layers className="size-3.5" aria-hidden="true" />
+        {parts.length} phần
+      </span>
+      {shown.map(({ part, phase }) => (
+        <Link
+          key={part.id}
+          to={href(part.id)}
+          title={`${part.name} · ${dateRange(part.startsOn ?? undefined, part.endsOn ?? undefined)}`}
+          className="type-meta inline-flex h-6 max-w-56 items-center gap-1.5 rounded-md border px-2 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <PartPhaseDot phase={phase} />
+          <span className="truncate">{partLabel(part.name, main.name)}</span>
+        </Link>
+      ))}
+      {hidden > 0 && (
+        <button
+          type="button"
+          onClick={onMore}
+          className="type-meta rounded underline-offset-2 outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          +{hidden} phần khác
+        </button>
+      )}
+    </div>
   )
 }

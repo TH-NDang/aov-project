@@ -158,6 +158,21 @@ export type TournamentContent = {
   placements?: TournamentPlacement[]
   awards?: TournamentAward[]
   links?: TournamentLink[]
+  /** The main event this tournament is a part of: its qualifier, wildcard, weekly stop or show match. */
+  parentTournamentId?: string | null
+}
+/** A part of a main event as a tab or a list line shows it; opening the part reads its full record. */
+export type TournamentPart = {
+  id: string
+  parentId: string
+  name: string
+  logoUrl?: string | null
+  competitionType?: CompetitionType
+  status?: TournamentStatus
+  tier?: TournamentTier
+  region?: string
+  startsOn?: string | null
+  endsOn?: string | null
 }
 export type SeriesContent = {
   code: string

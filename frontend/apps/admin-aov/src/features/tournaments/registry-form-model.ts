@@ -29,12 +29,19 @@ export function parseTeamAliases(value: string): string[] {
   return [...unique.values()]
 }
 
+/** `defaults` start a new record, such as a part that takes its main event's region, year and logo. */
 export function initialRegistryValues(
   entry: DocumentView<Content> | undefined,
   kind: RegistryKind,
   tournamentId?: string,
+  defaults?: Record<string, string>,
 ): Record<string, string> {
-  const values: Record<string, string> = { region: "VN", bestOf: "3", tournamentId: tournamentId ?? "" }
+  const values: Record<string, string> = {
+    region: "VN",
+    bestOf: "3",
+    tournamentId: tournamentId ?? "",
+    ...(entry ? undefined : defaults),
+  }
   if (entry)
     for (const [key, value] of Object.entries(entry.content)) {
       if (value == null) continue
@@ -50,7 +57,7 @@ export function initialRegistryValues(
       values.scheduledAt = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
   }
   if (values.repeatPicksAllowed === "false") values.repeatPicksAllowed = ""
-  if (kind === "tournaments" && !entry) values.year = String(new Date().getFullYear())
+  if (kind === "tournaments" && !entry && !values.year) values.year = String(new Date().getFullYear())
   return values
 }
 

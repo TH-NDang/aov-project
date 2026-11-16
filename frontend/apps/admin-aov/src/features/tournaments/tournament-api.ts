@@ -11,6 +11,7 @@ import type {
   TeamContent,
   TournamentContent,
   TournamentFacets,
+  TournamentPart,
   TournamentStats,
 } from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
@@ -28,8 +29,11 @@ export type RecordKind = keyof TournamentRecords
 type Request = <T>(path: string, init?: RequestInit) => Promise<T>
 export const tournamentKeys = { all: ["community", "tournaments"] as const }
 export type TournamentSort = "RECENT" | "STATUS" | "NAME"
+/** MAIN keeps a list to main events; each then also answers to the names of its parts. */
+export type TournamentLevel = "ALL" | "MAIN"
 export type TournamentFilters = {
   q?: string
+  level?: TournamentLevel
   status?: string
   tier?: string
   region?: string
@@ -43,13 +47,18 @@ export type TournamentFilters = {
   size?: number
 }
 /** What a picker was opened in: rows belonging to it come first. */
-export type PickerContext = { tournamentId?: string; teamId?: string; playerId?: string }
+export type PickerContext = { tournamentId?: string; teamId?: string; playerId?: string; level?: TournamentLevel }
 type RankedKind = "teams" | "players" | "tournaments"
 const searchParams = (values: Record<string, string | number | string[] | undefined>) => {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(values))
     if (Array.isArray(value) ? value.length : value !== undefined && value !== "") params.set(key, String(value))
   return params
+}
+
+const withQuery = (path: string, values: Parameters<typeof searchParams>[0]) => {
+  const query = searchParams(values).toString()
+  return query ? `${path}?${query}` : path
 }
 
 export function createTournamentApi(request: Request = communityRequest) {
@@ -79,7 +88,11 @@ export function createTournamentApi(request: Request = communityRequest) {
       throw new Error("Danh sách quá lớn. Hãy thu hẹp phạm vi trước khi tải lại.")
     },
     tournamentStats: (signal?: AbortSignal) => request<TournamentStats[]>("/admin/tournaments/stats", { signal }),
-    tournamentFacets: (signal?: AbortSignal) => request<TournamentFacets>("/admin/tournaments/facets", { signal }),
+    tournamentFacets: (signal?: AbortSignal, level?: TournamentLevel) =>
+      request<TournamentFacets>(withQuery("/admin/tournaments/facets", { level }), { signal }),
+    /** The parts of one main event, or every part when none is named, each event's parts in playing order. */
+    tournamentParts: (mainEventId?: string, signal?: AbortSignal) =>
+      request<TournamentPart[]>(withQuery("/admin/tournaments/parts", { parentId: mainEventId }), { signal }),
     /** One page of tournaments in the server's order, with every filter applied there. */
     searchTournaments: (filters: TournamentFilters, signal?: AbortSignal) =>
       request<PageSlice<DocumentView<TournamentContent>>>(

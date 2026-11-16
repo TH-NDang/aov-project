@@ -23,11 +23,20 @@ import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 import { pageApi, pageKeys, publicSite } from "@/features/community/page-api"
 import { StatusPill, TierBadge } from "@/features/esports/components/primitives"
 import { useRosters, useTournamentGames, useTournamentSeries } from "@/features/esports/data/use-esports-data"
-import { AccessGate, Crumbs, EsportsPage, LoadError, type Access } from "@/features/esports/pages/esports-shell"
+import {
+  AccessGate,
+  Crumbs,
+  EsportsPage,
+  LoadError,
+  tournamentPath,
+  type Access,
+} from "@/features/esports/pages/esports-shell"
 import { RegistryEditor } from "@/features/tournaments/registry-editor"
 import { tournamentApi, tournamentKeys } from "@/features/tournaments/tournament-api"
 import { tournamentDates } from "@/features/tournaments/tournament-metadata"
+import { partLabel, type EventFamily } from "@/features/tournaments/tournament-parts"
 import { competitionApi, competitionKeys } from "./competition-api"
+import { EventPartTabs } from "./workspace/event-parts"
 import { FinalStep } from "./workspace/final-step"
 import { FormatStep } from "./workspace/format-step"
 import {
@@ -102,6 +111,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
   const dirty = JSON.stringify(plan) !== JSON.stringify(baseline)
   const [notice, setNotice] = useState("")
   const [editing, setEditing] = useState(false)
+  const [addingPart, setAddingPart] = useState(false)
   const [pickedTeams, setPickedTeams] = useState<Record<string, TeamContent>>({})
 
   const series = useTournamentSeries(entry.id)
@@ -111,6 +121,28 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     queryKey: [...tournamentKeys.all, "tournaments", access.actorKey, "one", entry.id],
     queryFn: ({ signal }) => tournamentApi.read("tournaments", entry.id, signal),
   })
+  // A tournament is either a main event or a part of one; both show the same row of tabs.
+  const mainEventId = entry.content.tournament.parentTournamentId || entry.id
+  const isPart = mainEventId !== entry.id
+  const mainEvent = useQuery({
+    queryKey: [...tournamentKeys.all, "tournaments", access.actorKey, "one", mainEventId],
+    queryFn: ({ signal }) => tournamentApi.read("tournaments", mainEventId, signal),
+    enabled: isPart,
+  })
+  const parts = useQuery({
+    queryKey: [...tournamentKeys.all, "parts", access.actorKey, mainEventId],
+    queryFn: ({ signal }) => tournamentApi.tournamentParts(mainEventId, signal),
+    staleTime: 30_000,
+  })
+  const family: EventFamily = useMemo(
+    () => ({
+      mainEventId,
+      mainName: isPart ? mainEvent.data?.content.name : entry.content.tournament.name,
+      isPart,
+      parts: parts.data ?? [],
+    }),
+    [mainEventId, isPart, mainEvent.data, entry.content.tournament.name, parts.data],
+  )
   const organization = useQuery({
     queryKey: [...pageKeys, access.actorKey, plan.organizerPageId],
     queryFn: () => pageApi.read(plan.organizerPageId!),
@@ -283,7 +315,17 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
 
   return (
     <EsportsPage>
-      <Crumbs items={[{ label: "Giải đấu", to: "/tournaments" }, { label: info.name }]} />
+      <Crumbs
+        items={
+          isPart
+            ? [
+                { label: "Giải đấu", to: "/tournaments" },
+                { label: family.mainName ?? "Giải chính", to: tournamentPath(mainEventId) },
+                { label: partLabel(info.name, family.mainName) },
+              ]
+            : [{ label: "Giải đấu", to: "/tournaments" }, { label: info.name }]
+        }
+      />
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <Avatar className="size-14 rounded-lg border bg-background">
@@ -339,6 +381,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
           )}
         </div>
       </header>
+      <EventPartTabs family={family} currentId={entry.id} />
       <nav
         ref={stepNavigation}
         className="sticky top-0 z-20 flex overflow-x-auto overflow-y-hidden border-b bg-background/95 backdrop-blur-sm"
@@ -406,7 +449,14 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       )}
       <div className="min-w-0">
         {step === "overview" && (
-          <OverviewStep ws={ws} checks={checks} totals={totals} onEditTournament={() => setEditing(true)} />
+          <OverviewStep
+            ws={ws}
+            checks={checks}
+            totals={totals}
+            family={family}
+            onEditTournament={() => setEditing(true)}
+            onAddPart={() => setAddingPart(true)}
+          />
         )}
         {step === "teams" && <TeamsStep ws={ws} />}
         {step === "format" && <FormatStep ws={ws} />}
@@ -432,9 +482,30 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
           onClose={() => setEditing(false)}
         />
       )}
+      {addingPart && (
+        <RegistryEditor
+          open
+          kind="tournaments"
+          teams={[]}
+          defaults={partDefaults(entry.id, info)}
+          onClose={() => setAddingPart(false)}
+        />
+      )}
     </EsportsPage>
   )
 }
+
+/** A new part starts from its main event: same region, year, tier and logo, with the event's name to extend. */
+const partDefaults = (mainEventId: string, main: CompetitionView["content"]["tournament"]): Record<string, string> => ({
+  parentTournamentId: mainEventId,
+  code: `${main.code}-`,
+  name: `${main.name} - `,
+  region: main.region,
+  competitionType: "QUALIFIER",
+  ...(main.year ? { year: String(main.year) } : {}),
+  ...(main.tier ? { tier: main.tier } : {}),
+  ...(main.logoUrl ? { logoUrl: main.logoUrl } : {}),
+})
 
 /** The tournament editor only lists team names, so the snapshot's teams stand in for full records. */
 const documentOf = (id: string, content: TeamContent): DocumentView<TeamContent> => ({

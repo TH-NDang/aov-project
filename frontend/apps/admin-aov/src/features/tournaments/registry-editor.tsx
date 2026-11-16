@@ -6,7 +6,7 @@ import type {
   TeamContent,
   TournamentContent,
 } from "@aov/community-contracts"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
@@ -84,6 +84,8 @@ function registryFields(kind: RegistryKind): Field[] {
     return [
       ...common,
       { key: "name", label: "Tên giải", required: true },
+      // Set for a qualifier, wildcard, weekly stop or show match: the list then shows it under that main event.
+      { key: "parentTournamentId", label: "Thuộc giải chính", picker: "tournaments" },
       {
         key: "region",
         label: "Thị trường",
@@ -190,6 +192,7 @@ function RegistryForm({
   entry,
   teams,
   tournamentId,
+  defaults,
   onSaved,
   onBusyChange,
 }: {
@@ -197,10 +200,11 @@ function RegistryForm({
   entry?: DocumentView<Content>
   teams: DocumentView<TeamContent>[]
   tournamentId?: string
+  defaults?: Record<string, string>
   onSaved: () => void
   onBusyChange: (busy: boolean) => void
 }) {
-  const [initial] = useState(() => initialRegistryValues(entry, kind, tournamentId))
+  const [initial] = useState(() => initialRegistryValues(entry, kind, tournamentId, defaults))
   const [values, setValues] = useState(initial)
   const [error, setError] = useState("")
   const [uploading, setUploading] = useState(false)
@@ -229,6 +233,14 @@ function RegistryForm({
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
     },
   })
+  // Parts do not nest: a tournament that has parts of its own cannot be made a part of another one.
+  const ownParts = useQuery({
+    queryKey: [...tournamentKeys.all, "parts", entry?.id],
+    queryFn: ({ signal }) => tournamentApi.tournamentParts(entry!.id, signal),
+    enabled: kind === "tournaments" && !!entry,
+    staleTime: 30_000,
+  })
+  const ownPartCount = ownParts.data?.length ?? 0
   const busy = mutation.isPending || uploading || lifecycleBusy
   const dirty = JSON.stringify(values) !== JSON.stringify(initial)
   useEffect(() => {
@@ -251,11 +263,13 @@ function RegistryForm({
   }
   const fields = registryFields(kind)
   function renderField(field: Field) {
+    const mainEvent = field.key === "parentTournamentId"
     return (
       <label key={field.key}>
         <span>
           {field.label}
           {field.required && <b aria-hidden="true"> *</b>}
+          {mainEvent && ownPartCount > 0 && ` · giải này đang có ${ownPartCount} phần nên không thuộc giải khác`}
         </span>
         {field.picker ? (
           <RecordPicker
@@ -263,7 +277,15 @@ function RegistryForm({
             label={field.label}
             value={values[field.key] ?? ""}
             required={field.required}
-            context={field.picker === "teams" ? { tournamentId: values.tournamentId || undefined } : undefined}
+            context={
+              field.picker === "teams"
+                ? { tournamentId: values.tournamentId || undefined }
+                : mainEvent
+                  ? { level: "MAIN" }
+                  : undefined
+            }
+            exclude={mainEvent && entry ? [entry.id] : undefined}
+            disabled={mainEvent && ownPartCount > 0}
             onChange={(id) => setValues((current) => ({ ...current, [field.key]: id }))}
           />
         ) : field.options ? (
@@ -400,6 +422,7 @@ export function RegistryEditor({
   onClose,
   teams,
   tournamentId,
+  defaults,
 }: {
   kind: RegistryKind
   entry?: DocumentView<Content>
@@ -407,6 +430,8 @@ export function RegistryEditor({
   onClose: () => void
   teams: DocumentView<TeamContent>[]
   tournamentId?: string
+  /** Values a new record starts from; ignored when an existing record is edited. */
+  defaults?: Record<string, string>
 }) {
   const [busy, setBusy] = useState(false)
   return (
@@ -425,7 +450,7 @@ export function RegistryEditor({
         </SheetDescription>
         <RegistryForm
           key={`${kind}-${entry?.id ?? "new"}-${entry?.version ?? 0}`}
-          {...{ kind, entry, teams, tournamentId }}
+          {...{ kind, entry, teams, tournamentId, defaults }}
           onSaved={onClose}
           onBusyChange={setBusy}
         />

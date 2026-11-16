@@ -1,12 +1,16 @@
-import { Building2, CalendarDays, ListChecks, Pencil, Trophy } from "lucide-react"
+import { Link } from "react-router"
+import { Building2, CalendarDays, Layers, ListChecks, Pencil, Trophy } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { Section } from "@/features/community/profile-fields"
 import { youtubeVideoId } from "@/features/esports/model/vod"
+import { tournamentPath } from "@/features/esports/pages/esports-shell"
 import { TeamRegionBadge } from "@/features/tournaments/team-region"
 import { tournamentDates } from "@/features/tournaments/tournament-metadata"
+import type { EventFamily } from "@/features/tournaments/tournament-parts"
 import { CompetitionInformationFields } from "../competition-information-fields"
 import { OrganizationPicker } from "../organization-picker"
+import { EventPartsPanel } from "./event-parts"
 import { hasScore, type RecordingTotals, type WorkspaceCheck } from "./model"
 import { Panel, Progress, type Workspace } from "./parts"
 
@@ -15,12 +19,16 @@ export function OverviewStep({
   ws,
   checks,
   totals,
+  family,
   onEditTournament,
+  onAddPart,
 }: {
   ws: Workspace
   checks: WorkspaceCheck[]
   totals?: RecordingTotals
+  family: EventFamily
   onEditTournament: () => void
+  onAddPart: () => void
 }) {
   const { entry, plan } = ws
   const tournament = entry.content.tournament
@@ -85,6 +93,20 @@ export function OverviewStep({
               <CalendarDays aria-hidden size={16} />
               {tournamentDates(tournament) || "Chưa có thời gian thi đấu"}
             </p>
+            {family.isPart && (
+              <p className="type-body flex items-center gap-2 border-t pt-3 text-muted-foreground">
+                <Layers aria-hidden size={16} />
+                <span>
+                  Là một phần của{" "}
+                  <Link
+                    to={tournamentPath(family.mainEventId)}
+                    className="text-foreground underline underline-offset-2"
+                  >
+                    {family.mainName ?? "giải chính"}
+                  </Link>
+                </span>
+              </p>
+            )}
           </Section>
           <Section title="Đơn vị tổ chức" icon={Building2}>
             <OrganizationPicker
@@ -98,6 +120,7 @@ export function OverviewStep({
             />
           </Section>
         </div>
+        {!family.isPart && <EventPartsPanel family={family} canEdit={ws.canEdit} onAdd={onAddPart} />}
         <CompetitionInformationFields
           actorKey={ws.access.actorKey}
           plan={plan}

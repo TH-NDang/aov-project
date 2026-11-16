@@ -16,6 +16,7 @@ import { useRecords, useTournamentStats } from "../data/use-esports-data"
 import type { TournamentStats } from "../components/tournament-cards"
 import { TournamentList } from "@/features/tournaments/tournament-list"
 import { regionsNamedBy } from "@/features/tournaments/record-reason"
+import { partsByMainEvent } from "@/features/tournaments/tournament-parts"
 import { tournamentApi, tournamentKeys, type TournamentSort } from "@/features/tournaments/tournament-api"
 import { useDebounced } from "@/features/community/directory/directory-api"
 import {
@@ -66,6 +67,8 @@ function Hub({ access }: { access: Access }) {
           year,
           alsoRegions: regionsNamedBy(settled),
           sort: order,
+          // Qualifiers, wildcards and other parts come with their main event instead of as rows of their own.
+          level: "MAIN",
           page: pageParam,
         },
         signal,
@@ -76,9 +79,15 @@ function Hub({ access }: { access: Access }) {
   })
   const facets = useQuery({
     queryKey: [...tournamentKeys.all, "hub-facets", access.actorKey],
-    queryFn: ({ signal }) => tournamentApi.tournamentFacets(signal),
+    queryFn: ({ signal }) => tournamentApi.tournamentFacets(signal, "MAIN"),
     staleTime: 30_000,
   })
+  const parts = useQuery({
+    queryKey: [...tournamentKeys.all, "parts", access.actorKey, "every"],
+    queryFn: ({ signal }) => tournamentApi.tournamentParts(undefined, signal),
+    staleTime: 30_000,
+  })
+  const partsByEvent = useMemo(() => partsByMainEvent(parts.data ?? []), [parts.data])
   const counters = useTournamentStats()
   // Only the create form needs the team list; it is too long to load for every visit to this page.
   const teams = useRecords("teams", creating)
@@ -224,7 +233,14 @@ function Hub({ access }: { access: Access }) {
             </select>
           </ManagementToolbar>
           {visible.length ? (
-            <TournamentList entries={visible} stats={stats} onOpen={open} />
+            <TournamentList
+              entries={visible}
+              stats={stats}
+              onOpen={open}
+              parts={partsByEvent}
+              search={settled}
+              partHref={tournamentPath}
+            />
           ) : (
             <ManagementEmpty
               title={filtered ? "Không tìm thấy giải đấu" : "Chưa có giải đấu"}
