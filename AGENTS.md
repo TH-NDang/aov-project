@@ -100,8 +100,11 @@ Commands (run inside `backend/wiki-service`; community-service has its own Maven
 ```powershell
 ./mvnw.cmd verify                                             # build + tests + format check
 ./mvnw.cmd spotless:apply                                     # format all Java files
-./mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local" # run locally (Docker required)
+./scripts/dev/start-local.ps1 -EnvironmentFile <path to .env.r2>  # run locally (Docker required)
 ```
+
+Object storage is Cloudflare R2 in development too (ADR-030 section 14). The launcher reads the `STORAGE_*` values from
+the ignored environment file; a plain `spring-boot:run` with the `local` profile has no storage unless they are set.
 
 Build output defaults to `target/`. If the IDE/JDT writes there during verification, isolate Maven output with an
 absolute directory instead of stopping the user's IDE:
@@ -160,10 +163,10 @@ These rules apply to new and touched tests; existing tests keep their names and 
   storage and uses the one shared container configuration and the one shared Docker gate. No other suffix; the
   architecture tests keep their existing names.
 - Frontend: every package needs a `test` script that runs every file under `tests/`. CI must run
-  `pnpm format:check`, `pnpm typecheck` (which includes `tests/`) and `pnpm -r test`; a test that none of these runs
+  `pnpm format:check`, `pnpm typecheck` (Admin's also checks `tests/`) and `pnpm test`; a test that none of these runs
   is a gap to fix.
-- Shared set-up lives in one place per suite (`tests/kit/` in each frontend package, a test support package in each
-  service). Do not paste a bootstrap block into a test file.
+- Shared set-up lives in one place per suite (`tests/fixtures/` in each frontend package, a test support package in
+  each service). Do not paste a bootstrap block into a test file.
 - A test waits for a condition with the suite's shared `waitFor` helper or uses fake timers. No fixed sleeps.
 - One behavior per test, named as a sentence. Do not assert on source text or on file hashes.
 
@@ -183,9 +186,8 @@ These rules apply to new and touched tests; existing tests keep their names and 
 - A Flyway version number is taken when the branch is merged, not when the migration is written: use the next free
   number on the target branch and rename the file in the merge. A gap is fine. Never reuse or renumber a version that
   a shared database has applied; a branch's own local database is repaired or reset instead.
-- The pre-commit hook must format staged Java of both services and staged frontend files, and check comments in
-  every tracked source folder. Until it formats community-service Java, run `./mvnw.cmd spotless:apply` there before
-  committing.
+- The pre-commit hook formats staged Java of both services and staged frontend files, and checks comments in every
+  tracked source folder.
 
 ## Git hooks
 
