@@ -133,7 +133,8 @@ const num = (value: unknown) => {
   const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value.replace(",", ".")) : NaN
   return Number.isFinite(parsed) ? parsed : null
 }
-const seconds = (value: number) => String(value).replace(".", ",")
+// Seconds are a game number, written as the game writes them: a decimal point, no grouping (QUY-UOC-VIET §3).
+const seconds = (value: number) => String(value)
 const record = (value: unknown) =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null
 

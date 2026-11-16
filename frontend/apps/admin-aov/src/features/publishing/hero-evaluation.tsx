@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ListChecks, MessageSquareText, Pencil, Sparkles } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
@@ -660,11 +661,22 @@ function NotesEditor({
             Soạn nháp từ dữ liệu
           </Button>
           <span className="type-meta">
-            {ranking.isPending
-              ? "Đang đọc số liệu đấu hạng…"
-              : snapshot
-                ? `Số liệu: ${snapshot.modeLabel}, ${new Date(snapshot.capturedAt).toLocaleDateString("vi-VN")}${ranking.data?.entry ? "" : " (bảng chưa có tướng này)"}. Đặc điểm: ${content.SKILLS?.traits?.length ?? 0} đã lưu.`
-                : `Chưa có bảng đấu hạng đã xác nhận; bản nháp chỉ dùng ${content.SKILLS?.traits?.length ?? 0} đặc điểm đã lưu.`}
+            {ranking.isPending ? (
+              "Đang đọc số liệu đấu hạng…"
+            ) : snapshot ? (
+              <>
+                Số liệu: {snapshot.modeLabel},{" "}
+                <LocalTime
+                  value={snapshot.capturedAt}
+                  sourceTimeZone={snapshot.sourceTimeZone}
+                  format={{ dateStyle: "short" }}
+                />
+                {ranking.data?.entry ? "" : " (bảng chưa có tướng này)"}. Đặc điểm:{" "}
+                {content.SKILLS?.traits?.length ?? 0} đã lưu.
+              </>
+            ) : (
+              `Chưa có bảng đấu hạng đã xác nhận; bản nháp chỉ dùng ${content.SKILLS?.traits?.length ?? 0} đặc điểm đã lưu.`
+            )}
           </span>
         </div>
       )}

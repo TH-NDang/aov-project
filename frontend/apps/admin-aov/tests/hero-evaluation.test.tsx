@@ -60,6 +60,15 @@ test("traits are suggested from the Vietnamese skill text and tags, with the ski
   assert.match(suggestions[0]!.evidence!.text, /sát thương chuẩn/)
 })
 
+test("a suggested detail writes part of a second with a decimal point, as game numbers are written", () => {
+  // The game writes part of a second with a decimal point, like every number in its skill text.
+  const [control] = suggestTraits([
+    skill("skill-1", "ACTIVE", "Hào hoa", "Gây 100 sát thương vật lý và làm choáng nạn nhân trong 0.75 giây."),
+  ]).filter((suggestion) => suggestion.code === "HARD_CC")
+
+  assert.equal(control!.detail, "Hào hoa (choáng 0.75 giây)")
+})
+
 test("saved traits keep the fixed order, skills that still exist and written details only", () => {
   const traits = cleanTraits(
     [
