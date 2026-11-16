@@ -15,6 +15,11 @@ Instructions for AI coding agents (and humans) working in this repository.
 
 The pre-commit hook rejects Vietnamese text in comments of newly added lines (see "Git hooks").
 
+Vietnamese shown to users, in the UI and in warehouse content (items, arcana, enchantments, spells, glossary, patch
+notes), follows `frontend/docs/QUY-UOC-VIET.md`: one word for one idea, the label-first format of item effects
+(`Kích hoạt – Tên: mô tả. Hồi chiêu: 60 giây.`), numbers and units, capitals and punctuation. Text copied word for word
+from the game (hero skill descriptions, the Cờ Liên Quân guide) stays as the game writes it.
+
 ## Project map
 
 ```text

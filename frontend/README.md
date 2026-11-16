@@ -41,6 +41,8 @@ pnpm dlx shadcn@latest add button --cwd packages/ui
 
 Cơ chế giữ nội dung nhập khi chuyển trang và khôi phục sau tải lại trong Admin được mô tả tại [State và bản nháp nhập liệu](docs/ADMIN-STATE-AND-DRAFTS.md).
 
+Chữ trên giao diện và nội dung kho viết theo [Quy ước viết](docs/QUY-UOC-VIET.md): thuật ngữ chuẩn, cách ghi con số, nội tại và kích hoạt của trang bị, viết hoa và dấu câu.
+
 ```tsx
 import { Button } from "@aov/ui/components/button"
 import { useIsMobile } from "@aov/ui/hooks/use-mobile"
