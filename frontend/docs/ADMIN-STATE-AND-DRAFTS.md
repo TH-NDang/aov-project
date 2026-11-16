@@ -28,7 +28,7 @@ Cache API và bản nháp là hai vùng riêng. Sửa ô nhập không ghi vào 
 - Lịch mùa và lịch phát hành patch: giữ ngày nhập dở, lựa chọn có giờ, chuỗi giờ và nguồn theo từng thị trường. Lưu lịch một thị trường giữ nguyên nháp của các thị trường còn lại.
 - Hồ sơ của mình và form chỉnh hồ sơ người dùng khác.
 
-Các form legacy tạo patch/variant/release trong `PatchSetup` chế độ `all`/`patch` chưa chuyển sang cơ chế này; giao diện quản lý hiện dùng `SharedPatchSetup`, `SeasonScheduleForm` và `PatchReleaseForm`. Import file/folder/ZIP tiếp tục dùng phiên upload/backend job chuyên biệt. Nháp form không lưu dữ liệu đăng nhập, file bytes hoặc tiến trình upload.
+Giao diện quản lý mùa và patch dùng `SharedPatchSetup`, lịch theo thị trường trong `MarketSchedule` (dựng trên `ScheduleForm`) và nút phát hành `PatchReleaseForm`. Import file/folder/ZIP tiếp tục dùng phiên upload/backend job chuyên biệt. Nháp form không lưu dữ liệu đăng nhập, file bytes hoặc tiến trình upload.
 
 Phạm vi áp dụng là các form liệt kê ở trên. Form khác chưa dùng `useLocalDraft`/`useDraftForm` giữ cơ chế hiện có; hướng dẫn mở rộng nằm ở cuối tài liệu.
 

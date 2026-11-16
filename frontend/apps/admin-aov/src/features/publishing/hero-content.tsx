@@ -3,7 +3,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { ImageIcon, LayoutDashboard, Pencil, Shirt, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { SectionHeading, sectionFrame } from "@/components/section-contents"
 import { SECTIONS, type Content, type Section } from "./types"
 import { HeroOverviewCard, HeroOverviewFacts, type HeroOverviewProps } from "./hero-overview"
@@ -22,8 +21,6 @@ import { visibleSkins } from "./hero-skins"
 import { heroContentSectionId, heroContentTabs } from "./hero-content-tabs"
 export { HeroAsset } from "./hero-asset"
 
-export { heroContentSectionId } from "./hero-content-tabs"
-
 /** An editor open on the page: it takes the place of the section it changes, the rest of the page stays readable. */
 export interface HeroSectionEditing {
   section: Section
@@ -41,42 +38,6 @@ function EditingStatus({ part }: { part?: string }) {
       <Pencil className="size-3" />
       {part ? `Đang sửa · ${part}` : "Đang sửa"}
     </span>
-  )
-}
-
-export function IconAction({
-  label,
-  icon: Icon,
-  onClick,
-  disabled = false,
-}: {
-  label: string
-  icon: ComponentType<{ className?: string }>
-  onClick: () => void
-  disabled?: boolean
-}) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-10 shrink-0"
-            aria-label={label}
-            title={label}
-            aria-disabled={disabled}
-            onClick={() => {
-              if (!disabled) onClick()
-            }}
-          >
-            <Icon className="size-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{label}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
   )
 }
 
@@ -414,7 +375,7 @@ function HeroContentBody({
   // Every part is on one page, in reading order, so nothing waits behind a tab.
   return (
     <div ref={contentRef} aria-label="Nội dung tướng" className="@container min-w-0 space-y-6">
-      {heroContentTabs(!!heroId).map(({ key }) => (
+      {heroContentTabs(!!heroId).map((key) => (
         <div key={key} id={heroContentSectionId(key)} className="min-w-0 scroll-mt-28">
           {panels[key]()}
         </div>

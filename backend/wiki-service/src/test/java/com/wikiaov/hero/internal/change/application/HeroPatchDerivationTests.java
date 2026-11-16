@@ -120,7 +120,8 @@ class HeroPatchDerivationTests {
         var header = mock(Header.class);
         when(header.getId()).thenReturn(UUID.randomUUID());
         when(header.getPatchVariantId()).thenReturn(current.id());
-        when(history.forHero(hero, "vi-VN")).thenReturn(List.of(new Entry(header, null, null, List.of(armor))));
+        when(history.forHero(hero, "vi-VN"))
+                .thenReturn(List.of(new Entry(header, null, null, List.of(armor), Map.of())));
 
         assertThat(derivation.at(hero, current.id(), baseline.id()).stats()).singleElement()
                 .satisfies(stat -> assertThat(stat.percentValue()).isEqualByComparingTo("20"));
@@ -183,6 +184,6 @@ class HeroPatchDerivationTests {
         skill.setFieldKey("cooldown");
         skill.setOldValue(before);
         skill.setNewValue(after);
-        return new Entry(header, null, null, List.of(skill));
+        return new Entry(header, null, null, List.of(skill), Map.of());
     }
 }

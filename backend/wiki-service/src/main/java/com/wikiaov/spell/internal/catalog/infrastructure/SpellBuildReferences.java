@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class SpellBuildReferences implements BuildReferenceProvider {
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
         for (var identity : published(identities.findByCodeIn(codes)))
-            result.put(identity.identity().getCode(), identity.reference());
+            result.put(identity.getCode(), reference(identity));
         return result;
     }
 
@@ -40,32 +41,21 @@ public class SpellBuildReferences implements BuildReferenceProvider {
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();
         for (var identity : published(identities.findAllById(ids)))
-            result.put(identity.identity().getId(), identity.reference());
+            result.put(identity.getId(), reference(identity));
         return result;
     }
 
-    /** The given identities that have a published revision, each with its latest one. */
-    private List<Published> published(List<SpellIdentity> found) {
+    /** The given identities that have a published revision. */
+    private List<SpellIdentity> published(List<SpellIdentity> found) {
         if (found.isEmpty())
             return List.of();
-        Map<UUID, SpellRevision> latest = revisions
+        Set<UUID> published = revisions
                 .findByOwnerIdInAndState(found.stream().map(SpellIdentity::getId).toList(), "PUBLISHED").stream()
-                .collect(Collectors.toMap(SpellRevision::getOwnerId, revision -> revision,
-                        (a, b) -> sequence(a) >= sequence(b) ? a : b));
-        return found.stream().filter(identity -> latest.containsKey(identity.getId()))
-                .map(identity -> new Published(identity, latest.get(identity.getId()))).toList();
+                .map(SpellRevision::getOwnerId).collect(Collectors.toSet());
+        return found.stream().filter(identity -> published.contains(identity.getId())).toList();
     }
 
-    private static long sequence(SpellRevision revision) {
-        return revision.getPublicationSequence() == null ? 0 : revision.getPublicationSequence();
-    }
-
-    private record Published(
-            SpellIdentity identity,
-            SpellRevision revision
-    ) {
-        BuildReference reference() {
-            return BuildReference.of(identity.getId(), identity.getCode());
-        }
+    private static BuildReference reference(SpellIdentity identity) {
+        return BuildReference.of(identity.getId(), identity.getCode());
     }
 }

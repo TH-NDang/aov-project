@@ -237,16 +237,6 @@ public class HeroQueries {
         result.put("skinPortraitMedia", skinPortraitMedia);
     }
 
-    public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
-            String sort) {
-        return list(region, locale, page, size, q, role, sort, null, null, false);
-    }
-
-    public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
-            String sort, UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
-        return list(region, locale, page, size, q, role, sort, seasonId, patchVariantId, includeUnscoped, false);
-    }
-
     /**
      * Lists what readers browse (ADR-024): heroes without forms and heroes that hold forms, each holder carrying its
      * published forms. With {@code playable}, lists what players pick instead: heroes without forms and every form,

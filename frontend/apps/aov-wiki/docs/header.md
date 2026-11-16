@@ -2,7 +2,7 @@
 
 - Tham khảo bố cục: https://wiki.hoyolab.com/pc/hsr/home (xem mục "Bố cục theo HoYoWiki")
 - Phạm vi: header, logo, theme tối cố định và responsive; dùng chung cho trang chủ, thư viện Tướng/Trang phục, Kho trang bị và chi tiết Tướng qua các biến thể `home`, `library`, `hero`.
-- Trên thư viện và chi tiết Tướng, tìm kiếm điều hướng đến `/hero?q=...` để lọc danh sách thật. Thư viện Trang phục dùng `/skins?q=...`, Kho trang bị dùng `/warehouse/<tab>?q=...` và giữ tab hiện tại; cùng form và popup với nhãn tương ứng. Tìm kiếm chung trên trang chủ vẫn ghi rõ trạng thái sắp ra mắt; tài khoản đã có luồng đăng nhập thật.
+- Trên thư viện và chi tiết Tướng, tìm kiếm điều hướng đến `/hero?q=...` để lọc danh sách thật. Thư viện Trang phục dùng `/skins?q=...`, Kho trang bị dùng `/warehouse/<tab>?q=...` và giữ tab hiện tại; cùng form và popup với nhãn tương ứng. Trên trang chủ, ô tìm kiếm cho chọn mục cần tìm (Tướng, Trang phục, Kho trang bị…) rồi mở danh sách của mục đó kèm `q`; tài khoản đã có luồng đăng nhập thật.
 - Logo hiện tại: `public/images/mole-logo-v4.png`, tạo bằng công cụ imagegen tích hợp; các phiên bản trước và prompt được lưu lại bên dưới.
 - Đã kiểm tra trên trình duyệt ở chiều rộng 320, 390, 768 và 1440 px; không tràn ngang. Popup tài khoản đóng bằng Escape.
 
@@ -49,9 +49,9 @@ Bám theo thanh điều hướng của https://wiki.hoyolab.com/pc/hsr/home (gi�
 - Cao 48px, nền `#000000a6` + blur, viền dưới trắng 8%, padding ngang 24px.
 - Trái: logo chuột chũi dẫn về trang chủ; tên **AOV Wiki** kèm mũi tên là nút mở menu chuyển ứng dụng. Danh sách (`SECTIONS` trong `wiki-header.tsx`) gồm AOV Wiki và AOV Stream, có logo, mô tả và nhãn **Đang xem**. Chọn Stream mở frontend Stream trong cùng tab.
 - Giữa: ô tìm kiếm cao 28px, tối đa 540px, bo 23px, căn giữa màn hình bằng lưới 3 cột (`minmax(max-content, 1fr) | minmax(0, 540px) | minmax(max-content, 1fr)`).
-- Phải: chọn thị trường dữ liệu và icon tài khoản. Hover hoặc nhấn icon mở popup ngôn ngữ và đăng nhập; không có lựa chọn giao diện. Thư viện và chi tiết Tướng có thêm icon **Phản hồi vấn đề** trên desktop.
+- Phải: chọn thị trường dữ liệu và icon tài khoản. Hover hoặc nhấn icon mở popup ngôn ngữ và đăng nhập; không có lựa chọn giao diện. Góp ý nằm ở chân trang (xem "Phản hồi vấn đề").
 - Dropdown/popover dùng chung hằng `PANEL_SURFACE` trong `wiki-header.tsx` (nền tối trong mờ, bo 12px).
-- Responsive: ≤1100px ẩn chữ "Sắp ra mắt"; ≤860px ô tìm kiếm thành nút kính lúp; ≤640px chuyển sang bố cục điện thoại (xem dưới). Đã kiểm tra ở 320, 375, 1024, 1440px — không tràn ngang, không lỗi console.
+- Responsive: ≤1100px thu hẹp khoảng cách và lề ngang; dưới 900px (`usePageLayout`) chuyển sang header compact (xem dưới). Đã kiểm tra ở 320, 375, 1024, 1440px — không tràn ngang, không lỗi console.
 
 ### Cách viết style
 
@@ -68,21 +68,22 @@ Lưu ý khi sửa:
 
 ## Header thư viện và chi tiết Tướng
 
-- `WikiHeader` nhận `variant`, `pageTitle`, `onOpenContents` và `feedback`. Trang chủ giữ bố cục hiện có; thư viện dùng nền xanh xám phù hợp với danh sách. Header chi tiết Tướng trong suốt khi ở đầu trang trên cả desktop và điện thoại, để ảnh nền phía sau liền với trang.
+- `WikiHeader` nhận `variant`, `pageTitle`, `backTo`, `section`, `searchScope` và `ownSearch`. Trang chủ giữ bố cục hiện có; thư viện dùng nền xanh xám phù hợp với danh sách. Header chi tiết Tướng trong suốt khi ở đầu trang trên cả desktop và điện thoại, để ảnh nền phía sau liền với trang.
 - Trong 100px cuộn đầu tiên, nền, viền dưới và độ blur của header chi tiết tăng dần. `useScrollProgressVar` chỉ ghi `--header-solid` trực tiếp lên thẻ header, không cập nhật state hoặc render lại React theo mỗi lần cuộn. Màu nền đọc từ `--hero-surface-rgb` của bố cục chi tiết, cùng bảng màu ảnh trong `hero-appearance.ts`; thiếu cấu hình thì dùng nền tối dự phòng.
-- Ô tìm kiếm trên hai biến thể Tướng hoạt động bằng form: nhập tên rồi nhấn Enter để mở `/hero?q=...`; gửi rỗng sẽ về `/hero`. Không có nút mũi tên điều hướng trong ô nhập. Từ 860px trở xuống, icon kính lúp mở popup chứa cùng form; chữ nhập 16px và gợi ý phím tìm kiếm cho bàn phím điện thoại. Bộ lọc danh sách và tìm kiếm không phân biệt dấu được mô tả trong `layout.md`.
+- Ô tìm kiếm trên hai biến thể Tướng hoạt động bằng form: nhập tên rồi nhấn Enter để mở `/hero?q=...`; gửi rỗng sẽ về `/hero`. Không có nút mũi tên điều hướng trong ô nhập. Trên header compact, icon kính lúp mở popup chứa cùng form; chữ nhập 16px và gợi ý phím tìm kiếm cho bàn phím điện thoại. Bộ lọc danh sách và tìm kiếm không phân biệt dấu được mô tả trong `layout.md`.
 - Trên điện thoại, thư viện hiện “Tướng” ở giữa thay cho logo và wordmark; chi tiết không hiện cả tên tướng lẫn logo/wordmark trên header. Header chi tiết chỉ có Trang chủ bên trái, Tìm kiếm và “⋯” bên phải; Mục lục nằm trong “⋯”. Menu đóng trước khi mở **Mục lục** từ phải qua bằng `Sheet` để không chồng lớp khóa focus. Thư viện vẫn giữ nút mục lục riêng. Nút “⋯” còn phụ trách chuyển ứng dụng và thị trường dữ liệu; tài khoản/ngôn ngữ nằm trong menu “⋯”. Desktop vẫn có logo và wordmark trên cả hai biến thể.
-- Mục lục thư viện trên desktop nằm ở cột bên trái dưới header. Nhóm **Sổ tay nhân vật** chứa **Danh sách tướng** (`/hero`) và **Trang phục** (`/skins`). Nhóm **Kho trang bị** chứa **Trang bị**, **Phù hiệu**, **Bảng ngọc**, **Phụ trợ**; các mục dùng query `tab` của `/warehouse` và chỉ mục đang xem được đánh dấu. Bản đồ và Chế độ chơi vẫn là các mục độc lập. Chi tiết Tướng dùng ảnh rộng nên không hiện cột này; mục lục trên điện thoại dùng cùng nội dung điều hướng.
+- Mục lục thư viện trên desktop nằm ở cột bên trái dưới header. Nhóm **Sổ tay nhân vật** chứa **Danh sách tướng** (`/hero`) và **Trang phục** (`/skins`). Nhóm **Kho trang bị** chứa **Trang bị**, **Phù hiệu**, **Bảng ngọc**, **Phụ trợ**; mỗi mục có đường dẫn riêng `/warehouse/<tab>` và chỉ mục đang xem được đánh dấu. Nhóm **Lối chơi** chứa **Chế độ chơi**, nhóm **Tham khảo** chứa **Ghi chú cập nhật** và **Thuật ngữ**. Chi tiết Tướng dùng ảnh rộng nên không hiện cột này; mục lục trên điện thoại dùng cùng nội dung điều hướng.
 
 - Riêng header chi tiết trên mobile dùng vùng chạm 40px, vòng tròn nhìn thấy 28px và icon 16px. Nền trong nhẹ, viền theo màu điểm nhấn của tướng. Mép trên ảnh có gradient tối cao 140–200px, đậm nhẹ ở đầu rồi tan dần để nút dễ nhìn mà ảnh vẫn liền mạch. Icon đổi tướng nằm cạnh tên trong thân trang, mở bảng chọn bên trái; mục lục vẫn mở bên phải.
 
 ## Phản hồi vấn đề
 
-- Icon chỉ hiện trên desktop của thư viện và chi tiết Tướng, mở `Dialog` dùng chung của `@aov/ui`. Người dùng có thể viết tối đa 1.000 ký tự và chọn tối đa 3 ảnh PNG/JPG, 5 MB mỗi ảnh để xem trước.
-- Chưa có endpoint gửi phản hồi. Nút **Lưu bản nháp** chỉ lưu nội dung chữ, đường dẫn trang và thời gian trên thiết bị qua `localStorage`; giao diện nói rõ bản nháp chưa được gửi đến quản trị viên.
-- Ảnh đính kèm chỉ tồn tại trong bộ nhớ khi còn ở trang, không được upload hoặc lưu cùng bản nháp. Thoát trang hoặc tải lại sẽ mất các ảnh này.
+- Nút **Góp ý trang này** nằm ở chân trang (`WikiFooter`), có trên mọi trang và mọi kích thước. Một số khối có nút **Đề xuất chỉnh sửa** riêng, ví dụ khung cập nhật mùa ở trang chủ. Cả hai mở `Dialog` của `@aov/ui` (`components/public-overlay`), code trong `src/layout/feedback-dialog.tsx`.
+- Người dùng nhập góp ý, tên và email. Cả thư tối đa 4.000 ký tự, tính cả phần đầu ghi trang và mốc dữ liệu đang xem. Gửi qua `POST /api/wiki/v1/media/contact-requests` (chủ đề `OTHER`); gửi xong hiện **Mã tiếp nhận**.
+- Nút **Lưu nháp** lưu nội dung chữ, đường dẫn trang và thời gian trên thiết bị qua `localStorage`; gửi thành công thì xóa nháp.
+- Có thể chọn tối đa 3 ảnh PNG/JPG, 5 MB mỗi ảnh để xem trước. Ảnh chỉ tồn tại trong bộ nhớ khi còn ở trang, không được gửi đi hoặc lưu cùng bản nháp. Thoát trang hoặc tải lại sẽ mất các ảnh này.
 
-## Điện thoại (≤640px)
+## Header compact (dưới 900px)
 
 Theo bản mobile của HoYoWiki (https://wiki.hoyolab.com/m/hsr/home):
 

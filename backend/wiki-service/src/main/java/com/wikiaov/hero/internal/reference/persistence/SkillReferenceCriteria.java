@@ -18,11 +18,6 @@ public record SkillReferenceCriteria(
         int size,
         boolean allowUnscoped
 ) {
-    public SkillReferenceCriteria(UUID rulesetId, Map<UUID, Long> ordinals, Instant at, Long cutoff,
-            SkillReferenceSearch search, UUID heroId, List<String> ids, int page, int size) {
-        this(rulesetId, ordinals, at, cutoff, search, heroId, ids, page, size, true);
-    }
-
     public boolean published() {
         return cutoff != null;
     }

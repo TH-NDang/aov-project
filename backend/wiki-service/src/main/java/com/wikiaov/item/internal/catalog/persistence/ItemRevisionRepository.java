@@ -20,6 +20,4 @@ public interface ItemRevisionRepository extends JpaRepository<ItemRevision, UUID
                 select f.id from ItemPatchChange f where f.patchVariantId = :variantId and f.toRevisionId = r.id))
             """)
     List<ItemRevision> publishedForChanges(UUID rulesetId, UUID variantId);
-
-    List<ItemRevision> findByIconAssetIdAndStateNot(UUID assetId, String state);
 }

@@ -4,7 +4,7 @@ Tham chiếu: https://wiki.hoyolab.com/pc/hsr/home (đo ở 1440px).
 
 ## Trạng thái hiện tại
 
-Trang chủ giữ header, ảnh nền, câu chào, banner tự chuyển cùng khung cập nhật mùa hiện tại. Thư viện Tướng dùng bố cục riêng tại `/hero`; chi tiết tại `/hero/:heroCode` hiện tập trung vào tên và ảnh tướng. Các route Tướng được tải riêng khi truy cập, không đưa toàn bộ giao diện thư viện vào lần tải trang chủ.
+Trang chủ giữ header, ảnh nền, câu chào, banner tự chuyển cùng khung cập nhật mùa hiện tại. Thư viện Tướng dùng bố cục riêng tại `/hero`; chi tiết tại `/hero/:heroCode` có thay đổi ở bản đang xem, bộ kỹ năng, trang phục, video, tổng quan, chỉ số và cốt truyện (xem "Chi tiết Tướng"). Các route Tướng được tải riêng khi truy cập, không đưa toàn bộ giao diện thư viện vào lần tải trang chủ.
 
 ## Khối trang chủ
 
@@ -26,11 +26,11 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 ## Thư viện Tướng
 
 - Trên compact, ô tìm và nút Lọc dính dưới đầu trang; bộ lọc Vị trí và Vai trò nằm trong drawer dưới, có ghi tên từng lựa chọn và số tướng tìm được. Trên wide, ô tìm nằm một hàng, Vị trí và Vai trò nằm hàng dưới.
-- `/hero` dùng cùng màu nền với toàn sản phẩm, nội dung căn giữa và giới hạn chiều ngang. Desktop có mục lục bên trái, ghim dưới header; phần danh sách bên phải. Từ 640px trở xuống, mục lục chuyển thành tấm trượt từ phải qua (`Sheet` của `@aov/ui`), mở bằng icon trên header. Nhóm **Sổ tay nhân vật** gồm **Danh sách tướng** dẫn đến `/hero` và **Trang phục** dẫn đến `/skins`; Kho trang bị, Bản đồ, Chế độ chơi là các mục ngang hàng bên ngoài nhóm và chưa mở nội dung. Chỉ mục đang xem có nền và viền đánh dấu.
+- `/hero` dùng cùng màu nền với toàn sản phẩm, nội dung căn giữa và giới hạn chiều ngang. Desktop có mục lục bên trái, ghim dưới header; phần danh sách bên phải. Trên compact (dưới 900px), mục lục chuyển thành tấm trượt từ phải qua (`Sheet` của `@aov/ui`), mở bằng icon trên header. Mục lục lấy từ `wiki-sections.ts` và chia bốn nhóm: **Sổ tay nhân vật** (Tướng `/hero`, Trang phục `/skins`), **Kho trang bị** (Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ), **Lối chơi** (Chế độ chơi) và **Tham khảo** (Ghi chú cập nhật, Thuật ngữ). Chỉ mục đang xem có nền và viền đánh dấu.
 - Danh sách lấy các tướng đã xuất bản từ API public `GET /api/wiki/v1/heroes?region=VN&locale=vi-VN&size=100&page=0`. Nếu có nhiều trang, chương trình đọc tiếp trước khi lọc; số lượng kết quả được tính từ dữ liệu thực tế, không cố định theo một bộ mẫu. Mỗi mục có thể kèm trường `portrait` để dùng ảnh `PORTRAIT` ngay từ API danh sách, không cần tải chi tiết từng tướng chỉ để lấy ảnh.
 - TanStack Query giữ dữ liệu danh sách và chi tiết ở trạng thái mới trong 60 giây, dùng chung danh sách khi chuyển giữa thư viện và chi tiết. Khi lỗi có nút thử lại; khi chưa có dữ liệu hoặc không khớp bộ lọc có trạng thái riêng, không thay bằng tướng mẫu.
 - Hai nhóm bộ lọc phân biệt rõ: **Vị trí** gồm Đường Caesar, Rừng, Đường giữa, Đường Rồng, Hỗ trợ; **Vai trò** gồm Đỡ đòn, Đấu sĩ, Sát thủ, Pháp sư, Xạ thủ, Trợ thủ. Mỗi lựa chọn dùng icon, tên xuất hiện khi hover hoặc focus và có nhãn cho trình đọc màn hình.
-- Vai trò lấy trực tiếp từ backend. Vị trí hiện dùng bảng tham khảo tạm trong `hero-classifications.ts`, ánh xạ rõ từng mã tướng, không suy luận từ vai trò. Nhãn “Tham khảo” giải thích đây là phân loại minh họa, chờ biên tập; chưa coi đây là dữ liệu vị trí do backend quản lý.
+- Vai trò và vị trí đều lấy từ backend (`roles`, `positions` trong API danh sách), không suy luận vị trí từ vai trò. `hero-classifications.ts` chỉ giữ danh sách lựa chọn, nhãn và icon của hai bộ lọc.
 - Trạng thái lọc lưu trên URL: `q` là tên hoặc mã tướng, `role` và `position` là các giá trị phân cách bằng dấu phẩy, ví dụ `/hero?q=amily&role=WARRIOR&position=TOP,JUNGLE`. Trong cùng nhóm chỉ cần khớp một lựa chọn; giữa tìm kiếm, vai trò và vị trí phải đồng thời khớp. Tìm kiếm không phân biệt chữ hoa, chữ thường hoặc dấu tiếng Việt, gồm cả `đ`/`d`.
 - Thẻ tướng ưu tiên ảnh `PORTRAIT` thật, dùng `HEAD` nếu thiếu hoặc lỗi chân dung, rồi mới dùng chỗ giữ chỗ. Ảnh dọc tỉ lệ 4:5, bo góc đều; tên và vai trò lấy từ backend nằm dưới ảnh. Desktop và tablet tự chia cột theo chiều rộng, mỗi thẻ rộng tối thiểu 148px; điện thoại từ 420px dùng 4 cột, hẹp hơn dùng 3 cột và chỉ giữ icon vai trò. Toàn bộ thẻ mở chi tiết và giữ đường dẫn bộ lọc để quay về.
 - 11 icon vị trí/vai trò trong `public/icons/hero/` là SVG có nền trong suốt. `HeroGlyph` hiển thị bằng CSS mask và `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. Các PNG nguồn trong `resources/` vẫn được giữ nguyên.
@@ -45,12 +45,12 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 ## Thư viện Trang phục
 
 - `/skins` dùng chung bố cục thư viện, mục lục và tiện ích desktop. Đầu trang compact hiện “Trang phục” và không lặp ô tìm kiếm vì trang đã có ô riêng.
-- Dữ liệu lấy từ API public `GET /api/wiki/v1/skins?region=VN&locale=vi-VN&page=0&size=24`. API chọn bản tướng đã xuất bản theo gameplay context hiện hành, trả trang phục, tên tướng, ảnh và nhãn bậc đã bản địa hóa. Không gọi API admin hay tải detail riêng của từng tướng để dựng danh sách.
+- Dữ liệu lấy từ API public `GET /api/wiki/v1/skins` theo thị trường, ngôn ngữ và mốc đang xem, mỗi trang 60 mục; chương trình đọc hết các trang rồi mới dựng danh mục. API chọn bản tướng đã xuất bản theo gameplay context hiện hành, trả trang phục, tên tướng, ảnh và nhãn bậc đã bản địa hóa. Không gọi API admin hay tải detail riêng của từng tướng để dựng danh sách.
 - Ảnh gốc của tướng được lưu dưới trang phục “Mặc định” không xuất hiện trong danh mục này. Backend loại trước khi tính số kết quả, bộ lọc và phân trang; các ảnh đó vẫn dùng trong trang Tướng.
 - Đầu danh mục dùng tiêu đề, biểu tượng bộ sưu tập, số kết quả và họa tiết thẻ rất mờ. Thanh tìm kiếm và hai bộ chọn có icon nằm trên một bề mặt tối gọn; mobile đưa ô tìm kiếm lên hàng riêng.
 - Thẻ có khung ảnh dọc tỉ lệ 7:11, bo góc bất đối xứng và viền mảnh trung tính. Ảnh bậc thật nằm trong góc trên trái; tên trang phục và dòng tướng sở hữu có ảnh head nằm trên lớp chuyển tối ở chân ảnh. Toàn bộ thẻ mở ảnh, có dấu mở nhỏ luôn hiện để nhận biết thao tác trên màn hình cảm ứng. Ưu tiên portrait, dự phòng head rồi art; thiếu ảnh có chỗ giữ chỗ. Trang phục không có nhãn hoặc thiếu icon không được tự gán bậc minh họa.
 - Desktop 1200–1599px dùng 5 cột, mỗi thẻ rộng khoảng 174px; từ 1600px dùng 6 cột khoảng 161px, khung thư viện riêng cho Trang phục rộng tối đa 1360px và danh mục tối đa 1024px. Khoảng 900–1199px dùng 4 cột, tablet hẹp và mobile dùng 3 cột gọn. Nhãn bậc, khoảng đệm và dòng tên thu gọn theo thẻ. Khung, hai dòng tên và dòng tướng giữ chỗ trong khi ảnh tải; `WikiImage` chỉ hiện ảnh sau khi giải mã xong. Hover trên thiết bị có chuột nâng nhẹ thẻ, phóng ảnh và làm rõ điểm nhấn; thiết bị bật giảm chuyển động không dùng các hiệu ứng này.
-- Tìm tên trang phục/tướng, lọc tướng và bậc lưu trong query `q`, `hero`, `rarity`. Tìm kiếm chờ 250ms trước khi gọi API; TanStack Query giữ cache mới 60 giây, hủy request không còn dùng và tự tải tiếp khi cuộn gần cuối. Các nhãn nguồn trùng tên được thêm chỉ dẫn “Mẫu” trong bộ chọn để phân biệt, không đổi tên trong dữ liệu hoặc trên thẻ. Không có nút phân trang; lỗi phần tiếp theo có nút thử lại.
+- Tìm tên trang phục/tướng, lọc tướng và bậc lưu trong query `q`, `hero`, `rarity`; cách sắp xếp lưu trong `heroSort` và `skinSort`. Tìm và lọc chạy trên dữ liệu đã tải, không gọi lại API; TanStack Query giữ cache mới 60 giây. Các nhãn nguồn trùng tên được thêm chỉ dẫn “Mẫu” trong bộ chọn để phân biệt, không đổi tên trong dữ liệu hoặc trên thẻ. Không có nút phân trang.
 - Chọn thẻ mở hộp xem ảnh lớn bằng Dialog, ưu tiên ảnh art gốc và giữ toàn bộ tỉ lệ ảnh, có tên, bậc và liên kết đến tướng. Khung ảnh giữ tỉ lệ cố định để nút không nhảy khi đổi ảnh; phần thừa được lấp bằng chính ảnh đó làm mờ. Không điều hướng sang trang mới chỉ để xem ảnh.
 - Trong hộp xem có thể xem liên tiếp mà không cần đóng: nút trái/phải trên ảnh, phím ← →, vuốt ngang trên màn hình cảm ứng, dải ảnh các trang phục cùng tướng kèm vị trí như `4/17`, và nút sang tướng trước/sau. Thứ tự đi theo đúng danh sách đang lọc và sắp xếp; hết trang phục của một tướng thì sang tướng kế tiếp, cuối danh sách quay về đầu. Ảnh kế tiếp được tải trước để chuyển không bị nháy. Đóng bằng nút đóng hoặc Escape, focus và vị trí cuộn về thẻ của trang phục đang xem, không phải thẻ đã mở lúc đầu.
 
@@ -119,7 +119,7 @@ Dữ liệu từ `GET /videos`, xem ADR-019. Chỉ hiện khối khi mục có v
 
 ## Chi tiết Tướng
 
-- `/hero/:heroCode` dùng bố cục ảnh rộng riêng, không đặt sidebar desktop cạnh ảnh. Header vẫn có mục lục trên điện thoại. Phạm vi hiện tại chỉ gồm tên, ảnh đại diện, ảnh lớn và điều hướng trở về thư viện; chưa dựng kỹ năng, chỉ số hoặc các phần nội dung khác.
+- `/hero/:heroCode` dùng bố cục ảnh rộng riêng, không đặt sidebar desktop cạnh ảnh. Header vẫn có mục lục trên điện thoại.
 - Mã tướng trên URL được đối chiếu với danh sách đã xuất bản; chi tiết đọc từ `GET /api/wiki/v1/heroes/{id}?region=VN&locale=vi-VN`. URL ảnh dùng phiên bản Media mà backend trả về.
 - Hiển thị ảnh nền `SPLASH` độ phân giải cao; chỉ dùng `PORTRAIT` dự phòng nếu thiếu hoặc lỗi ảnh nền. Không có nút chuyển loại ảnh và không phóng `HEAD` thành ảnh lớn. Nếu cả hai ảnh lớn đều không dùng được, giao diện hiển thị trạng thái thiếu ảnh.
 - Cạnh tên tướng là icon tròn dùng ảnh `HEAD`, kích thước 52px trên desktop và 40px trên điện thoại. Ảnh có đệm trong 2px, viền mảnh theo màu điểm nhấn và bóng nhẹ; tên dùng cỡ 32–44px trên desktop, 26–30px trên mobile, căn giữa với ảnh và nút đổi tướng. Tên dài được xuống dòng, không đẩy nút ra ngoài màn hình. Thiếu hoặc lỗi ảnh thì dùng chân dung dự phòng, sau đó là chữ cái đầu của tên. Header chi tiết trong suốt ở đầu trang trên mọi kích thước, tối dần trong 100px cuộn đầu tiên; mobile không đặt tên tướng hoặc wordmark trên header.
@@ -144,21 +144,8 @@ Dữ liệu từ `GET /videos`, xem ADR-019. Chỉ hiện khối khi mục có v
 - Dòng cuối ghi thuộc về Garena / Liên Quân Mobile và mốc dữ liệu đang xem kèm thị trường.
 - Khi không đủ chỗ cho một hàng, ba liên kết xuống dưới phần giới thiệu; dưới 560px chúng xếp dọc để không liên kết nào rớt lẻ một mình. Trang có nút mục lục nổi chừa thêm khoảng trống cuối chân trang để nút không che liên kết.
 
-## Ảnh nền đầu trang
-
-- `PageBackdrop` (`src/components/page-backdrop.tsx`): `position: fixed`, lớp màu phủ hết chiều ngang, ảnh căn giữa giới hạn 1440px, cao `min(540px, 50svh)` để không vượt nửa chiều cao màn hình, `background-size: cover`, căn trên, độ mờ 45%, nằm dưới mọi nội dung (`-z-10`).
-- Lớp `::after` phủ toàn bộ vùng nền, chuyển từ trong suốt ở mốc 32,6% sang màu nền trang ở đáy.
-- Ảnh đứng yên khi cuộn, nội dung trượt lên trên ảnh.
-- Điện thoại (≤640px): ảnh cuộn theo trang (`absolute`), cao `min(66.667vw, 25svh)` để không vượt một phần tư chiều cao màn hình, độ hiện ảnh 45%, gradient bắt đầu từ 45% chiều cao ảnh và chuyển về nền tối ở đáy.
-- Chưa có ảnh: hiện quầng sáng hổ phách (`--amber-accent`) làm chỗ giữ chỗ.
-- Thêm ảnh: đặt file vào `public/images/` (ví dụ `home-bg.jpg`) rồi gán `HOME_BACKGROUND = { image: "/images/home-bg.jpg", color: "#27283f" }` trong `src/App.tsx`. Nên dùng ảnh ngang, rộng ≥ 1920px, chủ thể ở nửa trên vì phần dưới bị gradient che.
-
 ## Font chữ
 
-- Cả trang dùng **Tahoma** (dự phòng Helvetica, Arial), giống HoYoWiki dùng cho tiếng Việt và các ngôn ngữ chữ Latin.
-- Token trong `wiki.css`: `--font-sans` (mặc định cho cả trang) và `--font-heading` (hiện trỏ về `--font-sans`, dùng qua class `font-heading` cho tiêu đề). Muốn đổi font tiêu đề sau này chỉ cần sửa token này.
-- Tahoma là font hệ thống, chỉ có 2 độ đậm: thường (400) và đậm (700). Dùng `font-normal`/`font-bold`; `font-medium`/`font-semibold` sẽ hiển thị như thường hoặc đậm.
-- Có sẵn trên Windows và macOS; Android/iOS không có nên trình duyệt dùng Helvetica/Arial/Roboto thay thế.
-- Wordmark AOVWiKi trên header vẫn giữ Arial Black.
-
-- Hai mép ảnh dùng mask chuyển mượt vào lớp màu xung quanh; lớp màu đậm dần về nền trang ở hai bên. Cấu hình image/color độc lập để sau này lấy từ backend. Trên 4K ảnh vẫn rộng tối đa 1440px.
+- Cả trang dùng **Be Vietnam Pro** như toàn bộ sản phẩm (`--aov-font-sans` trong `packages/ui/src/styles/tokens.css`, trọng số 400–700; xem `frontend/docs/DESIGN-TOKENS.md`).
+- Token trong `wiki.css`: `--font-sans` và `--font-heading` trỏ về `--wiki-font-reading` và `--wiki-font-display` của `src/styles/typography.css`; cả hai hiện là `--aov-font-sans`. Muốn đổi font tiêu đề sau này chỉ cần sửa `--wiki-font-display`.
+- Wordmark AOVWiKi trên header vẫn giữ Arial Black (`--font-wordmark`).

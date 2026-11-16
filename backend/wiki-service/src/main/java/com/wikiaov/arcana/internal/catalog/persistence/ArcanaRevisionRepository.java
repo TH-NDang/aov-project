@@ -20,6 +20,4 @@ public interface ArcanaRevisionRepository extends JpaRepository<ArcanaRevision, 
                 select f.id from ArcanaPatchChange f where f.patchVariantId = :variantId and f.toRevisionId = r.id))
             """)
     List<ArcanaRevision> publishedForChanges(UUID rulesetId, UUID variantId);
-
-    List<ArcanaRevision> findByIconAssetIdAndStateNot(UUID assetId, String state);
 }

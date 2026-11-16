@@ -70,40 +70,31 @@ Nội dung của một mục (trang bị, ngọc, phụ trợ, phù hiệu) nằ
 - **Sửa ngay tại chỗ:** bấm bút thì trình sửa thay phần nội dung của đúng phần đó, tiêu đề hiện nhãn "Đang sửa", các phần khác vẫn đọc được nhưng bút bị khóa cho tới khi lưu hoặc hủy. Trong lúc sửa, cột mục lục thu vào nút nổi để trình sửa dùng hết chiều rộng.
 - Mục lục chỉ tìm phần trong trang của chính nó: các trang tướng mở ở tab khác của Admin có cùng id phần.
 
-### Trang tướng: tab mục (09/11/2026)
+### Trang tướng: một trang cuộn (11/11/2026)
 
-Trang tướng trong Admin không còn cột "Trên trang này" và nút nổi mở mục lục. Tab "Nội dung" chia thành **hàng tab mục**: Tổng quan → Kỹ năng → Trang phục → Ảnh → Video (Video chỉ có khi tướng đã lưu). Chỉ áp dụng trong Admin, Wiki công khai giữ nguyên.
+Trang tướng trong Admin có hai tab quản lý: **Nội dung** và **Lịch sử**. Lịch sử gom phiên bản đang mở, thay đổi theo patch và phần so sánh hai phiên bản. Bản dịch không còn tab riêng: chọn ngôn ngữ ở menu ngôn ngữ trên đầu trang, mỗi ngôn ngữ có bút riêng và ô dịch hiện ngay tại chỗ. Đầu trang và hàng tab dính cùng nhau ở trên khi cuộn. Chỉ áp dụng trong Admin, Wiki công khai giữ nguyên.
 
-- **Hai hàng dính.** Trên là hàng tab quản lý (Nội dung, Bản dịch, Lịch sử, Theo patch, Phiên bản), dưới là hàng tab mục. Khi cuộn xuống, cả hai dính ở đầu khung rồi hàng tab quản lý trượt lên ẩn đi, chỉ còn hàng tab mục. Cuộn lên một chút là hàng tab quản lý hiện lại. Dùng bàn phím đi tới hàng này cũng làm nó hiện lại.
-- **Tướng ở đầu hàng tab mục.** Khi đầu trang đã cuộn khỏi màn hình, đầu hàng tab mục hiện ảnh tướng, tên tướng (ẩn tên khi khung hẹp hơn 42rem) và nút đổi tướng. Các tab nằm bên phải phần này. Lúc đầu trang còn trong màn hình thì phần này thu lại, vì đầu trang đã có tên tướng.
-- **Tổng quan gom nội dung.** Thẻ tướng, Đánh giá và Thuộc tính chiến đấu hiện đầy đủ. Các tab khác chỉ có bản thu nhỏ, xếp theo mức quan trọng. Bấm vào một mục trong bản thu nhỏ thì xem ngay tại chỗ, không chuyển tab. Chỉ nút "Xem chi tiết" mới sang tab đó:
-  - Kỹ năng: dải icon chiêu, biến thể xếp chồng. Bấm một chiêu thì bên dưới hiện tên chiêu và 3 dòng đầu của mô tả. Chiêu đang xem dùng chung với tab Kỹ năng, nên "Xem chi tiết" mở đúng chiêu đó.
-  - Trang phục: một hàng ảnh, không có tên. Lúc đầu hiện 8 trang phục, kéo ngang tới cuối hàng thì tải thêm 8. Bấm một ảnh thì mở ảnh lớn có tên, chuyển được giữa các trang phục đã hiện.
-  - Ảnh: ba ảnh Đại diện, Chân dung, Ảnh nền thu nhỏ. Bấm thì mở ảnh lớn.
-  - Video: số video và 3 video đầu, có ảnh thu nhỏ và mục đích. Bấm thì phát trong cửa sổ.
-- **Thuộc tính chiến đấu** nằm chung thẻ với Đánh giá:
+- **Mọi phần trên một trang**, theo thứ tự đọc: Tổng quan → Kỹ năng → Trang phục → Ảnh → Video (Video chỉ có khi tướng đã lưu). Không có hàng tab mục, cột "Trên trang này" hay nút nổi mở mục lục.
+- **Bố cục Tổng quan.** Thẻ tướng và Đánh giá nằm cùng một hàng, cao bằng nhau; khung Tổng quan từ 820px thì Đánh giá là cột phải 22rem. Thuộc tính chiến đấu chiếm trọn một hàng ngay dưới, trước Kỹ năng. Hẹp hơn thì xếp một cột theo đúng thứ tự đó.
+- **Thuộc tính chiến đấu:**
   - Các thuộc tính nổi bật hiện thành dòng giống Đánh giá: icon của game, tên, giá trị bên phải. Bên dưới là một dòng nguồn ghi nhận.
-  - Nút "Toàn bộ thuộc tính" và "So sánh" mở cùng một cửa sổ rộng, có hai tab. Tab Thuộc tính chia hai cột trên màn rộng; tab So sánh là phần phân tích với các tướng khác. Cột bên cạnh thẻ tướng vì thế không bị kéo dài.
+  - Nút "Toàn bộ thuộc tính" và "So sánh" mở cùng một cửa sổ rộng, có hai tab. Tab Thuộc tính chia hai cột trên màn rộng; tab So sánh là phần phân tích với các tướng khác.
   - Cảnh báo nguồn trỏ tới thuộc tính sẽ mở thẳng cửa sổ này.
   - Không có thuộc tính nổi bật nào thì toàn bộ danh sách hiện luôn trong thẻ.
-- **Bố cục Tổng quan.** Khung từ 820px: cột trái là thẻ tướng → Kỹ năng → Trang phục, cột phải 22rem là Đánh giá và thuộc tính → Ảnh → Video. Hẹp hơn thì xếp một cột theo thứ tự quan trọng: tướng → kỹ năng → đánh giá, thuộc tính → trang phục → ảnh → video.
-- **Mỗi tab nhớ chỗ đang xem.** Quay lại một tab, hoặc bấm lại tab đang mở, thì trang về đúng vị trí đã cuộn trước đó. Sang Bản dịch hay Lịch sử rồi về Nội dung cũng vậy.
-  - Tab mở lần đầu bắt đầu ngay dưới hàng tab. Nếu đầu trang còn trong màn hình thì giữ nguyên chỗ đó.
-  - Vị trí được đặt lại khi tab còn đang tải và trang dài ra, cho tới khi người đọc tự cuộn hoặc gõ phím.
-- **Tab được dựng một lần rồi giữ.** Lần đầu mở tab thì tab mới được dựng. Từ đó tab chỉ ẩn khi sang tab khác, nên chiêu, trang phục đang chọn và dữ liệu đã tải vẫn còn.
-- **Sửa trong tab.** Bút mở trình sửa thay chỗ nội dung của tab đó; sửa phần Tổng quan thì trình sửa chiếm cả tab. Trình sửa mở ra thì đầu tab được đưa lên ngay dưới hàng tab. Trong lúc sửa vẫn sang tab khác đọc được; tab đang sửa có chấm nhỏ trên nhãn.
-- `?tab=skills`, `?tab=media`… mở thẳng tab đó. Đổi tab chỉ thay `tab` trong URL, không thêm vào lịch sử trình duyệt.
+- Mỗi phần nằm trong thẻ riêng. Tiêu đề thẻ có icon, số đếm và nút sửa là cây bút.
+- **Sửa tại chỗ.** Bút mở trình sửa thay chỗ nội dung của đúng phần đó, tiêu đề hiện nhãn "Đang sửa"; sửa phần Tổng quan thì trình sửa chiếm cả thẻ Tổng quan. Trong lúc sửa, bút ở các phần khác bị khóa cho tới khi lưu hoặc hủy. Phiên bản đã xuất bản không có bút ở từng phần: bút ở đầu trang tạo bản nháp trước.
+- Mở trình sửa thì `tab` trong URL ghi phần đang sửa (`?tab=skills`, `?tab=media`…; Tổng quan thì bỏ `tab`), để đóng trình sửa thì trang mở lại ở phần đó. Liên kết cũ vẫn dùng được: `?view=skills` mở trang Nội dung ở phần Kỹ năng, `?view=patch` và `?view=versions` mở tab Lịch sử.
 
-Component: `HeroStickyBars` và `HeroContentTabs` trong `apps/admin-aov/src/features/publishing/hero-content-tabs.tsx`. Các bản thu nhỏ nằm trong `hero-overview-previews.tsx`. `HeroStickyBars` đặt một mốc cao 0px ngay trước hai hàng; mốc này bù lại khoảng cách `gap-4` của `Page`, và vị trí tab mở lần đầu được đo theo mốc đó.
+Component: `HeroContent` trong `apps/admin-aov/src/features/publishing/hero-content.tsx`. Thứ tự các phần và id của từng phần (`hero-content-<phần>`) nằm trong `hero-content-tabs.tsx`; hai tab quản lý nằm trong `hero-workspace-tabs.tsx`.
 
 Component dùng chung cho ngăn chi tiết: `SectionContents`, `ContentsSection` và `useSectionContents` trong `apps/admin-aov/src/components/section-contents.tsx`. Trang khai báo chiều cao các thanh dính phía trên bằng `--contents-offset` (px) trên `SectionContents`. Thanh dính cần `[overflow-anchor:none]` để trình duyệt không lấy nó làm mốc giữ vị trí cuộn.
 
 | Trang | Cách xử lý |
 |---|---|
-| Chi tiết tướng | Tab: Nội dung → Bản dịch → Lịch sử → Theo patch → Phiên bản (tạo bản nháp kế thừa, chuyển mốc, ghi thay đổi patch; trước đây nằm trong menu `⋯`), trên điện thoại năm tab chia đều một hàng, icon trên nhãn. Nội dung chia tab mục Tổng quan → Kỹ năng → Trang phục → Ảnh → Video (xem "Trang tướng: tab mục"); trên điện thoại các tab mục cũng chia đều một hàng, icon trên nhãn, không hiện số đếm. Thẻ tướng: ảnh, tên, danh hiệu, giá vàng và quân huy dạng icon kèm số, vai trò, giới thiệu; cốt truyện mở bằng icon sách trong cửa sổ riêng. Kỹ năng khi đọc là một dải icon chiêu (nhãn Nội tại, Chiêu 1…) với nút Tập trung / Dạng phẳng ở cuối, chi tiết chiêu bên dưới, bản quyền ảnh ở chân thẻ; trình sửa vẫn có cột chọn chiêu |
+| Chi tiết tướng | Tab: Nội dung → Lịch sử; bản dịch làm tại chỗ qua menu ngôn ngữ. Nội dung là một trang cuộn Tổng quan → Kỹ năng → Trang phục → Ảnh → Video (xem "Trang tướng: một trang cuộn"). Thẻ tướng: ảnh, tên, danh hiệu, giá vàng và quân huy dạng icon kèm số, vai trò, giới thiệu; cốt truyện mở bằng icon sách trong cửa sổ riêng. Kỹ năng khi đọc là một dải icon chiêu (nhãn Nội tại, Chiêu 1…) với nút Tập trung / Dạng phẳng ở cuối, chi tiết chiêu bên dưới, bản quyền ảnh ở chân thẻ; trình sửa vẫn có cột chọn chiêu |
 | Chi tiết trang bị | Ngăn bên rộng tối đa 880px, trên điện thoại là sheet dưới. Tab: Nội dung → Bản dịch → Lịch sử. Nội dung: Thông tin (chỉ số, hiệu ứng, ghép từ, vị trí trong shop) → Mốc patch và ghi chú → Video. Cột mục lục khi ngăn từ 42rem |
 | Chi tiết ngọc, phụ trợ, phù hiệu | Như trang bị. Nội dung: Thông tin → Phân loại ngọc / Thuộc tính / Hệ và vị trí → Chỉ số (ngọc) hoặc Trạng thái phụ trợ → Ảnh → Mốc patch và ghi chú → Video. Ngăn sửa hệ phù hiệu và nhóm trang bị vẫn giữ tab vì chỉ là một biểu mẫu ngắn |
-| Đầu trang chi tiết tướng | Tên và nhóm nút là hai khối. Nút đổi tướng nằm ngay sau tên, cả ở đầu trang lẫn phần tướng ở đầu hàng tab mục (hoặc thanh tên dính ở các tab quản lý) khi cuộn. Phiên bản chỉ hiện `#số`, ngôn ngữ chỉ hiện lá cờ; tên đầy đủ nằm trong tooltip và menu. Khung đầu trang từ 42rem: `#số`, cờ, Xuất bản/Tạo bản nháp, `⋯`; không đủ chỗ thì cả nhóm xuống hàng dưới. Hẹp hơn (đo theo chính khung, nên đúng cả trong ngăn bên): một hàng, ẩn ảnh nhỏ cạnh tên, menu `#số` chứa danh sách phiên bản, mục Ngôn ngữ và Xuất bản/Tạo bản nháp, đặt ngay trái `⋯`. Menu `⋯` chỉ còn Mở trang đầy đủ và Hủy bản nháp. Ngăn tướng mở từ danh sách không có thanh tiêu đề riêng; "Mở trang tướng đầy đủ" nằm đầu menu `⋯` |
+| Đầu trang chi tiết tướng | Tên và nhóm nút là hai khối. Nút đổi tướng nằm ngay sau tên; đầu trang dính ở trên khi cuộn nên nút luôn ở đó. Phiên bản chỉ hiện `#số`, ngôn ngữ chỉ hiện lá cờ; tên đầy đủ nằm trong tooltip và menu. Khung đầu trang từ 42rem: `#số`, cờ, Xuất bản/Tạo bản nháp, `⋯`; không đủ chỗ thì cả nhóm xuống hàng dưới. Hẹp hơn (đo theo chính khung, nên đúng cả trong ngăn bên): một hàng, ẩn ảnh nhỏ cạnh tên, menu `#số` chứa danh sách phiên bản, mục Ngôn ngữ và Xuất bản/Tạo bản nháp, đặt ngay trái `⋯`. Menu `⋯` chỉ còn Dạng của tướng (khi tướng có dạng) và Hủy bản nháp. Ngăn tướng mở từ danh sách không có thanh tiêu đề riêng và đóng bằng nút × ở cuối hàng đầu trang, như các ngăn khác |
 | Danh sách có bộ lọc | Ô tìm một khối, nhóm ô lọc một khối luôn nằm trên một hàng |
 | Hồ sơ (Đội tuyển, Tuyển thủ…) | Tab trên một hàng, thiếu chỗ thì ẩn icon rồi cuộn ngang |
 | Tuyển thủ | Ẩn cột theo độ rộng, tên đội chuyển xuống dòng phụ khi ẩn cột đội |
