@@ -13,9 +13,9 @@ import { gamesQuery, tournamentsQuery } from "./tournament-api"
 import { seriesRound, seriesTeams } from "./tournament-model"
 
 /** The match a game belongs to in a few words: both teams and, where the match has one, its round. */
-function matchName(game: PublishedGame) {
+function matchName(game: PublishedGame, locale: string) {
   const round = seriesRound(game.series.name)
-  const teams = seriesTeams(game)
+  const teams = seriesTeams(game, locale)
     .map((team) => team.shortName)
     .join(" vs ")
   return round ? `${teams} (${round})` : teams
@@ -108,7 +108,18 @@ export function TournamentDirectory() {
           )}
         </div>
         <ScheduleNote
-          filters={seriesId ? [series ? `các ván của trận ${matchName(series)}` : "các ván của một trận"] : []}
+          filters={
+            seriesId
+              ? [
+                  series
+                    ? text(
+                        `các ván của trận ${matchName(series, languageTag)}`,
+                        `games of ${matchName(series, languageTag)}`,
+                      )
+                    : text("các ván của một trận", "games of one match"),
+                ]
+              : []
+          }
           onClear={() => filter("series", "")}
         />
         {games.isPending ? (

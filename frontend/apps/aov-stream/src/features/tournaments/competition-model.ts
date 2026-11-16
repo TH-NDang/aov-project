@@ -121,23 +121,37 @@ export function bracketLanes(matches: PlannedMatch[]): BracketLane[] {
   return lanes.filter((lane) => lane.rounds.length)
 }
 
-export const stageFormatLabels: Record<string, string> = {
-  ROUND_ROBIN: "Vòng tròn",
-  SINGLE_ELIMINATION: "Loại trực tiếp",
-  DOUBLE_ELIMINATION: "Nhánh thắng – nhánh thua",
+type CodeNames = Readonly<Record<string, readonly [vi: string, en: string]>>
+
+export const STAGE_FORMAT_NAMES: CodeNames = {
+  ROUND_ROBIN: ["Vòng tròn", "Round robin"],
+  SINGLE_ELIMINATION: ["Loại trực tiếp", "Single elimination"],
+  DOUBLE_ELIMINATION: ["Nhánh thắng – nhánh thua", "Upper bracket / lower bracket"],
 }
 
-export const tierLabels: Record<string, string> = { S: "Hạng S", A: "Hạng A", B: "Hạng B", C: "Hạng C", D: "Hạng D" }
-export const venueModeLabels: Record<string, string> = {
-  ONLINE: "Trực tuyến",
-  OFFLINE: "Tại sân khấu",
-  HYBRID: "Kết hợp",
+export const TIER_NAMES: CodeNames = {
+  S: ["Hạng S", "S-Tier"],
+  A: ["Hạng A", "A-Tier"],
+  B: ["Hạng B", "B-Tier"],
+  C: ["Hạng C", "C-Tier"],
+  D: ["Hạng D", "D-Tier"],
 }
-export const competitionTypeLabels: Record<string, string> = {
-  LEAGUE: "Giải vô địch",
-  CUP: "Cúp",
-  QUALIFIER: "Vòng loại",
-  SHOWMATCH: "Giao hữu",
+export const VENUE_MODE_NAMES: CodeNames = {
+  ONLINE: ["Trực tuyến", "Online"],
+  OFFLINE: ["Tại sân khấu", "Offline"],
+  HYBRID: ["Kết hợp", "Hybrid"],
+}
+export const COMPETITION_TYPE_NAMES: CodeNames = {
+  LEAGUE: ["Giải vô địch", "League"],
+  CUP: ["Cúp", "Cup"],
+  QUALIFIER: ["Vòng loại", "Qualifier"],
+  SHOWMATCH: ["Giao hữu", "Showmatch"],
+}
+
+/** The name of a coded value through `text`, or undefined for a code the table does not know. */
+export function codeName(names: CodeNames, code: string | null | undefined, text: (vi: string, en: string) => string) {
+  const pair = code ? names[code] : undefined
+  return pair && text(pair[0], pair[1])
 }
 
 /** The champion of a finished competition, only when an editor recorded the result. */

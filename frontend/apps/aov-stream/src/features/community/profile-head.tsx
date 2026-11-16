@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { isCommunityProfile, isIndividualProfile, type CommunityProfile } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
+import { useStreamLocale } from "../../components/stream-locale"
 import { Avatar } from "./community-ui"
 import "./community.css"
 import "./community-profile.css"
@@ -28,6 +29,7 @@ export function ProfileHead({
   /** The page's channels as icons, where the reference column is not on screen. */
   channels?: ReactNode
 }) {
+  const { text } = useStreamLocale()
   const content = profile.content!
   return (
     <header className="pf-head">
@@ -41,11 +43,13 @@ export function ProfileHead({
         <div className="pf-title">
           <span className="hub-kicker">
             <span>{kicker}</span>
-            {profile.live && <span className="tn-live">Trực tiếp</span>}
+            {profile.live && <span className="tn-live">{text("Trực tiếp", "Live")}</span>}
           </span>
           <h1>
             {content.name}
-            {profile.represented && isCommunityProfile(profile.kind) && <OfficialBadge label="Đại diện đã xác minh" />}
+            {profile.represented && isCommunityProfile(profile.kind) && (
+              <OfficialBadge label={text("Đại diện đã xác minh", "Verified representative")} />
+            )}
           </h1>
           {lines}
           {facts.length > 0 && (

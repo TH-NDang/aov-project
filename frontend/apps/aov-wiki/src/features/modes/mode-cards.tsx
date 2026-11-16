@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react"
 import { Link } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { useWikiContext } from "../../context/wiki-context"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import type { ModeCard } from "./mode-api"
 import { AvailabilityState, durationText, isClosed, ModeArt } from "./mode-ui"
 
@@ -32,10 +32,11 @@ export function modeMetaText(mode: Pick<ModeCard, "duration" | "playersLabel">, 
 }
 
 function ModeTags({ mode }: { mode: ModeCard }) {
+  const { locale } = useWikiContext()
   return (
     <>
       <AvailabilityState availability={mode.availability} quiet />
-      {mode.hasGuide && <span className="mode-tag">Cẩm nang</span>}
+      {mode.hasGuide && <span className="mode-tag">{wikiText(locale, "Cẩm nang", "Guide")}</span>}
     </>
   )
 }

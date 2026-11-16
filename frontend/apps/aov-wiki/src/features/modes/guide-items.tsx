@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from "react"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { foldText } from "./auto-chess-model"
 import { ModeHeading } from "./mode-ui"
 import { GuideText, type GuideIndex } from "./guide-ui"
@@ -40,11 +41,13 @@ function StoneMark({
 
 /** Items by stone: a chip per stone filters the groups; each item reads as a row with its icon and effect. */
 export function ItemsTab({ index }: { index: GuideIndex }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const { itemGroups, items } = index.content
   const [stone, setStone] = useState<string | null>(null)
   const groups: { code: string; name: string; iconAssetId?: string | null }[] = [
     ...itemGroups,
-    ...(items.some((item) => !item.groupCode) ? [{ code: "", name: "Khác" }] : []),
+    ...(items.some((item) => !item.groupCode) ? [{ code: "", name: text("Khác", "Other") }] : []),
   ]
   const entriesOf = (code: string) =>
     items.filter((item) => (item.groupCode ?? "") === code).sort((a, b) => (a.slot ?? 99) - (b.slot ?? 99))
@@ -54,9 +57,9 @@ export function ItemsTab({ index }: { index: GuideIndex }) {
     return short.charAt(0).toLocaleUpperCase("vi") + short.slice(1)
   }
   return (
-    <section className="guide-tab-body" aria-label="Trang bị">
+    <section className="guide-tab-body" aria-label={text("Trang bị", "Equipment")}>
       <div className="guide-toolbar">
-        <div className="mode-chip-row" role="group" aria-label="Nhóm trang bị">
+        <div className="mode-chip-row" role="group" aria-label={text("Nhóm trang bị", "Equipment groups")}>
           {groups.map((group) => (
             <button
               key={group.code}
@@ -110,7 +113,12 @@ export function ItemsTab({ index }: { index: GuideIndex }) {
                   })}
                 </ul>
               ) : (
-                <p className="mode-meta">Chưa có trang bị nào của nhóm này trong bản đã thu thập.</p>
+                <p className="mode-meta">
+                  {text(
+                    "Chưa có trang bị nào của nhóm này trong bản đã thu thập.",
+                    "No items of this group in the collected edition yet.",
+                  )}
+                </p>
               )}
             </section>
           )

@@ -21,12 +21,13 @@ import { CompetitionLogo, StatusBadge } from "./competition-card"
 import {
   bracketLanes,
   champion,
-  competitionTypeLabels,
+  codeName,
+  COMPETITION_TYPE_NAMES,
   matchStrip,
   playedOrder,
-  stageFormatLabels,
-  tierLabels,
-  venueModeLabels,
+  STAGE_FORMAT_NAMES,
+  TIER_NAMES,
+  VENUE_MODE_NAMES,
 } from "./competition-model"
 import { CompetitionSchedule } from "./competition-schedule"
 import { MatchCard } from "./match-card"
@@ -97,7 +98,7 @@ export function PublicCompetitionPage() {
   const matches = competitionMatches([view])
   const won = champion(tournament, teams)
   const status = competitionStatus(tournament)
-  const kicker = [tournament.region, tournament.tier && tierLabels[tournament.tier]].filter(Boolean).join(" · ")
+  const kicker = [tournament.region, codeName(TIER_NAMES, tournament.tier, text)].filter(Boolean).join(" · ")
   return (
     <StreamShell>
       <title>{`${tournament.name} — AOV Stream`}</title>
@@ -330,7 +331,7 @@ function Standings({ view, matches }: { view: CompetitionView; matches: Competit
         </Block>
       ))}
       {knockouts.map((stage) => (
-        <Block key={stage.code} title={stage.name} note={stageFormatLabels[stage.format]}>
+        <Block key={stage.code} title={stage.name} note={codeName(STAGE_FORMAT_NAMES, stage.format, text)}>
           <Bracket stage={stage} matches={matches} />
         </Block>
       ))}
@@ -588,8 +589,8 @@ function Facts({ view }: { view: CompetitionView }) {
     [
       "Hình thức",
       [
-        tournament.competitionType && competitionTypeLabels[tournament.competitionType],
-        tournament.venueMode && venueModeLabels[tournament.venueMode],
+        codeName(COMPETITION_TYPE_NAMES, tournament.competitionType, text),
+        codeName(VENUE_MODE_NAMES, tournament.venueMode, text),
       ]
         .filter(Boolean)
         .join(" · "),
@@ -659,7 +660,7 @@ function Format({ view }: { view: CompetitionView }) {
             <strong>{stage.name}</strong>
             <span>
               {[
-                stageFormatLabels[stage.format] ?? "Lịch riêng",
+                codeName(STAGE_FORMAT_NAMES, stage.format, text) ?? text("Lịch riêng", "Custom schedule"),
                 `BO${stage.bestOf}`,
                 stage.format === "ROUND_ROBIN" && stage.legs > 1 && `${stage.legs} lượt`,
                 stage.format === "ROUND_ROBIN" && stage.advance > 0 && `${stage.advance} đội đi tiếp`,

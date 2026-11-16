@@ -136,10 +136,12 @@ export function CompetitionDirectory() {
   )
   const scheduleSelects = Number(regions.length > 1) + Number(years.length > 1)
   const scheduleFiltered = region !== "all" || year !== "all" || !!needle
+  const statusName = (competitionStatusLabels()[status as CompetitionStatus] ?? status).toLowerCase()
+  const stageName =
+    items.flatMap((entry) => entry.content.plan.stages).find((item) => item.code === stage)?.name ?? stage
   const linked = [
-    status !== "all" && `giải ${(competitionStatusLabels()[status as CompetitionStatus] ?? status).toLowerCase()}`,
-    stage &&
-      `giai đoạn ${items.flatMap((entry) => entry.content.plan.stages).find((item) => item.code === stage)?.name ?? stage}`,
+    status !== "all" && text(`giải ${statusName}`, `${statusName} tournaments`),
+    stage && text(`giai đoạn ${stageName}`, `stage ${stageName}`),
     day && scheduleDayLabel(day, languageTag),
   ].filter((label): label is string => !!label)
   const clearLinked = () =>

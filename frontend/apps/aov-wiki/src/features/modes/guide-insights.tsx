@@ -1,6 +1,7 @@
 import { useContext, type ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { ModeHeading } from "./mode-ui"
 import { insightsQuery } from "./mode-api"
 import { GuideLinks, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
@@ -9,6 +10,7 @@ type Row = { key: string; label: ReactNode; value: number }
 
 /** Plain bars, the longest row full width, each with its exact number at the end. */
 function Bars({ rows, label }: { rows: Row[]; label: string }) {
+  const { locale } = useWikiContext()
   const max = Math.max(1, ...rows.map((row) => row.value))
   return (
     <ol className="insight-bars" aria-label={label}>
@@ -18,7 +20,7 @@ function Bars({ rows, label }: { rows: Row[]; label: string }) {
           <span className="insight-track" aria-hidden="true">
             <i style={{ width: `${(row.value / max) * 100}%` }} />
           </span>
-          <b>{row.value.toLocaleString("vi-VN")}</b>
+          <b>{row.value.toLocaleString(locale)}</b>
         </li>
       ))}
     </ol>
@@ -27,8 +29,9 @@ function Bars({ rows, label }: { rows: Row[]; label: string }) {
 
 /** Rows of empty bars while the numbers load, so the section keeps its shape. */
 function BarsLoading({ rows }: { rows: number }) {
+  const { locale } = useWikiContext()
   return (
-    <ol className="insight-bars" role="status" aria-label="Đang tải thống kê">
+    <ol className="insight-bars" role="status" aria-label={wikiText(locale, "Đang tải thống kê", "Loading statistics")}>
       {Array.from({ length: rows }, (_, at) => (
         <li key={at} className="insight-bar" data-loading="">
           <span className="insight-label" />
@@ -50,6 +53,8 @@ export function InsightsTab({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const insights = useQuery(insightsQuery(code))
   const links = useContext(GuideLinks)
   const { units, traits } = index.content
@@ -90,29 +95,39 @@ export function InsightsTab({
   }
   const failed = (
     <div className="guide-state" role="alert">
-      <p>Chưa tải được thống kê đội hình.</p>
+      <p>{text("Chưa tải được thống kê đội hình.", "Lineup statistics could not be loaded.")}</p>
       <button type="button" className="mode-chip" onClick={() => void insights.refetch()}>
-        Thử lại
+        {text("Thử lại", "Retry")}
       </button>
     </div>
   )
   const editorial = insights.data ? insights.data.lineupCount - insights.data.communityLineupCount : 0
+  const community = insights.data?.communityLineupCount ?? 0
 
   return (
     <div className="guide-tab-body">
       <p className="insights-lead">
         {insights.data
-          ? `Tính từ ${editorial} đội hình đề xuất và ${insights.data.communityLineupCount} đội hình cộng đồng. `
+          ? text(
+              `Tính từ ${editorial} đội hình đề xuất và ${community} đội hình cộng đồng. `,
+              `Counted from ${editorial} recommended and ${community} community lineups. `,
+            )
           : ""}
-        Đây là xu hướng xếp đội hình của biên tập viên và người đọc, không phải tỷ lệ thắng.
+        {text(
+          "Đây là xu hướng xếp đội hình của biên tập viên và người đọc, không phải tỷ lệ thắng.",
+          "This shows how editors and readers build lineups, not win rates.",
+        )}
       </p>
       {/* Phones read the sections in this order; wide screens place them in two columns (see guide.css). */}
       <div className="insights">
         <section className="mode-section" data-area="units" aria-labelledby="insight-units">
           <ModeHeading
             id="insight-units"
-            title="Quân cờ được dùng nhiều"
-            note="Điểm = số lần có trong đội hình × (1 + lượt thích)."
+            title={text("Quân cờ được dùng nhiều", "Most used units")}
+            note={text(
+              "Điểm = số lần có trong đội hình × (1 + lượt thích).",
+              "Score = appearances in lineups × (1 + likes).",
+            )}
           />
           {insights.isPending ? (
             <BarsLoading rows={12} />
@@ -120,7 +135,7 @@ export function InsightsTab({
             failed
           ) : (
             <Bars
-              label="Quân cờ được dùng nhiều"
+              label={text("Quân cờ được dùng nhiều", "Most used units")}
               rows={insights.data.units.slice(0, 12).map((row) => ({
                 key: row.code,
                 label: unitLabel(row.code),
@@ -132,8 +147,11 @@ export function InsightsTab({
         <section className="mode-section" data-area="traits" aria-labelledby="insight-traits">
           <ModeHeading
             id="insight-traits"
-            title="Phe & Nghề hay kích hoạt"
-            note="Số đội hình đạt ít nhất một mốc của Phe/Nghề."
+            title={text("Phe & Nghề hay kích hoạt", "Most activated Factions & Classes")}
+            note={text(
+              "Số đội hình đạt ít nhất một mốc của Phe/Nghề.",
+              "Lineups that reach at least one tier of the Faction/Class.",
+            )}
           />
           {insights.isPending ? (
             <BarsLoading rows={10} />
@@ -141,7 +159,7 @@ export function InsightsTab({
             failed
           ) : (
             <Bars
-              label="Phe & Nghề hay kích hoạt"
+              label={text("Phe & Nghề hay kích hoạt", "Most activated Factions & Classes")}
               rows={insights.data.traits.slice(0, 10).map((row) => ({
                 key: row.code,
                 label: traitLabel(row.code),
@@ -151,18 +169,22 @@ export function InsightsTab({
           )}
         </section>
         <section className="mode-section" data-area="costs" aria-labelledby="insight-costs">
-          <ModeHeading id="insight-costs" title="Số quân cờ theo giá" />
+          <ModeHeading id="insight-costs" title={text("Số quân cờ theo giá", "Number of units by cost")} />
           <Bars
-            label="Số quân cờ theo giá"
+            label={text("Số quân cờ theo giá", "Number of units by cost")}
             rows={[...byCost.entries()]
               .sort((a, b) => a[0] - b[0])
-              .map(([cost, count]) => ({ key: String(cost), label: `${cost} vàng`, value: count }))}
+              .map(([cost, count]) => ({
+                key: String(cost),
+                label: text(`${cost} vàng`, `${cost} gold`),
+                value: count,
+              }))}
           />
         </section>
         <section className="mode-section" data-area="health" aria-labelledby="insight-health">
-          <ModeHeading id="insight-health" title="Máu cao nhất ở 3 sao" />
+          <ModeHeading id="insight-health" title={text("Máu cao nhất ở 3 sao", "Highest HP at 3 stars")} />
           <Bars
-            label="Máu cao nhất ở 3 sao"
+            label={text("Máu cao nhất ở 3 sao", "Highest HP at 3 stars")}
             rows={leaders("health").map((unit) => ({
               key: unit.code,
               label: unitLabel(unit.code),
@@ -171,9 +193,12 @@ export function InsightsTab({
           />
         </section>
         <section className="mode-section" data-area="attack" aria-labelledby="insight-attack">
-          <ModeHeading id="insight-attack" title="Công vật lý cao nhất ở 3 sao" />
+          <ModeHeading
+            id="insight-attack"
+            title={text("Công vật lý cao nhất ở 3 sao", "Highest Attack Damage at 3 stars")}
+          />
           <Bars
-            label="Công vật lý cao nhất ở 3 sao"
+            label={text("Công vật lý cao nhất ở 3 sao", "Highest Attack Damage at 3 stars")}
             rows={leaders("physicalAttack").map((unit) => ({
               key: unit.code,
               label: unitLabel(unit.code),
@@ -184,11 +209,14 @@ export function InsightsTab({
         <section className="mode-section" data-area="members" aria-labelledby="insight-members">
           <ModeHeading
             id="insight-members"
-            title="Phe & Nghề theo số quân cờ"
-            note="Bao nhiêu quân cờ mang mỗi Phe/Nghề trong bản Bách khoa."
+            title={text("Phe & Nghề theo số quân cờ", "Factions & Classes by number of units")}
+            note={text(
+              "Bao nhiêu quân cờ mang mỗi Phe/Nghề trong bản Bách khoa.",
+              "How many units carry each Faction/Class in the Encyclopedia edition.",
+            )}
           />
           <Bars
-            label="Phe & Nghề theo số quân cờ"
+            label={text("Phe & Nghề theo số quân cờ", "Factions & Classes by number of units")}
             rows={[...traits]
               .map((trait) => ({
                 key: trait.code,

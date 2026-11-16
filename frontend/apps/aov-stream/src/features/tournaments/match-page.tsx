@@ -77,7 +77,7 @@ export function MatchPage() {
   const loading = id ? competition.isPending : games.isPending
   const tournamentId = id || first?.series.tournamentId
   const competitionName = entry?.competition.content.tournament.name || first?.tournament.name
-  const head = entry ? matchHeadOf(entry, languageTag) : first ? seriesHeadOf(first) : null
+  const head = entry ? matchHeadOf(entry, languageTag) : first ? seriesHeadOf(first, languageTag) : null
   const status = entry ? matchStatus(entry) : null
   const series = entry ? entry.competition.content.series[matchSeriesId(entry) || ""] : first?.series
   const note = plainNote(series?.note || "")

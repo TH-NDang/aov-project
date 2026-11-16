@@ -132,8 +132,12 @@ export type SeriesTeam = {
   lost: boolean
 }
 
-/** Both teams of the series a game belongs to, with the series score and its winner once the score decides it. */
-export function seriesTeams(game: Pick<PublishedGame, "series" | "teams">): [SeriesTeam, SeriesTeam] {
+/**
+ * Both teams of the series a game belongs to, with the series score and its winner once the score decides it. A team
+ * the data does not name reads in `locale`.
+ */
+export function seriesTeams(game: Pick<PublishedGame, "series" | "teams">, locale = "vi-VN"): [SeriesTeam, SeriesTeam] {
+  const english = locale.startsWith("en")
   const { teamAId, teamBId, bestOf, result } = game.series
   const a = result?.scoreA ?? null
   const b = result?.scoreB ?? null
@@ -144,8 +148,8 @@ export function seriesTeams(game: Pick<PublishedGame, "series" | "teams">): [Ser
     const ahead = decided && score === Math.max(a!, b!)
     return {
       teamId,
-      name: team?.name || "Đội chưa có thông tin",
-      shortName: team?.shortName || team?.name || "Đội",
+      name: team?.name || (english ? "No team information yet" : "Đội chưa có thông tin"),
+      shortName: team?.shortName || team?.name || (english ? "Team" : "Đội"),
       logoUrl: team?.logoUrl,
       score,
       won: ahead,

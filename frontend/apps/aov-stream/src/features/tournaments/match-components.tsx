@@ -158,11 +158,11 @@ export function matchHeadOf(entry: CompetitionMatch, locale: string): Head {
 }
 
 /** The same head read from a published game, which carries its series, for a match opened without its competition. */
-export function seriesHeadOf(game: PublishedGame): Head {
+export function seriesHeadOf(game: PublishedGame, locale = "vi-VN"): Head {
   return {
     tint: game.tournament.name,
     kicker: [seriesRound(game.series.name), `BO${game.series.bestOf}`].filter(Boolean).join(" · "),
-    teams: seriesTeams(game),
+    teams: seriesTeams(game, locale),
   }
 }
 

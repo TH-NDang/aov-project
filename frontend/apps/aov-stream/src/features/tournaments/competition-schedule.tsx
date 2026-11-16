@@ -96,7 +96,7 @@ export function ScheduleNote({ filters, onClear }: { filters: string[]; onClear:
   if (!filters.length) return null
   return (
     <p className="tn-schedule-note">
-      <span>Đang xem {filters.join(", ")}.</span>
+      <span>{text(`Đang xem ${filters.join(", ")}.`, `Showing ${filters.join(", ")}.`)}</span>
       <button type="button" onClick={onClear}>
         {text("Xem tất cả", "See all")}
       </button>

@@ -1,40 +1,48 @@
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { GoldIcon } from "./gold-icon"
 import { ModeHeading } from "./mode-ui"
 import type { GuideIndex } from "./guide-ui"
 
 /** A reward in gold reads with the game's coin; any other reward stays as the editor wrote it. */
-function Reward({ text }: { text?: string | null }) {
-  if (!text)
+function Reward({ text: reward }: { text?: string | null }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  if (!reward)
     return (
       <span className="quest-reward" data-missing="">
-        Chưa ghi phần thưởng
+        {text("Chưa ghi phần thưởng", "Reward not recorded yet")}
       </span>
     )
-  const gold = /^(\d+)\s*vàng$/iu.exec(text.trim())
+  const gold = /^(\d+)\s*vàng$/iu.exec(reward.trim())
   return (
     <span className="quest-reward">
       {gold ? (
         <>
           <GoldIcon size={16} />
-          {gold[1]} vàng
+          {text(`${gold[1]} vàng`, `${gold[1]} gold`)}
         </>
       ) : (
-        text
+        reward
       )}
     </span>
   )
 }
 
 export function QuestsTab({ index }: { index: GuideIndex }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const { quests } = index.content
   return (
-    <section className="guide-tab-body" aria-label="Nhiệm vụ">
+    <section className="guide-tab-body" aria-label={text("Nhiệm vụ", "Quests")}>
       <section className="mode-section" aria-labelledby="guide-quests">
         <ModeHeading
           id="guide-quests"
-          title="Nhiệm vụ"
+          title={text("Nhiệm vụ", "Quests")}
           count={quests.length}
-          note="Nhiệm vụ trong trận và phần thưởng khi hoàn thành."
+          note={text(
+            "Nhiệm vụ trong trận và phần thưởng khi hoàn thành.",
+            "In-match quests and the rewards for completing them.",
+          )}
         />
         {quests.length ? (
           <ol className="guide-entries" data-columns="2">
@@ -47,7 +55,12 @@ export function QuestsTab({ index }: { index: GuideIndex }) {
             ))}
           </ol>
         ) : (
-          <p className="mode-meta">Bản Bách khoa đã thu thập chưa có nhiệm vụ nào.</p>
+          <p className="mode-meta">
+            {text(
+              "Bản Bách khoa đã thu thập chưa có nhiệm vụ nào.",
+              "The collected edition of the Encyclopedia has no quests yet.",
+            )}
+          </p>
         )}
       </section>
     </section>

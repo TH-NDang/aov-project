@@ -110,7 +110,7 @@ function PublishedGameView({
   const { text, languageTag } = useStreamLocale()
   const { number, durationSeconds, seriesId, sourceUrl, note } = game.content
   const scope = game.resolvedContext
-  const head = seriesHeadOf(game)
+  const head = seriesHeadOf(game, languageTag)
   const tabs = siblings.length ? siblings : [game]
   // The patch the game was played on, named by its date where its code is one (the season in front of it carries the
   // year), with its title on hover. The season gives way first where the head is narrow.

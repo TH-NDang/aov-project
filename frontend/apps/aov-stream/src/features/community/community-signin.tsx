@@ -19,22 +19,27 @@ export function useSignedInAction() {
   return (why: string, action: () => void) => (session.status === "authenticated" ? action() : show(why))
 }
 
-const benefits: [StreamIconName, string][] = [
-  ["bell", "Theo dõi trang và nhận thông báo khi có bài mới"],
-  ["message", "Thích, bình luận và thảo luận cùng cộng đồng"],
-  ["shield", "Quản lý trang của đội hoặc tuyển thủ bạn đại diện"],
+const benefits: [StreamIconName, string, string][] = [
+  ["bell", "Theo dõi trang và nhận thông báo khi có bài mới", "Follow pages and get notified of new posts"],
+  ["message", "Thích, bình luận và thảo luận cùng cộng đồng", "Like, comment and talk with the community"],
+  [
+    "shield",
+    "Quản lý trang của đội hoặc tuyển thủ bạn đại diện",
+    "Manage the page of the team or player you represent",
+  ],
 ]
 
 /** What an account gives a visitor, in three short lines; shared by the sign-in dialog and the account screens. */
 export function SignInBenefits() {
+  const { text } = useStreamLocale()
   return (
     <ul className="cp-benefits">
-      {benefits.map(([icon, text]) => (
+      {benefits.map(([icon, vi, en]) => (
         <li key={icon}>
           <span aria-hidden="true">
             <StreamIcon name={icon} size={16} />
           </span>
-          {text}
+          {text(vi, en)}
         </li>
       ))}
     </ul>
