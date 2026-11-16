@@ -1,5 +1,7 @@
-package com.wikiaov.gamemode.internal.domain;
+package com.wikiaov.gamemode.internal.catalog.domain;
 
+import com.wikiaov.gamemode.internal.domain.ContentChecks;
+import com.wikiaov.gamemode.internal.domain.GameModeContent;
 import com.wikiaov.gamemode.internal.domain.GameModeContent.RuleSection;
 import com.wikiaov.gamemode.internal.domain.GameModeContent.Source;
 import com.wikiaov.platform.ApiFieldError;
@@ -65,7 +67,7 @@ public final class GameModeContentRules {
         return ids;
     }
 
-    static void rules(ContentChecks checks, String path, List<RuleSection> rules, int max) {
+    public static void rules(ContentChecks checks, String path, List<RuleSection> rules, int max) {
         checks.size(path, rules, max);
         for (int i = 0; i < rules.size(); i++) {
             var rule = rules.get(i);
@@ -80,7 +82,7 @@ public final class GameModeContentRules {
         }
     }
 
-    static void sources(ContentChecks checks, String path, List<Source> sources) {
+    public static void sources(ContentChecks checks, String path, List<Source> sources) {
         checks.size(path, sources, 20);
         for (int i = 0; i < sources.size(); i++) {
             var source = sources.get(i);

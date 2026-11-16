@@ -1,10 +1,13 @@
-package com.wikiaov.gamemode.internal.domain;
+package com.wikiaov.gamemode.internal.guide.domain;
 
+import com.wikiaov.gamemode.internal.catalog.domain.GameModeContentRules;
+import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.Lineup;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupStage;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.Unit;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.UnitStats;
+import com.wikiaov.gamemode.internal.domain.ContentChecks;
 import com.wikiaov.platform.ApiFieldError;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -302,7 +305,7 @@ public final class AutoChessContentRules {
     }
 
     /** Shared by editorial and community lineups: known units once each, known items, valid rows and free cells. */
-    static void lineupUnits(ContentChecks checks, String at, List<LineupUnit> lineupUnits, Set<String> units,
+    public static void lineupUnits(ContentChecks checks, String at, List<LineupUnit> lineupUnits, Set<String> units,
             Set<String> items) {
         checks.size(at, lineupUnits, MAX_LINEUP_UNITS);
         var codes = lineupUnits.stream().map(LineupUnit::unitCode).collect(Collectors.toList());

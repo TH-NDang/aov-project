@@ -1,10 +1,19 @@
-import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
+import {
+  currentTimeZone,
+  DATE_TIME_FORMAT,
+  formatCalendarDate,
+  formatInZone,
+  isCalendarDate,
+} from "@aov/ui/lib/time-zone"
 
+/**
+ * A schedule date as text, for labels and tooltips that cannot hold `LocalTime`. A calendar date stays as written, a
+ * moment reads in the reader's zone, and both follow the reader's date format.
+ */
 export function dateLabel(value: string | null | undefined, locale = "vi-VN") {
   if (!value) return "—"
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value))
-    return new Date(`${value}T00:00:00Z`).toLocaleDateString(locale, { dateStyle: "medium", timeZone: "UTC" })
-  return formatInZone(value, currentTimeZone(), { dateStyle: "medium", timeStyle: "short" }, locale) || "—"
+  if (isCalendarDate(value)) return formatCalendarDate(value, undefined, locale)
+  return formatInZone(value, currentTimeZone(), DATE_TIME_FORMAT, locale) || "—"
 }
 
 export function scheduleDate(date: string, time: string) {

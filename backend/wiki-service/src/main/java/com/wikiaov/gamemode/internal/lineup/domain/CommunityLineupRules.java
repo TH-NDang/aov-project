@@ -1,6 +1,9 @@
-package com.wikiaov.gamemode.internal.domain;
+package com.wikiaov.gamemode.internal.lineup.domain;
 
+import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
+import com.wikiaov.gamemode.internal.domain.ContentChecks;
+import com.wikiaov.gamemode.internal.guide.domain.AutoChessContentRules;
 import com.wikiaov.platform.ApiFieldError;
 import java.util.List;
 import java.util.Set;

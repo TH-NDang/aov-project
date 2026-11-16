@@ -1,7 +1,8 @@
-package com.wikiaov.gamemode.internal.domain;
+package com.wikiaov.gamemode.internal.catalog.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.wikiaov.gamemode.internal.domain.GameModeContent;
 import com.wikiaov.gamemode.internal.domain.GameModeContent.Availability;
 import com.wikiaov.gamemode.internal.domain.GameModeContent.Duration;
 import com.wikiaov.platform.ApiFieldError;

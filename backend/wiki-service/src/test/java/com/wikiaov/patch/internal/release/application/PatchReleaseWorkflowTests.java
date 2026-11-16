@@ -24,6 +24,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -158,6 +159,19 @@ class PatchReleaseWorkflowTests {
         var input = new Release(regionId, NOW, null, "ftp://invalid", null, null);
 
         assertInvalid(() -> workflow.schedule(variantId, input), "Source URL must use HTTP or HTTPS.");
+
+        verify(releases, never()).lockAndReadVariant(any());
+        verifyNoInteractions(audit);
+    }
+
+    @Test
+    void rejectsSourceUrlContainingAnyWhitespace() {
+        prepareScheduling(seasonId);
+
+        for (String url : List.of("https://example.com/a b", "https://example.com/a\tb", "https://example.com/a\nb")) {
+            var input = new Release(regionId, NOW, null, url, null, null);
+            assertInvalid(() -> workflow.schedule(variantId, input), "Source URL must use HTTP or HTTPS.");
+        }
 
         verify(releases, never()).lockAndReadVariant(any());
         verifyNoInteractions(audit);

@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { Check, ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { backendRequest } from "@/app/auth/session"
 import { InfiniteScroll } from "@/components/infinite-scroll"
 import { HeroAsset } from "../publishing/hero-content"
@@ -45,7 +46,7 @@ export function SkinBadgePicker({
     queryFn: ({ pageParam, signal }) => groupsApi.groups(locale, q, pageParam, signal),
     enabled: open,
     staleTime: 60000,
-    getNextPageParam: (page) => ((page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
   })
   const current = selected.data?.items.find((badge) => badge.code === value)
   const items = groups.data?.pages.flatMap((page) => page.items) ?? []
@@ -172,7 +173,7 @@ function PickerGroup({
     queryFn: ({ pageParam, signal }) => api.badges(group.id, "", locale, q, pageParam, signal),
     enabled: active,
     staleTime: 60000,
-    getNextPageParam: (page) => ((page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
   })
   const items = badges.data?.pages.flatMap((page) => page.items) ?? []
   return (

@@ -2,8 +2,8 @@ package com.wikiaov.gamemode.internal.application;
 
 import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
-import com.wikiaov.gamemode.internal.domain.AutoChessContentRules;
 import com.wikiaov.gamemode.internal.domain.GameModeContent;
+import com.wikiaov.gamemode.internal.guide.domain.AutoChessContentRules;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

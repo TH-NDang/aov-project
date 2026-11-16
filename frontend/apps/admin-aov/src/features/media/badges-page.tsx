@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,7 +84,7 @@ export function BadgesPage({
     queryFn: ({ pageParam, signal }) => api.groups(locale, context.q, pageParam, signal),
     enabled: !!context.rulesetId,
     staleTime: 60000,
-    getNextPageParam: (page) => ((page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
   })
   const data = useMemo(() => groups.data?.pages.flatMap((page) => page.items) ?? [], [groups.data])
   function createBadge(groupId: string | null) {
@@ -296,7 +297,7 @@ function BadgeGroupRows({
     queryFn: ({ pageParam, signal }) => api.badges(group.id, rulesetId, locale, q, pageParam, signal),
     enabled: active && !!rulesetId,
     staleTime: 60000,
-    getNextPageParam: (page) => ((page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
   })
   const data = useMemo(() => badges.data?.pages.flatMap((page) => page.items) ?? [], [badges.data])
   const columns = useMemo(
@@ -509,7 +510,7 @@ function BadgeSkins({
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => api.badgeSkins(id, rulesetId, locale, pageParam, signal),
     enabled: active && !!rulesetId,
-    getNextPageParam: (page) => ((page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
   })
   return (
     <div className="space-y-3">

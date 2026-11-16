@@ -11,21 +11,16 @@ import com.wikiaov.platform.ApiException;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import org.junit.jupiter.api.*;
-import org.springframework.security.access.AccessDeniedException;
 import tools.jackson.databind.json.JsonMapper;
 
 class HeroImportNotificationTest {
     private Actor actor;
     private HeroImportJob job;
-    private int reads;
     private int writes;
     private final HeroImportJobRepository repository = (HeroImportJobRepository) Proxy.newProxyInstance(
             HeroImportJobRepository.class.getClassLoader(), new Class<?>[] {HeroImportJobRepository.class},
             (proxy, method, args) -> switch (method.getName()) {
-                case "findById" -> {
-                    reads++;
-                    yield job.getId().equals(args[0]) ? Optional.of(job) : Optional.empty();
-                }
+                case "findById" -> job.getId().equals(args[0]) ? Optional.of(job) : Optional.empty();
                 case "dismissNotification" -> {
                     writes++;
                     assertThat(args).containsExactly(job.getId(), job.getOwnerIssuer(), job.getOwnerSubject());
@@ -75,13 +70,7 @@ class HeroImportNotificationTest {
         assertThat(writes).isZero();
     }
 
-    @Test
-    void capabilityIsRequiredBeforeAccessingAJob() {
-        actor = new Actor("issuer", "editor", ActorType.HUMAN, null, Set.of());
-        assertThatThrownBy(() -> jobs.dismissNotification(job.getId())).isInstanceOf(AccessDeniedException.class);
-        assertThat(reads).isZero();
-        assertThat(writes).isZero();
-    }
+    // The capability check lives on the facade proxy now; HeroImportAuthorizationTest covers it.
 
     @Test
     void issuerAndSubjectMustBothMatch() {

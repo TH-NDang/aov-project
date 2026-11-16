@@ -6,12 +6,10 @@ import com.wikiaov.hero.internal.importing.application.HeroImportJobs;
 import com.wikiaov.platform.ApiPaths;
 import java.util.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = ApiPaths.ADMIN + "/heroes/import/jobs", version = "1")
-@PreAuthorize("hasAuthority('hero:write')")
 public class HeroImportJobController implements HeroImportJobApi {
     private final HeroImportJobs jobs;
 

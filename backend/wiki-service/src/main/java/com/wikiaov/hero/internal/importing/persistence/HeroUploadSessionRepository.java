@@ -1,13 +1,15 @@
 package com.wikiaov.hero.internal.importing.persistence;
 
 import com.wikiaov.hero.internal.importing.persistence.entity.HeroUploadSession;
+import jakarta.persistence.LockModeType;
 import java.util.*;
 import org.springframework.data.jpa.repository.*;
 
 public interface HeroUploadSessionRepository extends JpaRepository<HeroUploadSession, UUID> {
     List<HeroUploadSession> findByOwnerIssuerAndOwnerSubjectOrderByUpdatedAtDesc(String issuer, String subject);
 
-    @Query(value = "SELECT * FROM hero.upload_session WHERE id=:id FOR UPDATE", nativeQuery = true)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM HeroUploadSession s WHERE s.id = :id")
     Optional<HeroUploadSession> lock(UUID id);
 
     @Modifying

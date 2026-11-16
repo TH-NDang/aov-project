@@ -6,6 +6,7 @@ import { Page, PageHeader } from "@/components/page-header"
 import { SearchField } from "@/components/search-field"
 import { InfiniteScroll } from "@/components/infinite-scroll"
 import { Button } from "@aov/ui/components/button"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { ProfileForm } from "./profile-form"
 import { UsersList, UsersListSkeleton } from "./users-list"
 import { listProfiles, profileError, selfProfile, userKeys } from "./user-api"
@@ -61,10 +62,7 @@ export function UsersPage() {
     queryKey: [...userKeys.all, "infinite-list", actor?.issuer, actor?.subject, term],
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => listProfiles(term, pageParam, signal),
-    getNextPageParam: (last) =>
-      last.items.length > 0 && last.size > 0 && (last.page + 1) * last.size < last.totalElements
-        ? last.page + 1
-        : undefined,
+    getNextPageParam: nextPageOf,
     enabled: canRead,
   })
   const profiles = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data])

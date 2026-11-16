@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { Languages, LoaderCircle, Plus } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { backendRequest } from "@/app/auth/session"
 import { useIsWide } from "@/hooks/use-media-query"
 import { errorMessage } from "@/lib/api/errors"
@@ -41,7 +42,7 @@ export function BadgeGroupSelect({
     queryKey: badgeGroupKeys.list(locale, ""),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => api.groups(locale, "", pageParam, signal),
-    getNextPageParam: (page) => ((page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
     staleTime: 60000,
   })
   const items = groups.data?.pages.flatMap((page) => page.items).filter((group) => group.id) ?? []

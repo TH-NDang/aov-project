@@ -1,5 +1,6 @@
-package com.wikiaov.gamemode.internal.domain;
+package com.wikiaov.gamemode.internal.lineup.domain;
 
+import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;

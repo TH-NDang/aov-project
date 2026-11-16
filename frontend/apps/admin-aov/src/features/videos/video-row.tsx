@@ -1,19 +1,10 @@
 import { useState, type ReactNode } from "react"
 import { ArrowDown, ArrowUp, Check, EyeOff, ExternalLink, Pencil, Play, Trash2 } from "lucide-react"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@aov/ui/components/alert-dialog"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { useSession } from "@/app/auth/auth-gate"
+import { confirmAction } from "@/components/confirm-dialog"
 import { videoPlayback, videoProviderName, videoThumbnail, videoWatchUrl } from "@aov/ui/lib/video-playback"
 import { capabilityFor, formatClock, PURPOSE_LABELS, STATUS_LABELS, type AdminVideo } from "./video-model"
 import { VideoPlayerDialog } from "./video-player-dialog"
@@ -44,7 +35,6 @@ export function VideoRow({
   const canPublish = capabilities.includes(capabilityFor(video.subjectKind, "publish"))
   // Taking a video off the wiki is a publishing decision too, so it needs the same capability.
   const canChange = canWrite && (video.status !== "PUBLISHED" || canPublish)
-  const [confirming, setConfirming] = useState(false)
   const [watching, setWatching] = useState(false)
   const thumbnail = videoThumbnail(video, "mq")
   const playable = !!videoPlayback(video, window.location.hostname)
@@ -172,27 +162,22 @@ export function VideoRow({
           aria-label="Xóa video"
           title="Xóa video"
           disabled={busy || !canChange}
-          onClick={() => setConfirming(true)}
+          onClick={async () => {
+            const accepted = await confirmAction({
+              title: "Xóa video này?",
+              description:
+                video.origin === "IMPORT"
+                  ? "Video từ dữ liệu thu thập sẽ quay lại ở lần nhập sau. Nếu không muốn dùng nữa, hãy chọn Ẩn."
+                  : "Video sẽ biến mất khỏi wiki và không khôi phục được.",
+              confirmLabel: "Xóa",
+              cancelLabel: "Giữ lại",
+            })
+            if (accepted) onDelete()
+          }}
         >
           <Trash2 className="size-4" />
         </Button>
       </div>
-      <AlertDialog open={confirming} onOpenChange={setConfirming}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xóa video này?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {video.origin === "IMPORT"
-                ? "Video từ dữ liệu thu thập sẽ quay lại ở lần nhập sau. Nếu không muốn dùng nữa, hãy chọn Ẩn."
-                : "Video sẽ biến mất khỏi wiki và không khôi phục được."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Giữ lại</AlertDialogCancel>
-            <AlertDialogAction onClick={onDelete}>Xóa</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </li>
   )
 }

@@ -15,12 +15,12 @@ import com.wikiaov.gamemode.internal.application.response.GameModeViews.CardList
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.GuideState;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicMode;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.Revision;
+import com.wikiaov.gamemode.internal.catalog.domain.GameModeContentRules;
 import com.wikiaov.gamemode.internal.catalog.persistence.GameModeRepository;
 import com.wikiaov.gamemode.internal.catalog.persistence.GameModeRevisionRepository;
 import com.wikiaov.gamemode.internal.catalog.persistence.entity.GameMode;
 import com.wikiaov.gamemode.internal.catalog.persistence.entity.GameModeRevision;
 import com.wikiaov.gamemode.internal.domain.GameModeContent;
-import com.wikiaov.gamemode.internal.domain.GameModeContentRules;
 import com.wikiaov.gamemode.internal.domain.RevisionRecord;
 import com.wikiaov.gamemode.internal.guide.persistence.AutoChessRevisionRepository;
 import com.wikiaov.media.MediaSemanticType;
