@@ -33,7 +33,8 @@ Skills: `{skills:[{skillKey,kind,formKey?,displayOrder,iconAssetId?,stateIcons?,
 translations:[{locale,name,description}],effects:[]}]}`. `stateIcons` là `[{assetId,label}]`, tối đa 10 mỗi
 kỹ năng, asset semantic `HERO_SKILL_ICON`, nhãn 1–64 ký tự; nhãn không trùng (không phân biệt hoa thường), asset
 không trùng nhau và không trùng `iconAssetId`, sai trả 422 `HERO_INVALID_CONTENT`. Bỏ trống nghĩa là danh sách rỗng;
-đọc luôn trả mảng.
+đọc luôn trả mảng. Đọc Skills còn có `traits` và đọc Profile có `strengths`, `weaknesses`, `counterTips` theo locale
+(ADR-029); PUT Skills/Profile giữ nguyên chúng, chỉ endpoint riêng ở mục Đánh giá tướng đổi được.
 Skins: `{skins:[{skinKey,displayOrder,artAssetId?,rarityCode?,translations:[{locale,name,description?,acquisitionNote?}]}]}`.
 Effect gồm effectType và metadata. Source gồm label, sourceUrl?, observedAt?, verificationState
 (UNVERIFIED/VERIFIED), note?. Hero media bindings nhận HEAD/PORTRAIT/SPLASH asset UUID.
@@ -3322,7 +3323,8 @@ Tướng không có lần chụp xác nhận nào trả `sources: []`. Tên và 
 
 ## Thống kê đấu hạng (ADR-025)
 
-Chỉ có API admin. Mapping dùng `ApiPaths.ADMIN` và `version="1"`. Đọc cần `catalog:read`; nhập, sửa giá trị, xác nhận,
+API admin ở mục này; người đọc xem bản chụp đã xác nhận qua `GET /heroes/{heroId}/ranking` ở mục Đánh giá tướng.
+Mapping dùng `ApiPaths.ADMIN` và `version="1"`. Đọc cần `catalog:read`; nhập, sửa giá trị, xác nhận,
 xóa cần `hero:write`. Audit `HERO_RANKING_SNAPSHOT_IMPORTED`, `HERO_RANKING_VALUE_REVIEWED`,
 `HERO_RANKING_SNAPSHOT_CONFIRMED`, `HERO_RANKING_SNAPSHOT_DELETED`. Mã lỗi thuộc `HeroErrorCode`:
 404 `HERO_RANKING_SNAPSHOT_NOT_FOUND`, 404 `HERO_RANKING_VALUE_NOT_FOUND`, 409 `HERO_RANKING_SNAPSHOT_EXISTS`,
@@ -3406,3 +3408,76 @@ Trả `{value, snapshot}` với `snapshot` là mục danh sách sau khi lưu. Ve
 **Xóa** — `expectedVersion` bắt buộc; trả 204 và xóa mọi ảnh, tướng, giá trị của bản.
 
 So sánh hai bản chụp làm ở Admin bằng hai lần đọc chi tiết, khớp theo `heroId`.
+
+## Đánh giá tướng (ADR-029)
+
+Đặc điểm nằm trong phần kỹ năng, nhận định nằm trong hồ sơ của bản nháp tướng; hai endpoint admin riêng đổi chúng,
+trả 200 với composition revision mới nhất như các section PUT. Mapping admin dùng `ApiPaths.ADMIN`, công khai dùng
+`ApiPaths.ROOT`, cùng `version="1"`. Ghi cần `hero:write`; audit `HERO_TRAITS_UPDATED`, `HERO_NOTES_UPDATED`.
+
+```http
+PUT    /api/wiki/v1/admin/heroes/{heroId}/drafts/{draftId}/traits
+PUT    /api/wiki/v1/admin/heroes/{heroId}/drafts/{draftId}/notes
+GET    /api/wiki/v1/heroes/{heroId}/ranking?region=VN&mode=RANKED_ELITE
+GET    /api/wiki/v1/hero-traits?region=VN
+```
+
+**Đặc điểm** — body `{expectedDraftVersion, traits, changeNote?}`; `traits` là danh sách đầy đủ, rỗng là xóa hết:
+
+```json
+{
+  "expectedDraftVersion": 7,
+  "traits": [
+    { "code": "HARD_CC", "skillKeys": ["skill-1-1"],
+      "translations": [{ "locale": "vi-VN", "detail": "Hào hoa: choáng 0,75 giây" }] },
+    { "code": "DASH", "skillKeys": ["skill-2-1"], "translations": [] }
+  ],
+  "changeNote": "Duyệt đặc điểm"
+}
+```
+
+Quy tắc: tối đa 32 đặc điểm; `code` thuộc 22 mã của ADR-029 (mã lạ trả 400), không trùng; `skillKeys` tối đa 20, phải
+là kỹ năng của phần kỹ năng hiện tại của bản nháp (có thể rỗng, khóa lặp lại được gộp); `translations` tối đa 30,
+locale chuẩn không trùng, `detail` 1–300 ký tự. Sai trả 422 `HERO_INVALID_CONTENT`. Server sắp đặc điểm theo thứ tự
+cố định, kỹ năng và locale theo thứ tự chữ, bỏ khoảng trắng hai đầu. Không đổi gì thì không tạo phiên bản kỹ năng mới.
+`expectedDraftVersion` cũ trả 409 `HERO_REVISION_VERSION_CONFLICT`.
+
+**Nhận định** — body `{expectedDraftVersion, locale, strengths?, weaknesses?, counterTips?, changeNote?}`; mỗi ô tối
+đa 4.000 ký tự, chữ trống hoặc bỏ trống là xóa ô đó. `locale` phải có sẵn trong hồ sơ của bản nháp, không thì 422
+`HERO_INVALID_CONTENT`.
+
+`PUT .../skills` và `PUT .../profile` (kể cả khi nhập dữ liệu) giữ đặc điểm và nhận định đang có: `traits` gửi kèm bị bỏ
+qua, khóa kỹ năng không còn trong bộ kỹ năng mới bị bỏ khỏi đặc điểm, nhận định của locale bị xóa khỏi hồ sơ mất theo.
+
+**Đọc công khai.** Phần kỹ năng đã xuất bản (hero detail, section resource) có `traits` theo thứ tự cố định:
+`[{code, skillKeys, detail, actualLocale, fallbackApplied}]`, dòng chi tiết chọn locale như tên kỹ năng; đặc điểm chưa
+có dòng chi tiết trả `detail: null`, `actualLocale: null`, `fallbackApplied: false`. Hồ sơ có `strengths`,
+`weaknesses`, `counterTips` của bản dịch đã chọn, chưa viết thì `null`.
+
+**Số liệu đấu hạng** — không cần đăng nhập; chỉ nhận `region` (mặc định `VN`, `^[A-Z]{2,16}$`) và `mode` (mặc định
+`RANKED_ELITE`, `^[A-Z][A-Z0-9_]*$`), sai trả 422 `HERO_RANKING_INVALID`, tham số lạ trả 400. Đọc bản chụp **đã xác
+nhận** mới nhất của thị trường và chế độ:
+
+```json
+{
+  "snapshot": {
+    "code": "vn-ranked-elite-20261111-0705", "regionCode": "VN", "modeCode": "RANKED_ELITE",
+    "modeLabel": "Đấu hạng (Tinh Anh trở lên)", "periodLabel": null,
+    "capturedAt": "2026-11-11T00:07:49Z", "sourceTimeZone": "Asia/Ho_Chi_Minh", "heroes": 130
+  },
+  "entry": {
+    "heroId": "…", "heroCode": "toro", "tier": "T0", "winRate": 49.42, "pickRate": 24.1, "banRate": null,
+    "figures": [{ "metric": "DAMAGE_TAKEN", "value": 32452.0, "rank": 5, "of": 128 }],
+    "counters": [{ "heroId": "…", "heroCode": "grakk" }]
+  }
+}
+```
+
+Giá trị còn chờ duyệt trả `null`; chỉ số chờ duyệt có `value` và `rank` `null`. `rank` là 1 cộng số tướng có giá trị
+lớn hơn, `of` là số tướng có giá trị của chỉ số đó. `counters` theo `COUNTER_1..3`, bỏ ô chờ duyệt. Không trả
+`readText`, ghi chú, ảnh dẫn chứng. Chưa có bản đã xác nhận thì `snapshot` và `entry` là `null`; bản không có tướng
+(hoặc id lạ) thì `entry` là `null`. Dạng của tướng (ADR-024) đọc theo id của dạng.
+
+**Tướng theo đặc điểm** — không cần đăng nhập; chỉ nhận `region` (mặc định `VN`). Trả
+`{region, traits:[{code, heroes:[{id, code}]}]}` cho cả 22 mã theo thứ tự cố định, tính từ phiên bản người đọc đang
+thấy của từng tướng trong thị trường. Liệt kê tướng thường và từng dạng; tướng chứa các dạng không có trong danh sách.
