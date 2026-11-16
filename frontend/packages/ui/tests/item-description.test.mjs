@@ -103,3 +103,57 @@ test("a heal written as a total over time is still read as healing", () => {
     assert.deepEqual(profile.effects, ["heal"], description)
   }
 })
+
+test("an English unique passive that only grants a stat reads as a stat named in English", () => {
+  const reading = parseItemDescription("Unique Passive – Pierce: +20% Armor Pierce", "en-US")
+
+  assert.deepEqual(reading.passives, [])
+  assert.deepEqual(
+    reading.stats.map((stat) => [stat.key, stat.label, stat.value, stat.percent, stat.unique, stat.note]),
+    [["armorPierce", "Armor Pierce", 20, true, true, "Pierce"]],
+  )
+})
+
+test("English active labels make an active wherever the label stands", () => {
+  const { passives } = parseItemDescription(
+    [
+      "Gain 35% damage reduction for 3 seconds. <Indomitable> – Unique Active",
+      "Active Ability – Blood Recovery: Heals an ally",
+      "Active – Vanish: Instantly enter stealth.",
+      "Divine Shield: Gain a shield. Cooldown: 60 seconds – Active Ability",
+    ].join("\n"),
+    "en-US",
+  )
+
+  assert.deepEqual(passives, [
+    { name: "Indomitable", text: "Gain 35% damage reduction for 3 seconds.", unique: false, active: true },
+    { name: "Blood Recovery", text: "Heals an ally", unique: false, active: true },
+    { name: "Vanish", text: "Instantly enter stealth.", unique: false, active: true },
+    { name: "Divine Shield", text: "Gain a shield. Cooldown: 60 seconds", unique: false, active: true },
+  ])
+})
+
+test("English words for an active ability inside a sentence keep a passive passive", () => {
+  const [passive] = parseItemDescription(
+    "Passive – Echo: Using an active ability grants 10% Movement Speed for 2 seconds.",
+    "en-US",
+  ).passives
+
+  assert.deepEqual(passive, {
+    name: "Echo",
+    text: "Using an active ability grants 10% Movement Speed for 2 seconds.",
+    unique: false,
+  })
+})
+
+test("an English heal over time is healing and a healing cut is not", () => {
+  const heal = itemProfile(
+    itemReaderContent({}, { description: "Unique Passive – Lifeline: Restores 400 HP over 5 seconds." }, "en-US"),
+  )
+  const cut = itemProfile(
+    itemReaderContent({}, { description: "Unique Passive – Rend: Reduces the target's healing by 40%." }, "en-US"),
+  )
+
+  assert.ok(heal.effects.includes("heal"))
+  assert.deepEqual(cut.effects, ["anti-heal"])
+})
