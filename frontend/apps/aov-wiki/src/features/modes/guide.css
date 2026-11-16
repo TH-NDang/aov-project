@@ -755,6 +755,16 @@ a.guide-trait-tag:hover {
     min-width: 0;
     height: 40px;
   }
+  /* The clear button is as tall as the field, so it is easy to hit. */
+  .guide-search button {
+    width: 40px;
+    height: auto;
+    align-self: stretch;
+  }
+  .builder-slot .builder-actions button {
+    min-width: 36px;
+    height: 36px;
+  }
   /* 16px so an iPhone does not zoom into the field. */
   .guide-search input,
   .guide-select select {

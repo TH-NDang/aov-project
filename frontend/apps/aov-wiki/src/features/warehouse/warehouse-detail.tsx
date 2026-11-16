@@ -471,10 +471,10 @@ export function WarehouseDetail({
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return
       if (event.altKey || event.ctrlKey || event.metaKey) return
       const target = event.target as HTMLElement
-      // Controls that use the arrow keys themselves keep them.
+      // Controls that use the arrow keys themselves keep them, as do the video player and menus over the page.
       if (
         target.closest(
-          "input, textarea, select, [contenteditable='true'], [role='tab'], [role='listbox'], [role='menu'], [role='slider'], .shop-viewport",
+          "input, textarea, select, [contenteditable='true'], [role='tab'], [role='listbox'], [role='menu'], [role='slider'], .shop-viewport, .wiki-video-theater, [data-radix-popper-content-wrapper]",
         )
       )
         return

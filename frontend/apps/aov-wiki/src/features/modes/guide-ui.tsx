@@ -126,7 +126,7 @@ export function TraitIcon({ trait, index, size = 20 }: { trait?: Trait; index: G
 }
 
 /** A unit's traits, factions first, then classes. */
-export function splitTraits(unit: Unit, index: GuideIndex) {
+function splitTraits(unit: Unit, index: GuideIndex) {
   const traits = unit.traitCodes.map((code) => index.traits.get(code)).filter((trait): trait is Trait => !!trait)
   return {
     factions: traits.filter((trait) => trait.kind === "FACTION"),
@@ -265,10 +265,10 @@ export function GuideSearch({
   return (
     <label className="guide-search">
       <WikiIcon name="search" size={18} />
-      <span className="sr-only">{label}</span>
       <input
         ref={input}
         type="search"
+        aria-label={label}
         value={value}
         maxLength={80}
         placeholder={placeholder}

@@ -314,6 +314,12 @@
 .wiki-skin-toolbar-compact .wiki-skin-search input {
   font-size: 16px;
 }
+/* The clear button is as tall as the field, so it is easy to hit. */
+.wiki-skin-toolbar-compact .wiki-skin-search-clear {
+  width: 40px;
+  height: auto;
+  align-self: stretch;
+}
 .wiki-skin-status {
   display: grid;
   min-width: 0;

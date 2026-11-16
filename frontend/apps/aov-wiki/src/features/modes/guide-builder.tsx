@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
@@ -25,6 +25,9 @@ import { ModeDialog, ModeHeading } from "./mode-ui"
 import { deleteLineup, lineupErrorMessage, myStateQuery, saveLineup } from "./mode-api"
 
 type Cell = { row: BoardRow; column: number }
+
+/** The name of the board being built, which also finds its cells. */
+const BOARD_LABEL = "Bàn cờ đang xếp"
 
 /**
  * The lineup builder: the board is the screen's main thing, with what the lineup turns on beside it. On wide screens
@@ -100,6 +103,19 @@ export function BuilderTab({
     )
   }
   const { placed, bench } = placeUnits(units)
+  // A unit picked in the sheet for an empty cell replaces the button that opened the sheet; once the sheet has closed,
+  // keyboard focus moves to the new piece on that cell.
+  const pieceToFocus = useRef<Cell | null>(null)
+  useEffect(() => {
+    const cell = pieceToFocus.current
+    if (!cell || picking || !placed.has(`${cell.row}-${cell.column}`)) return
+    pieceToFocus.current = null
+    document
+      .querySelector<HTMLElement>(
+        `[aria-label="${BOARD_LABEL}"] .board-cell[aria-label="${ROW_LABEL[cell.row]}, ô ${cell.column}"] .board-piece`,
+      )
+      ?.focus()
+  })
   /** Adds a unit, onto the cell an empty-cell tap chose; removes it when already chosen. */
   const toggleUnit = (code: string) => {
     if (chosen.has(code)) {
@@ -111,6 +127,7 @@ export function BuilderTab({
     const cell = target && !placed.has(`${target.row}-${target.column}`) ? target : null
     write([...units, cell ? { unitCode: code, carry: false, ...cell } : { unitCode: code, carry: false }])
     if (cell) {
+      if (compact) pieceToFocus.current = cell
       setTarget(null)
       setPicking(false)
     }
@@ -144,11 +161,17 @@ export function BuilderTab({
   }
   const toggleCarry = (item: BuilderUnit) =>
     write(units.map((unit) => (unit === item ? { ...unit, carry: !unit.carry } : unit)))
-  /** An empty cell chooses where the next unit goes: the pool waits under the board on wide screens, in a sheet on phones. */
+  /** On wide screens the pool waits under the board: bring it into view and move keyboard focus to its first unit. */
+  const focusPool = () => {
+    const pool = document.getElementById("builder-pool")
+    pool?.querySelector<HTMLElement>(".builder-pool-unit:not(:disabled)")?.focus({ preventScroll: true })
+    pool?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+  }
+  /** An empty cell chooses where the next unit goes: the pool under the board on wide screens, a sheet on phones. */
   const chooseCell = (cell: Cell) => {
     setTarget(cell)
     if (compact) setPicking(true)
-    else document.getElementById("builder-pool")?.scrollIntoView({ block: "nearest", behavior: "smooth" })
+    else focusPool()
   }
   const selectedUnit = selected ? units.find((unit) => unit.unitCode === selected) : undefined
   const selectedInfo = selectedUnit ? index.units.get(selectedUnit.unitCode) : undefined
@@ -193,7 +216,7 @@ export function BuilderTab({
           className="builder-slot builder-slot-empty"
           data-extra={slot >= BOARD_SLOTS || undefined}
           aria-label={slot >= BOARD_SLOTS ? "Thêm quân vào ô thêm" : "Thêm quân cờ"}
-          onClick={() => (compact ? setPicking(true) : document.getElementById("builder-pool")?.scrollIntoView())}
+          onClick={() => (compact ? setPicking(true) : focusPool())}
         >
           <span className="builder-slot-plus" aria-hidden="true">
             +
@@ -311,7 +334,7 @@ export function BuilderTab({
             </header>
             {view === "board" ? (
               <BoardGrid
-                label="Bàn cờ đang xếp"
+                label={BOARD_LABEL}
                 onDropUnit={compact ? undefined : placeAt}
                 cell={(row, column) => {
                   const item = placed.get(`${row}-${column}`)

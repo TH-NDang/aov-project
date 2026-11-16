@@ -295,8 +295,14 @@
     padding: 8px 4px;
   }
 }
+/* The column labels stay as headings for assistive technology; the board shows its columns without them. */
 .wiki-item-board .shop-column-label {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .wiki-item-board .shop-cell {
   border-color: transparent;

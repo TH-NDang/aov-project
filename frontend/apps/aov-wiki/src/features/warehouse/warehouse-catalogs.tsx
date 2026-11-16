@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react"
+import { useState, type CSSProperties } from "react"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { ItemStatChips } from "@aov/ui/components/warehouse/item-facts"
@@ -87,7 +87,11 @@ function ItemList({
 }: Pick<CatalogProps, "selectedId" | "onSelect"> & { view: ItemCatalogView; scope: string }) {
   const { locale } = useWikiContext()
   const opened = view.listed.findIndex((entry) => entry.id === selectedId)
-  const revealed = useRevealedRows(view.listed, scope, ITEM_BATCH, opened + 1)
+  // Rows shown for an open item stay once it closes, so the row it was opened from is still there to take focus back.
+  const [reach, setReach] = useState({ scope, rows: 0 })
+  const kept = reach.scope === scope ? reach.rows : 0
+  if (opened + 1 > kept) setReach({ scope, rows: opened + 1 })
+  const revealed = useRevealedRows(view.listed, scope, ITEM_BATCH, Math.max(opened + 1, kept))
   const byTier = view.sort === "tier"
   const totals = new Map(byTier ? warehouseItemLayout(view.listed, "").map((s) => [s.key, s.entries.length]) : [])
   const sections = byTier ? warehouseItemLayout(revealed.rows, "").reverse() : null
@@ -152,6 +156,7 @@ function ItemBoard({
     "Chọn một trang bị để xem chi tiết và đường ghép.",
     "Pick an item to read it and see its recipe lines.",
   )
+  const board = groups.find((group) => group.code === view.category)
   const open = (id: string | null) => {
     const entry = id ? items.find((item) => item.id === id) : undefined
     if (entry) onSelect(entry, document.activeElement instanceof HTMLButtonElement ? document.activeElement : undefined)
@@ -163,6 +168,10 @@ function ItemBoard({
       data-warehouse-density="compact"
       style={{ "--board-hint": JSON.stringify(hint) } as CSSProperties}
     >
+      {/* The board's columns and branches carry headings of their own; this one names the board above them. */}
+      <h2 className="sr-only">
+        {(board && warehouseText(board.translations, locale)?.name) || wikiText(locale, "Trang bị", "Items")}
+      </h2>
       <ItemShopGraph
         // A new group starts from its own branches: the board keeps the chosen branch in its own state.
         key={view.category}

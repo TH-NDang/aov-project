@@ -324,7 +324,8 @@ function WikiHeaderWide({ variant = "home", section }: WikiHeaderProps) {
           <SectionSelector />
         </div>
         <TopNavigation active={section} />
-        {searching ? <WikiSearch autoFocus onDone={() => setSearching(false)} /> : <WikiSearch />}
+        {/* A new field for each opening, so it takes focus as it mounts. */}
+        {searching ? <WikiSearch key="open" autoFocus onDone={() => setSearching(false)} /> : <WikiSearch key="bar" />}
         <button
           ref={searchButton}
           type="button"

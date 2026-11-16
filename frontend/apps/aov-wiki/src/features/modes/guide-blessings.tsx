@@ -10,7 +10,7 @@ const BLESSING_TIERS = ["NORMAL", "EPIC", "LEGENDARY"] as const
  * A mark per blessing tier, drawn in the tier's color: a gem for the normal tier, a crest for epic, a crown for
  * legendary, so the tier reads before its name.
  */
-export function TierIcon({ tier, size = 18 }: { tier: Blessing["tier"]; size?: number }) {
+function TierIcon({ tier, size = 18 }: { tier: Blessing["tier"]; size?: number }) {
   return (
     <svg
       className="tier-icon"

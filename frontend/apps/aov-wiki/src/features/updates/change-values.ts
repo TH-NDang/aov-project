@@ -36,7 +36,7 @@ const statName = (key: RankPart["key"]) => formatPatchValue(`1*${key}`).replace(
  * One side of a formula the way the glossary teaches to read it: the base with its growth by skill level in brackets,
  * then the share of each stat, as in "350 (+110 a level) + 40% of magic attack". Null when that side has no value.
  */
-export function formulaSide(parts: RankPart[], side: "before" | "after") {
+function formulaSide(parts: RankPart[], side: "before" | "after") {
   if (parts.every((part) => part.summary[side] === null)) return null
   // What the base gains with the hero's level reads right after the base, before the stats it adds.
   const place = (part: RankPart) => (part.key === "base" ? 0 : part.key === "heroLevel" ? 1 : 2)
@@ -58,7 +58,7 @@ export function formulaSide(parts: RankPart[], side: "before" | "after") {
  * range in "200~396 + 0.3*bonusPhysicalAttack". The terms it can read are still worded, a range takes the dash other
  * notes write it with, and anything else stays as published.
  */
-export function readableValue(value: string | null | undefined, locale: string) {
+function readableValue(value: string | null | undefined, locale: string) {
   const whole = formatChangeValue(value, locale)
   if (!value || whole !== value) return whole
   let worded = false

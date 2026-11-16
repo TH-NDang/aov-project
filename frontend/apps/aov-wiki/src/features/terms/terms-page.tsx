@@ -107,9 +107,9 @@ export function TermsPage() {
       <div className="wiki-terms-tools">
         <label className="wiki-terms-search">
           <WikiIcon name="search" size={18} />
-          <span className="sr-only">{text("Tìm thuật ngữ", "Search terms")}</span>
           <input
             type="search"
+            aria-label={text("Tìm thuật ngữ", "Search terms")}
             value={search}
             maxLength={120}
             onChange={(event) => updateSearch(event.target.value)}

@@ -62,10 +62,10 @@ function SearchField({
   return (
     <label className="wiki-warehouse-search">
       <WikiIcon name="search" size={18} />
-      <span className="sr-only">{label}</span>
       <input
         ref={input}
         type="search"
+        aria-label={label}
         value={value}
         maxLength={120}
         onChange={(event) => onChange(event.target.value)}

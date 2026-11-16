@@ -146,8 +146,14 @@ export default function WarehousePage() {
   }
 
   function clearSelection() {
-    hold(main.current?.querySelector<HTMLElement>(OPEN_ENTRY))
-    navigate({ pathname: warehousePath(kind), search: `?${params}` }, { replace: true })
+    // The entry being closed takes focus back, also when it was opened from a link or reached by stepping.
+    const open = main.current?.querySelector<HTMLButtonElement>(OPEN_ENTRY)
+    if (open) trigger.current = open
+    hold(open)
+    // An item opened from a link chose the board; the board stays on it once the item closes.
+    const next = new URLSearchParams(params)
+    if (kind === "items" && itemView.layout === "shop" && itemView.category) next.set("group", itemView.category)
+    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
   }
 
   function setSearch(value: string) {
