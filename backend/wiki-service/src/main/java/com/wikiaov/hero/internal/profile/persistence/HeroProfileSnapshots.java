@@ -42,8 +42,10 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
         var revision = lifecycle.create(revisions, new ProfileRevision(), heroId, actor, at);
         if (content != null) {
             var value = (Profile) content;
-            translations.saveAll(value.translations().stream().map(t -> new ProfileTranslationRow(revision.getId(),
-                    t.locale(), t.name(), t.title(), t.summary(), t.lore())).toList());
+            translations.saveAll(value.translations().stream()
+                    .map(t -> new ProfileTranslationRow(revision.getId(), t.locale(), t.name(), t.title(),
+                            t.summary(), t.lore(), t.strengths(), t.weaknesses(), t.counterTips()))
+                    .toList());
             roles.saveAll(
                     value.roles().stream().map(role -> new ProfileRoleRow(revision.getId(), role.name())).toList());
             positions.saveAll(value.positions().stream()
@@ -65,7 +67,8 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
         var texts = translations.findByProfileRevisionIdIn(ids, Sort.by("locale")).stream()
                 .collect(Collectors.groupingBy(ProfileTranslationRow::getProfileRevisionId,
                         Collectors.mapping(t -> new ProfileTranslation(t.getLocale(), t.getName(), t.getTitle(),
-                                t.getSummary(), t.getLore()), Collectors.toList())));
+                                t.getSummary(), t.getLore(), t.getStrengths(), t.getWeaknesses(), t.getCounterTips()),
+                                Collectors.toList())));
         // An enum's hash changes between JVM runs, so only keeping the query's order gives clients a stable answer.
         var selectedRoles = roles.findByProfileRevisionIdIn(ids, Sort.by("roleCode")).stream()
                 .collect(Collectors.groupingBy(ProfileRoleRow::getProfileRevisionId,

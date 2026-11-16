@@ -58,13 +58,27 @@ public final class HeroContent {
         VERIFIED
     }
 
+    /**
+     * Strengths, weaknesses and counter tips are editor-written notes (ADR-029). Only the notes endpoint writes them;
+     * a profile update keeps the notes the draft already has.
+     */
     public record ProfileTranslation(
             @NotBlank @Size(max = 16) String locale,
             @NotBlank @Size(max = 120) String name,
             @Size(max = 200) String title,
             @Size(max = 20000) String summary,
-            @Size(max = 100000) String lore
+            @Size(max = 100000) String lore,
+            @Size(max = 4000) String strengths,
+            @Size(max = 4000) String weaknesses,
+            @Size(max = 4000) String counterTips
     ) {
+        public ProfileTranslation(String locale, String name, String title, String summary, String lore) {
+            this(locale, name, title, summary, lore, null, null, null);
+        }
+
+        public ProfileTranslation withNotes(String strengths, String weaknesses, String counterTips) {
+            return new ProfileTranslation(locale, name, title, summary, lore, strengths, weaknesses, counterTips);
+        }
     }
 
     public enum Position {
@@ -159,9 +173,56 @@ public final class HeroContent {
     ) {
     }
 
+    /**
+     * Traits are yes/no facts read from the kit and confirmed by an editor (ADR-029). {@code null} traits mean "not
+     * sent": a skills update keeps the traits the draft already has, and only the traits endpoint replaces them.
+     */
     public record Skills(
             @NotEmpty @Size(max = 100) List<@Valid Skill> skills,
-            @NotNull @Size(max = 30) List<@Valid Source> sources
+            @NotNull @Size(max = 30) List<@Valid Source> sources,
+            @Size(max = 32) List<@NotNull @Valid Trait> traits
+    ) {
+        public Skills(List<Skill> skills, List<Source> sources) {
+            this(skills, sources, null);
+        }
+    }
+
+    /** The fixed list of traits a hero page can show, grouped as the Wiki shows them. */
+    public enum TraitCode {
+        TRUE_DAMAGE,
+        PERCENT_HP_DAMAGE,
+        MISSING_HP_DAMAGE,
+        ARMOR_SHRED,
+        DASH,
+        WALL_CROSS,
+        UNTARGETABLE,
+        STEALTH,
+        GLOBAL,
+        CC_IMMUNE,
+        CLEANSE,
+        SELF_HEAL,
+        SHIELD,
+        DAMAGE_REDUCTION,
+        REVIVE,
+        HARD_CC,
+        DISPLACE,
+        SILENCE,
+        ALLY_HEAL,
+        ALLY_SHIELD,
+        ALLY_BUFF,
+        VISION
+    }
+
+    public record Trait(
+            @NotNull TraitCode code,
+            @NotNull @Size(max = 20) List<@NotBlank @Size(max = 64) String> skillKeys,
+            @NotNull @Size(max = 30) List<@Valid TraitTranslation> translations
+    ) {
+    }
+
+    public record TraitTranslation(
+            @NotBlank @Size(max = 16) String locale,
+            @NotBlank @Size(max = 300) String detail
     ) {
     }
 

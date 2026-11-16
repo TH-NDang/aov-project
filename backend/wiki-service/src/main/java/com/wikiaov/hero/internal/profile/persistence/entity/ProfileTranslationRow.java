@@ -28,6 +28,12 @@ public class ProfileTranslationRow extends AssignedIdentifierEntity<ProfileTrans
 
     private String lore;
 
+    private String strengths;
+
+    private String weaknesses;
+
+    private String counterTips;
+
     @Override
     public Key getId() {
         return new Key(profileRevisionId, locale);

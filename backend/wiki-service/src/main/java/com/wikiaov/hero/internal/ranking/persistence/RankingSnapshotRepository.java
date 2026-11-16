@@ -16,6 +16,10 @@ public interface RankingSnapshotRepository
             JpaSpecificationExecutor<RankingSnapshotRow> {
     boolean existsByCode(String code);
 
+    /** The snapshot readers see: the latest one an editor confirmed for the market and mode. */
+    Optional<RankingSnapshotRow> findFirstByRegionCodeAndModeCodeAndConfirmedAtIsNotNullOrderByCapturedAtDescIdAsc(
+            String regionCode, String modeCode);
+
     /** Serializes review writes on one snapshot, so its open review count cannot change under a confirmation. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from RankingSnapshotRow s where s.id = :id")

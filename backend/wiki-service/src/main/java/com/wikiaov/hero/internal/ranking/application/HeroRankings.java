@@ -32,6 +32,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -92,6 +93,69 @@ public class HeroRankings {
     @Transactional(readOnly = true)
     public Detail detail(UUID snapshotId) {
         return detailOf(snapshots.findById(snapshotId).orElseThrow(HeroRankings::snapshotNotFound));
+    }
+
+    /**
+     * One hero as readers see it in the latest confirmed snapshot (ADR-029): no unconfirmed snapshot, no value waiting
+     * for review, no reading text or source area.
+     */
+    @Transactional(readOnly = true)
+    public HeroRankingViews.Published published(UUID heroId, String region, String mode) {
+        if (!REGION.matcher(region).matches() || !MODE.matcher(mode).matches())
+            throw invalid("Use an upper-case market and mode code.");
+
+        var found = snapshots.findFirstByRegionCodeAndModeCodeAndConfirmedAtIsNotNullOrderByCapturedAtDescIdAsc(region,
+                mode);
+        if (found.isEmpty())
+            return new HeroRankingViews.Published(null, null);
+        var snapshot = found.get();
+        var rows = values.findBySnapshotId(snapshot.getId()).stream().filter(row -> !row.isNeedsReview()).toList();
+        int heroCount = entries.findBySnapshotId(snapshot.getId()).size();
+        var view = new HeroRankingViews.PublishedSnapshot(snapshot.getCode(), snapshot.getRegionCode(),
+                snapshot.getModeCode(), snapshot.getModeLabel(), snapshot.getPeriodLabel(), snapshot.getCapturedAt(),
+                snapshot.getSourceTimeZone(), heroCount);
+
+        var own = rows.stream().filter(row -> row.getHeroId().equals(heroId))
+                .collect(Collectors.toMap(RankingSnapshotValueRow::getMetric, row -> row, (a, b) -> a));
+        if (own.isEmpty())
+            return new HeroRankingViews.Published(view, null);
+
+        return new HeroRankingViews.Published(view, entry(heroId, own, rows));
+    }
+
+    private HeroRankingViews.PublishedEntry entry(UUID heroId, Map<String, RankingSnapshotValueRow> own,
+            List<RankingSnapshotValueRow> all) {
+        var figures = Arrays.stream(RankingMetric.values()).filter(metric -> metric.kind() == RankingMetric.Kind.AMOUNT)
+                .map(metric -> {
+                    var mine = own.get(metric.name());
+                    var others = all.stream()
+                            .filter(row -> row.getMetric().equals(metric.name()) && row.getNumberValue() != null)
+                            .map(RankingSnapshotValueRow::getNumberValue).toList();
+                    if (mine == null || mine.getNumberValue() == null)
+                        return new HeroRankingViews.Figure(metric.name(), null, null, others.size());
+                    int rank = 1 + (int) others.stream().filter(value -> value.compareTo(mine.getNumberValue()) > 0)
+                            .count();
+                    return new HeroRankingViews.Figure(metric.name(), mine.getNumberValue(), rank, others.size());
+                }).toList();
+
+        var counterIds = Stream.of(RankingMetric.COUNTER_1, RankingMetric.COUNTER_2, RankingMetric.COUNTER_3)
+                .map(metric -> own.get(metric.name())).filter(Objects::nonNull)
+                .map(RankingSnapshotValueRow::getHeroValue).filter(Objects::nonNull).toList();
+        Set<UUID> ids = new HashSet<>(counterIds);
+        ids.add(heroId);
+        var codes = codes(ids);
+
+        return new HeroRankingViews.PublishedEntry(heroId, codes.get(heroId), tier(own.get("TIER")),
+                number(own.get("WIN_RATE")), number(own.get("PICK_RATE")), number(own.get("BAN_RATE")), figures,
+                counterIds.stream().map(id -> new HeroRankingViews.Counter(id, codes.get(id))).toList());
+    }
+
+    private static String tier(RankingSnapshotValueRow row) {
+        return row == null ? null : row.getTierValue();
+    }
+
+    private static BigDecimal number(RankingSnapshotValueRow row) {
+        return row == null ? null : row.getNumberValue();
     }
 
     @PreAuthorize("hasAuthority('hero:write')")

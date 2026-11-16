@@ -9,6 +9,7 @@ import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.domain.CharacterCodes;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroEvaluations;
 import com.wikiaov.hero.internal.domain.HeroImages;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
@@ -188,7 +189,48 @@ public class HeroAuthoring {
         validation.validate(section, content);
 
         Object old = sections.content(section, draft.sections().get(section));
-        content = HeroImages.retain(old, content);
+        content = HeroEvaluations.retain(old, HeroImages.retain(old, content));
+
+        return write(heroId, draft, section, expected, old, content, note, "HERO_SECTION_UPDATED");
+    }
+
+    /** Replaces the draft's traits (ADR-029); they live in the skills section and are published with it. */
+    @PreAuthorize("hasAuthority('hero:write')")
+    public HeroRevisionView updateTraits(UUID heroId, UUID draftId, long expected, List<Trait> traits, String note) {
+        store.lockHero(heroId);
+        var draft = editable(heroId, draftId, expected);
+        if (traits == null)
+            throw HeroValidation.invalid("Send the full list of traits, empty to clear them.");
+
+        var old = (Skills) sections.content(HeroSection.SKILLS, draft.sections().get(HeroSection.SKILLS));
+        var content = new Skills(old.skills(), old.sources(), HeroEvaluations.normalize(traits));
+
+        return write(heroId, draft, HeroSection.SKILLS, expected, old, content, note, "HERO_TRAITS_UPDATED");
+    }
+
+    /** Replaces the editor-written notes of one profile locale (ADR-029); blank text clears a note. */
+    @PreAuthorize("hasAuthority('hero:write')")
+    public HeroRevisionView updateNotes(UUID heroId, UUID draftId, long expected, String locale, String strengths,
+            String weaknesses, String counterTips, String note) {
+        store.lockHero(heroId);
+        var draft = editable(heroId, draftId, expected);
+        HeroValidation.locale(locale);
+
+        var old = (Profile) sections.content(HeroSection.PROFILE, draft.sections().get(HeroSection.PROFILE));
+        if (old.translations().stream().noneMatch(text -> text.locale().equals(locale)))
+            throw HeroValidation.invalid("Add a profile translation for this locale before writing notes.");
+        var content = new Profile(old.translations().stream()
+                .map(text -> text.locale().equals(locale)
+                        ? text.withNotes(HeroEvaluations.note(strengths), HeroEvaluations.note(weaknesses),
+                                HeroEvaluations.note(counterTips))
+                        : text)
+                .toList(), old.roles(), old.positions(), old.sources());
+
+        return write(heroId, draft, HeroSection.PROFILE, expected, old, content, note, "HERO_NOTES_UPDATED");
+    }
+
+    private HeroRevisionView write(UUID heroId, HeroRevisionView draft, HeroSection section, long expected,
+            Object old, Object content, String note, String action) {
         validation.validate(section, content);
         if (forms.holdsForms(heroId) && HeroFormGameplay.present(content))
             throw formGameplay(section);
@@ -196,12 +238,12 @@ public class HeroAuthoring {
             return draft;
 
         UUID newId = sections.create(heroId, section, content, actors.require(), clock.instant());
-        bind(draftId, section, newId);
-        bump(draftId);
+        bind(draft.id(), section, newId);
+        bump(draft.id());
 
-        record("HERO_SECTION_UPDATED", heroId, draftId, expected, expected + 1, note);
+        record(action, heroId, draft.id(), expected, expected + 1, note);
 
-        return store.revision(heroId, draftId);
+        return store.revision(heroId, draft.id());
     }
 
     @PreAuthorize("hasAuthority('hero:publish')")

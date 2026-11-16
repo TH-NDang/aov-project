@@ -18,7 +18,7 @@ public final class HeroFormGameplay {
             case Ratings ratings -> ratings.scaleCode() != null || Stream.of(ratings.survivability(),
                     ratings.attackDamage(), ratings.skillEffects(), ratings.difficulty()).anyMatch(v -> v != null);
             case Stats stats -> !stats.values().isEmpty();
-            case Skills skills -> !skills.skills().isEmpty();
+            case Skills skills -> !skills.skills().isEmpty() || (skills.traits() != null && !skills.traits().isEmpty());
             case null, default -> false;
         };
     }
