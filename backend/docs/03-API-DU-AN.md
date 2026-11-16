@@ -30,7 +30,8 @@ Section PUT dùng payload phẳng, `expectedDraftVersion` và full section conte
 Profile: `{translations:[{locale,name,title?,summary?,lore?}],roles:["ASSASSIN"],positions?:["DRAGON"]}`.
 `positions` nhận `TOP`, `MID`, `JUNGLE`, `DRAGON`, `SUPPORT`; bỏ trống nghĩa là chưa có vị trí đi.
 Skills: `{skills:[{skillKey,kind,formKey?,displayOrder,iconAssetId?,stateIcons?,
-translations:[{locale,name,description}],effects:[]}]}`. `stateIcons` là `[{assetId,label}]`, tối đa 10 mỗi
+translations:[{locale,name,description,summary?}],effects:[]}]}`. `summary` là tóm tắt dễ hiểu của kỹ năng (mục
+"Tóm tắt kỹ năng — V073"). `stateIcons` là `[{assetId,label}]`, tối đa 10 mỗi
 kỹ năng, asset semantic `HERO_SKILL_ICON`, nhãn 1–64 ký tự; nhãn không trùng (không phân biệt hoa thường), asset
 không trùng nhau và không trùng `iconAssetId`, sai trả 422 `HERO_INVALID_CONTENT`. Bỏ trống nghĩa là danh sách rỗng;
 đọc luôn trả mảng.
@@ -2887,6 +2888,24 @@ phía server: admin 30 giây, public catalog/thuật ngữ 2 phút mặc định
 region/locale và patch hiện hành. Quyền được kiểm tra trước lookup. Epoch DB đổi trong cùng transaction
 với audit để dữ liệu sửa/xuất bản/nâng phiên bản ảnh có hiệu lực cho request tiếp theo. Redis lỗi thì
 đọc DB, có timeout ngắn và backoff; không cache lỗi, token, phiên đăng nhập hoặc bytes ảnh.
+
+
+### Tóm tắt kỹ năng — V073 (13/11/2026)
+
+Mỗi bản dịch của kỹ năng có trường tùy chọn `summary`: văn bản thường một đoạn, tối đa 300 ký tự, không xuống dòng.
+
+- `PUT /admin/heroes/{heroId}/drafts/{draftId}/skills`: `translations[].summary` nhận chuỗi hoặc bỏ trống. Khoảng
+  trắng đầu cuối được bỏ; chuỗi rỗng, chỉ có khoảng trắng hoặc `null` nghĩa là chưa có tóm tắt và xóa tóm tắt đang có
+  của bản dịch đó. Dài quá 300 ký tự hoặc có ký tự xuống dòng trả 422 `HERO_INVALID_CONTENT`. Không bắt buộc khi xuất
+  bản.
+- Admin detail, preview và so sánh phiên bản trả `summary` trong từng bản dịch (`null` khi chưa có); khác biệt có path
+  `/skills/<skillKey>/translations/<locale>/summary`.
+- Public Hero detail và `skill-set-revisions` trả `summary` cùng `name`, `description` của bản dịch được chọn theo
+  fallback locale (`null` khi bản dịch đó chưa có tóm tắt); không fallback riêng cho từng trường.
+- Import: `values.skills[].translations[].summary` được nhận như các trường khác của bản dịch. Khi kỹ năng nhập vào
+  không mang tóm tắt, tóm tắt đang có của cùng `skillKey` và locale được giữ; nếu mô tả của bản dịch đó đổi, `warnings`
+  có thêm dòng "Cần xem lại tóm tắt kỹ năng <skillKey> (<locale>): mô tả đã đổi, tóm tắt cũ được giữ nguyên."
+- `GET /admin/heroes/publish-readiness` và các API tham chiếu kỹ năng không trả `summary`.
 
 
 ### Thư viện icon kỹ năng theo tướng — V033 (2026-10-20)

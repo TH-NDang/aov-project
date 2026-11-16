@@ -444,6 +444,7 @@ skill_key
 locale
 name
 description
+summary VARCHAR(300) NULL
 ```
 
 PK `(skill_set_revision_id, skill_key, locale)`.
@@ -1870,6 +1871,14 @@ VARCHAR(64) NOT NULL. Khóa chính `(skill_set_revision_id,skill_key,icon_order)
 `(skill_set_revision_id,skill_key,asset_id)`; FK `(skill_set_revision_id,skill_key)` vào `hero.hero_skill_snapshot`.
 Index theo `asset_id` cho tham chiếu Media. Trigger `guard_section_child` giữ bảng bất biến khi revision kỹ năng đã
 xuất bản, như các bảng con khác của snapshot kỹ năng. Không FK vào bảng Media; kiểm tra qua `MediaAssets`.
+
+### Tóm tắt kỹ năng — V073 (13/11/2026)
+
+`hero.hero_skill_translation` có thêm cột `summary` VARCHAR(300) NULL: tóm tắt dễ hiểu của kỹ năng theo ngôn ngữ,
+văn bản thường một đoạn. `NULL` nghĩa là chưa có tóm tắt; ràng buộc `hero_skill_translation_summary_check` không
+cho lưu chuỗi chỉ có khoảng trắng hoặc có ký tự xuống dòng. Migration chỉ thêm cột, không ghi dữ liệu: dòng của
+revision đã xuất bản giữ `NULL` và vẫn bất biến qua trigger `guard_section_child`, nên tóm tắt cho tướng đã xuất bản
+được thêm bằng bản nháp mới rồi xuất bản.
 
 ### Tham chiếu kỹ năng (2026-10-20)
 
