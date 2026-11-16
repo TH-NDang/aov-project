@@ -164,6 +164,14 @@ class HeroEvaluationIntegrationTest {
         assertThat(profileText(kept)).containsEntry("title", "Tay kiếm hào hoa")
                 .containsEntry("strengths", "Lướt nhiều lần");
 
+        // Admin and the import scripts send the skills section back as they read it, traits included.
+        Map<String, Object> echoed = new HashMap<>((Map<String, Object>) kept.get("skills"));
+        echoed.put("expectedDraftVersion", number(draft, "version"));
+        echoed.put("traits", List.of(trait("TRUE_DAMAGE", List.of(), "Bị bỏ qua")));
+        draft = send(put(p + "/skills"), echoed, 200);
+        assertThat(traits(content(hero, draft))).extracting(t -> t.get("code"), t -> t.get("skillKeys"))
+                .containsExactly(tuple("DASH", List.of("skill-2-1")), tuple("HARD_CC", List.of()));
+
         publish(draft);
         var detail = send(get(ROOT + "/heroes/" + hero), null, 200);
         var content = (Map<String, Object>) detail.get("content");

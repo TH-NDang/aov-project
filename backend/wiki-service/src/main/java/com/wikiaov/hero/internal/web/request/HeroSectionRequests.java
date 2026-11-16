@@ -52,11 +52,16 @@ public final class HeroSectionRequests {
         }
     }
 
+    /**
+     * {@code traits} is accepted because clients send the skills section back as they read it, and it is ignored: the
+     * draft keeps its traits, and only the traits endpoint changes them (ADR-029).
+     */
     public record SkillsRequest(
             @NotNull @Positive Long expectedDraftVersion,
             List<Skill> skills,
             List<Source> sources,
-            String changeNote
+            String changeNote,
+            List<Trait> traits
     ) {
         public Skills content() {
             return new Skills(skills, sources == null ? List.of() : sources);
