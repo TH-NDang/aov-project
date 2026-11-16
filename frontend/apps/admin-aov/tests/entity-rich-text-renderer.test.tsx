@@ -186,8 +186,17 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     await act(async () => trigger.click())
     await settle()
     assert.equal(document.querySelector("a")?.getAttribute("href"), "/heroes/lu-bo")
-    assert.ok(document.body.textContent?.includes("Ngôn ngữ dự phòng: vi-VN"))
+    assert.ok(document.body.textContent?.includes("Shown in vi-VN"), "The Wiki card speaks the page language")
     assert.ok(document.querySelector('[role="dialog"]'), "Click opens the card without requiring hover")
+
+    await mount("admin", "en-US")
+    trigger = document.querySelector<HTMLElement>('[role="button"]')!
+    await act(async () => trigger.click())
+    await settle()
+    assert.ok(
+      document.body.textContent?.includes("Ngôn ngữ dự phòng: vi-VN"),
+      "Admin keeps its own language while it shows English content",
+    )
 
     const described = {
       ...entity,

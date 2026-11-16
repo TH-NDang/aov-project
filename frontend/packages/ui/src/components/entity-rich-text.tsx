@@ -282,7 +282,8 @@ export function EntityReferencePopover({
   const translation = Array.isArray(entity.translations)
     ? entity.translations.find((entry) => entry.locale === matched)
     : undefined
-  const english = locale.startsWith("en")
+  // The card's own words follow the screen: the Wiki reads in the page language, Admin stays Vietnamese for any content.
+  const english = context === "wiki" && locale.startsWith("en")
   const description =
     translation?.description || (english ? "No description for this entry yet." : "Chưa có mô tả cho mục này.")
   const descriptionNodes = React.useMemo(

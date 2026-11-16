@@ -1,4 +1,4 @@
-import { useWarehouseText } from "./warehouse-view"
+import { useWarehouseLanguage, useWarehouseText } from "./warehouse-view"
 import { cardChangeKinds, WarehouseBadges as CatalogChangeBadges } from "./warehouse-view"
 import { useState } from "react"
 import { ChevronDown, CircleDot, Gem, Sparkles, Swords } from "lucide-react"
@@ -55,6 +55,8 @@ export function ArcanaCollection<E extends WarehouseEntry<ArcanaContent>>({
   revealLowerTiers?: boolean
 }) {
   const t = useWarehouseText()
+  // Group names belong to the screen, not to the content `locale` the cards are written in.
+  const screenLocale = useWarehouseLanguage()
   const [openTiers, setOpenTiers] = useState<number[]>(revealLowerTiers ? [1, 2] : [])
   function groups(entries: E[], tier: number) {
     return colors.map((color) => {
@@ -63,7 +65,7 @@ export function ArcanaCollection<E extends WarehouseEntry<ArcanaContent>>({
       const details = colorDetails[color]
       const grouped = items.map((entry) => ({ entry, group: arcanaCombatGroup(entry.content) }))
       return (
-        <section key={color} aria-label={arcanaGroupLabel(color, tier, locale)} className="overflow-hidden">
+        <section key={color} aria-label={arcanaGroupLabel(color, tier, screenLocale)} className="overflow-hidden">
           <header className={cn("flex items-center gap-2 rounded-md px-3 py-2", details.header)}>
             <Gem aria-hidden className={cn("size-4", details.icon)} />
             <h3 className="text-xs font-semibold">
@@ -81,7 +83,7 @@ export function ArcanaCollection<E extends WarehouseEntry<ArcanaContent>>({
                 <section
                   key={key}
                   className="space-y-2"
-                  aria-label={`${t(label, labelEnglish)} · ${arcanaGroupLabel(color, tier, locale)}`}
+                  aria-label={`${t(label, labelEnglish)} · ${arcanaGroupLabel(color, tier, screenLocale)}`}
                 >
                   <div className="flex items-center gap-2 px-1 pt-1">
                     <Icon

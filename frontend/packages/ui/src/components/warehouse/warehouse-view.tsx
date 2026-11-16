@@ -34,6 +34,10 @@ export function cardChangeKinds(kinds: readonly CatalogBadgeKind[] = []) {
 
 const viText = (vi: string, _en: string) => vi
 const enText = (_vi: string, en: string) => en
+/** The language of the warehouse screen. Admin sets none, so it stays Vietnamese whatever the content locale is. */
+export function useWarehouseLanguage() {
+  return useContext(Context)?.language ?? "vi-VN"
+}
 export function useWarehouseText() {
-  return useContext(Context)?.language?.startsWith("en") ? enText : viText
+  return useWarehouseLanguage().startsWith("en") ? enText : viText
 }
