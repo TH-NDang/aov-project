@@ -83,6 +83,8 @@ export interface PublicSkill {
   stateIcons?: { assetId: string; label: string }[]
   name?: string | null
   description?: string | null
+  /** A short plain text beside the description, written for readers new to the game; absent until an editor writes it. */
+  summary?: string | null
   kind: "PASSIVE" | "ACTIVE" | "OTHER"
   displayOrder: number
   effects?: {
