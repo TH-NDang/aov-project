@@ -192,6 +192,26 @@ Người dùng không muốn tốn bộ nhớ cho SeaweedFS nữa, nhất là tr
 - Stack chạy một máy trong `infra/` (ADR-021) chưa đổi trong đợt này: SeaweedFS ở đó còn gắn với reverse proxy, tạo
   bucket và sao lưu. Chuyển stack đó sang R2 là việc riêng.
 
+### 15. Admin không còn đọc `resources/` (bổ sung 16/11/2026)
+
+Giai đoạn 4 đổi từng chỗ còn đọc `/__resources` theo cách sau. Middleware `/__resources` bị bỏ.
+
+- **Hộp tìm Ctrl-K** lấy trang bị và phù hiệu từ kho của backend, mở đúng mục ở trang Trang bị và Phù hiệu. API giả lập
+  đọc `data/*.json` bị bỏ cùng các hook của nó.
+- **Màn so sánh kỹ năng** lấy ảnh tham chiếu từ thư viện ảnh kỹ năng (Media, cùng quy tắc với màn Kỹ năng) thay cho
+  `data/heroes.json` và `assets/skill`.
+- **Nhập tướng** bỏ nút ghép ảnh từ tài nguyên. 131 tướng đã nhập và ảnh đã là Media. CDN công khai không trả CORS, nên
+  trình duyệt không thể tải lại bytes để upload, còn chép 0,9 GB ảnh tướng sang tệp nguồn thì tốn mà không có ích. Nhập từ
+  bộ ảnh chụp, thư mục và ZIP vẫn giữ.
+- **Nhập chế độ chơi và cẩm nang Cờ Liên quân** đọc JSON và ảnh qua link ký sẵn từ bộ `sanh-che-do` và
+  `co-lien-quan-2026-11-08-1503`, nên chạy được cả trên bản build. Bộ tệp nguồn giữ nguyên bố cục thư mục
+  `che-do-choi` cũ. Ảnh sảnh đã xử lý và icon Bách khoa vì vậy có thêm bản sao trong bộ của lượt chụp (250 nội dung,
+  39 MB), dù đã là Media.
+- **Script và test dữ liệu** (nhập giải đấu, chế độ chơi, script trong `research/`) đọc bản kéo về đúng chỗ cũ trong
+  `resources/` bằng `pnpm sources:sync pull`. Git bỏ qua bản kéo về. Test tự bỏ qua khi chưa kéo dữ liệu.
+- 10 ảnh công khai chưa là Media (2 GIF, 8 portrait chưa khớp trang phục) vào bộ `lien-quan-v3-data`. 6 icon vai trò bỏ,
+  vì bản giống hệt đã nằm trong `admin-aov/public/images/hero/vai-tro/`.
+
 ## Hệ quả
 
 - Ước tính sau khi chuyển: Media 1,08 GB, ảnh đối chứng khoảng 3,2 GB (2.354 ảnh), dữ liệu nhập khoảng 0,08 GB.
@@ -225,11 +245,11 @@ Vite dev; bản build trả 404.
 | `Lien-Quan-v3/assets/skin` | 4.720 · 818 MB | 4.711 | Admin nhập tướng (dev), `import-images.py` | Công khai | Giữ Media hiện có | 1 GIF và 8 portrait chưa khớp trang phục → bộ `lien-quan-v3-data` | 4 |
 | `Lien-Quan-v3/assets/trang-bi`, `phu-hieu`, `ngoc`, `phu-tro` | 255 · 11 MB | 255 | Hộp tìm Ctrl-K của Admin (dev, đọc JSON giả lập), `import-warehouse.py` | Công khai | Giữ Media hiện có | Ctrl-K đọc API kho trang bị | 4 |
 | `Lien-Quan-v3/assets/vai-tro` | 6 · < 0,1 MB | 0 | Không ai. Bản giống hệt đã có ở `admin-aov/public/images/hero/vai-tro/` | Bỏ | — | — | 4 |
-| `Lien-Quan-v3/che-do-choi`: icon Cờ Liên quân (`anh-goc/`) và ảnh sảnh đã xử lý (`da-xu-ly/`) | 456 · 41 MB | 456 | Admin nhập chế độ chơi và Cờ Liên quân (dev) | Công khai | Giữ Media hiện có | Trình nhập đọc JSON từ bộ tệp nguồn | 4 |
+| `Lien-Quan-v3/che-do-choi`: icon Cờ Liên quân (`anh-goc/`) và ảnh sảnh đã xử lý (`da-xu-ly/`) | 456 · 41 MB | 456 | Admin nhập chế độ chơi và Cờ Liên quân (dev) | Công khai | Giữ Media hiện có, thêm bản sao trong bộ của lượt chụp (mục 15) | Trình nhập đọc JSON và ảnh từ bộ tệp nguồn | 4 |
 | `Lien-Quan-v3/che-do-choi/co-lien-quan`: ảnh chụp trang bách khoa (bốn lượt chụp) | 407 · 263 MB | 0 | Không mã nào đọc | Đối chứng | `GAME_MODE_SOURCE`, mỗi lượt một bộ, ví dụ `co-lien-quan-2026-11-08-1503` | — | 3 |
 | `Lien-Quan-v3/che-do-choi/sanh-che-do/goc-da-che-uid` | 20 · 5 MB | 0 | Không mã nào đọc | Đối chứng | `GAME_MODE_SOURCE` `sanh-che-do` | — | 3 |
 | `Lien-Quan-v3/che-do-choi`: JSON, Markdown, văn bản | 16 · 0,8 MB | — | Admin chế độ chơi và Cờ Liên quân (dev), test `game-modes` | Dữ liệu nhập | Tệp của lượt chụp nào vào bộ của lượt đó (kể cả `du-lieu/<lượt>.json`); `che-do.json` và `README.md` vào bộ `sanh-che-do` | Trình nhập và test đọc bộ đã kéo về | 4 |
-| `Lien-Quan-v3/data` | 27 · 10 MB | — | Admin nhập tướng, so sánh icon, Ctrl-K (dev). `import-images.py`, `import-skill-images.py`, `import-warehouse.py`, `sync-media-sources.py` | Dữ liệu nhập | `IMPORT_DATA` `lien-quan-v3-data`, kèm chỉ mục đường dẫn → SHA-256 → asset Media của 6.225 ảnh | Admin đọc bộ qua URL ký sẵn | 4 |
+| `Lien-Quan-v3/data` | 27 · 10 MB | — | Admin nhập tướng, so sánh icon, Ctrl-K (dev). `import-images.py`, `import-skill-images.py`, `import-warehouse.py`, `sync-media-sources.py` | Dữ liệu nhập | `IMPORT_DATA` `lien-quan-v3-data` | Admin không còn đọc (mục 15); script đọc bản kéo về | 4 |
 | `Lien-Quan-v3/note` | 9 · < 0,1 MB | — | Người đọc: hướng dẫn thu thập và nguồn | Dữ liệu nhập | Bộ `lien-quan-v3-data` | — | 4 |
 | `Lien-Quan-v3/program` | 26 · 1,3 MB | — | Công cụ cũ tự ghi vào `data/` (sửa trang bị, quản lý portrait), đã có màn hình Admin thay | Bỏ | — | — | 4 |
 | `Lien-Quan-v3/preview` | 10 · 0,3 MB | — | Trang HTML xem `data/` | Bỏ | — | — | 4 |
