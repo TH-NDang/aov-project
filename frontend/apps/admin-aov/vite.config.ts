@@ -1,59 +1,9 @@
 import { mediaPath } from "../../tooling/media-proxy.mts"
-import { defineConfig, type Plugin } from "vite"
+import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
-import { createReadStream, statSync } from "node:fs"
-import { extname, resolve, sep } from "node:path"
 import { fileURLToPath, URL } from "node:url"
 import { jsonStorage } from "./server/json-storage.ts"
-import { patchCaptures } from "./server/patch-captures.ts"
-import { rankingCaptures } from "./server/ranking-captures.ts"
-import { shopCaptures } from "./server/shop-captures.ts"
-import { buildCaptures } from "./server/build-captures.ts"
-
-const RESOURCES_ROOT = fileURLToPath(new URL("../../../resources/Lien-Quan-v3", import.meta.url))
-
-const CONTENT_TYPES: Record<string, string> = {
-  ".json": "application/json; charset=utf-8",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".webp": "image/webp",
-  ".gif": "image/gif",
-  ".avif": "image/avif",
-}
-
-/**
- * Serves the working data set in `resources/` under `/__resources/` so the admin app can run
- * against realistic data before the wiki-service admin API exists. Dev and preview only.
- */
-function aovResources(): Plugin {
-  const handler = (req: { url?: string }, res: import("node:http").ServerResponse, next: () => void) => {
-    const pathname = decodeURIComponent((req.url ?? "/").split("?")[0])
-    const file = resolve(RESOURCES_ROOT, "." + pathname)
-    const type = CONTENT_TYPES[extname(file).toLowerCase()]
-    if (!type || !file.startsWith(RESOURCES_ROOT + sep)) return next()
-    try {
-      const stat = statSync(file)
-      if (!stat.isFile()) return next()
-      res.setHeader("Content-Type", type)
-      res.setHeader("Content-Length", stat.size)
-      res.setHeader("Cache-Control", "no-cache")
-      createReadStream(file).pipe(res)
-    } catch {
-      next()
-    }
-  }
-  return {
-    name: "aov-resources",
-    configureServer(server) {
-      server.middlewares.use("/__resources", handler)
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use("/__resources", handler)
-    },
-  }
-}
 
 export default defineConfig({
   server: {
@@ -97,16 +47,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: { include: ["@tanstack/react-table"] },
-  plugins: [
-    react(),
-    tailwindcss(),
-    aovResources(),
-    patchCaptures(fileURLToPath(new URL(".", import.meta.url))),
-    shopCaptures(fileURLToPath(new URL(".", import.meta.url))),
-    buildCaptures(fileURLToPath(new URL(".", import.meta.url))),
-    rankingCaptures(fileURLToPath(new URL(".", import.meta.url))),
-    jsonStorage(fileURLToPath(new URL("./storage", import.meta.url))),
-  ],
+  plugins: [react(), tailwindcss(), jsonStorage(fileURLToPath(new URL("./storage", import.meta.url)))],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   build: {
     rolldownOptions: {

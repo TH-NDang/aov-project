@@ -30,7 +30,7 @@ aov-project/
 │   └── community-service/ Java 21, Maven Wrapper — manual tournament backend; separate DB/API
 ├── frontend/           pnpm + Turborepo: apps/aov-wiki, apps/aov-stream, apps/admin-aov, packages/ui
 ├── infra/              Production-like Docker Compose: reverse proxy, realm template, backup scripts (guide: infra/README.md)
-└── resources/          Raw data and images (images via Git LFS).
+└── resources/          Local copies only, git-ignored (ADR-030); resources/README.md says where the data lives.
 ```
 
 ## Source of truth
@@ -175,7 +175,10 @@ These rules apply to new and touched tests; existing tests keep their names and 
   `feat(wiki/hero): ...`, `fix(fe/aov-wiki): ...`, `docs(spec): ...`, `chore(infra): ...`.
 - One logical change per commit. Commit spec changes separately from code.
 - Never commit secrets (`.env`, keys, tokens). Only `.env.example` is tracked.
-- Images under `resources/` are stored with Git LFS (`.gitattributes`). Do not change those rules without asking.
+- `resources/` is git-ignored except `resources/README.md` (ADR-030). Public images are Media; evidence captures and
+  import data live in the R2 source collections, and `pnpm sources:sync pull` (in `frontend/apps/admin-aov`) restores a
+  local copy. Never commit files from `resources/`. Keep the Git LFS rules in `.gitattributes`; do not change them
+  without asking.
 - CI: `.github/workflows/backend.yml` runs `mvnw verify` (with Docker, so Testcontainers tests run) on every push touching `backend/wiki-service`.
 - A Flyway version number is taken when the branch is merged, not when the migration is written: use the next free
   number on the target branch and rename the file in the merge. A gap is fine. Never reuse or renumber a version that
@@ -216,6 +219,6 @@ git lfs install --skip-repo
 
 ## Do not
 
-- Do not modify files in `resources/` unless explicitly asked.
+- Do not modify or delete local files in `resources/` (above all the untracked `resources/raw`) unless explicitly asked.
 - Do not add Redis, Kafka, Kubernetes or new services without an ADR.
 - Do not translate or rewrite the Vietnamese specs unless explicitly asked.

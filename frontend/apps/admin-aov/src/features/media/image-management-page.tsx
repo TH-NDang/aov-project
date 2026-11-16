@@ -30,6 +30,7 @@ import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../publishing/asset-picker"
 import { control } from "../publishing/fields"
+import { FileTabs } from "../files/file-tabs"
 import type { Asset, PageSlice } from "../publishing/types"
 import {
   LibraryImage,
@@ -327,7 +328,7 @@ export function ImageManagementPage() {
   return (
     <Page>
       <PageHeader
-        title="Quản lý ảnh"
+        title="Quản lý tệp"
         actions={
           <PageActionsMenu label="Thêm ảnh và tùy chọn thư viện">
             {writable && (
@@ -355,7 +356,9 @@ export function ImageManagementPage() {
             </DropdownMenuItem>
           </PageActionsMenu>
         }
-      />
+      >
+        <FileTabs current="images" />
+      </PageHeader>
       <div className="flex flex-wrap items-center gap-2" role="region" aria-label="Bộ lọc thư viện ảnh">
         {/* One control for the credit filter; its count replaces a separate reminder. */}
         <FilterTabs label="Lọc theo nguồn">

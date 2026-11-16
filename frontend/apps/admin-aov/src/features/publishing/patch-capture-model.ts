@@ -11,8 +11,10 @@ export type CaptureLink = PatchLink | "SHOP"
 export interface CaptureImage extends Omit<PatchImage, "section" | "link"> {
   section: PatchImage["section"] | "SHOP"
   link: CaptureLink
-  /** Shop screenshots are not addressed through a patch set. */
-  url?: string
+  /** The bytes Admin opens through a presigned link; a patch picture's id is already its SHA-256. */
+  sha256?: string
+  /** Where the picture sits in its source collection (ADR-030). */
+  path?: string
   kind?: ShopCaptureImage["kind"]
   skinKey?: string | null
   entryName?: string
@@ -259,8 +261,12 @@ export const captureLinkHints: Record<CaptureLink, string> = {
   SHOP: "Giá trị này được đọc từ thẻ đang đánh dấu trên ảnh chụp cửa hàng, chưa ai xác nhận lại trong game.",
 }
 
-export const captureImageUrl = (patchCode: string, image: Pick<CaptureImage, "id" | "url">) =>
-  image.url ?? `/__patch-captures/${encodeURIComponent(patchCode)}/images/${image.id}.png`
+/** The SHA-256 a picture is stored under in the private bucket; a shop card names its screenshot's. */
+export const captureSha256 = (image: Pick<CaptureImage, "id" | "sha256">) => image.sha256 ?? image.id
+
+/** Where the picture sits among the source files; without a published path, where it was inside its ZIP. */
+export const captureSourcePath = (image: Pick<CaptureImage, "archive" | "member" | "path">) =>
+  image.path ?? `${image.archive}/${image.member}`
 
 export interface CaptureZoom {
   scale: number

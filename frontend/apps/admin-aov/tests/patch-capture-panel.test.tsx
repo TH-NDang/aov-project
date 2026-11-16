@@ -1,4 +1,6 @@
+import { setFetch } from "./fixtures/dispatch-fetch"
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
@@ -19,16 +21,22 @@ import {
   type CaptureTarget,
   type CaptureImage,
   captureImageTitle,
-  captureImageUrl,
+  captureSha256,
   clampCaptureZoom,
   withShopGroups,
   zoomCaptureAt,
 } from "../src/features/publishing/patch-capture-model"
 import type { Skill } from "../src/features/publishing/types"
-import { fetchCaptureSets, fetchHeroCaptures, findHeroCode } from "../src/features/publishing/use-patch-captures"
+import {
+  fetchCaptureSets,
+  fetchHeroCaptures,
+  fetchShopCaptures,
+  findHeroCode,
+} from "../src/features/publishing/use-patch-captures"
 
+/** A patch picture's id is the SHA-256 of its bytes, which is also what its presigned link is asked by. */
 const capture = (id: string, section: CaptureImage["section"], extra: Partial<CaptureImage> = {}): CaptureImage => ({
-  id: id.padEnd(64, "0"),
+  id: createHash("sha256").update(id).digest("hex"),
   fileName: `${id}.png`,
   archive: "01.zip",
   member: `run/airi/${id}.png`,
@@ -237,6 +245,10 @@ test("variants of one slot are told apart in the chip label", () => {
 })
 
 const shopBox = { x: 615, y: 217, width: 279, height: 509, imageWidth: 2400, imageHeight: 1080 }
+/** Every card of these fixtures sits on one screenshot. */
+const SHOP_SCREENSHOT = "5".repeat(64)
+/** What the fake backend answers for a picture's presigned link. */
+const link = (sha256: string) => `https://r2.test/sources/${sha256}?X-Amz-Signature=fixture`
 const shopImage = (
   kind: "price" | "skin",
   skinKey: string | null,
@@ -258,7 +270,8 @@ const shopImage = (
   card: 1,
   box: shopBox,
   capturedOn: "2026-09-16",
-  url: "/__shop-captures/images/x.jpg",
+  sha256: SHOP_SCREENSHOT,
+  path: "raw/shop/2026-09-16/tuong/Screenshot.jpg",
 })
 
 test("shop images take the skins group's place and sit beside the stats, even without a patch set", () => {
@@ -285,7 +298,8 @@ test("shop images take the skins group's place and sit beside the stats, even wi
     withShopGroups([], shop).map((group) => group.key),
     ["shop-price", "skins"],
   )
-  assert.equal(captureImageUrl("2026-10-30", shop[0]!), "/__shop-captures/images/x.jpg")
+  assert.equal(captureSha256(shop[0]!), SHOP_SCREENSHOT, "a card opens its screenshot's bytes")
+  assert.equal(captureSha256(images[0]!), images[0]!.id, "a patch picture is named by its bytes")
 })
 
 test("a shop image opens on its own card, whole inside the frame", () => {
@@ -334,28 +348,58 @@ test("the hero code comes from the id, trying the name first and walking the cat
   assert.equal(await findHeroCode("missing", "", list), null)
 })
 
-test("capture responses separate a missing patch, a missing hero and a server without the endpoint", async () => {
-  const previous = globalThis.fetch
-  const respond = (status: number, body: unknown, type = "application/json") =>
-    (async () =>
-      new Response(typeof body === "string" ? body : JSON.stringify(body), {
-        status,
-        headers: { "content-type": type },
-      })) as typeof fetch
+/**
+ * The Admin API and the private bucket as the readers of published sets see them (ADR-030): each file is a collection
+ * of its kind whose capture-manifest.json is that file. `failure` answers every Admin API call instead.
+ */
+function publishedSets(files: Record<string, unknown>[], failure?: { status: number; body: unknown }): typeof fetch {
+  return async (input, init) => {
+    const url = new URL(String(input), "http://localhost")
+    const path = url.pathname.replace("/api/wiki/v1", "")
+    if (path === "/auth/refresh") return Response.json({ accessToken: "panel-fixture", expiresIn: 3600 })
+    if (failure && path.startsWith("/admin/")) return Response.json(failure.body, { status: failure.status })
+    if (path === "/admin/source-collections") {
+      const items = files
+        .map((file, index) => ({ id: `set-${index}`, code: `set-${index}`, category: file.kind, label: `Bộ ${index}` }))
+        .filter((item) => item.category === url.searchParams.get("category"))
+      return Response.json({ items, page: 0, size: 100, totalElements: items.length })
+    }
+    const links = /^\/admin\/source-collections\/set-(\d+)\/links$/.exec(path)
+    if (links && init?.method === "POST") {
+      const sha256 = createHash("sha256")
+        .update(JSON.stringify(files[Number(links[1])]))
+        .digest("hex")
+      const item = { path: "capture-manifest.json", sha256, url: `https://r2.test/manifest/${links[1]}` }
+      return Response.json({ items: [item], missing: [] })
+    }
+    const manifest = /^\/manifest\/(\d+)$/.exec(path)
+    if (manifest && url.host === "r2.test") return Response.json(files[Number(manifest[1])])
+    return Response.json({ code: "NOT_FOUND" }, { status: 404 })
+  }
+}
+
+const patchSet = (patchCode: string) => ({
+  kind: "HERO_CAPTURE",
+  patchCode,
+  archive: "outer.zip",
+  coverage: {},
+  sources: [],
+  heroes: { airi: { heroCode: "airi", sourceFolder: "airi", images: [images[0]] } },
+})
+
+test("published sets separate a missing patch, a missing hero and an account without access", async () => {
+  const restore = setFetch(publishedSets([patchSet("2026-10-30")]))
   try {
-    globalThis.fetch = respond(200, { heroCode: "airi", sourceFolder: "airi", images: [images[0]] })
     const ready = await fetchHeroCaptures("2026-10-30", "airi")
-    assert.equal(ready.status, "ready")
-    globalThis.fetch = respond(404, { code: "PATCH_NOT_FOUND" })
+    assert.deepEqual(ready, { status: "ready", heroCode: "airi", sourceFolder: "airi", images: [images[0]] })
     assert.deepEqual(await fetchHeroCaptures("2025-01-01", "airi"), { status: "no-patch" })
-    globalThis.fetch = respond(404, { code: "HERO_NOT_FOUND" })
     assert.deepEqual(await fetchHeroCaptures("2026-10-30", "x"), { status: "no-hero", heroCode: "x" })
-    globalThis.fetch = respond(200, "<!doctype html>", "text/html")
+    setFetch(publishedSets([], { status: 403, body: { code: "FORBIDDEN" } }))
     assert.deepEqual(await fetchHeroCaptures("2026-10-30", "airi"), { status: "unavailable" })
-    globalThis.fetch = respond(500, { code: "CAPTURE_READ_FAILED", message: "boom" })
-    assert.deepEqual(await fetchHeroCaptures("2026-10-30", "airi"), { status: "error", message: "boom" })
+    setFetch(publishedSets([], { status: 500, body: { code: "INTERNAL_ERROR" } }))
+    assert.equal((await fetchHeroCaptures("2026-10-30", "airi")).status, "error")
   } finally {
-    globalThis.fetch = previous
+    restore()
   }
 })
 
@@ -371,7 +415,18 @@ async function withPanel(run: (ui: Awaited<ReturnType<typeof mount>>) => Promise
 async function mount() {
   const dom = new JSDOM('<!doctype html><div id="root"></div>', { url: "http://localhost/hero/a" })
   const originals = new Map<string, PropertyDescriptor | undefined>()
-  const previousFetch = globalThis.fetch
+  // The panel asks the backend for presigned links; this one signs every picture it is asked about.
+  const restoreFetch = setFetch(async (input, init) => {
+    const path = String(input).replace("/api/wiki/v1", "")
+    if (path === "/auth/refresh") return Response.json({ accessToken: "panel-fixture", expiresIn: 3600 })
+    if (path === "/admin/source-files/links" && init?.method === "POST") {
+      const { sha256 } = JSON.parse(String(init.body)) as { sha256: string[] }
+      const items = sha256.map((value) => ({ sha256: value, url: link(value), expiresAt: "2099-01-01T00:00:00Z" }))
+      return Response.json({ items, missing: [] })
+    }
+    return Response.json({ code: "NOT_FOUND" }, { status: 404 })
+  })
+  const client = new QueryClient()
   for (const [key, value] of Object.entries({
     React,
     window: dom.window,
@@ -445,7 +500,7 @@ async function mount() {
       },
     }
     return (
-      <QueryClientProvider client={new QueryClient()}>
+      <QueryClientProvider client={client}>
         <TooltipProvider>
           <PatchCaptureProvider value={captures as never}>
             <PatchCaptureToggle />
@@ -487,6 +542,16 @@ async function mount() {
         document.querySelector("aside")!.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key, bubbles: true }))
       }),
     picture: () => document.querySelector<HTMLImageElement>("[data-testid=capture-frame] img"),
+    /** Waits until the open picture shows these bytes; its presigned link arrives a moment after the panel. */
+    showing: async (sha256: string) => {
+      for (let attempt = 0; attempt < 200; attempt++) {
+        if (document.querySelector("[data-testid=capture-frame] img")?.getAttribute("src") === link(sha256)) return
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 5))
+        })
+      }
+      assert.fail(`The panel never showed ${link(sha256)}.`)
+    },
     byLabel: (label: string) => document.querySelector(`[aria-label="${label}"]`),
     chip: (label: string) =>
       [...document.querySelectorAll('[aria-label="Chọn mục cần xem ảnh"] button')].find((button) =>
@@ -494,7 +559,8 @@ async function mount() {
       ),
     close: async () => {
       await act(async () => root.unmount())
-      globalThis.fetch = previousFetch
+      client.clear()
+      restoreFetch()
       for (const [key, descriptor] of originals)
         if (descriptor) Object.defineProperty(globalThis, key, descriptor)
         else delete (globalThis as Record<string, unknown>)[key]
@@ -509,7 +575,7 @@ test("opening a hero shows the original next to the page, with zoom and quick sw
   await withPanel(async (ui) => {
     await ui.render(ready)
     assert.equal(ui.document.querySelector("aside")?.getAttribute("aria-label"), "Ảnh gốc của tướng")
-    assert.equal(ui.picture()?.getAttribute("src"), `/__patch-captures/2026-10-30/images/${images[0]!.id}.png`)
+    await ui.showing(images[0]!.id)
     assert.match(ui.document.querySelector("aside")!.textContent!, /1\/7 ảnh của tướng/)
     assert.match(ui.document.querySelector("aside")!.textContent!, /Chỉ theo tên tệp/)
 
@@ -521,15 +587,16 @@ test("opening a hero shows the original next to the page, with zoom and quick sw
     await ui.press("ArrowRight")
     await ui.press("ArrowRight")
     assert.equal(ui.chip("Chiêu 1")?.getAttribute("aria-pressed"), "true")
-    assert.equal(ui.picture()?.getAttribute("src"), `/__patch-captures/2026-10-30/images/${images[3]!.id}.png`)
+    await ui.showing(images[3]!.id)
     assert.deepEqual(ui.navigations.at(-1), { tab: "skills", skill: "skill-1-1", group: "skill:skill-1-1" })
     const led = ui.navigations.length
     await ui.click(ui.byLabel(`Ảnh 2: one-b.png`))
     assert.equal(ui.navigations.length, led, "Another picture of the same skill leaves the page where it is")
-    assert.equal(ui.picture()?.getAttribute("src"), `/__patch-captures/2026-10-30/images/${images[4]!.id}.png`)
+    // The group's links were asked together, so the second picture opens at once.
+    assert.equal(ui.picture()?.getAttribute("src"), link(images[4]!.id))
     assert.equal(ui.byLabel(`Ảnh 2: one-b.png`)?.getAttribute("aria-current"), "true")
     await ui.press("ArrowLeft")
-    assert.equal(ui.picture()?.getAttribute("src"), `/__patch-captures/2026-10-30/images/${images[3]!.id}.png`)
+    assert.equal(ui.picture()?.getAttribute("src"), link(images[3]!.id))
 
     // jsdom has no layout, so zoom buttons are checked through the scale they report.
     assert.equal(ui.byLabel("Thu nhỏ ảnh")?.hasAttribute("disabled"), true)
@@ -560,11 +627,11 @@ test("an item button reveals that item's own images and admits when it has none"
     assert.equal(ui.byLabel("Phong thần không có ảnh gốc")?.textContent, "Không có ảnh")
     await ui.click(ui.byLabel("Xem 2 ảnh gốc của Lôi đình"))
     assert.equal(ui.chip("Chiêu 1")?.getAttribute("aria-pressed"), "true")
-    assert.equal(ui.picture()?.getAttribute("src"), `/__patch-captures/2026-10-30/images/${images[3]!.id}.png`)
+    await ui.showing(images[3]!.id)
   })
 })
 
-test("other states explain themselves, and the toggle disappears without the endpoint", async () => {
+test("other states explain themselves, and the toggle disappears for an account without source files", async () => {
   await withPanel(async (ui) => {
     await ui.render({ status: "no-patch" })
     assert.match(ui.document.querySelector("aside [role=status]")!.textContent!, /Patch 2026-10-30 chưa có bộ ảnh gốc/)
@@ -612,7 +679,7 @@ test("a shop card opens from its own button, marked on the screenshot, with what
     assert.equal(aside.querySelector("h3")!.textContent, "Trang phục · skin-b")
     assert.match(aside.textContent!, /Đọc từ thẻ số 1: 28\.888 vàng/)
     assert.match(aside.textContent!, /chưa ai xác nhận lại trong game/)
-    assert.equal(ui.picture()?.getAttribute("src"), "/__shop-captures/images/x.jpg")
+    await ui.showing(SHOP_SCREENSHOT)
 
     assert.equal(ui.document.querySelector("[data-testid=capture-card-mark]"), null, "no mark before the picture loads")
     await act(async () => {
@@ -639,7 +706,7 @@ test("shop cards still open when the patch being viewed has no capture set", asy
     assert.match(aside.querySelector("h2")!.textContent!, /cửa hàng/)
     assert.doesNotMatch(aside.textContent!, /chưa có bộ ảnh gốc/)
     assert.match(aside.textContent!, /Xem bộ ảnh patch 2026-10-30/, "the set that exists can still be opened")
-    assert.equal(ui.picture()?.getAttribute("src"), "/__shop-captures/images/x.jpg")
+    await ui.showing(SHOP_SCREENSHOT)
   })
 })
 
@@ -651,18 +718,34 @@ test("a rejected image names the file's claimed skill without saying it shows th
   })
 })
 
-test("capture sets are read only from a server that has the endpoint", async () => {
-  const previous = globalThis.fetch
+test("capture sets list the published patches, shop visits read newest first, and no access shows none", async () => {
+  const shopVisit = (capturedOn: string, image: CaptureImage) => ({
+    kind: "SHOP_CAPTURE",
+    capturedOn,
+    region: "VN",
+    heroes: { airi: [{ ...image, capturedOn }] },
+  })
+  const restore = setFetch(
+    publishedSets([
+      patchSet("2026-10-30"),
+      shopVisit("2026-09-16", shopImage("price", null)),
+      shopVisit("2026-11-01", shopImage("skin", "a")),
+    ]),
+  )
   try {
-    globalThis.fetch = (async () =>
-      new Response(JSON.stringify({ patches: ["2026-10-30"] }), {
-        headers: { "content-type": "application/json" },
-      })) as typeof fetch
     assert.deepEqual(await fetchCaptureSets(), ["2026-10-30"])
-    globalThis.fetch = (async () =>
-      new Response("<!doctype html>", { headers: { "content-type": "text/html" } })) as typeof fetch
+    assert.deepEqual(
+      (await fetchShopCaptures("airi")).map((image) => [image.capturedOn, image.kind]),
+      [
+        ["2026-11-01", "skin"],
+        ["2026-09-16", "price"],
+      ],
+    )
+    assert.deepEqual(await fetchShopCaptures("nobody"), [])
+    setFetch(publishedSets([], { status: 403, body: { code: "FORBIDDEN" } }))
     assert.deepEqual(await fetchCaptureSets(), [])
+    assert.deepEqual(await fetchShopCaptures("airi"), [])
   } finally {
-    globalThis.fetch = previous
+    restore()
   }
 })

@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import { useQuery } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
+import { fetchPublishedSets, isSourceAccessDenied } from "../files/capture-sets"
 import {
   buildCaptureGroups,
   withShopGroups,
@@ -18,7 +19,7 @@ const OPEN_KEY = "aov-admin:hero-captures-open"
 export type CaptureState =
   | { status: "idle" }
   | { status: "loading" }
-  /** The endpoint exists only on the Vite dev and preview servers. */
+  /** The account cannot open source files (no catalog:read), so the panel stays out of the way. */
   | { status: "unavailable" }
   | { status: "no-patch" }
   | { status: "no-hero"; heroCode: string | null }
@@ -41,37 +42,39 @@ export async function findHeroCode(heroId: string, name: string, list: ListHeroe
   }
 }
 
+/** One patch's screenshots of a hero, from the set publish-captures left in the private bucket (ADR-030). */
 export async function fetchHeroCaptures(patchCode: string | undefined, heroCode: string): Promise<CaptureState> {
-  const patch = encodeURIComponent(patchCode ?? "none")
-  const response = await fetch(`/__patch-captures/${patch}/heroes/${encodeURIComponent(heroCode)}.json`, {
-    credentials: "omit",
-  })
-  if (!response.headers.get("content-type")?.includes("application/json")) return { status: "unavailable" }
-  const body = (await response.json()) as {
-    code?: string
-    message?: string
-    heroCode: string
-    sourceFolder: string
-    images: CaptureImage[]
+  try {
+    const set = (await fetchPublishedSets("HERO_CAPTURE")).find((entry) => entry.set.patchCode === patchCode)?.set
+    if (!set) return { status: "no-patch" }
+    const hero = set.heroes[heroCode]
+    if (!hero) return { status: "no-hero", heroCode }
+    return { status: "ready", heroCode: hero.heroCode, sourceFolder: hero.sourceFolder, images: hero.images }
+  } catch (failure) {
+    if (isSourceAccessDenied(failure)) return { status: "unavailable" }
+    return { status: "error", message: errorMessage(failure) }
   }
-  if (response.ok)
-    return { status: "ready", heroCode: body.heroCode, sourceFolder: body.sourceFolder, images: body.images }
-  if (body.code === "HERO_NOT_FOUND") return { status: "no-hero", heroCode }
-  if (body.code === "PATCH_NOT_FOUND" || body.code === "CAPTURES_UNAVAILABLE") return { status: "no-patch" }
-  return { status: "error", message: body.message ?? "Không đọc được bộ ảnh gốc." }
 }
 
+/** Patches that have a published set, so a revision from another patch can still reach the screenshots that exist. */
 export async function fetchCaptureSets(): Promise<string[]> {
-  const response = await fetch("/__patch-captures/sets.json", { credentials: "omit" })
-  if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) return []
-  return ((await response.json()) as { patches: string[] }).patches
+  try {
+    return (await fetchPublishedSets("HERO_CAPTURE")).map((entry) => entry.set.patchCode).sort()
+  } catch {
+    return []
+  }
 }
 
-/** Empty where the endpoint does not exist or this hero has no shop screenshot. */
+/** Newest shop visit first; empty where the account cannot open source files or the hero has no shop screenshot. */
 export async function fetchShopCaptures(heroCode: string): Promise<CaptureImage[]> {
-  const response = await fetch(`/__shop-captures/heroes/${encodeURIComponent(heroCode)}.json`, { credentials: "omit" })
-  if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) return []
-  return ((await response.json()) as { images?: CaptureImage[] }).images ?? []
+  try {
+    return (await fetchPublishedSets("SHOP_CAPTURE"))
+      .map((entry) => entry.set)
+      .sort((a, b) => b.capturedOn.localeCompare(a.capturedOn))
+      .flatMap((set) => set.heroes[heroCode] ?? [])
+  } catch {
+    return []
+  }
 }
 
 function readOpen() {

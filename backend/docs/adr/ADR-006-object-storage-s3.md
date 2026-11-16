@@ -49,6 +49,11 @@ Lựa chọn storage cho production chưa cần chốt ngay, nhưng code không 
 | Spring Cloud AWS (`S3Template`) | Thêm một lớp phụ thuộc; cần kiểm tra tương thích Spring Boot 4.1 trước khi dùng. Có thể xem xét lại sau |
 | Lưu ảnh trên filesystem của server | Không scale, khó backup, không có presigned URL |
 
+## Bổ sung 14/11/2026
+
+Môi trường dev dùng thẳng Cloudflare R2 (ADR-030 mục 14). SeaweedFS chỉ còn chạy trong Testcontainers và khi bật
+profile `local-storage` của `compose.yaml`. Adapter và các thao tác S3 được phép không đổi.
+
 ## Tài liệu tham khảo
 
 - AWS SDK for Java 2.x Developer Guide: https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/

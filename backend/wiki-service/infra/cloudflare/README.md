@@ -157,3 +157,52 @@ Ba công cụ `research/character-images/import-images.py`, `import-skill-images
 ```
 
 Chỉ đúng hostname HTTPS được cho phép; không chấp nhận cổng tùy ý, userinfo, fragment, hostname giả hoặc redirect. URL API backend và Keycloak của các công cụ này vẫn là localhost. Việc này không thay đổi cách upload trực tiếp của giao diện admin.
+
+## Tệp nguồn riêng tư (ADR-030)
+
+Ảnh đối chứng và dữ liệu nhập nằm trong bucket thứ ba, không bao giờ công khai. Backend lưu mỗi bytes một lần ở key
+`sources/<sha256>`; Admin xem qua URL GET ký sẵn sống 10 phút. Chi tiết: ADR-030 và các mục ADR-030 trong 01, 02, 03.
+
+### Thiết lập trên Cloudflare (người dùng tự làm)
+
+1. **R2 → Create bucket**: tên `aov-source-private`, loại Standard, vị trí Asia-Pacific như hai bucket cũ.
+2. Không gắn Custom Domain, không bật Public Development URL (`r2.dev`).
+3. **Settings → CORS Policy**: dán nội dung `source-cors.json` (chỉ `GET`/`HEAD` từ origin Admin). Khi Admin có địa chỉ
+   khác, thêm đúng origin đó, không dùng wildcard.
+4. **R2 → Manage API tokens**: sửa token đang dùng trong `.env.r2` để có quyền Object Read & Write trên cả
+   `aov-source-private`, hoặc tạo token mới chỉ cho ba bucket rồi thay khóa trong `.env.r2`. Không gửi khóa vào chat.
+5. Thêm vào `.env.r2`: `STORAGE_SOURCES_BUCKET=aov-source-private`.
+6. Tùy chọn, để Admin thấy số thật của Cloudflare: tạo API token chỉ có quyền **Account Analytics: Read**, thêm
+   `CLOUDFLARE_ACCOUNT_ID` và `CLOUDFLARE_ANALYTICS_TOKEN` vào `.env.r2`.
+
+Upload vẫn đi qua `incoming/` của `aov-media-private`, nên không cần CORS `PUT` cho bucket mới. Có thể đặt lifecycle
+xóa `incoming/` sau một ngày trên `aov-media-private`; không đặt lifecycle cho `aov-source-private`.
+
+Backend phải chạy bản có migration V071 trước khi dùng các lệnh dưới đây. V071 chỉ thêm bảng và chỉ mục.
+
+### Đồng bộ bằng dòng lệnh
+
+Chạy trong `frontend/apps/admin-aov`, với backend và Keycloak local đang chạy. Công cụ đăng nhập như các công cụ nhập
+trong `research/` (`WIKI_IMPORT_USERNAME`, `WIKI_IMPORT_PASSWORD`, mặc định đọc tài khoản trong realm local) và không
+cần khóa R2.
+
+```powershell
+# Kế hoạch: số tệp, dung lượng, số nội dung khác nhau, ước lượng thao tác và dung lượng sau khi tải. Không ghi gì.
+pnpm sources:sync plan C:\...\resources\raw\shop\2026-09-16 --collection shop-2026-09-16 --prefix raw/shop/2026-09-16
+
+# Đẩy lên sau khi đã duyệt kế hoạch. Tạo bộ nếu chưa có; đọc lại từng tệp để đối chiếu SHA-256.
+pnpm sources:sync push C:\...\resources\raw\shop\2026-09-16 --collection shop-2026-09-16 `
+  --category SHOP_CAPTURE --label "Ảnh cửa hàng 16/09/2026" --captured-on 2026-09-16 `
+  --prefix raw/shop/2026-09-16 --apply
+
+# Kéo một bộ về thư mục cục bộ cho công cụ nhập; thiếu --apply thì chỉ báo sẽ tải bao nhiêu.
+pnpm sources:sync pull --collection lien-quan-v3-data --to C:\...\sources\lien-quan-v3-data --apply
+```
+
+- Nguồn là một thư mục, một tệp, hoặc một ZIP. ZIP chứa ZIP con (như bộ ảnh tướng) được mở thêm một tầng; đường dẫn
+  giữ tên ZIP, ví dụ `raw/tuong-v4/01_aleister_tamyn/<tệp>`.
+- `--exclude <chuỗi>` bỏ đường dẫn có chuỗi đó, ví dụ `--exclude .local-state --exclude __pycache__`.
+- Đường dẫn đã có tệp khác thì tệp đó bị báo lỗi; thêm `--replace` mới thay.
+- Kế hoạch ghi vào `.local-state/source-sync/<mã bộ>.<nguồn>.plan.json`; biên nhận JSONL có fsync ghi vào
+  `.local-state/source-sync/<mã bộ>.jsonl`. Chạy lại an toàn: bytes đã có chỉ được đặt vào bộ, không tải lại.
+- Mỗi tệp mới tốn 2 thao tác lớp A (PUT, CopyObject) và 3 lớp B (HEAD, GET khi complete, GET đọc lại).

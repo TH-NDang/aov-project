@@ -4,7 +4,7 @@ Thư mục này đóng gói Wiki, Stream, Admin, `wiki-service`, `community-serv
 reverse proxy Caddy. Không triển khai đi đâu cả và không đụng tới môi trường dev trong `backend/wiki-service/compose.yaml`.
 Lý do các lựa chọn nằm ở [ADR-021](../backend/docs/adr/ADR-021-dong-goi-chay-mot-may.md).
 
-Cần Docker kèm Compose, và Git LFS khi clone (bản build Wiki đóng gói ảnh kỹ năng từ `resources/`).
+Cần Docker kèm Compose. Bản build không đọc `resources/` (ADR-030), nên clone không cần Git LFS.
 
 ## Khởi động
 
@@ -25,12 +25,6 @@ Lần đầu phải tải dependency và build image: đo trên máy đang bận
 
 Tài khoản thử: `admin`, `editor`, `publisher`, mật khẩu là `TEST_USER_PASSWORD` trong `.env`. Hệ thống mới không có dữ liệu Wiki,
 danh mục trống là đúng; xem [Đưa dữ liệu vào](#đưa-dữ-liệu-vào).
-
-Lỗi `holds Git LFS pointers` khi build nghĩa là checkout chưa có ảnh thật:
-
-```bash
-git lfs pull --include="resources/Lien-Quan-v3/assets/skill/*"
-```
 
 ## Dừng và xóa
 
@@ -186,6 +180,8 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
 - **Tài khoản thật**: tạo biên tập viên và gán vai trò trong console; bật MFA nếu cần.
 - **CDN hoặc load balancer**: nếu đặt trước Caddy phải khai báo `trusted_proxies`, nếu không giới hạn tần suất theo IP sẽ sai.
 - **Theo dõi**: chưa có giám sát uptime, cảnh báo đầy đĩa hay gom log; log JSON hiện chỉ xoay vòng trong Docker.
-- **Tính năng chỉ có ở Vite dev**: JSON storage, ảnh gốc của patch, ảnh shop và nhập từ `/__resources/` trong Admin cần `resources/` và
-  dev server, nên bản build trả 404 cho chúng.
+- **Tính năng chỉ có ở Vite dev**: JSON storage của Admin cần dev server, nên bản build trả 404 cho nó.
+- **Tệp nguồn (ADR-030)**: ảnh đối chứng và dữ liệu nhập nằm trong bucket R2 `aov-source-private`. Stack này còn dùng
+  SeaweedFS, nên các màn ảnh gốc, cửa hàng, build và xếp hạng chỉ có dữ liệu khi stack chuyển sang R2 (thêm origin Admin
+  của stack vào CORS của bucket) hoặc đẩy bộ tệp nguồn vào SeaweedFS.
 - **Content-Security-Policy** chưa đặt; cần liệt kê nguồn thật như YouTube trước khi bật.

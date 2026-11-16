@@ -7,7 +7,7 @@ createRoot(document.getElementById("root")!).render(
     <h1 className="mb-6 text-2xl">Nguồn ảnh</h1>
     <div className="relative w-72 overflow-hidden rounded-xl border border-white/20">
       <img
-        src="/__resources/assets/hero/portrait/airi-1-portrait.png"
+        src="https://img.athahub.com/assets/4bdca004-d2d1-449b-8ac8-c99a504c8993/97e0b9fc-a16c-4fec-85a7-ed8e4dd8c7c6.png"
         alt="Airi"
         className="h-96 w-full object-cover"
       />

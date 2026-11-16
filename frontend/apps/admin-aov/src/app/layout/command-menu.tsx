@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router"
+import { useQuery } from "@tanstack/react-query"
 import { Moon, Search, Sun } from "lucide-react"
 import { useTheme } from "@/app/theme"
 import {
@@ -14,10 +15,17 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
 import { MEDIA_NAV, NAV_ITEMS } from "@/app/nav"
 import { NavIcon } from "@/app/nav-icon"
-import { MediaImage } from "@/components/media-image"
-import { useEnchantments, useItemCatalog } from "@/lib/queries"
-import { commandFilter, formatNumber } from "@/lib/text"
+import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
+import { defaultRulesetId } from "@/features/publishing/default-ruleset"
+import { HeroAsset } from "@/features/publishing/hero-asset"
+import { useContentLocale } from "@/features/publishing/publication-overview"
+import { createPublishingApi } from "@/features/publishing/publishing-api"
+import { useWarehouseCatalog } from "@/features/warehouse/warehouse-api"
+import { warehouseName } from "@/features/warehouse/warehouse-types"
+import { commandFilter, formatNumber } from "@/lib/text"
+
+const publishing = createPublishingApi(backendRequest)
 
 interface CommandMenuProps {
   open: boolean
@@ -29,8 +37,18 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
   const navigate = useNavigate()
   const { resolvedTheme, setTheme } = useTheme()
   const [search, setSearch] = useState("")
-  const items = useItemCatalog()
-  const enchantments = useEnchantments()
+  const canReadCatalog = !!actor?.capabilities.includes("catalog:read")
+  const locale = useContentLocale()
+  const rulesets = useQuery({
+    queryKey: ["publishing-rulesets"],
+    queryFn: publishing.rulesets,
+    enabled: open && canReadCatalog,
+    staleTime: 60000,
+  })
+  // The warehouse loads the first time the menu opens, not with every page; reopening reuses it.
+  const rulesetId = open && canReadCatalog ? defaultRulesetId(rulesets.data) : ""
+  const items = useWarehouseCatalog("items", rulesetId, locale)
+  const enchantments = useWarehouseCatalog("enchantments", rulesetId, locale)
 
   const run = (action: () => void) => {
     onOpenChange(false)
@@ -74,7 +92,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
             </CommandGroup>
             {search.trim().length > 1 && (
               <CommandGroup heading="Tìm nhanh">
-                {actor?.capabilities.includes("catalog:read") && (
+                {canReadCatalog && (
                   <CommandItem
                     value={`tim tuong ${search}`}
                     onSelect={() => run(() => navigate(`/hero?q=${encodeURIComponent(search.trim())}`))}
@@ -93,36 +111,36 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
               </CommandGroup>
             )}
             <CommandSeparator />
-            {items.data && (
+            {!!items.data?.length && (
               <CommandGroup heading="Trang bị">
-                {items.data.items.map((item) => (
+                {items.data.map((item) => (
                   <CommandItem
                     key={item.id}
-                    value={`trang bi ${item.name} ${item.id}`}
+                    value={`trang bi ${warehouseName(item, locale)} ${item.code}`}
                     onSelect={() => run(() => navigate(`/items?item=${item.id}`))}
                   >
-                    <MediaImage path={item.image} className="size-6 rounded-sm object-contain" />
-                    <span>{item.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {item.category} · {formatNumber(item.price)} vàng
-                    </span>
+                    <HeroAsset id={item.content.iconAssetId} alt="" className="size-6 shrink-0 rounded-sm" />
+                    <span>{warehouseName(item, locale)}</span>
+                    {item.content.price !== null && (
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {formatNumber(item.content.price)} vàng
+                      </span>
+                    )}
                   </CommandItem>
                 ))}
               </CommandGroup>
             )}
-            {enchantments.data && (
+            {!!enchantments.data?.length && (
               <CommandGroup heading="Phù hiệu">
                 {enchantments.data.map((item) => (
                   <CommandItem
                     key={item.id}
-                    value={`phu hieu ${item.name} ${item.id}`}
+                    value={`phu hieu ${warehouseName(item, locale)} ${item.code}`}
                     onSelect={() => run(() => navigate(`/enchantments?item=${item.id}`))}
                   >
-                    <MediaImage path={item.image.file} className="size-6 rounded-sm object-contain" />
-                    <span>{item.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {item.position.group} · Cấp {item.tierLabel}
-                    </span>
+                    <HeroAsset id={item.content.iconAssetId} alt="" className="size-6 shrink-0 rounded-sm" />
+                    <span>{warehouseName(item, locale)}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">Cấp {item.content.tier}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>

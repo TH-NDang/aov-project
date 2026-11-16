@@ -3,8 +3,10 @@
 # Subdirectories may have their own .gitignore (e.g. backend/wiki-service).
 # =====================================================================
 
-# ---- resources/ IS committed: images go through Git LFS (see .gitattributes) ----
-/resources/Lien-Quan-v3/program/trang-bi/editor-server.pid
+# ---- resources/ is local only (ADR-030): its data lives in Media and the R2 source collections ----
+# Only resources/README.md is tracked; it says where each folder went and how to pull a local copy.
+/resources/*
+!/resources/README.md
 
 # ---- Secrets / local configuration ----
 .env
@@ -38,7 +40,7 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# ---- Python (scripts in resources) ----
+# ---- Python ----
 __pycache__/
 *.pyc
 

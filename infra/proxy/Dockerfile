@@ -1,20 +1,13 @@
 # syntax=docker/dockerfile:1
 # The reverse proxy image: static builds of the three frontend apps served by Caddy (spec 01, section 3.4).
-# Build context is frontend/; Compose passes the other inputs as named contexts `proxy` and `skill-artwork`.
+# Build context is frontend/; Compose passes the proxy configuration as the named context `proxy`.
+# Images are not bundled: every public picture is a Media URL (ADR-030), so no Git LFS file is needed here.
 
 FROM node:22-bookworm-slim AS frontend
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 CI=true
 RUN corepack enable
 WORKDIR /workspace/frontend
 COPY . .
-# The Wiki build bundles these public illustrations from resources/ (apps/aov-wiki/skill-artwork.mts).
-COPY --from=skill-artwork . /workspace/resources/Lien-Quan-v3/assets/skill/
-RUN if grep --recursive --files-with-matches --max-count=1 "git-lfs.github.com/spec" \
-        /workspace/resources/Lien-Quan-v3/assets/skill | grep --quiet .; then \
-        echo 'resources/Lien-Quan-v3/assets/skill holds Git LFS pointers, not images.' >&2; \
-        echo 'Run: git lfs pull --include="resources/Lien-Quan-v3/assets/skill/*"' >&2; \
-        exit 1; \
-    fi
 RUN --mount=type=cache,id=aov-pnpm-store,target=/pnpm-store \
     pnpm install --frozen-lockfile --store-dir /pnpm-store
 

@@ -1,6 +1,7 @@
 import { buildResourceMediaSources, resourceSourceFiles } from "@aov/ui/lib/resource-media-sources"
 
-export async function importMediaSources(files: Map<string, File>, base: string, localResources: boolean) {
+/** Credit metadata that travels with an imported folder or ZIP, in its `data/` folder. */
+export async function importMediaSources(files: Map<string, File>, base: string) {
   const documents: Record<string, unknown> = {}
   await Promise.all(
     resourceSourceFiles.map(async (name) => {
@@ -8,11 +9,6 @@ export async function importMediaSources(files: Map<string, File>, base: string,
       const file = files.get(path) ?? files.get(`data/${name}`)
       try {
         if (file) documents[name] = JSON.parse(await file.text())
-        else if (localResources) {
-          const response = await fetch(`/__resources/data/${name}`, { credentials: "omit", redirect: "error" })
-          if (response.ok && response.headers.get("content-type")?.includes("json"))
-            documents[name] = await response.json()
-        }
       } catch {
         // Missing metadata remains explicitly unverified; it must never prevent reading the original image.
       }

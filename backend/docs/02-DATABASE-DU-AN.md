@@ -2128,6 +2128,93 @@ Ràng buộc: mỗi chỉ số chỉ dùng đúng một cột giá trị theo lo
 bằng cách nhập giá trị). Chỉ mục một phần `(snapshot_id) WHERE needs_review` phục vụ đếm giá trị chờ duyệt. Thao tác
 ghi khóa dòng `ranking_snapshot` bằng `SELECT … FOR UPDATE` trước khi sửa giá trị hoặc xác nhận bản.
 
+## Tệp nguồn riêng tư — V071 (ADR-030)
+
+Migration V071 tạo bốn bảng trong schema `media`, thuộc capability `source` của module `media`. Bytes nằm trong bucket
+riêng tư `aov-source-private` ở key `sources/<sha256>`; database chỉ giữ danh mục. Không bảng nào chứa URL ký sẵn.
+
+`media.source_object` — mỗi bytes một dòng:
+
+| Cột | Ý nghĩa |
+|---|---|
+| `sha256` | Khóa chính, SHA-256 hex chữ thường (`^[0-9a-f]{64}$`) |
+| `object_key` | `sources/<sha256>`, duy nhất |
+| `storage_alias` | `primary`, như Media |
+| `size_bytes` | ≥ 0 |
+| `content_type` | Một trong danh sách cho phép (ADR-030 mục 5) |
+| `first_path` | Đường dẫn lúc bytes được lưu lần đầu, chỉ để hiển thị khi bytes đã mồ côi |
+| `state` | `READY`, hoặc `DELETING` khi đang xóa bytes mồ côi |
+| `created_at`, `created_by_issuer`, `created_by_subject` | Lần lưu bytes đầu tiên |
+
+Chỉ mục `(created_at)` phục vụ tổng tải lên theo tháng. Dòng chỉ bị xóa cùng bytes, khi không còn tệp nào trỏ tới và
+không module nào báo đang dùng:
+
+1. Transaction khóa dòng (`SELECT … FOR UPDATE`), kiểm tra lại không còn tệp và nơi dùng, đặt `DELETING`.
+2. Ngoài transaction, xóa object `sources/<sha256>`.
+3. Transaction xóa dòng còn `DELETING`.
+
+Lỗi giữa chừng để dòng ở `DELETING`; gọi lại thao tác xóa thì làm tiếp. Trong lúc đó, thêm tệp trỏ tới cùng bytes bị từ
+chối tạm thời và thử lại được, vì thao tác thêm tệp cũng khóa dòng này.
+
+`media.source_collection` — một bộ tệp của một chức năng:
+
+| Cột | Ý nghĩa |
+|---|---|
+| `id` | UUID |
+| `code` | Slug duy nhất `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 120 ký tự, ví dụ `shop-2026-09-16`; không đổi sau khi tạo |
+| `category` | `HERO_CAPTURE`, `SHOP_CAPTURE`, `BUILD_CAPTURE`, `RANKING_CAPTURE`, `GAME_MODE_SOURCE`, `ESPORTS_SOURCE`, `IMPORT_DATA`, `ARCHIVE`; không đổi |
+| `label` | Tên hiển thị, 1–200 ký tự |
+| `note` | Ghi chú ≤ 2000 ký tự, null được |
+| `captured_on` | `DATE` null được: ngày chụp hay thu thập, giữ như ngày lịch, không qua múi giờ |
+| `lock_version` | Optimistic version |
+| `created_at`, `created_by_issuer`, `created_by_subject`, `updated_at` | |
+
+Chỉ mục `(category, captured_on DESC NULLS LAST, code)` phục vụ duyệt theo chức năng.
+
+`media.source_file` — tệp trong bộ:
+
+| Cột | Ý nghĩa |
+|---|---|
+| `id` | UUID |
+| `collection_id` | FK `source_collection`, xóa theo bộ |
+| `path` | Đường dẫn tương đối, tối đa 512 ký tự, chuẩn NFC, phân cách bằng `/`; không rỗng, không bắt đầu bằng `/`, không có `\`, ký tự điều khiển, đoạn rỗng, `.` hay `..` |
+| `sha256` | FK `source_object` |
+| `lock_version` | Optimistic version; tăng khi đường dẫn được trỏ sang bytes khác |
+| `created_at`, `created_by_issuer`, `created_by_subject`, `updated_at` | |
+
+`UNIQUE (collection_id, path)`; chỉ mục `(sha256)` để tìm mọi nơi chứa cùng bytes và để tìm bytes mồ côi.
+
+`media.source_upload_session` — phiên upload, vòng đời như `media.media_upload_session` (mục 17):
+
+| Cột | Ý nghĩa |
+|---|---|
+| `id` | UUID (`uploadId`) |
+| `collection_id` | FK `source_collection`, xóa theo bộ |
+| `path` | Đường dẫn sẽ ghi, cùng quy tắc như `source_file.path` |
+| `replace_file_id`, `replace_expected_version` | Cùng null hoặc cùng có: tệp được thay và phiên bản dòng lúc xin upload |
+| `declared_sha256`, `declared_size_bytes`, `content_type` | Giá trị client khai báo; complete phải khớp |
+| `object_key` | `incoming/<uploadId>` trong bucket riêng tư của Media, duy nhất |
+| `state` | `REQUESTED`, `VALIDATING`, `READY`, `REJECTED`, `EXPIRED` |
+| `expires_at`, `validation_started_at`, `completed_at` | |
+| `error_code` | Lý do từ chối, ví dụ `SHA256_MISMATCH`, `SIZE_MISMATCH`, `TYPE_MISMATCH` |
+| `file_id` | Tệp kết quả khi `READY` |
+| `lock_version`, `created_at`, `created_by_issuer`, `created_by_subject` | |
+
+Hai phiên cùng bytes có thể chạy song song: phiên complete sau thấy `source_object` đã có thì chỉ ghi tệp và xóa key tạm
+của mình. Copy hai lần cùng bytes vào cùng key cho cùng kết quả; dòng `source_object` được chèn bằng
+`INSERT ... ON CONFLICT DO NOTHING`.
+
+V071 cũng thêm chỉ mục `media.media_asset_version(sha256)` mà mục 38 đã liệt kê, để ước lượng tải lên và Admin tra ảnh
+Media theo SHA-256 mà không quét bảng.
+
+Dung lượng (ADR-030 mục 9) được tính khi đọc, không lưu bảng tổng:
+
+- Media: tổng `size_bytes` của phiên bản thuộc asset chưa có `deleted_at`, nhóm theo `semantic_type`.
+- Tệp nguồn: tổng `size_bytes` của `source_object`; theo chức năng thì đếm mỗi bytes một lần trong mỗi loại có bộ
+  chứa nó.
+- Vùng tạm: tổng `declared_size_bytes` của phiên upload Media và tệp nguồn còn `REQUESTED` hoặc `VALIDATING` và chưa
+  quá hạn.
+
 ## Đánh giá tướng — V072 (ADR-029)
 
 Migration V072 thêm ba bảng con của phần kỹ năng (`hero.hero_skill_set_revision`) và ba cột nhận định của

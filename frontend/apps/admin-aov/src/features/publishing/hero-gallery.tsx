@@ -404,7 +404,7 @@ function GalleryDetail({
             onClick={async () => {
               const accepted = await confirmAction({
                 title: "Bỏ ảnh khỏi thư viện của tướng?",
-                description: "Ảnh vẫn còn trong Quản lý ảnh; chỉ bỏ liên kết với tướng này.",
+                description: "Ảnh vẫn còn trong Quản lý tệp; chỉ bỏ liên kết với tướng này.",
                 confirmLabel: "Bỏ khỏi thư viện",
               })
               if (accepted) remove.mutate()

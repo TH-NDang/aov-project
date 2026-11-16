@@ -6,7 +6,8 @@ import { Switch } from "@aov/ui/components/switch"
 import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
 import { errorMessage } from "@/lib/api/errors"
-import { captureImageUrl, type Build } from "./builds-api"
+import { useSourceUrl } from "../files/source-links"
+import type { Build } from "./builds-api"
 import {
   PANEL,
   confirmBodyOf,
@@ -236,13 +237,18 @@ function Editor({
 
 /** The part of the screenshot with the build, cropped from the full image, which opens on its own when clicked. */
 function Evidence({ imageId, label }: { imageId: string | null; label: string }) {
-  if (!imageId)
+  const link = useSourceUrl(imageId)
+  const [broken, setBroken] = useState(false)
+  if (!imageId || !link.url || link.failed || broken)
     return (
-      <div className="grid aspect-[855/760] place-items-center rounded-md bg-muted type-meta text-muted-foreground">
-        Không có ảnh
+      <div
+        className="grid place-items-center rounded-md bg-muted type-meta text-muted-foreground"
+        style={{ aspectRatio: `${PANEL.width} / ${PANEL.height}` }}
+      >
+        {!imageId ? "Không có ảnh" : link.failed || broken ? "Không mở được ảnh gốc" : ""}
       </div>
     )
-  const url = captureImageUrl(imageId)
+  const url = link.url
   return (
     <a
       href={url}
@@ -252,7 +258,18 @@ function Evidence({ imageId, label }: { imageId: string | null; label: string })
       style={{ aspectRatio: `${PANEL.width} / ${PANEL.height}` }}
       aria-label={`Mở ảnh gốc của ${label}`}
     >
-      <img src={url} alt="" loading="lazy" decoding="async" className="absolute max-w-none" style={panelImageStyle()} />
+      <img
+        src={url}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="absolute max-w-none"
+        style={panelImageStyle()}
+        onError={() => {
+          // An expired link is renewed and the picture loads again; a fresh one that fails is a broken picture.
+          if (!link.retry()) setBroken(true)
+        }}
+      />
       <span className="absolute right-1.5 bottom-1.5 inline-flex items-center gap-1 rounded bg-background/85 px-1.5 py-0.5 type-meta opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
         <ExternalLink className="size-3.5" /> Ảnh gốc
       </span>

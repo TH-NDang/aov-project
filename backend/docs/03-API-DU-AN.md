@@ -3501,3 +3501,162 @@ lớn hơn, `of` là số tướng có giá trị của chỉ số đó. `counte
 **Tướng theo đặc điểm** — không cần đăng nhập; chỉ nhận `region` (mặc định `VN`). Trả
 `{region, traits:[{code, heroes:[{id, code}]}]}` cho cả 22 mã theo thứ tự cố định, tính từ phiên bản người đọc đang
 thấy của từng tướng trong thị trường. Liệt kê tướng thường và từng dạng; tướng chứa các dạng không có trong danh sách.
+
+## Tệp nguồn riêng tư và dung lượng R2 (ADR-030)
+
+Mọi endpoint dưới đây nằm trong `/api/wiki/v1/admin`. Đọc cần
+`catalog:read`; ghi cần `media:write`. Danh sách trả `PageSlice` (mục 46; `size` tối đa 100 trừ khi ghi khác). Query
+string được whitelist. Response chứa URL ký sẵn mang `Cache-Control: no-store`; backend không ghi URL này vào log.
+
+### Bộ tệp
+
+- `GET /admin/source-collections` — query `category,q,page,size`. `q` tìm không phân biệt hoa thường trong mã và tên.
+  Mục: `{id, code, category, label, note, capturedOn, fileCount, totalBytes, updatedAt, version}`; `totalBytes` cộng
+  bytes của từng tệp trong bộ. Sắp xếp theo thứ tự loại ở ADR-030 mục 4, rồi `capturedOn` mới trước (null cuối), rồi mã.
+- `GET /admin/source-collections/{collectionId}` — một mục như trên; không có thì trả 404 `SOURCE_COLLECTION_NOT_FOUND`.
+- `POST /admin/source-collections` — body `{code, category, label, note?, capturedOn?}`; trả 201 cùng mục. Mã trùng trả
+  409 `SOURCE_COLLECTION_CODE_TAKEN`.
+- `PUT /admin/source-collections/{collectionId}` — body `{expectedVersion, label, note?, capturedOn?}`. Mã và loại không
+  đổi được. Version cũ trả 409 `SOURCE_COLLECTION_VERSION_CONFLICT`.
+- `POST /admin/source-collections/{collectionId}/delete` — body `{expectedVersion}`; trả 204. Xóa bộ cùng mọi dòng tệp
+  và phiên upload của bộ. Bytes vẫn còn, thành mồ côi nếu không còn chỗ nào trỏ tới.
+
+### Tệp trong bộ
+
+- `GET /admin/source-collections/{collectionId}/files` — query `prefix,q,page,size` (`size` tối đa 200). `prefix` là thư
+  mục, ví dụ `raw/shop`, và lấy mọi tệp bên dưới; `q` tìm trong đường dẫn. Mục:
+  `{id, path, sha256, sizeBytes, contentType, createdAt, updatedAt, version}`, sắp xếp theo đường dẫn.
+- `GET /admin/source-files/{fileId}` — mục trên, cùng `collection {id, code, category, label}`, `otherPlaces` (tối đa 20
+  tệp khác cùng bytes: `{fileId, collectionCode, path}`) và `usages` (các module báo qua `SourceFileUsageProvider`:
+  `{ownerDomain, ownerType, ownerId, ownerName, role}`).
+- `POST /admin/source-files/{fileId}/delete` — body `{expectedVersion}`; trả 204. Chỉ xóa dòng tệp.
+
+### Tải lên
+
+1. `POST /admin/source-collections/{collectionId}/uploads` — body
+   `{path, sha256, sizeBytes, contentType, replace?: {fileId, expectedVersion}}`.
+   - Bytes đã có: trả 200 `{status: "STORED", file}`; tệp được ghi hoặc thay ngay, không cần upload.
+   - Cùng đường dẫn đã trỏ đúng bytes này: trả 200 `{status: "STORED", file}` và không đổi gì.
+   - Còn lại: trả 201 `{status: "UPLOAD_REQUIRED", upload: {uploadId, method, uploadUrl, headers, expiresAt}}`.
+   - Đường dẫn đã có trong bộ với bytes khác mà không gửi `replace` thì trả 409 `SOURCE_FILE_PATH_TAKEN`, context
+     `{fileId, sha256, version}`. `replace` sai tệp hoặc version cũ trả 409 `SOURCE_FILE_VERSION_CONFLICT`.
+   - Đường dẫn sai quy tắc (02, phần ADR-030) trả 400 `INVALID_REQUEST` với lỗi field `SOURCE_FILE_PATH_INVALID`.
+     Loại ngoài danh sách trả 415 `SOURCE_FILE_TYPE_NOT_ALLOWED`. Quá `wiki.sources.max-upload-size` trả 413
+     `SOURCE_FILE_TOO_LARGE` với context `maxBytes`.
+2. Client `PUT` bytes tới `uploadUrl` kèm đúng `headers`, không qua backend.
+3. `POST /admin/source-uploads/{uploadId}/complete` — trả 200 `{file}`. Backend đọc stream để tính SHA-256, kiểm tra
+   kích thước và chữ ký ảnh, rồi copy sang `sources/<sha256>` và xóa key tạm.
+   - Gọi lại sau khi đã xong trả đúng tệp cũ.
+   - Chưa có object tạm thì trả 409 `SOURCE_UPLOAD_NOT_UPLOADED`; phiên vẫn chờ và thử lại được.
+   - Bytes không khớp khai báo trả 409 `SOURCE_UPLOAD_REJECTED`, context `reason` là `SHA256_MISMATCH`,
+     `SIZE_MISMATCH` hoặc `TYPE_MISMATCH`. Phiên bị từ chối vĩnh viễn.
+   - Quá hạn trả 409 `SOURCE_UPLOAD_EXPIRED`. Đang có lượt complete khác trả 409 `SOURCE_UPLOAD_IN_PROGRESS`.
+   - Bytes cùng SHA-256 đang bị xóa trả 409 `SOURCE_OBJECT_BUSY`; phiên vẫn chờ, thử lại sau.
+- `GET /admin/source-uploads/{uploadId}` — `{uploadId, collectionId, path, state, errorCode, expiresAt, fileId}`.
+
+Hạn URL upload và hạn complete dùng chung cấu hình của Media (`wiki.media.upload-url-validity`,
+`wiki.media.upload-session-validity`).
+
+### Xem và tải về
+
+- `POST /admin/source-files/links` — body `{sha256: [...]}`, 1–200 giá trị không trùng. Trả
+  `{items: [{sha256, url, expiresAt, contentType, sizeBytes}], missing: [...]}`; SHA-256 không có trong danh mục nằm ở
+  `missing`. Quá 200 trả 400 `SOURCE_LINK_LIMIT_EXCEEDED`.
+- `POST /admin/source-collections/{collectionId}/links` — body `{paths: [...]}`, 1–200 đường dẫn. Trả
+  `{items: [{path, sha256, url, expiresAt, contentType, sizeBytes}], missing: [...]}`. Dùng để đọc manifest của một bộ.
+- `POST /admin/source-files/{fileId}/download-link` — trả `{url, expiresAt}`; URL buộc tải về với tên tệp gốc.
+
+URL sống `wiki.sources.link-validity` (mặc định 10 phút) và chỉ dùng cho `GET`. CORS của bucket chỉ mở cho origin Admin.
+
+### Bytes mồ côi
+
+- `GET /admin/source-objects/orphans` — query `page,size`. Mục `{sha256, sizeBytes, contentType, firstPath, createdAt,
+  state}`: bytes không còn tệp nào trỏ tới và không module nào báo đang dùng, kể cả dòng đang `DELETING`.
+- `POST /admin/source-objects/{sha256}/delete` — trả 204 sau khi xóa object và dòng. Còn tệp hoặc nơi dùng thì trả 409
+  `SOURCE_OBJECT_IN_USE`, context `{files, usages}`. Không có thì trả 404 `SOURCE_OBJECT_NOT_FOUND`. Gọi lại khi dòng
+  còn `DELETING` thì làm tiếp.
+
+### Dung lượng
+
+`GET /admin/storage/summary` — không có query parameter.
+
+```json
+{
+  "generatedAt": "2026-11-14T10:00:00Z",
+  "bytesPerGigabyte": 1000000000,
+  "freeTier": { "storageBytes": 10000000000, "classAOperations": 1000000, "classBOperations": 10000000 },
+  "prices": { "storageUsdPerGigabyteMonth": 0.015, "classAUsdPerMillion": 4.5, "classBUsdPerMillion": 0.36 },
+  "thresholds": { "warning": 0.8, "critical": 0.95 },
+  "buckets": [
+    { "role": "MEDIA_ASSETS", "bucket": "aov-media-assets", "files": 6886, "bytes": 1079600000,
+      "groups": [{ "key": "HERO_SKIN_ART", "files": 3749, "bytes": 652700000 }] },
+    { "role": "SOURCES", "bucket": "aov-source-private", "files": 0, "bytes": 0,
+      "orphanFiles": 0, "orphanBytes": 0, "groups": [] },
+    { "role": "STAGING", "bucket": "aov-media-private", "files": 4, "bytes": 1200000, "groups": [] }
+  ],
+  "storage": { "source": "DATABASE", "bytes": 1080800000, "share": 0.108, "level": "OK" },
+  "operations": { "source": "ESTIMATE", "month": "2026-11", "classA": 3250, "classB": 3250,
+    "classAShare": 0.00325, "classBShare": 0.000325, "classALevel": "OK", "classBLevel": "OK" },
+  "months": [{ "month": "2026-11", "files": 1625, "bytes": 293900000, "classA": 3250, "classB": 3250 }],
+  "cloudflare": { "state": "NOT_CONFIGURED" }
+}
+```
+
+- `role`: `MEDIA_ASSETS` (Media công khai), `SOURCES` (tệp nguồn), `STAGING` (upload đang chờ trong bucket riêng tư).
+- `groups`: theo `semantic_type` với Media, theo loại chức năng với tệp nguồn. Bytes nằm trong bộ của hai loại được
+  đếm ở cả hai nhóm, nhưng chỉ một lần trong tổng bucket.
+- `level`: `OK`, `WARNING` (từ ngưỡng `warning`), `CRITICAL` (từ ngưỡng `critical`), `OVER` (quá 100% mức miễn phí).
+- `months`: 12 tháng gần nhất theo lịch UTC, cộng Media và tệp nguồn tải lên trong tháng; thao tác là ước lượng.
+- `cloudflare.state`: `NOT_CONFIGURED`, `OK` hoặc `UNAVAILABLE`. Khi `OK` có thêm `checkedAt`, `buckets`
+  (`{bucket, objects, bytes, pendingUploads}`) và `operations` (`{from, to, classA, classB, free}`). Khi đó `operations`
+  lấy số của Cloudflare với `source: "CLOUDFLARE"`. `storage` lấy số lớn hơn giữa database và tổng Cloudflare, ghi
+  `source` theo số được chọn: Cloudflare có cả bytes ngoài danh mục nhưng chỉ cập nhật dung lượng theo chu kỳ, nên lượt
+  vừa tải vẫn được tính ngay. Số Cloudflare được cache 15 phút.
+
+`POST /admin/storage/estimates` — body `{target: "MEDIA" | "SOURCES", files: [{sha256?, sizeBytes}]}`, 1–20.000 tệp.
+
+```json
+{
+  "target": "SOURCES",
+  "files": 262, "bytes": 259500000,
+  "knownFiles": 0, "knownBytes": 0,
+  "newFiles": 262, "newBytes": 259500000,
+  "classA": 524, "classB": 524,
+  "storageBytesAfter": 1340300000, "storageShareAfter": 0.134, "level": "OK"
+}
+```
+
+- `knownFiles`, `knownBytes`: tệp có SHA-256 đã nằm trên R2.
+- Với `SOURCES`, tệp đã biết không tốn dung lượng hay thao tác. Với `MEDIA`, tệp đã biết vẫn tính vào `newBytes`, vì
+  asset mới lưu bản riêng; Admin cảnh báo trùng trước khi tải.
+- Mỗi tệp mới tính 2 thao tác lớp A (PUT, CopyObject) và 2 lớp B (HeadObject, GetObject lúc complete). Đọc lại để
+  đối chiếu là việc của client và không nằm trong số này.
+- Quá 20.000 tệp trả 400 `STORAGE_ESTIMATE_LIMIT_EXCEEDED`.
+
+### Ảnh chiêu trên Wiki
+
+Không có endpoint mới. Chi tiết tướng công khai đã trả ảnh thư viện icon kỹ năng trong `skillMedia` cho kỹ năng chưa
+gắn icon (mục 7, "Skills"); Wiki chỉ dùng `skillMedia` và `skillStateMedia`, không đọc ảnh từ `resources/`.
+
+### Mã lỗi mới của Media
+
+```text
+SOURCE_COLLECTION_NOT_FOUND         404
+SOURCE_COLLECTION_CODE_TAKEN        409
+SOURCE_COLLECTION_VERSION_CONFLICT  409  context.currentVersion
+SOURCE_FILE_NOT_FOUND               404
+SOURCE_FILE_PATH_TAKEN              409  context.fileId, context.sha256, context.version
+SOURCE_FILE_VERSION_CONFLICT        409  context.currentVersion
+SOURCE_FILE_TYPE_NOT_ALLOWED        415  context.contentType
+SOURCE_FILE_TOO_LARGE               413  context.maxBytes
+SOURCE_UPLOAD_NOT_FOUND             404
+SOURCE_UPLOAD_NOT_UPLOADED          409
+SOURCE_UPLOAD_EXPIRED               409  context.expiresAt
+SOURCE_UPLOAD_REJECTED              409  context.reason
+SOURCE_UPLOAD_IN_PROGRESS           409
+SOURCE_OBJECT_NOT_FOUND             404
+SOURCE_OBJECT_IN_USE                409  context.files, context.usages
+SOURCE_OBJECT_BUSY                  409
+SOURCE_LINK_LIMIT_EXCEEDED          400  context.max
+STORAGE_ESTIMATE_LIMIT_EXCEEDED     400  context.max
+```

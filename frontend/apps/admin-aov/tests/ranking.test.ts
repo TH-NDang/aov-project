@@ -4,7 +4,8 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
-import { createRankingCaptureHandler } from "../server/ranking-captures"
+import { missingPictures } from "../server/capture-sets"
+import { captureSetFromFolder, collectFolder } from "../server/source-sync"
 import type { RankingDetail, RankingHero, RankingMetric, RankingValue } from "../src/features/ranking/ranking-api"
 import {
   DEFAULT_VIEW,
@@ -148,38 +149,18 @@ test("review walks through waiting values in the game's order and wraps", () => 
   assert.equal(nextToReview(single, { heroId: "a", metric: "KILLS" }), null, "nothing else waits")
 })
 
-const call = async (handler: ReturnType<typeof createRankingCaptureHandler>, url: string, method = "GET") => {
-  const chunks: Buffer[] = []
-  let status = 0
-  let type = ""
-  let passed = false
-  const res = {
-    writeHead(code: number, headers: Record<string, string>) {
-      status = code
-      type = headers["Content-Type"] ?? ""
-    },
-    end(chunk?: Uint8Array | string) {
-      if (chunk) chunks.push(Buffer.from(chunk))
-    },
-  }
-  await handler({ url, method } as never, res as never, () => {
-    passed = true
-  })
-  return { status, type, body: Buffer.concat(chunks), passed }
-}
-
-test("the dev endpoint offers capture sets and serves only verified screenshots", async () => {
+test("a published set offers its import body, and a screenshot that changed is never published", async () => {
   const resources = await mkdtemp(join(tmpdir(), "ranking-captures-"))
-  const previous = process.env.AOV_RESOURCES_DIR
-  process.env.AOV_RESOURCES_DIR = resources
   try {
     const bytes = Buffer.from("png-bytes")
     const good = createHash("sha256").update(bytes).digest("hex")
     const bad = "f".repeat(64)
-    await mkdir(join(resources, "raw", "ranking", "2026-11-11", "ty-le"), { recursive: true })
-    await writeFile(join(resources, "raw", "ranking", "2026-11-11", "ty-le", "page-1.png"), bytes)
-    await writeFile(join(resources, "raw", "ranking", "2026-11-11", "ty-le", "page-2.png"), "other")
-    await mkdir(join(resources, "extracted", "ranking", "2026-11-11"), { recursive: true })
+    const raw = join(resources, "raw", "ranking", "2026-11-11")
+    await mkdir(join(raw, "ty-le"), { recursive: true })
+    await writeFile(join(raw, "ty-le", "page-1.png"), bytes)
+    await writeFile(join(raw, "ty-le", "page-2.png"), "other")
+    const extracted = join(resources, "extracted", "ranking", "2026-11-11")
+    await mkdir(extracted, { recursive: true })
     const manifest = {
       capturedOn: "2026-11-11",
       snapshot: {
@@ -196,44 +177,32 @@ test("the dev endpoint offers capture sets and serves only verified screenshots"
         [bad]: { path: "ty-le/page-2.png", fileName: "page-2.png", width: 2400, height: 1080 },
       },
     }
-    await writeFile(
-      join(resources, "extracted", "ranking", "2026-11-11", "ranking-manifest.json"),
-      JSON.stringify(manifest),
+    await writeFile(join(extracted, "ranking-manifest.json"), JSON.stringify(manifest))
+
+    const { set, pictures } = await captureSetFromFolder("RANKING_CAPTURE", extracted)
+    assert.equal(set.kind, "RANKING_CAPTURE")
+    if (set.kind !== "RANKING_CAPTURE") return
+    assert.deepEqual(set.set, {
+      capturedOn: "2026-11-11",
+      code: "vn-ranked-elite-20261111-0705",
+      capturedAt: "2026-11-11T00:07:49Z",
+      sourceTimeZone: "Asia/Ho_Chi_Minh",
+      modeLabel: "Đấu hạng (Tinh Anh trở lên)",
+      regionCode: "VN",
+      heroes: 1,
+      values: 2,
+      needsReview: 1,
+      images: 2,
+    })
+    assert.equal(set.snapshot.code, "vn-ranked-elite-20261111-0705")
+
+    const pushed = (await collectFolder(raw, "raw/ranking/2026-11-11")).items
+    assert.deepEqual(
+      missingPictures(pictures, pushed),
+      [{ sha256: bad, path: "raw/ranking/2026-11-11/ty-le/page-2.png" }],
+      "bytes that changed are refused",
     )
-    const handler = createRankingCaptureHandler({ start: resources })
-
-    const sets = await call(handler, "/sets.json")
-    assert.equal(sets.status, 200)
-    assert.deepEqual(JSON.parse(sets.body.toString()).sets, [
-      {
-        capturedOn: "2026-11-11",
-        code: "vn-ranked-elite-20261111-0705",
-        capturedAt: "2026-11-11T00:07:49Z",
-        sourceTimeZone: "Asia/Ho_Chi_Minh",
-        modeLabel: "Đấu hạng (Tinh Anh trở lên)",
-        regionCode: "VN",
-        heroes: 1,
-        values: 2,
-        needsReview: 1,
-        images: 2,
-      },
-    ])
-    const set = await call(handler, "/sets/2026-11-11.json")
-    assert.equal(JSON.parse(set.body.toString()).code, "vn-ranked-elite-20261111-0705")
-    assert.equal((await call(handler, "/sets/2026-11-12.json")).status, 404)
-
-    const image = await call(handler, `/images/${good}.png`)
-    assert.equal(image.status, 200)
-    assert.equal(image.type, "image/png")
-    assert.deepEqual(image.body, bytes)
-    assert.equal((await call(handler, `/images/${bad}.png`)).status, 502, "bytes that changed are refused")
-    assert.equal((await call(handler, `/images/${"0".repeat(64)}.png`)).status, 404)
-    assert.equal((await call(handler, "/images/..%2Fsecret.png")).status, 400)
-    assert.equal((await call(handler, "/sets.json", "POST")).status, 405)
-    assert.equal((await call(handler, "/other")).passed, true)
   } finally {
-    if (previous === undefined) delete process.env.AOV_RESOURCES_DIR
-    else process.env.AOV_RESOURCES_DIR = previous
     await rm(resources, { recursive: true, force: true })
   }
 })

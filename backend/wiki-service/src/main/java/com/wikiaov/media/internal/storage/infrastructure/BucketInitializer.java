@@ -34,7 +34,8 @@ class BucketInitializer implements ApplicationRunner {
     BucketInitializer(S3Client s3, StorageProperties properties,
             @Value("${wiki.storage.upload-origins:${wiki.auth.admin-origin:http://localhost:5175}}") List<String> uploadOrigins) {
         this.s3 = s3;
-        this.buckets = Set.copyOf(List.of(properties.bucket(), properties.effectiveAssetsBucket()));
+        this.buckets = Set.copyOf(List.of(properties.bucket(), properties.effectiveAssetsBucket(),
+                properties.effectiveSourcesBucket()));
         this.uploadOrigins = List.copyOf(uploadOrigins);
     }
 

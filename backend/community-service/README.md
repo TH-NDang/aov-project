@@ -174,7 +174,9 @@ tiết tiếp tục được nhập nháp riêng. Thứ tự đội A/B chỉ x�
 ## Nhập metadata giải đấu đã thu thập
 
 Script Python chỉ tạo metadata đội và giải để biên tập; không tạo loạt trận, ván, đội hình hoặc xuất bản dữ liệu.
-Mặc định đọc `resources/esports/2026-post-apl/manifest.json` từ gốc repository.
+Mặc định đọc `resources/esports/2026-post-apl/manifest.json` từ gốc repository. Từ ADR-030 dữ liệu này nằm trong bộ tệp
+nguồn `esports-2026-post-apl`; kéo về trước (trong `frontend/apps/admin-aov`: `pnpm sources:sync pull --collection
+esports-2026-post-apl --to ../../../resources/esports/2026-post-apl --apply`).
 
 ```powershell
 python ./scripts/import-collected-metadata.py --dry-run

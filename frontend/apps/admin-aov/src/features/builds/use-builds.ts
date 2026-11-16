@@ -24,7 +24,7 @@ export function useBuildCapture(id: string | null | undefined) {
 }
 
 export function useCaptureSets() {
-  return useQuery({ queryKey: buildKeys.captureSets, queryFn: ({ signal }) => fetchCaptureSets(signal) })
+  return useQuery({ queryKey: buildKeys.captureSets, queryFn: () => fetchCaptureSets() })
 }
 
 interface HeroPage {

@@ -15,6 +15,8 @@ import org.springframework.validation.annotation.Validated;
  * @param region                signing region; SeaweedFS accepts any value, R2 uses {@code auto}
  * @param bucket                private bucket for incoming uploads and imports
  * @param assetsBucket          optional bucket for validated public assets; empty uses the private bucket
+ * @param sourcesBucket         optional private bucket for source files ({@code sources/}); empty uses the private
+ *                              bucket (ADR-030)
  * @param pathStyleAccess       {@code true} for SeaweedFS/MinIO ({@code http://host/bucket/key})
  * @param accessKey             access key; empty falls back to the AWS default credentials chain
  * @param secretKey             secret key paired with {@code accessKey}
@@ -28,6 +30,7 @@ record StorageProperties(
         @DefaultValue("us-east-1") @NotBlank String region,
         @DefaultValue("wiki-media") @NotBlank String bucket,
         @Nullable String assetsBucket,
+        @Nullable String sourcesBucket,
         @DefaultValue("true") boolean pathStyleAccess,
         @Nullable String accessKey,
         @Nullable String secretKey,
@@ -36,13 +39,18 @@ record StorageProperties(
 ) {
 
     String bucketFor(String key) {
-        return key.startsWith(MediaObjectKeys.ASSETS_PREFIX)
-                ? effectiveAssetsBucket()
-                : bucket;
+        if (key.startsWith(MediaObjectKeys.ASSETS_PREFIX)) {
+            return effectiveAssetsBucket();
+        }
+        return key.startsWith(MediaObjectKeys.SOURCES_PREFIX) ? effectiveSourcesBucket() : bucket;
     }
 
     String effectiveAssetsBucket() {
         return assetsBucket == null || assetsBucket.isBlank() ? bucket : assetsBucket;
+    }
+
+    String effectiveSourcesBucket() {
+        return sourcesBucket == null || sourcesBucket.isBlank() ? bucket : sourcesBucket;
     }
 
     @Nullable

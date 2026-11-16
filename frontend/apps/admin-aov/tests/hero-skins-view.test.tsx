@@ -45,7 +45,6 @@ const card = (key: string, reading: string): CaptureImage => ({
   skillKey: null,
   skillName: null,
   notes: [],
-  url: `/shop/${key}.jpg`,
   kind: "skin",
   skinKey: key,
   entryName: key,

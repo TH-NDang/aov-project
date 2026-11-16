@@ -1,14 +1,10 @@
 /**
- * Where the working data set is served. Defaults to the dev/preview middleware that serves
- * `resources/Lien-Quan-v3` (see vite.config.ts); static demo builds point it at bundled copies.
+ * A media address the browser can load as it is: an absolute URL or a path on this origin. Relative paths of the old
+ * `resources/` data set have no server any more (ADR-030), so they give no address and the caller shows its fallback.
  */
-export const RESOURCES_BASE = import.meta.env?.VITE_RESOURCES_BASE ?? "/__resources/"
-
-/** Resolves a package-relative media path such as `assets/hero/head/airi-head.jpg`. */
 export function mediaUrl(path: string | null | undefined): string | undefined {
   if (!path) return undefined
-  if (/^(https?:)?\/\//.test(path) || path.startsWith("/")) return path
-  return RESOURCES_BASE + path.split("/").map(encodeURIComponent).join("/")
+  return /^(https?:)?\/\//.test(path) || path.startsWith("/") ? path : undefined
 }
 
 export function fileName(path: string): string {

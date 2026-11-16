@@ -30,11 +30,12 @@ import {
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 import { HeroTranslationNotice } from "./hero-translation-notice"
 import { ImageCreditSummary } from "./image-credit-summary"
-import { captureGroupKeys, captureImageUrl, captureLinkLabels, type CaptureImage } from "./patch-capture-model"
+import { captureGroupKeys, captureLinkLabels, captureSha256, type CaptureImage } from "./patch-capture-model"
 import { CaptureCardThumbnail, PatchCaptureLink } from "./patch-capture-panel"
 import type { SkinAcquisition } from "./publishing-api"
 import type { Skin } from "./types"
 import { usePatchCaptureContext } from "./use-patch-captures"
+import { useSourceUrls } from "../files/source-links"
 
 /** Arrow keys belong to the form while the editor is in it. */
 const insideForm = (target: EventTarget) => target instanceof HTMLElement && !!target.closest("form")
@@ -286,7 +287,6 @@ export function HeroSkinsView({
           {heroId && captures && captures.groups.length > 0 && (
             <SkinCaptureCompare
               images={ownCaptures}
-              patchCode={captures.patchCode}
               value={value}
               draft={drafts[selected.skinKey]}
               canWrite={canWrite}
@@ -488,7 +488,6 @@ function SkinStage({
  */
 function SkinCaptureCompare({
   images,
-  patchCode,
   value,
   draft,
   canWrite,
@@ -496,13 +495,13 @@ function SkinCaptureCompare({
   onFill,
 }: {
   images: CaptureImage[]
-  patchCode: string | undefined
   value?: SkinAcquisition
   draft?: SkinAcquisitionDraft
   canWrite: boolean
   onOpen: (imageId: string) => void
   onFill: (price: number, capturedOn: string | undefined) => void
 }) {
+  const urls = useSourceUrls(images.map(captureSha256))
   if (!images.length)
     return (
       <p className="type-meta rounded-lg bg-muted/40 px-3 py-2 [grid-area:compare]">
@@ -531,7 +530,7 @@ function SkinCaptureCompare({
             >
               {image.box ? (
                 <CaptureCardThumbnail
-                  url={captureImageUrl(patchCode ?? "", image)}
+                  url={urls.url(captureSha256(image))}
                   box={image.box}
                   className="w-8 @min-[900px]/skin-tab:w-12"
                 />

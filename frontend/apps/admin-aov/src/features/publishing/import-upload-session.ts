@@ -52,12 +52,7 @@ export async function createUploadSession(
   label: string,
 ): Promise<UploadSession> {
   const images: UploadState["images"] = {}
-  const localResources = entries.some(
-    (entry) =>
-      Object.values(entry.imageUrls ?? {}).some((path) => path.startsWith("/__resources/")) ||
-      entry.relatedImages?.some((image) => image.source.startsWith("/__resources/")),
-  )
-  const sources = await importMediaSources(files, base, localResources)
+  const sources = await importMediaSources(files, base)
   for (const entry of entries) {
     const targets = [
       ...Object.entries(entry.imageUrls ?? {}).map(([key, source]) => ({

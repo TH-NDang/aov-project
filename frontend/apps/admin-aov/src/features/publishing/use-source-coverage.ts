@@ -1,13 +1,17 @@
 import { useMemo } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
+import { fetchPublishedSets, isSourceAccessDenied } from "../files/capture-sets"
 import type { HeroSourceCoverage } from "./source-image-gaps"
 
-/** Captures are copied into `resources` by hand, so the page looks again on its own. */
+/**
+ * New captures arrive when someone publishes a set with the sync tool, so the page looks again on its own. A look costs
+ * two small API calls; the set itself downloads again only when it changed.
+ */
 export const SOURCE_COVERAGE_REFRESH_MS = 30_000
 export const sourceCoverageKey = ["source-coverage"] as const
 
 export type SourceCoverageState =
-  /** Only the Vite dev and preview servers can read the capture sets. */
+  /** The account cannot open source files (no catalog:read). */
   | { status: "unavailable" }
   | { status: "loading" }
   | { status: "error"; message: string }
@@ -19,26 +23,20 @@ export type SourceCoverageState =
       pending: boolean
     }
 
-const json = (response: Response) => response.headers.get("content-type")?.includes("application/json")
-
-/** Null where the capture endpoint does not exist. */
-export async function fetchCaptureSetList(signal?: AbortSignal): Promise<string[] | null> {
-  const response = await fetch("/__patch-captures/sets.json", { credentials: "omit", signal })
-  // An app server without the capture endpoint answers with its page or a plain not found.
-  if (!json(response) || response.status === 404) return null
-  if (!response.ok) throw new Error("Không đọc được danh sách bộ ảnh gốc.")
-  return ((await response.json()) as { patches: string[] }).patches
+/** The patches with a published set; null where the account cannot open source files. */
+export async function fetchCaptureSetList(): Promise<string[] | null> {
+  try {
+    return (await fetchPublishedSets("HERO_CAPTURE")).map((entry) => entry.set.patchCode).sort()
+  } catch (failure) {
+    if (isSourceAccessDenied(failure)) return null
+    throw new Error("Không đọc được danh sách bộ ảnh gốc.")
+  }
 }
 
-export async function fetchSourceCoverage(patchCode: string, signal?: AbortSignal): Promise<HeroSourceCoverage[]> {
-  const response = await fetch(`/__patch-captures/${encodeURIComponent(patchCode)}/heroes.json`, {
-    credentials: "omit",
-    signal,
-  })
-  if (!json(response)) throw new Error(`Không đọc được bộ ảnh gốc của patch ${patchCode}.`)
-  const body = (await response.json()) as { heroes?: HeroSourceCoverage[]; message?: string }
-  if (!response.ok) throw new Error(body.message ?? `Không đọc được bộ ảnh gốc của patch ${patchCode}.`)
-  return body.heroes ?? []
+export async function fetchSourceCoverage(patchCode: string): Promise<HeroSourceCoverage[]> {
+  const set = (await fetchPublishedSets("HERO_CAPTURE")).find((entry) => entry.set.patchCode === patchCode)?.set
+  if (!set) throw new Error(`Không đọc được bộ ảnh gốc của patch ${patchCode}.`)
+  return set.sources
 }
 
 // Kept outside the hook so the combined result only changes when a query does.
@@ -54,14 +52,14 @@ const live = { refetchInterval: SOURCE_COVERAGE_REFRESH_MS, refetchOnWindowFocus
 export function useSourceCoverage(patchesFor: (patches: string[]) => string[]): SourceCoverageState {
   const sets = useQuery({
     queryKey: [...sourceCoverageKey, "sets"],
-    queryFn: ({ signal }) => fetchCaptureSetList(signal),
+    queryFn: () => fetchCaptureSetList(),
     ...live,
   })
   const wanted = useMemo(() => (sets.data ? patchesFor(sets.data) : []), [sets.data, patchesFor])
   const coverage = useQueries({
     queries: wanted.map((patchCode) => ({
       queryKey: [...sourceCoverageKey, "patch", patchCode],
-      queryFn: ({ signal }: { signal: AbortSignal }) => fetchSourceCoverage(patchCode, signal),
+      queryFn: () => fetchSourceCoverage(patchCode),
       ...live,
     })),
     combine: combineCoverage,

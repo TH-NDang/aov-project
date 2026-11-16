@@ -102,11 +102,20 @@ class S3ObjectStorage implements ObjectStorage {
     }
 
     @Override
-    public PresignedRequest presignGet(String key, Duration validity) {
+    public PresignedRequest presignGet(String key, Duration validity, @Nullable String downloadName) {
         PresignedGetObjectRequest presigned = presigner.presignGetObject(request -> request
                 .signatureDuration(validity)
-                .getObjectRequest(get -> get.bucket(properties.bucketFor(key)).key(key)));
+                .getObjectRequest(get -> get.bucket(properties.bucketFor(key)).key(key)
+                        .responseContentDisposition(downloadName == null ? null : attachment(downloadName))));
         return toPresignedRequest(presigned);
+    }
+
+    /** RFC 6266 header with an ASCII fallback, so names with Vietnamese letters survive every browser. */
+    static String attachment(String fileName) {
+        String ascii = fileName.replaceAll("[^A-Za-z0-9._-]", "_");
+        String encoded = java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8).replace("+",
+                "%20");
+        return "attachment; filename=\"" + ascii + "\"; filename*=UTF-8''" + encoded;
     }
 
     private static PresignedRequest toPresignedRequest(

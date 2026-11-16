@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { ImageOff } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
-import { captureImageUrl, type RankingImage, type RankingSource } from "./ranking-api"
+import { useSourceUrl } from "../files/source-links"
+import type { RankingImage, RankingSource } from "./ranking-api"
 
 interface Area {
   x: number
@@ -51,8 +52,9 @@ export function EvidenceCrop({
   className?: string
   label: string
 }) {
-  const [failed, setFailed] = useState(false)
-  if (failed)
+  const link = useSourceUrl(image.imageId)
+  const [broken, setBroken] = useState(false)
+  if (link.failed || broken)
     return (
       <div
         className={cn(
@@ -61,7 +63,7 @@ export function EvidenceCrop({
         )}
       >
         <ImageOff className="size-4 shrink-0" />
-        Ảnh gốc chỉ mở được trên máy có thư mục resources/raw/ranking.
+        Không mở được ảnh gốc {image.fileName} trong Tệp nguồn.
       </div>
     )
   const percent = (value: number, of: number) => `${(value / of) * 100}%`
@@ -72,18 +74,23 @@ export function EvidenceCrop({
       className={cn("relative max-w-full overflow-hidden rounded-md bg-muted", className)}
       style={{ aspectRatio: `${area.width} / ${area.height}` }}
     >
-      <img
-        src={captureImageUrl(image.imageId)}
-        alt=""
-        draggable={false}
-        onError={() => setFailed(true)}
-        className="pointer-events-none absolute max-w-none select-none"
-        style={{
-          width: percent(image.width, area.width),
-          left: percent(-area.x, area.width),
-          top: percent(-area.y, area.height),
-        }}
-      />
+      {link.url && (
+        <img
+          src={link.url}
+          alt=""
+          draggable={false}
+          onError={() => {
+            // An expired link is renewed and the picture loads again; a fresh one that fails is a broken picture.
+            if (!link.retry()) setBroken(true)
+          }}
+          className="pointer-events-none absolute max-w-none select-none"
+          style={{
+            width: percent(image.width, area.width),
+            left: percent(-area.x, area.width),
+            top: percent(-area.y, area.height),
+          }}
+        />
+      )}
       {highlight && (
         <span
           aria-hidden

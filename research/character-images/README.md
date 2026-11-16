@@ -1,6 +1,7 @@
 # Nhập không gian ảnh nhân vật
 
-Script đọc `resources/Lien-Quan-v3/data/heroes.json`, ánh xạ chính xác mã tướng và `skinKey`
+Script đọc `resources/Lien-Quan-v3/data/heroes.json` (từ ADR-030 kéo bộ tệp nguồn `lien-quan-v3-data` về
+`resources/Lien-Quan-v3` trước), ánh xạ chính xác mã tướng và `skinKey`
 trong ruleset `aov-standard`. Không sửa file tài nguyên. Chỉ gọi API quản trị; bytes ảnh được
 PUT trực tiếp tới presigned URL của object storage local, sau đó gọi complete.
 

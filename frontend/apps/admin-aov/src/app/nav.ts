@@ -42,10 +42,10 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Dự án",
     items: [
       {
-        title: "Quản lý ảnh",
+        title: "Quản lý tệp",
         icon: "imageLibrary",
         to: "/image-management",
-        description: "Ảnh, phiên bản và nơi sử dụng",
+        description: "Ảnh công khai, tệp nguồn riêng tư và dung lượng R2",
         capability: "catalog:read",
       },
       {

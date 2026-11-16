@@ -9,7 +9,7 @@ import { Textarea } from "@aov/ui/components/textarea"
 import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
 import { ApiError, errorMessage } from "@/lib/api/errors"
-import { RESOURCES_BASE } from "@/lib/media"
+import { fetchSourceFile, openSourceCollection } from "../files/source-collection-files"
 import {
   BlessingsSection,
   ItemsSection,
@@ -30,8 +30,7 @@ import {
   type GuideContent,
 } from "./game-mode-api"
 import {
-  GUIDE_FOLDER,
-  GUIDE_MANIFEST,
+  GUIDE_SOURCE,
   guideContentFromManifest,
   guideIconPaths,
   iconsWithoutSource,
@@ -288,16 +287,21 @@ function StartGuide({
   const run = useMutation({
     mutationFn: async (fromResources: boolean) => {
       if (!fromResources) return gameModeApi.createGuideDraft(modeId, undefined, "Nháp trống")
-      const response = await fetch(`${RESOURCES_BASE}${GUIDE_MANIFEST}`)
-      if (!response.ok)
-        throw new Error("Không đọc được dữ liệu Bách khoa. Chạy Admin bằng pnpm dev để có /__resources/.")
-      const manifest = (await response.json()) as GuideManifest
+      const source = await openSourceCollection(GUIDE_SOURCE.collection)
+      const manifest = await source.json<GuideManifest>(GUIDE_SOURCE.manifest)
       const unsourced = iconsWithoutSource(manifest)
       if (unsourced.length)
         throw new Error(
           `${unsourced.length} biểu tượng chưa có nguồn trong dữ liệu, ví dụ ${unsourced[0]}. Chưa tải ảnh nào.`,
         )
       const paths = guideIconPaths(manifest)
+      // Every icon must be in the collection before anything is uploaded, so a guide never starts half illustrated.
+      const links = await source.links(paths.map((path) => GUIDE_SOURCE.folder + path))
+      const absent = paths.filter((path) => !links.has(GUIDE_SOURCE.folder + path))
+      if (absent.length)
+        throw new Error(
+          `${absent.length} icon chưa có trong bộ tệp nguồn ${GUIDE_SOURCE.collection}, ví dụ ${absent[0]}. Chưa tải ảnh nào.`,
+        )
       let done = 0
       const assets = uploaded.current
       await mapLimit(paths, 4, async (path) => {
@@ -305,7 +309,7 @@ function StartGuide({
           setProgress(`Đã tải ${++done}/${paths.length} ảnh…`)
           return
         }
-        const image = await fetch(`${RESOURCES_BASE}${GUIDE_FOLDER}${path}`)
+        const image = await fetchSourceFile(links.get(GUIDE_SOURCE.folder + path)!)
         if (image.ok) {
           const blob = await image.blob()
           const name = path.slice(path.lastIndexOf("/") + 1)
@@ -333,13 +337,14 @@ function StartGuide({
   return (
     <Section title="Chưa có cẩm nang">
       <p className="type-body">
-        Nhập bản chép Bách khoa 08/11/2026 (lượt 15:03) trong resources: 58 quân cờ, 27 Phe/Nghề, 22 trang bị, 82 chúc
-        phúc, 18 nhiệm vụ và 3 đội hình mẫu, cùng 247 biểu tượng. Mỗi biểu tượng mang nguồn riêng: ảnh thể hiện gì, tệp
-        gốc trong bộ thu thập và giờ ghi. Hoặc bắt đầu từ nháp trống. Kết quả là bản nháp để rà soát.
+        Nhập bản chép Bách khoa 08/11/2026 (lượt 15:03) trong bộ tệp nguồn co-lien-quan-2026-11-08-1503: 58 quân cờ, 27
+        Phe/Nghề, 22 trang bị, 82 chúc phúc, 18 nhiệm vụ và 3 đội hình mẫu, cùng 247 biểu tượng. Mỗi biểu tượng mang
+        nguồn riêng: ảnh thể hiện gì, tệp gốc trong bộ thu thập và giờ ghi. Hoặc bắt đầu từ nháp trống. Kết quả là bản
+        nháp để rà soát.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button disabled={!canWrite || run.isPending} onClick={() => run.mutate(true)}>
-          <Download /> Nhập Bách khoa từ resources
+          <Download /> Nhập Bách khoa từ tệp nguồn
         </Button>
         <Button variant="outline" disabled={!canWrite || run.isPending} onClick={() => run.mutate(false)}>
           Tạo nháp trống

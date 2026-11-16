@@ -76,7 +76,7 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   chỗ. Ảnh dọc tỉ lệ 4:5 trên nền thẻ, không viền; tên, vai trò và vị trí nằm dưới ảnh: vai trò ghi chữ khi thẻ đủ rộng,
   chỉ còn icon khi hẹp; vị trí luôn là icon. Lưới 7 cột, 6 cột dưới 1100px, 5 cột trên compact, 4 cột dưới 720px, 3 cột
   dưới 480px. Toàn bộ thẻ mở chi tiết và giữ đường dẫn bộ lọc để quay về; nguồn ảnh mở từ nút nhỏ trên thẻ.
-- 11 icon vị trí/vai trò trong `public/icons/hero/` là SVG có nền trong suốt. `HeroGlyph` hiển thị bằng CSS mask và `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. Các PNG nguồn trong `resources/` vẫn được giữ nguyên.
+- 11 icon vị trí/vai trò trong `public/icons/hero/` là SVG có nền trong suốt. `HeroGlyph` hiển thị bằng CSS mask và `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. PNG nguồn không còn trong `resources/` (ADR-030); bản PNG vai trò nằm trong `apps/admin-aov/public/images/hero/vai-tro/`.
 
 ## Trạng thái chờ của thư viện
 

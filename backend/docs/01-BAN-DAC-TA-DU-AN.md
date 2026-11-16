@@ -218,7 +218,7 @@ Container:
 | `reverse-proxy` | TLS, routing, phục vụ file tĩnh của các app frontend | Caddy tự cấp chứng chỉ TLS, cấu hình ngắn |
 | `wiki-service` | Spring Boot JAR | Một instance là đủ ở giai đoạn đầu |
 | `postgres` | Database `wiki`; về sau thêm `keycloak`, `community` | Mỗi database một user DB riêng |
-| object storage | Lưu bytes media | Bucket `wiki-media`; local dùng `seaweedfs`, production dùng dịch vụ S3-compatible (mục 13.2) |
+| object storage | Lưu bytes media | Cloudflare R2 cho cả local và production; test dùng SeaweedFS trong Testcontainers (mục 13.2, ADR-030) |
 | `keycloak` | Phát JWT | Cần từ khi bật admin API (Phase 3) |
 
 Chạy bằng **Docker Compose trên một máy (VPS)** là đủ. Không dùng Kubernetes ở giai đoạn này.
@@ -327,6 +327,7 @@ aov-project/
 
 - Tài liệu dùng chung cho các service backend nằm ở `backend/docs/`. Mỗi service có thể có `README.md` riêng trong thư mục của nó.
 - `resources/` là dữ liệu làm việc tạm thời, **không** phải nguồn dữ liệu chính thức và không được service đọc trực tiếp lúc chạy.
+  Thư mục này đang được chuyển lên R2 và bỏ dần khỏi git theo ADR-030; ứng dụng và bản build không được đọc nó.
 - Không tạo thư viện Java dùng chung giữa `wiki-service` và `community-service` ở giai đoạn đầu. Contract giữa các bên là **OpenAPI**.
 - Frontend sinh TypeScript type từ OpenAPI của từng service (có thể đặt trong một package như `packages/api-client`).
 
@@ -334,7 +335,7 @@ aov-project/
 
 | Môi trường | Mục đích | Cách chạy |
 |---|---|---|
-| `local` | Phát triển | `docker compose` chạy postgres, seaweedfs, keycloak; `wiki-service` chạy từ IDE; các app frontend chạy `pnpm dev` |
+| `local` | Phát triển | `docker compose` chạy postgres, redis, keycloak; object storage là R2 qua tệp môi trường riêng; `wiki-service` chạy từ IDE; các app frontend chạy `pnpm dev` |
 | `test` | Integration test | Testcontainers (PostgreSQL, SeaweedFS); JWT giả lập trong test, không cần Keycloak |
 | `prod` | Thật | Một VPS, Docker Compose, reverse proxy TLS, backup PostgreSQL + object storage |
 
@@ -1210,20 +1211,20 @@ Mọi môi trường dùng cùng adapter qua API chuẩn S3; chỉ khác cấu h
 
 | Môi trường | Storage | Ghi chú |
 |---|---|---|
-| `local` | SeaweedFS (`compose.yaml`) | `http://localhost:8333`, path-style; credential trong `infra/local/seaweedfs/s3.json` |
+| `local` | Cloudflare R2 | Cấu hình trong `.env` hoặc `.env.r2` bị git bỏ qua (ADR-030 mục 14). SeaweedFS chỉ chạy khi bật profile `local-storage` |
 | `test` | SeaweedFS (Testcontainers) | Image pin version |
-| `prod` | Dịch vụ S3-compatible, dự kiến Cloudflare R2 | Chốt khi deploy |
+| `prod` | Cloudflare R2 | Ba bucket: `aov-media-private`, `aov-media-assets`, `aov-source-private` (ADR-014, ADR-030) |
 
 ```yaml
 wiki:
   storage:
-    endpoint: ${STORAGE_ENDPOINT}          # local: http://localhost:8333
+    endpoint: ${STORAGE_ENDPOINT}          # R2: https://<account>.r2.cloudflarestorage.com
     region: ${STORAGE_REGION:us-east-1}
     bucket: ${STORAGE_BUCKET:wiki-media}
     path-style-access: ${STORAGE_PATH_STYLE:true}
     access-key: ${STORAGE_ACCESS_KEY}
     secret-key: ${STORAGE_SECRET_KEY}
-    create-bucket-if-missing: false      # local: true
+    create-bucket-if-missing: false      # chỉ bật với SeaweedFS (profile local-storage)
 ```
 
 Quy tắc:
@@ -1231,7 +1232,8 @@ Quy tắc:
 - không dùng SDK riêng của nhà cung cấp (MinIO SDK…); chỉ AWS SDK v2;
 - chỉ dùng thao tác S3 cơ bản: `PutObject`, `HeadObject`, `GetObject`, `CopyObject`, `DeleteObject`, presigned `PUT`/`GET`;
 - không dựa vào bucket versioning, object lock, event notification; version media do `MediaAssetVersion` và object key quản lý;
-- image MinIO đã bị gỡ khỏi Docker Hub (09/2026) nên local/test dùng SeaweedFS; đổi storage chỉ cần đổi cấu hình;
+- image MinIO đã bị gỡ khỏi Docker Hub (09/2026) nên test dùng SeaweedFS; local dùng thẳng R2 từ 14/11/2026
+  (ADR-030 mục 14); đổi storage chỉ cần đổi cấu hình;
 - backup object storage là bắt buộc (`02-DATABASE-DU-AN.md` mục 41).
 
 ### 13.3 Object key
@@ -1244,6 +1246,7 @@ Object key/version phải hỗ trợ immutable delivery. Bố cục bucket:
 incoming/{uploadId}                   upload trực tiếp đang chờ kiểm tra, không bao giờ public
 imports/...                           object do công cụ import đặt sẵn, không public
 assets/{assetId}/{versionId}.{ext}    bytes đã kiểm tra, bất biến
+sources/{sha256}                      tệp nguồn riêng tư (ảnh đối chứng, dữ liệu nhập), bất biến, không public (ADR-030)
 ```
 
 - URL public: `/media/{assetId}/{versionId}.{ext}`; reverse proxy/CDN map `/media/` vào prefix `assets/` (mục 3.4). Prefix cấu hình bằng `wiki.media.public-base-url`.
@@ -1818,7 +1821,7 @@ Môi trường local tối thiểu:
 ```text
 Spring Boot
 PostgreSQL
-SeaweedFS  (object storage S3-compatible)
+Cloudflare R2 (object storage S3-compatible; SeaweedFS chỉ khi bật profile local-storage)
 Keycloak   (khi bật admin API)
 ```
 
@@ -2478,7 +2481,8 @@ Identity tham chiếu là `<heroUUID>.<skillKey>`; tên, mô tả, icon và tư�
 Tìm kiếm chỉ gợi ý kỹ năng trong revision hiện hành của ngữ cảnh. Khi đọc token đã lưu, có thể tìm
 revision hợp lệ gần nhất còn chứa skillKey đó; không lấy bản nháp hoặc patch tương lai cho wiki.
 Ảnh thư viện chỉ fallback ở admin khi ghép duy nhất theo skillKey hoặc slot+biến thể chuẩn, có nhãn
-nguồn `LIBRARY`; public chỉ dùng ảnh gắn trong revision. Không suy đoán dạng từ tên hoặc thứ tự mảng.
+nguồn `LIBRARY`; public dùng ảnh gắn trong revision, thiếu thì dùng ảnh thư viện cùng slot và biến thể (ADR-030).
+Không suy đoán dạng từ tên hoặc thứ tự mảng.
 
 
 ### Nguồn ảnh, credit và liên hệ (28/10/2026)
@@ -2638,7 +2642,8 @@ tướng của Wiki. Module `build`, quyết định ở ADR-026.
   lần có mã slug duy nhất, ví dụ `vn-pro-20261111`.
 - Mỗi tướng (hoặc dạng, ADR-024) trong lần chụp có tên trên màn hình, thứ tự được chụp và kết quả: đã chụp, game không có
   bộ đề cử, hoặc chụp lỗi. Mỗi bộ giữ thứ tự trong danh sách của game và **ảnh dẫn chứng** (mã băm SHA-256, tên tệp, kích
-  thước). Vùng của từng ô suy ra từ bố cục cố định của màn Chuẩn bị. Ảnh nằm ở `resources/raw/builds/<ngày>/`, không commit.
+  thước). Vùng của từng ô suy ra từ bố cục cố định của màn Chuẩn bị. Ảnh là tệp nguồn loại `BUILD_CAPTURE` trên R2
+  (ADR-030), không commit; trước khi chuyển, ảnh nằm ở `resources/raw/builds/<ngày>/`.
 - Bộ đọc thiếu hoặc khớp yếu được đánh dấu **chờ duyệt** kèm ghi chú. Biên tập viên sửa nội dung hoặc xác nhận bộ. Lần chụp
   được **xác nhận** khi không còn bộ chờ duyệt; đánh dấu chờ duyệt lại một bộ thì bỏ xác nhận. Xóa lần chụp xóa mọi bộ.
 - Nhập lần chụp qua API từ tệp `build-manifest.json` do script đọc ảnh tạo ra; không nhập bằng migration.
@@ -2663,8 +2668,8 @@ nhận mới nhất, trong mục Đánh giá của trang tướng (ADR-029).
 - Thống kê theo **thực thể chơi được**: tướng thường và từng dạng (ADR-024). Hai dòng “Flowborn” là `flowborn-ad` và
   `flowborn-mid`, phân biệt bằng vai trò trên game.
 - Mỗi giá trị giữ chữ đọc được trên ảnh và **ảnh dẫn chứng**: ảnh nào (mã băm SHA-256, tên tệp, bảng, trang) và vùng nào
-  (x, y, rộng, cao theo pixel của ảnh). Ảnh nằm ở `resources/raw/ranking/<ngày>/` và không commit, như ảnh cửa hàng;
-  Admin xem ảnh qua middleware dev.
+  (x, y, rộng, cao theo pixel của ảnh). Ảnh là tệp nguồn loại `RANKING_CAPTURE` trên R2 và không commit, như ảnh cửa
+  hàng; Admin xem ảnh qua URL ký sẵn (ADR-030). Trước khi chuyển, ảnh nằm ở `resources/raw/ranking/<ngày>/`.
 - Giá trị đọc không chắc hoặc không có trên ảnh được đánh dấu **chờ duyệt** kèm lý do. Giá trị thiếu vẫn có dòng với
   giá trị rỗng. Biên tập viên xác nhận (giữ giá trị) hoặc sửa (nhập giá trị mới, chữ đọc được giữ nguyên); có thể đánh
   dấu chờ duyệt lại một giá trị đã duyệt.
@@ -2697,3 +2702,62 @@ tính. Mục gồm ba khối, khối nào chưa có nội dung thì không hiệ
   năng đã xóa thì tự bỏ khỏi đặc điểm). Chúng là phần của bản nháp, xuất bản cùng tướng, không bắt buộc khi xuất bản.
 - Quyền như bản nháp tướng: sửa cần `hero:write`, xuất bản cần `hero:publish`. Mọi thao tác ghi có audit.
 - Không làm: điểm 0–10, biểu đồ năm trục, danh sách “trên kèo / dưới kèo” suy từ kỹ năng, thống kê tướng ở giải đấu.
+
+## Tệp nguồn riêng tư và dung lượng R2 (ADR-030)
+
+Mục tiêu: mọi ảnh và tệp nguồn của dự án nằm trên Cloudflare R2, biết trước dung lượng và thao tác so với gói miễn phí,
+và thư mục `resources/` được bỏ dần khỏi git. Bảng quyết định cho từng thư mục nằm ở phụ lục A của ADR-030.
+
+### Ba loại tệp
+
+- **Ảnh công khai** là Media (mục 12) trong bucket công khai, phục vụ qua CDN. Wiki chỉ hiển thị ảnh qua URL Media.
+- **Ảnh đối chứng** là ảnh chụp màn hình game dùng để kiểm tra dữ liệu: ảnh trang tướng theo patch, bảng giá cửa hàng,
+  build đề cử, bảng xếp hạng, trang bách khoa và sảnh chế độ chơi. Ảnh có thể chứa thông tin tài khoản của người chụp.
+  Ảnh đối chứng là **tệp nguồn**, nằm trong bucket riêng tư không gắn tên miền, và không bao giờ thành Media.
+- **Dữ liệu nhập** là JSON, CSV, Markdown hay script mà công cụ nhập đọc. Dữ liệu nhập cũng là tệp nguồn.
+
+### Bộ tệp nguồn
+
+- Tệp nguồn được xếp vào **bộ**: một lượt chụp hay một gói dữ liệu của một chức năng, ví dụ "Ảnh cửa hàng 16/09/2026".
+  Bộ có mã cố định, loại chức năng, tên hiển thị, ghi chú và ngày chụp nếu biết.
+- Loại chức năng: ảnh tướng theo patch, ảnh cửa hàng, ảnh build đề cử, ảnh xếp hạng, ảnh nguồn chế độ chơi, ảnh nguồn
+  thi đấu, dữ liệu nhập, lưu trữ.
+- Mỗi tệp giữ đường dẫn tương đối như khi thu thập. Bytes được định danh bằng SHA-256: cùng bytes chỉ lưu một lần dù nằm
+  ở nhiều bộ, và bytes đã lưu không bao giờ bị ghi đè.
+- Thay một tệp là trỏ đường dẫn đó sang bytes mới, có xác nhận và cho thấy cũ → mới. Bỏ tệp hay cả bộ chỉ xóa danh mục.
+- Bytes không còn trong bộ nào và không còn nơi dùng là **bytes mồ côi**. Chỉ người có `media:write` xóa vĩnh viễn bytes
+  mồ côi, bằng thao tác riêng có xác nhận.
+- Nơi dùng của tệp nguồn do module sở hữu báo, giống nơi dùng của Media: build đề cử và thống kê đấu hạng báo các ảnh
+  dẫn chứng của mình.
+
+### Xem và tải
+
+- Người có `catalog:read` xem tệp nguồn trong Admin qua URL GET ký sẵn hạn ngắn (mặc định 10 phút) do backend cấp. Bytes
+  đi thẳng từ R2 tới trình duyệt. Wiki và Stream không bao giờ nhận các URL này. Admin đã build xem được như khi dev.
+- Người có `media:write` tải tệp lên: backend cấp URL tải lên ký sẵn, rồi kiểm tra SHA-256, kích thước và định dạng ảnh
+  trước khi tệp vào bộ. Không cho tải HTML, SVG hay tệp trình duyệt chạy được.
+- Công cụ đồng bộ dòng lệnh đẩy một thư mục lên một bộ và kéo một bộ về thư mục cục bộ. Trước khi đẩy, công cụ in kế
+  hoạch (số tệp, dung lượng, số thao tác, dung lượng sau khi tải) và chỉ ghi khi chạy với `--apply`. Sau khi tải,
+  công cụ đọc lại bytes để đối chiếu SHA-256 và ghi biên nhận vào `.local-state/`.
+
+### Dung lượng và chi phí
+
+- Admin có trang dung lượng R2: dung lượng theo bucket và theo loại ảnh hay chức năng, số tệp, lượng tải lên theo tháng,
+  thao tác lớp A/B của tháng, so với gói miễn phí (10 GB-tháng, 1 triệu lớp A, 10 triệu lớp B). Gần ngưỡng (mặc định
+  80% và 95%) thì cảnh báo.
+- Số liệu chính lấy từ database, không tốn thao tác R2. Khi người dùng cấu hình token Cloudflare chỉ đọc analytics,
+  trang hiện thêm số thật của Cloudflare (dung lượng từng bucket, thao tác tháng này) và chênh lệch với database.
+- Trước mỗi đợt tải lên (Admin hay công cụ), hệ thống ước lượng số tệp mới, GB mới, số thao tác và dung lượng sau khi
+  tải. Với tệp nguồn, bytes đã có không tính thêm.
+
+### Ảnh chiêu trên Wiki
+
+- Kỹ năng trong bản xuất bản có icon gắn thì Wiki dùng icon đó. Chưa có thì Wiki dùng ảnh của thư viện icon kỹ năng cùng
+  slot và biến thể, mà chi tiết tướng công khai đã trả trong `skillMedia`. Wiki không đọc ảnh từ `resources/`.
+
+### Bỏ `resources/`
+
+- Mỗi phần chỉ bị bỏ khỏi git sau khi bản trên R2 được kiểm chứng, bằng commit mới; không viết lại lịch sử.
+- Tệp cục bộ không bị xóa khi người dùng chưa xác nhận.
+- Bỏ khỏi git không xóa ảnh khỏi lịch sử của kho công khai; việc đó cần chuyển kho sang riêng tư hoặc viết lại lịch sử,
+  do chủ dự án quyết định.

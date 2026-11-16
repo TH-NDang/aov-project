@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
@@ -556,12 +557,36 @@ test("source images still to capture show per hero, rank the list, open the skil
       },
     ],
   })
+  // The published set as publish-captures leaves it in the private bucket; only its coverage matters here.
+  const heroSet = () => ({
+    kind: "HERO_CAPTURE",
+    patchCode: "2026-10-30",
+    archive: "outer.zip",
+    coverage: {},
+    sources: coverage().heroes,
+    heroes: {},
+  })
   const captureRequests: string[] = []
-  const fetcher: typeof fetch = async (input) => {
-    const path = new URL(String(input), "http://localhost").pathname.replace("/api/wiki/v1", "")
-    if (path.startsWith("/__patch-captures/")) captureRequests.push(path)
-    if (path === "/__patch-captures/sets.json") return Response.json({ patches: ["2026-10-30"] })
-    if (path === "/__patch-captures/2026-10-30/heroes.json") return Response.json(coverage())
+  const fetcher: typeof fetch = async (input, init) => {
+    const url = new URL(String(input), "http://localhost")
+    const path = url.pathname.replace("/api/wiki/v1", "")
+    if (path === "/admin/source-collections")
+      return Response.json({
+        items: [{ id: "hero-set", code: "hero-capture-2026-10-30", category: "HERO_CAPTURE", label: "Ảnh tướng" }],
+        page: 0,
+        size: 100,
+        totalElements: 1,
+      })
+    if (path === "/admin/source-collections/hero-set/links" && init?.method === "POST") {
+      // The link names the manifest's bytes, so the page downloads it again only once a review changed it.
+      const sha256 = createHash("sha256").update(JSON.stringify(heroSet())).digest("hex")
+      const item = { path: "capture-manifest.json", sha256, url: "https://r2.test/hero-set/capture-manifest.json" }
+      return Response.json({ items: [item], missing: [] })
+    }
+    if (url.host === "r2.test") {
+      captureRequests.push(path)
+      return Response.json(heroSet())
+    }
     if (path === "/auth/refresh") return Response.json({ accessToken: "readiness-fixture", expiresIn: 3600 })
     if (path === "/auth/logout") return new Response(null, { status: 204 })
     if (path === "/admin/me")

@@ -13,6 +13,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+# The collection esports-2026-post-apl holds this data since ADR-030; `pnpm sources:sync pull` restores it here.
 DEFAULT_MANIFEST = ROOT / "resources/esports/2026-post-apl/manifest.json"
 REPORT_DIRECTORY = ROOT / ".local-state/tournament-metadata-import"
 CODE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")

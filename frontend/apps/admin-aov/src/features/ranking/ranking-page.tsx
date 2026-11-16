@@ -130,7 +130,7 @@ export function RankingPage() {
     if (!selected) return
     const accepted = await confirmAction({
       title: "Xóa bản chụp này?",
-      description: `Mọi giá trị, ghi chú duyệt và liên kết ảnh dẫn chứng của bản chụp ${selected.code} sẽ bị xóa. Ảnh gốc trong resources vẫn giữ nguyên.`,
+      description: `Mọi giá trị, ghi chú duyệt và liên kết ảnh dẫn chứng của bản chụp ${selected.code} sẽ bị xóa. Ảnh gốc trong Tệp nguồn vẫn giữ nguyên.`,
       confirmLabel: "Xóa bản chụp",
     })
     if (!accepted) return
@@ -180,7 +180,7 @@ export function RankingPage() {
       ) : !selected ? (
         <div className="grid justify-items-start gap-3 rounded-lg border border-dashed p-6">
           <p className="type-body text-muted-foreground">
-            Chưa có bản chụp thống kê nào. Nhập bộ ảnh đã đọc từ resources/extracted/ranking.
+            Chưa có bản chụp thống kê nào. Nhập một bộ ảnh đã đọc trong Tệp nguồn.
           </p>
           <Button type="button" disabled={!canWrite} onClick={() => setImporting(true)}>
             <FileUp className="size-4" /> Nhập bản chụp

@@ -210,10 +210,11 @@ export interface ShopCaptureImage {
   card: number
   box: ShopCardBox | null
   capturedOn: string
-  url: string
+  /** The screenshot's bytes, which Admin opens through a presigned link (ADR-030). */
+  sha256: string
+  /** Where the screenshot sits in its source collection. */
+  path: string
 }
-
-export const shopImageUrl = (sha256: string) => `/__shop-captures/images/${sha256}.jpg`
 
 export function heroShopImages(manifest: ShopManifest, heroCode: string): ShopCaptureImage[] {
   const hero = manifest.heroes[heroCode]
@@ -240,7 +241,9 @@ export function heroShopImages(manifest: ShopManifest, heroCode: string): ShopCa
           card: source.card,
           box: source.box,
           capturedOn: manifest.capturedOn,
-          url: shopImageUrl(source.image),
+          sha256: source.image,
+          // Collection paths are NFC, as push stores them.
+          path: `raw/shop/${manifest.capturedOn}/${image.path}`.normalize("NFC"),
         }
       }),
     )

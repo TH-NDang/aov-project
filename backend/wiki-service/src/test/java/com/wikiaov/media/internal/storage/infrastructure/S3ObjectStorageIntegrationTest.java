@@ -156,7 +156,7 @@ class S3ObjectStorageIntegrationTest {
         String publicBucket = "wiki-media-assets-test";
         s3.createBucket(request -> request.bucket(publicBucket));
         var properties = new StorageProperties(endpoint, "us-east-1", "wiki-media-test", publicBucket,
-                true, ACCESS_KEY, SECRET_KEY, false, null);
+                null, true, ACCESS_KEY, SECRET_KEY, false, null);
         var splitStorage = new S3ObjectStorage(s3, presigner, properties);
         byte[] bytes = "split-bucket-image".getBytes(StandardCharsets.UTF_8);
         String source = "incoming/split-upload";
@@ -203,7 +203,7 @@ class S3ObjectStorageIntegrationTest {
     }
 
     private static StorageProperties properties(String secretKey) {
-        return new StorageProperties(endpoint, "us-east-1", "wiki-media-test", null, true, ACCESS_KEY, secretKey,
-                false, null);
+        return new StorageProperties(endpoint, "us-east-1", "wiki-media-test", null, null, true, ACCESS_KEY,
+                secretKey, false, null);
     }
 }

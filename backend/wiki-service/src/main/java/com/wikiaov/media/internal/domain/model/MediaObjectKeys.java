@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
  * incoming/{uploadId}                      direct uploads waiting for validation (never public)
  * imports/...                              objects placed by import tooling (never public)
  * assets/{assetId}/{versionId}.{ext}       validated, immutable bytes; served as /media/{assetId}/{versionId}.{ext}
+ * sources/{sha256}                         private source files addressed by content (ADR-030); never public
  * </pre>
  */
 public final class MediaObjectKeys {
@@ -21,6 +22,7 @@ public final class MediaObjectKeys {
     public static final String ASSETS_PREFIX = "assets/";
     public static final String INCOMING_PREFIX = "incoming/";
     public static final String IMPORTS_PREFIX = "imports/";
+    public static final String SOURCES_PREFIX = "sources/";
 
     private static final int MAX_KEY_LENGTH = 1024;
     private static final Pattern IMPORT_KEY = Pattern.compile("imports/[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*");
@@ -34,6 +36,11 @@ public final class MediaObjectKeys {
 
     public static String asset(UUID assetId, UUID versionId, ImageFormat format) {
         return ASSETS_PREFIX + assetId + "/" + versionId + "." + format.extension();
+    }
+
+    /** Key of a private source file; the SHA-256 must already be validated as lowercase hex. */
+    public static String source(String sha256) {
+        return SOURCES_PREFIX + sha256;
     }
 
     /** Import keys come from trusted tooling but are still limited to {@code imports/} and safe characters. */
