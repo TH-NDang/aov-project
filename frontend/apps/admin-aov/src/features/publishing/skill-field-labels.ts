@@ -59,6 +59,7 @@ export const SKILL_FIELD_LABELS: Record<string, string> = {
   stun: "Khống chế",
   STUN: "Khống chế",
   description: "Mô tả",
+  summary: "Tóm tắt",
 }
 
 /** Scoped API keys share their final field's label; unknown codes never become reader-facing headings. */

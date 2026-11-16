@@ -6,6 +6,7 @@ import {
   missingTranslationFields,
   translationSource,
   sectionTextFields,
+  translationFieldLabel,
   type TranslationField,
   type TranslatableSection,
 } from "./hero-translation-model"
@@ -13,6 +14,7 @@ import { Check, CircleDashed } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { HeroAsset } from "./hero-content"
 import { translationLanguageLabel } from "./hero-translation-notice"
+import { SkillSummaryField, summaryValue } from "./skill-summary-field"
 import type { Content, Profile, Skills, Skins } from "./types"
 
 export type { TranslatableSection } from "./hero-translation-model"
@@ -26,14 +28,6 @@ type TextRow = {
   acquisitionNote?: string | null
 }
 type TextField = Exclude<keyof TextRow, "locale">
-const labels: Record<TextField, string> = {
-  name: "Tên",
-  title: "Danh hiệu",
-  summary: "Giới thiệu",
-  lore: "Cốt truyện",
-  description: "Mô tả",
-  acquisitionNote: "Cách sở hữu",
-}
 
 export function updateTranslation(
   section: TranslatableSection,
@@ -45,7 +39,9 @@ export function updateTranslation(
 ): NonNullable<Content[TranslatableSection]> {
   function replace<T extends TextRow>(rows: T[], empty: T): T[] {
     const current = rows.find((row) => row.locale === locale)
-    const next = { ...(current ?? empty), [field]: text }
+    // An emptied skill summary is stored as none, like one that was never written.
+    const written = section === "SKILLS" && field === "summary" ? summaryValue(text) : text
+    const next = { ...(current ?? empty), [field]: written }
     return current ? rows.map((row) => (row.locale === locale ? next : row)) : [...rows, next]
   }
   if (section === "PROFILE") {
@@ -137,7 +133,7 @@ export function TranslationEditor({
       key: skill.skillKey,
       label: skill.skillKey,
       rows: skill.translations,
-      fields: ["name", "description"],
+      fields: ["name", "summary", "description"],
       image: skill.iconAssetId,
     }))
   else
@@ -224,16 +220,26 @@ export function TranslationEditor({
                   className="scroll-mt-24"
                 >
                   <WithReference<TextRow> read={(other) => other?.[field]}>
-                    <Field
-                      label={`${labels[field]} · ${translationLanguageLabel(targetLocale)}`}
-                      value={target?.[field] ?? ""}
-                      required={field === "name" && !!target}
-                      multiline={field !== "name" && field !== "title"}
-                      richTextLocale={targetLocale}
-                      onChange={(text) =>
-                        onChange(updateTranslation(section, value, group.key, targetLocale, field, text))
-                      }
-                    />
+                    {section === "SKILLS" && field === "summary" ? (
+                      <SkillSummaryField
+                        label={`${translationFieldLabel(section, field)} · ${translationLanguageLabel(targetLocale)}`}
+                        value={target?.summary ?? ""}
+                        onChange={(text) =>
+                          onChange(updateTranslation(section, value, group.key, targetLocale, field, text))
+                        }
+                      />
+                    ) : (
+                      <Field
+                        label={`${translationFieldLabel(section, field)} · ${translationLanguageLabel(targetLocale)}`}
+                        value={target?.[field] ?? ""}
+                        required={field === "name" && !!target}
+                        multiline={field !== "name" && field !== "title"}
+                        richTextLocale={targetLocale}
+                        onChange={(text) =>
+                          onChange(updateTranslation(section, value, group.key, targetLocale, field, text))
+                        }
+                      />
+                    )}
                   </WithReference>
                 </div>
               ))}

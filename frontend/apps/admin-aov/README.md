@@ -527,6 +527,11 @@ chú gỡ phụ trợ, ghi chú biên tập, tên gọi khác (mỗi dòng một
 người dùng không phải mô tả game nên cũng giữ nguyên. Tab **Thử hiển thị** của trang thuật ngữ và ô sửa nhãn đặc tính
 của kỹ năng cũng dùng ô này, không còn khung "Kết quả hiển thị" thứ hai.
 
+Tóm tắt kỹ năng (`SkillSummaryField` trong `src/features/publishing/skill-summary-field.tsx`) cũng là ô văn bản thường:
+một đoạn, tối đa 300 ký tự, có bộ đếm theo mốc 200 ký tự của quy tắc viết, xuống dòng khi dán được đổi thành khoảng
+trắng. Ô nằm ngay trên ô mô tả của chiêu trong trình sửa kỹ năng và trong phần dịch; khi đọc, tóm tắt hiện trên mô tả và
+tên trong game vẫn được nhận diện.
+
 ## Lưu trữ thuật ngữ dùng chung
 
 - Nguồn chính là schema `terminology` trong PostgreSQL, qua Spring Data JPA. V029 tạo cấu hình và

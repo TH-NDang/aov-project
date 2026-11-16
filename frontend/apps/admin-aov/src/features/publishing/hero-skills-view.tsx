@@ -15,6 +15,7 @@ import { captureGroupKeys } from "./patch-capture-model"
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 import { SkillVideosSection } from "../videos/skill-videos-section"
 import { SkillStateSwitch, skillInState, stateIconsOf } from "./skill-state-icons"
+import { SkillSummaryText } from "./skill-summary-field"
 import { SkillFormSwitch, SkillVariantDots } from "@aov/ui/components/skill-kit"
 
 export type HeroSkillsLayout = "focus" | "flat"
@@ -488,9 +489,14 @@ function SkillDetail({
         {states && <div className="basis-full">{states}</div>}
       </header>
       <SkillStateSwitch skill={skill} state={state} onState={setState} />
+      {text?.summary && <SkillSummaryText text={text.summary} />}
       {text?.description ? (
-        <div className="type-body whitespace-pre-wrap break-words leading-7 [overflow-wrap:anywhere]">
-          <AdminEntityText text={text.description} />
+        <div className="space-y-1">
+          {/* Named only beside a summary, to tell the two texts apart. */}
+          {text.summary && <p className="type-label text-muted-foreground">Mô tả đầy đủ</p>}
+          <div className="type-body whitespace-pre-wrap break-words leading-7 [overflow-wrap:anywhere]">
+            <AdminEntityText text={text.description} />
+          </div>
         </div>
       ) : (
         <p className="rounded-lg bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground">

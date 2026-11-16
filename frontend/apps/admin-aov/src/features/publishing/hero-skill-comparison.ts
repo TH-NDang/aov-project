@@ -167,9 +167,17 @@ function skillFacts(skill: Skill | null): Map<string, Fact> {
   const facts = new Map<string, Fact>()
   if (!skill) return facts
   const add = (fact: Fact) => facts.set(fact.id, fact)
-  for (const translation of skill.translations ?? [])
+  for (const translation of skill.translations ?? []) {
     if (translation.name)
       add({ id: `name.${translation.locale}`, label: `Tên kỹ năng (${translation.locale})`, value: translation.name })
+    // The summary is editorial text of its own, so it is compared apart from the game's description.
+    if (translation.summary)
+      add({
+        id: `summary.${translation.locale}`,
+        label: `${fieldLabels.summary} (${translation.locale})`,
+        value: translation.summary,
+      })
+  }
   for (const key of ["kind", "formKey", "iconAssetId"] as const)
     if (skill[key] !== null && skill[key] !== undefined) add({ id: key, label: fieldLabels[key], value: skill[key] })
   for (const effect of skill.effects ?? []) {

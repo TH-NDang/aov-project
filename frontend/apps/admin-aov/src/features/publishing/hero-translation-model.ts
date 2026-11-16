@@ -19,9 +19,13 @@ export type TranslationTarget = {
 }
 export const sectionTextFields: Record<TranslatableSection, readonly TranslationField[]> = {
   PROFILE: ["name", "title", "summary", "lore"],
-  SKILLS: ["name", "description"],
+  SKILLS: ["name", "summary", "description"],
   SKINS: ["name", "description", "acquisitionNote"],
 }
+
+/** A skill's `summary` is its short plain summary, while a hero's is the introduction. */
+export const translationFieldLabel = (section: TranslatableSection, field: TranslationField): string =>
+  section === "SKILLS" && field === "summary" ? "Tóm tắt" : translationFields[field]
 
 export function translationSource(rows: readonly TranslationText[], field: TranslationField, preferred = "vi-VN") {
   return rows.find((row) => row.locale === preferred && row[field]?.trim()) ?? rows.find((row) => row[field]?.trim())
