@@ -33,7 +33,7 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 - Vai trò lấy trực tiếp từ backend. Vị trí hiện dùng bảng tham khảo tạm trong `hero-classifications.ts`, ánh xạ rõ từng mã tướng, không suy luận từ vai trò. Nhãn “Tham khảo” giải thích đây là phân loại minh họa, chờ biên tập; chưa coi đây là dữ liệu vị trí do backend quản lý.
 - Trạng thái lọc lưu trên URL: `q` là tên hoặc mã tướng, `role` và `position` là các giá trị phân cách bằng dấu phẩy, ví dụ `/hero?q=amily&role=WARRIOR&position=TOP,JUNGLE`. Trong cùng nhóm chỉ cần khớp một lựa chọn; giữa tìm kiếm, vai trò và vị trí phải đồng thời khớp. Tìm kiếm không phân biệt chữ hoa, chữ thường hoặc dấu tiếng Việt, gồm cả `đ`/`d`.
 - Thẻ tướng ưu tiên ảnh `PORTRAIT` thật, dùng `HEAD` nếu thiếu hoặc lỗi chân dung, rồi mới dùng chỗ giữ chỗ. Ảnh dọc tỉ lệ 4:5, bo góc đều; tên và vai trò lấy từ backend nằm dưới ảnh. Desktop và tablet tự chia cột theo chiều rộng, mỗi thẻ rộng tối thiểu 148px; điện thoại từ 420px dùng 4 cột, hẹp hơn dùng 3 cột và chỉ giữ icon vai trò. Toàn bộ thẻ mở chi tiết và giữ đường dẫn bộ lọc để quay về.
-- 11 icon vị trí/vai trò trong `public/icons/hero/` là SVG có nền trong suốt. `HeroGlyph` hiển thị bằng CSS mask và `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. Các PNG nguồn trong `resources/` vẫn được giữ nguyên.
+- 11 icon vị trí/vai trò trong `public/icons/hero/` là SVG có nền trong suốt. `HeroGlyph` hiển thị bằng CSS mask và `currentColor`, nên có thể đổi màu bằng CSS mà không tạo thêm bản ảnh. PNG nguồn không còn trong `resources/` (ADR-030); bản PNG vai trò nằm trong `apps/admin-aov/public/images/hero/vai-tro/`.
 
 ## Trạng thái chờ của thư viện
 
