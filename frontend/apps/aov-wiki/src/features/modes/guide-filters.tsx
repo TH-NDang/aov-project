@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactNode } from "react"
+import { useMemo, type ReactNode } from "react"
+import { useSearchParams } from "react-router"
 import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
@@ -9,12 +10,32 @@ import { costStyle, GuideSearch, TraitIcon, type GuideIndex } from "./guide-ui"
 
 const KINDS = ["FACTION", "CLASS"] as const
 
-/** What narrows a list of units: part of a name, one price, and factions or classes. */
+/** The address keys of the unit filter: the search, the price and the chosen factions and classes. */
+export const UNIT_FILTER_KEYS = ["q", "gia", "phe"] as const
+
+/**
+ * What narrows a list of units: part of a name, one price, and factions or classes. The filter lives in the address,
+ * so a reload or a shared link keeps it; values the guide does not know are ignored.
+ */
 export function useUnitFilter(index: GuideIndex) {
-  const [search, setSearch] = useState("")
-  const [cost, setCost] = useState<number | null>(null)
-  const [picked, setPicked] = useState<string[]>([])
+  const [params, setParams] = useSearchParams()
   const costs = useMemo(() => [...new Set(index.content.units.map((unit) => unit.cost))].sort((a, b) => a - b), [index])
+  const search = params.get("q") ?? ""
+  const askedCost = Number(params.get("gia"))
+  const cost = costs.includes(askedCost) ? askedCost : null
+  const picked = [...new Set((params.get("phe") ?? "").split(","))].filter((code) => index.traits.has(code))
+  const change = (values: { q?: string; gia?: number | null; phe?: string[] }) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        const set = (key: string, value: string) => (value ? next.set(key, value) : next.delete(key))
+        if (values.q !== undefined) set("q", values.q)
+        if (values.gia !== undefined) set("gia", values.gia === null ? "" : String(values.gia))
+        if (values.phe !== undefined) set("phe", values.phe.join(","))
+        return next
+      },
+      { replace: true, preventScrollReset: true },
+    )
   const needle = foldText(search.trim())
   // Several factions or several classes widen the choice; a faction and a class narrow it to units with both.
   const pickedOf = (kind: Trait["kind"]) => picked.filter((code) => index.traits.get(code)?.kind === kind)
@@ -24,14 +45,14 @@ export function useUnitFilter(index: GuideIndex) {
   )
   return {
     search,
-    setSearch,
+    setSearch: (value: string) => change({ q: value }),
     cost,
-    setCost,
+    setCost: (value: number | null) => change({ gia: value }),
     costs,
     picked,
     pickedOf,
     toggle: (code: string) =>
-      setPicked((current) => (current.includes(code) ? current.filter((entry) => entry !== code) : [...current, code])),
+      change({ phe: picked.includes(code) ? picked.filter((entry) => entry !== code) : [...picked, code] }),
     units: base.filter((unit) => fits(unit, pickedOf("FACTION")) && fits(unit, pickedOf("CLASS"))),
     /** How many units a trait would show alongside what the other kind has chosen. */
     countWith: (code: string) => {
@@ -41,10 +62,9 @@ export function useUnitFilter(index: GuideIndex) {
     },
     /** Filters set apart from the search: the price and the traits. */
     active: (cost === null ? 0 : 1) + picked.length,
-    reset: () => {
-      setCost(null)
-      setPicked([])
-    },
+    reset: () => change({ gia: null, phe: [] }),
+    /** Clears the search as well, in one change of the address. */
+    clear: () => change({ q: "", gia: null, phe: [] }),
   }
 }
 
@@ -225,14 +245,7 @@ export function FilterSummary({ index, filter }: { index: GuideIndex; filter: Un
         )
       })}
       {any && (
-        <button
-          type="button"
-          className="guide-clear"
-          onClick={() => {
-            filter.reset()
-            filter.setSearch("")
-          }}
-        >
+        <button type="button" className="guide-clear" onClick={filter.clear}>
           Bỏ lọc
         </button>
       )}

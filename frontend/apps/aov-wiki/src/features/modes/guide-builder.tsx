@@ -19,7 +19,7 @@ import {
   type BuilderUnit,
 } from "./auto-chess-model"
 import { BoardGrid, BoardPiece, dragUnit, LineupViewSwitch, placeUnits, useLineupView } from "./lineup-board"
-import { UnitFilters, useUnitFilter } from "./guide-filters"
+import { UNIT_FILTER_KEYS, UnitFilters, useUnitFilter } from "./guide-filters"
 import { costStyle, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
 import { ModeDialog, ModeHeading } from "./mode-ui"
 import { deleteLineup, lineupErrorMessage, myStateQuery, saveLineup } from "./mode-api"
@@ -94,9 +94,11 @@ export function BuilderTab({
   function write(next: BuilderUnit[], nextEmblems = emblems) {
     setParams(
       (current) => {
-        const result = new URLSearchParams(encodeLineup(next, nextEmblems))
-        const unit = current.get("unit")
-        if (unit) result.set("unit", unit)
+        // The lineup replaces its own keys; the version, the open unit and the pool's filter stay.
+        const result = new URLSearchParams(current)
+        result.delete("u")
+        result.delete("e")
+        for (const [key, value] of new URLSearchParams(encodeLineup(next, nextEmblems))) result.set(key, value)
         return result
       },
       { replace: true, preventScrollReset: true },
@@ -177,7 +179,10 @@ export function BuilderTab({
   const selectedInfo = selectedUnit ? index.units.get(selectedUnit.unitCode) : undefined
 
   async function copyLink() {
-    await navigator.clipboard?.writeText(window.location.href)
+    // The shared lineup keeps the version it was built on, not the pool filter or the open unit.
+    const link = new URL(window.location.href)
+    for (const key of [...UNIT_FILTER_KEYS, "unit"]) link.searchParams.delete(key)
+    await navigator.clipboard?.writeText(link.toString())
     setCopied(true)
     window.setTimeout(() => setCopied(false), 2000)
   }

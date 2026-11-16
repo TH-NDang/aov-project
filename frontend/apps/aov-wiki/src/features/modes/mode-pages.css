@@ -631,7 +631,7 @@ a.mode-row:active {
 .mode-rule + .mode-rule {
   margin-top: 6px;
 }
-.mode-rule h4 {
+.mode-rule > :is(h3, h4) {
   font: var(--wiki-type-entry);
   color: var(--aov-text);
 }

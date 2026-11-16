@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link, useNavigate } from "react-router"
+import { Link, useNavigate, useSearchParams } from "react-router"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import {
   DropdownMenu,
@@ -40,6 +40,8 @@ const SORTS: [LineupSort, string][] = [
   ["trending", "Đang lên (7 ngày)"],
   ["recent", "Mới cập nhật"],
 ]
+/** How a sort reads in the address; the default sort has none. */
+const SORT_KEYS: Partial<Record<LineupSort, string>> = { trending: "dang-len", recent: "moi" }
 
 /** Likes of the signed-in reader, with the server's answer applied right away. */
 function useLikes(code: string) {
@@ -202,8 +204,23 @@ export function LineupsTab({
   const compact = usePageLayout() === "compact"
   const likes = useLikes(code)
   const [view, setView] = useLineupView()
-  const [sort, setSort] = useState<LineupSort>("popular")
-  const [unit, setUnit] = useState<string | null>(null)
+  // The community list's sort and unit live in the address, so a reload or a shared link keeps them.
+  const [params, setParams] = useSearchParams()
+  const sort = SORTS.find(([key]) => SORT_KEYS[key] === params.get("xep"))?.[0] ?? "popular"
+  const asked = params.get("quan")
+  const unit = asked && index.units.has(asked) ? asked : null
+  const change = (key: "xep" | "quan", value: string | null | undefined) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        if (value) next.set(key, value)
+        else next.delete(key)
+        return next
+      },
+      { replace: true, preventScrollReset: true },
+    )
+  const setSort = (value: LineupSort) => change("xep", SORT_KEYS[value])
+  const setUnit = (value: string | null) => change("quan", value)
   const community = useInfiniteQuery(communityLineupsQuery(code, sort, unit))
   const communityLineups = community.data?.pages.flatMap((page) => page.items) ?? []
   const communityTotal = community.data?.pages[0]?.totalElements

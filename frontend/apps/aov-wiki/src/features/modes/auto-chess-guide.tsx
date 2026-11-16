@@ -1,9 +1,10 @@
 import { useMemo } from "react"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { useSearchParams } from "react-router"
 import { useWikiContext } from "../../context/wiki-context"
 import { TRAIT_KIND_LABEL } from "./auto-chess-model"
 import type { PublicGuide } from "./mode-api"
-import { formatDay, ModeDialog } from "./mode-ui"
+import { ModeDialog } from "./mode-ui"
 import { GuideLinks, useGuideIndex, type GuideIndex } from "./guide-ui"
 import { UnitDetail, UnitsTab } from "./guide-units"
 import { TraitsTab } from "./guide-traits"
@@ -82,7 +83,7 @@ function guideReferences(index: GuideIndex, modeCode: string, href: (path: strin
 
 export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideTab; guide: PublicGuide }) {
   const index = useGuideIndex(guide)
-  const { href } = useWikiContext()
+  const { href, locale } = useWikiContext()
   const links = useMemo(
     () => ({
       entities: guideReferences(index, code, href),
@@ -118,8 +119,13 @@ export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideT
       {/* Where the data comes from closes every tab, out of the way of what the reader came for. */}
       <p className="guide-edition">
         {guide.content.edition ?? "Bách khoa Cờ Liên quân"}
-        {guide.content.observedOn && ` · ghi nhận ${formatDay(guide.content.observedOn)}`} · Dữ liệu và hình ảnh: Garena
-        / Liên Quân Mobile
+        {guide.content.observedOn && (
+          <>
+            {" · ghi nhận "}
+            <LocalTime value={guide.content.observedOn} locale={locale} />
+          </>
+        )}{" "}
+        · Dữ liệu và hình ảnh: Garena / Liên Quân Mobile
       </p>
       <ModeDialog open={!!selected} onClose={() => showUnit(null)} label={selected?.name ?? "Quân cờ"} title="Quân cờ">
         {selected && <UnitDetail unit={selected} index={index} code={code} onOpen={showUnit} />}

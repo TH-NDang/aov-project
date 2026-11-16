@@ -62,12 +62,6 @@ export function durationText(duration?: ModeDuration | null) {
   return `${duration.minMinutes ?? duration.maxMinutes} phút`
 }
 
-export function formatDay(value?: string | null) {
-  if (!value) return null
-  const [year, month, day] = value.split("-")
-  return year && month && day ? `${day}/${month}/${year}` : value
-}
-
 /**
  * Mode art with the image credit, or the section's emblem on a quiet tone while no art is published yet. Inside a
  * card that already names the mode the picture is decoration, so it carries no text of its own and no credit: an
@@ -179,9 +173,11 @@ export function RuleList({ rules, collapsible }: { rules: RuleSection[]; collaps
   return (
     <div className="mode-rules">
       {[...groups.entries()].map(([group, entries], index) => {
+        // A rule sits under its group's h3; where the group folds behind a summary, or there is none, it is the h3.
+        const Title = group && !collapsible ? "h4" : "h3"
         const items = entries.map((rule, at) => (
           <div key={`${rule.title}-${at}`} className="mode-rule">
-            <h4>{rule.title}</h4>
+            <Title>{rule.title}</Title>
             <RuleBody body={rule.body} />
           </div>
         ))
