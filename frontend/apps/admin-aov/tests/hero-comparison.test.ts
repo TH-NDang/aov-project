@@ -7,7 +7,7 @@ import {
   comparisonPathLabels,
   comparisonImages,
 } from "../src/features/publishing/hero-comparison"
-import { captureDataset, mergeResourceArtwork } from "../src/features/publishing/hero-source-dataset"
+import { captureDataset } from "../src/features/publishing/hero-source-dataset"
 import {
   heroReviewItems,
   setHeroReviewResolved,
@@ -168,32 +168,6 @@ test("capture imports preserve unknowns, raw source tables and incomplete forms 
   assert.equal(captureDataset({ heroes: [{ name: "Normal JSON" }] }), null)
 })
 
-test("artwork merges use exact stable identities and preserve the capture content", () => {
-  const rows = captureDataset(source)!.rows
-  const merged = mergeResourceArtwork(rows, [
-    {
-      id: "edras",
-      head: "assets/hero/edras.jpg",
-      skills: [
-        {
-          slot: 0,
-          variants: [
-            { index: 1, icon: "assets/skill/edras.png" },
-            { index: 2, icon: "assets/skill/other-form.png" },
-          ],
-        },
-      ],
-      skins: [{ id: "edras-default", name: "Mặc định", cover: "assets/skin/edras.jpg" }],
-    },
-  ])
-  assert.equal(merged[0].head, "/__resources/assets/hero/edras.jpg")
-  const skills = merged[0].skills as Record<string, unknown>[]
-  assert.equal(skills.length, 1)
-  assert.equal(skills[0].iconAssetId, "/__resources/assets/skill/edras.png")
-  assert.equal(skills[0].description, (rows[0].skills as Record<string, unknown>[])[0].description)
-  assert.deepEqual(mergeResourceArtwork(rows, [{ id: "another-hero" }]), rows)
-})
-
 test("reviewed aliases avoid duplicate heroes while ambiguous Flowborn forms require an explicit identity", () => {
   const dataset = captureDataset({
     ...source,
@@ -207,7 +181,7 @@ test("reviewed aliases avoid duplicate heroes while ambiguous Flowborn forms req
   assert.equal(dataset.rows[1].code, "")
 })
 
-test("mismatched capture slots cannot overwrite canonical skills or bind the wrong artwork", () => {
+test("mismatched capture slots cannot overwrite canonical skills", () => {
   const dataset = captureDataset({
     ...source,
     heroes: [
@@ -237,15 +211,6 @@ test("mismatched capture slots cannot overwrite canonical skills or bind the wro
     ["capture-skill-1", "capture-skill-3"],
   )
   assert.equal((skills[0].effects[0].metadata.duplicateCaptures as unknown[]).length, 1)
-  const merged = mergeResourceArtwork(dataset.rows, [
-    {
-      id: "edras",
-      skills: [{ slot: 3, variants: [{ index: 1, icon: "assets/wrong.png" }] }],
-      skins: [{ id: "missing-name", name: "", cover: "assets/skin.png" }],
-    },
-  ])
-  assert.equal((merged[0].skills as Record<string, unknown>[])[1].iconAssetId, undefined)
-  assert.deepEqual(merged[0].skins, [])
 })
 
 test("capture provenance keeps exact image and folder links while rejecting executable or credential URLs", () => {

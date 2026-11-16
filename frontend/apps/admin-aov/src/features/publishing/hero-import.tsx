@@ -33,7 +33,7 @@ import {
 } from "lucide-react"
 import { IMPORT_STATUS, ImportValue } from "./import-review"
 import type { ImportContext } from "./import-context"
-import { captureDataset, mergeResourceArtwork, type SourceDataset } from "./hero-source-dataset"
+import { captureDataset, type SourceDataset } from "./hero-source-dataset"
 import { BaselineMigration } from "./baseline-migration"
 
 import type { components } from "./generated/hero-api"
@@ -124,7 +124,6 @@ export function HeroImport({
   const [step, setStep] = useState(1)
   const [fileName, setFileName] = useState("")
   const [capture, setCapture] = useState<SourceDataset | null>(null)
-  const [artworkMerged, setArtworkMerged] = useState(false)
   const [progress, setProgress] = useState("")
   const [filter, setFilter] = useState("ALL")
   const [mapping, setMapping] = useState<Record<string, string>>({})
@@ -177,7 +176,6 @@ export function HeroImport({
   }
   function adoptFiles(index: Map<string, File>, label: string) {
     setCapture(null)
-    setArtworkMerged(false)
     setPendingTransfer(false)
     setFiles(index)
     setSourceName(label)
@@ -247,7 +245,6 @@ export function HeroImport({
     setStep(1)
     setDataPath(path ?? "")
     setCapture(null)
-    setArtworkMerged(false)
     try {
       if (file.size > 5 * 1024 * 1024) throw new Error("File tối đa 5 MB.")
       const text = await file.text()
@@ -561,7 +558,7 @@ export function HeroImport({
                 <select
                   className={control}
                   value={String(row.code)}
-                  disabled={busy || artworkMerged}
+                  disabled={busy}
                   onChange={(event) => {
                     const next = capture.rows.map((item) =>
                       item.__sourceCode === row.__sourceCode ? { ...item, code: event.target.value } : item,
@@ -585,36 +582,6 @@ export function HeroImport({
               Xác nhận hai bản Flowborn trước khi nhập để tránh tạo tướng trùng hoặc gắn nhầm dạng.
             </p>
           )}
-          <Button
-            variant="outline"
-            disabled={busy || artworkMerged || capture.rows.some((row) => !row.code)}
-            onClick={async () => {
-              setBusy(true)
-              setError("")
-              try {
-                const response = await fetch("/__resources/data/heroes.json", { credentials: "omit" })
-                if (!response.ok || !response.headers.get("content-type")?.includes("application/json"))
-                  throw new Error("Không đọc được tài nguyên trên máy chủ này. Hãy chọn thư mục hoặc ZIP chứa ảnh.")
-                const resource = (await response.json()) as { heroes: Record<string, unknown>[] }
-                adoptRows(mergeResourceArtwork(capture.rows, resource.heroes))
-                setPolicies({ skills: "OVERWRITE", skins: "OVERWRITE" })
-                setArtworkMerged(true)
-              } catch (failure) {
-                setError(errorMessage(failure))
-              } finally {
-                setBusy(false)
-              }
-            }}
-          >
-            <FolderOpen className="mr-2 size-4" />
-            {artworkMerged
-              ? "Đã ghép ảnh tài nguyên vào ánh xạ"
-              : "Ghép ảnh tướng, kỹ năng và trang phục từ tài nguyên"}
-          </Button>
-          <p className="text-xs leading-5 text-muted-foreground">
-            Ghép theo mã tướng và vị trí kỹ năng. Chỉ những trường ảnh giữ trong ánh xạ mới được upload; dữ liệu và ảnh
-            sẵn có vẫn tuân theo lựa chọn ghi đè hoặc bỏ qua.
-          </p>
         </section>
       )}
       {context && mode === "BASELINE" && (

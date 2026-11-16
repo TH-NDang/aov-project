@@ -52,8 +52,8 @@ export function ImportUploadRecovery({
       // Folder pickers strip the wrapper; ZIPs and folder drops can retain it.
       const resolved = new Map(index)
       for (const image of Object.values(active?.state.images ?? {})) {
-        if (image.completed || image.source.startsWith("https:") || image.source.startsWith("/__resources/assets/"))
-          continue
+        // Links and absolute paths, such as a session saved before the resources folder left the app, match no file.
+        if (image.completed || image.source.startsWith("https:") || image.source.startsWith("/")) continue
         const path = normalizeImportPath(`${active!.state.base ? `${active!.state.base}/` : ""}${image.source}`)
         if (resolved.has(path)) continue
         const candidates = [...index].filter(([key]) => path.endsWith(`/${key}`) || key.endsWith(`/${path}`))

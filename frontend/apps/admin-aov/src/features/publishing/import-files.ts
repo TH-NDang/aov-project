@@ -2,8 +2,6 @@ import { imageFromUrl } from "./image-url"
 
 const imageLimit = 25 * 1024 * 1024
 const imageTypes = ["image/png", "image/jpeg", "image/webp"]
-const resourcesPrefix = "/__resources/"
-const assetsPrefix = `${resourcesPrefix}assets/`
 
 function validatedImage(file: File, path: string): File {
   const type =
@@ -15,63 +13,6 @@ function validatedImage(file: File, path: string): File {
   if (!imageTypes.includes(type) || file.size === 0 || file.size > imageLimit)
     throw new Error(`Ảnh ${path} phải là PNG, JPEG hoặc WebP, tối đa 25 MB.`)
   return file.type ? file : new File([file], file.name, { type })
-}
-
-/** Decode each segment before validation; encoded separators must never change the resource namespace. */
-function resourceImagePath(source: string): { path: string; url: string } {
-  if (!source.startsWith(assetsPrefix) || source.length > 4096)
-    throw new Error("Đường dẫn ảnh tài nguyên không hợp lệ.")
-  const invalid = () => {
-    throw new Error("Đường dẫn ảnh tài nguyên không hợp lệ.")
-  }
-  const segments = source
-    .slice(resourcesPrefix.length)
-    .split("/")
-    .map((segment) => {
-      if (!segment) return invalid()
-      let decoded = segment
-      for (let pass = 0; pass < 4; pass++) {
-        if (/^[.]{1,2}$/.test(decoded) || /[\u0000-\u001f\u007f\\/?#]/.test(decoded)) return invalid()
-        if (!decoded.includes("%")) return decoded
-        try {
-          decoded = decodeURIComponent(decoded)
-        } catch {
-          return invalid()
-        }
-      }
-      return invalid()
-    })
-  const path = segments.join("/")
-  if (segments[0] !== "assets" || normalizeImportPath(path) !== path) return invalid()
-  return { path, url: resourcesPrefix + segments.map(encodeURIComponent).join("/") }
-}
-
-async function resourceImage(response: Response, path: string): Promise<File> {
-  const type = response.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() ?? ""
-  const length = Number(response.headers.get("content-length"))
-  if (!response.ok || !response.body || !imageTypes.includes(type)) {
-    await response.body?.cancel().catch(() => {})
-    throw new Error(`Không đọc được ảnh tài nguyên: ${path}. Chọn thư mục chứa ảnh để tiếp tục.`)
-  }
-  if (Number.isFinite(length) && length > imageLimit) {
-    await response.body.cancel().catch(() => {})
-    throw new Error("Ảnh tài nguyên vượt giới hạn 25 MB.")
-  }
-  const reader = response.body.getReader()
-  const chunks: Uint8Array<ArrayBuffer>[] = []
-  let size = 0
-  try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      size += value.byteLength
-      if (size > imageLimit) throw new Error("Ảnh tài nguyên vượt giới hạn 25 MB.")
-      chunks.push(new Uint8Array(value))
-    }
-  } finally {
-    await reader.cancel().catch(() => {})
-  }
-  return validatedImage(new File(chunks, path.split("/").at(-1)!, { type }), path)
 }
 
 export function detectImportImageBase(
@@ -139,11 +80,6 @@ export function indexImportFiles(files: File[]): Map<string, File> {
   return index
 }
 export function resolveImportImage(source: string, files: Map<string, File>, base: string): File | string {
-  if (source.startsWith(assetsPrefix)) {
-    const { path, url } = resourceImagePath(source)
-    const selected = files.get(path) ?? files.get(normalizeImportPath(`${base ? `${base}/` : ""}${path}`))
-    return selected ? validatedImage(selected, path) : url
-  }
   if (/^https:/i.test(source)) {
     const url = new URL(source)
     if (url.username || url.password) throw new Error("Link ảnh không được chứa tài khoản hoặc mật khẩu.")
@@ -158,19 +94,7 @@ export function resolveImportImage(source: string, files: Map<string, File>, bas
 }
 export async function importImageFile(source: string, files: Map<string, File>, base: string) {
   const resolved = resolveImportImage(source, files, base)
-  if (typeof resolved === "string") {
-    if (!resolved.startsWith(assetsPrefix)) return imageFromUrl(resolved)
-    const response = await fetch(resolved, {
-      credentials: "omit",
-      redirect: "error",
-      referrerPolicy: "no-referrer",
-      signal: AbortSignal.timeout(30000),
-    })
-    const file = await resourceImage(response, resourceImagePath(resolved).path)
-    if ((await file.slice(0, 128).text()).startsWith("version https://git-lfs.github.com/spec/v1"))
-      throw new Error(`Ảnh ${resolved} mới là Git LFS pointer. Hãy tải ảnh thật bằng git lfs pull trước khi import.`)
-    return file
-  }
+  if (typeof resolved === "string") return imageFromUrl(resolved)
   if ((await resolved.slice(0, 128).text()).startsWith("version https://git-lfs.github.com/spec/v1"))
     throw new Error(`Ảnh ${resolved.name} mới là Git LFS pointer. Hãy tải ảnh thật bằng git lfs pull trước khi import.`)
   return resolved
