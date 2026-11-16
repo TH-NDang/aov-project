@@ -307,7 +307,7 @@ Dữ liệu từ `GET /videos`, xem ADR-019. Chỉ hiện khối khi mục có v
   có trang phục thì mục này và dòng tương ứng trong mục lục đều ẩn. Dạng của một tướng hiện trang phục chung của tướng và
   trang phục riêng của dạng đó (ADR-024).
 - Mục lục trang tướng ("Trên trang này") liệt kê các phần thực sự có: Tổng quan, Chỉ số, Cốt truyện, Thay đổi ở bản này,
-  Bộ kỹ năng, Build đề cử, Trang phục, Video, Lịch sử thay đổi. Từ 1180px trở lên là cột bên phải, dính theo khi cuộn và
+  Bộ kỹ năng, Đánh giá, Build đề cử, Trang phục, Video, Lịch sử thay đổi. Từ 1180px trở lên là cột bên phải, dính theo khi cuộn và
   tô sáng phần đang đọc. Dưới 1180px là nút tròn nổi ở góc dưới bên phải, bấm mở drawer từ dưới lên, các dòng theo thứ tự
   trên trang; chọn một dòng thì drawer đóng rồi trang mới cuộn tới phần đó.
 - Nút quay về phần thay đổi chỉ hiện khi vừa bấm "Xem kỹ năng đầy đủ" từ một thay đổi, nằm cạnh nút mục lục và tự mất khi đã quay lại. Từ 1180px trở lên không có nút này vì mục lục đã là đường quay về.
