@@ -14,7 +14,7 @@ export function AccountSettings() {
   const session = useCommunitySession()
   const client = useQueryClient()
   const profile = useOwnProfile()
-  const { locale } = useStreamLocale()
+  const { locale, languageTag, text } = useStreamLocale()
 
   const saveLanguage = useMutation({
     mutationFn: async (next: string) => {
@@ -27,42 +27,57 @@ export function AccountSettings() {
 
   return (
     <section className="cp-panel account-settings" aria-labelledby="account-settings-title">
-      <h2 id="account-settings-title">Cài đặt</h2>
-      <p>Ngôn ngữ, múi giờ, cách hiển thị ngày và tiền tệ áp dụng trên cả Wiki, Stream và Admin.</p>
+      <h2 id="account-settings-title">{text("Cài đặt", "Settings")}</h2>
+      <p>
+        {text(
+          "Ngôn ngữ, múi giờ, cách hiển thị ngày và tiền tệ áp dụng trên cả Wiki, Stream và Admin.",
+          "Language, time zone, date format and currency apply across Wiki, Stream and Admin.",
+        )}
+      </p>
       <div className="cp-form-grid">
         <label>
-          Ngôn ngữ
+          {text("Ngôn ngữ", "Language")}
           <Select
             value={profile.data?.locale ?? ""}
             disabled={!profile.data || saveLanguage.isPending}
             onValueChange={(next) => saveLanguage.mutate(next)}
           >
-            <SelectTrigger className="account-settings-select" aria-label="Ngôn ngữ">
+            <SelectTrigger className="account-settings-select" aria-label={text("Ngôn ngữ", "Language")}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent drawerTitle="Ngôn ngữ" data-product="stream" position="popper" align="end" sideOffset={4}>
+            <SelectContent
+              drawerTitle={text("Ngôn ngữ", "Language")}
+              data-product="stream"
+              position="popper"
+              align="end"
+              sideOffset={4}
+            >
               {LANGUAGE_CODES.map((code) => (
                 <SelectItem key={code} value={code}>
-                  {languageLabel(code)}
+                  {languageLabel(code, languageTag)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </label>
         <label>
-          Múi giờ
+          {text("Múi giờ", "Time zone")}
           <PublicTimeZoneSelect locale={locale} product="stream" triggerClassName="account-settings-select" />
         </label>
         <label>
-          Định dạng ngày
+          {text("Định dạng ngày", "Date format")}
           <PublicDateFormatSelect locale={locale} product="stream" triggerClassName="account-settings-select" />
         </label>
         <label>
-          Tiền tệ
+          {text("Tiền tệ", "Currency")}
           <PublicCurrencySelect locale={locale} product="stream" triggerClassName="account-settings-select" />
         </label>
       </div>
-      {saveLanguage.isError && <p role="alert">Chưa lưu được ngôn ngữ. Hãy thử lại.</p>}
+      {saveLanguage.isError && (
+        <p role="alert">
+          {text("Chưa lưu được ngôn ngữ. Hãy thử lại.", "The language could not be saved. Please try again.")}
+        </p>
+      )}
     </section>
   )
 }

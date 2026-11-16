@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { useUserTimeZone } from "@aov/ui/lib/time-zone"
+import { useStreamLocale } from "../../components/stream-locale"
 import { useFeaturedCompetitions } from "./community-ui"
 import { MATCH_WINDOW, matchesToShow, scheduledMatches } from "./schedule-model"
 import { competitionMatchHref } from "../tournaments/match-model"
@@ -10,19 +11,20 @@ const dayTime: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", 
 
 /** The side column's match list: what is on today, scores once entered, and an "under way" marker. */
 export function TodaySchedule() {
+  const { text, languageTag } = useStreamLocale()
   const competitions = useFeaturedCompetitions()
   const now = Date.now()
   const timeZone = useUserTimeZone()
-  const { today, items } = matchesToShow(scheduledMatches(competitions.data?.items || []), now, timeZone)
+  const { today, items } = matchesToShow(scheduledMatches(competitions.data?.items || [], languageTag), now, timeZone)
   if (!items.length) return null
   return (
     <section className="hub-card hub-card-padded" aria-labelledby="today-schedule">
       <div className="hub-card-heading">
         <h2 id="today-schedule" className="hub-card-title">
-          {today ? "Lịch hôm nay" : "Sắp diễn ra"}
+          {today ? text("Lịch hôm nay", "Today's schedule") : text("Sắp diễn ra", "Upcoming")}
         </h2>
         <Link to="/competitions?tab=schedule" className="hub-card-more">
-          Xem lịch đấu
+          {text("Xem lịch đấu", "See schedule")}
         </Link>
       </div>
       <ul className="cp-schedule">
@@ -34,9 +36,14 @@ export function TodaySchedule() {
               <Link to={competitionMatchHref(match.competitionId, match.matchKey)}>
                 <span className="cp-schedule-time">
                   {underway ? (
-                    <span className="cp-live-badge">Đang diễn ra</span>
+                    <span className="cp-live-badge">{text("Đang diễn ra", "Ongoing")}</span>
                   ) : (
-                    <LocalTime value={match.at} sourceTimeZone={match.timeZone} format={today ? time : dayTime} />
+                    <LocalTime
+                      value={match.at}
+                      sourceTimeZone={match.timeZone}
+                      format={today ? time : dayTime}
+                      locale={languageTag}
+                    />
                   )}
                 </span>
                 <span className="cp-schedule-match">

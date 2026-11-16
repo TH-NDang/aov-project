@@ -5,19 +5,36 @@ import {
   profileKindLabels,
   type CommunityProfile,
   type PageSlice,
+  type ProfileKind,
   type ProfileLink,
 } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
+import { knownCountryName } from "@aov/ui/lib/country-references"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { Avatar, formatDay } from "./community-ui"
 
-/** Display a name for recognized country codes and preserve free-form country names. */
-export function regionName(country?: string | null) {
+/** English names of the page kinds: `profileKindLabels` in the shared contracts carries the Vietnamese ones only. */
+export const profileKindEnglish: Record<ProfileKind, string> = {
+  CIRCUIT: "Tournament circuit",
+  ORGANIZATION: "Organization",
+  TEAM: "Team",
+  PLAYER: "Player",
+  PERSON: "Staff",
+}
+
+/**
+ * Display a name for recognized country codes and preserve free-form country names. Pass the reader's language to show
+ * the name; without one it reads in Vietnamese, which is what related pages are matched by.
+ */
+export function regionName(country?: string | null, locale = "vi") {
   const value = country?.trim()
   if (!value) return null
-  return /^[A-Z]{2}$/.test(value) ? new Intl.DisplayNames(["vi"], { type: "region" }).of(value) || value : value
+  if (/^[A-Z]{2}$/.test(value)) return new Intl.DisplayNames([locale], { type: "region" }).of(value) || value
+  // Editors also type the name in Vietnamese; English readers get the countries this app knows in English.
+  return locale.startsWith("en") ? (knownCountryName(value, locale) ?? value) : value
 }
 
 function linkName(link: ProfileLink) {
@@ -35,64 +52,71 @@ function linkName(link: ProfileLink) {
  * pushing the column below the posts.
  */
 export function ProfileAside({ profile, inline = false }: { profile: CommunityProfile; inline?: boolean }) {
+  const { text, languageTag } = useStreamLocale()
   const content = profile.content!
-  const region = regionName(content.country)
+  const region = regionName(content.country, languageTag)
   const Wrapper = inline ? "div" : "aside"
   return (
     <Wrapper
       className={inline ? "cp-profile-aside-inline" : "cp-side-column cp-profile-aside"}
-      aria-label={inline ? undefined : "Thông tin tham khảo"}
+      aria-label={inline ? undefined : text("Thông tin tham khảo", "Reference information")}
     >
       <section className="cp-panel">
-        <h2>Thông tin chung</h2>
+        <h2>{text("Thông tin chung", "General information")}</h2>
         <dl className="cp-profile-facts">
           <div>
-            <dt>Loại trang</dt>
-            <dd>{profileKindLabels[profile.kind]}</dd>
+            <dt>{text("Loại trang", "Page type")}</dt>
+            <dd>{text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])}</dd>
           </div>
           {content.shortName && (
             <div>
-              <dt>Tên viết tắt</dt>
+              <dt>{text("Tên viết tắt", "Short name")}</dt>
               <dd>{content.shortName}</dd>
             </div>
           )}
           {region && (
             <div>
-              <dt>Quốc gia / khu vực</dt>
+              <dt>{text("Quốc gia / khu vực", "Country / region")}</dt>
               <dd>{region}</dd>
             </div>
           )}
           <div>
-            <dt>Người theo dõi</dt>
-            <dd>{profile.followers.toLocaleString("vi-VN")}</dd>
+            <dt>{text("Người theo dõi", "Followers")}</dt>
+            <dd>{profile.followers.toLocaleString(languageTag)}</dd>
           </div>
           <div>
-            <dt>Quản lý trang</dt>
+            <dt>{text("Quản lý trang", "Page management")}</dt>
             <dd>
               {profile.represented ? (
                 <>
-                  Đại diện đã xác minh <OfficialBadge label="Đại diện đã xác minh" />
+                  {text("Đại diện đã xác minh", "Verified representative")}{" "}
+                  <OfficialBadge label={text("Đại diện đã xác minh", "Verified representative")} />
                 </>
               ) : (
-                "AthaHub tổng hợp"
+                text("AthaHub tổng hợp", "Compiled by AthaHub")
               )}
             </dd>
           </div>
         </dl>
         {!profile.represented && (
-          <p className="cp-meta">Bạn là người đại diện? Chọn nút ⋯ rồi gửi yêu cầu quản lý trang.</p>
+          <p className="cp-meta">
+            {text(
+              "Bạn là người đại diện? Chọn nút ⋯ rồi gửi yêu cầu quản lý trang.",
+              "Are you a representative? Select the ⋯ button, then send a request to manage the page.",
+            )}
+          </p>
         )}
       </section>
       {content.links.length > 0 && (
         <section className="cp-panel">
-          <h2>Kênh liên hệ</h2>
+          <h2>{text("Kênh liên hệ", "Contact channels")}</h2>
           <ul className="cp-link-list">
             {content.links.map((link, index) => (
               <li key={`${link.url}-${index}`}>
                 <a href={link.url} target="_blank" rel="noreferrer">
                   <SocialPlatformIcon url={link.url} size={18} />
                   <span>{linkName(link)}</span>
-                  {link.official && <OfficialBadge label="Kênh chính thức" />}
+                  {link.official && <OfficialBadge label={text("Kênh chính thức", "Official channel")} />}
                   <StreamIcon name="external" size={14} />
                 </a>
               </li>
@@ -101,7 +125,7 @@ export function ProfileAside({ profile, inline = false }: { profile: CommunityPr
         </section>
       )}
       <section className="cp-panel">
-        <h2>Nguồn thông tin</h2>
+        <h2>{text("Nguồn thông tin", "Sources")}</h2>
         {content.sources.length ? (
           <ul className="cp-link-list">
             {content.sources.map((source, index) => (
@@ -111,12 +135,16 @@ export function ProfileAside({ profile, inline = false }: { profile: CommunityPr
                   <span>{linkName(source)}</span>
                   <StreamIcon name="external" size={14} />
                 </a>
-                {source.checkedOn && <p className="cp-meta">Đối chiếu {formatDay(source.checkedOn)}</p>}
+                {source.checkedOn && (
+                  <p className="cp-meta">
+                    {text("Đối chiếu", "Checked on")} {formatDay(source.checkedOn)}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="cp-muted">Chưa có nguồn được công bố.</p>
+          <p className="cp-muted">{text("Chưa có nguồn được công bố.", "No sources published yet.")}</p>
         )}
       </section>
       <RelatedPages profile={profile} />
@@ -126,6 +154,7 @@ export function ProfileAside({ profile, inline = false }: { profile: CommunityPr
 
 /** Other community pages from the same country, so a visitor can move between a region's channels. */
 function RelatedPages({ profile }: { profile: CommunityProfile }) {
+  const { text } = useStreamLocale()
   const pages = useQuery({
     queryKey: ["page-regions"],
     queryFn: () => communityApi<PageSlice<CommunityProfile>>("/pages?size=100"),
@@ -144,7 +173,7 @@ function RelatedPages({ profile }: { profile: CommunityProfile }) {
   if (!related.length) return null
   return (
     <section className="cp-panel">
-      <h2>Trang liên quan</h2>
+      <h2>{text("Trang liên quan", "Related pages")}</h2>
       <ul className="cp-related">
         {related.map((page) => (
           <li key={page.id}>
@@ -152,7 +181,7 @@ function RelatedPages({ profile }: { profile: CommunityProfile }) {
               <Avatar profile={page} />
               <span>
                 <strong>{page.content?.name || page.code}</strong>
-                <small>{profileKindLabels[page.kind]}</small>
+                <small>{text(profileKindLabels[page.kind], profileKindEnglish[page.kind])}</small>
               </span>
             </Link>
           </li>

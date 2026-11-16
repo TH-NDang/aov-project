@@ -8,6 +8,7 @@ import { shownTimeZoneLabel, useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { PublicDrawer, PublicDrawerContent } from "@aov/ui/components/public-overlay"
 import { StreamImage } from "../../components/stream-image"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { GameCard } from "./game-card"
 import { matchGamesQuery } from "./tournament-api"
 import {
@@ -19,14 +20,15 @@ import {
 } from "./match-model"
 
 export const matchStateLabels = {
-  FINISHED: "Đã kết thúc",
-  SCORED: "Có tỷ số",
-  UPCOMING: "Sắp diễn ra",
-  PENDING: "Chờ cập nhật kết quả",
-  UNSCHEDULED: "Chờ lịch",
-}
+  FINISHED: ["Đã kết thúc", "Finished"],
+  SCORED: ["Có tỷ số", "Score available"],
+  UPCOMING: ["Sắp diễn ra", "Upcoming"],
+  PENDING: ["Chờ cập nhật kết quả", "Awaiting result"],
+  UNSCHEDULED: ["Chờ lịch", "To be scheduled"],
+} as const
 
 export function MatchSummary({ entry, compact = false }: { entry: CompetitionMatch; compact?: boolean }) {
+  const { text, languageTag } = useStreamLocale()
   useUserTimeZone()
   const { competition, match, result } = entry
   const { teams, plan } = competition.content
@@ -50,7 +52,7 @@ export function MatchSummary({ entry, compact = false }: { entry: CompetitionMat
           {match.bestOf}
         </span>
         <span className="match-state" data-state={state}>
-          {matchStateLabels[state]}
+          {text(matchStateLabels[state][0], matchStateLabels[state][1])}
         </span>
       </div>
       <div className="match-scoreboard">
@@ -67,9 +69,10 @@ export function MatchSummary({ entry, compact = false }: { entry: CompetitionMat
             value={match.scheduledAt}
             sourceTimeZone={plan.timezone}
             format={{ dateStyle: "short", timeStyle: "short" }}
-            fallback="Chưa có giờ thi đấu"
+            locale={languageTag}
+            fallback={text("Chưa có giờ thi đấu", "No match time yet")}
           />
-          {!compact && ` · ${shownTimeZoneLabel(match.scheduledAt || Date.now())}`}
+          {!compact && ` · ${shownTimeZoneLabel(match.scheduledAt || Date.now(), languageTag)}`}
         </span>
       </div>
     </div>
@@ -78,6 +81,7 @@ export function MatchSummary({ entry, compact = false }: { entry: CompetitionMat
 
 /** Keep a real link for keyboards and new tabs; a normal phone tap opens the quick preview. */
 export function MatchRow({ entry }: { entry: CompetitionMatch }) {
+  const { text } = useStreamLocale()
   const mobile = useIsMobile()
   const [open, setOpen] = useState(false)
   const trigger = useRef<HTMLAnchorElement>(null)
@@ -108,7 +112,7 @@ export function MatchRow({ entry }: { entry: CompetitionMatch }) {
       </Link>
       <PublicDrawer open={open} onOpenChange={setOpen}>
         <PublicDrawerContent
-          title="Chi tiết trận đấu"
+          title={text("Chi tiết trận đấu", "Match details")}
           aria-describedby={undefined}
           onCloseAutoFocus={(event) => {
             event.preventDefault()
@@ -120,7 +124,7 @@ export function MatchRow({ entry }: { entry: CompetitionMatch }) {
               <MatchSummary entry={entry} />
               <MatchGamesPanel seriesId={matchSeriesId(entry)} compact onNavigate={() => setOpen(false)} />
               <Link className="cp-button cp-primary" to={href} onClick={() => setOpen(false)}>
-                Mở trang trận đấu <StreamIcon name="arrow" size={15} />
+                {text("Mở trang trận đấu", "Open the match page")} <StreamIcon name="arrow" size={15} />
               </Link>
             </div>
           )}
@@ -139,20 +143,29 @@ export function MatchGamesPanel({
   compact?: boolean
   onNavigate?: () => void
 }) {
+  const { text } = useStreamLocale()
   const query = useQuery(matchGamesQuery(seriesId))
-  if (!seriesId) return <p className="cp-muted">Các ván sẽ xuất hiện khi trận được ghi nhận và công bố.</p>
+  if (!seriesId)
+    return (
+      <p className="cp-muted">
+        {text(
+          "Các ván sẽ xuất hiện khi trận được ghi nhận và công bố.",
+          "Games will appear once the match is recorded and published.",
+        )}
+      </p>
+    )
   if (query.isPending)
     return (
       <p className="cp-muted" role="status">
-        Đang tải các ván của trận…
+        {text("Đang tải các ván của trận…", "Loading the games of this match…")}
       </p>
     )
   if (query.isError && !query.data)
     return (
       <div className="match-query-error" role="alert">
-        <p>Chưa tải được các ván của trận.</p>
+        <p>{text("Chưa tải được các ván của trận.", "The games of this match could not be loaded.")}</p>
         <button className="cp-button" onClick={() => void query.refetch()}>
-          Thử lại
+          {text("Thử lại", "Retry")}
         </button>
       </div>
     )
@@ -161,17 +174,25 @@ export function MatchGamesPanel({
     <>
       {query.isError && (
         <p className="cp-error" role="alert">
-          Chưa cập nhật được dữ liệu. Đang hiển thị bản đã tải.{" "}
-          <button onClick={() => void query.refetch()}>Thử lại</button>
+          {text(
+            "Chưa cập nhật được dữ liệu. Đang hiển thị bản đã tải.",
+            "The data could not be updated. Showing the version already loaded.",
+          )}{" "}
+          <button onClick={() => void query.refetch()}>{text("Thử lại", "Retry")}</button>
         </p>
       )}
       {!games.length ? (
-        <p className="cp-muted">Chưa có ván được công bố cho trận này. Lịch và tỷ số trận vẫn được hiển thị ở trên.</p>
+        <p className="cp-muted">
+          {text(
+            "Chưa có ván được công bố cho trận này. Lịch và tỷ số trận vẫn được hiển thị ở trên.",
+            "No games have been published for this match yet. The match schedule and score are still shown above.",
+          )}
+        </p>
       ) : compact ? (
         <div className="match-game-links">
           {games.map((game) => (
             <Link key={game.id} to={`/games/${game.id}`} onClick={onNavigate}>
-              <span>Ván {game.content.number}</span>
+              <span>{text(`Ván ${game.content.number}`, `Game ${game.content.number}`)}</span>
               <StreamIcon name="arrow" size={15} />
             </Link>
           ))}
@@ -196,28 +217,32 @@ export function MatchGameNavigation({
   matchHref?: string
   activeGameId?: string
 }) {
+  const { text } = useStreamLocale()
   const query = useQuery(matchGamesQuery(seriesId))
   const games = orderedMatchGames(query.data || [], seriesId)
   return (
-    <nav className="match-game-nav" aria-label="Các ván trong trận">
+    <nav className="match-game-nav" aria-label={text("Các ván trong trận", "Games in this match")}>
       <Link
         to={matchHref || `/matches/${encodeURIComponent(seriesId)}`}
         aria-current={!activeGameId ? "page" : undefined}
       >
-        Tổng quan trận
+        {text("Tổng quan trận", "Match overview")}
       </Link>
       {games.map((game) => (
         <Link key={game.id} to={`/games/${game.id}`} aria-current={activeGameId === game.id ? "page" : undefined}>
-          Ván {game.content.number}
+          {text(`Ván ${game.content.number}`, `Game ${game.content.number}`)}
         </Link>
       ))}
-      {query.isPending && <span role="status">Đang tải ván…</span>}
-      {query.isError && <button onClick={() => void query.refetch()}>Tải lại danh sách ván</button>}
+      {query.isPending && <span role="status">{text("Đang tải ván…", "Loading games…")}</span>}
+      {query.isError && (
+        <button onClick={() => void query.refetch()}>{text("Tải lại danh sách ván", "Reload the game list")}</button>
+      )}
     </nav>
   )
 }
 
 export function ArchivedMatchSummary({ game }: { game: PublishedGame }) {
+  const { text } = useStreamLocale()
   const { series, teams } = game
   return (
     <div className="match-summary">
@@ -225,13 +250,13 @@ export function ArchivedMatchSummary({ game }: { game: PublishedGame }) {
         <span>
           {series.stage} · BO{series.bestOf}
         </span>
-        <span>Thông tin từ ván đã công bố</span>
+        <span>{text("Thông tin từ ván đã công bố", "Information from a published game")}</span>
       </div>
       <div className="match-scoreboard match-scoreboard-archived">
         {[series.teamAId, series.teamBId].map((id, index) => (
           <span key={id} className="match-team">
-            <StreamImage src={teams[id]?.logoUrl} name={teams[id]?.name || "Đội"} />
-            <strong>{teams[id]?.shortName || teams[id]?.name || "Chờ đội"}</strong>
+            <StreamImage src={teams[id]?.logoUrl} name={teams[id]?.name || text("Đội", "Team")} />
+            <strong>{teams[id]?.shortName || teams[id]?.name || text("Chờ đội", "Team TBD")}</strong>
             {series.result && <b>{index === 0 ? series.result.scoreA : series.result.scoreB}</b>}
           </span>
         ))}

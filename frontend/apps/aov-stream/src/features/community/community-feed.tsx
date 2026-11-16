@@ -8,6 +8,7 @@ import {
   type PostKind,
 } from "@aov/community-contracts"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { useCommunitySession } from "./community-auth"
 import { PostCard } from "./community-post"
@@ -15,6 +16,9 @@ import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const kinds = Object.keys(postKindLabels) as PostKind[]
+
+/** The English name of each post kind; `postKindLabels` holds the Vietnamese one. */
+const postKindEnglish: Record<PostKind, string> = { TEXT: "Post", NEWS: "News", VIDEO: "Video" }
 
 /** Image links typed one per line; the service accepts four. */
 const imageLines = (value: string) =>
@@ -45,6 +49,7 @@ export function CommunityFeed({
   kind?: PostKind
   composer?: boolean
 }) {
+  const { text } = useStreamLocale()
   const session = useCommunitySession()
   const client = useQueryClient()
   const [body, setBody] = useState("")
@@ -105,41 +110,41 @@ export function CommunityFeed({
               if (ready) write.mutate(true)
             }}
           >
-            <div className="hub-pills" role="group" aria-label="Dạng bài viết">
+            <div className="hub-pills" role="group" aria-label={text("Dạng bài viết", "Post type")}>
               {kinds.map((value) => (
                 <button key={value} type="button" aria-pressed={postKind === value} onClick={() => setPostKind(value)}>
                   <StreamIcon name={value === "VIDEO" ? "play" : value === "NEWS" ? "feed" : "message"} size={14} />
-                  {postKindLabels[value]}
+                  {text(postKindLabels[value], postKindEnglish[value])}
                 </button>
               ))}
             </div>
             {postKind === "NEWS" && (
               <label>
-                <span className="sr-only">Tiêu đề tin</span>
+                <span className="sr-only">{text("Tiêu đề tin", "News title")}</span>
                 <input
                   required
                   maxLength={200}
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Tiêu đề tin tức"
+                  placeholder={text("Tiêu đề tin tức", "News title")}
                 />
               </label>
             )}
             {postKind === "VIDEO" && (
               <label>
-                <span className="sr-only">Đường dẫn video</span>
+                <span className="sr-only">{text("Đường dẫn video", "Video link")}</span>
                 <input
                   required
                   type="url"
                   maxLength={2000}
                   value={videoUrl}
                   onChange={(event) => setVideoUrl(event.target.value)}
-                  placeholder="Link YouTube, Facebook hoặc TikTok"
+                  placeholder={text("Link YouTube, Facebook hoặc TikTok", "YouTube, Facebook or TikTok link")}
                 />
               </label>
             )}
             <label>
-              <span className="sr-only">Chia sẻ với cộng đồng</span>
+              <span className="sr-only">{text("Chia sẻ với cộng đồng", "Share with the community")}</span>
               <textarea
                 required={postKind !== "VIDEO"}
                 rows={3}
@@ -147,24 +152,30 @@ export function CommunityFeed({
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 placeholder={
-                  postKind === "VIDEO" ? "Mô tả video (không bắt buộc)" : `Chia sẻ suy nghĩ của bạn về ${pageName}…`
+                  postKind === "VIDEO"
+                    ? text("Mô tả video (không bắt buộc)", "Video description (optional)")
+                    : text(`Chia sẻ suy nghĩ của bạn về ${pageName}…`, `Share your thoughts about ${pageName}…`)
                 }
               />
             </label>
             <details className="cp-composer-images">
-              <summary>Thêm ảnh bằng đường dẫn (tối đa 4)</summary>
+              <summary>{text("Thêm ảnh bằng đường dẫn (tối đa 4)", "Add images by link (up to 4)")}</summary>
               <textarea
                 rows={2}
                 value={images}
                 onChange={(event) => setImages(event.target.value)}
-                placeholder="Mỗi dòng một đường dẫn ảnh https://…"
+                placeholder={text("Mỗi dòng một đường dẫn ảnh https://…", "One image link per line https://…")}
                 aria-invalid={imageUrls.length > 4 || undefined}
               />
-              {imageUrls.length > 4 && <p className="cp-error">Chỉ đính kèm được tối đa 4 ảnh.</p>}
+              {imageUrls.length > 4 && (
+                <p className="cp-error">
+                  {text("Chỉ đính kèm được tối đa 4 ảnh.", "Only up to 4 images can be attached.")}
+                </p>
+              )}
             </details>
             <div className="cp-actions cp-composer-actions">
               <label className="cp-inline-label">
-                Đăng với tư cách
+                {text("Đăng với tư cách", "Post as")}
                 <select value={asPage ? "page" : "self"} onChange={(event) => setAsPage(event.target.value === "page")}>
                   <option value="self">{session.name}</option>
                   {["OWNER", "EDITOR"].includes(role) && <option value="page">{pageName}</option>}
@@ -176,11 +187,11 @@ export function CommunityFeed({
                 disabled={write.isPending || !ready}
                 onClick={() => write.mutate(false)}
               >
-                Lưu nháp
+                {text("Lưu nháp", "Save draft")}
               </button>
               <button className="cp-button cp-primary" disabled={write.isPending || !ready}>
                 <StreamIcon name="send" size={16} />
-                Đăng bài
+                {text("Đăng bài", "Post")}
               </button>
             </div>
             {write.isError && (
@@ -192,20 +203,27 @@ export function CommunityFeed({
         </section>
       )}
       {posts.isPending ? (
-        <div className="hub-skeleton-rows" role="status" aria-label="Đang tải bài viết" />
+        <div className="hub-skeleton-rows" role="status" aria-label={text("Đang tải bài viết", "Loading posts")} />
       ) : posts.isLoadingError ? (
         <div className="hub-state" role="alert">
           <StreamIcon name="reset" size={28} />
           <h3>{posts.error.message}</h3>
           <button className="cp-button" onClick={() => void posts.refetch()}>
-            Thử lại
+            {text("Thử lại", "Retry")}
           </button>
         </div>
       ) : !items.length ? (
         <div className="hub-state">
           <StreamIcon name={kind === "VIDEO" ? "play" : "message"} size={28} />
-          <h3>{kind === "VIDEO" ? "Chưa có video" : "Chưa có bài viết"}</h3>
-          <p>Thông tin hồ sơ vẫn được cập nhật ở các mục khác của trang.</p>
+          <h3>
+            {kind === "VIDEO" ? text("Chưa có video", "No videos yet") : text("Chưa có bài viết", "No posts yet")}
+          </h3>
+          <p>
+            {text(
+              "Thông tin hồ sơ vẫn được cập nhật ở các mục khác của trang.",
+              "Profile information is still kept up to date in the other sections of the page.",
+            )}
+          </p>
         </div>
       ) : (
         <div className="cp-post-list">
@@ -214,7 +232,11 @@ export function CommunityFeed({
           ))}
         </div>
       )}
-      <InfiniteScroll query={posts} label="Đang tải thêm bài viết" />
+      <InfiniteScroll
+        query={posts}
+        label={text("Đang tải thêm bài viết", "Loading more posts")}
+        retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+      />
     </div>
   )
 }

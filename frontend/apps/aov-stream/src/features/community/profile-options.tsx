@@ -11,19 +11,21 @@ import {
   DropdownMenuTrigger,
 } from "@aov/ui/components/public-overlay"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { formatDay } from "./community-ui"
 import { useSignedInAction } from "./community-signin"
 
 type ProfileDialog = "sources" | "suggestion" | "claim"
 
-const dialogTitles: Record<ProfileDialog, string> = {
-  sources: "Nguồn thông tin",
-  suggestion: "Đề xuất chỉnh sửa",
-  claim: "Yêu cầu quản lý trang",
+const dialogTitles: Record<ProfileDialog, readonly [string, string]> = {
+  sources: ["Nguồn thông tin", "Sources"],
+  suggestion: ["Đề xuất chỉnh sửa", "Suggest an edit"],
+  claim: ["Yêu cầu quản lý trang", "Request to manage page"],
 }
 
 export function ProfileOptions({ profile, role }: { profile: CommunityProfile; role?: PageRole | null }) {
+  const { text } = useStreamLocale()
   const signedIn = useSignedInAction()
   const [dialog, setDialog] = useState<ProfileDialog>("sources")
   const [open, setOpen] = useState(false)
@@ -42,8 +44,14 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
       else
         signedIn(
           next === "claim"
-            ? "Đăng nhập bằng tài khoản của bạn để gửi yêu cầu quản lý trang."
-            : "Đăng nhập để gửi đề xuất chỉnh sửa đến đội ngũ biên tập.",
+            ? text(
+                "Đăng nhập bằng tài khoản của bạn để gửi yêu cầu quản lý trang.",
+                "Sign in with your account to send a request to manage the page.",
+              )
+            : text(
+                "Đăng nhập để gửi đề xuất chỉnh sửa đến đội ngũ biên tập.",
+                "Sign in to send an edit suggestion to the editorial team.",
+              ),
           showDialog,
         )
     }
@@ -57,8 +65,8 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
             ref={trigger}
             type="button"
             className="cp-button cp-profile-options-trigger"
-            aria-label="Tùy chọn trang"
-            title="Tùy chọn trang"
+            aria-label={text("Tùy chọn trang", "Page options")}
+            title={text("Tùy chọn trang", "Page options")}
           >
             <StreamIcon name="more" size={18} />
           </button>
@@ -68,7 +76,7 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
           sideOffset={6}
           collisionPadding={12}
           className="hub-popover cp-profile-options-menu"
-          drawerTitle="Tùy chọn trang"
+          drawerTitle={text("Tùy chọn trang", "Page options")}
           onCloseAutoFocus={(event) => {
             if (!afterMenuClose.current) return
             event.preventDefault()
@@ -80,11 +88,11 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
         >
           <DropdownMenuItem className="hub-menu-item" onSelect={() => choose("sources")}>
             <StreamIcon name="link" size={16} />
-            Nguồn thông tin
+            {text("Nguồn thông tin", "Sources")}
           </DropdownMenuItem>
           <DropdownMenuItem className="hub-menu-item" onSelect={() => choose("suggestion")}>
             <StreamIcon name="edit" size={16} />
-            Đề xuất chỉnh sửa
+            {text("Đề xuất chỉnh sửa", "Suggest an edit")}
           </DropdownMenuItem>
           {isCommunityProfile(profile.kind) && <DropdownMenuSeparator className="cp-profile-menu-separator" />}
           {isCommunityProfile(profile.kind) &&
@@ -92,13 +100,13 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
               <DropdownMenuItem asChild className="hub-menu-item">
                 <Link to={`/manage/${profile.id}`}>
                   <StreamIcon name="shield" size={16} />
-                  Quản lý trang
+                  {text("Quản lý trang", "Manage page")}
                 </Link>
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem className="hub-menu-item" onSelect={() => choose("claim")}>
                 <StreamIcon name="shield" size={16} />
-                Yêu cầu quản lý trang
+                {text("Yêu cầu quản lý trang", "Request to manage page")}
               </DropdownMenuItem>
             ))}
         </DropdownMenuContent>
@@ -114,11 +122,11 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
         >
           <div className="cp-profile-dialog-heading">
             <div>
-              <DialogTitle>{dialogTitles[dialog]}</DialogTitle>
+              <DialogTitle>{text(...dialogTitles[dialog])}</DialogTitle>
               <DialogDescription>{profile.content?.name || profile.code}</DialogDescription>
             </div>
             <DialogClose asChild>
-              <button type="button" className="hub-icon-button" aria-label="Đóng">
+              <button type="button" className="hub-icon-button" aria-label={text("Đóng", "Close")}>
                 <StreamIcon name="close" size={16} />
               </button>
             </DialogClose>
@@ -128,10 +136,16 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
               <p className="cp-profile-info-note">
                 <StreamIcon name="info" size={18} />
                 {!isCommunityProfile(profile.kind)
-                  ? "Trang thông tin hệ thống giải do AthaHub biên tập từ nguồn công khai."
+                  ? text(
+                      "Trang thông tin hệ thống giải do AthaHub biên tập từ nguồn công khai.",
+                      "Tournament circuit information page edited by AthaHub from public sources.",
+                    )
                   : profile.represented
-                    ? "Trang có đại diện đã xác minh."
-                    : "Hồ sơ do AthaHub tổng hợp từ nguồn công khai."}
+                    ? text("Trang có đại diện đã xác minh.", "This page has a verified representative.")
+                    : text(
+                        "Hồ sơ do AthaHub tổng hợp từ nguồn công khai.",
+                        "Profile compiled by AthaHub from public sources.",
+                      )}
               </p>
               {sources.length ? (
                 <ul className="cp-profile-sources">
@@ -140,7 +154,11 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
                       <a href={source.url} target="_blank" rel="noreferrer">
                         <span>
                           <strong>{source.label}</strong>
-                          {source.checkedOn && <small>Đối chiếu {formatDay(source.checkedOn)}</small>}
+                          {source.checkedOn && (
+                            <small>
+                              {text("Đối chiếu", "Checked on")} {formatDay(source.checkedOn)}
+                            </small>
+                          )}
                         </span>
                         <StreamIcon name="external" size={15} />
                       </a>
@@ -148,7 +166,7 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
                   ))}
                 </ul>
               ) : (
-                <p className="cp-muted">Chưa có nguồn được công bố.</p>
+                <p className="cp-muted">{text("Chưa có nguồn được công bố.", "No sources published yet.")}</p>
               )}
             </div>
           )}
@@ -162,6 +180,8 @@ export function ProfileOptions({ profile, role }: { profile: CommunityProfile; r
 }
 
 function ProfileRequestForm({ pageId, kind }: { pageId: string; kind: "suggestion" | "claim" }) {
+  // `text` is the request being typed here, so the wording picker goes by `ui`.
+  const { text: ui } = useStreamLocale()
   const signedIn = useSignedInAction()
   const [text, setText] = useState("")
   const isClaim = kind === "claim"
@@ -177,15 +197,20 @@ function ProfileRequestForm({ pageId, kind }: { pageId: string; kind: "suggestio
     return (
       <div className="cp-profile-request-success" role="status">
         <StreamIcon name="check" size={24} />
-        <strong>{isClaim ? "Đã gửi yêu cầu quản lý" : "Đã gửi đề xuất"}</strong>
+        <strong>
+          {isClaim ? ui("Đã gửi yêu cầu quản lý", "Management request sent") : ui("Đã gửi đề xuất", "Suggestion sent")}
+        </strong>
         <p>
           {isClaim
-            ? "Bạn có thể xem tiến trình tại tài khoản của mình."
-            : "Đội ngũ biên tập sẽ đối chiếu thông tin bạn cung cấp."}
+            ? ui("Bạn có thể xem tiến trình tại tài khoản của mình.", "You can track its progress in your account.")
+            : ui(
+                "Đội ngũ biên tập sẽ đối chiếu thông tin bạn cung cấp.",
+                "The editorial team will check the information you provided.",
+              )}
         </p>
         <DialogClose asChild>
           <button type="button" className="cp-button">
-            Đóng
+            {ui("Đóng", "Close")}
           </button>
         </DialogClose>
       </div>
@@ -197,16 +222,27 @@ function ProfileRequestForm({ pageId, kind }: { pageId: string; kind: "suggestio
       onSubmit={(event) => {
         event.preventDefault()
         if (request.isPending || !text.trim()) return
-        signedIn("Đăng nhập để gửi thông tin đến đội ngũ biên tập.", () => request.mutate())
+        signedIn(
+          ui("Đăng nhập để gửi thông tin đến đội ngũ biên tập.", "Sign in to send information to the editorial team."),
+          () => request.mutate(),
+        )
       }}
     >
       <p className="cp-muted">
         {isClaim
-          ? "Nhận quyền quản lý để cập nhật giới thiệu và đăng bài dưới tên trang."
-          : "Gửi thông tin cần sửa cùng nguồn đối chiếu để đội ngũ biên tập kiểm tra."}
+          ? ui(
+              "Nhận quyền quản lý để cập nhật giới thiệu và đăng bài dưới tên trang.",
+              "Get management access to update the introduction and post under the page's name.",
+            )
+          : ui(
+              "Gửi thông tin cần sửa cùng nguồn đối chiếu để đội ngũ biên tập kiểm tra.",
+              "Send the information to correct along with reference sources for the editorial team to check.",
+            )}
       </p>
       <label>
-        {isClaim ? "Kênh chính thức và bằng chứng đại diện" : "Nội dung và nguồn bổ sung"}
+        {isClaim
+          ? ui("Kênh chính thức và bằng chứng đại diện", "Official channels and proof of representation")
+          : ui("Nội dung và nguồn bổ sung", "Details and additional sources")}
         <textarea
           required
           rows={5}
@@ -216,12 +252,22 @@ function ProfileRequestForm({ pageId, kind }: { pageId: string; kind: "suggestio
           onChange={(event) => setText(event.target.value)}
           placeholder={
             isClaim
-              ? "Vai trò của bạn, liên kết kênh chính thức và cách đối chiếu…"
-              : "Thông tin cần sửa, liên kết nguồn…"
+              ? ui(
+                  "Vai trò của bạn, liên kết kênh chính thức và cách đối chiếu…",
+                  "Your role, links to official channels and how to verify them…",
+                )
+              : ui("Thông tin cần sửa, liên kết nguồn…", "Information to correct, source links…")
           }
         />
       </label>
-      {isClaim && <p className="cp-meta">Thông tin này chỉ dùng để xét duyệt, không hiển thị trên hồ sơ.</p>}
+      {isClaim && (
+        <p className="cp-meta">
+          {ui(
+            "Thông tin này chỉ dùng để xét duyệt, không hiển thị trên hồ sơ.",
+            "This information is used for review only and is not shown on the profile.",
+          )}
+        </p>
+      )}
       {request.isError && (
         <p className="cp-error" role="alert">
           {request.error.message}
@@ -230,11 +276,15 @@ function ProfileRequestForm({ pageId, kind }: { pageId: string; kind: "suggestio
       <div className="cp-profile-dialog-actions">
         <DialogClose asChild>
           <button type="button" className="cp-button">
-            Hủy
+            {ui("Hủy", "Cancel")}
           </button>
         </DialogClose>
         <button type="submit" className="cp-button cp-primary" disabled={request.isPending || !text.trim()}>
-          {request.isPending ? "Đang gửi…" : isClaim ? "Gửi yêu cầu" : "Gửi đề xuất"}
+          {request.isPending
+            ? ui("Đang gửi…", "Sending…")
+            : isClaim
+              ? ui("Gửi yêu cầu", "Send request")
+              : ui("Gửi đề xuất", "Send suggestion")}
         </button>
       </div>
     </form>

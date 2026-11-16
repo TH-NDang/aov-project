@@ -1,3 +1,4 @@
+import { streamText } from "../../components/stream-locale"
 import { accessToken } from "./community-auth"
 
 export async function communityApi<T>(path: string, body?: unknown, method?: string): Promise<T> {
@@ -13,16 +14,32 @@ export async function communityApi<T>(path: string, body?: unknown, method?: str
   })
   if (!response.ok) {
     const problem = (await response.json().catch(() => ({}))) as { code?: string }
-    const messages: Record<string, string> = {
-      PAGE_NOT_FOUND: "Không tìm thấy nội dung đã công bố.",
-      PAGE_CONFLICT: "Nội dung vừa được thay đổi. Vui lòng tải lại trước khi lưu.",
-      PAGE_ACTION_FORBIDDEN: "Bạn chưa có quyền thực hiện thao tác này.",
-      PAGE_INVALID_CONTENT: "Thông tin chưa hợp lệ hoặc trạng thái đã thay đổi. Hãy kiểm tra lại trước khi gửi.",
-      TOURNAMENT_DUPLICATE_CODE: "Bạn đã gửi yêu cầu này hoặc đã có quyền quản lý trang.",
+    const messages: Record<string, [string, string]> = {
+      PAGE_NOT_FOUND: ["Không tìm thấy nội dung đã công bố.", "This published content could not be found."],
+      PAGE_CONFLICT: [
+        "Nội dung vừa được thay đổi. Vui lòng tải lại trước khi lưu.",
+        "This content has just changed. Please reload before saving.",
+      ],
+      PAGE_ACTION_FORBIDDEN: ["Bạn chưa có quyền thực hiện thao tác này.", "You are not allowed to do this yet."],
+      PAGE_INVALID_CONTENT: [
+        "Thông tin chưa hợp lệ hoặc trạng thái đã thay đổi. Hãy kiểm tra lại trước khi gửi.",
+        "Some details are not valid, or the status has changed. Please check again before sending.",
+      ],
+      TOURNAMENT_DUPLICATE_CODE: [
+        "Bạn đã gửi yêu cầu này hoặc đã có quyền quản lý trang.",
+        "You have already sent this request, or you already manage this page.",
+      ],
     }
+    const known = messages[problem.code || ""]
     throw new Error(
-      messages[problem.code || ""] ||
-        (response.status === 401 ? "Vui lòng đăng nhập lại." : "Chưa kết nối được máy chủ. Vui lòng thử lại."),
+      known
+        ? streamText(...known)
+        : response.status === 401
+          ? streamText("Vui lòng đăng nhập lại.", "Please sign in again.")
+          : streamText(
+              "Chưa kết nối được máy chủ. Vui lòng thử lại.",
+              "The server could not be reached. Please try again.",
+            ),
     )
   }
   const text = await response.text()

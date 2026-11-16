@@ -2,6 +2,7 @@ import type { CSSProperties } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { CommunityProfile, PageSlice } from "@aov/community-contracts"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { Avatar, hueOf, TimeAgo } from "./community-ui"
 
@@ -16,7 +17,8 @@ export function useLivePages(size = 6) {
 }
 
 /** A row of live pages; nothing is rendered while nobody is live. */
-export function LiveRow({ title = "Đang trực tiếp" }: { title?: string }) {
+export function LiveRow({ title }: { title?: string }) {
+  const { text } = useStreamLocale()
   const live = useLivePages()
   const items = (live.data?.items || []).filter((page) => page.live)
   if (!items.length) return null
@@ -24,7 +26,10 @@ export function LiveRow({ title = "Đang trực tiếp" }: { title?: string }) {
     <section className="cp-live-row" aria-labelledby="live-row">
       <div className="hub-card-heading">
         <h2 id="live-row" className="hub-card-title">
-          {title} <span className="cp-meta">· {items.length} kênh</span>
+          {title ?? text("Đang trực tiếp", "Live now")}{" "}
+          <span className="cp-meta">
+            {text(`· ${items.length} kênh`, `· ${items.length} ${items.length === 1 ? "channel" : "channels"}`)}
+          </span>
         </h2>
       </div>
       <div className="cp-live-cards">
@@ -42,7 +47,7 @@ export function LiveRow({ title = "Đang trực tiếp" }: { title?: string }) {
                   } as CSSProperties
                 }
               >
-                <span className="cp-live-badge">Trực tiếp</span>
+                <span className="cp-live-badge">{text("Trực tiếp", "Live")}</span>
               </span>
               <span className="cp-live-meta">
                 <Avatar profile={page} />

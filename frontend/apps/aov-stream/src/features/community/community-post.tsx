@@ -11,9 +11,11 @@ import {
 } from "@aov/ui/components/public-overlay"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { initials } from "../account/profile-model"
 import { communityApi } from "./community-api"
 import { useCommunitySession } from "./community-auth"
+import { profileKindEnglish } from "./community-directory"
 import { useFollowPage } from "./community-queries"
 import { useSignedInAction } from "./community-signin"
 import { CardAvatar, hueOf, TimeAgo } from "./community-ui"
@@ -43,7 +45,13 @@ const longPost = (body: string) => body.length > 420 || body.split("\n").length 
  * without it, the page is the surrounding profile. `following` is null for signed-out viewers, who see no follow
  * buttons; their likes, comments and reports open the sign-in prompt instead.
  */
-const REPORT_REASONS = ["Spam hoặc quảng cáo", "Thông tin sai", "Ngôn từ xúc phạm", "Nội dung phản cảm", "Mạo danh"]
+const REPORT_REASONS: readonly (readonly [string, string])[] = [
+  ["Spam hoặc quảng cáo", "Spam or advertising"],
+  ["Thông tin sai", "False information"],
+  ["Ngôn từ xúc phạm", "Abusive language"],
+  ["Nội dung phản cảm", "Offensive content"],
+  ["Mạo danh", "Impersonation"],
+]
 
 export function PostCard({
   post,
@@ -62,6 +70,7 @@ export function PostCard({
   const signedIn = useSignedInAction()
   const client = useQueryClient()
   const follow = useFollowPage()
+  const { text, languageTag } = useStreamLocale()
   const [expanded, setExpanded] = useState(false)
   const [unfolded, setUnfolded] = useState(false)
   const [body, setBody] = useState("")
@@ -155,10 +164,16 @@ export function PostCard({
   const published = post.status === "PUBLISHED"
   const long = longPost(post.body)
   const startReport = (commentId?: string) =>
-    signedIn("Đăng nhập để báo cáo nội dung không phù hợp với đội ngũ kiểm duyệt.", () => {
-      setReportedComment(commentId)
-      setReporting(true)
-    })
+    signedIn(
+      text(
+        "Đăng nhập để báo cáo nội dung không phù hợp với đội ngũ kiểm duyệt.",
+        "Sign in to report inappropriate content to the moderation team.",
+      ),
+      () => {
+        setReportedComment(commentId)
+        setReporting(true)
+      },
+    )
   return (
     <article className="cp-post">
       <header className="cp-post-header">
@@ -174,21 +189,30 @@ export function PostCard({
             <>
               <strong>
                 <Link to={`/pages/${page.code}`}>{page.name}</Link>
-                {page.represented && <OfficialBadge label="Đại diện đã xác minh" />}
+                {page.represented && <OfficialBadge label={text("Đại diện đã xác minh", "Verified representative")} />}
               </strong>
               <span className="cp-meta">
-                {post.asPage ? profileKindLabels[page.kind] : `${post.authorName} · Thành viên cộng đồng`} ·{" "}
-                <TimeAgo value={post.createdAt} />
+                {post.asPage
+                  ? text(profileKindLabels[page.kind], profileKindEnglish[page.kind])
+                  : text(`${post.authorName} · Thành viên cộng đồng`, `${post.authorName} · Community member`)}{" "}
+                · <TimeAgo value={post.createdAt} />
               </span>
             </>
           ) : (
             <>
               <strong>
                 {post.authorName}
-                {post.asPage && represented && <OfficialBadge label="Bài đăng của đại diện đã xác minh" />}
+                {post.asPage && represented && (
+                  <OfficialBadge
+                    label={text("Bài đăng của đại diện đã xác minh", "Post by a verified representative")}
+                  />
+                )}
               </strong>
               <span className="cp-meta">
-                {post.asPage ? "Đăng bởi đại diện trang" : "Thành viên cộng đồng"} · <TimeAgo value={post.createdAt} />
+                {post.asPage
+                  ? text("Đăng bởi đại diện trang", "Posted by a page representative")
+                  : text("Thành viên cộng đồng", "Community member")}{" "}
+                · <TimeAgo value={post.createdAt} />
               </span>
             </>
           )}
@@ -196,12 +220,12 @@ export function PostCard({
         {post.pinned && (
           <span className="cp-badge cp-pin-badge">
             <StreamIcon name="pin" size={12} />
-            Đã ghim
+            {text("Đã ghim", "Pinned")}
           </span>
         )}
         {post.status !== "PUBLISHED" && (
           <span className="cp-badge" data-status={post.status}>
-            {post.status === "HIDDEN" ? "Đã ẩn" : "Bản nháp"}
+            {post.status === "HIDDEN" ? text("Đã ẩn", "Hidden") : text("Bản nháp", "Draft")}
           </span>
         )}
         {page && following && !following.has(page.id) && (
@@ -209,20 +233,27 @@ export function PostCard({
             className="cp-follow-chip"
             disabled={follow.isPending}
             onClick={() => follow.mutate({ pageId: page.id, following: true })}
-            aria-label={`Theo dõi ${page.name}`}
+            aria-label={text(`Theo dõi ${page.name}`, `Follow ${page.name}`)}
           >
             <StreamIcon name="plus" size={14} />
-            <span className="cp-follow-label">Theo dõi</span>
+            <span className="cp-follow-label">{text("Theo dõi", "Follow")}</span>
           </button>
         )}
         {(published || canEdit || canModerate) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="hub-icon-button cp-post-more" aria-label="Thao tác với bài viết">
+              <button
+                className="hub-icon-button cp-post-more"
+                aria-label={text("Thao tác với bài viết", "Post actions")}
+              >
                 <StreamIcon name="more" size={18} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="hub-popover hub-post-menu" drawerTitle="Tùy chọn bài viết">
+            <DropdownMenuContent
+              align="end"
+              className="hub-popover hub-post-menu"
+              drawerTitle={text("Tùy chọn bài viết", "Post options")}
+            >
               {canEdit && (
                 <DropdownMenuItem
                   className="hub-menu-item"
@@ -233,19 +264,19 @@ export function PostCard({
                   }}
                 >
                   <StreamIcon name="edit" size={16} />
-                  Chỉnh sửa
+                  {text("Chỉnh sửa", "Edit")}
                 </DropdownMenuItem>
               )}
               {canPin && (
                 <DropdownMenuItem className="hub-menu-item" disabled={pin.isPending} onSelect={() => pin.mutate()}>
                   <StreamIcon name="pin" size={16} />
-                  {post.pinned ? "Bỏ ghim" : "Ghim lên đầu trang"}
+                  {post.pinned ? text("Bỏ ghim", "Unpin") : text("Ghim lên đầu trang", "Pin to the top of the page")}
                 </DropdownMenuItem>
               )}
               {published && (
                 <DropdownMenuItem className="hub-menu-item" onSelect={() => startReport()}>
                   <StreamIcon name="flag" size={16} />
-                  Báo cáo bài viết
+                  {text("Báo cáo bài viết", "Report post")}
                 </DropdownMenuItem>
               )}
               {canModerate && (
@@ -255,7 +286,9 @@ export function PostCard({
                   onSelect={() => hide.mutate(undefined)}
                 >
                   <StreamIcon name={post.status === "HIDDEN" ? "eye" : "eyeOff"} size={16} />
-                  {post.status === "HIDDEN" ? "Khôi phục hiển thị" : "Ẩn bài viết"}
+                  {post.status === "HIDDEN"
+                    ? text("Khôi phục hiển thị", "Restore visibility")
+                    : text("Ẩn bài viết", "Hide post")}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -268,11 +301,16 @@ export function PostCard({
           {post.body}
         </p>
       )}
-      {post.videoUrl && <PostVideo url={post.videoUrl} title={post.title || `Video của ${post.authorName}`} />}
+      {post.videoUrl && (
+        <PostVideo
+          url={post.videoUrl}
+          title={post.title || text(`Video của ${post.authorName}`, `Video by ${post.authorName}`)}
+        />
+      )}
       <PostImages urls={post.imageUrls || []} alt={post.title || post.authorName} />
       {long && (
         <button className="cp-text-button" onClick={() => setUnfolded(!unfolded)}>
-          {unfolded ? "Thu gọn" : "Xem thêm"}
+          {unfolded ? text("Thu gọn", "Show less") : text("Xem thêm", "Show more")}
         </button>
       )}
       {editing && (
@@ -285,7 +323,7 @@ export function PostCard({
         >
           {post.kind === "NEWS" && (
             <label>
-              Tiêu đề
+              {text("Tiêu đề", "Title")}
               <input
                 required
                 maxLength={200}
@@ -295,7 +333,7 @@ export function PostCard({
             </label>
           )}
           <label>
-            Nội dung bài viết
+            {text("Nội dung bài viết", "Post content")}
             <textarea
               required={post.kind !== "VIDEO"}
               maxLength={20000}
@@ -306,7 +344,7 @@ export function PostCard({
           </label>
           <div className="cp-actions">
             <button className="cp-button cp-primary" disabled={edit.isPending}>
-              Lưu & đăng
+              {text("Lưu & đăng", "Save & post")}
             </button>
             <button
               type="button"
@@ -314,10 +352,10 @@ export function PostCard({
               disabled={edit.isPending || (post.kind !== "VIDEO" && !editedBody.trim())}
               onClick={() => edit.mutate(false)}
             >
-              Giữ ở bản nháp
+              {text("Giữ ở bản nháp", "Keep as draft")}
             </button>
             <button type="button" className="cp-button" onClick={() => setEditing(false)}>
-              Hủy
+              {text("Hủy", "Cancel")}
             </button>
           </div>
         </form>
@@ -332,23 +370,33 @@ export function PostCard({
           <button
             className="cp-like"
             aria-pressed={session.status === "authenticated" ? shown.liked : undefined}
-            aria-label={`${shown.liked ? "Bỏ thích" : "Thích"} · ${shown.likes.toLocaleString("vi-VN")} lượt thích`}
+            aria-label={text(
+              `${shown.liked ? "Bỏ thích" : "Thích"} · ${shown.likes.toLocaleString(languageTag)} lượt thích`,
+              `${shown.liked ? "Unlike" : "Like"} · ${shown.likes.toLocaleString(languageTag)} ${shown.likes === 1 ? "like" : "likes"}`,
+            )}
             disabled={like.isPending}
-            onClick={() => signedIn("Đăng nhập để thích bài viết này.", () => like.mutate(!shown.liked))}
+            onClick={() =>
+              signedIn(text("Đăng nhập để thích bài viết này.", "Sign in to like this post."), () =>
+                like.mutate(!shown.liked),
+              )
+            }
           >
             <StreamIcon name="heart" size={16} />
-            <span className="cp-like-count">{shown.likes.toLocaleString("vi-VN")}</span>
+            <span className="cp-like-count">{shown.likes.toLocaleString(languageTag)}</span>
           </button>
         )}
         <button
           className="cp-like"
           aria-expanded={expanded}
-          aria-label={`Bình luận · ${post.comments.toLocaleString("vi-VN")}`}
+          aria-label={text(
+            `Bình luận · ${post.comments.toLocaleString(languageTag)}`,
+            `${post.comments.toLocaleString(languageTag)} ${post.comments === 1 ? "comment" : "comments"}`,
+          )}
           disabled={!published}
           onClick={() => setExpanded(!expanded)}
         >
           <StreamIcon name="message" size={16} />
-          <span className="cp-like-count">{post.comments.toLocaleString("vi-VN")}</span>
+          <span className="cp-like-count">{post.comments.toLocaleString(languageTag)}</span>
         </button>
       </div>
       {reporting && (
@@ -360,9 +408,11 @@ export function PostCard({
           }}
         >
           <label>
-            {reportedComment ? "Lý do báo cáo bình luận" : "Lý do báo cáo bài viết"}
+            {reportedComment
+              ? text("Lý do báo cáo bình luận", "Reason for reporting the comment")
+              : text("Lý do báo cáo bài viết", "Reason for reporting the post")}
             <span className="cp-reason-chips">
-              {REPORT_REASONS.map((option) => (
+              {REPORT_REASONS.map((names) => text(...names)).map((option) => (
                 <button type="button" key={option} aria-pressed={reason === option} onClick={() => setReason(option)}>
                   {option}
                 </button>
@@ -372,17 +422,17 @@ export function PostCard({
           </label>
           <div className="cp-actions">
             <button className="cp-button cp-primary" disabled={report.isPending}>
-              Gửi báo cáo
+              {text("Gửi báo cáo", "Send report")}
             </button>
             <button type="button" className="cp-button" onClick={() => setReporting(false)}>
-              Hủy
+              {text("Hủy", "Cancel")}
             </button>
           </div>
         </form>
       )}
       {report.isSuccess && (
         <p className="cp-success" role="status">
-          Đã gửi báo cáo.
+          {text("Đã gửi báo cáo.", "Report sent.")}
         </p>
       )}
       {(report.isError || hide.isError || reply.isError || like.isError) && (
@@ -397,9 +447,14 @@ export function PostCard({
               {comments.error.message}
             </p>
           )}
-          {comments.isLoading && <p className="cp-muted">Đang tải bình luận…</p>}
+          {comments.isLoading && <p className="cp-muted">{text("Đang tải bình luận…", "Loading comments…")}</p>}
           {comments.data && !commentRows.length && (
-            <p className="cp-muted">Chưa có bình luận. Hãy là người đầu tiên chia sẻ suy nghĩ.</p>
+            <p className="cp-muted">
+              {text(
+                "Chưa có bình luận. Hãy là người đầu tiên chia sẻ suy nghĩ.",
+                "No comments yet. Be the first to share your thoughts.",
+              )}
+            </p>
           )}
           {commentRows.map((comment) => (
             <div className="cp-comment" key={comment.id}>
@@ -408,25 +463,29 @@ export function PostCard({
                 <div className="cp-comment-bubble">
                   <strong>
                     {comment.authorName}
-                    {comment.asPage ? " · Đại diện trang" : ""}
+                    {comment.asPage ? text(" · Đại diện trang", " · Page representative") : ""}
                   </strong>
                   <p className="cp-prose">{comment.body}</p>
                 </div>
                 <div className="cp-comment-tools">
                   <TimeAgo className="cp-meta" value={comment.createdAt} />
                   <button className="cp-text-button" onClick={() => startReport(comment.id)}>
-                    Báo cáo
+                    {text("Báo cáo", "Report")}
                   </button>
                   {["OWNER", "MODERATOR"].includes(role) && (
                     <button className="cp-text-button" onClick={() => hide.mutate(comment.id)}>
-                      Ẩn bình luận
+                      {text("Ẩn bình luận", "Hide comment")}
                     </button>
                   )}
                 </div>
               </div>
             </div>
           ))}
-          <InfiniteScroll query={comments} label="Đang tải thêm bình luận" />
+          <InfiniteScroll
+            query={comments}
+            label={text("Đang tải thêm bình luận", "Loading more comments")}
+            retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
+          />
           {session.status === "authenticated" ? (
             <form
               className="cp-reply"
@@ -436,12 +495,12 @@ export function PostCard({
               }}
             >
               <label>
-                <span className="sr-only">Bình luận của bạn</span>
+                <span className="sr-only">{text("Bình luận của bạn", "Your comment")}</span>
                 <textarea
                   required
                   rows={2}
                   maxLength={4000}
-                  placeholder="Viết bình luận…"
+                  placeholder={text("Viết bình luận…", "Write a comment…")}
                   value={body}
                   onChange={(event) => setBody(event.target.value)}
                 />
@@ -450,22 +509,27 @@ export function PostCard({
                 {role && (
                   <label className="cp-inline-label">
                     <input type="checkbox" checked={asPage} onChange={(event) => setAsPage(event.target.checked)} />
-                    Trả lời với tư cách trang
+                    {text("Trả lời với tư cách trang", "Reply as the page")}
                   </label>
                 )}
                 <button className="cp-button cp-primary" disabled={reply.isPending}>
                   <StreamIcon name="send" size={16} />
-                  Gửi bình luận
+                  {text("Gửi bình luận", "Send comment")}
                 </button>
               </div>
             </form>
           ) : (
             <button
               className="cp-reply-prompt"
-              onClick={() => signedIn("Đăng nhập để bình luận và tham gia thảo luận.", () => undefined)}
+              onClick={() =>
+                signedIn(
+                  text("Đăng nhập để bình luận và tham gia thảo luận.", "Sign in to comment and join the discussion."),
+                  () => undefined,
+                )
+              }
             >
               <StreamIcon name="message" size={16} />
-              Đăng nhập để bình luận
+              {text("Đăng nhập để bình luận", "Sign in to comment")}
             </button>
           )}
         </div>

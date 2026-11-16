@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { CommunityProfile, PageLive } from "@aov/community-contracts"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { competitionsQuery, timeAgo } from "./community-ui"
 import { LocalTime } from "@aov/ui/components/local-time"
@@ -13,14 +14,19 @@ import { competitionMatchHref } from "../tournaments/match-model"
 
 /** The broadcast pinned to the top of a page while it is live. */
 export function LiveBlock({ live, name }: { live: PageLive; name: string }) {
+  const { text, languageTag } = useStreamLocale()
   return (
     <section className="cp-panel cp-live-block" aria-labelledby="page-live">
       <div className="cp-live-heading">
-        <span className="cp-live-badge">Trực tiếp</span>
+        <span className="cp-live-badge">{text("Trực tiếp", "Live")}</span>
         <h2 id="page-live">{live.title}</h2>
         <span className="cp-meta">
-          Bắt đầu{" "}
-          <LocalTime value={live.startedAt} label={(zone) => timeAgo(live.startedAt, Date.now(), zone).toLowerCase()} />
+          {text("Bắt đầu", "Started")}{" "}
+          <LocalTime
+            value={live.startedAt}
+            locale={languageTag}
+            label={(zone) => timeAgo(live.startedAt, Date.now(), zone, languageTag).toLowerCase()}
+          />
         </span>
       </div>
       <PostVideo url={live.url} title={`${name} · ${live.title}`} />
@@ -38,11 +44,12 @@ function competitionFilter(profile: CommunityProfile): Record<string, string> | 
 
 /** The page's next matches; teams only see the matches they play. */
 export function PageUpcoming({ profile }: { profile: CommunityProfile }) {
+  const { text, languageTag } = useStreamLocale()
   const filter = competitionFilter(profile)
   const competitions = useQuery({ ...competitionsQuery(filter || {}, 0, 24), enabled: !!filter })
   const now = Date.now()
   const team = profile.kind === "TEAM" ? profile.entityId : null
-  const upcoming = scheduledMatches(competitions.data?.items || [])
+  const upcoming = scheduledMatches(competitions.data?.items || [], languageTag)
     .filter((match) => match.at + MATCH_WINDOW > now)
     .filter((match) => !team || match.teamAId === team || match.teamBId === team)
     .sort((a, b) => a.at - b.at)
@@ -57,7 +64,7 @@ export function PageUpcoming({ profile }: { profile: CommunityProfile }) {
   }
   return (
     <section className="cp-panel" aria-labelledby="page-upcoming">
-      <h2 id="page-upcoming">Sắp diễn ra</h2>
+      <h2 id="page-upcoming">{text("Sắp diễn ra", "Upcoming")}</h2>
       <ul className="cp-schedule">
         {upcoming.map((match) => {
           const scored = match.scoreA != null && match.scoreB != null
@@ -66,9 +73,9 @@ export function PageUpcoming({ profile }: { profile: CommunityProfile }) {
               <Link to={competitionMatchHref(match.competitionId, match.matchKey)}>
                 <span className="cp-schedule-time">
                   {!scored && match.at <= now ? (
-                    <span className="cp-live-badge">Đang diễn ra</span>
+                    <span className="cp-live-badge">{text("Đang diễn ra", "Ongoing")}</span>
                   ) : (
-                    <LocalTime value={match.at} sourceTimeZone={match.timeZone} format={format} />
+                    <LocalTime value={match.at} sourceTimeZone={match.timeZone} format={format} locale={languageTag} />
                   )}
                 </span>
                 <span className="cp-schedule-match">
@@ -88,21 +95,24 @@ export function PageUpcoming({ profile }: { profile: CommunityProfile }) {
 
 /** Three numbers under the header of team and player pages. */
 export function ProfileStats({ profile }: { profile: CommunityProfile }) {
+  const { text, languageTag } = useStreamLocale()
   const filter = competitionFilter(profile)
   const competitions = useQuery({ ...competitionsQuery(filter || {}, 0, 1), enabled: !!filter })
   const content = profile.content!
   if (profile.kind !== "TEAM" && profile.kind !== "PLAYER") return null
   const stats: [string, number | string][] = [
-    ["Giải đã tham gia", competitions.data?.totalElements ?? "—"],
-    ["Thành tích", content.achievements.length],
-    profile.kind === "TEAM" ? ["Thành viên", content.roster.length] : ["Mốc sự nghiệp", content.history.length],
+    [text("Giải đã tham gia", "Tournaments played"), competitions.data?.totalElements ?? "—"],
+    [text("Thành tích", "Achievements"), content.achievements.length],
+    profile.kind === "TEAM"
+      ? [text("Thành viên", "Members"), content.roster.length]
+      : [text("Mốc sự nghiệp", "Career milestones"), content.history.length],
   ]
   return (
     <dl className="cp-profile-stats">
       {stats.map(([label, value]) => (
         <div key={label}>
           <dt>{label}</dt>
-          <dd>{typeof value === "number" ? value.toLocaleString("vi-VN") : value}</dd>
+          <dd>{typeof value === "number" ? value.toLocaleString(languageTag) : value}</dd>
         </div>
       ))}
     </dl>
@@ -111,6 +121,7 @@ export function ProfileStats({ profile }: { profile: CommunityProfile }) {
 
 /** Lets a page's owner or editor announce, change or end a live broadcast. */
 export function LiveControl({ profile }: { profile: CommunityProfile }) {
+  const { text } = useStreamLocale()
   const client = useQueryClient()
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState("")
@@ -146,16 +157,18 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
         }}
       >
         <StreamIcon name="play" size={16} />
-        {profile.live ? "Đang phát" : "Phát trực tiếp"}
+        {profile.live ? text("Đang phát", "Broadcasting") : text("Phát trực tiếp", "Go live")}
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="cp-live-dialog">
           <DialogTitle className="cp-dialog-title">
-            {profile.live ? "Đang phát trực tiếp" : "Phát trực tiếp"}
+            {profile.live ? text("Đang phát trực tiếp", "Broadcasting live") : text("Phát trực tiếp", "Go live")}
           </DialogTitle>
           <DialogDescription className="cp-dialog-text">
-            Dán link buổi phát trên YouTube, Facebook hoặc TikTok. Người theo dõi nhận thông báo khi bạn bật; trạng thái
-            tự tắt sau 12 giờ.
+            {text(
+              "Dán link buổi phát trên YouTube, Facebook hoặc TikTok. Người theo dõi nhận thông báo khi bạn bật; trạng thái tự tắt sau 12 giờ.",
+              "Paste the link to the broadcast on YouTube, Facebook or TikTok. Followers are notified when you turn it on; the status turns itself off after 12 hours.",
+            )}
           </DialogDescription>
           <form
             className="cp-live-form"
@@ -165,7 +178,7 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
             }}
           >
             <label>
-              Link buổi phát
+              {text("Link buổi phát", "Broadcast link")}
               <input
                 required
                 type="url"
@@ -176,22 +189,22 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
               />
             </label>
             <label>
-              Tiêu đề
+              {text("Tiêu đề", "Title")}
               <input
                 required
                 maxLength={200}
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="ĐTDV mùa Đông · Tuần 3"
+                placeholder={text("ĐTDV mùa Đông · Tuần 3", "AOG Winter · Week 3")}
               />
             </label>
             <div className="cp-dialog-actions">
               <button className="cp-button cp-primary" disabled={start.isPending}>
-                {profile.live ? "Cập nhật" : "Bật trực tiếp"}
+                {profile.live ? text("Cập nhật", "Update") : text("Bật trực tiếp", "Turn live on")}
               </button>
               {profile.live && (
                 <button type="button" className="cp-button" disabled={end.isPending} onClick={() => end.mutate()}>
-                  Tắt trực tiếp
+                  {text("Tắt trực tiếp", "Turn live off")}
                 </button>
               )}
             </div>

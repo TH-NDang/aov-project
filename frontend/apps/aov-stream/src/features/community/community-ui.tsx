@@ -8,6 +8,7 @@ import type {
   TournamentContent,
 } from "@aov/community-contracts"
 import type { StreamIconName } from "../../components/stream-icon"
+import { streamLanguageTag, streamText, useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { LocalTime } from "@aov/ui/components/local-time"
@@ -31,22 +32,34 @@ export function hueOf(text: string) {
 /** Formats an ISO calendar date (yyyy-mm-dd) without shifting it through the viewer's time zone. */
 export function formatDay(value?: string | null) {
   if (!value) return ""
-  return formatCalendarDate(value.slice(0, 10))
+  return formatCalendarDate(value.slice(0, 10), undefined, streamLanguageTag())
 }
 
-export function dayRange(startsOn?: string | null, endsOn?: string | null, fallback = "Chưa xác định lịch") {
+export function dayRange(
+  startsOn?: string | null,
+  endsOn?: string | null,
+  fallback = streamText("Chưa xác định lịch", "Schedule to be announced"),
+) {
   const start = formatDay(startsOn)
   const end = formatDay(endsOn)
   if (!start && !end) return fallback
-  return `${start || "Chưa rõ"} – ${end || "Chưa rõ"}`
+  const unknown = streamText("Chưa rõ", "Unknown")
+  return `${start || unknown} – ${end || unknown}`
 }
 
 export type CompetitionStatus = "ONGOING" | "UPCOMING" | "ANNOUNCED" | "FINISHED"
-export const competitionStatusLabels: Record<CompetitionStatus, string> = {
-  ONGOING: "Đang diễn ra",
-  UPCOMING: "Sắp diễn ra",
-  ANNOUNCED: "Đã công bố",
-  FINISHED: "Đã kết thúc",
+const COMPETITION_STATUS_NAMES: Record<CompetitionStatus, readonly [string, string]> = {
+  ONGOING: ["Đang diễn ra", "Ongoing"],
+  UPCOMING: ["Sắp diễn ra", "Upcoming"],
+  ANNOUNCED: ["Đã công bố", "Announced"],
+  FINISHED: ["Đã kết thúc", "Finished"],
+}
+
+/** The status names in the reader's language. Call it while rendering so a language change shows at once. */
+export function competitionStatusLabels() {
+  return Object.fromEntries(
+    Object.entries(COMPETITION_STATUS_NAMES).map(([status, names]) => [status, streamText(...names)]),
+  ) as Record<CompetitionStatus, string>
 }
 
 /** Uses the edited status when there is one; otherwise reads it from the published dates. */
@@ -103,7 +116,10 @@ export function Avatar({ profile, className = "" }: { profile: CommunityProfile;
 }
 
 export function followersLabel(count: number) {
-  return `${count.toLocaleString("vi-VN")} người theo dõi`
+  return streamText(
+    `${count.toLocaleString("vi-VN")} người theo dõi`,
+    `${count.toLocaleString("en-US")} ${count === 1 ? "follower" : "followers"}`,
+  )
 }
 
 /** A page's avatar from its feed card; pages without artwork get initials on a colour from their name. */
@@ -121,20 +137,39 @@ export function CardAvatar({ name, url, className = "" }: { name: string; url?: 
   )
 }
 
-const relativeTime = new Intl.RelativeTimeFormat("vi-VN", { numeric: "auto" })
+const relativeTimes = new Map<string, Intl.RelativeTimeFormat>()
+function relativeTimeIn(locale: string) {
+  let format = relativeTimes.get(locale)
+  if (!format) relativeTimes.set(locale, (format = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })))
+  return format
+}
 
 /** Recent moments read as relative minutes, hours or days; anything older than a week shows its date. */
-export function timeAgo(value: string, now = Date.now(), timeZone = currentTimeZone()) {
+export function timeAgo(
+  value: string,
+  now = Date.now(),
+  timeZone = currentTimeZone(),
+  locale: string = streamLanguageTag(),
+) {
   const seconds = Math.round((new Date(value).getTime() - now) / 1000)
   if (Number.isNaN(seconds)) return ""
-  if (seconds > -60) return "Vừa xong"
+  const relativeTime = relativeTimeIn(locale)
+  if (seconds > -60) return locale.startsWith("en") ? "Just now" : "Vừa xong"
   if (seconds > -3600) return relativeTime.format(Math.round(seconds / 60), "minute")
   if (seconds > -86400) return relativeTime.format(Math.round(seconds / 3600), "hour")
   if (seconds > -7 * 86400) return relativeTime.format(Math.round(seconds / 86400), "day")
-  return formatInZone(value, timeZone, { day: "2-digit", month: "2-digit", year: "numeric" })
+  return formatInZone(value, timeZone, { day: "2-digit", month: "2-digit", year: "numeric" }, locale)
 }
 
 /** The relative time of a post or notification, which opens its exact time. These moments have no zone of their own. */
 export function TimeAgo({ value, className }: { value: string; className?: string }) {
-  return <LocalTime value={value} className={className} label={(zone) => timeAgo(value, Date.now(), zone)} />
+  const { languageTag } = useStreamLocale()
+  return (
+    <LocalTime
+      value={value}
+      className={className}
+      locale={languageTag}
+      label={(zone) => timeAgo(value, Date.now(), zone, languageTag)}
+    />
+  )
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { currencyChoice } from "@aov/ui/lib/currency"
 import { currentTimeZone } from "@aov/ui/lib/time-zone"
+import { useStreamLocale } from "../../components/stream-locale"
 import { useCommunitySession } from "../community/community-auth"
 import { AVATAR_TYPES, uploadAvatar } from "./avatar-upload"
 import { profileKey, saveProfile, useOwnProfile, wikiRequest } from "./profile-api"
@@ -21,21 +22,23 @@ import {
 import "./account.css"
 import { Link } from "react-router"
 
-const languageNames = new Intl.DisplayNames(["vi"], { type: "language" })
-export const languageLabel = (code: string) => {
+const languageNames = new Map<string, Intl.DisplayNames>()
+export const languageLabel = (code: string, locale = "vi-VN") => {
   try {
-    return languageNames.of(code) || code
+    let names = languageNames.get(locale)
+    if (!names) languageNames.set(locale, (names = new Intl.DisplayNames([locale], { type: "language" })))
+    return names.of(code) || code
   } catch {
     return code
   }
 }
-const fieldLabels: Record<keyof ProfileDraft, string> = {
-  displayName: "tên hiển thị",
-  biography: "giới thiệu",
-  locale: "ngôn ngữ",
-  timeZone: "múi giờ",
-  currency: "tiền tệ",
-  avatarAssetId: "ảnh đại diện",
+const fieldLabels: Record<keyof ProfileDraft, readonly [string, string]> = {
+  displayName: ["tên hiển thị", "display name"],
+  biography: ["giới thiệu", "bio"],
+  locale: ["ngôn ngữ", "language"],
+  timeZone: ["múi giờ", "time zone"],
+  currency: ["tiền tệ", "currency"],
+  avatarAssetId: ["ảnh đại diện", "avatar"],
 }
 
 export function AccountAvatar({ url, name, large = false }: { url?: string | null; name: string; large?: boolean }) {
@@ -49,6 +52,7 @@ export function AccountAvatar({ url, name, large = false }: { url?: string | nul
 }
 
 export function AccountProfile() {
+  const { text, languageTag } = useStreamLocale()
   const profile = useOwnProfile()
   if (profile.data)
     return (
@@ -56,17 +60,17 @@ export function AccountProfile() {
     )
   return (
     <section className="cp-panel account-profile">
-      <h2>Hồ sơ dùng chung</h2>
+      <h2>{text("Hồ sơ dùng chung", "Shared profile")}</h2>
       {profile.isError ? (
         <div className="cp-error" role="alert">
-          <p>{profileError(profile.error)}</p>
+          <p>{profileError(profile.error, languageTag)}</p>
           <button className="cp-button" disabled={profile.isFetching} onClick={() => void profile.refetch()}>
-            Thử lại
+            {text("Thử lại", "Retry")}
           </button>
         </div>
       ) : (
         <p className="cp-muted" role="status">
-          Đang tải hồ sơ…
+          {text("Đang tải hồ sơ…", "Loading profile…")}
         </p>
       )}
     </section>
@@ -82,6 +86,7 @@ function ProfileEditor({
   reloading: boolean
   onReload: () => void
 }) {
+  const { text, languageTag } = useStreamLocale()
   const session = useCommunitySession()
   const client = useQueryClient()
   const [seen, setSeen] = useState(profile)
@@ -113,7 +118,7 @@ function ProfileEditor({
   }
 
   const newer = latest && latest.version > base.version ? latest : null
-  const differences = newer ? changedFields(draft, profileDraft(newer)) : ""
+  const differences = newer ? changedFields(draft, profileDraft(newer), text) : ""
   const dirty = !sameDraft(draft, profileDraft(base))
   const locked = busy || !!uploading
   const canSave = !locked && !conflict && !newer && !!draft.displayName.trim() && (dirty || base.id === null)
@@ -136,13 +141,13 @@ function ProfileEditor({
     setError("")
     setSaved(false)
     try {
-      const result = await uploadAvatar(file, wikiRequest, controller.signal, setUploading)
+      const result = await uploadAvatar(file, wikiRequest, controller.signal, setUploading, undefined, languageTag)
       if (!controller.signal.aborted) {
         setDraft((current) => ({ ...current, avatarAssetId: result.assetId }))
         setPreview({ assetId: result.assetId, url: result.avatarUrl })
       }
     } catch (cause) {
-      if (!controller.signal.aborted) setError(profileError(cause))
+      if (!controller.signal.aborted) setError(profileError(cause, languageTag))
     } finally {
       if (!controller.signal.aborted) setUploading("")
     }
@@ -164,7 +169,7 @@ function ProfileEditor({
       setSaved(true)
     } catch (cause) {
       setConflict(cause instanceof WikiApiError && cause.code === "USER_PROFILE_CONFLICT")
-      setError(profileError(cause))
+      setError(profileError(cause, languageTag))
     } finally {
       setBusy(false)
     }
@@ -184,19 +189,21 @@ function ProfileEditor({
   return (
     <form className="cp-panel account-profile" aria-labelledby="account-profile-title" onSubmit={save}>
       <div className="account-profile-intro">
-        <h2 id="account-profile-title">Hồ sơ dùng chung</h2>
+        <h2 id="account-profile-title">{text("Hồ sơ dùng chung", "Shared profile")}</h2>
         <p className="cp-muted">
-          Tên và ảnh đại diện dùng chung cho AOV Stream, WiKi và cộng đồng. Mật khẩu và email được quản lý ở trang đăng
-          nhập.
+          {text(
+            "Tên và ảnh đại diện dùng chung cho AOV Stream, WiKi và cộng đồng. Mật khẩu và email được quản lý ở trang đăng nhập.",
+            "Your name and avatar are shared across AOV Stream, WiKi and the community. Your password and email are managed on the sign-in page.",
+          )}
         </p>
       </div>
       <div className="account-avatar-field">
         <AccountAvatar url={avatarUrl} name={draft.displayName || session.name} large />
         <div>
-          <span className="account-field-label">Ảnh đại diện</span>
+          <span className="account-field-label">{text("Ảnh đại diện", "Avatar")}</span>
           <div className="cp-actions">
             <label className="cp-button account-file" aria-disabled={locked || undefined}>
-              {draft.avatarAssetId ? "Đổi ảnh" : "Chọn ảnh"}
+              {draft.avatarAssetId ? text("Đổi ảnh", "Change image") : text("Chọn ảnh", "Choose image")}
               <input
                 type="file"
                 accept={AVATAR_TYPES.join(",")}
@@ -214,7 +221,7 @@ function ProfileEditor({
                 disabled={locked}
                 onClick={() => change({ avatarAssetId: null })}
               >
-                Gỡ ảnh
+                {text("Gỡ ảnh", "Remove image")}
               </button>
             )}
             {base.avatarAssetId && draft.avatarAssetId !== base.avatarAssetId && (
@@ -224,14 +231,20 @@ function ProfileEditor({
                 disabled={locked}
                 onClick={() => change({ avatarAssetId: base.avatarAssetId })}
               >
-                Giữ ảnh cũ
+                {text("Giữ ảnh cũ", "Keep the old image")}
               </button>
             )}
           </div>
           <p className="cp-meta">
             {draft.avatarAssetId !== base.avatarAssetId
-              ? "Ảnh đại diện có thay đổi chưa lưu. Bấm Lưu thay đổi để áp dụng."
-              : "PNG, JPEG hoặc WebP, tối đa 25 MB. Nên chọn ảnh vuông."}
+              ? text(
+                  "Ảnh đại diện có thay đổi chưa lưu. Bấm Lưu thay đổi để áp dụng.",
+                  "The avatar has unsaved changes. Press Save changes to apply them.",
+                )
+              : text(
+                  "PNG, JPEG hoặc WebP, tối đa 25 MB. Nên chọn ảnh vuông.",
+                  "PNG, JPEG or WebP, up to 25 MB. A square image is recommended.",
+                )}
           </p>
         </div>
       </div>
@@ -244,16 +257,16 @@ function ProfileEditor({
             onClick={() => {
               upload.current?.abort()
               setUploading("")
-              setError("Đã hủy tải ảnh.")
+              setError(text("Đã hủy tải ảnh.", "Image upload canceled."))
             }}
           >
-            Hủy tải ảnh
+            {text("Hủy tải ảnh", "Cancel image upload")}
           </button>
         </div>
       )}
       <fieldset disabled={busy}>
         <label>
-          Tên hiển thị
+          {text("Tên hiển thị", "Display name")}
           <input
             required
             autoComplete="nickname"
@@ -263,11 +276,11 @@ function ProfileEditor({
           />
         </label>
         <label>
-          Giới thiệu
+          {text("Giới thiệu", "Bio")}
           <textarea
             rows={4}
             maxLength={PROFILE_LIMITS.biography}
-            placeholder="Một vài điều về bạn…"
+            placeholder={text("Một vài điều về bạn…", "A few things about you…")}
             value={draft.biography}
             onChange={(event) => change({ biography: event.target.value })}
           />
@@ -277,24 +290,26 @@ function ProfileEditor({
         </label>
         <div className="cp-form-grid">
           <div className="account-profile-fact">
-            <span>Ngôn ngữ và khu vực</span>
-            <strong>{languageLabel(draft.locale)}</strong>
-            <Link to="/account?tab=settings">Đổi trong Cài đặt</Link>
+            <span>{text("Ngôn ngữ và khu vực", "Language and region")}</span>
+            <strong>{languageLabel(draft.locale, languageTag)}</strong>
+            <Link to="/account?tab=settings">{text("Đổi trong Cài đặt", "Change in Settings")}</Link>
           </div>
         </div>
       </fieldset>
       {newer && (
         <div className="cp-confirm" role="alert">
           <p>
-            Hồ sơ vừa được cập nhật ở nơi khác{differences && ` (khác ở ${differences})`}. Bạn muốn dùng bản mới nhất
-            hay giữ nội dung đang nhập rồi lưu đè?
+            {text(
+              `Hồ sơ vừa được cập nhật ở nơi khác${differences && ` (khác ở ${differences})`}. Bạn muốn dùng bản mới nhất hay giữ nội dung đang nhập rồi lưu đè?`,
+              `Your profile was just updated somewhere else${differences && ` (differs in ${differences})`}. Do you want to use the latest version, or keep what you have typed and save over it?`,
+            )}
           </p>
           <div className="cp-actions">
             <button type="button" className="cp-button" onClick={() => resolve(newer, false)}>
-              Dùng bản mới nhất
+              {text("Dùng bản mới nhất", "Use the latest version")}
             </button>
             <button type="button" className="cp-button" onClick={() => resolve(newer, true)}>
-              Giữ nội dung đang nhập
+              {text("Giữ nội dung đang nhập", "Keep what you have typed")}
             </button>
           </div>
         </div>
@@ -304,33 +319,33 @@ function ProfileEditor({
           <p>{error}</p>
           {conflict && (
             <button type="button" className="cp-button" disabled={reloading} onClick={onReload}>
-              {reloading ? "Đang tải…" : "Tải bản mới nhất"}
+              {reloading ? text("Đang tải…", "Loading…") : text("Tải bản mới nhất", "Load the latest version")}
             </button>
           )}
         </div>
       )}
       {saved && (
         <p className="cp-success" role="status">
-          Đã lưu hồ sơ.
+          {text("Đã lưu hồ sơ.", "Profile saved.")}
         </p>
       )}
       <div className="cp-actions account-profile-actions">
         {dirty && (
           <button type="button" className="cp-button" disabled={locked} onClick={() => resolve(base, false)}>
-            Hoàn tác
+            {text("Hoàn tác", "Undo")}
           </button>
         )}
         <button className="cp-button cp-primary" disabled={!canSave}>
-          {busy ? "Đang lưu…" : "Lưu thay đổi"}
+          {busy ? text("Đang lưu…", "Saving…") : text("Lưu thay đổi", "Save changes")}
         </button>
       </div>
     </form>
   )
 }
 
-function changedFields(left: ProfileDraft, right: ProfileDraft) {
+function changedFields(left: ProfileDraft, right: ProfileDraft, text: (vi: string, en: string) => string) {
   return (Object.keys(fieldLabels) as (keyof ProfileDraft)[])
     .filter((field) => left[field] !== right[field])
-    .map((field) => fieldLabels[field])
+    .map((field) => text(...fieldLabels[field]))
     .join(", ")
 }

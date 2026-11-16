@@ -22,13 +22,14 @@ export type ScheduledMatch = {
 }
 
 /** Every planned match with a start time, named from the teams the competition snapshot already resolved. */
-export function scheduledMatches(views: CompetitionView[]): ScheduledMatch[] {
+export function scheduledMatches(views: CompetitionView[], locale = "vi-VN"): ScheduledMatch[] {
+  const undecided = locale.startsWith("en") ? "TBD" : "Chờ xác định"
   return views.flatMap((view) => {
     const { plan, teams, resolved, tournament } = view.content
     const results = new Map(resolved.map((match) => [match.key, match]))
     const team = (id: string | null | undefined, label: string | null | undefined) => {
       const entry = id ? teams[id] : undefined
-      return entry?.shortName || entry?.name || label || "Chờ xác định"
+      return entry?.shortName || entry?.name || label || undecided
     }
     return plan.matches.flatMap((match) => {
       const at = match.scheduledAt ? new Date(match.scheduledAt).getTime() : NaN

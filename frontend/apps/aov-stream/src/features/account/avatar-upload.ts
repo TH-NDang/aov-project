@@ -25,16 +25,23 @@ export async function uploadAvatar(
   signal: AbortSignal,
   progress: (step: string) => void,
   fetcher: typeof fetch = fetch,
+  locale = "vi-VN",
 ): Promise<AvatarResult> {
+  const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
   if (!AVATAR_TYPES.includes(file.type) || file.size === 0 || file.size > AVATAR_MAX_BYTES)
-    throw new Error("Chọn ảnh PNG, JPEG hoặc WebP có dung lượng từ 1 byte đến 25 MB.")
-  progress("Đang chuẩn bị tải ảnh…")
+    throw new Error(
+      text(
+        "Chọn ảnh PNG, JPEG hoặc WebP có dung lượng từ 1 byte đến 25 MB.",
+        "Choose a PNG, JPEG or WebP image from 1 byte to 25 MB in size.",
+      ),
+    )
+  progress(text("Đang chuẩn bị tải ảnh…", "Preparing to upload the image…"))
   const ticket = await request<UploadTicket>("/users/me/avatar-uploads", {
     method: "POST",
     signal,
     body: JSON.stringify({ fileName: file.name, contentType: file.type, sizeBytes: file.size }),
   })
-  progress("Đang tải ảnh lên kho lưu trữ…")
+  progress(text("Đang tải ảnh lên kho lưu trữ…", "Uploading the image to storage…"))
   const response = await fetcher(ticket.uploadUrl, {
     method: ticket.method,
     headers: ticket.headers,
@@ -43,7 +50,13 @@ export async function uploadAvatar(
     redirect: "error",
     signal: AbortSignal.any([signal, AbortSignal.timeout(120000)]),
   })
-  if (!response.ok) throw new Error("Tải ảnh lên kho lưu trữ chưa thành công. Hãy thử lại.")
-  progress("Đang kiểm tra ảnh…")
+  if (!response.ok)
+    throw new Error(
+      text(
+        "Tải ảnh lên kho lưu trữ chưa thành công. Hãy thử lại.",
+        "The image could not be uploaded to storage. Please try again.",
+      ),
+    )
+  progress(text("Đang kiểm tra ảnh…", "Checking the image…"))
   return request<AvatarResult>(`/users/me/avatar-uploads/${ticket.uploadId}/complete`, { method: "POST", signal })
 }

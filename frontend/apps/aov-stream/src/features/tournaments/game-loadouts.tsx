@@ -1,19 +1,22 @@
 import type { Participant, PublishedGame } from "@aov/community-contracts"
 import { StreamIcon } from "../../components/stream-icon"
+import { useStreamLocale } from "../../components/stream-locale"
 import { ReferenceArt } from "./reference-art"
 import {
   clock,
   LANE_SHORT,
-  LANES,
-  OBSERVATIONS,
+  LANE_NAMES,
+  OBSERVATION_NAMES,
   orderedParticipants,
   referenceName,
   snapshotAt,
+  UNKNOWN_REFERENCE,
 } from "./tournament-model"
 
 export type LoadoutTab = "equipment" | "arcana" | "enchantments"
 
 function Inventory({ participant, game, time }: { participant: Participant; game: PublishedGame; time: number }) {
+  const { text } = useStreamLocale()
   const snapshot = snapshotAt(participant.equipmentSnapshots, time)
   return (
     <div className="inventory-observation">
@@ -28,10 +31,10 @@ function Inventory({ participant, game, time }: { participant: Participant; game
               data-unknown={!known || undefined}
               title={
                 !known
-                  ? `Ô ${slot + 1} · Chưa quan sát`
+                  ? text(`Ô ${slot + 1} · Chưa quan sát`, `Slot ${slot + 1} · Not observed`)
                   : value.item
-                    ? referenceName(game.catalog, "items", value.item)
-                    : `Ô ${slot + 1} · Trống`
+                    ? referenceName(game.catalog, "items", value.item, text(...UNKNOWN_REFERENCE))
+                    : text(`Ô ${slot + 1} · Trống`, `Slot ${slot + 1} · Empty`)
               }
             >
               {known && value.item ? (
@@ -39,7 +42,7 @@ function Inventory({ participant, game, time }: { participant: Participant; game
               ) : (
                 <span aria-hidden="true">{known ? "·" : "?"}</span>
               )}
-              <small className="sr-only">Ô {slot + 1}</small>
+              <small className="sr-only">{text(`Ô ${slot + 1}`, `Slot ${slot + 1}`)}</small>
             </span>
           )
         })}
@@ -47,7 +50,7 @@ function Inventory({ participant, game, time }: { participant: Participant; game
       <span className="inventory-observed-at">
         {snapshot ? (
           <>
-            Ghi nhận lúc <strong>{clock(snapshot.atSeconds)}</strong>
+            {text("Ghi nhận lúc", "Recorded at")} <strong>{clock(snapshot.atSeconds)}</strong>
             {snapshot.note && (
               <span title={snapshot.note}>
                 <StreamIcon name="info" size={12} />
@@ -55,7 +58,7 @@ function Inventory({ participant, game, time }: { participant: Participant; game
             )}
           </>
         ) : (
-          "Chưa có mốc ghi nhận"
+          text("Chưa có mốc ghi nhận", "No recorded time yet")
         )}
       </span>
     </div>
@@ -71,13 +74,14 @@ function OptionalLoadout({
   game: PublishedGame
   tab: Exclude<LoadoutTab, "equipment">
 }) {
+  const { text } = useStreamLocale()
   const loadout = participant[tab]
   // A partial observation still shows what the source showed.
   if (loadout.status !== "KNOWN" && loadout.status !== "PARTIAL")
     return (
       <span className="loadout-unavailable">
         <StreamIcon name="info" size={14} />
-        {OBSERVATIONS[loadout.status]}
+        {text(OBSERVATION_NAMES[loadout.status][0], OBSERVATION_NAMES[loadout.status][1])}
         {loadout.note && <small>{loadout.note}</small>}
       </span>
     )
@@ -88,7 +92,7 @@ function OptionalLoadout({
           <span
             key={index}
             data-color={entry.color}
-            title={`${referenceName(game.catalog, "arcana", entry.selection)} × ${entry.count}`}
+            title={`${referenceName(game.catalog, "arcana", entry.selection, text(...UNKNOWN_REFERENCE))} × ${entry.count}`}
           >
             <ReferenceArt catalog={game.catalog} kind="arcana" selection={entry.selection} />
             <b>×{entry.count}</b>
@@ -99,13 +103,16 @@ function OptionalLoadout({
   return (
     <div className="enchantment-observation">
       {[true, false].map((primary) => (
-        <div key={String(primary)} aria-label={primary ? "Nhánh chính" : "Nhánh phụ"}>
+        <div
+          key={String(primary)}
+          aria-label={primary ? text("Nhánh chính", "Primary branch") : text("Nhánh phụ", "Secondary branch")}
+        >
           {participant.enchantments.entries
             .filter((entry) => entry.primary === primary)
             .map((entry, index) => (
               <span
                 key={index}
-                title={`${referenceName(game.catalog, "enchantments", entry.selection)} · ${primary ? "Chính" : "Phụ"} · Bậc ${entry.tier}`}
+                title={`${referenceName(game.catalog, "enchantments", entry.selection, text(...UNKNOWN_REFERENCE))} · ${primary ? text("Chính", "Primary") : text("Phụ", "Secondary")} · ${text(`Bậc ${entry.tier}`, `Tier ${entry.tier}`)}`}
               >
                 <ReferenceArt catalog={game.catalog} kind="enchantments" selection={entry.selection} />
                 <small>{["", "I", "II", "III"][entry.tier] || entry.tier}</small>
@@ -118,6 +125,7 @@ function OptionalLoadout({
 }
 
 export function GameLoadouts({ game, tab, time }: { game: PublishedGame; tab: LoadoutTab; time: number }) {
+  const { text } = useStreamLocale()
   return (
     <div className="game-loadout-sides">
       {game.content.sides.map((side) => (
@@ -131,8 +139,12 @@ export function GameLoadouts({ game, tab, time }: { game: PublishedGame; tab: Lo
               <div className="game-loadout-identity">
                 <ReferenceArt catalog={game.catalog} kind="heroes" selection={participant.hero} />
                 <span>
-                  <strong>{game.players[participant.playerId || ""]?.nickname || "Chưa rõ tuyển thủ"}</strong>
-                  <small title={LANES[participant.lane]}>{LANE_SHORT[participant.lane]}</small>
+                  <strong>
+                    {game.players[participant.playerId || ""]?.nickname || text("Chưa rõ tuyển thủ", "Unknown player")}
+                  </strong>
+                  <small title={text(LANE_NAMES[participant.lane][0], LANE_NAMES[participant.lane][1])}>
+                    {LANE_SHORT[participant.lane]}
+                  </small>
                 </span>
                 <ReferenceArt
                   catalog={game.catalog}
@@ -154,8 +166,14 @@ export function GameLoadouts({ game, tab, time }: { game: PublishedGame; tab: Lo
   )
 }
 
-const EVENT_NAMES = { BUY: "Mua", SELL: "Bán", UPGRADE: "Nâng cấp", SWAP: "Đổi ô" } as const
+const EVENT_NAMES = {
+  BUY: ["Mua", "Buy"],
+  SELL: ["Bán", "Sell"],
+  UPGRADE: ["Nâng cấp", "Upgrade"],
+  SWAP: ["Đổi ô", "Swap slots"],
+} as const
 export function EquipmentEvents({ game, time }: { game: PublishedGame; time: number }) {
+  const { text } = useStreamLocale()
   const events = game.content.sides
     .flatMap((side) =>
       side.participants.flatMap((participant) =>
@@ -170,23 +188,28 @@ export function EquipmentEvents({ game, time }: { game: PublishedGame; time: num
     <details className="equipment-events">
       <summary>
         <StreamIcon name="list" size={16} />
-        Giao dịch đã ghi nhận <span>{events.length}</span>
+        {text("Giao dịch đã ghi nhận", "Recorded transactions")} <span>{events.length}</span>
       </summary>
-      <p>Chỉ hiển thị giao dịch có ghi nhận riêng; không suy từ các ảnh chụp đồ.</p>
+      <p>
+        {text(
+          "Chỉ hiển thị giao dịch có ghi nhận riêng; không suy từ các ảnh chụp đồ.",
+          "Only transactions recorded on their own are shown; none are inferred from item snapshots.",
+        )}
+      </p>
       <ol>
         {events.map(({ event, participant, key }) => (
           <li key={key}>
             <time>{clock(event.atSeconds)}</time>
             <strong>{game.players[participant.playerId || ""]?.nickname}</strong>
             <span className="equipment-event-type" data-type={event.type}>
-              {EVENT_NAMES[event.type]}
+              {text(EVENT_NAMES[event.type][0], EVENT_NAMES[event.type][1])}
             </span>
             {event.replacedItem && <ReferenceArt catalog={game.catalog} kind="items" selection={event.replacedItem} />}
             {event.replacedItem && event.item && <StreamIcon name="arrow" size={13} />}
             {event.item && <ReferenceArt catalog={game.catalog} kind="items" selection={event.item} />}
             {event.type === "SWAP" && (
               <span>
-                Ô {event.fromSlot} ↔ {event.toSlot}
+                {text("Ô", "Slot")} {event.fromSlot} ↔ {event.toSlot}
               </span>
             )}
             {event.note && (

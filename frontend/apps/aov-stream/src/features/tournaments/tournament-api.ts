@@ -6,6 +6,7 @@ import type {
   TournamentContent,
   SeriesContent,
 } from "@aov/community-contracts"
+import { streamText } from "../../components/stream-locale"
 
 export interface PublishedSummary<T> {
   id: string
@@ -16,7 +17,9 @@ async function read<T>(path: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(`/api/community/v1${path}`, { signal, credentials: "omit" })
   if (!response.ok)
     throw new Error(
-      response.status === 404 ? "Không tìm thấy nội dung đã xuất bản." : "Chưa kết nối được kho dữ liệu giải đấu.",
+      response.status === 404
+        ? streamText("Không tìm thấy nội dung đã xuất bản.", "This published content could not be found.")
+        : streamText("Chưa kết nối được kho dữ liệu giải đấu.", "The tournament data store could not be reached."),
     )
   return response.json()
 }

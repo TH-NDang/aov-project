@@ -8,10 +8,12 @@ import {
   type CommunityProfile,
   type PageSlice,
   type PageViewer,
+  type PersonRole,
 } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
+import { streamText, useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
 import { useCommunitySession } from "./community-auth"
 import { Avatar, followersLabel, hueOf, kindIcons } from "./community-ui"
@@ -23,10 +25,21 @@ import { ProfileTeams } from "./profile-teams"
 import { ProfileOptions } from "./profile-options"
 import { ProfileSocials } from "./profile-socials"
 import { CircuitProfile } from "./circuit-profile"
-import { ProfileAside, regionName } from "./profile-aside"
+import { ProfileAside, profileKindEnglish, regionName } from "./profile-aside"
 import { LiveBlock, LiveControl, PageUpcoming, ProfileStats } from "./profile-home"
 
+/** English names of the staff roles: `personRoleLabels` in the shared contracts carries the Vietnamese ones only. */
+const personRoleEnglish: Record<PersonRole, string> = {
+  COACH: "Coach",
+  TEAM_ANALYST: "Team analyst",
+  HOST: "Host",
+  INTERVIEWER: "Interviewer",
+  CASTER: "Caster",
+  GUEST_ANALYST: "Guest analyst",
+}
+
 export function CommunityProfilePage() {
+  const { text } = useStreamLocale()
   const { code = "" } = useParams()
   const profile = useQuery({
     queryKey: ["public-page", code],
@@ -38,17 +51,17 @@ export function CommunityProfilePage() {
   return (
     <StreamShell>
       {profile.isPending ? (
-        <div className="cp-container" role="status" aria-label="Đang tải hồ sơ">
+        <div className="cp-container" role="status" aria-label={text("Đang tải hồ sơ", "Loading profile")}>
           <div className="hub-skeleton cp-header-skeleton" />
         </div>
       ) : profile.isError ? (
         <div className="cp-container">
           <div className="hub-state">
             <StreamIcon name="info" size={28} />
-            <h1>Chưa mở được hồ sơ</h1>
+            <h1>{text("Chưa mở được hồ sơ", "Profile could not be opened")}</h1>
             <p role="alert">{profile.error.message}</p>
             <Link className="cp-button" to="/explore">
-              Về danh bạ
+              {text("Về danh bạ", "Back to the directory")}
             </Link>
           </div>
         </div>
@@ -62,44 +75,48 @@ export function CommunityProfilePage() {
 }
 type ProfileTab = "home" | "video" | "roster" | "history" | "competitions" | "achievements" | "overview"
 
-/** Content first, introduction last; each kind of page gets the sections that make sense for it. */
+/**
+ * Content first, introduction last; each kind of page gets the sections that make sense for it. The names follow the
+ * reader's language, so call it while rendering.
+ */
 function profileTabs(kind: CommunityProfile["kind"]): [ProfileTab, string][] {
   if (kind === "ORGANIZATION")
     return [
-      ["home", "Trang chủ"],
+      ["home", streamText("Trang chủ", "Home")],
       ["video", "Video"],
-      ["competitions", "Giải đấu"],
-      ["history", "Lịch sử hoạt động"],
-      ["overview", "Giới thiệu"],
+      ["competitions", streamText("Giải đấu", "Tournaments")],
+      ["history", streamText("Lịch sử hoạt động", "Activity history")],
+      ["overview", streamText("Giới thiệu", "About")],
     ]
   if (kind === "TEAM")
     return [
-      ["home", "Trang chủ"],
+      ["home", streamText("Trang chủ", "Home")],
       ["video", "Video"],
-      ["roster", "Đội hình"],
-      ["competitions", "Thi đấu"],
-      ["achievements", "Thành tích"],
-      ["history", "Lịch sử"],
-      ["overview", "Giới thiệu"],
+      ["roster", streamText("Đội hình", "Roster")],
+      ["competitions", streamText("Thi đấu", "Competitions")],
+      ["achievements", streamText("Thành tích", "Achievements")],
+      ["history", streamText("Lịch sử", "History")],
+      ["overview", streamText("Giới thiệu", "About")],
     ]
   if (kind === "PLAYER")
     return [
-      ["home", "Trang chủ"],
+      ["home", streamText("Trang chủ", "Home")],
       ["video", "Video"],
-      ["history", "Sự nghiệp"],
-      ["competitions", "Thi đấu"],
-      ["achievements", "Thành tích"],
-      ["overview", "Giới thiệu"],
+      ["history", streamText("Sự nghiệp", "Career")],
+      ["competitions", streamText("Thi đấu", "Competitions")],
+      ["achievements", streamText("Thành tích", "Achievements")],
+      ["overview", streamText("Giới thiệu", "About")],
     ]
   return [
-    ["home", "Trang chủ"],
+    ["home", streamText("Trang chủ", "Home")],
     ["video", "Video"],
-    ["history", "Sự nghiệp & hoạt động"],
-    ["overview", "Giới thiệu"],
+    ["history", streamText("Sự nghiệp & hoạt động", "Career & activity")],
+    ["overview", streamText("Giới thiệu", "About")],
   ]
 }
 
 function Profile({ profile }: { profile: CommunityProfile }) {
+  const { text, languageTag } = useStreamLocale()
   const session = useCommunitySession()
   const signedIn = useSignedInAction()
   const [picked, setTab] = useState<ProfileTab | null>(null)
@@ -142,14 +159,19 @@ function Profile({ profile }: { profile: CommunityProfile }) {
             <span className="hub-kicker">
               <StreamIcon name={kindIcons[profile.kind]} size={14} />
               {(profile.kind === "PERSON"
-                ? content.personRoles?.map((role) => personRoleLabels[role]).join(" · ")
-                : null) || profileKindLabels[profile.kind]}{" "}
-              {content.country ? `· ${regionName(content.country)}` : ""}
+                ? content.personRoles?.map((role) => text(personRoleLabels[role], personRoleEnglish[role])).join(" · ")
+                : null) || text(profileKindLabels[profile.kind], profileKindEnglish[profile.kind])}{" "}
+              {content.country ? `· ${regionName(content.country, languageTag)}` : ""}
             </span>
             <h1>
               {content.name}
-              {profile.represented && <OfficialBadge className="cp-official" label="Đại diện đã xác minh" />}
-              {profile.live && <span className="cp-live-badge cp-title-live">Trực tiếp</span>}
+              {profile.represented && (
+                <OfficialBadge
+                  className="cp-official"
+                  label={text("Đại diện đã xác minh", "Verified representative")}
+                />
+              )}
+              {profile.live && <span className="cp-live-badge cp-title-live">{text("Trực tiếp", "Live")}</span>}
             </h1>
             <p className="cp-identity-meta">
               <span>
@@ -165,19 +187,19 @@ function Profile({ profile }: { profile: CommunityProfile }) {
               aria-pressed={following}
               disabled={follow.isPending || (authenticated && !viewer.data)}
               onClick={() =>
-                signedIn(`Đăng nhập để theo dõi ${content.name}.`, () =>
+                signedIn(text(`Đăng nhập để theo dõi ${content.name}.`, `Sign in to follow ${content.name}.`), () =>
                   follow.mutate({ pageId: profile.id, following: !following }),
                 )
               }
             >
               <StreamIcon name={following ? "check" : "plus"} size={16} />
-              {following ? "Đang theo dõi" : "Theo dõi"}
+              {following ? text("Đang theo dõi", "Following") : text("Theo dõi", "Follow")}
             </button>
             {["OWNER", "EDITOR"].includes(viewer.data?.role || "") && <LiveControl profile={profile} />}
             <ProfileOptions profile={profile} role={authenticated ? viewer.data?.role || undefined : undefined} />
           </div>
         </div>
-        <nav className="cp-tabs cp-header-tabs" aria-label="Nội dung hồ sơ">
+        <nav className="cp-tabs cp-header-tabs" aria-label={text("Nội dung hồ sơ", "Profile content")}>
           {tabs.map(([value, label]) => (
             <button key={value} aria-current={tab === value ? "page" : undefined} onClick={() => setTab(value)}>
               {label}
@@ -197,9 +219,13 @@ function Profile({ profile }: { profile: CommunityProfile }) {
           {tab === "overview" && (
             <>
               <section className="cp-panel">
-                <h2>Giới thiệu</h2>
+                <h2>{text("Giới thiệu", "About")}</h2>
                 <p className="cp-prose">
-                  {content.biography || "Thông tin giới thiệu đang được bổ sung từ các nguồn công khai."}
+                  {content.biography ||
+                    text(
+                      "Thông tin giới thiệu đang được bổ sung từ các nguồn công khai.",
+                      "The introduction is being compiled from public sources.",
+                    )}
                 </p>
               </section>
               <ProfileAside profile={profile} inline />
@@ -212,7 +238,7 @@ function Profile({ profile }: { profile: CommunityProfile }) {
                     <div>
                       <span className="hub-kicker">{item.placement}</span>
                       <h2>{item.title}</h2>
-                      <p className="cp-meta">{item.date || "Chưa xác định ngày"}</p>
+                      <p className="cp-meta">{item.date || text("Chưa xác định ngày", "Unknown date")}</p>
                     </div>
                   </article>
                 ))}
@@ -220,22 +246,27 @@ function Profile({ profile }: { profile: CommunityProfile }) {
           )}
           {tab === "roster" && profile.kind === "TEAM" && (
             <section className="cp-panel">
-              <h2>Thành viên và ban huấn luyện</h2>
-              {!content.roster.length && <p className="cp-muted">Thông tin thành viên đang được bổ sung.</p>}
+              <h2>{text("Thành viên và ban huấn luyện", "Members and coaching staff")}</h2>
+              {!content.roster.length && (
+                <p className="cp-muted">
+                  {text("Thông tin thành viên đang được bổ sung.", "Member information is being added.")}
+                </p>
+              )}
               {content.roster.map((item, i) => (
                 <article className="cp-list-row" key={i}>
                   <div>
                     <h3>{item.pageId ? <Link to={`/pages/${item.pageId}`}>{item.name}</Link> : item.name}</h3>
                     <p>
-                      {item.role} · {item.status || "Chưa rõ trạng thái"}
+                      {item.role} · {item.status || text("Chưa rõ trạng thái", "Unknown status")}
                     </p>
                     <p className="cp-meta">
-                      {item.startsOn || "Chưa rõ ngày bắt đầu"} → {item.endsOn || "Chưa ghi nhận kết thúc"}
+                      {item.startsOn || text("Chưa rõ ngày bắt đầu", "Unknown start date")} →{" "}
+                      {item.endsOn || text("Chưa ghi nhận kết thúc", "No end date recorded")}
                     </p>
                   </div>
                   {item.sourceUrl && (
                     <a className="cp-source" href={item.sourceUrl} target="_blank" rel="noreferrer">
-                      Nguồn
+                      {text("Nguồn", "Source")}
                       <StreamIcon name="external" size={12} />
                     </a>
                   )}
@@ -249,19 +280,24 @@ function Profile({ profile }: { profile: CommunityProfile }) {
               <section className="cp-panel">
                 <h2>
                   {isIndividualProfile(profile.kind)
-                    ? "Sự nghiệp & hoạt động"
+                    ? text("Sự nghiệp & hoạt động", "Career & activity")
                     : isOrganization
-                      ? "Lịch sử hoạt động"
-                      : "Lịch sử đội tuyển"}
+                      ? text("Lịch sử hoạt động", "Activity history")
+                      : text("Lịch sử đội tuyển", "Team history")}
                 </h2>
                 {!content.history.length && (
-                  <p className="cp-muted">Các mốc có nguồn đối chiếu sẽ được bổ sung tại đây.</p>
+                  <p className="cp-muted">
+                    {text(
+                      "Các mốc có nguồn đối chiếu sẽ được bổ sung tại đây.",
+                      "Milestones with reference sources will be added here.",
+                    )}
+                  </p>
                 )}
                 <div className="cp-timeline">
                   {content.history.map((item, i) => (
                     <article key={i}>
                       <span className="cp-meta">
-                        {item.startsOn || "Chưa rõ ngày"}
+                        {item.startsOn || text("Chưa rõ ngày", "Unknown date")}
                         {item.endsOn ? ` — ${item.endsOn}` : ""}
                       </span>
                       <h3>
@@ -274,7 +310,7 @@ function Profile({ profile }: { profile: CommunityProfile }) {
                       {item.role && <p>{item.role}</p>}
                       {item.sourceUrl && (
                         <a className="cp-source" href={item.sourceUrl} target="_blank" rel="noreferrer">
-                          Nguồn đối chiếu
+                          {text("Nguồn đối chiếu", "Reference source")}
                           <StreamIcon name="external" size={12} />
                         </a>
                       )}
@@ -286,8 +322,10 @@ function Profile({ profile }: { profile: CommunityProfile }) {
           )}
           {tab === "achievements" && !isOrganization && (
             <section className="cp-panel">
-              <h2>Thành tích và danh hiệu</h2>
-              {!content.achievements.length && <p className="cp-muted">Chưa có thành tích được ghi nhận.</p>}
+              <h2>{text("Thành tích và danh hiệu", "Achievements and titles")}</h2>
+              {!content.achievements.length && (
+                <p className="cp-muted">{text("Chưa có thành tích được ghi nhận.", "No achievements recorded yet.")}</p>
+              )}
               {content.achievements.map((item, i) => (
                 <article className="cp-list-row" key={i}>
                   <span className="cp-placement">{item.placement}</span>
@@ -299,11 +337,11 @@ function Profile({ profile }: { profile: CommunityProfile }) {
                         item.title
                       )}
                     </h3>
-                    <p className="cp-meta">{item.date || "Chưa xác định ngày"}</p>
+                    <p className="cp-meta">{item.date || text("Chưa xác định ngày", "Unknown date")}</p>
                   </div>
                   {item.sourceUrl && (
                     <a className="cp-source" href={item.sourceUrl} target="_blank" rel="noreferrer">
-                      Nguồn
+                      {text("Nguồn", "Source")}
                       <StreamIcon name="external" size={12} />
                     </a>
                   )}
