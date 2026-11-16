@@ -8,14 +8,9 @@ import { Input } from "@aov/ui/components/input"
 import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
 import { errorMessage } from "@/lib/api/errors"
-import { RESOURCES_BASE } from "@/lib/media"
+import { fetchSourceFile, openSourceCollection } from "../files/source-collection-files"
 import { gameModeApi, gameModeKeys, uploadModeImage, type AdminSummary, type ModeGroup } from "./game-mode-api"
-import {
-  importedImageSource,
-  modeContentFromManifest,
-  MODES_MANIFEST,
-  type ModeManifestEntry,
-} from "./game-mode-import"
+import { importedImageSource, modeContentFromManifest, MODES_SOURCE, type ModeManifestEntry } from "./game-mode-import"
 
 const GROUP_LABEL: Record<ModeGroup, string> = { PVP: "PVP", ENTERTAINMENT: "Giải trí" }
 
@@ -63,7 +58,7 @@ export function GameModesPage() {
         actions={
           <>
             <Button variant="outline" disabled={!canWrite} onClick={() => setImporting(true)}>
-              <Download /> Nhập từ resources
+              <Download /> Nhập từ tệp nguồn
             </Button>
             <Button disabled={!canWrite} onClick={() => setCreating(true)}>
               <Plus /> Thêm chế độ
@@ -83,7 +78,7 @@ export function GameModesPage() {
         <p className="type-body text-destructive">{errorMessage(modes.error)}</p>
       ) : modes.data.length === 0 ? (
         <p className="type-body text-muted-foreground">
-          Chưa có chế độ nào. Dùng “Nhập từ resources” để tạo 26 chế độ từ ảnh sảnh đã thu thập.
+          Chưa có chế độ nào. Dùng “Nhập từ tệp nguồn” để tạo 26 chế độ từ ảnh sảnh đã thu thập.
         </p>
       ) : (
         <>
@@ -261,8 +256,8 @@ function CreateModeDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
 }
 
 /**
- * Creates the modes of the lobby manifest that do not exist yet, uploading their cleaned art. Only works while the
- * dev server serves `resources/` under /__resources/.
+ * Creates the modes of the lobby manifest that do not exist yet, uploading their cleaned art. The manifest and the art
+ * come from the `sanh-che-do` source collection through presigned links (ADR-030), so a built Admin can run it too.
  */
 function ImportModesDialog({
   open,
@@ -280,10 +275,13 @@ function ImportModesDialog({
   const [log, setLog] = useState<string[]>([])
   const run = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`${RESOURCES_BASE}${MODES_MANIFEST}`)
-      if (!response.ok) throw new Error("Không đọc được che-do.json. Chạy Admin bằng pnpm dev để có /__resources/.")
-      const { modes } = (await response.json()) as { modes: ModeManifestEntry[] }
+      const source = await openSourceCollection(MODES_SOURCE.collection)
+      const { modes } = await source.json<{ modes: ModeManifestEntry[] }>(MODES_SOURCE.manifest)
       const say = (line: string) => setLog((current) => [...current, line])
+      // Links last ten minutes, which covers the art of every new mode in one run.
+      const arts = await source.links(
+        modes.flatMap((entry) => (!existing.has(entry.code) && entry.art ? [entry.art] : [])),
+      )
       for (const entry of modes) {
         if (existing.has(entry.code)) {
           say(`Bỏ qua ${entry.name}: đã có.`)
@@ -293,15 +291,16 @@ function ImportModesDialog({
         const artSource = importedImageSource(entry.artSource)
         if (entry.art && !artSource) say(`${entry.name}: ảnh chưa có nguồn trong che-do.json, chưa tải.`)
         else if (entry.art && artSource) {
-          const image = await fetch(`${RESOURCES_BASE}che-do-choi/${entry.art}`)
-          if (image.ok) {
+          const link = arts.get(entry.art)
+          const image = link ? await fetchSourceFile(link) : null
+          if (image?.ok) {
             const blob = await image.blob()
             artAssetId = await uploadModeImage(
               new File([blob], `${entry.code}.png`, { type: blob.type || "image/png" }),
               "GAME_MODE_ART",
               artSource,
             )
-          } else say(`${entry.name}: không đọc được ảnh ${entry.art}.`)
+          } else say(`${entry.name}: bộ tệp nguồn ${MODES_SOURCE.collection} chưa có ảnh ${entry.art}, chưa tải.`)
         }
         const created = await gameModeApi.create({
           code: entry.code,
@@ -326,12 +325,12 @@ function ImportModesDialog({
     <Dialog open={open} onOpenChange={(next) => !run.isPending && onOpenChange(next)}>
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nhập chế độ từ resources</DialogTitle>
+          <DialogTitle>Nhập chế độ từ tệp nguồn</DialogTitle>
         </DialogHeader>
         <p className="type-body">
-          Đọc che-do-choi/che-do.json (26 chế độ từ ảnh sảnh), tải ảnh đã gỡ giao diện vào kho ảnh với credit Garena /
-          Liên Quân Mobile và nguồn riêng của từng ảnh (ảnh sảnh gốc, bước xử lý), rồi tạo bản nháp cho chế độ chưa có.
-          Chế độ đã có được giữ nguyên.
+          Đọc che-do.json của bộ tệp nguồn sanh-che-do (26 chế độ từ ảnh sảnh), tải ảnh đã gỡ giao diện vào kho ảnh với
+          credit Garena / Liên Quân Mobile và nguồn riêng của từng ảnh (ảnh sảnh gốc, bước xử lý), rồi tạo bản nháp cho
+          chế độ chưa có. Chế độ đã có được giữ nguyên.
         </p>
         {canPublish && (
           <label className="type-body flex items-center gap-2">

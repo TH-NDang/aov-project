@@ -8,7 +8,7 @@ export interface ImageSource {
   note: string
 }
 
-/** One mode of `resources/Lien-Quan-v3/che-do-choi/che-do.json`. */
+/** One mode of the lobby manifest, `che-do.json` of the `sanh-che-do` source collection. */
 export interface ModeManifestEntry {
   code: string
   name: string
@@ -39,9 +39,17 @@ export interface GuideManifest extends Omit<GuideContent, "traits" | "units" | "
   imageSources?: Record<string, ImageSource>
 }
 
-export const MODES_MANIFEST = "che-do-choi/che-do.json"
-export const GUIDE_FOLDER = "che-do-choi/co-lien-quan/"
-export const GUIDE_MANIFEST = `${GUIDE_FOLDER}du-lieu/bach-khoa-2026-11-08-1503.json`
+/**
+ * Where the importers find their data among the source files (ADR-030). A collection keeps the layout of the old
+ * `resources/Lien-Quan-v3/che-do-choi` folder, so mode art and encyclopedia icons keep the paths the manifests give them.
+ */
+export const MODES_SOURCE = { collection: "sanh-che-do", manifest: "che-do.json" } as const
+export const GUIDE_SOURCE = {
+  collection: "co-lien-quan-2026-11-08-1503",
+  manifest: "co-lien-quan/du-lieu/bach-khoa-2026-11-08-1503.json",
+  /** Icon paths in the manifest are relative to this folder of the collection. */
+  folder: "co-lien-quan/",
+} as const
 
 export function modeContentFromManifest(entry: ModeManifestEntry, artAssetId: string | null): ModeContent {
   return {
@@ -61,7 +69,7 @@ export function modeContentFromManifest(entry: ModeManifestEntry, artAssetId: st
   }
 }
 
-/** Every icon path of the encyclopedia, once, relative to `resources/Lien-Quan-v3/che-do-choi/co-lien-quan/`. */
+/** Every icon path of the encyclopedia, once, relative to {@link GUIDE_SOURCE}.folder. */
 export function guideIconPaths(manifest: GuideManifest) {
   const paths = new Set<string>()
   const add = (path?: string | null) => path && paths.add(path)
