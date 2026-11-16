@@ -111,7 +111,7 @@ function useBuildLabels() {
     items: wikiText(locale, "Trang bị theo thứ tự lên đồ", "Items in buying order"),
     enchantments: wikiText(locale, "Phù hiệu", "Enchantments"),
     arcana: wikiText(locale, "Ngọc", "Arcana"),
-    spell: wikiText(locale, "Phụ trợ", "Spell"),
+    spell: wikiText(locale, "Phụ trợ", "Talent"),
   }
 }
 
