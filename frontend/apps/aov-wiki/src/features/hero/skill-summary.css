@@ -1,0 +1,33 @@
+/* A skill's summary: the first thing to read, set apart from the game's own text by a soft gold ground. */
+.wiki-skill-summary {
+  max-width: 68ch;
+  margin-top: 12px;
+  border-radius: 8px;
+  padding: 10px 12px 12px;
+  background: color-mix(in srgb, var(--aov-wiki-gold) 10%, transparent);
+  color: var(--aov-text);
+}
+.wiki-skill-summary h4,
+.wiki-skill-summary-next {
+  font: var(--wiki-type-meta);
+  margin: 0;
+}
+.wiki-skill-summary h4 {
+  color: var(--aov-wiki-gold);
+}
+.wiki-skill-summary p {
+  font: var(--wiki-type-prose);
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+/* Names the full description only where a summary stands above it, and sits close to the text it names. */
+.wiki-skill-summary-next {
+  margin: 14px 0 -8px;
+  color: var(--aov-muted);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .wiki-skill-summary {
+    animation: public-fade 240ms ease-out both;
+  }
+}

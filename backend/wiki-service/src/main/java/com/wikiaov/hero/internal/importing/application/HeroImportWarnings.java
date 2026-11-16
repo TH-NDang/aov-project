@@ -4,6 +4,7 @@ import com.wikiaov.hero.internal.application.HeroImportRequest.Mode;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroSkillSummaries;
 import java.util.*;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -15,21 +16,31 @@ final class HeroImportWarnings {
         this.json = json;
     }
 
-    List<String> forImport(Mode mode, Map<String, Object> normalized, HeroRevisionView revision, boolean missing) {
+    List<String> forImport(Mode mode, Map<String, Object> original, Map<String, Object> normalized,
+            HeroRevisionView revision, boolean missing) {
         List<String> warnings = new ArrayList<>();
         if (((List<?>) normalized.get("roles")).isEmpty())
             warnings.add("Cần bổ sung trước khi xuất bản: vai trò tướng.");
-        addSkillReviewWarnings(normalized, warnings);
+        addSkillReviewWarnings(original, normalized, warnings);
         addSnapshotWarnings(mode, revision, missing, warnings);
         return warnings;
     }
 
-    private void addSkillReviewWarnings(Map<String, Object> normalized, List<String> warnings) {
+    private void addSkillReviewWarnings(Map<String, Object> original, Map<String, Object> normalized,
+            List<String> warnings) {
+        Map<String, Skill> previous = new HashMap<>();
+        for (var skill : json.convertValue(original.get("skills"), Skill[].class))
+            previous.put(skill.skillKey(), skill);
+
         for (var skill : json.convertValue(normalized.get("skills"), Skill[].class)) {
             for (var text : skill.translations()) {
                 if (text.description() == null || text.description().isBlank())
                     warnings.add("Cần bổ sung trước khi xuất bản: mô tả kỹ năng " + skill.skillKey()
                             + " (" + text.locale() + ").");
+                if (HeroSkillSummaries.outlivedDescription(translation(previous.get(skill.skillKey()), text.locale()),
+                        text))
+                    warnings.add("Cần xem lại tóm tắt kỹ năng " + skill.skillKey() + " (" + text.locale()
+                            + "): mô tả đã đổi, tóm tắt cũ được giữ nguyên.");
             }
             if (skill.effects().stream().filter(effect -> effect.effectType().equals("SOURCE_SNAPSHOT"))
                     .anyMatch(effect -> !HeroImportContent.empty(effect.metadata().get("reviewFlags"))
@@ -37,6 +48,12 @@ final class HeroImportWarnings {
                 warnings.add("Cần kiểm tra nguồn kỹ năng " + skill.skillKey()
                         + ": dữ liệu thu thập còn cảnh báo; không tự suy đoán nội dung bị thiếu.");
         }
+    }
+
+    private static SkillTranslation translation(Skill skill, String locale) {
+        return skill == null
+                ? null
+                : skill.translations().stream().filter(text -> text.locale().equals(locale)).findFirst().orElse(null);
     }
 
     private void addSnapshotWarnings(Mode mode, HeroRevisionView revision, boolean missing, List<String> warnings) {

@@ -72,7 +72,8 @@ const contentSchema = z.object({
           formKey: nullableText,
           displayOrder: number,
           iconAssetId: nullableText,
-          translations: z.array(translation.extend({ description: text })),
+          // Without the summary here a restored copy would drop it and the next save would erase it on the server.
+          translations: z.array(translation.extend({ description: text, summary: nullableText.optional() })),
           effects: z.array(z.object({ effectType: text, metadata: z.record(text, z.unknown()) })),
           // A label may be empty while it is being typed; the server checks it on save.
           stateIcons: z.array(z.object({ assetId: text, label: z.string() })).optional(),

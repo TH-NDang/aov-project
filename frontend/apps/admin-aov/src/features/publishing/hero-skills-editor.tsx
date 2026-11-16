@@ -29,6 +29,7 @@ import { addSkillVariant, unusedSkillImages } from "./skill-variants"
 import { applyCostStyle, sharedCostStyle } from "./skill-cost-fields"
 import { SectionSources } from "./fields"
 import { SkillSettings } from "./skill-settings"
+import { SkillSummaryField, summaryValue } from "./skill-summary-field"
 import { skillLabel, skillSlot, skillVariantLabel } from "./hero-skills"
 import type { Skill, Skills } from "./types"
 
@@ -100,9 +101,10 @@ export function HeroSkillsEditor({
       ...value,
       skills: value.skills.map((skill, position) => (position === index ? { ...skill, ...change } : skill)),
     })
-  function updateText(field: "name" | "description", text: string) {
+  function updateText(field: "name" | "description" | "summary", text: string) {
     if (!selected) return
-    const row = { ...(translation ?? { locale, name: "", description: "" }), [field]: text }
+    const written = field === "summary" ? summaryValue(text) : text
+    const row = { ...(translation ?? { locale, name: "", description: "" }), [field]: written }
     patch({
       translations: translation
         ? selected.translations.map((item) => (item.locale === locale ? row : item))
@@ -333,6 +335,12 @@ export function HeroSkillsEditor({
                   />
                 </div>
               </div>
+              {/* The summary sits right above the full description it is written from. */}
+              <SkillSummaryField
+                key={`summary-${locale}`}
+                value={translation?.summary ?? ""}
+                onChange={(text) => updateText("summary", text)}
+              />
               <AdminDescriptionField
                 key={locale}
                 label="Mô tả"

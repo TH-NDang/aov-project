@@ -752,6 +752,7 @@ Có thể hỗ trợ:
 - displayOrder;
 - icon MediaAsset;
 - localized name/description;
+- localized summary tùy chọn (mục "Tóm tắt dễ hiểu của kỹ năng");
 - structured values/effects khi triển khai sâu hơn.
 
 ### 7.7 Skins
@@ -2433,6 +2434,38 @@ Admin không cho gõ tay khóa kỹ năng và khóa trang phục. Kỹ năng m�
 thành `skill-<slot>-<biến thể>` và không trùng kỹ năng khác. Trang phục mới lấy khóa
 `<mã tướng>-<tên tiếng Việt không dấu>-<số>`, phần mã tướng đọc từ các khóa đã có. Khóa đã lưu lên server
 giữ nguyên vì mô tả, video, giá và ảnh thư viện tham chiếu nó.
+
+### Tóm tắt dễ hiểu của kỹ năng (13/11/2026)
+
+Mô tả kỹ năng là nguyên văn của game: dài, nhiều con số và từ riêng. Mỗi bản dịch của kỹ năng có thêm **tóm tắt**
+(`summary`) tùy chọn: một đoạn ngắn nói chiêu làm gì và điều cần nhớ khi dùng, để người mới đọc là hiểu. Mô tả đầy đủ
+không đổi và vẫn là dữ liệu gốc; tóm tắt là nội dung biên tập viết thêm, không thay mô tả.
+
+- Tóm tắt theo ngôn ngữ như tên và mô tả; mỗi biến thể của kỹ năng có tóm tắt riêng. Chưa có tóm tắt thì để trống; dữ
+  liệu cũ đọc như chưa có.
+- Văn bản thường, một đoạn, tối đa 300 ký tự, không xuống dòng. Khoảng trắng đầu cuối được bỏ; chuỗi rỗng lưu như chưa
+  có. Sai trả 422 `HERO_INVALID_CONTENT`.
+- Tóm tắt đi theo revision như mọi trường snapshot: chỉ sửa trong bản nháp, bản đã xuất bản bất biến. Không bắt buộc
+  khi xuất bản. Thêm hoặc sửa tóm tắt là sửa nội dung, không phải thay đổi gameplay: không ghi change set, không đổi
+  patch áp dụng.
+- Quy tắc viết: một đến hai câu, nên không quá 200 ký tự. Câu đầu nói chiêu làm gì: hành động, loại sát thương, hiệu
+  ứng chính (khống chế, lướt, hồi máu, lá chắn). Câu sau nói điều kiện đáng nhớ có trong mô tả gốc. Không chép dãy số
+  trừ khi con số là điểm chính; dùng từ thống nhất với kho thuật ngữ, không viết tắt; lược tên tướng và gọi chiêu khác
+  theo số; không thêm lời khuyên chiến thuật hay nhận định không có trong mô tả gốc. Mô tả gốc thiếu hoặc mơ hồ thì chỉ
+  viết phần chắc chắn và chờ người duyệt.
+- Thời gian trong tóm tắt viết sao cho chỉ hiểu được một cách. Thời hạn để làm tiếp một việc viết “có N giây để …”
+  (“Sau lần đầu, có 5 giây để dùng lần 2.”), không viết “có thể … trong vòng N giây” vì dễ đọc thành phải chờ N giây.
+  Thời lượng của hiệu ứng đặt ngay sau hiệu ứng đó (“làm chậm trong 1.5 giây”, “lá chắn kéo dài 3 giây”). Thời gian
+  chờ viết “mỗi N giây chỉ … một lần” hoặc “hồi chiêu N giây”.
+- Admin: ô "Tóm tắt" nằm ngay trên mô tả đầy đủ trong trình sửa kỹ năng, có bộ đếm ký tự; khi đọc, tóm tắt hiện trên mô
+  tả. So sánh phiên bản hiện thay đổi của tóm tắt theo từng ngôn ngữ. Tóm tắt được tính vào tiến độ dịch như các
+  trường tùy chọn khác.
+- Wiki: trang tướng hiện tóm tắt ngay trên mô tả đầy đủ của kỹ năng; không có tóm tắt thì trang hiện như trước. Tên
+  trong game xuất hiện trong tóm tắt được nhận diện như ở mô tả. Tóm tắt đi cùng bản dịch được chọn cho kỹ năng, không
+  lấy riêng từ ngôn ngữ khác.
+- Import: dữ liệu nhập là chữ của game nên thường không có tóm tắt. Khi nhập ghi đè mảng kỹ năng, tóm tắt đang có được
+  giữ theo `skillKey` và ngôn ngữ nếu dữ liệu nhập không mang tóm tắt; nếu mô tả của bản dịch đó đổi, preview cảnh báo
+  cần xem lại tóm tắt.
 
 ### Tham chiếu trực tiếp kỹ năng (2026-10-20)
 

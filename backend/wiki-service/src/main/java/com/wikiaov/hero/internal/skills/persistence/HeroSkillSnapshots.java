@@ -67,9 +67,8 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
         identities.flush();
         snapshots.saveAndFlush(new SkillSnapshotRow(revisionId, heroId, skill.skillKey(), skill.kind().name(),
                 skill.formKey(), skill.displayOrder(), skill.iconAssetId()));
-        translations.saveAll(skill.translations().stream()
-                .map(t -> new SkillTranslationRow(revisionId, skill.skillKey(), t.locale(), t.name(), t.description()))
-                .toList());
+        translations.saveAll(skill.translations().stream().map(t -> new SkillTranslationRow(revisionId,
+                skill.skillKey(), t.locale(), t.name(), t.description(), t.summary())).toList());
         for (int n = 0; n < skill.effects().size(); n++) {
             var effect = skill.effects().get(n);
             effects.save(new SkillEffectRow(revisionId, skill.skillKey(), n, effect.effectType(), effect.metadata()));
@@ -160,7 +159,9 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
                     skill.getSkillKey(), SkillKind.valueOf(skill.getKind()), skill.getFormKey(),
                     skill.getDisplayOrder(), skill.getIconAssetId(),
                     skillTexts.getOrDefault(skill.getSkillKey(), List.of()).stream()
-                            .map(t -> new SkillTranslation(t.getLocale(), t.getName(), t.getDescription())).toList(),
+                            .map(t -> new SkillTranslation(t.getLocale(), t.getName(), t.getDescription(),
+                                    t.getSummary()))
+                            .toList(),
                     effectRows.getOrDefault(skill.getSkillKey(), List.of()).stream()
                             .map(effect -> new Effect(effect.getEffectType(), effect.getMetadata())).toList(),
                     iconRows.getOrDefault(skill.getSkillKey(), List.of()).stream()

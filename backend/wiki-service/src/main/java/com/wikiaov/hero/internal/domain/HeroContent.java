@@ -130,13 +130,23 @@ public final class HeroContent {
     ) {
     }
 
+    /**
+     * The summary is a short plain paragraph an editor writes beside the game's own description, for readers new to the
+     * game. A blank one means none has been written.
+     */
     public record SkillTranslation(
             @NotBlank @Size(max = 16) String locale,
             @NotBlank @Size(max = 120) String name,
-            @NotNull @NotBlank(groups = Publication.class) @Size(max = 100000) String description
+            @NotNull @NotBlank(groups = Publication.class) @Size(max = 100000) String description,
+            @Size(max = 300) String summary
     ) {
         public SkillTranslation {
             description = description == null ? "" : description;
+            summary = summary == null || summary.isBlank() ? null : summary.strip();
+        }
+
+        public SkillTranslation(String locale, String name, String description) {
+            this(locale, name, description, null);
         }
     }
 

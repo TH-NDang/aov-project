@@ -130,6 +130,39 @@ class HeroImportsTest {
     }
 
     @Test
+    void overwritingSkillsKeepsTheirSummariesAndAsksToReviewTheOnesWhoseDescriptionChanged() {
+        sections.put(HeroSection.SKILLS, new Skills(List.of(
+                summarized("skill-1", "Mô tả cũ", "Lướt tới và hất tung mục tiêu."),
+                summarized("skill-2", "Mô tả giữ nguyên", "Tạo lá chắn cho đồng minh.")), List.of()));
+        var imported = List.of(summarized("skill-1", "Mô tả mới", null),
+                summarized("skill-2", "Mô tả giữ nguyên", null));
+
+        var result = imports.preview(request(Mode.CORRECTION, Map.of("skills", imported),
+                Map.of("skills", Policy.OVERWRITE), revisionId, 7L));
+        var skills = json.convertValue(result.after().get("skills"), Skill[].class);
+
+        assertThat(skills).extracting(skill -> skill.translations().getFirst().description())
+                .containsExactly("Mô tả mới", "Mô tả giữ nguyên");
+        assertThat(skills).extracting(skill -> skill.translations().getFirst().summary())
+                .containsExactly("Lướt tới và hất tung mục tiêu.", "Tạo lá chắn cho đồng minh.");
+        assertThat(result.warnings()).containsExactly(
+                "Cần xem lại tóm tắt kỹ năng skill-1 (vi-VN): mô tả đã đổi, tóm tắt cũ được giữ nguyên.");
+    }
+
+    @Test
+    void importingTheSameSkillTextAgainLeavesSummarizedSkillsUnchanged() {
+        sections.put(HeroSection.SKILLS, new Skills(
+                List.of(summarized("skill-1", "Mô tả", "Lướt tới và hất tung mục tiêu.")), List.of()));
+
+        var result = imports.preview(request(Mode.CORRECTION,
+                Map.of("skills", List.of(summarized("skill-1", "Mô tả", null))),
+                Map.of("skills", Policy.OVERWRITE), revisionId, 7L));
+
+        assertThat(result.changed()).isFalse();
+        assertThat(result.warnings()).isEmpty();
+    }
+
+    @Test
     void missingBaselineSkipsCompleteProfileValidationButKeepsWarningOrder() {
         when(authoring.revisions(heroId)).thenReturn(List.of());
         var skill = new Skill("skill-1", SkillKind.ACTIVE, null, 0, null,
@@ -239,6 +272,11 @@ class HeroImportsTest {
     private HeroRevisionView revision(String state, Cause cause, UUID patch) {
         return new HeroRevisionView(revisionId, heroId, rulesetId, 1L, state, 7L, 1L, null, cause, null, patch,
                 Map.of());
+    }
+
+    private Skill summarized(String key, String description, String summary) {
+        return new Skill(key, SkillKind.ACTIVE, null, key.equals("skill-1") ? 0 : 1, null,
+                List.of(new SkillTranslation("vi-VN", "Chiêu", description, summary)), List.of());
     }
 
     private Skin skin(String key, UUID artwork) {

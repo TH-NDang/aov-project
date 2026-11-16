@@ -27,6 +27,8 @@ public class SkillTranslationRow extends AssignedIdentifierEntity<SkillTranslati
 
     private String description;
 
+    private String summary;
+
     @Override
     public Key getId() {
         return new Key(skillSetRevisionId, skillKey, locale);

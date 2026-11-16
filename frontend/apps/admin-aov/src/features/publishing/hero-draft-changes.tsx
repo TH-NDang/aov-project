@@ -8,7 +8,7 @@ import { comparisonFieldLabels, comparisonImages, comparisonValue } from "./hero
 import { HeroAsset } from "./hero-asset"
 import { comparableSection, sameHeroSection, type HeroWorkingCopy } from "./hero-working-copy"
 import type { HeroDraftChangeSet } from "./publishing-api"
-import { skillFieldLabel } from "./skill-field-labels"
+import { SKILL_FIELD_LABELS, skillFieldLabel } from "./skill-field-labels"
 import { SkillRankComparison } from "./skill-rank-table"
 import { compareSkillRanks } from "./skill-rank-values"
 import { statReadingChange, type StatNumbers } from "./stat-reading"
@@ -53,8 +53,16 @@ function itemLabel(item: unknown, locale: string, index: number): string {
   return `Mục ${index + 1}`
 }
 
-/** Match identified rows before comparing fields so removing a skill does not rename the following ones. */
-export function changedRows(before: unknown, after: unknown, locale: string): Row[] {
+/**
+ * Match identified rows before comparing fields so removing a skill does not rename the following ones. `labels` names
+ * the fields a section reads differently, such as a skill's summary beside a hero's introduction.
+ */
+export function changedRows(
+  before: unknown,
+  after: unknown,
+  locale: string,
+  labels: Record<string, string> = {},
+): Row[] {
   const rows: Row[] = []
   function visit(left: unknown, right: unknown, field: string, path: string[]) {
     if (sameDraftValue(left, right) || (left == null && right == null)) return
@@ -77,7 +85,8 @@ export function changedRows(before: unknown, after: unknown, locale: string): Ro
           })
       }
       if (keys.size) {
-        for (const key of keys) visit(a[key], b[key], key, [...path, fieldLabels[key] ?? skillFieldLabel(key)])
+        for (const key of keys)
+          visit(a[key], b[key], key, [...path, labels[key] ?? fieldLabels[key] ?? skillFieldLabel(key)])
         return
       }
     }
@@ -133,6 +142,7 @@ function sectionRows(before: SectionValues, after: SectionValues, locale: string
       comparableSection(section, before[section] as never),
       comparableSection(section, after[section] as never),
       locale,
+      section === "SKILLS" ? { summary: SKILL_FIELD_LABELS.summary } : undefined,
     ),
   }))
 }

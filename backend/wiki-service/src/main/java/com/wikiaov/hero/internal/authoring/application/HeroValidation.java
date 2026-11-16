@@ -90,6 +90,7 @@ public class HeroValidation {
         for (var skill : skills.skills()) {
             unique(skill.translations().stream().map(SkillTranslation::locale).toList());
             skill.translations().forEach(text -> locale(text.locale()));
+            skill.translations().forEach(HeroValidation::summary);
 
             asset(skill.iconAssetId(), MediaSemanticType.HERO_SKILL_ICON);
             stateIcons(skill);
@@ -113,6 +114,12 @@ public class HeroValidation {
             unique(trait.translations().stream().map(TraitTranslation::locale).toList());
             trait.translations().forEach(text -> locale(text.locale()));
         }
+    }
+
+    /** A summary reads as one short paragraph wherever it is shown, so it holds no line break. */
+    private static void summary(SkillTranslation text) {
+        if (text.summary() != null && text.summary().lines().count() > 1)
+            throw invalid("A skill summary is a single paragraph without line breaks.");
     }
 
     /** Each state names a different look of the same skill, so labels and pictures never repeat, the main icon included. */

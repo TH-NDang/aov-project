@@ -82,7 +82,8 @@ export interface Skill {
   formKey: string | null
   displayOrder: number
   iconAssetId: string | null
-  translations: (Translation & { description: string })[]
+  /** `summary` is the short plain text editors write beside the game's description; missing or null means none. */
+  translations: (Translation & { description: string; summary?: string | null })[]
   effects: { effectType: string; metadata: Record<string, unknown> }[]
   /** Read as empty when missing; content saved before states existed has none. */
   stateIcons?: SkillStateIcon[]

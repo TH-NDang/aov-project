@@ -6,7 +6,7 @@ import { languageOptions } from "../users/profile-preference-picker"
 import { HeroLanguageIcon } from "./hero-language-picker"
 import {
   missingTranslationFields,
-  translationFields,
+  translationFieldLabel,
   type TranslatableSection,
   type TranslationField,
   type TranslationTarget,
@@ -46,7 +46,7 @@ export function HeroTranslationNotice({
           size="sm"
           disabled={disabled}
           className="h-7 shrink-0 gap-1.5 rounded-full bg-amber-500/10 px-2 text-amber-700 hover:bg-amber-500/15 dark:text-amber-400"
-          aria-label={`Xem ${missing.length} mục chưa dịch: ${fields.map((field) => translationFields[field]).join(", ")}`}
+          aria-label={`Xem ${missing.length} mục chưa dịch: ${fields.map((field) => translationFieldLabel(section, field)).join(", ")}`}
         >
           <Languages className="size-3.5" />
           <span className="type-label">
@@ -76,7 +76,7 @@ export function HeroTranslationNotice({
           {missing.map((entry) => (
             <div key={entry.field} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
-                <p className="type-body">{translationFields[entry.field]}</p>
+                <p className="type-body">{translationFieldLabel(section, entry.field)}</p>
                 <p className="type-meta mt-0.5 leading-5">
                   Đang hiển thị {translationLanguageLabel(entry.sourceLocale)}.
                 </p>
@@ -88,7 +88,7 @@ export function HeroTranslationNotice({
                   size="sm"
                   disabled={disabled}
                   className="shrink-0"
-                  aria-label={`Dịch phần này: ${translationFields[entry.field]}`}
+                  aria-label={`Dịch phần này: ${translationFieldLabel(section, entry.field)}`}
                   onClick={() => {
                     navigating.current = true
                     setOpen(false)

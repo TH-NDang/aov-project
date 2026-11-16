@@ -225,7 +225,8 @@ export function comparisonPathLabels(
       if (key === "effects" && parts[index + 1] === "SOURCE_SNAPSHOT") continue
       if (key === "display" && index === parts.length - 1) continue
     }
-    let label = comparisonFieldLabels[key] ?? key
+    // Within skills, `summary` is the skill's short summary, not the hero's introduction.
+    let label = (section === "skills" && key === "summary" ? "Tóm tắt" : comparisonFieldLabels[key]) ?? key
     if (index > 0 && ["skills", "skins"].includes(parts[index - 1])) {
       const keyField = parts[index - 1] === "skills" ? "skillKey" : "skinKey"
       const row = rows.find((item) => item[keyField] === key)

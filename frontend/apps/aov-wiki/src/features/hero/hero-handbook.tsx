@@ -23,6 +23,7 @@ import { HeroEvaluation } from "./hero-evaluation"
 import { HeroSectionNav } from "./hero-section-nav"
 import { WikiIcon } from "../../components/wiki-icon"
 import { SkillVideos } from "../videos/skill-videos"
+import { SkillSummary, hasSkillSummary } from "./skill-summary"
 import { SkillFormSwitch, SkillStateToggle, SkillVariantDots } from "@aov/ui/components/skill-kit"
 import { groupSkillKit, skillCooldownRange, skillFormName } from "@aov/ui/lib/skill-kit"
 
@@ -242,6 +243,9 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
             revision={hero.revisionId}
             fields={[
               { label: text("Mô tả chiêu", "Ability description"), value: active.description ?? "" },
+              ...(hasSkillSummary(active.summary)
+                ? [{ label: text("Tóm tắt chiêu", "Ability summary"), value: active.summary }]
+                : []),
               { label: text("Tên kỹ năng", "Ability name"), value: active.name ?? "" },
               ...rows.map((row) => ({ label: row.label!, value: row.display_values!.join(" / ") })),
             ]}
@@ -285,6 +289,13 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
           skillKey={active.skillKey}
           videos={videos.bySkill.get(active.skillKey) ?? []}
           patchCode={videos.patchCode}
+        />
+        <SkillSummary
+          key={`summary-${active.skillKey}`}
+          summary={active.summary}
+          locale={locale}
+          render={rich}
+          labelDescription={!!active.description}
         />
         {active.description ? (
           <div className="wiki-skill-prose" key={active.skillKey}>
