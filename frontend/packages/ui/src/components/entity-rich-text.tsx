@@ -2,7 +2,7 @@ import * as React from "react"
 import { ArrowUpRight, BookOpen, Swords, UserRound, Users, Globe2, X, Gem, Shield, Zap } from "lucide-react"
 import {
   createEntityIndex,
-  entityKindLabels,
+  entityKindLabel,
   parseRichText,
   resolveEntityRoute,
   safeLinkUrl,
@@ -37,7 +37,6 @@ export interface EntityRichTextProps {
 }
 
 const emptyEntities: EntityReference[] = []
-const kindLabels = entityKindLabels
 const hexColor = /^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i
 
 export type EntityIconResolver = ((entity: EntityReference) => Promise<string | null | undefined>) & {
@@ -165,15 +164,24 @@ export function EntityReferenceArtwork(props: ReferenceIconProps) {
 
 export function skillReferenceContext(entity: EntityReference, locale: string, fallbackLocale = "vi-VN") {
   if (entity.kind !== "skill" || !validSkillReference(entity)) return undefined
+  const english = locale.startsWith("en")
   const owner = referenceTranslation(entity.owner!, locale, fallbackLocale)
   const slot =
     Number.isInteger(entity.sourceSlot) && entity.sourceSlot! >= 0
       ? entity.sourceSlot === 0
-        ? "Nội tại"
-        : `Chiêu ${entity.sourceSlot}`
+        ? english
+          ? "Passive"
+          : "Nội tại"
+        : english
+          ? `Ability ${entity.sourceSlot}`
+          : `Chiêu ${entity.sourceSlot}`
       : undefined
   const variant =
-    Number.isInteger(entity.variantNo) && entity.variantNo! > 0 ? `Biến thể ${entity.variantNo}` : undefined
+    Number.isInteger(entity.variantNo) && entity.variantNo! > 0
+      ? english
+        ? `Form ${entity.variantNo}`
+        : `Biến thể ${entity.variantNo}`
+      : undefined
   return {
     ownerName: owner?.name ?? entity.heroId!,
     ownerLocale: owner?.locale,
@@ -183,28 +191,28 @@ export function skillReferenceContext(entity: EntityReference, locale: string, f
   }
 }
 
-function renderDescriptionNodes(nodes: RichTextNode[]): React.ReactNode {
+function renderDescriptionNodes(nodes: RichTextNode[], locale: string): React.ReactNode {
   return nodes.map((node, position) => {
-    if (node.type === "exampleTable") return <ExampleTable rows={node.rows} key={position} />
+    if (node.type === "exampleTable") return <ExampleTable rows={node.rows} locale={locale} key={position} />
     if (node.type === "paragraph")
       return (
-        <RichParagraph style={node.style} key={position}>
-          {renderDescriptionNodes(node.children)}
+        <RichParagraph style={node.style} locale={locale} key={position}>
+          {renderDescriptionNodes(node.children, locale)}
         </RichParagraph>
       )
     if (node.type === "text") return <React.Fragment key={position}>{node.text}</React.Fragment>
     if (node.type === "reference") return <React.Fragment key={position}>{node.label}</React.Fragment>
-    if (node.type === "strong") return <strong key={position}>{renderDescriptionNodes(node.children)}</strong>
-    if (node.type === "emphasis") return <em key={position}>{renderDescriptionNodes(node.children)}</em>
+    if (node.type === "strong") return <strong key={position}>{renderDescriptionNodes(node.children, locale)}</strong>
+    if (node.type === "emphasis") return <em key={position}>{renderDescriptionNodes(node.children, locale)}</em>
     if (node.type === "muted")
       return (
         <span key={position} className="text-muted-foreground">
-          {renderDescriptionNodes(node.children)}
+          {renderDescriptionNodes(node.children, locale)}
         </span>
       )
     return (
       <span key={position} style={hexColor.test(node.color) ? { color: node.color } : undefined}>
-        {renderDescriptionNodes(node.children)}
+        {renderDescriptionNodes(node.children, locale)}
       </span>
     )
   })
@@ -265,18 +273,24 @@ export function EntityReferencePopover({
       if (active !== trigger.current && !content.current?.contains(active ?? null)) setOpen(false)
     }, 180)
   }
-  const matched = actualLocale ?? referenceTranslation(entity, locale, fallbackLocale)?.locale ?? locale
+  // A reference nobody could resolve carries only a placeholder note, written in both languages.
+  const matched =
+    (entity.unresolved ? undefined : actualLocale) ??
+    referenceTranslation(entity, locale, fallbackLocale)?.locale ??
+    locale
   const skill = skillReferenceContext(entity, locale, matched)
   const translation = Array.isArray(entity.translations)
     ? entity.translations.find((entry) => entry.locale === matched)
     : undefined
-  const description = translation?.description || "Chưa có mô tả cho mục này."
+  const english = locale.startsWith("en")
+  const description =
+    translation?.description || (english ? "No description for this entry yet." : "Chưa có mô tả cho mục này.")
   const descriptionNodes = React.useMemo(
     () => (open ? parseRichText(description, index, { autoRecognize: false }) : []),
     [open, description, index],
   )
   const name = translation?.name || label || entity.id
-  const kind = kindLabels[entity.kind] || kindLabels.term
+  const kind = entityKindLabel(entity.kind, locale)
   const route = safeLinkUrl(resolveEntityRoute(entity, context, locale))
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -346,7 +360,7 @@ export function EntityReferencePopover({
           </div>
           <button
             type="button"
-            aria-label={`Đóng thông tin ${name}`}
+            aria-label={english ? `Close ${name}` : `Đóng thông tin ${name}`}
             className="-mr-2 -mt-2 flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
             onClick={() => setOpen(false)}
           >
@@ -355,18 +369,22 @@ export function EntityReferencePopover({
         </div>
         <div
           role="region"
-          aria-label={`Mô tả ${name}`}
+          aria-label={english ? `About ${name}` : `Mô tả ${name}`}
           tabIndex={0}
           className="max-h-64 min-h-12 space-y-3 overflow-y-auto overscroll-contain p-4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
         >
           {skill && entity.iconSource === "LIBRARY" && (
-            <div className="text-xs text-muted-foreground">Ảnh tham khảo từ thư viện kỹ năng</div>
+            <div className="text-xs text-muted-foreground">
+              {english ? "Reference picture from the ability library" : "Ảnh tham khảo từ thư viện kỹ năng"}
+            </div>
           )}
           {matched.toLowerCase() !== locale.toLowerCase() && (
-            <div className="text-xs text-muted-foreground">Ngôn ngữ dự phòng: {matched}</div>
+            <div className="text-xs text-muted-foreground">
+              {english ? "Shown in" : "Ngôn ngữ dự phòng:"} {matched}
+            </div>
           )}
           <p id={descriptionId} className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-            {renderDescriptionNodes(descriptionNodes)}
+            {renderDescriptionNodes(descriptionNodes, locale)}
           </p>
         </div>
         {route && (
@@ -375,7 +393,7 @@ export function EntityReferencePopover({
               href={route}
               className="flex min-h-10 items-center justify-between gap-3 rounded-md border px-3 text-sm font-medium hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
             >
-              Mở trang {name}
+              {english ? "Open" : "Mở trang"} {name}
               <ArrowUpRight className="size-4 shrink-0" aria-hidden="true" />
             </a>
           </div>
@@ -404,7 +422,7 @@ function EntityMention({
 }) {
   const entity = node.entity
   const skill = skillReferenceContext(entity, locale, node.actualLocale)
-  const kind = kindLabels[entity.kind] || kindLabels.term
+  const kind = entityKindLabel(entity.kind, locale)
   const color = explicitColor ?? entity.display?.color
   const validColor = typeof color === "string" && hexColor.test(color) ? color : defaultEntityColor(entity)
   const style: React.CSSProperties = {
@@ -483,10 +501,10 @@ export function EntityRichText({
   )
   const renderNodes = (items: RichTextNode[], explicitColor?: string): React.ReactNode =>
     items.map((node, position) => {
-      if (node.type === "exampleTable") return <ExampleTable rows={node.rows} key={position} />
+      if (node.type === "exampleTable") return <ExampleTable rows={node.rows} locale={locale} key={position} />
       if (node.type === "paragraph")
         return (
-          <RichParagraph style={node.style} key={position}>
+          <RichParagraph style={node.style} locale={locale} key={position}>
             {renderNodes(node.children, explicitColor)}
           </RichParagraph>
         )

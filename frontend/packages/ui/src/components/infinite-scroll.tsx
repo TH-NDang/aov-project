@@ -9,6 +9,8 @@ interface InfiniteScrollProps {
     fetchNextPage: () => Promise<unknown>
   }
   label: string
+  /** Text of the button that loads the next part again after a failure. */
+  retryLabel?: string
   enabled?: boolean
   rootRef?: RefObject<HTMLElement | null>
 }
@@ -31,7 +33,13 @@ function scrollParent(element: HTMLElement): HTMLElement | null {
  * Loads the next part of a list as the reader nears its end. Place it right after the last row, inside the box that
  * scrolls. Takes an infinite query, or `useRevealedRows().loader` when the rows are already in memory.
  */
-export function InfiniteScroll({ query, label, enabled = true, rootRef }: InfiniteScrollProps) {
+export function InfiniteScroll({
+  query,
+  label,
+  retryLabel = "Tải lại phần tiếp theo",
+  enabled = true,
+  rootRef,
+}: InfiniteScrollProps) {
   const sentinel = useRef<HTMLDivElement>(null)
   const { hasNextPage, isFetching, isError, fetchNextPage } = query
   useEffect(() => {
@@ -81,7 +89,7 @@ export function InfiniteScroll({ query, label, enabled = true, rootRef }: Infini
             className="text-xs text-primary underline-offset-2 hover:underline"
             onClick={() => void fetchNextPage().catch(() => undefined)}
           >
-            Tải lại phần tiếp theo
+            {retryLabel}
           </button>
         )
       )}

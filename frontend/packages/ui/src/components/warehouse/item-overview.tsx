@@ -37,7 +37,7 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
   const { content } = entry
   const text = warehouseText(content.translations, locale)
   const language = text?.locale ?? locale
-  const reading = itemReaderContent(content, text)
+  const reading = itemReaderContent(content, text, locale)
   const hasEffects = reading.passives.length > 0 || reading.notes.length > 0
   const upgrades = relatedItems.filter(
     (item) =>
@@ -56,7 +56,7 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
       relatedItems.filter((item) => !listed.has(item.id)),
       (item) => {
         const itemText = warehouseText(item.content.translations, locale)
-        return itemProfile(itemReaderContent(item.content, itemText), {
+        return itemProfile(itemReaderContent(item.content, itemText, locale), {
           summary: itemText?.summary,
           category: item.content.categoryCode,
         })
@@ -72,10 +72,15 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
             <h3 className="type-section-title">{t("Chỉ số", "Stats")}</h3>
             {pencil?.("stats")}
           </div>
-          {!reading.stats.length && <p className="type-meta">Chưa có chỉ số.</p>}
+          {!reading.stats.length && <p className="type-meta">{t("Chưa có chỉ số.", "No stats yet.")}</p>}
           <ItemStatList stats={reading.stats} locale={locale} />
           {pencil && !content.stats.length && reading.stats.length > 0 && (
-            <p className="type-meta">Đang đọc từ mô tả, chưa lưu thành chỉ số có cấu trúc.</p>
+            <p className="type-meta">
+              {t(
+                "Đang đọc từ mô tả, chưa lưu thành chỉ số có cấu trúc.",
+                "Read from the description; not saved as structured stats yet.",
+              )}
+            </p>
           )}
         </section>
       )}
@@ -101,7 +106,9 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
             <h3 className="type-section-title">{t("Vị trí trong shop", "Shop positions")}</h3>
             {pencil?.("positions")}
           </div>
-          {!content.shopPositions.length && <p className="type-meta">Chưa xếp vị trí.</p>}
+          {!content.shopPositions.length && (
+            <p className="type-meta">{t("Chưa xếp vị trí.", "No shop position yet.")}</p>
+          )}
           <ul className="flex flex-wrap gap-2">
             {content.shopPositions.map((position, i) => {
               const category = categories.find((group) => group.code === position.categoryCode)
@@ -109,11 +116,15 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
               return (
                 <li key={i} className="flex flex-wrap items-center gap-1.5 rounded-md bg-muted/50 px-2 py-1 text-sm">
                   <ItemCategoryIcon category={category} />
-                  <span>{groupName || position.categoryCode || "Chưa xếp nhóm"}</span>
+                  <span>{groupName || position.categoryCode || t("Chưa xếp nhóm", "No category yet")}</span>
                   <span className="text-muted-foreground">
                     {[
-                      position.column === null ? "Chưa xếp cột" : `${t("Cột", "Column")} ${position.column + 1}`,
-                      position.row === null ? "Chưa xếp hàng" : `${t("Hàng", "Row")} ${position.row + 1}`,
+                      position.column === null
+                        ? t("Chưa xếp cột", "No column yet")
+                        : `${t("Cột", "Column")} ${position.column + 1}`,
+                      position.row === null
+                        ? t("Chưa xếp hàng", "No row yet")
+                        : `${t("Hàng", "Row")} ${position.row + 1}`,
                       position.variant && (text?.variantLabels?.[position.variant] || position.variant),
                     ]
                       .filter(Boolean)

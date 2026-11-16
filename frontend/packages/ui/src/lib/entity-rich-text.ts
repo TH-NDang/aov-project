@@ -13,6 +13,24 @@ export const entityKindLabels = {
   term: "Thuật ngữ",
 } as const
 export type EntityKind = keyof typeof entityKindLabels
+const entityKindEnglish: Record<EntityKind, string> = {
+  hero: "Hero",
+  skill: "Ability",
+  item: "Item",
+  enchantment: "Enchantment",
+  arcana: "Arcana",
+  spell: "Talent",
+  team: "Team",
+  player: "Player",
+  country: "Country / region",
+  term: "Term",
+}
+
+/** What kind of thing a reference is, in the reader's language. Kinds this version does not know read as terms. */
+export function entityKindLabel(kind: string, locale = "vi-VN") {
+  const known = (Object.hasOwn(entityKindLabels, kind) ? kind : "term") as EntityKind
+  return locale.startsWith("en") ? entityKindEnglish[known] : entityKindLabels[known]
+}
 
 /**
  * What text may recognize by itself. Game text only names the game, where a number like "100%" must never become a team;
@@ -713,6 +731,12 @@ export function parseRichText(
                   name: label,
                   aliases: [],
                   description: "Chưa có thông tin công khai cho tham chiếu này.",
+                },
+                {
+                  locale: "en-US",
+                  name: label,
+                  aliases: [],
+                  description: "There is no public information for this reference yet.",
                 },
               ],
             },

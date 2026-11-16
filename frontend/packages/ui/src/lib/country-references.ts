@@ -22,25 +22,38 @@ export function countryReferenceFlag(code: string) {
   return Object.hasOwn(flags, code) ? flags[code] : undefined
 }
 
-const countries: [string, string, string[]][] = [
-  ["VN", "Việt Nam", ["Vietnam", "Viet Nam", "VN"]],
-  ["TH", "Thái Lan", ["Thailand", "Thai Lan", "TH"]],
-  ["TW", "Đài Loan", ["Taiwan", "Dai Loan", "TW"]],
-  ["HK", "Hồng Kông", ["Hong Kong", "Hongkong", "HK"]],
-  ["MO", "Ma Cao", ["Macau", "Macao", "MO"]],
-  ["ID", "Indonesia", ["In-đô-nê-xi-a", "ID"]],
-  ["SG", "Singapore", ["Xin-ga-po", "SG"]],
-  ["MY", "Malaysia", ["Ma-lai-xi-a", "MY"]],
-  ["PH", "Philippines", ["Phi-líp-pin", "PH"]],
-  ["JP", "Nhật Bản", ["Japan", "Nhat Ban", "JP"]],
-  ["KR", "Hàn Quốc", ["South Korea", "Han Quoc", "KR"]],
-  ["CN", "Trung Quốc", ["China", "Trung Quoc", "CN"]],
-  ["US", "Hoa Kỳ", ["United States", "Mỹ", "USA", "US"]],
-  ["GB", "Vương quốc Anh", ["United Kingdom", "Anh", "UK", "GB"]],
-  ["GLOBAL", "Quốc tế", ["Toàn cầu", "Global", "International", "Quoc te"]],
+/** Code, Vietnamese name, English name, then the other spellings people write. */
+const countries: [string, string, string, string[]][] = [
+  ["VN", "Việt Nam", "Vietnam", ["Vietnam", "Viet Nam", "VN"]],
+  ["TH", "Thái Lan", "Thailand", ["Thailand", "Thai Lan", "TH"]],
+  ["TW", "Đài Loan", "Taiwan", ["Taiwan", "Dai Loan", "TW"]],
+  ["HK", "Hồng Kông", "Hong Kong", ["Hong Kong", "Hongkong", "HK"]],
+  ["MO", "Ma Cao", "Macau", ["Macau", "Macao", "MO"]],
+  ["ID", "Indonesia", "Indonesia", ["In-đô-nê-xi-a", "ID"]],
+  ["SG", "Singapore", "Singapore", ["Xin-ga-po", "SG"]],
+  ["MY", "Malaysia", "Malaysia", ["Ma-lai-xi-a", "MY"]],
+  ["PH", "Philippines", "Philippines", ["Phi-líp-pin", "PH"]],
+  ["JP", "Nhật Bản", "Japan", ["Japan", "Nhat Ban", "JP"]],
+  ["KR", "Hàn Quốc", "South Korea", ["South Korea", "Han Quoc", "KR"]],
+  ["CN", "Trung Quốc", "China", ["China", "Trung Quoc", "CN"]],
+  ["US", "Hoa Kỳ", "United States", ["United States", "Mỹ", "USA", "US"]],
+  ["GB", "Vương quốc Anh", "United Kingdom", ["United Kingdom", "Anh", "UK", "GB"]],
+  ["GLOBAL", "Quốc tế", "International", ["Toàn cầu", "Global", "International", "Quoc te"]],
 ]
 
-export const countryReferences: EntityReference[] = countries.map(([code, name, aliases]) => ({
+/**
+ * The name of a country in the reader's language, from its code or from any name people write for it. Returns
+ * undefined for a name this list does not know, so the caller can keep what was written.
+ */
+export function knownCountryName(value: string, locale = "vi-VN") {
+  const wanted = value.trim().toLowerCase()
+  const entry = countries.find(([code, name, english, aliases]) =>
+    [code, name, english, ...aliases].some((candidate) => candidate.toLowerCase() === wanted),
+  )
+  return entry && (locale.startsWith("en") ? entry[2] : entry[1])
+}
+
+export const countryReferences: EntityReference[] = countries.map(([code, name, english, aliases]) => ({
   id: code,
   kind: "country",
   autoMatch: false,
@@ -49,7 +62,13 @@ export const countryReferences: EntityReference[] = countries.map(([code, name, 
       locale: "vi-VN",
       name,
       aliases,
-      description: name === "Quốc tế" ? "Phạm vi quốc tế." : `Quốc gia / khu vực: ${name}.`,
+      description: code === "GLOBAL" ? "Phạm vi quốc tế." : `Quốc gia / khu vực: ${name}.`,
+    },
+    {
+      locale: "en-US",
+      name: english,
+      aliases: [name, ...aliases],
+      description: code === "GLOBAL" ? "International scope." : `Country / region: ${english}.`,
     },
   ],
   display: { showIcon: true, underline: true },

@@ -1,22 +1,64 @@
 import { defaultEntityColor, foldEntitySearch, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { ArcanaContent } from "./warehouse-content"
 
+/** Each group lists the stat keys, the Vietnamese labels seen in the data and the English labels of `en-US` content. */
 const statGroups: [string, string[]][] = [
   [
     "cong-phep",
-    ["magicAttack", "magicPierce", "Công phép", "Xuyên giáp phép", "Xuyên thủ phép", "Hút máu phép", "Hút phép"],
+    [
+      "magicAttack",
+      "magicPierce",
+      "Công phép",
+      "Xuyên giáp phép",
+      "Xuyên thủ phép",
+      "Hút máu phép",
+      "Hút phép",
+      "magic-penetration",
+      "magic-lifesteal",
+      "Ability Power",
+      "Magic Pierce",
+      "Magic Life Steal",
+    ],
   ],
-  ["cong-vat-ly", ["physicalAttack", "armorPierce", "Công vật lý", "Công vậy lý", "Xuyên giáp"]],
+  [
+    "cong-vat-ly",
+    [
+      "physicalAttack",
+      "armorPierce",
+      "Công vật lý",
+      "Công vậy lý",
+      "Xuyên giáp",
+      "armor-penetration",
+      "Attack Damage",
+      "Armor Pierce",
+    ],
+  ],
   ["giap", ["armor", "Giáp"]],
-  ["giap-phep", ["magicDefense", "Giáp phép", "Thủ phép", "Kháng phép"]],
-  ["hoi-mau", ["maxHealth", "Máu", "Máu tối đa", "Hồi máu", "Hồi máu/5s", "Hút máu"]],
+  ["giap-phep", ["magicDefense", "Giáp phép", "Thủ phép", "Kháng phép", "Magic Defense"]],
+  [
+    "hoi-mau",
+    [
+      "maxHealth",
+      "Máu",
+      "Máu tối đa",
+      "Hồi máu",
+      "Hồi máu/5s",
+      "Hút máu",
+      "health-regen-per-five-seconds",
+      "physical-lifesteal",
+      "Max HP",
+      "HP",
+      "HP/5s",
+      "Life Steal",
+    ],
+  ],
   ["toc-danh", ["attackSpeed", "Tốc đánh", "Tốc độ đánh"]],
   ["toc-chay", ["movementSpeed", "Tốc chạy", "Tốc độ di chuyển"]],
   [
     "chi-mang",
     ["criticalChance", "criticalDamage", "Chí mạng", "Tỉ lệ chí mạng", "Tỷ lệ chí mạng", "Sát thương chí mạng"],
   ],
-  ["giam-hoi-chieu", ["cooldownReduction", "Giảm hồi chiêu", "Giám hồi chiêu", "Hồi chiêu"]],
+  ["giam-hoi-chieu", ["cooldownReduction", "Giảm hồi chiêu", "Giám hồi chiêu", "Hồi chiêu", "Cooldown Speed"]],
 ]
 
 const normalize = (value: string) =>

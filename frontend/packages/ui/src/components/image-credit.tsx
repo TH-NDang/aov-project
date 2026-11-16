@@ -13,6 +13,7 @@ export function ImageCredit({
   pageBaseHref,
   renderPageReference,
   mobileDrawer = false,
+  locale = "vi-VN",
 }: {
   sources?: MediaCredit[]
   contactHref?: string
@@ -24,7 +25,10 @@ export function ImageCredit({
   pageBaseHref?: string
   renderPageReference?: (id: string, label: string) => ReactNode
   mobileDrawer?: boolean
+  /** The reader's language; source and owner names stay as they were recorded. */
+  locale?: string
 }) {
+  const t = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
   const missing = flagMissing && needsMediaCredit(sources)
   const reference = (id: string, label: string) =>
     renderPageReference ? (
@@ -44,8 +48,14 @@ export function ImageCredit({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={missing ? "Nguồn ảnh · chưa đủ nguồn hoặc chủ sở hữu" : "Nguồn ảnh"}
-          title={missing ? "Chưa đủ nguồn hoặc chủ sở hữu" : "Nguồn ảnh"}
+          aria-label={
+            missing
+              ? t("Nguồn ảnh · chưa đủ nguồn hoặc chủ sở hữu", "Image source · source or owner incomplete")
+              : t("Nguồn ảnh", "Image source")
+          }
+          title={
+            missing ? t("Chưa đủ nguồn hoặc chủ sở hữu", "Source or owner incomplete") : t("Nguồn ảnh", "Image source")
+          }
           className={`absolute right-1 bottom-1 z-30 grid size-7 place-items-center rounded-full border shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${missing ? "border-amber-200/60 bg-amber-500 text-black hover:bg-amber-400" : "border-white/30 bg-black/75 text-white hover:bg-black"} ${className}`}
           onClick={(event) => event.stopPropagation()}
         >
@@ -57,12 +67,12 @@ export function ImageCredit({
         </button>
       </PopoverTrigger>
       <PopoverContent
-        drawerTitle="Nguồn ảnh"
+        drawerTitle={t("Nguồn ảnh", "Image source")}
         align="end"
         className="z-[100] max-h-[min(30rem,80dvh)] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto text-sm"
         onClick={(event) => event.stopPropagation()}
       >
-        <h2 className="mb-3 font-semibold">Nguồn ảnh</h2>
+        <h2 className="mb-3 font-semibold">{t("Nguồn ảnh", "Image source")}</h2>
         {sources.length ? (
           <ul className="space-y-4">
             {sources.map((source, index) => {
@@ -70,7 +80,7 @@ export function ImageCredit({
               const contact = creditHttpUrl(source.contactUrl)
               return (
                 <li key={index} className="space-y-1.5 break-words">
-                  <p className="text-xs text-muted-foreground">Thuộc về</p>
+                  <p className="text-xs text-muted-foreground">{t("Thuộc về", "Belongs to")}</p>
                   {source.ownerName ? (
                     <p className="flex items-center gap-1.5 font-semibold">
                       <Copyright className="size-4 shrink-0" aria-hidden="true" />
@@ -79,12 +89,14 @@ export function ImageCredit({
                   ) : (
                     <p className="flex items-center gap-1.5 font-medium text-amber-700 dark:text-amber-300">
                       <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
-                      Chưa xác nhận chủ sở hữu
+                      {t("Chưa xác nhận chủ sở hữu", "Owner not confirmed")}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">Lấy từ: {source.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Lấy từ:", "Taken from:")} {source.label}
+                  </p>
                   {source.relatedPageId && (pageBaseHref || renderPageReference) && (
-                    <p>{reference(source.relatedPageId, "Xem hồ sơ nội dung liên quan")}</p>
+                    <p>{reference(source.relatedPageId, t("Xem hồ sơ nội dung liên quan", "See the related page"))}</p>
                   )}
                   {url && (
                     <a
@@ -94,12 +106,12 @@ export function ImageCredit({
                       rel="noopener noreferrer"
                       referrerPolicy="no-referrer"
                     >
-                      Xem nguồn gốc <ExternalLink className="size-3" aria-hidden="true" />
+                      {t("Xem nguồn gốc", "View the original")} <ExternalLink className="size-3" aria-hidden="true" />
                     </a>
                   )}
                   {contact && (
                     <a className="block text-xs underline" href={contact} target="_blank" rel="noopener noreferrer">
-                      Liên hệ bên cung cấp
+                      {t("Liên hệ bên cung cấp", "Contact the provider")}
                     </a>
                   )}
                 </li>
@@ -107,16 +119,21 @@ export function ImageCredit({
             })}
           </ul>
         ) : (
-          <p className="text-muted-foreground">Chưa xác minh nguồn ảnh. Bạn có thể gửi thông tin bổ sung.</p>
+          <p className="text-muted-foreground">
+            {t(
+              "Chưa xác minh nguồn ảnh. Bạn có thể gửi thông tin bổ sung.",
+              "This image's source has not been verified. You can send more information.",
+            )}
+          </p>
         )}
         {contactHref && (
           <a className="mt-4 block border-t pt-3 text-xs underline underline-offset-4" href={contactHref}>
-            Liên hệ về ảnh / đính chính nguồn
+            {t("Liên hệ về ảnh / đính chính nguồn", "Contact us about this image or correct its source")}
           </a>
         )}
         {manageHref && (
           <a className="mt-4 block border-t pt-3 text-xs underline underline-offset-4" href={manageHref}>
-            Sửa nguồn trong Quản lý ảnh
+            {t("Sửa nguồn trong Quản lý ảnh", "Edit the source in Image management")}
           </a>
         )}
       </PopoverContent>

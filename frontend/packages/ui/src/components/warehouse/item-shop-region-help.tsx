@@ -2,28 +2,36 @@ import { useId, useState, type KeyboardEvent } from "react"
 import { CircleHelp } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
+import { useWarehouseText } from "./warehouse-view"
 
 type Props = { kind: "terminal" } | { kind: "external"; sourceGroup: string; selectedItem: string }
 
-function explanation(props: Props) {
+function explanation(props: Props, t: (vi: string, en: string) => string) {
   switch (props.kind) {
     case "terminal":
       return {
-        label: "Giải thích vùng trang bị hoàn chỉnh",
-        title: "Vì sao là trang bị hoàn chỉnh?",
-        text: "Các món này không dùng làm nguyên liệu và không tạo thành từ trang bị ở cột 3.",
+        label: t("Giải thích vùng trang bị hoàn chỉnh", "About the complete items area"),
+        title: t("Vì sao là trang bị hoàn chỉnh?", "Why are these complete items?"),
+        text: t(
+          "Các món này không dùng làm nguyên liệu và không tạo thành từ trang bị ở cột 3.",
+          "These items are not used as ingredients and are not built from the items in column 3.",
+        ),
       }
     case "external":
       return {
-        label: `Giải thích vùng thuộc tính ${props.sourceGroup}`,
-        title: `${props.sourceGroup} · Thuộc tính khác`,
-        text: `Thuộc nhóm ${props.sourceGroup}, có quan hệ ghép với ${props.selectedItem}; hiển thị dưới đúng cột của nhóm nguồn.`,
+        label: t(`Giải thích vùng thuộc tính ${props.sourceGroup}`, `About the ${props.sourceGroup} category area`),
+        title: t(`${props.sourceGroup} · Thuộc tính khác`, `${props.sourceGroup} · Other category`),
+        text: t(
+          `Thuộc nhóm ${props.sourceGroup}, có quan hệ ghép với ${props.selectedItem}; hiển thị dưới đúng cột của nhóm nguồn.`,
+          `Belongs to ${props.sourceGroup} and shares a recipe with ${props.selectedItem}; shown under the column of its own category.`,
+        ),
       }
   }
 }
 
 export function ItemShopRegionHelp(props: Props) {
-  const info = explanation(props)
+  const t = useWarehouseText()
+  const info = explanation(props, t)
   const titleId = useId()
   const [expanded, setExpanded] = useState(false)
   const [hint, setHint] = useState(false)

@@ -30,47 +30,111 @@ export interface ItemStatDefinition {
   vi: string
   en: string
   icon: GameplayIconName
-  /** Accent-free, lowercase spellings seen in the data, including recurring typos. */
+  /**
+   * Accent-free, lowercase spellings seen in the data, including recurring typos, followed by the English name the
+   * `en-US` descriptions use.
+   */
   spellings: string[]
 }
 
+/** English names follow the game's own wording (docs/THUAT-NGU-VIET-ANH.md). */
 export const ITEM_STATS: ItemStatDefinition[] = [
-  { key: "physicalAttack", vi: "Công vật lý", en: "Physical attack", icon: "sword", spellings: ["cong vat ly"] },
-  { key: "magicAttack", vi: "Công phép", en: "Magic attack", icon: "orb", spellings: ["cong phep"] },
-  { key: "maxHealth", vi: "Máu tối đa", en: "Max HP", icon: "heart", spellings: ["mau toi da", "mau"] },
-  { key: "armor", vi: "Giáp", en: "Armor", icon: "shield", spellings: ["giap"] },
-  { key: "magicDefense", vi: "Giáp phép", en: "Magic defense", icon: "runeShield", spellings: ["giap phep"] },
-  { key: "attackSpeed", vi: "Tốc đánh", en: "Attack speed", icon: "bolt", spellings: ["toc danh", "toc dang"] },
-  { key: "movementSpeed", vi: "Tốc chạy", en: "Movement speed", icon: "boot", spellings: ["toc chay"] },
+  {
+    key: "physicalAttack",
+    vi: "Công vật lý",
+    en: "Attack Damage",
+    icon: "sword",
+    spellings: ["cong vat ly", "attack damage"],
+  },
+  { key: "magicAttack", vi: "Công phép", en: "Ability Power", icon: "orb", spellings: ["cong phep", "ability power"] },
+  { key: "maxHealth", vi: "Máu tối đa", en: "Max HP", icon: "heart", spellings: ["mau toi da", "mau", "max hp", "hp"] },
+  { key: "armor", vi: "Giáp", en: "Armor", icon: "shield", spellings: ["giap", "armor"] },
+  {
+    key: "magicDefense",
+    vi: "Giáp phép",
+    en: "Magic Defense",
+    icon: "runeShield",
+    spellings: ["giap phep", "magic defense"],
+  },
+  {
+    key: "attackSpeed",
+    vi: "Tốc đánh",
+    en: "Attack Speed",
+    icon: "bolt",
+    spellings: ["toc danh", "toc dang", "attack speed"],
+  },
+  {
+    key: "movementSpeed",
+    vi: "Tốc chạy",
+    en: "Movement Speed",
+    icon: "boot",
+    spellings: ["toc chay", "movement speed"],
+  },
   {
     key: "cooldownReduction",
     vi: "Giảm hồi chiêu",
-    en: "Cooldown reduction",
+    en: "Cooldown Speed",
     icon: "cooldown",
-    spellings: ["giam hoi chieu"],
+    spellings: ["giam hoi chieu", "cooldown speed"],
   },
-  { key: "criticalChance", vi: "Tỷ lệ chí mạng", en: "Critical chance", icon: "crit", spellings: ["ty le chi mang"] },
+  {
+    key: "criticalChance",
+    vi: "Tỷ lệ chí mạng",
+    en: "Critical Chance",
+    icon: "crit",
+    spellings: ["ty le chi mang", "critical chance"],
+  },
   {
     key: "criticalDamage",
     vi: "Sát thương chí mạng",
-    en: "Critical damage",
+    en: "Critical Damage",
     icon: "critDamage",
-    spellings: ["sat thuong chi mang"],
+    spellings: ["sat thuong chi mang", "critical damage"],
   },
-  { key: "lifesteal", vi: "Hút máu", en: "Lifesteal", icon: "vamp", spellings: ["hut mau"] },
-  { key: "magicLifesteal", vi: "Hút máu phép", en: "Magic lifesteal", icon: "vamp", spellings: ["hut mau phep"] },
-  { key: "armorPierce", vi: "Xuyên giáp", en: "Armor pierce", icon: "pierce", spellings: ["xuyen giap"] },
-  { key: "magicPierce", vi: "Xuyên giáp phép", en: "Magic pierce", icon: "pierce", spellings: ["xuyen giap phep"] },
-  { key: "healthRegen", vi: "Hồi máu/5s", en: "HP regen/5s", icon: "heart", spellings: ["hoi mau/5s"] },
-  { key: "manaRegen", vi: "Hồi năng lượng/5s", en: "Mana regen/5s", icon: "mana", spellings: ["hoi nang luong/5s"] },
+  { key: "lifesteal", vi: "Hút máu", en: "Life Steal", icon: "vamp", spellings: ["hut mau", "life steal"] },
+  {
+    key: "magicLifesteal",
+    vi: "Hút máu phép",
+    en: "Magic Life Steal",
+    icon: "vamp",
+    spellings: ["hut mau phep", "magic life steal"],
+  },
+  {
+    key: "armorPierce",
+    vi: "Xuyên giáp",
+    en: "Armor Pierce",
+    icon: "pierce",
+    spellings: ["xuyen giap", "armor pierce"],
+  },
+  {
+    key: "magicPierce",
+    vi: "Xuyên giáp phép",
+    en: "Magic Pierce",
+    icon: "pierce",
+    spellings: ["xuyen giap phep", "magic pierce"],
+  },
+  { key: "healthRegen", vi: "Hồi máu/5s", en: "HP/5s", icon: "heart", spellings: ["hoi mau/5s", "hp/5s"] },
+  {
+    key: "manaRegen",
+    vi: "Hồi năng lượng/5s",
+    en: "Mana/5s",
+    icon: "mana",
+    spellings: ["hoi nang luong/5s", "mana/5s"],
+  },
   {
     key: "maxMana",
     vi: "Năng lượng tối đa",
-    en: "Max mana",
+    en: "Max Mana",
     icon: "mana",
-    spellings: ["nang luong toi da", "nang luong"],
+    spellings: ["nang luong toi da", "nang luong", "max mana", "mana"],
   },
-  { key: "tenacity", vi: "Kháng hiệu ứng", en: "Tenacity", icon: "barrier", spellings: ["khang hieu ung"] },
+  {
+    key: "tenacity",
+    vi: "Kháng hiệu ứng",
+    en: "Resistance",
+    icon: "barrier",
+    spellings: ["khang hieu ung", "resistance"],
+  },
 ]
 
 const DEFINITIONS = new Map(ITEM_STATS.flatMap((stat) => stat.spellings.map((spelling) => [spelling, stat] as const)))
@@ -111,17 +175,18 @@ function folded(value: string) {
     .trim()
 }
 
-const UNIQUE = /n[oộ]i\s+t[aạ]i\s+duy\s+nh[aấ]t/i
+// Each marker is matched as the Vietnamese data writes it and as the English descriptions do.
+const UNIQUE = /n[oộ]i\s+t[aạ]i\s+duy\s+nh[aấ]t|unique\s+passive/i
 const STAT_LINE = /^["'“”\s]*(\+)?\s*(\d[\d.,]*)\s*(%?)\s+(.+)$/
 const SEPARATOR = /\s+[–—-]\s+/
-const ACTIVE = /k[ií]ch\s+ho[aạ]t\s+(?:duy\s+nh[aấ]t|ch[uủ]\s+đ[oộ]ng)/i
+const ACTIVE = /k[ií]ch\s+ho[aạ]t\s+(?:duy\s+nh[aấ]t|ch[uủ]\s+đ[oộ]ng)|unique\s+active|active\s+ability/i
 
 function numberFrom(text: string) {
   if (/^\d{1,3}(\.\d{3})+$/.test(text)) return Number(text.replaceAll(".", ""))
   return Number(text.replace(",", "."))
 }
 
-function statFrom(line: string): ItemTextStat | null {
+function statFrom(line: string, english: boolean): ItemTextStat | null {
   const match = STAT_LINE.exec(line)
   if (!match) return null
   const [, plus, amount, percent, rest] = match
@@ -149,7 +214,7 @@ function statFrom(line: string): ItemTextStat | null {
     .join(" · ")
   return {
     key: definition?.key ?? null,
-    label: definition?.vi ?? base,
+    label: (definition && (english ? definition.en : definition.vi)) ?? base,
     value,
     percent: percent === "%",
     unique,
@@ -160,7 +225,7 @@ function statFrom(line: string): ItemTextStat | null {
 /** Removes a marker such as "unique passive" from the line, together with the dash or colon that joined it. */
 function withoutMarker(line: string, marker: RegExp) {
   return line
-    .replace(new RegExp(`\\s*[–—-]?\\s*${marker.source}\\s*[.:–—-]?\\s*`, "gi"), " ")
+    .replace(new RegExp(`\\s*[–—-]?\\s*(?:${marker.source})\\s*[.:–—-]?\\s*`, "gi"), " ")
     .replace(/\s+/g, " ")
     .trim()
 }
@@ -170,7 +235,7 @@ function passiveFrom(line: string): ItemTextPassive {
   const active = ACTIVE.test(line)
   let text = withoutMarker(withoutMarker(line, UNIQUE), ACTIVE)
     // A bare "passive" prefix says nothing the section heading does not; the real name, if any, follows it.
-    .replace(/^n[oộ]i\s+t[aạ]i\s*[:–—-]\s*/i, "")
+    .replace(/^(?:n[oộ]i\s+t[aạ]i|passive)\s*[:–—-]\s*/i, "")
   const flags = { unique, ...(active ? { active } : {}) }
 
   // Some entries put the name last, in angle brackets.
@@ -185,7 +250,9 @@ function passiveFrom(line: string): ItemTextPassive {
   return { name: null, text, ...flags }
 }
 
-export function parseItemDescription(description: string | null | undefined): ItemTextContent {
+/** `locale` only chooses the language of the stat names; the text is read the same way in both. */
+export function parseItemDescription(description: string | null | undefined, locale = "vi-VN"): ItemTextContent {
+  const english = locale.startsWith("en")
   const content: ItemTextContent = { stats: [], passives: [], notes: [] }
   for (const raw of (description ?? "").split(/\r?\n/)) {
     const line = raw.trim()
@@ -194,7 +261,7 @@ export function parseItemDescription(description: string | null | undefined): It
       content.notes.push(line.replace(/^\(|\)?\s*\.?$/g, "").trim())
       continue
     }
-    const stat = statFrom(line)
+    const stat = statFrom(line, english)
     if (stat) content.stats.push(stat)
     else content.passives.push(passiveFrom(line))
   }
@@ -219,17 +286,17 @@ export interface ItemStatFilterDefinition {
 }
 
 export const ITEM_STAT_FILTERS: ItemStatFilterDefinition[] = [
-  { key: "physical", vi: "Công vật lý", en: "Physical attack", icon: "sword", stats: ["physicalAttack"] },
-  { key: "magic", vi: "Công phép", en: "Magic attack", icon: "orb", stats: ["magicAttack"] },
-  { key: "attack-speed", vi: "Tốc đánh", en: "Attack speed", icon: "bolt", stats: ["attackSpeed"] },
+  { key: "physical", vi: "Công vật lý", en: "Attack Damage", icon: "sword", stats: ["physicalAttack"] },
+  { key: "magic", vi: "Công phép", en: "Ability Power", icon: "orb", stats: ["magicAttack"] },
+  { key: "attack-speed", vi: "Tốc đánh", en: "Attack Speed", icon: "bolt", stats: ["attackSpeed"] },
   { key: "crit", vi: "Chí mạng", en: "Critical", icon: "crit", stats: ["criticalChance", "criticalDamage"] },
-  { key: "lifesteal", vi: "Hút máu", en: "Lifesteal", icon: "vamp", stats: ["lifesteal", "magicLifesteal"] },
+  { key: "lifesteal", vi: "Hút máu", en: "Life Steal", icon: "vamp", stats: ["lifesteal", "magicLifesteal"] },
   { key: "pierce", vi: "Xuyên giáp", en: "Pierce", icon: "pierce", stats: ["armorPierce", "magicPierce"] },
-  { key: "cooldown", vi: "Giảm hồi chiêu", en: "Cooldown", icon: "cooldown", stats: ["cooldownReduction"] },
+  { key: "cooldown", vi: "Giảm hồi chiêu", en: "Cooldown Speed", icon: "cooldown", stats: ["cooldownReduction"] },
   { key: "health", vi: "Máu", en: "HP", icon: "heart", stats: ["maxHealth", "healthRegen"] },
   { key: "armor", vi: "Giáp", en: "Armor", icon: "shield", stats: ["armor"] },
-  { key: "magic-defense", vi: "Giáp phép", en: "Magic defense", icon: "runeShield", stats: ["magicDefense"] },
-  { key: "movement", vi: "Tốc chạy", en: "Movement", icon: "boot", stats: ["movementSpeed"] },
+  { key: "magic-defense", vi: "Giáp phép", en: "Magic Defense", icon: "runeShield", stats: ["magicDefense"] },
+  { key: "movement", vi: "Tốc chạy", en: "Movement Speed", icon: "boot", stats: ["movementSpeed"] },
   { key: "mana", vi: "Năng lượng", en: "Mana", icon: "mana", stats: ["maxMana", "manaRegen"] },
 ]
 
@@ -267,13 +334,15 @@ export function itemReaderContent(
     statLabels?: Record<string, string>
     effects?: { name: string; description: string }[]
   } | null,
+  locale = "vi-VN",
 ): ItemTextContent {
-  const parsed = parseItemDescription(text?.description)
+  const english = locale.startsWith("en")
+  const parsed = parseItemDescription(text?.description, locale)
   const stats = (content.stats ?? []).map((stat): ItemTextStat => {
     const definition = ITEM_STATS.find((candidate) => candidate.key === stat.key)
     return {
       key: definition?.key ?? null,
-      label: text?.statLabels?.[stat.key] || definition?.vi || stat.key,
+      label: text?.statLabels?.[stat.key] || (english ? definition?.en : definition?.vi) || stat.key,
       value: stat.value,
       percent: stat.unit === "PERCENT" || stat.unit === "%",
       unique: false,
@@ -304,56 +373,89 @@ export function itemStatsFromDescription(description: string | null | undefined)
 /**
  * What a passive does, recognised from its wording so that items with differently named passives can still be matched.
  * Patterns run on accent-free, lowercase text and only list effects specific enough to say something about the item.
+ * `pattern` reads the Vietnamese data and `english` the `en-US` descriptions, which are written to the same phrases
+ * so that an item gets the same effects in both languages.
  */
-export const ITEM_EFFECTS: { key: string; vi: string; en: string; pattern: RegExp }[] = [
+export const ITEM_EFFECTS: { key: string; vi: string; en: string; pattern: RegExp; english: RegExp }[] = [
   {
     key: "anti-heal",
     vi: "Giảm hồi máu",
     en: "Healing reduction",
     pattern: /giam (?:\d+% )?(?:hieu (?:ung|qua) )?hoi mau/,
+    english: /reduces? [^.;]{0,24}healing|healing reduction/,
   },
   {
     key: "heal",
     vi: "Hồi máu",
     en: "Healing",
     pattern: /(?<!giam (?:\d+% )?(?:hieu (?:ung|qua) )?)hoi (?:mau|phuc)|hoi \d+[^.;]{0,20} mau/,
+    english:
+      /\bheals?\b|(?<!reduces? [^.;]{0,24})\bhealing\b(?! reduction)|restor\w* [^.;]{0,40}\bhp\b|\brecover\w*|\bregenerate\b/,
   },
-  { key: "shield", vi: "Lá chắn", en: "Shield", pattern: /la chan/ },
-  { key: "slow", vi: "Làm chậm", en: "Slow", pattern: /lam cham/ },
-  { key: "burn", vi: "Thiêu đốt", en: "Burn", pattern: /thieu dot/ },
-  { key: "revive", vi: "Hồi sinh", en: "Revive", pattern: /hoi sinh|phuc sinh|song lai/ },
+  { key: "shield", vi: "Lá chắn", en: "Shield", pattern: /la chan/, english: /\bshields?\b/ },
+  { key: "slow", vi: "Làm chậm", en: "Slow", pattern: /lam cham/, english: /\bslow(?:s|ed|ing)?\b/ },
+  { key: "burn", vi: "Thiêu đốt", en: "Burn", pattern: /thieu dot/, english: /burn damage|burns enemies/ },
+  { key: "revive", vi: "Hồi sinh", en: "Revive", pattern: /hoi sinh|phuc sinh|song lai/, english: /\breviv\w*/ },
   {
     key: "invulnerable",
     vi: "Miễn thương",
     en: "Damage immunity",
     pattern: /mien thuong|mien nhiem sat thuong|vo dich|bat kha xam pham/,
+    english: /(?<!physical )damage (?:immunity|reduction)|immune to (?:fatal )?damage|\binvincib\w*|\binvulnerab\w*/,
   },
-  { key: "cleanse", vi: "Giải khống chế", en: "Cleanse", pattern: /mien khong|giai khong|hoa giai khong che/ },
-  { key: "reflect", vi: "Phản sát thương", en: "Damage reflection", pattern: /phan (?:sat thuong|lai|don)/ },
-  { key: "true-damage", vi: "Sát thương chuẩn", en: "True damage", pattern: /sat thuong chuan/ },
+  {
+    key: "cleanse",
+    vi: "Giải khống chế",
+    en: "Cleanse",
+    pattern: /mien khong|giai khong|hoa giai khong che/,
+    english: /control immunity|removes? (?:all )?control effects|\bcleanse/,
+  },
+  {
+    key: "reflect",
+    vi: "Phản sát thương",
+    en: "Damage reflection",
+    pattern: /phan (?:sat thuong|lai|don)/,
+    english: /\breflect\w*/,
+  },
+  {
+    key: "true-damage",
+    vi: "Sát thương chuẩn",
+    en: "True damage",
+    pattern: /sat thuong chuan/,
+    english: /true damage/,
+  },
   {
     key: "percent-health",
     vi: "Sát thương theo % máu",
     en: "Damage based on health",
     pattern: /tuong duong[^.;]{0,10}\d+% mau|\d+% mau hien tai|gay \d+% mau toi da thanh sat thuong/,
+    english: /equal to \(?\d+% of [^.;]{0,32}\bhp\b|\d+% of the target's current hp/,
   },
   {
     key: "on-hit",
     vi: "Đánh thường gây thêm sát thương",
     en: "On-hit damage",
     pattern: /danh thuong[^.;]{0,30}gay them/,
+    english: /normal attacks?[^.;]{0,40}deals? (?:an )?extra/,
   },
-  { key: "shred", vi: "Giảm giáp mục tiêu", en: "Armor reduction", pattern: /giam [^.;]{0,16}giap|pha giap/ },
+  {
+    key: "shred",
+    vi: "Giảm giáp mục tiêu",
+    en: "Armor reduction",
+    pattern: /giam [^.;]{0,16}giap|pha giap/,
+    english: /armor reduction|reduces? [^.;]{0,16}\barmor\b/,
+  },
   {
     key: "attack-speed-down",
     vi: "Giảm tốc đánh địch",
-    en: "Attack speed reduction",
+    en: "Attack Speed reduction",
     pattern: /giam (?:\d+% )?toc danh/,
+    english: /reduces? (?:the )?attack speed|attack speed reduction/,
   },
-  { key: "stealth", vi: "Chống tàng hình", en: "Stealth detection", pattern: /tang hinh/ },
+  { key: "stealth", vi: "Chống tàng hình", en: "Stealth detection", pattern: /tang hinh/, english: /\bstealth\b/ },
 ]
 
-const GENERIC_PASSIVE_NAMES = new Set(["noi tai", "kich hoat", "chu dong"])
+const GENERIC_PASSIVE_NAMES = new Set(["noi tai", "kich hoat", "chu dong", "passive", "active"])
 
 /** Everything used to tell whether two items play alike. */
 export interface ItemProfile {
@@ -385,7 +487,9 @@ export function itemProfile(
   return {
     stats,
     passives,
-    effects: ITEM_EFFECTS.filter((effect) => effect.pattern.test(text)).map((effect) => effect.key),
+    effects: ITEM_EFFECTS.filter((effect) => effect.pattern.test(text) || effect.english.test(text)).map(
+      (effect) => effect.key,
+    ),
     active: reading.passives.some((passive) => passive.active),
     summary: folded(summary ?? ""),
     category,

@@ -194,7 +194,7 @@ function GraphCard({
   const name = warehouseName(item, locale)
   const text = warehouseText(item.content.translations, locale)
   const summary = text?.summary?.trim()
-  const stats = useMemo(() => itemReaderContent(item.content, text).stats, [item.content, text])
+  const stats = useMemo(() => itemReaderContent(item.content, text, locale).stats, [item.content, text, locale])
   const changeKinds = cardChangeKinds(item.changeKinds)
   const hasOutput = column < columns - 1 && !terminal
   const missing = item.missingFields?.length ?? 0
@@ -217,8 +217,8 @@ function GraphCard({
       {editable && !reference && (
         <button
           type="button"
-          aria-label={`Di chuyển ${name}`}
-          title="Kéo để đổi ô"
+          aria-label={t(`Di chuyển ${name}`, `Move ${name}`)}
+          title={t("Kéo để đổi ô", "Drag to another cell")}
           className="cursor-grab touch-none self-stretch text-muted-foreground opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-foreground focus-visible:opacity-100 active:cursor-grabbing [@media(hover:none)]:opacity-100"
           {...drag.listeners}
           {...drag.attributes}
@@ -240,10 +240,13 @@ function GraphCard({
           ) : (
             <span
               className="relative flex size-11 items-center justify-center rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 text-amber-600"
-              title="Chưa có icon"
+              title={t("Chưa có icon", "No icon yet")}
             >
               <Fallback aria-hidden className="size-5 opacity-70" />
-              <ImageOff aria-label="Chưa có icon" className="absolute -top-1 -left-1 size-3.5 rounded-full bg-card" />
+              <ImageOff
+                aria-label={t("Chưa có icon", "No icon yet")}
+                className="absolute -top-1 -left-1 size-3.5 rounded-full bg-card"
+              />
             </span>
           )}
           <ItemPrice amount={item.content.price} locale={locale} badge />
@@ -257,33 +260,44 @@ function GraphCard({
             {region !== "completed" && item.content.tier !== null && item.content.tier !== column + 1 && (
               <span
                 className="rounded bg-muted px-1.5 py-0.5 text-xs"
-                title={`Trang bị cấp ${item.content.tier}, hiển thị ở cột ${column + 1}`}
+                title={t(
+                  `Trang bị cấp ${item.content.tier}, hiển thị ở cột ${column + 1}`,
+                  `Tier ${item.content.tier} item, shown in column ${column + 1}`,
+                )}
               >
-                Cấp {item.content.tier}
+                {t("Cấp", "Tier")} {item.content.tier}
               </span>
             )}
             {!locked && (
               <span
                 className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300"
-                title="Bản nháp chưa xuất bản"
+                title={t("Bản nháp chưa xuất bản", "Unpublished draft")}
               >
-                {item.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
+                {item.revision.effectiveFromPatchVariantId
+                  ? t("Nháp", "Draft")
+                  : t("Nháp · Chưa gắn patch", "Draft · No patch yet")}
               </span>
             )}
             {item.revision.state === "PUBLISHED" && !item.revision.effectiveFromPatchVariantId && (
               <span className="rounded bg-muted px-1.5 py-0.5 text-xs">{t("Chưa rõ patch", "Patch unknown")}</span>
             )}
             {item.content.recipeStatus === "UNKNOWN" && (
-              <span className="rounded bg-muted px-1.5 py-0.5 text-xs" title="Công thức chưa xác nhận">
-                Công thức?
+              <span
+                className="rounded bg-muted px-1.5 py-0.5 text-xs"
+                title={t("Công thức chưa xác nhận", "Recipe not confirmed")}
+              >
+                {t("Công thức?", "Recipe?")}
               </span>
             )}
             {missing > 0 && (
               <span
                 className="rounded bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-700 dark:text-amber-300"
-                title={`Còn thiếu ${missing} mục bắt buộc để xuất bản`}
+                title={t(
+                  `Còn thiếu ${missing} mục bắt buộc để xuất bản`,
+                  `${missing} required ${missing === 1 ? "field is" : "fields are"} still missing before publishing`,
+                )}
               >
-                Thiếu {missing}
+                {t("Thiếu", "Missing")} {missing}
               </span>
             )}
           </span>
@@ -300,7 +314,7 @@ function GraphCard({
               "opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100",
           )}
           aria-label={`${t("Xem trang bị", "View item")} ${name}`}
-          title={locked ? "Mở chi tiết" : "Mở bản nháp"}
+          title={locked ? t("Mở chi tiết", "Open details") : t("Mở bản nháp", "Open draft")}
           onClick={onOpen}
         >
           <PanelRightOpen className="size-3.5" />
@@ -315,10 +329,14 @@ function GraphCard({
               type="button"
               data-link-id={editable ? item.id : undefined}
               data-link-side={side}
-              aria-label={`${side === "in" ? "Ghép từ" : "Nâng cấp từ"} ${name}`}
+              aria-label={`${side === "in" ? t("Ghép từ", "Built from") : t("Nâng cấp từ", "Upgrades from")} ${name}`}
               aria-pressed={armed?.id === item.id && armed.side === side}
               disabled={!editable}
-              title={side === "in" ? "Ghép từ: nối với nguyên liệu" : "Nâng cấp: nối tới món đích"}
+              title={
+                side === "in"
+                  ? t("Ghép từ: nối với nguyên liệu", "Built from: link to an ingredient")
+                  : t("Nâng cấp: nối tới món đích", "Upgrade: link to the result item")
+              }
               onClick={() => onPort({ id: item.id, side })}
               className={cn(
                 "absolute top-1/2 z-20 flex h-11 w-6 -translate-y-1/2 touch-none items-center justify-center rounded-lg text-muted-foreground enabled:cursor-crosshair enabled:hover:text-primary focus-visible:outline-2 focus-visible:outline-ring data-[connection-compatible=true]:text-primary/70 data-[connection-source=true]:bg-primary/10 data-[connection-source=true]:text-primary data-[connection-target=true]:bg-primary/15 data-[connection-target=true]:text-primary data-[connection-target=true]:ring-2 data-[connection-target=true]:ring-primary/50",
@@ -353,13 +371,14 @@ function GraphCell({
   track: number
   children?: React.ReactNode
 }) {
+  const t = useWarehouseText()
   const slot = useId()
   const drop = useDroppable({ id: `cell:${row}:${column}:${slot}`, data: { row, column } })
   return (
     <div
       ref={drop.setNodeRef}
       style={{ gridRow: track }}
-      aria-label={`Hàng ${row + 1}, cột ${column + 1}`}
+      aria-label={t(`Hàng ${row + 1}, cột ${column + 1}`, `Row ${row + 1}, column ${column + 1}`)}
       className={cn(
         "shop-cell grid min-h-20 min-w-0 auto-rows-fr gap-2 rounded-xl border border-dashed border-transparent p-1",
         !children && "border-border/60",
@@ -711,7 +730,14 @@ export function ItemShopGraph({
                 key={group.code}
                 active={active}
                 count={count}
-                title={matches ? `${count} món khớp tìm kiếm` : undefined}
+                title={
+                  matches
+                    ? t(
+                        `${count} món khớp tìm kiếm`,
+                        `${count} ${count === 1 ? "item matches" : "items match"} the search`,
+                      )
+                    : undefined
+                }
                 className={cn("[&_svg]:size-5", matches && !count && !active && "opacity-50")}
                 onClick={() => {
                   // The category change comes last: both can write to the URL, and it also clears the selection.
@@ -733,16 +759,17 @@ export function ItemShopGraph({
             variant="ghost"
             size="sm"
             className="h-8 gap-1.5 text-amber-700 dark:text-amber-300"
-            title="Mở món đầu tiên chưa có icon"
+            title={t("Mở món đầu tiên chưa có icon", "Open the first item without an icon")}
             onClick={() => onSelect(missingIcons[0].id)}
           >
             <ImageOff className="size-4" />
-            {missingIcons.length} món thiếu icon
+            {missingIcons.length}{" "}
+            {t("món thiếu icon", missingIcons.length === 1 ? "item without an icon" : "items without an icon")}
           </Button>
         )}
         {!!variants.length && (
           <select
-            aria-label="Nhánh trang bị"
+            aria-label={t("Nhánh trang bị", "Item branch")}
             className="w-auto rounded-md border bg-background px-3 py-2 text-sm"
             value={variant}
             onChange={(event) => setVariant(event.target.value)}
@@ -779,7 +806,11 @@ export function ItemShopGraph({
                     className="flex items-center gap-2 rounded-lg border border-primary/30 bg-card/95 px-2.5 py-1.5 text-xs text-primary shadow-sm backdrop-blur"
                   >
                     <Link2 className="size-3.5 shrink-0" />
-                    Đang nối {warehouseName(byId.get(armed.id)!, locale)} · chọn chấm ở phía đối diện. Esc để hủy.
+                    {t("Đang nối", "Linking")} {warehouseName(byId.get(armed.id)!, locale)}{" "}
+                    {t(
+                      "· chọn chấm ở phía đối diện. Esc để hủy.",
+                      "· pick a dot on the opposite side. Press Esc to cancel.",
+                    )}
                   </p>
                 )}
                 {selectedId && (
@@ -971,7 +1002,10 @@ export function ItemShopGraph({
                         return section.terminal ? (
                           <section
                             key={firstRow}
-                            aria-label={`Trang bị hoàn chỉnh · Cột ${column + 1} · Hàng ${firstRow + 1}–${lastRow + 1}`}
+                            aria-label={t(
+                              `Trang bị hoàn chỉnh · Cột ${column + 1} · Hàng ${firstRow + 1}–${lastRow + 1}`,
+                              `Complete items · Column ${column + 1} · Rows ${firstRow + 1}–${lastRow + 1}`,
+                            )}
                             className="grid min-w-0 grid-rows-subgrid rounded-xl bg-muted/25 ring-1 ring-inset ring-border"
                             style={{ gridRow: `${rowTracks[firstRow] - 1} / ${rowTracks[lastRow] + 1}` }}
                           >
@@ -1001,21 +1035,24 @@ export function ItemShopGraph({
                             return (
                               <section
                                 key={code ?? "unassigned"}
-                                aria-label={`Thuộc tính khác · ${name || "Chưa phân loại"} · Cột ${column + 1}`}
+                                aria-label={t(
+                                  `Thuộc tính khác · ${name || "Chưa phân loại"} · Cột ${column + 1}`,
+                                  `Other category · ${name || "Uncategorized"} · Column ${column + 1}`,
+                                )}
                                 className="space-y-3 border-t border-dashed pt-3"
                               >
                                 <h4 className="flex flex-wrap items-center gap-x-2 px-1 text-xs">
-                                  <span className="font-semibold">{name || "Chưa phân loại"}</span>
+                                  <span className="font-semibold">{name || t("Chưa phân loại", "Uncategorized")}</span>
                                   <span className="text-muted-foreground">
                                     {t("Thuộc tính khác", "Other category")}
                                   </span>
                                   <ItemShopRegionHelp
                                     kind="external"
-                                    sourceGroup={name || "Chưa phân loại"}
+                                    sourceGroup={name || t("Chưa phân loại", "Uncategorized")}
                                     selectedItem={
                                       byId.has(selectedId ?? "")
                                         ? warehouseName(byId.get(selectedId!)!, locale)
-                                        : "món đang chọn"
+                                        : t("món đang chọn", "the selected item")
                                     }
                                   />
                                 </h4>
@@ -1043,7 +1080,7 @@ export function ItemShopGraph({
               </div>
               <svg
                 className="pointer-events-none absolute inset-0 z-10 size-full"
-                aria-label="Đường ghép của trang bị được chọn"
+                aria-label={t("Đường ghép của trang bị được chọn", "Recipe links of the selected item")}
               >
                 <defs>
                   <marker
@@ -1137,7 +1174,11 @@ export function ItemShopGraph({
       )}
       {!!layout.missingIds.length && (
         <p role="status" className="text-xs text-muted-foreground">
-          {layout.missingIds.length} nguyên liệu hoặc món nâng cấp chưa có dữ liệu tại phạm vi đang xem.
+          {layout.missingIds.length}{" "}
+          {t(
+            "nguyên liệu hoặc món nâng cấp chưa có dữ liệu tại phạm vi đang xem.",
+            "ingredients or upgrades have no data in the scope being viewed.",
+          )}
         </p>
       )}
     </section>
