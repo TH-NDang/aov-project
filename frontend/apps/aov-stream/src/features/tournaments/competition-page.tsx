@@ -50,7 +50,7 @@ export function PublicCompetitionPage() {
   const query = useQuery(competitionQuery(id))
   const [params, setParams] = useSearchParams()
   const requested = params.get("tab")
-  // "bracket" is an address from before the table and the bracket shared a tab.
+  // The bracket stands on the standings tab, so `?tab=bracket` opens that tab.
   const tab: Tab = requested === "bracket" ? "standings" : (TABS.find(([key]) => key === requested)?.[0] ?? "overview")
   const tabButtons = useRef(new Map<Tab, HTMLButtonElement>())
   const focusTab = useRef<Tab | null>(null)
@@ -240,7 +240,7 @@ function Overview({
       <div className="tn-overview-main">
         {empty && (
           <div className="hub-state">
-            <h3>Lịch thi đấu chưa được công bố</h3>
+            <h2>Lịch thi đấu chưa được công bố</h2>
             <p>Trận đấu và bảng xếp hạng sẽ xuất hiện tại đây khi ban tổ chức công bố.</p>
             {plan.entrants.length > 0 && (
               <button type="button" className="cp-button" onClick={() => openTab("teams")}>
@@ -300,7 +300,7 @@ function Standings({ view, matches }: { view: CompetitionView; matches: Competit
   if (!standings.length && !knockouts.length)
     return (
       <div className="hub-state">
-        <h3>Giải chưa có bảng xếp hạng hoặc nhánh đấu</h3>
+        <h2>Giải chưa có bảng xếp hạng hoặc nhánh đấu</h2>
       </div>
     )
   return (
@@ -454,7 +454,7 @@ function Teams({ view }: { view: CompetitionView }) {
   if (!plan.entrants.length)
     return (
       <div className="hub-state">
-        <h3>Chưa có đội tham dự được công bố</h3>
+        <h2>Chưa có đội tham dự được công bố</h2>
       </div>
     )
   const order = (row: RosterMembershipContent) =>
@@ -463,7 +463,7 @@ function Teams({ view }: { view: CompetitionView }) {
   return (
     <div className="tn-stack">
       {withoutRoster > 0 && (
-        <p className="cp-muted tn-teams-note">
+        <p className="cp-muted">
           {withoutRoster === plan.entrants.length
             ? "Đội hình của các đội chưa được công bố."
             : `${withoutRoster} trong ${plan.entrants.length} đội chưa công bố đội hình.`}

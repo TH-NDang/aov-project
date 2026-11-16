@@ -63,7 +63,7 @@ export function CommunityHome() {
       aside={
         <>
           <HomeCompetitions />
-          <CommunityAside guest suggestions />
+          <CommunityAside />
         </>
       }
     >

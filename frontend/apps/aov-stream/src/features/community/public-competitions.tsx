@@ -35,7 +35,7 @@ export function CompetitionList({ profile, title }: { profile: CommunityProfile;
         <div className="hub-skeleton-rows" role="status" aria-label="Đang tải giải đấu" />
       ) : query.isLoadingError ? (
         <div className="hub-state" role="alert">
-          <h3>Chưa tải được giải đấu</h3>
+          {title ? <h3>Chưa tải được giải đấu</h3> : <h2>Chưa tải được giải đấu</h2>}
           <p>{query.error.message}</p>
           <button type="button" className="cp-button" onClick={() => void query.refetch()}>
             Thử lại
@@ -115,7 +115,7 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
   if (query.isLoadingError)
     return (
       <div className="hub-state" role="alert">
-        <h3>Chưa tải được lịch và kết quả</h3>
+        <h2>Chưa tải được lịch và kết quả</h2>
         <p>{query.error.message}</p>
         <button type="button" className="cp-button" onClick={() => void query.refetch()}>
           Thử lại

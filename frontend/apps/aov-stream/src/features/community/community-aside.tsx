@@ -11,14 +11,14 @@ import { Avatar, followersLabel } from "./community-ui"
  * The right column of the feed. Visitors get the invitation to sign in; signed-in readers get the pages they follow
  * and pages to follow next. The account and the notifications live in the top bar.
  */
-export function CommunityAside({ suggestions = true, guest = false }: { suggestions?: boolean; guest?: boolean }) {
+export function CommunityAside() {
   const session = useCommunitySession()
   const signedIn = session.status === "authenticated"
   return (
     <>
-      {!signedIn && guest && <GuestCard />}
-      {signedIn && suggestions && <FollowingCard />}
-      {signedIn && suggestions && <FollowSuggestions />}
+      {!signedIn && <GuestCard />}
+      {signedIn && <FollowingCard />}
+      {signedIn && <FollowSuggestions />}
     </>
   )
 }

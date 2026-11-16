@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import {
@@ -152,6 +152,18 @@ function Profile({ profile }: { profile: CommunityProfile }) {
       else updated.set("tab", next)
       return updated
     })
+  // A link of the overview opens another tab and goes away with the overview; keyboard focus moves to that tab.
+  const tabButtons = useRef(new Map<ProfileTab, HTMLButtonElement>())
+  const focusTab = useRef<ProfileTab | null>(null)
+  useEffect(() => {
+    if (focusTab.current !== tab) return
+    focusTab.current = null
+    tabButtons.current.get(tab)?.focus()
+  }, [tab])
+  const openTab = (next: ProfileTab) => {
+    focusTab.current = next
+    setTab(next)
+  }
 
   const region = regionName(content.country)
   const kind =
@@ -200,6 +212,10 @@ function Profile({ profile }: { profile: CommunityProfile }) {
           {tabs.map(([value, label]) => (
             <button
               key={value}
+              ref={(button) => {
+                if (button) tabButtons.current.set(value, button)
+                else tabButtons.current.delete(value)
+              }}
               type="button"
               aria-current={tab === value ? "page" : undefined}
               onClick={() => setTab(value)}
@@ -227,7 +243,7 @@ function Profile({ profile }: { profile: CommunityProfile }) {
               links={links}
               role={viewer.data?.role || ""}
               authenticated={authenticated}
-              open={setTab}
+              open={openTab}
             />
           )}
           {tab === "history" && (

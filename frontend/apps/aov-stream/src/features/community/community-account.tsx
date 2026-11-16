@@ -56,9 +56,16 @@ export function CommunityAccount() {
   const enabled = session.status === "authenticated"
   const unread = useUnreadCount()
   const tabRow = useRef<HTMLElement>(null)
-  // A tab opened from a link may sit past the edge of the row on a phone; bring it into view.
+  // A tab opened from a link may sit past the edge of the row on a phone, also once the unread count widens the row;
+  // the row scrolls sideways to it, and the page stays where it is.
   useEffect(() => {
-    tabRow.current?.querySelector("[aria-current]")?.scrollIntoView({ block: "nearest", inline: "nearest" })
+    const row = tabRow.current
+    const chosen = row?.querySelector<HTMLElement>("[aria-current]")
+    if (!row || !chosen) return
+    const box = row.getBoundingClientRect()
+    const shown = chosen.getBoundingClientRect()
+    if (shown.left >= box.left && shown.right <= box.right) return
+    row.scrollLeft += shown.left - box.left - (box.width - shown.width) / 2
   }, [tab, enabled, unread.data?.unread])
   return (
     <StreamShell>
@@ -428,7 +435,10 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
       </nav>
       {tab === "presentation" && <PresentationForm profile={profile} viewer={viewer} />}
       {tab === "posts" && (
-        <section className="cp-section" aria-label="Bài viết của trang">
+        <section className="cp-section" aria-labelledby="manage-posts">
+          <div className="tn-heading">
+            <h2 id="manage-posts">Bài viết của trang</h2>
+          </div>
           <CommunityFeed
             pageId={profile.id}
             pageName={name}

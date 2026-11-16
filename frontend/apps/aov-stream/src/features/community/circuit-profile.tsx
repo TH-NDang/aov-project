@@ -23,7 +23,7 @@ export function CircuitProfile({ profile }: { profile: CommunityProfile }) {
   const content = profile.content!
   const [params, setParams] = useSearchParams()
   const history = distinctHistory(content.history)
-  // "seasons" was a tab of its own; its address now opens the overview, which lists them.
+  // The overview lists the seasons, so `?tab=seasons` and any other unknown tab open it.
   const tab = params.get("tab") === "history" && history.length ? "history" : "overview"
   const seasons = useInfiniteQuery(competitionsFeedQuery({ circuitPageId: profile.id }))
   const seasonCount = seasons.data?.pages[0]?.totalElements

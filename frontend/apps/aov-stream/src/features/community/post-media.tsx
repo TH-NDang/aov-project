@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { StreamIcon } from "../../components/stream-icon"
 import { videoEmbed, videoPoster } from "./post-media-model"
 
@@ -9,6 +9,11 @@ import { videoEmbed, videoPoster } from "./post-media-model"
  */
 export function PostVideo({ url, title }: { url: string; title: string }) {
   const [playing, setPlaying] = useState(false)
+  const frame = useRef<HTMLIFrameElement>(null)
+  // The pressed poster gives way to the player; keyboard focus moves into it.
+  useEffect(() => {
+    if (playing) frame.current?.focus()
+  }, [playing])
   const embed = videoEmbed(url)
   if (!embed) return null
   if (embed.kind === "youtube")
@@ -16,6 +21,7 @@ export function PostVideo({ url, title }: { url: string; title: string }) {
       <div className="cp-post-video">
         {playing ? (
           <iframe
+            ref={frame}
             src={`${embed.src}?autoplay=1`}
             title={title}
             allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"

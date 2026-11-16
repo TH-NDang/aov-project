@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, useSearchParams } from "react-router"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import {
@@ -49,9 +49,9 @@ const STEP = 24
 const TOP_REGIONS = 6
 const CHIP_PAGES = 5
 /**
- * The service cannot filter or count pages by country, so the regions are counted here from the whole directory.
- * Past this many pages that stops being reasonable: the directory then only loads as the reader scrolls and offers
- * no regions.
+ * The service cannot filter or count pages by country, so the regions are counted here from the whole directory, and
+ * only once a reader asks for them or opens a link with a region. Past this many pages that stops being reasonable:
+ * the directory then only loads as the reader scrolls and offers no regions.
  */
 const SCAN_LIMIT = 3000
 const UNRECORDED = "none"
@@ -92,7 +92,8 @@ function useChosenChipInView(choice: string) {
 
 /**
  * Every published page, narrowed by kind and by region. Both filters live in the URL. The kind is asked of the
- * service; the region is applied here, to pages that keep loading in the background until the list is whole.
+ * service; the region is applied here, to pages that keep loading in the background until the list is whole. That
+ * download starts only when the regions are asked for, so a visit that does not filter by region stays light.
  */
 export function PageDirectory() {
   const [params, setParams] = useSearchParams()
@@ -100,6 +101,8 @@ export function PageDirectory() {
   const kind = requested && profileKinds.includes(requested) ? requested : null
   const region = params.get("region") || ""
   const following = useFollowedIds()
+  const [counting, setCounting] = useState(false)
+  const section = useRef<HTMLElement>(null)
   const query = useInfiniteQuery({
     queryKey: ["public-pages", kind],
     initialPageParam: 0,
@@ -114,13 +117,20 @@ export function PageDirectory() {
   const { hasNextPage, isFetching, isFetchNextPageError, fetchNextPage } = query
   const total = query.data?.pages[0]?.totalElements ?? 0
   const scanned = total <= SCAN_LIMIT
+  const scanning = scanned && (counting || !!region)
   useEffect(() => {
-    if (scanned && hasNextPage && !isFetching && !isFetchNextPageError) void fetchNextPage({ cancelRefetch: false })
-  }, [scanned, hasNextPage, isFetching, isFetchNextPageError, fetchNextPage])
+    if (scanning && hasNextPage && !isFetching && !isFetchNextPageError) void fetchNextPage({ cancelRefetch: false })
+  }, [scanning, hasNextPage, isFetching, isFetchNextPageError, fetchNextPage])
 
   const profiles = query.data?.pages.flatMap((page) => page.items) ?? []
   const complete = !!query.data && !hasNextPage
   const regions = complete ? regionFacet(profiles) : null
+  // The button that asked for the regions gives way to them; keyboard focus moves to the first region chip.
+  const regionsReady = !!regions
+  useEffect(() => {
+    if (!regionsReady || !counting || document.activeElement !== document.body) return
+    section.current?.querySelector<HTMLElement>("[data-regions] button")?.focus()
+  }, [regionsReady, counting])
   const narrowed = scanned && !!region
   const rows = narrowed ? profiles.filter((profile) => regionOf(profile) === region) : profiles
   const revealed = useRevealedRows(rows, `${kind}|${narrowed ? region : ""}`, STEP)
@@ -146,7 +156,7 @@ export function PageDirectory() {
   }
 
   return (
-    <section aria-labelledby="page-directory">
+    <section ref={section} aria-labelledby="page-directory">
       <div className="tn-heading">
         <h2 id="page-directory">
           Danh bạ trang {count != null && <small>{count.toLocaleString("vi-VN")} trang</small>}
@@ -169,12 +179,21 @@ export function PageDirectory() {
           !query.isError &&
           (regions ? (
             <RegionChips regions={regions} value={region} onChange={(value) => update({ region: value })} />
-          ) : (
+          ) : region ? (
             <div className="hub-pills" role="status" aria-label="Đang đếm trang theo khu vực">
               {Array.from({ length: 5 }, (_, index) => (
                 <span key={index} className="hub-skeleton" />
               ))}
             </div>
+          ) : (
+            query.data && (
+              <div className="hub-pills">
+                <button type="button" aria-disabled={counting || undefined} onClick={() => setCounting(true)}>
+                  <StreamIcon name="compass" size={16} />
+                  {counting ? "Đang đếm trang theo khu vực…" : "Lọc theo khu vực"}
+                </button>
+              </div>
+            )
           ))}
       </div>
       {query.isPending || (!rows.length && !complete && !query.isError) ? (
@@ -246,7 +265,7 @@ function RegionChips({
   const rest = regions.filter((entry) => !top.includes(entry))
   const other = rest.find((entry) => entry.key === value)
   return (
-    <div ref={row} className="hub-pills" role="group" aria-label="Khu vực">
+    <div ref={row} className="hub-pills" role="group" aria-label="Khu vực" data-regions="">
       <button type="button" aria-pressed={!value} onClick={() => onChange("")}>
         Mọi khu vực
       </button>

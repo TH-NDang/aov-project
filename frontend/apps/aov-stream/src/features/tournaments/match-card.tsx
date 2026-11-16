@@ -11,7 +11,7 @@ const when: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", hou
  * What a match says about itself in a few words: on now, done, waiting for its result or for a date. `brief` leaves
  * out "finished", which the score already shows, for narrow places such as a bracket.
  */
-export function MatchStatus({ entry, brief = false }: { entry: CompetitionMatch; brief?: boolean }) {
+function MatchStatus({ entry, brief = false }: { entry: CompetitionMatch; brief?: boolean }) {
   const { match, competition } = entry
   const state = matchState(entry)
   if (matchUnderway(entry)) return <span className="tn-live">Đang diễn ra</span>

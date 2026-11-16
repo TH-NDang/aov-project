@@ -364,7 +364,7 @@ export function PostCard({
         >
           <fieldset>
             <legend>{reportedComment ? "Lý do báo cáo bình luận" : "Lý do báo cáo bài viết"}</legend>
-            <div className="hub-pills cp-reason-chips">
+            <div className="hub-pills">
               {REPORT_REASONS.map((option) => (
                 <button type="button" key={option} aria-pressed={reason === option} onClick={() => setReason(option)}>
                   {option}

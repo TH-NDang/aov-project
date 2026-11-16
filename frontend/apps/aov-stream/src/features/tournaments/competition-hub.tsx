@@ -247,7 +247,7 @@ export function CompetitionDirectory() {
             <div className="hub-skeleton-rows" role="status" aria-label="Đang tải giải đấu" />
           ) : query.isError && !query.data ? (
             <div className="hub-state" role="alert">
-              <h3>Chưa tải được giải đấu</h3>
+              <h2>Chưa tải được giải đấu</h2>
               <button className="cp-button" onClick={() => void query.refetch()}>
                 Thử lại
               </button>
@@ -299,7 +299,7 @@ export function CompetitionDirectory() {
                 </>
               ) : (
                 <div className="hub-state">
-                  <h3>{items.length ? "Không có giải phù hợp" : "Chưa có giải đấu được công bố"}</h3>
+                  <h2>{items.length ? "Không có giải phù hợp" : "Chưa có giải đấu được công bố"}</h2>
                   <p>
                     {items.length
                       ? "Thử khu vực, năm hoặc trạng thái khác."

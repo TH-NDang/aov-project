@@ -146,7 +146,7 @@ export function seriesTeams(game: Pick<PublishedGame, "series" | "teams">): [Ser
 }
 
 export type LoadoutKind = "equipment" | "arcana" | "enchantments"
-export const LOADOUT_KINDS: LoadoutKind[] = ["equipment", "arcana", "enchantments"]
+const LOADOUT_KINDS: LoadoutKind[] = ["equipment", "arcana", "enchantments"]
 
 /** Whether a source showed anything of this kind for a player. A status alone, without entries, is not a record. */
 export function hasLoadout(participant: Participant, kind: LoadoutKind) {

@@ -54,14 +54,14 @@ export function LiveCards({ pages }: { pages: CommunityProfile[] }) {
 }
 
 /** The broadcasts above the home feed; nothing is rendered while nobody is live. */
-export function LiveRow({ title = "Đang trực tiếp" }: { title?: string }) {
+export function LiveRow() {
   const live = useLivePages()
   const items = (live.data?.items || []).filter((page) => page.live)
   if (!items.length) return null
   return (
     <section className="lv-row" aria-labelledby="live-row">
       <h2 id="live-row" className="hub-card-title">
-        {title} <span className="cp-meta">· {items.length} kênh</span>
+        Đang trực tiếp <span className="cp-meta">· {items.length} kênh</span>
       </h2>
       <LiveCards pages={items} />
     </section>

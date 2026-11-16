@@ -379,11 +379,13 @@
 .pf-roster .tn-team-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
-.pf-roster .tn-team-grid:has(> :nth-child(4)) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.pf-roster .tn-team-grid:has(> :nth-child(4)) > :last-child:nth-child(odd) {
-  grid-column: 1 / -1;
+@container profile-main (min-width: 700px) {
+  .pf-roster .tn-team-grid:has(> :nth-child(4)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pf-roster .tn-team-grid:has(> :nth-child(4)) > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 }
 @container profile-main (max-width: 699.98px) {
   .pf-roster .tn-team-grid {

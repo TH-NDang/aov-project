@@ -7,7 +7,7 @@ import { ReferenceArt } from "./reference-art"
 import { clock, orderedParticipants, seriesRound, seriesSides, unbroken } from "./tournament-model"
 
 /** The five picks of one side in lane order, underlined in the colour of the side it played on. */
-export function PickStrip({ game, side, slot }: { game: PublishedGame; side: GameSide; slot?: "a" | "b" }) {
+function PickStrip({ game, side, slot }: { game: PublishedGame; side: GameSide; slot?: "a" | "b" }) {
   return (
     <span className="tn-picks" data-side={side.side} data-slot={slot}>
       <span className="sr-only">{side.side === "BLUE" ? "Phe xanh:" : "Phe đỏ:"}</span>

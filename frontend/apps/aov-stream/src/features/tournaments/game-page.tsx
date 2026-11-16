@@ -108,7 +108,7 @@ function PublishedGameView({
   const patchCode =
     scope?.patchCode &&
     (DAY.test(scope.patchCode)
-      ? `Bản ${scope.seasonName ? formatCalendarDate(scope.patchCode).slice(0, 5) : formatCalendarDate(scope.patchCode)}`
+      ? `Bản ${scope.seasonName ? formatCalendarDate(scope.patchCode, { day: "2-digit", month: "2-digit" }) : formatCalendarDate(scope.patchCode)}`
       : scope.patchCode)
   const patch = (
     <span title={scope?.patchTitle || undefined}>

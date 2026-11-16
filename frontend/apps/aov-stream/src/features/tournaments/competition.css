@@ -666,8 +666,21 @@
     display: none;
   }
 }
-/* The narrowest phones: the pairing takes the whole first line, and the time and the format move beside the round. */
+/*
+ * The narrowest phones: the pairing takes the whole first line, and the time and the format move beside the round.
+ * The head's score narrows and its names shrink a step, so a word of a team name does not break across lines.
+ */
 @media (max-width: 379.98px) {
+  .tn-duel {
+    padding-inline: 8px;
+  }
+  .tn-duel-board {
+    font-size: 14px;
+  }
+  .tn-duel-score {
+    min-width: 76px;
+    font-size: 28px;
+  }
   .tn-fixture {
     grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
     grid-template-areas:

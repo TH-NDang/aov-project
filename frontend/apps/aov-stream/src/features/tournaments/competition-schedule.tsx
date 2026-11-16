@@ -203,7 +203,7 @@ export function ScheduleList({
 export function ScheduleEmpty({ filtered, onClear }: { filtered: boolean; onClear?: () => void }) {
   return (
     <div className="hub-state">
-      <h3>{filtered ? "Không có trận phù hợp" : "Chưa có lịch thi đấu"}</h3>
+      <h2>{filtered ? "Không có trận phù hợp" : "Chưa có lịch thi đấu"}</h2>
       <p>
         {filtered
           ? "Không trận nào khớp với bộ lọc đang chọn."
