@@ -309,6 +309,77 @@ Dòng hiển thị lý do xếp hạng: ngữ cảnh ("Trong giải này", "Từ
 
 Trận trong một giải vẫn theo lịch thi đấu, trận không có ngày xếp cuối. Trận tìm xuyên giải theo độ khớp tên rồi mới nhất. Không đổi thứ tự public trên Stream: các endpoint công khai không dùng chung truy vấn với danh sách admin.
 
+## Giải chính và các phần của giải (13/11/2026)
+
+Lần nhập 06/11/2026 tạo một giải cho mỗi trang Liquipedia có infobox giải, kể cả các trang con mà Liquipedia chỉ hiện
+thành tab của một giải: vòng loại, wildcard, tuần đấu, chặng thành phố, vòng thăng hạng, showmatch. Vì vậy danh sách
+giải lặp lại một giải nhiều lần. Người dùng yêu cầu bỏ cách hiển thị này ngày 13/11/2026.
+
+### Mô hình
+
+- Giải có thêm `parentTournamentId` tùy chọn. Giải không có trường này là **giải chính**; giải có trường này là **một
+  phần** của giải chính đó.
+- Một phần vẫn là một giải đầy đủ: có đội tham dự, đội hình, thể thức, lịch, kết quả, thứ hạng chung cuộc và bản công
+  bố riêng. Không gộp trận của vòng loại vào giải chính, vì đội dự vòng loại không phải đội dự giải chính, còn hạng
+  giải, thời gian và tiền thưởng của mỗi phần cũng khác.
+- Phần khác giai đoạn. Giai đoạn (vòng bảng, playoffs) nằm trong thể thức của một giải và dùng chung danh sách đội.
+  Phần là một cuộc đấu riêng diễn ra vì giải chính.
+- Chỉ có một cấp: giải chính không là phần của giải khác và phần không có phần riêng. Trang con nhiều tầng của
+  Liquipedia được gắn thẳng vào giải chính; tên của phần vẫn giữ đủ ngữ cảnh.
+- Giải chính có thể không có trận của riêng mình khi nó chỉ gom các phần ngang hàng, ví dụ một mùa gồm nhiều chặng
+  thành phố.
+
+### Quy tắc lưu, xóa và khôi phục
+
+- `parentTournamentId` phải trỏ tới một giải không ở thùng rác, khác chính nó và là giải chính. Giải đã có phần không
+  nhận `parentTournamentId`; phần đang ở thùng rác cũng được tính vì còn khôi phục được. Vi phạm trả 400
+  `TOURNAMENT_INVALID_CONTENT`; giải chính không tồn tại hoặc đã xóa trả 409 `TOURNAMENT_RECORD_DELETED`.
+- Giải chính còn phần chưa xóa thì chưa xóa được: `deletion-impact` trả usage `TOURNAMENT_PART` và thao tác xóa trả 409
+  `TOURNAMENT_RECORD_IN_USE`. Xóa hoặc tách các phần trước.
+- Khôi phục một phần khi giải chính còn ở thùng rác trả 409 `TOURNAMENT_RESTORE_BLOCKED`, như mọi bản ghi phụ thuộc khác.
+- Tách một phần là bỏ `parentTournamentId`; giải đó trở lại là giải chính.
+
+### Danh sách và tìm kiếm
+
+- `GET /admin/tournaments` nhận `level`: `ALL` (mặc định, như trước) hoặc `MAIN`. Với `MAIN`, danh sách chỉ gồm giải
+  chính; từ khóa khớp tên giải chính hoặc tên một phần của nó; bộ lọc trạng thái, hạng, khu vực và năm xét trên giải
+  chính.
+- Thứ tự RECENT với `MAIN` xếp giải chính theo thành viên gần hôm nay nhất trong giải chính và các phần chưa xóa của nó:
+  nhóm trước, rồi khoảng cách trong nhóm, đúng quy tắc của "Ưu tiên gần đây". Vòng loại đang diễn ra đưa giải chính lên
+  nhóm đang diễn ra dù giải chính còn vài tháng nữa mới đấu.
+- `GET /admin/tournaments/facets?level=MAIN` đếm theo giải chính.
+- `GET /admin/tournaments/parts?parentId=` trả các phần chưa xóa của một giải chính; bỏ `parentId` thì trả mọi phần. Mỗi
+  dòng gồm `{id,parentId,name,logoUrl,competitionType,status,tier,region,startsOn,endsOn}`, xếp theo giải chính, rồi
+  ngày bắt đầu, rồi tên.
+- Ô chọn giải cho trận, đội hình và thành tích vẫn liệt kê cả các phần (`level=ALL`), vì trận và đội hình thuộc về
+  từng phần. Ô chọn giải chính dùng `level=MAIN`.
+- Mùa của một tổ chức hoặc hệ thống giải (`GET /admin/competitions` có lọc trang, `GET /admin/competitions/page-stats`):
+  một phần chỉ được liệt kê và đếm khi giải chính của nó không thuộc cùng trang đó. Vòng loại do cùng đơn vị tổ chức đi
+  theo giải chính; vòng loại do đơn vị khác tổ chức vẫn hiện ở trang của đơn vị đó. Thứ tự các mùa dùng cùng cách xếp
+  theo thành viên gần hôm nay nhất.
+- Số giải và số chức vô địch trong danh bạ đội, tuyển thủ chưa đổi: mỗi phần vẫn được đếm như một giải.
+
+### Admin
+
+- Danh sách giải chỉ hiện giải chính. Dưới ngày tháng của giải có một dòng nêu số phần và tối đa bốn phần, mỗi phần là
+  một liên kết mở thẳng phần đó. Phần được từ khóa gọi tên đứng trước, rồi phần đang hoặc sắp diễn ra (có chấm màu),
+  rồi theo thứ tự thi đấu. Số còn lại hiện thành "+N phần khác" và mở giải chính.
+- Trang giải có một hàng tab ngay dưới tiêu đề: "Giải chính" và từng phần, giống hàng tab của Liquipedia. Mỗi tab mở
+  không gian sáu bước của giải đó. Đường dẫn đầu trang của một phần có thêm tên giải chính.
+- Tên rút gọn của phần là tên phần bỏ đi tên giải chính ở đầu ("… 2026 - Wildcard" thành "Wildcard"). Khi hai tên chỉ
+  giống nhau phần mở đầu cho tới một dấu ngăn cách thì bỏ phần giống nhau đó. Phần có tên riêng ("Road to APL 2020 -
+  GCS") giữ nguyên tên.
+- Bước Tổng quan của giải chính có mục "Các phần của giải": loại, ngày, trạng thái, số đội và số trận của từng phần,
+  cùng nút "Thêm phần" là nơi duy nhất tạo phần mới. Form mở sẵn giải chính, mã, tên, khu vực, năm, hạng và logo lấy từ
+  giải chính. Bước Tổng quan của một phần ghi "Là một phần của" kèm tên giải chính.
+- Trường "Thuộc giải chính" trong form sửa giải là nơi duy nhất gắn một giải có sẵn vào giải chính hoặc tách ra. Trường
+  bị khóa khi giải đó đang có phần.
+
+### Công khai
+
+Chưa đổi. Snapshot công bố của một giải mang `parentTournamentId` như mọi trường khác của giải, để Stream gom các phần
+thành tab ở bước sau. Hiện chưa có giải nào được công bố.
+
 ## Cơ sở dữ liệu
 
 V006 tạo schema community và các bảng page, page_audit, page_member, page_claim, page_invitation,
@@ -349,6 +420,10 @@ player_tournament_activity, player_activity, page_activity). `tournament.page_ac
 Migration `V014` đưa tên thật (`fullName`) vào phần tìm kiếm của tuyển thủ: ô tìm trong danh bạ và ô chọn tuyển thủ đều tìm được
 theo tên thi đấu, tên thật, biệt danh hoặc mã.
 
+V016 phục vụ "Giải chính và các phần của giải": cột sinh `tournament.tournament.parent_id` (đọc từ `parentTournamentId`),
+index theo cột đó cho các giải là phần, và view `tournament.event_window`: mỗi giải chính một dòng với `recency_rank`,
+`recency_distance` của thành viên gần hôm nay nhất trong giải chính và các phần chưa xóa.
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
@@ -360,8 +435,9 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 |---|---|
 | GET /pages?kind=&q=&page=&size= | Chỉ bản công bố; tìm theo tên công bố |
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
-| GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&teamId=&playerId=&state=&page=&size= | Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
-| GET /admin/tournaments/facets | {total,statuses,regions,years}, cho tab và bộ lọc mà không tải cả danh sách |
+| GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&level=&teamId=&playerId=&state=&page=&size= | `level` ALL (mặc định) hoặc MAIN: chỉ giải chính, tìm cả theo tên các phần, xếp theo thành viên gần hôm nay nhất. Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
+| GET /admin/tournaments/facets?level= | {total,statuses,regions,years}, cho tab và bộ lọc mà không tải cả danh sách; `level=MAIN` đếm theo giải chính |
+| GET /admin/tournaments/parts?parentId= | Các phần chưa xóa của một giải chính, hoặc mọi phần khi bỏ `parentId`: [{id,parentId,name,logoUrl,competitionType,status,tier,region,startsOn,endsOn}] |
 | GET /admin/teams?q=&sort=&tournamentId=&state=&page=&size= | sort RECENT (mặc định), NAME, UPDATED. Dòng có thêm `lastActiveOn`, `context` TOURNAMENT khi thuộc giải; hai trường này không có khi không áp dụng |
 | GET /admin/players?q=&sort=&teamId=&tournamentId=&state=&page=&size= | Như trên; `context` là TEAM_IN_TOURNAMENT, TEAM hoặc TOURNAMENT |
 | GET /admin/reference-catalog?q=&kind= | Khớp tên rồi hoạt động gần nhất; tra theo `ids` không xếp hạng |
