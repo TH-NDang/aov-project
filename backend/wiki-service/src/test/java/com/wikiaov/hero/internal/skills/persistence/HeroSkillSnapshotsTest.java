@@ -50,7 +50,7 @@ class HeroSkillSnapshotsTest {
                 new SkillTraitSkillRow(first, "HARD_CC", "skill-1"),
                 new SkillTraitSkillRow(second, "DASH", "skill-1")));
         when(traitTexts.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
-                new SkillTraitTranslationRow(first, "HARD_CC", "vi-VN", "Hào hoa: choáng 0,75 giây")));
+                new SkillTraitTranslationRow(first, "HARD_CC", "vi-VN", "Hào hoa (choáng 0.75 giây)")));
 
         var result = store.traits(ids);
 
@@ -58,7 +58,7 @@ class HeroSkillSnapshotsTest {
                 TraitCode.HARD_CC);
         assertThat(result.get(first).getLast().skillKeys()).containsExactly("skill-1", "skill-2");
         assertThat(result.get(first).getLast().translations()).extracting(TraitTranslation::detail)
-                .containsExactly("Hào hoa: choáng 0,75 giây");
+                .containsExactly("Hào hoa (choáng 0.75 giây)");
         assertThat(result.get(first).getFirst().skillKeys()).isEmpty();
         assertThat(result.get(second)).extracting(Trait::code).containsExactly(TraitCode.DASH);
     }

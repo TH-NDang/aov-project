@@ -130,7 +130,7 @@ class HeroEvaluationIntegrationTest {
         String p = path(hero, id(draft));
 
         draft = send(put(p + "/traits"), Map.of("expectedDraftVersion", number(draft, "version"), "traits", List.of(
-                trait("HARD_CC", List.of("skill-1-1"), "Hào hoa: choáng 0,75 giây"),
+                trait("HARD_CC", List.of("skill-1-1"), "Hào hoa (choáng 0.75 giây)"),
                 Map.of("code", "DASH", "skillKeys", List.of("skill-2-1", "skill-1-1"), "translations", List.of()))),
                 200);
         assertThat(traits(content(hero, draft))).extracting(t -> t.get("code"), t -> t.get("skillKeys"))
@@ -177,7 +177,7 @@ class HeroEvaluationIntegrationTest {
         var content = (Map<String, Object>) detail.get("content");
         assertThat((List<Map<String, Object>>) ((Map<String, Object>) content.get("skills")).get("traits"))
                 .extracting(t -> t.get("code"), t -> t.get("detail"))
-                .containsExactly(tuple("DASH", null), tuple("HARD_CC", "Hào hoa: choáng 0,75 giây"));
+                .containsExactly(tuple("DASH", null), tuple("HARD_CC", "Hào hoa (choáng 0.75 giây)"));
         assertThat((Map<String, Object>) content.get("profile")).containsEntry("strengths", "Lướt nhiều lần")
                 .containsEntry("counterTips", "Chờ hết miễn khống.");
 
