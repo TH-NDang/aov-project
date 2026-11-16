@@ -1,10 +1,12 @@
-/* A skill's summary: the first thing to read, set apart from the game's own text by a soft gold ground. */
+/*
+ * A skill's summary: the first thing to read. It sits on the page like the rest of the skill text, with a gold
+ * heading and a thin rule between it and the game's own description.
+ */
 .wiki-skill-summary {
-  max-width: 68ch;
+  max-width: 72ch;
   margin-top: 12px;
-  border-radius: 8px;
-  padding: 10px 12px 12px;
-  background: color-mix(in srgb, var(--aov-wiki-gold) 10%, transparent);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--aov-line);
   color: var(--aov-text);
 }
 .wiki-skill-summary h4,
@@ -13,7 +15,7 @@
   margin: 0;
 }
 .wiki-skill-summary h4 {
-  color: var(--aov-wiki-gold);
+  color: var(--aov-accent);
 }
 .wiki-skill-summary p {
   font: var(--wiki-type-prose);
@@ -22,7 +24,7 @@
 }
 /* Names the full description only where a summary stands above it, and sits close to the text it names. */
 .wiki-skill-summary-next {
-  margin: 14px 0 -8px;
+  margin: 12px 0 -8px;
   color: var(--aov-muted);
 }
 
