@@ -1,16 +1,16 @@
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { Info, Swords } from "lucide-react"
-import { ImagePreview } from "@/components/image-preview"
-import { mediaUrl, RESOURCES_BASE } from "@/lib/media"
 import { HeroAsset } from "./hero-content"
+import { skillImageMatch, useHeroSkillImages, type SkillImage } from "./skill-artwork"
 import type { Skill } from "./types"
 
 interface ComparisonSkillIconProps {
   before: Skill | null
   after: Skill | null
-  referenceCodes?: readonly string[]
+  /** The hero whose skill image library fills in a skill that neither version has an icon for. */
+  heroId?: string
 }
+
+const LIBRARY_LABEL = "Ảnh thư viện kỹ năng, không phải ảnh của hai phiên bản đang so sánh"
 
 type RecordValue = Record<string, unknown>
 const record = (value: unknown): RecordValue | null =>
@@ -18,45 +18,29 @@ const record = (value: unknown): RecordValue | null =>
 const records = (value: unknown): RecordValue[] =>
   Array.isArray(value) ? value.map(record).filter((item): item is RecordValue => item !== null) : []
 
-function referenceIdentity({ before, after, referenceCodes = [] }: ComparisonSkillIconProps) {
-  const codes = [...new Set(referenceCodes)]
-  if (codes.length !== 1 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(codes[0]) || codes[0].length > 80) return null
-  const skills = [before, after].filter((skill): skill is Skill => skill !== null)
-  const keys = [...new Set(skills.map((skill) => skill.skillKey))]
-  const match = keys.length === 1 ? /^skill-(\d+)-(\d+)$/.exec(keys[0]) : null
-  if (!match) return null
-  for (const skill of skills) {
-    for (const effect of skill.effects.filter((item) => item.effectType === "SOURCE_SNAPSHOT")) {
-      const source = effect.metadata
-      if (typeof source.sourceHeroCode === "string" && source.sourceHeroCode !== codes[0]) return null
-      if (
-        [...records(source.heroReviewFlags), ...records(source.reviewFlags)].some(
-          (flag) => flag.type === "source_filename_display_mismatch",
-        )
-      )
-        return null
-    }
-  }
-  return { code: codes[0], slot: Number(match[1]), variant: Number(match[2]) }
-}
-
-/** Current resource artwork is a labelled reference, never evidence of a historical icon. */
-export function resolveComparisonReferenceIcon(props: ComparisonSkillIconProps, heroes: unknown): string | null {
-  const identity = referenceIdentity(props)
-  if (!identity) return null
-  const matches = records(heroes).filter((hero) => hero.id === identity.code)
-  if (matches.length !== 1) return null
-  const skills = records(matches[0].skills).filter((skill) => skill.slot === identity.slot)
-  if (skills.length !== 1) return null
-  const variants = records(skills[0].variants).filter((variant) => variant.index === identity.variant)
-  const path = variants.length === 1 ? variants[0].icon : null
-  if (
-    typeof path !== "string" ||
-    !/^assets\/[a-zA-Z0-9_./-]+\.(png|jpe?g|webp)$/i.test(path) ||
-    path.split("/").includes("..")
+/** The capture review found that the file name does not show this skill, so its slot cannot pick a picture. */
+const mislabeled = (skill: Skill) =>
+  skill.effects.some(
+    (effect) =>
+      effect.effectType === "SOURCE_SNAPSHOT" &&
+      [...records(effect.metadata.heroReviewFlags), ...records(effect.metadata.reviewFlags)].some(
+        (flag) => flag.type === "source_filename_display_mismatch",
+      ),
   )
-    return null
-  return mediaUrl(path) ?? null
+
+/**
+ * The library picture of a skill that neither version has an icon for, by the rule the skills view uses. It is a labelled
+ * reference, never evidence of a historical icon, so two different skill keys or a mislabeled capture give none.
+ */
+export function comparisonLibraryImage(
+  before: Skill | null,
+  after: Skill | null,
+  images: readonly SkillImage[],
+): SkillImage | undefined {
+  const skills = [before, after].filter((skill): skill is Skill => skill !== null)
+  if (!skills.length || new Set(skills.map((skill) => skill.skillKey)).size !== 1 || skills.some(mislabeled))
+    return undefined
+  return skillImageMatch(skills.at(-1)!, images)
 }
 
 function skillName(skill: Skill | null) {
@@ -80,7 +64,7 @@ function MissingSkillIcon({ skill, compact = false }: { skill: Skill | null; com
     <div
       role="img"
       aria-label={`${label} · Chưa có ảnh kỹ năng`}
-      title="Chưa có ảnh kỹ năng phù hợp trong bản dữ liệu hoặc tài nguyên tham chiếu"
+      title="Chưa có ảnh kỹ năng phù hợp trong hai phiên bản hoặc thư viện ảnh kỹ năng"
       className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted/50 text-muted-foreground ${compact ? "size-10" : "size-12"}`}
     >
       <Swords aria-hidden="true" className="absolute -right-1 -bottom-1 size-8 opacity-15" />
@@ -89,25 +73,12 @@ function MissingSkillIcon({ skill, compact = false }: { skill: Skill | null; com
   )
 }
 
-export function ComparisonSkillIcon(props: ComparisonSkillIconProps) {
-  const { before, after } = props
+export function ComparisonSkillIcon({ before, after, heroId }: ComparisonSkillIconProps) {
   const beforeId = before?.iconAssetId?.trim() || null
   const afterId = after?.iconAssetId?.trim() || null
   const boundId = afterId ?? beforeId
-  const eligible = !boundId && referenceIdentity(props) !== null
-  const [failedUrl, setFailedUrl] = useState<string | null>(null)
-  const reference = useQuery({
-    queryKey: ["comparison-reference-artwork", RESOURCES_BASE],
-    queryFn: async ({ signal }) => {
-      const response = await fetch(`${RESOURCES_BASE}data/heroes.json`, { credentials: "omit", signal })
-      if (!response.ok) throw new Error("Reference artwork is unavailable.")
-      const data: unknown = await response.json()
-      return record(data)?.heroes ?? []
-    },
-    enabled: eligible,
-    staleTime: Infinity,
-    retry: false,
-  })
+  // The library is only asked for when a skill is shown and neither version has an icon of its own.
+  const library = useHeroSkillImages(boundId || (!before && !after) ? undefined : heroId)
   if (before && after && beforeId !== afterId)
     return (
       <div className="flex shrink-0 gap-1.5" aria-label="Đổi ảnh kỹ năng">
@@ -130,28 +101,14 @@ export function ComparisonSkillIcon(props: ComparisonSkillIconProps) {
     )
   if (boundId) return <BoundSkillIcon id={boundId} alt={skillName(after ?? before)} />
 
-  const url = eligible ? resolveComparisonReferenceIcon(props, reference.data) : null
-  const name = skillName(after ?? before)
-  const referenceLabel = "Ảnh tham chiếu từ tài nguyên hiện tại"
-  if (!url || failedUrl === url) return <MissingSkillIcon skill={after ?? before} />
+  const image = comparisonLibraryImage(before, after, library.data ?? [])
+  if (!image) return <MissingSkillIcon skill={after ?? before} />
   return (
-    <div className="relative size-12 shrink-0" title={referenceLabel}>
-      <ImagePreview
-        src={url}
-        alt={`${referenceLabel} · ${name}`}
-        className="size-12 rounded-full [&>button>span]:rounded-full"
-      >
-        <img
-          src={url}
-          alt={`${referenceLabel} · ${name}`}
-          loading="lazy"
-          className="size-full rounded-full border object-cover"
-          onError={() => setFailedUrl(url)}
-        />
-      </ImagePreview>
+    <div className="relative size-12 shrink-0" title={LIBRARY_LABEL}>
+      <BoundSkillIcon id={image.assetId} alt={`${LIBRARY_LABEL} · ${skillName(after ?? before)}`} />
       <span className="pointer-events-none absolute -right-1 -bottom-1 rounded-full border bg-background p-0.5 text-muted-foreground">
         <Info aria-hidden="true" className="size-3" />
-        <span className="sr-only">{referenceLabel}</span>
+        <span className="sr-only">{LIBRARY_LABEL}</span>
       </span>
     </div>
   )

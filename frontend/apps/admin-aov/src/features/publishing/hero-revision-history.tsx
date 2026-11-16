@@ -8,7 +8,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { AdminReferenceProvider } from "../terminology/catalog"
-import { createPublishingApi, type HeroComparison } from "./publishing-api"
+import { createPublishingApi } from "./publishing-api"
 import { control } from "./fields"
 import { usePublicationOverview } from "./publication-overview"
 import { comparisonFieldLabels } from "./hero-comparison"
@@ -38,19 +38,6 @@ type HeroRevisionHistoryProps = {
   content: Content
   onOpenRevision: (revision: Revision) => void
   disabled?: boolean
-}
-
-function referenceHeroCodes(comparison: HeroComparison | undefined): string[] {
-  const codes = new Set<string>()
-  for (const snapshot of comparison ? [comparison.before, comparison.after] : []) {
-    const section = (snapshot.skills ?? snapshot.SKILLS) as Content["SKILLS"] | undefined
-    for (const skill of section?.skills ?? [])
-      for (const effect of skill.effects) {
-        const code = effect.effectType === "SOURCE_SNAPSHOT" ? effect.metadata.sourceHeroCode : null
-        if (typeof code === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(code)) codes.add(code)
-      }
-  }
-  return [...codes]
 }
 
 export function HeroRevisionHistory(props: HeroRevisionHistoryProps) {
@@ -113,7 +100,6 @@ function RevisionHistoryContent({
         : { skills: [], otherChanges: [] },
     [comparison.data, locale, recorded?.changes],
   )
-  const referenceCodes = useMemo(() => referenceHeroCodes(comparison.data), [comparison.data])
   const candidates = useMemo(
     () =>
       revisions
@@ -251,7 +237,7 @@ function RevisionHistoryContent({
               </p>
             )}
             {skills.map((group) => (
-              <SkillComparisonCard key={group.skillKey} group={group} mode={mode} referenceCodes={referenceCodes} />
+              <SkillComparisonCard key={group.skillKey} group={group} mode={mode} heroId={heroId} />
             ))}
             {otherChanges.map((change) => (
               <OtherComparisonCard

@@ -128,11 +128,12 @@ function skillCaption(group: SkillComparisonGroup) {
 export function SkillComparisonCard({
   group,
   mode,
-  referenceCodes,
+  heroId,
 }: {
   group: SkillComparisonGroup
   mode: DescriptionDiffMode
-  referenceCodes: readonly string[]
+  /** Fills in a skill that neither version has an icon for, from the hero skill image library. */
+  heroId?: string
 }) {
   const heading = useId()
   const rows = group.rows.filter((row) => row.id !== "iconAssetId" && !row.ranks)
@@ -156,7 +157,7 @@ export function SkillComparisonCard({
       className="@container min-w-0 overflow-hidden admin-panel"
     >
       <header className="flex flex-wrap items-center gap-3 bg-muted/15 p-4">
-        <ComparisonSkillIcon before={group.beforeSkill} after={group.afterSkill} referenceCodes={referenceCodes} />
+        <ComparisonSkillIcon before={group.beforeSkill} after={group.afterSkill} heroId={heroId} />
         <div className="min-w-0 flex-1 space-y-1">
           <p className="text-xs text-muted-foreground">{skillCaption(group)}</p>
           <h4 id={heading} className="break-words font-semibold">
