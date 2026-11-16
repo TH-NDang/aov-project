@@ -181,6 +181,61 @@ class CompetitionRecencyIntegrationTest {
     }
 
     @Test
+    void theMainEventListLeavesPartsOutFindsAnEventThroughThemAndPlacesItByItsNearestPart() throws Exception {
+        var marker = marker("events");
+        var championship = tournament(marker, "championship", 60, 70);
+        part(marker, "wildcard", championship, -1, 1);
+        part(marker, "open-qualifier", championship, -30, -28);
+        var ended = tournament(marker, "ended", -20, -10);
+        part(marker, "ended-qualifier", ended, -40, -35);
+
+        // The full list keeps every tournament, each placed by its own dates.
+        assertThat(contentCodes(tournaments(marker))).containsExactly(marker + "-wildcard", marker + "-ended",
+                marker + "-open-qualifier", marker + "-ended-qualifier", marker + "-championship");
+
+        // A wildcard in progress brings its main event forward although the main event is two months away.
+        var events = read(get(ADMIN + "/tournaments").param("q", marker).param("level", "MAIN"));
+        assertThat(contentCodes(events)).containsExactly(marker + "-championship", marker + "-ended");
+        assertThat(events.path("totalElements").asInt()).isEqualTo(2);
+        assertThat(contentCodes(read(get(ADMIN + "/tournaments").param("q", marker + " wildcard")
+                .param("level", "MAIN")))).containsExactly(marker + "-championship");
+        assertThat(contentCodes(read(get(ADMIN + "/tournaments").param("q", marker + " wildcard"))))
+                .containsExactly(marker + "-wildcard");
+        authorizedFails(get(ADMIN + "/tournaments").param("level", "NOPE"));
+
+        var parts = read(get(ADMIN + "/tournaments/parts").param("parentId", championship.toString()));
+        assertThat(parts.findValuesAsString("name")).containsExactly(marker + " open-qualifier",
+                marker + " wildcard");
+
+        var every = read(get(ADMIN + "/tournaments/facets"));
+        var main = read(get(ADMIN + "/tournaments/facets").param("level", "MAIN"));
+        assertThat(every.path("total").asInt() - main.path("total").asInt()).isGreaterThanOrEqualTo(3);
+        authorizedFails(get(ADMIN + "/tournaments/facets").param("level", "NOPE"));
+    }
+
+    @Test
+    void aPartIsASeasonOfAPageOnlyWhereItsMainEventIsNot() throws Exception {
+        var marker = marker("seasons");
+        var organizer = page("ORGANIZATION", marker + "-organizer", null, Map.of("name", marker + " organizer"));
+        var partner = page("ORGANIZATION", marker + "-partner", null, Map.of("name", marker + " partner"));
+        var cup = tournament(marker, "cup", -20, -10);
+        var ownQualifier = part(marker, "own-qualifier", cup, -40, -35);
+        var partnerQualifier = part(marker, "partner-qualifier", cup, -50, -45);
+        organizedBy(cup, organizer);
+        organizedBy(ownQualifier, organizer);
+        organizedBy(partnerQualifier, partner);
+
+        assertThat(ids(read(get(ADMIN + "/competitions").param("organizerPageId", organizer.path("id").asText()))))
+                .containsExactly(cup.toString());
+        assertThat(ids(read(get(ADMIN + "/competitions").param("organizerPageId", partner.path("id").asText()))))
+                .containsExactly(partnerQualifier.toString());
+
+        var stats = read(get(ADMIN + "/competitions/page-stats"));
+        assertThat(seasonsOf(stats, organizer)).isEqualTo(1);
+        assertThat(seasonsOf(stats, partner)).isEqualTo(1);
+    }
+
+    @Test
     void pagingThroughTiesNeverRepeatsOrSkipsARow() throws Exception {
         var marker = marker("ties");
         var expected = new ArrayList<String>();
@@ -516,6 +571,25 @@ class CompetitionRecencyIntegrationTest {
                 TODAY.plusDays(startsIn).getYear(),
                 TODAY.plusDays(startsIn), TODAY.plusDays(endsIn), null, null);
         return id(create("tournaments", content));
+    }
+
+    private UUID part(String marker, String label, UUID mainEvent, int startsIn, int endsIn) throws Exception {
+        var content = new Tournament(marker + "-" + label, marker + " " + label, "VN",
+                TODAY.plusDays(startsIn).getYear(), TODAY.plusDays(startsIn), TODAY.plusDays(endsIn), null, null, null,
+                null, CompetitionType.QUALIFIER, null, null, null, null, null, null, null, mainEvent);
+        return id(create("tournaments", content));
+    }
+
+    private void organizedBy(UUID tournament, JsonNode organizer) throws Exception {
+        send(put(ADMIN + "/competitions/" + tournament),
+                Map.of("version", 0, "content", Map.of("organizerPageId", organizer.path("id").asText())));
+    }
+
+    private static int seasonsOf(JsonNode stats, JsonNode page) {
+        for (var row : stats)
+            if (row.path("pageId").asText().equals(page.path("id").asText()))
+                return row.path("tournaments").asInt();
+        throw new AssertionError("No statistics for page " + page.path("id").asText());
     }
 
     private UUID team(String marker, String label) throws Exception {

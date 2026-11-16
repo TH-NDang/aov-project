@@ -131,6 +131,10 @@ public final class TournamentContent {
         }
     }
 
+    /**
+     * {@code parentTournamentId} makes this tournament a part of a main event: its qualifier, wildcard, weekly stop or
+     * show match. A part keeps its own teams, format, schedule and final table; a main event names no parent.
+     */
     public record Tournament(
             String code,
             String name,
@@ -149,7 +153,8 @@ public final class TournamentContent {
             String localCurrency,
             List<TournamentPlacement> placements,
             List<TournamentAward> awards,
-            List<TournamentLink> links
+            List<TournamentLink> links,
+            UUID parentTournamentId
     ) {
         public Tournament {
             tier = tier == null ? TournamentTier.UNKNOWN : tier;
@@ -159,6 +164,15 @@ public final class TournamentContent {
             placements = placements == null ? List.of() : List.copyOf(placements);
             awards = awards == null ? List.of() : List.copyOf(awards);
             links = links == null ? List.of() : List.copyOf(links);
+        }
+
+        public Tournament(String code, String name, String region, Integer year, LocalDate startsOn,
+                LocalDate endsOn, String sourceUrl, String note, String logoUrl, TournamentTier tier,
+                CompetitionType competitionType, VenueMode venueMode, TournamentStatus status,
+                TournamentResult result, String localCurrency, List<TournamentPlacement> placements,
+                List<TournamentAward> awards, List<TournamentLink> links) {
+            this(code, name, region, year, startsOn, endsOn, sourceUrl, note, logoUrl, tier, competitionType,
+                    venueMode, status, result, localCurrency, placements, awards, links, null);
         }
 
         public Tournament(String code, String name, String region, Integer year, LocalDate startsOn,

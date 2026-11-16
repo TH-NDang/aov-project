@@ -83,6 +83,7 @@ public interface TournamentAdminApi {
             @RequestParam(defaultValue = "") String region,
             @RequestParam(required = false) Integer year,
             @RequestParam(defaultValue = "RECENT") String sort,
+            @RequestParam(defaultValue = "ALL") String level,
             @RequestParam(required = false) UUID teamId,
             @RequestParam(required = false) UUID playerId,
             @RequestParam(defaultValue = "0") int page,
@@ -90,7 +91,11 @@ public interface TournamentAdminApi {
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/facets")
-    TournamentFacets tournamentFacets(HttpServletRequest request);
+    TournamentFacets tournamentFacets(@RequestParam(defaultValue = "ALL") String level, HttpServletRequest request);
+
+    @GetMapping(ApiPaths.ADMIN + "/tournaments/parts")
+    java.util.List<TournamentPart> tournamentParts(@RequestParam(required = false) UUID parentId,
+            HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/{id}")
     View<Tournament> getTournament(@PathVariable UUID id);

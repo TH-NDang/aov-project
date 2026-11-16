@@ -100,19 +100,25 @@ public class TournamentAdminController implements TournamentAdminApi {
 
     @Override
     public PageSlice<Ranked<Tournament>> tournaments(String q, String alsoRegions, RecordState state, String status,
-            String tier, String region, Integer year, String sort, UUID teamId, UUID playerId, int page, int size,
-            HttpServletRequest request) {
-        Parameters.only(request, "q", "alsoRegions", "state", "status", "tier", "region", "year", "sort", "teamId",
-                "playerId", "page", "size");
+            String tier, String region, Integer year, String sort, String level, UUID teamId, UUID playerId, int page,
+            int size, HttpServletRequest request) {
+        Parameters.only(request, "q", "alsoRegions", "state", "status", "tier", "region", "year", "sort", "level",
+                "teamId", "playerId", "page", "size");
         Parameters.search(q);
-        return administration.tournaments(q, alsoRegions, state, status, tier, region, year, sort, teamId, playerId,
-                Parameters.page(page, size, "updatedAt"));
+        return administration.tournaments(q, alsoRegions, state, status, tier, region, year, sort, level, teamId,
+                playerId, Parameters.page(page, size, "updatedAt"));
     }
 
     @Override
-    public TournamentFacets tournamentFacets(HttpServletRequest request) {
-        Parameters.only(request);
-        return administration.tournamentFacets();
+    public TournamentFacets tournamentFacets(String level, HttpServletRequest request) {
+        Parameters.only(request, "level");
+        return administration.tournamentFacets(level);
+    }
+
+    @Override
+    public List<TournamentPart> tournamentParts(UUID parentId, HttpServletRequest request) {
+        Parameters.only(request, "parentId");
+        return administration.tournamentParts(parentId);
     }
 
     @Override

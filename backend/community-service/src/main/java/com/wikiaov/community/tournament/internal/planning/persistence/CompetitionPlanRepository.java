@@ -7,22 +7,32 @@ import org.springframework.data.jpa.repository.*;
 public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlanRecord, UUID> {
     /**
      * The seasons of an organizer or circuit, in the order of the tournament list. A tournament in the trash takes its
-     * plan with it.
+     * plan with it. A part of a main event is a season of a page only when its main event is not one already: a
+     * qualifier run by the same organizer comes with its main event instead of standing beside it.
      */
     @Query(value = """
         SELECT p.* FROM tournament.competition_plan p
           JOIN tournament.tournament t ON t.id = p.id
           JOIN tournament.tournament_window w ON w.id = p.id
+          LEFT JOIN tournament.event_window e ON e.id = p.id
+          LEFT JOIN tournament.competition_plan main ON main.id = t.parent_id
         WHERE t.deleted_at IS NULL
-          AND (:organizer = '' OR p.organizer_page_id = CAST(NULLIF(:organizer, '') AS uuid))
-          AND (:circuit = '' OR p.circuit_page_id = CAST(NULLIF(:circuit, '') AS uuid))
-        ORDER BY w.recency_rank, w.recency_distance, lower(t.name), p.id
+          AND (:organizer = '' OR (p.organizer_page_id = CAST(NULLIF(:organizer, '') AS uuid)
+                                   AND p.organizer_page_id IS DISTINCT FROM main.organizer_page_id))
+          AND (:circuit = '' OR (p.circuit_page_id = CAST(NULLIF(:circuit, '') AS uuid)
+                                 AND p.circuit_page_id IS DISTINCT FROM main.circuit_page_id))
+        ORDER BY CASE WHEN e.id IS NULL THEN w.recency_rank ELSE e.recency_rank END,
+                 CASE WHEN e.id IS NULL THEN w.recency_distance ELSE e.recency_distance END,
+                 lower(t.name), p.id
         """, countQuery = """
         SELECT count(*) FROM tournament.competition_plan p
           JOIN tournament.tournament t ON t.id = p.id
+          LEFT JOIN tournament.competition_plan main ON main.id = t.parent_id
         WHERE t.deleted_at IS NULL
-          AND (:organizer = '' OR p.organizer_page_id = CAST(NULLIF(:organizer, '') AS uuid))
-          AND (:circuit = '' OR p.circuit_page_id = CAST(NULLIF(:circuit, '') AS uuid))
+          AND (:organizer = '' OR (p.organizer_page_id = CAST(NULLIF(:organizer, '') AS uuid)
+                                   AND p.organizer_page_id IS DISTINCT FROM main.organizer_page_id))
+          AND (:circuit = '' OR (p.circuit_page_id = CAST(NULLIF(:circuit, '') AS uuid)
+                                 AND p.circuit_page_id IS DISTINCT FROM main.circuit_page_id))
         """, nativeQuery = true)
     Page<CompetitionPlanRecord> summaries(String organizer, String circuit, Pageable pageable);
 

@@ -1,8 +1,10 @@
 package com.wikiaov.community.tournament.internal.directory.application;
 
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.CompetitionType;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -80,6 +82,21 @@ public final class DirectoryViews {
             List<LineupMember> lineup,
             TournamentRef lineupTournament,
             LocalDate lastActiveOn
+    ) {
+    }
+
+    /** A part of a main event as a tab or a list line shows it; opening the part reads its full record. */
+    public record TournamentPart(
+            UUID id,
+            UUID parentId,
+            String name,
+            String logoUrl,
+            CompetitionType competitionType,
+            TournamentStatus status,
+            TournamentTier tier,
+            String region,
+            LocalDate startsOn,
+            LocalDate endsOn
     ) {
     }
 

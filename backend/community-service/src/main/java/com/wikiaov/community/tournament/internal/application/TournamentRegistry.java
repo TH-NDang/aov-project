@@ -48,6 +48,7 @@ public class TournamentRegistry {
     public View<Tournament> create(Tournament content, String actor) {
         archives.lockWrites();
         validate(content);
+        validateMainEvent(null, content);
         media.requireAvailable(content.logoUrl());
 
         var row = repository.saveAndFlush(new TournamentRecord(UUID.randomUUID(), content, actor));
@@ -62,6 +63,7 @@ public class TournamentRegistry {
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         RegistryArchivePolicy.requireActive(row);
         TournamentErrors.version(row.getVersion(), version);
+        validateMainEvent(id, content);
 
         row.setContent(content, actor);
         repository.flush();
@@ -85,6 +87,26 @@ public class TournamentRegistry {
         var violations = TournamentMetadataRules.violations(content);
         if (!violations.isEmpty())
             throw TournamentErrors.invalid(String.join(" ", violations));
+    }
+
+    /**
+     * A part hangs under a main event that is not in the trash, and parts do not nest: the main event names no parent
+     * itself, and a tournament that already has parts cannot become one.
+     */
+    private void validateMainEvent(UUID id, Tournament content) {
+        var mainEventId = content.parentTournamentId();
+        if (mainEventId == null)
+            return;
+        if (mainEventId.equals(id))
+            throw TournamentErrors.invalid("A tournament cannot be a part of itself.");
+
+        archives.validateParents(content);
+        var mainEvent = repository.findById(mainEventId).orElseThrow(TournamentErrors::missing);
+
+        if (mainEvent.getContent().parentTournamentId() != null)
+            throw TournamentErrors.invalid("parentTournamentId must name a main event, not a part of another one.");
+        if (id != null && repository.countParts(id) > 0)
+            throw TournamentErrors.invalid("A tournament that has parts cannot become a part of another one.");
     }
 
     @Transactional(readOnly = true)

@@ -821,6 +821,79 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aPartHangsUnderOneMainEventDoesNotNestAndGoesToTheTrashBeforeIt() throws Exception {
+        String marker = "parts-" + UUID.randomUUID();
+        var main = create("tournaments", event(marker + "-cup", marker + " Cup", null));
+        var other = create("tournaments", event(marker + "-other", marker + " Other", null));
+        var part = create("tournaments", event(marker + "-qualifier", marker + " Cup - Qualifier", id(main)));
+        String mainPath = ADMIN + "/tournaments/" + main.get("id");
+        String otherPath = ADMIN + "/tournaments/" + other.get("id");
+        String partPath = ADMIN + "/tournaments/" + part.get("id");
+
+        mvc.perform(authorized(get(partPath)))
+                .andExpect(jsonPath("$.content.parentTournamentId").value(main.get("id").toString()));
+        mvc.perform(authorized(get(mainPath))).andExpect(jsonPath("$.content.parentTournamentId").isEmpty());
+
+        // Parts do not nest, an event with parts cannot become a part, and nothing is a part of itself.
+        mvc.perform(authorized(post(ADMIN + "/tournaments")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("content", event(marker + "-nested", "Nested", id(part))))))
+                .andExpect(status().isBadRequest());
+        mvc.perform(authorized(put(mainPath)).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", version(main), "content",
+                        event(marker + "-cup", marker + " Cup", id(other))))))
+                .andExpect(status().isBadRequest());
+        mvc.perform(authorized(put(otherPath)).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", version(other), "content",
+                        event(marker + "-other", marker + " Other", id(other))))))
+                .andExpect(status().isBadRequest());
+        mvc.perform(authorized(post(ADMIN + "/tournaments")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(
+                        Map.of("content", event(marker + "-orphan", "Orphan", UUID.randomUUID())))))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOURNAMENT_RECORD_DELETED"));
+
+        mvc.perform(authorized(get(ADMIN + "/tournaments/parts")).param("parentId", main.get("id").toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(part.get("id").toString()))
+                .andExpect(jsonPath("$[0].parentId").value(main.get("id").toString()))
+                .andExpect(jsonPath("$[0].name").value(marker + " Cup - Qualifier"))
+                .andExpect(jsonPath("$[0].competitionType").value("QUALIFIER"));
+        mvc.perform(authorized(get(ADMIN + "/tournaments/parts")).param("parentId", other.get("id").toString()))
+                .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(authorized(get(ADMIN + "/tournaments/parts")))
+                .andExpect(jsonPath("$[*].id", hasItem(part.get("id").toString())));
+        mvc.perform(authorized(get(ADMIN + "/tournaments/parts")).param("q", marker))
+                .andExpect(status().isBadRequest());
+
+        // The main event cannot go to the trash before its parts, and a part cannot come back without it.
+        mvc.perform(authorized(get(mainPath + "/deletion-impact"))).andExpect(jsonPath("$.canDelete").value(false))
+                .andExpect(jsonPath("$.usages[*].type", hasItem("TOURNAMENT_PART")));
+        mvc.perform(authorized(post(mainPath + "/delete")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", version(main)))))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOURNAMENT_RECORD_IN_USE"));
+        var deletedPart = write(post(partPath + "/delete"), Map.of("version", version(part)));
+        mvc.perform(authorized(get(ADMIN + "/tournaments/parts")).param("parentId", main.get("id").toString()))
+                .andExpect(jsonPath("$.length()").value(0));
+        var deletedMain = write(post(mainPath + "/delete"), Map.of("version", version(main)));
+        mvc.perform(authorized(post(partPath + "/restore")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", version(deletedPart)))))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOURNAMENT_RESTORE_BLOCKED"));
+        write(post(mainPath + "/restore"), Map.of("version", version(deletedMain)));
+        var restoredPart = write(post(partPath + "/restore"), Map.of("version", version(deletedPart)));
+
+        // Detached, it is a main event again and its former main event is free to go.
+        write(put(partPath), Map.of("version", version(restoredPart), "content",
+                event(marker + "-qualifier", marker + " Cup - Qualifier", null)));
+        mvc.perform(authorized(get(partPath))).andExpect(jsonPath("$.content.parentTournamentId").isEmpty());
+        mvc.perform(authorized(get(mainPath + "/deletion-impact"))).andExpect(jsonPath("$.canDelete").value(true));
+    }
+
+    private static Tournament event(String code, String name, UUID mainEventId) {
+        return new Tournament(code, name, "VN", 2026, null, null, null, null, null, null,
+                mainEventId == null ? CompetitionType.CUP : CompetitionType.QUALIFIER, null, null, null, null, null,
+                null, null, mainEventId);
+    }
+
+    @Test
     void publicationAndWithdrawalHistoryPermanentlyProtectIdentityWithoutChangingTheSnapshot() throws Exception {
         var fixture = fixture();
         var draft = create("games", fixture.game());

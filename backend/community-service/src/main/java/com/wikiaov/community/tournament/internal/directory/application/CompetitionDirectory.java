@@ -34,6 +34,7 @@ public class CompetitionDirectory {
     private static final Set<String> PLAYER_SORTS = Set.of("RECENT", "TOURNAMENTS", "TITLES", "NAME");
     private static final Set<String> RECORD_SORTS = Set.of("RECENT", "NAME");
     private static final Set<String> TOURNAMENT_SORTS = Set.of("RECENT", "STATUS", "NAME", "UPDATED");
+    private static final Set<String> TOURNAMENT_LEVELS = Set.of("ALL", "MAIN");
     private static final int LINEUP_LIMIT = 7;
 
     private final DirectoryRepository directory;
@@ -122,13 +123,14 @@ public class CompetitionDirectory {
     }
 
     public PageSlice<Ranked<Tournament>> rankedTournaments(String q, String alsoRegions, String status, String tier,
-            String region, Integer year, String sort, UUID teamId, UUID playerId, Pageable page) {
+            String region, Integer year, String sort, String level, UUID teamId, UUID playerId, Pageable page) {
         requireOneOf("sort", sort, TOURNAMENT_SORTS);
+        requireOneOf("level", level, TOURNAMENT_LEVELS);
         requireEnum("status", status, TournamentStatus.class);
         requireEnum("tier", tier, TournamentTier.class);
 
         var rows = directory.rankedTournaments(q, alsoRegions, status, tier, region,
-                year == null ? "" : year.toString(), sort, text(teamId), text(playerId), unsorted(page));
+                year == null ? "" : year.toString(), sort, level, text(teamId), text(playerId), unsorted(page));
         var records = byId(tournaments.findAllById(rows.map(RankedRow::getId).toList()), TournamentRecord::getId);
 
         return PageSlice.from(rows.map(row -> {
@@ -137,8 +139,22 @@ public class CompetitionDirectory {
         }));
     }
 
-    public TournamentFacets tournamentFacets() {
-        var rows = directory.tournamentFacets();
+    /** The parts of one main event, or every part when no main event is named. */
+    public List<TournamentPart> tournamentParts(UUID mainEventId) {
+        var ids = directory.tournamentParts(text(mainEventId));
+        var records = byId(tournaments.findAllById(ids), TournamentRecord::getId);
+
+        return ids.stream().map(records::get).map(row -> {
+            var part = row.getContent();
+            return new TournamentPart(row.getId(), part.parentTournamentId(), part.name(), part.logoUrl(),
+                    part.competitionType(), part.status(), part.tier(), part.region(), part.startsOn(), part.endsOn());
+        }).toList();
+    }
+
+    public TournamentFacets tournamentFacets(String level) {
+        requireOneOf("level", level, TOURNAMENT_LEVELS);
+
+        var rows = directory.tournamentFacets(level);
         var statuses = rows.stream().filter(row -> row.getFacet().equals("STATUS"))
                 .collect(Collectors.toMap(FacetRow::getValue, FacetRow::getRows));
         var regions = rows.stream().filter(row -> row.getFacet().equals("REGION")).map(FacetRow::getValue).sorted()

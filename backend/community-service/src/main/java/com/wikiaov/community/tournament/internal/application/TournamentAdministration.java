@@ -122,17 +122,25 @@ public class TournamentAdministration {
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
     public PageSlice<Ranked<Tournament>> tournaments(String q, String alsoRegions, RecordState state, String status,
-            String tier, String region, Integer year, String sort, UUID teamId, UUID playerId, Pageable page) {
+            String tier, String region, Integer year, String sort, String level, UUID teamId, UUID playerId,
+            Pageable page) {
         if (state != RecordState.ACTIVE)
             return Ranked.unranked(tournaments.list(q, state, page));
 
-        return directory.rankedTournaments(q, alsoRegions, status, tier, region, year, sort, teamId, playerId, page);
+        return directory.rankedTournaments(q, alsoRegions, status, tier, region, year, sort, level, teamId, playerId,
+                page);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public TournamentFacets tournamentFacets() {
-        return directory.tournamentFacets();
+    public TournamentFacets tournamentFacets(String level) {
+        return directory.tournamentFacets(level);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public java.util.List<TournamentPart> tournamentParts(UUID mainEventId) {
+        return directory.tournamentParts(mainEventId);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")

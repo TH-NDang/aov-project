@@ -24,6 +24,9 @@ public interface RegistryUsageRepository extends Repository<TeamRecord, UUID> {
              OR content->>'teamBId'=CAST(:id AS text)))
              OR (:kind='TOURNAMENT' AND content->>'tournamentId'=CAST(:id AS text)))
         UNION ALL
+        SELECT 'TOURNAMENT_PART',COUNT(*) FROM tournament.tournament
+         WHERE deleted_at IS NULL AND :kind='TOURNAMENT' AND parent_id=:id
+        UNION ALL
         SELECT 'GAME',COUNT(*) FROM tournament.game game
          WHERE game.deleted_at IS NULL AND ((:kind='SERIES' AND game.series_id=:id)
              OR (:kind='TEAM' AND EXISTS(SELECT 1 FROM jsonb_array_elements(game.content->'sides') side

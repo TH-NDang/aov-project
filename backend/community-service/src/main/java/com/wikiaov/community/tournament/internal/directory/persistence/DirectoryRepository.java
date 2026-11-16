@@ -38,10 +38,15 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
         )
         """;
 
+    /** With level MAIN a main event also answers to the names of its parts, which the list leaves out. */
     String TOURNAMENT_FILTER = """
         t.deleted_at IS NULL
+        AND (:level <> 'MAIN' OR t.parent_id IS NULL)
         AND (strpos(t.search_names, tournament.search_key(:wanted)) > 0
-             OR t.content->>'region' = ANY(string_to_array(:alsoRegions, ',')))
+             OR t.content->>'region' = ANY(string_to_array(:alsoRegions, ','))
+             OR (:level = 'MAIN' AND EXISTS (SELECT 1 FROM tournament.tournament part
+                                              WHERE part.parent_id = t.id AND part.deleted_at IS NULL
+                                                AND strpos(part.search_names, tournament.search_key(:wanted)) > 0)))
         AND (:status = '' OR t.status = :status)
         AND (:tier = '' OR coalesce(t.content->>'tier', 'UNKNOWN') = :tier)
         AND (:region = '' OR t.content->>'region' = :region)
@@ -250,13 +255,15 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
 
     /**
      * Tournaments for a list or picker: RECENT runs from what is in progress outwards in time (V013), STATUS keeps the
-     * older grouping by status, and the tournaments of a team or player in context come first in a picker.
+     * older grouping by status, and the tournaments of a team or player in context come first in a picker. Level MAIN
+     * lists main events only and places each by the member closest to today, its parts included (V016).
      */
     @Query(nativeQuery = true, value = """
         SELECT t.id AS id, CAST(NULL AS date) AS lastActiveOn,
                CASE WHEN c.tournament_id IS NOT NULL THEN 'PARTICIPANT' END AS context
           FROM tournament.tournament t
           JOIN tournament.tournament_window w ON w.id = t.id
+          LEFT JOIN tournament.event_window e ON :level = 'MAIN' AND e.id = t.id
           LEFT JOIN (SELECT tournament_id FROM tournament.tournament_team
                       WHERE team_id = CAST(NULLIF(:teamId, '') AS uuid)
                      UNION
@@ -268,8 +275,9 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
          ORDER BY CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), t.search_names) > 0 END,
                   CASE WHEN :sort = 'RECENT' THEN c.tournament_id IS NULL END,
                   CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), t.search_names) END,
-                  CASE WHEN :sort = 'RECENT' THEN w.recency_rank END,
-                  CASE WHEN :sort = 'RECENT' THEN w.recency_distance END,
+                  CASE WHEN :sort = 'RECENT' THEN CASE WHEN e.id IS NULL THEN w.recency_rank ELSE e.recency_rank END END,
+                  CASE WHEN :sort = 'RECENT'
+                       THEN CASE WHEN e.id IS NULL THEN w.recency_distance ELSE e.recency_distance END END,
                   CASE WHEN :sort = 'STATUS' THEN
                       CASE t.status WHEN 'ONGOING' THEN 0 WHEN 'UPCOMING' THEN 1 WHEN 'ANNOUNCED' THEN 2
                                     WHEN 'FINISHED' THEN 4 ELSE 3 END END,
@@ -279,20 +287,32 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
                   t.id
         """, countQuery = "SELECT count(*) FROM tournament.tournament t WHERE " + TOURNAMENT_FILTER)
     Page<RankedRow> rankedTournaments(String wanted, String alsoRegions, String status, String tier, String region,
-            String year, String sort, String teamId, String playerId, Pageable page);
+            String year, String sort, String level, String teamId, String playerId, Pageable page);
+
+    /** The parts of one main event, or of every main event when none is named, each event's parts in playing order. */
+    @Query(nativeQuery = true, value = """
+        SELECT t.id
+          FROM tournament.tournament t
+         WHERE t.deleted_at IS NULL AND t.parent_id IS NOT NULL
+           AND (:mainEventId = '' OR t.parent_id = CAST(NULLIF(:mainEventId, '') AS uuid))
+         ORDER BY t.parent_id, t.starts_on NULLS LAST, lower(t.name), t.id
+        """)
+    List<UUID> tournamentParts(String mainEventId);
 
     /** What a list of tournaments can be narrowed by: its statuses with their counts, its regions and years. */
     @Query(nativeQuery = true, value = """
-        SELECT 'STATUS' AS facet, status AS value, count(*) AS rows
-          FROM tournament.tournament WHERE deleted_at IS NULL GROUP BY status
+        WITH listed AS (
+            SELECT status, content->>'region' AS region, season_year
+              FROM tournament.tournament
+             WHERE deleted_at IS NULL AND (:level <> 'MAIN' OR parent_id IS NULL)
+        )
+        SELECT 'STATUS' AS facet, status AS value, count(*) AS rows FROM listed GROUP BY status
         UNION ALL
-        SELECT 'REGION', content->>'region', count(*)
-          FROM tournament.tournament WHERE deleted_at IS NULL AND content->>'region' IS NOT NULL GROUP BY content->>'region'
+        SELECT 'REGION', region, count(*) FROM listed WHERE region IS NOT NULL GROUP BY region
         UNION ALL
-        SELECT 'YEAR', CAST(season_year AS text), count(*)
-          FROM tournament.tournament WHERE deleted_at IS NULL AND season_year IS NOT NULL GROUP BY season_year
+        SELECT 'YEAR', CAST(season_year AS text), count(*) FROM listed WHERE season_year IS NOT NULL GROUP BY season_year
         """)
-    List<FacetRow> tournamentFacets();
+    List<FacetRow> tournamentFacets(String level);
 
     /** Roster lines of the given teams in every tournament; callers keep the tournament they want to show. */
     @Query(nativeQuery = true, value = "WITH " + DAYS + """
@@ -309,15 +329,19 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
         plans AS (
             SELECT p.id AS tournament_id, p.organizer_page_id AS organizer,
                    p.circuit_page_id AS circuit, t.content->>'tier' AS tier,
-                   t.season_year AS year, d.day
+                   t.season_year AS year, d.day,
+                   main.organizer_page_id AS main_organizer, main.circuit_page_id AS main_circuit
               FROM tournament.competition_plan p
               JOIN tournament.tournament t ON t.id = p.id AND t.deleted_at IS NULL
               JOIN days d ON d.id = t.id
+              LEFT JOIN tournament.competition_plan main ON main.id = t.parent_id
         ),
         links AS (
-            SELECT organizer AS page_id, tournament_id, tier, year, day FROM plans WHERE organizer IS NOT NULL
+            SELECT organizer AS page_id, tournament_id, tier, year, day FROM plans
+             WHERE organizer IS NOT NULL AND organizer IS DISTINCT FROM main_organizer
             UNION ALL
-            SELECT circuit, tournament_id, tier, year, day FROM plans WHERE circuit IS NOT NULL
+            SELECT circuit, tournament_id, tier, year, day FROM plans
+             WHERE circuit IS NOT NULL AND circuit IS DISTINCT FROM main_circuit
         )
         SELECT page_id AS pageId,
                count(DISTINCT tournament_id) AS tournaments,

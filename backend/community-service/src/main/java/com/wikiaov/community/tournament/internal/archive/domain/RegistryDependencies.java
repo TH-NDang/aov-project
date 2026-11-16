@@ -17,7 +17,9 @@ public final class RegistryDependencies {
 
     public static List<Parent> of(Object content) {
         var parents = new ArrayList<Parent>();
-        if (content instanceof Series series) {
+        if (content instanceof Tournament tournament) {
+            add(parents, RegistryKind.TOURNAMENT, tournament.parentTournamentId());
+        } else if (content instanceof Series series) {
             add(parents, RegistryKind.TOURNAMENT, series.tournamentId());
             add(parents, RegistryKind.TEAM, series.teamAId());
             add(parents, RegistryKind.TEAM, series.teamBId());

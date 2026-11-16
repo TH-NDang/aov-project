@@ -98,6 +98,8 @@ public class RegistryArchivePolicy {
             return "/tournaments?tournament=" + id;
         if (type.equals("GAME") && kind == RegistryKind.SERIES)
             return "/tournaments?series=" + id;
+        if (type.equals("TOURNAMENT_PART"))
+            return "/tournaments/" + id;
         return "/tournaments";
     }
 
