@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
+import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -226,6 +227,21 @@ class GameModeIntegrationTest {
                 .andExpect(status().isNoContent());
         assertThat(jdbc.sql("select count(*) from gamemode.lineup_like where lineup_id = ?::uuid").param(lineupId)
                 .query(Long.class).single()).isZero();
+    }
+
+    @Test
+    void decomposedTextFromAnEditorIsStoredPrecomposed() throws Exception {
+        String name = "Chế độ bóng đá";
+        String decomposed = Normalizer.normalize(name, Normalizer.Form.NFD);
+
+        JsonNode mode = createMode("che-do-bong-da", decomposed);
+        String id = mode.get("id").asText();
+        String stored = jdbc.sql("select content ->> 'name' from gamemode.game_mode_revision where mode_id = ?::uuid")
+                .param(id).query(String.class).single();
+
+        assertThat(decomposed).isNotEqualTo(name);
+        assertThat(mode.at("/content/name").asText()).isEqualTo(name);
+        assertThat(stored).isEqualTo(name);
     }
 
     @Test
