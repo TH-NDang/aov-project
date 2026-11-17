@@ -1,6 +1,6 @@
-import { useState, type CSSProperties } from "react"
+import { useState } from "react"
 import { Link } from "react-router"
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CommunityPost, PageCard, PageRole } from "@aov/community-contracts"
 import { profileKindLabels } from "@aov/community-contracts"
 import {
@@ -12,40 +12,17 @@ import {
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
-import { initials } from "../../../lib/profile-model"
 import { communityApi } from "../../../lib/community-api"
-import { communityKeys, refreshPostLists } from "../../../lib/community-keys"
+import { refreshPostLists } from "../../../lib/community-keys"
 import { useCommunitySession } from "../../../lib/stream-auth"
 import { useFollowPage } from "../../../lib/community-queries"
 import { useSignedInAction } from "../../../components/community-signin"
-import { CardAvatar, hueOf, profileKindEnglish, TimeAgo } from "../../../components/community-ui"
+import { CardAvatar, profileKindEnglish, TimeAgo } from "../../../components/community-ui"
 import { PostImages, PostVideo } from "./post-media"
-import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
-import { nextPageOf } from "@aov/ui/lib/page-slice"
-
-/** Lists that show posts; every change to a post or its comments refreshes them all. */
-
-function AuthorMark({ name, small = false }: { name: string; small?: boolean }) {
-  return (
-    <span
-      className={small ? "cp-author-mark cp-author-mark-small" : "cp-author-mark"}
-      style={{ "--hub-hue": hueOf(name) } as CSSProperties}
-      aria-hidden="true"
-    >
-      {initials(name)}
-    </span>
-  )
-}
+import { AuthorMark, PostComments } from "./post-comments"
+import { PostEditForm, PostReportForm } from "./post-forms"
 
 const longPost = (body: string) => body.length > 420 || body.split("\n").length > 7
-
-const REPORT_REASONS: readonly (readonly [string, string])[] = [
-  ["Spam hoặc quảng cáo", "Spam or advertising"],
-  ["Thông tin sai", "False information"],
-  ["Ngôn từ xúc phạm", "Abusive language"],
-  ["Nội dung phản cảm", "Offensive content"],
-  ["Mạo danh", "Impersonation"],
-]
 
 /**
  * One post with its likes, comments and actions. With `page` it introduces the page it belongs to (cross-page feeds);
@@ -75,14 +52,9 @@ export function PostCard({
   const { text, languageTag } = useStreamLocale()
   const [expanded, setExpanded] = useState(false)
   const [unfolded, setUnfolded] = useState(false)
-  const [body, setBody] = useState("")
-  const [asPage, setAsPage] = useState(false)
-  const [reporting, setReporting] = useState(false)
-  const [reason, setReason] = useState("")
   const [editing, setEditing] = useState(false)
-  const [editedBody, setEditedBody] = useState(post.body)
-  const [editedTitle, setEditedTitle] = useState(post.title || "")
-  const [reportedComment, setReportedComment] = useState<string | undefined>()
+  // The report being written; the counter starts a fresh form each time a report is asked for.
+  const [reporting, setReporting] = useState<{ commentId?: string; at: number } | null>(null)
   const refreshLists = () => refreshPostLists(client)
   // A like shown before the feed refetches; a newer `post` from the server replaces it.
   const [liking, setLiking] = useState<{ source: CommunityPost; liked: boolean; likes: number } | null>(null)
@@ -97,57 +69,9 @@ export function PostCard({
     onSuccess: (result) => setLiking({ source: post, ...result }),
     onError: (_error, _liked, previous) => setLiking(previous ?? null),
   })
-  const edit = useMutation({
-    mutationFn: (publish: boolean) =>
-      communityApi.editPost(post.pageId, post.id, {
-        version: post.version,
-        kind: post.kind,
-        title: editedTitle,
-        body: editedBody,
-        videoUrl: post.videoUrl,
-        imageUrls: post.imageUrls,
-        asPage: post.asPage,
-        publish,
-      }),
-    onSuccess: async () => {
-      setEditing(false)
-      await refreshLists()
-    },
-  })
-  const comments = useInfiniteQuery({
-    queryKey: communityKeys.comments(post.id),
-    initialPageParam: 0,
-    queryFn: ({ pageParam }) => communityApi.comments(post.id, pageParam),
-    getNextPageParam: nextPageOf,
-    enabled: expanded && post.status === "PUBLISHED",
-  })
-  const commentRows = comments.data?.pages.flatMap((page) => page.items) ?? []
-  const reply = useMutation({
-    mutationFn: () => communityApi.comment(post.id, { body, asPage }),
-    onSuccess: async () => {
-      setBody("")
-      await client.invalidateQueries({ queryKey: communityKeys.comments(post.id) })
-      await refreshLists()
-    },
-  })
-  const report = useMutation({
-    mutationFn: () => communityApi.report(post.pageId, { postId: post.id, commentId: reportedComment, reason }),
-    onSuccess: () => {
-      setReporting(false)
-      setReason("")
-    },
-  })
   const hide = useMutation({
-    mutationFn: (commentId?: string) =>
-      communityApi.moderate(post.pageId, {
-        postId: post.id,
-        commentId,
-        hidden: commentId ? true : post.status !== "HIDDEN",
-      }),
-    onSuccess: async () => {
-      await refreshLists()
-      await client.invalidateQueries({ queryKey: communityKeys.comments(post.id) })
-    },
+    mutationFn: () => communityApi.moderate(post.pageId, { postId: post.id, hidden: post.status !== "HIDDEN" }),
+    onSuccess: refreshLists,
   })
   const pin = useMutation({
     mutationFn: () => communityApi.pin(post.pageId, post.id, !post.pinned),
@@ -164,10 +88,7 @@ export function PostCard({
         "Đăng nhập để báo cáo nội dung không phù hợp với đội ngũ kiểm duyệt.",
         "Sign in to report inappropriate content to the moderation team.",
       ),
-      () => {
-        setReportedComment(commentId)
-        setReporting(true)
-      },
+      () => setReporting({ commentId, at: Date.now() }),
     )
   return (
     <article className="cp-post">
@@ -244,14 +165,7 @@ export function PostCard({
               drawerTitle={text("Tùy chọn bài viết", "Post options")}
             >
               {canEdit && (
-                <DropdownMenuItem
-                  className="hub-menu-item"
-                  onSelect={() => {
-                    setEditedBody(post.body)
-                    setEditedTitle(post.title || "")
-                    setEditing(true)
-                  }}
-                >
+                <DropdownMenuItem className="hub-menu-item" onSelect={() => setEditing(true)}>
                   <StreamIcon name="edit" size={16} />
                   {text("Chỉnh sửa", "Edit")}
                 </DropdownMenuItem>
@@ -269,11 +183,7 @@ export function PostCard({
                 </DropdownMenuItem>
               )}
               {canModerate && (
-                <DropdownMenuItem
-                  className="hub-menu-item"
-                  disabled={hide.isPending}
-                  onSelect={() => hide.mutate(undefined)}
-                >
+                <DropdownMenuItem className="hub-menu-item" disabled={hide.isPending} onSelect={() => hide.mutate()}>
                   <StreamIcon name={post.status === "HIDDEN" ? "eye" : "eyeOff"} size={16} />
                   {post.status === "HIDDEN"
                     ? text("Khôi phục hiển thị", "Restore visibility")
@@ -302,56 +212,10 @@ export function PostCard({
         />
       )}
       <PostImages urls={post.imageUrls || []} alt={post.title || post.authorName} />
-      {editing && (
-        <form
-          className="cp-inline-form"
-          onSubmit={(event) => {
-            event.preventDefault()
-            edit.mutate(true)
-          }}
-        >
-          {post.kind === "NEWS" && (
-            <label>
-              {text("Tiêu đề", "Title")}
-              <input
-                required
-                maxLength={200}
-                value={editedTitle}
-                onChange={(event) => setEditedTitle(event.target.value)}
-              />
-            </label>
-          )}
-          <label>
-            {text("Nội dung bài viết", "Post content")}
-            <textarea
-              required={post.kind !== "VIDEO"}
-              maxLength={20000}
-              rows={5}
-              value={editedBody}
-              onChange={(event) => setEditedBody(event.target.value)}
-            />
-          </label>
-          <div className="cp-actions">
-            <button className="cp-button cp-primary" disabled={edit.isPending}>
-              {text("Lưu & đăng", "Save & post")}
-            </button>
-            <button
-              type="button"
-              className="cp-button"
-              disabled={edit.isPending || (post.kind !== "VIDEO" && !editedBody.trim())}
-              onClick={() => edit.mutate(false)}
-            >
-              {text("Giữ ở bản nháp", "Keep as draft")}
-            </button>
-            <button type="button" className="cp-button" onClick={() => setEditing(false)}>
-              {text("Hủy", "Cancel")}
-            </button>
-          </div>
-        </form>
-      )}
-      {(edit.isError || pin.isError) && (
+      {editing && <PostEditForm post={post} onClose={() => setEditing(false)} />}
+      {pin.isError && (
         <p className="cp-error" role="alert">
-          {edit.error?.message || pin.error?.message}
+          {pin.error.message}
         </p>
       )}
       <div className="cp-post-actions">
@@ -389,150 +253,19 @@ export function PostCard({
         </button>
       </div>
       {reporting && (
-        <form
-          className="cp-inline-form"
-          onSubmit={(event) => {
-            event.preventDefault()
-            report.mutate()
-          }}
-        >
-          <fieldset>
-            <legend>
-              {reportedComment
-                ? text("Lý do báo cáo bình luận", "Reason for reporting the comment")
-                : text("Lý do báo cáo bài viết", "Reason for reporting the post")}
-            </legend>
-            <div className="hub-pills">
-              {REPORT_REASONS.map((names) => text(...names)).map((option) => (
-                <button type="button" key={option} aria-pressed={reason === option} onClick={() => setReason(option)}>
-                  {option}
-                </button>
-              ))}
-            </div>
-            <label>
-              <span className="sr-only">{text("Mô tả lý do", "Describe the reason")}</span>
-              <textarea
-                required
-                rows={2}
-                maxLength={2000}
-                placeholder={text("Chọn một lý do ở trên hoặc tự mô tả…", "Choose a reason above or describe it…")}
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-              />
-            </label>
-          </fieldset>
-          <div className="cp-actions">
-            <button className="cp-button cp-primary" disabled={report.isPending}>
-              {text("Gửi báo cáo", "Send report")}
-            </button>
-            <button type="button" className="cp-button" onClick={() => setReporting(false)}>
-              {text("Hủy", "Cancel")}
-            </button>
-          </div>
-        </form>
+        <PostReportForm
+          key={reporting.at}
+          post={post}
+          commentId={reporting.commentId}
+          onClose={() => setReporting(null)}
+        />
       )}
-      {report.isSuccess && (
-        <p className="cp-success" role="status">
-          {text("Đã gửi báo cáo.", "Report sent.")}
-        </p>
-      )}
-      {(report.isError || hide.isError || reply.isError || like.isError) && (
+      {(hide.isError || like.isError) && (
         <p className="cp-error" role="alert">
-          {report.error?.message || hide.error?.message || reply.error?.message || like.error?.message}
+          {hide.error?.message || like.error?.message}
         </p>
       )}
-      {expanded && (
-        <div className="cp-comments">
-          {comments.isLoadingError && (
-            <p className="cp-error" role="alert">
-              {comments.error.message}
-            </p>
-          )}
-          {comments.isLoading && <p className="cp-muted">{text("Đang tải bình luận…", "Loading comments…")}</p>}
-          {comments.data && !commentRows.length && (
-            <p className="cp-muted">
-              {text(
-                "Chưa có bình luận. Hãy là người đầu tiên chia sẻ suy nghĩ.",
-                "No comments yet. Be the first to share your thoughts.",
-              )}
-            </p>
-          )}
-          {commentRows.map((comment) => (
-            <div className="cp-comment" key={comment.id}>
-              <AuthorMark name={comment.authorName} small />
-              <div className="cp-comment-body">
-                <p className="cp-comment-head">
-                  <strong>{comment.authorName}</strong>
-                  {comment.asPage && <span>{text("Đại diện trang", "Page representative")}</span>}
-                  <TimeAgo value={comment.createdAt} />
-                </p>
-                <p className="cp-prose">{comment.body}</p>
-                <div className="cp-comment-tools">
-                  <button className="cp-text-button" onClick={() => startReport(comment.id)}>
-                    {text("Báo cáo", "Report")}
-                  </button>
-                  {["OWNER", "MODERATOR"].includes(role) && (
-                    <button className="cp-text-button" onClick={() => hide.mutate(comment.id)}>
-                      {text("Ẩn bình luận", "Hide comment")}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-          <InfiniteScroll
-            query={comments}
-            label={text("Đang tải thêm bình luận", "Loading more comments")}
-            retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
-          />
-          {session.status === "authenticated" ? (
-            <form
-              className="cp-reply"
-              onSubmit={(event) => {
-                event.preventDefault()
-                reply.mutate()
-              }}
-            >
-              <label>
-                <span className="sr-only">{text("Bình luận của bạn", "Your comment")}</span>
-                <textarea
-                  required
-                  rows={2}
-                  maxLength={4000}
-                  placeholder={text("Viết bình luận…", "Write a comment…")}
-                  value={body}
-                  onChange={(event) => setBody(event.target.value)}
-                />
-              </label>
-              <div className="cp-actions cp-reply-actions">
-                {role && (
-                  <label className="cp-check">
-                    <input type="checkbox" checked={asPage} onChange={(event) => setAsPage(event.target.checked)} />
-                    {text("Trả lời với tư cách trang", "Reply as the page")}
-                  </label>
-                )}
-                <button className="cp-button cp-primary" disabled={reply.isPending || !body.trim()}>
-                  <StreamIcon name="send" size={16} />
-                  {text("Gửi bình luận", "Send comment")}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <button
-              className="cp-button cp-reply-prompt"
-              onClick={() =>
-                signedIn(
-                  text("Đăng nhập để bình luận và tham gia thảo luận.", "Sign in to comment and join the discussion."),
-                  () => undefined,
-                )
-              }
-            >
-              <StreamIcon name="message" size={16} />
-              {text("Đăng nhập để bình luận", "Sign in to comment")}
-            </button>
-          )}
-        </div>
-      )}
+      {expanded && <PostComments post={post} role={role} onReport={startReport} />}
     </article>
   )
 }
