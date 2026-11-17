@@ -424,6 +424,11 @@ V016 phục vụ "Giải chính và các phần của giải": cột sinh `tourn
 index theo cột đó cho các giải là phần, và view `tournament.event_window`: mỗi giải chính một dòng với `recency_rank`,
 `recency_distance` của thành viên gần hôm nay nhất trong giải chính và các phần chưa xóa.
 
+Mọi cột lưu tài khoản (`edited_by`, `deleted_by`, `actor`) dùng một dạng khóa: issuer và subject của JWT, cách nhau bằng
+một dấu xuống dòng; chỉ `CommunityActor` ghép khóa này. V017 đổi các khóa cũ ghép bằng dấu `|` trong schema tournament
+(team, player, tournament, series, game, roster_membership, game_publication, competition_plan, plan_revision) sang dạng đó;
+khóa đã đúng dạng giữ nguyên.
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
