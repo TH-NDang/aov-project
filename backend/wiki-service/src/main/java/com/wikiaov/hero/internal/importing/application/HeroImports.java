@@ -79,6 +79,16 @@ public class HeroImports {
         this.drafts = new HeroImportDraftWriter(authoring, revisions, content, json);
     }
 
+    /** The hero fields an import file may fill. */
+    public List<Field> fields() {
+        return FIELDS;
+    }
+
+    /** The fields of each repeated relation (skills, skins) an import file may fill. */
+    public Map<String, List<Field>> relationFields() {
+        return RELATION_FIELDS;
+    }
+
     @Transactional(readOnly = true)
     public HeroImportPlan preview(HeroImportRequest input) {
         try {

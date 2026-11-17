@@ -8,12 +8,10 @@ import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Set;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = ApiPaths.ADMIN + "/heroes/import", version = "1")
-@PreAuthorize("hasAuthority('hero:write')")
 public class HeroImportController implements HeroImportApi {
     private final HeroImports imports;
 
@@ -24,7 +22,7 @@ public class HeroImportController implements HeroImportApi {
     @GetMapping("/fields")
     public List<HeroImports.Field> fields(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
-        return HeroImports.FIELDS;
+        return imports.fields();
     }
 
     @PostMapping("/preview")
@@ -34,7 +32,7 @@ public class HeroImportController implements HeroImportApi {
 
     @GetMapping("/relation-fields")
     public java.util.Map<String, List<HeroImports.Field>> relationFields() {
-        return HeroImports.RELATION_FIELDS;
+        return imports.relationFields();
     }
 
     @GetMapping("/contexts")
