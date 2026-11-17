@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 import { VideoPlayer, VideoThumbnail } from "./video-player"
 import {
   formatDuration,
-  formatVideoDate,
   neighbours,
   providerName,
   purposeLabel,
@@ -15,6 +15,7 @@ import {
 } from "./video-model"
 
 const AUTO_NEXT_KEY = "wiki-video-auto-next"
+const PUBLISHED_DAY: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
 
 function useAutoNext() {
   const [enabled, setEnabled] = useState(() => {
@@ -69,7 +70,6 @@ export function VideoTheater({
   const portrait = playback?.kind === "frame" && playback.portrait
   const provider = shown ? providerName(shown) : ""
   const patch = shown ? patchName?.(shown) : undefined
-  const date = shown?.publishedOn ? formatVideoDate(shown.publishedOn, locale) : null
 
   useEffect(() => {
     if (!video) return
@@ -147,7 +147,11 @@ export function VideoTheater({
                     </span>
                   )}
                   {shown.channelName && <span>{shown.channelName}</span>}
-                  {date && <span>{date}</span>}
+                  {shown.publishedOn && (
+                    <span>
+                      <LocalTime value={shown.publishedOn} format={PUBLISHED_DAY} locale={locale} />
+                    </span>
+                  )}
                   {shown.durationSeconds && <span>{formatDuration(shown.durationSeconds)}</span>}
                 </span>
               </DialogDescription>

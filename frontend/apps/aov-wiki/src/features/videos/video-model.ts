@@ -113,12 +113,6 @@ export function neighbours<T extends { id: string }>(playlist: readonly T[], id:
   }
 }
 
-export function formatVideoDate(date: string, locale: string) {
-  const parsed = new Date(`${date}T00:00:00Z`)
-  if (Number.isNaN(parsed.getTime())) return date
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(parsed)
-}
-
 /** Reads the status messages the YouTube player posts to the page; state 0 means the video has finished. */
 export function isVideoEndedMessage(data: unknown) {
   if (typeof data !== "string") return false
