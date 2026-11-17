@@ -171,7 +171,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 maxLength={6}
                 disabled={busy}
                 value={otp}
-                onChange={(event) => setOtp(event.target.value.replace(/D/g, "").slice(0, 6))}
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="6 chữ số trong ứng dụng xác thực"
                 aria-describedby="admin-otp-help"
                 className={inputStyle + " tracking-[0.3em]"}
@@ -198,7 +198,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
             onClick={() => void choose("google")}
             className="flex min-h-12 items-center justify-center gap-3 rounded-xl border border-white/15 bg-[#24242b] px-4 text-sm font-semibold hover:bg-[#303039] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e7bd7a] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <img src={import.meta.env.BASE_URL + "images/google.svg"} alt="" className="size-5" /> Đăng nhập với Google
+            <img src={`${import.meta.env?.BASE_URL ?? "/"}images/google.svg`} alt="" className="size-5" /> Đăng nhập với
+            Google
           </button>
           {!session.googleEnabled && (
             <p className="mt-2 text-center text-xs text-[#aaa6b5]">Đăng nhập Google chưa được cấu hình.</p>

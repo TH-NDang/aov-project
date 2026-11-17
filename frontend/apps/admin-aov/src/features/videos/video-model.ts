@@ -5,6 +5,7 @@ import {
   videoThumbnail,
   type VideoSource,
 } from "@aov/ui/lib/video-playback"
+import { matchesQuery } from "@/lib/text"
 
 export type VideoSubjectKind = "HERO" | "SKILL" | "SKIN" | "ITEM" | "ENCHANTMENT" | "ARCANA" | "SPELL"
 export type VideoPurpose =
@@ -52,6 +53,10 @@ export interface VideoSubject {
   name: string
   aliases: string[]
 }
+
+/** True when every word typed appears in the subject's label, code or other names, ignoring accents and the crossed d. */
+export const subjectMatches = (search: string, subject: VideoSubject, label = subject.name) =>
+  matchesQuery(search, label, subject.code, ...subject.aliases)
 
 export interface SaveVideo {
   subjectKind: VideoSubjectKind

@@ -1,6 +1,6 @@
 import { LocalTime } from "@aov/ui/components/local-time"
 import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import {
@@ -91,16 +91,20 @@ export function ImageManagementPage() {
   const [params, setParams] = useSearchParams()
   // The open image lives in the URL (?asset=…), so other pages can link straight to an image's sources.
   const selected = params.get("asset")
-  const setSelected = (id: string | null) =>
-    setParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        if (id) next.set("asset", id)
-        else next.delete("asset")
-        return next
-      },
-      { preventScrollReset: true },
-    )
+  // The table columns keep this function, so it must change with the URL it builds on.
+  const setSelected = useCallback(
+    (id: string | null) =>
+      setParams(
+        (current) => {
+          const next = new URLSearchParams(current)
+          if (id) next.set("asset", id)
+          else next.delete("asset")
+          return next
+        },
+        { preventScrollReset: true },
+      ),
+    [setParams],
+  )
   const grid = params.get("view") === "grid"
   const writable = useSession().actor?.capabilities.includes("media:write")
   const assets = useInfiniteQuery({
@@ -323,7 +327,7 @@ export function ImageManagementPage() {
           ),
         }),
       ]),
-    [],
+    [setSelected],
   )
   const table = useTable({ features, columns, data: rows, getRowId: (row) => row.id })
   return (

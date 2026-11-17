@@ -48,6 +48,7 @@ import { mergeReferenceCatalog, updateHeroAliases } from "./hero-aliases"
 import { HeroAliasEditor } from "./hero-alias-editor"
 import { invalidateReferenceCatalog } from "./reference-api"
 import { confirmDiscard } from "@/components/confirm-dialog"
+import { randomId } from "@/lib/random-id"
 
 const ReferencePreview = memo(EntityRichText)
 
@@ -230,7 +231,7 @@ export function TerminologyPage() {
     ) : null
   }
   function createTerm() {
-    const id = crypto.randomUUID()
+    const id = randomId()
     const next: EntityReference = {
       id,
       kind: "term",

@@ -17,6 +17,7 @@ import { Button } from "@aov/ui/components/button"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
+import { randomId } from "@/lib/random-id"
 import { MatchRecordingStrip } from "@/features/esports/components/match-recording-strip"
 import { TeamLogo } from "@/features/esports/components/primitives"
 import { matchRecording } from "@/features/esports/model/match-recording"
@@ -697,7 +698,7 @@ function ScheduleSetup({ ws, stage }: { ws: Workspace; stage: CompetitionStage }
               ws.change("matches", [
                 ...ws.plan.matches,
                 {
-                  key: `M_${crypto.randomUUID().slice(0, 8)}`,
+                  key: `M_${randomId().slice(0, 8)}`,
                   stageCode: stage.code,
                   round: 1,
                   label: "Trận bổ sung",

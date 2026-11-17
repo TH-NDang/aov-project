@@ -72,6 +72,12 @@ const rules: Rule[] = [
     offenders: (text) => errorsShownTwice(text),
   },
   {
+    name: "admin makes ids with randomId",
+    hint: "crypto.randomUUID is missing on plain-HTTP LAN addresses; use randomId from lib/random-id.",
+    files: files(source, /\.tsx?$/).filter((path) => !path.endsWith(join("lib", "random-id.ts"))),
+    offenders: (text) => (text.includes("crypto.randomUUID") ? [""] : []),
+  },
+  {
     name: "esports viewer components and models stay free of admin-only modules",
     hint: "The public site reuses these folders; keep the admin API and session out of them.",
     files: ["components", "model"].flatMap((folder) => files(join(source, "features", "esports", folder), /\.tsx?$/)),
