@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import com.wikiaov.access.AcceptedCommands;
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
+import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
 import com.wikiaov.hero.internal.application.HeroImportJobRequest;
 import com.wikiaov.hero.internal.importing.persistence.HeroImportJobRepository;
@@ -112,12 +113,12 @@ class HeroImportAuthorizationTest {
         @Bean
         HeroImportJobs jobs(HeroImportJobRepository repository, CurrentActor actors) {
             return new HeroImportJobs(repository, actors, mock(AcceptedCommands.class), mock(HeroImports.class),
-                    JsonMapper.builder().build());
+                    mock(AuditLog.class), JsonMapper.builder().build());
         }
 
         @Bean
         HeroUploadSessions sessions(HeroUploadSessionRepository repository, CurrentActor actors) {
-            return new HeroUploadSessions(repository, actors, JsonMapper.builder().build());
+            return new HeroUploadSessions(repository, actors, mock(AuditLog.class), JsonMapper.builder().build());
         }
     }
 }

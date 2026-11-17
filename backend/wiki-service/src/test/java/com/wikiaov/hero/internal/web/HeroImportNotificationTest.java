@@ -38,7 +38,9 @@ class HeroImportNotificationTest {
             return actor;
         }
     };
-    private final HeroImportJobs jobs = new HeroImportJobs(repository, actors, null, null, new JsonMapper());
+    private final List<AuditEntry> audited = new ArrayList<>();
+    private final HeroImportJobs jobs = new HeroImportJobs(repository, actors, null, null, audited::add,
+            new JsonMapper());
 
     @BeforeEach
     void setup() {
@@ -58,6 +60,14 @@ class HeroImportNotificationTest {
         assertThat(jobs.dismissNotification(job.getId()).notificationDismissed()).isTrue();
         assertThat(jobs.get(job.getId()).results()).hasSize(1);
         assertThat(writes).isEqualTo(2);
+    }
+
+    @Test
+    void onlyTheFirstDismissalIsAudited() {
+        jobs.dismissNotification(job.getId());
+        jobs.dismissNotification(job.getId());
+
+        assertThat(audited).extracting(AuditEntry::action).containsExactly("HERO_IMPORT_NOTIFICATION_DISMISSED");
     }
 
     @Test

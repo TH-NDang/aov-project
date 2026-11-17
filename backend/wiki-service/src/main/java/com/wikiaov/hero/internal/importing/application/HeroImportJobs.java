@@ -19,18 +19,22 @@ import tools.jackson.databind.json.JsonMapper;
 
 @Service
 public class HeroImportJobs {
+    private static final String AGGREGATE = "HERO_IMPORT_JOB";
+
     private final HeroImportJobRepository repository;
     private final CurrentActor actors;
     private final AcceptedCommands accepted;
     private final HeroImports imports;
+    private final AuditLog audit;
     private final JsonMapper json;
 
     public HeroImportJobs(HeroImportJobRepository repository, CurrentActor actors, AcceptedCommands accepted,
-            HeroImports imports, JsonMapper json) {
+            HeroImports imports, AuditLog audit, JsonMapper json) {
         this.repository = repository;
         this.actors = actors;
         this.accepted = accepted;
         this.imports = imports;
+        this.audit = audit;
         this.json = json;
     }
 
@@ -46,8 +50,8 @@ public class HeroImportJobs {
                     "Import must have unique codes and fit within 5 MB.");
         }
 
-        repository.enqueue(request.id(), actor.issuer(), actor.subject(), actor.type().name(), payload,
-                request.rows().size());
+        int inserted = repository.enqueue(request.id(), actor.issuer(), actor.subject(), actor.type().name(),
+                payload, request.rows().size());
 
         var job = owned(request.id());
         if (!json.readTree(job.getRequestJson()).equals(json.readTree(payload))) {
@@ -55,6 +59,10 @@ public class HeroImportJobs {
                     "This import ID already has different data.");
         }
 
+        // A retried request finds its own job and records nothing new.
+        if (inserted == 1)
+            audit.record(new AuditEntry(actor, "HERO_IMPORT_JOB_ENQUEUED", AGGREGATE, job.getId(), null, null, null,
+                    null, Map.of("rows", job.getTotal())));
         return view(job);
     }
 
@@ -77,12 +85,15 @@ public class HeroImportJobs {
     public HeroImportJobView dismissNotification(UUID id) {
         var actor = actors.require();
         var job = owned(id);
+        boolean alreadyDismissed = job.isNotificationDismissed();
         if (job.getCompleted() < job.getTotal()
                 || repository.dismissNotification(id, actor.issuer(), actor.subject()) != 1) {
             throw new ApiException(HeroErrorCode.HERO_IMPORT_JOB_CONFLICT,
                     "A running import notification cannot be dismissed.");
         }
 
+        if (!alreadyDismissed)
+            audit.record(AuditEntry.of(actor, "HERO_IMPORT_NOTIFICATION_DISMISSED", AGGREGATE, id));
         return view(owned(id));
     }
 
