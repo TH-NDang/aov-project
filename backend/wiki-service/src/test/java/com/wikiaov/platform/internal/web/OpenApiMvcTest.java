@@ -2,7 +2,7 @@ package com.wikiaov.platform.internal.web;
 
 import static org.mockito.Mockito.mock;
 
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import org.springdoc.core.configuration.SpringDocConfiguration;
@@ -16,15 +16,17 @@ import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import tools.jackson.databind.json.JsonMapper;
+import org.springframework.web.bind.annotation.RestController;
 
 @WebMvcTest
 @ActiveProfiles({"test", "openapi-contract-slice"})
@@ -48,26 +50,19 @@ class OpenApiMvcTest extends OpenApiContractChecks {
             return beanFactory -> {
                 var registry = (DefaultListableBeanFactory) beanFactory;
                 try {
-                    var baseline = JsonMapper.builder().build().readTree(
-                            Path.of("src/test/resources/contracts/controller-baseline.json").toFile());
                     Set<Class<?>> dependencies = new HashSet<>();
-                    var controllers = new java.util.ArrayList<String>();
-                    baseline.properties()
-                            .forEach(entry -> controllers.add(entry.getKey().replace('/', '.').replace(".java", "")));
-                    controllers.add("com.wikiaov.media.internal.web.MediaDeletionController");
-                    controllers.add("com.wikiaov.media.internal.web.MediaOwnerAdminController");
-                    controllers.add("com.wikiaov.media.internal.web.MediaReferencesController");
-                    controllers.add("com.wikiaov.patch.internal.web.PatchStatDefaultsController");
-                    controllers.add("com.wikiaov.patch.internal.web.PatchNotesController");
-                    controllers.add("com.wikiaov.build.internal.web.BuildCaptureController");
-                    controllers.add("com.wikiaov.build.internal.web.BuildPublicController");
-                    controllers.add("com.wikiaov.hero.internal.web.HeroStatSamplesController");
-                    controllers.add("com.wikiaov.hero.internal.web.HeroPublishReadinessController");
-                    controllers.add("com.wikiaov.hero.internal.web.HeroFormsController");
-                    controllers.add("com.wikiaov.hero.internal.web.HeroRankingController");
-                    controllers.add("com.wikiaov.hero.internal.web.HeroEvaluationController");
-                    controllers.add("com.wikiaov.hero.internal.web.HeroEvaluationPublicController");
-                    controllers.add("com.wikiaov.user.internal.web.AccountSecurityController");
+                    var scanner = new ClassPathScanningCandidateComponentProvider(false);
+                    scanner.addIncludeFilter(new AnnotationTypeFilter(RestController.class));
+                    var controllers = new ArrayList<String>();
+                    for (var candidate : scanner.findCandidateComponents("com.wikiaov")) {
+                        // Test probes are not part of the production contract.
+                        boolean production = !String.valueOf(candidate.getResourceDescription())
+                                .contains("test-classes");
+                        if (production
+                                && !candidate.getBeanClassName().equals(ProblemErrorController.class.getName())) {
+                            controllers.add(candidate.getBeanClassName());
+                        }
+                    }
                     for (String controllerName : controllers) {
                         Class<?> controller = Class.forName(controllerName);
                         registry.registerBeanDefinition(controller.getName(), new RootBeanDefinition(controller));
