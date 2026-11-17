@@ -1802,7 +1802,8 @@ POST /api/wiki/v1/admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous
 Quyền `patch:write`. Body `{description, sourceUrl}`: `description` là văn bản người biên tập tự viết, không rỗng, tối
 đa 4.000 ký tự; `sourceUrl` là link HTTP(S) của nguồn. Dòng `changeId` phải là dòng MECHANIC thuộc change set
 `changeSetId`. Mỗi dòng nhận tối đa một mô tả; ghi lần hai trả 409 `HERO_PATCH_CHANGE_CONFLICT`, không có API sửa hay
-xóa. Dòng không tồn tại hoặc nội dung sai trả 422 `HERO_INVALID_CONTENT`. Trả 201 `{id}` là `changeId`. Mô tả không
+xóa. Change set hoặc dòng không tồn tại trả 404 `HERO_PATCH_CHANGE_NOT_FOUND`, nội dung sai trả 422
+`HERO_INVALID_CONTENT`. Trả 201 `{id}` là `changeId`. Mô tả không
 đổi `patch-view` và không tạo snapshot ([ADR-016](adr/ADR-016-patch-note-changes.md)).
 
 ### 39c. Thư viện ảnh của tướng
@@ -2804,7 +2805,7 @@ Không cung cấp API kéo đổi/xóa lịch sử đã xác nhận.
 PUT /admin/hero-changes/{changeSetId}/assessment cần patch:write, nhận {kind,expectedVersion}.
 Kind dùng HeroChanges (ADJUSTMENT hiển thị Cân bằng) và thêm `RELEASE` (Ra mắt) chỉ cho change set có
 `introducesHero=true`; change set khác nhận `RELEASE` trả 422. Dòng thay đổi không nhận `RELEASE`. Tạo đầu
-version=0, lưu tăng version, xung đột 409.
+version=0, lưu tăng version, xung đột 409. Change set không tồn tại trả 404 `HERO_PATCH_CHANGE_NOT_FOUND`.
 API hero changes thêm overallKind,assessmentVersion; gameplayChanges của /admin/heroes thêm overallKind nullable,
 giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay sự kiện kỹ năng/chỉ số.
 
