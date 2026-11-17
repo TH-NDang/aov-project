@@ -3,6 +3,8 @@ package com.wikiaov.community.community.internal.membership.application;
 import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.*;
 import com.wikiaov.community.community.internal.domain.*;
+import com.wikiaov.community.community.internal.domain.ClaimStatus;
+import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.membership.persistence.*;
 import com.wikiaov.community.community.internal.pages.application.*;
 import com.wikiaov.community.community.internal.social.application.PageNotifications;
@@ -47,7 +49,7 @@ public class PageMemberships {
         row.setActor(actor.key());
         row.setName(actor.name());
         row.setEvidence(evidence);
-        row.setStatus("PENDING");
+        row.setStatus(ClaimStatus.PENDING);
         row.setCreatedAt(Instant.now());
         claims.saveAndFlush(row);
         access.audit(pageId, actor, "PAGE_CLAIM_REQUESTED");
@@ -63,7 +65,8 @@ public class PageMemberships {
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
     public PageSlice<Claim> pending(int page, int size) {
         return PageSlice.from(
-                claims.findByStatusOrderByCreatedAtDesc("PENDING", PageProfiles.paging(page, size)).map(this::view));
+                claims.findByStatusOrderByCreatedAtDesc(ClaimStatus.PENDING, PageProfiles.paging(page, size))
+                        .map(this::view));
     }
 
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
@@ -74,17 +77,17 @@ public class PageMemberships {
         access.lock(initial.getPageId());
         var row = claims.findById(id).orElseThrow(PageAccess::missing);
         PageAccess.version(row.getVersion(), version);
-        if (!row.getStatus().equals("PENDING"))
+        if (row.getStatus() != ClaimStatus.PENDING)
             throw PageChecks.invalid("The claim was already reviewed.");
         if (row.getActor().equals(actor.key()))
             throw PageChecks.invalid("A different administrator must review this claim.");
         if (approve) {
             PageAccess.requireCommunity(access.read(row.getPageId()));
-            if (members.existsByPageIdAndRole(row.getPageId(), "OWNER"))
+            if (members.existsByPageIdAndRole(row.getPageId(), Role.OWNER))
                 throw PageChecks.invalid("The page already has an owner. Resolve the ownership dispute first.");
-            add(row.getPageId(), row.getActor(), row.getName(), "OWNER");
+            add(row.getPageId(), row.getActor(), row.getName(), Role.OWNER);
         }
-        row.setStatus(approve ? "APPROVED" : "REJECTED");
+        row.setStatus(approve ? ClaimStatus.APPROVED : ClaimStatus.REJECTED);
         row.setResolution(resolution);
         row.setReviewedBy(actor.key());
         claims.flush();
@@ -98,20 +101,21 @@ public class PageMemberships {
     public List<Member> members(UUID pageId) {
         var actor = CommunityActor.require();
         if (!actor.publisher())
-            access.require(pageId, actor, "OWNER", "EDITOR", "MODERATOR");
+            access.require(pageId, actor, Role.OWNER, Role.EDITOR, Role.MODERATOR);
         return members.findByPageId(pageId).stream()
-                .map(row -> new Member(row.getId(), row.getName(), row.getRole(), row.getActor().equals(actor.key())))
+                .map(row -> new Member(row.getId(), row.getName(), row.getRole().name(),
+                        row.getActor().equals(actor.key())))
                 .toList();
     }
 
     public Map<String, Object> invite(UUID pageId, PageContent.Role role) {
         var actor = CommunityActor.require();
         access.lock(pageId);
-        access.require(pageId, actor, "OWNER");
+        access.require(pageId, actor, Role.OWNER);
         if (role == null || role == PageContent.Role.OWNER)
             throw PageChecks.invalid("Invite an editor or moderator; use ownership transfer for owners.");
 
-        var issued = issue(pageId, role.name());
+        var issued = issue(pageId, role);
         access.audit(pageId, actor, "PAGE_MEMBER_INVITED");
         return issued;
     }
@@ -121,7 +125,7 @@ public class PageMemberships {
     public Handover handover(UUID pageId) {
         access.read(pageId);
         var now = Instant.now();
-        return invitations.findByPageIdAndRoleAndAcceptedAtIsNull(pageId, "OWNER").stream()
+        return invitations.findByPageIdAndRoleAndAcceptedAtIsNull(pageId, Role.OWNER).stream()
                 .filter(row -> row.getExpiresAt().isAfter(now))
                 .max(Comparator.comparing(PageInvitation::getExpiresAt))
                 .map(row -> new Handover(true, row.getExpiresAt()))
@@ -139,11 +143,11 @@ public class PageMemberships {
         PageAccess.requireCommunity(page);
         if (page.getPublishedContent() == null)
             throw PageAccess.conflict("Publish the page before handing it over.");
-        if (members.existsByPageIdAndRole(pageId, "OWNER"))
+        if (members.existsByPageIdAndRole(pageId, Role.OWNER))
             throw PageAccess.conflict("The page already has an owner. Revoke it before handing the page over.");
 
         expireHandovers(pageId);
-        var issued = issue(pageId, "OWNER");
+        var issued = issue(pageId, Role.OWNER);
         access.audit(pageId, actor, "PAGE_HANDOVER_ISSUED");
         return Map.of("token", issued.get("token"), "expiresAt", issued.get("expiresAt"));
     }
@@ -163,8 +167,8 @@ public class PageMemberships {
         var initial = invitations.findByTokenHash(hash(token)).orElseThrow(PageAccess::missing);
         PageAccess.requireCommunity(access.lock(initial.getPageId()));
         var row = invitations.findByTokenHash(hash(token)).orElseThrow(PageAccess::missing);
-        var handover = row.getRole().equals("OWNER");
-        var owned = members.existsByPageIdAndRole(row.getPageId(), "OWNER");
+        var handover = row.getRole() == Role.OWNER;
+        var owned = members.existsByPageIdAndRole(row.getPageId(), Role.OWNER);
         if (row.getAcceptedAt() != null || !row.getExpiresAt().isAfter(Instant.now()))
             throw PageChecks.invalid("Invitation expired or was already used.");
         if (handover && owned)
@@ -186,14 +190,14 @@ public class PageMemberships {
         var actor = CommunityActor.require();
         access.lock(pageId);
         if (!actor.publisher())
-            access.require(pageId, actor, "OWNER");
+            access.require(pageId, actor, Role.OWNER);
         var member = members.findById(memberId).orElseThrow(PageAccess::missing);
         if (!member.getPageId().equals(pageId))
             throw PageAccess.missing();
-        if (member.getRole().equals("OWNER") && !actor.publisher())
+        if (member.getRole() == Role.OWNER && !actor.publisher())
             throw PageChecks.invalid("Transfer ownership before leaving the page.");
         members.delete(member);
-        if (member.getRole().equals("OWNER")) {
+        if (member.getRole() == Role.OWNER) {
             members.findByPageId(pageId).forEach(members::delete);
             invitations.findByPageIdAndAcceptedAtIsNull(pageId)
                     .forEach(invitation -> invitation.setExpiresAt(Instant.now()));
@@ -205,21 +209,21 @@ public class PageMemberships {
     public void transfer(UUID pageId, UUID memberId) {
         var actor = CommunityActor.require();
         access.lock(pageId);
-        access.require(pageId, actor, "OWNER");
+        access.require(pageId, actor, Role.OWNER);
         var target = members.findById(memberId).orElseThrow(PageAccess::missing);
         if (!target.getPageId().equals(pageId) || target.getActor().equals(actor.key()))
             throw PageChecks.invalid("Choose another member of this page.");
         var owner = members.findByPageIdAndActor(pageId, actor.key()).orElseThrow(PageAccess::missing);
-        owner.setRole("EDITOR");
+        owner.setRole(Role.EDITOR);
         members.flush();
-        target.setRole("OWNER");
+        target.setRole(Role.OWNER);
         invitations.findByPageIdAndAcceptedAtIsNull(pageId)
                 .forEach(invitation -> invitation.setExpiresAt(Instant.now()));
         access.audit(pageId, actor, "PAGE_OWNERSHIP_TRANSFERRED");
         notifications.send(target.getActor(), pageId, "Bạn đã nhận quyền quản trị chính của trang.");
     }
 
-    private Map<String, Object> issue(UUID pageId, String role) {
+    private Map<String, Object> issue(UUID pageId, Role role) {
         String token = UUID.randomUUID().toString() + UUID.randomUUID();
         var row = new PageInvitation();
         row.setPageId(pageId);
@@ -232,14 +236,14 @@ public class PageMemberships {
 
     private int expireHandovers(UUID pageId) {
         var now = Instant.now();
-        var live = invitations.findByPageIdAndRoleAndAcceptedAtIsNull(pageId, "OWNER").stream()
+        var live = invitations.findByPageIdAndRoleAndAcceptedAtIsNull(pageId, Role.OWNER).stream()
                 .filter(row -> row.getExpiresAt().isAfter(now))
                 .toList();
         live.forEach(row -> row.setExpiresAt(now));
         return live.size();
     }
 
-    private void add(UUID pageId, String actor, String name, String role) {
+    private void add(UUID pageId, String actor, String name, Role role) {
         var row = new PageMember();
         row.setPageId(pageId);
         row.setActor(actor);
@@ -251,7 +255,7 @@ public class PageMemberships {
     private Claim view(PageClaim row) {
         return new Claim(row.getId(), row.getVersion(), row.getPageId(),
                 access.read(row.getPageId()).getContent().name(),
-                row.getName(), row.getEvidence(), row.getStatus(), row.getResolution(), row.getCreatedAt());
+                row.getName(), row.getEvidence(), row.getStatus().name(), row.getResolution(), row.getCreatedAt());
     }
 
     private static String hash(String value) {

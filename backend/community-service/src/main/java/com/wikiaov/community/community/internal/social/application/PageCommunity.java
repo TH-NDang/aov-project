@@ -2,7 +2,9 @@ package com.wikiaov.community.community.internal.social.application;
 
 import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.*;
+import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PostContent;
+import com.wikiaov.community.community.internal.domain.PostStatus;
 import com.wikiaov.community.community.internal.pages.application.*;
 import com.wikiaov.community.community.internal.social.persistence.*;
 import com.wikiaov.community.platform.CommunityActor;
@@ -45,7 +47,7 @@ public class PageCommunity {
     public PageSlice<Post> posts(UUID pageId, String kind, int page, int size, boolean manage) {
         var filter = PageChecks.postKindFilter(kind);
         if (manage)
-            access.require(pageId, CommunityActor.require(), "OWNER", "EDITOR", "MODERATOR");
+            access.require(pageId, CommunityActor.require(), Role.OWNER, Role.EDITOR, Role.MODERATOR);
         else
             access.social(pageId);
         var result = manage
@@ -67,14 +69,18 @@ public class PageCommunity {
     public PageSlice<FeedPost> latest(String kind, String query, int page, int size) {
         var filter = PageChecks.postKindFilter(kind);
         var pattern = PageChecks.searchPattern(query);
-        return feedView(posts.published(null, filter, pattern, PageProfiles.paging(page, size)), null);
+        return feedView(
+                posts.published(PostStatus.PUBLISHED.name(), null, filter, pattern, PageProfiles.paging(page, size)),
+                null);
     }
 
     @Transactional(readOnly = true)
     public PageSlice<FeedPost> timeline(boolean following, String kind, int page, int size) {
         var actor = CommunityActor.require();
         var filter = PageChecks.postKindFilter(kind);
-        return feedView(posts.published(following ? actor.key() : null, filter, null, PageProfiles.paging(page, size)),
+        return feedView(
+                posts.published(PostStatus.PUBLISHED.name(), following ? actor.key() : null, filter, null,
+                        PageProfiles.paging(page, size)),
                 actor);
     }
 
@@ -85,7 +91,7 @@ public class PageCommunity {
         access.lock(pageId);
         var profile = access.social(pageId);
         if (asPage)
-            access.require(pageId, actor, "OWNER", "EDITOR");
+            access.require(pageId, actor, Role.OWNER, Role.EDITOR);
         var row = id == null ? new CommunityPost() : posts.findById(id).orElseThrow(PageAccess::missing);
         if (id != null) {
             if (!pageId.equals(row.getPageId()))
@@ -95,7 +101,7 @@ public class PageCommunity {
             PageAccess.version(row.getVersion(), version);
             if (row.getAsPage() != asPage)
                 throw PageChecks.invalid("A post's author identity cannot change.");
-            if (row.getStatus().equals("HIDDEN"))
+            if (row.getStatus() == PostStatus.HIDDEN)
                 throw PageChecks.invalid("A moderated post cannot be republished by its author.");
         } else {
             row.setPageId(pageId);
@@ -104,13 +110,13 @@ public class PageCommunity {
             row.setAsPage(asPage);
             row.setAuthorName(asPage ? profile.getPublishedContent().name() : actor.name());
         }
-        boolean newlyPublished = publish && !"PUBLISHED".equals(row.getStatus());
+        boolean newlyPublished = publish && row.getStatus() != PostStatus.PUBLISHED;
         row.setKind(content.kind());
         row.setTitle(content.title());
         row.setBody(content.body());
         row.setVideoUrl(content.videoUrl());
         row.setImageUrls(content.imageUrls());
-        row.setStatus(publish ? "PUBLISHED" : "DRAFT");
+        row.setStatus(publish ? PostStatus.PUBLISHED : PostStatus.DRAFT);
         if (!publish)
             row.setPinnedAt(null);
         row.setUpdatedAt(Instant.now());
@@ -139,7 +145,7 @@ public class PageCommunity {
         var post = publishedPost(postId);
         access.lock(post.getPageId());
         if (asPage)
-            access.require(post.getPageId(), actor, "OWNER", "EDITOR", "MODERATOR");
+            access.require(post.getPageId(), actor, Role.OWNER, Role.EDITOR, Role.MODERATOR);
         var row = new CommunityComment();
         row.setPostId(postId);
         row.setActor(actor.key());
@@ -175,11 +181,11 @@ public class PageCommunity {
         var actor = CommunityActor.require();
         access.lock(pageId);
         if (!actor.editor())
-            access.require(pageId, actor, "OWNER", "EDITOR");
+            access.require(pageId, actor, Role.OWNER, Role.EDITOR);
         var post = posts.findById(postId).orElseThrow(PageAccess::missing);
         if (!post.getPageId().equals(pageId))
             throw PageAccess.missing();
-        if (pinned && (!post.getAsPage() || !"PUBLISHED".equals(post.getStatus())))
+        if (pinned && (!post.getAsPage() || post.getStatus() != PostStatus.PUBLISHED))
             throw PageChecks.invalid("Only published page posts can be pinned.");
 
         if (pinned)
@@ -257,9 +263,9 @@ public class PageCommunity {
                 throw PageAccess.missing();
             comment.setHidden(hidden);
         } else {
-            if (post.getStatus().equals("DRAFT"))
+            if (post.getStatus() == PostStatus.DRAFT)
                 throw PageChecks.invalid("Drafts cannot be published by moderation.");
-            post.setStatus(hidden ? "HIDDEN" : "PUBLISHED");
+            post.setStatus(hidden ? PostStatus.HIDDEN : PostStatus.PUBLISHED);
             if (hidden)
                 post.setPinnedAt(null);
         }
@@ -281,13 +287,13 @@ public class PageCommunity {
 
     private void moderate(UUID pageId, CommunityActor actor) {
         if (!actor.publisher())
-            access.require(pageId, actor, "OWNER", "MODERATOR");
+            access.require(pageId, actor, Role.OWNER, Role.MODERATOR);
     }
 
     private CommunityPost publishedPost(UUID id) {
         var post = posts.findById(id).orElseThrow(PageAccess::missing);
         access.social(post.getPageId());
-        if (!post.getStatus().equals("PUBLISHED"))
+        if (post.getStatus() != PostStatus.PUBLISHED)
             throw PageAccess.missing();
         return post;
     }
@@ -325,7 +331,7 @@ public class PageCommunity {
 
     private Post postView(CommunityPost row, CommunityActor actor, long likeCount, boolean liked, long commentCount) {
         return new Post(row.getId(), row.getVersion(), row.getPageId(), row.getAuthorName(), row.getAsPage(),
-                row.getBody(), row.getStatus(), row.getCreatedAt(),
+                row.getBody(), row.getStatus().name(), row.getCreatedAt(),
                 actor != null && actor.key().equals(row.getActor()), likeCount, liked, commentCount, row.getKind(),
                 row.getTitle(), row.getVideoUrl(), List.copyOf(row.getImageUrls()), row.getPinnedAt() != null);
     }

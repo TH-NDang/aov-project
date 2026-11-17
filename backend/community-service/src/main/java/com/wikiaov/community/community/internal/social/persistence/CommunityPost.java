@@ -1,5 +1,6 @@
 package com.wikiaov.community.community.internal.social.persistence;
 
+import com.wikiaov.community.community.internal.domain.PostStatus;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.*;
@@ -18,7 +19,8 @@ public class CommunityPost {
     private String authorName;
     private boolean asPage;
     private String body;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private PostStatus status;
     private Instant createdAt;
     private Instant updatedAt;
     private String kind = "TEXT";
@@ -84,11 +86,11 @@ public class CommunityPost {
         this.body = value;
     }
 
-    public String getStatus() {
+    public PostStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String value) {
+    public void setStatus(PostStatus value) {
         this.status = value;
     }
 

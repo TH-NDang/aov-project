@@ -2,6 +2,7 @@ package com.wikiaov.community.community.internal.social.application;
 
 import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.*;
+import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.pages.application.*;
 import com.wikiaov.community.community.internal.pages.persistence.PageRecord;
@@ -35,7 +36,7 @@ public class PageBroadcasts {
         var actor = CommunityActor.require();
         PageChecks.live(url, title);
         var page = access.lock(pageId);
-        access.require(pageId, actor, "OWNER", "EDITOR");
+        access.require(pageId, actor, Role.OWNER, Role.EDITOR);
 
         return begin(page, actor, url, title);
     }
@@ -52,7 +53,7 @@ public class PageBroadcasts {
     public void end(UUID pageId) {
         var actor = CommunityActor.require();
         access.lock(pageId);
-        access.require(pageId, actor, "OWNER", "EDITOR");
+        access.require(pageId, actor, Role.OWNER, Role.EDITOR);
 
         stop(pageId, actor);
     }

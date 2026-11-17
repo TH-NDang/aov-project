@@ -3,6 +3,7 @@ package com.wikiaov.community.community.internal.pages.application;
 import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.*;
 import com.wikiaov.community.community.internal.domain.*;
+import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.membership.persistence.PageMemberRepository;
 import com.wikiaov.community.community.internal.pages.persistence.*;
 import com.wikiaov.community.community.internal.social.persistence.PageFollowRepository;
@@ -144,7 +145,7 @@ public class PageProfiles {
         var rows = pages.findAllById(ids).stream().filter(row -> row.getPublishedContent() != null).toList();
         if (rows.isEmpty())
             return Map.of();
-        var represented = members.ownedAmong(rows.stream().map(PageRecord::getId).toList());
+        var represented = members.withRoleAmong(Role.OWNER, rows.stream().map(PageRecord::getId).toList());
 
         var cards = new HashMap<UUID, PageCard>();
         for (var row : rows) {
@@ -277,7 +278,7 @@ public class PageProfiles {
         PageChecks.presentation(content);
         assets.acquire(content.avatarUrl(), content.coverUrl());
         var row = access.lock(id);
-        access.require(id, actor, "OWNER", "EDITOR");
+        access.require(id, actor, Role.OWNER, Role.EDITOR);
         PageAccess.version(row.getVersion(), version);
         row.setPresentation(content);
         row.setUpdatedAt(Instant.now());
@@ -290,10 +291,11 @@ public class PageProfiles {
     public Map<String, Object> me(UUID id) {
         var actor = CommunityActor.require();
         var row = access.read(id);
-        String role = access.role(id, actor);
+        var role = access.role(id, actor);
         if (row.getPublishedContent() == null && role.isEmpty() && !actor.editor())
             throw PageAccess.missing();
-        return Map.of("role", role, "following", follows.findByPageIdAndActor(id, actor.key()).isPresent(),
+        return Map.of("role", role.map(Role::name).orElse(""), "following",
+                follows.findByPageIdAndActor(id, actor.key()).isPresent(),
                 "version", row.getVersion(), "name", actor.name());
     }
 
@@ -306,7 +308,7 @@ public class PageProfiles {
 
     @Transactional(readOnly = true)
     public Profile managed(UUID id) {
-        access.require(id, CommunityActor.require(), "OWNER", "EDITOR", "MODERATOR");
+        access.require(id, CommunityActor.require(), Role.OWNER, Role.EDITOR, Role.MODERATOR);
         return view(access.read(id), false);
     }
 
@@ -337,7 +339,7 @@ public class PageProfiles {
         return new Profile(row.getId(), admin ? row.getVersion() : null, row.getCode(), row.getKind(),
                 row.getEntityId(),
                 content, row.getPublishedContent() != null,
-                community && members.existsByPageIdAndRole(row.getId(), "OWNER"),
+                community && members.existsByPageIdAndRole(row.getId(), Role.OWNER),
                 community ? follows.countByPageId(row.getId()) : 0, row.getUpdatedAt(), community ? live(row) : null);
     }
 

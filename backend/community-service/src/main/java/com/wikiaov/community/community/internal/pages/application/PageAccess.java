@@ -1,6 +1,8 @@
 package com.wikiaov.community.community.internal.pages.application;
 
 import com.wikiaov.community.community.internal.application.PageErrorCode;
+import com.wikiaov.community.community.internal.domain.PageContent.Role;
+import com.wikiaov.community.community.internal.membership.persistence.PageMember;
 import com.wikiaov.community.community.internal.membership.persistence.PageMemberRepository;
 import com.wikiaov.community.community.internal.pages.persistence.*;
 import com.wikiaov.community.platform.*;
@@ -35,10 +37,12 @@ public class PageAccess {
         return page;
     }
 
-    public String role(UUID id, CommunityActor actor) {
-        if (!community(read(id)))
-            return "";
-        return members.findByPageIdAndActor(id, actor.key()).map(member -> member.getRole()).orElse("");
+    /** The account's role on a community page; none on a circuit page, which has no representatives. */
+    public Optional<Role> role(UUID id, CommunityActor actor) {
+        if (!community(read(id))) {
+            return Optional.empty();
+        }
+        return members.findByPageIdAndActor(id, actor.key()).map(PageMember::getRole);
     }
 
     public PageRecord social(UUID id) {
@@ -57,9 +61,10 @@ public class PageAccess {
                     "Circuit pages are editorial information pages and do not support community accounts.");
     }
 
-    public void require(UUID id, CommunityActor actor, String... roles) {
-        if (!Set.of(roles).contains(role(id, actor)))
+    public void require(UUID id, CommunityActor actor, Role... roles) {
+        if (role(id, actor).filter(Set.of(roles)::contains).isEmpty()) {
             throw forbidden();
+        }
     }
 
     public void audit(UUID id, CommunityActor actor, String action) {

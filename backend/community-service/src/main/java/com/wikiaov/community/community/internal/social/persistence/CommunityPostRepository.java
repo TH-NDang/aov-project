@@ -1,19 +1,20 @@
 package com.wikiaov.community.community.internal.social.persistence;
 
+import com.wikiaov.community.community.internal.domain.PostStatus;
 import java.util.*;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.*;
 
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, UUID> {
-    @Query("select p from CommunityPost p where p.pageId = :pageId and (p.status = 'PUBLISHED' or (p.actor = :actor and p.status = 'DRAFT')) order by p.createdAt desc")
+    @Query("select p from CommunityPost p where p.pageId = :pageId and (p.status = PUBLISHED or (p.actor = :actor and p.status = DRAFT)) order by p.createdAt desc")
     org.springframework.data.domain.Page<CommunityPost> visibleTo(UUID pageId, String actor,
             org.springframework.data.domain.Pageable page);
 
-    Page<CommunityPost> findByPageIdAndStatusOrderByCreatedAtDesc(UUID pageId, String status, Pageable pageable);
+    Page<CommunityPost> findByPageIdAndStatusOrderByCreatedAtDesc(UUID pageId, PostStatus status, Pageable pageable);
 
     /** A page's published posts with its pinned post first; {@code kind} null keeps every kind. */
     @Query("""
-            select p from CommunityPost p where p.pageId = :pageId and p.status = 'PUBLISHED'
+            select p from CommunityPost p where p.pageId = :pageId and p.status = PUBLISHED
             and (:kind is null or p.kind = :kind)
             order by case when p.pinnedAt is null then 1 else 0 end, p.createdAt desc
             """)
@@ -33,7 +34,7 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, UU
         """, nativeQuery = true)
     List<String> allMedia();
 
-    @Query("select p from CommunityPost p where p.pageId = :pageId and (p.asPage = true or p.status <> 'DRAFT') order by p.createdAt desc")
+    @Query("select p from CommunityPost p where p.pageId = :pageId and (p.asPage = true or p.status <> DRAFT) order by p.createdAt desc")
     Page<CommunityPost> findByPageIdOrderByCreatedAtDesc(UUID pageId, Pageable pageable);
 
     /**
@@ -42,7 +43,7 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, UU
      */
     @Query(value = """
             SELECT p.* FROM community.post p JOIN community.page g ON g.id = p.page_id
-            WHERE p.status = 'PUBLISHED' AND g.published_content IS NOT NULL AND g.kind <> 'CIRCUIT'
+            WHERE p.status = :status AND g.published_content IS NOT NULL AND g.kind <> 'CIRCUIT'
               AND (CAST(:follower AS varchar) IS NULL OR EXISTS (
                 SELECT 1 FROM community.follow f WHERE f.page_id = p.page_id AND f.actor = :follower))
               AND (CAST(:kind AS varchar) IS NULL OR p.kind = :kind)
@@ -51,12 +52,12 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, UU
             ORDER BY p.created_at DESC, p.id
             """, countQuery = """
             SELECT count(*) FROM community.post p JOIN community.page g ON g.id = p.page_id
-            WHERE p.status = 'PUBLISHED' AND g.published_content IS NOT NULL AND g.kind <> 'CIRCUIT'
+            WHERE p.status = :status AND g.published_content IS NOT NULL AND g.kind <> 'CIRCUIT'
               AND (CAST(:follower AS varchar) IS NULL OR EXISTS (
                 SELECT 1 FROM community.follow f WHERE f.page_id = p.page_id AND f.actor = :follower))
               AND (CAST(:kind AS varchar) IS NULL OR p.kind = :kind)
               AND (CAST(:pattern AS varchar) IS NULL OR p.body ILIKE :pattern ESCAPE '\\'
                 OR p.title ILIKE :pattern ESCAPE '\\')
             """, nativeQuery = true)
-    Page<CommunityPost> published(String follower, String kind, String pattern, Pageable pageable);
+    Page<CommunityPost> published(String status, String follower, String kind, String pattern, Pageable pageable);
 }
