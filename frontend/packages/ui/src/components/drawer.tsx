@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cn } from "cn"
+import { cn } from "@aov/ui/lib/utils"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 function Drawer({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) {

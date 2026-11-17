@@ -1,4 +1,4 @@
-import { cn } from "../lib/utils"
+import { cn } from "@aov/ui/lib/utils"
 import { useLocaleText } from "@aov/ui/hooks/use-locale-text"
 import "./public-app-brand.css"
 

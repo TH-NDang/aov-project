@@ -1,4 +1,4 @@
-import { cn } from "../lib/utils"
+import { cn } from "@aov/ui/lib/utils"
 import { useLocaleText } from "@aov/ui/hooks/use-locale-text"
 
 /** A twelve-point seal, rounded by its stroke, so the badge reads as a stamp rather than a plain check. */

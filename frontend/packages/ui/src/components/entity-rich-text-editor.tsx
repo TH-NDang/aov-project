@@ -37,7 +37,7 @@ import { Button } from "./button"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { RichTextColorPalette } from "./rich-text-color-palette"
 import { AtSign, ChevronDown, Eraser, Link2Off, Palette, Redo2, Table2, Undo2 } from "lucide-react"
-import { cn } from "../lib/utils"
+import { cn } from "@aov/ui/lib/utils"
 
 const empty: EntityReference[] = []
 const kinds = entityKindLabels

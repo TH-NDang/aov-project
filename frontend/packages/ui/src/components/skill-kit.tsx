@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { ArrowLeftRight, Sparkles } from "lucide-react"
-import { cn } from "../lib/utils"
+import { cn } from "@aov/ui/lib/utils"
 import { useLocaleText } from "@aov/ui/hooks/use-locale-text"
 
 export interface SkillFormOption {

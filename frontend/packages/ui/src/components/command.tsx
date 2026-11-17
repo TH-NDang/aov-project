@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
-import { cn } from "cn"
+import { cn } from "@aov/ui/lib/utils"
 import { SearchIcon } from "lucide-react"
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
