@@ -1,14 +1,12 @@
 import { useQuery } from "@tanstack/react-query"
-import { accessToken, useCommunitySession } from "../community/community-auth"
-import { createWikiRequest, type ProfileRequest, type UserProfile } from "./profile-model"
-
-export const wikiRequest = createWikiRequest(accessToken)
+import { useCommunitySession } from "../../lib/stream-auth"
+import { wikiRequest } from "../../lib/stream-api"
+import type { ProfileRequest, UserProfile } from "./profile-model"
 
 /** The session revision changes on every sign-in and sign-out, so a profile never leaks across accounts. */
 export const profileKey = (revision: number) => ["user-profile", "me", revision] as const
 
-export const saveProfile = (body: ProfileRequest) =>
-  wikiRequest<UserProfile>("/users/me", { method: "PUT", body: JSON.stringify(body) })
+export const saveProfile = (body: ProfileRequest) => wikiRequest<UserProfile>("/users/me", { method: "PUT", body })
 
 /** Signed avatar URLs expire after 15 minutes, so the profile is re-read before that. */
 export function useOwnProfile() {

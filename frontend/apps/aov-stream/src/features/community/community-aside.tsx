@@ -4,7 +4,7 @@ import { OfficialBadge } from "@aov/ui/components/official-badge"
 import owlMark from "../../assets/stream-owl.svg"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
-import { signIn, useCommunitySession } from "./community-auth"
+import { signIn, useCommunitySession } from "../../lib/stream-auth"
 import { useFollowedPages, useFollowPage, useSuggestions } from "./community-queries"
 import { Avatar, followersLabel, profileKindEnglish } from "./community-ui"
 

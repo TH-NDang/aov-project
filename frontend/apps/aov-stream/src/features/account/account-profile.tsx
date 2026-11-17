@@ -3,12 +3,13 @@ import { useQueryClient } from "@tanstack/react-query"
 import { currencyChoice } from "@aov/ui/lib/currency"
 import { currentTimeZone } from "@aov/ui/lib/time-zone"
 import { useStreamLocale } from "../../components/stream-locale"
-import { useCommunitySession } from "../community/community-auth"
+import { useCommunitySession } from "../../lib/stream-auth"
 import { AVATAR_TYPES, uploadAvatar } from "./avatar-upload"
-import { profileKey, saveProfile, useOwnProfile, wikiRequest } from "./profile-api"
+import { profileKey, saveProfile, useOwnProfile } from "./profile-api"
+import { ApiError } from "../../lib/api-client"
+import { wikiRequest } from "../../lib/stream-api"
 import {
   PROFILE_LIMITS,
-  WikiApiError,
   initialDraft,
   initials,
   profileDraft,
@@ -169,7 +170,7 @@ function ProfileEditor({
       client.setQueryData(profileKey(session.revision), result)
       setSaved(true)
     } catch (cause) {
-      setConflict(cause instanceof WikiApiError && cause.code === "USER_PROFILE_CONFLICT")
+      setConflict(cause instanceof ApiError && cause.code === "USER_PROFILE_CONFLICT")
       setError(profileError(cause, languageTag))
     } finally {
       setBusy(false)

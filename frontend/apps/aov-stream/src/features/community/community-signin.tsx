@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/c
 import owlMark from "../../assets/stream-owl.svg"
 import { StreamIcon, type StreamIconName } from "../../components/stream-icon"
 import { streamText, useStreamLocale } from "../../components/stream-locale"
-import { signIn, useCommunitySession } from "./community-auth"
+import { signIn, useCommunitySession } from "../../lib/stream-auth"
 
 /** Why the sign-in prompt is open; null while it is closed. One prompt serves the whole app. */
 let reason: string | null = null

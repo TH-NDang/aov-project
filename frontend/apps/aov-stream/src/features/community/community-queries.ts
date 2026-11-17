@@ -1,7 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { CommunityNotification, CommunityProfile, PageSlice } from "@aov/community-contracts"
+import { communityGetAll } from "../../lib/stream-api"
 import { communityApi } from "./community-api"
-import { useCommunitySession } from "./community-auth"
+import { useCommunitySession } from "../../lib/stream-auth"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 /**
@@ -17,7 +18,7 @@ export function useFollowedPages() {
   const { revision, enabled } = useAccountQuery()
   return useQuery({
     queryKey: ["my-follows", revision],
-    queryFn: () => communityApi<PageSlice<CommunityProfile>>("/me/follows?size=100"),
+    queryFn: async () => ({ items: await communityGetAll<CommunityProfile>("/me/follows") }),
     enabled,
     staleTime: 30_000,
   })

@@ -25,7 +25,7 @@ import { AccountProfile } from "../account/account-profile"
 import { AccountSettings } from "../account/account-settings"
 import { initials } from "../account/profile-model"
 import { communityApi } from "./community-api"
-import { useCommunitySession } from "./community-auth"
+import { useCommunitySession } from "../../lib/stream-auth"
 import { CommunityFeed } from "./community-feed"
 import { openSignIn, SignInBenefits } from "./community-signin"
 import {

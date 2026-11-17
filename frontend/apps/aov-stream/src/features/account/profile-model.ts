@@ -27,39 +27,6 @@ export interface BrowserPreferences {
 export const PROFILE_LIMITS = { displayName: 80, biography: 1000 } as const
 export const LANGUAGE_CODES = ["vi-VN", "en-US", "th-TH", "zh-TW", "id-ID"] as const
 
-export class WikiApiError extends Error {
-  readonly status: number
-  readonly code: string
-
-  constructor(status: number, code: string, message: string) {
-    super(message)
-    this.status = status
-    this.code = code
-  }
-}
-
-type Token = () => Promise<string>
-
-/** Calls the wiki API through the dev proxy with the in-memory access token and no cookies. */
-export function createWikiRequest(token: Token, fetcher?: typeof fetch) {
-  return async function wikiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const timeout = AbortSignal.timeout(20000)
-    const response = await (fetcher ?? fetch)(`/api/wiki/v1${path}`, {
-      ...init,
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` },
-      credentials: "omit",
-      cache: "no-store",
-      signal: init.signal ? AbortSignal.any([init.signal, timeout]) : timeout,
-    })
-    if (!response.ok) {
-      const problem = (await response.json().catch(() => ({}))) as { code?: string; detail?: string }
-      throw new WikiApiError(response.status, problem.code ?? "", problem.detail ?? `HTTP ${response.status}`)
-    }
-    const text = await response.text()
-    return text ? (JSON.parse(text) as T) : (undefined as T)
-  }
-}
-
 export const profileDraft = (profile: UserProfile): ProfileDraft => ({
   displayName: profile.displayName,
   biography: profile.biography,
@@ -90,7 +57,7 @@ export const profileRequest = (draft: ProfileDraft, expectedVersion: number): Pr
 
 export function profileError(error: unknown, locale = "vi-VN") {
   const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
-  if (error instanceof WikiApiError) {
+  if (error instanceof ApiError) {
     const messages: Record<string, [string, string]> = {
       USER_PROFILE_CONFLICT: [
         "Hồ sơ đã thay đổi ở nơi khác. Hãy tải bản mới nhất để xem lại trước khi lưu; nội dung đang nhập vẫn được giữ.",
@@ -192,3 +159,4 @@ export function initials(name: string) {
       .join("") || "?"
   )
 }
+import { ApiError } from "../../lib/api-client.ts"

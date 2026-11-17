@@ -12,6 +12,7 @@ import {
 } from "@aov/ui/components/public-overlay"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
+import { ApiError } from "../../lib/api-client"
 import { communityApi } from "./community-api"
 import { formatDay } from "./community-ui"
 import { useSignedInAction } from "./community-signin"
@@ -270,7 +271,12 @@ function ProfileRequestForm({ pageId, kind }: { pageId: string; kind: "suggestio
       )}
       {request.isError && (
         <p className="cp-error" role="alert">
-          {request.error.message}
+          {request.error instanceof ApiError && request.error.code === "TOURNAMENT_DUPLICATE_CODE"
+            ? ui(
+                "Bạn đã gửi yêu cầu này hoặc đã có quyền quản lý trang.",
+                "You have already sent this request, or you already manage this page.",
+              )
+            : request.error.message}
         </p>
       )}
       <div className="cp-profile-dialog-actions">

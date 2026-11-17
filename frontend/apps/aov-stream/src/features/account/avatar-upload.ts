@@ -1,3 +1,4 @@
+import type { ApiRequest } from "../../lib/api-client.ts"
 export interface UploadTicket {
   uploadId: string
   assetId: string
@@ -10,7 +11,7 @@ export interface AvatarResult {
   assetId: string
   avatarUrl: string
 }
-type Request = <T>(path: string, init?: RequestInit) => Promise<T>
+type Request = <T>(path: string, request?: ApiRequest) => Promise<T>
 
 export const AVATAR_TYPES = ["image/png", "image/jpeg", "image/webp"]
 export const AVATAR_MAX_BYTES = 25 * 1024 * 1024
@@ -39,7 +40,7 @@ export async function uploadAvatar(
   const ticket = await request<UploadTicket>("/users/me/avatar-uploads", {
     method: "POST",
     signal,
-    body: JSON.stringify({ fileName: file.name, contentType: file.type, sizeBytes: file.size }),
+    body: { fileName: file.name, contentType: file.type, sizeBytes: file.size },
   })
   progress(text("Đang tải ảnh lên kho lưu trữ…", "Uploading the image to storage…"))
   const response = await fetcher(ticket.uploadUrl, {

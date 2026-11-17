@@ -1,32 +1,16 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import type { CompetitionView, PageSlice, PublishedGame, TournamentContent } from "@aov/community-contracts"
-import { streamText } from "../../components/stream-locale"
+import { communityGetAll, communityRequest } from "../../lib/stream-api"
 
 export interface PublishedSummary<T> {
   id: string
   content: T
   gameCount: number
 }
-async function read<T>(path: string, signal: AbortSignal): Promise<T> {
-  const response = await fetch(`/api/community/v1${path}`, { signal, credentials: "omit" })
-  if (!response.ok)
-    throw new Error(
-      response.status === 404
-        ? streamText("Không tìm thấy nội dung đã xuất bản.", "This published content could not be found.")
-        : streamText("Chưa kết nối được kho dữ liệu giải đấu.", "The tournament data store could not be reached."),
-    )
-  return response.json()
-}
+const read = <T>(path: string, signal: AbortSignal) => communityRequest<T>(path, { signal })
 
 /** Read every public page so filtering and match grouping never silently omit later pages. */
-async function readPages<T>(path: string, signal: AbortSignal): Promise<T[]> {
-  const items: T[] = []
-  for (let page = 0; ; page += 1) {
-    const result = await read<PageSlice<T>>(`${path}${path.includes("?") ? "&" : "?"}page=${page}&size=50`, signal)
-    items.push(...result.items)
-    if (!result.items.length || (result.page + 1) * result.size >= result.totalElements) return items
-  }
-}
+const readPages = <T>(path: string, signal: AbortSignal) => communityGetAll<T>(path, { signal })
 
 export const competitionCatalogQuery = queryOptions({
   queryKey: ["competition-catalog"],
@@ -74,7 +58,9 @@ export const gameQuery = (id: string) =>
   })
 export const tournamentsQuery = queryOptions({
   queryKey: ["community", "tournaments"],
-  queryFn: ({ signal }) => read<PageSlice<PublishedSummary<TournamentContent>>>("/tournaments?size=100", signal),
+  queryFn: async ({ signal }) => ({
+    items: await readPages<PublishedSummary<TournamentContent>>("/tournaments", signal),
+  }),
   staleTime: 60_000,
   retry: 1,
 })

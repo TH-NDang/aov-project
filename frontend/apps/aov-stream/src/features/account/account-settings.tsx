@@ -5,8 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PublicTimeZoneSelect } from "@aov/ui/components/public-time-zone-select"
 import { languageLabel } from "./account-profile"
 import { LANGUAGE_CODES, profileDraft, profileRequest, type UserProfile } from "./profile-model"
-import { profileKey, saveProfile, useOwnProfile, wikiRequest } from "./profile-api"
-import { useCommunitySession } from "../community/community-auth"
+import { profileKey, saveProfile, useOwnProfile } from "./profile-api"
+import { wikiRequest } from "../../lib/stream-api"
+import { useCommunitySession } from "../../lib/stream-auth"
 import { useStreamLocale } from "../../components/stream-locale"
 
 /** How the app reads for this person. These are not part of who they are, so they live apart from the profile. */
