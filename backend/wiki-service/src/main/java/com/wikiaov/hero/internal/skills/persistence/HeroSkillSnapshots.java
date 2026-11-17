@@ -86,12 +86,12 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
             return;
 
         for (var trait : list) {
-            String code = trait.code().name();
-            traits.saveAndFlush(new SkillTraitRow(revisionId, code));
+            var code = trait.code();
+            traits.saveAndFlush(SkillTraitRow.of(revisionId, code));
             traitSkills.saveAll(trait.skillKeys().stream()
-                    .map(key -> new SkillTraitSkillRow(revisionId, code, key.strip())).toList());
+                    .map(key -> SkillTraitSkillRow.of(revisionId, code, key.strip())).toList());
             traitTexts.saveAll(trait.translations().stream()
-                    .map(text -> new SkillTraitTranslationRow(revisionId, code, text.locale(), text.detail().strip()))
+                    .map(text -> SkillTraitTranslationRow.of(revisionId, code, text.locale(), text.detail().strip()))
                     .toList());
         }
     }
@@ -113,7 +113,7 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
         Map<UUID, List<Trait>> result = new HashMap<>();
         codes.forEach((id, rows) -> result.put(id, HeroEvaluations.normalize(rows.stream().map(row -> {
             String key = id + "/" + row.getTraitCode();
-            return new Trait(TraitCode.valueOf(row.getTraitCode()),
+            return new Trait(row.getTraitCode(),
                     keys.getOrDefault(key, List.of()).stream().map(SkillTraitSkillRow::getSkillKey).toList(),
                     texts.getOrDefault(key, List.of()).stream()
                             .map(text -> new TraitTranslation(text.getLocale(), text.getDetail())).toList());

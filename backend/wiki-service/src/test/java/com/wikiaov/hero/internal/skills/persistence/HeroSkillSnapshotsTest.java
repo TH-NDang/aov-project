@@ -43,14 +43,14 @@ class HeroSkillSnapshotsTest {
         var second = UUID.randomUUID();
         var ids = List.of(first, second);
         when(traits.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
-                new SkillTraitRow(first, "HARD_CC"), new SkillTraitRow(first, "TRUE_DAMAGE"),
-                new SkillTraitRow(second, "DASH")));
+                SkillTraitRow.of(first, TraitCode.HARD_CC), SkillTraitRow.of(first, TraitCode.TRUE_DAMAGE),
+                SkillTraitRow.of(second, TraitCode.DASH)));
         when(traitSkills.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
-                new SkillTraitSkillRow(first, "HARD_CC", "skill-2"),
-                new SkillTraitSkillRow(first, "HARD_CC", "skill-1"),
-                new SkillTraitSkillRow(second, "DASH", "skill-1")));
+                SkillTraitSkillRow.of(first, TraitCode.HARD_CC, "skill-2"),
+                SkillTraitSkillRow.of(first, TraitCode.HARD_CC, "skill-1"),
+                SkillTraitSkillRow.of(second, TraitCode.DASH, "skill-1")));
         when(traitTexts.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
-                new SkillTraitTranslationRow(first, "HARD_CC", "vi-VN", "Hào hoa (choáng 0.75 giây)")));
+                SkillTraitTranslationRow.of(first, TraitCode.HARD_CC, "vi-VN", "Hào hoa (choáng 0.75 giây)")));
 
         var result = store.traits(ids);
 

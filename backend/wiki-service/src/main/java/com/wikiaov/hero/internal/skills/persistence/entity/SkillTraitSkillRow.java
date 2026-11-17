@@ -1,16 +1,25 @@
 package com.wikiaov.hero.internal.skills.persistence.entity;
 
+import com.wikiaov.hero.internal.domain.HeroContent.TraitCode;
 import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import java.io.Serializable;
 import java.util.UUID;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+/** A skill a trait comes from (ADR-029). Written once with its revision, like {@link SkillTraitRow}. */
 @Entity
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(schema = "hero", name = "hero_skill_trait_skill")
 @IdClass(SkillTraitSkillRow.Key.class)
 public class SkillTraitSkillRow extends AssignedIdentifierEntity<SkillTraitSkillRow.Key> {
@@ -18,10 +27,19 @@ public class SkillTraitSkillRow extends AssignedIdentifierEntity<SkillTraitSkill
     private UUID skillSetRevisionId;
 
     @Id
-    private String traitCode;
+    @Enumerated(EnumType.STRING)
+    private TraitCode traitCode;
 
     @Id
     private String skillKey;
+
+    public static SkillTraitSkillRow of(UUID skillSetRevisionId, TraitCode traitCode, String skillKey) {
+        var row = new SkillTraitSkillRow();
+        row.skillSetRevisionId = skillSetRevisionId;
+        row.traitCode = traitCode;
+        row.skillKey = skillKey;
+        return row;
+    }
 
     @Override
     public Key getId() {
@@ -31,9 +49,9 @@ public class SkillTraitSkillRow extends AssignedIdentifierEntity<SkillTraitSkill
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class Key implements java.io.Serializable {
+    public static class Key implements Serializable {
         public UUID skillSetRevisionId;
-        public String traitCode;
+        public TraitCode traitCode;
         public String skillKey;
     }
 }
