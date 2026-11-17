@@ -17,6 +17,7 @@ import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.platform.CatalogChangeProvider;
 import com.wikiaov.platform.CatalogChanges;
+import com.wikiaov.query.internal.application.PatchPages;
 import com.wikiaov.query.internal.web.PatchPageController;
 import com.wikiaov.spell.SpellChangeQueries;
 import io.swagger.v3.oas.annotations.Operation;
@@ -266,7 +267,7 @@ abstract class OpenApiContractChecks {
         when(patches.published(patchId, "VN", "vi-VN")).thenReturn(Map.of("variantId", variantId));
         when(heroes.forVariant(variantId, "vi-VN")).thenReturn(List.of());
         when(spells.forVariant(variantId, "vi-VN")).thenReturn(List.of());
-        var controller = new PatchPageController(patches, heroes, spells, List.of());
+        var controller = new PatchPageController(new PatchPages(patches, heroes, spells, List.of()));
         for (String domain : List.of("HERO", "SPELL")) {
             assertThat(controller.changes(patchId, "VN", "vi-VN", domain, null, 0, 50,
                     new MockHttpServletRequest()).getStatusCode().value()).isEqualTo(200);
@@ -294,17 +295,17 @@ abstract class OpenApiContractChecks {
                 UUID.randomUUID(), List.of(CatalogChanges.Kind.DATA_BASELINE), null, null, null, false, null);
         when(items.changes(ruleset, variant, "vi-VN")).thenReturn(List.of(change, baseline));
 
-        var controller = new PatchPageController(patches, mock(HeroChangeQueries.class), mock(SpellChangeQueries.class),
-                List.of(items));
-        var response = (Map<?, ?>) controller
-                .changes(patch, "VN", "vi-VN", "ITEM", variant, 0, 50, new MockHttpServletRequest()).getBody();
-        assertThat((List<?>) response.get("items")).hasSize(1);
-        var row = (Map<?, ?>) ((List<?>) response.get("items")).getFirst();
+        var controller = new PatchPageController(new PatchPages(patches, mock(HeroChangeQueries.class),
+                mock(SpellChangeQueries.class), List.of(items)));
+        var response = controller.changes(patch, "VN", "vi-VN", "ITEM", variant, 0, 50, new MockHttpServletRequest())
+                .getBody();
+        assertThat(response.items()).hasSize(1);
+        var row = (Map<?, ?>) response.items().getFirst();
         assertThat(((Map<?, ?>) row.get("subject")).get("id")).isEqualTo(owner);
         assertThat(row.get("changeKinds")).isEqualTo(List.of(CatalogChanges.Kind.BUFF));
         assertThat(row.get("summary")).isEqualTo("Attack increased.");
         assertThat(row.get("actualLocale")).isEqualTo("en-US");
-        assertThat(response.get("totalElements")).isEqualTo(1);
+        assertThat(response.totalElements()).isEqualTo(1);
     }
 
     Set<String> domainValues(JsonNode spec, String path) {

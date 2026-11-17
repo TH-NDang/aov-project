@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import java.util.*;
 import org.springframework.http.*;
 
@@ -46,7 +47,8 @@ public interface PatchPageApi {
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(description = "Public patch change domain. Only published gameplay changes are included. Existing hero details and spell removal events retain their format.", schema = @Schema(allowableValues = {
-                    "HERO", "SPELL", "ITEM", "ENCHANTMENT", "ARCANA"})) String domain,
+                    "HERO", "SPELL", "ITEM", "ENCHANTMENT",
+                    "ARCANA"})) @Pattern(regexp = "HERO|SPELL|ITEM|ENCHANTMENT|ARCANA") String domain,
             @Parameter(description = "Optional published variant from the regional catalog, including undated variants.") UUID patchVariantId,
             @Parameter(description = "Zero-based page index.") @Min(0) int page,
             @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
