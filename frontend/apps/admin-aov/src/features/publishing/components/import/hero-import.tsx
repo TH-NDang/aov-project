@@ -15,7 +15,6 @@ import {
   type RelationMapping,
   type RelatedImage,
 } from "../../model/import/import-relations"
-import { RelationMappingFields } from "./relation-mapping"
 import { type Request } from "../../api/publishing-api"
 import { createUploadSession, resumeUploadSession, type UploadSession } from "./import-upload-session"
 import { control } from "../fields"
@@ -31,51 +30,33 @@ import {
   ArrowRight,
   AlertCircle,
 } from "lucide-react"
-import { IMPORT_STATUS, ImportValue } from "./import-review"
+import { IMPORT_STATUS } from "./import-review"
 import type { ImportContext } from "./import-context"
 import { captureDataset, type SourceDataset } from "../../model/import/hero-source-dataset"
 import { BaselineMigration } from "./baseline-migration"
+import type {
+  ImportEntry as Entry,
+  ImportField as Field,
+  ImportPolicy as Policy,
+  HeroImportInput as Input,
+  HeroImportPlan as Plan,
+} from "../../model/import/hero-import-types"
+import { ImportMappingStep } from "./import-mapping-step"
+import { ImportEntryCard } from "./import-entry-card"
 
-import type { components } from "../../generated/hero-api"
-type Policy = components["schemas"]["ImportPolicy"]
-type Field = components["schemas"]["ImportField"]
-type Input = components["schemas"]["HeroImportRequest"]
-type Plan = components["schemas"]["HeroImportPlan"]
 export interface ImportActivity {
   status: "idle" | "running" | "review" | "completed" | "error"
   description: string
   completed: number
   total: number
 }
-interface Entry {
-  relatedImages?: RelatedImage[]
-  imageUrls?: Record<string, string>
-  input: Input
-  plan?: Plan
-  error?: string
-  selected: boolean
-  result?: string
-}
-function sampleValue(value: unknown): string {
-  if (value == null || value === "") return "Trống"
-  if (Array.isArray(value))
-    return `${value.length} mục${
-      value.length && typeof value[0] === "object"
-        ? ` · ${value
-            .slice(0, 3)
-            .map((item) => item?.name || item?.skillKey || item?.skinKey || "")
-            .filter(Boolean)
-            .join(", ")}`
-        : ` · ${value.slice(0, 4).join(", ")}`
-    }`
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>
-    if (Array.isArray(record.values)) return `${record.values.length} chỉ số · giữ đơn vị và nguồn đi kèm`
-    if (record.scaleCode)
-      return `Thang ${record.scaleCode} · ${record.derived ? "quy đổi từ ảnh nguồn" : "đánh giá đã ghi nhận"}`
-    return `${Object.keys(record).length} trường dữ liệu`
-  }
-  return String(value)
+
+/** `rows` with `row` added when its part opened, or taken out when it closed. */
+function toggled(rows: Set<number>, row: number, open: boolean) {
+  const next = new Set(rows)
+  if (open) next.add(row)
+  else next.delete(row)
+  return next
 }
 export function HeroImport({
   context,
@@ -809,150 +790,33 @@ export function HeroImport({
           </>
         )}
         {step === 2 && (
-          <>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h3 className="font-medium">{fileName}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {rows.length} bản ghi · {modes.find((m) => m.key === mode)?.title}
-                </p>
-              </div>
-              <Button type="button" variant="ghost" onClick={() => setStep(1)}>
-                Đổi tệp / loại nhập
-              </Button>
-            </div>
-            <label className="grid gap-2 rounded-lg bg-muted/40 p-4 text-sm sm:grid-cols-2 sm:items-center">
-              <span>
-                <strong>Cột nhận diện tướng</strong>
-                <span className="mt-1 block text-muted-foreground">
-                  Dùng mã ổn định như airi. Không tạo lại ID khi cập nhật.
-                </span>
-              </span>
-              <select
-                className={control}
-                value={idColumn}
-                onChange={(e) => {
-                  setIdColumn(e.target.value)
-                  setEntries([])
-                }}
-              >
-                <option value="">Chọn cột mã tướng</option>
-                {columns.map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
-            </label>
-            <div className="hidden grid-cols-3 gap-4 px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
-              <span>Trường dữ liệu</span>
-              <span>Cột trong tệp</span>
-              <span>Khi đã có giá trị</span>
-            </div>
-            <div className="divide-y rounded-lg border">
-              {fields.data?.map((field) => (
-                <div key={field.key} className="grid gap-3 p-3 sm:grid-cols-3 sm:items-start">
-                  <div className="text-sm">
-                    <span className="font-medium">{field.label}</span>
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      {field.type === "image"
-                        ? "Đường dẫn trong thư mục / HTTPS / UUID asset"
-                        : field.type === "json"
-                          ? "Ghi đè dữ liệu mục này; kiểm tra bản xem trước"
-                          : "Ô trống sẽ giữ dữ liệu hiện có"}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <select
-                      aria-label={`Cột nguồn cho ${field.label}`}
-                      className={control}
-                      value={mapping[field.key] ?? ""}
-                      onChange={(e) => {
-                        setMapping({ ...mapping, [field.key]: e.target.value })
-                        if (field.key === "skills" || field.key === "skins")
-                          setRelations({
-                            ...relations,
-                            [field.key]: defaultRelationMapping(
-                              rows.find(
-                                (row) =>
-                                  Array.isArray(row[e.target.value]) && (row[e.target.value] as unknown[]).length,
-                              )?.[e.target.value],
-                              field.key,
-                            ),
-                          })
-                        setEntries([])
-                      }}
-                    >
-                      <option value="">Không nhập trường này</option>
-                      {columns.map((c) => (
-                        <option key={c}>{c}</option>
-                      ))}
-                    </select>
-                    {mapping[field.key] && (
-                      <p
-                        className="mt-1 truncate text-xs text-muted-foreground"
-                        title={sampleValue(rows[0]?.[mapping[field.key]])}
-                      >
-                        Ví dụ: {sampleValue(rows[0]?.[mapping[field.key]])}
-                      </p>
-                    )}
-                  </div>
-                  <select
-                    aria-label={`Xử lý ${field.label}`}
-                    className={control}
-                    value={policies[field.key] ?? "FILL_EMPTY"}
-                    onChange={(e) => {
-                      setPolicies({ ...policies, [field.key]: e.target.value as Policy })
-                      setEntries([])
-                    }}
-                  >
-                    <option value="FILL_EMPTY">Chỉ bổ sung chỗ trống</option>
-                    <option value="OVERWRITE">Ghi đè giá trị</option>
-                    <option value="SKIP">Bỏ qua</option>
-                  </select>
-                </div>
-              ))}
-            </div>
-            {(["skills", "skins"] as const)
-              .filter((section) => mapping[section] && policies[section] !== "SKIP")
-              .map((section) => (
-                <RelationMappingFields
-                  key={section}
-                  section={section}
-                  sample={
-                    rows.find(
-                      (row) => Array.isArray(row[mapping[section]]) && (row[mapping[section]] as unknown[]).length,
-                    )?.[mapping[section]] ?? rows[0]?.[mapping[section]]
-                  }
-                  value={relations[section]}
-                  fields={relationFields.data?.[section] ?? []}
-                  onChange={(value) => {
-                    setRelations({ ...relations, [section]: value })
-                    setEntries([])
-                  }}
-                />
-              ))}
-            {relationFields.error && (
-              <p role="alert" className="text-sm text-destructive">
-                Không tải được trường ánh xạ kỹ năng/trang phục. Hãy cập nhật máy chủ.
-              </p>
-            )}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground">Xem trước chưa ghi dữ liệu và chưa tải ảnh.</p>
-              <Button
-                type="button"
-                disabled={
-                  !idColumn ||
-                  !context ||
-                  !fields.data ||
-                  !Object.values(mapping).some(Boolean) ||
-                  !!capture?.rows.some((row) => !row.code)
-                }
-                onClick={() => void preview()}
-              >
-                Kiểm tra {rows.length} bản ghi
-                <ArrowRight className="ml-2 size-4" />
-              </Button>
-            </div>
-          </>
+          <ImportMappingStep
+            fileName={fileName}
+            modeTitle={modes.find((m) => m.key === mode)?.title}
+            rows={rows}
+            columns={columns}
+            idColumn={idColumn}
+            setIdColumn={setIdColumn}
+            fields={fields.data}
+            relationFields={relationFields.data}
+            relationFieldsFailed={!!relationFields.error}
+            mapping={mapping}
+            setMapping={setMapping}
+            policies={policies}
+            setPolicies={setPolicies}
+            relations={relations}
+            setRelations={setRelations}
+            onChange={() => setEntries([])}
+            onBack={() => setStep(1)}
+            previewBlocked={
+              !idColumn ||
+              !context ||
+              !fields.data ||
+              !Object.values(mapping).some(Boolean) ||
+              !!capture?.rows.some((row) => !row.code)
+            }
+            onPreview={() => void preview()}
+          />
         )}
         {step === 3 && (
           <>
@@ -1008,121 +872,21 @@ export function HeroImport({
             <div className="space-y-3">
               {shown.map((entry) => {
                 const i = entries.indexOf(entry)
-                const changedFields =
-                  fields.data?.filter(
-                    (f) =>
-                      entry.plan &&
-                      (JSON.stringify(entry.plan.before[f.key]) !== JSON.stringify(entry.plan.after[f.key]) ||
-                        (entry.imageUrls?.[f.key] &&
-                          (entry.input.policies[f.key] === "OVERWRITE" || !entry.plan.before[f.key]))),
-                  ) ?? []
                 return (
-                  <article
+                  <ImportEntryCard
                     key={i}
-                    className={`overflow-hidden rounded-lg border ${entry.error ? "border-destructive/40" : ""}`}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/20 px-4 py-3">
-                      <label className="flex items-center gap-3 text-sm font-medium">
-                        <input
-                          type="checkbox"
-                          checked={entry.selected}
-                          disabled={!eligible(entry)}
-                          onChange={(e) =>
-                            setEntries(
-                              entries.map((item, j) => (j === i ? { ...item, selected: e.target.checked } : item)),
-                            )
-                          }
-                        />
-                        {entry.input.code || `Dòng ${i + 1}`}
-                      </label>
-                      <span
-                        className={`rounded-full border px-2.5 py-1 text-xs ${entry.result ? "border-(--aov-success)/30 text-(--aov-success)" : "text-muted-foreground"}`}
-                      >
-                        {entry.result ||
-                          (entry.error ? "Cần xử lý" : entry.plan && IMPORT_STATUS[entry.plan.classification])}
-                      </span>
-                    </div>
-                    {entry.error && (
-                      <p role="alert" className="px-4 py-3 text-sm text-destructive">
-                        {entry.error}
-                      </p>
-                    )}
-                    {entry.plan?.warnings.map((w) => (
-                      <p key={w} className="flex gap-2 px-4 py-2 text-xs leading-relaxed text-muted-foreground">
-                        <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
-                        {w}
-                      </p>
-                    ))}
-                    {!!entry.relatedImages?.length && (
-                      <details
-                        className="border-t px-4 py-3 text-sm"
-                        onToggle={(event) => {
-                          const open = event.currentTarget.open
-                          setExpandedImages((current) => {
-                            const next = new Set(current)
-                            if (open) next.add(i)
-                            else next.delete(i)
-                            return next
-                          })
-                        }}
-                      >
-                        <summary className="cursor-pointer">
-                          Sẽ tải lên {entry.relatedImages.length} ảnh liên quan
-                        </summary>
-                        {expandedImages.has(i) && (
-                          <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-                            {entry.relatedImages.map((image) => (
-                              <li key={`${image.section}-${image.index}-${image.field}`} className="break-all">
-                                {image.section} · {image.field}: {image.source}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </details>
-                    )}
-                    {!!changedFields.length && (
-                      <details
-                        className="border-t"
-                        onToggle={(event) => {
-                          const open = event.currentTarget.open
-                          setExpandedEntries((current) => {
-                            const next = new Set(current)
-                            if (open) next.add(i)
-                            else next.delete(i)
-                            return next
-                          })
-                        }}
-                      >
-                        <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
-                          Xem {changedFields.length} trường khác biệt
-                        </summary>
-                        {expandedEntries.has(i) && (
-                          <div className="divide-y">
-                            {changedFields.map((f) => (
-                              <div key={f.key} className="grid gap-3 px-4 py-3 text-sm sm:grid-cols-[1fr_2fr_2fr]">
-                                <span className="font-medium">{f.label}</span>
-                                <div className="min-w-0">
-                                  <p className="mb-1 text-xs text-muted-foreground">Trước</p>
-                                  <div className="max-h-64 overflow-auto rounded-md bg-muted/40 p-2">
-                                    <ImportValue value={entry.plan?.before[f.key]} />
-                                  </div>
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="mb-1 text-xs text-muted-foreground">Sau khi nhập</p>
-                                  <div className="max-h-64 overflow-auto rounded-md bg-primary/5 p-2">
-                                    <ImportValue value={entry.imageUrls?.[f.key] ?? entry.plan?.after[f.key]} />
-                                  </div>
-                                  {entry.imageUrls?.[f.key] && (
-                                    <p className="mt-1 text-xs text-muted-foreground">Ảnh chỉ tải khi xác nhận lưu.</p>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </details>
-                    )}
-                  </article>
+                    entry={entry}
+                    index={i}
+                    fields={fields.data}
+                    selectable={eligible(entry)}
+                    onSelect={(selected) =>
+                      setEntries(entries.map((item, j) => (j === i ? { ...item, selected } : item)))
+                    }
+                    imagesOpen={expandedImages.has(i)}
+                    onImagesToggle={(open) => setExpandedImages((current) => toggled(current, i, open))}
+                    changesOpen={expandedEntries.has(i)}
+                    onChangesToggle={(open) => setExpandedEntries((current) => toggled(current, i, open))}
+                  />
                 )
               })}
             </div>
