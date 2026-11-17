@@ -15,7 +15,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, UUID> {
     int like(UUID id, UUID postId, String actor);
 
     @Modifying(flushAutomatically = true)
-    @Query(value = "DELETE FROM community.post_like WHERE post_id = :postId AND actor = :actor", nativeQuery = true)
+    @Query("delete from PostLike l where l.postId = :postId and l.actor = :actor")
     int unlike(UUID postId, String actor);
 
     long countByPostId(UUID postId);

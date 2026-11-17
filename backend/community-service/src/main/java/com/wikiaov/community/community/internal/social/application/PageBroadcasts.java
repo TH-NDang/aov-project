@@ -2,6 +2,7 @@ package com.wikiaov.community.community.internal.social.application;
 
 import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.*;
+import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.pages.application.*;
@@ -69,7 +70,7 @@ public class PageBroadcasts {
     @Transactional(readOnly = true)
     public PageSlice<Profile> active(int page, int size) {
         var since = Instant.now().minus(PageRules.LIVE_WINDOW);
-        return PageSlice.from(lives.active(since, PageProfiles.paging(page, size))
+        return PageSlice.from(lives.active(since, PageContent.Kind.CIRCUIT.name(), PageProfiles.paging(page, size))
                 .map(live -> profiles.read(live.getPageId(), false)));
     }
 

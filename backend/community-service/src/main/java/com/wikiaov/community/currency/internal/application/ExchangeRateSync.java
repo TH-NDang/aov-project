@@ -62,7 +62,7 @@ public class ExchangeRateSync {
 
         Map<String, LocalDate> latest = rates.latestDays().stream()
                 .collect(Collectors.toMap(ExchangeRateRepository.LatestDay::getCurrency,
-                        day -> LocalDate.parse(day.getLatest())));
+                        ExchangeRateRepository.LatestDay::getLatest));
         var oldest = settings.currencies().stream().map(code -> latest.getOrDefault(code, settings.historyStart()))
                 .min(Comparator.naturalOrder()).orElse(settings.historyStart());
         var from = oldest.minusDays(REFRESH_DAYS);

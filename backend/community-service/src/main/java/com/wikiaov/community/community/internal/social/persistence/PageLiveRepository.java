@@ -7,14 +7,14 @@ import org.springframework.data.jpa.repository.*;
 
 public interface PageLiveRepository extends JpaRepository<PageLive, UUID> {
 
-    /** Broadcasts started after {@code since} on published community pages, newest first. */
-    @Query(value = """
-            SELECT l.* FROM community.page_live l JOIN community.page g ON g.id = l.page_id
-            WHERE l.started_at > :since AND g.published_content IS NOT NULL AND g.kind <> 'CIRCUIT'
-            ORDER BY l.started_at DESC, l.page_id
-            """, countQuery = """
-            SELECT count(*) FROM community.page_live l JOIN community.page g ON g.id = l.page_id
-            WHERE l.started_at > :since AND g.published_content IS NOT NULL AND g.kind <> 'CIRCUIT'
-            """, nativeQuery = true)
-    Page<PageLive> active(Instant since, Pageable pageable);
+    /**
+     * Broadcasts started after {@code since} on published pages, newest first. {@code editorialKind} names the kind of
+     * page that has no community (circuits), which is left out.
+     */
+    @Query("""
+            select l from PageLive l join PageRecord g on g.id = l.pageId
+            where l.startedAt > :since and g.publishedContent is not null and g.kind <> :editorialKind
+            order by l.startedAt desc, l.pageId
+            """)
+    Page<PageLive> active(Instant since, String editorialKind, Pageable pageable);
 }

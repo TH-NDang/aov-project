@@ -15,6 +15,5 @@ public interface TournamentRepository extends JpaRepository<TournamentRecord, UU
     Page<TournamentRecord> search(String query, String state, Pageable page);
 
     /** Parts that name this tournament as their main event, the ones in the trash included: they can be restored. */
-    @Query(value = "SELECT count(*) FROM tournament.tournament WHERE parent_id = :id", nativeQuery = true)
-    long countParts(UUID id);
+    long countByParentId(UUID parentId);
 }

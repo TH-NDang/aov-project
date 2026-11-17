@@ -2,6 +2,7 @@ package com.wikiaov.community.currency.internal.persistence;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -25,11 +26,11 @@ public interface ExchangeRateRepository extends Repository<ExchangeRateRecord, E
         """, nativeQuery = true)
     int upsert(@Param("rows") String rows, @Param("source") String source, @Param("fetchedAt") Instant fetchedAt);
 
-    @Query(value = """
-        SELECT currency, CAST(max(rate_date) AS text) AS latest
-          FROM currency.exchange_rate
-         GROUP BY currency
-        """, nativeQuery = true)
+    @Query("""
+        select rate.key.currency as currency, max(rate.key.rateDate) as latest
+          from ExchangeRateRecord rate
+         group by rate.key.currency
+        """)
     List<LatestDay> latestDays();
 
     /** For each day and currency, the newest rate published on or before that day. Days and currencies are JSON arrays. */
@@ -52,7 +53,7 @@ public interface ExchangeRateRepository extends Repository<ExchangeRateRecord, E
     interface LatestDay {
         String getCurrency();
 
-        String getLatest();
+        LocalDate getLatest();
     }
 
     interface EffectiveRate {

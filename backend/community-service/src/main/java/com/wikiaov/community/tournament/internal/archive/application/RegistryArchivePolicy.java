@@ -7,7 +7,7 @@ import com.wikiaov.community.tournament.internal.archive.application.RecordLifec
 import com.wikiaov.community.tournament.internal.archive.domain.DependentKind;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryDependencies;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
-import com.wikiaov.community.tournament.internal.archive.persistence.RegistryUsageRepository;
+import com.wikiaov.community.tournament.internal.archive.persistence.RegistryUsages;
 import com.wikiaov.community.tournament.internal.archive.persistence.RegistryWriteGuard;
 import com.wikiaov.community.tournament.internal.persistence.VersionedRecord;
 import java.util.List;
@@ -18,10 +18,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class RegistryArchivePolicy {
     private final RegistryWriteGuard writes;
-    private final RegistryUsageRepository usages;
+    private final RegistryUsages usages;
     private final List<com.wikiaov.community.tournament.CompetitionReferences> additional;
 
-    public RegistryArchivePolicy(RegistryWriteGuard writes, RegistryUsageRepository usages,
+    public RegistryArchivePolicy(RegistryWriteGuard writes, RegistryUsages usages,
             List<com.wikiaov.community.tournament.CompetitionReferences> additional) {
         this.writes = writes;
         this.usages = usages;
@@ -34,8 +34,8 @@ public class RegistryArchivePolicy {
 
     public Impact impact(RegistryKind kind, VersionedRecord row) {
         var references = new java.util.ArrayList<>(
-                usages.usages(kind.name(), row.getId()).stream().filter(usage -> usage.getCount() > 0)
-                        .map(usage -> usage(DependentKind.valueOf(usage.getType()), usage.getCount(), kind,
+                usages.usages(kind.name(), row.getId()).stream().filter(usage -> usage.count() > 0)
+                        .map(usage -> usage(DependentKind.valueOf(usage.type()), usage.count(), kind,
                                 row.getId()))
                         .toList());
         long extra = additional.stream().mapToLong(provider -> provider.identityReferences(kind.name(), row.getId()))

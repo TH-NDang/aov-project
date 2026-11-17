@@ -1,20 +1,24 @@
 package com.wikiaov.community.tournament.internal.archive.persistence;
 
-import com.wikiaov.community.tournament.internal.persistence.TeamRecord;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.Repository;
+import org.springframework.stereotype.Repository;
 
-/** Fixed registry graph queries; immutable game evidence is counted separately from active editorial references. */
-public interface RegistryUsageRepository extends Repository<TeamRecord, UUID> {
-    interface CountRow {
-        String getType();
-
-        long getCount();
+/**
+ * Fixed registry graph queries over the jsonb documents of every registry table; immutable game evidence is counted
+ * separately from active editorial references.
+ */
+@Repository
+public class RegistryUsages {
+    public record CountRow(
+            String type,
+            long count
+    ) {
     }
 
-    @Query(value = """
+    private static final String USAGES = """
         SELECT 'ROSTER_MEMBERSHIP' AS type,COUNT(*) AS count FROM tournament.roster_membership
          WHERE deleted_at IS NULL AND ((:kind='TEAM' AND team_id=:id)
              OR (:kind='PLAYER' AND player_id=:id) OR (:kind='TOURNAMENT' AND tournament_id=:id))
@@ -47,16 +51,32 @@ public interface RegistryUsageRepository extends Repository<TeamRecord, UUID> {
              OR (:kind='PLAYER' AND jsonb_exists(published_snapshot->'players',CAST(:id AS text)))
              OR (:kind='TOURNAMENT' AND published_snapshot->'series'->>'tournamentId'=CAST(:id AS text))
              OR (:kind='SERIES' AND published_snapshot->'content'->>'seriesId'=CAST(:id AS text)))
-        """, nativeQuery = true)
-    List<CountRow> usages(String kind, UUID id);
+        """;
 
-    @Query(value = """
+    private static final String ACTIVE_PARENTS = """
         SELECT CASE :kind
             WHEN 'TEAM' THEN (SELECT COUNT(*) FROM tournament.team WHERE id=:id AND deleted_at IS NULL)
             WHEN 'PLAYER' THEN (SELECT COUNT(*) FROM tournament.player WHERE id=:id AND deleted_at IS NULL)
             WHEN 'TOURNAMENT' THEN (SELECT COUNT(*) FROM tournament.tournament WHERE id=:id AND deleted_at IS NULL)
             WHEN 'SERIES' THEN (SELECT COUNT(*) FROM tournament.series WHERE id=:id AND deleted_at IS NULL)
             ELSE 0 END
-        """, nativeQuery = true)
-    long activeParents(String kind, UUID id);
+        """;
+
+    private final EntityManager entities;
+
+    public RegistryUsages(EntityManager entities) {
+        this.entities = entities;
+    }
+
+    public List<CountRow> usages(String kind, UUID id) {
+        List<Tuple> rows = entities.createNativeQuery(USAGES, Tuple.class).setParameter("kind", kind)
+                .setParameter("id", id).getResultList();
+        return rows.stream().map(row -> new CountRow(row.get("type", String.class),
+                row.get("count", Number.class).longValue())).toList();
+    }
+
+    public long activeParents(String kind, UUID id) {
+        return ((Number) entities.createNativeQuery(ACTIVE_PARENTS).setParameter("kind", kind).setParameter("id", id)
+                .getSingleResult()).longValue();
+    }
 }

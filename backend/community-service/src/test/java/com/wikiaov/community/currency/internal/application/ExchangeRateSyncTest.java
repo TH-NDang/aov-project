@@ -50,13 +50,14 @@ class ExchangeRateSyncTest {
 
     record Latest(
             String getCurrency,
-            String getLatest
+            LocalDate getLatest
     ) implements ExchangeRateRepository.LatestDay {
     }
 
     private void stored(Map<String, String> latest) {
         List<ExchangeRateRepository.LatestDay> days = latest.entrySet()
-                .stream().<ExchangeRateRepository.LatestDay>map(entry -> new Latest(entry.getKey(), entry.getValue()))
+                .stream().<ExchangeRateRepository.LatestDay>map(
+                        entry -> new Latest(entry.getKey(), LocalDate.parse(entry.getValue())))
                 .toList();
         when(rates.latestDays()).thenReturn(days);
     }

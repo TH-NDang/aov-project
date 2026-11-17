@@ -11,6 +11,6 @@ public interface PageAuditRepository extends JpaRepository<PageAudit, UUID> {
     boolean existsByPageIdAndAction(UUID pageId, String action);
 
     @Modifying(flushAutomatically = true)
-    @Query(value = "DELETE FROM community.page_audit WHERE page_id = :pageId", nativeQuery = true)
+    @Query("delete from PageAudit audit where audit.pageId = :pageId")
     int deleteByPage(UUID pageId);
 }

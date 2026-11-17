@@ -106,7 +106,7 @@ public class TournamentRegistry {
 
         if (mainEvent.getContent().parentTournamentId() != null)
             throw TournamentErrors.invalid("parentTournamentId must name a main event, not a part of another one.");
-        if (id != null && repository.countParts(id) > 0)
+        if (id != null && repository.countByParentId(id) > 0)
             throw TournamentErrors.invalid("A tournament that has parts cannot become a part of another one.");
     }
 
