@@ -16,19 +16,12 @@ import { revisionSkillReferences } from "../model/skills/revision-skill-referenc
 import { useHeroSkillImages } from "../components/skills/skill-artwork"
 import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, FileUp, Layers, MoreHorizontal, Plus, Save, Trash2, X, ChevronDown, Send } from "lucide-react"
+import { ArrowLeft, FileUp, Layers, MoreHorizontal, Plus, Save, Trash2, X, ChevronDown } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { Page, PageHeader } from "@/components/page-header"
@@ -54,7 +47,7 @@ import { HeroCatalog } from "../components/catalog/hero-catalog"
 import { HeroRevisionHistory } from "../components/hero-revision-history"
 import { HeroPatchTimeline } from "../components/patch-changes/hero-patch-view"
 
-import { HeroLanguageIcon, HeroLanguageItems, HeroLanguagePicker } from "../components/hero-language-picker"
+import { HeroLanguagePicker } from "../components/hero-language-picker"
 import { cn } from "@aov/ui/lib/utils"
 import { HeroReviewNotice } from "../components/hero-review-notice"
 import { reviewTab, type HeroReviewItem } from "../model/import/hero-source-review"
@@ -120,10 +113,10 @@ import { toast } from "sonner"
 import { confirmAction } from "@/components/confirm-dialog"
 import { CAUSE_NAMES } from "../model/setup/version-causes"
 import { VersionFacts } from "../components/setup/version-facts"
+import { HeroVersionMenu, REVISION_STATES as STATES } from "../components/hero-version-menu"
 
 const api = createPublishingApi(backendRequest)
 const CAUSES: Record<Cause, string> = CAUSE_NAMES
-const STATES = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCARDED: "Đã hủy" }
 const noSkills: Skill[] = []
 
 function PublishingFrame({
@@ -751,76 +744,37 @@ export function PublishingWorkspace({
   // The version as "#n"; on a narrow header its menu also holds the reading language and the main action.
   const versionMenu = (narrow: boolean) =>
     revision && (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            aria-label="Phiên bản dữ liệu"
-            title={`Phiên bản #${revision.revisionNo} · ${STATES[revision.state]}`}
-            data-revision={selectedId}
-            disabled={busy}
-            className={cn("h-8 shrink-0 bg-background font-normal", narrow ? "gap-1 px-2" : "gap-1.5 px-2.5")}
-          >
-            <span className="type-meta whitespace-nowrap tabular-nums">
-              Bản {revision.revisionNo}
-              {!narrow && ` · ${STATES[revision.state]}`}
-            </span>
-            <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
-          <DropdownMenuLabel className="type-label">Phiên bản dữ liệu</DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={selectedId} onValueChange={chooseRevision}>
-            {(revisions.data ?? [revision]).map((row) => (
-              <DropdownMenuRadioItem key={row.id} value={row.id}>
-                #{row.revisionNo} · {STATES[row.state]}
-                {new Set(revisions.data?.map((item) => item.rulesetId)).size > 1
-                  ? ` · ${rulesets.data?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}`
-                  : ""}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-          {narrow && preview && !translating && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger
-                  disabled={busy || (editing && section !== "SKILLS")}
-                  className="gap-2"
-                  aria-label="Ngôn ngữ hiển thị nội dung"
-                >
-                  <HeroLanguageIcon locale={location.readLocale} />
-                  Ngôn ngữ
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-80 max-w-[calc(100vw-2rem)] rounded-xl p-1.5">
-                  <HeroLanguageItems
-                    content={preview.content}
-                    locale={location.readLocale}
-                    onChange={setContentLocale}
-                  />
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </>
-          )}
-          {narrow && headerAction === "publish" && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={busy}
-                onSelect={() => {
+      <HeroVersionMenu
+        revision={revision}
+        revisions={revisions.data}
+        rulesets={rulesets.data}
+        selectedId={selectedId}
+        busy={busy}
+        narrow={narrow}
+        onChoose={chooseRevision}
+        language={
+          narrow && preview && !translating
+            ? {
+                content: preview.content,
+                locale: location.readLocale,
+                disabled: busy || (editing && section !== "SKILLS"),
+                onChange: setContentLocale,
+              }
+            : undefined
+        }
+        publish={
+          narrow && headerAction === "publish"
+            ? {
+                publishing,
+                onSelect: () => {
                   // Gaps open the same list the header button shows; with none, the click publishes.
                   if (issues.length || unsavedSections.length) setTimeout(() => setPublishOpen(true))
                   else publishRevision()
-                }}
-              >
-                <Send />
-                {publishing ? "Đang xuất bản…" : "Xuất bản"}
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+                },
+              }
+            : undefined
+        }
+      />
     )
   // The single pencil on a published version: it opens the draft in progress or starts one of the chosen kind.
   const draftPencil = revision && (
