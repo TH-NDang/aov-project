@@ -188,7 +188,10 @@ These rules apply to new and touched tests; existing tests keep their names and 
   import data live in the R2 source collections, and `pnpm sources:sync pull` (in `frontend/apps/admin-aov`) restores a
   local copy. Never commit files from `resources/`. Keep the Git LFS rules in `.gitattributes`; do not change them
   without asking.
-- CI: `.github/workflows/backend.yml` runs `mvnw verify` (with Docker, so Testcontainers tests run) on every push touching `backend/wiki-service`.
+- CI: `.github/workflows/backend.yml` runs `mvnw verify` (with Docker, so Testcontainers tests run), the Python script
+  tests and the launcher checks on every push touching `backend/wiki-service`; `community-backend.yml` does the same for
+  community-service, `frontend.yml` runs the frontend checks, `research.yml` the research importer tests, and
+  `comments.yml` the English comment check on the pushed commits.
 - A Flyway version number is taken when the branch is merged, not when the migration is written: use the next free
   number on the target branch and rename the file in the merge. A gap is fine. Never reuse or renumber a version that
   a shared database has applied; a branch's own local database is repaired or reset instead.
@@ -210,7 +213,8 @@ git lfs install --skip-repo
      frontend files with Prettier (skipped with a warning until `pnpm install` has installed it).
      Fully staged files are re-staged. A partially staged file is formatted in the working tree only and
      the commit stops: review it, `git add` it, commit again.
-  2. Rejects Vietnamese text in comments of staged code under `backend/` and `frontend/`.
+  2. Rejects Vietnamese text in comments of staged code in every folder except docs and `resources/`.
+     `comments.yml` runs the same check in CI (`--range <base>...<head>`) for clones without the hooks.
 - Skip formatting once: `SKIP_FORMAT=1 git commit ...` (PowerShell: `$env:SKIP_FORMAT=1; git commit ...; Remove-Item Env:SKIP_FORMAT`).
 - `pre-push`, `post-checkout`, `post-commit`, `post-merge`: Git LFS hooks.
 - Bypass only for a genuine exception: `git commit --no-verify`.
