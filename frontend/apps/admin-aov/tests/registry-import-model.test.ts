@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { existsSync, readFileSync } from "node:fs"
+import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import {
   importCounts,
@@ -7,13 +7,9 @@ import {
   parseRegistryImport,
 } from "../src/features/tournaments/registry-import-model"
 
-// The frozen AOG sample lives in the private bucket since ADR-030. Pull it to its old place to run these checks, from
-// frontend/apps/admin-aov:
-//   pnpm sources:sync pull --collection esports-2026-post-apl --to ../../../resources/esports/2026-post-apl --apply
-const sampleDirectory = new URL("../../../../resources/esports/2026-post-apl/aog-sample/", import.meta.url)
+// A small fixed sample with the shape of the AOG packages; scripts/check-source-data.ts checks the full ones.
+const sampleDirectory = new URL("./fixtures/registry-import/", import.meta.url)
 const sample = (name: string) => readFileSync(new URL(name, sampleDirectory), "utf8")
-const samplePulled = existsSync(new URL("registries-and-rosters.json", sampleDirectory))
-const frozen = samplePulled ? false : "pull the esports-2026-post-apl source collection first"
 const parse = (value: unknown) => parseRegistryImport(JSON.stringify(value))
 const team = (code = "blue") => ({ content: { code, name: "Blue" } })
 const series = () => ({
@@ -35,113 +31,104 @@ const series = () => ({
   },
 })
 
-test(
-  "the frozen AOG registry package imports 147 records without treating source metadata as API content",
-  { skip: frozen },
-  () => {
-    const source = JSON.parse(sample("registries-and-rosters.json"))
-    const parsed = parseRegistryImport(sample("registries-and-rosters.json"))
+test("a registry package imports its records without treating source metadata as API content", () => {
+  const source = JSON.parse(sample("registries-and-rosters.json"))
+  const parsed = parseRegistryImport(sample("registries-and-rosters.json"))
 
-    assert.equal(parsed.asOf, "2026-10-27")
-    assert.equal(parsed.rows.length, 147)
-    assert.equal(parsed.skipped, 0)
-    assert.deepEqual(
-      importCounts(parsed.rows).map(({ kind, count }) => ({ kind, count })),
-      [
-        { kind: "teams", count: 9 },
-        { kind: "players", count: 68 },
-        { kind: "tournaments", count: 1 },
-        { kind: "roster-memberships", count: 69 },
-      ],
-    )
+  assert.equal(parsed.asOf, "2026-10-27")
+  assert.equal(parsed.skipped, 1, "A row marked not ready is left out")
+  assert.deepEqual(
+    importCounts(parsed.rows).map(({ kind, count }) => ({ kind, count })),
+    [
+      { kind: "teams", count: 2 },
+      { kind: "players", count: 2 },
+      { kind: "tournaments", count: 1 },
+      { kind: "roster-memberships", count: 3 },
+    ],
+  )
 
-    const teams = parsed.rows.filter((row) => row.kind === "teams")
-    for (const row of teams) {
-      const original = source.teams.find((entry: { content: { code: string } }) => entry.content.code === row.key)
-      assert.deepEqual(row.content, original.content)
-      assert.equal(row.matchCode, original.existingCode)
-      assert.equal("logo" in row.content, false)
-      assert.equal("verification" in row.content, false)
-      assert.equal(row.content.logoUrl, null)
+  const teams = parsed.rows.filter((row) => row.kind === "teams")
+  for (const row of teams) {
+    const original = source.teams.find((entry: { content: { code: string } }) => entry.content.code === row.key)
+    assert.deepEqual(row.content, original.content)
+    assert.equal(row.matchCode, original.existingCode)
+    assert.equal("logo" in row.content, false)
+    assert.equal("verification" in row.content, false)
+    assert.equal(row.content.logoUrl, null)
+  }
+
+  const players = parsed.rows.filter((row) => row.kind === "players")
+  assert.equal(players.filter((row) => row.content.fullName === null).length, 2)
+  assert.equal(
+    players.every((row) => row.content.photoUrl === null),
+    true,
+  )
+  assert.equal(
+    players.some((row) => "playerSourceUrl" in row.content || "photo" in row.content),
+    false,
+  )
+
+  const rosters = parsed.rows.filter((row) => row.kind === "roster-memberships")
+  assert.equal(
+    rosters.every((row) => row.references.tournamentCode === "aog-2026-winter"),
+    true,
+  )
+  assert.equal(
+    rosters.every((row) => row.references.teamCode && row.references.playerCode),
+    true,
+  )
+  assert.deepEqual(
+    rosters
+      .filter((row) => row.references.playerCode === "maris")
+      .map((row) => [row.references.teamCode, row.content.status])
+      .sort(),
+    [
+      ["rex-regum-qeon-vn-vn", "ACTIVE"],
+      ["team-flash-vn", "INACTIVE"],
+    ],
+  )
+  assert.equal(
+    rosters.some((row) => "sourceFlags" in row.content || "captain" in row.content),
+    false,
+  )
+})
+
+test("a series package keeps every timestamp and sourced result without importing the blocked final", () => {
+  const source = JSON.parse(sample("series-import.json"))
+  const parsed = parseRegistryImport(sample("series-import.json"))
+
+  assert.equal(parsed.rows.length, 2)
+  assert.equal(parsed.skipped, 0)
+  assert.equal(
+    parsed.rows.every((row) => row.kind === "series"),
+    true,
+  )
+  assert.equal(parsed.rows.filter((row) => row.content.result !== null).length, 1)
+  assert.equal(source.blocked.length, 1)
+  assert.equal(
+    parsed.rows.some((row) => row.key === source.blocked[0].code),
+    false,
+  )
+
+  for (const row of parsed.rows) {
+    const original = source.series.find((entry: { content: { code: string } }) => entry.content.code === row.key)
+    assert.deepEqual(row.content, original.content)
+    assert.deepEqual(row.references, {
+      tournamentCode: original.tournamentCode,
+      teamACode: original.teamACode,
+      teamBCode: original.teamBCode,
+    })
+    assert.ok(row.content.scheduledAt)
+    assert.equal("timeEvidence" in row.content, false)
+    assert.equal("sourceDate" in row.content, false)
+    if (row.content.result) {
+      const result = row.content.result as Record<string, unknown>
+      assert.equal(result.verification, "SECONDARY_CAPTURE")
+      assert.equal(result.verifiedOn, "2026-10-27")
+      assert.match(String(result.sourceUrl), /^https:\/\/liquipedia\.example\//)
     }
-
-    const players = parsed.rows.filter((row) => row.kind === "players")
-    assert.equal(players.filter((row) => row.content.fullName === null).length, 68)
-    assert.equal(
-      players.every((row) => row.content.photoUrl === null),
-      true,
-    )
-    assert.equal(
-      players.some((row) => "playerSourceUrl" in row.content || "photo" in row.content),
-      false,
-    )
-
-    const rosters = parsed.rows.filter((row) => row.kind === "roster-memberships")
-    assert.equal(
-      rosters.every((row) => row.references.tournamentCode === "aog-2026-winter"),
-      true,
-    )
-    assert.equal(
-      rosters.every((row) => row.references.teamCode && row.references.playerCode),
-      true,
-    )
-    assert.deepEqual(
-      rosters
-        .filter((row) => row.references.playerCode === "maris")
-        .map((row) => [row.references.teamCode, row.content.status])
-        .sort(),
-      [
-        ["rex-regum-qeon-vn-vn", "ACTIVE"],
-        ["team-flash-vn", "INACTIVE"],
-      ],
-    )
-    assert.equal(
-      rosters.some((row) => "sourceFlags" in row.content || "captain" in row.content),
-      false,
-    )
-  },
-)
-
-test(
-  "the frozen series package preserves all 79 timestamps and 78 sourced results without importing the TBD final",
-  { skip: frozen },
-  () => {
-    const source = JSON.parse(sample("series-import.json"))
-    const parsed = parseRegistryImport(sample("series-import.json"))
-
-    assert.equal(parsed.rows.length, 79)
-    assert.equal(parsed.skipped, 0)
-    assert.equal(
-      parsed.rows.every((row) => row.kind === "series"),
-      true,
-    )
-    assert.equal(parsed.rows.filter((row) => row.content.result !== null).length, 78)
-    assert.equal(source.blocked.length, 1)
-    assert.equal(
-      parsed.rows.some((row) => row.key === source.blocked[0].code),
-      false,
-    )
-
-    for (const row of parsed.rows) {
-      const original = source.series.find((entry: { content: { code: string } }) => entry.content.code === row.key)
-      assert.deepEqual(row.content, original.content)
-      assert.deepEqual(row.references, {
-        tournamentCode: original.tournamentCode,
-        teamACode: original.teamACode,
-        teamBCode: original.teamBCode,
-      })
-      assert.ok(row.content.scheduledAt)
-      assert.equal("timeEvidence" in row.content, false)
-      assert.equal("sourceDate" in row.content, false)
-      if (row.content.result) {
-        const result = row.content.result as Record<string, unknown>
-        assert.equal(result.verification, "SECONDARY_CAPTURE")
-        assert.equal(result.verifiedOn, "2026-10-27")
-        assert.match(String(result.sourceUrl), /^https:\/\/liquipedia\.net\//)
-      }
-    }
-  },
-)
+  }
+})
 
 test("stable reference codes trim whitespace while existingCode remains a distinct matching key", () => {
   const parsed = parse({

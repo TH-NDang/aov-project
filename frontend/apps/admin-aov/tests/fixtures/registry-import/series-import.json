@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "note": "A small copy of the shape of the AOG 2026 Winter series package; links are made up.",
+  "series": [
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "timeEvidence": "broadcast schedule",
+      "sourceDate": "2026-10-27",
+      "content": {
+        "code": "week-1-flash-rrq",
+        "name": "Tuần 1 · FL vs RRQ",
+        "stage": "GROUP",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-04T10:00:00Z",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.example/aog-2026-winter/week-1",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "team-flash-vn",
+      "timeEvidence": "broadcast schedule",
+      "content": {
+        "code": "week-2-rrq-flash",
+        "name": "Tuần 2 · RRQ vs FL",
+        "stage": "GROUP",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-11T10:00:00Z",
+        "result": null
+      }
+    }
+  ],
+  "blocked": [
+    {
+      "code": "grand-final",
+      "reason": "Teams not decided yet"
+    }
+  ]
+}

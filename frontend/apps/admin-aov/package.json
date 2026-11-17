@@ -12,7 +12,8 @@
     "lint": "node --experimental-strip-types lint/source-rules.ts",
     "test": "tsx --tsconfig tests/tsconfig.json --import ./tests/fixtures/css-loader.mjs --test --test-force-exit --test-concurrency=2 \"tests/*.test.ts\" \"tests/*.test.tsx\"",
     "sources:sync": "node --experimental-strip-types server/source-sync.ts",
-    "shop-captures:import": "node --experimental-strip-types server/shop-capture-import.ts"
+    "shop-captures:import": "node --experimental-strip-types server/shop-capture-import.ts",
+    "check:source-data": "tsx --tsconfig tests/tsconfig.json scripts/check-source-data.ts"
   },
   "dependencies": {
     "@aov/community-contracts": "workspace:*",
