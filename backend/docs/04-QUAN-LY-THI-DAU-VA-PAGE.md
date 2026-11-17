@@ -424,6 +424,11 @@ V016 phục vụ "Giải chính và các phần của giải": cột sinh `tourn
 index theo cột đó cho các giải là phần, và view `tournament.event_window`: mỗi giải chính một dòng với `recency_rank`,
 `recency_distance` của thành viên gần hôm nay nhất trong giải chính và các phần chưa xóa.
 
+Mọi cột lưu tài khoản (`edited_by`, `deleted_by`, `actor`) dùng một dạng khóa: issuer và subject của JWT, cách nhau bằng
+một dấu xuống dòng; chỉ `CommunityActor` ghép khóa này. V017 đổi các khóa cũ ghép bằng dấu `|` trong schema tournament
+(team, player, tournament, series, game, roster_membership, game_publication, competition_plan, plan_revision) sang dạng đó;
+khóa đã đúng dạng giữ nguyên.
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
@@ -479,7 +484,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /me/notifications/unread; POST /me/notifications/read-all | {unread} số chưa đọc / đánh dấu tất cả đã đọc |
 | GET /competitions?teamId=&playerId=&organizerPageId=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức |
 | GET /competitions/{id} | Snapshot giải |
-| GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Lỗi EXCHANGE_RATE_INVALID_QUERY 400 |
+| GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Ngày sai dạng hoặc quá 60 ngày trả 400 INVALID_QUERY_PARAMETER |
 | GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp, theo thứ tự danh sách giải) / kế hoạch cùng dữ liệu giải quyết |
 | PUT /admin/competitions/{id} | {version,content:CompetitionPlan} |
 | POST /admin/competitions/preview | {content,stageCode,opponent}; lịch xem trước, không ghi DB |
@@ -487,6 +492,14 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 
 Lỗi page: PAGE_NOT_FOUND 404, PAGE_ACTION_FORBIDDEN 403, PAGE_CONFLICT 409, PAGE_INVALID_CONTENT 422.
 Thi đấu dùng bộ TOURNAMENT_* hiện có. Không tin vai trò hoặc tên tác giả do client gửi trong body.
+
+Lỗi dùng chung một dạng với wiki-service: RFC 9457 kèm `code`, `requestId` (trùng header `X-Request-Id` của mọi câu trả lời) và
+`errors[]` {path, code, message} khi lỗi gắn với một trường; ngữ cảnh của module (`usages`, `missingFields`, `references`) vẫn là
+thành viên cấp trên của problem. Tham số truy vấn lạ, lặp lại, sai kiểu hoặc ngoài giới hạn trang trả 400 INVALID_QUERY_PARAMETER
+(`on`, `ids`, `entityIds` được lặp). Field JSON lạ trong body bị từ chối: 400 INVALID_REQUEST, `errors[].code = UNKNOWN_FIELD`.
+Hai lần ghi đồng thời vào cùng bản ghi trả 409 VERSION_CONFLICT; ràng buộc unique trả 409 TOURNAMENT_DUPLICATE_CODE (tên giữ
+nguyên vì Admin và Stream đọc mã này). Thiếu hoặc sai token trả 401 UNAUTHENTICATED, thiếu quyền 403 FORBIDDEN. Lỗi không lường
+trước được ghi log và trả 500 INTERNAL_ERROR.
 
 ## Vận hành dev
 

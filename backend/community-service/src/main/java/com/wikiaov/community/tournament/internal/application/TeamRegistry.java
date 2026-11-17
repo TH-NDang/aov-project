@@ -1,7 +1,10 @@
 package com.wikiaov.community.tournament.internal.application;
 
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
@@ -9,7 +12,8 @@ import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia;
-import com.wikiaov.community.tournament.internal.persistence.*;
+import com.wikiaov.community.tournament.internal.persistence.TeamRecord;
+import com.wikiaov.community.tournament.internal.persistence.TeamRepository;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -67,21 +71,25 @@ public class TeamRegistry {
     }
 
     private void validate(Team content) {
-        if (content == null)
+        if (content == null) {
             throw TournamentErrors.invalid("content is required.");
+        }
         TournamentErrors.code(content.code());
-        if (!SourceUrls.valid(content.logoUrl()))
+        if (!SourceUrls.valid(content.logoUrl())) {
             throw TournamentErrors
                     .invalid("logoUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
+        }
         TournamentErrors.required(content.name(), "name");
         validateAliases(content);
     }
 
     private static void validateAliases(Team content) {
-        if (content.shortName() != null && content.shortName().length() > 100)
+        if (content.shortName() != null && content.shortName().length() > 100) {
             throw TournamentErrors.invalid("shortName must not exceed 100 characters.");
-        if (!ReferenceLabels.validAliases(content.aliases()))
+        }
+        if (!ReferenceLabels.validAliases(content.aliases())) {
             throw TournamentErrors.invalid("Use at most 20 unique team aliases of 1 to 100 characters each.");
+        }
     }
 
     @Transactional(readOnly = true)

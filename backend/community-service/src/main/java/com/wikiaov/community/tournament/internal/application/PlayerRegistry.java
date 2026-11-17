@@ -1,7 +1,10 @@
 package com.wikiaov.community.tournament.internal.application;
 
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
@@ -9,7 +12,8 @@ import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia;
-import com.wikiaov.community.tournament.internal.persistence.*;
+import com.wikiaov.community.tournament.internal.persistence.PlayerRecord;
+import com.wikiaov.community.tournament.internal.persistence.PlayerRepository;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -67,19 +71,23 @@ public class PlayerRegistry {
     }
 
     private void validate(Player content) {
-        if (content == null)
+        if (content == null) {
             throw TournamentErrors.invalid("content is required.");
+        }
         TournamentErrors.code(content.code());
         TournamentErrors.required(content.nickname(), "nickname");
         if (content.signatureHeroes().size() > 20
                 || content.signatureHeroes().stream()
-                        .anyMatch(name -> name == null || name.isBlank() || name.length() > 100))
+                        .anyMatch(name -> name == null || name.isBlank() || name.length() > 100)) {
             throw TournamentErrors.invalid("signatureHeroes allows 20 names of at most 100 characters.");
-        if (!SourceUrls.valid(content.photoUrl()))
+        }
+        if (!SourceUrls.valid(content.photoUrl())) {
             throw TournamentErrors
                     .invalid("photoUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
-        if (!ReferenceLabels.validAliases(content.aliases()))
+        }
+        if (!ReferenceLabels.validAliases(content.aliases())) {
             throw TournamentErrors.invalid("Use at most 20 unique player aliases of 1 to 100 characters each.");
+        }
     }
 
     @Transactional(readOnly = true)

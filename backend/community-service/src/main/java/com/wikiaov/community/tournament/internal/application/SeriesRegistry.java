@@ -1,13 +1,22 @@
 package com.wikiaov.community.tournament.internal.application;
 
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.TournamentStats;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
-import com.wikiaov.community.tournament.internal.persistence.*;
+import com.wikiaov.community.tournament.internal.persistence.SeriesRecord;
+import com.wikiaov.community.tournament.internal.persistence.SeriesRepository;
+import com.wikiaov.community.tournament.internal.persistence.TeamRepository;
+import com.wikiaov.community.tournament.internal.persistence.TournamentRepository;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +48,7 @@ public class SeriesRegistry {
     }
 
     @Transactional(readOnly = true)
-    public java.util.List<TournamentStats> stats() {
+    public List<TournamentStats> stats() {
         return repository.stats().stream()
                 .map(row -> new TournamentStats(row.getTournamentId(), row.getTeams(), row.getMatches(),
                         row.getPlayed()))
@@ -75,35 +84,44 @@ public class SeriesRegistry {
     }
 
     private void validate(Series content) {
-        if (content == null)
+        if (content == null) {
             throw TournamentErrors.invalid("content is required.");
+        }
         TournamentErrors.code(content.code());
-        if (!SourceUrls.valid(content.sourceUrl()))
+        if (!SourceUrls.valid(content.sourceUrl())) {
             throw TournamentErrors
                     .invalid("sourceUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
-        if (content.tournamentId() == null || !tournaments.existsById(content.tournamentId()))
+        }
+        if (content.tournamentId() == null || !tournaments.existsById(content.tournamentId())) {
             throw TournamentErrors.invalid("Choose an existing tournament.");
+        }
         if (content.teamAId() == null || content.teamBId() == null || content.teamAId().equals(content.teamBId())
-                || !teams.existsById(content.teamAId()) || !teams.existsById(content.teamBId()))
+                || !teams.existsById(content.teamAId()) || !teams.existsById(content.teamBId())) {
             throw TournamentErrors.invalid("Choose two different existing teams.");
-        if (content.bestOf() == null || !java.util.Set.of(1, 2, 3, 4, 5, 7, 9).contains(content.bestOf()))
+        }
+        if (content.bestOf() == null || !Set.of(1, 2, 3, 4, 5, 7, 9).contains(content.bestOf())) {
             throw TournamentErrors.invalid("bestOf must be 1, 2, 3, 4, 5, 7 or 9.");
+        }
         if (content.result() != null) {
             var result = content.result();
-            if (result.scoreA() == null || result.scoreB() == null || result.scoreA() < 0 || result.scoreB() < 0)
+            if (result.scoreA() == null || result.scoreB() == null || result.scoreA() < 0 || result.scoreB() < 0) {
                 throw TournamentErrors.invalid("A completed series requires both scores.");
+            }
             if (content.bestOf() % 2 == 0) {
                 // A fixed-length series plays every game, so it may end level.
-                if (result.scoreA() + result.scoreB() != content.bestOf())
+                if (result.scoreA() + result.scoreB() != content.bestOf()) {
                     throw TournamentErrors.invalid("A fixed-length series requires every game to be scored.");
+                }
             } else {
                 int wins = content.bestOf() / 2 + 1;
                 if (result.scoreA() > wins || result.scoreB() > wins || result.scoreA().equals(result.scoreB())
-                        || Math.max(result.scoreA(), result.scoreB()) != wins)
+                        || Math.max(result.scoreA(), result.scoreB()) != wins) {
                     throw TournamentErrors.invalid("A completed series requires one winner at the best-of threshold.");
+                }
             }
-            if (result.sourceUrl() == null || result.sourceUrl().isBlank() || !SourceUrls.valid(result.sourceUrl()))
+            if (result.sourceUrl() == null || result.sourceUrl().isBlank() || !SourceUrls.valid(result.sourceUrl())) {
                 throw TournamentErrors.invalid("Series result requires an absolute HTTP or HTTPS source URL.");
+            }
         }
 
         archives.validateParents(content);

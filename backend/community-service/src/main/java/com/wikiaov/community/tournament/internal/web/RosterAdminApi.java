@@ -1,20 +1,33 @@
 package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.ApiPaths;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
+import com.wikiaov.community.platform.PageLimits;
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Create;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Update;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.UUID;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RequestMapping(version = "1")
 public interface RosterAdminApi {
     @GetMapping(ApiPaths.ADMIN + "/roster-memberships")
     PageSlice<View<RosterMembership>> memberships(@RequestParam(required = false) UUID tournamentId,
             @RequestParam(required = false) UUID teamId, @RequestParam(required = false) UUID playerId,
-            @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "ACTIVE") RecordState state,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @RequestParam(defaultValue = "50") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/roster-memberships/{id}")

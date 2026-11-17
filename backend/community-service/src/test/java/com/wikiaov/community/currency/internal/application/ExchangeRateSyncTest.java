@@ -2,15 +2,27 @@ package com.wikiaov.community.currency.internal.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.community.currency.internal.application.port.ExchangeRateSource;
 import com.wikiaov.community.currency.internal.domain.DailyRate;
 import com.wikiaov.community.currency.internal.persistence.ExchangeRateRepository;
 import java.math.BigDecimal;
-import java.time.*;
-import java.util.*;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -41,8 +53,9 @@ class ExchangeRateSyncTest {
 
         @Override
         public List<DailyRate> fetch(LocalDate from, LocalDate to, List<String> currencies) {
-            if (asked.size() == failAtRequest)
+            if (asked.size() == failAtRequest) {
                 throw failure;
+            }
             asked.add(new Range(from, to));
             return List.of(new DailyRate("VND", to, new BigDecimal("25000")));
         }
@@ -50,13 +63,14 @@ class ExchangeRateSyncTest {
 
     record Latest(
             String getCurrency,
-            String getLatest
+            LocalDate getLatest
     ) implements ExchangeRateRepository.LatestDay {
     }
 
     private void stored(Map<String, String> latest) {
         List<ExchangeRateRepository.LatestDay> days = latest.entrySet()
-                .stream().<ExchangeRateRepository.LatestDay>map(entry -> new Latest(entry.getKey(), entry.getValue()))
+                .stream().<ExchangeRateRepository.LatestDay>map(
+                        entry -> new Latest(entry.getKey(), LocalDate.parse(entry.getValue())))
                 .toList();
         when(rates.latestDays()).thenReturn(days);
     }
@@ -69,8 +83,9 @@ class ExchangeRateSyncTest {
 
         assertThat(source.asked).first().isEqualTo(new Range(START, START.plusDays(365)));
         assertThat(source.asked).last().extracting(Range::to).isEqualTo(TODAY);
-        for (int index = 1; index < source.asked.size(); index++)
+        for (int index = 1; index < source.asked.size(); index++) {
             assertThat(source.asked.get(index).from()).isEqualTo(source.asked.get(index - 1).to().plusDays(1));
+        }
         verify(rates, times(source.asked.size())).upsert(anyString(), eq("fake"), any());
     }
 

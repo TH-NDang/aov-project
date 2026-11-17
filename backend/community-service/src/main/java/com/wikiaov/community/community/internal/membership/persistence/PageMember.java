@@ -1,6 +1,11 @@
 package com.wikiaov.community.community.internal.membership.persistence;
 
-import jakarta.persistence.*;
+import com.wikiaov.community.community.internal.domain.PageContent.Role;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.util.UUID;
 
 @Entity
@@ -11,7 +16,8 @@ public class PageMember {
     private UUID pageId;
     private String actor;
     private String name;
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     public PageMember() {
         this.id = UUID.randomUUID();
@@ -49,11 +55,11 @@ public class PageMember {
         this.name = value;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String value) {
+    public void setRole(Role value) {
         this.role = value;
     }
 

@@ -1,7 +1,10 @@
 package com.wikiaov.community.tournament.internal.application;
 
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
@@ -9,7 +12,8 @@ import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.domain.TournamentMetadataRules;
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia;
-import com.wikiaov.community.tournament.internal.persistence.*;
+import com.wikiaov.community.tournament.internal.persistence.TournamentRecord;
+import com.wikiaov.community.tournament.internal.persistence.TournamentRepository;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -72,21 +76,26 @@ public class TournamentRegistry {
     }
 
     private void validate(Tournament content) {
-        if (content == null)
+        if (content == null) {
             throw TournamentErrors.invalid("content is required.");
+        }
         TournamentErrors.code(content.code());
-        if (!SourceUrls.valid(content.sourceUrl()))
+        if (!SourceUrls.valid(content.sourceUrl())) {
             throw TournamentErrors
                     .invalid("sourceUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
+        }
         TournamentErrors.required(content.name(), "name");
-        if (content.region() == null || content.region().isBlank())
+        if (content.region() == null || content.region().isBlank()) {
             throw TournamentErrors.invalid("region is required.");
-        if (content.startsOn() != null && content.endsOn() != null && content.endsOn().isBefore(content.startsOn()))
+        }
+        if (content.startsOn() != null && content.endsOn() != null && content.endsOn().isBefore(content.startsOn())) {
             throw TournamentErrors.invalid("endsOn cannot precede startsOn.");
+        }
 
         var violations = TournamentMetadataRules.violations(content);
-        if (!violations.isEmpty())
+        if (!violations.isEmpty()) {
             throw TournamentErrors.invalid(String.join(" ", violations));
+        }
     }
 
     /**
@@ -95,18 +104,22 @@ public class TournamentRegistry {
      */
     private void validateMainEvent(UUID id, Tournament content) {
         var mainEventId = content.parentTournamentId();
-        if (mainEventId == null)
+        if (mainEventId == null) {
             return;
-        if (mainEventId.equals(id))
+        }
+        if (mainEventId.equals(id)) {
             throw TournamentErrors.invalid("A tournament cannot be a part of itself.");
+        }
 
         archives.validateParents(content);
         var mainEvent = repository.findById(mainEventId).orElseThrow(TournamentErrors::missing);
 
-        if (mainEvent.getContent().parentTournamentId() != null)
+        if (mainEvent.getContent().parentTournamentId() != null) {
             throw TournamentErrors.invalid("parentTournamentId must name a main event, not a part of another one.");
-        if (id != null && repository.countParts(id) > 0)
+        }
+        if (id != null && repository.countByParentId(id) > 0) {
             throw TournamentErrors.invalid("A tournament that has parts cannot become a part of another one.");
+        }
     }
 
     @Transactional(readOnly = true)

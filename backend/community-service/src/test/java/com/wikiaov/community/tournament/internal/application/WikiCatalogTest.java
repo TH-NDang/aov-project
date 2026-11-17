@@ -1,12 +1,19 @@
 package com.wikiaov.community.tournament.internal.application;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sun.net.httpserver.HttpServer;
+import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.tournament.internal.infrastructure.WikiCatalogClient;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class WikiCatalogTest {
     private static final UUID SEASON = UUID.randomUUID(), OTHER = UUID.randomUUID(), FIRST = UUID.randomUUID(),
@@ -38,7 +45,7 @@ class WikiCatalogTest {
             exchange.close();
         });
         server.start();
-        catalog = new WikiCatalog("http://localhost:" + server.getAddress().getPort());
+        catalog = new WikiCatalog(new WikiCatalogClient("http://localhost:" + server.getAddress().getPort()));
     }
 
     @AfterEach
@@ -81,7 +88,7 @@ class WikiCatalogTest {
     @Test
     void mismatchedSeasonPatchIsRejectedBeforeReadingGameplay() {
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", OTHER, FIRST, false))
-                .isInstanceOf(com.wikiaov.community.platform.ApiException.class)
+                .isInstanceOf(ApiException.class)
                 .hasMessageContaining("does not belong");
         assertThat(requested).hasSize(2);
     }
@@ -94,8 +101,17 @@ class WikiCatalogTest {
         assertThat(result.resolvedContext().unknown()).isTrue();
         assertThat(requested).hasSize(1);
         assertThatThrownBy(() -> catalog.read("TH", "vi-VN", SEASON, FIRST, false))
-                .isInstanceOf(com.wikiaov.community.platform.ApiException.class)
+                .isInstanceOf(ApiException.class)
                 .hasMessageContaining("unavailable for this market");
+    }
+
+    @Test
+    void aWikiThatCannotBeReachedIsAnsweredAsUnavailable() {
+        server.stop(0);
+
+        assertThatThrownBy(() -> catalog.read("VN", "vi-VN", null, null, false))
+                .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getErrorCode())
+                        .isEqualTo(TournamentErrorCode.TOURNAMENT_WIKI_UNAVAILABLE));
     }
 
     private static String context() {

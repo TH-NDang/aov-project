@@ -1,7 +1,9 @@
 package com.wikiaov.community.tournament.internal.planning.domain;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record CompetitionPlan(
         String circuit,

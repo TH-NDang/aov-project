@@ -99,8 +99,9 @@ public record PageContent(
     }
 
     public PageContent present(Presentation presentation) {
-        if (presentation == null)
+        if (presentation == null) {
             return this;
+        }
         return new PageContent(name, shortName, country, presentation.biography(), presentation.avatarUrl(),
                 presentation.coverUrl(), presentation.links(), sources, history, achievements, roster, personRoles,
                 channelOrganizationId);

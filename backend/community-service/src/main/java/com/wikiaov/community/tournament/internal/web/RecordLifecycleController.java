@@ -1,9 +1,13 @@
 package com.wikiaov.community.tournament.internal.web;
 
+import com.wikiaov.community.platform.QueryParameters;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Version;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
 import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycles;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,7 +21,7 @@ public class RecordLifecycleController implements RecordLifecycleApi {
 
     @Override
     public Impact impact(String kind, UUID id, HttpServletRequest request) {
-        Parameters.only(request);
+        QueryParameters.requireOnly(request, Set.of());
         return lifecycles.impact(kind, id);
     }
 

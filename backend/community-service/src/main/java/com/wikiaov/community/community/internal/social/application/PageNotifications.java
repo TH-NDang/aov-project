@@ -1,11 +1,18 @@
 package com.wikiaov.community.community.internal.social.application;
 
-import com.wikiaov.community.community.internal.application.PageViews.*;
-import com.wikiaov.community.community.internal.pages.application.*;
-import com.wikiaov.community.community.internal.social.persistence.*;
+import com.wikiaov.community.community.internal.application.PageViews.Notification;
+import com.wikiaov.community.community.internal.application.PageViews.UnreadCount;
+import com.wikiaov.community.community.internal.pages.application.PageAccess;
+import com.wikiaov.community.community.internal.pages.application.PageProfiles;
+import com.wikiaov.community.community.internal.social.persistence.PageFollow;
+import com.wikiaov.community.community.internal.social.persistence.PageFollowRepository;
+import com.wikiaov.community.community.internal.social.persistence.PageNotification;
+import com.wikiaov.community.community.internal.social.persistence.PageNotificationRepository;
 import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.platform.PageSlice;
 import java.time.Instant;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +30,7 @@ public class PageNotifications {
     /** Sends the message to every follower of the page, in batches of 100. */
     public void followers(UUID pageId, String message) {
         int page = 0;
-        org.springframework.data.domain.Page<PageFollow> batch;
+        Page<PageFollow> batch;
         do {
             batch = follows.findByPageId(pageId, PageProfiles.paging(page++, 100));
             batch.forEach(row -> send(row.getActor(), pageId, message));
@@ -40,8 +47,8 @@ public class PageNotifications {
     }
 
     @Transactional(readOnly = true)
-    public Slice<Notification> inbox(int page, int size) {
-        return Slice.of(notifications
+    public PageSlice<Notification> inbox(int page, int size) {
+        return PageSlice.from(notifications
                 .findByActorOrderByCreatedAtDesc(CommunityActor.require().key(), PageProfiles.paging(page, size))
                 .map(row -> new Notification(row.getId(), row.getPageId(), row.getMessage(), row.getCreatedAt(),
                         row.getReadAt() != null)));
@@ -58,8 +65,9 @@ public class PageNotifications {
 
     public void read(UUID id) {
         var row = notifications.findById(id).orElseThrow(PageAccess::missing);
-        if (!row.getActor().equals(CommunityActor.require().key()))
+        if (!row.getActor().equals(CommunityActor.require().key())) {
             throw PageAccess.forbidden();
+        }
         row.setReadAt(Instant.now());
     }
 }

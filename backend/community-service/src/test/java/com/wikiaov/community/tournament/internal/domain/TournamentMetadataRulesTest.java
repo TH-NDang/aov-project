@@ -2,8 +2,19 @@ package com.wikiaov.community.tournament.internal.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.CompetitionType;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentAward;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentLink;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentPlacement;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentResult;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.VenueMode;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Verification;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TournamentMetadataRulesTest {
@@ -49,18 +60,18 @@ class TournamentMetadataRulesTest {
     void finalTableKeepsSharedPlacesAndRejectsBrokenLines() {
         var valid = new Tournament("event", "Event", "GLOBAL", 2026, null, null, null, null, null, TournamentTier.D,
                 CompetitionType.SHOWMATCH, VenueMode.ONLINE, TournamentStatus.FINISHED, null, "VND",
-                java.util.List
-                        .of(new TournamentPlacement("5-8", null, "Team", java.math.BigDecimal.TEN, null, null, null)),
-                java.util.List.of(new TournamentAward("MVP", null, "Player", null, null, null)),
-                java.util.List.of(new TournamentLink("Liquipedia", "https://liquipedia.net/honorofkings/Event")));
+                List
+                        .of(new TournamentPlacement("5-8", null, "Team", BigDecimal.TEN, null, null, null)),
+                List.of(new TournamentAward("MVP", null, "Player", null, null, null)),
+                List.of(new TournamentLink("Liquipedia", "https://liquipedia.net/honorofkings/Event")));
         assertThat(TournamentMetadataRules.violations(valid)).isEmpty();
 
         var broken = new Tournament("event", "Event", "GLOBAL", 2026, null, null, null, null, null, null, null, null,
                 null, null, "x".repeat(31),
-                java.util.List.of(
-                        new TournamentPlacement(" ", null, "", java.math.BigDecimal.ONE.negate(), null, null, null)),
-                java.util.List.of(new TournamentAward("", null, "", null, null, null)),
-                java.util.List.of(new TournamentLink("", "javascript:alert(1)")));
+                List.of(
+                        new TournamentPlacement(" ", null, "", BigDecimal.ONE.negate(), null, null, null)),
+                List.of(new TournamentAward("", null, "", null, null, null)),
+                List.of(new TournamentLink("", "javascript:alert(1)")));
         assertThat(TournamentMetadataRules.violations(broken)).hasSizeGreaterThanOrEqualTo(6);
     }
 

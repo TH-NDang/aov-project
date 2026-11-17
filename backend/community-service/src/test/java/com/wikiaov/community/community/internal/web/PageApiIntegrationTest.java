@@ -2,44 +2,33 @@ package com.wikiaov.community.community.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.*;
-import org.junit.jupiter.api.*;
+import com.wikiaov.community.testsupport.CommunityApplicationTest;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.*;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.*;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@CommunityApplicationTest
 class PageApiIntegrationTest {
-    static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:17.6");
-    static {
-        DATABASE.start();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        properties.add("spring.datasource.url", DATABASE::getJdbcUrl);
-        properties.add("spring.datasource.username", DATABASE::getUsername);
-        properties.add("spring.datasource.password", DATABASE::getPassword);
-    }
-
-    @AfterAll
-    static void stop() {
-        DATABASE.stop();
-    }
-
     @Autowired
     MockMvc mvc;
     @Autowired
@@ -193,19 +182,21 @@ class PageApiIntegrationTest {
                 Map.of("kind", "PLAYER", "code", code, "content",
                         Map.of("name", "Guest player", "personRoles", List.of("GUEST_ANALYST"))));
         assertThat(created.path("entityId").asText()).isNotBlank();
-        for (String filter : List.of("kind=PLAYER", "personRole=BROADCAST"))
+        for (String filter : List.of("kind=PLAYER", "personRole=BROADCAST")) {
             mvc.perform(as(get(ROOT + "/admin/pages?" + filter).param("q", code), "editor", true))
                     .andExpect(jsonPath("$.totalElements").value(1))
                     .andExpect(jsonPath("$.items[0].id").value(created.path("id").asText()));
+        }
     }
 
     @Test
     void personnelValidationRejectsMissingUnknownDuplicateAndOrganizationRoles() throws Exception {
-        for (var roles : List.of(List.of(), List.of("UNKNOWN"), List.of("COACH", "COACH")))
+        for (var roles : List.of(List.of(), List.of("UNKNOWN"), List.of("COACH", "COACH"))) {
             mvc.perform(as(post(ROOT + "/admin/pages"), "editor", true).contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("kind", "PERSON", "code", "invalid-" + UUID.randomUUID(),
                             "content", Map.of("name", "Invalid roles", "personRoles", roles)))))
                     .andExpect(status().isUnprocessableEntity());
+        }
         mvc.perform(as(post(ROOT + "/admin/pages"), "editor", true).contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(Map.of("kind", "ORGANIZATION", "code", "invalid-" + UUID.randomUUID(),
                         "content", Map.of("name", "Organization", "personRoles", List.of("COACH"))))))
@@ -267,9 +258,11 @@ class PageApiIntegrationTest {
                 .andExpect(status().isUnprocessableEntity());
         var memberList = send(get(ROOT + "/me/pages/" + id + "/members"), "representative", false, null);
         String ownerId = "";
-        for (var member : memberList)
-            if (member.path("role").asText().equals("OWNER"))
+        for (var member : memberList) {
+            if (member.path("role").asText().equals("OWNER")) {
                 ownerId = member.path("id").asText();
+            }
+        }
         send(post(ROOT + "/me/pages/" + id + "/members/" + ownerId + "/revoke"), "reviewer", true, null);
         mvc.perform(get(ROOT + "/pages/" + id)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.represented").value(false));
@@ -332,7 +325,21 @@ class PageApiIntegrationTest {
                 .andExpect(jsonPath("$.references").value(1));
         mvc.perform(as(post(ROOT + "/admin/media-assets/" + asset + "/retire"), "editor", true))
                 .andExpect(status().isConflict());
-        mvc.perform(get(ROOT + "/pages?unexpected=true")).andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void aPageLargerThanTheListLimitIsAnInvalidQueryParameter() throws Exception {
+        mvc.perform(get(ROOT + "/pages").param("size", "101")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
+                .andExpect(jsonPath("$.errors[0].path").value("size"));
+    }
+
+    @Test
+    void anUnknownQueryParameterOfAPublicPageReadIsAnInvalidQueryParameter() throws Exception {
+        mvc.perform(get(ROOT + "/pages?unexpected=true")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+        mvc.perform(get(ROOT + "/pages/by-code/anything?unexpected=true")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
     }
 
     @Test
@@ -480,9 +487,10 @@ class PageApiIntegrationTest {
                         .value("Followed organization"))
                 .andExpect(jsonPath("$.items[?(@.post.body == 'Draft news')]").isEmpty());
         mvc.perform(get(ROOT + "/pages/" + followed + "/posts")).andExpect(jsonPath("$.items[0].comments").value(1));
-        mvc.perform(get(ROOT + "/posts?following=true")).andExpect(status().isUnprocessableEntity());
-        for (var path : List.of("/me/feed", "/me/follows", "/me/suggestions", "/me/notifications/unread"))
+        mvc.perform(get(ROOT + "/posts?following=true")).andExpect(status().isBadRequest());
+        for (var path : List.of("/me/feed", "/me/follows", "/me/suggestions", "/me/notifications/unread")) {
             mvc.perform(get(ROOT + path)).andExpect(status().isUnauthorized());
+        }
 
         send(post(ROOT + "/me/pages/" + followed + "/follow"), "feed-reader", false, Map.of("following", true));
         var following = send(get(ROOT + "/me/feed?following=true&size=100"), "feed-reader", false, null);
@@ -624,15 +632,16 @@ class PageApiIntegrationTest {
         return id;
     }
 
-    private org.springframework.test.web.servlet.ResultActions perform(MockHttpServletRequestBuilder request,
+    private ResultActions perform(MockHttpServletRequestBuilder request,
             String actor, Object body) throws Exception {
         as(request, actor, false);
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         return mvc.perform(request);
     }
 
-    private org.springframework.test.web.servlet.ResultActions accept(String token, String actor) throws Exception {
+    private ResultActions accept(String token, String actor) throws Exception {
         return mvc.perform(as(post(ROOT + "/me/invitations/accept"), actor, false)
                 .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("token", token))));
     }
@@ -644,7 +653,7 @@ class PageApiIntegrationTest {
                 : List.<SimpleGrantedAuthority>of();
         return request
                 .with(jwt().jwt(token -> token.subject(actor).issuer("https://identity.example").claim("name", actor))
-                        .authorities(roles.toArray(org.springframework.security.core.GrantedAuthority[]::new)));
+                        .authorities(roles.toArray(GrantedAuthority[]::new)));
     }
 
     @Test
@@ -920,11 +929,12 @@ class PageApiIntegrationTest {
                 .andExpect(jsonPath("$.content.channelOrganizationId").isEmpty());
     }
 
-    private tools.jackson.databind.JsonNode send(MockHttpServletRequestBuilder request, String actor, boolean admin,
+    private JsonNode send(MockHttpServletRequestBuilder request, String actor, boolean admin,
             Object body) throws Exception {
         as(request, actor, admin);
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var result = mvc.perform(request).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         return json.readTree(result.isEmpty() ? "null" : result);
     }

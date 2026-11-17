@@ -1,16 +1,26 @@
 package com.wikiaov.community.tournament.internal.planning.application;
 
 import com.wikiaov.community.platform.CommunityActor;
-import com.wikiaov.community.tournament.internal.application.*;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.internal.application.SeriesRegistry;
+import com.wikiaov.community.tournament.internal.application.TournamentErrors;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
-import com.wikiaov.community.tournament.internal.planning.domain.*;
-import com.wikiaov.community.tournament.internal.planning.persistence.*;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionRules;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionSnapshot;
+import com.wikiaov.community.tournament.internal.planning.persistence.CompetitionPlanRecord;
+import com.wikiaov.community.tournament.internal.planning.persistence.CompetitionPlanRepository;
+import com.wikiaov.community.tournament.internal.planning.persistence.PlanRevision;
+import com.wikiaov.community.tournament.internal.planning.persistence.PlanRevisionRepository;
+import java.time.DateTimeException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -39,9 +49,6 @@ public class CompetitionPlanning {
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('tournament:read')")
     public PageSlice<Summary> summaries(int page, int size, UUID organizerPageId, UUID circuitPageId) {
-        if (page < 0 || size < 1 || size > 100)
-            throw TournamentErrors.invalid("Invalid pagination.");
-
         var rows = plans.summaries(organizerPageId == null ? "" : organizerPageId.toString(),
                 circuitPageId == null ? "" : circuitPageId.toString(),
                 PageRequest.of(page, size));
@@ -82,8 +89,6 @@ public class CompetitionPlanning {
     @Transactional(readOnly = true)
     public PageSlice<View> published(int page, int size, UUID teamId, UUID playerId, UUID organizerPageId,
             UUID circuitPageId) {
-        if (page < 0 || size < 1 || size > 100)
-            throw TournamentErrors.invalid("Invalid pagination.");
         return PageSlice.from(plans
                 .published(teamId == null ? "" : teamId.toString(), playerId == null ? "" : playerId.toString(),
                         organizerPageId == null ? "" : organizerPageId.toString(),
@@ -101,25 +106,28 @@ public class CompetitionPlanning {
         var snapshot = inputs.snapshot(id, content);
         consistent(snapshot);
         for (var match : content.matches()) {
-            if (match.seriesId() == null)
+            if (match.seriesId() == null) {
                 continue;
+            }
             var current = series.get(match.seriesId());
             var value = current.content();
             if (!Objects.equals(value.scheduledAt(), match.scheduledAt())
                     || !Objects.equals(value.name(), match.label())
-                    || !Objects.equals(value.stage(), match.stageCode()))
+                    || !Objects.equals(value.stage(), match.stageCode())) {
                 series.update(current.id(), current.version(),
                         new Series(value.code(), id, match.label(), match.stageCode(), value.teamAId(), value.teamBId(),
                                 value.bestOf(), match.scheduledAt(), value.sourceUrl(), value.note(), value.result(),
                                 value.repeatPicksAllowed()),
                         actor.key());
+            }
         }
         if (row.getContent() != null) {
             var retained = content.matches().stream().map(CompetitionPlan.Match::seriesId).filter(Objects::nonNull)
                     .toList();
             if (row.getContent().matches().stream()
-                    .anyMatch(match -> match.seriesId() != null && !retained.contains(match.seriesId())))
+                    .anyMatch(match -> match.seriesId() != null && !retained.contains(match.seriesId()))) {
                 throw TournamentErrors.invalid("Linked matches cannot be removed from the competition plan.");
+            }
         }
         row.save(snapshot.plan(), actor.key());
         plans.saveAndFlush(row);
@@ -153,18 +161,35 @@ public class CompetitionPlanning {
     }
 
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
-    public View publish(UUID id, Long version, boolean publish) {
+    public View publish(UUID id, Long version) {
         var actor = CommunityActor.require();
         archives.lockWrites();
         var row = locked(id, version);
-        var snapshot = inputs.snapshot(id, row.getContent(), publish);
+        var snapshot = inputs.snapshot(id, row.getContent(), true);
         consistent(snapshot);
-        if (publish && (row.getContent().entrants().size() < 2 || row.getContent().stages().isEmpty()
-                || row.getContent().sourceUrl() == null || row.getContent().sourceUrl().isBlank()))
+        if (row.getContent().entrants().size() < 2 || row.getContent().stages().isEmpty()
+                || row.getContent().sourceUrl() == null || row.getContent().sourceUrl().isBlank()) {
             throw TournamentErrors.invalid("Publication requires entrants, stages and a source URL.");
-        row.publish(publish ? snapshot : null, actor.key());
+        }
+
+        row.publish(snapshot, actor.key());
         plans.flush();
-        revisions.save(new PlanRevision(id, snapshot, publish ? "PUBLISH" : "WITHDRAW", actor.key()));
+        revisions.save(new PlanRevision(id, snapshot, "PUBLISH", actor.key()));
+        return view(row);
+    }
+
+    /** Takes the plan out of public view; the withdrawal is kept in the plan history. */
+    @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
+    public View withdraw(UUID id, Long version) {
+        var actor = CommunityActor.require();
+        archives.lockWrites();
+        var row = locked(id, version);
+        var snapshot = inputs.snapshot(id, row.getContent(), false);
+        consistent(snapshot);
+
+        row.publish(null, actor.key());
+        plans.flush();
+        revisions.save(new PlanRevision(id, snapshot, "WITHDRAW", actor.key()));
         return view(row);
     }
 
@@ -178,8 +203,9 @@ public class CompetitionPlanning {
             return switch (stage.format()) {
                 case "ROUND_ROBIN" -> CompetitionRules.roundRobin(stage, content.entrants());
                 case "DOUBLE_ELIMINATION" -> {
-                    if (content.entrants().stream().filter(entry -> !"WITHDRAWN".equals(entry.status())).count() < 6)
+                    if (content.entrants().stream().filter(entry -> !"WITHDRAWN".equals(entry.status())).count() < 6) {
                         throw TournamentErrors.invalid("The AOG playoff template requires six entrants.");
+                    }
                     yield CompetitionRules.aogPlayoffs(stage, opponent);
                 }
                 default -> throw TournamentErrors.invalid("This format uses manual fixtures.");
@@ -201,19 +227,21 @@ public class CompetitionPlanning {
     }
 
     private static void consistent(CompetitionSnapshot snapshot) {
-        if (snapshot.resolved().stream().anyMatch(match -> !match.consistent()))
+        if (snapshot.resolved().stream().anyMatch(match -> !match.consistent())) {
             throw TournamentErrors.invalid(
                     "A linked match no longer agrees with its participant slots or best-of. Review downstream results first.");
+        }
     }
 
     private static void validate(CompetitionPlan plan) {
         try {
             CompetitionRules.validate(plan);
-        } catch (IllegalArgumentException | java.time.DateTimeException error) {
+        } catch (IllegalArgumentException | DateTimeException error) {
             throw TournamentErrors.invalid(error.getMessage());
         }
         if (!SourceUrls.valid(plan.sourceUrl())
-                || plan.stages().stream().anyMatch(stage -> !SourceUrls.valid(stage.sourceUrl())))
+                || plan.stages().stream().anyMatch(stage -> !SourceUrls.valid(stage.sourceUrl()))) {
             throw TournamentErrors.invalid("Source URLs must be absolute HTTP or HTTPS URLs without credentials.");
+        }
     }
 }

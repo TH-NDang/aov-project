@@ -5,7 +5,9 @@ import com.wikiaov.community.currency.internal.domain.DailyRate;
 import com.wikiaov.community.currency.internal.persistence.ExchangeRateRepository;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.json.JsonMapper;
@@ -44,8 +46,9 @@ public class ExchangeRateSync {
         var stored = 0;
         while (!from.isAfter(today)) {
             var to = from.plusDays(WINDOW_DAYS - 1L);
-            if (to.isAfter(today))
+            if (to.isAfter(today)) {
                 to = today;
+            }
             stored += store(source.fetch(from, to, settings.currencies()));
             from = to.plusDays(1);
         }
@@ -57,12 +60,13 @@ public class ExchangeRateSync {
     private LocalDate firstDayToFetch(LocalDate today) {
         var recent = today.minusDays(REFRESH_DAYS);
         // Once the history is known to be full, a currency the source lacks must not restart it on every run.
-        if (historyChecked)
+        if (historyChecked) {
             return recent;
+        }
 
         Map<String, LocalDate> latest = rates.latestDays().stream()
                 .collect(Collectors.toMap(ExchangeRateRepository.LatestDay::getCurrency,
-                        day -> LocalDate.parse(day.getLatest())));
+                        ExchangeRateRepository.LatestDay::getLatest));
         var oldest = settings.currencies().stream().map(code -> latest.getOrDefault(code, settings.historyStart()))
                 .min(Comparator.naturalOrder()).orElse(settings.historyStart());
         var from = oldest.minusDays(REFRESH_DAYS);
@@ -71,8 +75,9 @@ public class ExchangeRateSync {
     }
 
     private int store(List<DailyRate> fetched) {
-        if (fetched.isEmpty())
+        if (fetched.isEmpty()) {
             return 0;
+        }
 
         var rows = fetched.stream().map(rate -> Map.of("currency", rate.currency(), "rate_date",
                 rate.date().toString(), "units_per_usd", rate.unitsPerUsd())).toList();

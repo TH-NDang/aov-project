@@ -214,6 +214,34 @@ test("unsupported schemas, synthetic game imports and unknown content fields are
   )
 })
 
+test("unknown fields inside placements, awards and links are rejected before they reach the backend", () => {
+  const tournament = (list: string, item: Record<string, unknown>) => ({
+    schemaVersion: 1,
+    tournaments: [{ content: { code: "event", name: "Event", region: "VN", [list]: [item] } }],
+  })
+  assert.throws(
+    () => parse(tournament("placements", { place: "1", teamName: "Blue", teamCode: "blue" })),
+    /placements\[0\].*teamCode.*chưa được hỗ trợ/,
+  )
+  assert.throws(
+    () => parse(tournament("awards", { title: "MVP", recipientName: "Blue", playerCode: "blue" })),
+    /awards\[0\].*playerCode.*chưa được hỗ trợ/,
+  )
+  assert.throws(
+    () => parse(tournament("links", { label: "Bracket", url: "https://source.example", kind: "bracket" })),
+    /links\[0\].*kind.*chưa được hỗ trợ/,
+  )
+})
+
+test("placements, awards and links with known fields import unchanged", () => {
+  const placement = { place: "1", teamName: "Blue", prizeUsd: 1000 }
+  const result = parse({
+    schemaVersion: 1,
+    tournaments: [{ content: { code: "event", name: "Event", region: "VN", placements: [placement] } }],
+  })
+  assert.deepEqual(result.rows[0]?.content.placements, [placement])
+})
+
 test("the byte limit counts UTF-8 bytes and rejects oversized input before parsing records", () => {
   const text = JSON.stringify({ schemaVersion: 1, ignoredEvidence: "ấ".repeat(MAX_REGISTRY_IMPORT_BYTES / 2) })
   assert.ok(text.length < MAX_REGISTRY_IMPORT_BYTES)

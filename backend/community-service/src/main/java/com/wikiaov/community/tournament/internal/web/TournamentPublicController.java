@@ -1,13 +1,18 @@
 package com.wikiaov.community.tournament.internal.web;
 
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.platform.QueryParameters;
 import com.wikiaov.community.tournament.internal.application.PublicTournamentQueries;
 import com.wikiaov.community.tournament.internal.application.PublicTournamentQueries.Summary;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.application.WikiCatalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class TournamentPublicController implements TournamentPublicApi {
@@ -22,31 +27,33 @@ public class TournamentPublicController implements TournamentPublicApi {
     @Override
     public Catalog catalog(String region, String locale, UUID seasonId, UUID patchVariantId, boolean includeUnscoped,
             HttpServletRequest request) {
-        Parameters.only(request, "region", "locale", "seasonId", "patchVariantId", "includeUnscoped");
+        QueryParameters.requireOnly(request,
+                Set.of("region", "locale", "seasonId", "patchVariantId", "includeUnscoped"));
         return catalog.read(region, locale, seasonId, patchVariantId, includeUnscoped);
     }
 
     @Override
     public PageSlice<PublishedGame> games(UUID tournamentId, UUID seriesId, int page, int size,
             HttpServletRequest request) {
-        Parameters.only(request, "tournamentId", "seriesId", "page", "size");
-        return queries.games(tournamentId, seriesId, Parameters.page(page, size, "published_at"));
+        QueryParameters.requireOnly(request, Set.of("tournamentId", "seriesId", "page", "size"));
+        return queries.games(tournamentId, seriesId, Parameters.pageable(page, size, "published_at"));
     }
 
     @Override
-    public PublishedGame game(UUID id) {
+    public PublishedGame game(UUID id, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
         return queries.game(id);
     }
 
     @Override
     public PageSlice<Summary<Tournament>> tournaments(int page, int size, HttpServletRequest request) {
-        Parameters.only(request, "page", "size");
-        return queries.tournaments(Parameters.page(page, size, "publishedAt"));
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
+        return queries.tournaments(Parameters.pageable(page, size, "publishedAt"));
     }
 
     @Override
     public PageSlice<Summary<Series>> series(UUID tournamentId, int page, int size, HttpServletRequest request) {
-        Parameters.only(request, "tournamentId", "page", "size");
-        return queries.series(tournamentId, Parameters.page(page, size, "publishedAt"));
+        QueryParameters.requireOnly(request, Set.of("tournamentId", "page", "size"));
+        return queries.series(tournamentId, Parameters.pageable(page, size, "publishedAt"));
     }
 }

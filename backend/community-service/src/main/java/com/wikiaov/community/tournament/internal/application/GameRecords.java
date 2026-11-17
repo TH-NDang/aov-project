@@ -1,17 +1,39 @@
 package com.wikiaov.community.tournament.internal.application;
 
 import com.wikiaov.community.platform.ApiException;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
 import com.wikiaov.community.tournament.internal.domain.GameRules;
 import com.wikiaov.community.tournament.internal.domain.SeriesPickRule;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
-import com.wikiaov.community.tournament.internal.persistence.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Reference;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.persistence.GameRecord;
+import com.wikiaov.community.tournament.internal.persistence.GameRepository;
+import com.wikiaov.community.tournament.internal.persistence.PlayerRepository;
+import com.wikiaov.community.tournament.internal.persistence.PublicationRecord;
+import com.wikiaov.community.tournament.internal.persistence.PublicationRepository;
+import com.wikiaov.community.tournament.internal.persistence.SeriesRepository;
+import com.wikiaov.community.tournament.internal.persistence.TeamRepository;
+import com.wikiaov.community.tournament.internal.persistence.TournamentRepository;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -81,27 +103,34 @@ public class GameRecords {
         archives.validateParents(content);
         var missing = new ArrayList<>(GameRules.violations(content, true, catalog));
         var match = content.seriesId() == null ? null : series.findById(content.seriesId()).orElse(null);
-        if (match == null)
+        if (match == null) {
             missing.add("seriesId.notFound");
-        if (match != null && content.number() != null && content.number() > match.getContent().bestOf())
+        }
+        if (match != null && content.number() != null && content.number() > match.getContent().bestOf()) {
             missing.add("number.exceedsBestOf");
+        }
         var teamCopies = new LinkedHashMap<UUID, Team>();
         var playerCopies = new LinkedHashMap<UUID, Player>();
         for (var side : content.sides()) {
-            if (side.teamId() != null)
+            if (side.teamId() != null) {
                 teams.findById(side.teamId()).ifPresentOrElse(team -> teamCopies.put(team.getId(), team.getContent()),
                         () -> missing.add("sides.teamId.notFound"));
-            for (var participant : side.participants())
-                if (participant.playerId() != null)
+            }
+            for (var participant : side.participants()) {
+                if (participant.playerId() != null) {
                     players.findById(participant.playerId()).ifPresentOrElse(
                             player -> playerCopies.put(player.getId(), player.getContent()),
                             () -> missing.add("sides.participants.playerId.notFound"));
+                }
+            }
         }
         if (match != null && !new HashSet<>(teamCopies.keySet())
-                .equals(Set.of(match.getContent().teamAId(), match.getContent().teamBId())))
+                .equals(Set.of(match.getContent().teamAId(), match.getContent().teamBId()))) {
             missing.add("sides.teams.matchSeries");
-        if (!missing.isEmpty())
+        }
+        if (!missing.isEmpty()) {
             throw new PublicationIncomplete(missing);
+        }
         var tournament = tournaments.findById(match.getContent().tournamentId()).orElseThrow(TournamentErrors::missing);
 
         var resolved = catalog.resolvedContext();
@@ -122,9 +151,10 @@ public class GameRecords {
         var row = games.findById(id).orElseThrow(TournamentErrors::missing);
         RegistryArchivePolicy.requireActive(row);
         TournamentErrors.version(row.getVersion(), version);
-        if (row.getPublishedSnapshot() != null)
+        if (row.getPublishedSnapshot() != null) {
             publications.save(
                     new PublicationRecord(UUID.randomUUID(), id, row.getPublishedSnapshot(), actor, "WITHDRAWAL"));
+        }
         row.withdraw(actor);
         games.flush();
         return view(row);
@@ -132,25 +162,29 @@ public class GameRecords {
 
     private void validateDraft(UUID id, Game content) {
         var violations = GameRules.violations(content, false, null);
-        if (!violations.isEmpty())
+        if (!violations.isEmpty()) {
             throw new ApiException(TournamentErrorCode.TOURNAMENT_INVALID_CONTENT, "Invalid game observations.",
                     Map.of("missingFields", violations));
+        }
         var match = content.seriesId() == null ? null : series.findById(content.seriesId()).orElse(null);
-        if (content.seriesId() != null && match == null)
+        if (content.seriesId() != null && match == null) {
             throw TournamentErrors.invalid("Choose an existing series.");
-        if (content.region() != null && !content.region().matches("[A-Z]{2,16}"))
+        }
+        if (content.region() != null && !content.region().matches("[A-Z]{2,16}")) {
             throw TournamentErrors.invalid("Invalid market code.");
+        }
         archives.validateParents(content);
         if (match != null) {
             var others = games.search(content.seriesId(), null, RecordState.ACTIVE.name(), Pageable.unpaged()).stream()
                     .filter(row -> !row.getId().equals(id)).map(GameRecord::getContent).toList();
             var reused = match.getContent().repeatPicksAllowed()
-                    ? java.util.List.<String>of()
+                    ? List.<String>of()
                     : SeriesPickRule.violations(content, match.getContent().bestOf(), others);
-            if (!reused.isEmpty())
+            if (!reused.isEmpty()) {
                 throw new ApiException(TournamentErrorCode.TOURNAMENT_INVALID_CONTENT,
                         "A team picked a hero it already played earlier in this series.",
                         Map.of("missingFields", reused));
+            }
         }
     }
 
@@ -186,8 +220,9 @@ public class GameRecords {
     }
 
     private static void add(Set<UUID> ids, Selection selection) {
-        if (selection != null && selection.id() != null)
+        if (selection != null && selection.id() != null) {
             ids.add(selection.id());
+        }
     }
 
     private static List<Reference> used(List<Reference> references, Set<UUID> ids) {

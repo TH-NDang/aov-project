@@ -1,12 +1,25 @@
 package com.wikiaov.community.tournament.internal.directory.application;
 
-import com.wikiaov.community.tournament.internal.application.TournamentErrors;
+import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.platform.PlatformErrorCode;
 import com.wikiaov.community.tournament.internal.application.TournamentViews;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
-import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.CompetitionPageEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.LineupMember;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamRef;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentRef;
 import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository;
-import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.*;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.CompetitionPageRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.FacetRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.LineupRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.PlayerRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.RankedRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.TeamRow;
 import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
@@ -16,8 +29,19 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;
-import com.wikiaov.community.tournament.internal.persistence.*;
-import java.util.*;
+import com.wikiaov.community.tournament.internal.persistence.PlayerRecord;
+import com.wikiaov.community.tournament.internal.persistence.PlayerRepository;
+import com.wikiaov.community.tournament.internal.persistence.TeamRecord;
+import com.wikiaov.community.tournament.internal.persistence.TeamRepository;
+import com.wikiaov.community.tournament.internal.persistence.TournamentRecord;
+import com.wikiaov.community.tournament.internal.persistence.TournamentRepository;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
@@ -34,7 +58,6 @@ public class CompetitionDirectory {
     private static final Set<String> PLAYER_SORTS = Set.of("RECENT", "TOURNAMENTS", "TITLES", "NAME");
     private static final Set<String> RECORD_SORTS = Set.of("RECENT", "NAME");
     private static final Set<String> TOURNAMENT_SORTS = Set.of("RECENT", "STATUS", "NAME", "UPDATED");
-    private static final Set<String> TOURNAMENT_LEVELS = Set.of("ALL", "MAIN");
     private static final int LINEUP_LIMIT = 7;
 
     private final DirectoryRepository directory;
@@ -123,14 +146,15 @@ public class CompetitionDirectory {
     }
 
     public PageSlice<Ranked<Tournament>> rankedTournaments(String q, String alsoRegions, String status, String tier,
-            String region, Integer year, String sort, String level, UUID teamId, UUID playerId, Pageable page) {
+            String region, Integer year, String sort, TournamentLevel level, UUID teamId, UUID playerId,
+            Pageable page) {
         requireOneOf("sort", sort, TOURNAMENT_SORTS);
-        requireOneOf("level", level, TOURNAMENT_LEVELS);
         requireEnum("status", status, TournamentStatus.class);
         requireEnum("tier", tier, TournamentTier.class);
 
         var rows = directory.rankedTournaments(q, alsoRegions, status, tier, region,
-                year == null ? "" : year.toString(), sort, level, text(teamId), text(playerId), unsorted(page));
+                year == null ? "" : year.toString(), sort, level.mainEventsOnly(), text(teamId), text(playerId),
+                unsorted(page));
         var records = byId(tournaments.findAllById(rows.map(RankedRow::getId).toList()), TournamentRecord::getId);
 
         return PageSlice.from(rows.map(row -> {
@@ -151,10 +175,8 @@ public class CompetitionDirectory {
         }).toList();
     }
 
-    public TournamentFacets tournamentFacets(String level) {
-        requireOneOf("level", level, TOURNAMENT_LEVELS);
-
-        var rows = directory.tournamentFacets(level);
+    public TournamentFacets tournamentFacets(TournamentLevel level) {
+        var rows = directory.tournamentFacets(level.mainEventsOnly());
         var statuses = rows.stream().filter(row -> row.getFacet().equals("STATUS"))
                 .collect(Collectors.toMap(FacetRow::getValue, FacetRow::getRows));
         var regions = rows.stream().filter(row -> row.getFacet().equals("REGION")).map(FacetRow::getValue).sorted()
@@ -179,8 +201,9 @@ public class CompetitionDirectory {
 
     /** The most recent roster each team has on record; its latest tournament may have none entered yet. */
     private Map<UUID, Lineup> lineups(List<UUID> teamIds) {
-        if (teamIds.isEmpty())
+        if (teamIds.isEmpty()) {
             return Map.of();
+        }
 
         var teamList = teamIds.stream().map(UUID::toString).collect(Collectors.joining(","));
         var current = directory.lineups(teamList).stream()
@@ -236,16 +259,18 @@ public class CompetitionDirectory {
     }
 
     private static TeamRef teamRef(TeamRecord row) {
-        if (row == null)
+        if (row == null) {
             return null;
+        }
 
         var team = row.getContent();
         return new TeamRef(row.getId(), team.name(), team.shortName(), team.logoUrl());
     }
 
     private static TournamentRef tournamentRef(TournamentRecord row) {
-        if (row == null)
+        if (row == null) {
             return null;
+        }
 
         var tournament = row.getContent();
         return new TournamentRef(row.getId(), tournament.name(), tournament.logoUrl(), tournament.tier(),
@@ -261,25 +286,33 @@ public class CompetitionDirectory {
     }
 
     private static List<TournamentTier> parseTiers(String tiers) {
-        if (tiers == null)
+        if (tiers == null) {
             return List.of();
+        }
 
         return Arrays.stream(tiers.split(",")).map(TournamentTier::valueOf).sorted().toList();
     }
 
     private static void requireOneOf(String name, String value, Set<String> allowed) {
-        if (!allowed.contains(value))
-            throw TournamentErrors.invalid("Unsupported " + name + ": " + value);
+        if (!allowed.contains(value)) {
+            throw unsupported(name, value);
+        }
     }
 
     private static <E extends Enum<E>> void requireEnum(String name, String value, Class<E> type) {
-        if (value.isEmpty())
+        if (value.isEmpty()) {
             return;
+        }
 
         try {
             Enum.valueOf(type, value);
         } catch (IllegalArgumentException invalid) {
-            throw TournamentErrors.invalid("Unsupported " + name + ": " + value);
+            throw unsupported(name, value);
         }
+    }
+
+    /** A list option the client sent that the list does not have is a bad query parameter, not bad content. */
+    private static ApiException unsupported(String name, String value) {
+        return new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Unsupported " + name + ": " + value);
     }
 }

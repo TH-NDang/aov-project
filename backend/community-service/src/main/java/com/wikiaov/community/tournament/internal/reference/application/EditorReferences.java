@@ -1,12 +1,15 @@
 package com.wikiaov.community.tournament.internal.reference.application;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
 import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
 import com.wikiaov.community.tournament.internal.reference.persistence.EditorReferenceRepository;
 import com.wikiaov.community.tournament.internal.reference.persistence.EditorReferenceRepository.ReferenceRow;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -57,8 +60,9 @@ public class EditorReferences {
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
     public PageSlice<Entry> search(String query, Kind kind, List<UUID> ids, Pageable page) {
-        if (ids != null && (ids.isEmpty() || ids.size() > 50 || ids.stream().anyMatch(Objects::isNull)))
+        if (ids != null && (ids.isEmpty() || ids.size() > 50 || ids.stream().anyMatch(Objects::isNull))) {
             throw TournamentErrors.invalid("Reference lookup accepts between 1 and 50 UUIDs.");
+        }
 
         String escaped = ReferenceLabels.literalSearch(query);
         var unsorted = PageRequest.of(page.getPageNumber(), page.getPageSize());
@@ -73,11 +77,13 @@ public class EditorReferences {
     private Entry entry(ReferenceRow row) {
         var aliases = new LinkedHashSet<String>();
         aliases.add(row.getCode());
-        if (row.getShortName() != null && !row.getShortName().isBlank())
+        if (row.getShortName() != null && !row.getShortName().isBlank()) {
             aliases.add(row.getShortName());
-        if (row.getAliasesJson() != null && !row.getAliasesJson().equals("null"))
+        }
+        if (row.getAliasesJson() != null && !row.getAliasesJson().equals("null")) {
             aliases.addAll(json.readValue(row.getAliasesJson(), new TypeReference<List<String>>() {
             }));
+        }
         aliases.remove(row.getName());
         var translation = new Translation("vi-VN", row.getName(), List.copyOf(aliases), "");
         String tab = row.getKind().equals("team") ? "teams" : "players";

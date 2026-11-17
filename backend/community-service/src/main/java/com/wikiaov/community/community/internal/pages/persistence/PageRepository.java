@@ -1,8 +1,15 @@
 package com.wikiaov.community.community.internal.pages.persistence;
 
-import java.util.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
+import jakarta.persistence.LockModeType;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 
 public interface PageRepository extends JpaRepository<PageRecord, UUID> {
 
@@ -85,7 +92,7 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
     interface ActiveRow {
         UUID getId();
 
-        java.time.LocalDate getLastActiveOn();
+        LocalDate getLastActiveOn();
 
         boolean getRelated();
     }
@@ -157,7 +164,7 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
         """, nativeQuery = true)
     List<String> allMedia();
 
-    @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from PageRecord p where p.id = :id")
     Optional<PageRecord> lock(UUID id);
 
