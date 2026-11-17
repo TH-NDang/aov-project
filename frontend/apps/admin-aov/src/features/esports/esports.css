@@ -141,10 +141,6 @@
   .esp-loser .esp-logo {
     filter: grayscale(1);
   }
-  .esp-win-score {
-    color: var(--esp-ink);
-    background: var(--esp-gold-fill);
-  }
 
   .esp-num {
     font-variant-numeric: tabular-nums;
@@ -178,11 +174,6 @@
     inset: 0;
     z-index: -1;
     background: linear-gradient(90deg, oklch(0.14 0.03 265 / 0.92) 0%, oklch(0.14 0.03 265 / 0.55) 55%, transparent);
-  }
-  .esp-glass {
-    background: oklch(1 0 0 / 0.08);
-    border: 1px solid oklch(1 0 0 / 0.14);
-    backdrop-filter: blur(8px);
   }
 
   /* Logos and portraits keep their aspect and fall back to a monogram. */
@@ -235,102 +226,6 @@
     box-shadow:
       inset 0 0 0 1px var(--esp-gold),
       0 0 0 2px var(--esp-gold-soft);
-  }
-
-  /* VOD timeline */
-  /* Rows (px): blue markers 8–20, axis 38–62, red markers 80–92, ticks 108–124. */
-  .esp-track {
-    position: relative;
-    height: 124px;
-    margin-inline: 14px;
-    touch-action: none;
-    user-select: none;
-    cursor: pointer;
-  }
-  .esp-track:focus-visible {
-    outline: 2px solid var(--esp-gold);
-    outline-offset: 4px;
-    border-radius: 8px;
-  }
-  .esp-track-lane {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 36px;
-  }
-  .esp-track-lane[data-side="BLUE"] {
-    top: 2px;
-  }
-  .esp-track-lane[data-side="RED"] {
-    top: 68px;
-  }
-  .esp-track-axis {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 38px;
-    height: 24px;
-    border-radius: 999px;
-    background: var(--muted);
-    overflow: hidden;
-  }
-  .esp-track-played {
-    position: absolute;
-    inset: 0 auto 0 0;
-    background: linear-gradient(90deg, var(--esp-gold-soft), color-mix(in oklch, var(--esp-gold) 32%, transparent));
-  }
-  .esp-track-momentum {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-  .esp-marker {
-    position: absolute;
-    top: 50%;
-    display: grid;
-    place-items: center;
-    width: 26px;
-    height: 26px;
-    margin-left: -13px;
-    margin-top: -13px;
-    border-radius: 999px;
-    color: white;
-    background: var(--side, var(--esp-gold));
-    box-shadow: 0 0 0 2px var(--background);
-    transition:
-      transform 120ms ease,
-      opacity 120ms ease;
-  }
-  .esp-marker[data-kind="ITEM"] {
-    width: 20px;
-    height: 20px;
-    margin-left: -10px;
-    margin-top: -10px;
-    border-radius: 6px;
-    background: var(--card);
-    color: var(--side, var(--foreground));
-    box-shadow:
-      inset 0 0 0 1.5px var(--side, var(--border)),
-      0 0 0 2px var(--background);
-  }
-  .esp-marker[data-kind="NOTE"] {
-    background: var(--esp-gold);
-    color: var(--esp-ink);
-  }
-  .esp-marker[data-face="portrait"] {
-    background: var(--side, var(--card));
-    box-shadow:
-      0 0 0 2px var(--side, var(--border)),
-      0 0 0 4px var(--background);
-  }
-  .esp-marker[data-kind="OBJECTIVE"] {
-    width: 30px;
-    height: 30px;
-    margin-left: -15px;
-    margin-top: -15px;
-    background: transparent;
-    box-shadow: 0 0 0 2px var(--side, var(--esp-gold));
   }
   /* Match viewer: one grid so the player stays mounted while the per-game panels change. */
   .esp-viewer {
@@ -908,42 +803,6 @@
     background: var(--esp-gold);
     box-shadow: 0 0 0 2px var(--background);
   }
-  .esp-marker[data-dim="true"] {
-    opacity: 0.25;
-  }
-  .esp-marker[data-past="false"] {
-    filter: saturate(0.5);
-    opacity: 0.7;
-  }
-  .esp-marker:hover,
-  .esp-marker:focus-visible,
-  .esp-marker[data-active="true"] {
-    z-index: 3;
-    transform: scale(1.22);
-    outline: none;
-  }
-  .esp-playhead {
-    position: absolute;
-    top: 0;
-    bottom: 18px;
-    width: 2px;
-    margin-left: -1px;
-    background: var(--esp-gold);
-    pointer-events: none;
-    z-index: 4;
-  }
-  .esp-playhead::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 38px;
-    width: 16px;
-    height: 24px;
-    transform: translateX(-50%);
-    border-radius: 6px;
-    background: var(--esp-gold);
-    box-shadow: 0 2px 10px oklch(0 0 0 / 0.3);
-  }
   .esp-track-ticks {
     position: absolute;
     left: 0;
@@ -987,7 +846,6 @@
     .esp-live-dot {
       animation: none;
     }
-    .esp-marker,
     .esp-pill {
       transition: none;
     }
