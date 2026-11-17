@@ -64,7 +64,7 @@ export function PlatformIcon({ url, className }: { url: string; className?: stri
   return (
     <span className={cn("inline-flex shrink-0 items-center justify-center text-foreground", className)}>
       {platform.id === "website" ? (
-        <Globe aria-hidden className="size-4 text-sky-600 dark:text-sky-400" />
+        <Globe aria-hidden className="size-4 text-(--aov-info)" />
       ) : (
         <svg aria-hidden viewBox="0 0 24 24" className="size-[18px] overflow-visible">
           {platform.id === "tiktok" && (

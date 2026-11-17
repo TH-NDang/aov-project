@@ -390,13 +390,13 @@ export function ImageManagementPage() {
           <FilterTab
             active={needsCredit}
             onClick={() => showMissing(true)}
-            className={missingCount ? "text-amber-700 dark:text-amber-400" : undefined}
+            className={missingCount ? "text-(--aov-warning)" : undefined}
           >
             <CircleAlert aria-hidden />
             Thiếu nguồn / chủ sở hữu
             {missingCount !== undefined && (
               <span
-                className={`rounded-full px-1.5 text-xs tabular-nums ${missingCount ? "bg-amber-500/15" : "bg-muted text-muted-foreground"}`}
+                className={`rounded-full px-1.5 text-xs tabular-nums ${missingCount ? "bg-(--aov-warning-soft)" : "bg-muted text-muted-foreground"}`}
               >
                 {formatNumber(missingCount)}
               </span>
@@ -550,7 +550,7 @@ export function ImageManagementPage() {
                   {row.currentVersionId &&
                     !needsNoCredit(row.semanticType) &&
                     sourceGap(row.sources ?? []) !== "none" && (
-                      <span className="flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
+                      <span className="flex items-center gap-1 text-xs font-medium text-(--aov-warning)">
                         <CircleAlert aria-hidden className="size-3.5 shrink-0" />
                         <span className="truncate">{sourceGapLabels[sourceGap(row.sources ?? [])]}</span>
                       </span>

@@ -267,7 +267,7 @@ export function HeroSkinsView({
               className="type-meta hidden @min-[480px]/skin-tab:flex @min-[900px]/skin-tab:hidden"
             />
             {missing.length > 0 && (
-              <p className="type-meta flex items-center gap-1 text-amber-700 dark:text-amber-400">
+              <p className="type-meta flex items-center gap-1 text-(--aov-warning)">
                 <AlertTriangle className="size-3.5 shrink-0" aria-hidden="true" />
                 Thiếu {missing.join(" và ")}
                 {/* The only place an editor learns the old head is still public. */}
@@ -359,7 +359,7 @@ function SkinThumbMark({ unsaved, review, unknown }: { unsaved: boolean; review:
         unsaved
           ? "bg-primary text-primary-foreground"
           : review
-            ? "bg-amber-500 text-white"
+            ? "bg-(--aov-warning) text-white"
             : "bg-background text-muted-foreground",
       )}
     >
@@ -549,7 +549,7 @@ function SkinCaptureCompare({
             </div>
             {read !== null &&
               (same ? (
-                <span className="type-meta inline-flex shrink-0 items-center gap-1 text-emerald-700 dark:text-emerald-400">
+                <span className="type-meta inline-flex shrink-0 items-center gap-1 text-(--aov-success)">
                   <Check className="size-3.5" aria-hidden="true" />
                   Khớp
                 </span>

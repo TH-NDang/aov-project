@@ -161,7 +161,9 @@ export function HeroSharedPart({
         <Pencil className="size-4 shrink-0" />
         <span className="type-body shrink-0">Phần chung</span>
         {summary && <span className="type-meta truncate">· {summary}</span>}
-        {draft && <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-label="Có bản nháp đang mở" />}
+        {draft && (
+          <span className="size-1.5 shrink-0 rounded-full bg-(--aov-warning)" aria-label="Có bản nháp đang mở" />
+        )}
       </Button>
       <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : void leave())}>
         <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-2xl overflow-y-auto">

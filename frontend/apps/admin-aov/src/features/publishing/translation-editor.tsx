@@ -200,7 +200,7 @@ export function TranslationEditor({
                   <h3 className="break-words font-medium">{source?.name || group.label}</h3>
                 </div>
               </div>
-              <Badge variant="outline" className={complete ? "text-emerald-600" : "text-muted-foreground"}>
+              <Badge variant="outline" className={complete ? "text-(--aov-success)" : "text-muted-foreground"}>
                 {complete ? <Check className="size-3" /> : <CircleDashed className="size-3" />}
                 {complete
                   ? "Đủ nội dung"

@@ -509,7 +509,7 @@ export function SecondaryEditor({
           </TabsList>
           <div className="min-h-0 flex-auto space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
             {visibleMissing.length > 0 && (
-              <div className="type-body rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+              <div className="type-body rounded-lg border border-(--aov-warning)/30 bg-(--aov-warning-soft) p-3">
                 <p className="type-label">Cần hoàn thiện trước khi xuất bản</p>
                 <ul className="mt-1 list-disc pl-4">
                   {visibleMissing.map((field) => (

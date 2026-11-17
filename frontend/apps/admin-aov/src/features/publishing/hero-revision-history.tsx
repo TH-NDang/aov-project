@@ -155,7 +155,7 @@ function RevisionHistoryContent({
             </div>
           </div>
           {disabled && (
-            <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+            <p className="mt-3 text-xs text-(--aov-warning)">
               Bạn đang có chỉnh sửa. Lưu nội dung để đưa các thay đổi đó vào phần so sánh.
             </p>
           )}

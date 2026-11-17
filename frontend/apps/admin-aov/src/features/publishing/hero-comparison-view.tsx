@@ -48,14 +48,14 @@ export function DescriptionComparison({
           return (
             <del
               key={index}
-              className="rounded-sm bg-amber-500/15 px-0.5 font-medium text-foreground no-underline dark:bg-amber-400/20"
+              className="rounded-sm bg-(--aov-warning-soft) px-0.5 font-medium text-foreground no-underline"
             >
               {content}
             </del>
           )
         if (segment.type === "added")
           return (
-            <ins key={index} className="rounded-sm bg-sky-500/15 px-0.5 font-medium no-underline dark:bg-sky-400/20">
+            <ins key={index} className="rounded-sm bg-(--aov-info-soft) px-0.5 font-medium no-underline">
               {content}
             </ins>
           )
@@ -68,7 +68,7 @@ export function DescriptionComparison({
         <p className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-muted-foreground">
           Trước
           {previousText !== currentText && segments.some((segment) => segment.type === "removed") && (
-            <span className="rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-foreground dark:bg-amber-400/20">
+            <span className="rounded-sm bg-(--aov-warning-soft) px-1.5 py-0.5 text-foreground">
               Phần được thay hoặc bỏ
             </span>
           )}
@@ -81,7 +81,7 @@ export function DescriptionComparison({
         <p className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-muted-foreground">
           Sau
           {previousText !== currentText && segments.some((segment) => segment.type === "added") && (
-            <span className="rounded-sm bg-sky-500/15 px-1.5 py-0.5 text-foreground dark:bg-sky-400/20">Phần mới</span>
+            <span className="rounded-sm bg-(--aov-info-soft) px-1.5 py-0.5 text-foreground">Phần mới</span>
           )}
         </p>
         <div data-description-side="after" className="whitespace-pre-wrap break-words text-sm leading-7">

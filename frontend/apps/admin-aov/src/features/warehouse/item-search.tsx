@@ -124,7 +124,7 @@ export function ItemSearch({
                     </span>
                   </span>
                   {item.content.price !== null && (
-                    <span className="shrink-0 text-xs tabular-nums text-amber-600 dark:text-amber-400">
+                    <span className="shrink-0 text-xs tabular-nums text-(--aov-warning)">
                       {formatGameNumber(item.content.price)}
                     </span>
                   )}

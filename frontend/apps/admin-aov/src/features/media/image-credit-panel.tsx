@@ -28,7 +28,7 @@ export function ImageCreditPanel({
       aria-label="Nguồn và ghi công ảnh"
       className={cn(
         "space-y-2 rounded-lg border p-3 text-sm",
-        gap === "none" ? "bg-muted/30" : "border-amber-500/40 bg-amber-500/10",
+        gap === "none" ? "bg-muted/30" : "border-(--aov-warning)/40 bg-(--aov-warning-soft)",
         className,
       )}
     >
@@ -42,7 +42,7 @@ export function ImageCreditPanel({
                 {main?.ownerPageId ? <PageReference id={main.ownerPageId} label={owner} /> : owner}
               </>
             ) : (
-              <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+              <span className="flex items-center gap-1.5 text-(--aov-warning)">
                 <CircleAlert aria-hidden className="size-4 shrink-0" />
                 {gap === "missing-owner" ? "Chưa ghi chủ sở hữu" : sourceGapLabels[gap]}
               </span>
@@ -74,7 +74,7 @@ export function ImageCreditPanel({
           <PageReference id={main.relatedPageId} />
         </div>
       )}
-      {gap !== "none" && <p className="text-xs text-amber-800 dark:text-amber-200">{sourceGapHints[gap]}</p>}
+      {gap !== "none" && <p className="text-xs text-(--aov-warning)">{sourceGapHints[gap]}</p>}
       {(contact || others.length > 0 || assetId) && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-2 text-xs text-muted-foreground">
           {others.length > 0 && <span>Nguồn khác: {others.map((source) => source.label).join(" · ")}</span>}

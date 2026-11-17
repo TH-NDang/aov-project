@@ -32,8 +32,8 @@ import { SkillRankValues } from "./skill-rank-table"
 import { formatStatReading } from "./stat-reading"
 
 const provenanceTone: Record<Provenance, string> = {
-  OBSERVED: "text-emerald-700 dark:text-emerald-300",
-  DERIVED: "text-sky-700 dark:text-sky-300",
+  OBSERVED: "text-(--aov-success)",
+  DERIVED: "text-(--aov-info)",
   CARRIED: "text-muted-foreground",
 }
 const ProvenanceIcon = ({ value }: { value: Provenance }) =>

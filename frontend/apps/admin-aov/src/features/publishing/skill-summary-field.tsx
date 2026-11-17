@@ -41,7 +41,7 @@ export function SkillSummaryField({
         </label>
         <span
           id={`${id}-count`}
-          className={cn("type-meta tabular-nums", long && "text-amber-700 dark:text-amber-400")}
+          className={cn("type-meta tabular-nums", long && "text-(--aov-warning)")}
           aria-label={`${value.length} trên ${SKILL_SUMMARY_TARGET} ký tự nên dùng`}
         >
           {long && "Nên rút gọn · "}

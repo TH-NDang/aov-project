@@ -391,7 +391,7 @@ function BadgeGroupRows({
                 {row.original.translations.length} ngôn ngữ
               </p>
               {row.original.fallbackApplied && row.original.actualLocale ? (
-                <p className="mt-1 text-amber-600 dark:text-amber-400">Đang dùng {row.original.actualLocale}</p>
+                <p className="mt-1 text-(--aov-warning)">Đang dùng {row.original.actualLocale}</p>
               ) : (
                 !row.original.translations.length && (
                   <p className="mt-1 text-muted-foreground">Chưa có tên / biểu tượng</p>

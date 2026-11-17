@@ -184,7 +184,7 @@ const STAR_HEAD = (
   <div className="grid grid-cols-[minmax(84px,auto)_repeat(3,minmax(0,1fr))] gap-2">
     <span />
     {["★", "★★", "★★★"].map((star) => (
-      <span key={star} className="type-meta text-center text-amber-200">
+      <span key={star} className="type-meta text-center text-(--aov-warning)">
         {star}
       </span>
     ))}
@@ -415,7 +415,7 @@ function MasterDetail({
                           {row.meta && <span className="type-meta truncate">{row.meta}</span>}
                         </span>
                         {row.warn && (
-                          <span className="size-2 shrink-0 rounded-full bg-amber-400" title="Còn thiếu dữ liệu" />
+                          <span className="size-2 shrink-0 rounded-full bg-(--aov-warning)" title="Còn thiếu dữ liệu" />
                         )}
                       </button>
                     </li>

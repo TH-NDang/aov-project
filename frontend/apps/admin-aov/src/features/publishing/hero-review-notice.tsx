@@ -31,7 +31,7 @@ export function HeroReviewNotice({
           type="button"
           variant="ghost"
           size="sm"
-          className="shrink-0 gap-1.5 text-amber-700 dark:text-amber-400"
+          className="shrink-0 gap-1.5 text-(--aov-warning)"
           disabled={disabled}
           aria-label={`Xem ${items.length} cảnh báo cần đối chiếu từ nguồn`}
         >

@@ -62,7 +62,7 @@ export function LibraryOwner({
     </span>
   ) : (
     <span
-      className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-amber-700 dark:text-amber-400"
+      className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-(--aov-warning)"
       title={sourceGapHints[gap]}
     >
       <CircleAlert aria-hidden className="size-3.5 shrink-0" />
@@ -89,7 +89,7 @@ export function LibraryStateBadge({ state, label, ready }: { state: string; labe
       className={cn(
         "inline-flex shrink-0 items-center rounded-full border px-1.5 text-xs leading-5",
         !ready
-          ? "border-amber-500/40 text-amber-700 dark:text-amber-400"
+          ? "border-(--aov-warning)/40 text-(--aov-warning)"
           : state === "BLOCKED"
             ? "border-destructive/40 text-destructive"
             : "text-muted-foreground",
@@ -109,7 +109,7 @@ export function LibraryUsage({ usage, className }: { usage?: MediaUsageSummary |
       <span
         className={cn(
           "flex items-center gap-1 text-xs font-medium",
-          usage.state === "STORED_ONLY" && "text-amber-700 dark:text-amber-400",
+          usage.state === "STORED_ONLY" && "text-(--aov-warning)",
           (usage.state === "NONE" || usage.state === "HISTORY_ONLY") && "text-muted-foreground",
         )}
       >

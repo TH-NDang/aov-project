@@ -76,7 +76,7 @@ export function MediaSourceFields({
           onPick={(ownerName) => onChange({ ...value, ownerName })}
         />
         {ownerRequired ? (
-          <span className={ownerMissing ? "type-meta text-amber-700 dark:text-amber-400" : "type-meta"}>
+          <span className={ownerMissing ? "type-meta text-(--aov-warning)" : "type-meta"}>
             Bắt buộc khi tải ảnh mới. Chọn tên đã dùng để mọi ảnh của cùng chủ sở hữu ghi giống nhau.
           </span>
         ) : (

@@ -35,7 +35,7 @@ export function HeroImageSource({ assetId }: { assetId: string | null | undefine
     <div
       className={cn(
         "min-w-0 space-y-2 rounded-lg border p-3 text-sm",
-        asset.isSuccess && gap !== "none" ? "border-amber-500/40 bg-amber-500/5" : "bg-muted/20",
+        asset.isSuccess && gap !== "none" ? "border-(--aov-warning)/40 bg-(--aov-warning-soft)" : "bg-muted/20",
       )}
       aria-label="Nguồn ảnh"
     >
@@ -71,7 +71,7 @@ export function HeroImageSource({ assetId }: { assetId: string | null | undefine
                     {source.ownerPageId ? <PageReference id={source.ownerPageId} label={owner} /> : owner}
                   </p>
                 ) : (
-                  <p className="flex items-start gap-1.5 font-semibold text-amber-700 dark:text-amber-300">
+                  <p className="flex items-start gap-1.5 font-semibold text-(--aov-warning)">
                     <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                     {missing === "unverified" ? sourceGapLabels.unverified : "Chưa ghi chủ sở hữu"}
                   </p>
@@ -112,7 +112,7 @@ export function HeroImageSource({ assetId }: { assetId: string | null | undefine
           })}
         </ul>
       ) : (
-        <p className="flex items-start gap-1.5 font-semibold text-amber-700 dark:text-amber-300">
+        <p className="flex items-start gap-1.5 font-semibold text-(--aov-warning)">
           <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           Chưa ghi nhận nguồn cho ảnh này.
         </p>

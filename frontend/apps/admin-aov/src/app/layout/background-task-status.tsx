@@ -88,7 +88,7 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
                 }}
               >
                 <Icon
-                  className={`size-4 shrink-0 ${running ? "animate-spin text-primary" : task.status === "error" ? "text-amber-500" : "text-muted-foreground"}`}
+                  className={`size-4 shrink-0 ${running ? "animate-spin text-primary" : task.status === "error" ? "text-(--aov-warning)" : "text-muted-foreground"}`}
                 />
                 <span className="grid min-w-0 flex-1 gap-1.5 group-data-[collapsible=icon]:hidden">
                   <span className="flex items-center justify-between gap-2 text-xs font-medium">

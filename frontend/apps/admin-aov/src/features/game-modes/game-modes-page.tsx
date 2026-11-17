@@ -141,8 +141,8 @@ function modeState(mode: AdminSummary): { label: string; tone: "live" | "draft" 
 }
 
 const TONE_CLASS = {
-  live: "bg-emerald-500/15 text-emerald-300",
-  draft: "bg-amber-500/15 text-amber-200",
+  live: "bg-(--aov-success-soft) text-(--aov-success)",
+  draft: "bg-(--aov-warning-soft) text-(--aov-warning)",
   none: "bg-muted text-muted-foreground",
 } as const
 
@@ -157,7 +157,7 @@ function ModeRow({ mode }: { mode: AdminSummary }) {
         {mode.art ? (
           <img src={mode.art.url} alt="" className="size-full object-cover" loading="lazy" />
         ) : (
-          <span className="type-meta flex flex-col items-center gap-1 text-amber-200">
+          <span className="type-meta flex flex-col items-center gap-1 text-(--aov-warning)">
             <ImageIcon className="size-5" aria-hidden="true" />
             Thiếu ảnh
           </span>

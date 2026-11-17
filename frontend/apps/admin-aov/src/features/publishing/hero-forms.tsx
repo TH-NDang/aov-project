@@ -85,7 +85,7 @@ export function HeroFormSwitcher({
             <span className="type-body">{choice.label}</span>
             {choice.form && !choice.form.published && <span className="type-meta">· chưa xuất bản</span>}
             {choice.form?.draftOpen && (
-              <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-label="Có bản nháp đang mở" />
+              <span className="size-1.5 shrink-0 rounded-full bg-(--aov-warning)" aria-label="Có bản nháp đang mở" />
             )}
           </Button>
         )

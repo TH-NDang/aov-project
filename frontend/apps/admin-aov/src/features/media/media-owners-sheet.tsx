@@ -97,7 +97,7 @@ export function MediaOwnersSheet({ writable, onClose }: { writable: boolean; onC
                           )}
                         </p>
                         {similar && (
-                          <p className="type-meta text-amber-700 dark:text-amber-300">
+                          <p className="type-meta text-(--aov-warning)">
                             Gần giống “{similar.name}”. Gộp nếu là cùng một chủ sở hữu.
                           </p>
                         )}

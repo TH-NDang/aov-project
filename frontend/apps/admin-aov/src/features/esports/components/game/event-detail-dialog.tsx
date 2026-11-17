@@ -69,7 +69,7 @@ export function EventDetailDialog({
               </button>
               {youtube && (
                 <a className={action} href={youtube} target="_blank" rel="noreferrer">
-                  <Youtube size={13} className="text-red-500" /> Mở trên YouTube
+                  <Youtube size={13} className="text-destructive" /> Mở trên YouTube
                 </a>
               )}
               <button

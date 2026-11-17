@@ -381,16 +381,13 @@ function TimelineRail(props: TimelineProps & { groups: SeasonGroup[] }) {
                     "h-8 rounded-md px-1.5 sm:h-7 sm:px-2",
                     pressed ? "border-primary bg-background font-medium text-primary" : "bg-background hover:bg-accent",
                     variant.status === "DRAFT" && "border-dashed",
-                    pinned &&
-                      "border-dashed border-indigo-500/60 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
+                    pinned && "border-dashed border-(--aov-info)/60 bg-(--aov-info-soft) text-(--aov-info)",
                   )}
                 >
-                  {current && <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />}
+                  {current && <span className="size-1.5 shrink-0 rounded-full bg-(--aov-success)" aria-hidden />}
                   {pinned && <Bookmark className="size-3" aria-label="Mốc đã chọn" />}
                   <span className="truncate">{variant.patchCode}</span>
-                  {variant.status === "DRAFT" && (
-                    <span className="type-meta text-amber-700 dark:text-amber-300">Nháp</span>
-                  )}
+                  {variant.status === "DRAFT" && <span className="type-meta text-(--aov-warning)">Nháp</span>}
                   <CountBadge props={props} variant={variant} />
                   <span className="sr-only">
                     {current ? " · Đang áp dụng" : ""}

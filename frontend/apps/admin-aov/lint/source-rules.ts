@@ -95,6 +95,25 @@ const rules: Rule[] = [
         ),
   },
   {
+    name: "status colours come from the tokens, without hand-written dark variants",
+    hint: "Use text-destructive, text-(--aov-warning), bg-(--aov-success-soft) and the like (frontend/docs/DESIGN-TOKENS.md).",
+    // The change colours are a palette the editor picks from; the sign-in card is drawn on its own dark artwork.
+    files: files(source, /\.tsx?$/).filter(
+      (path) => !path.endsWith("change-color-preferences.tsx") && !path.endsWith(join("auth", "auth-gate.tsx")),
+    ),
+    offenders: (text) =>
+      text
+        .split("\n")
+        .flatMap((line, index) =>
+          [
+            ...line.matchAll(
+              /(?<![\w-])(?:dark:)?(?:text|bg|border)-(?:amber|emerald|green|red|yellow|orange|sky)-\d{2,3}(?:\/\d+)?/g,
+            ),
+            ...line.matchAll(/(?<![\w-])dark:(?:text|bg|border)-[a-z]+-\d{2,3}(?:\/\d+)?/g),
+          ].map(([match]) => `:${index + 1} ${match}`),
+        ),
+  },
+  {
     name: "admin uses only the font weights the font files provide",
     hint: "Use 400, 500, 600 or 700 (font-normal, font-medium, font-semibold, font-bold); see frontend/AGENTS.md.",
     files: files(source, /\.(tsx?|css)$/),

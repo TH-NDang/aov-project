@@ -61,7 +61,7 @@ export function useHeroShop(heroId?: string) {
 export function ReviewMark() {
   return (
     <span
-      className="type-meta inline-flex items-center gap-1 text-amber-700 dark:text-amber-400"
+      className="type-meta inline-flex items-center gap-1 text-(--aov-warning)"
       title="Chưa hiện ra Wiki cho tới khi xác nhận"
     >
       <AlertTriangle className="size-3.5 shrink-0" aria-hidden="true" />
@@ -311,7 +311,9 @@ function PriceHistory({ heroId, rows, canWrite }: { heroId: string; rows: HeroSh
                 ? `${amount(row.goldPrice)} vàng · ${amount(row.voucherPrice)} quân huy`
                 : availabilityLabels[row.availability]}
             </span>
-            {row.needsReview && <AlertTriangle className="size-3.5 shrink-0 text-amber-600" aria-label="Cần xem lại" />}
+            {row.needsReview && (
+              <AlertTriangle className="size-3.5 shrink-0 text-(--aov-warning)" aria-label="Cần xem lại" />
+            )}
             {canWrite && (
               <Button
                 type="button"
@@ -452,7 +454,9 @@ export function SkinAcquisitionEditor({
           <li key={row.capturedOn} className="type-meta flex items-center gap-2">
             <span className="w-20 shrink-0 tabular-nums">{capturedDate(row.capturedOn)}</span>
             <span className="min-w-0 flex-1 truncate text-foreground">{skinAcquisitionText(row)}</span>
-            {row.needsReview && <AlertTriangle className="size-3.5 shrink-0 text-amber-600" aria-label="Cần xem lại" />}
+            {row.needsReview && (
+              <AlertTriangle className="size-3.5 shrink-0 text-(--aov-warning)" aria-label="Cần xem lại" />
+            )}
             {canWrite && (
               <Button
                 type="button"
@@ -646,7 +650,7 @@ export function SkinAcquisitionSummary({
           active={filter === "review"}
           count={review}
           disabled={!review && filter !== "review"}
-          className={review ? "text-amber-700 dark:text-amber-400" : undefined}
+          className={review ? "text-(--aov-warning)" : undefined}
           onClick={() => onFilter("review")}
         >
           <AlertTriangle aria-hidden="true" />

@@ -113,7 +113,7 @@ export function CatalogChangeBadges({
             : kind === "INHERITED" || kind === "UNCHANGED"
               ? "border-transparent bg-muted/30 text-muted-foreground"
               : kind === "ADDED"
-                ? "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+                ? "border-(--aov-info)/25 bg-(--aov-info-soft) text-(--aov-info)"
                 : "border-border bg-muted/40 text-foreground"
         return (
           <span

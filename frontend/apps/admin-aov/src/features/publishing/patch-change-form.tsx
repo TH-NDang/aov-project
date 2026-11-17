@@ -59,7 +59,7 @@ export function PatchChangeForm({ revision, locale }: { revision: Revision; loca
       ) : recorded ? (
         <div className="space-y-2">
           <p className="flex flex-wrap items-center gap-2 text-sm">
-            <CheckCircle2 className="size-4 text-emerald-600" />
+            <CheckCircle2 className="size-4 text-(--aov-success)" />
             {savedId === recorded.id ? "Đã ghi lịch sử thay đổi." : "Patch này đã có lịch sử thay đổi của tướng."}
             <SourceBadge change={recorded} />
           </p>

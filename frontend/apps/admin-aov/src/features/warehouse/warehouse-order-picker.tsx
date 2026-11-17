@@ -197,7 +197,7 @@ export function WarehouseOrderPicker({
             </DialogDescription>
           </DialogHeader>
           {blockedReason && (
-            <p role="status" className="text-sm text-amber-600 dark:text-amber-400">
+            <p role="status" className="text-sm text-(--aov-warning)">
               {blockedReason}
             </p>
           )}

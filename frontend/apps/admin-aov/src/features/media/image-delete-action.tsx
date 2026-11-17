@@ -187,7 +187,10 @@ export function ImageDeleteAction({
             </p>
           )}
           {linked && (
-            <p role="alert" className="type-body rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+            <p
+              role="alert"
+              className="type-body rounded-lg border border-(--aov-warning)/30 bg-(--aov-warning-soft) p-3"
+            >
               Ảnh còn {references.data} liên kết, bao gồm bản nháp, lịch sử hoặc mục trong thùng rác. Gỡ liên kết trước
               khi xóa.
             </p>
@@ -195,7 +198,7 @@ export function ImageDeleteAction({
           {progress && progress.state !== "COMPLETE" && (
             <div role="status" className="space-y-2 rounded-lg border bg-muted/30 p-3">
               <p className="type-body flex items-center gap-2">
-                <Check aria-hidden className="size-4 text-emerald-600" />
+                <Check aria-hidden className="size-4 text-(--aov-success)" />
                 Đã ghi nhận yêu cầu và khóa ảnh để xóa
               </p>
               <p className="type-body">
@@ -211,7 +214,7 @@ export function ImageDeleteAction({
             </div>
           )}
           {!progress && !linked && permitted && !checking && !checkError && references.isSuccess && (
-            <p className="type-body flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+            <p className="type-body flex items-center gap-2 text-(--aov-success)">
               <Check aria-hidden className="size-4" />
               Ảnh không còn liên kết sử dụng.
             </p>

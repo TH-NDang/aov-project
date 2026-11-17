@@ -157,9 +157,7 @@ export function AssetPicker({
       )}
       <p className="text-xs text-muted-foreground">{value ? `Asset đã chọn: ${value}` : "Chưa chọn ảnh"}</p>
       {writable && sourceProblem && (
-        <p className="text-xs text-amber-700 dark:text-amber-400">
-          {sourceProblem} Chọn ảnh có sẵn trong kho không cần điền.
-        </p>
+        <p className="text-xs text-(--aov-warning)">{sourceProblem} Chọn ảnh có sẵn trong kho không cần điền.</p>
       )}
       <div className="flex flex-wrap gap-2">
         {directUpload && writable && (

@@ -287,8 +287,8 @@ function Editor({
                 className={cn(
                   "rounded-full px-2 leading-5",
                   entry.published
-                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                    : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+                    ? "bg-(--aov-success-soft) text-(--aov-success)"
+                    : "bg-(--aov-warning-soft) text-(--aov-warning)",
                 )}
               >
                 {entry.published ? "Đã xuất bản" : "Bản nháp"}
@@ -434,9 +434,9 @@ function Editor({
             {uploading || update.isPending ? (
               <LoaderCircle className="size-3.5 animate-spin" />
             ) : dirty ? (
-              <Circle className="size-3.5 text-amber-600 dark:text-amber-400" />
+              <Circle className="size-3.5 text-(--aov-warning)" />
             ) : (
-              <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+              <Check className="size-3.5 text-(--aov-success)" />
             )}
             {uploading ? "Đang tải ảnh…" : update.isPending ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : "Đã lưu"}
           </p>
@@ -455,7 +455,7 @@ function Editor({
                     className={cn(
                       "relative flex size-7 items-center justify-center rounded-md outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
                       done
-                        ? "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400"
+                        ? "bg-(--aov-success-soft) text-(--aov-success) hover:bg-(--aov-success)/20"
                         : "bg-muted text-muted-foreground hover:text-foreground",
                     )}
                   >

@@ -236,7 +236,7 @@ export function CharacterMediaViewer({
             <Badge
               variant="outline"
               className={
-                entry.main ? "gap-1 border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : ""
+                entry.main ? "gap-1 border-(--aov-success)/25 bg-(--aov-success-soft) text-(--aov-success)" : ""
               }
             >
               {entry.main && <Check className="size-3" />}

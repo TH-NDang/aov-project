@@ -54,7 +54,7 @@ export function ImageCreditSummary({
       ))}
       {ranked.length > shownOwners && <span className="type-meta">+{ranked.length - shownOwners} chủ sở hữu khác</span>}
       {missing > 0 && (
-        <span className="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+        <span className="inline-flex items-center gap-1.5 text-(--aov-warning)">
           <CircleAlert aria-hidden="true" className="size-3.5 shrink-0" />
           {missing} ảnh chưa đủ nguồn hoặc chủ sở hữu
         </span>

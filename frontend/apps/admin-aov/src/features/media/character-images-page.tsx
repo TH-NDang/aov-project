@@ -43,7 +43,7 @@ function MainImageMarker({ entry }: { entry: CharacterImageEntry }) {
       role="img"
       aria-label="Ảnh chính"
       title="Ảnh chính"
-      className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 border-background bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-950 dark:text-emerald-300"
+      className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 border-background bg-(--aov-success-soft) text-(--aov-success) shadow-sm"
     >
       <Check className="size-3" strokeWidth={3} />
     </span>

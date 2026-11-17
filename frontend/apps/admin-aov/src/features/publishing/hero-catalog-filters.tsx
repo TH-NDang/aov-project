@@ -66,7 +66,7 @@ export function HeroCatalogFilters() {
             onChange={(event) => update({ hasWarnings: event.target.checked ? "true" : "" })}
             className="size-4 accent-primary"
           />
-          <AlertTriangle className="size-4 text-amber-600" /> Có cảnh báo chưa đối chiếu
+          <AlertTriangle className="size-4 text-(--aov-warning)" /> Có cảnh báo chưa đối chiếu
         </label>
         <fieldset className="space-y-2">
           <legend className="type-label mb-2">Đường</legend>

@@ -168,9 +168,9 @@ function Fact({ ok, label, children }: { ok: boolean; label: string; children: R
   return (
     <div className="flex items-start gap-2.5 py-2">
       {ok ? (
-        <Check aria-label="Có" className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        <Check aria-label="Có" className="mt-0.5 size-4 shrink-0 text-(--aov-success)" />
       ) : (
-        <X aria-label="Thiếu" className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+        <X aria-label="Thiếu" className="mt-0.5 size-4 shrink-0 text-(--aov-warning)" />
       )}
       <div className="min-w-0 flex-1">
         <p className="type-meta">{label}</p>
@@ -405,7 +405,7 @@ export function ImageDetailSheet({
                     <p
                       className={cn(
                         "mt-0.5 truncate text-sm font-semibold",
-                        item.tone === "warn" && "text-amber-700 dark:text-amber-400",
+                        item.tone === "warn" && "text-(--aov-warning)",
                         item.tone === "muted" && "text-muted-foreground",
                       )}
                     >
@@ -437,15 +437,12 @@ export function ImageDetailSheet({
                     className={cn(
                       "flex items-start gap-2 rounded-lg border p-3 text-sm",
                       gap === "none"
-                        ? "border-emerald-500/30 bg-emerald-500/5"
-                        : "border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200",
+                        ? "border-(--aov-success)/30 bg-(--aov-success-soft)"
+                        : "border-(--aov-warning)/30 bg-(--aov-warning-soft) text-(--aov-warning)",
                     )}
                   >
                     {gap === "none" ? (
-                      <CircleCheck
-                        aria-hidden
-                        className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
-                      />
+                      <CircleCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-(--aov-success)" />
                     ) : (
                       <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
                     )}
@@ -483,9 +480,7 @@ export function ImageDetailSheet({
                               label={source.ownerName?.trim() || "Hồ sơ chủ sở hữu"}
                             />
                           ) : (
-                            source.ownerName?.trim() || (
-                              <span className="text-amber-700 dark:text-amber-400">Chưa ghi</span>
-                            )
+                            source.ownerName?.trim() || <span className="text-(--aov-warning)">Chưa ghi</span>
                           )}
                         </Fact>
                         {source.relatedPageId && (

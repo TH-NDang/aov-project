@@ -84,16 +84,16 @@ export function HeroLanguagePicker({
           <span className="flex shrink-0 items-center gap-2">
             {!!progress?.missing.length && (
               <span
-                className={`type-label rounded bg-amber-500/10 px-1.5 py-0.5 text-amber-700 dark:text-amber-400 ${compact ? "hidden" : ""}`}
+                className={`type-label rounded bg-(--aov-warning-soft) px-1.5 py-0.5 text-(--aov-warning) ${compact ? "hidden" : ""}`}
               >
                 {progress.exists ? `Thiếu ${progress.missing.length}` : "Chưa dịch"}
               </span>
             )}
             {compact && !!progress?.missing.length && (
-              <span className="size-1.5 rounded-full bg-amber-500" aria-hidden />
+              <span className="size-1.5 rounded-full bg-(--aov-warning)" aria-hidden />
             )}
             {!compact && !!progress?.totalFields && !progress.missing.length && (
-              <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-label="Đủ nội dung" />
+              <CheckCircle2 className="size-3.5 text-(--aov-success)" aria-label="Đủ nội dung" />
             )}
             <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
           </span>
@@ -161,9 +161,7 @@ export function HeroLanguageItems({
               <span className="min-w-0 flex-1">
                 <span className="type-body block">{option.label}</span>
                 {optionProgress && (
-                  <span
-                    className={`type-meta mt-0.5 block ${complete ? "text-emerald-600 dark:text-emerald-400" : ""}`}
-                  >
+                  <span className={`type-meta mt-0.5 block ${complete ? "text-(--aov-success)" : ""}`}>
                     {translationStatusLabel(optionProgress)}
                   </span>
                 )}

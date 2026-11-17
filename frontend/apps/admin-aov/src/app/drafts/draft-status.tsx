@@ -60,7 +60,7 @@ export function DraftStatusControl({
           size="sm"
           aria-label={description}
           title={description}
-          className={`h-8 shrink-0 gap-1.5 px-2 ${warning ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"}`}
+          className={`h-8 shrink-0 gap-1.5 px-2 ${warning ? "text-(--aov-warning)" : "text-muted-foreground"}`}
         >
           <Icon aria-hidden className={`size-4 ${pending && !warning ? "animate-spin" : ""}`} />
           {warning ? (
@@ -160,7 +160,7 @@ export function DraftStatus({
         </p>
       )}
       {draft.conflict && (
-        <div role="alert" className="space-y-2 text-amber-700 dark:text-amber-300">
+        <div role="alert" className="space-y-2 text-(--aov-warning)">
           <p>
             Dữ liệu trên máy chủ đã thay đổi kể từ lúc bắt đầu nháp. Nháp của bạn vẫn được giữ; đối chiếu nội dung trước
             khi lưu.

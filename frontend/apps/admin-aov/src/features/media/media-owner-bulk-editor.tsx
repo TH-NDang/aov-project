@@ -149,7 +149,7 @@ export function MediaOwnerBulkEditor({
                       <LoaderCircle aria-label="Đang lưu" className="size-4 animate-spin" />
                     )}
                     {result?.state === "success" && (
-                      <CircleCheck aria-label="Đã lưu" className="size-4 text-emerald-600 dark:text-emerald-400" />
+                      <CircleCheck aria-label="Đã lưu" className="size-4 text-(--aov-success)" />
                     )}
                     {(result?.state === "error" || result?.state === "changed") && (
                       <CircleAlert aria-label="Chưa lưu" className="size-4 text-destructive" />

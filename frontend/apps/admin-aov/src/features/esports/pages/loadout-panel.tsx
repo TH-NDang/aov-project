@@ -218,7 +218,7 @@ export function LoadoutPanel({
                     {value?.playerId ? (
                       <span className="max-w-20 truncate">{entry.playerName}</span>
                     ) : (
-                      <span className="text-amber-600 dark:text-amber-400">Chưa ghi</span>
+                      <span className="text-(--aov-warning)">Chưa ghi</span>
                     )}
                     <SeatDots participant={value} />
                   </button>
@@ -321,7 +321,7 @@ export function LoadoutPanel({
               onChange={(event) => updateSeat(seat, (value) => ({ ...value, playerId: event.target.value || null }))}
               className={cn(
                 "h-8 max-w-full min-w-44 rounded-md border bg-background px-2 text-sm font-semibold",
-                !participant.playerId && "border-dashed border-amber-500 text-amber-600 dark:text-amber-400",
+                !participant.playerId && "border-dashed border-(--aov-warning) text-(--aov-warning)",
               )}
             >
               <option value="">Chưa ghi tuyển thủ</option>

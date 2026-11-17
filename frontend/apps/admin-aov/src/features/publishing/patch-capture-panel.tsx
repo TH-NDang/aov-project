@@ -488,7 +488,7 @@ function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: Cap
         <Badge
           variant={image.link === "REVIEWED" ? "secondary" : "outline"}
           title={captureLinkHints[image.link]}
-          className={cn(image.link !== "REVIEWED" && "border-amber-500/40 text-amber-700 dark:text-amber-400")}
+          className={cn(image.link !== "REVIEWED" && "border-(--aov-warning)/40 text-(--aov-warning)")}
         >
           {captureLinkLabels[image.link]}
         </Badge>
@@ -503,11 +503,11 @@ function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: Cap
       {image.notes.length > 0 && (
         <div
           aria-label="Ghi chú rà soát"
-          className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-5 [overflow-wrap:anywhere]"
+          className="space-y-2 rounded-lg border border-(--aov-warning)/25 bg-(--aov-warning-soft) p-3 text-xs leading-5 [overflow-wrap:anywhere]"
         >
           {image.notes.map((note) => (
             <p key={note} className="flex gap-2">
-              <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600" />
+              <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-(--aov-warning)" />
               {note}
             </p>
           ))}
@@ -727,8 +727,8 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
         </div>
       )}
       {state.status === "ready" && viewedPatchCode !== patchCode && !group?.shop && (
-        <p role="note" className="flex shrink-0 gap-2 border-b bg-amber-500/5 px-3 py-2 text-xs leading-5">
-          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600" />
+        <p role="note" className="flex shrink-0 gap-2 border-b bg-(--aov-warning-soft) px-3 py-2 text-xs leading-5">
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-(--aov-warning)" />
           Bản đang xem thuộc patch {viewedPatchCode ?? "chưa rõ"}; các ảnh này của patch {patchCode}.
         </p>
       )}

@@ -430,8 +430,8 @@ function RevisionState({ tone, label, detail }: { tone: "published" | "draft"; l
         className={cn(
           "gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-medium",
           tone === "draft"
-            ? "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-            : "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+            ? "border-(--aov-warning)/20 bg-(--aov-warning-soft) text-(--aov-warning)"
+            : "border-(--aov-success)/20 bg-(--aov-success-soft) text-(--aov-success)",
         )}
       >
         <span aria-hidden className="size-1.5 rounded-full bg-current" />
@@ -459,7 +459,7 @@ function BlockerAction({
     "type-body flex w-full cursor-pointer gap-2 rounded-md text-left underline-offset-4 hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
   const content = (
     <>
-      <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-amber-500" />
+      <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-(--aov-warning)" />
       {blocker.message}
     </>
   )
@@ -527,8 +527,8 @@ function CaptureOverview({
 }
 
 const weightTone: Record<SourceGapWeight, string> = {
-  UNBLOCKS: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  MISSING_DATA: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  UNBLOCKS: "border-(--aov-success)/20 bg-(--aov-success-soft) text-(--aov-success)",
+  MISSING_DATA: "border-(--aov-warning)/20 bg-(--aov-warning-soft) text-(--aov-warning)",
   UNCHECKED: "border-border bg-muted text-muted-foreground",
   MINOR: "border-border bg-muted text-muted-foreground",
 }

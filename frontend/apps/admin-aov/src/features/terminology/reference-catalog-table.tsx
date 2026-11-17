@@ -235,7 +235,7 @@ export function ReferenceCatalogTable({
             <Button
               size="sm"
               variant="ghost"
-              className={`h-8 gap-1.5 rounded-lg border px-2.5 text-xs ${missingTranslation ? "border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-200" : "border-border bg-background text-foreground/80"}`}
+              className={`h-8 gap-1.5 rounded-lg border px-2.5 text-xs ${missingTranslation ? "border-(--aov-warning)/50 bg-(--aov-warning-soft) text-(--aov-warning)" : "border-border bg-background text-foreground/80"}`}
               aria-label="Thiếu bản dịch"
               aria-pressed={missingTranslation}
               onClick={() => {
@@ -352,9 +352,7 @@ export function ReferenceCatalogTable({
                           <ChevronRight aria-hidden className="size-3.5" />
                         </span>
                       </button>
-                      {!available && (
-                        <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">Thiếu dữ liệu gốc</p>
-                      )}
+                      {!available && <p className="mt-2 text-xs text-(--aov-warning)">Thiếu dữ liệu gốc</p>}
                       {entity.kind !== "term" && customKeys.has(key) && (
                         <p className="mt-2 text-xs text-muted-foreground">Có tùy chỉnh</p>
                       )}
@@ -386,7 +384,7 @@ export function ReferenceCatalogTable({
                         ))}
                       </div>
                       {!translated && (
-                        <span className="mt-1.5 block text-xs text-amber-600 dark:text-amber-400">
+                        <span className="mt-1.5 block text-xs text-(--aov-warning)">
                           {text ? `Đang dùng ${text.locale}` : "Chưa có bản dịch"}
                         </span>
                       )}

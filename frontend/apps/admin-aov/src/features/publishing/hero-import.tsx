@@ -504,7 +504,7 @@ export function HeroImport({
       </div>
       <div
         role={pendingTransfer ? "alert" : "note"}
-        className="mx-5 mt-5 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm"
+        className="mx-5 mt-5 flex items-start gap-2 rounded-lg border border-(--aov-warning)/30 bg-(--aov-warning-soft) p-3 text-sm"
       >
         <AlertCircle className="mt-0.5 size-4 shrink-0" />
         <div>
@@ -522,7 +522,7 @@ export function HeroImport({
         </div>
       </div>
       {!context && (
-        <div className="mx-5 mt-5 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
+        <div className="mx-5 mt-5 flex items-start gap-2 rounded-lg border border-(--aov-warning)/30 bg-(--aov-warning-soft) p-3 text-sm">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
           Chọn mùa và patch phía trên để bắt đầu. Dữ liệu sẽ được ghi nhận từ mốc đã chọn.
         </div>
@@ -578,7 +578,7 @@ export function HeroImport({
               </label>
             ))}
           {capture.rows.some((row) => !row.code) && (
-            <p className="text-sm text-amber-700 dark:text-amber-400">
+            <p className="text-sm text-(--aov-warning)">
               Xác nhận hai bản Flowborn trước khi nhập để tránh tạo tướng trùng hoặc gắn nhầm dạng.
             </p>
           )}
@@ -1036,7 +1036,7 @@ export function HeroImport({
                         {entry.input.code || `Dòng ${i + 1}`}
                       </label>
                       <span
-                        className={`rounded-full border px-2.5 py-1 text-xs ${entry.result ? "border-emerald-500/30 text-emerald-600" : "text-muted-foreground"}`}
+                        className={`rounded-full border px-2.5 py-1 text-xs ${entry.result ? "border-(--aov-success)/30 text-(--aov-success)" : "text-muted-foreground"}`}
                       >
                         {entry.result ||
                           (entry.error ? "Cần xử lý" : entry.plan && IMPORT_STATUS[entry.plan.classification])}

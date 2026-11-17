@@ -445,9 +445,7 @@ function CurrentPatchCard({ locale }: { locale: string }) {
               </div>
             </dl>
             {pending > 0 && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                {pending} lịch phát hành đang chờ xác nhận áp dụng.
-              </p>
+              <p className="text-xs text-(--aov-warning)">{pending} lịch phát hành đang chờ xác nhận áp dụng.</p>
             )}
             <Button asChild variant="outline" size="sm">
               <Link to={`/game-configuration?season=${variant.seasonId ?? ""}&patch=${variant.id}`}>

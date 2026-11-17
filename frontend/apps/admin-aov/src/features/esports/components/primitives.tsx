@@ -281,7 +281,7 @@ export { VIDEO_MARK }
 /** The red video mark used beside broadcast positions. */
 export function VideoMark({ className }: { className?: string }) {
   return (
-    <span aria-hidden="true" className={cn("text-red-500", className)}>
+    <span aria-hidden="true" className={cn("text-destructive", className)}>
       {VIDEO_MARK}
     </span>
   )
@@ -316,7 +316,7 @@ export function TimeTag({
       title={TIME_TAGS[kind].label}
       aria-label={`${TIME_TAGS[kind].label} ${seconds == null ? "chưa rõ" : text}`}
     >
-      <span aria-hidden="true" className={kind === "video" ? "text-[0.8em] text-red-500" : "text-[0.85em]"}>
+      <span aria-hidden="true" className={kind === "video" ? "text-[0.8em] text-destructive" : "text-[0.85em]"}>
         {TIME_TAGS[kind].mark}
       </span>
       {seconds == null ? "--:--" : text}

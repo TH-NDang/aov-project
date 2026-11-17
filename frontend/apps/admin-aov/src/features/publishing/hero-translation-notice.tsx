@@ -45,7 +45,7 @@ export function HeroTranslationNotice({
           variant="ghost"
           size="sm"
           disabled={disabled}
-          className="h-7 shrink-0 gap-1.5 rounded-full bg-amber-500/10 px-2 text-amber-700 hover:bg-amber-500/15 dark:text-amber-400"
+          className="h-7 shrink-0 gap-1.5 rounded-full bg-(--aov-warning-soft) px-2 text-(--aov-warning) hover:bg-(--aov-warning)/15"
           aria-label={`Xem ${missing.length} mục chưa dịch: ${fields.map((field) => translationFieldLabel(section, field)).join(", ")}`}
         >
           <Languages className="size-3.5" />

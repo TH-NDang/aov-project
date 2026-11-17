@@ -117,7 +117,7 @@ export function LanguagePicker({
           aria-description={current.label}
         >
           <HeroLanguageIcon locale={value} />
-          {!current.complete && <span className="size-1.5 rounded-full bg-amber-500" aria-hidden />}
+          {!current.complete && <span className="size-1.5 rounded-full bg-(--aov-warning)" aria-hidden />}
           <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
         </Button>
       </DropdownMenuTrigger>
@@ -145,7 +145,7 @@ export function LanguagePicker({
                   <span className="min-w-0 flex-1">
                     <span className="type-body block">{option.label}</span>
                     <span
-                      className={`type-meta mt-0.5 block ${row.complete && row.total ? "text-emerald-600 dark:text-emerald-400" : ""}`}
+                      className={`type-meta mt-0.5 block ${row.complete && row.total ? "text-(--aov-success)" : ""}`}
                     >
                       {row.label}
                     </span>

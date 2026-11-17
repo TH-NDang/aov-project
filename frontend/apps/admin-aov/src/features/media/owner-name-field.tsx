@@ -65,7 +65,7 @@ export function OwnerNameHints({
     <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
       {similar ? (
         <p role="status" className="type-meta flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-amber-700 dark:text-amber-300">
+          <span className="text-(--aov-warning)">
             Gần giống chủ sở hữu đã có: <span className="font-semibold">{similar.name}</span>
           </span>
           <button

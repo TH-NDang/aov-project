@@ -906,7 +906,7 @@ export function PublishingWorkspace({
               />
             </div>
             {sourceLocale === locale && (
-              <p role="status" className="text-sm text-amber-600 @min-[600px]:col-span-2">
+              <p role="status" className="text-sm text-(--aov-warning) @min-[600px]:col-span-2">
                 Chọn ngôn ngữ đích khác nguồn để bắt đầu biên dịch.
               </p>
             )}
@@ -924,7 +924,7 @@ export function PublishingWorkspace({
                 onClick={() => setSection(key)}
               >
                 {label}
-                {dirty.has(key) && <span className="size-1.5 rounded-full bg-amber-500" aria-label="Chưa lưu" />}
+                {dirty.has(key) && <span className="size-1.5 rounded-full bg-(--aov-warning)" aria-label="Chưa lưu" />}
               </Button>
             ))}
           </div>

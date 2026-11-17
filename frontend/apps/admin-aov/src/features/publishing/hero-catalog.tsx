@@ -288,8 +288,8 @@ export function HeroCatalog({
                       className={cn(
                         "gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-medium",
                         r.state === "DRAFT"
-                          ? "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                          ? "border-(--aov-warning)/20 bg-(--aov-warning-soft) text-(--aov-warning)"
+                          : "border-(--aov-success)/20 bg-(--aov-success-soft) text-(--aov-success)",
                       )}
                     >
                       <span aria-hidden className="size-1.5 rounded-full bg-current" />

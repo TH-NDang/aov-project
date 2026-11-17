@@ -367,7 +367,7 @@ export const VodPlayer = forwardRef<
   if (failed)
     return (
       <div className="flex aspect-video flex-col items-center justify-center gap-3 rounded-xl bg-[var(--esp-ink)] p-6 text-center text-sm text-white/80">
-        <Youtube size={28} className="text-red-500" />
+        <Youtube size={28} className="text-destructive" />
         Không tải được trình phát YouTube (có thể bị chặn bởi trình duyệt hoặc mạng).
         <a
           className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-white hover:bg-white/20"
@@ -607,7 +607,7 @@ export const VodPlayer = forwardRef<
             aria-label="Xem trên YouTube"
             title="Xem trên YouTube"
           >
-            <Youtube size={16} className="text-red-500" />
+            <Youtube size={16} className="text-destructive" />
           </a>
         </div>
       </div>

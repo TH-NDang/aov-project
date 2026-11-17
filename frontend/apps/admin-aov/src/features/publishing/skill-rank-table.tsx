@@ -62,7 +62,7 @@ export function SkillRankComparison({ data, label, locale }: { data: RankCompari
                       data-rank-changed={data.changed[index] || undefined}
                       className={cn(
                         "px-2 py-3 text-center align-top",
-                        data.changed[index] && (side === "before" ? "bg-amber-500/10" : "bg-sky-500/10"),
+                        data.changed[index] && (side === "before" ? "bg-(--aov-warning-soft)" : "bg-(--aov-info-soft)"),
                       )}
                     >
                       {value === null ? (
@@ -109,7 +109,8 @@ function RankCells({
   changed: boolean[]
   side: "before" | "after" | "same"
 }) {
-  const tone = (on: boolean) => on && (side === "before" ? "bg-amber-500/10" : side === "after" ? "bg-sky-500/10" : "")
+  const tone = (on: boolean) =>
+    on && (side === "before" ? "bg-(--aov-warning-soft)" : side === "after" ? "bg-(--aov-info-soft)" : "")
   const value = (text: string | null) =>
     text === null ? (
       <span className="text-muted-foreground">

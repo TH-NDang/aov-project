@@ -73,7 +73,7 @@ export function PublishButton({
             onPublish()
           }}
         >
-          {blocked ? <AlertTriangle className="size-4 text-amber-600" /> : <Send className="size-4" />}
+          {blocked ? <AlertTriangle className="size-4 text-(--aov-warning)" /> : <Send className="size-4" />}
           {publishing ? "Đang xuất bản…" : "Xuất bản"}
         </Button>
       </PopoverTrigger>
@@ -93,7 +93,7 @@ export function PublishButton({
           <ul className="space-y-2">
             {issues.map((issue) => (
               <li key={issue} className="type-body flex gap-2">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-amber-500" />
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-(--aov-warning)" />
                 {issue}
               </li>
             ))}

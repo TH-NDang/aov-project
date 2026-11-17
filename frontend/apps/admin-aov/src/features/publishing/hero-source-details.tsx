@@ -126,10 +126,10 @@ export function SkillSourceDetails({
   const provenance = (
     <>
       {notes.length > 0 && (
-        <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-5 text-muted-foreground">
+        <div className="space-y-2 rounded-lg border border-(--aov-warning)/25 bg-(--aov-warning-soft) p-3 text-xs leading-5 text-muted-foreground">
           {notes.map((note) => (
             <p key={note} className="flex gap-2">
-              <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600" />
+              <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-(--aov-warning)" />
               {note}
             </p>
           ))}
@@ -259,7 +259,7 @@ export function SkillSourceDetails({
                         {row.label}
                         {row.reviewRequired && (
                           <span title="Nhãn và giá trị cần đối chiếu nguồn">
-                            <AlertTriangle className="size-3 shrink-0 text-amber-600" />
+                            <AlertTriangle className="size-3 shrink-0 text-(--aov-warning)" />
                             <span className="sr-only">Cần đối chiếu</span>
                           </span>
                         )}
@@ -291,7 +291,7 @@ export function SkillSourceDetails({
         <details data-review-source className="group/source border-t pt-3">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-xs text-muted-foreground [&::-webkit-details-marker]:hidden">
             {notes.length > 0 ? (
-              <AlertTriangle className="size-3.5 text-amber-600" />
+              <AlertTriangle className="size-3.5 text-(--aov-warning)" />
             ) : (
               <ExternalLink className="size-3.5" />
             )}

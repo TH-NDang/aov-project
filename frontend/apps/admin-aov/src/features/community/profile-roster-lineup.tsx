@@ -180,7 +180,7 @@ function Member({
       {position.captain && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span tabIndex={0} aria-label="Đội trưởng" className="shrink-0 text-amber-600 dark:text-amber-400">
+            <span tabIndex={0} aria-label="Đội trưởng" className="shrink-0 text-(--aov-warning)">
               <Crown className="size-3.5" />
             </span>
           </TooltipTrigger>
