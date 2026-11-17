@@ -70,8 +70,8 @@ export function seasonName(name: string, circuit?: string | null) {
 }
 
 /**
- * A competition in a grid: its mark, name, dates and size, and on the last line either where it stands or, once an
- * editor has recorded the result, who won it. `within` names the circuit the card is listed under.
+ * A competition in a grid: its mark, name, dates and size, and on the last line either where it stands or, once the
+ * final table names a champion, who won it. `within` names the circuit the card is listed under.
  */
 export function CompetitionCard({ entry, within }: { entry: CompetitionView; within?: string | null }) {
   const { text } = useStreamLocale()

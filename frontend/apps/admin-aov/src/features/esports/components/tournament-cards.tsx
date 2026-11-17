@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react"
 import type { TournamentContent } from "@aov/community-contracts"
 import { CalendarDays, ExternalLink, MapPin, Swords, Trophy, Users } from "lucide-react"
+import { tournamentPodium } from "@aov/ui/lib/tournament-podium"
 import { cn } from "@aov/ui/lib/utils"
 import arenaBanner from "../assets/arena-banner.webp"
 import { FORMAT_LABELS, VENUE_LABELS, dateRange, regionName, seasonProgress } from "../model/labels"
@@ -68,7 +69,7 @@ export function TournamentBanner({
           {[
             { icon: Users, label: "Đội", value: stats.teams },
             { icon: Swords, label: "Trận đã đấu", value: `${stats.played}/${stats.matches}` },
-            { icon: Trophy, label: "Vô địch", value: content.result?.winnerName ?? "Chưa có" },
+            { icon: Trophy, label: "Vô địch", value: tournamentPodium(content)?.winner.name ?? "Chưa có" },
           ].map((item) => (
             <div key={item.label} className="esp-glass rounded-xl px-3 py-2">
               <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-white/60">
@@ -158,6 +159,7 @@ export function TournamentCard({
 
 /** Liquipedia-style infobox with only the fields the record actually holds. */
 export function TournamentInfobox({ content, teams }: { content: TournamentContent; teams: number }) {
+  const podium = tournamentPodium(content)
   const rows: [string, ReactNode][] = [
     ["Khu vực", regionName(content.region)],
     ["Thể thức", content.competitionType ? FORMAT_LABELS[content.competitionType] : null],
@@ -168,15 +170,14 @@ export function TournamentInfobox({ content, teams }: { content: TournamentConte
     ["Số đội", teams || null],
     [
       "Vô địch",
-      content.result ? (
+      podium ? (
         <span className="font-semibold">
-          {content.result.winnerName}
-          {content.result.winnerScore != null &&
-            ` (${content.result.winnerScore}–${content.result.runnerUpScore ?? "?"})`}
+          {podium.winner.name}
+          {podium.score && ` (${podium.score})`}
         </span>
       ) : null,
     ],
-    ["Á quân", content.result?.runnerUpName ?? null],
+    ["Á quân", podium?.runnerUp?.name ?? null],
   ]
   return (
     <aside className="overflow-hidden rounded-xl border bg-card text-sm">

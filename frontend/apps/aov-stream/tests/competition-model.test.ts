@@ -206,10 +206,26 @@ const tournament = (result?: Partial<NonNullable<TournamentContent["result"]>> |
     result: result && { sourceUrl: "", verification: "PRIMARY", ...result },
   }) as TournamentContent
 
-test("the champion is read only from a recorded result", () => {
+test("a competition without a final table or a recorded champion has no champion", () => {
   assert.equal(champion(tournament(), teams), null)
   assert.equal(champion(tournament(null), teams), null)
   assert.equal(champion(tournament({ winnerName: "", runnerUpName: "BOOM Esports" }), teams), null)
+})
+
+test("the champion saved in the final table is matched to its team by id", () => {
+  const finished = {
+    ...tournament(),
+    placements: [
+      { place: "1", teamId: "fpl", teamName: "FPT Polytechnic", lastOpponent: "BOOM Esports", lastScore: "4-2" },
+      { place: "2", teamId: "bme", teamName: "BOOM Esports" },
+    ],
+  }
+
+  const won = champion(finished, teams)
+
+  assert.equal(won?.winner, teams.fpl)
+  assert.equal(won?.runnerUp, teams.bme)
+  assert.equal(won?.score, "4–2")
 })
 
 test("the champion and the runner-up are matched to their teams by full or short name", () => {

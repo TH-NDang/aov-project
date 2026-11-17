@@ -5,6 +5,7 @@ import type {
   TeamContent,
   TournamentContent,
 } from "@aov/community-contracts"
+import { tournamentPodium, type PodiumTeam } from "@aov/ui/lib/tournament-podium"
 import { matchState, type CompetitionMatch } from "./match-model.ts"
 
 /** A match is treated as under way for this long after its start when no score has been entered yet. */
@@ -154,19 +155,17 @@ export function codeName(names: CodeNames, code: string | null | undefined, text
   return pair && text(pair[0], pair[1])
 }
 
-/** The champion of a finished competition, only when an editor recorded the result. */
+/** The champion of a finished competition, from its final table or the result an editor typed by hand. */
 export function champion(tournament: TournamentContent, teams: Record<string, TeamContent>) {
-  const result = tournament.result
-  if (!result?.winnerName) return null
-  const find = (name: string) => Object.values(teams).find((team) => team.name === name || team.shortName === name)
-  return {
-    winner: find(result.winnerName) ?? { code: "", name: result.winnerName },
-    runnerUp: result.runnerUpName ? (find(result.runnerUpName) ?? { code: "", name: result.runnerUpName }) : null,
-    score:
-      result.winnerScore != null && result.runnerUpScore != null
-        ? `${result.winnerScore}–${result.runnerUpScore}`
-        : null,
-  }
+  const podium = tournamentPodium(tournament)
+  if (!podium) return null
+  const find = (side: PodiumTeam) =>
+    (side.teamId ? teams[side.teamId] : undefined) ??
+    Object.values(teams).find((team) => team.name === side.name || team.shortName === side.name) ?? {
+      code: "",
+      name: side.name,
+    }
+  return { winner: find(podium.winner), runnerUp: podium.runnerUp && find(podium.runnerUp), score: podium.score }
 }
 
 /** Newest first; competitions without dates go last. */
