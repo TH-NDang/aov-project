@@ -296,6 +296,38 @@ test("final places follow the bracket and wait for matches that are not played",
   )
 })
 
+test("the champion line carries the grand final score, so the podium can show it", async () => {
+  const { tournamentPodium } = await import("@aov/ui/lib/tournament-podium")
+  const finished = played.map((entry) =>
+    entry.key === "LF" ? row("LF", "sgp", "bme", 4, 1) : entry.key === "GF" ? row("GF", "fpl", "sgp", 2, 4) : entry,
+  )
+
+  const lines = suggestedPlacements(plan(playoffs), finished, [], teams)
+
+  assert.deepEqual(
+    lines.slice(0, 3).map((line) => [line.place, line.lastOpponent, line.lastScore]),
+    [
+      ["1", "FPL", "4–2"],
+      ["2", "SGP", "2–4"],
+      ["3", "SGP", "1–4"],
+    ],
+  )
+  const podium = tournamentPodium({
+    placements: lines.map((line) => ({
+      place: line.place,
+      teamId: line.teamId,
+      teamName: line.teamName,
+      lastOpponent: line.lastOpponent,
+      lastScore: line.lastScore,
+    })),
+  })
+  assert.deepEqual(podium, {
+    winner: { teamId: "sgp", name: "SGP" },
+    runnerUp: { teamId: "fpl", name: "FPL" },
+    score: "4–2",
+  })
+})
+
 test("only required checks block publishing, and final places wait until the last match", () => {
   const checks = workspaceChecks({
     plan: plan(playoffs),

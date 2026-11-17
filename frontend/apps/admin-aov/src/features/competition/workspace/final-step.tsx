@@ -30,8 +30,9 @@ export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
             teamName: line.teamName,
             prizeUsd: kept?.prizeUsd ?? null,
             prizeLocal: kept?.prizeLocal ?? null,
-            lastOpponent: kept?.lastOpponent ?? null,
-            lastScore: kept?.lastScore ?? null,
+            // The bracket knows the last match of each team; a line it cannot read keeps what was typed.
+            lastOpponent: line.lastOpponent ?? kept?.lastOpponent ?? null,
+            lastScore: line.lastScore ?? kept?.lastScore ?? null,
           }
         }),
       }),

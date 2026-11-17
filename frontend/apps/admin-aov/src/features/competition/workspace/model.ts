@@ -551,7 +551,15 @@ export function pendingChanges(draft: CompetitionSnapshot, published: Competitio
   return changes
 }
 
-export type SuggestedPlacement = { place: string; teamId?: string; teamName: string; reason: string }
+export type SuggestedPlacement = {
+  place: string
+  teamId?: string
+  teamName: string
+  reason: string
+  /** The team's last match in the bracket: who it played and the score from its side, such as "4–2". */
+  lastOpponent?: string
+  lastScore?: string
+}
 
 /**
  * Final ranking read from a linked elimination bracket: the final gives first and second, each match whose loser goes
@@ -573,7 +581,15 @@ export function suggestedPlacements(
     const row = index.get(key)
     if (!row || !hasScore(row) || !row.consistent || row.scoreA === row.scoreB) return null
     const aWon = row.scoreA! > row.scoreB!
-    return { winner: aWon ? row.teamAId : row.teamBId, loser: aWon ? row.teamBId : row.teamAId, row }
+    const high = Math.max(row.scoreA!, row.scoreB!)
+    const low = Math.min(row.scoreA!, row.scoreB!)
+    return {
+      winner: aWon ? row.teamAId : row.teamBId,
+      loser: aWon ? row.teamBId : row.teamAId,
+      row,
+      winnerScore: `${high}–${low}`,
+      loserScore: `${low}–${high}`,
+    }
   }
   const dropsSomewhere = new Set(
     plan.matches.flatMap((match) =>
@@ -591,6 +607,8 @@ export function suggestedPlacements(
           teamId: decided.winner ?? undefined,
           teamName: name(decided.winner),
           reason: `Thắng ${final.match.label}`,
+          lastOpponent: name(decided.loser) || undefined,
+          lastScore: decided.winnerScore,
         }
       : { place: "1", teamName: "", reason: `Chờ ${final.match.label}` },
     decided
@@ -599,6 +617,8 @@ export function suggestedPlacements(
           teamId: decided.loser ?? undefined,
           teamName: name(decided.loser),
           reason: `Thua ${final.match.label}`,
+          lastOpponent: name(decided.winner) || undefined,
+          lastScore: decided.loserScore,
         }
       : { place: "2", teamName: "", reason: `Chờ ${final.match.label}` },
   )
@@ -617,7 +637,9 @@ export function suggestedPlacements(
               place,
               teamId: result.loser ?? undefined,
               teamName: name(result.loser),
-              reason: `Thua ${node.match.label} · ${Math.min(result.row.scoreA!, result.row.scoreB!)}–${Math.max(result.row.scoreA!, result.row.scoreB!)}`,
+              reason: `Thua ${node.match.label} · ${result.loserScore}`,
+              lastOpponent: name(result.winner) || undefined,
+              lastScore: result.loserScore,
             }
           : { place, teamName: "", reason: `Chờ ${node.match.label}` },
       )
