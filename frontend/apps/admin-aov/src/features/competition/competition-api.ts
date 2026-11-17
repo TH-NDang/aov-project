@@ -6,7 +6,7 @@ import type {
   PageSlice,
 } from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
-import { tournamentKeys } from "@/features/tournaments/tournament-api"
+import { tournamentKeys } from "@/features/tournaments/api/tournament-api"
 export const competitionKeys = [...tournamentKeys.all, "plans"] as const
 export const competitionApi = {
   inCircuit: (circuitPageId: string, page = 0) =>

@@ -6,8 +6,8 @@ import {
   parseTeamAliases,
   registryContent,
   registryFormIssue,
-} from "../src/features/tournaments/registry-form-model"
-import { tournamentDates } from "../src/features/tournaments/tournament-metadata"
+} from "../src/features/tournaments/model/registry-form-model"
+import { tournamentDates } from "../src/features/tournaments/components/tournament-metadata"
 
 test("partial tournament dates label their known boundary without implying a complete range", () => {
   const base = { code: "event", name: "Event", region: "TH" }

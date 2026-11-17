@@ -7,11 +7,11 @@ import { tournamentPath, type Access } from "@/features/esports/pages/esports-sh
 import { HeroIcon, LaneIcon, Monogram, PlayerPhoto } from "@/features/esports/components/primitives"
 import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
 import { initials } from "@/features/esports/model/game-view"
-import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
-import { CAREER_STATUSES } from "@/features/tournaments/tournament-metadata"
-import { TEAM_REGIONS } from "@/features/tournaments/team-region"
-import { activityLabel } from "@/features/tournaments/record-reason"
-import { ProfileCountry } from "../profile-country"
+import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
+import { CAREER_STATUSES } from "@/features/tournaments/components/tournament-metadata"
+import { TEAM_REGIONS } from "@/features/tournaments/components/team-region"
+import { activityLabel } from "@/features/tournaments/model/record-reason"
+import { ProfileCountry } from "../components/profile-country"
 import {
   directoryApi,
   directoryKeys,

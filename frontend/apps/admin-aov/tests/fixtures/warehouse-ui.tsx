@@ -8,7 +8,7 @@ import { act } from "react"
 import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { WarehouseRevision } from "../../src/features/warehouse/warehouse-types"
+import type { WarehouseRevision } from "../../src/features/warehouse/model/warehouse-types"
 import { flush, installWindow, waitFor } from "./dom"
 
 let activeRequests: string[] = []

@@ -6,7 +6,7 @@ import {
   characterImageKeys,
   createCharacterImageApi,
   imageSectionChange,
-} from "../src/features/media/character-image-api"
+} from "../src/features/media/api/character-image-api"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 
 test("hero mutations invalidate every cached media role and badge locale without unrelated queries", async () => {

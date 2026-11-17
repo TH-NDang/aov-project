@@ -7,12 +7,12 @@ import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi, uploadHeroImage, upgradeHeroImage } from "../../api/publishing-api"
 import { imageFromUrl } from "../../model/import/image-url"
 import { control, Field } from "../fields"
-import { invalidateMediaAsset } from "../../../media/media-cache"
-import { MediaSourceFields } from "../../../media/media-source-fields"
+import { invalidateMediaAsset } from "../../../media/api/media-cache"
+import { MediaSourceFields } from "../../../media/components/media-source-fields"
 import { creditHttpUrl, type MediaSourceInput } from "@aov/ui/lib/media-credit"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
-import { mediaKeys } from "@/features/media/media-cache"
+import { mediaKeys } from "@/features/media/api/media-cache"
 const api = createPublishingApi(backendRequest)
 export function AssetPicker({
   semanticType,

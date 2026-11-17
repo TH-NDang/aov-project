@@ -21,7 +21,7 @@ import { defaultRulesetId } from "@/features/publishing/model/setup/default-rule
 import { HeroAsset } from "@/features/publishing/components/hero-asset"
 import { useContentLocale } from "@/features/publishing/api/publication-overview"
 import { createPublishingApi } from "@/features/publishing/api/publishing-api"
-import { useWarehouseCatalog } from "@/features/warehouse/warehouse-api"
+import { useWarehouseCatalog } from "@/features/warehouse/api/warehouse-api"
 import { warehouseName } from "@aov/ui/lib/warehouse-content"
 import { commandFilter } from "@/lib/text"
 import { formatGameNumber } from "@aov/ui/lib/game-number"

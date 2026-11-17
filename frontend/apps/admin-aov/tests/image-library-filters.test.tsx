@@ -42,7 +42,7 @@ beforeEach(() => {
 
 async function library(entry: string) {
   const { createMemoryRouter, RouterProvider } = await import("react-router")
-  const { ImageManagementPage } = await import("../src/features/media/image-management-page")
+  const { ImageManagementPage } = await import("../src/features/media/pages/image-management-page")
   const router = createMemoryRouter([{ path: "/image-management", element: <ImageManagementPage /> }], {
     initialEntries: [entry],
   })

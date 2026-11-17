@@ -7,7 +7,7 @@ import {
   usageSummaryLabel,
   type MediaUsageItem,
   type MediaUsageSummary,
-} from "../src/features/media/media-usage"
+} from "../src/features/media/model/media-usage"
 
 const usage = (overrides: Partial<MediaUsageItem>): MediaUsageItem => ({
   ownerDomain: "HERO",

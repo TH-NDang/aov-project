@@ -9,8 +9,8 @@ import { installWindow, waitFor, withGlobals } from "./fixtures/dom"
 const [{ activityLabel, recordReason, regionsNamedBy, tournamentTiming }, { createTournamentApi, tournamentApi }] =
   await withGlobals({ BroadcastChannel: undefined }, () =>
     Promise.all([
-      import("../src/features/tournaments/record-reason"),
-      import("../src/features/tournaments/tournament-api"),
+      import("../src/features/tournaments/model/record-reason"),
+      import("../src/features/tournaments/api/tournament-api"),
     ]),
   )
 
@@ -148,7 +148,7 @@ test("the picker shows the server's rows with their reasons, leaves out what is 
     }) as never
     const chosen: string[] = []
     // Radix decides at import time whether a document exists, so this comes after the DOM above.
-    const { RecordPicker } = await import("../src/features/tournaments/record-picker")
+    const { RecordPicker } = await import("../src/features/tournaments/components/record-picker")
     const { createRoot } = await import("react-dom/client")
     const root = createRoot(document.getElementById("root")!)
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })

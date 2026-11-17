@@ -70,8 +70,8 @@ test("image management loads on scroll, retries without losing rows and filters 
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { ImageManagementPage } = await import("../src/features/media/image-management-page")
-  const { invalidateMediaAsset } = await import("../src/features/media/media-cache")
+  const { ImageManagementPage } = await import("../src/features/media/pages/image-management-page")
+  const { invalidateMediaAsset } = await import("../src/features/media/api/media-cache")
   const { createRoot } = await import("react-dom/client")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const root = createRoot(dom.window.document.getElementById("root")!)

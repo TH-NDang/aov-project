@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import type { PlayerContent } from "@aov/community-contracts"
-import { tournamentApi, tournamentKeys } from "@/features/tournaments/tournament-api"
+import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 
 /**
  * Profiles of everyone on a roster of one tournament, by player id. The directory lists a tournament's own players

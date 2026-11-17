@@ -1,8 +1,8 @@
 import { useQueries } from "@tanstack/react-query"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import type { LightboxImage } from "@/components/image-lightbox"
-import { ImageCreditPanel } from "../../../media/image-credit-panel"
-import { visibleSources } from "../../../media/media-source-gaps"
+import { ImageCreditPanel } from "../../../media/components/image-credit-panel"
+import { visibleSources } from "../../../media/model/media-source-gaps"
 import { heroContentAssetQuery } from "../../model/assets/hero-content-asset"
 
 /**

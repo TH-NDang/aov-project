@@ -1,4 +1,4 @@
-import { PageReference } from "@/features/community/page-reference"
+import { PageReference } from "@/features/community/components/page-reference"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Image } from "lucide-react"
@@ -8,8 +8,8 @@ import type { LightboxImage } from "@/components/image-lightbox"
 import { heroContentAssetQuery } from "../model/assets/hero-content-asset"
 import { ImageCredit } from "@aov/ui/components/image-credit"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
-import { ImageCreditPanel } from "../../media/image-credit-panel"
-import { creditSummary, visibleSources } from "../../media/media-source-gaps"
+import { ImageCreditPanel } from "../../media/components/image-credit-panel"
+import { creditSummary, visibleSources } from "../../media/model/media-source-gaps"
 
 export function HeroAsset({
   id,

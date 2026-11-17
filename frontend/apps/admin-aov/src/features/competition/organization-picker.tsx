@@ -1,5 +1,5 @@
 import type { CommunityProfile } from "@aov/community-contracts"
-import { PageReferencePicker } from "@/features/community/page-reference-picker"
+import { PageReferencePicker } from "@/features/community/components/page-reference-picker"
 
 export function OrganizationPicker(props: {
   value?: string | null

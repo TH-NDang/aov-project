@@ -5,9 +5,9 @@ import type { Access } from "@/features/esports/pages/esports-shell"
 import { tournamentPath } from "@/features/esports/pages/esports-shell"
 import { LaneIcon, Monogram } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
-import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
-import { TEAM_REGIONS } from "@/features/tournaments/team-region"
-import { activityLabel } from "@/features/tournaments/record-reason"
+import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
+import { TEAM_REGIONS } from "@/features/tournaments/components/team-region"
+import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { directoryApi, directoryKeys, useDebounced, useProfilesOf, winRate, type TeamSort } from "./directory-api"
 import {
   CountryLabel,

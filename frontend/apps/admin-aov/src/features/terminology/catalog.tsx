@@ -6,7 +6,7 @@ import { createEntityIndex, type EntityReference } from "@aov/ui/lib/entity-rich
 import { backendRequest, getSession, subscribeSession } from "@/app/auth/session"
 import { createPublishingApi } from "../publishing/api/publishing-api"
 import { defaultSettings, referenceSettingsQuery } from "./settings-api"
-import { createMediaIconResolver } from "../media/media-cache"
+import { createMediaIconResolver } from "../media/api/media-cache"
 import { referenceCatalogApi, referenceCatalogKeys } from "./reference-api"
 import { useSkillReferences } from "./use-skill-references"
 import { countryReferences } from "@aov/ui/lib/country-references"

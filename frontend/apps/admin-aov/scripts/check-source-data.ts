@@ -21,7 +21,7 @@ import {
   type GuideManifest,
   type ModeManifestEntry,
 } from "../src/features/game-modes/game-mode-import"
-import { importCounts, parseRegistryImport } from "../src/features/tournaments/registry-import-model"
+import { importCounts, parseRegistryImport } from "../src/features/tournaments/model/registry-import-model"
 
 const resources = new URL("../../../../resources/", import.meta.url)
 const checks: { name: string; files: URL[]; run: (read: (file: URL) => string) => void }[] = []

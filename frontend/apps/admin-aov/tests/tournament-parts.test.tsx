@@ -11,9 +11,9 @@ const [
   { createTournamentApi },
 ] = await withGlobals({ BroadcastChannel: undefined }, () =>
   Promise.all([
-    import("../src/features/tournaments/tournament-parts"),
-    import("../src/features/tournaments/registry-form-model"),
-    import("../src/features/tournaments/tournament-api"),
+    import("../src/features/tournaments/model/tournament-parts"),
+    import("../src/features/tournaments/model/registry-form-model"),
+    import("../src/features/tournaments/api/tournament-api"),
   ]),
 )
 
@@ -187,7 +187,7 @@ async function withDom(run: (document: Document) => Promise<void>) {
 
 test("a main event names its parts under its row and each part opens on its own", async () => {
   await withDom(async (document) => {
-    const { TournamentList } = await import("../src/features/tournaments/tournament-list")
+    const { TournamentList } = await import("../src/features/tournaments/components/tournament-list")
     const { MemoryRouter } = await import("react-router")
     const { createRoot } = await import("react-dom/client")
     const root = createRoot(document.getElementById("root")!)

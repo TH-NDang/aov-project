@@ -7,7 +7,7 @@ import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import type { Request } from "../src/features/publishing/api/publishing-api"
-import type { CharacterImageGroup, SkinBadgeRecord } from "../src/features/media/character-image-api"
+import type { CharacterImageGroup, SkinBadgeRecord } from "../src/features/media/api/character-image-api"
 import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("backend media groups retain missing main rows, select alternatives with expected version and protect published bindings", async () => {
@@ -148,9 +148,9 @@ test("backend media groups retain missing main rows, select alternatives with ex
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { CharacterImagesPage } = await import("../src/features/media/character-images-page")
-  const { BadgesPage } = await import("../src/features/media/badges-page")
-  const { SkinBadgeEditor } = await import("../src/features/media/skin-badge-editor")
+  const { CharacterImagesPage } = await import("../src/features/media/pages/character-images-page")
+  const { BadgesPage } = await import("../src/features/media/pages/badges-page")
+  const { SkinBadgeEditor } = await import("../src/features/media/components/skin-badge-editor")
   const { createRoot } = await import("react-dom/client")
   const { TooltipProvider } = await import("@aov/ui/components/tooltip")
   const root = createRoot(dom.window.document.getElementById("root")!)

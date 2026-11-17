@@ -4,9 +4,9 @@ import { ChevronRight, RefreshCw, Trophy } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { Page } from "@/components/page-header"
-import { tournamentError } from "@/features/tournaments/tournament-api"
+import { tournamentError } from "@/features/tournaments/api/tournament-api"
 import { useTournamentAccess } from "../data/use-esports-data"
-import "@/features/tournaments/tournament-styles"
+import "@/features/tournaments/model/tournament-styles"
 import "../esports.css"
 
 export type Access = ReturnType<typeof useTournamentAccess>

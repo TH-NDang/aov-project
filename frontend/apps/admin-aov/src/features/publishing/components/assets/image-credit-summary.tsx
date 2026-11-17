@@ -3,7 +3,7 @@ import { CircleAlert, Copyright } from "lucide-react"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import { cn } from "@aov/ui/lib/utils"
 import { heroContentAssetQuery } from "../../model/assets/hero-content-asset"
-import { primarySource, sourceGap, visibleSources } from "../../../media/media-source-gaps"
+import { primarySource, sourceGap, visibleSources } from "../../../media/model/media-source-gaps"
 
 const shownOwners = 3
 

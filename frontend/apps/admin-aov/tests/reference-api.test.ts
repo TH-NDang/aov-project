@@ -9,7 +9,7 @@ Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writ
 const { createReferenceCatalogApi, referenceCatalogKeys, invalidateReferenceCatalog } =
   await import("../src/features/terminology/reference-api")
 const { invalidateHeroCatalogs } = await import("../src/features/publishing/api/publishing-cache")
-const { invalidateWarehouseCatalogs } = await import("../src/features/warehouse/warehouse-api")
+const { invalidateWarehouseCatalogs } = await import("../src/features/warehouse/api/warehouse-api")
 Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: originalChannel })
 
 const entities: EntityReference[] = [

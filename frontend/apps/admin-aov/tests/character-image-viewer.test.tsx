@@ -6,9 +6,9 @@ import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
-import { characterMediaOwners, ownerMainEntry } from "../src/features/media/character-image-viewer-data"
+import { characterMediaOwners, ownerMainEntry } from "../src/features/media/model/character-image-viewer-data"
 import type { Request } from "../src/features/publishing/api/publishing-api"
-import type { CharacterImageEntry, CharacterImageGroup } from "../src/features/media/character-image-api"
+import type { CharacterImageEntry, CharacterImageGroup } from "../src/features/media/api/character-image-api"
 import type { Preview } from "../src/features/publishing/api/types"
 import { flush, installWindow, waitFor } from "./fixtures/dom"
 
@@ -158,9 +158,9 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
-  const { CharacterImageDetail } = await import("../src/features/media/character-image-detail")
-  const { SkinMediaDetail } = await import("../src/features/media/skin-media-detail")
-  const { SkinBadgeLabel } = await import("../src/features/media/skin-badge-label")
+  const { CharacterImageDetail } = await import("../src/features/media/components/character-image-detail")
+  const { SkinMediaDetail } = await import("../src/features/media/components/skin-media-detail")
+  const { SkinBadgeLabel } = await import("../src/features/media/components/skin-badge-label")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })

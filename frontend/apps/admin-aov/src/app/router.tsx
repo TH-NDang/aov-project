@@ -3,7 +3,7 @@ import { LegacyHeroRedirect } from "./legacy-hero-redirect"
 import { AppShell } from "./layout/app-shell"
 import type { RouteHandle } from "./layout/site-header"
 import { AppLoading, RouteError } from "./route-error"
-import { LegacyMediaRedirect, MediaWorkspace } from "@/features/media/media-workspace"
+import { LegacyMediaRedirect, MediaWorkspace } from "@/features/media/components/media-workspace"
 import { MovedRedirect } from "./moved-redirect"
 import { HeroCrumb, TournamentCrumb } from "./layout/entity-crumbs"
 
@@ -70,7 +70,9 @@ const routes: RouteObject[] = [
           {
             path: "media-contact-requests",
             handle: title("Liên hệ về hình ảnh"),
-            lazy: async () => ({ Component: (await import("@/features/media/media-contact-page")).MediaContactPage }),
+            lazy: async () => ({
+              Component: (await import("@/features/media/pages/media-contact-page")).MediaContactPage,
+            }),
           },
           {
             // The file manager lived at /image-management before it held more than images.
@@ -165,20 +167,22 @@ const routes: RouteObject[] = [
             path: "items",
             handle: title("Trang bị"),
             lazy: async () => ({
-              Component: (await import("@/features/warehouse/backend-items-page")).BackendItemsPage,
+              Component: (await import("@/features/warehouse/pages/backend-items-page")).BackendItemsPage,
             }),
           },
           {
             path: "enchantments",
             handle: title("Phù hiệu"),
             lazy: async () => ({
-              Component: (await import("@/features/warehouse/secondary-pages")).BackendEnchantmentsPage,
+              Component: (await import("@/features/warehouse/components/secondary-pages")).BackendEnchantmentsPage,
             }),
           },
           {
             path: "arcana",
             handle: title("Bảng ngọc"),
-            lazy: async () => ({ Component: (await import("@/features/warehouse/secondary-pages")).BackendArcanaPage }),
+            lazy: async () => ({
+              Component: (await import("@/features/warehouse/components/secondary-pages")).BackendArcanaPage,
+            }),
           },
           {
             path: "game-modes",
@@ -202,7 +206,9 @@ const routes: RouteObject[] = [
           {
             path: "spells",
             handle: title("Phụ trợ"),
-            lazy: async () => ({ Component: (await import("@/features/warehouse/secondary-pages")).BackendSpellsPage }),
+            lazy: async () => ({
+              Component: (await import("@/features/warehouse/components/secondary-pages")).BackendSpellsPage,
+            }),
           },
           { path: "hero/media", handle: title("Không gian ảnh"), element: <MediaWorkspace /> },
           { path: "portraits", handle: { pageTab: false } satisfies RouteHandle, element: <LegacyMediaRedirect /> },
@@ -237,21 +243,22 @@ const routes: RouteObject[] = [
             path: "tournaments/trash",
             handle: title("Thùng rác giải đấu"),
             lazy: async () => ({
-              Component: (await import("@/features/tournaments/trash-page")).TournamentTrashPage,
+              Component: (await import("@/features/tournaments/pages/trash-page")).TournamentTrashPage,
             }),
           },
           {
             path: "tournaments/registry",
             handle: { pageTab: false } satisfies RouteHandle,
             lazy: async () => ({
-              Component: (await import("@/features/tournaments/legacy-registry-redirect")).LegacyRegistryRedirect,
+              Component: (await import("@/features/tournaments/components/legacy-registry-redirect"))
+                .LegacyRegistryRedirect,
             }),
           },
           {
             path: "teams",
             handle: title("Đội tuyển"),
             lazy: async () => {
-              const { PageDirectory } = await import("@/features/community/page-directory")
+              const { PageDirectory } = await import("@/features/community/components/page-directory")
               return { Component: () => <PageDirectory kind="TEAM" /> }
             },
           },
@@ -259,7 +266,7 @@ const routes: RouteObject[] = [
             path: "players",
             handle: title("Tuyển thủ"),
             lazy: async () => {
-              const { PageDirectory } = await import("@/features/community/page-directory")
+              const { PageDirectory } = await import("@/features/community/components/page-directory")
               return { Component: () => <PageDirectory kind="PLAYER" /> }
             },
           },
@@ -267,7 +274,7 @@ const routes: RouteObject[] = [
             path: "organizations",
             handle: title("Tổ chức"),
             lazy: async () => {
-              const { PageDirectory } = await import("@/features/community/page-directory")
+              const { PageDirectory } = await import("@/features/community/components/page-directory")
               return { Component: () => <PageDirectory kind="ORGANIZATION" /> }
             },
           },
@@ -275,7 +282,7 @@ const routes: RouteObject[] = [
             path: "circuits",
             handle: title("Hệ thống giải"),
             lazy: async () => {
-              const { PageDirectory } = await import("@/features/community/page-directory")
+              const { PageDirectory } = await import("@/features/community/components/page-directory")
               return { Component: () => <PageDirectory kind="CIRCUIT" /> }
             },
           },
@@ -283,7 +290,7 @@ const routes: RouteObject[] = [
             path: "coaches",
             handle: title("Ban huấn luyện"),
             lazy: async () => {
-              const { PageDirectory } = await import("@/features/community/page-directory")
+              const { PageDirectory } = await import("@/features/community/components/page-directory")
               return { Component: () => <PageDirectory kind="PERSON" group="COACHING" /> }
             },
           },
@@ -291,19 +298,19 @@ const routes: RouteObject[] = [
             path: "broadcast",
             handle: title("Broadcast"),
             lazy: async () => {
-              const { PageDirectory } = await import("@/features/community/page-directory")
+              const { PageDirectory } = await import("@/features/community/components/page-directory")
               return { Component: () => <PageDirectory kind="PERSON" group="BROADCAST" /> }
             },
           },
           {
             path: "pages/:pageId",
             handle: title("Hồ sơ công khai"),
-            lazy: async () => ({ Component: (await import("@/features/community/page-editor")).PageEditor }),
+            lazy: async () => ({ Component: (await import("@/features/community/components/page-editor")).PageEditor }),
           },
           {
             path: "page-requests",
             handle: title("Yêu cầu & kiểm duyệt"),
-            lazy: async () => ({ Component: (await import("@/features/community/page-review")).PageReview }),
+            lazy: async () => ({ Component: (await import("@/features/community/components/page-review")).PageReview }),
           },
           {
             path: "tournaments/:tournamentId",

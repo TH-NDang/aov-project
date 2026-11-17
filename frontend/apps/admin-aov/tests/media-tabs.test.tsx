@@ -6,7 +6,7 @@ import { createMemoryRouter, RouterProvider } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { HotkeysProvider } from "../src/app/hotkeys"
 import { PageTabPanels, PageTabsProvider, usePageTabs } from "../src/app/layout/page-tabs"
-import { mediaTabLocation, readMediaTab } from "../src/features/media/media-location"
+import { mediaTabLocation, readMediaTab } from "../src/features/media/model/media-location"
 import type { Request } from "../src/features/publishing/api/publishing-api"
 import { flush, installWindow, waitFor } from "./fixtures/dom"
 
@@ -41,7 +41,7 @@ test("media query tabs restore back/forward state and legacy links never create 
       throw new Error("Live requests are forbidden in media routing tests")
     },
   })
-  const { MediaWorkspace, LegacyMediaRedirect } = await import("../src/features/media/media-workspace")
+  const { MediaWorkspace, LegacyMediaRedirect } = await import("../src/features/media/components/media-workspace")
   function SessionLinks() {
     const { sessions } = usePageTabs()
     return (

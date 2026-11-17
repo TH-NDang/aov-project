@@ -14,7 +14,7 @@ import type {
 import { communityRequest } from "@/app/auth/session"
 import { normalize } from "@/lib/text"
 import { usePublicHeroes, type PublicHero } from "@/lib/public-heroes"
-import { pageKeys } from "../page-api"
+import { pageKeys } from "../api/page-api"
 
 export const DIRECTORY_PAGE_SIZE = 24
 

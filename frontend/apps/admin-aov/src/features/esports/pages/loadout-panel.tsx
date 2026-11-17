@@ -4,7 +4,7 @@ import { Clock3, EyeOff, Shield, Swords, TriangleAlert, Users, X } from "lucide-
 import { Button } from "@aov/ui/components/button"
 import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
-import { EquipmentEditor } from "@/features/tournaments/equipment-editor"
+import { EquipmentEditor } from "@/features/tournaments/components/equipment-editor"
 import { LoadoutEditor, type ObservedAtControl } from "./loadout-editor"
 import { HeroIcon, LaneIcon, TimeTag, VIDEO_MARK } from "../components/primitives"
 import {

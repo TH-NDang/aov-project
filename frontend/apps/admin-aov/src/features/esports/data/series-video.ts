@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { DocumentView, GameContent } from "@aov/community-contracts"
-import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/tournament-api"
+import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 
 type GameWriter = Pick<typeof tournamentApi, "read" | "save">
 

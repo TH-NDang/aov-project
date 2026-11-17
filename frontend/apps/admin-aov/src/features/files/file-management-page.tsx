@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react"
 import { useSearchParams } from "react-router"
-import { ImageManagementPage } from "../media/image-management-page"
+import { ImageManagementPage } from "../media/pages/image-management-page"
 import { readFileTab } from "./file-tabs"
 
 const SourceFilesPage = lazy(() =>

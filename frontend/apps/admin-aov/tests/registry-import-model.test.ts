@@ -5,7 +5,7 @@ import {
   importCounts,
   MAX_REGISTRY_IMPORT_BYTES,
   parseRegistryImport,
-} from "../src/features/tournaments/registry-import-model"
+} from "../src/features/tournaments/model/registry-import-model"
 
 // A small fixed sample with the shape of the AOG packages; scripts/check-source-data.ts checks the full ones.
 const sampleDirectory = new URL("./fixtures/registry-import/", import.meta.url)

@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { DocumentView, GameContent } from "@aov/community-contracts"
-import { initialGame } from "../src/features/tournaments/tournament-model"
+import { initialGame } from "../src/features/tournaments/model/tournament-model"
 
 const channelDescriptor = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
 Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-const { createTournamentApi, tournamentIssueFields } = await import("../src/features/tournaments/tournament-api")
+const { createTournamentApi, tournamentIssueFields } = await import("../src/features/tournaments/api/tournament-api")
 const { ApiError } = await import("../src/lib/api/errors")
 if (channelDescriptor) Object.defineProperty(globalThis, "BroadcastChannel", channelDescriptor)
 

@@ -30,10 +30,10 @@ import { useContentLocale, usePublicationOverview } from "../publishing/api/publ
 import { dateLabel } from "@/features/publishing/model/setup/schedule-date"
 import { defaultRulesetId } from "../publishing/model/setup/default-ruleset"
 import { Button } from "@aov/ui/components/button"
-import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/warehouse-api"
+import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/api/warehouse-api"
 import { warehouseText } from "@aov/ui/lib/warehouse-content"
 import { cn } from "@aov/ui/lib/utils"
-import { mediaKeys } from "@/features/media/media-cache"
+import { mediaKeys } from "@/features/media/api/media-cache"
 
 const publishing = createPublishingApi(backendRequest)
 

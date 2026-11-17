@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { QueryClient } from "@tanstack/react-query"
-import { invalidateMediaAsset, mediaKeys } from "../src/features/media/media-cache"
+import { invalidateMediaAsset, mediaKeys } from "../src/features/media/api/media-cache"
 import { directoryKeys } from "../src/features/community/directory/directory-api"
-import { pageKeys } from "../src/features/community/page-api"
+import { pageKeys } from "../src/features/community/api/page-api"
 
 test("every view of a changed image refreshes, including views nobody listed", async () => {
   const client = new QueryClient()

@@ -1,14 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import type { SecondaryContent } from "../src/features/warehouse/secondary-editor"
-import type { WarehouseEntry, WarehouseRevision } from "../src/features/warehouse/warehouse-types"
+import type { SecondaryContent } from "../src/features/warehouse/components/secondary-editor"
+import type { WarehouseEntry, WarehouseRevision } from "../src/features/warehouse/model/warehouse-types"
 import type { SpellContent } from "@aov/ui/lib/warehouse-content"
 import { withWarehouseUi, fixtureRevision } from "./fixtures/warehouse-ui"
 
 test("creating a spell uploads its icon from the information tab and saves the completed media reference", async () => {
   await withWarehouseUi(async ({ document, requests, render, upload, click }) => {
-    const { SecondaryEditor, newSecondaryContent } = await import("../src/features/warehouse/secondary-editor")
+    const { SecondaryEditor, newSecondaryContent } =
+      await import("../src/features/warehouse/components/secondary-editor")
     const content = newSecondaryContent("spells", "vi-VN")
     content.translations[0].name = "Phụ trợ mới"
     let saved: SecondaryContent | undefined
@@ -45,7 +46,7 @@ test("creating a spell uploads its icon from the information tab and saves the c
 test("editing one spell translation preserves other locales, mechanics, states and artwork; published views cannot upload", async () => {
   await withWarehouseUi(async ({ document, render, tab, name, click }) => {
     const window = document.defaultView!
-    const { SecondaryEditor } = await import("../src/features/warehouse/secondary-editor")
+    const { SecondaryEditor } = await import("../src/features/warehouse/components/secondary-editor")
     const content: SecondaryContent = {
       iconAssetId: "spell-icon",
       notes: "Evidence",
@@ -131,7 +132,7 @@ test("editing one spell translation preserves other locales, mechanics, states a
 
 test("spell cards expose both state icons, open details and collapse legacy entries without hiding filtered results", async () => {
   await withWarehouseUi(async ({ document, client, render }) => {
-    const { SpellCollection } = await import("../src/features/warehouse/spell-cards")
+    const { SpellCollection } = await import("../src/features/warehouse/components/spell-cards")
     const entry: WarehouseEntry<SpellContent> = {
       id: "punish",
       code: "trung-tri",
@@ -245,7 +246,7 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     await render(<SpellCollection key="filtered" {...props} records={[removed]} revealLegacy />)
     assert.equal(document.querySelector('[data-slot="collapsible-trigger"]')?.getAttribute("aria-expanded"), "true")
     assert.ok(document.querySelector('button[aria-label="Xem Phụ trợ đã gỡ"]'))
-    const { SecondaryEditor } = await import("../src/features/warehouse/secondary-editor")
+    const { SecondaryEditor } = await import("../src/features/warehouse/components/secondary-editor")
     await render(
       <SecondaryEditor
         kind="spells"
@@ -272,7 +273,8 @@ test("spell cards expose both state icons, open details and collapse legacy entr
 
 test("archived spells stay separate, gameplay revisions require a patch, and later removal history needs a source", async () => {
   await withWarehouseUi(async ({ document, render, click, tab }) => {
-    const { SecondaryEditor, newSecondaryContent } = await import("../src/features/warehouse/secondary-editor")
+    const { SecondaryEditor, newSecondaryContent } =
+      await import("../src/features/warehouse/components/secondary-editor")
     const content = newSecondaryContent("spells", "vi-VN")
     content.translations[0] = { locale: "vi-VN", name: "Phụ trợ cũ", description: "Mô tả lịch sử" }
     Object.assign(content, {
@@ -316,7 +318,7 @@ test("archived spells stay separate, gameplay revisions require a patch, and lat
       (button) => button.textContent?.trim() === "Xuất bản",
     )!
     assert.equal(publishButton.disabled, true)
-    const { SpellRemovalHistory } = await import("../src/features/warehouse/spell-removal-history")
+    const { SpellRemovalHistory } = await import("../src/features/warehouse/components/spell-removal-history")
     await render(
       <SpellRemovalHistory id="legacy" revisionId="legacy-revision" rulesetId="standard" published canPublish />,
     )
@@ -352,7 +354,8 @@ test("archived spells stay separate, gameplay revisions require a patch, and lat
 
 test("baseline spell publication needs no invented patch and corrections retain their unscoped baseline", async () => {
   await withWarehouseUi(async ({ document, render, click, tab }) => {
-    const { SecondaryEditor, newSecondaryContent } = await import("../src/features/warehouse/secondary-editor")
+    const { SecondaryEditor, newSecondaryContent } =
+      await import("../src/features/warehouse/components/secondary-editor")
     const content = newSecondaryContent("spells", "vi-VN")
     content.translations[0] = { locale: "vi-VN", name: "Tốc hành", description: "Tăng tốc chạy" }
     Object.assign(content, {
@@ -418,7 +421,7 @@ test("baseline spell publication needs no invented patch and corrections retain 
 test("patch history can compare published unscoped baselines without offering drafts, future or archived spells", async () => {
   await withWarehouseUi(
     async ({ document, client, render }) => {
-      const { WarehouseChangeHistory } = await import("../src/features/warehouse/warehouse-change-history")
+      const { WarehouseChangeHistory } = await import("../src/features/warehouse/components/warehouse-change-history")
       const baseline = {
         ...fixtureRevision("baseline"),
         id: "baseline",

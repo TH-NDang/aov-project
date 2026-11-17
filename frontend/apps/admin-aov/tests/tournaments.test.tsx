@@ -12,7 +12,7 @@ import {
   minuteLabel,
   parseGameTime,
   selectionName,
-} from "../src/features/tournaments/tournament-model"
+} from "../src/features/tournaments/model/tournament-model"
 import { flush, installWindow } from "./fixtures/dom"
 
 const series: SeriesContent = {
@@ -73,7 +73,7 @@ test("ID-only references resolve visible and accessible labels from their loaded
   assert.equal(selectionName({ id: "hero" }, heroes), "Errol")
   assert.equal(selectionName({ name: "Recorded hero" }, heroes), "Recorded hero")
   await withUi(async ({ render, document }) => {
-    const { CatalogPicker } = await import("../src/features/tournaments/catalog-picker")
+    const { CatalogPicker } = await import("../src/features/tournaments/components/catalog-picker")
     await render(<CatalogPicker value={{ id: "hero" }} options={heroes} label="Cấm 1" onChange={() => {}} />)
     const trigger = document.querySelector<HTMLButtonElement>(".tournament-catalog-trigger")
     assert.equal(trigger?.getAttribute("aria-label"), "Cấm 1: Errol")
@@ -154,7 +154,7 @@ async function withUi(
 
 test("equipment editor saves a six-slot observation without fabricating purchases or treating unknown as empty", async () => {
   await withUi(async ({ render, click, change, document }) => {
-    const { EquipmentEditor } = await import("../src/features/tournaments/equipment-editor")
+    const { EquipmentEditor } = await import("../src/features/tournaments/components/equipment-editor")
     let latest = emptyParticipant("TOP")
     function Host() {
       const [value, setValue] = useState(latest)
@@ -191,7 +191,7 @@ test("changing one game's season keeps its already observed picks and leaves oth
     })
   try {
     await withUi(async ({ render, change }) => {
-      const { GameScope } = await import("../src/features/tournaments/game-scope")
+      const { GameScope } = await import("../src/features/tournaments/components/game-scope")
       const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
       let latest = initialGame("series", series, 1)
       latest.sides[0].participants[0].hero = { id: "hero", name: "Airi" }
@@ -230,7 +230,7 @@ test("changing one game's season keeps its already observed picks and leaves oth
 
 test("tournament list opens the selected record and displays recorded match counts", async () => {
   await withUi(async ({ render, document }) => {
-    const { TournamentList } = await import("../src/features/tournaments/tournament-list")
+    const { TournamentList } = await import("../src/features/tournaments/components/tournament-list")
     let opened = ""
     await render(
       <TournamentList

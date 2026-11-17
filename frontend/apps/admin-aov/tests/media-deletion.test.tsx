@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { MediaDeletion } from "../src/features/media/media-deletion"
+import type { MediaDeletion } from "../src/features/media/model/media-deletion"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 test("image deletion requires verified references and confirmation, survives reload and refreshes the library", async () => {
@@ -59,7 +59,7 @@ test("image deletion requires verified references and confirmation, survives rel
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { ImageDeleteAction } = await import("../src/features/media/image-delete-action")
+  const { ImageDeleteAction } = await import("../src/features/media/components/image-delete-action")
   const { createRoot } = await import("react-dom/client")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const root = createRoot(dom.window.document.getElementById("root")!)

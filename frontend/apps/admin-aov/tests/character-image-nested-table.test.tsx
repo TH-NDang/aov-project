@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import type { Request } from "../src/features/publishing/api/publishing-api"
-import type { CharacterImageGroup } from "../src/features/media/character-image-api"
+import type { CharacterImageGroup } from "../src/features/media/api/character-image-api"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { flush, installWindow, waitFor } from "./fixtures/dom"
 
@@ -130,7 +130,7 @@ test("full-width hero groups load on scroll, keep every candidate and separate e
     IntersectionObserver: intersections.Observer,
     fetch: fetcher,
   })
-  const { CharacterImagesPage } = await import("../src/features/media/character-images-page")
+  const { CharacterImagesPage } = await import("../src/features/media/pages/character-images-page")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { TooltipProvider } = await import("@aov/ui/components/tooltip")
   const { createRoot } = await import("react-dom/client")

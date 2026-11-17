@@ -11,7 +11,7 @@ import { defaultRulesetId } from "@/features/publishing/model/setup/default-rule
 import { useContentLocale } from "@/features/publishing/api/publication-overview"
 import { createPublishingApi } from "@/features/publishing/api/publishing-api"
 import { useReferenceCatalog } from "@/features/terminology/catalog"
-import { useWarehouseCatalog } from "@/features/warehouse/warehouse-api"
+import { useWarehouseCatalog } from "@/features/warehouse/api/warehouse-api"
 
 export type BuildKind = "item" | "enchantment" | "arcana" | "spell"
 

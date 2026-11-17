@@ -17,7 +17,7 @@ import { z } from "zod"
 import { useSession } from "@/app/auth/auth-gate"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatus } from "@/app/drafts/draft-status"
-import { mediaKeys } from "@/features/media/media-cache"
+import { mediaKeys } from "@/features/media/api/media-cache"
 
 const profileDraftSchema = z.object({
   displayName: z.string(),

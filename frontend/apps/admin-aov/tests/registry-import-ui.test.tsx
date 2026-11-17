@@ -32,8 +32,8 @@ test("file selection previews named records without mutation until the explicit 
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window, values)
   const { createRoot } = await import("react-dom/client")
-  const { tournamentApi } = await import("../src/features/tournaments/tournament-api")
-  const { RegistryImportSheet } = await import("../src/features/tournaments/registry-import")
+  const { tournamentApi } = await import("../src/features/tournaments/api/tournament-api")
+  const { RegistryImportSheet } = await import("../src/features/tournaments/components/registry-import")
   const apiOriginal = { list: tournamentApi.list, create: tournamentApi.create }
   let writes = 0
   tournamentApi.list = async (_kind, _signal, filters) => {

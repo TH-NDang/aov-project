@@ -21,7 +21,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { communityRequest } from "@/app/auth/session"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
-import { pageApi, pageKeys, publicSite } from "@/features/community/page-api"
+import { pageApi, pageKeys, publicSite } from "@/features/community/api/page-api"
 import { StatusPill, TierBadge } from "@/features/esports/components/primitives"
 import { useRosters, useTournamentGames, useTournamentSeries } from "@/features/esports/data/use-esports-data"
 import {
@@ -32,10 +32,10 @@ import {
   tournamentPath,
   type Access,
 } from "@/features/esports/pages/esports-shell"
-import { RegistryEditor } from "@/features/tournaments/registry-editor"
-import { tournamentApi, tournamentKeys } from "@/features/tournaments/tournament-api"
-import { tournamentDates } from "@/features/tournaments/tournament-metadata"
-import { partLabel, type EventFamily } from "@/features/tournaments/tournament-parts"
+import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
+import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { tournamentDates } from "@/features/tournaments/components/tournament-metadata"
+import { partLabel, type EventFamily } from "@/features/tournaments/model/tournament-parts"
 import { competitionApi, competitionKeys } from "./competition-api"
 import { EventPartTabs } from "./workspace/event-parts"
 import { FinalStep } from "./workspace/final-step"

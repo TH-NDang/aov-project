@@ -55,7 +55,7 @@ import { showAllCatalogEntries } from "../../model/catalog/catalog-scope"
 import { useHeroScopeChanges } from "../../api/use-hero-scope-changes"
 import { HeroCatalogFilters, heroCatalogFacets } from "./hero-catalog-filters"
 import { confirmDiscard } from "@/components/confirm-dialog"
-import { mediaKeys } from "@/features/media/media-cache"
+import { mediaKeys } from "@/features/media/api/media-cache"
 const HeroWorkspace = lazy(() =>
   import("../../pages/publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
 )

@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { before, beforeEach, test } from "node:test"
 import * as React from "react"
 import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
-import type { MediaOwner } from "../src/features/media/media-owners"
+import type { MediaOwner } from "../src/features/media/components/media-owners"
 import { answerConfirm, button, click, confirmDialog, render, type, waitFor, withDom } from "./fixtures/dom"
 import { fakeBackend, json, page } from "./fixtures/network"
 import { sessionRoutes, signIn } from "./fixtures/session"
@@ -51,14 +51,14 @@ const text = () => document.body.textContent ?? ""
 const ownerRows = () => document.querySelectorAll('[aria-label="Danh sách chủ sở hữu"] li')
 
 async function ownersSheet() {
-  const { MediaOwnersSheet } = await import("../src/features/media/media-owners-sheet")
+  const { MediaOwnersSheet } = await import("../src/features/media/components/media-owners-sheet")
   const rendered = await render(<MediaOwnersSheet writable onClose={() => {}} />)
   await waitFor(() => ownerRows().length === 2)
   return rendered
 }
 
 test("owner names match ignoring case and whitespace and flag look-alike spellings", async () => {
-  const { exactOwner, ownerKey, similarOwner } = await import("../src/features/media/media-owner-names")
+  const { exactOwner, ownerKey, similarOwner } = await import("../src/features/media/model/media-owner-names")
   const all = [garena, shortGarena]
 
   assert.equal(ownerKey("  GARENA   /  Liên Quân Mobile "), "garena / liên quân mobile")
@@ -71,7 +71,7 @@ test("owner names match ignoring case and whitespace and flag look-alike spellin
 })
 
 test("owner suggestions fill the field only on request", async () => {
-  const { MediaSourceFields } = await import("../src/features/media/media-source-fields")
+  const { MediaSourceFields } = await import("../src/features/media/components/media-source-fields")
   let source: MediaSourceInput = { type: "OTHER", label: "Ảnh chụp từ game Liên Quân", ownerName: null }
   function Form() {
     const [value, setValue] = React.useState(source)

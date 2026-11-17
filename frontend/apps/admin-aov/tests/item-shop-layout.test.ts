@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { itemShopLayout, itemShopSections } from "@aov/ui/lib/item-shop-layout"
-import type { WarehouseEntry } from "../src/features/warehouse/warehouse-types"
+import type { WarehouseEntry } from "../src/features/warehouse/model/warehouse-types"
 import type { ItemContent } from "@aov/ui/lib/warehouse-content"
 
 function item(id: string, column: number | null, content: Partial<ItemContent> = {}): WarehouseEntry<ItemContent> {

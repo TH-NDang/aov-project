@@ -1,5 +1,5 @@
 import { Field } from "./fields"
-import { ReferenceLanguage, WithReference } from "../../warehouse/warehouse-translation-panel"
+import { ReferenceLanguage, WithReference } from "../../warehouse/components/warehouse-translation-panel"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@aov/ui/components/button"
 import {
