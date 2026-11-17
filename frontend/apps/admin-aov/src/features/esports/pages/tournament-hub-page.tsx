@@ -4,7 +4,7 @@ import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
 import { useNavigate, useSearchParams } from "react-router"
 import type { DocumentView, TournamentContent } from "@aov/community-contracts"
-import { Plus, Upload } from "lucide-react"
+import { Plus, Trash2, Upload } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
@@ -138,19 +138,25 @@ function Hub({ access }: { access: Access }) {
       <PageHeader
         title="Giải đấu"
         actions={
-          access.canWrite && (
-            <>
+          <>
+            {access.canWrite && (
               <Button onClick={() => setCreating(true)}>
                 <Plus aria-hidden="true" /> Tạo giải đấu
               </Button>
-              <PageActionsMenu label="Giải đấu: nhập dữ liệu">
+            )}
+            <PageActionsMenu label="Giải đấu: nhập dữ liệu và thùng rác">
+              {access.canWrite && (
                 <DropdownMenuItem onSelect={() => setImporting(true)}>
                   <Upload />
                   Nhập dữ liệu
                 </DropdownMenuItem>
-              </PageActionsMenu>
-            </>
-          )
+              )}
+              <DropdownMenuItem onSelect={() => navigate("/tournaments/trash")}>
+                <Trash2 />
+                Thùng rác
+              </DropdownMenuItem>
+            </PageActionsMenu>
+          </>
         }
       />
 

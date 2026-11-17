@@ -221,6 +221,13 @@ const routes: RouteObject[] = [
             }),
           },
           {
+            path: "tournaments/trash",
+            handle: title("Thùng rác giải đấu"),
+            lazy: async () => ({
+              Component: (await import("@/features/tournaments/trash-page")).TournamentTrashPage,
+            }),
+          },
+          {
             path: "tournaments/registry",
             handle: { pageTab: false } satisfies RouteHandle,
             lazy: async () => ({

@@ -306,6 +306,30 @@ test("trash keeps restore behind write permission and refreshes its list after r
   }
 })
 
+test("the trash page shows deleted tournaments to a reader without offering to restore them", async () => {
+  const original = { me: tournamentApi.me, list: tournamentApi.list }
+  tournamentApi.me = async () => ({ capabilities: ["tournament:read"] }) as never
+  tournamentApi.list = async (kind, _signal, filters) => {
+    assert.equal(typeof filters === "object" ? filters.state : null, "DELETED")
+    if (kind !== "tournaments") return [] as never
+    const removed = { id: "aog", version: 3, createdAt: "", updatedAt: "", deletedAt: "2026-11-16T00:00:00Z" }
+    return [{ ...removed, missingFields: [], content: { code: "aog-old", name: "AOG cũ", region: "VN" } }] as never
+  }
+  try {
+    await withUi(async ({ render, document }) => {
+      const { TournamentTrashPage } = await import("../src/features/tournaments/trash-page")
+      await render(<TournamentTrashPage />)
+
+      assert.equal(document.querySelector("h1")?.textContent, "Thùng rác giải đấu")
+      assert.match(document.body.textContent ?? "", /AOG cũ/)
+      assert.ok(![...document.querySelectorAll("button")].some((button) => button.textContent?.includes("Khôi phục")))
+    })
+  } finally {
+    tournamentApi.me = original.me
+    tournamentApi.list = original.list
+  }
+})
+
 test("the game info panel saves only what changed and asks before taking the public copy down", async () => {
   const originalFetch = globalThis.fetch
   globalThis.fetch = async () =>
