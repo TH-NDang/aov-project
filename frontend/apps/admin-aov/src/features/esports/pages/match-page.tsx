@@ -36,6 +36,7 @@ import { initialGame } from "@/features/tournaments/tournament-model"
 import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/tournament-api"
 import { useGameCatalog, useGames, useRecords, useRosters } from "../data/use-esports-data"
 import { useTournamentView } from "../data/use-tournament-view"
+import { useSeriesVideo } from "../data/series-video"
 import { WikiReferences } from "./wiki-references"
 import {
   BestOfBadge,
@@ -322,7 +323,6 @@ function MatchViewer({
   addGame: { number: number; pending: boolean; onAdd: (start: GameStart | null) => Promise<string> } | null
 }) {
   const phone = usePhoneLayout()
-  const client = useQueryClient()
   const [draftLink, setDraftLink] = useDraftVideo(series.id)
   const draftId = youtubeVideoId(draftLink)
   const video = seriesVideo(series.content, games) ?? (draftId ? { videoId: draftId, url: draftLink } : null)
@@ -417,15 +417,8 @@ function MatchViewer({
     url.searchParams.delete("game")
     return url.toString()
   }
-  // One broadcast for the whole match: the link is written to every game, each keeps its own start second.
-  const applyVideoToAll = async (url: string) => {
-    for (const entry of games) {
-      if (entry.content.sourceUrl === url) continue
-      const latest = await tournamentApi.read("games", entry.id)
-      await tournamentApi.save("games", latest, { ...latest.content, sourceUrl: url })
-    }
-    await client.invalidateQueries({ queryKey: [...tournamentKeys.all, "games"] })
-  }
+  const seriesVideoWrite = useSeriesVideo(games)
+  const applyVideoToAll = (url: string) => seriesVideoWrite.mutate(url)
 
   const progressOf = useMemo(
     () => Object.fromEntries(games.map((entry) => [entry.id, recordingProgress(entry)])),
@@ -454,7 +447,7 @@ function MatchViewer({
     setPanel({ kind: "draft" })
   }
   const useVideo = (url: string) => {
-    if (games.length) void applyVideoToAll(url)
+    if (games.length) applyVideoToAll(url)
     else setDraftLink(url)
     const start = youtubeLinkTime(url)
     if (start !== null) setPlayhead(start)
@@ -960,7 +953,7 @@ function MatchViewer({
             onPanel={setPanel}
             onDetail={setDetail}
             seekGame={(second, play) => seekChapter(focused, second, play)}
-            onVideoUrl={(url) => void applyVideoToAll(url)}
+            onVideoUrl={applyVideoToAll}
             shareLink={shareLink}
             actions={gameActions}
           >
