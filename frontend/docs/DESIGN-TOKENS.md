@@ -28,7 +28,9 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 - Stream đặt tên lại các token chung thành `--hub-*` ở đầu `stream.css` và chạy được ở cả giao diện sáng lẫn tối. Thanh
   trên và chân trang luôn màu chàm đêm. Logo đội và giải nằm trên ô `--hub-plate`, để logo vẽ cho nền tối vẫn thấy được ở
   giao diện sáng.
-- Biểu đồ một chuỗi số liệu dùng `--chart-1` (lấy từ `--aov-chart`). Ở bảng màu gốc, màu này tối hơn màu nhấn vì màu
+- Chữ AOV WiKi và AOV Stream trong menu chuyển ứng dụng giữ màu riêng của từng sản phẩm ở mọi app: `--aov-brand-wiki-*`,
+  `--aov-brand-stream-*` trong `tokens.css`. Các thành phần dùng chung trong `packages/ui` chỉ đọc token, không gõ màu.
+- Biểu đồ một chuỗi số liệu dùng `--chart-1` (lấy từ `--aov-chart`); các chuỗi tiếp theo lấy `--aov-chart-2` đến `--aov-chart-5`. Ở bảng màu gốc, màu này tối hơn màu nhấn vì màu
   nhấn quá sáng cho mảng đặc trên nền tối; Wiki dùng chính màu vàng của mình.
 
 ## Chữ
