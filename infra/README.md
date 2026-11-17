@@ -5,8 +5,8 @@ proxy Caddy. Ảnh và tệp nguồn nằm trên Cloudflare R2 như môi trườ
 triển khai đi đâu cả và không đụng tới môi trường dev trong `backend/wiki-service/compose.yaml`. Lý do các lựa chọn nằm ở
 [ADR-021](../backend/docs/adr/ADR-021-dong-goi-chay-mot-may.md).
 
-Cần Docker kèm Compose và các bucket R2 đã chuẩn bị theo [Cloudflare R2](#cloudflare-r2). Bản build không đọc `resources/`
-(ADR-030), nên clone không cần Git LFS.
+Cần Docker kèm Compose và quyền dùng ba bucket R2 của trang, xem [Cloudflare R2](#cloudflare-r2). Bản build không đọc
+`resources/` (ADR-030), nên clone không cần Git LFS.
 
 ## Khởi động
 
@@ -16,7 +16,8 @@ Chạy trong `infra/`, dùng được cả PowerShell lẫn bash. Lần đầu c
 cp .env.example .env
 ```
 
-Điền phần object storage trong `.env`: giá trị trong ngoặc nhọn là mẫu. Rồi khởi động:
+Điền phần object storage trong `.env`: giá trị trong ngoặc nhọn là mẫu. Tên bucket và tên miền ảnh đã là của trang thật.
+Rồi khởi động:
 
 ```bash
 docker compose up -d --build --wait
@@ -34,7 +35,9 @@ docker compose up -d --build --wait
 | <http://localhost:18081/idp/admin/> | Console Keycloak, chỉ nghe trên máy này, dùng `KEYCLOAK_ADMIN_USER` / `KEYCLOAK_ADMIN_PASSWORD` |
 
 Tài khoản thử: `admin`, `editor`, `publisher`, mật khẩu là `TEST_USER_PASSWORD` trong `.env`. Hệ thống mới không có dữ liệu Wiki,
-danh mục trống là đúng; xem [Đưa dữ liệu vào](#đưa-dữ-liệu-vào).
+danh mục trống là đúng; xem [Chuyển dữ liệu dev lên](#chuyển-dữ-liệu-dev-lên). Database trống đó là database thứ hai bên cạnh
+dev: khi nó trỏ vào bucket thật, đừng tải ảnh lên hay xóa ảnh trước khi đã nhận database dev (quy tắc ở
+[Cloudflare R2](#cloudflare-r2)).
 
 ## Dừng và xóa
 
@@ -73,34 +76,40 @@ docker compose down -v
 
 ## Cloudflare R2
 
-Stack không tạo bucket, không ghi CORS và không đổi gì trên Cloudflare (ADR-014). Chủ dự án chuẩn bị trong dashboard:
+Stack dùng ba bucket và tên miền ảnh mà dev đang dùng, vì khi ra mắt nó nhận lại database của dev (xem
+[Chuyển dữ liệu dev lên](#chuyển-dữ-liệu-dev-lên)). Nó không tạo bucket, không ghi CORS và không đổi gì trên Cloudflare (ADR-014).
 
 | Bucket | Biến | Chứa | Truy cập |
 |---|---|---|---|
-| Riêng tư | `STORAGE_BUCKET` | `incoming/` (upload chờ kiểm tra), `imports/` | Không public. CORS cho `PUT`, `GET`, `HEAD` từ origin của stack |
-| Ảnh công khai | `STORAGE_ASSETS_BUCKET` | `assets/` (ảnh đã kiểm tra, bất biến) | Custom domain `img.<tên miền>`, cache rule như dev |
-| Tệp nguồn | `STORAGE_SOURCES_BUCKET` | `sources/` (ảnh đối chứng, dữ liệu nhập) | Không public, không custom domain, không `r2.dev`. CORS cho `GET`, `HEAD` từ origin của stack |
+| `aov-media-private` | `STORAGE_BUCKET` | `incoming/` (upload chờ kiểm tra), `imports/` | Không public. CORS cho `PUT`, `GET`, `HEAD` |
+| `aov-media-assets` | `STORAGE_ASSETS_BUCKET` | `assets/` (ảnh đã kiểm tra, bất biến) | Custom domain `img.athahub.com`, nên `MEDIA_PUBLIC_BASE_URL=https://img.athahub.com/assets` |
+| `aov-source-private` | `STORAGE_SOURCES_BUCKET` | `sources/` (ảnh đối chứng, dữ liệu nhập) | Không public, không custom domain, không `r2.dev`. CORS cho `GET`, `HEAD` |
 
-1. **Bucket**: ba bucket Standard như trên. Cách dev đã làm và cache rule của tên miền ảnh nằm trong
-   [infra/cloudflare/README.md](../backend/wiki-service/infra/cloudflare/README.md) của `wiki-service`.
-2. **Khóa**: một R2 API token chỉ có quyền Object Read & Write trên đúng ba bucket, điền vào `STORAGE_ACCESS_KEY`,
-   `STORAGE_SECRET_KEY`. Endpoint là `https://<account-id>.r2.cloudflarestorage.com`.
-3. **CORS**: thêm đúng `PUBLIC_ORIGIN` (không có `/` cuối, không wildcard) vào `AllowedOrigins` của bucket riêng tư theo
-   [upload-cors.json](../backend/wiki-service/infra/cloudflare/upload-cors.json) và của bucket tệp nguồn theo
-   [source-cors.json](../backend/wiki-service/infra/cloudflare/source-cors.json). Admin và Stream cùng một origin nên một
-   dòng là đủ. Thiếu CORS thì trình duyệt không tải ảnh lên được, và các màn ảnh gốc, cửa hàng, build, xếp hạng không đọc
-   được bộ tệp nguồn.
-4. **Tên miền ảnh**: gắn `img.<tên miền>` vào bucket ảnh công khai, đặt `MEDIA_PUBLIC_BASE_URL=https://img.<tên miền>/assets`.
-5. **Purge cache**: Zone ID của tên miền (không phải Account ID) và token chỉ có quyền Zone / Cache Purge trên zone đó, điền vào
-   `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_CACHE_PURGE_TOKEN`. Đặt `MEDIA_CLOUDFLARE_PURGE_ENABLED=false` thì hệ thống vẫn chạy
-   nhưng Admin từ chối xóa ảnh.
-6. **Tùy chọn**: token chỉ có quyền Account Analytics: Read cùng `CLOUDFLARE_ACCOUNT_ID` để tab Dung lượng R2 của Admin có
+Bucket, tên miền ảnh và cache rule đã có từ dev, cách làm nằm trong
+[infra/cloudflare/README.md](../backend/wiki-service/infra/cloudflare/README.md) của `wiki-service`; không tạo lại. Trước khi
+chạy stack trên VPS, chủ dự án làm trong dashboard:
+
+1. **CORS**: thêm `PUBLIC_ORIGIN` của trang thật (`https://<tên miền>`, không có `/` cuối, không wildcard) vào
+   `AllowedOrigins` của `aov-media-private` theo [upload-cors.json](../backend/wiki-service/infra/cloudflare/upload-cors.json)
+   và của `aov-source-private` theo [source-cors.json](../backend/wiki-service/infra/cloudflare/source-cors.json). Giữ các origin
+   `localhost` đang có. Admin và Stream cùng một origin nên một dòng là đủ. Thiếu CORS thì trình duyệt không tải ảnh lên được,
+   và các màn ảnh gốc, cửa hàng, build, xếp hạng không đọc được bộ tệp nguồn.
+2. **Token R2 của VPS**: một R2 API token mới, chỉ dành cho VPS, chỉ có quyền Object Read & Write trên đúng ba bucket trên;
+   điền vào `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY` của `.env` trên VPS. Không dùng lại token của máy dev: sau ngày ra mắt
+   máy dev không được ghi vào các bucket này nữa, và thu hồi token của nó không được làm VPS mất quyền. Endpoint giống dev,
+   `https://<account-id>.r2.cloudflarestorage.com`.
+3. **Token Cache Purge**: token chỉ có quyền Zone / Cache Purge trên zone `athahub.com`, cùng Zone ID của zone đó (không phải
+   Account ID), điền vào `CLOUDFLARE_CACHE_PURGE_TOKEN`, `CLOUDFLARE_ZONE_ID`. Đặt `MEDIA_CLOUDFLARE_PURGE_ENABLED=false` thì hệ
+   thống vẫn chạy nhưng Admin từ chối xóa ảnh.
+4. **Tùy chọn**: token chỉ có quyền Account Analytics: Read cùng `CLOUDFLARE_ACCOUNT_ID` để tab Dung lượng R2 của Admin có
    số thật của Cloudflare (ADR-030 mục 9).
 
-**Một database, một bộ bucket.** Hai database dùng chung bucket không ghi đè nhau, vì key ảnh là UUID, nhưng vẫn xóa được của
-nhau: tệp nguồn lưu theo SHA-256, nên dọn bytes mồ côi ở database này có thể xóa đúng bytes mà database kia còn dùng; và nếu
-một database là bản sao của database kia thì xóa ảnh ở một bên làm hỏng ảnh ở bên còn lại. Stack chạy thử với database trống
-cần bộ bucket riêng và tên miền ảnh riêng. Chỉ trỏ vào bucket của dev khi stack này thay hẳn database dev.
+**Một database, một bộ bucket.** Ba bucket trên chỉ được có một database dùng: hôm nay là database dev, sau khi chuyển là
+database của stack. Quy tắc này áp dụng khi xuất hiện database thứ hai, ví dụ dev trên máy sau ngày ra mắt, stack chạy thử với
+database trống, hay một bản diễn tập chuyển dữ liệu. Hai database dùng chung bucket không ghi đè nhau, vì key ảnh là UUID,
+nhưng vẫn xóa được của nhau: tệp nguồn lưu theo SHA-256, nên dọn bytes mồ côi ở database này có thể xóa đúng bytes mà database
+kia còn dùng; và nếu một database là bản sao của database kia thì xóa ảnh ở một bên làm hỏng ảnh ở bên còn lại. Database thứ
+hai cần bộ bucket riêng, token riêng và địa chỉ ảnh riêng; bộ bucket dev đó chưa được tạo.
 
 Trình duyệt tải lên và đọc tệp nguồn thẳng từ endpoint R2 bằng URL ký sẵn, còn ảnh công khai đến từ tên miền ảnh. Không byte
 nào đi qua Caddy hay `wiki-service`.
@@ -129,9 +138,9 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | `STORAGE_ENDPOINT` | Endpoint S3 của R2, `https://<account-id>.r2.cloudflarestorage.com` |
 | `STORAGE_PUBLIC_ENDPOINT` | Địa chỉ ghi vào URL ký sẵn; để trống là dùng `STORAGE_ENDPOINT`, đúng với R2 |
 | `STORAGE_REGION`, `STORAGE_PATH_STYLE` | `auto` và `true` với R2 |
-| `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY` | Khóa của R2 API token |
-| `STORAGE_BUCKET`, `STORAGE_ASSETS_BUCKET`, `STORAGE_SOURCES_BUCKET` | Bucket riêng tư, bucket ảnh công khai, bucket tệp nguồn; xem [Cloudflare R2](#cloudflare-r2) |
-| `MEDIA_PUBLIC_BASE_URL` | `https://img.<tên miền>/assets`; đuôi `/assets` là bắt buộc |
+| `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY` | Khóa của R2 API token dành riêng cho máy chạy stack |
+| `STORAGE_BUCKET`, `STORAGE_ASSETS_BUCKET`, `STORAGE_SOURCES_BUCKET` | `aov-media-private`, `aov-media-assets`, `aov-source-private`; xem [Cloudflare R2](#cloudflare-r2) |
+| `MEDIA_PUBLIC_BASE_URL` | `https://img.athahub.com/assets`; đuôi `/assets` là bắt buộc |
 | `MEDIA_CLOUDFLARE_PURGE_ENABLED`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_CACHE_PURGE_TOKEN` | Purge cache Cloudflare khi xóa ảnh |
 | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ANALYTICS_TOKEN` | Tùy chọn: số liệu R2 thật trong Admin |
 | `REDIS_PASSWORD` | Mật khẩu cache |
@@ -236,16 +245,33 @@ Kiểm tra sau khi chạy: địa chỉ của một tướng phải trả về �
 curl -s http://localhost:18080/hero/airi | grep -i "<title>"
 ```
 
-## Đưa dữ liệu vào
+## Chuyển dữ liệu dev lên
 
-Hệ thống này không tự lấy dữ liệu từ môi trường dev. Để đưa dữ liệu sang, dump database `wiki`, `community` và cả realm từ dev ở định
-dạng `pg_dump --format=custom`, đặt vào `backups/db/<tên>/` đúng ba tên file `wiki.dump`, `community.dump`, `keycloak.dump` rồi
-khôi phục database như trên. Bản dump Keycloak của dev có redirect URI và tài khoản local, nên phải sửa lại realm sau đó.
+Khi ra mắt, stack nhận lại database và bucket của dev, và dữ liệu dev trở thành dữ liệu thật. Database `wiki` và `community`
+đi theo bản dump. Ảnh và tệp nguồn nằm nguyên trên ba bucket, vì key trong database trỏ đúng object đang có, nên không chép
+object nào.
 
-Bytes đi theo bucket, không theo dump. Stack trỏ vào chính bucket của dev thì không cần chép gì, nhưng đọc lại quy tắc "một
-database, một bộ bucket" ở [Cloudflare R2](#cloudflare-r2). Stack có bucket riêng thì phải chép object của dev sang đó trước,
-giữ nguyên key và metadata, ví dụ bằng `rclone copy` giữa hai bucket trong cùng tài khoản. Cách này chưa được chạy thử với dữ
-liệu dev thật.
+Phần đã có là `db-restore` ở [Khôi phục](#khôi-phục): nó thay cả ba database bằng `wiki.dump`, `community.dump`,
+`keycloak.dump` (`pg_dump --format=custom`) trong `backups/db/<tên>/`. Dev dùng cùng PostgreSQL 17.6 và cùng tên user `wiki`,
+`community`, nên quyền sở hữu trong hai bản dump của dev khớp với stack.
+
+Phần còn thiếu, nên các bước chuyển chưa được viết ở đây:
+
+- **Tài khoản Keycloak.** Keycloak của dev chạy `start-dev`: realm và người dùng nằm trong file H2 của volume `keycloak-data`,
+  không trong PostgreSQL. Không có `keycloak.dump` nào của dev để đưa cho `db-restore`, và stack không có lệnh nhập một bản xuất
+  realm kèm người dùng, vì realm mẫu chỉ được import khi chưa có realm.
+- **Issuer trong database.** Database nhận diện người dùng theo cặp issuer và subject: hồ sơ, người tạo và người sửa nội dung,
+  đội hình và lượt thích, nhật ký. Issuer của dev là `http://localhost:8081/realms/wikiaov`, của stack là
+  `<PUBLIC_ORIGIN>/idp/realms/wikiaov`. Kể cả khi giữ nguyên ID người dùng, dữ liệu cũ vẫn mang issuer của dev cho tới khi
+  được đổi lại.
+
+Dù các bước sau này ra sao, lúc chuyển phải giữ:
+
+- Dev ngừng ghi từ lúc dump. Từ đó chỉ stack ghi vào ba bucket.
+- Bản diễn tập trên VPS trước ngày ra mắt là database thứ hai. Khi nó còn chạy, không xóa ảnh và không dọn bytes mồ côi ở cả
+  hai bên; diễn tập xong thì bỏ database đó (`docker compose down -v`) trước khi chuyển thật.
+- Lịch sử Flyway của database dev phải khớp với code đem lên. Một migration đã áp dụng mà code không có (ví dụ từ một nhánh
+  chưa merge) làm service không khởi động được.
 
 Stack cũ còn container và volume của kho ảnh đi kèm trước đây: xem phần bổ sung ngày 17/11/2026 của ADR-021 để dọn.
 
@@ -257,8 +283,13 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
 - **TLS**: đặt `SITE_ADDRESS=<tên miền>`, `PUBLIC_ORIGIN=https://<tên miền>`, `PUBLIC_BIND_ADDRESS=0.0.0.0`, `HTTP_PORT=80`,
   `HTTPS_PORT=443`, `AUTH_SECURE_COOKIES=true`, bỏ `COMPOSE_PROFILES`, sinh secret mới rồi build lại. Bước này chưa chạy thử vì chưa có
   tên miền.
-- **R2 cho stack này**: chuẩn bị theo [Cloudflare R2](#cloudflare-r2). R2 đã chạy thật ở dev (upload, CopyObject, CDN); trên
-  origin của stack còn phải thử một lần: tải ảnh lên trong Admin, xem ảnh qua tên miền ảnh, mở ảnh gốc ở trang tướng.
+- **R2 cho stack này**: CORS, token R2 và token purge của VPS theo [Cloudflare R2](#cloudflare-r2). R2 đã chạy thật ở dev
+  (upload, CopyObject, CDN); trên origin của stack còn phải thử một lần: tải ảnh lên trong Admin, xem ảnh qua tên miền ảnh, mở
+  ảnh gốc ở trang tướng.
+- **Chuyển dữ liệu dev**: còn thiếu cách đưa realm và người dùng Keycloak của dev sang, và bước đổi issuer trong database; xem
+  [Chuyển dữ liệu dev lên](#chuyển-dữ-liệu-dev-lên).
+- **Sau ngày ra mắt**: máy dev không ghi vào ba bucket thật nữa. Thu hồi token R2 của máy dev hoặc đổi nó sang chỉ đọc; khi cần
+  dev tiếp thì tạo bộ bucket dev nhỏ, gần như trống, với token và địa chỉ ảnh riêng.
 - **Sao lưu ra ngoài máy**: backup hiện nằm cùng máy. Cần chỗ lưu riêng và lịch chạy.
 - **Email của Keycloak**: chưa có SMTP nên quên mật khẩu và xác minh email chưa hoạt động. Đăng ký mở sẵn như realm local
   (`registrationAllowed`), cần quyết định có giữ không.
