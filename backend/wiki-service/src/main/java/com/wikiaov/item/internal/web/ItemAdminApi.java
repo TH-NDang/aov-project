@@ -6,8 +6,6 @@ import com.wikiaov.platform.*;
 import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,10 +20,7 @@ import java.util.*;
 public interface ItemAdminApi {
 
     @Operation(operationId = "itemAdminApi_list", summary = "List - item admin", description = "List for item admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     PageSlice<ItemView> list(@Parameter(description = "Ruleset id identifier.") UUID rulesetId,
             @Parameter(description = "Requested translation locale.") String locale,
@@ -40,77 +35,53 @@ public interface ItemAdminApi {
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "itemAdminApi_latest", summary = "Latest - item admin", description = "Latest for item admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     ItemView latest(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Ruleset id identifier.") UUID rulesetId,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "itemAdminApi_create", summary = "Create - item admin", description = "Create for item admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('item:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     ItemView create(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Create input);
 
     @Operation(operationId = "itemAdminApi_history", summary = "History - item admin", description = "History for item admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     List<ItemView.Revision> history(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "itemAdminApi_read", summary = "Read - item admin", description = "Read for item admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     ItemView read(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Revision id identifier.") UUID revisionId,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "itemAdminApi_fork", summary = "Fork - item admin", description = "Fork for item admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('item:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     ItemView fork(@Parameter(description = "Id identifier.") UUID id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Fork input);
 
     @Operation(operationId = "itemAdminApi_update", summary = "Update - item admin", description = "Update for item admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('item:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     ItemView update(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Revision id identifier.") UUID revisionId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Update input);
 
     @Operation(operationId = "itemAdminApi_publish", summary = "Publish - item admin", description = "Publish for item admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('item:publish').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     ItemView publish(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Revision id identifier.") UUID revisionId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation input);
 
     @Operation(operationId = "itemAdminApi_discard", summary = "Discard - item admin", description = "Discard for item admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('item:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     ItemView discard(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Revision id identifier.") UUID revisionId,

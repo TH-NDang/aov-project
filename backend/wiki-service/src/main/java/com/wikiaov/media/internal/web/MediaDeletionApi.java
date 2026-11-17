@@ -15,11 +15,13 @@ public interface MediaDeletionApi {
             @ApiResponse(responseCode = "200", description = "Deletion completed"),
             @ApiResponse(responseCode = "409", description = "Image is referenced, uploading, stale or already being deleted"),
             @ApiResponse(responseCode = "502", description = "Competition check or CDN purge failed; retry is safe"),
-            @ApiResponse(responseCode = "503", description = "Storage or CDN configuration is unavailable")})
+            @ApiResponse(responseCode = "503", description = "Storage or CDN configuration is unavailable")
+    })
     MediaDeletionView delete(UUID assetId, @Valid DeleteMediaRequest request);
 
     @Operation(operationId = "mediaDeletionApi_status", summary = "Read durable media deletion progress", description = "Requires catalog:read and media:write. Returns origin deletion and cache purge progress without storage credentials or object keys.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Deletion progress"),
-            @ApiResponse(responseCode = "404", description = "No deletion was requested")})
+            @ApiResponse(responseCode = "404", description = "No deletion was requested")
+    })
     MediaDeletionView status(UUID assetId);
 }

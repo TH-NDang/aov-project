@@ -5,10 +5,17 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.IntegerSchema;
+import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.ObjectSchema;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,6 +45,50 @@ class OpenApiConfiguration {
             });
             api.setPaths(paths);
         };
+    }
+
+    /**
+     * The problem responses every operation shares, declared once instead of on each {@code *Api} method: a default
+     * RFC 9457 problem, and for operations that need a bearer token the 401 and 403 answers. An operation that documents
+     * one of these codes itself keeps its own wording. Responses are listed by status code, the default last.
+     */
+    @Bean
+    OpenApiCustomizer commonProblemResponses() {
+        return api -> {
+            if (api.getPaths() == null) {
+                return;
+            }
+            api.getPaths().values().forEach(item -> item.readOperations().forEach(operation -> {
+                var responses = new LinkedHashMap<String, ApiResponse>();
+                if (operation.getResponses() != null) {
+                    responses.putAll(operation.getResponses());
+                }
+                boolean secured = operation.getSecurity() != null && operation.getSecurity().stream()
+                        .anyMatch(requirement -> requirement.containsKey("bearerAuth"));
+
+                if (secured) {
+                    responses.putIfAbsent("401", problem("A valid bearer access token is required."));
+                    responses.putIfAbsent("403", problem(
+                            "The authenticated actor lacks a required capability or fails an authorization rule."));
+                }
+                responses.putIfAbsent("default", problem("Failure expressed as RFC 9457 Problem Details, "
+                        + "including the module-specific code and requestId when available."));
+
+                var ordered = new ApiResponses();
+                if (operation.getResponses() != null) {
+                    ordered.setExtensions(operation.getResponses().getExtensions());
+                }
+                responses.entrySet().stream()
+                        .sorted(Comparator.comparing(entry -> "default".equals(entry.getKey()) ? "~" : entry.getKey()))
+                        .forEach(entry -> ordered.addApiResponse(entry.getKey(), entry.getValue()));
+                operation.setResponses(ordered);
+            }));
+        };
+    }
+
+    private static ApiResponse problem(String description) {
+        return new ApiResponse().description(description).content(new Content().addMediaType("application/problem+json",
+                new MediaType().schema(new Schema<>().$ref("#/components/schemas/ApiProblem"))));
     }
 
     @Bean

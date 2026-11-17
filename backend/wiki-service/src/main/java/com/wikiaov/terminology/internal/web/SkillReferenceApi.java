@@ -24,10 +24,7 @@ import org.springframework.web.context.request.WebRequest;
 public interface SkillReferenceApi {
 
     @Operation(operationId = "skillReferenceApi_admin", summary = "Admin - skill reference", description = "Admin for skill reference. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
-            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     PageSlice<Candidate> admin(@Parameter(description = "Ruleset id identifier.") UUID rulesetId,
             @Parameter(description = "Requested translation locale.") String locale,
@@ -44,8 +41,7 @@ public interface SkillReferenceApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<PageSlice<Candidate>> published(
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
