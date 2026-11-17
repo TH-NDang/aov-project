@@ -17,13 +17,6 @@ export const COMPETITION_TYPES = {
   SHOWMATCH: "Giao hữu / biểu diễn",
   OTHER: "Khác",
 }
-export const PLAYER_LANES = {
-  TOP: "Đường Tà Thần",
-  JUNGLE: "Đi rừng",
-  MID: "Đường giữa",
-  DRAGON: "Đường Rồng",
-  SUPPORT: "Trợ thủ",
-}
 export const CAREER_STATUSES = {
   UNKNOWN: "Chưa xác định",
   ACTIVE: "Đang thi đấu",

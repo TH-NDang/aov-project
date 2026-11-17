@@ -4,6 +4,7 @@ import type { TournamentRecords } from "./tournament-api"
 import { registryFormIssue } from "./registry-form-model"
 import { rosterFormIssue } from "./roster-model"
 import type { RosterMembershipContent } from "@aov/community-contracts"
+import { isBestOf } from "@/features/esports/model/series-rules"
 
 export const MAX_REGISTRY_IMPORT_BYTES = 1024 * 1024
 export const IMPORT_KINDS = ["teams", "players", "tournaments", "roster-memberships", "series"] as const
@@ -170,8 +171,7 @@ function content(kind: ImportKind, value: unknown, label: string) {
         : [])
     if (!result[field]) throw new Error(`${label}: thiếu ${field}.`)
   if (kind === "tournaments" && !result.region) throw new Error(`${label}: thiếu thị trường.`)
-  if (kind === "series" && ![1, 3, 5, 7, 9].includes(result.bestOf as number))
-    throw new Error(`${label}: thể thức BO chưa hợp lệ.`)
+  if (kind === "series" && !isBestOf(result.bestOf)) throw new Error(`${label}: thể thức BO chưa hợp lệ.`)
   if (
     result.status != null &&
     !(

@@ -289,6 +289,20 @@ test("preflight rejects unfinished results, missing result sources and reversed 
   )
 })
 
+test("an imported series takes the same lengths as the forms, even ones included", () => {
+  const row = series()
+  for (const bestOf of [1, 2, 3, 4, 5, 7, 9])
+    assert.equal(
+      parse({ schemaVersion: 1, series: [{ ...row, content: { ...row.content, bestOf, result: undefined } }] }).rows
+        .length,
+      1,
+    )
+  assert.throws(
+    () => parse({ schemaVersion: 1, series: [{ ...row, content: { ...row.content, bestOf: 6 } }] }),
+    /thể thức BO chưa hợp lệ/,
+  )
+})
+
 test("short names and scheduled calendar dates are checked before import", () => {
   assert.equal(
     parse({ schemaVersion: 1, teams: [{ content: { code: "blue", name: "Blue", shortName: "a".repeat(100) } }] }).rows

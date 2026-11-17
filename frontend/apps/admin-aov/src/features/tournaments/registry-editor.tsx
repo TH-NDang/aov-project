@@ -21,12 +21,13 @@ import { initialRegistryValues, registryContent, registryFormIssue, type Registr
 import {
   CAREER_STATUSES,
   COMPETITION_TYPES,
-  PLAYER_LANES,
   RESULT_VERIFICATIONS,
   TOURNAMENT_STATUSES,
   TOURNAMENT_TIERS,
   VENUE_MODES,
 } from "./tournament-metadata"
+import { BEST_OF_CHOICES } from "@/features/esports/model/series-rules"
+import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
 
 export type { RegistryKind } from "./registry-form-model"
 type Content = TeamContent | PlayerContent | TournamentContent | SeriesContent
@@ -71,7 +72,7 @@ function registryFields(kind: RegistryKind): Field[] {
       {
         key: "lane",
         label: "Vị trí thường đánh",
-        options: Object.entries(PLAYER_LANES).map(([id, name]) => ({ id, name })),
+        options: LANE_ORDER.map((lane) => ({ id: lane, name: LANE_LABELS[lane].name })),
       },
       {
         key: "careerStatus",
@@ -161,7 +162,7 @@ function registryFields(kind: RegistryKind): Field[] {
       key: "bestOf",
       label: "Thể thức",
       required: true,
-      options: [1, 2, 3, 4, 5, 7, 9].map((value) => ({ id: String(value), name: `BO${value}` })),
+      options: BEST_OF_CHOICES.map((value) => ({ id: String(value), name: `BO${value}` })),
     },
     {
       key: "repeatPicksAllowed",

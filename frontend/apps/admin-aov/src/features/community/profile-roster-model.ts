@@ -1,4 +1,5 @@
 import type { Lane, ProfileMember } from "@aov/community-contracts"
+import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
 
 const normalize = (value: string) =>
   value
@@ -36,13 +37,9 @@ const laneAliases: Record<string, Lane> = {
   roam: "SUPPORT",
 }
 
-export const rosterLaneLabels: Record<Lane, string> = {
-  TOP: "Tà thần",
-  JUNGLE: "Đi rừng",
-  MID: "Đường giữa",
-  DRAGON: "Đường Rồng",
-  SUPPORT: "Trợ thủ",
-}
+export const rosterLaneLabels: Record<Lane, string> = Object.fromEntries(
+  LANE_ORDER.map((lane) => [lane, LANE_LABELS[lane].name]),
+) as Record<Lane, string>
 const laneOrder: Lane[] = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"]
 export type RosterGroup = "starting" | "substitute" | "staff" | "other" | "former"
 export type RosterEntry = { member: ProfileMember; index: number }

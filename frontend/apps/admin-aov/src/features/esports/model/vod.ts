@@ -1,5 +1,4 @@
-/** A stoppage inside the broadcast: the game clock holds at `atSeconds` for `durationSeconds` of video. */
-export type VodPause = { atSeconds: number; durationSeconds: number }
+import type { VodPause } from "@aov/community-contracts"
 
 /** Maps the in-game clock onto one official broadcast video that may contain several games and pauses. */
 export type VodSync = { url: string; startSecond: number | null; pauses: VodPause[] }

@@ -1,3 +1,4 @@
+import type { ObjectiveKind } from "@aov/community-contracts"
 import { useMemo } from "react"
 import type { Side } from "@aov/community-contracts"
 import { Ban, Crown, Flag, History, PackagePlus, TriangleAlert, UserPlus } from "lucide-react"
@@ -10,7 +11,6 @@ import {
   objectivesAt,
   seatStatsAt,
   type ItemRef,
-  type ObjectiveKind,
   type SeatKey,
   type TimelineEvent,
 } from "../../model/timeline"

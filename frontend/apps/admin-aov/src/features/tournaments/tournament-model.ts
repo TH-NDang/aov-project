@@ -10,14 +10,13 @@ import type {
   SeriesContent,
   Side,
 } from "@aov/community-contracts"
+import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
 
-export const LANES: { code: Lane; name: string; short: string }[] = [
-  { code: "TOP", name: "Đường Caesar", short: "DSL" },
-  { code: "JUNGLE", name: "Đi rừng", short: "JUG" },
-  { code: "MID", name: "Đường giữa", short: "MID" },
-  { code: "DRAGON", name: "Đường Rồng", short: "ADL" },
-  { code: "SUPPORT", name: "Hỗ trợ", short: "SUP" },
-]
+/** Lanes in map order with their names; the names come from the one table the match screens use. */
+export const LANES: { code: Lane; name: string; short: string }[] = LANE_ORDER.map((code) => ({
+  code,
+  ...LANE_LABELS[code],
+}))
 export const OBSERVATION_LABELS = {
   UNKNOWN: "Chưa thu thập",
   NOT_SHOWN: "Nguồn không hiển thị",

@@ -1,4 +1,4 @@
-import type { EquipmentEvent, EquipmentSnapshot, Lane, Side } from "@aov/community-contracts"
+import type { EquipmentEvent, EquipmentSnapshot, Lane, ObjectiveKind, Side } from "@aov/community-contracts"
 
 /** Stable seat inside one game: side plus lane, e.g. `BLUE:MID`. */
 export type SeatKey = `${Side}:${Lane}`
@@ -7,7 +7,6 @@ export const seatSide = (key: SeatKey): Side => key.split(":")[0] as Side
 export const otherSide = (side: Side): Side => (side === "BLUE" ? "RED" : "BLUE")
 
 export type ItemRef = { id?: string | null; name: string }
-export type ObjectiveKind = "DARK_SLAYER" | "ABYSSAL_DRAGON" | "TURRET" | "BASE" | "OTHER"
 export type ItemAction = "BUY" | "SELL" | "UPGRADE" | "SWAP"
 
 export const OBJECTIVE_LABELS: Record<ObjectiveKind, string> = {

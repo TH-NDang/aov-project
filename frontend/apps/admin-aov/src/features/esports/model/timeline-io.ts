@@ -5,6 +5,7 @@ import type {
   Seat,
   Side,
   TimelineEvent as StoredEvent,
+  VodPause,
 } from "@aov/community-contracts"
 import {
   KIND_LABELS,
@@ -15,7 +16,7 @@ import {
   type SeatKey,
   type TimelineEvent,
 } from "./timeline"
-import { formatClock, type VodPause } from "./vod"
+import { formatClock } from "./vod"
 
 const toKey = (seat?: Seat | null): SeatKey | undefined => (seat ? seatKey(seat.side, seat.lane) : undefined)
 const toSeat = (key?: SeatKey): Seat | null => {

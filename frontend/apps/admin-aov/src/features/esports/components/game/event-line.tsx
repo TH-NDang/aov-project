@@ -1,3 +1,4 @@
+import type { ObjectiveKind } from "@aov/community-contracts"
 import { ArrowRightLeft, ChevronsRight, Flag, ShoppingBag, Skull, Sparkles, Swords, Tag } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import type { GameSeat, GameView } from "../../model/game-view"
@@ -8,7 +9,6 @@ import {
   eventSide,
   objectiveActor,
   type ItemRef,
-  type ObjectiveKind,
   type SeatKey,
   type TimelineEvent,
 } from "../../model/timeline"

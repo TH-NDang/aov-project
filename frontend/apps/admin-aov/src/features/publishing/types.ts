@@ -1,3 +1,4 @@
+import { LANE_LABELS } from "@/features/esports/model/labels"
 export const SECTIONS = [
   ["PROFILE", "profile", "Thông tin"],
   ["OVERVIEW_RATINGS", "overview-ratings", "Đánh giá"],
@@ -16,12 +17,13 @@ export const ROLES = {
   SUPPORT: "Trợ thủ",
 } as const
 export type Role = keyof typeof ROLES
+/** A hero's lanes, named like a player's lane in the one table of lane names. */
 export const POSITIONS = {
-  TOP: "Đường Tà thần Caesar",
-  MID: "Đường giữa",
-  JUNGLE: "Rừng",
-  DRAGON: "Đường Rồng",
-  SUPPORT: "Hỗ trợ",
+  TOP: LANE_LABELS.TOP.name,
+  MID: LANE_LABELS.MID.name,
+  JUNGLE: LANE_LABELS.JUNGLE.name,
+  DRAGON: LANE_LABELS.DRAGON.name,
+  SUPPORT: LANE_LABELS.SUPPORT.name,
 } as const
 export type Position = keyof typeof POSITIONS
 export interface Source {

@@ -1,5 +1,6 @@
 import type { CompetitionPlan } from "@aov/community-contracts"
 import { normalize } from "@/lib/text"
+import { BEST_OF_CHOICES } from "@/features/esports/model/series-rules"
 
 export type CompetitionOption = { value: string; label: string; keywords?: string; detail?: string }
 
@@ -68,7 +69,7 @@ export const stageNameOptions = textOptions([
   "Playoffs",
   "Chung kết",
 ])
-export const bestOfOptions: CompetitionOption[] = [1, 2, 3, 4, 5, 7, 9].map((value) => ({
+export const bestOfOptions: CompetitionOption[] = BEST_OF_CHOICES.map((value) => ({
   value: String(value),
   label: value % 2 ? `BO${value} · Thắng ${Math.ceil(value / 2)} ván` : `BO${value} · Đấu đủ ${value} ván`,
 }))
