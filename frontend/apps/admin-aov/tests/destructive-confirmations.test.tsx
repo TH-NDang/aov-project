@@ -1,16 +1,12 @@
 import assert from "node:assert/strict"
-import { after, before, test } from "node:test"
-import { JSDOM } from "jsdom"
-import * as React from "react"
-import { act } from "react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { before, test } from "node:test"
+import { act, type ReactNode } from "react"
+import { button as findButton, click, confirmDialog as dialog, flush, render, withDom } from "./fixtures/dom"
+import { fakeBackend, json, noContent, type ApiRequest } from "./fixtures/network"
+import { sessionRoutes, signIn } from "./fixtures/session"
 import type { HeroShop, HeroShopPrice, SkinAcquisition } from "../src/features/publishing/publishing-api"
 import type { AdminVideo } from "../src/features/videos/video-model"
 import type { Revision } from "../src/features/publishing/types"
-
-const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
-const document = dom.window.document
-const requests: { method: string; path: string }[] = []
 
 const price = (capturedOn: string, goldPrice: number): HeroShopPrice => ({
   availability: "ON_SALE",
@@ -38,25 +34,12 @@ const shop: HeroShop = {
   skinHistory: [],
 }
 
-const fetcher: typeof fetch = async (input, init) => {
-  const path = String(input).replace("/api/wiki/v1", "")
-  const method = init?.method ?? "GET"
-  requests.push({ method, path })
-  if (path === "/auth/refresh") return Response.json({ accessToken: "fixture-only", expiresIn: 3600 })
-  if (path === "/auth/logout") return new Response(null, { status: 204 })
-  if (path === "/admin/me")
-    return Response.json({
-      issuer: "fixture",
-      subject: "editor",
-      type: "HUMAN",
-      displayName: "UI fixture",
-      capabilities: ["hero:write", "hero:publish"],
-    })
-  if (path.startsWith("/admin/heroes/fixture-hero/shop") && method === "GET") return Response.json(shop)
-  if (method === "DELETE") return new Response(null, { status: 204 })
-  if (path === "/admin/seasons") return Response.json([{ id: "season-1" }])
+const backend = fakeBackend(sessionRoutes({ capabilities: ["hero:write", "hero:publish"] }), ({ method, path }) => {
+  if (path.startsWith("/admin/heroes/fixture-hero/shop") && method === "GET") return json(shop)
+  if (method === "DELETE") return noContent()
+  if (path === "/admin/seasons") return json([{ id: "season-1" }])
   if (path === "/admin/heroes/import/contexts?seasonId=season-1")
-    return Response.json([
+    return json([
       {
         contextId: "context-old",
         rulesetId: "rules",
@@ -72,91 +55,22 @@ const fetcher: typeof fetch = async (input, init) => {
         patchCode: "1.1",
       },
     ])
-  if (path.endsWith("/baseline-context")) return Response.json({ id: "draft", version: 2 })
-  return Response.json({ detail: `Unexpected ${method} ${path}` }, { status: 404 })
-}
-
-const originals = new Map<string, PropertyDescriptor | undefined>()
-before(async () => {
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    BroadcastChannel: undefined,
-    fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  const { verifySession } = await import("../src/app/auth/session")
-  await verifySession()
+  if (path.endsWith("/baseline-context")) return json({ id: "draft", version: 2 })
+  return undefined
 })
+const requests: ApiRequest[] = backend.requests
+const dom = withDom({ globals: () => ({ fetch: backend.fetch }) })
 
-after(async () => {
-  const { logout } = await import("../src/app/auth/session")
-  await logout()
-  dom.window.close()
-  for (const [key, descriptor] of originals) {
-    if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-    else Reflect.deleteProperty(globalThis, key)
-  }
-})
+before(signIn)
 
-async function settle() {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10))
-    })
-  }
+async function mounted(element: ReactNode) {
+  return (await render(element)).unmount
 }
-
-async function mounted(element: React.ReactNode) {
-  const { createRoot } = await import("react-dom/client")
-  const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  const host = document.createElement("div")
-  document.body.append(host)
-  const root = createRoot(host)
-  await act(async () =>
-    root.render(
-      <QueryClientProvider client={client}>
-        {element}
-        <ConfirmDialogHost />
-      </QueryClientProvider>,
-    ),
-  )
-  await settle()
-  return async () => {
-    await act(async () => root.unmount())
-    client.clear()
-    host.remove()
-  }
-}
-
-const dialog = () => document.querySelector<HTMLElement>('[role="alertdialog"]')
 
 function button(label: string, scope: ParentNode = document) {
-  const found = [...scope.querySelectorAll<HTMLButtonElement>("button")].find(
-    (entry) => entry.getAttribute("aria-label") === label || entry.textContent?.trim() === label,
-  )
+  const found = findButton(label, scope)
   assert.ok(found, `Expected a "${label}" button`)
   return found
-}
-
-async function click(element: HTMLElement) {
-  await act(async () => element.click())
-  await settle()
 }
 
 const writes = () => requests.filter((request) => request.method !== "GET")
@@ -296,7 +210,7 @@ test("moving a baseline to another patch asks first", async () => {
       select.value = "context-new"
       select.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
     })
-    await settle()
+    await flush()
     const submit = () => button("Đổi patch")
     const write = await expectAskedBeforeWrite(submit, /Đổi patch của bản nhập dữ liệu\?/, "Đổi patch", "Quay lại")
     assert.equal(write.method, "POST")
