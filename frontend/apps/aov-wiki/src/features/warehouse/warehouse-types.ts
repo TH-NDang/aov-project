@@ -1,5 +1,6 @@
 import { warehouseName, warehouseText } from "@aov/ui/lib/warehouse-content"
 import type { WarehouseContents } from "@aov/ui/lib/warehouse-content"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 export type PublishedWarehouseRecord = {
   [K in WarehouseKind]: WarehouseEntry<WarehouseContents[K]> & { kind: K }
 }[WarehouseKind]
@@ -102,7 +103,7 @@ export function matchesWarehouseSearch(entry: WarehouseEntry, query: string, loc
 }
 
 export function warehouseStatValue(stat: WarehouseStat, locale = "vi-VN") {
-  const value = stat.value.toLocaleString(locale, { maximumFractionDigits: 3 })
+  const value = formatGameNumber(stat.value, 3)
   return `${stat.value > 0 ? "+" : ""}${value}${stat.unit === "PERCENT" || stat.unit === "%" ? "%" : stat.unit === "SECONDS" ? (locale.startsWith("en") ? " s" : " giây") : ""}`
 }
 

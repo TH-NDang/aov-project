@@ -255,7 +255,7 @@ function DetailContent({
             <Title>{entryTitle(entry, scope.locale)}</Title>
             {entry.kind === "items" && (
               <div className="wiki-warehouse-detail-price">
-                <ItemPrice amount={entry.content.price} locale={scope.locale} />
+                <ItemPrice amount={entry.content.price} />
               </div>
             )}
           </div>

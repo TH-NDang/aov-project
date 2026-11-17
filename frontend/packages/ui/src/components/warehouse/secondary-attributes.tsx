@@ -3,6 +3,7 @@ import { availabilityLabels } from "./spell-cards"
 import { SpellCooldown } from "./spell-cooldown"
 import { warehouseText, type WarehouseMetadata } from "@aov/ui/lib/warehouse-content"
 import type { WarehouseContents, WarehouseTranslation, WarehouseStat } from "@aov/ui/lib/warehouse-content"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 type SecondaryKind = Exclude<keyof WarehouseContents, "items">
 type SecondaryContent = Partial<
   WarehouseContents["spells"] & WarehouseContents["enchantments"] & WarehouseContents["arcana"]
@@ -43,7 +44,7 @@ export function SecondaryAttributes({
   if (part === "stats") {
     const labels = warehouseText(content.translations, locale)?.statLabels
     for (const stat of content.stats ?? [])
-      rows.push([labels?.[stat.key] || stat.key, `${stat.value.toLocaleString(locale)}${stat.unit ?? ""}`])
+      rows.push([labels?.[stat.key] || stat.key, `${formatGameNumber(stat.value)}${stat.unit ?? ""}`])
   } else if (kind === "enchantments") {
     const branch = branches.find((entry) => entry.code === content.branchCode)
     rows.push(
@@ -93,7 +94,7 @@ export function SecondaryAttributes({
         <div className="self-center">
           <dt className="sr-only">{t("Hồi chiêu", "Cooldown")}</dt>
           <dd className="type-body">
-            <SpellCooldown seconds={content.cooldownSeconds} locale={locale} />
+            <SpellCooldown seconds={content.cooldownSeconds} />
           </dd>
         </div>
       )}

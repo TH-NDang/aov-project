@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 type HeroAvailability = "ON_SALE" | "NOT_OPEN" | "COMING_SOON" | "UNKNOWN"
 type SkinMethod = "VOUCHER" | "EVENT" | "NOT_OPEN" | "OTHER" | "UNKNOWN"
@@ -51,8 +52,8 @@ export function HeroPriceTag({ heroId, fallbackHeroId }: { heroId: string; fallb
   if (!price) return null
   const Coin = gameplayIcons.coin
   const amounts = [
-    price.goldPrice != null && `${price.goldPrice.toLocaleString(locale)} ${text("vàng", "gold")}`,
-    price.voucherPrice != null && `${price.voucherPrice.toLocaleString(locale)} ${text("quân huy", "vouchers")}`,
+    price.goldPrice != null && `${formatGameNumber(price.goldPrice)} ${text("vàng", "gold")}`,
+    price.voucherPrice != null && `${formatGameNumber(price.voucherPrice)} ${text("quân huy", "vouchers")}`,
   ].filter(Boolean)
   const label =
     price.availability === "NOT_OPEN"
@@ -82,7 +83,7 @@ export function useSkinAcquisition(heroId: string, skinKey: string) {
   return row.method === "VOUCHER"
     ? row.voucherPrice == null
       ? text("Mua bằng quân huy", "Bought with vouchers")
-      : `${row.voucherPrice.toLocaleString(locale)} ${text("quân huy", "vouchers")}`
+      : `${formatGameNumber(row.voucherPrice)} ${text("quân huy", "vouchers")}`
     : row.method === "EVENT"
       ? row.eventName
         ? `${text("Sự kiện", "Event")}: ${row.eventName}`

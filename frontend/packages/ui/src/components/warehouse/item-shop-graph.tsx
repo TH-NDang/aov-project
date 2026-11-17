@@ -249,7 +249,7 @@ function GraphCard({
               />
             </span>
           )}
-          <ItemPrice amount={item.content.price} locale={locale} badge />
+          <ItemPrice amount={item.content.price} badge />
         </span>
         <span className="min-w-0 flex-1 space-y-0.5">
           <ShopCardText text={name} />

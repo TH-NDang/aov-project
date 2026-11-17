@@ -1,9 +1,10 @@
 import { Clock3 } from "lucide-react"
 import { useWarehouseText } from "./warehouse-view"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
-export function SpellCooldown({ seconds, locale }: { seconds?: number | null; locale: string }) {
+export function SpellCooldown({ seconds }: { seconds?: number | null }) {
   const t = useWarehouseText()
-  const value = seconds?.toLocaleString(locale)
+  const value = seconds == null ? undefined : formatGameNumber(seconds)
   const label =
     value == null ? t("Chưa rõ hồi chiêu", "Cooldown unknown") : t(`Hồi chiêu ${value} giây`, `Cooldown: ${value} s`)
   return (

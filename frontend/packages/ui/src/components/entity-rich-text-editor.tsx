@@ -249,7 +249,7 @@ export function EntityRichTextEditor({
   }
   const commit = (snapshot: EditorSnapshot, focus = true) => {
     if (snapshot.value.length > limit && snapshot.value.length > current.current.length) {
-      setNotice(`Nội dung vượt giới hạn ${limit.toLocaleString("vi-VN")} ký tự.`)
+      setNotice(`Nội dung vượt giới hạn ${limit.toLocaleString()} ký tự.`)
       return false
     }
     if (snapshot.value !== history.current[position.current]?.value) {

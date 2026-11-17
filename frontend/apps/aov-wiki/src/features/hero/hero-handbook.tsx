@@ -10,7 +10,7 @@ import { FeedbackDialog } from "../../components/feedback-dialog"
 import { HeroHistory } from "./hero-history"
 import { HeroVersionChanges, HeroVersionUnchanged, useHeroVersion } from "./hero-version-changes"
 import { localizedFormName, localizedRankLabel, localizedSkillCost, localizedStateName } from "./hero-skill-labels"
-import { localizedStatText, statText } from "./hero-stat-text"
+import { statText } from "./hero-stat-text"
 import { HeroRatings } from "./hero-ratings"
 import { useHeroVideos, useVideoParam, VideoGallery } from "../videos/subject-videos"
 import { SkillIcon } from "./hero-skill-icon"
@@ -142,7 +142,7 @@ function useHandbook(hero: HeroDetail) {
     if (key === "ABILITY_POWER" && !roles.includes("MAGE") && roles.includes("MARKSMAN")) return []
     const stat = hero.content.combatStats?.values?.find((value) => value.statKey === key)
     if (stat?.baseValue == null) return []
-    return [{ label: text(vi, en), Icon, value: localizedStatText(statText(stat), locale) }]
+    return [{ label: text(vi, en), Icon, value: statText(stat) }]
   })
   return {
     scope,

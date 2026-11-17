@@ -7,6 +7,7 @@ import { WarehouseArtwork } from "./warehouse-artwork"
 import { fillStyle } from "./warehouse-grid"
 import { EmptyGroup, FoldedGroup } from "./warehouse-parts"
 import { warehouseName, warehouseText, type PublishedWarehouseRecord, type WarehouseEntry } from "./warehouse-types"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 /** When a talent becomes available to an account, where the game says so. */
 function spellUnlockText(content: WarehouseSpell["content"], locale: string) {
@@ -19,7 +20,7 @@ function spellUnlockText(content: WarehouseSpell["content"], locale: string) {
 export function spellCooldownText(seconds: number | null | undefined, locale: string) {
   return seconds == null
     ? wikiText(locale, "Chưa rõ hồi chiêu", "Cooldown unknown")
-    : wikiText(locale, `${seconds.toLocaleString(locale)} giây`, `${seconds.toLocaleString(locale)} s`)
+    : wikiText(locale, `${formatGameNumber(seconds)} giây`, `${formatGameNumber(seconds)} s`)
 }
 
 /**

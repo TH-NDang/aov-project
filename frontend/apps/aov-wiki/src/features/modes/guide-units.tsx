@@ -17,6 +17,7 @@ import {
   UnitTraits,
   type GuideIndex,
 } from "./guide-ui"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 type StatKey = "health" | "physicalAttack" | "armor" | "magicResistance"
 const STATS: { key: StatKey; label: string; english: string }[] = [
@@ -25,6 +26,8 @@ const STATS: { key: StatKey; label: string; english: string }[] = [
   { key: "armor", label: "Giáp", english: "Armor" },
   { key: "magicResistance", label: "Giáp phép", english: "Magic Defense" },
 ]
+/** A unit's stat as the game writes it, whatever the reader's locale. */
+const gameValue = (value: number | undefined) => (value == null ? "—" : formatGameNumber(value))
 type SortKey = StatKey | "cost" | "name"
 type SortRule = { key: SortKey; desc: boolean }
 const SORT_LABEL: Record<SortKey, LabelNames> = {
@@ -266,7 +269,7 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
                     </td>
                     {shownStats.map((stat) => (
                       <td key={stat.key} className="num">
-                        {unit.stats?.[stat.key]?.[star]?.toLocaleString(locale) ?? "—"}
+                        {gameValue(unit.stats?.[stat.key]?.[star])}
                       </td>
                     ))}
                     {!compact && (
@@ -360,7 +363,7 @@ export function UnitDetail({
                   <th scope="row">{text(stat.label, stat.english)}</th>
                   {(unit.stats?.[stat.key] ?? []).map((value, at) => (
                     <td key={at} className="num">
-                      {value.toLocaleString(locale)}
+                      {formatGameNumber(value)}
                     </td>
                   ))}
                 </tr>
