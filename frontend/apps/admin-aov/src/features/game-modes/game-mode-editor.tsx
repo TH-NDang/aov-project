@@ -15,6 +15,15 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { HeroCodePicker, RowMenu } from "./entry-controls"
 import { RulesEditor } from "./rules-editor"
 
+/** Discarding a draft drops every change saved in it, so it asks first. */
+export const confirmDraftDiscard = () =>
+  confirmAction({
+    title: "Bỏ bản nháp này?",
+    description: "Mọi thay đổi đã lưu trong bản nháp sẽ mất. Bản đang xuất bản trên Wiki giữ nguyên.",
+    confirmLabel: "Bỏ nháp",
+    cancelLabel: "Giữ bản nháp",
+  })
+
 export const field = "grid gap-1"
 export const selectClass = "h-9 rounded-md border bg-transparent px-3 type-body"
 
@@ -104,7 +113,9 @@ export function GameModeEditorPage() {
               <Button
                 variant="outline"
                 disabled={!canWrite || action.isPending}
-                onClick={() => action.mutate("discard")}
+                onClick={async () => {
+                  if (await confirmDraftDiscard()) action.mutate("discard")
+                }}
               >
                 Bỏ nháp
               </Button>
