@@ -1348,7 +1348,7 @@ Query `needsCredit=true` lọc ảnh đã có phiên bản hiện hành nhưng c
 nguồn và chủ sở hữu / credit. Bỏ qua hoặc `false` trả mọi ảnh. Kết hợp được với `semanticType`;
 lọc trước phân trang nên `totalElements` là tổng ảnh khớp trong toàn kho. Ưu tiên nguồn riêng
 của phiên bản đang dùng; chỉ dùng nguồn cấp asset nếu phiên bản chưa có nguồn riêng. Nguồn
-ghi “Chưa xác minh” chưa được tính đầy đủ. Chỉ cần một nguồn đầy đủ, không bắt buộc URL cho
+đánh dấu chưa xác minh (`unverified`, xem 02 V074) chưa được tính đầy đủ, dù nhãn viết gì. Chỉ cần một nguồn đầy đủ, không bắt buộc URL cho
 ảnh chụp game; nguồn của phiên bản cũ và ảnh chưa hoàn tất upload không làm sai bộ lọc.
 Ảnh đại diện người dùng (`USER_AVATAR`) thuộc về chính người dùng tải lên, không cần ghi nguồn hay chủ
 sở hữu nên không bao giờ nằm trong kết quả `needsCredit=true` (01/11/2026).

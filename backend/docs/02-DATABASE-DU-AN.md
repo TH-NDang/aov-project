@@ -1945,6 +1945,11 @@ Nguồn cũ không có tham chiếu vẫn hợp lệ. Chỉ hai UUID được s�
 phiên bản và audit; thông tin nguồn gốc và bytes giữ nguyên. Tham chiếu không xác nhận quyền sở hữu,
 không cấp quyền quản lý page, không tự nối theo tên. Xem ADR-017 và đặc tả 04.
 
+Migration V074 bổ sung `unverified BOOLEAN NOT NULL DEFAULT FALSE` vào `media.media_provenance`: `true` khi nguồn được
+ghi mà không có bằng chứng ảnh từ đâu tới, ví dụ nguồn giữ chỗ hệ thống ghi khi phiên bản mới tải lên không kèm nguồn.
+Nguồn `unverified` không bao giờ được tính là ghi công đầy đủ. Migration đánh dấu các dòng cũ có `source_label` chứa
+“Chưa xác minh”, đúng như bộ lọc cũ nhận ra chúng; từ đó bộ lọc đọc cột này thay cho câu chữ của nhãn.
+
 ## Video theo đối tượng — V047 (ADR-019)
 
 Migration V047 tạo schema `video` và bảng `video.subject_video`, thuộc module `video`.
