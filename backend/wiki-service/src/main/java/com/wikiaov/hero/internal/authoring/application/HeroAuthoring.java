@@ -191,7 +191,11 @@ public class HeroAuthoring {
         validation.validate(section, content);
 
         Object old = sections.content(section, draft.sections().get(section));
-        content = HeroEvaluations.retain(old, HeroImages.retain(old, content));
+        content = HeroImages.retain(old, content);
+        if (old instanceof Skills previous && content instanceof Skills next)
+            content = HeroEvaluations.retain(previous, next);
+        if (old instanceof Profile previous && content instanceof Profile next)
+            content = HeroEvaluations.retain(previous, next);
 
         return write(heroId, draft, section, expected, old, content, note, "HERO_SECTION_UPDATED");
     }

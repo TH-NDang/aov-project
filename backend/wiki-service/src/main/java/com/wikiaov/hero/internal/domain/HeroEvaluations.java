@@ -11,24 +11,22 @@ public final class HeroEvaluations {
     private HeroEvaluations() {
     }
 
-    /**
-     * Keeps the draft's traits and notes in a skills or profile update. A trait loses the skills the update removes;
-     * notes follow their locale and disappear with it.
-     */
-    public static Object retain(Object previous, Object incoming) {
-        if (previous instanceof Skills old && incoming instanceof Skills next)
-            return new Skills(next.skills(), next.sources(), prune(old.traits(), next.skills()));
-        if (previous instanceof Profile old && incoming instanceof Profile next) {
-            Map<String, ProfileTranslation> notes = new HashMap<>();
-            old.translations().forEach(text -> notes.put(text.locale(), text));
-            return new Profile(next.translations().stream().map(text -> {
-                var prior = notes.get(text.locale());
-                return prior == null
-                        ? text.withNotes(null, null, null)
-                        : text.withNotes(prior.strengths(), prior.weaknesses(), prior.counterTips());
-            }).toList(), next.roles(), next.positions(), next.sources());
-        }
-        return incoming;
+    /** Keeps the draft's traits in a skills update; a trait loses the skills the update removes. */
+    public static Skills retain(Skills previous, Skills incoming) {
+        return new Skills(incoming.skills(), incoming.sources(), prune(previous.traits(), incoming.skills()));
+    }
+
+    /** Keeps the draft's notes in a profile update; notes follow their locale and disappear with it. */
+    public static Profile retain(Profile previous, Profile incoming) {
+        Map<String, ProfileTranslation> notes = new HashMap<>();
+        previous.translations().forEach(text -> notes.put(text.locale(), text));
+
+        return new Profile(incoming.translations().stream().map(text -> {
+            var prior = notes.get(text.locale());
+            return prior == null
+                    ? text.withNotes(null, null, null)
+                    : text.withNotes(prior.strengths(), prior.weaknesses(), prior.counterTips());
+        }).toList(), incoming.roles(), incoming.positions(), incoming.sources());
     }
 
     /** One canonical order, so equal traits compare equal however a client sent them. */
