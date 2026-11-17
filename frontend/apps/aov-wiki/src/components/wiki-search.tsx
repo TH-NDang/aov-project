@@ -6,6 +6,7 @@ import { foldEntitySearch, referenceTranslation, type EntityReference } from "@a
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { wikiReferencesQuery } from "../lib/wiki-references"
 import { WikiIcon } from "./wiki-icon"
+import { SITE_NAME } from "../lib/seo/page-meta"
 import "./wiki-search.css"
 
 const LIMIT = 8
@@ -145,7 +146,7 @@ export function WikiSearch({
         aria-controls={listId}
         aria-autocomplete="list"
         aria-activedescendant={open ? `${listId}-${marked}` : undefined}
-        aria-label={wikiText(locale, "Tìm trong AOV Wiki", "Search AOV Wiki")}
+        aria-label={wikiText(locale, `Tìm trong ${SITE_NAME}`, `Search ${SITE_NAME}`)}
         placeholder={
           size === "bar"
             ? wikiText(locale, "Tìm tướng, trang bị, thuật ngữ…", "Search heroes, items, terms…")

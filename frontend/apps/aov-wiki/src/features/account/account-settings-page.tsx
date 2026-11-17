@@ -12,6 +12,7 @@ import {
   useWikiSession,
   wikiAccessToken,
 } from "../auth/wiki-auth"
+import { SITE_NAME } from "../../lib/seo/page-meta"
 import "./account.css"
 
 /** Password, signed-in devices and two-step sign-in of the reader's account, which Wiki and Stream share. */
@@ -26,7 +27,7 @@ export function AccountSettingsPage() {
   const [signInError, setSignInError] = useState(false)
   return (
     <>
-      <title>{text("Cài đặt tài khoản — AOV Wiki", "Account settings — AOV Wiki")}</title>
+      <title>{text(`Cài đặt tài khoản — ${SITE_NAME}`, `Account settings — ${SITE_NAME}`)}</title>
       <WikiHeader />
       <main id="main" tabIndex={-1} className="wiki-account-page">
         {session.status === "authenticated" ? (

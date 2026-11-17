@@ -7,6 +7,7 @@ import { CatalogHeading } from "../../layout/catalog-heading"
 import { contactMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { ContactRequestError, sendContactRequest } from "./contact-request"
+import { SITE_NAME } from "../../lib/seo/page-meta"
 import "./contact.css"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -25,8 +26,8 @@ export function ContactPage() {
   const [receipt, setReceipt] = useState("")
   const title = text("Liên hệ", "Contact")
   const lead = text(
-    "Gửi nguồn ảnh, đề nghị ghi công hoặc báo vấn đề về hình ảnh cho ban quản trị AOV Wiki.",
-    "Send image sources, attribution requests or image reports to the AOV Wiki editors.",
+    `Gửi nguồn ảnh, đề nghị ghi công hoặc báo vấn đề về hình ảnh cho ban quản trị ${SITE_NAME}.`,
+    `Send image sources, attribution requests or image reports to the ${SITE_NAME} editors.`,
   )
 
   async function submit(event: FormEvent<HTMLFormElement>) {

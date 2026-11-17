@@ -113,7 +113,7 @@ export type AccountSecurityApi = ReturnType<typeof createAccountSecurityApi>
 export function applicationName(clientId: string) {
   switch (clientId) {
     case "aov-wiki":
-      return "AOV Wiki"
+      return "AOV WiKi"
     case "aov-stream":
       return "AOV Stream"
     case "admin-aov":

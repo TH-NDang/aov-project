@@ -228,8 +228,8 @@ export function contactMeta(locale: string): PageMeta {
     heading,
     description: pick(
       locale,
-      "Gửi góp ý, báo sai dữ liệu hoặc đề xuất gỡ ảnh cho đội ngũ biên tập AOV WiKi.",
-      "Send feedback, report wrong data or ask for an image to be removed by the AOV WiKi editors.",
+      `Gửi góp ý, báo sai dữ liệu hoặc đề xuất gỡ ảnh cho đội ngũ biên tập ${SITE_NAME}.`,
+      `Send feedback, report wrong data or ask for an image to be removed by the ${SITE_NAME} editors.`,
     ),
     path: "/contact",
     locale,
@@ -245,7 +245,11 @@ export function notFoundMeta(locale: string, path: string, section?: SectionKey)
   return {
     title: titled(heading),
     heading,
-    description: pick(locale, "Không tìm thấy nội dung này trên AOV WiKi.", "This page was not found on AOV WiKi."),
+    description: pick(
+      locale,
+      `Không tìm thấy nội dung này trên ${SITE_NAME}.`,
+      `This page was not found on ${SITE_NAME}.`,
+    ),
     path,
     locale,
     image: DEFAULT_IMAGE,

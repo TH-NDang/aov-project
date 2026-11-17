@@ -5,6 +5,7 @@ import { WikiSectionTiles } from "../../components/wiki-section-tiles"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
+import { SITE_NAME } from "../../lib/seo/page-meta"
 import "./not-found.css"
 
 /** An address the Wiki does not have: say so, then offer the search and every section, so the reader can go on. */
@@ -21,8 +22,8 @@ export function NotFoundPage() {
           <h1>{text("Không tìm thấy trang", "Page not found")}</h1>
           <p>
             {text(
-              "Địa chỉ này không có trên AOV Wiki: trang có thể đã đổi tên hoặc đã được gỡ. Tìm theo tên, hoặc mở một mục bên dưới.",
-              "This address is not on AOV Wiki: the page may have been renamed or removed. Search by name, or open a section below.",
+              `Địa chỉ này không có trên ${SITE_NAME}: trang có thể đã đổi tên hoặc đã được gỡ. Tìm theo tên, hoặc mở một mục bên dưới.`,
+              `This address is not on ${SITE_NAME}: the page may have been renamed or removed. Search by name, or open a section below.`,
             )}
           </p>
           <div className="wiki-not-found-search">

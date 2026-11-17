@@ -11,6 +11,7 @@ import {
 } from "@aov/ui/components/public-overlay"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { SITE_NAME } from "../lib/seo/page-meta"
 import "./wiki-header.css"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { WikiPreferenceControls } from "../context/wiki-preferences"
@@ -45,7 +46,7 @@ const SECTIONS: Section[] = [
   {
     id: "wiki",
     product: "Wiki",
-    label: "AOV Wiki",
+    label: SITE_NAME,
     description: "Tra cứu tướng, trang bị, phù hiệu",
     image: WIKI_LOGO_URL,
     href: "/",
@@ -278,7 +279,7 @@ function WikiHeaderCompact({
           <Icon name="home" />
         </a>
       ) : (
-        <a className="wiki-compact-brand" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
+        <a className="wiki-compact-brand" href={href("/")} aria-label={`${SITE_NAME} — ${t("home")}`}>
           <img src={WIKI_LOGO_URL} alt="" width={28} height={28} fetchPriority="high" />
           <PublicAppWordmark product="Wiki" className="wiki-mobile-wordmark" />
         </a>
@@ -318,7 +319,7 @@ function WikiHeaderWide({ variant = "home", section }: WikiHeaderProps) {
     <header ref={headerRef} data-variant={variant} className="wiki-header">
       <div className="wiki-header-inner" data-searching={searching || undefined}>
         <div className="public-app-theme wiki-header-brand" data-appearance="wiki">
-          <a className="wiki-header-logo" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
+          <a className="wiki-header-logo" href={href("/")} aria-label={`${SITE_NAME} — ${t("home")}`}>
             <img src={WIKI_LOGO_URL} alt="" width={32} height={32} fetchPriority="high" />
           </a>
           <SectionSelector />

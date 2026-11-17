@@ -78,3 +78,7 @@ test("names devices and applications for people", () => {
   assert.equal(applicationName("admin-aov-backend"), "AOV Admin")
   assert.equal(applicationName("custom"), "custom")
 })
+
+test("the Wiki's sign-in client carries the product name as the style guide writes it", () => {
+  assert.equal(applicationName("aov-wiki"), "AOV WiKi")
+})
