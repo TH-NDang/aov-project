@@ -28,15 +28,10 @@ import { WarehouseDraftMenu, WarehouseRulesetSelect, useWarehouseContext } from 
 import { ItemSearch, itemSearchMatches } from "./item-search"
 import { ItemStatFilter } from "@aov/ui/components/warehouse/item-facts"
 import { itemMatchesStatFilters, itemReaderContent, itemStatFilterCounts } from "@aov/ui/lib/item-description"
-import {
-  warehouseName,
-  warehouseText,
-  type ItemContent,
-  type WarehouseEntry,
-  type WarehouseMetadata,
-} from "./warehouse-types"
+import { type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
+import { warehouseName, warehouseText, type ItemContent } from "@aov/ui/lib/warehouse-content"
 import { EnchantmentBranchEditor } from "./secondary-editor"
-import { recipeConnectionError } from "./item-graph"
+import { recipeConnectionError } from "@aov/ui/lib/item-graph"
 import { ItemShopGraph, ItemShopHelp } from "./item-shop-graph"
 import { ItemEditor } from "./item-editor"
 import type { EditTarget, WarehouseSection } from "./warehouse-edit-section"

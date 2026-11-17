@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
-import { compareSkillRanks } from "../src/features/publishing/skill-rank-values"
+import { compareSkillRanks } from "@aov/ui/lib/skill-rank-values"
 import type { Skill } from "../src/features/publishing/types"
 
 test("skill details show rank columns and comparison toggles retain the changed-cell markers", async () => {

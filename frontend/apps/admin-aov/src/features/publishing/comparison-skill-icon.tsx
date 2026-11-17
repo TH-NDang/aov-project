@@ -1,5 +1,5 @@
 import { Info, Swords } from "lucide-react"
-import { HeroAsset } from "./hero-content"
+import { HeroAsset } from "@/features/publishing/hero-asset"
 import { skillImageMatch, useHeroSkillImages, type SkillImage } from "./skill-artwork"
 import type { Skill } from "./types"
 

@@ -6,14 +6,8 @@ import { JSDOM } from "jsdom"
 import { MemoryRouter, useSearchParams } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { SecondaryContent } from "../src/features/warehouse/secondary-editor"
-import type {
-  SpellContent,
-  ArcanaContent,
-  ItemContent,
-  EnchantmentContent,
-  WarehouseEntry,
-  WarehouseRevision,
-} from "../src/features/warehouse/warehouse-types"
+import type { WarehouseEntry, WarehouseRevision } from "../src/features/warehouse/warehouse-types"
+import type { SpellContent, ArcanaContent, ItemContent, EnchantmentContent } from "@aov/ui/lib/warehouse-content"
 
 let activeRequests: string[] = []
 let removalEvents: Record<string, unknown>[] = []
@@ -1282,7 +1276,7 @@ test("arcana filters follow the loaded patch and distinguish missing changes fro
 test("arcana uses terminology colors and live overrides without adding hover or nested button controls", async () => {
   await withUi(async ({ document, client, render }) => {
     const { ArcanaCollection } = await import("../src/features/warehouse/arcana-cards")
-    const { createArcanaStatColors } = await import("../src/features/warehouse/arcana-stat-colors")
+    const { createArcanaStatColors } = await import("@aov/ui/lib/arcana-stat-colors")
     const { defaultSettings } = await import("../src/features/terminology/settings-api")
     const colors = createArcanaStatColors(defaultSettings.entities)
     assert.equal(colors("Công phép"), "light-dark(#7e22ce, #d8b4fe)")

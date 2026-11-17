@@ -11,7 +11,8 @@ import {
 import { FilePenLine } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import type { Variant } from "../publishing/publication-overview"
-import { warehouseName, type WarehouseEntry } from "./warehouse-types"
+import { type WarehouseEntry } from "./warehouse-types"
+import { warehouseName } from "@aov/ui/lib/warehouse-content"
 
 export function WarehouseDraftMenu<T extends WarehouseEntry>({
   entries,

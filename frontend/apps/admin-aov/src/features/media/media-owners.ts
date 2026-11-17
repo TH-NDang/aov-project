@@ -3,8 +3,6 @@ import { backendRequest } from "@/app/auth/session"
 import type { PageSlice } from "../publishing/types"
 import { invalidateAllMediaAssets } from "./media-cache"
 
-export { exactOwner, ownerKey, similarOwner } from "./media-owner-names"
-
 /** An entry of the image owner catalog (ADR-017). */
 export interface MediaOwner {
   id: string

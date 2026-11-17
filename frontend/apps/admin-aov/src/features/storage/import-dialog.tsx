@@ -14,7 +14,7 @@ import {
   type StorageRow,
   type StorageTable,
 } from "./storage-model"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 export const SELECT_CLASS =

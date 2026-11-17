@@ -5,7 +5,7 @@ import type {
   PlannedMatch,
   TeamContent,
 } from "@aov/community-contracts"
-import { Field } from "@/features/community/profile-fields"
+import { Field } from "@/features/community/profile-form-primitives"
 import { CompetitionChoiceField } from "../competition-choice-field"
 import { bestOfOptions, stageNameOptions } from "../competition-field-options"
 import { FORMAT_NAMES } from "./model"

@@ -7,7 +7,7 @@ import {
   type PersonRole,
   type PersonRoleFilter,
 } from "@aov/community-contracts"
-import { FilterTab, FilterTabs } from "@/components/filter-tabs"
+import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import type { Access } from "@/features/esports/pages/esports-shell"
 import { PlayerPhoto } from "@/features/esports/components/primitives"
 import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"

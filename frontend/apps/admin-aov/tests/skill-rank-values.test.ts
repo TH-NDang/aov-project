@@ -8,7 +8,7 @@ import {
   skillRankCount,
   skillSourceTable,
   splitSkillRanks,
-} from "../src/features/publishing/skill-rank-values"
+} from "@aov/ui/lib/skill-rank-values"
 import { markDescriptionChanges, mechanicSkillKey } from "../src/features/publishing/patch-description-marks"
 import { buildSkillComparison } from "../src/features/publishing/hero-skill-comparison"
 import type { Skill } from "../src/features/publishing/types"

@@ -22,7 +22,8 @@ import {
   isGameplayChange,
   type CatalogBadgeKind,
 } from "./catalog-changes"
-import type { WarehouseEntry, WarehouseKind } from "./warehouse-types"
+import type { WarehouseEntry } from "./warehouse-types"
+import type { WarehouseKind } from "@aov/ui/lib/warehouse-content"
 
 function appendVisibleDrafts<T extends WarehouseEntry>(
   rows: T[],

@@ -1,6 +1,6 @@
 import { SKILL_FIELD_LABELS as fieldLabels, skillFieldLabel } from "./skill-field-labels"
 import { joinStatReadings, plainComparisonText } from "./hero-comparison"
-import { compareSkillRanks, type RankComparison } from "./skill-rank-values"
+import { compareSkillRanks, type RankComparison } from "@aov/ui/lib/skill-rank-values"
 import type { HeroComparison } from "./publishing-api"
 import type { Skill } from "./types"
 import { normalize } from "@/lib/text"

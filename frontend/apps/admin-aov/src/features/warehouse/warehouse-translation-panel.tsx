@@ -16,7 +16,7 @@ import { AdminRichTextPreview } from "../terminology/rich-text-field"
 import { languageOptions } from "../users/profile-preference-picker"
 import { control } from "../publishing/fields"
 import { joinWrappedLines } from "./warehouse-sheet"
-import type { WarehouseTranslation } from "./warehouse-types"
+import type { WarehouseTranslation } from "@aov/ui/lib/warehouse-content"
 
 type Text = WarehouseTranslation
 

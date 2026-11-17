@@ -11,7 +11,7 @@ import {
   suggestedRows,
 } from "../src/features/publishing/patch-change-model"
 import type { Content } from "../src/features/publishing/types"
-import { formatPatchValue } from "../src/features/publishing/patch-value"
+import { formatPatchValue } from "@aov/ui/lib/patch-value"
 import { comparisonValue } from "../src/features/publishing/hero-comparison"
 
 test("patch formulas use readable stat names while preserving coefficients, grouping and stored values", () => {

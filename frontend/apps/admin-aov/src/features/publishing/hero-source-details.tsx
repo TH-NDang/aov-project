@@ -6,7 +6,7 @@ import { Badge } from "@aov/ui/components/badge"
 import { AdminEntityText } from "../terminology/catalog"
 import type { Skill } from "./types"
 import { heroReviewItems, sourceHttpUrl, sourceReviewNotes } from "./hero-source-review"
-import { hasRankFormula, skillSourceTable } from "./skill-rank-values"
+import { hasRankFormula, skillSourceTable } from "@aov/ui/lib/skill-rank-values"
 import { SkillTagsEditor, SkillTableEditor } from "./skill-source-editor"
 import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
 import {

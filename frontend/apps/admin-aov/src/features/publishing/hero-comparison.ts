@@ -1,4 +1,4 @@
-import { formatPatchValue } from "./patch-value"
+import { formatPatchValue } from "@aov/ui/lib/patch-value"
 import { statReadingChange, type StatNumbers } from "./stat-reading"
 import { POSITIONS } from "./types"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"

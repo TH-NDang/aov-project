@@ -11,9 +11,10 @@ import {
   ItemRecipeView,
   recipeStatusNames as statusNames,
 } from "@aov/ui/components/warehouse/item-recipe"
-import { recipeConnectionError } from "./item-graph"
-import { warehouseName, type ItemContent, type WarehouseEntry } from "./warehouse-types"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { recipeConnectionError } from "@aov/ui/lib/item-graph"
+import { type WarehouseEntry } from "./warehouse-types"
+import { warehouseName, type ItemContent } from "@aov/ui/lib/warehouse-content"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 type Item = WarehouseEntry<ItemContent>

@@ -11,7 +11,7 @@ import { pageApi, pageError, pageKeys } from "./page-api"
 import { PageReference } from "./page-reference"
 import { ProfileTypeIcon } from "./profile-icons"
 import { activityLabel } from "@/features/tournaments/record-reason"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 export function PageReferencePicker({

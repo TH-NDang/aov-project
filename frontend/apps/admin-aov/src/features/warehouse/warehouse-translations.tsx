@@ -5,7 +5,7 @@ import { Badge } from "@aov/ui/components/badge"
 import { AdminRichTextPreview } from "../terminology/rich-text-field"
 import { Field, control } from "../publishing/fields"
 import { languageOptions } from "../users/profile-preference-picker"
-import type { WarehouseTranslation } from "./warehouse-types"
+import type { WarehouseTranslation } from "@aov/ui/lib/warehouse-content"
 import { WithReference } from "./warehouse-translation-panel"
 
 /** The floating reference for this editor's fields, read from the same kind of text in another language. */

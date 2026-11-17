@@ -2,7 +2,8 @@ import { useId } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { control } from "../publishing/fields"
-import { warehouseText, type WarehouseContent, type WarehouseEntry, type WarehouseStat } from "./warehouse-types"
+import { type WarehouseEntry } from "./warehouse-types"
+import { warehouseText, type WarehouseContent, type WarehouseStat } from "@aov/ui/lib/warehouse-content"
 
 export function WarehouseStatsEditor({
   stats,

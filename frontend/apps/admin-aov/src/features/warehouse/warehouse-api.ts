@@ -3,15 +3,8 @@ import { invalidateReferenceCatalog } from "../terminology/reference-api"
 import { backendRequest } from "@/app/auth/session"
 import type { Request } from "../publishing/publishing-api"
 import type { PageSlice } from "../publishing/types"
-import type {
-  WarehouseContents,
-  WarehouseEntry,
-  WarehouseKind,
-  WarehouseMetadata,
-  WarehouseRevision,
-  EnchantmentContent,
-  SpellRemoval,
-} from "./warehouse-types"
+import type { WarehouseEntry, WarehouseMetadata, WarehouseRevision, SpellRemoval } from "./warehouse-types"
+import type { WarehouseContents, WarehouseKind, EnchantmentContent } from "@aov/ui/lib/warehouse-content"
 
 export const warehouseKeys = {
   all: ["warehouse"] as const,

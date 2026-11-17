@@ -29,7 +29,7 @@ import {
 import { EntityReferenceArtwork, type EntityIconResolver } from "@aov/ui/components/entity-rich-text"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 import { Skeleton } from "@aov/ui/components/skeleton"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 const kinds = entityKindLabels

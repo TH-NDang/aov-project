@@ -24,7 +24,7 @@ import {
   type VideoStatus,
   type VideoSubjectKind,
 } from "./video-model"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const ALL = "ALL"

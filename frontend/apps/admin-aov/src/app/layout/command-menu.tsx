@@ -22,7 +22,7 @@ import { HeroAsset } from "@/features/publishing/hero-asset"
 import { useContentLocale } from "@/features/publishing/publication-overview"
 import { createPublishingApi } from "@/features/publishing/publishing-api"
 import { useWarehouseCatalog } from "@/features/warehouse/warehouse-api"
-import { warehouseName } from "@/features/warehouse/warehouse-types"
+import { warehouseName } from "@aov/ui/lib/warehouse-content"
 import { commandFilter } from "@/lib/text"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
 

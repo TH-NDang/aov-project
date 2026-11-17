@@ -19,7 +19,8 @@ import {
 import { ChangeKindSelect } from "../publishing/change-kind-select"
 import { CAUSE_NAMES } from "../publishing/version-causes"
 import { warehouseApi, invalidateWarehouseCatalogs } from "./warehouse-api"
-import { warehouseBaselineMode, type WarehouseKind, type WarehouseRevision } from "./warehouse-types"
+import { warehouseBaselineMode, type WarehouseRevision } from "./warehouse-types"
+import { type WarehouseKind } from "@aov/ui/lib/warehouse-content"
 
 const revisionLabels: Record<WarehouseRevision["cause"], string> = CAUSE_NAMES
 

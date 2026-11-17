@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from "@aov/ui/components/dialog"
 import { errorMessage } from "@/lib/api/errors"
-import { HeroAsset } from "../publishing/hero-content"
+import { HeroAsset } from "@/features/publishing/hero-asset"
 import { toast } from "sonner"
 
 export interface OrderItem {

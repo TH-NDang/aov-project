@@ -12,12 +12,12 @@ import {
   directionBadge,
   directionText,
   provenanceText,
-  skillFieldLabel,
   statLabel,
   type Direction,
   type HeroPatchView as PatchView,
   type Provenance,
 } from "./patch-change-model"
+import { skillFieldLabel } from "@/features/publishing/skill-field-labels"
 import { CAUSE_NAMES } from "./version-causes"
 import { RecordPatchNotesSheet } from "./patch-notes-sheet"
 import { usePublicationOverview } from "./publication-overview"
@@ -25,9 +25,9 @@ import { type Content, type Revision } from "./types"
 import { useHeroLocation } from "./use-hero-location"
 import { control } from "./fields"
 import { patchViewAnchors, selectedPatchAnchor, patchViewRequest } from "./patch-view-anchor"
-import { formatPatchValue } from "./patch-value"
+import { formatPatchValue } from "@aov/ui/lib/patch-value"
 import { SkillChangeList } from "./skill-change-list"
-import { compareSkillRanks, rankPartLabel, splitSkillRankValues } from "./skill-rank-values"
+import { compareSkillRanks, rankPartLabel, splitSkillRankValues } from "@aov/ui/lib/skill-rank-values"
 import { SkillRankValues } from "./skill-rank-table"
 import { formatStatReading } from "./stat-reading"
 

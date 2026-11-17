@@ -1,8 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
-import { warehouseText, type WarehouseMetadata } from "./warehouse-types"
+import { type WarehouseMetadata } from "./warehouse-types"
+import { warehouseText } from "@aov/ui/lib/warehouse-content"
 import { ItemCategoryIcon } from "./item-category-view"
-export { ItemCategoryIcon } from "./item-category-view"
-export { itemCategoryFallback } from "@aov/ui/components/item-category-icons"
 export function ItemCategorySelect({
   label,
   categories,

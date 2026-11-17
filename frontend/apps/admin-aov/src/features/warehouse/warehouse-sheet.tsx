@@ -14,7 +14,7 @@ import {
 import { usePublicationOverview } from "../publishing/publication-overview"
 import { confirmAction } from "@/components/confirm-dialog"
 import { AdminRichTextPreview } from "../terminology/rich-text-field"
-import type { WarehouseTranslation } from "./warehouse-types"
+import type { WarehouseTranslation } from "@aov/ui/lib/warehouse-content"
 
 /*
  * The pieces every warehouse sheet (items, spells, enchantments, arcana) shares, so the four read and act alike:
@@ -36,7 +36,6 @@ export function focusSheet(event: Event) {
 }
 
 /** Why a version exists: the hero page and the sheets share one set of names. */
-export { CAUSE_NAMES } from "../publishing/version-causes"
 
 export function versionLabel(revisionNo: number | undefined, state: string | undefined, editing: boolean) {
   const status = editing

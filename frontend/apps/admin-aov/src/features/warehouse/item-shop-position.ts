@@ -1,4 +1,5 @@
-import type { ItemContent, WarehouseEntry } from "./warehouse-types"
+import type { WarehouseEntry } from "./warehouse-types"
+import type { ItemContent } from "@aov/ui/lib/warehouse-content"
 
 type Entry = WarehouseEntry<ItemContent>
 

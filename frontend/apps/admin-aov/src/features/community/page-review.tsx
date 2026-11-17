@@ -7,7 +7,7 @@ import { Textarea } from "@aov/ui/components/textarea"
 import { Page, PageHeader } from "@/components/page-header"
 import { AccessGate } from "@/features/esports/pages/esports-shell"
 import { pageApi, pageError, pageKeys } from "./page-api"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 export function PageReview() {

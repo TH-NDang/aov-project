@@ -8,7 +8,7 @@ import { backendRequest, getSession } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { ContactImage } from "./contact-image"
 import type { PageSlice } from "../publishing/types"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 interface Contact {

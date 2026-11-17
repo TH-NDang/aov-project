@@ -12,7 +12,7 @@ import { Field, Section } from "./profile-form-primitives"
 import { activityLabel } from "@/features/tournaments/record-reason"
 import { ProfileRosterMemberChoice } from "./profile-roster-member-choice"
 import { ProfileRosterLineup, RosterAvatar as PersonAvatar } from "./profile-roster-lineup"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const positions = [

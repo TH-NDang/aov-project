@@ -7,10 +7,10 @@ import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { ChangeKindSelect } from "./change-kind-select"
 import { createPublishingApi } from "./publishing-api"
+import { SKILL_FIELD_LABELS } from "./skill-field-labels"
 import {
   KIND_LABELS,
   ROW_TYPE_LABELS,
-  SKILL_FIELDS,
   UNIT_LABELS,
   changePayload,
   duplicateRows,
@@ -261,7 +261,7 @@ export function PatchChangeEditor({
             )}
           />
           <datalist id={fieldsId}>
-            {[...new Set(Object.values(SKILL_FIELDS))].map((name) => (
+            {[...new Set(Object.values(SKILL_FIELD_LABELS))].map((name) => (
               <option key={name} value={name} />
             ))}
           </datalist>
@@ -479,10 +479,10 @@ function ChangeRowEditor({
               className={compactControl}
               list={fieldsId}
               placeholder="Trường: hồi chiêu, sát thương…"
-              value={SKILL_FIELDS[row.field] ?? row.field}
+              value={SKILL_FIELD_LABELS[row.field] ?? row.field}
               onChange={(event) => {
                 const typed = event.target.value
-                const known = Object.entries(SKILL_FIELDS).find(([, name]) => name === typed)?.[0]
+                const known = Object.entries(SKILL_FIELD_LABELS).find(([, name]) => name === typed)?.[0]
                 onChange({ field: known ?? typed })
               }}
             />

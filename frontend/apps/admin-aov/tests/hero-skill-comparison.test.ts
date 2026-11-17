@@ -7,7 +7,7 @@ import {
 } from "../src/features/publishing/hero-skill-comparison"
 import type { HeroComparison } from "../src/features/publishing/publishing-api"
 import type { Revision, Skill } from "../src/features/publishing/types"
-import { skillFieldLabel } from "../src/features/publishing/patch-change-model"
+import { skillFieldLabel } from "@/features/publishing/skill-field-labels"
 
 const skill = (key: string, metadata: Record<string, unknown> = {}, description = "Mô tả kỹ năng"): Skill => ({
   skillKey: key,

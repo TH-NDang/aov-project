@@ -1,7 +1,8 @@
 import { useId, type ComponentProps } from "react"
 import { Copyright } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
-import { similarOwner, useMediaOwners } from "./media-owners"
+import { useMediaOwners } from "./media-owners"
+import { similarOwner } from "@/features/media/media-owner-names"
 
 const quickPicks = 3
 

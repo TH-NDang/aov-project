@@ -9,7 +9,6 @@ import { ProfilePersonRoles } from "./profile-person-roles"
 import { Field, Section, CompactEntry } from "./profile-form-primitives"
 import { ProfileRoster } from "./profile-roster"
 import { ProfileTeams } from "./profile-teams"
-export { Field, Section } from "./profile-form-primitives"
 
 export function ProfileFields({
   content,

@@ -13,7 +13,7 @@ import { ProfileCountry } from "../profile-country"
 import { findProfileCountry } from "../profile-country-options"
 import { profileKindIcons, profileRoleIcons } from "../profile-icons"
 import { directoryApi, directoryKeys } from "./directory-api"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { formatNumber } from "@/lib/text"
 
 export type PersonnelGroup = "COACHING" | "BROADCAST"

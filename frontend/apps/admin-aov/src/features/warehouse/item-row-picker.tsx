@@ -21,9 +21,10 @@ import {
   DialogTitle,
 } from "@aov/ui/components/dialog"
 import { cn } from "@aov/ui/lib/utils"
-import { HeroAsset } from "../publishing/hero-content"
+import { HeroAsset } from "@/features/publishing/hero-asset"
 import { shopRowPeers } from "./item-shop-position"
-import { warehouseName, type ItemContent, type WarehouseEntry } from "./warehouse-types"
+import { type WarehouseEntry } from "./warehouse-types"
+import { warehouseName, type ItemContent } from "@aov/ui/lib/warehouse-content"
 
 type Entry = WarehouseEntry<ItemContent>
 type Peer = ReturnType<typeof shopRowPeers>[number]

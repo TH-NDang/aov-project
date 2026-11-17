@@ -7,7 +7,7 @@ import { changeTone, useChangeColors } from "../publishing/change-color-preferen
 import type { CatalogFilter } from "../publishing/catalog-context"
 import type { PublicationOverview } from "../publishing/publication-overview"
 import type { TimelineCount } from "../publishing/catalog-timeline"
-import type { WarehouseKind } from "./warehouse-types"
+import type { WarehouseKind } from "@aov/ui/lib/warehouse-content"
 
 export const catalogChangeKinds = {
   DATA_BASELINE: { label: "Nhập dữ liệu", icon: changeKindIcons.DATA_BASELINE },
@@ -22,7 +22,6 @@ export const catalogChangeKinds = {
 } as const
 export type CatalogChangeKind = keyof typeof catalogChangeKinds
 export type CatalogBadgeKind = CatalogChangeKind | "UNCHANGED" | "INHERITED"
-export { cardChangeKinds } from "@aov/ui/components/warehouse/warehouse-view"
 
 export interface CatalogChange {
   id: string

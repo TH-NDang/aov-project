@@ -68,7 +68,7 @@ test("hero image sources share the image request and retain current provenance, 
   }
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { HeroImageSource, currentImageSources } = await import("../src/features/publishing/hero-image-source")
-  const { HeroAsset } = await import("../src/features/publishing/hero-content")
+  const { HeroAsset } = await import("../src/features/publishing/hero-asset")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })

@@ -5,7 +5,7 @@ import * as React from "react"
 import { act, Activity } from "react"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 
-type InfiniteScrollComponent = typeof import("../src/components/infinite-scroll").InfiniteScroll
+type InfiniteScrollComponent = typeof import("@aov/ui/components/infinite-scroll").InfiniteScroll
 type PagingQuery = React.ComponentProps<InfiniteScrollComponent>["query"]
 
 function pagingQuery(fetchNextPage: PagingQuery["fetchNextPage"]): PagingQuery {
@@ -39,7 +39,7 @@ async function withUi(
     originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
   }
-  const { InfiniteScroll } = await import("../src/components/infinite-scroll")
+  const { InfiniteScroll } = await import("@aov/ui/components/infinite-scroll")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   try {

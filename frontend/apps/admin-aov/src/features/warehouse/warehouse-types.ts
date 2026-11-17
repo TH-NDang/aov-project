@@ -1,16 +1,4 @@
 import type { WarehouseContent, WarehouseMetadata as ViewMetadata } from "@aov/ui/lib/warehouse-content"
-export type {
-  WarehouseKind,
-  WarehouseTranslation,
-  WarehouseStat,
-  WarehouseContent,
-  ItemContent,
-  ArcanaContent,
-  SpellContent,
-  EnchantmentContent,
-  WarehouseContents,
-} from "@aov/ui/lib/warehouse-content"
-export { warehouseText, warehouseName } from "@aov/ui/lib/warehouse-content"
 
 export interface WarehouseRevision {
   id: string

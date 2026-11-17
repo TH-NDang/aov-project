@@ -1,4 +1,4 @@
-import { skillSlot, splitSkillRanks, type RankPart, type RankVariable } from "./skill-rank-values"
+import { skillSlot, splitSkillRanks, type RankPart, type RankVariable } from "@aov/ui/lib/skill-rank-values"
 import type { Skill } from "./types"
 
 /**

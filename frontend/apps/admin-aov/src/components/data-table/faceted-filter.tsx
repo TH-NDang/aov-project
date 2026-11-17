@@ -1,5 +1,4 @@
 import type { RowData } from "@tanstack/react-table"
-export { facetFilterFn } from "./table-features"
 import type { DataColumn as Column } from "./table-features"
 import type { ComponentType } from "react"
 import { Check, PlusCircle } from "lucide-react"

@@ -29,7 +29,6 @@ import {
 import { BEST_OF_CHOICES } from "@/features/esports/model/series-rules"
 import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
 
-export type { RegistryKind } from "./registry-form-model"
 type Content = TeamContent | PlayerContent | TournamentContent | SeriesContent
 export const REGISTRY_LABELS: Record<RegistryKind, string> = {
   teams: "đội tuyển",

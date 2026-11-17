@@ -9,7 +9,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@aov
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@aov/ui/lib/utils"
 import type { CatalogFilter } from "./catalog-context"
-import { dateLabel, type PublicationOverview, type Variant } from "./publication-overview"
+import { type PublicationOverview, type Variant } from "./publication-overview"
+import { dateLabel } from "@/features/publishing/schedule-date"
 
 export interface TimelineCount {
   changes: number

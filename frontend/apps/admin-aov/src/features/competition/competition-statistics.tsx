@@ -2,7 +2,7 @@ import { useGameCatalog, useTournamentGames } from "@/features/esports/data/use-
 import { HeroStatistics } from "@/features/esports/components/hero-stats"
 import { gameStatistics } from "@/features/esports/model/statistics"
 import { referenceIndex } from "@/features/esports/model/game-view"
-import { Section } from "@/features/community/profile-fields"
+import { Section } from "@/features/community/profile-form-primitives"
 
 export function CompetitionStatistics({ tournamentId, seriesIds }: { tournamentId: string; seriesIds: string[] }) {
   const query = useTournamentGames(tournamentId)

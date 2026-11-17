@@ -5,7 +5,7 @@ import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-tab
 import { Check, ChevronDown, ChevronRight, Images, LoaderCircle, PanelRightOpen } from "lucide-react"
 import { backendRequest } from "@/app/auth/session"
 import { Page } from "@/components/page-header"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useCollapseScrollAnchor } from "@/hooks/use-collapse-scroll-anchor"
 import { errorMessage } from "@/lib/api/errors"
 import { CharacterMediaImage } from "./character-media-image"

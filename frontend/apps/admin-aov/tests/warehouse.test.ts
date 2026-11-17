@@ -7,13 +7,9 @@ import {
   relatedItemEdges,
   selectedItemEdges,
   routeItemWire,
-} from "../src/features/warehouse/item-graph"
-import {
-  warehouseBaselineMode,
-  type ItemContent,
-  type SpellContent,
-  type WarehouseEntry,
-} from "../src/features/warehouse/warehouse-types"
+} from "@aov/ui/lib/item-graph"
+import { warehouseBaselineMode, type WarehouseEntry } from "../src/features/warehouse/warehouse-types"
+import { type ItemContent, type SpellContent } from "@aov/ui/lib/warehouse-content"
 
 function item(
   id: string,

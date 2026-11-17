@@ -21,7 +21,6 @@ import { visibleSkins } from "./hero-skins"
 import { heroContentSectionId, heroContentTabs } from "./hero-content-tabs"
 import { HeroEvaluation } from "./hero-evaluation"
 import type { Revision } from "./types"
-export { HeroAsset } from "./hero-asset"
 
 /** An editor open on the page: it takes the place of the section it changes, the rest of the page stays readable. */
 export interface HeroSectionEditing {

@@ -8,7 +8,7 @@ import {
   type RankComparison,
   type RankPart,
   type RankPartsComparison,
-} from "./skill-rank-values"
+} from "@aov/ui/lib/skill-rank-values"
 import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
 
 export function SkillRankComparison({ data, label, locale }: { data: RankComparison; label: string; locale?: string }) {

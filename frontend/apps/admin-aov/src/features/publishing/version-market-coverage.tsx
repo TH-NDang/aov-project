@@ -1,5 +1,6 @@
 import { MarketBadge } from "./market-badge"
-import { dateLabel, marketReleaseLabel, phaseLabels, type PublicationOverview } from "./publication-overview"
+import { marketReleaseLabel, phaseLabels, type PublicationOverview } from "./publication-overview"
+import { dateLabel } from "@/features/publishing/schedule-date"
 
 type Scope = { seasonId: string; variantId?: never } | { variantId: string; seasonId?: never }
 

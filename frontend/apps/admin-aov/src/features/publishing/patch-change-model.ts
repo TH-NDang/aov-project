@@ -57,8 +57,6 @@ export const STAT_LABELS: Record<string, string> = {
 
 export const UNIT_LABELS: Record<string, string> = { PERCENT: "%", UNKNOWN: "", POINT: "" }
 
-export { SKILL_FIELD_LABELS as SKILL_FIELDS, skillFieldLabel } from "./skill-field-labels"
-
 export const statLabel = (key: string) => STAT_LABELS[key] ?? key
 
 export interface ChangeRow {

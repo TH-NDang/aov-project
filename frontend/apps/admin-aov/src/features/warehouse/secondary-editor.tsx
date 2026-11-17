@@ -26,7 +26,7 @@ import { useIsWide } from "@/hooks/use-media-query"
 import { ContentsSection, SectionContents, useSectionContents, type ContentsEntry } from "@/components/section-contents"
 import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../publishing/asset-picker"
-import { HeroAsset } from "../publishing/hero-content"
+import { HeroAsset } from "@/features/publishing/hero-asset"
 import { VersionFacts } from "../publishing/version-facts"
 import { Field, control } from "../publishing/fields"
 import { WarehouseTranslations } from "./warehouse-translations"
@@ -36,7 +36,7 @@ import { WarehouseStatsEditor } from "./warehouse-stats-editor"
 import { WarehouseNotes } from "./warehouse-notes"
 import { SpellArtwork } from "./spell-artwork"
 import { SpellRemovalHistory } from "./spell-removal-history"
-import { enchantmentBranchColor } from "./enchantment-colors"
+import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import { WarehouseOrderPicker } from "./warehouse-order-picker"
 import {
   LanguagePicker,
@@ -57,16 +57,18 @@ import {
   type NewDraft,
 } from "./warehouse-sheet"
 import {
-  warehouseText,
   warehouseBaselineMode,
-  type WarehouseContent,
   type WarehouseMetadata,
-  type WarehouseStat,
-  type SpellContent,
-  type EnchantmentContent,
   type WarehouseEntry,
   type WarehouseRevision,
 } from "./warehouse-types"
+import {
+  warehouseText,
+  type WarehouseContent,
+  type WarehouseStat,
+  type SpellContent,
+  type EnchantmentContent,
+} from "@aov/ui/lib/warehouse-content"
 import { confirmDiscard } from "@/components/confirm-dialog"
 
 export type SecondaryKind = "arcana" | "spells" | "enchantments"

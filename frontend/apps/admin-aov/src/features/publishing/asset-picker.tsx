@@ -10,7 +10,7 @@ import { control, Field } from "./fields"
 import { invalidateMediaAsset } from "../media/media-cache"
 import { MediaSourceFields } from "../media/media-source-fields"
 import { creditHttpUrl, type MediaSourceInput } from "@aov/ui/lib/media-credit"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 const api = createPublishingApi(backendRequest)
 export function AssetPicker({

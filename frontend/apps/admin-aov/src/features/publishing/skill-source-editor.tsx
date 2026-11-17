@@ -7,7 +7,7 @@ import { AdminEntityText } from "../terminology/catalog"
 import { AdminDescriptionField } from "../terminology/rich-text-field"
 import { plainComparisonText } from "./hero-comparison"
 import { isRecord } from "./import-relations"
-import { rankSummary, rankValues, skillRankCount, skillSourceTable } from "./skill-rank-values"
+import { rankSummary, rankValues, skillRankCount, skillSourceTable } from "@aov/ui/lib/skill-rank-values"
 import type { Skill } from "./types"
 import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
 

@@ -10,7 +10,7 @@ import { comparableSection, sameHeroSection, type HeroWorkingCopy } from "./hero
 import type { HeroDraftChangeSet } from "./publishing-api"
 import { SKILL_FIELD_LABELS, skillFieldLabel } from "./skill-field-labels"
 import { SkillRankComparison } from "./skill-rank-table"
-import { compareSkillRanks } from "./skill-rank-values"
+import { compareSkillRanks } from "@aov/ui/lib/skill-rank-values"
 import { statReadingChange, type StatNumbers } from "./stat-reading"
 import { SECTIONS, type Section } from "./types"
 

@@ -5,7 +5,7 @@ import { usePublicationOverview } from "../publishing/publication-overview"
 import { Link, useSearchParams } from "react-router"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import { ExternalLink } from "lucide-react"
-import { HeroAsset } from "../publishing/hero-content"
+import { HeroAsset } from "@/features/publishing/hero-asset"
 import {
   CatalogChangeBadges,
   useCatalogChanges,
@@ -14,7 +14,7 @@ import {
   type CatalogBadgeKind,
 } from "./catalog-changes"
 import { errorMessage } from "@/lib/api/errors"
-import type { WarehouseKind } from "./warehouse-types"
+import type { WarehouseKind } from "@aov/ui/lib/warehouse-content"
 const features = tableFeatures({})
 type Row = Omit<CatalogChange, "kinds"> & { kinds: CatalogBadgeKind[] }
 const helper = createColumnHelper<typeof features, Row>()

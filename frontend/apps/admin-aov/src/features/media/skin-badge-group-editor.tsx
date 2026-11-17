@@ -20,7 +20,7 @@ import {
   type BadgeGroupKind,
   type BadgeGroupTranslation,
 } from "./skin-badge-groups-api"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { toast } from "sonner"
 import { confirmDiscard } from "@/components/confirm-dialog"
 

@@ -5,7 +5,7 @@ import { Skeleton } from "@aov/ui/components/skeleton"
 import { Table, TableBody, TableCaption, TableHead, TableHeader, TableRow } from "@aov/ui/components/table"
 import { cn } from "@aov/ui/lib/utils"
 import { SearchField } from "@/components/search-field"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 
 export const managementSelectClassName =
   "type-body h-9 min-w-0 max-w-full rounded-md border bg-background px-3 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"

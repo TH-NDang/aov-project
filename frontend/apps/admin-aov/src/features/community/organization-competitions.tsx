@@ -3,8 +3,8 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import { ArrowRight, CalendarDays } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
-import { Section } from "./profile-fields"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { Section } from "@/features/community/profile-form-primitives"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 export function OrganizationCompetitions({

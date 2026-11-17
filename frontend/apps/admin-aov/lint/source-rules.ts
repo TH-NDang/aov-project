@@ -105,6 +105,15 @@ const rules: Rule[] = [
         .flatMap((line, index) => (/\.normalize\(\s*["']NFD["']\s*\)/.test(line) ? [`:${index + 1}`] : [])),
   },
   {
+    name: "admin imports a name from the module that declares it",
+    hint: "Import from the real module (often @aov/ui) and drop the re-export; two paths to one thing drift apart.",
+    files: files(source, /\.tsx?$/),
+    offenders: (text) =>
+      [...text.matchAll(/^export\s+(type\s+)?(\*|\{[^}]*\})\s+from\s/gm)].map(
+        (match) => `:${text.slice(0, match.index).split("\n").length}`,
+      ),
+  },
+  {
     name: "admin makes ids with randomId",
     hint: "crypto.randomUUID is missing on plain-HTTP LAN addresses; use randomId from lib/random-id.",
     files: files(source, /\.tsx?$/).filter((path) => !path.endsWith(join("lib", "random-id.ts"))),

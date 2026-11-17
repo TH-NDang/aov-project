@@ -10,13 +10,12 @@ import { useIsWide } from "@/hooks/use-media-query"
 import { control } from "../publishing/fields"
 import {
   mergeMediaOwner,
-  ownerKey,
   refreshAfterOwnerChange,
-  similarOwner,
   updateMediaOwner,
   useMediaOwners,
   type MediaOwner,
 } from "./media-owners"
+import { ownerKey, similarOwner } from "@/features/media/media-owner-names"
 import { toast } from "sonner"
 
 type Editing = { owner: MediaOwner; mode: "edit" | "merge" }

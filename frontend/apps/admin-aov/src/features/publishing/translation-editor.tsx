@@ -12,12 +12,11 @@ import {
 } from "./hero-translation-model"
 import { Check, CircleDashed } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
-import { HeroAsset } from "./hero-content"
+import { HeroAsset } from "@/features/publishing/hero-asset"
 import { translationLanguageLabel } from "./hero-translation-notice"
 import { SkillSummaryField, summaryValue } from "./skill-summary-field"
 import type { Content, Profile, Skills, Skins } from "./types"
 
-export type { TranslatableSection } from "./hero-translation-model"
 type TextRow = {
   locale: string
   name: string

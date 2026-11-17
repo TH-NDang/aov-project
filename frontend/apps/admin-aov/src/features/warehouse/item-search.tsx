@@ -2,14 +2,9 @@ import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { cn } from "@aov/ui/lib/utils"
 import { SearchField } from "@/components/search-field"
 import { matchesQuery } from "@/lib/text"
-import { HeroAsset } from "../publishing/hero-content"
-import {
-  warehouseName,
-  warehouseText,
-  type ItemContent,
-  type WarehouseEntry,
-  type WarehouseMetadata,
-} from "./warehouse-types"
+import { HeroAsset } from "@/features/publishing/hero-asset"
+import { type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
+import { warehouseName, warehouseText, type ItemContent } from "@aov/ui/lib/warehouse-content"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 type Entry = WarehouseEntry<ItemContent>

@@ -3,7 +3,7 @@ import { isIndividualProfile, type ProfileContent, type ProfileKind } from "@aov
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { Check, ExternalLink, Trash2 } from "lucide-react"
-import { Field } from "./profile-fields"
+import { Field } from "@/features/community/profile-form-primitives"
 import { ProfileImageField } from "./profile-image-field"
 import { PlatformIcon, socialPlatforms, customSocialPlatform, platformOf, type SocialPlatformId } from "./platform-icon"
 import { cn } from "@aov/ui/lib/utils"

@@ -1,4 +1,5 @@
-import { ItemCategoryIcon, ItemCategorySelect } from "./item-category-icon"
+import { ItemCategorySelect } from "./item-category-icon"
+import { ItemCategoryIcon } from "@/features/warehouse/item-category-view"
 import { ItemRecipe } from "./item-recipe"
 import { ItemRowPicker } from "./item-row-picker"
 import { shopColumns } from "./item-shop-position"
@@ -29,7 +30,7 @@ import { useIsWide } from "@/hooks/use-media-query"
 import { ContentsSection, SectionContents, useSectionContents } from "@/components/section-contents"
 import { AssetPicker } from "../publishing/asset-picker"
 import { Field, control } from "../publishing/fields"
-import { HeroAsset } from "../publishing/hero-content"
+import { HeroAsset } from "@/features/publishing/hero-asset"
 import { VersionFacts } from "../publishing/version-facts"
 import { AdminRichTextPreview } from "../terminology/rich-text-field"
 import { AdminWarehouseView } from "./warehouse-view"
@@ -58,14 +59,8 @@ import {
 } from "./warehouse-sheet"
 import type { WarehouseSection } from "./warehouse-edit-section"
 import { SubjectVideosPanel } from "../videos/subject-videos-panel"
-import {
-  warehouseName,
-  warehouseText,
-  warehouseBaselineMode,
-  type ItemContent,
-  type WarehouseEntry,
-  type WarehouseMetadata,
-} from "./warehouse-types"
+import { warehouseBaselineMode, type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
+import { warehouseName, warehouseText, type ItemContent } from "@aov/ui/lib/warehouse-content"
 import { confirmDiscard } from "@/components/confirm-dialog"
 
 /** Sections of the item page, in reading order. Viewing and editing share them, so the page never rearranges. */

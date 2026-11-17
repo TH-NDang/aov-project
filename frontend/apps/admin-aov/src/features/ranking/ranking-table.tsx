@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, Flag } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import type { RankingDetail, RankingMetric, RankingValue } from "./ranking-api"
 import {
