@@ -46,7 +46,8 @@ variant/release publish cần patch:publish. Không có API sửa một revision
 Khi không chỉ định sourceRevisionId, fork chọn source theo gameplay applicability rồi publication sequence;
 khi chưa có active context phải truyền source tường minh.
 
-Public Hero list nhận region/locale/page/size/q/role/sort, chỉ sort code,asc hoặc code,desc.
+Public Hero list nhận region/locale/page/size/q/role/sort, chỉ sort code,asc hoặc code,desc. Sort khác, role lạ,
+`q` quá 120 ký tự hay page/size ngoài giới hạn trả 400 INVALID_QUERY_PARAMETER.
 Hero detail/manifest nhận region/locale. Section resource nhận locale, chỉ trả section đã có published
 composition tham chiếu; nội dung không trả source/actor. Các resource section không resolve current media URL;
 Hero detail/list resolve asset current version để ETag đổi khi media được nâng chất lượng.
@@ -514,7 +515,8 @@ Danh mục này dành cho thư viện Trang phục của wiki, không dùng API 
 tải chi tiết từng tướng. `hero` là mã của tướng chứa dạng thì gồm trang phục chung của tướng và trang phục riêng của
 mọi dạng; `heroCode` của mỗi mục vẫn là mã tướng sở hữu trang phục (ADR-024). Tham số được cho phép: `region` (mặc định `VN`), `locale` (mặc định `vi-VN`),
 `q` (tối đa 120 ký tự), `hero` (mã tướng), `rarity` (mã nhãn bậc/chủ đề), `page` (từ 0), `size`
-(1–60, mặc định 24). Tham số lạ bị từ chối. Tìm kiếm không phân biệt dấu và hoa/thường, ghép các từ
+(1–60, mặc định 24). Tham số lạ, `q` quá dài, `page`/`size` ngoài giới hạn hay bộ lọc `hero`/`rarity` rỗng hoặc
+quá dài trả 400 `INVALID_QUERY_PARAMETER`. Tìm kiếm không phân biệt dấu và hoa/thường, ghép các từ
 trong tên/mã tướng và tên/khóa trang phục; các từ tìm kiếm có thể xuất hiện theo thứ tự khác nhau.
 
 Response có cấu trúc:
@@ -2084,6 +2086,9 @@ Response:
 
 Không expose trực tiếp Spring `Page` JSON format vì có thể đổi theo framework/version.
 
+`page` âm hoặc `size` ngoài giới hạn của endpoint trả `400 INVALID_QUERY_PARAMETER` ở mọi danh sách, như tham số
+lạ; không trả mã lỗi nội dung của module.
+
 Cursor pagination có thể thêm cho feeds lớn sau này.
 
 ---
@@ -2505,8 +2510,8 @@ baseline độc lập đúng mốc và kiểm chứng nguồn.
 
 `GET /admin/heroes` tiếp tục cần `catalog:read` và giữ `{id,code,revisions}` trong từng dòng. Query:
 `page=0`, `size=20` (1–100), `q` tối đa 100 ký tự sau trim, `seasonId?`, `patchVariantId?`,
-`rulesetId?`, `locale=vi-VN`, `sort=code|edited-desc`. Tham số khác trả 400; sort/locale/phạm vi
-không hợp lệ trả 422. Tìm kiếm không phân biệt hoa thường trên mã và tên snapshot theo từng ruleset,
+`rulesetId?`, `locale=vi-VN`, `sort=code|edited-desc`. Tham số khác, page/size ngoài giới hạn, `q` quá dài hay
+sort khác trả 400 `INVALID_QUERY_PARAMETER`; locale/phạm vi không hợp lệ trả 422. Tìm kiếm không phân biệt hoa thường trên mã và tên snapshot theo từng ruleset,
 trước khi phân trang/count. Khi không lọc mùa/patch, chọn snapshot chưa hủy theo `rulesetOrdinal`
 rồi `revisionNo` giảm dần; bổ sung lịch sử sau này không thay tên ở patch mới hơn. Khi lọc mùa/patch,
 chỉ tìm tên đích của change set mới nhất trong phạm vi đó. Nhận tên của mọi bản dịch đã lưu.
