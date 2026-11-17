@@ -20,6 +20,6 @@ public interface EnchantmentPatchChangeApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, UUID> record(@Parameter(description = "Id identifier.") UUID id,
+    CreatedId record(@Parameter(description = "Id identifier.") UUID id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) CatalogChanges.Record input);
 }

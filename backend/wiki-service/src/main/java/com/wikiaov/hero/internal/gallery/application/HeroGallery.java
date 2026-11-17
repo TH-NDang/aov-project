@@ -168,7 +168,7 @@ public class HeroGallery {
 
     @Transactional
     @PreAuthorize("hasAuthority('hero:write')")
-    public Map<String, Object> update(UUID heroId, UUID itemId, HeroGalleryView.Update input) {
+    public HeroGalleryView.Saved update(UUID heroId, UUID itemId, HeroGalleryView.Update input) {
         store.lockHero(heroId);
         var item = require(heroId, itemId);
         if (input == null || item.getVersion() != input.expectedVersion())
@@ -190,7 +190,7 @@ public class HeroGallery {
 
         audit.record(new AuditEntry(actors.require(), "HERO_GALLERY_ITEM_UPDATED", CatalogAggregates.HERO, heroId, null,
                 input.expectedVersion(), item.getVersion(), null, Map.of("itemId", itemId)));
-        return Map.of("id", itemId, "version", item.getVersion());
+        return new HeroGalleryView.Saved(itemId, item.getVersion());
     }
 
     /** Takes the image out of the gallery; the image itself stays in media. */

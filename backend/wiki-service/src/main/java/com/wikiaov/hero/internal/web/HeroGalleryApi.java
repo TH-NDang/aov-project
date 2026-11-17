@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.gallery.application.HeroGalleryView;
+import com.wikiaov.platform.CreatedId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,7 +32,7 @@ public interface HeroGalleryApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, UUID> attach(@Parameter(description = "Hero id identifier.") UUID heroId,
+    CreatedId attach(@Parameter(description = "Hero id identifier.") UUID heroId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) HeroGalleryView.Attach body,
             @Parameter(hidden = true) HttpServletRequest request);
 
@@ -41,7 +42,7 @@ public interface HeroGalleryApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, Object> update(@Parameter(description = "Hero id identifier.") UUID heroId,
+    HeroGalleryView.Saved update(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Gallery item identifier.") UUID itemId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) HeroGalleryView.Update body,
             @Parameter(hidden = true) HttpServletRequest request);

@@ -5,6 +5,7 @@ import com.wikiaov.hero.internal.application.response.HeroCatalogView;
 import com.wikiaov.hero.internal.application.response.HeroComparisonView;
 import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
+import com.wikiaov.hero.internal.application.response.HeroStatusView;
 import com.wikiaov.hero.internal.web.request.HeroSectionRequests.*;
 import com.wikiaov.platform.*;
 import com.wikiaov.platform.PageLimits;
@@ -51,7 +52,7 @@ public interface HeroAdminApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, Object> status(@Parameter(description = "Hero id identifier.") UUID heroId,
+    HeroStatusView status(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroAdminApi_create", summary = "Create - hero admin", description = "Create for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {

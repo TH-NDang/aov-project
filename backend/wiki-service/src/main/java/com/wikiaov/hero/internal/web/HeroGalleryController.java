@@ -27,14 +27,14 @@ public class HeroGalleryController implements HeroGalleryApi {
 
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> attach(@PathVariable UUID heroId, @RequestBody HeroGalleryView.Attach body,
+    public CreatedId attach(@PathVariable UUID heroId, @RequestBody HeroGalleryView.Attach body,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
-        return Map.of("id", gallery.attach(heroId, body));
+        return new CreatedId(gallery.attach(heroId, body));
     }
 
     @PutMapping(path = "/{itemId}", version = "1")
-    public Map<String, Object> update(@PathVariable UUID heroId, @PathVariable UUID itemId,
+    public HeroGalleryView.Saved update(@PathVariable UUID heroId, @PathVariable UUID itemId,
             @RequestBody HeroGalleryView.Update body, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return gallery.update(heroId, itemId, body);

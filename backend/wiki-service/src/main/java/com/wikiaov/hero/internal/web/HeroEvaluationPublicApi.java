@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.application.response.HeroRankingViews;
+import com.wikiaov.hero.internal.application.response.HeroTraitsView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -8,7 +9,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Map;
 import java.util.UUID;
 
 @Tag(name = "hero")
@@ -26,6 +26,6 @@ public interface HeroEvaluationPublicApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "RFC 9457 Problem Details.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, Object> traits(@Parameter(description = "Market code, default VN.") String region,
+    HeroTraitsView traits(@Parameter(description = "Market code, default VN.") String region,
             @Parameter(hidden = true) HttpServletRequest request);
 }

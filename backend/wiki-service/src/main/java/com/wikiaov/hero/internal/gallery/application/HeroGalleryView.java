@@ -44,6 +44,13 @@ public record HeroGalleryView(
     ) {
     }
 
+    @Schema(name = "HeroGallerySaved")
+    public record Saved(
+            UUID id,
+            long version
+    ) {
+    }
+
     @Schema(name = "HeroGalleryAttachment")
     public record Attachment(
             UUID id,

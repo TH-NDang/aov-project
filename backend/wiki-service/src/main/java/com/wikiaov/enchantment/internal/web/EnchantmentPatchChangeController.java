@@ -17,7 +17,7 @@ public class EnchantmentPatchChangeController implements EnchantmentPatchChangeA
 
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> record(@PathVariable UUID id, @RequestBody CatalogChanges.Record input) {
-        return Map.of("id", changes.record(id, input));
+    public CreatedId record(@PathVariable UUID id, @RequestBody CatalogChanges.Record input) {
+        return new CreatedId(changes.record(id, input));
     }
 }

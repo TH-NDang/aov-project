@@ -5,6 +5,7 @@ import com.wikiaov.hero.internal.application.response.HeroCatalogView;
 import com.wikiaov.hero.internal.application.response.HeroComparisonView;
 import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
+import com.wikiaov.hero.internal.application.response.HeroStatusView;
 import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
 import com.wikiaov.hero.internal.catalog.application.HeroCatalog;
 import com.wikiaov.hero.internal.comparison.application.HeroComparisons;
@@ -47,9 +48,9 @@ public class HeroAdminController implements HeroAdminApi {
     }
 
     @GetMapping(path = "/{heroId}", version = "1")
-    public Map<String, Object> status(@PathVariable UUID heroId, HttpServletRequest request) {
+    public HeroStatusView status(@PathVariable UUID heroId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
-        return Map.of("id", heroId, "revisions", authoring.revisions(heroId));
+        return new HeroStatusView(heroId, authoring.revisions(heroId));
     }
 
     @PostMapping(version = "1")

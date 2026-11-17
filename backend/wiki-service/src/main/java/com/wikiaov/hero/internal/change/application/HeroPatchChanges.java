@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.change.application;
 import com.wikiaov.access.*;
 import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
+import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
@@ -313,7 +314,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
 
     @Transactional
     @PreAuthorize("hasAuthority('patch:write')")
-    public Map<String, Object> assess(UUID changeSetId, AssessmentInput input) {
+    public HeroAssessmentView assess(UUID changeSetId, AssessmentInput input) {
         UUID heroId = history.heroId(changeSetId).orElseThrow(HeroPatchChanges::changeSetNotFound);
         store.lockHero(heroId);
         if (input.kind() == null)
@@ -336,7 +337,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
         audit.record(new AuditEntry(actor, "HERO_PATCH_ASSESSED", CatalogAggregates.HERO, heroId, null,
                 input.expectedVersion(),
                 value.getVersion(), null, Map.of("changeSetId", changeSetId, "kind", input.kind().name())));
-        return Map.of("kind", value.getKind(), "version", value.getVersion());
+        return new HeroAssessmentView(value.getKind(), value.getVersion());
     }
 
     @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.PreviousInput")

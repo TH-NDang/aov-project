@@ -1,5 +1,6 @@
 package com.wikiaov.hero.internal.web;
 
+import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
 import com.wikiaov.hero.internal.change.application.HeroPatchDerivation;
@@ -22,21 +23,21 @@ public class HeroChangesController implements HeroChangesApi {
 
     @PostMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> record(@PathVariable UUID id,
+    public CreatedId record(@PathVariable UUID id,
             @RequestBody com.wikiaov.hero.internal.domain.HeroChanges.Record body) {
-        return Map.of("id", changes.record(id, body));
+        return new CreatedId(changes.record(id, body));
     }
 
     @PutMapping(path = ApiPaths.ADMIN + "/hero-changes/{id}/assessment", version = "1")
-    public Map<String, Object> assess(@PathVariable UUID id, @RequestBody HeroPatchChanges.AssessmentInput input) {
+    public HeroAssessmentView assess(@PathVariable UUID id, @RequestBody HeroPatchChanges.AssessmentInput input) {
         return changes.assess(id, input);
     }
 
     @PostMapping(path = ApiPaths.ADMIN + "/hero-changes/{changeSetId}/mechanics/{changeId}/previous", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> recordPrevious(@PathVariable UUID changeSetId, @PathVariable UUID changeId,
+    public CreatedId recordPrevious(@PathVariable UUID changeSetId, @PathVariable UUID changeId,
             @RequestBody HeroPatchChanges.PreviousInput input) {
-        return Map.of("id", changes.recordPrevious(changeSetId, changeId, input));
+        return new CreatedId(changes.recordPrevious(changeSetId, changeId, input));
     }
 
     @GetMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")

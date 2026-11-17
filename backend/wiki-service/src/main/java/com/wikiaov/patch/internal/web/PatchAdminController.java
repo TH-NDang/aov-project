@@ -1,8 +1,10 @@
 package com.wikiaov.patch.internal.web;
 
 import com.wikiaov.patch.internal.application.PatchCommands.*;
+import com.wikiaov.patch.internal.application.response.PatchAdminViews;
 import com.wikiaov.patch.internal.authoring.application.PatchAuthoring;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CreatedId;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -19,46 +21,46 @@ public class PatchAdminController implements PatchAdminApi {
     }
 
     @GetMapping(path = "/patches", version = "1")
-    public com.wikiaov.platform.PageSlice<Map<String, Object>> catalog(@RequestParam(defaultValue = "0") int page,
+    public com.wikiaov.platform.PageSlice<PatchAdminViews.Patch> catalog(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("page", "size"));
         return authoring.catalog(page, size);
     }
 
     @GetMapping(path = "/regions/{id}/ruleset-assignments", version = "1")
-    public List<Map<String, Object>> assignments(@PathVariable UUID id, HttpServletRequest request) {
+    public List<PatchAdminViews.Assignment> assignments(@PathVariable UUID id, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return authoring.assignments(id);
     }
 
     @PostMapping(path = "/regions", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> region(@RequestBody CreateRegion body) {
-        return Map.of("id", authoring.region(body));
+    public CreatedId region(@RequestBody CreateRegion body) {
+        return new CreatedId(authoring.region(body));
     }
 
     @PostMapping(path = "/rulesets", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> ruleset(@RequestBody Ruleset body) {
-        return Map.of("id", authoring.ruleset(body));
+    public CreatedId ruleset(@RequestBody Ruleset body) {
+        return new CreatedId(authoring.ruleset(body));
     }
 
     @GetMapping(path = "/rulesets", version = "1")
-    public List<Map<String, Object>> rulesets(HttpServletRequest request) {
+    public List<PatchAdminViews.Ruleset> rulesets(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return authoring.rulesets();
     }
 
     @PostMapping(path = "/regions/{id}/ruleset-assignments", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> assignment(@PathVariable UUID id, @RequestBody Assignment body) {
-        return Map.of("id", authoring.assign(id, body));
+    public CreatedId assignment(@PathVariable UUID id, @RequestBody Assignment body) {
+        return new CreatedId(authoring.assign(id, body));
     }
 
     @PostMapping(path = "/patches", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> patch(@RequestBody Patch body) {
-        return Map.of("id", authoring.patch(body));
+    public CreatedId patch(@RequestBody Patch body) {
+        return new CreatedId(authoring.patch(body));
     }
 
     @PutMapping(path = "/patches/{id}/title", version = "1")
@@ -69,14 +71,14 @@ public class PatchAdminController implements PatchAdminApi {
 
     @PostMapping(path = "/season-patches", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> seasonPatch(@RequestBody SeasonPatch body) {
-        return Map.of("id", authoring.seasonPatch(body));
+    public CreatedId seasonPatch(@RequestBody SeasonPatch body) {
+        return new CreatedId(authoring.seasonPatch(body));
     }
 
     @PostMapping(path = "/patches/{id}/variants", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> variant(@PathVariable UUID id, @RequestBody Variant body) {
-        return Map.of("id", authoring.variant(id, body));
+    public CreatedId variant(@PathVariable UUID id, @RequestBody Variant body) {
+        return new CreatedId(authoring.variant(id, body));
     }
 
     @PostMapping(path = "/patch-variants/{id}/publish", version = "1")
@@ -93,7 +95,7 @@ public class PatchAdminController implements PatchAdminApi {
 
     @PostMapping(path = "/patch-variants/{id}/releases", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> release(@PathVariable UUID id, @RequestBody Release body) {
-        return Map.of("id", authoring.release(id, body));
+    public CreatedId release(@PathVariable UUID id, @RequestBody Release body) {
+        return new CreatedId(authoring.release(id, body));
     }
 }

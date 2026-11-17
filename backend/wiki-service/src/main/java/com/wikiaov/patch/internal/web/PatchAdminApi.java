@@ -1,6 +1,8 @@
 package com.wikiaov.patch.internal.web;
 
 import com.wikiaov.patch.internal.application.PatchCommands.*;
+import com.wikiaov.patch.internal.application.response.PatchAdminViews;
+import com.wikiaov.platform.CreatedId;
 import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,7 +27,7 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    com.wikiaov.platform.PageSlice<Map<String, Object>> catalog(
+    com.wikiaov.platform.PageSlice<PatchAdminViews.Patch> catalog(
             @Parameter(description = "Zero-based page index.") @Min(0) int page,
             @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(hidden = true) HttpServletRequest request);
@@ -36,7 +38,7 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    List<Map<String, Object>> assignments(@Parameter(description = "Id identifier.") UUID id,
+    List<PatchAdminViews.Assignment> assignments(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "patchAdminApi_region", summary = "Region - patch admin", description = "Region for patch admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('region:admin').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
@@ -45,7 +47,7 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, UUID> region(
+    CreatedId region(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid CreateRegion body);
 
     @Operation(operationId = "patchAdminApi_ruleset", summary = "Ruleset - patch admin", description = "Ruleset for patch admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('region:admin').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
@@ -54,7 +56,7 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, UUID> ruleset(
+    CreatedId ruleset(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Ruleset body);
 
     @Operation(operationId = "patchAdminApi_rulesets", summary = "Rulesets - patch admin", description = "Rulesets for patch admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
@@ -63,7 +65,7 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    List<Map<String, Object>> rulesets(@Parameter(hidden = true) HttpServletRequest request);
+    List<PatchAdminViews.Ruleset> rulesets(@Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "patchAdminApi_assignment", summary = "Assignment - patch admin", description = "Assignment for patch admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('region:admin').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
@@ -71,7 +73,7 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, UUID> assignment(@Parameter(description = "Id identifier.") UUID id,
+    CreatedId assignment(@Parameter(description = "Id identifier.") UUID id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Assignment body);
 
     @Operation(operationId = "patchAdminApi_patch", summary = "Patch - patch admin", description = "Patch for patch admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
@@ -80,7 +82,7 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, UUID> patch(
+    CreatedId patch(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Patch body);
 
     @Operation(operationId = "patchAdminApi_title", summary = "Title - patch admin", description = "Renames a patch in one locale and adds that locale's text when it is missing. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
@@ -98,7 +100,7 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, UUID> seasonPatch(
+    CreatedId seasonPatch(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SeasonPatch body);
 
     @Operation(operationId = "patchAdminApi_variant", summary = "Variant - patch admin", description = "Variant for patch admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
@@ -107,7 +109,7 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, UUID> variant(@Parameter(description = "Id identifier.") UUID id,
+    CreatedId variant(@Parameter(description = "Id identifier.") UUID id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Variant body);
 
     @Operation(operationId = "patchAdminApi_publish", summary = "Publish - patch admin", description = "Publish for patch admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('patch:publish').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
@@ -132,6 +134,6 @@ public interface PatchAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    Map<String, UUID> release(@Parameter(description = "Id identifier.") UUID id,
+    CreatedId release(@Parameter(description = "Id identifier.") UUID id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Release body);
 }

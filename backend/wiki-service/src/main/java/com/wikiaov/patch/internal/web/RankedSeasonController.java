@@ -2,6 +2,7 @@ package com.wikiaov.patch.internal.web;
 
 import com.wikiaov.patch.internal.season.application.RankedSeasons;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CreatedId;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -33,8 +34,8 @@ public class RankedSeasonController implements RankedSeasonApi {
 
     @PostMapping(path = "/{seasonId}/schedules", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public java.util.Map<String, UUID> schedule(@PathVariable UUID seasonId,
+    public CreatedId schedule(@PathVariable UUID seasonId,
             @RequestBody RankedSeasons.ScheduleInput input) {
-        return java.util.Map.of("id", seasons.schedule(seasonId, input));
+        return new CreatedId(seasons.schedule(seasonId, input));
     }
 }

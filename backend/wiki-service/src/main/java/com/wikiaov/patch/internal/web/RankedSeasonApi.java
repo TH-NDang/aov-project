@@ -1,6 +1,7 @@
 package com.wikiaov.patch.internal.web;
 
 import com.wikiaov.patch.internal.season.application.RankedSeasons;
+import com.wikiaov.platform.CreatedId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,6 +41,6 @@ public interface RankedSeasonApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    java.util.Map<String, UUID> schedule(@Parameter(description = "Season id identifier.") UUID seasonId,
+    CreatedId schedule(@Parameter(description = "Season id identifier.") UUID seasonId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid RankedSeasons.ScheduleInput input);
 }
