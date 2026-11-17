@@ -27,6 +27,9 @@ function MarketName({ region, english }: { region: WikiRegion; english: boolean 
   return <>{marketName(region.code, english ? "en-US" : "vi-VN", region.displayName)}</>
 }
 
+/** Each language is named in itself, so a reader finds their own whichever language the page is in. */
+const LANGUAGE_NAMES: Record<string, string> = { "vi-VN": "Tiếng Việt", "en-US": "English" }
+
 export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean }) {
   const context = useWikiContext()
   const { region, locale, regions, regionsPending, regionsError, setRegion, setLocale } = context
@@ -48,8 +51,11 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
               <SelectValue />
             </SelectTrigger>
             <SelectContent drawerTitle={t("Ngôn ngữ", "Language")}>
-              <SelectItem value="vi-VN">Tiếng Việt</SelectItem>
-              <SelectItem value="en-US">English</SelectItem>
+              {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
+                <SelectItem key={code} value={code}>
+                  {name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

@@ -30,7 +30,9 @@ export function HomeIntro() {
       style={{ "--home-art": `url("${banner.image}")`, "--home-art-position": banner.position } as CSSProperties}
     >
       <div className="wiki-home-intro-inner">
-        <p className="wiki-home-eyebrow">{SITE_NAME} · Liên Quân Mobile</p>
+        <p className="wiki-home-eyebrow">
+          {SITE_NAME} · {wikiText(locale, "Liên Quân Mobile", "Arena of Valor")}
+        </p>
         <h1>
           {wikiText(
             locale,
