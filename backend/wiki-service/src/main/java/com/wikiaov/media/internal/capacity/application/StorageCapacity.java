@@ -36,7 +36,8 @@ import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * How much of the R2 free tier the project uses (ADR-030 sections 9 and 10). Figures come from the media and source
@@ -60,10 +61,12 @@ public class StorageCapacity {
     private final R2Analytics analytics;
     private final CapacityProperties properties;
     private final Clock clock;
+    private final TransactionTemplate readOnly;
 
     StorageCapacity(MediaAssetVersionRepository mediaVersions, MediaUploadSessionRepository mediaUploads,
             SourceObjectRepository sourceObjects, SourceUploadSessionRepository sourceUploads, SourceOrphans orphans,
-            StorageLayout layout, R2Analytics analytics, CapacityProperties properties, Clock clock) {
+            StorageLayout layout, R2Analytics analytics, CapacityProperties properties, Clock clock,
+            PlatformTransactionManager transactions) {
         this.mediaVersions = mediaVersions;
         this.mediaUploads = mediaUploads;
         this.sourceObjects = sourceObjects;
@@ -73,16 +76,22 @@ public class StorageCapacity {
         this.analytics = analytics;
         this.properties = properties;
         this.clock = clock;
+        this.readOnly = new TransactionTemplate(transactions);
+        this.readOnly.setReadOnly(true);
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Cloudflare is asked first, outside any transaction, so no database connection waits on its API; the catalog
+     * figures are then read together in one read-only transaction.
+     */
     public StorageCapacityViews.Summary summary() {
         Instant now = clock.instant();
-        List<Bucket> buckets = buckets(now);
         R2Analytics.Usage cloudflare = analytics.read(bucketNames());
+        Catalog catalog = readOnly.execute(status -> new Catalog(buckets(now), months(now)));
 
+        List<Bucket> buckets = catalog.buckets();
         long databaseBytes = buckets.stream().mapToLong(Bucket::bytes).sum();
-        List<StorageCapacityViews.Month> months = months(now);
+        List<StorageCapacityViews.Month> months = catalog.months();
         String currentMonth = YearMonth.from(now.atZone(ZoneOffset.UTC)).toString();
         StorageCapacityViews.Month thisMonth = months.stream().filter(month -> month.month().equals(currentMonth))
                 .findFirst().orElse(new StorageCapacityViews.Month(currentMonth, 0, 0, 0, 0));
@@ -101,12 +110,16 @@ public class StorageCapacity {
 
     /**
      * What an upload batch would add. Source bytes already stored cost nothing; media uploads store a copy per asset,
-     * so known bytes are only reported as duplicates.
+     * so known bytes are only reported as duplicates. Like {@link #summary()}, Cloudflare is asked before the
+     * read-only transaction opens.
      */
-    @Transactional(readOnly = true)
     public StorageCapacityViews.Estimate estimate(Target target, @Nullable List<EstimateFile> files) {
         validate(files);
-        Set<String> known = known(target, files);
+
+        R2Analytics.Usage cloudflare = analytics.read(bucketNames());
+        Stored stored = readOnly.execute(status -> new Stored(known(target, files),
+                buckets(clock.instant()).stream().mapToLong(Bucket::bytes).sum()));
+        Set<String> known = stored.sha256s();
 
         long bytes = 0;
         long knownFiles = 0;
@@ -128,8 +141,7 @@ public class StorageCapacity {
             }
         }
 
-        long current = storage(buckets(clock.instant()).stream().mapToLong(Bucket::bytes).sum(),
-                analytics.read(bucketNames())).bytes();
+        long current = storage(stored.databaseBytes(), cloudflare).bytes();
         long after = current + newBytes;
         double share = (double) after / properties.freeStorageBytes();
         return new StorageCapacityViews.Estimate(target, files.size(), bytes, knownFiles, knownBytes, newFiles,
@@ -256,5 +268,17 @@ public class StorageCapacity {
 
     private CapacityLevel level(double share) {
         return CapacityLevel.of(share, properties.warningRatio(), properties.criticalRatio());
+    }
+
+    private record Catalog(
+            List<Bucket> buckets,
+            List<StorageCapacityViews.Month> months
+    ) {
+    }
+
+    private record Stored(
+            Set<String> sha256s,
+            long databaseBytes
+    ) {
     }
 }
