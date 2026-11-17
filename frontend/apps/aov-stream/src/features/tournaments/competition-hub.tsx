@@ -7,10 +7,10 @@ import { useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
-import { competitionStatus, competitionStatusLabels, type CompetitionStatus } from "../community/community-ui"
+import { competitionStatusLabels } from "../community/community-ui"
 import { competitionCatalogQuery } from "./tournament-api"
 import { competitionMatches } from "./match-model"
-import { byRecency, bySoonest } from "./competition-model"
+import { byRecency, bySoonest, competitionStatus, type CompetitionStatus } from "./competition-model"
 import { CompetitionCard, CompetitionFeature } from "./competition-card"
 import {
   FilterSelect,
@@ -58,7 +58,7 @@ export function CompetitionDirectory() {
     ({ content: { tournament, plan } }) =>
       (region === "all" || region === tournament.region) &&
       (year === "all" || year === String(tournament.year)) &&
-      (status === "all" || status === competitionStatus(tournament)) &&
+      (status === "all" || status === competitionStatus({ tournament, plan })) &&
       (!search.trim() ||
         searchKey(`${tournament.name} ${plan.circuit} ${plan.organizer}`).includes(searchKey(search.trim()))),
   )
@@ -118,7 +118,7 @@ export function CompetitionDirectory() {
       return (
         (region === "all" || region === tournament.region) &&
         (year === "all" || year === String(tournament.year)) &&
-        (status === "all" || status === competitionStatus(tournament)) &&
+        (status === "all" || status === competitionStatus(entry.competition.content)) &&
         (!stage || entry.match.stageCode === stage) &&
         (!needle || key.includes(needle))
       )
@@ -154,11 +154,11 @@ export function CompetitionDirectory() {
   const ahead = filtered
     ? []
     : visible
-        .filter((entry) => AHEAD.includes(competitionStatus(entry.content.tournament) ?? ""))
+        .filter((entry) => AHEAD.includes(competitionStatus(entry.content) ?? ""))
         .sort((a, b) => {
-          const status = competitionStatus(a.content.tournament)!
+          const status = competitionStatus(a.content)!
           return (
-            AHEAD.indexOf(status) - AHEAD.indexOf(competitionStatus(b.content.tournament)!) ||
+            AHEAD.indexOf(status) - AHEAD.indexOf(competitionStatus(b.content)!) ||
             (status === "ONGOING" ? byRecency(a, b) : bySoonest(a, b))
           )
         })

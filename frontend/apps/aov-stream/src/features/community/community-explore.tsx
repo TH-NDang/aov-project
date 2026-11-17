@@ -19,7 +19,8 @@ import { PageDirectory, ProfileCard, profileKinds } from "./community-directory"
 import { LiveCards, useLivePages, videoThumbnail } from "./community-live"
 import { PostCard } from "./community-post"
 import { useFollowedIds } from "./community-queries"
-import { competitionStatus, profileKindEnglish, TimeAgo } from "./community-ui"
+import { competitionStatus } from "../tournaments/competition-model"
+import { profileKindEnglish, TimeAgo } from "./community-ui"
 import { CompetitionCard } from "../tournaments/competition-card"
 import { competitionCatalogQuery } from "../tournaments/tournament-api"
 import "./community.css"
@@ -146,8 +147,7 @@ function matchingCompetitions(catalog: CompetitionView[], search: string) {
     )
     .sort(
       (a, b) =>
-        Number(competitionStatus(a.content.tournament) === "FINISHED") -
-          Number(competitionStatus(b.content.tournament) === "FINISHED") ||
+        Number(competitionStatus(a.content) === "FINISHED") - Number(competitionStatus(b.content) === "FINISHED") ||
         (b.content.tournament.year || 0) - (a.content.tournament.year || 0),
     )
 }

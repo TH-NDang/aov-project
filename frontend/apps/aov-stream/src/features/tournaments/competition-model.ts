@@ -5,6 +5,7 @@ import type {
   TeamContent,
   TournamentContent,
 } from "@aov/community-contracts"
+import { currentTimeZone, dayKeyInZone, isValidTimeZone } from "@aov/ui/lib/time-zone"
 import { tournamentPodium, type PodiumTeam } from "@aov/ui/lib/tournament-podium"
 import { matchState, type CompetitionMatch } from "./match-model.ts"
 
@@ -153,6 +154,25 @@ export const COMPETITION_TYPE_NAMES: CodeNames = {
 export function codeName(names: CodeNames, code: string | null | undefined, text: (vi: string, en: string) => string) {
   const pair = code ? names[code] : undefined
   return pair && text(pair[0], pair[1])
+}
+
+export type CompetitionStatus = "ONGOING" | "UPCOMING" | "ANNOUNCED" | "FINISHED"
+
+/**
+ * Uses the edited status when there is one; otherwise reads it from the published dates against today on the calendar
+ * where the competition is played (`plan.timezone`), so the status turns at local midnight there, not at UTC midnight.
+ */
+export function competitionStatus(
+  { tournament, plan }: Pick<CompetitionView["content"], "tournament" | "plan">,
+  now = Date.now(),
+): CompetitionStatus | null {
+  if (tournament.status && tournament.status !== "UNKNOWN") return tournament.status as CompetitionStatus
+  const today = dayKeyInZone(now, isValidTimeZone(plan?.timezone) ? plan.timezone : currentTimeZone())
+  const { startsOn, endsOn } = tournament
+  if (endsOn && endsOn.slice(0, 10) < today) return "FINISHED"
+  if (startsOn && startsOn.slice(0, 10) > today) return "UPCOMING"
+  if (startsOn && (!endsOn || endsOn.slice(0, 10) >= today)) return "ONGOING"
+  return null
 }
 
 /** The champion of a finished competition, from its final table or the result an editor typed by hand. */

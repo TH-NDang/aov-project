@@ -15,7 +15,7 @@ import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
 import { useStreamLocale } from "../../components/stream-locale"
-import { competitionStatus, dayRange, hueOf } from "../community/community-ui"
+import { dayRange, hueOf } from "../community/community-ui"
 import { EntityPageLink } from "../community/public-competitions"
 import { CompetitionLogo, StatusBadge } from "./competition-card"
 import {
@@ -23,6 +23,7 @@ import {
   champion,
   codeName,
   COMPETITION_TYPE_NAMES,
+  competitionStatus,
   matchStrip,
   playedOrder,
   STAGE_FORMAT_NAMES,
@@ -97,7 +98,7 @@ export function PublicCompetitionPage() {
   const { tournament, plan, teams, circuit } = view.content
   const matches = competitionMatches([view])
   const won = champion(tournament, teams)
-  const status = competitionStatus(tournament)
+  const status = competitionStatus(view.content)
   const kicker = [tournament.region, codeName(TIER_NAMES, tournament.tier, text)].filter(Boolean).join(" · ")
   return (
     <StreamShell>

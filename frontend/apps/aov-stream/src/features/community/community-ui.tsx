@@ -1,14 +1,8 @@
 import type { CSSProperties } from "react"
 import { infiniteQueryOptions, useQuery } from "@tanstack/react-query"
-import type {
-  CommunityProfile,
-  CompetitionView,
-  PageSlice,
-  PersonRole,
-  ProfileKind,
-  TournamentContent,
-} from "@aov/community-contracts"
+import type { CommunityProfile, CompetitionView, PageSlice, PersonRole, ProfileKind } from "@aov/community-contracts"
 import { streamLanguageTag, streamText, useStreamLocale } from "../../components/stream-locale"
+import type { CompetitionStatus } from "../tournaments/competition-model"
 import { communityApi } from "./community-api"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { LocalTime } from "@aov/ui/components/local-time"
@@ -109,7 +103,6 @@ export function dayRange(
   return `${start || unknown} – ${end || unknown}`
 }
 
-export type CompetitionStatus = "ONGOING" | "UPCOMING" | "ANNOUNCED" | "FINISHED"
 const COMPETITION_STATUS_NAMES: Record<CompetitionStatus, readonly [string, string]> = {
   ONGOING: ["Đang diễn ra", "Ongoing"],
   UPCOMING: ["Sắp diễn ra", "Upcoming"],
@@ -122,16 +115,6 @@ export function competitionStatusLabels() {
   return Object.fromEntries(
     Object.entries(COMPETITION_STATUS_NAMES).map(([status, names]) => [status, streamText(...names)]),
   ) as Record<CompetitionStatus, string>
-}
-
-/** Uses the edited status when there is one; otherwise reads it from the published dates. */
-export function competitionStatus(tournament: TournamentContent, today = new Date().toISOString().slice(0, 10)) {
-  if (tournament.status && tournament.status !== "UNKNOWN") return tournament.status as CompetitionStatus
-  const { startsOn, endsOn } = tournament
-  if (endsOn && endsOn.slice(0, 10) < today) return "FINISHED"
-  if (startsOn && startsOn.slice(0, 10) > today) return "UPCOMING"
-  if (startsOn && (!endsOn || endsOn.slice(0, 10) >= today)) return "ONGOING"
-  return null
 }
 
 export function competitionsQuery(filter: Record<string, string>, page: number, size = 12) {

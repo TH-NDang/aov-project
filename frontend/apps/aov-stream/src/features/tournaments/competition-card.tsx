@@ -4,14 +4,8 @@ import type { CompetitionView } from "@aov/community-contracts"
 import { LocalPrizeText } from "@aov/ui/components/local-money"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
-import {
-  competitionStatus,
-  competitionStatusLabels,
-  dayRange,
-  hueOf,
-  type CompetitionStatus,
-} from "../community/community-ui"
-import { champion } from "./competition-model"
+import { competitionStatusLabels, dayRange, hueOf } from "../community/community-ui"
+import { champion, competitionStatus, type CompetitionStatus } from "./competition-model"
 
 const hue = (name: string) => ({ "--hub-hue": hueOf(name) }) as CSSProperties
 const monogram = (name: string) =>
@@ -76,7 +70,7 @@ export function seasonName(name: string, circuit?: string | null) {
 export function CompetitionCard({ entry, within }: { entry: CompetitionView; within?: string | null }) {
   const { text } = useStreamLocale()
   const { tournament, teams } = entry.content
-  const status = competitionStatus(tournament)
+  const status = competitionStatus(entry.content)
   const won = champion(tournament, teams)
   return (
     <Link className="tn-card" to={`/competitions/${entry.id}`} data-status={status ?? undefined}>
@@ -118,7 +112,7 @@ export function CompetitionFeature({ entry }: { entry: CompetitionView }) {
       </span>
       <span className="tn-feature-body">
         <span className="tn-feature-line">
-          <StatusBadge status={competitionStatus(tournament)} />
+          <StatusBadge status={competitionStatus({ tournament, plan })} />
           <span className="hub-kicker">
             {[plan.circuit, tournament.region].filter(Boolean).join(" · ") || text("Giải đấu", "Tournament")}
           </span>

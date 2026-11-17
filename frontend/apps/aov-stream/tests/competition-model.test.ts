@@ -12,10 +12,40 @@ import {
   bracketLanes,
   bySoonest,
   champion,
+  competitionStatus,
   matchRoundLabel,
   matchStrip,
   playedOrder,
 } from "../src/features/tournaments/competition-model.ts"
+
+/** 01:00 on 17 November in Hanoi, still 16 November in UTC. */
+const AFTER_HANOI_MIDNIGHT = Date.parse("2026-11-16T18:00:00Z")
+const dated = (startsOn: string, endsOn: string, timezone = "Asia/Ho_Chi_Minh", status?: TournamentContent["status"]) =>
+  ({
+    tournament: { code: "aog", name: "AOG", region: "VN", startsOn, endsOn, status },
+    plan: { timezone },
+  }) as unknown as CompetitionView["content"]
+
+test("a competition that starts today where it is played is ongoing just after local midnight", () => {
+  assert.equal(competitionStatus(dated("2026-11-17", "2026-11-20"), AFTER_HANOI_MIDNIGHT), "ONGOING")
+})
+
+test("a competition that ended yesterday where it is played is finished just after local midnight", () => {
+  assert.equal(competitionStatus(dated("2026-11-10", "2026-11-16"), AFTER_HANOI_MIDNIGHT), "FINISHED")
+})
+
+test("the dates are read on the competition's own calendar, not in UTC", () => {
+  assert.equal(
+    competitionStatus(dated("2026-11-17", "2026-11-20", "America/Los_Angeles"), AFTER_HANOI_MIDNIGHT),
+    "UPCOMING",
+  )
+})
+
+test("an edited status wins over the dates", () => {
+  const edited = dated("2026-11-17", "2026-11-20", "Asia/Ho_Chi_Minh", "FINISHED")
+
+  assert.equal(competitionStatus(edited, AFTER_HANOI_MIDNIGHT), "FINISHED")
+})
 import { competitionMatches } from "../src/features/tournaments/match-model.ts"
 
 const HOUR = 60 * 60 * 1000

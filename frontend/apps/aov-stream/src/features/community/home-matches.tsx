@@ -2,10 +2,10 @@ import { Link } from "react-router"
 import type { CSSProperties } from "react"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
-import { matchStrip } from "../tournaments/competition-model"
+import { competitionStatus, matchStrip } from "../tournaments/competition-model"
 import { MatchCard } from "../tournaments/match-card"
 import { competitionMatches } from "../tournaments/match-model"
-import { competitionStatus, competitionStatusLabels, dayRange, hueOf, useFeaturedCompetitions } from "./community-ui"
+import { competitionStatusLabels, dayRange, hueOf, useFeaturedCompetitions } from "./community-ui"
 
 /**
  * The first thing on the home page: matches on now, the next ones, then the latest results, in one row that scrolls
@@ -50,12 +50,8 @@ export function HomeCompetitions() {
   const competitions = useFeaturedCompetitions()
   const order = ["ONGOING", "UPCOMING", "ANNOUNCED"]
   const items = (competitions.data?.items ?? [])
-    .filter((view) => order.includes(competitionStatus(view.content.tournament) ?? ""))
-    .sort(
-      (a, b) =>
-        order.indexOf(competitionStatus(a.content.tournament)!) -
-        order.indexOf(competitionStatus(b.content.tournament)!),
-    )
+    .filter((view) => order.includes(competitionStatus(view.content) ?? ""))
+    .sort((a, b) => order.indexOf(competitionStatus(a.content)!) - order.indexOf(competitionStatus(b.content)!))
     .slice(0, 5)
   if (!items.length) return null
   return (
@@ -71,7 +67,7 @@ export function HomeCompetitions() {
       <ul className="tn-mini-list">
         {items.map((view) => {
           const { tournament } = view.content
-          const status = competitionStatus(tournament)
+          const status = competitionStatus(view.content)
           return (
             <li key={view.id}>
               <Link to={`/competitions/${view.id}`}>
