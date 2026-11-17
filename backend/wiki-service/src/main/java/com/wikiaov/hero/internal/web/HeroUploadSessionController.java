@@ -26,17 +26,20 @@ public class HeroUploadSessionController implements HeroUploadSessionApi {
         this.sessions = sessions;
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<HeroUploadSessionView> list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return sessions.list();
     }
 
+    @Override
     @PutMapping(path = "/{id}", version = "1")
     public HeroUploadSessionView save(@PathVariable UUID id, @RequestBody HeroUploadSessionRequest request) {
         return sessions.save(id, request.version(), request.state());
     }
 
+    @Override
     @DeleteMapping(path = "/{id}", version = "1")
     public void delete(@PathVariable UUID id) {
         sessions.delete(id);

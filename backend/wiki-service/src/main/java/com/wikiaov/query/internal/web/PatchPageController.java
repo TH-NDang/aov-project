@@ -27,6 +27,7 @@ public class PatchPageController implements PatchPageApi {
         this.pages = pages;
     }
 
+    @Override
     @GetMapping(version = "1")
     public ResponseEntity<PageSlice<Map<String, Object>>> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -37,6 +38,7 @@ public class PatchPageController implements PatchPageApi {
                 .body(pages.list(region, locale, page, size));
     }
 
+    @Override
     @GetMapping(path = "/{id}", version = "1")
     public ResponseEntity<Map<String, Object>> detail(@PathVariable UUID id,
             @RequestParam(defaultValue = "VN") String region,
@@ -47,6 +49,7 @@ public class PatchPageController implements PatchPageApi {
                 .body(pages.detail(id, region, locale));
     }
 
+    @Override
     @GetMapping(path = "/{id}/changes", version = "1")
     public ResponseEntity<PatchChangesPage> changes(@PathVariable UUID id,
             @RequestParam(defaultValue = "VN") String region,

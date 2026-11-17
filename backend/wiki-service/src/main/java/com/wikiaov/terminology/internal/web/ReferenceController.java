@@ -44,6 +44,7 @@ public class ReferenceController implements ReferenceApi {
         this.cache = cache;
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/reference-catalog", version = "1")
     public AdminReferenceCatalogView adminReferences(@RequestParam(required = false) UUID rulesetId,
             HttpServletRequest request) {
@@ -51,6 +52,7 @@ public class ReferenceController implements ReferenceApi {
         return adminReferences.read(rulesetId);
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ROOT + "/reference-catalog", version = "1")
     public ResponseEntity<ReferenceSettingsView> references(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -63,6 +65,7 @@ public class ReferenceController implements ReferenceApi {
                 : references.read(region, locale, seasonId, patchVariantId, includeUnscoped), web);
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ROOT + "/reference-settings", version = "1")
     public ResponseEntity<ReferenceSettingsView> publicSettings(HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of());
@@ -70,12 +73,14 @@ public class ReferenceController implements ReferenceApi {
                 catalog::readPublic), web);
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/reference-settings", version = "1")
     public ReferenceSettingsView adminSettings(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.readAdmin();
     }
 
+    @Override
     @PutMapping(path = ApiPaths.ADMIN + "/reference-settings", version = "1")
     public ReferenceSettingsView save(@RequestBody SaveReferenceSettings request) {
         return catalog.save(request.expectedVersion(), request.settings());

@@ -21,12 +21,14 @@ public class HeroEvaluationController implements HeroEvaluationApi {
         this.authoring = authoring;
     }
 
+    @Override
     @PutMapping(path = "/traits", version = "1")
     public HeroRevisionView updateTraits(@PathVariable UUID heroId, @PathVariable UUID draftId,
             @RequestBody UpdateTraitsCommand body) {
         return authoring.updateTraits(heroId, draftId, body);
     }
 
+    @Override
     @PutMapping(path = "/notes", version = "1")
     public HeroRevisionView updateNotes(@PathVariable UUID heroId, @PathVariable UUID draftId,
             @RequestBody UpdateNotesCommand body) {

@@ -22,6 +22,7 @@ public class ItemPatchChangeController implements ItemPatchChangeApi {
         this.changes = changes;
     }
 
+    @Override
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId record(@PathVariable UUID id, @RequestBody CatalogChanges.Record input) {

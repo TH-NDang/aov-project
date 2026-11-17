@@ -24,12 +24,14 @@ public class ItemCategoryController implements ItemCategoryApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<ItemCategoryView> list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.list();
     }
 
+    @Override
     @PutMapping(path = "/{code}", version = "1")
     public ItemCategoryView save(@PathVariable String code, @RequestBody ItemCategoryCommand input) {
         return catalog.save(code, input);

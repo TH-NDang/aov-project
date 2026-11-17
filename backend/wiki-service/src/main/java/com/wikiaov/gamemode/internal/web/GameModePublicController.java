@@ -35,24 +35,28 @@ public class GameModePublicController implements GameModePublicApi {
         this.lineups = lineups;
     }
 
+    @Override
     @GetMapping(version = "1")
     public CardList list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.cards();
     }
 
+    @Override
     @GetMapping(path = "/{code}", version = "1")
     public PublicMode read(@PathVariable String code, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.published(code);
     }
 
+    @Override
     @GetMapping(path = "/{code}/auto-chess", version = "1")
     public PublicGuide guide(@PathVariable String code, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return guides.published(code);
     }
 
+    @Override
     @GetMapping(path = "/{code}/auto-chess/lineups", version = "1")
     public PageSlice<PublicLineup> lineups(@PathVariable String code,
             @RequestParam(defaultValue = "popular") String sort, @RequestParam(required = false) String unit,
@@ -62,6 +66,7 @@ public class GameModePublicController implements GameModePublicApi {
         return lineups.community(code, sort, unit, page, size);
     }
 
+    @Override
     @GetMapping(path = "/{code}/auto-chess/insights", version = "1")
     public Insights insights(@PathVariable String code, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());

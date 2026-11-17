@@ -23,6 +23,7 @@ public class CatalogContextController implements CatalogContextApi {
         this.contexts = contexts;
     }
 
+    @Override
     @GetMapping(version = "1")
     public ResponseEntity<CatalogContextView> read(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request) {

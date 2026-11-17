@@ -22,6 +22,7 @@ public class ItemCategoryPublicController implements ItemCategoryPublicApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<PublicItemCategoryView> list(@RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request) {

@@ -38,6 +38,7 @@ public class SpellAdminController implements SpellAdminApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public PageSlice<SpellView> list(@RequestParam(required = false) UUID rulesetId,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -65,6 +66,7 @@ public class SpellAdminController implements SpellAdminApi {
                 includeUnscoped);
     }
 
+    @Override
     @GetMapping(path = "/{id}", version = "1")
     public SpellView latest(@PathVariable UUID id, @RequestParam(required = false) UUID rulesetId,
             HttpServletRequest request) {
@@ -72,45 +74,53 @@ public class SpellAdminController implements SpellAdminApi {
         return catalog.latest(id, rulesetId);
     }
 
+    @Override
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public SpellView create(@RequestBody Create input) {
         return catalog.create(input);
     }
 
+    @Override
     @GetMapping(path = "/{id}/revisions", version = "1")
     public List<SpellView.Revision> history(@PathVariable UUID id, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.history(id);
     }
 
+    @Override
     @GetMapping(path = {"/{id}/revisions/{revisionId}", "/{id}/drafts/{revisionId}"}, version = "1")
     public SpellView read(@PathVariable UUID id, @PathVariable UUID revisionId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.read(id, revisionId);
     }
 
+    @Override
     @PostMapping(path = "/{id}/drafts", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public SpellView fork(@PathVariable UUID id, @RequestBody Fork input) {
         return catalog.fork(id, input);
     }
 
+    @Override
     @PutMapping(path = "/{id}/drafts/{revisionId}", version = "1")
     public SpellView update(@PathVariable UUID id, @PathVariable UUID revisionId, @RequestBody Update input) {
         return catalog.update(id, revisionId, input);
     }
 
+    @Override
     @PostMapping(path = "/{id}/drafts/{revisionId}/publish", version = "1")
     public SpellView publish(@PathVariable UUID id, @PathVariable UUID revisionId, @RequestBody Mutation input) {
         return catalog.publish(id, revisionId, input);
     }
 
+    @Override
     @PostMapping(path = "/{id}/drafts/{revisionId}/discard", version = "1")
     public SpellView discard(@PathVariable UUID id, @PathVariable UUID revisionId, @RequestBody Mutation input) {
         return catalog.discard(id, revisionId, input);
     }
 
+    @Override
     @GetMapping(path = "/{id}/removals", version = "1")
     public List<SpellRemovalView> removals(@PathVariable UUID id, @RequestParam UUID rulesetId,
             HttpServletRequest request) {
@@ -118,6 +128,7 @@ public class SpellAdminController implements SpellAdminApi {
         return catalog.removals(id, rulesetId);
     }
 
+    @Override
     @PostMapping(path = "/{id}/removals", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public SpellRemovalView recordRemoval(@PathVariable UUID id, @RequestBody Removal input) {

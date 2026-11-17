@@ -26,12 +26,14 @@ public class HeroSkillImageController implements HeroSkillImageApi {
         this.images = images;
     }
 
+    @Override
     @GetMapping(version = "1")
     public Map<String, List<HeroSkillImageView>> list(@PathVariable UUID heroId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return Map.of("items", images.list(heroId));
     }
 
+    @Override
     @PutMapping(path = "/{sourceSlot}/{variantNo}", version = "1")
     public HeroSkillImageView save(@PathVariable UUID heroId, @PathVariable int sourceSlot, @PathVariable int variantNo,
             @RequestBody SaveHeroSkillImage body, HttpServletRequest request) {

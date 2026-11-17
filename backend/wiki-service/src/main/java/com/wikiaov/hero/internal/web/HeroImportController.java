@@ -24,23 +24,27 @@ public class HeroImportController implements HeroImportApi {
         this.imports = imports;
     }
 
+    @Override
     @GetMapping(path = "/fields", version = "1")
     public List<HeroImports.Field> fields(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return imports.fields();
     }
 
+    @Override
     @PostMapping(path = "/preview", version = "1")
     public HeroImportPlan preview(@RequestBody HeroImportRequest request) {
         return imports.preview(request);
     }
 
+    @Override
     @GetMapping(path = "/relation-fields", version = "1")
     public java.util.Map<String, List<HeroImports.Field>> relationFields(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return imports.relationFields();
     }
 
+    @Override
     @GetMapping(path = "/contexts", version = "1")
     public List<com.wikiaov.patch.AuthoringContext> contexts(@RequestParam(required = false) java.util.UUID regionId,
             @RequestParam java.util.UUID seasonId, HttpServletRequest request) {
@@ -48,6 +52,7 @@ public class HeroImportController implements HeroImportApi {
         return imports.contexts(regionId, seasonId);
     }
 
+    @Override
     @PostMapping(path = "/apply", version = "1")
     public HeroImportPlan apply(@RequestBody HeroImportRequest request) {
         return imports.apply(request);

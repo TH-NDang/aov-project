@@ -30,6 +30,7 @@ public class HeroGalleryController implements HeroGalleryApi {
         this.gallery = gallery;
     }
 
+    @Override
     @GetMapping(version = "1")
     public HeroGalleryView read(@PathVariable UUID heroId,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -38,6 +39,7 @@ public class HeroGalleryController implements HeroGalleryApi {
         return gallery.read(heroId, locale);
     }
 
+    @Override
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId attach(@PathVariable UUID heroId, @RequestBody HeroGalleryView.Attach body,
@@ -46,6 +48,7 @@ public class HeroGalleryController implements HeroGalleryApi {
         return new CreatedId(gallery.attach(heroId, body));
     }
 
+    @Override
     @PutMapping(path = "/{itemId}", version = "1")
     public HeroGalleryView.Saved update(@PathVariable UUID heroId, @PathVariable UUID itemId,
             @RequestBody HeroGalleryView.Update body, HttpServletRequest request) {
@@ -53,6 +56,7 @@ public class HeroGalleryController implements HeroGalleryApi {
         return gallery.update(heroId, itemId, body);
     }
 
+    @Override
     @DeleteMapping(path = "/{itemId}", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void remove(@PathVariable UUID heroId, @PathVariable UUID itemId, @RequestParam long expectedVersion,

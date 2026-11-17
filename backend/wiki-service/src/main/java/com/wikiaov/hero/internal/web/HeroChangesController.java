@@ -35,6 +35,7 @@ public class HeroChangesController implements HeroChangesApi {
         this.derivation = derivation;
     }
 
+    @Override
     @PostMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId record(@PathVariable UUID id,
@@ -42,11 +43,13 @@ public class HeroChangesController implements HeroChangesApi {
         return new CreatedId(changes.record(id, body));
     }
 
+    @Override
     @PutMapping(path = ApiPaths.ADMIN + "/hero-changes/{id}/assessment", version = "1")
     public HeroAssessmentView assess(@PathVariable UUID id, @RequestBody HeroPatchChanges.AssessmentInput input) {
         return changes.assess(id, input);
     }
 
+    @Override
     @PostMapping(path = ApiPaths.ADMIN + "/hero-changes/{changeSetId}/mechanics/{changeId}/previous", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId recordPrevious(@PathVariable UUID changeSetId, @PathVariable UUID changeId,
@@ -54,6 +57,7 @@ public class HeroChangesController implements HeroChangesApi {
         return new CreatedId(changes.recordPrevious(changeSetId, changeId, input));
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
     public List<Map<String, Object>> authoringChanges(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request) {
@@ -61,6 +65,7 @@ public class HeroChangesController implements HeroChangesApi {
         return changes.forAuthoringVariant(id, locale);
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/heroes/{heroId}/patch-view", version = "1")
     public HeroPatchView patchView(@PathVariable UUID heroId, @RequestParam UUID patchVariantId,
             @RequestParam(required = false) UUID anchorRevisionId, HttpServletRequest request) {
@@ -68,6 +73,7 @@ public class HeroChangesController implements HeroChangesApi {
         return derivation.at(heroId, patchVariantId, anchorRevisionId);
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ROOT + "/heroes/{heroId}/changes", version = "1")
     public ResponseEntity<?> history(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,

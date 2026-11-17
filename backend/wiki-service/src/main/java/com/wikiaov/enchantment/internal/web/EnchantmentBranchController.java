@@ -25,17 +25,20 @@ public class EnchantmentBranchController implements EnchantmentBranchApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<EnchantmentBranchView> list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.list();
     }
 
+    @Override
     @PutMapping(path = "/{code}", version = "1")
     public EnchantmentBranchView save(@PathVariable String code, @RequestBody EnchantmentBranchCommand input) {
         return catalog.save(code, input);
     }
 
+    @Override
     @PutMapping(path = "/order", version = "1")
     public List<EnchantmentBranchView> reorder(@RequestBody EnchantmentOrdering.Branches input) {
         return catalog.reorder(input);

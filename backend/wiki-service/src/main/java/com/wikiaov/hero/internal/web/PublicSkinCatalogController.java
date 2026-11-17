@@ -24,6 +24,7 @@ public class PublicSkinCatalogController implements PublicSkinCatalogApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public ResponseEntity<PublicSkinCatalogView> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,

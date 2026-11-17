@@ -36,6 +36,7 @@ public class ItemAdminController implements ItemAdminApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public PageSlice<ItemView> list(@RequestParam(required = false) UUID rulesetId,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -63,6 +64,7 @@ public class ItemAdminController implements ItemAdminApi {
                 includeUnscoped);
     }
 
+    @Override
     @GetMapping(path = "/{id}", version = "1")
     public ItemView latest(@PathVariable UUID id, @RequestParam(required = false) UUID rulesetId,
             HttpServletRequest request) {
@@ -70,40 +72,47 @@ public class ItemAdminController implements ItemAdminApi {
         return catalog.latest(id, rulesetId);
     }
 
+    @Override
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public ItemView create(@RequestBody Create input) {
         return catalog.create(input);
     }
 
+    @Override
     @GetMapping(path = "/{id}/revisions", version = "1")
     public List<ItemView.Revision> history(@PathVariable UUID id, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.history(id);
     }
 
+    @Override
     @GetMapping(path = {"/{id}/revisions/{revisionId}", "/{id}/drafts/{revisionId}"}, version = "1")
     public ItemView read(@PathVariable UUID id, @PathVariable UUID revisionId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.read(id, revisionId);
     }
 
+    @Override
     @PostMapping(path = "/{id}/drafts", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public ItemView fork(@PathVariable UUID id, @RequestBody Fork input) {
         return catalog.fork(id, input);
     }
 
+    @Override
     @PutMapping(path = "/{id}/drafts/{revisionId}", version = "1")
     public ItemView update(@PathVariable UUID id, @PathVariable UUID revisionId, @RequestBody Update input) {
         return catalog.update(id, revisionId, input);
     }
 
+    @Override
     @PostMapping(path = "/{id}/drafts/{revisionId}/publish", version = "1")
     public ItemView publish(@PathVariable UUID id, @PathVariable UUID revisionId, @RequestBody Mutation input) {
         return catalog.publish(id, revisionId, input);
     }
 
+    @Override
     @PostMapping(path = "/{id}/drafts/{revisionId}/discard", version = "1")
     public ItemView discard(@PathVariable UUID id, @PathVariable UUID revisionId, @RequestBody Mutation input) {
         return catalog.discard(id, revisionId, input);

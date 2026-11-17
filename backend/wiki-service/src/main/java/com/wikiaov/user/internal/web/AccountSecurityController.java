@@ -34,12 +34,14 @@ public class AccountSecurityController implements AccountSecurityApi {
         this.passwords = passwords;
     }
 
+    @Override
     @GetMapping(version = "1")
     public SecurityOverview overview(HttpServletRequest http) {
         QueryParameters.requireOnly(http, Set.of());
         return security.overview();
     }
 
+    @Override
     @PostMapping(path = "/password-change", version = "1")
     public ResponseEntity<PasswordChallengeView> startPasswordChange(HttpServletRequest http,
             @RequestBody(required = false) PasswordChangeRequests.Start body) {
@@ -48,6 +50,7 @@ public class AccountSecurityController implements AccountSecurityApi {
         return ResponseEntity.status(HttpStatus.CREATED).body(passwords.start(language));
     }
 
+    @Override
     @PostMapping(path = "/password-change/{challengeId}/confirm", version = "1")
     public PasswordChangeResult confirmPasswordChange(HttpServletRequest http, @PathVariable UUID challengeId,
             @RequestBody PasswordChangeRequests.Confirm body) {
@@ -56,12 +59,14 @@ public class AccountSecurityController implements AccountSecurityApi {
                 !Boolean.FALSE.equals(body.signOutOtherSessions()), AccountMail.Language.of(body.language()));
     }
 
+    @Override
     @GetMapping(path = "/sessions", version = "1")
     public SessionList sessions(HttpServletRequest http) {
         QueryParameters.requireOnly(http, Set.of());
         return security.sessions();
     }
 
+    @Override
     @DeleteMapping(path = "/sessions/{sessionId}", version = "1")
     public ResponseEntity<Void> signOutSession(HttpServletRequest http, @PathVariable String sessionId) {
         QueryParameters.requireOnly(http, Set.of());
@@ -69,12 +74,14 @@ public class AccountSecurityController implements AccountSecurityApi {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @PostMapping(path = "/sessions/sign-out-others", version = "1")
     public SessionList.SignOutResult signOutOtherSessions(HttpServletRequest http) {
         QueryParameters.requireOnly(http, Set.of());
         return security.signOutOthers();
     }
 
+    @Override
     @DeleteMapping(path = "/two-factor/recovery-codes", version = "1")
     public ResponseEntity<Void> removeRecoveryCodes(HttpServletRequest http) {
         QueryParameters.requireOnly(http, Set.of());

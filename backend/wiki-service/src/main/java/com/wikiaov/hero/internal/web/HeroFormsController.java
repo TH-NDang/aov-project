@@ -24,12 +24,14 @@ public class HeroFormsController implements HeroFormsApi {
         this.forms = forms;
     }
 
+    @Override
     @GetMapping(version = "1")
     public HeroFormsView read(@PathVariable UUID heroId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return forms.view(heroId);
     }
 
+    @Override
     @PutMapping(version = "1")
     public HeroFormsView replace(@PathVariable UUID heroId, @RequestBody ReplaceForms body) {
         return forms.replace(heroId, body);

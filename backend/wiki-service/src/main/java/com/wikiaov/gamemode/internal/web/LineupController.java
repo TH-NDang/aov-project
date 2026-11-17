@@ -35,33 +35,39 @@ public class LineupController implements LineupApi {
         this.lineups = lineups;
     }
 
+    @Override
     @GetMapping(version = "1")
     public MyState me(@PathVariable String code, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return lineups.me(code);
     }
 
+    @Override
     @PutMapping(path = "/likes/{lineupId}", version = "1")
     public LikeState like(@PathVariable String code, @PathVariable UUID lineupId) {
         return lineups.like(code, lineupId);
     }
 
+    @Override
     @DeleteMapping(path = "/likes/{lineupId}", version = "1")
     public LikeState unlike(@PathVariable String code, @PathVariable UUID lineupId) {
         return lineups.unlike(code, lineupId);
     }
 
+    @Override
     @PostMapping(path = "/lineups", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public OwnLineup create(@PathVariable String code, @RequestBody SaveLineup input) {
         return lineups.create(code, input);
     }
 
+    @Override
     @PutMapping(path = "/lineups/{lineupId}", version = "1")
     public OwnLineup update(@PathVariable String code, @PathVariable UUID lineupId, @RequestBody SaveLineup input) {
         return lineups.update(code, lineupId, input);
     }
 
+    @Override
     @DeleteMapping(path = "/lineups/{lineupId}", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String code, @PathVariable UUID lineupId, @RequestParam long expectedVersion,

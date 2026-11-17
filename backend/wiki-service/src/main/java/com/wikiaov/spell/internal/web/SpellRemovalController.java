@@ -23,6 +23,7 @@ public class SpellRemovalController implements SpellRemovalApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<Map<String, Object>> forVariant(@RequestParam UUID patchVariantId,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request) {

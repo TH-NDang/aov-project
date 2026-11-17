@@ -18,6 +18,7 @@ public class PublicationOverviewController implements PublicationOverviewApi {
         this.overview = overview;
     }
 
+    @Override
     @GetMapping(version = "1")
     public com.wikiaov.patch.internal.application.response.PublicationOverviewView.Snapshot read(
             HttpServletRequest request) {

@@ -31,6 +31,7 @@ public class HeroShopController implements HeroShopApi {
         this.shop = shop;
     }
 
+    @Override
     @GetMapping(version = "1")
     public HeroShopView read(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             HttpServletRequest request) {
@@ -38,12 +39,14 @@ public class HeroShopController implements HeroShopApi {
         return shop.admin(heroId, region);
     }
 
+    @Override
     @PutMapping(version = "1")
     public HeroShopView.Price savePrice(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestBody SavePrice body) {
         return shop.savePrice(heroId, region, body);
     }
 
+    @Override
     @DeleteMapping(path = "/prices/{capturedOn}", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePrice(@PathVariable UUID heroId,
@@ -52,6 +55,7 @@ public class HeroShopController implements HeroShopApi {
         shop.deletePrice(heroId, region, capturedOn);
     }
 
+    @Override
     @DeleteMapping(path = "/skins/{skinKey}/{capturedOn}", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSkin(@PathVariable UUID heroId, @PathVariable String skinKey,
@@ -60,6 +64,7 @@ public class HeroShopController implements HeroShopApi {
         shop.deleteSkin(heroId, skinKey, region, capturedOn);
     }
 
+    @Override
     @PutMapping(path = "/skins/{skinKey}", version = "1")
     public HeroShopView.SkinAcquisition saveSkin(@PathVariable UUID heroId, @PathVariable String skinKey,
             @RequestParam(defaultValue = "VN") String region, @RequestBody SaveSkinAcquisition body) {

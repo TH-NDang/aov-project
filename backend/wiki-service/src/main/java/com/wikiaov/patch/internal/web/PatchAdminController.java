@@ -37,6 +37,7 @@ public class PatchAdminController implements PatchAdminApi {
         this.authoring = authoring;
     }
 
+    @Override
     @GetMapping(path = "/patches", version = "1")
     public com.wikiaov.platform.PageSlice<PatchAdminViews.Patch> catalog(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
@@ -44,72 +45,84 @@ public class PatchAdminController implements PatchAdminApi {
         return authoring.catalog(page, size);
     }
 
+    @Override
     @GetMapping(path = "/regions/{id}/ruleset-assignments", version = "1")
     public List<PatchAdminViews.Assignment> assignments(@PathVariable UUID id, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return authoring.assignments(id);
     }
 
+    @Override
     @PostMapping(path = "/regions", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId region(@RequestBody CreateRegion body) {
         return new CreatedId(authoring.region(body));
     }
 
+    @Override
     @PostMapping(path = "/rulesets", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId ruleset(@RequestBody Ruleset body) {
         return new CreatedId(authoring.ruleset(body));
     }
 
+    @Override
     @GetMapping(path = "/rulesets", version = "1")
     public List<PatchAdminViews.Ruleset> rulesets(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return authoring.rulesets();
     }
 
+    @Override
     @PostMapping(path = "/regions/{id}/ruleset-assignments", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId assignment(@PathVariable UUID id, @RequestBody Assignment body) {
         return new CreatedId(authoring.assign(id, body));
     }
 
+    @Override
     @PostMapping(path = "/patches", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId patch(@RequestBody Patch body) {
         return new CreatedId(authoring.patch(body));
     }
 
+    @Override
     @PutMapping(path = "/patches/{id}/title", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void title(@PathVariable UUID id, @RequestBody Title body) {
         authoring.rename(id, body);
     }
 
+    @Override
     @PostMapping(path = "/season-patches", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId seasonPatch(@RequestBody SeasonPatch body) {
         return new CreatedId(authoring.seasonPatch(body));
     }
 
+    @Override
     @PostMapping(path = "/patches/{id}/variants", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId variant(@PathVariable UUID id, @RequestBody Variant body) {
         return new CreatedId(authoring.variant(id, body));
     }
 
+    @Override
     @PostMapping(path = "/patch-variants/{id}/publish", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void publish(@PathVariable UUID id) {
         authoring.publish(id);
     }
 
+    @Override
     @PostMapping(path = "/patch-releases/{id}/confirm", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void confirm(@PathVariable UUID id) {
         authoring.confirmRelease(id);
     }
 
+    @Override
     @PostMapping(path = "/patch-variants/{id}/releases", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId release(@PathVariable UUID id, @RequestBody Release body) {

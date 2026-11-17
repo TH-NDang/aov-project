@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class VideoAdminController implements VideoAdminApi {
     private final SubjectVideos videos;
 
+    @Override
     @GetMapping(version = "1")
     public PageSlice<AdminVideo> list(@RequestParam(required = false) VideoSubjectKind subjectKind,
             @RequestParam(required = false) UUID subjectId, @RequestParam(required = false) String subjectKey,
@@ -51,6 +52,7 @@ public class VideoAdminController implements VideoAdminApi {
         return videos.list(new AdminFilter(subjectKind, subjectId, subjectKey, status, purpose, origin, q), page, size);
     }
 
+    @Override
     @GetMapping(path = "/subjects", version = "1")
     public SubjectList subjects(@RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request) {
@@ -58,22 +60,26 @@ public class VideoAdminController implements VideoAdminApi {
         return videos.subjects(locale);
     }
 
+    @Override
     @PostMapping(version = "1")
     public ResponseEntity<AdminVideo> create(@RequestBody SaveVideo input) {
         return ResponseEntity.status(HttpStatus.CREATED).body(videos.create(input));
     }
 
+    @Override
     @PutMapping(path = "/{id}", version = "1")
     public AdminVideo update(@PathVariable UUID id, @RequestBody SaveVideo input) {
         return videos.update(id, input);
     }
 
+    @Override
     @DeleteMapping(path = "/{id}", version = "1")
     public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestParam long expectedVersion) {
         videos.delete(id, expectedVersion);
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @PostMapping(path = "/import", version = "1")
     public ImportResult importVideos(@RequestBody ImportVideos input) {
         return videos.importVideos(input);

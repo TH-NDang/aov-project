@@ -32,18 +32,21 @@ public class UserController implements UserApi {
         this.avatars = avatars;
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ROOT + "/users/me", version = "1")
     public UserProfile self(HttpServletRequest http) {
         QueryParameters.requireOnly(http, Set.of());
         return profiles.self();
     }
 
+    @Override
     @PutMapping(path = ApiPaths.ROOT + "/users/me", version = "1")
     public UserProfile saveSelf(HttpServletRequest http, @RequestBody ProfileRequest body) {
         QueryParameters.requireOnly(http, Set.of());
         return profiles.saveSelf(body.toInput());
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/users", version = "1")
     public PageSlice<UserProfile> list(HttpServletRequest http, @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "0") int page,
@@ -52,12 +55,14 @@ public class UserController implements UserApi {
         return profiles.list(search.strip(), page, size);
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/users/{id}", version = "1")
     public UserProfile get(HttpServletRequest http, @PathVariable UUID id) {
         QueryParameters.requireOnly(http, Set.of());
         return profiles.get(id);
     }
 
+    @Override
     @PutMapping(path = ApiPaths.ADMIN + "/users/{id}", version = "1")
     public UserProfile save(HttpServletRequest http, @PathVariable UUID id, @RequestBody ProfileRequest body) {
         QueryParameters.requireOnly(http, Set.of());
@@ -71,12 +76,14 @@ public class UserController implements UserApi {
     ) {
     }
 
+    @Override
     @PostMapping(path = ApiPaths.ROOT + "/users/me/avatar-uploads", version = "1")
     public AvatarUploads.Ticket upload(HttpServletRequest http, @RequestBody AvatarRequest body) {
         QueryParameters.requireOnly(http, Set.of());
         return avatars.begin(body.fileName(), body.contentType(), body.sizeBytes());
     }
 
+    @Override
     @PostMapping(path = ApiPaths.ROOT + "/users/me/avatar-uploads/{id}/complete", version = "1")
     public AvatarUploads.Result complete(HttpServletRequest http, @PathVariable UUID id) {
         QueryParameters.requireOnly(http, Set.of());

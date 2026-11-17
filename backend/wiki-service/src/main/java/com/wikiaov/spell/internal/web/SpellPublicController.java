@@ -24,6 +24,7 @@ public class SpellPublicController implements SpellPublicApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public PageSlice<SpellView> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -39,6 +40,7 @@ public class SpellPublicController implements SpellPublicApi {
         return catalog.published(region, locale, page, size, seasonId, patchVariantId, includeUnscoped);
     }
 
+    @Override
     @GetMapping(path = "/{id}", version = "1")
     public SpellView read(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -52,6 +54,7 @@ public class SpellPublicController implements SpellPublicApi {
         return catalog.publishedOne(id, region, locale, seasonId, patchVariantId, includeUnscoped);
     }
 
+    @Override
     @GetMapping(path = "/archived", version = "1")
     public PageSlice<SpellView> archived(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,

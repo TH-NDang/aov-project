@@ -52,6 +52,7 @@ public class HeroAdminController implements HeroAdminApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public PageSlice<HeroCatalogView> list(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, @RequestParam(defaultValue = "") String q,
@@ -69,30 +70,35 @@ public class HeroAdminController implements HeroAdminApi {
                 role, position, hasWarnings);
     }
 
+    @Override
     @GetMapping(path = "/{heroId}", version = "1")
     public HeroStatusView status(@PathVariable UUID heroId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return new HeroStatusView(heroId, authoring.revisions(heroId));
     }
 
+    @Override
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public HeroRevisionView create(@RequestBody Create body) {
         return authoring.create(body);
     }
 
+    @Override
     @PostMapping(path = "/{heroId}/drafts", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public HeroRevisionView fork(@PathVariable UUID heroId, @RequestBody Fork body) {
         return authoring.fork(heroId, body);
     }
 
+    @Override
     @GetMapping(path = "/{heroId}/revisions", version = "1")
     public List<HeroRevisionView> revisions(@PathVariable UUID heroId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return authoring.revisions(heroId);
     }
 
+    @Override
     @GetMapping(path = {"/{heroId}/revisions/{revisionId}", "/{heroId}/drafts/{revisionId}"}, version = "1")
     public Map<String, Object> read(@PathVariable UUID heroId, @PathVariable UUID revisionId,
             HttpServletRequest request) {
@@ -100,6 +106,7 @@ public class HeroAdminController implements HeroAdminApi {
         return Map.of("revision", authoring.read(heroId, revisionId), "content", authoring.preview(heroId, revisionId));
     }
 
+    @Override
     @GetMapping(path = "/{heroId}/revisions/{revisionId}/comparison", version = "1")
     public HeroComparisonView comparison(@PathVariable UUID heroId, @PathVariable UUID revisionId,
             @RequestParam(required = false) UUID fromRevisionId, HttpServletRequest request) {
@@ -107,6 +114,7 @@ public class HeroAdminController implements HeroAdminApi {
         return comparisons.compare(heroId, revisionId, fromRevisionId);
     }
 
+    @Override
     @GetMapping(path = "/{heroId}/revisions/{revisionId}/draft-changes", version = "1")
     public HeroDraftChangesView draftChanges(@PathVariable UUID heroId, @PathVariable UUID revisionId,
             HttpServletRequest request) {
@@ -114,22 +122,26 @@ public class HeroAdminController implements HeroAdminApi {
         return comparisons.draftChanges(heroId, revisionId);
     }
 
+    @Override
     @PostMapping(path = "/{heroId}/drafts/{draftId}/publish", version = "1")
     public HeroRevisionView publish(@PathVariable UUID heroId, @PathVariable UUID draftId, @RequestBody Mutation body) {
         return authoring.publish(heroId, draftId, body);
     }
 
+    @Override
     @PostMapping(path = "/{heroId}/drafts/{draftId}/baseline-context", version = "1")
     public HeroRevisionView baselineContext(@PathVariable UUID heroId, @PathVariable UUID draftId,
             @RequestBody BaselineContext body) {
         return authoring.baselineContext(heroId, draftId, body);
     }
 
+    @Override
     @PostMapping(path = "/{heroId}/drafts/{draftId}/discard", version = "1")
     public HeroRevisionView discard(@PathVariable UUID heroId, @PathVariable UUID draftId, @RequestBody Mutation body) {
         return authoring.discard(heroId, draftId, body);
     }
 
+    @Override
     @PutMapping(path = "/{heroId}/drafts/{draftId}/profile", version = "1")
     public HeroRevisionView updateProfile(@PathVariable UUID heroId, @PathVariable UUID draftId,
             @RequestBody ProfileRequest body) {
@@ -137,6 +149,7 @@ public class HeroAdminController implements HeroAdminApi {
                 body.changeNote());
     }
 
+    @Override
     @PutMapping(path = "/{heroId}/drafts/{draftId}/overview-ratings", version = "1")
     public HeroRevisionView updateRatings(@PathVariable UUID heroId, @PathVariable UUID draftId,
             @RequestBody RatingsRequest body) {
@@ -144,6 +157,7 @@ public class HeroAdminController implements HeroAdminApi {
                 body.content(), body.changeNote());
     }
 
+    @Override
     @PutMapping(path = "/{heroId}/drafts/{draftId}/combat-stats", version = "1")
     public HeroRevisionView updateStats(@PathVariable UUID heroId, @PathVariable UUID draftId,
             @RequestBody StatsRequest body) {
@@ -151,6 +165,7 @@ public class HeroAdminController implements HeroAdminApi {
                 body.changeNote());
     }
 
+    @Override
     @PutMapping(path = "/{heroId}/drafts/{draftId}/skills", version = "1")
     public HeroRevisionView updateSkills(@PathVariable UUID heroId, @PathVariable UUID draftId,
             @RequestBody SkillsRequest body) {
@@ -158,6 +173,7 @@ public class HeroAdminController implements HeroAdminApi {
                 body.changeNote());
     }
 
+    @Override
     @PutMapping(path = "/{heroId}/drafts/{draftId}/skins", version = "1")
     public HeroRevisionView updateSkins(@PathVariable UUID heroId, @PathVariable UUID draftId,
             @RequestBody SkinsRequest body) {
@@ -165,6 +181,7 @@ public class HeroAdminController implements HeroAdminApi {
                 body.changeNote());
     }
 
+    @Override
     @PutMapping(path = "/{heroId}/drafts/{draftId}/media-bindings", version = "1")
     public HeroRevisionView updateBindings(@PathVariable UUID heroId, @PathVariable UUID draftId,
             @RequestBody BindingsRequest body) {

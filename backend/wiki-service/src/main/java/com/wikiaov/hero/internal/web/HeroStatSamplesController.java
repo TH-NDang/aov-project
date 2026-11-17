@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class HeroStatSamplesController implements HeroStatSamplesApi {
     private final HeroStatSamples samples;
 
+    @Override
     @GetMapping(version = "1")
     public List<HeroStatSamples.Sample> forPatch(@PathVariable UUID id, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());

@@ -34,6 +34,7 @@ public class HeroPublicController implements HeroPublicApi {
         this.json = json;
     }
 
+    @Override
     @GetMapping(path = "/heroes", version = "1")
     public ResponseEntity<?> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -49,6 +50,7 @@ public class HeroPublicController implements HeroPublicApi {
                 includeUnscoped, playable), web, false);
     }
 
+    @Override
     @GetMapping(path = "/heroes/{heroId}", version = "1")
     public ResponseEntity<?> detail(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -61,6 +63,7 @@ public class HeroPublicController implements HeroPublicApi {
                 : queries.detail(heroId, region, locale, false, seasonId, patchVariantId, includeUnscoped), web, false);
     }
 
+    @Override
     @GetMapping(path = "/heroes/{heroId}/manifest", version = "1")
     public ResponseEntity<?> manifest(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -73,6 +76,7 @@ public class HeroPublicController implements HeroPublicApi {
                 : queries.detail(heroId, region, locale, true, seasonId, patchVariantId, includeUnscoped), web, false);
     }
 
+    @Override
     @GetMapping(path = "/hero-profile-revisions/{id}", version = "1")
     public ResponseEntity<?> sectionPROFILE(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -81,6 +85,7 @@ public class HeroPublicController implements HeroPublicApi {
         return cached(queries.section(HeroSection.PROFILE, id, locale), web, true);
     }
 
+    @Override
     @GetMapping(path = "/hero-overview-rating-revisions/{id}", version = "1")
     public ResponseEntity<?> sectionOVERVIEW_RATINGS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request,
@@ -89,6 +94,7 @@ public class HeroPublicController implements HeroPublicApi {
         return cached(queries.section(HeroSection.OVERVIEW_RATINGS, id, locale), web, true);
     }
 
+    @Override
     @GetMapping(path = "/hero-stats-revisions/{id}", version = "1")
     public ResponseEntity<?> sectionCOMBAT_STATS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -97,6 +103,7 @@ public class HeroPublicController implements HeroPublicApi {
         return cached(queries.section(HeroSection.COMBAT_STATS, id, locale), web, true);
     }
 
+    @Override
     @GetMapping(path = "/hero-skills-revisions/{id}", version = "1")
     public ResponseEntity<?> sectionSKILLS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -105,6 +112,7 @@ public class HeroPublicController implements HeroPublicApi {
         return cached(queries.section(HeroSection.SKILLS, id, locale), web, true);
     }
 
+    @Override
     @GetMapping(path = "/hero-skins-revisions/{id}", version = "1")
     public ResponseEntity<?> sectionSKINS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -113,6 +121,7 @@ public class HeroPublicController implements HeroPublicApi {
         return cached(queries.section(HeroSection.SKINS, id, locale), web, true);
     }
 
+    @Override
     @GetMapping(path = "/hero-media-binding-revisions/{id}", version = "1")
     public ResponseEntity<?> sectionMEDIA_BINDINGS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,

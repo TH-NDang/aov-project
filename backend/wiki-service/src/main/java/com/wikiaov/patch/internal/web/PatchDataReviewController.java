@@ -19,6 +19,7 @@ public class PatchDataReviewController implements PatchDataReviewApi {
         this.reviews = reviews;
     }
 
+    @Override
     @PutMapping(path = "/{id}/data-review", version = "1")
     public PatchDataReviewView update(@PathVariable UUID id, @RequestBody PatchDataReviewService.Update input) {
         return reviews.update(id, input);

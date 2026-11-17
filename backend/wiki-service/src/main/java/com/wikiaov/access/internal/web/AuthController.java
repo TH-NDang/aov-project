@@ -49,12 +49,14 @@ public class AuthController implements AuthApi {
         this.googleFlows = googleFlows;
     }
 
+    @Override
     @GetMapping(path = "/config", version = "1")
     public Map<String, Boolean> config(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return Map.of("googleEnabled", properties.googleEnabled() && !properties.clientSecret().isBlank());
     }
 
+    @Override
     @PostMapping(path = "/login", version = "1")
     public AuthTokenResponse login(@RequestBody LoginRequest body, HttpServletRequest request,
             HttpServletResponse response) {
@@ -64,6 +66,7 @@ public class AuthController implements AuthApi {
         return accept(sessions.password(body.username().trim(), body.password(), body.otp()), response);
     }
 
+    @Override
     @PostMapping(path = "/refresh", version = "1")
     public AuthTokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
         guard(request);
@@ -82,6 +85,7 @@ public class AuthController implements AuthApi {
         }
     }
 
+    @Override
     @PostMapping(path = "/logout", version = "1")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         guard(request);
@@ -94,6 +98,7 @@ public class AuthController implements AuthApi {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @PostMapping(path = "/google", version = "1")
     public Map<String, String> google(HttpServletRequest request, HttpServletResponse response) {
         guard(request);
@@ -110,6 +115,7 @@ public class AuthController implements AuthApi {
                 identity.authorizationUrl(flow.state(), flow.challenge(), properties.callbackUri()));
     }
 
+    @Override
     @GetMapping(path = "/google/callback", version = "1")
     public ResponseEntity<Void> callback(@RequestParam String state,
             @RequestParam(required = false) String code, @RequestParam(required = false) String error,

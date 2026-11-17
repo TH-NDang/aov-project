@@ -23,12 +23,14 @@ class StorageAdminController implements StorageAdminApi {
         this.capacity = capacity;
     }
 
+    @Override
     @GetMapping(path = "/summary", version = "1")
     public StorageCapacityViews.Summary summary(HttpServletRequest http) {
         QueryParameters.requireOnly(http, Set.of());
         return capacity.summary();
     }
 
+    @Override
     @PostMapping(path = "/estimates", version = "1")
     public StorageCapacityViews.Estimate estimate(@RequestBody CapacityCommands.EstimateCommand body) {
         return capacity.estimate(body.target(),

@@ -25,12 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class PatchStatDefaultsController implements PatchStatDefaultsApi {
     private final PatchStatDefaults defaults;
 
+    @Override
     @GetMapping(version = "1")
     public List<StatDefaultView> effective(@PathVariable UUID id, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return defaults.effective(id);
     }
 
+    @Override
     @PutMapping(path = "/{key}", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void set(@PathVariable UUID id, @PathVariable String key, @RequestBody SetStatDefault input) {

@@ -24,6 +24,7 @@ public class EnchantmentPublicController implements EnchantmentPublicApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public PageSlice<EnchantmentView> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -39,6 +40,7 @@ public class EnchantmentPublicController implements EnchantmentPublicApi {
         return catalog.published(region, locale, page, size, seasonId, patchVariantId, includeUnscoped);
     }
 
+    @Override
     @GetMapping(path = "/{id}", version = "1")
     public EnchantmentView read(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,

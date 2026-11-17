@@ -22,12 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class PatchNotesController implements PatchNotesApi {
     private final PatchNotes notes;
 
+    @Override
     @GetMapping(version = "1")
     public PatchNoteView read(@PathVariable UUID id, @PathVariable String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return notes.read(id, locale);
     }
 
+    @Override
     @PutMapping(version = "1")
     public PatchNoteView save(@PathVariable UUID id, @PathVariable String locale, @RequestBody UpdatePatchNote input) {
         return notes.save(id, locale, input);

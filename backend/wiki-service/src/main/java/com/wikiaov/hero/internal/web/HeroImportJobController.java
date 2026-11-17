@@ -28,24 +28,28 @@ public class HeroImportJobController implements HeroImportJobApi {
         this.jobs = jobs;
     }
 
+    @Override
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public HeroImportJobView create(@RequestBody HeroImportJobRequest request) {
         return jobs.enqueue(request);
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<HeroImportJobView> list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return jobs.list();
     }
 
+    @Override
     @GetMapping(path = "/{id}", version = "1")
     public HeroImportJobView get(@PathVariable UUID id, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return jobs.get(id);
     }
 
+    @Override
     @PutMapping(path = "/{id}/notification-dismissal", version = "1")
     public HeroImportJobView dismissNotification(@PathVariable UUID id) {
         return jobs.dismissNotification(id);

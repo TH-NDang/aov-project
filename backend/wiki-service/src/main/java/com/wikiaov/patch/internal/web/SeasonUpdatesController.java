@@ -23,6 +23,7 @@ public class SeasonUpdatesController implements SeasonUpdatesApi {
         this.updates = updates;
     }
 
+    @Override
     @GetMapping(version = "1")
     public ResponseEntity<SeasonUpdatesView> current(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,

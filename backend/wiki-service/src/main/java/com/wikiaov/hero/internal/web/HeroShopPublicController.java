@@ -24,6 +24,7 @@ public class HeroShopPublicController implements HeroShopPublicApi {
         this.shop = shop;
     }
 
+    @Override
     @GetMapping(version = "1")
     public HeroShopView read(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate at,

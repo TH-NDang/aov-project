@@ -39,18 +39,21 @@ public class AutoChessAdminController implements AutoChessAdminApi {
         this.lineups = lineups;
     }
 
+    @Override
     @GetMapping(version = "1")
     public AdminGuide current(@PathVariable UUID modeId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return guides.current(modeId);
     }
 
+    @Override
     @GetMapping(path = "/revisions", version = "1")
     public List<Revision> history(@PathVariable UUID modeId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return guides.history(modeId);
     }
 
+    @Override
     @GetMapping(path = "/revisions/{revisionId}", version = "1")
     public AdminGuide revision(@PathVariable UUID modeId, @PathVariable UUID revisionId,
             HttpServletRequest request) {
@@ -58,30 +61,35 @@ public class AutoChessAdminController implements AutoChessAdminApi {
         return guides.revision(modeId, revisionId);
     }
 
+    @Override
     @PostMapping(path = "/drafts", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public AdminGuide createDraft(@PathVariable UUID modeId, @RequestBody CreateGuideDraft input) {
         return guides.createDraft(modeId, input);
     }
 
+    @Override
     @PutMapping(path = "/drafts/{revisionId}", version = "1")
     public AdminGuide update(@PathVariable UUID modeId, @PathVariable UUID revisionId,
             @RequestBody UpdateGuide input) {
         return guides.update(modeId, revisionId, input);
     }
 
+    @Override
     @PostMapping(path = "/drafts/{revisionId}/publish", version = "1")
     public AdminGuide publish(@PathVariable UUID modeId, @PathVariable UUID revisionId,
             @RequestBody Mutation input) {
         return guides.publish(modeId, revisionId, input);
     }
 
+    @Override
     @PostMapping(path = "/drafts/{revisionId}/discard", version = "1")
     public AdminGuide discard(@PathVariable UUID modeId, @PathVariable UUID revisionId,
             @RequestBody Mutation input) {
         return guides.discard(modeId, revisionId, input);
     }
 
+    @Override
     @GetMapping(path = "/community-lineups", version = "1")
     public PageSlice<AdminLineup> communityLineups(@PathVariable UUID modeId,
             @RequestParam(required = false) String status, @RequestParam(defaultValue = "0") int page,
@@ -90,6 +98,7 @@ public class AutoChessAdminController implements AutoChessAdminApi {
         return lineups.adminList(modeId, status, page, size);
     }
 
+    @Override
     @PostMapping(path = "/community-lineups/{lineupId}/visibility", version = "1")
     public AdminLineup visibility(@PathVariable UUID modeId, @PathVariable UUID lineupId,
             @RequestBody Visibility input) {

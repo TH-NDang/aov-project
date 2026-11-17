@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class VideoPublicController implements VideoPublicApi {
     private final SubjectVideos videos;
 
+    @Override
     @GetMapping(version = "1")
     public ResponseEntity<PublicVideoList> list(@RequestParam VideoSubjectKind subjectKind,
             @RequestParam UUID subjectId, @RequestParam(required = false) String subjectKey,

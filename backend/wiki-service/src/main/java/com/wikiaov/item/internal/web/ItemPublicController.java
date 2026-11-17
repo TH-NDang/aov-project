@@ -24,6 +24,7 @@ public class ItemPublicController implements ItemPublicApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public PageSlice<ItemView> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -39,6 +40,7 @@ public class ItemPublicController implements ItemPublicApi {
         return catalog.published(region, locale, page, size, seasonId, patchVariantId, includeUnscoped);
     }
 
+    @Override
     @GetMapping(path = "/{id}", version = "1")
     public ItemView read(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,

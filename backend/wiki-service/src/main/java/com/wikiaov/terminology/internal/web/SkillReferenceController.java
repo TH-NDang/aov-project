@@ -31,6 +31,7 @@ public class SkillReferenceController implements SkillReferenceApi {
         this.json = json;
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/reference-skills", version = "1")
     public PageSlice<Candidate> admin(@RequestParam(required = false) UUID rulesetId,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -42,6 +43,7 @@ public class SkillReferenceController implements SkillReferenceApi {
         return catalog.admin(rulesetId, locale, q, heroId, ids, page, size);
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ROOT + "/reference-skills", version = "1")
     public ResponseEntity<PageSlice<Candidate>> published(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,

@@ -30,6 +30,7 @@ public class SkinBadgeGroupController implements SkinBadgeGroupApi {
         this.groups = groups;
     }
 
+    @Override
     @GetMapping(path = "/skin-badge-groups", version = "1")
     public PageSlice<SkinBadgeGroupView> list(@RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             @RequestParam(defaultValue = "") String q, @RequestParam(defaultValue = "0") int page,
@@ -38,12 +39,14 @@ public class SkinBadgeGroupController implements SkinBadgeGroupApi {
         return groups.list(locale, q, page, size);
     }
 
+    @Override
     @PostMapping(path = "/skin-badge-groups", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public SkinBadgeGroupView create(@RequestBody SkinBadgeGroupCommands.Create input) {
         return groups.create(input);
     }
 
+    @Override
     @PutMapping(path = "/skin-badge-groups/{id}", version = "1")
     public SkinBadgeGroupView update(@PathVariable UUID id, @RequestBody SkinBadgeGroupCommands.Update input) {
         return groups.update(id, input);

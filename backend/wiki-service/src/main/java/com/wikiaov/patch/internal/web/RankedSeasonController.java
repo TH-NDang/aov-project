@@ -26,18 +26,21 @@ public class RankedSeasonController implements RankedSeasonApi {
         this.seasons = seasons;
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<RankedSeasons.View> list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return seasons.list();
     }
 
+    @Override
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public RankedSeasons.View create(@RequestBody RankedSeasons.Input input) {
         return seasons.create(input);
     }
 
+    @Override
     @PostMapping(path = "/{seasonId}/schedules", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId schedule(@PathVariable UUID seasonId,

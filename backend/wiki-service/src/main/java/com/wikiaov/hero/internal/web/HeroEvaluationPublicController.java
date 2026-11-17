@@ -26,6 +26,7 @@ public class HeroEvaluationPublicController implements HeroEvaluationPublicApi {
         this.traits = traits;
     }
 
+    @Override
     @GetMapping(path = "/heroes/{heroId}/ranking", version = "1")
     public HeroRankingViews.Published ranking(@PathVariable UUID heroId,
             @RequestParam(defaultValue = "VN") String region,
@@ -34,6 +35,7 @@ public class HeroEvaluationPublicController implements HeroEvaluationPublicApi {
         return rankings.published(heroId, region, mode);
     }
 
+    @Override
     @GetMapping(path = "/hero-traits", version = "1")
     public HeroTraitsView traits(@RequestParam(defaultValue = "VN") String region, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region"));

@@ -23,6 +23,7 @@ public class CatalogChangesAdminController implements CatalogChangesAdminApi {
         this.changes = changes;
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<CatalogChanges.Entry> list(@RequestParam UUID rulesetId,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, @RequestParam String domain,

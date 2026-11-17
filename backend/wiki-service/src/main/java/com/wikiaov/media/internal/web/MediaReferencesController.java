@@ -20,6 +20,7 @@ public class MediaReferencesController implements MediaReferencesApi {
         this.update = update;
     }
 
+    @Override
     @PutMapping(path = "/assets/{assetId}/sources/{sourceId}/references", version = "1")
     public MediaAssetDetails update(@PathVariable UUID assetId, @PathVariable UUID sourceId,
             @RequestBody SourceReferencesRequest request) {

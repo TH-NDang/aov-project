@@ -22,6 +22,7 @@ public class EnchantmentBranchPublicController implements EnchantmentBranchPubli
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<PublicEnchantmentBranchView> list(@RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request) {

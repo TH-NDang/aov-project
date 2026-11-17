@@ -21,11 +21,13 @@ class MediaDeletionController implements MediaDeletionApi {
         this.deletion = deletion;
     }
 
+    @Override
     @PostMapping(path = "/{assetId}/delete", version = "1")
     public MediaDeletionView delete(@PathVariable UUID assetId, @RequestBody DeleteMediaRequest request) {
         return deletion.execute(assetId, request.expectedVersion(), request.reason());
     }
 
+    @Override
     @GetMapping(path = "/{assetId}/deletion", version = "1")
     public MediaDeletionView status(@PathVariable UUID assetId) {
         return deletion.status(assetId);

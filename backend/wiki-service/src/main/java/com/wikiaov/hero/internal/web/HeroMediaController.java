@@ -36,6 +36,7 @@ public class HeroMediaController implements HeroMediaApi {
         this.badges = badges;
     }
 
+    @Override
     @GetMapping(path = "/hero-media", version = "1")
     public PageSlice<HeroMediaGroup> gallery(@RequestParam UUID rulesetId, @RequestParam MediaRole role,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -46,6 +47,7 @@ public class HeroMediaController implements HeroMediaApi {
         return gallery.list(rulesetId, role, locale, q, page, size);
     }
 
+    @Override
     @GetMapping(path = "/skin-badges", version = "1")
     public PageSlice<SkinBadgeView> badges(@RequestParam(required = false) UUID rulesetId,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
@@ -58,22 +60,26 @@ public class HeroMediaController implements HeroMediaApi {
         return badges.list(rulesetId, locale, q, groupId, ungrouped, page, size);
     }
 
+    @Override
     @PostMapping(path = "/skin-badges", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public SkinBadgeView create(@RequestBody SkinBadgeCommands.Create body) {
         return badges.create(body);
     }
 
+    @Override
     @PutMapping(path = "/skin-badges/{id}", version = "1")
     public SkinBadgeView update(@PathVariable UUID id, @RequestBody SkinBadgeCommands.Update body) {
         return badges.update(id, body);
     }
 
+    @Override
     @PutMapping(path = "/skin-badges/{id}/group", version = "1")
     public SkinBadgeView assignGroup(@PathVariable UUID id, @RequestBody SkinBadgeCommands.AssignGroup body) {
         return badges.assignGroup(id, body);
     }
 
+    @Override
     @GetMapping(path = "/skin-badges/{id}/skins", version = "1")
     public PageSlice<SkinBadgeRelation> skins(@PathVariable UUID id, @RequestParam UUID rulesetId,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
