@@ -125,7 +125,18 @@
    database thứ hai: dev trên máy sau ngày ra mắt, stack chạy thử với database trống, một bản diễn tập chuyển dữ liệu. Database
    đó cần bộ bucket, token và địa chỉ ảnh riêng. Riêng bản diễn tập trên bucket thật thì khi nó còn chạy, không xóa ảnh và
    không dọn bytes mồ côi ở cả hai bên, và database diễn tập bị bỏ trước khi chuyển thật.
-8. **Không đổi:** test Testcontainers và profile `local-storage` trong `backend/wiki-service/compose.yaml` vẫn dùng SeaweedFS
+8. **Chuyển dev lên bằng ba công cụ** (các bước ở mục "Chuyển dữ liệu dev lên" của `infra/README.md`):
+   - `backend/wiki-service/scripts/dev/export-for-stack.ps1` trên máy dev: `pg_dump` hai database, và xuất người dùng của
+     realm bằng `kc.sh export` chạy trên bản chép của volume Keycloak, vì Keycloak mở file H2 để ghi. Script dừng khi Keycloak
+     dev còn chạy, khi backend dev còn trả lời, hoặc khi database có migration mà checkout không có.
+   - `dev-import` trên VPS: khôi phục `wiki`, `community`, rồi đổi mọi issuer kết thúc bằng `/realms/wikiaov` sang issuer
+     của stack. Các trigger bất biến của bản đã xuất bản và nhật ký chặn mọi UPDATE; đổi issuer không đổi nội dung, nên riêng
+     transaction đó chạy với `session_replication_role = replica`. Không khóa ngoại nào chứa cột issuer.
+   - `dev-users-import` trên VPS: `partialImport` của Keycloak với `OVERWRITE` thêm người dùng với nguyên ID, mật khẩu đã băm,
+     vai trò và liên kết Google, và thay `service-account-wiki-importer` của realm mẫu bằng bản dev. Realm vẫn là realm mẫu:
+     realm dev mang redirect URI `localhost`, các client chỉ có ở dev và secret của dev. Lệnh từ chối realm đã có người dùng,
+     và khóa `admin`, `editor`, `publisher`, vì mật khẩu của chúng nằm trong realm local của repo công khai.
+9. **Không đổi:** test Testcontainers và profile `local-storage` trong `backend/wiki-service/compose.yaml` vẫn dùng SeaweedFS
    (ADR-030 mục 14).
 
 ### Phương án đã cân nhắc
@@ -138,19 +149,23 @@
 | Giữ Content-Type bằng `rclone --metadata` (xattr) | Mất khi chép thư mục backup sang máy khác bằng công cụ thường; bind mount của Docker Desktop trên Windows không có xattr |
 | Lấy Content-Type từ database khi khôi phục | Cần cả psql và rclone trong một bước, và phải chép lại quy tắc thêm `charset` của backend |
 | Giữ SeaweedFS trong stack | Đúng thứ cần bỏ: tốn RAM và đĩa trên VPS, và là kho ảnh tách khỏi kho thật |
+| Realm mới, tạo lại tài khoản bằng tay | Nội dung mất tác giả: trong bản chép dev, 474 bản sửa tướng thuộc bốn tài khoản và service account nhập dữ liệu; hồ sơ và đội hình không còn chủ |
+| Nhập nguyên realm dev | Mang theo redirect URI `localhost`, client chỉ dành cho dev (`admin-aov`, `wiki-local-cli`) và secret của dev, phải sửa tay từng chỗ |
+| Để backend chấp nhận cả issuer dev | Sửa code để giữ mãi hai danh tính cho một người; issuer của dev là địa chỉ `localhost` không còn ai phát token |
 | Bộ bucket mới cho VPS, chép object của dev sang | Hai bộ cùng nội dung, khoảng 4,4 GB mỗi bộ, gần chạm mức miễn phí 10 GB; thêm một lần chép chưa thử. Database dev chuyển lên nên bộ bucket thật vẫn chỉ có một database dùng |
 
 ### Hệ quả
 
 - Stack cần mạng và tài khoản Cloudflare để chạy. Làm việc không có mạng thì dùng dev với profile `local-storage`.
-- Chuyển dev lên chưa có đủ công cụ. `db-restore` nhận được `wiki.dump` và `community.dump` của dev (cùng PostgreSQL 17.6,
-  cùng tên user), nhưng còn thiếu:
-  - Keycloak của dev chạy `start-dev` với file H2 trong volume `keycloak-data`, nên không có `keycloak.dump`, và stack không có
-    lệnh nhập bản xuất realm kèm người dùng;
-  - database ghi người dùng theo cặp issuer và subject, và issuer của dev (`http://localhost:8081/realms/wikiaov`) khác issuer
-    của stack (`<PUBLIC_ORIGIN>/idp/realms/wikiaov`).
-
-  Các bước chuyển sẽ được viết sau khi có hai phần này. Lúc chuyển, dev ngừng ghi từ lúc dump.
+- Lúc chuyển, dev ngừng ghi từ lúc xuất.
+- Phiên đăng nhập và cài đặt realm sửa tay ở dev không được chuyển; mọi người đăng nhập lại, `sync-account-security.ps1` chạy
+  lại như với realm mới.
+- Tài khoản chỉ đăng nhập bằng Google cần provider alias `google` trên Keycloak của stack; liên kết đã nằm trong database
+  Keycloak và có hiệu lực khi provider có.
+- Mục nhật ký cài đặt tài khoản (ADR-028) dùng mã tính từ issuer và subject (`AccountCaller.accountId`); mục ghi ở dev giữ mã
+  cũ, nên lịch sử cài đặt của một tài khoản tách làm hai đoạn.
+- Issuer của stack được khai báo một lần (`x-public-issuer` trong `compose.yaml`) cho `wiki-service`, `community-service`
+  và `dev-import`.
 - Vào ngày ra mắt, token R2 của máy dev bị thu hồi hoặc đổi sang chỉ đọc.
 - Đổi `PUBLIC_ORIGIN` phải đổi cả CORS của hai bucket riêng tư trên Cloudflare.
 - Khi bật Content-Security-Policy phải cho phép endpoint R2 (`connect-src`, `img-src`) và tên miền ảnh (`img-src`). Hiện chưa
@@ -178,5 +193,17 @@
   - `media-backup` gọi đúng endpoint và thoát mã lỗi khi không tới được; thiếu biến bucket thì báo tên biến.
 - Chưa thử với R2 thật: upload từ origin của stack, CORS, ảnh qua CDN, `media-backup` và `media-restore` trên bucket thật.
 - Sau quyết định 6: `preflight` với `.env.example` mới chỉ còn báo năm giá trị phải điền (endpoint, hai khóa, Zone ID, token
-  purge). Volume `keycloak-data` của dev, mở ở chế độ chỉ đọc, giữ realm trong `h2/keycloakdb.mv.db`. Chưa dump hay đọc
-  database dev.
+  purge). Volume `keycloak-data` của dev, mở ở chế độ chỉ đọc, giữ realm trong `h2/keycloakdb.mv.db`.
+- Chuyển dev lên, trên bản chép của hai volume dev (PostgreSQL và Keycloak, chép ở chế độ chỉ đọc; dev không chạy và không bị
+  đụng tới), vào một stack riêng với origin loopback và R2 giả:
+  - `export-for-stack.ps1` trên Windows PowerShell 5.1: hai bản dump, 4 tài khoản và 1 service account; dừng đúng khi Keycloak
+    dev còn chạy, khi cổng 8082 có tiến trình nghe, và khi database có một migration giả mà checkout không có.
+  - `dev-import`: lần đầu dừng ở trigger bất biến của `arcana_revision`, đã sửa như quyết định 8. Sau đó đổi 75.070 giá trị
+    trong 58 cột; không cột text hay jsonb nào còn chứa `localhost:8081`; `local-maintenance` và `urn:wikiaov:migration`
+    giữ nguyên.
+  - `dev-users-import`: 4 thêm, 1 ghi đè; ID trùng với bản xuất; liên kết `google` nằm trong database Keycloak; ba tài khoản
+    thử bị khóa; chạy lần hai bị từ chối.
+  - `up`: Flyway áp V072, V073 trên dữ liệu dev, mọi thành phần healthy, `wiki-prerender` tạo 786 trang. Token
+    `client_credentials` của `wiki-importer` có `sub` của dev và issuer của stack, gọi API admin được (200). Tài khoản
+    `editor`, mở khóa tạm, đăng nhập bằng mật khẩu của realm local: `sub` của dev, `/users/me` trả 200; khóa lại sau đó.
+  - Chưa thử: chạy trên VPS, `pwsh` trên Ubuntu, đăng nhập Google.
