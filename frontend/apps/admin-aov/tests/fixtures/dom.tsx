@@ -151,16 +151,22 @@ export type Rendered = {
   unmount: () => Promise<void>
 }
 
-/** Mounts a tree with a query client and the app's confirm dialog, then lets its first requests settle. */
+/**
+ * Mounts a tree inside what the app puts around every screen (query client, tooltips, confirm dialog), then lets its
+ * first requests settle.
+ */
 export async function render(node: ReactNode, { client = testQueryClient(), wrap, container }: RenderOptions = {}) {
   const { createRoot } = await import("react-dom/client")
   const { ConfirmDialogHost } = await import("../../src/components/confirm-dialog")
+  const { TooltipProvider } = await import("@aov/ui/components/tooltip")
   const host = container ?? document.body.appendChild(document.createElement("div"))
   const root = createRoot(host)
   const tree = (content: ReactNode) => (
     <QueryClientProvider client={client}>
-      {wrap ? wrap(content) : content}
-      <ConfirmDialogHost />
+      <TooltipProvider delayDuration={200}>
+        {wrap ? wrap(content) : content}
+        <ConfirmDialogHost />
+      </TooltipProvider>
     </QueryClientProvider>
   )
 
@@ -262,6 +268,21 @@ export const confirmDialog = () => document.querySelector<HTMLElement>('[role="a
 export async function answerConfirm(label: string) {
   const dialog = await waitFor(confirmDialog, { message: "No confirm dialog opened" })
   await click(button(label, dialog), `confirm button ${label}`)
+}
+
+/** Answers the media queries jsdom leaves out; `matches` decides each query, such as a wide screen for every one. */
+export function answerMediaQueries(window: DOMWindow, matches: (query: string) => boolean = () => false) {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    value: (query: string) => ({
+      matches: matches(query),
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+    }),
+  })
 }
 
 /** A ResizeObserver that never reports, for screens that only need it to exist. */
