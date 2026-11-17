@@ -5,6 +5,7 @@ import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
 import com.wikiaov.gamemode.internal.domain.GameModeContent;
 import com.wikiaov.gamemode.internal.domain.RevisionRecord;
 import com.wikiaov.gamemode.internal.lineup.domain.LineupInsights;
+import com.wikiaov.gamemode.internal.lineup.domain.LineupStatus;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaCredit;
 import com.wikiaov.platform.RevisionState;
@@ -163,7 +164,7 @@ public final class GameModeViews {
             String note,
             List<LineupUnit> units,
             List<String> emblems,
-            String status,
+            LineupStatus status,
             long version,
             long likes,
             Instant createdAt,
@@ -177,7 +178,7 @@ public final class GameModeViews {
             String note,
             List<LineupUnit> units,
             List<String> emblems,
-            String status,
+            LineupStatus status,
             String hiddenReason,
             String authorSubject,
             long version,

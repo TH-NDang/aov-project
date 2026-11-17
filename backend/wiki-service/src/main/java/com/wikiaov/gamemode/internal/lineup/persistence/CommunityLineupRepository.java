@@ -1,5 +1,6 @@
 package com.wikiaov.gamemode.internal.lineup.persistence;
 
+import com.wikiaov.gamemode.internal.lineup.domain.LineupStatus;
 import com.wikiaov.gamemode.internal.lineup.persistence.entity.CommunityLineup;
 import java.time.Instant;
 import java.util.List;
@@ -20,7 +21,7 @@ public interface CommunityLineupRepository extends JpaRepository<CommunityLineup
 
     Page<CommunityLineup> findByModeId(UUID modeId, Pageable pageable);
 
-    Page<CommunityLineup> findByModeIdAndStatus(UUID modeId, String status, Pageable pageable);
+    Page<CommunityLineup> findByModeIdAndStatus(UUID modeId, LineupStatus status, Pageable pageable);
 
     /**
      * Visible lineups of a mode in ranking order. {@code sort} is {@code popular} (all likes), {@code trending} (likes
@@ -33,7 +34,7 @@ public interface CommunityLineupRepository extends JpaRepository<CommunityLineup
                 select k.lineup_id, count(*) as total, count(*) filter (where k.created_at >= :since) as recent
                 from gamemode.lineup_like k where k.mode_id = :modeId group by k.lineup_id
             ) c on c.lineup_id = l.id
-            where l.mode_id = :modeId and l.status = 'VISIBLE'
+            where l.mode_id = :modeId and l.status = :visible
               and (cast(:unit as varchar) is null or exists (
                   select 1 from jsonb_array_elements(l.units) e where e ->> 'unitCode' = cast(:unit as varchar)))
             order by case cast(:sort as varchar)
@@ -43,13 +44,21 @@ public interface CommunityLineupRepository extends JpaRepository<CommunityLineup
                      l.updated_at desc, l.id
             limit :limit offset :offset
             """)
-    List<UUID> rankedIds(UUID modeId, Instant since, String unit, String sort, int limit, long offset);
+    List<UUID> rankedIds(UUID modeId, Instant since, String unit, String sort, int limit, long offset, String visible);
+
+    default List<UUID> rankedIds(UUID modeId, Instant since, String unit, String sort, int limit, long offset) {
+        return rankedIds(modeId, since, unit, sort, limit, offset, LineupStatus.VISIBLE.name());
+    }
 
     @Query(nativeQuery = true, value = """
             select count(*) from gamemode.community_lineup l
-            where l.mode_id = :modeId and l.status = 'VISIBLE'
+            where l.mode_id = :modeId and l.status = :visible
               and (cast(:unit as varchar) is null or exists (
                   select 1 from jsonb_array_elements(l.units) e where e ->> 'unitCode' = cast(:unit as varchar)))
             """)
-    long countVisible(UUID modeId, String unit);
+    long countVisible(UUID modeId, String unit, String visible);
+
+    default long countVisible(UUID modeId, String unit) {
+        return countVisible(modeId, unit, LineupStatus.VISIBLE.name());
+    }
 }

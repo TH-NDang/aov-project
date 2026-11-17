@@ -20,6 +20,7 @@ import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.guide.application.AutoChessGuides;
 import com.wikiaov.gamemode.internal.lineup.domain.CommunityLineupRules;
 import com.wikiaov.gamemode.internal.lineup.domain.LineupInsights;
+import com.wikiaov.gamemode.internal.lineup.domain.LineupStatus;
 import com.wikiaov.gamemode.internal.lineup.persistence.CommunityLineupRepository;
 import com.wikiaov.gamemode.internal.lineup.persistence.LineupLikeRepository;
 import com.wikiaov.gamemode.internal.lineup.persistence.entity.CommunityLineup;
@@ -142,7 +143,7 @@ public class LineupInteractions {
         lineup.setAuthorIssuer(reader.issuer());
         lineup.setAuthorSubject(reader.subject());
         apply(lineup, input);
-        lineup.setStatus(CommunityLineup.VISIBLE);
+        lineup.setStatus(LineupStatus.VISIBLE);
         lineup.setVersion(1);
         lineup.setCreatedAt(now);
         lineup.setUpdatedAt(now);
@@ -225,7 +226,7 @@ public class LineupInteractions {
         var request = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
         var result = status == null
                 ? lineups.findByModeId(modeId, request)
-                : lineups.findByModeIdAndStatus(modeId, status, request);
+                : lineups.findByModeIdAndStatus(modeId, LineupStatus.valueOf(status), request);
         var counts = likeCounts.counts(modeId, result.getContent().stream().map(l -> l.getId()).toList());
 
         return new PageSlice<>(result.getContent().stream().map(l -> adminView(l, counts.get(l.getId()))).toList(),
@@ -244,7 +245,7 @@ public class LineupInteractions {
             throw new ApiException(GameModeErrorCode.GAME_MODE_INVALID_CONTENT, "Give a reason for hiding a lineup.");
 
         long before = lineup.getVersion();
-        lineup.setStatus(input.hidden() ? CommunityLineup.HIDDEN : CommunityLineup.VISIBLE);
+        lineup.setStatus(input.hidden() ? LineupStatus.HIDDEN : LineupStatus.VISIBLE);
         lineup.setHiddenReason(input.hidden() ? reason : null);
         lineup.setVersion(before + 1);
         lineups.saveAndFlush(lineup);
@@ -258,7 +259,7 @@ public class LineupInteractions {
         if (guide.content().lineups().stream().anyMatch(lineup -> lineupId.equals(lineup.id())))
             return "EDITORIAL";
         var lineup = lineups.findByIdAndModeId(lineupId, guide.mode().getId())
-                .filter(l -> CommunityLineup.VISIBLE.equals(l.getStatus()))
+                .filter(l -> l.getStatus() == LineupStatus.VISIBLE)
                 .orElseThrow(LineupInteractions::lineupNotFound);
         if (lineup.authoredBy(reader.issuer(), reader.subject()))
             throw new ApiException(GameModeErrorCode.GAME_MODE_INVALID_CONTENT, "You cannot like your own lineup.");

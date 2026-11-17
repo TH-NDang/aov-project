@@ -1,8 +1,11 @@
 package com.wikiaov.gamemode.internal.lineup.persistence.entity;
 
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
+import com.wikiaov.gamemode.internal.lineup.domain.LineupStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -18,10 +21,6 @@ import org.hibernate.type.SqlTypes;
 @Setter
 @Table(schema = "gamemode", name = "community_lineup")
 public class CommunityLineup {
-    public static final String VISIBLE = "VISIBLE";
-
-    public static final String HIDDEN = "HIDDEN";
-
     @Id
     private UUID id;
 
@@ -43,7 +42,8 @@ public class CommunityLineup {
     @Column(columnDefinition = "jsonb")
     private List<String> emblems;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private LineupStatus status;
 
     private String hiddenReason;
 
