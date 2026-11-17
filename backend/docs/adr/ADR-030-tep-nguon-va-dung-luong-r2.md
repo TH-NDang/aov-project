@@ -194,7 +194,7 @@ Người dùng không muốn tốn bộ nhớ cho SeaweedFS nữa, nhất là tr
 - Test tự động vẫn dùng SeaweedFS trong Testcontainers: container chỉ sống trong lúc test, và test không được ghi vào
   bucket thật đang phục vụ `img.athahub.com`.
 - Stack chạy một máy trong `infra/` (ADR-021) chưa đổi trong đợt này: SeaweedFS ở đó còn gắn với reverse proxy, tạo
-  bucket và sao lưu. Chuyển stack đó sang R2 là việc riêng.
+  bucket và sao lưu. Chuyển stack đó sang R2 là việc riêng. *Đã chuyển ngày 17/11/2026, xem phần bổ sung của ADR-021.*
 
 ### 15. Admin không còn đọc `resources/` (bổ sung 16/11/2026)
 
