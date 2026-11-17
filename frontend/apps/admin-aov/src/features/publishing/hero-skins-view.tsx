@@ -36,6 +36,7 @@ import type { SkinAcquisition } from "./publishing-api"
 import type { Skin } from "./types"
 import { usePatchCaptureContext } from "./use-patch-captures"
 import { useSourceUrls } from "../files/source-links"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 /** Arrow keys belong to the form while the editor is in it. */
 const insideForm = (target: EventTarget) => target instanceof HTMLElement && !!target.closest("form")
@@ -559,7 +560,7 @@ function SkinCaptureCompare({
                     variant="outline"
                     size="xs"
                     className="shrink-0"
-                    title={`Điền ${read.toLocaleString("vi-VN")} quân huy vào ô giá`}
+                    title={`Điền ${formatGameNumber(read)} quân huy vào ô giá`}
                     onClick={() => onFill(read, image.capturedOn)}
                   >
                     Điền theo ảnh

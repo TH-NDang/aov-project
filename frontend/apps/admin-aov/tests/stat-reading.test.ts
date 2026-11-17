@@ -109,7 +109,7 @@ test("a whole stat row in a comparison reads as one value", () => {
   assert.match(comparisonValue(armor), /Giá trị ghi nhận: 150 \| 20%/)
   assert.doesNotMatch(comparisonValue(armor), /Phần trăm/)
   const health = { statKey: "HP", baseValue: 3500, percentValue: null, growthPerLevel: null, unit: "POINT" }
-  assert.match(comparisonValue(health), /Giá trị ghi nhận: 3\.500/)
+  assert.match(comparisonValue(health), /Giá trị ghi nhận: 3500/)
   assert.doesNotMatch(comparisonValue(health), /Phần trăm/)
 })
 

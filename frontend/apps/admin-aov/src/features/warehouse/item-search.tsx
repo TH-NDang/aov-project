@@ -10,6 +10,7 @@ import {
   type WarehouseEntry,
   type WarehouseMetadata,
 } from "./warehouse-types"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 type Entry = WarehouseEntry<ItemContent>
 const visibleResults = 8
@@ -129,7 +130,7 @@ export function ItemSearch({
                   </span>
                   {item.content.price !== null && (
                     <span className="shrink-0 text-xs tabular-nums text-amber-600 dark:text-amber-400">
-                      {item.content.price.toLocaleString("vi-VN")}
+                      {formatGameNumber(item.content.price)}
                     </span>
                   )}
                 </div>

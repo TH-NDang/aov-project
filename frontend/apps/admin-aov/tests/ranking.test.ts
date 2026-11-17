@@ -11,6 +11,7 @@ import {
   DEFAULT_VIEW,
   change,
   droppedHeroes,
+  editText,
   formatChange,
   formatValue,
   nextToReview,
@@ -75,9 +76,10 @@ const snapshot = (id: string, heroes: RankingHero[]): RankingDetail => ({
   heroes,
 })
 
-test("values read like the game prints them, and typed values read back", () => {
-  assert.equal(formatValue(value("WIN_RATE", 49.42)), "49,42%")
-  assert.equal(formatValue(value("DAMAGE_DEALT", 130189.1)), "130.189,10")
+test("statistics read in the reader's locale, and typed values read back", () => {
+  assert.equal(formatValue(value("WIN_RATE", 49.42), "vi-VN"), "49,42%")
+  assert.equal(formatValue(value("WIN_RATE", 49.42), "en-US"), "49.42%")
+  assert.equal(formatValue(value("DAMAGE_DEALT", 130189.1), "vi-VN"), "130.189,10")
   assert.equal(formatValue(value("TIER", null, { tier: "T0" })), "T0")
   assert.equal(formatValue(value("KILLS", null)), "—")
   assert.equal(parseNumber("130.189,10"), 130189.1)
@@ -86,8 +88,10 @@ test("values read like the game prints them, and typed values read back", () => 
   assert.equal(parseNumber("1.000"), null, "a dot alone is ambiguous, so it is refused")
   assert.equal(parseNumber("4,567"), null)
   assert.equal(parseNumber(""), null)
-  assert.equal(formatChange("WIN_RATE", 0.52), "+0,52 điểm")
-  assert.equal(formatChange("GOLD", -12.5), "−12,50")
+  assert.equal(formatChange("WIN_RATE", 0.52, "vi-VN"), "+0,52 điểm")
+  assert.equal(formatChange("GOLD", -12.5, "vi-VN"), "−12,50")
+  assert.equal(editText(value("DAMAGE_DEALT", 130189.1)), "130189.1", "The field holds a plain number")
+  assert.equal(parseNumber(editText(value("WIN_RATE", 49.42))), 49.42)
 })
 
 test("the table filters by role, search and review, and sorts with gaps last", () => {

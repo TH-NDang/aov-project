@@ -19,6 +19,7 @@ import {
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { captureGroupKeys } from "./patch-capture-model"
 import { PatchCaptureLink } from "./patch-capture-panel"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 const api = createPublishingApi(backendRequest)
 
@@ -40,7 +41,8 @@ const methodLabels: Record<SkinMethod, string> = {
   UNKNOWN: "Chưa rõ",
 }
 
-const amount = (value: number | null | undefined) => (value == null ? "—" : value.toLocaleString("vi-VN"))
+/** Gold and vouchers are figures of the game, written as the game writes them. */
+const amount = (value: number | null | undefined) => (value == null ? "—" : formatGameNumber(value))
 const capturedDate = (value: string | null | undefined) => (value ? formatCalendarDate(value) : null)
 const numberOrNull = (value: string) => (value.trim() === "" ? null : Number(value))
 const control = "h-9 w-full rounded-md border bg-background px-2.5 text-sm disabled:opacity-50"

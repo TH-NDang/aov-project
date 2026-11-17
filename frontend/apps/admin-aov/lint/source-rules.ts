@@ -83,6 +83,17 @@ const rules: Rule[] = [
         ),
   },
   {
+    name: "admin writes numbers in the reader's locale or as the game writes them",
+    hint: 'Use formatNumber from lib/text for interface numbers and formatGameNumber for figures of the game, never "vi-VN".',
+    files: files(source, /\.tsx?$/),
+    offenders: (text) =>
+      text
+        .split("\n")
+        .flatMap((line, index) =>
+          /toLocaleString\(\s*["']vi-VN["']|NumberFormat\(\s*["']vi-VN["']/.test(line) ? [`:${index + 1}`] : [],
+        ),
+  },
+  {
     name: "admin makes ids with randomId",
     hint: "crypto.randomUUID is missing on plain-HTTP LAN addresses; use randomId from lib/random-id.",
     files: files(source, /\.tsx?$/).filter((path) => !path.endsWith(join("lib", "random-id.ts"))),

@@ -2,6 +2,7 @@ import { formatPatchValue } from "./patch-value"
 import { statReadingChange, type StatNumbers } from "./stat-reading"
 import { POSITIONS } from "./types"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 export type DiffSegment = { type: "same" | "removed" | "added"; text: string }
 
@@ -60,7 +61,7 @@ export function textDifference(before: string, after: string): DiffSegment[] {
 export function comparisonValue(value: unknown, field?: string): string {
   if (value === null || value === undefined) return "Chưa ghi nhận"
   if (typeof value === "boolean") return value ? "Có" : "Không"
-  if (typeof value === "number") return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 6 }).format(value)
+  if (typeof value === "number") return formatGameNumber(value)
   if (typeof value === "string") {
     const label = field && comparisonEnumLabels[field]?.[value]
     return label || formatPatchValue(value) || "Trống"

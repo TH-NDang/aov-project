@@ -124,8 +124,8 @@ test("hero history distinguishes baseline from changes and preserves the selecte
     assert.equal(document.querySelector("del")?.textContent, "280")
     assert.equal(document.querySelector("ins")?.textContent, "300")
     const numeric = [...document.querySelectorAll("article")].find((item) => item.textContent!.includes("+200"))!
-    assert.match(numeric.textContent!, /3\.300/)
-    assert.match(numeric.textContent!, /3\.500/)
+    assert.match(numeric.textContent!, /3300/, "Health reads as the game writes it")
+    assert.match(numeric.textContent!, /3500/)
     assert.ok(![...document.querySelectorAll("article h4")].some((item) => item.textContent!.includes("Thông tin")))
     const filter = document.querySelector<HTMLSelectElement>('[aria-label="Lọc phần thay đổi"]')!
     assert.deepEqual(

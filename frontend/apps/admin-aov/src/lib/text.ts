@@ -27,10 +27,23 @@ export function slugify(value: string): string {
     .replace(/^-|-$/g, "")
 }
 
-const numberFormat = new Intl.NumberFormat("vi-VN")
+/** The reader's locale, from the browser, for interface numbers such as counts, views and statistics. */
+export const readerLocale = () => (typeof navigator === "undefined" ? undefined : navigator.language) || undefined
 
-export function formatNumber(value: number): string {
-  return numberFormat.format(value)
+const numberFormats = new Map<string, Intl.NumberFormat>()
+
+/**
+ * An interface number (row counts, views, statistics) in the reader's locale. Figures of the game (health, gold,
+ * seconds) are written as the game writes them with formatGameNumber instead (QUY-UOC-VIET section 3).
+ */
+export function formatNumber(value: number, options: Intl.NumberFormatOptions = {}, locale = readerLocale()): string {
+  const key = JSON.stringify([locale ?? "", options])
+  let format = numberFormats.get(key)
+  if (!format) {
+    format = new Intl.NumberFormat(locale, options)
+    numberFormats.set(key, format)
+  }
+  return format.format(value)
 }
 
 const relativeFormat = new Intl.RelativeTimeFormat("vi-VN", { numeric: "auto" })

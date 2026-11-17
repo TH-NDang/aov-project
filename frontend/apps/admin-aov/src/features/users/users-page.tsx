@@ -10,6 +10,7 @@ import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { ProfileForm } from "./profile-form"
 import { UsersList, UsersListSkeleton } from "./users-list"
 import { listProfiles, profileError, selfProfile, userKeys } from "./user-api"
+import { formatNumber } from "@/lib/text"
 
 export function ProfilePage() {
   const { actor } = useSession()
@@ -100,7 +101,7 @@ export function UsersPage() {
               <h2 className="truncate type-section-title">{term ? "Kết quả tìm kiếm" : "Danh sách hồ sơ"}</h2>
               {query.data && (
                 <span role="status" className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">
-                  {total.toLocaleString("vi-VN")}
+                  {formatNumber(total)}
                   <span className="sr-only"> hồ sơ</span>
                 </span>
               )}
@@ -156,7 +157,7 @@ export function UsersPage() {
               )}
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
                 <p className="tabular-nums">
-                  Đã hiển thị {profiles.length.toLocaleString("vi-VN")} / {total.toLocaleString("vi-VN")} hồ sơ
+                  Đã hiển thị {formatNumber(profiles.length)} / {formatNumber(total)} hồ sơ
                 </p>
                 {query.isError ? (
                   <div role="alert" className="flex flex-wrap items-center gap-2">

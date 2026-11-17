@@ -1,5 +1,6 @@
 import { imageTypeLabel } from "@/lib/image-types"
 import type { BucketRole, CapacityLevel, SourceCategory } from "./files-api"
+import { formatNumber, readerLocale } from "@/lib/text"
 
 /** Names of the source file functions, as Admin shows them (ADR-030 section 4). */
 export const CATEGORY_LABELS: Record<SourceCategory, string> = {
@@ -58,25 +59,25 @@ export const LEVEL_COLORS: Record<CapacityLevel, { fill: string; track: string; 
 const GIGABYTE = 1_000_000_000
 
 /**
- * Bytes in the decimal units R2 bills in (one GB is 10^9 bytes, ADR-030 section 9), with a Vietnamese decimal comma.
+ * Bytes in the decimal units R2 bills in (one GB is 10^9 bytes, ADR-030 section 9), in the reader's locale.
  */
-export function formatStorage(bytes: number) {
+export function formatStorage(bytes: number, locale = readerLocale()) {
   const units = [
     [GIGABYTE, "GB"],
     [1_000_000, "MB"],
     [1_000, "KB"],
   ] as const
   for (const [size, unit] of units)
-    if (Math.abs(bytes) >= size) return `${decimal(bytes / size, bytes / size < 10 ? 2 : 1)} ${unit}`
+    if (Math.abs(bytes) >= size) return `${decimal(bytes / size, bytes / size < 10 ? 2 : 1, locale)} ${unit}`
   return `${bytes} B`
 }
 
-export function formatCount(value: number) {
-  return new Intl.NumberFormat("vi-VN").format(value)
+export function formatCount(value: number, locale = readerLocale()) {
+  return formatNumber(value, {}, locale)
 }
 
-export function formatShare(share: number) {
-  return `${decimal(share * 100, share < 0.1 ? 1 : 0)}%`
+export function formatShare(share: number, locale = readerLocale()) {
+  return `${decimal(share * 100, share < 0.1 ? 1 : 0, locale)}%`
 }
 
 /** A "2026-11" month key as its Vietnamese label, for example month 11 of 2026. */
@@ -85,8 +86,8 @@ export function formatMonth(month: string) {
   return `Tháng ${Number(number)}/${year}`
 }
 
-function decimal(value: number, digits: number) {
-  return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: digits }).format(value)
+function decimal(value: number, digits: number, locale: string | undefined) {
+  return formatNumber(value, { maximumFractionDigits: digits }, locale)
 }
 
 /** The kind of a file, from its type, for a short column. */

@@ -1,10 +1,10 @@
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 /** The stats the game shows as a number, a bar and a percent, such as armor at "150 | 20%". */
 const PERCENT_STATS: ReadonlySet<string> = new Set(["ARMOR", "MAGIC_DEFENSE", "ARMOR_PIERCE", "MAGIC_PIERCE"])
 
 export const hasStatPercent = (statKey: string) => PERCENT_STATS.has(statKey)
 
-export const formatStatNumber = (value: number) =>
-  value.toLocaleString("vi-VN", { useGrouping: false, maximumFractionDigits: 12 })
+export const formatStatNumber = (value: number) => formatGameNumber(value, 12)
 
 /** Reads as the game shows it. A percent nobody recorded stays out rather than reading as 0%. */
 export function formatStatReading(value: number | null | undefined, percent: number | null | undefined) {

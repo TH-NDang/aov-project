@@ -56,6 +56,7 @@ import { MediaOwnerBulkEditor, type OwnerTarget } from "./media-owner-bulk-edito
 import { MediaOwnersSheet } from "./media-owners-sheet"
 import type { MediaSourceTarget } from "./bulk-media-sources"
 import { Link, useSearchParams } from "react-router"
+import { formatNumber } from "@/lib/text"
 
 const types = IMAGE_TYPE_LABELS
 const states = imageStates
@@ -396,7 +397,7 @@ export function ImageManagementPage() {
               <span
                 className={`rounded-full px-1.5 text-xs tabular-nums ${missingCount ? "bg-amber-500/15" : "bg-muted text-muted-foreground"}`}
               >
-                {missingCount.toLocaleString("vi-VN")}
+                {formatNumber(missingCount)}
               </span>
             )}
           </FilterTab>
@@ -431,7 +432,7 @@ export function ImageManagementPage() {
               {usageStates.map((state) => (
                 <option key={state} value={state}>
                   {usageStateLabels[state]}
-                  {usageTotals.data ? ` (${usageTotals.data.states[state].toLocaleString("vi-VN")})` : ""}
+                  {usageTotals.data ? ` (${formatNumber(usageTotals.data.states[state])})` : ""}
                 </option>
               ))}
             </select>
