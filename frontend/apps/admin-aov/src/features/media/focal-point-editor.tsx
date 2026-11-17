@@ -6,6 +6,7 @@ import { focalPosition, type FocalPoint } from "@aov/ui/lib/focal-point"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { invalidateMediaAsset } from "./media-cache"
+import { mediaKeys } from "./media-cache"
 
 interface VersionPoint {
   id: string
@@ -36,7 +37,7 @@ const clamp = (value: number) => Math.round(Math.min(1, Math.max(0, value)) * 10
 export function FocalPointEditor({ assetId, writable }: { assetId: string; writable: boolean }) {
   const client = useQueryClient()
   const details = useQuery({
-    queryKey: ["managed-image", assetId],
+    queryKey: mediaKeys.assetView(assetId, "managed"),
     queryFn: () => backendRequest<{ versions?: VersionPoint[] }>(`/admin/media/assets/${assetId}`),
   })
   const version = details.data?.versions?.find((candidate) => candidate.current)

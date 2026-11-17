@@ -57,6 +57,7 @@ import { MediaOwnersSheet } from "./media-owners-sheet"
 import type { MediaSourceTarget } from "./bulk-media-sources"
 import { Link, useSearchParams } from "react-router"
 import { formatNumber } from "@/lib/text"
+import { mediaKeys } from "./media-cache"
 
 const types = IMAGE_TYPE_LABELS
 const states = imageStates
@@ -127,7 +128,7 @@ export function ImageManagementPage() {
   const grid = params.get("view") === "grid"
   const writable = useSession().actor?.capabilities.includes("media:write")
   const assets = useInfiniteQuery({
-    queryKey: ["managed-images", "infinite", type, needsCredit, usage],
+    queryKey: mediaKeys.list("library", type, needsCredit, usage),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       backendRequest<PageSlice<Row>>(
@@ -141,7 +142,7 @@ export function ImageManagementPage() {
     queries: usage
       ? []
       : (assets.data?.pages ?? []).map((_, page) => ({
-          queryKey: ["managed-images", "usage-page", type, needsCredit, page],
+          queryKey: mediaKeys.list("usage-page", type, needsCredit, page),
           staleTime: 30_000,
           queryFn: ({ signal }: { signal: AbortSignal }) =>
             backendRequest<PageSlice<Row>>(
@@ -161,7 +162,7 @@ export function ImageManagementPage() {
   const total = assets.data?.pages[0]?.totalElements ?? 0
   // One-row count of images that still need a source or owner, for the reminder above the filters.
   const missing = useQuery({
-    queryKey: ["managed-images", "missing-count", type],
+    queryKey: mediaKeys.list("missing-count", type),
     queryFn: ({ signal }) =>
       backendRequest<PageSlice<Row>>(
         `/admin/media/assets?page=0&size=1&needsCredit=true${type ? `&semanticType=${type}` : ""}`,
@@ -172,7 +173,7 @@ export function ImageManagementPage() {
   })
   const missingCount = needsCredit ? (assets.data ? total : undefined) : missing.data?.totalElements
   const usageTotals = useQuery({
-    queryKey: ["managed-images", "usage-totals", type, needsCredit],
+    queryKey: mediaKeys.list("usage-totals", type, needsCredit),
     queryFn: ({ signal }) =>
       backendRequest<MediaUsageTotals>(
         `/admin/media/usage-totals?needsCredit=${needsCredit}${type ? `&semanticType=${type}` : ""}`,

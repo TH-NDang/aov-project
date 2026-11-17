@@ -171,7 +171,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
       },
     ],
   )
-  cache.setQueryData(["hero-content-asset", "head"], { currentUrl: "/fixture-head.png" })
+  cache.setQueryData(["media", "asset", "head", "content"], { currentUrl: "/fixture-head.png" })
   const updateCache = async (key: readonly unknown[], value: unknown) => {
     await act(async () => {
       cache.setQueryData(key, value)
@@ -308,7 +308,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.ok([...document.querySelectorAll("h2")].some((title) => title.textContent === "patch-october"))
     const press = async (label: string) =>
       act(async () => [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === label)!.click())
-    cache.setQueryData(["hero-content-asset", "item-icon"], { currentUrl: "/item-icon.png" })
+    cache.setQueryData(["media", "asset", "item-icon", "content"], { currentUrl: "/item-icon.png" })
     await updateCache(
       ["warehouse", "items", "rules", "vi-VN"],
       [

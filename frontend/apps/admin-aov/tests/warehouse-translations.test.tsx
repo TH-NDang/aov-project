@@ -796,7 +796,7 @@ test("spell cards expose both state icons, open details and collapse legacy entr
       },
     }
     for (const id of ["normal-icon", "chill-icon"]) {
-      client.setQueryData(["hero-content-asset", id], { id, currentUrl: `/${id}.webp` })
+      client.setQueryData(["media", "asset", id, "content"], { id, currentUrl: `/${id}.webp` })
     }
     let opened: string | undefined
     const props = {
@@ -978,7 +978,7 @@ test("warehouse sheets fork or resume a draft only from their single pencil and 
 test("arcana keeps tier III visible, collapses lower tiers and reveals filtered results with circular icons", async () => {
   await withUi(async ({ document, client, render }) => {
     const { ArcanaCollection } = await import("../src/features/warehouse/arcana-cards")
-    client.setQueryData(["hero-content-asset", "arcana-icon"], { currentUrl: "/arcana.webp" })
+    client.setQueryData(["media", "asset", "arcana-icon", "content"], { currentUrl: "/arcana.webp" })
     const records: WarehouseEntry<ArcanaContent>[] = [1, 2, 3].map((tier) => ({
       id: `tier-${tier}`,
       code: `tier-${tier}`,
@@ -1581,7 +1581,8 @@ test("item details show verified upgrades and select pictured ingredients only a
     const armor = make("armor", "Giáp hộ mệnh", [ring.id])
     const gem = make("gem", "Hồng thạch")
     const items = [ring, armor, gem, make("sword", "Kiếm ngắn")]
-    for (const item of items) client.setQueryData(["hero-content-asset", item.id], { currentUrl: `/${item.id}.png` })
+    for (const item of items)
+      client.setQueryData(["media", "asset", item.id, "content"], { currentUrl: `/${item.id}.png` })
     const opened: string[] = []
     const saved: ItemContent[] = []
     const props = {

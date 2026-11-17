@@ -82,10 +82,10 @@ test("hero and warehouse changes invalidate compact references without expiring 
   try {
     for (const refresh of [invalidateHeroCatalogs, invalidateWarehouseCatalogs]) {
       for (const key of keys) client.setQueryData(key, entities)
-      client.setQueryData(["publishing-asset", "head-id"], { currentUrl: "/head.webp" })
+      client.setQueryData(["media", "asset", "head-id", "detail"], { currentUrl: "/head.webp" })
       await refresh(client)
       for (const key of keys) assert.equal(client.getQueryState(key)?.isInvalidated, true)
-      assert.equal(client.getQueryState(["publishing-asset", "head-id"])?.isInvalidated, false)
+      assert.equal(client.getQueryState(["media", "asset", "head-id", "detail"])?.isInvalidated, false)
     }
   } finally {
     client.clear()

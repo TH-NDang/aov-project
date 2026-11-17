@@ -12,6 +12,7 @@ import { MediaSourceFields } from "../media/media-source-fields"
 import { creditHttpUrl, type MediaSourceInput } from "@aov/ui/lib/media-credit"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { mediaKeys } from "@/features/media/media-cache"
 const api = createPublishingApi(backendRequest)
 export function AssetPicker({
   semanticType,
@@ -68,14 +69,14 @@ export function AssetPicker({
   const validSource = !sourceProblem
   const writable = getSession().actor?.capabilities.includes("media:write")
   const assets = useInfiniteQuery({
-    queryKey: ["publishing-assets", semanticType],
+    queryKey: mediaKeys.list("picker", semanticType),
     initialPageParam: 0,
     queryFn: ({ pageParam }) => api.assets(semanticType, pageParam),
     getNextPageParam: nextPageOf,
     enabled: open,
   })
   const selectedAsset = useQuery({
-    queryKey: ["publishing-asset", value],
+    queryKey: mediaKeys.assetView(value, "detail"),
     queryFn: () => api.asset(value!),
     enabled: !!value,
     staleTime: 60000,

@@ -158,7 +158,7 @@ test("image deletion requires verified references and confirmation, survives rel
     // Recreate the component and clear its cached progress as a browser reload would.
     await act(async () => root.render(<></>))
     client.removeQueries({ queryKey: ["media-deletion", "sample"] })
-    client.setQueryData(["managed-images", "infinite"], { pages: [] })
+    client.setQueryData(["media", "list", "library"], { pages: [] })
     await render("resumed", "BLOCKED", 8)
     await waitFor(() => !!button("Tiếp tục xóa"))
     await act(async () => button("Tiếp tục xóa").click())
@@ -170,7 +170,7 @@ test("image deletion requires verified references and confirmation, survives rel
     await act(async () => releaseDeletion!())
     await waitFor(() => completeCount === 1)
     assert.equal(document.querySelector('[role="dialog"]'), null)
-    assert.equal(client.getQueryState(["managed-images", "infinite"])?.isInvalidated, true)
+    assert.equal(client.getQueryState(["media", "list", "library"])?.isInvalidated, true)
 
     progress = null
     client.removeQueries({ queryKey: ["media-deletion", "sample"] })

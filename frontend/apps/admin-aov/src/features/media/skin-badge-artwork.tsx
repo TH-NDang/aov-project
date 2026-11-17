@@ -8,6 +8,7 @@ import type { SkinBadgeRecord } from "./character-image-api"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import { ImageCreditPanel } from "./image-credit-panel"
 import { creditSummary, visibleSources } from "./media-source-gaps"
+import { mediaKeys } from "./media-cache"
 
 export function SkinBadgeArtwork({
   badge,
@@ -25,7 +26,7 @@ export function SkinBadgeArtwork({
   const name = badge.displayName || badge.code
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const asset = useQuery({
-    queryKey: ["hero-content-asset", id],
+    queryKey: mediaKeys.assetView(id, "content"),
     queryFn: () => createPublishingApi(request).asset(id!),
     enabled: !!id,
     staleTime: 60000,

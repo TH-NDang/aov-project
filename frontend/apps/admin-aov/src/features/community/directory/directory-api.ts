@@ -14,6 +14,7 @@ import type {
 import { communityRequest } from "@/app/auth/session"
 import { normalize } from "@/lib/text"
 import { usePublicHeroes, type PublicHero } from "@/lib/public-heroes"
+import { pageKeys } from "../page-api"
 
 export const DIRECTORY_PAGE_SIZE = 24
 
@@ -63,7 +64,8 @@ export const directoryApi = {
     ),
 }
 
-export const directoryKeys = ["community-directory"] as const
+/** Under the page keys, so every profile save that refreshes the pages refreshes the directory too. */
+export const directoryKeys = [...pageKeys, "directory"] as const
 
 /**
  * Pages of the identities on screen, so a row can open its profile and show whether it is published. Asked for one

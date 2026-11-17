@@ -2,15 +2,25 @@ import { QueryObserver, type QueryClient } from "@tanstack/react-query"
 import type { EntityIconResolver } from "@aov/ui/components/entity-rich-text"
 import type { AssetDetail } from "../publishing/types"
 
-// Existing screens cache different projections; refresh them without mixing their payload shapes.
-const details = new Set([
-  "publishing-asset",
-  "hero-content-asset",
-  "managed-image",
-  "profile-draft-avatar",
-  "media-contact-asset",
-])
-const lists = new Set(["publishing-assets", "managed-images"])
+/** How a screen reads one image; each view caches its own payload shape under the image. */
+export type MediaAssetView = "detail" | "content" | "managed" | "avatar" | "contact"
+
+/**
+ * Every cached read of an image or of an image list sits under one root, so a change refreshes them by prefix and a
+ * new view cannot be forgotten in a list of names.
+ */
+export const mediaKeys = {
+  all: ["media"] as const,
+  asset: (id: string) => ["media", "asset", id] as const,
+  /** A query waiting for its image (no id yet) keeps the same shape and refreshes with nothing. */
+  assetView: (id: string | null | undefined, view: MediaAssetView) => ["media", "asset", id ?? null, view] as const,
+  lists: ["media", "list"] as const,
+  list: (...parts: unknown[]) => ["media", "list", ...parts] as const,
+}
+
+const isMediaList = (queryKey: readonly unknown[]) => queryKey[0] === "media" && queryKey[1] === "list"
+const mediaAssetId = (queryKey: readonly unknown[]) =>
+  queryKey[0] === "media" && queryKey[1] === "asset" ? String(queryKey[2]) : null
 
 /** Cancel older reads before refreshing every view of the changed asset. */
 export async function invalidateMediaAsset(client: QueryClient, assetId: string) {
@@ -23,8 +33,7 @@ export async function invalidateMediaAssets(client: QueryClient, assetIds: reado
   if (!ids.size) return
   const filters = {
     predicate: ({ queryKey, state }: { queryKey: readonly unknown[]; state: { data: unknown } }) => {
-      if (lists.has(String(queryKey[0])) || (details.has(String(queryKey[0])) && ids.has(String(queryKey[1]))))
-        return true
+      if (isMediaList(queryKey) || ids.has(mediaAssetId(queryKey) ?? "")) return true
       if (queryKey[0] !== "user-profile") return false
       const data = state.data as { avatarAssetId?: string; items?: { avatarAssetId?: string }[] } | undefined
       return (
@@ -39,8 +48,7 @@ export async function invalidateMediaAssets(client: QueryClient, assetIds: reado
 /** Refreshes every cached image view, e.g. after an owner rename rewrote sources across many images. */
 export async function invalidateAllMediaAssets(client: QueryClient) {
   const filters = {
-    predicate: ({ queryKey }: { queryKey: readonly unknown[] }) =>
-      lists.has(String(queryKey[0])) || details.has(String(queryKey[0])),
+    predicate: ({ queryKey }: { queryKey: readonly unknown[] }) => queryKey[0] === "media",
   }
   await client.cancelQueries(filters)
   await client.invalidateQueries(filters)
@@ -52,7 +60,7 @@ export function createMediaIconResolver(
   read: (id: string) => Promise<AssetDetail>,
 ): EntityIconResolver {
   const options = (id: string) => ({
-    queryKey: ["publishing-asset", id],
+    queryKey: mediaKeys.assetView(id, "detail"),
     queryFn: () => read(id),
     staleTime: 300000,
   })

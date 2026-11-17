@@ -50,6 +50,7 @@ import { showAllCatalogEntries } from "./catalog-scope"
 import { useHeroScopeChanges } from "./use-hero-scope-changes"
 import { HeroCatalogFilters, heroCatalogFacets } from "./hero-catalog-filters"
 import { confirmDiscard } from "@/components/confirm-dialog"
+import { mediaKeys } from "@/features/media/media-cache"
 const HeroWorkspace = lazy(() =>
   import("./publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
 )
@@ -795,7 +796,7 @@ function HeroHead({ hero, fallbackAssetId }: { hero: CatalogRow; fallbackAssetId
   const assetId = preview.data?.content.MEDIA_BINDINGS?.bindings.HEAD ?? fallbackAssetId
   const [failed, setFailed] = useState(false)
   const asset = useQuery({
-    queryKey: ["publishing-asset", assetId],
+    queryKey: mediaKeys.assetView(assetId, "detail"),
     enabled: !!assetId,
     staleTime: 60000,
     queryFn: () => api.asset(assetId!),

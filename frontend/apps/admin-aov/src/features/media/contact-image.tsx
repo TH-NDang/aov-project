@@ -7,6 +7,7 @@ import { backendRequest } from "@/app/auth/session"
 import { ImagePreview } from "@/components/image-preview"
 import { MediaSourceEditor } from "./media-source-editor"
 import type { AssetProvenance } from "../publishing/types"
+import { mediaKeys } from "./media-cache"
 
 interface ContactAsset {
   versions: { id: string; url: string }[]
@@ -15,7 +16,7 @@ interface ContactAsset {
 export function ContactImage({ assetId, versionId }: { assetId: string; versionId: string }) {
   const [open, setOpen] = useState(false)
   const asset = useQuery({
-    queryKey: ["media-contact-asset", assetId],
+    queryKey: mediaKeys.assetView(assetId, "contact"),
     queryFn: () => backendRequest<ContactAsset>(`/admin/media/assets/${assetId}`),
     enabled: open,
   })

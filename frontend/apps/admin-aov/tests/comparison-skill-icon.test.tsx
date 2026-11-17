@@ -98,7 +98,7 @@ test("comparison skill icons share one library request, keep bound images and sh
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   for (const id of ["old", "new", "lib-1-1", "lib-3-2"])
-    client.setQueryData(["hero-content-asset", id], { currentUrl: `/media/${id}.png` })
+    client.setQueryData(["media", "asset", id, "content"], { currentUrl: `/media/${id}.png` })
   const document = dom.window.document
   const render = async (children: React.ReactNode) =>
     act(async () => root.render(<QueryClientProvider client={client}>{children}</QueryClientProvider>))

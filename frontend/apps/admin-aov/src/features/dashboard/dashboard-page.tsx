@@ -33,6 +33,7 @@ import { Button } from "@aov/ui/components/button"
 import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/warehouse-api"
 import { warehouseText } from "@aov/ui/lib/warehouse-content"
 import { cn } from "@aov/ui/lib/utils"
+import { mediaKeys } from "@/features/media/media-cache"
 
 const publishing = createPublishingApi(backendRequest)
 
@@ -72,7 +73,7 @@ export function DashboardPage() {
     staleTime: 30000,
   })
   const images = useQuery({
-    queryKey: ["managed-images", "dashboard"],
+    queryKey: mediaKeys.list("dashboard"),
     queryFn: () => backendRequest<PageSlice<unknown>>("/admin/media/assets?page=0&size=1"),
     enabled: canReadHeroes,
     staleTime: 30000,

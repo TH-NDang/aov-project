@@ -36,7 +36,6 @@ function useAssessment(change: HeroAssessment) {
     Promise.all([
       client.invalidateQueries({ queryKey: ["patch-changes"] }),
       client.invalidateQueries({ queryKey: ["publishing-heroes"] }),
-      client.invalidateQueries({ queryKey: ["hero-timeline"] }),
     ])
   return useMutation({
     mutationFn: async (kind: string) => {

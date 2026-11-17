@@ -51,6 +51,7 @@ import {
   sourceGapLabels,
   visibleSources,
 } from "./media-source-gaps"
+import { mediaKeys } from "./media-cache"
 
 /** Lifecycle of the image record; whether anything shows the image is the separate usage count. */
 export const imageStates: Record<string, string> = {
@@ -254,7 +255,7 @@ export function ImageDetailSheet({
   const [deleting, setDeleting] = useState(false)
   const [upgradeError, setUpgradeError] = useState("")
   const details = useQuery({
-    queryKey: ["managed-image", assetId],
+    queryKey: mediaKeys.assetView(assetId, "managed"),
     enabled: !!assetId,
     queryFn: () => backendRequest<Details>(`/admin/media/assets/${assetId}`),
   })

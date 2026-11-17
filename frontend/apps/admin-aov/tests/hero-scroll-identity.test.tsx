@@ -65,7 +65,7 @@ async function createView(observe = true) {
   const { createRoot } = await import("react-dom/client")
   const { HeroScrollIdentity } = await import("../src/features/publishing/hero-scroll-identity")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
-  client.setQueryData(["hero-content-asset", "head-asset"], {
+  client.setQueryData(["media", "asset", "head-asset", "content"], {
     id: "head-asset",
     currentUrl: "/media/head-asset.webp",
     provenance: [],
