@@ -96,6 +96,25 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aPageLargerThanTheRegistryLimitIsAnInvalidQueryParameter() throws Exception {
+        mvc.perform(authorized(get(ADMIN + "/teams").param("size", "501"))).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
+                .andExpect(jsonPath("$.errors[0].path").value("size"));
+    }
+
+    @Test
+    void theWholeRegistryPageIsServed() throws Exception {
+        mvc.perform(authorized(get(ADMIN + "/teams").param("size", "500"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(500));
+    }
+
+    @Test
+    void aSearchLongerThanTheLimitIsAnInvalidQueryParameter() throws Exception {
+        mvc.perform(authorized(get(ADMIN + "/teams").param("q", "x".repeat(121)))).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+    }
+
+    @Test
     void aRequestBodyWithAnUnknownFieldIsRefusedWithItsPath() throws Exception {
         mvc.perform(authorized(post(ADMIN + "/teams")).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"content\":{\"code\":\"unknown-field\",\"name\":\"Unknown\",\"colour\":\"red\"}}"))

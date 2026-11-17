@@ -3,6 +3,9 @@ package com.wikiaov.community.community.internal.web;
 import com.wikiaov.community.community.internal.application.PageViews.*;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.platform.*;
+import com.wikiaov.community.platform.PageLimits;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -118,7 +121,8 @@ public interface PageApi {
     @GetMapping(ApiPaths.ROOT + "/pages")
     PageSlice<Profile> pages(@RequestParam(required = false) String kind, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) String personRole,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @GetMapping(ApiPaths.ROOT + "/pages/{id}")
     Profile page(@PathVariable UUID id);
@@ -134,7 +138,8 @@ public interface PageApi {
             @RequestParam(defaultValue = "") List<UUID> entityIds,
             @RequestParam(defaultValue = "RECENT") String sort,
             @RequestParam(required = false) UUID relatedPageId,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @GetMapping(ApiPaths.ROOT + "/admin/pages/{id}")
     Profile adminPage(@PathVariable UUID id);
@@ -190,7 +195,8 @@ public interface PageApi {
     List<Claim> myClaims();
 
     @GetMapping(ApiPaths.ROOT + "/admin/page-claims")
-    PageSlice<Claim> claims(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+    PageSlice<Claim> claims(@RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @PostMapping(ApiPaths.ROOT + "/admin/page-claims/{id}/decision")
     Claim decision(@PathVariable UUID id, @RequestBody Decision body);
@@ -212,11 +218,12 @@ public interface PageApi {
 
     @GetMapping(ApiPaths.ROOT + "/pages/{id}/posts")
     PageSlice<Post> posts(@PathVariable UUID id, @RequestParam(required = false) String kind,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size);
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @GetMapping(ApiPaths.ROOT + "/me/pages/{id}/posts")
-    PageSlice<Post> managePosts(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size);
+    PageSlice<Post> managePosts(@PathVariable UUID id, @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/posts")
     Post writePost(@PathVariable UUID id, @RequestBody PostWrite body);
@@ -230,16 +237,18 @@ public interface PageApi {
     @GetMapping(ApiPaths.ROOT + "/posts")
     PageSlice<FeedPost> latestPosts(@RequestParam(required = false) String kind,
             @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size);
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @GetMapping(ApiPaths.ROOT + "/me/feed")
     PageSlice<FeedPost> timeline(@RequestParam(defaultValue = "false") boolean following,
-            @RequestParam(required = false) String kind, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size);
+            @RequestParam(required = false) String kind, @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     /** Pages broadcasting now; see spec 04, live status. */
     @GetMapping(ApiPaths.ROOT + "/live")
-    PageSlice<Profile> live(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size);
+    PageSlice<Profile> live(@RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "12") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @PutMapping(ApiPaths.ROOT + "/me/pages/{id}/live")
     Live startLive(@PathVariable UUID id, @RequestBody LiveWrite body);
@@ -254,15 +263,16 @@ public interface PageApi {
     void endLiveAsEditor(@PathVariable UUID id);
 
     @GetMapping(ApiPaths.ROOT + "/me/follows")
-    PageSlice<Profile> follows(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+    PageSlice<Profile> follows(@RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @GetMapping(ApiPaths.ROOT + "/me/suggestions")
-    PageSlice<Profile> suggestions(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size);
+    PageSlice<Profile> suggestions(@RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "5") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @GetMapping(ApiPaths.ROOT + "/posts/{id}/comments")
-    PageSlice<Comment> comments(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "30") int size);
+    PageSlice<Comment> comments(@PathVariable UUID id, @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "30") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @PostMapping(ApiPaths.ROOT + "/me/posts/{id}/comments")
     Comment comment(@PathVariable UUID id, @RequestBody CommentWrite body);
@@ -280,14 +290,15 @@ public interface PageApi {
     void moderate(@PathVariable UUID id, @RequestBody Moderation body);
 
     @GetMapping(ApiPaths.ROOT + "/admin/community-reports")
-    PageSlice<Report> reports(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+    PageSlice<Report> reports(@RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @PostMapping(ApiPaths.ROOT + "/admin/community-reports/{id}/resolve")
     void resolve(@PathVariable UUID id, @RequestBody Resolution body);
 
     @GetMapping(ApiPaths.ROOT + "/me/notifications")
-    PageSlice<Notification> notifications(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "24") int size);
+    PageSlice<Notification> notifications(@RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @PostMapping(ApiPaths.ROOT + "/me/notifications/{id}/read")
     void readNotification(@PathVariable UUID id);

@@ -330,9 +330,8 @@ public class PageProfiles {
                 .map(live -> new Live(live.getUrl(), live.getTitle(), live.getStartedAt())).orElse(null);
     }
 
+    /** The bounds are declared on the {@code PageApi} parameters; this only builds the request. */
     public static PageRequest paging(int page, int size) {
-        if (page < 0 || size < 1 || size > 100)
-            throw PageRules.invalid("Invalid pagination.");
         return PageRequest.of(page, size);
     }
 }

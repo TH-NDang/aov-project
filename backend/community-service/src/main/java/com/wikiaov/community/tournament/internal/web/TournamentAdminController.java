@@ -37,8 +37,7 @@ public class TournamentAdminController implements TournamentAdminApi {
     public PageSlice<Ranked<Team>> teams(String q, RecordState state, String sort, UUID tournamentId, int page,
             int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("q", "state", "sort", "tournamentId", "page", "size"));
-        Parameters.search(q);
-        return administration.teams(q, state, sort, tournamentId, Parameters.page(page, size, "updatedAt"));
+        return administration.teams(q, state, sort, tournamentId, Parameters.pageable(page, size, "updatedAt"));
     }
 
     @Override
@@ -60,17 +59,15 @@ public class TournamentAdminController implements TournamentAdminApi {
     public PageSlice<TeamEntry> teamDirectory(String q, String country, String sort, int page, int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("q", "country", "sort", "page", "size"));
-        Parameters.search(q);
-        return administration.teamDirectory(q, country, sort, Parameters.page(page, size, "updatedAt"));
+        return administration.teamDirectory(q, country, sort, Parameters.pageable(page, size, "updatedAt"));
     }
 
     @Override
     public PageSlice<PlayerEntry> playerDirectory(String q, String country, String lane, String status, String sort,
             int page, int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("q", "country", "lane", "status", "sort", "page", "size"));
-        Parameters.search(q);
         return administration.playerDirectory(q, country, lane, status, sort,
-                Parameters.page(page, size, "updatedAt"));
+                Parameters.pageable(page, size, "updatedAt"));
     }
 
     @Override
@@ -83,8 +80,8 @@ public class TournamentAdminController implements TournamentAdminApi {
     public PageSlice<Ranked<Player>> players(String q, RecordState state, String sort, UUID teamId, UUID tournamentId,
             int page, int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("q", "state", "sort", "teamId", "tournamentId", "page", "size"));
-        Parameters.search(q);
-        return administration.players(q, state, sort, teamId, tournamentId, Parameters.page(page, size, "updatedAt"));
+        return administration.players(q, state, sort, teamId, tournamentId,
+                Parameters.pageable(page, size, "updatedAt"));
     }
 
     @Override
@@ -110,9 +107,8 @@ public class TournamentAdminController implements TournamentAdminApi {
         QueryParameters.requireOnly(request,
                 Set.of("q", "alsoRegions", "state", "status", "tier", "region", "year", "sort", "level",
                         "teamId", "playerId", "page", "size"));
-        Parameters.search(q);
         return administration.tournaments(q, alsoRegions, state, status, tier, region, year, sort, level, teamId,
-                playerId, Parameters.page(page, size, "updatedAt"));
+                playerId, Parameters.pageable(page, size, "updatedAt"));
     }
 
     @Override
@@ -146,8 +142,7 @@ public class TournamentAdminController implements TournamentAdminApi {
     public PageSlice<View<Series>> series(String q, UUID tournamentId, RecordState state, int page, int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("q", "tournamentId", "state", "page", "size"));
-        Parameters.search(q);
-        return administration.series(q, tournamentId, state, Parameters.page(page, size, "updatedAt"));
+        return administration.series(q, tournamentId, state, Parameters.pageable(page, size, "updatedAt"));
     }
 
     @Override
@@ -175,7 +170,7 @@ public class TournamentAdminController implements TournamentAdminApi {
     public PageSlice<View<Game>> games(UUID seriesId, UUID tournamentId, RecordState state, int page, int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("seriesId", "tournamentId", "state", "page", "size"));
-        return administration.games(seriesId, tournamentId, state, Parameters.page(page, size, "updatedAt"));
+        return administration.games(seriesId, tournamentId, state, Parameters.pageable(page, size, "updatedAt"));
     }
 
     @Override

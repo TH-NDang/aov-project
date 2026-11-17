@@ -24,7 +24,7 @@ public class RosterAdminController implements RosterAdminApi {
             RecordState state, int page,
             int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("tournamentId", "teamId", "playerId", "state", "page", "size"));
-        return rosters.list(tournamentId, teamId, playerId, state, Parameters.page(page, size, "updatedAt"));
+        return rosters.list(tournamentId, teamId, playerId, state, Parameters.pageable(page, size, "updatedAt"));
     }
 
     @Override

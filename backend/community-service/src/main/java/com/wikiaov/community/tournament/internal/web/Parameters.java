@@ -1,21 +1,18 @@
 package com.wikiaov.community.tournament.internal.web;
 
-import com.wikiaov.community.tournament.internal.application.TournamentErrors;
-import java.util.*;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 final class Parameters {
     private Parameters() {
     }
 
-    static void search(String q) {
-        if (q.length() > 120)
-            throw TournamentErrors.invalid("Search is limited to 120 characters.");
-    }
+    /** Longest search text of a registry list. */
+    static final int MAX_SEARCH = 120;
 
-    static Pageable page(int page, int size, String sort) {
-        if (page < 0 || page > 100000 || size < 1 || size > 500)
-            throw TournamentErrors.invalid("Use a non-negative page and a size between 1 and 500.");
+    /** The bounds are declared on the {@code *Api} parameters; this only builds the request. */
+    static Pageable pageable(int page, int size, String sort) {
         return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sort));
     }
 }

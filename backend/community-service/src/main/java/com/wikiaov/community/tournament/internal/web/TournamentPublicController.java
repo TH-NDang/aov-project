@@ -33,7 +33,7 @@ public class TournamentPublicController implements TournamentPublicApi {
     public PageSlice<PublishedGame> games(UUID tournamentId, UUID seriesId, int page, int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("tournamentId", "seriesId", "page", "size"));
-        return queries.games(tournamentId, seriesId, Parameters.page(page, size, "published_at"));
+        return queries.games(tournamentId, seriesId, Parameters.pageable(page, size, "published_at"));
     }
 
     @Override
@@ -45,12 +45,12 @@ public class TournamentPublicController implements TournamentPublicApi {
     @Override
     public PageSlice<Summary<Tournament>> tournaments(int page, int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("page", "size"));
-        return queries.tournaments(Parameters.page(page, size, "publishedAt"));
+        return queries.tournaments(Parameters.pageable(page, size, "publishedAt"));
     }
 
     @Override
     public PageSlice<Summary<Series>> series(UUID tournamentId, int page, int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("tournamentId", "page", "size"));
-        return queries.series(tournamentId, Parameters.page(page, size, "publishedAt"));
+        return queries.series(tournamentId, Parameters.pageable(page, size, "publishedAt"));
     }
 }

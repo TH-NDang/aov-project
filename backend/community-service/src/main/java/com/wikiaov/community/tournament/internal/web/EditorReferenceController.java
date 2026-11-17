@@ -23,7 +23,6 @@ public class EditorReferenceController implements EditorReferenceApi {
     public PageSlice<Entry> references(String q, Kind kind, List<UUID> ids, int page, int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("q", "kind", "page", "size"), Set.of("ids"));
-        Parameters.search(q);
-        return references.search(q, kind, ids, Parameters.page(page, size, "name"));
+        return references.search(q, kind, ids, Parameters.pageable(page, size, "name"));
     }
 }

@@ -5,6 +5,9 @@ import com.wikiaov.community.community.internal.membership.application.PageMembe
 import com.wikiaov.community.community.internal.pages.application.PageProfiles;
 import com.wikiaov.community.community.internal.social.application.*;
 import com.wikiaov.community.platform.*;
+import com.wikiaov.community.platform.PageLimits;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,8 +32,8 @@ public class PageController implements PageApi {
     }
 
     @GetMapping(value = ApiPaths.ROOT + "/me/pages/{id}/feed", version = "1")
-    public PageSlice<Post> feed(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+    public PageSlice<Post> feed(@PathVariable UUID id, @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(PageLimits.MAX_SIZE) int size) {
         QueryParameters.requireOnly(request, Set.of("page", "size"));
         return social.feed(id, page, size);
     }

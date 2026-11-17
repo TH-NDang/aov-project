@@ -39,9 +39,6 @@ public class CompetitionPlanning {
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('tournament:read')")
     public PageSlice<Summary> summaries(int page, int size, UUID organizerPageId, UUID circuitPageId) {
-        if (page < 0 || size < 1 || size > 100)
-            throw TournamentErrors.invalid("Invalid pagination.");
-
         var rows = plans.summaries(organizerPageId == null ? "" : organizerPageId.toString(),
                 circuitPageId == null ? "" : circuitPageId.toString(),
                 PageRequest.of(page, size));
@@ -82,8 +79,6 @@ public class CompetitionPlanning {
     @Transactional(readOnly = true)
     public PageSlice<View> published(int page, int size, UUID teamId, UUID playerId, UUID organizerPageId,
             UUID circuitPageId) {
-        if (page < 0 || size < 1 || size > 100)
-            throw TournamentErrors.invalid("Invalid pagination.");
         return PageSlice.from(plans
                 .published(teamId == null ? "" : teamId.toString(), playerId == null ? "" : playerId.toString(),
                         organizerPageId == null ? "" : organizerPageId.toString(),

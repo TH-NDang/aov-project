@@ -315,6 +315,13 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void aPageLargerThanTheListLimitIsAnInvalidQueryParameter() throws Exception {
+        mvc.perform(get(ROOT + "/pages").param("size", "101")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
+                .andExpect(jsonPath("$.errors[0].path").value("size"));
+    }
+
+    @Test
     void anUnknownQueryParameterOfAPublicPageReadIsAnInvalidQueryParameter() throws Exception {
         mvc.perform(get(ROOT + "/pages?unexpected=true")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));

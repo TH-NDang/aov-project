@@ -1,6 +1,7 @@
 package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.ApiPaths;
+import com.wikiaov.community.platform.PageLimits;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
@@ -8,6 +9,9 @@ import com.wikiaov.community.tournament.internal.directory.application.Directory
 import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import java.util.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,19 +27,20 @@ public interface TournamentAdminApi {
             @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/teams")
-    PageSlice<Ranked<Team>> teams(@RequestParam(defaultValue = "") String q,
+    PageSlice<Ranked<Team>> teams(@RequestParam(defaultValue = "") @Size(max = Parameters.MAX_SEARCH) String q,
             @RequestParam(defaultValue = "ACTIVE") RecordState state,
             @RequestParam(defaultValue = "RECENT") String sort,
             @RequestParam(required = false) UUID tournamentId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size, HttpServletRequest request);
+            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @RequestParam(defaultValue = "50") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
+            HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/teams/directory")
-    PageSlice<TeamEntry> teamDirectory(@RequestParam(defaultValue = "") String q,
+    PageSlice<TeamEntry> teamDirectory(@RequestParam(defaultValue = "") @Size(max = Parameters.MAX_SEARCH) String q,
             @RequestParam(defaultValue = "") String country,
             @RequestParam(defaultValue = "RECENT") String sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "24") int size,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/teams/{id}")
@@ -48,23 +53,23 @@ public interface TournamentAdminApi {
     View<Team> updateTeam(@PathVariable UUID id, @RequestBody Update<Team> request);
 
     @GetMapping(ApiPaths.ADMIN + "/players")
-    PageSlice<Ranked<Player>> players(@RequestParam(defaultValue = "") String q,
+    PageSlice<Ranked<Player>> players(@RequestParam(defaultValue = "") @Size(max = Parameters.MAX_SEARCH) String q,
             @RequestParam(defaultValue = "ACTIVE") RecordState state,
             @RequestParam(defaultValue = "RECENT") String sort,
             @RequestParam(required = false) UUID teamId,
             @RequestParam(required = false) UUID tournamentId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @RequestParam(defaultValue = "50") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/players/directory")
-    PageSlice<PlayerEntry> playerDirectory(@RequestParam(defaultValue = "") String q,
+    PageSlice<PlayerEntry> playerDirectory(@RequestParam(defaultValue = "") @Size(max = Parameters.MAX_SEARCH) String q,
             @RequestParam(defaultValue = "") String country,
             @RequestParam(defaultValue = "") String lane,
             @RequestParam(defaultValue = "") String status,
             @RequestParam(defaultValue = "RECENT") String sort,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "24") int size,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/players/{id}")
@@ -77,7 +82,8 @@ public interface TournamentAdminApi {
     View<Player> updatePlayer(@PathVariable UUID id, @RequestBody Update<Player> request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments")
-    PageSlice<Ranked<Tournament>> tournaments(@RequestParam(defaultValue = "") String q,
+    PageSlice<Ranked<Tournament>> tournaments(
+            @RequestParam(defaultValue = "") @Size(max = Parameters.MAX_SEARCH) String q,
             @RequestParam(defaultValue = "") String alsoRegions,
             @RequestParam(defaultValue = "ACTIVE") RecordState state,
             @RequestParam(defaultValue = "") String status,
@@ -88,8 +94,8 @@ public interface TournamentAdminApi {
             @RequestParam(defaultValue = "ALL") TournamentLevel level,
             @RequestParam(required = false) UUID teamId,
             @RequestParam(required = false) UUID playerId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @RequestParam(defaultValue = "50") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/facets")
@@ -116,10 +122,11 @@ public interface TournamentAdminApi {
     java.util.List<TournamentStats> tournamentStats(HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/series")
-    PageSlice<View<Series>> series(@RequestParam(defaultValue = "") String q,
+    PageSlice<View<Series>> series(@RequestParam(defaultValue = "") @Size(max = Parameters.MAX_SEARCH) String q,
             @RequestParam(required = false) UUID tournamentId,
-            @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "ACTIVE") RecordState state,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @RequestParam(defaultValue = "50") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/series/{id}")
@@ -134,8 +141,9 @@ public interface TournamentAdminApi {
     @GetMapping(ApiPaths.ADMIN + "/games")
     PageSlice<View<Game>> games(@RequestParam(required = false) UUID seriesId,
             @RequestParam(required = false) UUID tournamentId,
-            @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(defaultValue = "ACTIVE") RecordState state,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @RequestParam(defaultValue = "50") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/games/{id}")
