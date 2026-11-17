@@ -114,8 +114,6 @@ export function HeroDetailLoading({ heroCode }: { heroCode?: string }) {
   const returnTo = typeof previous === "string" && /^\/hero(?:\?|$)/u.test(previous) ? previous : "/hero"
   const appearance = heroAppearance(heroCode || "")
   const style = {
-    "--hero-surface-rgb": appearance.surfaceRgb,
-    "--hero-backdrop": appearance.backdrop,
     "--hero-accent": appearance.accent,
   } as CSSProperties
 

@@ -77,8 +77,6 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
   ].find((url) => url && !failedUrls.includes(url))
   const appearance = heroAppearance(hero.code)
   const style = {
-    "--hero-surface-rgb": appearance.surfaceRgb,
-    "--hero-backdrop": appearance.backdrop,
     "--hero-accent": appearance.accent,
   } as CSSProperties
 
