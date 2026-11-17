@@ -5,6 +5,10 @@ import com.wikiaov.patch.internal.application.response.PublicationOverviewView.M
 import com.wikiaov.patch.internal.application.response.PublicationOverviewView.RulesetView;
 import com.wikiaov.patch.internal.context.application.PatchPublicationOverview.Timeline;
 import com.wikiaov.patch.internal.context.application.SeasonPublicationOverview.Calendar;
+import com.wikiaov.patch.internal.domain.PatchLifecycleState;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
+import com.wikiaov.patch.internal.domain.PatchStatus;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
@@ -44,7 +48,8 @@ class MarketPublicationOverview {
 
     Rules readRules() {
         var allRulesets = rulesets.findAll();
-        var activeRulesets = allRulesets.stream().filter(ruleset -> "ACTIVE".equals(ruleset.getLifecycleState()))
+        var activeRulesets = allRulesets.stream()
+                .filter(ruleset -> ruleset.getLifecycleState() == PatchLifecycleState.ACTIVE)
                 .map(GameplayRuleset::getId).collect(Collectors.toSet());
         return new Rules(allRulesets, activeRulesets, assignments.findAll());
     }
@@ -95,10 +100,10 @@ class MarketPublicationOverview {
         return timeline.releases().stream().filter(release -> {
             var variant = timeline.variantsById().get(release.getPatchVariantId());
             return region.isAvailable() && assignment != null && release.getRegionId().equals(region.getId())
-                    && "SCHEDULED".equals(release.getStatus()) && !release.getEffectiveAt().isAfter(now)
+                    && release.getStatus() == PatchReleaseStatus.SCHEDULED && !release.getEffectiveAt().isAfter(now)
                     && variant != null && variant.getRulesetId().equals(assignment.getRulesetId())
-                    && "PUBLISHED".equals(variant.getStatus())
-                    && "PUBLISHED".equals(timeline.patchesById().get(variant.getPatchId()).getStatus());
+                    && variant.getStatus() == PatchVariantStatus.PUBLISHED
+                    && timeline.patchesById().get(variant.getPatchId()).getStatus() == PatchStatus.PUBLISHED;
         }).max(Comparator.comparing(PatchRelease::getEffectiveAt)).orElse(null);
     }
 

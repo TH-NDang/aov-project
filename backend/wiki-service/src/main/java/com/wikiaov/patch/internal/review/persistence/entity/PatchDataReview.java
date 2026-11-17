@@ -1,5 +1,6 @@
 package com.wikiaov.patch.internal.review.persistence.entity;
 
+import com.wikiaov.patch.internal.domain.PatchDataReviewState;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -13,7 +14,8 @@ import lombok.Setter;
 public class PatchDataReview {
     @Id
     private UUID patchVariantId;
-    private String state;
+    @Enumerated(EnumType.STRING)
+    private PatchDataReviewState state;
     private long version;
     private Instant completedAt;
     private Instant updatedAt;

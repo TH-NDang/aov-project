@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore.VariantSnapshot;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
@@ -32,7 +33,7 @@ class PatchReleaseStoreTests {
 
     @Test
     void locksRulesetBeforeLockingTheSelectedVariant() {
-        var selected = snapshot(3, "DRAFT");
+        var selected = snapshot(3, PatchVariantStatus.DRAFT);
         when(variants.snapshotById(variantId)).thenReturn(Optional.of(selected));
         when(rulesets.lockById(rulesetId)).thenReturn(Optional.of(new GameplayRuleset()));
         var variant = new PatchVariant();
@@ -48,13 +49,13 @@ class PatchReleaseStoreTests {
 
     @Test
     void rereadsScalarSnapshotAfterRulesetLockInsteadOfUsingTheStaleOrdinalOrStatus() {
-        var beforeLock = snapshot(3, "DRAFT");
-        var afterLock = snapshot(4, "PUBLISHED");
+        var beforeLock = snapshot(3, PatchVariantStatus.DRAFT);
+        var afterLock = snapshot(4, PatchVariantStatus.PUBLISHED);
         when(variants.snapshotById(variantId)).thenReturn(Optional.of(beforeLock), Optional.of(afterLock));
         when(rulesets.lockById(rulesetId)).thenReturn(Optional.of(new GameplayRuleset()));
 
         assertThat(store.readVariantAfterLockingRuleset(variantId))
-                .isEqualTo(new VariantSnapshot(rulesetId, 4, "PUBLISHED"));
+                .isEqualTo(new VariantSnapshot(rulesetId, 4, PatchVariantStatus.PUBLISHED));
 
         var order = inOrder(variants, rulesets);
         order.verify(variants).snapshotById(variantId);
@@ -67,12 +68,13 @@ class PatchReleaseStoreTests {
     void readsTheCurrentSnapshotAfterAcquiringTheVariantLock() {
         var managed = new PatchVariant();
         managed.setRulesetOrdinal(3);
-        managed.setStatus("DRAFT");
-        var current = snapshot(4, "PUBLISHED");
+        managed.setStatus(PatchVariantStatus.DRAFT);
+        var current = snapshot(4, PatchVariantStatus.PUBLISHED);
         when(variants.lockById(variantId)).thenReturn(Optional.of(managed));
         when(variants.snapshotById(variantId)).thenReturn(Optional.of(current));
 
-        assertThat(store.lockAndReadVariant(variantId)).isEqualTo(new VariantSnapshot(rulesetId, 4, "PUBLISHED"));
+        assertThat(store.lockAndReadVariant(variantId))
+                .isEqualTo(new VariantSnapshot(rulesetId, 4, PatchVariantStatus.PUBLISHED));
 
         var order = inOrder(variants);
         order.verify(variants).lockById(variantId);
@@ -98,7 +100,7 @@ class PatchReleaseStoreTests {
                 .hasMessage("The patch operation conflicts with existing data.");
     }
 
-    private PatchVariantRepository.Snapshot snapshot(long ordinal, String status) {
+    private PatchVariantRepository.Snapshot snapshot(long ordinal, PatchVariantStatus status) {
         var snapshot = mock(PatchVariantRepository.Snapshot.class);
         when(snapshot.getRulesetId()).thenReturn(rulesetId);
         when(snapshot.getOrdinal()).thenReturn(ordinal);

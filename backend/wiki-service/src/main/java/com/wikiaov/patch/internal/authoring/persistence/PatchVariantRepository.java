@@ -2,6 +2,7 @@ package com.wikiaov.patch.internal.authoring.persistence;
 
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +13,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface PatchVariantRepository extends JpaRepository<PatchVariant, UUID> {
     @Query("select new com.wikiaov.patch.PatchVariantReference(v.id,v.patchId,v.rulesetId,v.seasonId,"
-            + "v.rulesetOrdinal,v.status='PUBLISHED') from PatchVariant v where v.rulesetId=:rulesetId")
+            + "v.rulesetOrdinal,v.status=com.wikiaov.patch.internal.domain.PatchVariantStatus.PUBLISHED) from PatchVariant v where v.rulesetId=:rulesetId")
     List<PatchVariantReference> referencesByRuleset(UUID rulesetId);
 
     @Query("select p.code from PatchVariant v join GamePatch p on p.id=v.patchId where v.id=:variantId")
@@ -43,7 +44,7 @@ public interface PatchVariantRepository extends JpaRepository<PatchVariant, UUID
 
         long getOrdinal();
 
-        String getStatus();
+        PatchVariantStatus getStatus();
     }
 
     default void makeOrdinalSpace(UUID rulesetId, long ordinal) {

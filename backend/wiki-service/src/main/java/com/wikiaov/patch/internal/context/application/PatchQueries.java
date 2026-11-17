@@ -5,6 +5,7 @@ import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchRepository;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchTranslationRepository;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
+import com.wikiaov.patch.internal.domain.PatchStatus;
 import com.wikiaov.patch.internal.ruleset.application.Regions;
 import com.wikiaov.platform.*;
 import java.time.Clock;
@@ -54,7 +55,7 @@ public class PatchQueries implements PatchCatalog {
 
     private Map<String, Object> view(UUID id, String region, String locale, UUID variantId, UUID rulesetId,
             Instant effectiveAt) {
-        var patch = patches.findByIdAndStatus(id, "PUBLISHED").orElseThrow(
+        var patch = patches.findByIdAndStatus(id, PatchStatus.PUBLISHED).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "Patch resource does not exist."));
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", patch.getId());

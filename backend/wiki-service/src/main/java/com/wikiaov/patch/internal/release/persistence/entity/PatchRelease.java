@@ -1,5 +1,6 @@
 package com.wikiaov.patch.internal.release.persistence.entity;
 
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -24,7 +25,8 @@ public class PatchRelease {
 
     private Instant announcedAt;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private PatchReleaseStatus status;
 
     private String sourceUrl;
 

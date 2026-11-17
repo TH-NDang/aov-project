@@ -5,6 +5,8 @@ import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.application.response.PatchDataReviewView;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
+import com.wikiaov.patch.internal.domain.PatchDataReviewState;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.review.persistence.PatchDataReviewRepository;
 import com.wikiaov.patch.internal.review.persistence.entity.PatchDataReview;
 import com.wikiaov.platform.ApiException;
@@ -44,10 +46,10 @@ public class PatchDataReviewService implements PatchDataReviews {
     public PatchDataReviewView update(UUID id, Update input) {
         var variant = variants.lockById(id).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant was not found."));
-        if (input.state() == null || !Set.of("IN_PROGRESS", "COMPLETE").contains(input.state())
+        if (input.state() == null || !PatchDataReviewState.isName(input.state())
                 || input.expectedVersion() < 0)
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "Invalid editorial review state.");
-        if (!variant.getStatus().equals("PUBLISHED"))
+        if (variant.getStatus() != PatchVariantStatus.PUBLISHED)
             throw new ApiException(PatchErrorCode.PATCH_INVALID,
                     "Publish the patch variant before completing data review.");
         var value = reviews.findById(id).orElseGet(PatchDataReview::new);
@@ -56,9 +58,9 @@ public class PatchDataReviewService implements PatchDataReviews {
                     "The patch data review has changed. Reload before saving.");
         var actor = actors.require();
         value.setPatchVariantId(id);
-        value.setState(input.state());
+        value.setState(PatchDataReviewState.valueOf(input.state()));
         value.setVersion(value.getVersion() + 1);
-        value.setCompletedAt(input.state().equals("COMPLETE") ? clock.instant() : null);
+        value.setCompletedAt(value.getState() == PatchDataReviewState.COMPLETE ? clock.instant() : null);
         value.setUpdatedAt(clock.instant());
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
@@ -76,11 +78,11 @@ public class PatchDataReviewService implements PatchDataReviews {
         variants.lockById(id).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant was not found."));
         var value = reviews.findById(id).orElse(null);
-        if (value == null || !value.getState().equals("COMPLETE"))
+        if (value == null || value.getState() != PatchDataReviewState.COMPLETE)
             return;
         var actor = actors.require();
         long previous = value.getVersion();
-        value.setState("IN_PROGRESS");
+        value.setState(PatchDataReviewState.IN_PROGRESS);
         value.setVersion(previous + 1);
         value.setCompletedAt(null);
         value.setUpdatedAt(clock.instant());

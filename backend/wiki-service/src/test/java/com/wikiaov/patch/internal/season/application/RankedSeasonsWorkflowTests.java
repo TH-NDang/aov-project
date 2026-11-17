@@ -10,6 +10,7 @@ import com.wikiaov.access.ActorType;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
@@ -105,7 +106,7 @@ class RankedSeasonsWorkflowTests {
     void rejectsACalendarThatWouldExcludeAnExistingReleaseBeforeSaving() {
         prepareCalendar();
         var release = new PatchRelease();
-        release.setStatus("PUBLISHED");
+        release.setStatus(PatchReleaseStatus.SCHEDULED);
         release.setEffectiveOn(LocalDate.of(2026, 9, 28));
         when(releases.findBySeasonIdAndRegionId(seasonId, regionId)).thenReturn(List.of(release));
 

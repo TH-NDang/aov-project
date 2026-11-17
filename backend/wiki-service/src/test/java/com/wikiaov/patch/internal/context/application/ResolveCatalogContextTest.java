@@ -9,6 +9,7 @@ import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository.CatalogPatch;
+import com.wikiaov.patch.internal.domain.PatchLifecycleState;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.entity.Region;
@@ -36,7 +37,8 @@ class ResolveCatalogContextTest {
 
     @BeforeEach
     void verifiedMarket() {
-        when(regions.findByCodeAndLifecycleState("VN", "ACTIVE")).thenReturn(Optional.of(mock(Region.class)));
+        when(regions.findByCodeAndLifecycleState("VN", PatchLifecycleState.ACTIVE))
+                .thenReturn(Optional.of(mock(Region.class)));
         when(repository.effective("VN", now, PageRequest.of(0, 1))).thenReturn(List.of(current));
     }
 

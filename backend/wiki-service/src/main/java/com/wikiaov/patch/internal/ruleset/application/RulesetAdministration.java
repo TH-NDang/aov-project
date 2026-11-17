@@ -8,6 +8,7 @@ import com.wikiaov.patch.internal.application.PatchCommands.Assignment;
 import com.wikiaov.patch.internal.application.PatchCommands.CreateRegion;
 import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
+import com.wikiaov.patch.internal.domain.PatchLifecycleState;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RulesetAssignmentRepository;
@@ -61,7 +62,7 @@ public class RulesetAdministration {
         entity.setId(id);
         entity.setCode(input.code());
         entity.setDescription(input.description());
-        entity.setLifecycleState("ACTIVE");
+        entity.setLifecycleState(PatchLifecycleState.ACTIVE);
         entity.setCreatedAt(clock.instant());
         persist(() -> rulesets.saveAndFlush(entity));
         record("RULESET_CREATED", id);

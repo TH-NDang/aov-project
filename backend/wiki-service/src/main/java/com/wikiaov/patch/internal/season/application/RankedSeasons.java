@@ -2,6 +2,7 @@ package com.wikiaov.patch.internal.season.application;
 
 import com.wikiaov.access.*;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
 import com.wikiaov.patch.internal.season.domain.SeasonCalendarRules;
@@ -151,7 +152,7 @@ public class RankedSeasons {
 
     private void requireIncludesReleases(UUID seasonId, UUID regionId, Window window, ZoneId zone) {
         for (var release : releases.findBySeasonIdAndRegionId(seasonId, regionId)) {
-            if ("CANCELLED".equals(release.getStatus()))
+            if (release.getStatus() == PatchReleaseStatus.CANCELLED)
                 continue;
             window.requireIncludesRelease(release.getEffectiveAt(), release.getEffectiveOn(), zone);
         }

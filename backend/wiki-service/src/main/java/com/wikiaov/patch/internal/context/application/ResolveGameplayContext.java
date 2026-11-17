@@ -6,6 +6,8 @@ import com.wikiaov.patch.internal.application.RegionErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
+import com.wikiaov.patch.internal.domain.PatchLifecycleState;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
 import com.wikiaov.patch.internal.season.persistence.RankedSeasonRepository;
@@ -36,7 +38,7 @@ public class ResolveGameplayContext implements GameplayContexts {
     }
 
     public GameplayContext resolve(String region, Instant at) {
-        regions.findByCodeAndLifecycleState(region, "ACTIVE").orElseThrow(
+        regions.findByCodeAndLifecycleState(region, PatchLifecycleState.ACTIVE).orElseThrow(
                 () -> new ApiException(RegionErrorCode.UNSUPPORTED_REGION, "The requested region is unavailable."));
         return contexts.effective(region, at, PageRequest.of(0, 1)).stream().findFirst()
                 .orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE,
@@ -63,7 +65,7 @@ public class ResolveGameplayContext implements GameplayContexts {
     }
 
     public List<GameplayContext> active(Instant at) {
-        return regions.findByLifecycleState("ACTIVE").stream().map(region -> {
+        return regions.findByLifecycleState(PatchLifecycleState.ACTIVE).stream().map(region -> {
             try {
                 return resolve(region.getCode(), at);
             } catch (ApiException exception) {
@@ -75,7 +77,7 @@ public class ResolveGameplayContext implements GameplayContexts {
     }
 
     public void requireRuleset(UUID rulesetId) {
-        if (!rulesets.existsByIdAndLifecycleState(rulesetId, "ACTIVE"))
+        if (!rulesets.existsByIdAndLifecycleState(rulesetId, PatchLifecycleState.ACTIVE))
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "The ruleset is unavailable.");
     }
 
@@ -120,6 +122,7 @@ public class ResolveGameplayContext implements GameplayContexts {
 
     private PatchVariantReference variantView(PatchVariant variant) {
         return new PatchVariantReference(variant.getId(), variant.getPatchId(), variant.getRulesetId(),
-                variant.getSeasonId(), variant.getRulesetOrdinal(), "PUBLISHED".equals(variant.getStatus()));
+                variant.getSeasonId(), variant.getRulesetOrdinal(),
+                variant.getStatus() == PatchVariantStatus.PUBLISHED);
     }
 }

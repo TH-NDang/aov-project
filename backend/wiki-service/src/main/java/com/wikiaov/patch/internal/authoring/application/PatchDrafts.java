@@ -14,6 +14,8 @@ import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatch;
 import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatchTranslation;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
+import com.wikiaov.patch.internal.domain.PatchStatus;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
@@ -53,7 +55,7 @@ public class PatchDrafts {
         var entity = new GamePatch();
         entity.setId(id);
         entity.setCode(input.code());
-        entity.setStatus("DRAFT");
+        entity.setStatus(PatchStatus.DRAFT);
         entity.setCreatedAt(clock.instant());
         entity.setCreatedByIssuer(actor.issuer());
         entity.setCreatedBySubject(actor.subject());
@@ -94,7 +96,7 @@ public class PatchDrafts {
         entity.setRulesetId(input.rulesetId());
         entity.setVariantCode(input.variantCode());
         entity.setRulesetOrdinal(ordinal);
-        entity.setStatus("DRAFT");
+        entity.setStatus(PatchVariantStatus.DRAFT);
         entity.setCreatedAt(clock.instant());
         persist(() -> variants.saveAndFlush(entity));
         record("PATCH_VARIANT_CREATED", entity.getId());
@@ -114,11 +116,11 @@ public class PatchDrafts {
         var snapshot = variants.snapshotById(variantId).orElseThrow(PatchDrafts::notFound);
         rulesets.lockById(snapshot.getRulesetId()).orElseThrow(PatchDrafts::notFound);
         var variant = variants.lockById(variantId).orElseThrow(PatchDrafts::notFound);
-        if ("PUBLISHED".equals(variant.getStatus()))
+        if (variant.getStatus() == PatchVariantStatus.PUBLISHED)
             return;
-        variant.setStatus("PUBLISHED");
+        variant.setStatus(PatchVariantStatus.PUBLISHED);
         variant.setPublishedAt(clock.instant());
-        patches.lockById(variant.getPatchId()).orElseThrow(PatchDrafts::notFound).setStatus("PUBLISHED");
+        patches.lockById(variant.getPatchId()).orElseThrow(PatchDrafts::notFound).setStatus(PatchStatus.PUBLISHED);
         record("PATCH_VARIANT_PUBLISHED", variantId);
     }
 

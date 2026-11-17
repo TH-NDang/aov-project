@@ -1,6 +1,7 @@
 package com.wikiaov.patch.internal.authoring.persistence;
 
 import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatch;
+import com.wikiaov.patch.internal.domain.PatchStatus;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +16,7 @@ public interface GamePatchRepository extends JpaRepository<GamePatch, UUID> {
     @Query("select e from GamePatch e where e.id = :id")
     Optional<GamePatch> lockById(UUID id);
 
-    Optional<GamePatch> findByIdAndStatus(UUID id, String status);
+    Optional<GamePatch> findByIdAndStatus(UUID id, PatchStatus status);
 
     List<GamePatch> findAllByOrderBySequenceDesc(Pageable page);
 }

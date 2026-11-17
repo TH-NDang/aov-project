@@ -1,5 +1,6 @@
 package com.wikiaov.patch.internal.stats.persistence;
 
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.stats.persistence.entity.PatchStatDefault;
 import java.math.BigDecimal;
 import java.util.*;
@@ -31,8 +32,13 @@ public interface PatchStatDefaultRepository extends JpaRepository<PatchStatDefau
             join patch.patch_variant v on v.ruleset_id = target.ruleset_id and v.ruleset_ordinal <= target.ruleset_ordinal
             join patch.stat_default d on d.variant_id = v.id
             join patch.game_patch p on p.id = v.patch_id
-            where target.id = :id and (v.id = target.id or v.status = 'PUBLISHED')
+            where target.id = :id and (v.id = target.id or v.status = :published)
             order by d.stat_key, v.ruleset_ordinal desc
             """, nativeQuery = true)
-    List<Effective> effective(UUID id);
+    List<Effective> effective(UUID id, String published);
+
+    /** The defaults a variant sees: its own, then those of published earlier variants of its ruleset. */
+    default List<Effective> effective(UUID id) {
+        return effective(id, PatchVariantStatus.PUBLISHED.name());
+    }
 }

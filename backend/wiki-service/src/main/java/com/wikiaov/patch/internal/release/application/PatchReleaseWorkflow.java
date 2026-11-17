@@ -6,6 +6,8 @@ import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.internal.application.PatchCommands.Release;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore.VariantSnapshot;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
@@ -109,7 +111,7 @@ public class PatchReleaseWorkflow {
     }
 
     private static void requireDateOnlyDraft(PatchRelease release) {
-        if (release.getEffectiveOn() == null || !"DRAFT".equals(release.getStatus()))
+        if (release.getEffectiveOn() == null || release.getStatus() != PatchReleaseStatus.DRAFT)
             throw invalid("Only a date-only release awaiting confirmation can be confirmed.");
     }
 
@@ -120,7 +122,7 @@ public class PatchReleaseWorkflow {
     }
 
     private static void requirePublished(VariantSnapshot variant, String detail) {
-        if (!"PUBLISHED".equals(variant.status()))
+        if (variant.status() != PatchVariantStatus.PUBLISHED)
             throw invalid(detail);
     }
 
@@ -132,7 +134,7 @@ public class PatchReleaseWorkflow {
         release.setEffectiveAt(input.effectiveAt());
         release.setAnnouncedAt(input.announcedAt());
         release.setEffectiveOn(input.effectiveOn());
-        release.setStatus(input.effectiveAt() == null ? "DRAFT" : "SCHEDULED");
+        release.setStatus(input.effectiveAt() == null ? PatchReleaseStatus.DRAFT : PatchReleaseStatus.SCHEDULED);
         release.setSourceUrl(input.sourceUrl());
         release.setCreatedAt(clock.instant());
         release.setSeasonId(seasonId);
@@ -142,7 +144,7 @@ public class PatchReleaseWorkflow {
     private static void markApplied(PatchRelease release, Instant now) {
         release.setEffectiveAt(now);
         release.setConfirmedAt(now);
-        release.setStatus("SCHEDULED");
+        release.setStatus(PatchReleaseStatus.SCHEDULED);
     }
 
     private void record(String action, UUID releaseId) {

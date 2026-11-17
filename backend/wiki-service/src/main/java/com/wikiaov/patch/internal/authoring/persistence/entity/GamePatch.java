@@ -1,5 +1,6 @@
 package com.wikiaov.patch.internal.authoring.persistence.entity;
 
+import com.wikiaov.patch.internal.domain.PatchStatus;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -19,7 +20,8 @@ public class GamePatch {
     @Column(insertable = false, updatable = false)
     private long sequence;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private PatchStatus status;
 
     private Instant createdAt;
 
