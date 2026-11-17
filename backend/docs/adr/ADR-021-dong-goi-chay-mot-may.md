@@ -132,6 +132,10 @@
    - `dev-import` trên VPS: khôi phục `wiki`, `community`, rồi đổi mọi issuer kết thúc bằng `/realms/wikiaov` sang issuer
      của stack. Các trigger bất biến của bản đã xuất bản và nhật ký chặn mọi UPDATE; đổi issuer không đổi nội dung, nên riêng
      transaction đó chạy với `session_replication_role = replica`. Không khóa ngoại nào chứa cột issuer.
+   - Provider Google là cài đặt làm tay duy nhất của realm dev cần mang theo (so realm dev với bản import mới của realm local:
+     ngoài nó chỉ có khác biệt về thứ tự, giá trị `localhost` và cài đặt mà realm mẫu đã có). Script xuất chỉ lấy
+     `identityProviders` ra khỏi file realm, không mang secret của client nào khác; `dev-users-import` thêm nó với `SKIP`,
+     nên provider đã cấu hình trên stack được giữ. Dùng lại OAuth client của dev, vốn đã có redirect URI của `athahub.com`.
    - `dev-users-import` trên VPS: `partialImport` của Keycloak với `OVERWRITE` thêm người dùng với nguyên ID, mật khẩu đã băm,
      vai trò và liên kết Google, và thay `service-account-wiki-importer` của realm mẫu bằng bản dev. Realm vẫn là realm mẫu:
      realm dev mang redirect URI `localhost`, các client chỉ có ở dev và secret của dev. Lệnh từ chối realm đã có người dùng,
@@ -160,8 +164,7 @@
 - Lúc chuyển, dev ngừng ghi từ lúc xuất.
 - Phiên đăng nhập và cài đặt realm sửa tay ở dev không được chuyển; mọi người đăng nhập lại, `sync-account-security.ps1` chạy
   lại như với realm mới.
-- Tài khoản chỉ đăng nhập bằng Google cần provider alias `google` trên Keycloak của stack; liên kết đã nằm trong database
-  Keycloak và có hiệu lực khi provider có.
+- Tài khoản chỉ đăng nhập bằng Google dùng provider `google` chuyển từ dev; `GOOGLE_LOGIN_ENABLED=true` bật nút ở Admin.
 - Mục nhật ký cài đặt tài khoản (ADR-028) dùng mã tính từ issuer và subject (`AccountCaller.accountId`); mục ghi ở dev giữ mã
   cũ, nên lịch sử cài đặt của một tài khoản tách làm hai đoạn.
 - Issuer của stack được khai báo một lần (`x-public-issuer` trong `compose.yaml`) cho `wiki-service`, `community-service`
@@ -206,4 +209,7 @@
   - `up`: Flyway áp V072, V073 trên dữ liệu dev, mọi thành phần healthy, `wiki-prerender` tạo 786 trang. Token
     `client_credentials` của `wiki-importer` có `sub` của dev và issuer của stack, gọi API admin được (200). Tài khoản
     `editor`, mở khóa tạm, đăng nhập bằng mật khẩu của realm local: `sub` của dev, `/users/me` trả 200; khóa lại sau đó.
-  - Chưa thử: chạy trên VPS, `pwsh` trên Ubuntu, đăng nhập Google.
+  - Lần chạy thứ hai, với Postgres của bản chép không mở cổng nào: script xuất chạy được cả khi stderr bị chuyển hướng (lần
+    đầu dừng vì Windows PowerShell coi dòng tiến trình của docker là lỗi, đã sửa); provider `google` được thêm (client ID
+    trùng với dev, secret có), liên kết `google` của tài khoản hiện ra.
+  - Chưa thử: chạy trên VPS, `pwsh` trên Ubuntu, đăng nhập Google thật.
