@@ -140,7 +140,7 @@ tới trình duyệt, nên bản build triển khai dùng được như Vite dev
 ### Vùng trên ảnh và điều hướng (09/11/2026)
 
 Ảnh chụp màn hình thông tin tướng trong game giữ một bố cục cố định trên ảnh tỉ lệ 20:9. Các vùng đo trên ảnh 2400 × 1080
-của patch 2026-10-30 nằm trong `captureRegions` và `captureFocusBox` (`src/features/publishing/patch-capture-model.ts`),
+của patch 2026-10-30 nằm trong `captureRegions` và `captureFocusBox` (`src/features/publishing/model/captures/patch-capture-model.ts`),
 tính theo tỉ lệ của ảnh. Ảnh có tỉ lệ khác, ảnh cửa hàng và ảnh chưa nối mục không được đoán vùng.
 
 - **Phóng sẵn vào phần cần đọc:** ảnh tổng quan mở ở cột chi tiết bên trái (sở trường, 4 icon chiêu, vai trò); ảnh chỉ số mở
@@ -165,7 +165,7 @@ tính theo tỉ lệ của ảnh. Ảnh có tỉ lệ khác, ảnh cửa hàng v
 Trang **Sẵn sàng xuất bản** có thêm cột **Ảnh gốc cần chụp** và bộ lọc **Cần chụp ảnh gốc**: với mỗi tướng, mục nào chưa có
 ảnh, ảnh nào không cho thấy điều cần thấy, cần mở màn hình nào trong game và ảnh đó giúp đối chiếu dữ liệu gì. Bản nháp được
 đối chiếu với bộ ảnh của patch của nó; patch chưa có bộ ảnh thì dùng bộ mới nhất. Cách tính nằm ở
-`src/features/publishing/source-image-gaps.ts`:
+`src/features/publishing/model/captures/source-image-gaps.ts`:
 
 - **Chỉ số**: không có ảnh thuộc tính, ảnh chỉ chụp trang tướng (mọi số đều không thấy) hoặc bị che một phần. Tướng mà
   màn Thuộc tính không có dòng tài nguyên (như Charlotte) ghi `noResource: true` trong bản đọc, nên không bị tính là che.
@@ -538,7 +538,7 @@ chú gỡ phụ trợ, ghi chú biên tập, tên gọi khác (mỗi dòng một
 người dùng không phải mô tả game nên cũng giữ nguyên. Tab **Thử hiển thị** của trang thuật ngữ và ô sửa nhãn đặc tính
 của kỹ năng cũng dùng ô này, không còn khung "Kết quả hiển thị" thứ hai.
 
-Tóm tắt kỹ năng (`SkillSummaryField` trong `src/features/publishing/skill-summary-field.tsx`) cũng là ô văn bản thường:
+Tóm tắt kỹ năng (`SkillSummaryField` trong `src/features/publishing/components/skills/skill-summary-field.tsx`) cũng là ô văn bản thường:
 một đoạn, tối đa 300 ký tự, có bộ đếm theo mốc 200 ký tự của quy tắc viết, xuống dòng khi dán được đổi thành khoảng
 trắng. Ô nằm ngay trên ô mô tả của chiêu trong trình sửa kỹ năng và trong phần dịch; khi đọc, tóm tắt hiện trên mô tả và
 tên trong game vẫn được nhận diện.
