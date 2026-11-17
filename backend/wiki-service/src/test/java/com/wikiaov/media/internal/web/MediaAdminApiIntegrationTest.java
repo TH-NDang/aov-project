@@ -103,6 +103,21 @@ class MediaAdminApiIntegrationTest {
     CompetitionMediaReferences competitionReferences;
 
     @Test
+    void anEditorSourceWhoseLabelSoundsUnverifiedStillCreditsTheImage() throws Exception {
+        String id = createAsset("PATCH_ART");
+        String version = JsonPath.read(uploadVersion(id, TestImages.png(29, 29), "image/png"), "$.versionId");
+        mvc.perform(post(BASE + "/assets/" + id + "/versions/" + version + "/sources").with(editor())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"type\":\"COMMUNITY\",\"label\":\"Chưa xác minh tác giả gốc\",\"ownerName\":\"Fan\"}"))
+                .andExpect(status().isOk());
+
+        String page = mvc.perform(get(BASE + "/assets?needsCredit=true&semanticType=PATCH_ART&size=100").with(reader()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        assertThat(JsonPath.<List<String>>read(page, "$.items[*].id")).doesNotContain(id);
+    }
+
+    @Test
     void deletionRemovesAllVersionsAndResumesAfterCacheFailure() throws Exception {
         String assetId = createAsset("OTHER");
         String first = uploadVersion(assetId, TestImages.png(35, 35), "image/png");
