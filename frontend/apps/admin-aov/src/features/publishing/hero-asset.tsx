@@ -85,7 +85,7 @@ export function HeroAsset({
     <ImageCredit
       renderPageReference={(id, label) => <PageReference id={id} label={label} />}
       sources={sources}
-      manageHref={`/image-management?asset=${encodeURIComponent(asset.data.id)}`}
+      manageHref={`/files?asset=${encodeURIComponent(asset.data.id)}`}
       flagMissing
     />
   ) : null

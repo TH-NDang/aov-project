@@ -54,7 +54,7 @@ export function MediaContactPage() {
         title="Góp ý Wiki & liên hệ về ảnh"
         actions={
           <Button variant="outline" asChild>
-            <Link to="/image-management">Kho ảnh</Link>
+            <Link to="/files">Kho ảnh</Link>
           </Button>
         }
       />

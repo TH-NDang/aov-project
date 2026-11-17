@@ -151,7 +151,7 @@ export function DashboardPage() {
             value: images.data?.totalElements,
             hint: "Trong thư viện ảnh",
             icon: NAV_ICONS.imageLibrary,
-            to: "/image-management",
+            to: "/files",
           },
           {
             label: "Bậc trang phục",

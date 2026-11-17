@@ -85,7 +85,7 @@ export function ImageCreditPanel({
           )}
           {assetId && (
             <Link
-              to={`/image-management?asset=${encodeURIComponent(assetId)}`}
+              to={`/files?asset=${encodeURIComponent(assetId)}`}
               className="ml-auto inline-flex items-center gap-1 text-primary hover:underline"
             >
               <PencilLine aria-hidden className="size-3" />

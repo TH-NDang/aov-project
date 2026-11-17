@@ -4,6 +4,7 @@ import { AppShell } from "./layout/app-shell"
 import type { RouteHandle } from "./layout/site-header"
 import { AppLoading, RouteError } from "./route-error"
 import { LegacyMediaRedirect, MediaWorkspace } from "@/features/media/media-workspace"
+import { MovedRedirect } from "./moved-redirect"
 import { HeroCrumb, TournamentCrumb } from "./layout/entity-crumbs"
 
 const handle = (crumb: RouteHandle["crumb"]): RouteHandle => ({ crumb })
@@ -64,7 +65,7 @@ const routes: RouteObject[] = [
           {
             path: "publishing-media",
             handle: { pageTab: false } satisfies RouteHandle,
-            element: <Navigate to="/image-management" replace />,
+            element: <MovedRedirect to="/files" />,
           },
           {
             path: "media-contact-requests",
@@ -72,7 +73,13 @@ const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import("@/features/media/media-contact-page")).MediaContactPage }),
           },
           {
+            // The file manager lived at /image-management before it held more than images.
             path: "image-management",
+            handle: { pageTab: false } satisfies RouteHandle,
+            element: <MovedRedirect to="/files" />,
+          },
+          {
+            path: "files",
             handle: title("Quản lý tệp"),
             lazy: async () => ({
               Component: (await import("@/features/files/file-management-page")).FileManagementPage,

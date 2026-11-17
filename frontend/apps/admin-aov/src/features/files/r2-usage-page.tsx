@@ -22,7 +22,7 @@ import {
 } from "./files-format"
 
 /** How much of the R2 free tier the project uses, from the database or from Cloudflare (ADR-030 section 9). */
-export function StoragePage() {
+export function R2UsagePage() {
   const summary = useStorageSummary()
   return (
     <Page>
@@ -296,7 +296,7 @@ function BucketRow({
       {bucket.role === "SOURCES" && (bucket.orphanFiles ?? 0) > 0 && (
         <p className="type-meta">
           Trong đó {formatCount(bucket.orphanFiles ?? 0)} tệp mồ côi, {formatStorage(bucket.orphanBytes ?? 0)}.{" "}
-          <Link className="underline underline-offset-2" to="/image-management?tab=sources&orphans=1">
+          <Link className="underline underline-offset-2" to="/files?tab=sources&orphans=1">
             Xem và dọn
           </Link>
         </p>
