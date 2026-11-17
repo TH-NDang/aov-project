@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@aov/ui/components/public-overlay"
-import { useWikiContext, wikiText, type WikiPatch } from "../context/wiki-context"
+import { useWikiContext, type WikiPatch, useWikiText } from "../context/wiki-context"
 import { WikiIcon } from "./wiki-icon"
 import "./wiki-version-picker.css"
 
@@ -23,7 +23,7 @@ export function WikiVersionPicker({ changedVariants }: { changedVariants?: Reado
   const { locale, options, optionsPending, seasonId, patchVariantId, setScope } = useWikiContext()
   const root = useRef<HTMLDivElement>(null)
   const [align, setAlign] = useState<"start" | "end">("start")
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const historical = !!(seasonId || patchVariantId)
   const activePatch = patchVariantId || (!seasonId && options?.currentPatchVariantId) || ""
   const selectedPatch = options?.patches.find((patch) => patch.id === activePatch)

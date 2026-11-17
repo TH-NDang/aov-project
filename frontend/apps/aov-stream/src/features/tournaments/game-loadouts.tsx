@@ -16,7 +16,7 @@ import {
   snapshotAt,
   UNKNOWN_REFERENCE,
   type LoadoutKind,
-} from "./tournament-model"
+} from "../../lib/tournament-model"
 
 /** Each kind of loadout in Vietnamese and in English. */
 const KIND_NAMES: Record<LoadoutKind, readonly [string, string]> = {
@@ -24,7 +24,7 @@ const KIND_NAMES: Record<LoadoutKind, readonly [string, string]> = {
   arcana: ["Bảng ngọc", "Arcana"],
   enchantments: ["Phù hiệu", "Enchantments"],
 }
-const ALL_KINDS = "Trang bị, ngọc và phù hiệu"
+const ALL_KINDS: [string, string] = ["Trang bị, ngọc và phù hiệu", "Items, arcana and enchantments"]
 
 function Inventory({ participant, game, time }: { participant: Participant; game: PublishedGame; time: number }) {
   const { text } = useStreamLocale()
@@ -149,9 +149,15 @@ function EquipmentEvents({ game, time }: { game: PublishedGame; time: number }) 
     <details className="tn-events">
       <summary>
         <StreamIcon name="list" size={16} />
-        {text("Giao dịch đã ghi nhận", "Recorded transactions")} <small>{events.length} lượt</small>
+        {text("Giao dịch đã ghi nhận", "Recorded transactions")}{" "}
+        <small>{text(`${events.length} lượt`, `${events.length} ${events.length === 1 ? "entry" : "entries"}`)}</small>
       </summary>
-      <p>Chỉ gồm giao dịch có ghi nhận riêng, không suy từ các ảnh chụp đồ.</p>
+      <p>
+        {text(
+          "Chỉ gồm giao dịch có ghi nhận riêng, không suy từ các ảnh chụp đồ.",
+          "Only transactions recorded on their own, not read from item screenshots.",
+        )}
+      </p>
       <ol>
         {events.map(({ event, participant, key }) => (
           <li key={key}>
@@ -193,9 +199,14 @@ export function GameLoadouts({ game }: { game: PublishedGame }) {
     return (
       <section className="tn-loadouts" aria-labelledby="game-loadouts">
         <div className="tn-heading">
-          <h2 id="game-loadouts">{ALL_KINDS}</h2>
+          <h2 id="game-loadouts">{text(...ALL_KINDS)}</h2>
         </div>
-        <p className="tn-quiet">Chưa ghi nhận trang bị, bảng ngọc hay phù hiệu của tuyển thủ nào trong ván này.</p>
+        <p className="tn-quiet">
+          {text(
+            "Chưa ghi nhận trang bị, bảng ngọc hay phù hiệu của tuyển thủ nào trong ván này.",
+            "No player's items, arcana or enchantments are recorded for this game yet.",
+          )}
+        </p>
       </section>
     )
   const kind = chosen && kinds.includes(chosen) ? chosen : kinds[0]!
@@ -209,10 +220,10 @@ export function GameLoadouts({ game }: { game: PublishedGame }) {
   return (
     <section className="tn-loadouts" aria-labelledby="game-loadouts">
       <div className="tn-heading">
-        <h2 id="game-loadouts">{kinds.length > 1 ? ALL_KINDS : text(...KIND_NAMES[kind])}</h2>
+        <h2 id="game-loadouts">{kinds.length > 1 ? text(...ALL_KINDS) : text(...KIND_NAMES[kind])}</h2>
       </div>
       {kinds.length > 1 && (
-        <div className="hub-pills" role="group" aria-label="Loại thông tin">
+        <div className="hub-pills" role="group" aria-label={text("Loại thông tin", "Kind of information")}>
           {kinds.map((item) => (
             <button type="button" key={item} aria-pressed={kind === item} onClick={() => setChosen(item)}>
               {text(...KIND_NAMES[item])}
@@ -284,7 +295,11 @@ export function GameLoadouts({ game }: { game: PublishedGame }) {
       )}
       {recorded.length > 0 && (missing > 0 || kind === "equipment") && (
         <p className="tn-quiet">
-          {missing > 0 && `Chưa ghi nhận cho ${missing} tuyển thủ còn lại. `}
+          {missing > 0 &&
+            text(
+              `Chưa ghi nhận cho ${missing} tuyển thủ còn lại. `,
+              `Not recorded yet for the other ${missing} ${missing === 1 ? "player" : "players"}. `,
+            )}
           {kind === "equipment" &&
             text(
               "Ô “?” là chưa quan sát; ô trống là đã xác nhận không có đồ.",

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { CompetitionView, PlannedMatch, ResolvedMatch } from "@aov/community-contracts"
-import { competitionMatches } from "../src/features/tournaments/match-model.ts"
+import { competitionMatches } from "../src/lib/match-model.ts"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 import {
   dayHeading,
   matchRound,
@@ -9,8 +10,7 @@ import {
   matchSides,
   scheduleGroups,
   scheduleParts,
-  searchKey,
-} from "../src/features/tournaments/match-schedule.ts"
+} from "../src/lib/match-schedule.ts"
 
 const HOUR = 60 * 60 * 1000
 const NOW = Date.parse("2026-11-13T05:00:00Z")
@@ -242,10 +242,9 @@ test("a match is named by its round, or by its stage when the label only repeats
 })
 
 test("search ignores case and tone marks and reaches teams, aliases and the competition", () => {
-  assert.equal(searchKey("Đấu Trường Danh Vọng"), "dau truong danh vong")
   const [entry] = entries([planned("m", { a: { type: "TEAM", teamId: "sgp" }, b: { type: "TEAM", teamId: "fl" } })])
   const key = matchSearchKey(entry!)
   for (const typed of ["saigon", "SGP", "bong ma", "team flash", "mua dong 2026", "garena"])
-    assert.ok(key.includes(searchKey(typed)), typed)
-  assert.ok(!key.includes(searchKey("box gaming")))
+    assert.ok(key.includes(foldSearchText(typed)), typed)
+  assert.ok(!key.includes(foldSearchText("box gaming")))
 })

@@ -8,7 +8,7 @@ import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { formatCalendarDate, useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { useStreamLocale } from "../../components/stream-locale"
 import { MatchRow } from "./match-components"
-import type { CompetitionMatch } from "./match-model"
+import type { CompetitionMatch } from "../../lib/match-model"
 import {
   dayHeading,
   knownScheduleDay,
@@ -18,7 +18,7 @@ import {
   scheduleParts,
   type ScheduleGroup,
   type ScheduleScope,
-} from "./match-schedule"
+} from "../../lib/match-schedule"
 
 /** Matches shown before the reader scrolls for more. */
 const STEP = 40
@@ -213,7 +213,7 @@ export function ScheduleList({
       )}
       <InfiniteScroll
         query={loader}
-        label="Đang tải thêm trận đấu"
+        label={text("Đang tải thêm trận đấu", "Loading more matches")}
         retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
       />
     </div>
@@ -309,7 +309,7 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
           label={text("Đội", "Team")}
           value={team}
           onChange={(value) => update("team", value)}
-          all="Mọi đội"
+          all={text("Mọi đội", "All teams")}
           options={teamIds.map((id) => [id, teams[id]!.name])}
         />
       )}
@@ -329,12 +329,15 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
           {selectCount > 0 &&
             (folded ? (
               <PublicFilterSheet
-                title="Lọc trận đấu"
+                title={text("Lọc trận đấu", "Filter matches")}
                 triggerLabel={text("Lọc", "Filter")}
                 count={active}
                 resetLabel={text("Xóa lọc", "Clear filters")}
                 onReset={clear}
-                resultLabel={`Xem ${total.toLocaleString(languageTag)} trận`}
+                resultLabel={text(
+                  `Xem ${total.toLocaleString(languageTag)} trận`,
+                  `Show ${total.toLocaleString(languageTag)} ${total === 1 ? "match" : "matches"}`,
+                )}
               >
                 <div className="competition-sheet-filters">{selects}</div>
               </PublicFilterSheet>

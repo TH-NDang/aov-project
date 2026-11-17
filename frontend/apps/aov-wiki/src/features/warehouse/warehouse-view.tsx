@@ -3,9 +3,9 @@ import { TooltipProvider } from "@aov/ui/components/tooltip"
 import { WarehouseViewProvider, type WarehouseImageProps } from "@aov/ui/components/warehouse/warehouse-view"
 import { useWikiContext } from "../../context/wiki-context"
 import { WikiImage } from "../../components/wiki-image"
-import type { HeroMedia } from "../hero/hero-api"
+import type { HeroMedia } from "../../lib/hero-api"
 import { WarehouseIcon } from "./warehouse-icon"
-import type { WarehouseEntry, WarehouseGroup, WarehouseKind } from "./warehouse-types"
+import type { WarehouseEntry, WarehouseGroup, WarehouseKind } from "../../lib/warehouse-types"
 
 const MediaContext = createContext<{ assets: Map<string, HeroMedia>; kind: WarehouseKind } | null>(null)
 

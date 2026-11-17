@@ -1,0 +1,7 @@
+.wiki-guide-star-level {
+  display: inline-flex;
+  gap: 1px;
+  align-items: center;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 40%));
+}

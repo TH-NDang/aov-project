@@ -1,5 +1,5 @@
-import { formLabelRole, heroFormPath } from "../../features/hero/hero-forms.ts"
-import type { HeroRole } from "../../features/hero/hero-classifications.ts"
+import { formLabelRole, heroFormPath } from "../hero-forms.ts"
+import type { HeroRole } from "../hero-classifications.ts"
 import { warehousePath, WAREHOUSE_TABS } from "../wiki-catalog.ts"
 import { headTags } from "./head-tags.ts"
 import {
@@ -15,7 +15,6 @@ import {
   SECTIONS,
   SITE_NAME,
   termMeta,
-  translationFor,
   warehouseEntryMeta,
   type HeroMetaSource,
   type ModeMetaSource,
@@ -26,6 +25,7 @@ import {
   type WarehouseEntryLike,
   type WarehouseTab,
 } from "./page-meta.ts"
+import { warehouseText } from "@aov/ui/lib/warehouse-content"
 
 /** Static pages describe the default market and language; other languages stay a view of the same URL (ADR-022). */
 export const STATIC_SCOPE = { region: "VN", locale: "vi-VN" } as const
@@ -172,7 +172,7 @@ function heroPage(hero: PublishedHero): StaticPage[] {
 
 function warehouseEntryPage(tab: WarehouseTab, entry: PublishedEntry): StaticPage[] {
   const meta = warehouseEntryMeta(tab, entry, LOCALE)
-  const text = translationFor(entry.content.translations, LOCALE)
+  const text = warehouseText(entry.content.translations, LOCALE)
   const body = page(
     text?.name ?? entry.code,
     [
@@ -192,7 +192,7 @@ function warehouseEntryPage(tab: WarehouseTab, entry: PublishedEntry): StaticPag
 function warehouseListPage(tab: WarehouseTab, entries: readonly PublishedEntry[]): StaticPage {
   const meta = sectionMeta(tab, LOCALE)
   const rows = entries.map((entry) => {
-    const text = translationFor(entry.content.translations, LOCALE)
+    const text = warehouseText(entry.content.translations, LOCALE)
     const summary = plainText(text?.summary)
     return `${link(warehousePath(tab, entry.code), text?.name ?? entry.code)}${summary ? `: ${escapeHtml(summary)}` : ""}`
   })

@@ -70,7 +70,7 @@
 .tn-feature-art > b {
   color: #fff;
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .tn-feature-body {
   display: grid;
@@ -240,7 +240,7 @@
   margin: 4px 0 0;
   color: #fff;
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 36px;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -571,7 +571,7 @@
 }
 .tn-links a {
   display: inline-flex;
-  min-height: 28px;
+  min-height: 36px;
   align-items: center;
   gap: 5px;
   color: var(--hub-accent-strong);

@@ -1,18 +1,21 @@
 import { useMemo, type ReactNode } from "react"
+import { MODE_PARAMS, paramNames, readParam, writeParam } from "../../lib/search-params"
 import { useSearchParams } from "react-router"
 import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { foldText, TRAIT_KIND_NAMES, type Trait, type Unit } from "./auto-chess-model"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
+import { TRAIT_KIND_NAMES, type Trait, type Unit } from "./auto-chess-model"
 import { GoldIcon } from "./gold-icon"
 import { costStyle, GuideSearch, TraitIcon, type GuideIndex } from "./guide-ui"
+import { foldSearchText } from "@aov/ui/lib/search-text"
+import "./guide-filters.css"
 
 const KINDS = ["FACTION", "CLASS"] as const
 
-/** The address keys of the unit filter: the search, the price and the chosen factions and classes. */
-export const UNIT_FILTER_KEYS = ["q", "gia", "phe"] as const
+/** The address keys of the unit filter, old spellings included: the search, the price and the factions and classes. */
+export const UNIT_FILTER_KEYS = paramNames([MODE_PARAMS.search, MODE_PARAMS.cost, MODE_PARAMS.traits])
 
 /**
  * What narrows a list of units: part of a name, one price, and factions or classes. The filter lives in the address,
@@ -21,39 +24,41 @@ export const UNIT_FILTER_KEYS = ["q", "gia", "phe"] as const
 export function useUnitFilter(index: GuideIndex) {
   const [params, setParams] = useSearchParams()
   const costs = useMemo(() => [...new Set(index.content.units.map((unit) => unit.cost))].sort((a, b) => a - b), [index])
-  const search = params.get("q") ?? ""
-  const askedCost = Number(params.get("gia"))
+  const search = readParam(params, MODE_PARAMS.search) ?? ""
+  const askedCost = Number(readParam(params, MODE_PARAMS.cost))
   const cost = costs.includes(askedCost) ? askedCost : null
-  const picked = [...new Set((params.get("phe") ?? "").split(","))].filter((code) => index.traits.has(code))
-  const change = (values: { q?: string; gia?: number | null; phe?: string[] }) =>
+  const picked = [...new Set((readParam(params, MODE_PARAMS.traits) ?? "").split(","))].filter((code) =>
+    index.traits.has(code),
+  )
+  const change = (values: { q?: string; cost?: number | null; traits?: string[] }) =>
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
-        const set = (key: string, value: string) => (value ? next.set(key, value) : next.delete(key))
-        if (values.q !== undefined) set("q", values.q)
-        if (values.gia !== undefined) set("gia", values.gia === null ? "" : String(values.gia))
-        if (values.phe !== undefined) set("phe", values.phe.join(","))
+        if (values.q !== undefined) writeParam(next, MODE_PARAMS.search, values.q)
+        if (values.cost !== undefined)
+          writeParam(next, MODE_PARAMS.cost, values.cost === null ? "" : String(values.cost))
+        if (values.traits !== undefined) writeParam(next, MODE_PARAMS.traits, values.traits.join(","))
         return next
       },
       { replace: true, preventScrollReset: true },
     )
-  const needle = foldText(search.trim())
+  const needle = foldSearchText(search.trim())
   // Several factions or several classes widen the choice; a faction and a class narrow it to units with both.
   const pickedOf = (kind: Trait["kind"]) => picked.filter((code) => index.traits.get(code)?.kind === kind)
   const fits = (unit: Unit, codes: string[]) => !codes.length || codes.some((code) => unit.traitCodes.includes(code))
   const base = index.content.units.filter(
-    (unit) => (!cost || unit.cost === cost) && (!needle || foldText(unit.name).includes(needle)),
+    (unit) => (!cost || unit.cost === cost) && (!needle || foldSearchText(unit.name).includes(needle)),
   )
   return {
     search,
     setSearch: (value: string) => change({ q: value }),
     cost,
-    setCost: (value: number | null) => change({ gia: value }),
+    setCost: (value: number | null) => change({ cost: value }),
     costs,
     picked,
     pickedOf,
     toggle: (code: string) =>
-      change({ phe: picked.includes(code) ? picked.filter((entry) => entry !== code) : [...picked, code] }),
+      change({ traits: picked.includes(code) ? picked.filter((entry) => entry !== code) : [...picked, code] }),
     units: base.filter((unit) => fits(unit, pickedOf("FACTION")) && fits(unit, pickedOf("CLASS"))),
     /** How many units a trait would show alongside what the other kind has chosen. */
     countWith: (code: string) => {
@@ -63,9 +68,9 @@ export function useUnitFilter(index: GuideIndex) {
     },
     /** Filters set apart from the search: the price and the traits. */
     active: (cost === null ? 0 : 1) + picked.length,
-    reset: () => change({ gia: null, phe: [] }),
+    reset: () => change({ cost: null, traits: [] }),
     /** Clears the search as well, in one change of the address. */
-    clear: () => change({ q: "", gia: null, phe: [] }),
+    clear: () => change({ q: "", cost: null, traits: [] }),
   }
 }
 
@@ -73,15 +78,14 @@ export type UnitFilter = ReturnType<typeof useUnitFilter>
 
 /** One chip per price, the coin and its number in the price's color; the chosen price again clears it. */
 function CostChips({ filter }: { filter: UnitFilter }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   return (
-    <div className="mode-chip-row" role="group" aria-label={text("Giá", "Cost")}>
+    <div className="wiki-mode-chip-row" role="group" aria-label={text("Giá", "Cost")}>
       {filter.costs.map((cost) => (
         <button
           key={cost}
           type="button"
-          className="mode-chip guide-cost-chip"
+          className="wiki-mode-chip wiki-guide-cost-chip"
           style={costStyle(cost)}
           aria-pressed={filter.cost === cost}
           aria-label={text(`${cost} vàng`, `${cost} gold`)}
@@ -110,7 +114,7 @@ function TraitChoices({
 }) {
   const { locale } = useWikiContext()
   return (
-    <fieldset className="guide-choices">
+    <fieldset className="wiki-guide-choices">
       <legend className={legend ? undefined : "sr-only"}>{wikiText(locale, ...TRAIT_KIND_NAMES[kind])}</legend>
       <div>
         {index.content.traits
@@ -122,7 +126,7 @@ function TraitChoices({
               <button
                 key={trait.code}
                 type="button"
-                className="mode-chip guide-trait-choice"
+                className="wiki-mode-chip wiki-guide-trait-choice"
                 aria-pressed={on}
                 data-empty={(!on && count === 0) || undefined}
                 onClick={() => filter.toggle(trait.code)}
@@ -146,13 +150,13 @@ function TraitMenu({ kind, index, filter }: { kind: Trait["kind"]; index: GuideI
   return (
     <Popover mobileDrawer={false}>
       <PopoverTrigger asChild>
-        <button type="button" className="mode-chip guide-menu-chip" data-active={chosen > 0 || undefined}>
+        <button type="button" className="wiki-mode-chip wiki-guide-menu-chip" data-active={chosen > 0 || undefined}>
           {name}
           {chosen > 0 && <small>{chosen}</small>}
           <WikiIcon name="chevron" size={14} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={8} drawerTitle={name} className="guide-trait-menu">
+      <PopoverContent align="start" sideOffset={8} drawerTitle={name} className="wiki-guide-trait-menu">
         <TraitChoices kind={kind} index={index} filter={filter} legend={false} />
       </PopoverContent>
     </Popover>
@@ -176,18 +180,22 @@ export function UnitFilters({
   inline?: boolean
 }) {
   const layout = usePageLayout()
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const search = (
-    <GuideSearch value={filter.search} onChange={filter.setSearch} label="Tìm quân cờ" placeholder="Tìm quân cờ…" />
+    <GuideSearch
+      value={filter.search}
+      onChange={filter.setSearch}
+      label={text("Tìm quân cờ", "Search pieces")}
+      placeholder={text("Tìm quân cờ…", "Search pieces…")}
+    />
   )
   if (inline)
     return (
-      <div className="guide-filter-stack">
+      <div className="wiki-guide-filter-stack">
         {search}
         <CostChips filter={filter} />
         {KINDS.map((kind) => (
-          <div key={kind} className="guide-choice-row">
+          <div key={kind} className="wiki-guide-choice-row">
             <TraitChoices kind={kind} index={index} filter={filter} />
           </div>
         ))}
@@ -195,17 +203,17 @@ export function UnitFilters({
     )
   if (layout === "compact")
     return (
-      <div className="guide-toolbar">
+      <div className="wiki-guide-toolbar">
         {search}
         <PublicFilterSheet
-          title="Lọc quân cờ"
+          title={text("Lọc quân cờ", "Filter pieces")}
           triggerLabel={text("Lọc", "Filter")}
           count={filter.active}
           resetLabel={text("Xóa lọc", "Clear filters")}
           onReset={filter.reset}
-          resultLabel={`Xem ${filter.units.length} quân cờ`}
+          resultLabel={text(`Xem ${filter.units.length} quân cờ`, `Show ${filter.units.length} pieces`)}
         >
-          <fieldset className="guide-choices">
+          <fieldset className="wiki-guide-choices">
             <legend>{text("Giá", "Cost")}</legend>
             <CostChips filter={filter} />
           </fieldset>
@@ -217,24 +225,23 @@ export function UnitFilters({
       </div>
     )
   return (
-    <div className="guide-toolbar">
+    <div className="wiki-guide-toolbar">
       {search}
       <CostChips filter={filter} />
       {KINDS.map((kind) => (
         <TraitMenu key={kind} kind={kind} index={index} filter={filter} />
       ))}
-      {end && <div className="guide-toolbar-end">{end}</div>}
+      {end && <div className="wiki-guide-toolbar-end">{end}</div>}
     </div>
   )
 }
 
 /** How many units show, and the chosen traits as chips that remove themselves. */
 export function FilterSummary({ index, filter }: { index: GuideIndex; filter: UnitFilter }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const any = filter.active > 0 || !!filter.search.trim()
   return (
-    <div className="guide-summary" role="status">
+    <div className="wiki-guide-summary" role="status">
       <span>
         {filter.units.length} {text("quân cờ", filter.units.length === 1 ? "unit" : "units")}
         {any && ` / ${index.content.units.length}`}
@@ -245,7 +252,7 @@ export function FilterSummary({ index, filter }: { index: GuideIndex; filter: Un
           <button
             key={code}
             type="button"
-            className="mode-chip"
+            className="wiki-mode-chip"
             aria-label={text(`Bỏ lọc ${trait?.name ?? code}`, `Clear the ${trait?.name ?? code} filter`)}
             onClick={() => filter.toggle(code)}
           >
@@ -256,7 +263,7 @@ export function FilterSummary({ index, filter }: { index: GuideIndex; filter: Un
         )
       })}
       {any && (
-        <button type="button" className="guide-clear" onClick={filter.clear}>
+        <button type="button" className="wiki-guide-clear" onClick={filter.clear}>
           {text("Bỏ lọc", "Clear filters")}
         </button>
       )}

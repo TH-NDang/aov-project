@@ -1,6 +1,6 @@
 import { useState, type DragEvent, type ReactNode } from "react"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import {
   BOARD_COLUMNS,
   BOARD_ROWS,
@@ -11,6 +11,7 @@ import {
   type LineupUnit,
 } from "./auto-chess-model"
 import { ChoiceSwitch, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
+import "./lineup-board.css"
 
 /*
  * A player's half of the board as the game draws it: three rows of seven square cells, the front row on top facing
@@ -53,8 +54,7 @@ export function LineupViewSwitch({
   onChange: (view: LineupView) => void
   labels?: boolean
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   return (
     <ChoiceSwitch
       label={text("Cách xem đội hình", "Lineup view")}
@@ -96,8 +96,7 @@ export function BoardGrid({
   footer?: ReactNode
   onDropUnit?: (code: string, row: BoardRow, column: number) => void
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [over, setOver] = useState<string | null>(null)
   const drop = (row: BoardRow, column: number) =>
     onDropUnit && {
@@ -117,17 +116,17 @@ export function BoardGrid({
       },
     }
   return (
-    <div className="board-wrap">
-      <span className="board-enemy" aria-hidden="true">
+    <div className="wiki-guide-board-wrap">
+      <span className="wiki-guide-board-enemy" aria-hidden="true">
         {text("↑ Phía đối thủ", "↑ Opponent's side")}
       </span>
-      <div className="board" role="grid" aria-label={label} data-slot={slot}>
+      <div className="wiki-guide-board" role="grid" aria-label={label} data-slot={slot}>
         {BOARD_ROWS.map((row) => (
-          <div key={row} className="board-row" role="row" aria-label={text(...ROW_NAMES[row])}>
+          <div key={row} className="wiki-guide-board-row" role="row" aria-label={text(...ROW_NAMES[row])}>
             {COLUMNS.map((column) => (
               <div
                 key={column}
-                className="board-cell"
+                className="wiki-guide-board-cell"
                 role="gridcell"
                 aria-label={text(`${ROW_NAMES[row][0]}, ô ${column}`, `${ROW_NAMES[row][1]}, cell ${column}`)}
                 data-cell={`${row}-${column}`}
@@ -161,14 +160,13 @@ export function BoardPiece({
   title?: string
   draggable?: boolean
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const unit = index.units.get(item.unitCode)
   if (!unit) return null
   return (
     <button
       type="button"
-      className="board-piece"
+      className="wiki-guide-board-piece"
       aria-pressed={selected}
       title={title ?? `${unit.name}${item.carry ? text(" · chủ lực", " · carry") : ""}`}
       draggable={draggable || undefined}
@@ -177,11 +175,11 @@ export function BoardPiece({
     >
       <UnitPortrait unit={unit} index={index} />
       {item.carry && (
-        <em className="carry-mark" aria-label={text("Chủ lực", "Carry")}>
+        <em className="wiki-guide-carry-mark" aria-label={text("Chủ lực", "Carry")}>
           M
         </em>
       )}
-      <span className="board-name">{unit.name}</span>
+      <span className="wiki-guide-board-name">{unit.name}</span>
     </button>
   )
 }
@@ -210,8 +208,7 @@ export function LineupBoard({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const { placed, bench } = placeUnits(units.filter((item) => index.units.has(item.unitCode)))
   return (
     <BoardGrid
@@ -222,8 +219,8 @@ export function LineupBoard({
       }}
       footer={
         bench.length > 0 && (
-          <div className="board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
-            <span className="mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
+          <div className="wiki-guide-board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
+            <span className="wiki-mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
             {bench.map((item) => (
               <BoardPiece key={item.unitCode} item={item} index={index} onClick={() => onOpen(item.unitCode)} />
             ))}
@@ -245,13 +242,13 @@ export function ActiveTraits({ units, emblems, index }: { units: LineupUnit[]; e
   if (!counts.length) return null
   return (
     <div
-      className="guide-trait-tags"
+      className="wiki-guide-trait-tags"
       aria-label={wikiText(locale, "Phe và Nghề kích hoạt", "Active Factions and Classes")}
     >
       {counts.map((count) => (
         <span
           key={count.trait.code}
-          className="guide-trait-tag"
+          className="wiki-guide-trait-tag"
           data-active="true"
           title={count.trait.tiers[count.reachedTier]?.effect}
         >

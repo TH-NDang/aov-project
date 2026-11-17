@@ -7,13 +7,13 @@ import {
 } from "@aov/ui/components/public-overlay"
 import owlMark from "../assets/stream-owl.svg"
 import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
-import { useIsMobile } from "@aov/ui/hooks/use-mobile"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useStreamLocale } from "./stream-locale"
 import "./stream-app-switcher.css"
 
 export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
   const { text } = useStreamLocale()
-  const mobile = useIsMobile()
+  const mobile = usePageLayout() === "compact"
   const wikiLogoUrl = new URL("images/mole-logo-v4.png", `${wikiUrl.replace(/\/$/, "")}/`).href
 
   if (mobile)

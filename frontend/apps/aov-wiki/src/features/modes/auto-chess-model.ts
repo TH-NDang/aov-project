@@ -319,8 +319,3 @@ export function ruleBlocks(body: string | null | undefined) {
   }
   return blocks
 }
-
-/** Folds Vietnamese text for search, so an unaccented query finds the accented name. */
-export function foldText(text: string) {
-  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
-}

@@ -1,7 +1,9 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
-import { wikiAccessToken } from "../auth/wiki-auth"
+import { wikiAccessToken } from "../../lib/wiki-auth"
 import type { GuideContent, LineupUnit, ModeImage, RuleSection } from "./auto-chess-model"
+import { WikiApiError, wikiGet, wikiRequest, type WikiRequest } from "../../lib/wiki-api"
 
 export interface ModeAvailability {
   status: "ALWAYS_OPEN" | "LIMITED" | "SPECIAL" | "CLOSED" | "LOCKED" | "UNKNOWN"
@@ -112,81 +114,60 @@ export interface Insights {
 
 export type LineupSort = "popular" | "trending" | "recent"
 
-export class ModeRequestError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string | undefined,
-    message: string,
-  ) {
-    super(message)
-    this.name = "ModeRequestError"
-  }
-}
-
-const BASE = "/api/wiki/v1/game-modes"
+const BASE = "/game-modes"
 /** The signed-in reader's routes live under `/users/me`, like the rest of what belongs to a reader. */
-const READER_BASE = "/api/wiki/v1/users/me/game-modes"
+const READER_BASE = "/users/me/game-modes"
 
-async function readPublic<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`${BASE}${path}`, { signal, credentials: "omit" })
-  if (!response.ok) throw await failure(response)
-  return response.json()
+/**
+ * Every query key of game modes; reads and invalidation both use these. A mode's key starts all of its other keys, so
+ * invalidating it refreshes the guide, the lineups, the statistics and the reader's own state together.
+ */
+export const modeKeys = {
+  cards: ["wiki", "game-modes"] as const,
+  mode: (code: string) => ["wiki", "game-mode", code] as const,
+  guide: (code: string) => [...modeKeys.mode(code), "auto-chess"] as const,
+  community: (code: string, sort: string, unit: string | null | undefined) =>
+    [...modeKeys.mode(code), "community", sort, unit] as const,
+  insights: (code: string) => [...modeKeys.mode(code), "insights"] as const,
+  mine: (code: string, revision: number) => [...modeKeys.mode(code), "me", revision] as const,
 }
 
-async function failure(response: Response) {
-  let code: string | undefined
-  let detail = ""
-  try {
-    const problem = (await response.json()) as { code?: string; detail?: string }
-    code = problem.code
-    detail = problem.detail ?? ""
-  } catch {
-    // A body that is not problem JSON keeps the status only.
-  }
-  return new ModeRequestError(response.status, code, detail || `Request failed with ${response.status}`)
-}
+const readPublic = <T>(path: string, signal?: AbortSignal) => wikiGet<T>(`${BASE}${path}`, signal)
 
 /** Requests of the signed-in reader; the token never goes to public reads, so those stay cacheable. */
-async function readPersonal<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function readPersonal<T>(path: string, request: Pick<WikiRequest, "method" | "body"> = {}): Promise<T> {
   const token = await wikiAccessToken()
-  if (!token) throw new ModeRequestError(401, undefined, "Sign in first.")
-  const response = await fetch(`${READER_BASE}${path}`, {
-    ...init,
-    headers: { ...(init.body ? { "Content-Type": "application/json" } : {}), Authorization: `Bearer ${token}` },
-    credentials: "omit",
-    cache: "no-store",
-  })
-  if (!response.ok) throw await failure(response)
-  return response.status === 204 ? (undefined as T) : response.json()
+  if (!token) throw new WikiApiError(401, undefined, "Sign in first.")
+  return wikiRequest<T>(`${READER_BASE}${path}`, { ...request, token })
 }
 
 export const modeCardsQuery = () =>
   queryOptions({
-    queryKey: ["wiki", "game-modes"],
+    queryKey: modeKeys.cards,
     queryFn: ({ signal }) => readPublic<{ items: ModeCard[] }>("", signal),
     staleTime: 60_000,
   })
 
 export const modeQuery = (code: string) =>
   queryOptions({
-    queryKey: ["wiki", "game-mode", code],
+    queryKey: modeKeys.mode(code),
     queryFn: ({ signal }) => readPublic<PublicMode>(`/${encodeURIComponent(code)}`, signal),
     staleTime: 60_000,
-    retry: (count, error) => !(error instanceof ModeRequestError && error.status === 404) && count < 1,
+    retry: (count, error) => !(error instanceof WikiApiError && error.status === 404) && count < 1,
   })
 
 export const guideQuery = (code: string) =>
   queryOptions({
-    queryKey: ["wiki", "game-mode", code, "auto-chess"],
+    queryKey: modeKeys.guide(code),
     queryFn: ({ signal }) => readPublic<PublicGuide>(`/${encodeURIComponent(code)}/auto-chess`, signal),
     staleTime: 30_000,
-    retry: (count, error) => !(error instanceof ModeRequestError && error.status === 404) && count < 1,
+    retry: (count, error) => !(error instanceof WikiApiError && error.status === 404) && count < 1,
   })
 
 /** Community lineups load page by page as the reader scrolls. */
 export const communityLineupsQuery = (code: string, sort: LineupSort, unit: string | null) =>
   infiniteQueryOptions({
-    queryKey: ["wiki", "game-mode", code, "community", sort, unit],
+    queryKey: modeKeys.community(code, sort, unit),
     queryFn: ({ signal, pageParam }) => {
       const params = new URLSearchParams({ sort, page: String(pageParam), size: "12" })
       if (unit) params.set("unit", unit)
@@ -199,14 +180,14 @@ export const communityLineupsQuery = (code: string, sort: LineupSort, unit: stri
 
 export const insightsQuery = (code: string) =>
   queryOptions({
-    queryKey: ["wiki", "game-mode", code, "insights"],
+    queryKey: modeKeys.insights(code),
     queryFn: ({ signal }) => readPublic<Insights>(`/${encodeURIComponent(code)}/auto-chess/insights`, signal),
     staleTime: 60_000,
   })
 
 export const myStateQuery = (code: string, revision: number) =>
   queryOptions({
-    queryKey: ["wiki", "game-mode", code, "me", revision],
+    queryKey: modeKeys.mine(code, revision),
     queryFn: () => readPersonal<MyState>(`/${encodeURIComponent(code)}/auto-chess`),
     staleTime: 15_000,
     retry: false,
@@ -229,7 +210,7 @@ export interface SaveLineupInput {
 
 export function saveLineup(code: string, input: SaveLineupInput, lineupId?: string) {
   const path = `/${encodeURIComponent(code)}/auto-chess/lineups${lineupId ? `/${encodeURIComponent(lineupId)}` : ""}`
-  return readPersonal<OwnLineup>(path, { method: lineupId ? "PUT" : "POST", body: JSON.stringify(input) })
+  return readPersonal<OwnLineup>(path, { method: lineupId ? "PUT" : "POST", body: input })
 }
 
 export function deleteLineup(code: string, lineupId: string, expectedVersion: number) {
@@ -241,8 +222,8 @@ export function deleteLineup(code: string, lineupId: string, expectedVersion: nu
 
 /** Messages for the errors a reader can cause, in the reader's language. */
 export function lineupErrorMessage(error: unknown, locale = "vi-VN") {
-  const text = (vietnamese: string, english: string) => (locale.startsWith("en") ? english : vietnamese)
-  if (!(error instanceof ModeRequestError))
+  const text = localeText(locale)
+  if (!(error instanceof WikiApiError))
     return text("Không kết nối được máy chủ. Thử lại sau.", "The server could not be reached. Try again later.")
   if (error.status === 401) return text("Đăng nhập để thích hoặc lưu đội hình.", "Sign in to like or save lineups.")
   if (error.status === 429)

@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState, type ComponentPropsWithoutRef } from "react"
 import "./wiki-image.css"
 import { WikiImageCredit as ImageCredit } from "./wiki-image-credit"
-import type { HeroMedia } from "../features/hero/hero-api"
+import type { HeroMedia } from "../lib/hero-api"
 import { focalPosition, type FocalPoint } from "@aov/ui/lib/focal-point"
 
 type WikiImageProps = ComponentPropsWithoutRef<"img"> & {

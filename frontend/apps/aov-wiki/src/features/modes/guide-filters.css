@@ -1,0 +1,124 @@
+.wiki-guide-toolbar-end {
+  display: flex;
+  flex: none;
+  gap: 8px;
+  margin-left: auto;
+}
+/* A price chip: the coin, then the number in the price's color. */
+.wiki-guide-cost-chip {
+  gap: 5px;
+  padding-inline: 10px 12px;
+}
+.wiki-guide-cost-chip b {
+  color: var(--cost-color);
+  font-variant-numeric: tabular-nums;
+}
+/* A chip that opens a list of choices; it takes the chosen look once something in it is chosen. */
+.wiki-guide-menu-chip > svg {
+  opacity: 0.7;
+}
+.wiki-guide-menu-chip[data-active] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.wiki-guide-menu-chip[data-active] small {
+  color: inherit;
+}
+.wiki-guide-menu-chip[data-state="open"] {
+  background: var(--aov-raised);
+}
+.wiki-guide-trait-menu[data-slot="popover-content"] {
+  width: min(480px, calc(100vw - 32px));
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-popover);
+  box-shadow: var(--aov-shadow-lg);
+  color: var(--aov-text);
+}
+/* Choices with their names written out: in the popover, the filter sheet and the unit drawer. */
+.wiki-guide-choices {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.wiki-guide-choices legend {
+  font: var(--wiki-type-category);
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--aov-text);
+}
+.wiki-guide-choices > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wiki-guide-choices > .wiki-mode-chip-row {
+  flex-wrap: nowrap;
+}
+.wiki-guide-trait-choice {
+  padding-left: 6px;
+}
+.wiki-guide-trait-choice[data-empty] {
+  opacity: 0.45;
+}
+.wiki-guide-filter-stack {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+/* What the filters left, and the chosen traits as chips that remove themselves. */
+.wiki-guide-summary {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-height: 32px;
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-guide-summary > span {
+  margin-right: 4px;
+}
+@media (max-width: 1179.98px) {
+  .wiki-guide-toolbar-end .wiki-guide-switch[data-labels] button {
+    position: relative;
+    padding: 0 8px;
+  }
+  .wiki-guide-toolbar-end .wiki-guide-switch[data-labels] button > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-summary {
+    flex-wrap: nowrap;
+    margin: -5px;
+    padding: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .wiki-guide-choice-row .wiki-guide-choices > div {
+    flex-wrap: nowrap;
+    margin: -5px;
+    padding: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .wiki-guide-choice-row .wiki-guide-choices legend {
+    font: var(--wiki-type-meta);
+    margin-bottom: 4px;
+    color: var(--aov-muted);
+  }
+}

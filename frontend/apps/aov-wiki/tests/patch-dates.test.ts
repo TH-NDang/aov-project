@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { formatCalendarDate, formatInZone } from "@aov/ui/lib/time-zone"
-import { patchDayLabel } from "../src/features/home/patch-day-label.ts"
+import { patchDayLabel } from "../src/lib/patch-day-label.ts"
 
 test("a patch day set by the market reads the same to readers in every zone", () => {
   const original = process.env.TZ

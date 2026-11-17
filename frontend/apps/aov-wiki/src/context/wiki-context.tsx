@@ -2,6 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { supportedWikiLocale, warehouseListPath, wikiScopeHref, wikiSection } from "../lib/wiki-catalog"
+import { catalogContextQuery, regionsQuery } from "./wiki-context-api"
+import { localeText, marketName } from "@aov/ui/lib/locale-text"
+import { LocaleProvider } from "@aov/ui/hooks/use-locale-text"
 
 export interface WikiRegion {
   code: string
@@ -53,7 +56,7 @@ export interface WikiScope {
   patchVariantId: string
   includeUnscoped: boolean
 }
-type CatalogContextResponse = {
+export type CatalogContextResponse = {
   regions: WikiRegion[]
   locales: WikiLanguage[]
   seasons: {
@@ -67,59 +70,9 @@ type CatalogContextResponse = {
   current?: { rulesetId?: string | null; seasonId?: string | null; patchVariantId?: string | null }
 }
 
-const COPY: Record<string, [string, string]> = {
-  home: ["Trang chủ", "Home"],
-  contents: ["Mục lục", "Contents"],
-  openContents: ["Mở mục lục", "Open contents"],
-  application: ["Chọn ứng dụng", "Choose application"],
-  more: ["Thêm", "More"],
-  close: ["Đóng", "Close"],
-  market: ["Thị trường dữ liệu", "Game market"],
-  language: ["Ngôn ngữ", "Language"],
-  retry: ["Thử lại", "Retry"],
-  loading: ["Đang tải…", "Loading…"],
-  unavailable: ["Chưa hỗ trợ", "Unavailable"],
-  comingSoon: ["Sắp có", "Coming soon"],
-  marketError: ["Chưa tải được thị trường.", "Markets could not be loaded."],
-  marketNote: [
-    "Thị trường và ngôn ngữ hiển thị được chọn độc lập.",
-    "Game market and display language are independent.",
-  ],
-  characters: ["Sổ tay nhân vật", "Character handbook"],
-  heroes: ["Tướng", "Heroes"],
-  skins: ["Trang phục", "Skins"],
-  warehouse: ["Kho trang bị", "Armory"],
-  items: ["Trang bị", "Equipment"],
-  enchantments: ["Phù hiệu", "Enchantments"],
-  arcana: ["Bảng ngọc", "Arcana"],
-  spells: ["Phụ trợ", "Talents"],
-  news: ["Tham khảo", "Reference"],
-  updates: ["Ghi chú cập nhật", "Patch notes"],
-  updatesShort: ["Cập nhật", "Updates"],
-  terms: ["Thuật ngữ", "Glossary"],
-  map: ["Bản đồ", "Maps"],
-  mode: ["Chế độ chơi", "Game modes"],
-  modes: ["Chế độ chơi", "Game modes"],
-  play: ["Lối chơi", "Gameplay"],
-  search: ["Tìm kiếm", "Search"],
-  searchHeroes: ["Tìm tướng", "Search heroes"],
-  utilities: ["Tiện ích", "Utilities"],
-  account: ["Tài khoản", "Account"],
-  feedback: ["Phản hồi vấn đề", "Report an issue"],
-  signInNote: ["Đăng nhập để lưu nội dung yêu thích", "Sign in to save your favorites"],
-}
-/** The backend names each market in Vietnamese only; English readers get these names instead. */
-export const MARKET_NAMES: Record<string, string> = {
-  VN: "Vietnam",
-  TH: "Thailand",
-  TW: "Taiwan",
-  ID: "Indonesia",
-  GLOBAL: "Global",
-}
 const PREFERENCE_KEY = "aov-wiki:browsing:v1"
 const UI_LANGUAGES = new Set(["vi-VN", "en-US"])
-export const wikiText = (locale: string, vietnamese: string, english: string) =>
-  locale.startsWith("en") ? english : vietnamese
+export const wikiText = (locale: string, vietnamese: string, english: string) => localeText(locale)(vietnamese, english)
 
 function readPreferences(): { region?: string; locale?: string } {
   try {
@@ -133,11 +86,6 @@ function readPreferences(): { region?: string; locale?: string } {
   } catch {
     return {}
   }
-}
-async function readPublic<T>(path: string, signal: AbortSignal): Promise<T> {
-  const response = await fetch(`/api/wiki/v1${path}`, { signal, credentials: "omit" })
-  if (!response.ok) throw new Error("Wiki browsing options are unavailable.")
-  return response.json()
 }
 function normalizeOptions(value: CatalogContextResponse): WikiOptions {
   return {
@@ -189,21 +137,8 @@ function useWikiState() {
   useEffect(() => {
     document.documentElement.lang = locale
   }, [locale])
-  const markets = useQuery({
-    queryKey: ["wiki", "regions"],
-    queryFn: ({ signal }) => readPublic<WikiRegion[]>("/regions", signal),
-    staleTime: 300_000,
-    retry: 1,
-  })
-  const context = useQuery({
-    queryKey: ["wiki", "catalog-context", region, locale],
-    queryFn: async ({ signal }) =>
-      normalizeOptions(
-        await readPublic<CatalogContextResponse>(`/catalog-context?${new URLSearchParams({ region, locale })}`, signal),
-      ),
-    staleTime: 60_000,
-    retry: 1,
-  })
+  const markets = useQuery(regionsQuery)
+  const context = useQuery({ ...catalogContextQuery(region, locale), select: normalizeOptions })
   useEffect(() => {
     if (!markets.data?.some((market) => market.code === region && market.available) || !UI_LANGUAGES.has(locale)) return
     try {
@@ -269,15 +204,14 @@ function useWikiState() {
     (path: string) => wikiScopeHref(path, { region, locale, seasonId, patchVariantId, includeUnscoped, section }),
     [region, locale, seasonId, patchVariantId, includeUnscoped, section],
   )
-  const t = useCallback((key: string) => COPY[key]?.[locale.startsWith("en") ? 1 : 0] ?? key, [locale])
-  const english = locale.startsWith("en")
   const marketList = markets.data ?? context.data?.regions
   const regions = useMemo(
     () =>
-      (marketList ?? []).map((market) =>
-        english ? { ...market, displayName: MARKET_NAMES[market.code] ?? market.displayName } : market,
-      ),
-    [marketList, english],
+      (marketList ?? []).map((market) => ({
+        ...market,
+        displayName: marketName(market.code, locale, market.displayName),
+      })),
+    [marketList, locale],
   )
   return {
     region,
@@ -290,7 +224,6 @@ function useWikiState() {
     setLocale,
     setScope,
     href,
-    t,
     options: context.data,
     optionsPending: context.isPending,
     optionsError: context.error,
@@ -304,10 +237,23 @@ function useWikiState() {
 const WikiContext = createContext<ReturnType<typeof useWikiState> | null>(null)
 export function WikiContextProvider({ children }: { children: ReactNode }) {
   const state = useWikiState()
-  return <WikiContext.Provider value={state}>{children}</WikiContext.Provider>
+  return (
+    <WikiContext.Provider value={state}>
+      <LocaleProvider locale={state.locale}>{children}</LocaleProvider>
+    </WikiContext.Provider>
+  )
 }
 export function useWikiContext() {
   const context = useContext(WikiContext)
   if (!context) throw new Error("WikiContextProvider is required.")
   return context
+}
+
+/**
+ * The Wiki's one way to write interface text in the reader's language: `const text = useWikiText()`, then
+ * `text(vietnamese, english)`. Code outside components calls `wikiText(locale, vietnamese, english)`.
+ */
+export function useWikiText() {
+  const { locale } = useWikiContext()
+  return useMemo(() => localeText(locale), [locale])
 }

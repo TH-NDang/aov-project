@@ -19,7 +19,7 @@ import {
   warehouseText,
   type PublishedWarehouseRecord,
   type WarehouseEntry,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 
 const FAMILY_NAMES: Record<ArcanaFamily, [string, string]> = {
   physical: ["Công vật lý", "Physical"],

@@ -2,6 +2,7 @@ import { useState, type ComponentProps, type ReactNode } from "react"
 import { X } from "lucide-react"
 import { DrawerClose, DrawerContent, DrawerHandle, DrawerTitle, DrawerDescription, DrawerTrigger } from "./drawer"
 import { PublicDrawer as Drawer } from "./public-overlay"
+import { localeText } from "@aov/ui/lib/locale-text"
 import "./public-account-menu.css"
 import "./public-preferences-drawer.css"
 
@@ -19,7 +20,7 @@ export function PublicPreferencesDrawer({
   onCloseAutoFocus?: ComponentProps<typeof DrawerContent>["onCloseAutoFocus"]
 }) {
   const [open, setOpen] = useState(false)
-  const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
+  const text = localeText(locale)
   return (
     <Drawer open={open} onOpenChange={setOpen} handleOnly shouldScaleBackground={false}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>

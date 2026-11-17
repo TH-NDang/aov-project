@@ -38,7 +38,7 @@
   width: 6px;
   height: 6px;
   flex: none;
-  border-radius: 50%;
+  border-radius: var(--aov-radius-pill);
   background: var(--aov-accent);
 }
 .public-tab-count {
@@ -74,7 +74,7 @@
   min-width: 18px;
   height: 18px;
   place-items: center;
-  border-radius: 9px;
+  border-radius: var(--aov-radius-pill);
   padding-inline: 4px;
   background: var(--aov-accent);
   color: var(--aov-on-accent, var(--aov-bg));

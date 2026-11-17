@@ -8,9 +8,9 @@ import { StreamImage } from "../../components/stream-image"
 import { useStreamLocale } from "../../components/stream-locale"
 import { GameLoadouts } from "./game-loadouts"
 import { MatchHead, MatchTabs, seriesHeadOf } from "./match-components"
-import { orderedMatchGames } from "./match-model"
+import { orderedMatchGames } from "../../lib/match-model"
 import { ReferenceArt } from "./reference-art"
-import { gameQuery, matchGamesQuery } from "./tournament-api"
+import { gameQuery, matchGamesQuery } from "../../lib/tournament-api"
 import {
   clock,
   findReference,
@@ -21,7 +21,7 @@ import {
   referenceName,
   seriesSides,
   UNKNOWN_REFERENCE,
-} from "./tournament-model"
+} from "../../lib/tournament-model"
 
 /** A patch code that is the day the patch came out. */
 const DAY = /^\d{4}-\d{2}-\d{2}$/
@@ -44,7 +44,7 @@ function Draft({ game, side }: { game: PublishedGame; side: GameSide }) {
         {game.content.winner === side.side && (
           <span className="tn-win">
             <StreamIcon name="trophy" size={13} />
-            <span>Thắng ván này</span>
+            <span>{text("Thắng ván này", "Won this game")}</span>
           </span>
         )}
       </header>
@@ -145,7 +145,7 @@ function PublishedGameView({
           tint={head.tint}
           kicker={head.kicker}
           teams={head.teams}
-          scoreNote="Tỷ số trận"
+          scoreNote={text("Tỷ số trận", "Match score")}
           more={
             <>
               {patch}
@@ -160,7 +160,7 @@ function PublishedGameView({
           }
         >
           <span className="tn-duel-game">{text(`Ván ${number}`, `Game ${number}`)}</span>
-          <span title="Thời lượng ván đấu">
+          <span title={text("Thời lượng ván đấu", "Game length")}>
             <StreamIcon name="clock" size={14} />
             {durationSeconds ? clock(durationSeconds) : text("Chưa rõ thời lượng", "Unknown duration")}
           </span>
@@ -179,7 +179,10 @@ function PublishedGameView({
         <footer className="tn-footnote">
           {note && <p>{plainNote(note)}</p>}
           <p>
-            Tên và ảnh giữ theo dữ liệu đã xuất bản cho ván này.
+            {text(
+              "Tên và ảnh giữ theo dữ liệu đã xuất bản cho ván này.",
+              "Names and pictures stay as published for this game.",
+            )}
             {scope?.includeUnscoped &&
               text(
                 " Một số mục được đối chiếu từ dữ liệu nền chưa xác định ngày áp dụng.",
@@ -220,7 +223,7 @@ export function GamePage() {
                 {text("Thử lại", "Retry")}
               </button>
               <Link className="cp-button" to="/games">
-                Về danh sách ván đấu
+                {text("Về danh sách ván đấu", "Back to the game list")}
               </Link>
             </div>
           </div>

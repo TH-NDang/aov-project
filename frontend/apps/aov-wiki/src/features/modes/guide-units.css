@@ -1,0 +1,316 @@
+.wiki-guide-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wiki-guide-members button {
+  padding: 0;
+  border: 0;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  cursor: pointer;
+}
+.wiki-guide-members button[aria-current] .wiki-guide-portrait {
+  box-shadow: 0 0 0 2px var(--aov-accent);
+}
+.wiki-guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* A name shown near the column's edge may reach into the gutter, never past the screen. */
+.wiki-guide-unit-ladder {
+  display: grid;
+  overflow-x: clip;
+  overflow-clip-margin: var(--wiki-gutter);
+}
+.wiki-guide-unit-rank {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 12px 0;
+  border-top: 1px solid var(--aov-line);
+}
+.wiki-guide-unit-rank:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.wiki-guide-unit-rank-label {
+  display: grid;
+  gap: 2px;
+  padding-top: 22px;
+}
+.wiki-guide-unit-rank-label .wiki-guide-cost {
+  font: var(--wiki-type-section);
+  gap: 6px;
+}
+.wiki-guide-unit-rank-label small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-guide-unit-grid {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 4px;
+}
+.wiki-guide-unit-tile {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 2px;
+  border: 0;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  color: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.wiki-guide-unit-tile:hover {
+  background: var(--aov-surface);
+}
+.wiki-guide-unit-tile strong {
+  font: var(--wiki-type-meta);
+  max-width: 100%;
+  color: var(--aov-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.wiki-guide-unit-tile .wiki-guide-unit-traits {
+  gap: 3px;
+}
+.wiki-guide-unit-tile .wiki-guide-trait-icon {
+  width: 16px;
+  height: 16px;
+}
+.wiki-guide-unit-tile .wiki-guide-unit-trait-divider {
+  margin: 0 2px;
+}
+.wiki-guide-unit-tile:hover .wiki-guide-trait-tip::after {
+  z-index: 11;
+}
+.wiki-guide-unit-incomplete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--aov-muted);
+}
+/* Tables: straight on the page, rows split by rules, numbers aligned on the right. */
+.wiki-guide-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+.wiki-guide-table {
+  font: var(--wiki-type-body);
+  width: 100%;
+  border-collapse: collapse;
+}
+.wiki-guide-table th,
+.wiki-guide-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--aov-line);
+  text-align: left;
+  vertical-align: middle;
+}
+.wiki-guide-table th:first-child,
+.wiki-guide-table td:first-child {
+  padding-left: 0;
+}
+.wiki-guide-table th:last-child,
+.wiki-guide-table td:last-child {
+  padding-right: 0;
+}
+.wiki-guide-table thead th {
+  font: var(--wiki-type-category);
+  border-bottom-color: var(--aov-line-strong);
+  color: var(--aov-muted);
+  white-space: nowrap;
+}
+.wiki-guide-table tbody th {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+.wiki-guide-table .wiki-guide-num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-guide-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.wiki-guide-unit-table td:last-child .wiki-guide-unit-traits {
+  flex-wrap: nowrap;
+}
+.wiki-guide-unit-table .wiki-guide-unit-trait-part {
+  flex-wrap: nowrap;
+}
+/* A sortable column: a muted ↕ until it sorts, then the direction and, with several, its rank. */
+.wiki-guide-sort-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  margin: -6px -8px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.wiki-guide-sort-head:hover {
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+.wiki-guide-sort-head[data-active="true"] {
+  color: var(--aov-accent-strong);
+}
+.wiki-guide-sort-mark {
+  opacity: 0.45;
+}
+.wiki-guide-sort-head[data-active="true"] .wiki-guide-sort-mark {
+  opacity: 1;
+}
+.wiki-guide-sort-rank {
+  font: var(--wiki-type-meta);
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+  font-weight: 700;
+}
+.wiki-guide-sort-rules {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.wiki-guide-sort-rules > span:first-child {
+  font: var(--wiki-type-meta);
+  margin-right: 2px;
+  color: var(--aov-muted);
+}
+.wiki-guide-sort-rule {
+  display: inline-flex;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--aov-accent);
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-accent-soft);
+}
+.wiki-guide-sort-rule button {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--aov-accent-strong);
+  cursor: pointer;
+}
+.wiki-guide-sort-rule button + button {
+  padding: 0 10px;
+  border-left: 1px solid color-mix(in srgb, var(--aov-accent) 40%, transparent);
+}
+.wiki-guide-sort-rule button:focus-visible {
+  outline-offset: -2px;
+}
+/* A unit in the drawer: its head, then its skill, stats and traits split by rules. */
+.wiki-guide-detail {
+  display: grid;
+  gap: 16px;
+}
+.wiki-guide-detail-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.wiki-guide-detail-head > div {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  min-width: 0;
+}
+.wiki-guide-detail-head h2 {
+  font: var(--wiki-type-page);
+  color: var(--aov-text);
+}
+.wiki-guide-skill {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+}
+.wiki-guide-skill .wiki-guide-icon {
+  width: 48px;
+  height: 48px;
+}
+.wiki-guide-skill > div {
+  display: grid;
+  gap: 4px;
+}
+.wiki-guide-skill h3,
+.wiki-guide-detail-block h3 {
+  font: var(--wiki-type-entry);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--aov-text);
+}
+.wiki-guide-skill p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+  white-space: pre-line;
+}
+.wiki-guide-skill .wiki-guide-values {
+  font: var(--wiki-type-category);
+  color: var(--aov-accent-strong);
+}
+@media (max-width: 1179.98px) {
+  .wiki-guide-unit-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-unit-rank {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 14px 0 10px;
+  }
+  .wiki-guide-unit-rank-label {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-top: 0;
+  }
+  .wiki-guide-unit-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+  }
+  .wiki-guide-unit-tile {
+    padding: 6px 1px;
+  }
+}
+@media (min-width: 600px) and (max-width: 899.98px) {
+  .wiki-guide-unit-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-guide-unit-tile {
+    transition: none;
+  }
+}

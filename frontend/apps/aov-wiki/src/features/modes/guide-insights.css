@@ -1,0 +1,103 @@
+/* Analysis: two columns of sections, each a list of plain bars with exact numbers. */
+.wiki-guide-insights-lead {
+  font: var(--wiki-type-body);
+  max-width: 72ch;
+  color: var(--aov-text-soft);
+}
+/* The long list of traits by unit count takes the left column under the most used units; the short lists stack right. */
+.wiki-guide-insights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto auto auto auto 1fr;
+  grid-template-areas:
+    "units traits"
+    "members costs"
+    "members health"
+    "members attack"
+    "members .";
+  gap: 36px 48px;
+  align-items: start;
+}
+.wiki-guide-insights > [data-area] {
+  min-width: 0;
+}
+.wiki-guide-insights > [data-area="units"] {
+  grid-area: units;
+}
+.wiki-guide-insights > [data-area="traits"] {
+  grid-area: traits;
+}
+.wiki-guide-insights > [data-area="costs"] {
+  grid-area: costs;
+}
+.wiki-guide-insights > [data-area="health"] {
+  grid-area: health;
+}
+.wiki-guide-insights > [data-area="attack"] {
+  grid-area: attack;
+}
+.wiki-guide-insights > [data-area="members"] {
+  grid-area: members;
+}
+.wiki-guide-insight-bars {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-guide-insight-bar {
+  font: var(--wiki-type-body);
+  display: grid;
+  grid-template-columns: minmax(150px, 2fr) minmax(0, 3fr) 56px;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  color: var(--aov-text-soft);
+}
+.wiki-guide-insight-label {
+  min-width: 0;
+}
+.wiki-guide-insight-label .wiki-guide-name-button {
+  font: var(--wiki-type-body);
+  text-decoration: none;
+}
+.wiki-guide-insight-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-surface);
+}
+.wiki-guide-insight-track > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--aov-chart);
+}
+.wiki-guide-insight-bar > b {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-guide-insight-bar[data-loading] .wiki-guide-insight-label {
+  height: 14px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-insights {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas: none;
+    gap: 32px;
+  }
+  .wiki-guide-insights > [data-area] {
+    grid-area: auto;
+  }
+  .wiki-guide-insight-bar {
+    grid-template-columns: minmax(120px, 1.4fr) minmax(0, 1fr) 52px;
+    gap: 8px;
+  }
+}

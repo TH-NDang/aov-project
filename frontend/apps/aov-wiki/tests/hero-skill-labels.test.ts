@@ -5,7 +5,7 @@ import {
   localizedRankLabel,
   localizedSkillCost,
   localizedStateName,
-} from "../src/features/hero/hero-skill-labels.ts"
+} from "../src/features/hero/model/hero-skill-labels.ts"
 
 test("skill labels stay as recorded for Vietnamese readers", () => {
   assert.equal(localizedRankLabel("ST gốc", "vi-VN"), "ST gốc")

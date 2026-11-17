@@ -8,39 +8,39 @@
   --app-selected: var(--hub-accent-soft, color-mix(in srgb, var(--primary) 9%, var(--popover)));
 }
 .public-app-theme[data-appearance="wiki"] {
-  --app-text: #f4f0e7;
-  --app-muted: #a2aab9;
-  --app-surface: #171c25;
+  --app-text: var(--aov-text);
+  --app-muted: var(--aov-muted);
+  --app-surface: var(--aov-popover);
   --app-border: #ffffff1f;
   --app-hover: #ffffff0a;
-  --app-accent: #e4c88e;
-  --app-selected: #e4c88e0d;
-  --brand-wiki-ink: #f5e6cc;
-  --brand-wiki-accent: #e5b566;
-  --brand-wiki-tint: #e5b5660d;
-  --brand-stream-ink: #eee0ba;
-  --brand-stream-accent: #aebbe3;
-  --brand-stream-tint: #aebbe314;
+  --app-accent: var(--aov-accent);
+  --app-selected: var(--aov-accent-soft);
+  --brand-wiki-ink: var(--aov-brand-wiki-ink);
+  --brand-wiki-accent: var(--aov-brand-wiki-accent);
+  --brand-wiki-tint: color-mix(in srgb, var(--aov-brand-wiki-accent) 5%, transparent);
+  --brand-stream-ink: var(--aov-brand-stream-ink);
+  --brand-stream-accent: var(--aov-brand-stream-accent);
+  --brand-stream-tint: color-mix(in srgb, var(--aov-brand-stream-accent) 8%, transparent);
 }
 .public-app-wordmark[data-product="wiki"] {
-  --wordmark-ink: var(--brand-wiki-ink, #f5e6cc);
-  --wordmark-accent: var(--brand-wiki-accent, #e5b566);
+  --wordmark-ink: var(--brand-wiki-ink, var(--aov-brand-wiki-ink));
+  --wordmark-accent: var(--brand-wiki-accent, var(--aov-brand-wiki-accent));
   --wordmark-line: var(--wordmark-accent);
 }
 .public-app-wordmark[data-product="stream"] {
   --wordmark-ink: var(--aov-stream-cream);
-  --wordmark-accent: #b6bfdf;
-  --wordmark-line: #d3a857;
+  --wordmark-accent: var(--aov-brand-stream-wordmark);
+  --wordmark-line: var(--aov-stream-gold);
 }
 .public-app-option[data-product="wiki"],
 .public-app-trigger[data-product="wiki"] {
-  --app-accent: var(--brand-wiki-accent, #e5b566);
-  --app-selected: var(--brand-wiki-tint, #e5b5660d);
+  --app-accent: var(--brand-wiki-accent, var(--aov-brand-wiki-accent));
+  --app-selected: var(--brand-wiki-tint, color-mix(in srgb, var(--aov-brand-wiki-accent) 5%, transparent));
 }
 .public-app-option[data-product="stream"],
 .public-app-trigger[data-product="stream"] {
-  --app-accent: var(--brand-stream-accent, #aebbe3);
-  --app-selected: var(--brand-stream-tint, #aebbe314);
+  --app-accent: var(--brand-stream-accent, var(--aov-brand-stream-accent));
+  --app-selected: var(--brand-stream-tint, color-mix(in srgb, var(--aov-brand-stream-accent) 8%, transparent));
 }
 .public-app-wordmark {
   display: inline-flex;
@@ -58,7 +58,7 @@
   display: inline-block;
   padding-right: 0.04em;
   font-family: "Arial Black", "Segoe UI", sans-serif;
-  font-weight: 900;
+  font-weight: 700;
   font-style: italic;
   letter-spacing: -0.075em;
   line-height: 0.95;
@@ -96,7 +96,7 @@
   flex-shrink: 0;
   padding: 4px 6px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: var(--aov-radius-control);
   background: transparent;
   color: var(--app-muted);
   cursor: pointer;
@@ -114,7 +114,7 @@
   width: 22px;
   height: 22px;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--aov-radius-control);
   background: var(--app-hover);
   color: var(--app-muted);
 }
@@ -130,12 +130,10 @@
   width: min(352px, calc(100vw - 24px));
   padding: 8px;
   border: 1px solid var(--app-border);
-  border-radius: 16px;
+  border-radius: var(--aov-radius-media);
   background: var(--app-surface);
   color: var(--app-text);
-  box-shadow:
-    0 16px 48px -12px #0005,
-    0 3px 8px #0001;
+  box-shadow: var(--aov-shadow-lg);
 }
 .public-app-menu-title {
   display: block;
@@ -155,7 +153,7 @@
   min-height: 86px;
   padding: 12px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--aov-radius-card);
   color: var(--app-text);
   text-decoration: none;
   cursor: pointer;
@@ -180,7 +178,7 @@
   width: 44px;
   height: 44px;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: var(--aov-radius-card);
   object-fit: cover;
   box-shadow: 0 0 0 1px #ffffff14;
 }
@@ -213,7 +211,7 @@
 .public-app-current::before {
   width: 4px;
   height: 4px;
-  border-radius: 50%;
+  border-radius: var(--aov-radius-pill);
   background: currentColor;
   content: "";
 }

@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.json && vite build",
     "prerender": "node --experimental-strip-types scripts/prerender.mts",
     "preview": "vite preview --port 5173 --strictPort",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p lint/tsconfig.json",
+    "lint": "node --experimental-strip-types lint/source-rules.ts",
     "test": "node --experimental-strip-types --test \"tests/*.test.ts\"",
     "test:modes": "node --experimental-strip-types --test tests/auto-chess-model.test.ts",
     "test:warehouse": "node --experimental-strip-types --test tests/item-description.test.ts tests/warehouse-item-layout.test.ts tests/warehouse-shop-layout.test.ts tests/wiki-catalog.test.ts"

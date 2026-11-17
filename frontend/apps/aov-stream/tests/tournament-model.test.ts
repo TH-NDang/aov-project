@@ -11,7 +11,7 @@ import {
   seriesSides,
   seriesTeams,
   snapshotAt,
-} from "../src/features/tournaments/tournament-model.ts"
+} from "../src/lib/tournament-model.ts"
 import type { EquipmentSnapshot, GameSide, Participant, PublishedGame } from "@aov/community-contracts"
 
 const snapshot = (atSeconds: number): EquipmentSnapshot => ({

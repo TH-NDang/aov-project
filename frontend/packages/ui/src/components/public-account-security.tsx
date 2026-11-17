@@ -1,4 +1,14 @@
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react"
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react"
 import { KeyRound, Laptop, LogOut, MonitorSmartphone, RefreshCw, ShieldCheck, Smartphone } from "lucide-react"
 import type { AccountAction, AccountActionResult, SignInOptions } from "../lib/public-auth"
 import {
@@ -11,6 +21,8 @@ import {
   type SecurityOverview,
   type SessionList,
 } from "../lib/account-security"
+import { LocalTime } from "./local-time"
+import { isEnglishLocale, localeText } from "@aov/ui/lib/locale-text"
 import "./public-account-security.css"
 
 type Text = (vi: string, en: string) => string
@@ -27,7 +39,7 @@ export type PublicAccountSecurityProps = {
 
 /** Account settings shared by the public apps: password, signed-in devices and two-step sign-in (ADR-028). */
 export function PublicAccountSecurity({ locale, api, startAction, actionResult }: PublicAccountSecurityProps) {
-  const text: Text = useCallback((vi, en) => (locale.startsWith("en") ? en : vi), [locale])
+  const text: Text = useMemo(() => localeText(locale), [locale])
   const [overview, setOverview] = useState<SecurityOverview | null>(null)
   const [sessions, setSessions] = useState<SessionList | null>(null)
   const [loadError, setLoadError] = useState(false)
@@ -170,18 +182,18 @@ function Section({ icon, title, children }: { icon: ReactNode; title: string; ch
   )
 }
 
-function formatDate(value: string | null, locale: string) {
-  if (!value) return null
-  return new Intl.DateTimeFormat(locale.startsWith("en") ? "en-US" : "vi-VN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value))
+/** The parts of one line of facts, with a dot between the ones that are there. */
+function factLine(parts: ReactNode[]) {
+  return parts
+    .filter(Boolean)
+    .flatMap((part, at) => (at === 0 ? [part] : [" · ", part]))
+    .map((part, at) => <Fragment key={at}>{part}</Fragment>)
 }
 
 function relative(value: string | null, locale: string) {
   if (!value) return null
   const seconds = Math.round((new Date(value).getTime() - Date.now()) / 1000)
-  const format = new Intl.RelativeTimeFormat(locale.startsWith("en") ? "en" : "vi", { numeric: "auto" })
+  const format = new Intl.RelativeTimeFormat(isEnglishLocale(locale) ? "en" : "vi", { numeric: "auto" })
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
     ["day", 86400],
     ["hour", 3600],
@@ -344,17 +356,21 @@ function PasswordSection({
   return (
     <Section icon={<KeyRound size={18} aria-hidden="true" />} title={text("Mật khẩu", "Password")}>
       <p className="pas-muted">
-        {hasPassword
-          ? overview.password.updatedAt
-            ? text(
-                `Đổi lần gần nhất: ${formatDate(overview.password.updatedAt, locale)}.`,
-                `Last changed ${formatDate(overview.password.updatedAt, locale)}.`,
-              )
-            : text("Tài khoản đang dùng mật khẩu.", "Your account has a password.")
-          : text(
-              "Tài khoản chưa có mật khẩu (ví dụ chỉ đăng nhập bằng Google). Bạn có thể đặt mật khẩu.",
-              "Your account has no password yet (for example Google-only sign-in). You can set one.",
-            )}
+        {hasPassword ? (
+          overview.password.updatedAt ? (
+            <>
+              {text("Đổi lần gần nhất: ", "Last changed ")}
+              <LocalTime value={overview.password.updatedAt} locale={locale} />.
+            </>
+          ) : (
+            text("Tài khoản đang dùng mật khẩu.", "Your account has a password.")
+          )
+        ) : (
+          text(
+            "Tài khoản chưa có mật khẩu (ví dụ chỉ đăng nhập bằng Google). Bạn có thể đặt mật khẩu.",
+            "Your account has no password yet (for example Google-only sign-in). You can set one.",
+          )
+        )}
       </p>
       {!overview.passwordChangeAvailable ? (
         <p className="pas-muted">
@@ -427,9 +443,10 @@ function PasswordSection({
         <form className="pas-form" onSubmit={(event) => void confirm(event)} noValidate>
           <p>
             {text(
-              `Đã gửi mã 6 số tới ${challenge.emailHint}. Mã hết hạn lúc ${formatDate(challenge.expiresAt, locale)}.`,
-              `A 6-digit code was sent to ${challenge.emailHint}. It expires at ${formatDate(challenge.expiresAt, locale)}.`,
+              `Đã gửi mã 6 số tới ${challenge.emailHint}. Mã hết hạn lúc `,
+              `A 6-digit code was sent to ${challenge.emailHint}. It expires at `,
             )}
+            <LocalTime value={challenge.expiresAt} locale={locale} />.
           </p>
           <label htmlFor={`${id}-code`}>
             <span>{text("Mã xác nhận", "Confirmation code")}</span>
@@ -630,16 +647,15 @@ function SessionRow({
             .join(" · ")}
         </span>
         <span>
-          {[
-            session.startedAt &&
-              text(
-                `Đăng nhập ${formatDate(session.startedAt, locale)}`,
-                `Signed in ${formatDate(session.startedAt, locale)}`,
-              ),
-            apps && apps,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
+          {factLine([
+            session.startedAt && (
+              <>
+                {text("Đăng nhập ", "Signed in ")}
+                <LocalTime value={session.startedAt} locale={locale} />
+              </>
+            ),
+            apps,
+          ])}
         </span>
       </div>
       {!session.current &&
@@ -722,16 +738,15 @@ function TwoFactorSection({
             )}
           </p>
           <p className="pas-muted">
-            {[
+            {factLine([
               factor.label && text(`Thiết bị: ${factor.label}`, `Device: ${factor.label}`),
-              factor.createdAt &&
-                text(
-                  `Bật từ ${formatDate(factor.createdAt, locale)}`,
-                  `On since ${formatDate(factor.createdAt, locale)}`,
-                ),
-            ]
-              .filter(Boolean)
-              .join(" · ")}
+              factor.createdAt && (
+                <>
+                  {text("Bật từ ", "On since ")}
+                  <LocalTime value={factor.createdAt} locale={locale} />
+                </>
+              ),
+            ])}
           </p>
           <p className="pas-muted">
             {codes

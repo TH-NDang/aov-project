@@ -3,7 +3,7 @@ import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import type { ArcanaColor, WarehouseArcana } from "./use-item-catalog"
 import { WarehouseArtwork } from "./warehouse-artwork"
-import type { PublishedWarehouseRecord } from "./warehouse-types"
+import type { PublishedWarehouseRecord } from "../../lib/warehouse-types"
 
 const ROMAN_TIERS = ["I", "II", "III"]
 /** A tier as the game writes it. */

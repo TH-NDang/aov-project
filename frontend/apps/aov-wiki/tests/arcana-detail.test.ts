@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { arcanaDetailDescription } from "../src/features/warehouse/warehouse-types.ts"
+import { arcanaDetailDescription } from "../src/lib/warehouse-types.ts"
 
 test("arcana details omit stat-only descriptions while preserving distinct gameplay text", () => {
   const statRows = [

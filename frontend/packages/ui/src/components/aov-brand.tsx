@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react"
-import { cn } from "cn"
+import { cn } from "@aov/ui/lib/utils"
 import { aovMarkUrl } from "../lib/brand"
 
 export function AovMark({ className, ...props }: Omit<ComponentProps<"img">, "src" | "alt">) {
@@ -14,7 +14,7 @@ export function AovWordmark({ product = "Wiki", className }: { product?: "Wiki" 
         className,
       )}
     >
-      <span className="font-black">AOV</span> <span className="font-semibold">{product}</span>
+      <span className="font-bold">AOV</span> <span className="font-semibold">{product}</span>
     </span>
   )
 }

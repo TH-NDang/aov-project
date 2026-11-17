@@ -69,6 +69,10 @@ test("a hero page names the hero, describes it and previews its own artwork", ()
   assert.equal(attribute(tags, "robots"), undefined)
 })
 
+test("a preview card names the site as the style guide writes it", () => {
+  assert.equal(attribute(headTags(heroMeta(hero, "en-US"), SITE), "og:site_name"), "AOV WiKi")
+})
+
 test("hero artwork prefers the widest image and falls back to the site logo only when there is none", () => {
   const image = (media: Parameters<typeof heroMeta>[0]["media"]) => heroMeta({ ...hero, media }, "vi-VN").image?.url
   const version = (url: string) => ({ currentVersion: { url } })

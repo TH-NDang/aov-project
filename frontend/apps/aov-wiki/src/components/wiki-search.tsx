@@ -2,10 +2,13 @@ import { useId, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } 
 import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router"
 import { EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
-import { foldEntitySearch, referenceTranslation, type EntityReference } from "@aov/ui/lib/entity-rich-text"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { referenceTranslation, type EntityReference } from "@aov/ui/lib/entity-rich-text"
+import { useWikiContext, wikiText, useWikiText } from "../context/wiki-context"
 import { wikiReferencesQuery } from "../lib/wiki-references"
 import { WikiIcon } from "./wiki-icon"
+import { SITE_NAME } from "../lib/seo/page-meta"
+import { foldSearchText } from "@aov/ui/lib/search-text"
+import { SECTION_NAMES } from "../lib/wiki-sections"
 import "./wiki-search.css"
 
 const LIMIT = 8
@@ -34,7 +37,7 @@ type Match = { entity: EntityReference; name: string; to: string }
  */
 function useMatches(search: string) {
   const scope = useWikiContext()
-  const needle = foldEntitySearch(search.trim())
+  const needle = foldSearchText(search.trim())
   const references = useQuery({ ...wikiReferencesQuery(scope), enabled: needle.length > 0 })
   const matches = useMemo<Match[]>(() => {
     if (!needle || !references.data) return []
@@ -44,7 +47,7 @@ function useMatches(search: string) {
       .flatMap((entity) => {
         const translation = referenceTranslation(entity, scope.locale, fallback)
         if (!translation) return []
-        const names = [translation.name, ...translation.aliases].map(foldEntitySearch)
+        const names = [translation.name, ...translation.aliases].map(foldSearchText)
         const rank = names.includes(needle)
           ? 0
           : names.some((name) => name.startsWith(needle))
@@ -89,7 +92,8 @@ export function WikiSearch({
   onDone?: () => void
 }) {
   const navigate = useNavigate()
-  const { locale, href, t } = useWikiContext()
+  const { locale, href } = useWikiContext()
+  const t = useWikiText()
   const [search, setSearch] = useState("")
   const [focused, setFocused] = useState(false)
   const [active, setActive] = useState(0)
@@ -98,7 +102,7 @@ export function WikiSearch({
   const { matches, needle, pending, failed, retry } = useMatches(search)
   const open = focused && needle.length > 0
   const lists = LISTS.map(([path, key]) => ({
-    label: t(key),
+    label: t(...SECTION_NAMES[key]),
     to: href(`${path}?${new URLSearchParams({ q: search.trim() })}`),
   }))
   // One run of options for the keyboard: the matching names, then the lists.
@@ -145,7 +149,7 @@ export function WikiSearch({
         aria-controls={listId}
         aria-autocomplete="list"
         aria-activedescendant={open ? `${listId}-${marked}` : undefined}
-        aria-label={wikiText(locale, "Tìm trong AOV Wiki", "Search AOV Wiki")}
+        aria-label={wikiText(locale, `Tìm trong ${SITE_NAME}`, `Search ${SITE_NAME}`)}
         placeholder={
           size === "bar"
             ? wikiText(locale, "Tìm tướng, trang bị, thuật ngữ…", "Search heroes, items, terms…")
@@ -189,7 +193,7 @@ export function WikiSearch({
           {matches.length === 0 && (
             <p className="wiki-search-empty" role="status">
               {pending
-                ? t("loading")
+                ? t("Đang tải…", "Loading…")
                 : failed
                   ? wikiText(
                       locale,

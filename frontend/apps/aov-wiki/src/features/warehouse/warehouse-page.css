@@ -91,8 +91,9 @@
 }
 .wiki-warehouse-search button {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
   flex: none;
   place-items: center;
   border-radius: var(--aov-radius-control);
@@ -632,7 +633,7 @@
 /* "Show more" under a list reads as a link at the list's left edge. */
 .wiki-warehouse-detail-body > section > button {
   justify-self: start;
-  min-height: 32px;
+  min-height: 36px;
   color: var(--aov-accent);
 }
 /* The last line of a list of facts meets the rule of the next section. */

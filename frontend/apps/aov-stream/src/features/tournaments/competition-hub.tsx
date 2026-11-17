@@ -7,11 +7,11 @@ import { useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
-import { competitionStatusLabels } from "../community/community-ui"
-import { competitionCatalogQuery } from "./tournament-api"
-import { competitionMatches } from "./match-model"
-import { byRecency, bySoonest, competitionStatus, type CompetitionStatus } from "./competition-model"
-import { CompetitionCard, CompetitionFeature } from "./competition-card"
+import { competitionStatusLabels } from "../../components/community-ui"
+import { competitionCatalogQuery } from "../../lib/tournament-api"
+import { competitionMatches } from "../../lib/match-model"
+import { byRecency, bySoonest, competitionStatus, type CompetitionStatus } from "../../lib/competition-model"
+import { CompetitionCard, CompetitionFeature } from "../../components/competition-card"
 import {
   FilterSelect,
   ScheduleEmpty,
@@ -21,9 +21,10 @@ import {
   scheduleDayLabel,
   scheduleScope,
 } from "./competition-schedule"
-import { knownScheduleDay, matchSearchKey, scheduleDay, scheduleParts, searchKey } from "./match-schedule"
+import { knownScheduleDay, matchSearchKey, scheduleDay, scheduleParts } from "../../lib/match-schedule"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /** Seasons a circuit shows before the rest fold away: two rows of three on a wide screen, three rows on a phone. */
 const GROUP_PREVIEW = { wide: 6, compact: 3 }
@@ -60,7 +61,7 @@ export function CompetitionDirectory() {
       (year === "all" || year === String(tournament.year)) &&
       (status === "all" || status === competitionStatus({ tournament, plan })) &&
       (!search.trim() ||
-        searchKey(`${tournament.name} ${plan.circuit} ${plan.organizer}`).includes(searchKey(search.trim()))),
+        foldSearchText(`${tournament.name} ${plan.circuit} ${plan.organizer}`).includes(foldSearchText(search.trim()))),
   )
   const filtered = region !== "all" || year !== "all" || status !== "all" || !!search.trim()
   const clearFilters = () => setParams(tab === "schedule" ? { tab: "schedule" } : {})
@@ -111,7 +112,7 @@ export function CompetitionDirectory() {
   }, [matches])
   const scope = switchable ? scheduleScope(params.get("scope")) : "all"
   const stage = params.get("stage") || ""
-  const needle = searchKey(search.trim())
+  const needle = foldSearchText(search.trim())
   const narrowed = matches
     .filter(({ entry, key }) => {
       const { tournament } = entry.competition.content
@@ -186,7 +187,12 @@ export function CompetitionDirectory() {
         <header className="tn-page-head">
           <div>
             <h1>{text("Giải đấu", "Tournaments")}</h1>
-            <p>Mùa giải, lịch thi đấu và kết quả từng trận.</p>
+            <p>
+              {text(
+                "Mùa giải, lịch thi đấu và kết quả từng trận.",
+                "Seasons, schedules and the result of every match.",
+              )}
+            </p>
           </div>
           <Link className="cp-button" to="/games">
             <StreamIcon name="search" size={15} />
@@ -301,7 +307,13 @@ export function CompetitionDirectory() {
                     <section className="tn-group" aria-labelledby="competitions-ahead">
                       <div className="tn-heading">
                         <h2 id="competitions-ahead">
-                          Đang và sắp diễn ra <small>{ahead.length} giải</small>
+                          {text("Đang và sắp diễn ra", "Current and upcoming")}{" "}
+                          <small>
+                            {text(
+                              `${ahead.length} giải`,
+                              `${ahead.length} ${ahead.length === 1 ? "tournament" : "tournaments"}`,
+                            )}
+                          </small>
                         </h2>
                       </div>
                       <div className="tn-feature-grid">

@@ -1,0 +1,1450 @@
+/*
+ * What the community pages share: the page stack, form controls, buttons, tabs, posts and comments, the feed's side
+ * column, the account and page manager screens and the sign-in prompts. Explore, the page directory, live rows and
+ * profile pages have stylesheets of their own beside this one. Tokens come from src/stream.css.
+ */
+
+/* ---------- Page stack ---------- */
+.cp-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hub-layout-gap);
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+/* Page stacks own the space between sections; their children do not add a second margin. */
+.cp-container > :is(.cp-back, .cp-tabs) {
+  margin-block: 0;
+}
+.cp-container > .cp-back {
+  align-self: flex-start;
+}
+.cp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: var(--hub-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.cp-back:hover {
+  color: var(--hub-text);
+}
+.cp-meta,
+.cp-muted {
+  color: var(--hub-muted);
+  font-weight: 400;
+}
+.cp-meta,
+.cp-container small {
+  font-size: 12px;
+}
+.cp-prose {
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Form controls: labels above fields, low specificity so component styles win ---------- */
+:where(.cp-container)
+  :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, select) {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--hub-border-strong);
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-sunken);
+  color: var(--hub-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+:where(.cp-container) :where(input, textarea)::placeholder {
+  color: var(--hub-muted);
+}
+/* Selects take their arrow and list from the shared styles (packages/ui globals.css). */
+:where(.cp-container) select {
+  cursor: pointer;
+}
+:where(.cp-container) :where(input, textarea, select):focus {
+  outline: none;
+  border-color: var(--hub-accent);
+  background-color: var(--hub-surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hub-accent) 25%, transparent);
+}
+:where(.cp-container) :where(input, textarea)[aria-invalid="true"] {
+  border-color: var(--hub-danger);
+}
+:where(.cp-container) textarea {
+  resize: vertical;
+}
+:where(.cp-container) input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--hub-accent);
+}
+:where(.cp-container) label {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+:where(.cp-container) fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+/* A short choice beside other controls, such as who a post is published as. */
+.cp-inline-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--hub-muted);
+  font-weight: 500;
+}
+.cp-inline-label select {
+  width: auto;
+  min-height: 36px;
+  padding-block: 6px;
+}
+.cp-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+/* An error next to the field it is about. */
+.cp-field-error {
+  margin: 0;
+  color: var(--hub-danger);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+/* ---------- Buttons ---------- */
+.cp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.cp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--hub-border-strong);
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cp-button:hover:not(:disabled) {
+  background: var(--hub-hover);
+}
+.cp-primary {
+  border-color: var(--hub-accent);
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+  font-weight: 700;
+}
+.cp-primary:hover:not(:disabled) {
+  background: var(--hub-accent);
+  filter: brightness(1.05);
+}
+/* Secondary actions that should not compete with the primary one. */
+.cp-quiet {
+  border-color: var(--hub-border);
+  background: transparent;
+  color: var(--hub-text-soft);
+}
+/* The confirming step of something that cannot be undone from here. */
+.cp-danger {
+  border-color: var(--hub-danger);
+  background: transparent;
+  color: var(--hub-danger);
+}
+.cp-danger:hover:not(:disabled) {
+  background: var(--hub-danger-soft);
+}
+.cp-text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: var(--hub-accent-strong);
+  font-size: 13px;
+  font-weight: 600;
+}
+.cp-text-button:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cp-more {
+  border-color: transparent;
+}
+.cp-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-danger-soft);
+  color: var(--hub-danger);
+  font-size: 14px;
+}
+.cp-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--hub-success);
+  font-size: 14px;
+  font-weight: 600;
+}
+.cp-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-raised);
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cp-badge[data-status="HIDDEN"],
+.cp-badge[data-status="REJECTED"] {
+  border-color: transparent;
+  background: var(--hub-danger-soft);
+  color: var(--hub-danger);
+}
+.cp-badge[data-status="DRAFT"] {
+  border-color: transparent;
+  background: var(--hub-indigo-soft);
+  color: var(--hub-indigo);
+}
+.cp-badge[data-status="PENDING"] {
+  border-color: transparent;
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+}
+.cp-badge[data-status="APPROVED"] {
+  border-color: transparent;
+  background: var(--hub-success-soft);
+  color: var(--hub-success);
+}
+.cp-follow-chip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--hub-border-strong);
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-surface);
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cp-follow-chip:hover:not(:disabled) {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.cp-follow-primary,
+.cp-post-header > .cp-follow-chip {
+  border-color: transparent;
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+}
+.cp-follow-primary:hover:not(:disabled),
+.cp-post-header > .cp-follow-chip:hover:not(:disabled) {
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+}
+/* A follow button that is only its plus sign; it carries its name for assistive technology. */
+.cp-follow-icon {
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+/* ---------- Tabs: one underlined row that scrolls sideways ---------- */
+.cp-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 12px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--hub-border);
+  scrollbar-width: none;
+}
+.cp-tabs::-webkit-scrollbar {
+  display: none;
+}
+.cp-tabs button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--aov-radius-control) var(--aov-radius-control) 0 0;
+  background: transparent;
+  color: var(--hub-muted);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background-color 160ms,
+    color 160ms;
+}
+.cp-tabs button:hover {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+/* The chosen tab keeps plain text and takes the accent line. */
+.cp-tabs button[aria-current] {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.cp-tabs button[aria-current]::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--hub-accent);
+}
+.cp-tab-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ---------- Pictures of pages and people ---------- */
+/* A page's picture, or its initials on a colour drawn from its name. Each place that shows one sets its size. */
+.cp-avatar {
+  width: 88px;
+  height: 88px;
+  border: 4px solid var(--hub-surface);
+  border-radius: var(--hub-radius);
+  background: var(--hub-plate);
+  object-fit: contain;
+}
+.cp-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, hsl(var(--hub-hue, 222) 52% 40%), hsl(calc(var(--hub-hue, 222) + 48) 58% 24%));
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+/* A member's initials, drawn the same way. */
+.cp-author-mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, hsl(var(--hub-hue, 222) 55% 46%), hsl(calc(var(--hub-hue, 222) + 48) 58% 30%));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+.cp-author-mark-small {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+/* An organizer's name beside its logo, among the facts of a competition or a circuit. */
+.cp-organizer {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+.cp-organizer img {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--aov-radius-control);
+  object-fit: contain;
+}
+
+/* ---------- Posts: on the page, a rule between two of them ---------- */
+.cp-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hub-layout-gap);
+  min-width: 0;
+}
+.cp-post-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.cp-post {
+  min-width: 0;
+  padding: 20px 0;
+}
+.cp-post + .cp-post {
+  border-top: 1px solid var(--hub-border);
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .cp-post {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 24%;
+    }
+  }
+}
+/* The first and last post line up with what is above and below the list. */
+.cp-post-list > .cp-post:first-child {
+  padding-top: 0;
+}
+.cp-post-list > .cp-post:last-child {
+  padding-bottom: 0;
+}
+.cp-post-skeleton {
+  height: 168px;
+  margin: 16px 0;
+}
+.cp-post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cp-post-avatar {
+  flex: none;
+}
+.cp-post-avatar .cp-avatar,
+.cp-avatar.cp-post-avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+}
+.cp-post-author {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cp-post-author > strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--hub-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+}
+/* Names may take two lines rather than lose their end. */
+.cp-post-author > strong > :is(a, span) {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.cp-post-author > strong > a:hover {
+  color: var(--hub-accent-strong);
+}
+/* Who, when, what kind and whether it is pinned, in one quiet line. */
+.cp-post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 6px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.cp-post-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cp-post-meta > span + span::before {
+  content: "·";
+  color: var(--hub-muted);
+  font-weight: 400;
+}
+.cp-post-pinned {
+  color: var(--hub-accent-strong);
+  font-weight: 600;
+}
+.cp-post-title {
+  max-width: 72ch;
+  margin: 12px 0 0;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.cp-post-body {
+  max-width: 72ch;
+  margin: 12px 0 0;
+}
+.cp-post-title + .cp-post-body {
+  margin-top: 6px;
+}
+.cp-post-body[data-folded] {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+.cp-post-fold {
+  padding: 4px 0;
+}
+.cp-post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 10px 0 0 -10px;
+}
+/* Like and comment: quiet until used, the count beside the icon. */
+.cp-post-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 56px;
+  height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: transparent;
+  color: var(--hub-muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cp-post-action:hover:not(:disabled),
+.cp-post-action[aria-expanded="true"] {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.cp-post-action[aria-pressed="true"] {
+  color: var(--hub-accent-strong);
+}
+.cp-post-action[aria-pressed="true"] svg {
+  fill: currentColor;
+}
+
+/* ---------- Media of a post ---------- */
+.cp-post-video,
+.cp-post-images,
+.cp-post-video-link {
+  max-width: 640px;
+  margin-top: 12px;
+}
+.cp-post-video {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--hub-radius);
+  background: var(--hub-sunken);
+}
+.cp-post-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+/* The video's own picture with a play mark; the player loads when it is pressed. */
+.cp-video-poster {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: var(--hub-sunken);
+}
+.cp-video-poster > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cp-video-poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(0 0 0 / 50%), transparent 38%);
+}
+.cp-video-poster:focus-visible {
+  outline: 3px solid var(--hub-accent);
+  outline-offset: -3px;
+}
+.cp-video-play {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 62%);
+  color: #fff;
+  transform: translate(-50%, -50%);
+  transition:
+    background-color 160ms,
+    transform 160ms;
+}
+.cp-video-play svg {
+  margin-left: 3px;
+  fill: currentColor;
+}
+.cp-video-poster:hover .cp-video-play {
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+  transform: translate(-50%, -50%) scale(1.06);
+}
+.cp-video-source {
+  position: absolute;
+  z-index: 1;
+  left: 14px;
+  bottom: 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+}
+.cp-post-video-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+}
+.cp-post-video-link:hover {
+  background: var(--hub-hover);
+}
+.cp-post-video-link > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.cp-post-video-link strong,
+.cp-post-video-link small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cp-post-video-link small {
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+.cp-post-video-play {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+}
+.cp-post-video-play svg {
+  margin-left: 2px;
+  fill: currentColor;
+}
+.cp-post-images {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  overflow: hidden;
+  border-radius: var(--hub-radius);
+}
+.cp-post-images[data-count="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.cp-post-images[data-count="3"] > a:first-child {
+  grid-row: span 2;
+}
+.cp-post-images a {
+  display: block;
+  min-height: 0;
+  background: var(--hub-sunken);
+}
+.cp-post-images img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 420px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.cp-post-images[data-count="1"] img {
+  aspect-ratio: auto;
+}
+
+/* ---------- Editing, reporting and commenting under a post ---------- */
+.cp-inline-form {
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.cp-inline-form fieldset {
+  display: grid;
+  gap: 10px;
+}
+.cp-inline-form legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+.cp-post > .cp-error,
+.cp-post > .cp-success {
+  margin-top: 12px;
+}
+.cp-comments {
+  display: grid;
+  gap: 14px;
+  max-width: 640px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hub-border);
+}
+.cp-comments > p {
+  margin: 0;
+}
+.cp-comment {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+.cp-comment-body {
+  flex: 1;
+  min-width: 0;
+}
+.cp-comment-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.cp-comment-head strong {
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.cp-comment-body > .cp-prose {
+  margin: 2px 0 0;
+  line-height: 20px;
+}
+.cp-comment-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+.cp-comment-tools .cp-text-button {
+  min-height: 36px;
+  padding: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+.cp-comment-tools .cp-text-button:hover {
+  color: var(--hub-text);
+}
+.cp-reply {
+  display: grid;
+  gap: 8px;
+}
+.cp-reply-actions > .cp-primary {
+  margin-left: auto;
+}
+.cp-reply-prompt {
+  justify-self: start;
+}
+
+/* ---------- Composer: a new post on a page ---------- */
+.cp-composer {
+  padding: var(--hub-panel-padding);
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.cp-composer form {
+  display: grid;
+  gap: 12px;
+}
+.cp-composer :where(input, textarea) {
+  background: var(--hub-sunken);
+}
+.cp-composer-images summary {
+  width: fit-content;
+  padding: 6px 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cp-composer-images summary:hover {
+  color: var(--hub-text);
+}
+.cp-composer-images > :not(summary) {
+  margin-top: 8px;
+}
+.cp-composer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.cp-composer-actions > .cp-inline-label {
+  margin-right: auto;
+}
+
+/* ---------- The feed's side column ---------- */
+.cp-join {
+  display: grid;
+  gap: 10px;
+}
+.cp-join-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cp-join-head > img {
+  flex: none;
+  border-radius: var(--aov-radius-control);
+}
+.cp-join-head > h2 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.cp-join > .hub-card-text {
+  margin: 0;
+}
+.cp-join-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 2px;
+}
+.cp-join-actions > .cp-button {
+  padding-inline: 10px;
+}
+/* Followed and suggested pages: rows like the competitions above them (tn-mini-list). */
+.cp-page-rows > li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.cp-page-rows > li > a {
+  flex: 1;
+  min-width: 0;
+}
+.cp-page-rows .cp-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+.cp-page-rows strong > svg {
+  margin-left: 4px;
+  vertical-align: -2px;
+}
+
+/* ---------- Account and page manager: sections straight on the page ---------- */
+/* Forms and lists keep a readable width; a long input line is hard to scan. */
+.cp-section {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+  max-width: 760px;
+}
+.cp-section > .tn-heading {
+  margin-bottom: 0;
+}
+.cp-section fieldset {
+  display: grid;
+  gap: 16px;
+}
+.cp-section-lead {
+  max-width: 72ch;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+.tn-heading + .cp-section-lead,
+.cp-subheading + .cp-section-lead {
+  margin-top: -8px;
+}
+.cp-section-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px var(--hub-layout-gap);
+  align-items: start;
+}
+.cp-section-pair > .cp-section {
+  max-width: none;
+}
+.cp-subheading {
+  margin: 8px 0 0;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.cp-field-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+.cp-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hub-border);
+}
+.cp-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: var(--hub-panel-padding);
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.cp-empty > p {
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+}
+.cp-confirm {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.cp-confirm p {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+/* Rows of a list, separated by rules: followed pages, notifications, managed pages, claims, members. */
+.cp-rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--hub-border);
+}
+.cp-rows > li {
+  min-width: 0;
+  border-bottom: 1px solid var(--hub-border);
+}
+.cp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 10px 0;
+}
+.cp-row-link {
+  margin-inline: -8px;
+  padding-inline: 8px;
+  border-radius: var(--hub-radius-sm);
+}
+.cp-row-link:hover {
+  background: var(--hub-hover);
+}
+.cp-row-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+.cp-row-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+.cp-row-text strong,
+.cp-row-text > a {
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.cp-row-text small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+:is(a.cp-row-text, .cp-row-link):hover strong,
+.cp-row-text a:hover,
+.cp-row-text a:hover strong {
+  color: var(--hub-accent-strong);
+}
+.cp-row-go {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+/* Notifications: a dot marks what is unread. */
+.cp-note {
+  align-items: flex-start;
+}
+.cp-note-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--hub-border-strong);
+}
+.cp-note[data-unread] .cp-note-dot {
+  background: var(--hub-accent);
+  box-shadow: 0 0 0 3px var(--hub-accent-soft);
+}
+.cp-note .cp-row-text > a {
+  color: var(--hub-text-soft);
+  font-weight: 400;
+}
+.cp-note[data-unread] .cp-row-text > a {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.cp-note-read {
+  border-color: transparent;
+}
+
+/* The page manager's head: the page's picture and name, the public page as its one action. */
+.cp-manage-head {
+  align-items: center;
+}
+.cp-manage-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.cp-manage-identity > .cp-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: var(--hub-radius-sm);
+  font-size: 18px;
+}
+.cp-manage-identity > div {
+  min-width: 0;
+}
+.cp-manage-identity h1 {
+  overflow-wrap: anywhere;
+}
+.cp-manage-skeleton {
+  display: grid;
+  gap: 16px;
+}
+.cp-manage-skeleton > span:first-child {
+  width: min(420px, 100%);
+  height: 56px;
+}
+.cp-manage-skeleton > span:nth-child(2) {
+  height: 40px;
+}
+/* A contact channel: link, name and the button that removes it; the column names are written once. */
+.cp-link-field {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) 36px;
+  align-items: end;
+  gap: 12px;
+}
+.cp-link-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cp-link-remove {
+  margin-bottom: 2px;
+  border-color: transparent;
+}
+.cp-link-add {
+  justify-self: start;
+}
+.cp-image-preview {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-raised);
+  object-fit: contain;
+}
+.cp-image-preview-wide {
+  width: 100%;
+  height: 96px;
+  border-radius: var(--hub-radius);
+  object-fit: cover;
+}
+.cp-invite {
+  display: grid;
+  gap: 16px;
+  margin-top: 8px;
+}
+.cp-invite-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+}
+.cp-invite-row > label {
+  flex: 1 1 240px;
+}
+.cp-invite-row > .cp-invite-role {
+  flex: 0 1 280px;
+}
+
+/* ---------- Sign-in prompts ---------- */
+.cp-signin {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  max-width: 560px;
+  padding: 24px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+}
+.cp-signin > h2 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.cp-benefits {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cp-benefits li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+}
+.cp-benefits li > span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+}
+.cp-signin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cp-signin-actions > .cp-button {
+  min-width: 140px;
+}
+.cp-signin-note {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.cp-signin-dialog {
+  max-width: min(420px, calc(100% - 32px));
+  justify-items: start;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+}
+.cp-signin-dialog.public-bottom-drawer > .public-bottom-body {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding-top: 12px;
+}
+.cp-dialog-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border-color: transparent;
+}
+.cp-dialog-mark {
+  border-radius: var(--hub-radius-sm);
+}
+.cp-dialog-title {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.cp-dialog-text {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+.cp-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+/* ---------- Session controls in the top bar ---------- */
+.cp-session {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Featured pages on an empty feed ---------- */
+.cp-featured {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+.cp-featured > .cp-grid {
+  width: 100%;
+}
+.cp-featured-intro h2 {
+  margin: 0 0 4px;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+}
+.cp-featured-intro p {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+}
+
+/* ---------- Home feed: the filters, then the posts, straight on the page ---------- */
+.hub-feed-header {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hub-border);
+}
+.hub-feed-header .hub-pills {
+  padding-block: 2px;
+}
+.hub-feed-body {
+  padding-top: var(--hub-panel-padding);
+}
+/* An empty feed already lists the pages to follow in the main column. */
+.hub-content-split:has(.cp-featured) .hub-follow-suggestions {
+  display: none;
+}
+
+/* ---------- Wide only: the channel column names are written on the first row ---------- */
+@media (min-width: 900px) {
+  .cp-link-field + .cp-link-field .cp-link-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ---------- Compact ---------- */
+@media (max-width: 899.98px) {
+  .cp-button {
+    min-height: 40px;
+  }
+  :where(.cp-container)
+    :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, select) {
+    font-size: 16px;
+  }
+  .cp-tabs button {
+    height: 44px;
+  }
+  .cp-post {
+    padding: 16px 0;
+  }
+  .cp-post-action {
+    height: 40px;
+  }
+  /* The pin keeps the meta line on one row; its word stays for assistive technology. */
+  .cp-post-pinned > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .cp-post-header > .cp-follow-chip {
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+  }
+  .cp-post-header .cp-follow-label {
+    display: none;
+  }
+  .cp-composer-actions > .cp-inline-label {
+    flex-basis: 100%;
+  }
+  .cp-composer-actions > .cp-button {
+    flex: 1;
+  }
+  .cp-section-pair,
+  .cp-field-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cp-link-field {
+    grid-template-columns: minmax(0, 1fr) 40px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--hub-border);
+  }
+  .cp-link-field > label:first-child {
+    grid-column: 1 / -1;
+  }
+  .cp-link-remove {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 0;
+  }
+  .cp-invite-row > :is(label, .cp-invite-role) {
+    flex-basis: 100%;
+  }
+  .cp-invite-row > .cp-button {
+    flex: 1;
+  }
+  .cp-signin {
+    max-width: none;
+    padding: var(--hub-panel-padding);
+  }
+  .cp-signin-actions {
+    justify-self: stretch;
+  }
+  .cp-signin-actions > .cp-button {
+    flex: 1;
+    min-width: 0;
+  }
+  .cp-manage-identity > .cp-avatar {
+    width: 48px;
+    height: 48px;
+  }
+  /* The public page stays beside the name as a round arrow, so it never takes a row of its own. */
+  .cp-manage-head {
+    flex-wrap: nowrap;
+  }
+  .cp-manage-public {
+    flex: none;
+    width: 40px;
+    padding: 0;
+  }
+  .cp-manage-public > span {
+    display: none;
+  }
+}

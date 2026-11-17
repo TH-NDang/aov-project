@@ -1,4 +1,6 @@
 import type { GameplayIconName } from "../components/gameplay-icons"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /**
  * Item entries keep their stats and effects as free text in the description: a "+60 <stat>" line for each stat, then
@@ -168,13 +170,7 @@ export interface ItemTextContent {
 }
 
 function folded(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim()
+  return foldSearchText(value).replace(/\s+/g, " ").trim()
 }
 
 // Each marker is matched as the Vietnamese data writes it and as the English descriptions do.
@@ -300,8 +296,9 @@ export function itemStatDefinition(key: ItemStatKey | null) {
   return key ? ITEM_STATS.find((stat) => stat.key === key) : undefined
 }
 
-export function formatItemStatValue(stat: Pick<ItemTextStat, "value" | "percent">, locale = "vi-VN") {
-  return `${stat.value > 0 ? "+" : ""}${stat.value.toLocaleString(locale)}${stat.percent ? "%" : ""}`
+/** A stat line's figure as the game writes it, such as "+1200" or "+0.5%", whatever the reader's locale. */
+export function formatItemStatValue(stat: Pick<ItemTextStat, "value" | "percent">) {
+  return `${stat.value > 0 ? "+" : ""}${formatGameNumber(stat.value)}${stat.percent ? "%" : ""}`
 }
 
 /** Reader-facing stat groups: close stats share one filter, because readers shop for "lifesteal", not for its kinds. */

@@ -2,7 +2,7 @@
 .wiki-version-picker {
   display: flex;
   min-width: 0;
-  min-height: 32px;
+  min-height: 36px;
   align-items: center;
   gap: 8px;
   color: var(--aov-muted);
@@ -23,7 +23,7 @@
 /* Where versions can be chosen the value only gains a chevron, so the control reads the same on every page and pulls
    no attention from the list; it is drawn as a control on hover, while open and while an earlier version is shown. */
 .wiki-version-trigger {
-  height: 32px;
+  height: 36px;
   margin-left: -9px;
   border: 1px solid transparent;
   border-radius: var(--aov-radius-control);

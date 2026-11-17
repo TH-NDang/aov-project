@@ -1,0 +1,828 @@
+/* The page of a circuit, an organizer, a team or a person: head, tabs, content and the reference column. */
+
+/* ---------- Head: the picture when there is one, then who this is, straight on the page ---------- */
+.pf-head {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+.pf-cover {
+  display: block;
+  width: 100%;
+  height: clamp(120px, 15vw, 200px);
+  border-radius: var(--hub-radius);
+  background: var(--hub-sunken);
+  object-fit: cover;
+}
+.pf-identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 20px;
+}
+.pf-identity > .cp-avatar {
+  width: 80px;
+  height: 80px;
+  flex: none;
+  border: 0;
+  border-radius: var(--hub-radius);
+  font-size: 28px;
+}
+.pf-identity[data-person] > .cp-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+.pf-identity[data-live] > .cp-avatar {
+  box-shadow:
+    0 0 0 3px var(--hub-bg),
+    0 0 0 5px var(--hub-red);
+}
+.pf-title {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+.pf-title > .hub-kicker {
+  flex-wrap: wrap;
+  gap: 0 12px;
+}
+.pf-title > .hub-kicker a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pf-title h1 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 36px;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.pf-title h1 > svg {
+  width: 22px;
+  height: 22px;
+  margin-left: 8px;
+  vertical-align: -2px;
+}
+/* A person's teams, each with what they do there. */
+.pf-teams {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pf-teams > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 8px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 20px;
+}
+.pf-teams a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.pf-teams a:hover {
+  color: var(--hub-accent-strong);
+}
+.pf-teams img {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--aov-radius-control);
+  object-fit: contain;
+}
+/* One quiet line of facts with a dot between two of them. The dot before the first fact of a line is cut off. */
+.pf-facts {
+  margin: 0;
+  overflow: hidden;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.pf-facts > span {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -14px;
+}
+.pf-facts > span > span {
+  position: relative;
+  padding-left: 14px;
+}
+.pf-facts > span > span::before {
+  content: "·";
+  position: absolute;
+  left: 4px;
+}
+.pf-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+.pf-options {
+  width: 36px;
+  flex: none;
+  padding: 0;
+}
+.pf-live-button {
+  border-color: color-mix(in srgb, var(--hub-red) 45%, var(--hub-border));
+  color: var(--hub-red);
+}
+
+/* Channels as icons, where the reference column is not on screen. */
+.pf-socials {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pf-socials::-webkit-scrollbar {
+  display: none;
+}
+.pf-socials > button {
+  position: relative;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  transition: background-color 120ms;
+}
+.pf-socials > button:hover,
+.pf-socials > button[data-state="open"] {
+  background: var(--hub-hover);
+}
+.pf-socials > button > svg {
+  pointer-events: none;
+}
+.pf-socials .pf-social-official {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 13px;
+  height: 13px;
+}
+.pf-social-popover {
+  width: 272px;
+  max-width: calc(100vw - 24px);
+  max-height: var(--radix-popover-content-available-height);
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--hub-border-strong);
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  box-shadow: var(--hub-shadow-lg);
+  animation: none;
+  transition: none;
+}
+.pf-social-popover-heading {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 28px;
+  align-items: start;
+  gap: 8px;
+}
+.pf-social-popover-heading > svg {
+  margin-top: 3px;
+}
+.pf-social-popover-heading > strong {
+  font-size: 14px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.pf-social-popover-heading > button {
+  width: 36px;
+  height: 36px;
+  margin: -4px;
+}
+.pf-social-host {
+  margin: 8px 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.pf-social-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  color: var(--hub-text-soft);
+  font-size: 12px;
+}
+.pf-social-open {
+  width: 100%;
+  margin-top: 14px;
+}
+.pf-social-popover.public-bottom-drawer .pf-social-popover-heading > button {
+  display: none;
+}
+
+/* ---------- Content beside the reference column ---------- */
+.pf-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 32px;
+}
+/* The content column measures itself, so its grids pick a column count their items fill. */
+.pf-main {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 32px;
+  container: profile-main / inline-size;
+}
+/* Four matches: one row of four where they fit, otherwise two rows of two, never three and one alone. */
+@media (min-width: 900px) {
+  @container profile-main (min-width: 720px) {
+    .pf-main .tn-match-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @container profile-main (max-width: 719.98px) {
+    .pf-main .tn-match-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+.pf-side {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+.pf-page .tn-heading h2 > a:hover {
+  color: var(--hub-accent-strong);
+}
+.pf-bio {
+  max-width: 72ch;
+  margin: 0;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.pf-intro {
+  display: grid;
+  justify-items: start;
+}
+.pf-intro > .pf-bio[data-folded] {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+.pf-intro > .tn-more {
+  margin-top: 4px;
+}
+/* What a page does not record, said once. */
+.pf-note {
+  max-width: 72ch;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.pf-match-skeleton {
+  height: 112px;
+  border: 0;
+}
+.pf-heading-note {
+  margin: -8px 0 12px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+/* The choice between all posts and videos, above the posts. */
+.pf-posts > .hub-pills {
+  margin-bottom: 16px;
+}
+
+/* A broadcast that is on now. */
+.pf-live {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+.pf-live > p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.pf-live > h2 {
+  margin: 0;
+  color: var(--hub-text);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+.pf-live > .cp-post-video {
+  max-width: 560px;
+  margin-top: 4px;
+  border-radius: var(--hub-radius);
+}
+.pf-live-dialog {
+  max-width: min(440px, calc(100% - 32px));
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+}
+.pf-live-form {
+  display: grid;
+  gap: 12px;
+}
+.pf-live-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pf-live-form input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--aov-radius-control);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/*
+ * A team's members, grouped by their standing in the squad. Rows come from the competition page's team card. The
+ * groups fill their rows: up to three side by side, two where three do not fit (or there are four or more), and an
+ * odd last group across both columns.
+ */
+.pf-roster .tn-team-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+@container profile-main (min-width: 700px) {
+  .pf-roster .tn-team-grid:has(> :nth-child(4)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pf-roster .tn-team-grid:has(> :nth-child(4)) > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+@container profile-main (max-width: 699.98px) {
+  .pf-roster .tn-team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pf-roster .tn-team-grid > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+@container profile-main (max-width: 519.98px) {
+  .pf-roster .tn-team-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.pf-roster .tn-team-card > h3 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: var(--hub-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.pf-roster .tn-team-card > h3 > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.pf-roster .tn-team-card li > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  padding: 6px 0;
+}
+.pf-roster .tn-team-card li > span:nth-child(2) > small {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+.pf-roster .tn-team-card li a:hover {
+  color: var(--hub-accent-strong);
+}
+/* In a narrow card the role wraps at the end of the row; the member's name never gives way to it. */
+.pf-roster .tn-team-card li {
+  grid-template-columns: 24px minmax(min-content, 1fr) minmax(0, max-content);
+}
+.pf-roster .tn-team-card li > small {
+  padding: 6px 0;
+  line-height: 16px;
+  text-align: right;
+}
+.pf-source {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  color: var(--hub-accent-strong);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pf-source:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Achievements and career steps: rows on the page, a rule between two of them. */
+.pf-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pf-rows > li {
+  display: grid;
+  grid-template-columns: [text] minmax(0, 1fr) [date] auto [source] 28px;
+  align-items: start;
+  gap: 2px 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--hub-border);
+}
+.pf-rows[data-marked] > li {
+  grid-template-columns: [mark] 40px [text] minmax(0, 1fr) [date] auto [source] 28px;
+}
+.pf-rows > li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.pf-rows > li:last-child {
+  padding-bottom: 0;
+}
+.pf-row-mark {
+  display: grid;
+  min-width: 28px;
+  height: 28px;
+  grid-column: mark;
+  place-items: center;
+  justify-self: start;
+  margin-top: 5px;
+  padding: 0 5px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-surface);
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.pf-row-mark[data-mark="champion"] {
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+}
+.pf-row-mark[data-mark="award"] {
+  color: var(--hub-muted);
+}
+.pf-row-text {
+  display: grid;
+  min-width: 0;
+  grid-column: text;
+  gap: 2px;
+}
+.pf-row-text > strong {
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.pf-row-text > strong > i {
+  color: var(--hub-muted);
+  font-style: normal;
+  font-weight: 400;
+}
+.pf-row-text > span {
+  color: var(--hub-text-soft);
+  font-size: 13px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+.pf-row-text a:hover {
+  color: var(--hub-accent-strong);
+}
+.pf-row-date {
+  grid-column: date;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.pf-row-source {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  grid-column: source;
+  place-items: center;
+  margin-top: -4px;
+  border-radius: var(--aov-radius-control);
+  color: var(--hub-muted);
+}
+.pf-row-source:hover {
+  background: var(--hub-hover);
+  color: var(--hub-accent-strong);
+}
+
+/* ---------- Reference column: surfaces in the language of the competition page's side cards ---------- */
+.pf-side .pf-bio,
+.pf-about .pf-bio {
+  margin-bottom: 8px;
+}
+.pf-about > .tn-facts > div:last-child {
+  border-bottom: 0;
+}
+.pf-about > .tn-facts dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pf-about > .cp-meta {
+  margin: 8px 0 0;
+}
+.pf-links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pf-links > li + li {
+  border-top: 1px solid var(--hub-border);
+}
+.pf-links a {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  color: var(--hub-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+.pf-links a > span {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.pf-links a small {
+  display: block;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.pf-links a > svg {
+  flex: none;
+}
+.pf-links a > svg:last-child {
+  color: var(--hub-muted);
+}
+.pf-links a:hover {
+  color: var(--hub-accent-strong);
+}
+.pf-related .cp-avatar {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--hub-radius-sm);
+  font-size: 14px;
+}
+.pf-related [data-person] > .cp-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ---------- Page options: sources, a correction, a claim ---------- */
+.cp-profile-options-menu {
+  width: 224px;
+  max-width: calc(100vw - 24px);
+  padding: 5px;
+}
+.cp-profile-options-menu .hub-menu-item {
+  gap: 9px;
+  border-radius: var(--aov-radius-control);
+  font-size: 14px;
+}
+.cp-profile-menu-separator {
+  margin: 4px;
+  background: var(--hub-border);
+}
+.cp-profile-dialog {
+  width: calc(100% - 24px);
+  max-width: 480px;
+  max-height: calc(100dvh - 32px);
+  gap: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  box-shadow: var(--hub-shadow-lg);
+}
+.cp-profile-dialog.public-bottom-drawer > .public-bottom-body {
+  padding: 0 0 env(safe-area-inset-bottom);
+}
+.cp-profile-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--hub-border);
+}
+.cp-profile-dialog-heading > div {
+  min-width: 0;
+}
+.cp-profile-dialog-heading h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.cp-profile-dialog-heading p {
+  margin: 0;
+  color: var(--hub-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.cp-profile-dialog-heading > button {
+  flex-shrink: 0;
+}
+.cp-profile-dialog-body {
+  padding: 16px;
+}
+.cp-profile-dialog-body > p:first-child {
+  margin-top: 0;
+}
+.cp-profile-info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--hub-muted);
+  font-size: 13px;
+  line-height: 18px;
+}
+.cp-profile-info-note svg {
+  flex-shrink: 0;
+  color: var(--hub-accent-strong);
+}
+.cp-profile-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.cp-profile-request-success {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  text-align: center;
+}
+.cp-profile-request-success > svg {
+  color: var(--hub-success);
+}
+.cp-profile-request-success p {
+  margin: 0 0 6px;
+  color: var(--hub-muted);
+}
+
+/* ---------- While the page loads: the head, the tabs and the first block ---------- */
+.pf-skeleton-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.pf-skeleton-head > span {
+  width: 80px;
+  height: 80px;
+  flex: none;
+  border-radius: var(--hub-radius);
+}
+.pf-skeleton-head > div {
+  display: grid;
+  flex: 1;
+  gap: 8px;
+}
+.pf-skeleton-head > div > span {
+  width: min(100%, 320px);
+  height: 16px;
+}
+.pf-skeleton-head > div > span:first-child {
+  width: 140px;
+  height: 12px;
+}
+.pf-skeleton-head > div > span:nth-child(2) {
+  width: min(100%, 260px);
+  height: 32px;
+}
+.pf-skeleton-tabs {
+  height: 41px;
+  border-bottom: 1px solid var(--hub-border);
+}
+
+@media (max-width: 1079.98px) {
+  .pf-layout {
+    grid-template-columns: minmax(0, 1fr) 288px;
+    gap: 24px;
+  }
+}
+@media (max-width: 899.98px) {
+  .pf-cover {
+    height: 120px;
+  }
+  .pf-identity {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .pf-identity > .cp-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--hub-radius);
+    font-size: 20px;
+  }
+  .pf-title h1 {
+    font-size: 22px;
+    line-height: 28px;
+  }
+  .pf-title h1 > svg {
+    width: 18px;
+    height: 18px;
+    margin-left: 6px;
+  }
+  /*
+   * Several buttons take a row of their own, the main one as wide as a phone allows; one alone stays beside the name.
+   */
+  .pf-actions:has(> :nth-child(2)) {
+    flex: 1 0 100%;
+  }
+  .pf-actions:has(> :nth-child(2)) > :first-child {
+    flex: 1;
+    max-width: 360px;
+  }
+  .pf-options {
+    width: 40px;
+  }
+  .pf-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pf-main {
+    gap: 24px;
+  }
+  /* A row's dates move under its text; the source stays at the end of the row. */
+  .pf-rows > li {
+    grid-template-columns: [text] minmax(0, 1fr) [source] 28px;
+  }
+  .pf-rows[data-marked] > li {
+    grid-template-columns: [mark] 40px [text] minmax(0, 1fr) [source] 28px;
+  }
+  .pf-row-date {
+    grid-row: 2;
+    grid-column: text;
+    line-height: 16px;
+  }
+  .pf-row-source {
+    grid-row: 1;
+  }
+  .pf-skeleton-head > span {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--hub-radius);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-socials > button {
+    transition: none;
+  }
+}

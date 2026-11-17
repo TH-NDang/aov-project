@@ -8,7 +8,8 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { usePublishedChanges } from "../../lib/wiki-patch-changes"
 import { seasonUpdatesQuery } from "./home-api"
 import { bannerOfDay } from "./home-banners"
-import { patchDayLabel } from "./patch-day-label"
+import { patchDayLabel } from "../../lib/patch-day-label"
+import { SITE_NAME } from "../../lib/seo/page-meta"
 
 /**
  * The opening of the home page: what the Wiki is, the search that reaches every published name, and one line about the
@@ -29,7 +30,9 @@ export function HomeIntro() {
       style={{ "--home-art": `url("${banner.image}")`, "--home-art-position": banner.position } as CSSProperties}
     >
       <div className="wiki-home-intro-inner">
-        <p className="wiki-home-eyebrow">AOV Wiki · Liên Quân Mobile</p>
+        <p className="wiki-home-eyebrow">
+          {SITE_NAME} · {wikiText(locale, "Liên Quân Mobile", "Arena of Valor")}
+        </p>
         <h1>
           {wikiText(
             locale,

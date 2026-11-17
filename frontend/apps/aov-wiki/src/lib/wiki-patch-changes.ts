@@ -1,10 +1,23 @@
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useWikiContext, type WikiPatch } from "../context/wiki-context"
-import { warehouseCatalogQuery } from "../features/warehouse/warehouse-api"
-import { warehouseName } from "../features/warehouse/warehouse-types"
+import { warehouseCatalogQuery } from "./warehouse-api"
+import { warehouseName } from "./warehouse-types"
 import { wikiCatalogParameters, type WikiCatalogScope } from "./wiki-catalog"
 import { changeKind, changedSubjects, type PublishedChange } from "./published-change-subjects"
-import type { WarehouseKind } from "../features/warehouse/warehouse-types"
+import type { WarehouseKind } from "./warehouse-types"
+import { wikiGetAll, wikiGetPage, type WikiPage } from "./wiki-api"
+
+/** Every query key of the shared patch change lists; reads and invalidation both use these. */
+export const patchChangeKeys = {
+  heroVariants: (scope: WikiCatalogScope, heroId: string) =>
+    ["wiki", "hero-changed-variants", scope.region, scope.locale, heroId] as const,
+  releases: (scope: WikiCatalogScope) => ["wiki", "releases", scope.region, scope.locale] as const,
+  changes: (scope: WikiCatalogScope, domain: ChangeDomain, variant: Pick<WikiPatch, "id" | "patchId">) =>
+    ["wiki", "patch-changes", scope.region, scope.locale, domain, variant.id, variant.patchId ?? "legacy"] as const,
+  /** The pages after the first one of a patch with more changes than one page holds. */
+  remaining: (scope: WikiCatalogScope, domain: ChangeDomain, variant: Pick<WikiPatch, "id" | "patchId">) =>
+    [...patchChangeKeys.changes(scope, domain, variant), "remaining"] as const,
+}
 
 type Release = { id: string; variantId: string }
 export type ChangeDomain = "HERO" | "ITEM" | "ARCANA" | "ENCHANTMENT" | "SPELL"
@@ -15,31 +28,18 @@ export const warehouseChangeDomain = {
   enchantments: "ENCHANTMENT",
   spells: "SPELL",
 } as const satisfies Record<WarehouseKind, ChangeDomain>
-type Slice<T> = { items: T[]; totalElements: number }
 const size = 20
 
-async function page<T>(path: string, params: URLSearchParams, index: number, signal: AbortSignal): Promise<Slice<T>> {
-  const query = new URLSearchParams(params)
-  query.set("page", String(index))
-  query.set("size", String(size))
-  const response = await fetch(`/api/wiki/v1${path}?${query}`, { credentials: "omit", signal })
-  if (!response.ok) throw new Error("Published patch changes could not be loaded.")
-  return response.json()
-}
+const page = <T>(path: string, params: URLSearchParams, index: number, signal: AbortSignal): Promise<WikiPage<T>> =>
+  wikiGetPage<T>(path, params, index, size, signal)
 
-async function pages<T>(path: string, params: URLSearchParams, signal: AbortSignal, start = 0) {
-  const items: T[] = []
-  for (let index = start; ; index++) {
-    const result = await page<T>(path, params, index, signal)
-    items.push(...result.items)
-    if (!result.items.length || (index + 1) * size >= result.totalElements) return items
-  }
-}
+const pages = <T>(path: string, params: URLSearchParams, signal: AbortSignal, from = 0) =>
+  wikiGetAll<T>(path, params, signal, { size, from })
 
 export function useHeroChangedVariants(heroId: string) {
   const scope = useWikiContext()
   return useQuery({
-    queryKey: ["wiki", "hero-changed-variants", scope.region, scope.locale, heroId],
+    queryKey: patchChangeKeys.heroVariants(scope, heroId),
     queryFn: async ({ signal }) => {
       const history = await pages<PublishedChange>(
         `/heroes/${heroId}/changes`,
@@ -65,7 +65,7 @@ export function usePublishedChanges(domain: ChangeDomain, includeAllPatches = fa
   const params = wikiCatalogParameters(scope, false)
   const needsReleases = (domain === "HERO" || domain === "SPELL") && variants.some((patch) => !patch.patchId)
   const releases = useQuery({
-    queryKey: ["wiki", "releases", scope.region, scope.locale],
+    queryKey: patchChangeKeys.releases(scope),
     queryFn: ({ signal }) => pages<Release>("/patches", params, signal),
     enabled: needsReleases,
     staleTime: 60_000,
@@ -82,15 +82,7 @@ export function usePublishedChanges(domain: ChangeDomain, includeAllPatches = fa
     if (variant.patchId) query.set("patchVariantId", variant.id)
     return query
   }
-  const key = (variant: WikiPatch) => [
-    "wiki",
-    "patch-changes",
-    scope.region,
-    scope.locale,
-    domain,
-    variant.id,
-    variant.patchId ?? "legacy",
-  ]
+  const key = (variant: WikiPatch) => patchChangeKeys.changes(scope, domain, variant)
   const first = useQueries({
     queries: variants.map((variant) => ({
       queryKey: key(variant),
@@ -147,7 +139,7 @@ export function usePublishedChanges(domain: ChangeDomain, includeAllPatches = fa
   )
   const remainder = useQueries({
     queries: paginated.map(({ variant }) => ({
-      queryKey: [...key(variant), "remaining"],
+      queryKey: patchChangeKeys.remaining(scope, domain, variant),
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         pages<PublishedChange>(endpoint(variant)!, parameters(variant), signal, 1),
       staleTime: 60_000,

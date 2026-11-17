@@ -1,4 +1,5 @@
 import { useWikiContext, wikiText } from "../../context/wiki-context"
+import "./star-level.css"
 
 const STAR = "M10 1.8l2.47 5.02 5.53.8-4 3.9.94 5.5L10 14.4l-4.94 2.6.94-5.5-4-3.9 5.53-.8z"
 
@@ -13,7 +14,7 @@ export function StarLevel({ level, size = 14 }: { level: number; size?: number }
   const { locale } = useWikiContext()
   return (
     <span
-      className="star-level"
+      className="wiki-guide-star-level"
       data-level={level}
       role="img"
       aria-label={wikiText(locale, `${level} sao`, `${level}-star`)}

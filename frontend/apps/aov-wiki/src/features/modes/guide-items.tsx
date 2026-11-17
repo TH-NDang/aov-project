@@ -1,15 +1,16 @@
 import { useState, type CSSProperties } from "react"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { foldText } from "./auto-chess-model"
+import { useWikiText } from "../../context/wiki-context"
 import { ModeHeading } from "./mode-ui"
 import { GuideText, type GuideIndex } from "./guide-ui"
+import { foldSearchText } from "@aov/ui/lib/search-text"
+import "./guide-items.css"
 
 /**
  * The game sorts items by the color of their stone (yellow-green, blue, gold, red); the group name says which. The
  * stone is part of the game's artwork, so its colors live here.
  */
 function stoneColor(code: string, name: string) {
-  const key = foldText(`${code} ${name}`)
+  const key = foldSearchText(`${code} ${name}`)
   // "xanh lam" contains "xanh la", so blue is checked first.
   if (key.includes("xanh lam") || key.includes("xanh duong")) return "#3fa2f0"
   if (key.includes("xanh la")) return "#a9c63b"
@@ -33,16 +34,15 @@ function StoneMark({
 }) {
   const src = index.image(group.iconAssetId)
   return src ? (
-    <img className="item-stone-icon" src={src} alt="" width={size} height={size} />
+    <img className="wiki-guide-item-stone-icon" src={src} alt="" width={size} height={size} />
   ) : (
-    <i className="item-stone" aria-hidden="true" />
+    <i className="wiki-guide-item-stone" aria-hidden="true" />
   )
 }
 
 /** Items by stone: a chip per stone filters the groups; each item reads as a row with its icon and effect. */
 export function ItemsTab({ index }: { index: GuideIndex }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const { itemGroups, items } = index.content
   const [stone, setStone] = useState<string | null>(null)
   const groups: { code: string; name: string; iconAssetId?: string | null }[] = [
@@ -57,14 +57,14 @@ export function ItemsTab({ index }: { index: GuideIndex }) {
     return short.charAt(0).toLocaleUpperCase("vi") + short.slice(1)
   }
   return (
-    <section className="guide-tab-body" aria-label={text("Trang bị", "Equipment")}>
-      <div className="guide-toolbar">
-        <div className="mode-chip-row" role="group" aria-label={text("Nhóm trang bị", "Equipment groups")}>
+    <section className="wiki-guide-tab-body" aria-label={text("Trang bị", "Equipment")}>
+      <div className="wiki-guide-toolbar">
+        <div className="wiki-mode-chip-row" role="group" aria-label={text("Nhóm trang bị", "Equipment groups")}>
           {groups.map((group) => (
             <button
               key={group.code}
               type="button"
-              className="mode-chip stone-chip"
+              className="wiki-mode-chip wiki-guide-stone-chip"
               style={stoneStyle(group)}
               aria-pressed={stone === group.code}
               onClick={() => setStone(stone === group.code ? null : group.code)}
@@ -83,7 +83,7 @@ export function ItemsTab({ index }: { index: GuideIndex }) {
           return (
             <section
               key={group.code}
-              className="mode-section"
+              className="wiki-mode-section"
               style={stoneStyle(group)}
               aria-labelledby={`item-group-${group.code}`}
             >
@@ -94,12 +94,12 @@ export function ItemsTab({ index }: { index: GuideIndex }) {
                 icon={<StoneMark group={group} index={index} />}
               />
               {entries.length ? (
-                <ul className="guide-entries" data-columns="2">
+                <ul className="wiki-guide-entries" data-columns="2">
                   {entries.map((item) => {
                     const icon = index.image(item.iconAssetId)
                     return (
-                      <li key={item.code} className="guide-entry item-entry">
-                        {icon ? <img className="guide-icon" src={icon} alt="" loading="lazy" /> : <span />}
+                      <li key={item.code} className="wiki-guide-entry wiki-guide-item-entry">
+                        {icon ? <img className="wiki-guide-icon" src={icon} alt="" loading="lazy" /> : <span />}
                         <div>
                           <h3>{item.name}</h3>
                           {item.effect && (
@@ -113,7 +113,7 @@ export function ItemsTab({ index }: { index: GuideIndex }) {
                   })}
                 </ul>
               ) : (
-                <p className="mode-meta">
+                <p className="wiki-mode-meta">
                   {text(
                     "Chưa có trang bị nào của nhóm này trong bản đã thu thập.",
                     "No items of this group in the collected edition yet.",

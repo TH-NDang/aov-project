@@ -6,15 +6,15 @@
   overflow: visible;
   border: 1px solid var(--account-line);
   border-bottom: 0;
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--aov-radius-media) var(--aov-radius-media) 0 0;
   touch-action: pan-y;
   animation-duration: 240ms;
 }
 .public-preferences-drawer[data-product="wiki"] {
-  background: #202329;
+  background: var(--aov-popover);
 }
 .public-preferences-overlay[data-vaul-overlay] {
-  background: #0005;
+  background: var(--aov-overlay);
   animation-duration: 240ms;
 }
 .public-preferences-handle[data-vaul-handle] {
@@ -34,7 +34,7 @@
   left: 14px;
   width: 36px;
   height: 3px;
-  border-radius: 3px;
+  border-radius: var(--aov-radius-pill);
   background: var(--account-muted);
   opacity: 0.3;
 }
@@ -68,7 +68,7 @@
   width: 40px;
   height: 36px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--aov-radius-control);
   background: transparent;
   color: var(--account-muted);
   cursor: pointer;
@@ -107,7 +107,7 @@
   min-height: 64px;
   padding: 10px;
   border: 1px solid var(--account-line);
-  border-radius: 10px;
+  border-radius: var(--aov-radius-card);
   background: var(--account-fill);
   color: var(--account-text);
   text-decoration: none;
@@ -123,7 +123,7 @@
   width: 30px;
   height: 30px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: var(--aov-radius-control);
   object-fit: cover;
 }
 .public-preferences-app > span {
@@ -152,7 +152,7 @@
 }
 .public-preferences-body .public-account-settings {
   border: 1px solid var(--account-line);
-  border-radius: 10px;
+  border-radius: var(--aov-radius-card);
   padding: 0 12px;
   background: var(--account-fill);
 }

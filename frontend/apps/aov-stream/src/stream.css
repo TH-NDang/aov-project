@@ -303,8 +303,9 @@ button:disabled {
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
   border-radius: var(--aov-radius-control);
   color: var(--hub-accent-strong);
 }
@@ -498,7 +499,6 @@ button:disabled {
   .hub-topnav,
   .hub-search-open .hub-topnav {
     display: flex;
-    order: 3;
     flex: 1 0 100%;
     height: 42px;
     margin: 0 calc(-1 * var(--hub-gutter));
@@ -799,7 +799,7 @@ button:disabled {
 .stream-image > span {
   color: var(--hub-on-plate);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 700;
 }
 /* The quiet line under a list that has nothing more to load. */
 .stream-load-more {
@@ -944,7 +944,7 @@ button:disabled {
   border-top: 1px solid var(--hub-border);
   color: var(--hub-accent-strong);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 700;
   text-align: center;
 }
 .hub-popover-footer:hover {

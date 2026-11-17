@@ -4,7 +4,7 @@
  * Runs after `vite build` and can run again at any time without rebuilding: it reads the template from dist/200.html
  * and replaces what an earlier run wrote. See backend/docs/adr/ADR-022-wiki-static-prerender.md.
  */
-import type { HeroRole } from "../src/features/hero/hero-classifications.ts"
+import type { HeroRole } from "../src/lib/hero-classifications.ts"
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -22,7 +22,7 @@ import {
   type PublishedPatch,
   type StaticPage,
 } from "../src/lib/seo/static-pages.ts"
-import { translationFor } from "../src/lib/seo/page-meta.ts"
+import { warehouseText } from "@aov/ui/lib/warehouse-content"
 
 const DETAIL_CONCURRENCY = 4
 const PAGE_SIZE = 100
@@ -175,7 +175,7 @@ async function readTerms(read: Reader) {
     }
   }>("/reference-catalog")
   return settings.entities.flatMap((entity) => {
-    const text = entity.kind === "term" ? translationFor(entity.translations ?? [], STATIC_SCOPE.locale) : undefined
+    const text = entity.kind === "term" ? warehouseText(entity.translations ?? [], STATIC_SCOPE.locale) : undefined
     return text ? [{ id: entity.id, name: text.name, description: text.description }] : []
   })
 }

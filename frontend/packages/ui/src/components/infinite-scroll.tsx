@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from "react"
 import { LoaderCircle } from "lucide-react"
+import { useLocaleText } from "@aov/ui/hooks/use-locale-text"
 
 interface InfiniteScrollProps {
   query: {
@@ -33,13 +34,8 @@ function scrollParent(element: HTMLElement): HTMLElement | null {
  * Loads the next part of a list as the reader nears its end. Place it right after the last row, inside the box that
  * scrolls. Takes an infinite query, or `useRevealedRows().loader` when the rows are already in memory.
  */
-export function InfiniteScroll({
-  query,
-  label,
-  retryLabel = "Tải lại phần tiếp theo",
-  enabled = true,
-  rootRef,
-}: InfiniteScrollProps) {
+export function InfiniteScroll({ query, label, retryLabel, enabled = true, rootRef }: InfiniteScrollProps) {
+  const t = useLocaleText()
   const sentinel = useRef<HTMLDivElement>(null)
   const { hasNextPage, isFetching, isError, fetchNextPage } = query
   useEffect(() => {
@@ -89,7 +85,7 @@ export function InfiniteScroll({
             className="text-xs text-primary underline-offset-2 hover:underline"
             onClick={() => void fetchNextPage().catch(() => undefined)}
           >
-            {retryLabel}
+            {retryLabel ?? t("Tải lại phần tiếp theo", "Load the next part again")}
           </button>
         )
       )}

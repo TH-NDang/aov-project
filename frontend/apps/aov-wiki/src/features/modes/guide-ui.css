@@ -1,0 +1,590 @@
+/*
+ * The auto chess guide tabs. Shared pieces first, then each tab in the order of the tab row. Game colors (prices,
+ * blessing tiers, item stones) reach these rules as custom properties set by the components, never as values here.
+ */
+/* A tab: its controls, then its content straight on the page, then the edition the data comes from. */
+.wiki-guide-tab-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+}
+/* Controls: a search, then filters on one row that never wraps; a chip row that runs out of room scrolls. */
+.wiki-guide-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px 12px;
+  min-width: 0;
+}
+.wiki-guide-toolbar > .wiki-mode-chip-row {
+  flex: 0 1 auto;
+}
+.wiki-guide-search {
+  display: flex;
+  flex: 0 1 280px;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  height: 36px;
+  padding: 0 4px 0 10px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+  color: var(--aov-muted);
+}
+.wiki-guide-search:focus-within {
+  border-color: var(--aov-accent);
+}
+.wiki-guide-search > svg {
+  flex: none;
+}
+.wiki-guide-search input {
+  font: var(--wiki-type-body);
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--aov-text);
+  text-overflow: ellipsis;
+}
+.wiki-guide-search input::placeholder {
+  color: var(--aov-muted);
+}
+.wiki-guide-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.wiki-guide-search button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  color: var(--aov-muted);
+  cursor: pointer;
+}
+.wiki-guide-search button:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-guide-select {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--aov-muted);
+}
+.wiki-guide-select select {
+  font: var(--wiki-type-body);
+  height: 36px;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+/* Ways to show the same thing: a quiet segmented switch, as in the warehouse. */
+.wiki-guide-switch {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
+.wiki-guide-switch button {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: calc(var(--aov-radius-control) - 2px);
+  background: none;
+  color: var(--aov-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.wiki-guide-switch[data-labels] button {
+  padding: 0 10px;
+}
+.wiki-guide-switch button:hover {
+  color: var(--aov-text);
+}
+.wiki-guide-switch button[aria-pressed="true"] {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-guide-switch button:focus-visible {
+  outline-offset: -2px;
+}
+.wiki-guide-clear {
+  font: var(--wiki-type-meta);
+  flex: none;
+  min-height: 32px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--aov-accent);
+  cursor: pointer;
+}
+.wiki-guide-clear:hover {
+  text-decoration: underline;
+}
+/* Pieces every tab draws: game icons, prices, trait tags and a trait's tiers. */
+.wiki-guide-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--aov-radius-card);
+  object-fit: cover;
+  background: var(--aov-sunken);
+}
+.wiki-guide-cost {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--cost-color, var(--aov-accent));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-guide-trait-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.wiki-guide-trait-tag {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 2px 9px 2px 3px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-sunken);
+  color: var(--aov-text-soft);
+  white-space: nowrap;
+}
+.wiki-guide-trait-tag b {
+  font-weight: 700;
+  color: var(--aov-text);
+}
+.wiki-guide-trait-tag[data-active="true"] {
+  border-color: color-mix(in srgb, var(--aov-accent) 50%, transparent);
+  color: var(--aov-text);
+}
+a.wiki-guide-trait-tag {
+  text-decoration: none;
+}
+a.wiki-guide-trait-tag:hover {
+  border-color: var(--aov-accent);
+  color: var(--aov-text);
+}
+.wiki-guide-name-button {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--aov-text);
+  text-align: left;
+  cursor: pointer;
+}
+.wiki-guide-name-button:hover {
+  color: var(--aov-accent-strong);
+}
+.wiki-guide-name-button > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+/* A unit's factions and classes: icons on a tile, names in a phone's table row, tags in the detail. */
+.wiki-guide-unit-traits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+.wiki-guide-unit-trait-part {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.wiki-guide-unit-trait-divider {
+  align-self: stretch;
+  width: 1px;
+  min-height: 12px;
+  margin: 0 3px;
+  background: var(--aov-line-strong);
+}
+.wiki-guide-unit-traits[data-as="names"] {
+  font: var(--wiki-type-meta);
+  justify-content: flex-start;
+  color: var(--aov-muted);
+}
+.wiki-guide-unit-traits[data-as="tags"] {
+  justify-content: flex-start;
+}
+/* A trait icon names itself on hover; the name only exists while shown, so it never widens the page. */
+.wiki-guide-trait-tip {
+  position: relative;
+  display: inline-grid;
+}
+.wiki-guide-trait-tip::after {
+  content: attr(data-tip);
+  display: none;
+  font: var(--wiki-type-meta);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 10;
+  padding: 4px 8px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-popover);
+  box-shadow: var(--aov-shadow-lg);
+  color: var(--aov-text);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+.wiki-guide-trait-tip:hover::after {
+  display: block;
+}
+/* A trait's tiers as small steps: the count in a ring that fills one step per tier, the effect beside it. */
+.wiki-guide-tiers {
+  display: grid;
+  gap: 8px;
+}
+.wiki-guide-tier {
+  font: var(--wiki-type-body);
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--aov-text-soft);
+}
+.wiki-guide-tier > b {
+  font: var(--wiki-type-meta);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--aov-text);
+  font-weight: 700;
+}
+.wiki-guide-tier > b::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--aov-accent) calc(var(--tier-progress, 1) * 1turn),
+    color-mix(in srgb, var(--aov-text) 16%, transparent) 0
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+}
+.wiki-guide-tier > span {
+  padding-top: 1px;
+}
+.wiki-guide-tier span b,
+.wiki-guide-tier strong {
+  color: var(--aov-text);
+}
+.wiki-guide-tier[data-reached="true"] > b {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.wiki-guide-tier[data-reached="true"] {
+  color: var(--aov-text);
+}
+/* Units: one row per price on wide screens, the price at the start; a heading over each price on phones. */
+.wiki-guide-note {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-guide-detail-block {
+  display: grid;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--aov-line);
+}
+/*
+ * Between the wide and the compact layout a price row holds half as many units, and the switch at the end of a
+ * toolbar keeps its icons only; its names stay for screen readers.
+ */
+@media (max-width: 1179.98px) {
+  .wiki-guide-search {
+    flex-basis: 200px;
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-toolbar {
+    gap: 8px;
+  }
+  .wiki-guide-search {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 40px;
+  }
+  /* The clear button is as tall as the field, so it is easy to hit. */
+  .wiki-guide-search button {
+    width: 40px;
+    height: auto;
+    align-self: stretch;
+  }
+  /* 16px so an iPhone does not zoom into the field. */
+  .wiki-guide-search input,
+  .wiki-guide-select select {
+    font-size: 16px;
+  }
+  .wiki-guide-select select {
+    height: 40px;
+  }
+  .wiki-guide-switch button {
+    min-width: 36px;
+    height: 36px;
+  }
+}
+.wiki-guide-trait-index {
+  display: grid;
+  gap: 28px;
+  min-width: 0;
+}
+.wiki-guide-trait-index-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.wiki-guide-trait-index-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.wiki-guide-trait-index-item > span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.wiki-guide-trait-index-item strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-guide-trait-index-item small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-guide-trait-index-item:hover {
+  background: var(--aov-surface);
+}
+.wiki-guide-trait-index-item[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+}
+.wiki-guide-trait-index-item[aria-pressed="true"] small {
+  color: var(--aov-text-soft);
+}
+.wiki-guide-trait-index-item:disabled:not([aria-pressed="true"]) {
+  cursor: default;
+  opacity: 0.45;
+}
+.wiki-mode-dialog .wiki-guide-trait-detail {
+  position: static;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  background: none;
+}
+/* Below the widest layout a trait's name sits under its icon, so long names keep two lines at most. */
+@media (max-width: 1179.98px) {
+  .wiki-guide-trait-index-item {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    align-content: start;
+    gap: 4px;
+    padding: 8px 2px;
+    text-align: center;
+  }
+  .wiki-guide-trait-index-item > span {
+    justify-items: center;
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-trait-index {
+    gap: 24px;
+  }
+  .wiki-guide-trait-index-grid {
+    gap: 2px;
+  }
+}
+/*
+ * Entries that are read, not pressed (items, blessings, quests): rows straight on the page split by rules, in as many
+ * columns as the screen gives. The first row sits right under its heading's rule.
+ */
+.wiki-guide-entries {
+  display: grid;
+  grid-template-columns: repeat(var(--entry-columns, 1), minmax(0, 1fr));
+  column-gap: 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-guide-entries[data-columns="2"] {
+  --entry-columns: 2;
+}
+.wiki-guide-entries[data-columns="3"] {
+  --entry-columns: 3;
+}
+.wiki-guide-entries[data-columns="2"] > :nth-child(-n + 2),
+.wiki-guide-entries[data-columns="3"] > :nth-child(-n + 3) {
+  padding-top: 0;
+  border-top: 0;
+}
+.wiki-guide-entry {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.wiki-guide-entry > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.wiki-guide-entry h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.wiki-guide-entry p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+  white-space: pre-line;
+}
+.wiki-guide-entry .wiki-guide-icon {
+  width: 44px;
+  height: 44px;
+}
+/*
+ * Blessings: the game ships each icon as a white drawing on black; screen blending drops the black, so the drawing
+ * sits on its tier's card color, the way the game shows it.
+ */
+.wiki-guide-blessing-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--tier-bg, var(--aov-sunken));
+}
+.wiki-guide-blessing-icon img {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+@media (max-width: 1179.98px) {
+  .wiki-guide-entries[data-columns="3"] {
+    --entry-columns: 2;
+  }
+  .wiki-guide-entries[data-columns="3"] > :nth-child(3) {
+    padding-top: var(--entry-pad, 14px);
+    border-top: 1px solid var(--aov-line);
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-toolbar[data-stack] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wiki-guide-entries[data-columns] {
+    --entry-columns: 1;
+  }
+  .wiki-guide-entries[data-columns] > :nth-child(-n + 3) {
+    padding-top: var(--entry-pad, 12px);
+    border-top: 1px solid var(--aov-line);
+  }
+  .wiki-guide-entries[data-columns] > :first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+  .wiki-guide-entry {
+    --entry-pad: 12px;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .wiki-guide-entry .wiki-guide-icon,
+  .wiki-guide-entry .wiki-guide-blessing-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
+@keyframes lineup-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+/* An empty or failed list says what happened and offers the next step. */
+.wiki-guide-state {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 20px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.wiki-guide-state p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+/* The drawer's filters stay at its top while the units scroll under them. */
+.wiki-guide-unit-picker > .wiki-guide-filter-stack {
+  position: sticky;
+  top: -18px;
+  z-index: 2;
+  margin-top: -18px;
+  padding-block: 18px 10px;
+  border-bottom: 1px solid var(--aov-line);
+  background: var(--aov-popover);
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-unit-picker > .wiki-guide-filter-stack {
+    top: -14px;
+    margin-top: -14px;
+    padding-top: 14px;
+  }
+}
+/*
+ * Between the compact and the widest layout the main column is narrow: the side column gives up some width, and the
+ * pool's search takes its own line above the price chips and the trait menus.
+ */

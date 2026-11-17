@@ -36,7 +36,7 @@ function ModeTags({ mode }: { mode: ModeCard }) {
   return (
     <>
       <AvailabilityState availability={mode.availability} quiet />
-      {mode.hasGuide && <span className="mode-tag">{wikiText(locale, "Cẩm nang", "Guide")}</span>}
+      {mode.hasGuide && <span className="wiki-mode-tag">{wikiText(locale, "Cẩm nang", "Guide")}</span>}
     </>
   )
 }
@@ -45,13 +45,13 @@ function ModeTile({ mode, to }: { mode: ModeCard; to: string }) {
   const { locale } = useWikiContext()
   const meta = modeMetaText(mode, locale)
   return (
-    <Link className="mode-card" to={to} data-closed={isClosed(mode.availability) || undefined}>
-      <ModeArt className="mode-card-art" image={mode.art} name={mode.name} inCard>
-        <span className="mode-badges">
+    <Link className="wiki-mode-card" to={to} data-closed={isClosed(mode.availability) || undefined}>
+      <ModeArt className="wiki-mode-card-art" image={mode.art} name={mode.name} inCard>
+        <span className="wiki-mode-badges">
           <ModeTags mode={mode} />
         </span>
       </ModeArt>
-      <div className="mode-card-body">
+      <div className="wiki-mode-card-body">
         <h3>{mode.name}</h3>
         {meta && <p>{meta}</p>}
       </div>
@@ -64,12 +64,12 @@ function ModeRow({ mode, to }: { mode: ModeCard; to: string }) {
   const { locale } = useWikiContext()
   const meta = modeMetaText(mode, locale)
   return (
-    <Link className="mode-row" to={to} data-closed={isClosed(mode.availability) || undefined}>
-      <ModeArt className="mode-row-art" image={mode.art} name={mode.name} inCard />
-      <div className="mode-row-body">
+    <Link className="wiki-mode-row" to={to} data-closed={isClosed(mode.availability) || undefined}>
+      <ModeArt className="wiki-mode-row-art" image={mode.art} name={mode.name} inCard />
+      <div className="wiki-mode-row-body">
         <h3>{mode.name}</h3>
         {meta && <p>{meta}</p>}
-        <p className="mode-row-tags">
+        <p className="wiki-mode-row-tags">
           <ModeTags mode={mode} />
         </p>
       </div>
@@ -84,7 +84,7 @@ export function ModeCards({ modes }: { modes: ModeCard[] }) {
   const link = (mode: ModeCard) => href(`/modes/${encodeURIComponent(mode.code)}`)
   if (layout === "compact")
     return (
-      <ul className="mode-list">
+      <ul className="wiki-mode-list">
         {modes.map((mode) => (
           <li key={mode.code}>
             <ModeRow mode={mode} to={link(mode)} />
@@ -93,7 +93,7 @@ export function ModeCards({ modes }: { modes: ModeCard[] }) {
       </ul>
     )
   return (
-    <ul className="mode-grid" style={gridColumns(modes.length)}>
+    <ul className="wiki-mode-grid" style={gridColumns(modes.length)}>
       {modes.map((mode) => (
         <li key={mode.code}>
           <ModeTile mode={mode} to={link(mode)} />
@@ -109,18 +109,18 @@ export function ModeCardsSkeleton({ count }: { count: number }) {
   const items = Array.from({ length: count }, (_, at) => at)
   if (layout === "compact")
     return (
-      <ul className="mode-list" aria-hidden="true">
+      <ul className="wiki-mode-list" aria-hidden="true">
         {items.map((at) => (
-          <li key={at} className="mode-row" data-skeleton="true" />
+          <li key={at} className="wiki-mode-row" data-skeleton="true" />
         ))}
       </ul>
     )
   return (
-    <ul className="mode-grid" style={gridColumns(count)} aria-hidden="true">
+    <ul className="wiki-mode-grid" style={gridColumns(count)} aria-hidden="true">
       {items.map((at) => (
-        <li key={at} className="mode-card" data-skeleton="true">
-          <span className="mode-art mode-card-art" />
-          <span className="mode-card-body" />
+        <li key={at} className="wiki-mode-card" data-skeleton="true">
+          <span className="wiki-mode-art wiki-mode-card-art" />
+          <span className="wiki-mode-card-body" />
         </li>
       ))}
     </ul>

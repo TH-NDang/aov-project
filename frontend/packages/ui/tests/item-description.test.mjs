@@ -1,6 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { itemProfile, itemReaderContent, parseItemDescription } from "../src/lib/item-description.ts"
+import {
+  formatItemStatValue,
+  itemProfile,
+  itemReaderContent,
+  parseItemDescription,
+} from "../src/lib/item-description.ts"
 
 const HOUSE_FORMAT = [
   "+90 Giáp phép",
@@ -156,4 +161,9 @@ test("an English heal over time is healing and a healing cut is not", () => {
 
   assert.ok(heal.effects.includes("heal"))
   assert.deepEqual(cut.effects, ["anti-heal"])
+})
+
+test("an item stat keeps the game's decimal dot and no thousands separator", () => {
+  assert.equal(formatItemStatValue({ value: 1200, percent: false }), "+1200")
+  assert.equal(formatItemStatValue({ value: 0.5, percent: true }), "+0.5%")
 })

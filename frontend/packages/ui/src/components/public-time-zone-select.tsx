@@ -8,10 +8,11 @@ import {
   useTimeZoneSaveFailed,
   utcOffsetLabel,
 } from "../lib/time-zone"
+import { isEnglishLocale, localeText } from "@aov/ui/lib/locale-text"
 
 const FOLLOW_DEVICE = "device"
 const deviceLabel = (locale: string) =>
-  `${locale.startsWith("en") ? "This device" : "Theo thiết bị"} (${utcOffsetLabel(browserTimeZone())})`
+  `${localeText(locale)("Theo thiết bị", "This device")} (${utcOffsetLabel(browserTimeZone())})`
 
 /** Lets a reader pick the zone that times are shown in. Rendered inside the settings of each public app. */
 export function PublicTimeZoneSelect({
@@ -29,7 +30,7 @@ export function PublicTimeZoneSelect({
 }) {
   const choice = useTimeZoneChoice()
   const failed = useTimeZoneSaveFailed()
-  const english = locale.startsWith("en")
+  const english = isEnglishLocale(locale)
   const title = english ? "Time zone" : "Múi giờ"
   const known = COMMON_TIME_ZONES.some((option) => option.value === choice)
   return (

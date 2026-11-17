@@ -1,8 +1,9 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { seasonUpdatesQuery, type SeasonPatch } from "./home-api"
-import { patchDayLabel } from "./patch-day-label"
+import { patchDayLabel } from "../../lib/patch-day-label"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 
@@ -32,7 +33,8 @@ function PatchRow({ patch }: { patch: SeasonPatch }) {
 /** The versions of the season in force, newest first. */
 export function SeasonUpdates() {
   const scope = useWikiContext()
-  const { locale, t } = scope
+  const { locale } = scope
+  const t = localeText(locale)
   const query = useQuery(seasonUpdatesQuery(scope))
 
   return (
@@ -58,7 +60,7 @@ export function SeasonUpdates() {
         <div className="wiki-home-updates-empty" role="status">
           <p>{wikiText(locale, "Chưa tải được cập nhật mùa.", "Could not load season updates.")}</p>
           <button className="wiki-home-retry" onClick={() => void query.refetch()} disabled={query.isFetching}>
-            <WikiIcon name="reset" /> {t("retry")}
+            <WikiIcon name="reset" /> {t("Thử lại", "Retry")}
           </button>
         </div>
       ) : !query.data.season ? (

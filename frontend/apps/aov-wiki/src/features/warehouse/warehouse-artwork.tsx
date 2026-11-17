@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { WikiImage } from "../../components/wiki-image"
 import { WarehouseIcon } from "./warehouse-icon"
-import { warehouseImage, type WarehouseEntry, type WarehouseKind } from "./warehouse-types"
+import { warehouseImage, type WarehouseEntry, type WarehouseKind } from "../../lib/warehouse-types"
 
 /** The picture of an entry, or of one of its states; the mark of its catalog stands in where it has none. */
 export function WarehouseArtwork({

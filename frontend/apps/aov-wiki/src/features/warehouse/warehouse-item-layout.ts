@@ -1,4 +1,4 @@
-import type { WarehouseContent, WarehouseEntry } from "./warehouse-types"
+import type { WarehouseContent, WarehouseEntry } from "../../lib/warehouse-types"
 
 type ShopPosition = NonNullable<WarehouseContent["shopPositions"]>[number]
 

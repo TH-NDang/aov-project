@@ -7,6 +7,7 @@ import {
   useCurrencyChoice,
   useCurrencySaveFailed,
 } from "../lib/currency"
+import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 
 const FOLLOW_DEVICE = "device"
 
@@ -26,7 +27,7 @@ export function PublicCurrencySelect({
 }) {
   const choice = useCurrencyChoice()
   const failed = useCurrencySaveFailed()
-  const english = locale.startsWith("en")
+  const english = isEnglishLocale(locale)
   const title = english ? "Currency" : "Tiền tệ"
   return (
     <>

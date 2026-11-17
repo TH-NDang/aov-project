@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { warehouseItemLayout } from "../src/features/warehouse/warehouse-item-layout.ts"
-import type { WarehouseContent, WarehouseEntry } from "../src/features/warehouse/warehouse-types.ts"
+import type { WarehouseContent, WarehouseEntry } from "../src/lib/warehouse-types.ts"
 
 function item(
   code: string,

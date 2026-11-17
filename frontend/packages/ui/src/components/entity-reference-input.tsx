@@ -574,7 +574,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
               {/* A variant shows the name of its form when it has one, otherwise its number. */}
               {known?.kind === "skill" && (known.formKey || (known.variantNo ?? 0) > 1) && (
                 <span
-                  className="inline-flex shrink-0 items-center gap-0.5 rounded bg-background/60 px-1 text-[10px] text-muted-foreground"
+                  className="inline-flex shrink-0 items-center gap-0.5 rounded bg-background/60 px-1 text-xs text-muted-foreground"
                   title={known.formKey || `Biến thể ${known.variantNo}`}
                   aria-hidden="true"
                 >

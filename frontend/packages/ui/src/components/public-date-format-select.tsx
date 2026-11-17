@@ -1,5 +1,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./public-select"
 import { DATE_FORMATS, chooseDateFormat, dateFormatLabel, isDateFormat, useDateFormat } from "../lib/time-zone"
+import { localeText } from "@aov/ui/lib/locale-text"
 
 /** Lets a reader pick how dates are written. Rendered inside the settings of each public app. */
 export function PublicDateFormatSelect({
@@ -16,7 +17,7 @@ export function PublicDateFormatSelect({
   contentClassName?: string
 }) {
   const format = useDateFormat()
-  const title = locale.startsWith("en") ? "Date format" : "Định dạng ngày"
+  const title = localeText(locale)("Định dạng ngày", "Date format")
   return (
     <Select
       value={format}

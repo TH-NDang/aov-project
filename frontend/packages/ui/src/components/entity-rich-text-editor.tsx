@@ -37,7 +37,7 @@ import { Button } from "./button"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { RichTextColorPalette } from "./rich-text-color-palette"
 import { AtSign, ChevronDown, Eraser, Link2Off, Palette, Redo2, Table2, Undo2 } from "lucide-react"
-import { cn } from "../lib/utils"
+import { cn } from "@aov/ui/lib/utils"
 
 const empty: EntityReference[] = []
 const kinds = entityKindLabels
@@ -249,7 +249,7 @@ export function EntityRichTextEditor({
   }
   const commit = (snapshot: EditorSnapshot, focus = true) => {
     if (snapshot.value.length > limit && snapshot.value.length > current.current.length) {
-      setNotice(`Nội dung vượt giới hạn ${limit.toLocaleString("vi-VN")} ký tự.`)
+      setNotice(`Nội dung vượt giới hạn ${limit.toLocaleString()} ký tự.`)
       return false
     }
     if (snapshot.value !== history.current[position.current]?.value) {
@@ -1067,7 +1067,7 @@ export function EntityRichTextEditor({
                           {translation.locale !== locale ? " (dự phòng)" : ""}
                         </span>
                       </span>
-                      <span className="ml-auto text-[10px] text-muted-foreground" aria-hidden="true">
+                      <span className="ml-auto text-xs text-muted-foreground" aria-hidden="true">
                         ↵
                       </span>
                     </button>

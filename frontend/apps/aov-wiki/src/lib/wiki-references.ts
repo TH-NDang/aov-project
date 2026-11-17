@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import type { EntityReference, RichTextSettings } from "@aov/ui/lib/entity-rich-text"
-import type { WarehouseKind } from "../features/warehouse/warehouse-types"
+import type { WarehouseKind } from "./warehouse-types"
 import {
   warehousePath,
   wikiCatalogParameters,
@@ -8,6 +8,12 @@ import {
   wikiScopeKey,
   type WikiCatalogScope,
 } from "./wiki-catalog"
+import { wikiGet } from "./wiki-api"
+
+/** Every query key of the reference catalog; reads and invalidation both use these. */
+export const referenceKeys = {
+  catalog: (scope: WikiCatalogScope) => ["wiki", "references", ...wikiScopeKey(scope), scope.section] as const,
+}
 
 const REFERENCE_TABS: Partial<Record<EntityReference["kind"], WarehouseKind>> = {
   item: "items",
@@ -18,14 +24,12 @@ const REFERENCE_TABS: Partial<Record<EntityReference["kind"], WarehouseKind>> = 
 
 export const wikiReferencesQuery = (scope: WikiCatalogScope) =>
   queryOptions({
-    queryKey: ["wiki", "references", ...wikiScopeKey(scope), scope.section],
+    queryKey: referenceKeys.catalog(scope),
     queryFn: async ({ signal }) => {
-      const response = await fetch(`/api/wiki/v1/reference-catalog?${wikiCatalogParameters(scope)}`, {
+      const { settings } = await wikiGet<{ settings: RichTextSettings }>(
+        `/reference-catalog?${wikiCatalogParameters(scope)}`,
         signal,
-        credentials: "omit",
-      })
-      if (!response.ok) throw new Error("Public references are unavailable.")
-      const { settings }: { settings: RichTextSettings } = await response.json()
+      )
       return {
         ...settings,
         entities: settings.entities.map((entity) => {

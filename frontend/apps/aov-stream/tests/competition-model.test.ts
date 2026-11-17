@@ -16,7 +16,7 @@ import {
   matchRoundLabel,
   matchStrip,
   playedOrder,
-} from "../src/features/tournaments/competition-model.ts"
+} from "../src/lib/competition-model.ts"
 
 /** 01:00 on 17 November in Hanoi, still 16 November in UTC. */
 const AFTER_HANOI_MIDNIGHT = Date.parse("2026-11-16T18:00:00Z")
@@ -46,7 +46,7 @@ test("an edited status wins over the dates", () => {
 
   assert.equal(competitionStatus(edited, AFTER_HANOI_MIDNIGHT), "FINISHED")
 })
-import { competitionMatches } from "../src/features/tournaments/match-model.ts"
+import { competitionMatches } from "../src/lib/match-model.ts"
 
 const HOUR = 60 * 60 * 1000
 const NOW = Date.parse("2026-11-13T12:00:00Z")

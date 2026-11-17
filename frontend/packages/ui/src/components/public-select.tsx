@@ -9,8 +9,8 @@ import {
 } from "react"
 import { Check, ChevronDown } from "lucide-react"
 import { RadioGroup } from "radix-ui"
-import { useIsMobile } from "../hooks/use-mobile"
-import { cn } from "../lib/utils"
+import { usePageLayout } from "../hooks/use-page-layout"
+import { cn } from "@aov/ui/lib/utils"
 import * as SelectBase from "./select"
 import { DrawerTrigger } from "./drawer"
 import { PublicDrawer, PublicDrawerContent } from "./public-overlay"
@@ -34,7 +34,7 @@ function collectLabels(children: ReactNode, labels = new Map<string, ReactNode>(
 }
 
 export function Select({ children, ...props }: ComponentProps<typeof SelectBase.Select>) {
-  const mobile = useIsMobile()
+  const mobile = usePageLayout() === "compact"
   const [localOpen, setOpen] = useState(props.defaultOpen ?? false)
   const [localValue, setValue] = useState(props.defaultValue ?? "")
   const value = props.value ?? localValue

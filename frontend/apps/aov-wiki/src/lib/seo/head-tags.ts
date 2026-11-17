@@ -1,4 +1,4 @@
-import type { PageMeta } from "./page-meta.ts"
+import { SITE_NAME, type PageMeta } from "./page-meta.ts"
 
 export interface HeadTag {
   tag: "meta" | "link"
@@ -55,7 +55,7 @@ export function headTags(meta: PageMeta, siteUrl: string | null): HeadTag[] {
   const hidden = meta.noindex || !siteUrl
   const tags: HeadTag[] = [
     named("description", meta.description),
-    property("og:site_name", "AOV WiKi"),
+    property("og:site_name", SITE_NAME),
     property("og:type", meta.type ?? "website"),
     property("og:title", meta.heading),
     property("og:description", meta.description),

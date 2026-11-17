@@ -30,7 +30,13 @@ function UniqueTag() {
 }
 
 /** Every stat with its icon and value, one to a row so numbers line up for comparison. */
-export function ItemStatList({ stats, locale }: { stats: ItemTextStat[]; locale: string }) {
+export function ItemStatList({
+  stats,
+}: {
+  stats: ItemTextStat[]
+  /** @deprecated Stats are written as the game writes them, so the locale no longer changes them. */
+  locale?: string
+}) {
   return (
     <dl className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-x-5">
       {stats.map((stat, index) => (
@@ -43,7 +49,7 @@ export function ItemStatList({ stats, locale }: { stats: ItemTextStat[]; locale:
             </span>
             {stat.note && <span className="type-meta block">{stat.note}</span>}
           </dt>
-          <dd className="text-sm font-semibold tabular-nums">{formatItemStatValue(stat, locale)}</dd>
+          <dd className="text-sm font-semibold tabular-nums">{formatItemStatValue(stat)}</dd>
         </div>
       ))}
     </dl>
@@ -53,12 +59,12 @@ export function ItemStatList({ stats, locale }: { stats: ItemTextStat[]; locale:
 /** The stats of a card in one line of icons and numbers; the label stays available to hover and screen readers. */
 export function ItemStatChips({
   stats,
-  locale,
   limit = 4,
   className,
 }: {
   stats: ItemTextStat[]
-  locale: string
+  /** @deprecated Stats are written as the game writes them, so the locale no longer changes them. */
+  locale?: string
   limit?: number
   className?: string
 }) {
@@ -68,11 +74,11 @@ export function ItemStatChips({
       {stats.slice(0, limit).map((stat, index) => (
         <span
           key={index}
-          title={`${formatItemStatValue(stat, locale)} ${stat.label}`}
+          title={`${formatItemStatValue(stat)} ${stat.label}`}
           className="inline-flex items-center gap-0.5 text-xs tabular-nums"
         >
           <StatArt stat={stat} size={14} />
-          {formatItemStatValue(stat, locale)}
+          {formatItemStatValue(stat)}
           <span className="sr-only">{stat.label}</span>
         </span>
       ))}

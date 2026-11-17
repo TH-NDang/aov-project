@@ -1,0 +1,20 @@
+/* Items: the icon wears a ring in its stone's color; the stone marks the group. */
+.wiki-guide-item-entry .wiki-guide-icon {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--stone-color) 55%, transparent);
+}
+.wiki-guide-item-stone {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  transform: rotate(45deg);
+  background: var(--stone-color);
+}
+.wiki-guide-item-stone-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.wiki-guide-stone-chip .wiki-guide-item-stone-icon {
+  width: 20px;
+  height: 20px;
+}

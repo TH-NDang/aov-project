@@ -4,11 +4,11 @@ import type { PublishedGame } from "@aov/community-contracts"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { StreamImage } from "../../components/stream-image"
 import { useStreamLocale } from "../../components/stream-locale"
-import { hueOf } from "../community/community-ui"
-import { matchUnderway } from "./competition-model"
-import { competitionMatchHref, matchState, type CompetitionMatch } from "./match-model"
-import { matchRound, matchSides, type MatchSide } from "./match-schedule"
-import { seriesRound, seriesTeams, unbroken } from "./tournament-model"
+import { hueOf } from "../../components/community-ui"
+import { matchUnderway } from "../../lib/competition-model"
+import { competitionMatchHref, matchState, type CompetitionMatch } from "../../lib/match-model"
+import { matchRound, matchSides, type MatchSide } from "../../lib/match-schedule"
+import { seriesRound, seriesTeams, unbroken } from "../../lib/tournament-model"
 
 const clockTime: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" }
 

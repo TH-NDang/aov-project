@@ -1,9 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { uploadAvatar } from "../src/features/account/avatar-upload.ts"
+import { ApiError, createApiRequest, WIKI_API_ROOT, type ApiRequest } from "../src/lib/api-client.ts"
+import { uploadAvatar } from "../src/lib/avatar-upload.ts"
 import {
-  WikiApiError,
-  createWikiRequest,
   initialDraft,
   initials,
   profileDraft,
@@ -12,7 +11,7 @@ import {
   sameDraft,
   withCurrent,
   type UserProfile,
-} from "../src/features/account/profile-model.ts"
+} from "../src/lib/profile-model.ts"
 
 const unsaved: UserProfile = {
   id: null,
@@ -41,9 +40,9 @@ test("avatar upload asks for a ticket, sends bytes to storage without credential
   const calls: string[] = []
   const bodies: unknown[] = []
   let storage: RequestInit | undefined
-  const request = async <T>(path: string, init?: RequestInit) => {
+  const request = async <T>(path: string, init?: ApiRequest) => {
     calls.push(`api ${init?.method} ${path}`)
-    if (init?.body) bodies.push(JSON.parse(String(init.body)))
+    if (init?.body) bodies.push(init.body)
     return (path.endsWith("/complete") ? { assetId: "asset-1", avatarUrl: "http://storage.test/a.png" } : ticket) as T
   }
   const fetcher = (async (url: string, init?: RequestInit) => {
@@ -105,20 +104,25 @@ test("wiki requests carry the in-memory bearer token without cookies and keep th
     sent = { url, init }
     return Response.json({ code: "USER_PROFILE_CONFLICT", detail: "Profile version is stale." }, { status: 409 })
   }) as typeof fetch
-  const request = createWikiRequest(async () => "token-1", fetcher)
+  const request = createApiRequest({
+    root: WIKI_API_ROOT,
+    token: async () => "token-1",
+    describe: (status, problem) => problem.detail || `HTTP ${status}`,
+    fetcher,
+  })
 
-  const failure = await request("/users/me", { method: "PUT", body: "{}" }).catch((error: unknown) => error)
+  const failure = await request("/users/me", { method: "PUT", body: {} }).catch((error: unknown) => error)
 
   assert.equal(sent?.url, "/api/wiki/v1/users/me")
   assert.equal(sent?.init?.credentials, "omit")
   assert.equal(sent?.init?.cache, "no-store")
   assert.equal((sent?.init?.headers as Record<string, string>).Authorization, "Bearer token-1")
-  assert.ok(failure instanceof WikiApiError)
+  assert.ok(failure instanceof ApiError)
   assert.equal(failure.status, 409)
   assert.equal(failure.code, "USER_PROFILE_CONFLICT")
   assert.match(profileError(failure), /tải bản mới nhất/)
-  assert.match(profileError(new WikiApiError(401, "", "")), /đăng nhập lại/)
-  assert.match(profileError(new WikiApiError(500, "UNKNOWN", "")), /thử lại/)
+  assert.match(profileError(new ApiError(401, "", "")), /đăng nhập lại/)
+  assert.match(profileError(new ApiError(500, "UNKNOWN", "")), /thử lại/)
 })
 
 test("saving sends only editable fields with the expected version and a trimmed name", () => {

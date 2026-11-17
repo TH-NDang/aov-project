@@ -1,16 +1,17 @@
 import { Link } from "react-router"
 import { WikiIcon } from "./wiki-icon"
-import { useWikiContext } from "../context/wiki-context"
-import { wikiSections, type WikiSectionKey } from "../lib/wiki-sections"
+import { useWikiContext, useWikiText } from "../context/wiki-context"
+import { wikiSections, type WikiSectionKey, SECTION_NAMES } from "../lib/wiki-sections"
 import "./library-navigation.css"
 
 export function LibraryNavigation({ active, onNavigate }: { active?: WikiSectionKey; onNavigate?: () => void }) {
-  const { t, href } = useWikiContext()
+  const { href } = useWikiContext()
+  const t = useWikiText()
   return (
-    <nav className="wiki-library-navigation" aria-label={t("contents")}>
+    <nav className="wiki-library-navigation" aria-label={t("Mục lục", "Contents")}>
       {(["characters", "warehouse", "play", "news"] as const).map((group) => (
         <div className="wiki-library-nav-group" key={group}>
-          <h3>{t(group)}</h3>
+          <h3>{t(...SECTION_NAMES[group])}</h3>
           {wikiSections
             .filter((section) => section.group === group)
             .map((section) => (
@@ -22,7 +23,7 @@ export function LibraryNavigation({ active, onNavigate }: { active?: WikiSection
                 aria-current={active === section.key ? "page" : undefined}
               >
                 <WikiIcon name={section.icon} size={26} />
-                {t(section.key)}
+                {t(...SECTION_NAMES[section.key])}
               </Link>
             ))}
         </div>

@@ -1,15 +1,16 @@
 import { Link } from "react-router"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { useWikiContext, useWikiText } from "../context/wiki-context"
 import { FeedbackDialog } from "./feedback-dialog"
 import { WikiIcon } from "./wiki-icon"
+import { SITE_NAME } from "../lib/seo/page-meta"
 import "./wiki-footer.css"
 
 const STREAM_URL = publicSiteUrl(import.meta.env.VITE_STREAM_URL, 5174, window.location.origin)
 
 export function WikiFooter() {
-  const { href, locale, options, regions, region, patchVariantId } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { href, options, regions, region, patchVariantId } = useWikiContext()
+  const text = useWikiText()
   const patch = options?.patches.find((entry) => entry.id === (patchVariantId || options.currentPatchVariantId))
   const market = regions.find((entry) => entry.code === region)?.displayName
 
@@ -18,7 +19,7 @@ export function WikiFooter() {
       <div className="wiki-footer-main">
         <div className="wiki-footer-about">
           <Link to={href("/")} className="wiki-footer-brand">
-            <img src="/images/mole-logo-v4-160.png" width="28" height="28" alt="" /> AOV Wiki
+            <img src="/images/mole-logo-v4-160.png" width="28" height="28" alt="" /> {SITE_NAME}
           </Link>
           <p>
             {text(
