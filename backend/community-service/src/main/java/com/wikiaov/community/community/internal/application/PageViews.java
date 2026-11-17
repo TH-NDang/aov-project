@@ -5,21 +5,9 @@ import com.wikiaov.community.community.internal.domain.PageContent;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
-import org.springframework.data.domain.Page;
 
 public final class PageViews {
     private PageViews() {
-    }
-
-    public record Slice<T>(
-            List<T> items,
-            long totalElements,
-            int page,
-            int size
-    ) {
-        public static <T> Slice<T> of(Page<T> value) {
-            return new Slice<>(value.getContent(), value.getTotalElements(), value.getNumber(), value.getSize());
-        }
     }
 
     public record Profile(

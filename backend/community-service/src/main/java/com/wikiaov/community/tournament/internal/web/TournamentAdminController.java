@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.web;
 
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentAdministration;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;

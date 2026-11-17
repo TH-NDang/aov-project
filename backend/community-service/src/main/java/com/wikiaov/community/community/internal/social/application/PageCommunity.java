@@ -6,6 +6,7 @@ import com.wikiaov.community.community.internal.domain.PostContent;
 import com.wikiaov.community.community.internal.pages.application.*;
 import com.wikiaov.community.community.internal.social.persistence.*;
 import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.CompetitionAssets;
 import java.time.Instant;
 import java.util.*;
@@ -41,7 +42,7 @@ public class PageCommunity {
     }
 
     @Transactional(readOnly = true)
-    public Slice<Post> posts(UUID pageId, String kind, int page, int size, boolean manage) {
+    public PageSlice<Post> posts(UUID pageId, String kind, int page, int size, boolean manage) {
         var filter = PageRules.postKindFilter(kind);
         if (manage)
             access.require(pageId, CommunityActor.require(), "OWNER", "EDITOR", "MODERATOR");
@@ -51,26 +52,26 @@ public class PageCommunity {
                 ? posts.findByPageIdOrderByCreatedAtDesc(pageId, PageProfiles.paging(page, size))
                 : posts.pagePosts(pageId, filter, PageProfiles.paging(page, size));
         var actor = manage ? CommunityActor.require() : null;
-        return Slice.of(views(result, actor));
+        return PageSlice.from(views(result, actor));
     }
 
     @Transactional(readOnly = true)
-    public Slice<Post> feed(UUID pageId, int page, int size) {
+    public PageSlice<Post> feed(UUID pageId, int page, int size) {
         var actor = CommunityActor.require();
         access.social(pageId);
-        return Slice.of(views(posts.visibleTo(pageId, actor.key(), PageProfiles.paging(page, size)), actor));
+        return PageSlice.from(views(posts.visibleTo(pageId, actor.key(), PageProfiles.paging(page, size)), actor));
     }
 
     /** The public feed across published pages; anonymous readers never see their own likes. */
     @Transactional(readOnly = true)
-    public Slice<FeedPost> latest(String kind, String query, int page, int size) {
+    public PageSlice<FeedPost> latest(String kind, String query, int page, int size) {
         var filter = PageRules.postKindFilter(kind);
         var pattern = PageRules.searchPattern(query);
         return feedView(posts.published(null, filter, pattern, PageProfiles.paging(page, size)), null);
     }
 
     @Transactional(readOnly = true)
-    public Slice<FeedPost> timeline(boolean following, String kind, int page, int size) {
+    public PageSlice<FeedPost> timeline(boolean following, String kind, int page, int size) {
         var actor = CommunityActor.require();
         var filter = PageRules.postKindFilter(kind);
         return feedView(posts.published(following ? actor.key() : null, filter, null, PageProfiles.paging(page, size)),
@@ -123,11 +124,13 @@ public class PageCommunity {
     }
 
     @Transactional(readOnly = true)
-    public Slice<Comment> comments(UUID postId, int page, int size) {
+    public PageSlice<Comment> comments(UUID postId, int page, int size) {
         publishedPost(postId);
-        return Slice.of(comments.findByPostIdAndHiddenFalseOrderByCreatedAtAsc(postId, PageProfiles.paging(page, size))
-                .map(row -> new Comment(row.getId(), postId, row.getAuthorName(), row.getAsPage(), row.getBody(),
-                        row.getCreatedAt(), false)));
+        return PageSlice
+                .from(comments.findByPostIdAndHiddenFalseOrderByCreatedAtAsc(postId, PageProfiles.paging(page, size))
+                        .map(row -> new Comment(row.getId(), postId, row.getAuthorName(), row.getAsPage(),
+                                row.getBody(),
+                                row.getCreatedAt(), false)));
     }
 
     public Comment comment(UUID postId, String body, boolean asPage) {
@@ -227,8 +230,8 @@ public class PageCommunity {
 
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public Slice<Report> reports(int page, int size) {
-        return Slice.of(reports.findByResolvedFalseOrderByCreatedAtAsc(PageProfiles.paging(page, size))
+    public PageSlice<Report> reports(int page, int size) {
+        return PageSlice.from(reports.findByResolvedFalseOrderByCreatedAtAsc(PageProfiles.paging(page, size))
                 .map(row -> new Report(row.getId(), row.getPageId(), row.getPostId(), row.getCommentId(),
                         row.getReason(),
                         row.getCommentId() != null
@@ -311,12 +314,13 @@ public class PageCommunity {
     }
 
     /** Feed rows whose page was withdrawn between the two reads are dropped from the slice. */
-    private Slice<FeedPost> feedView(org.springframework.data.domain.Page<CommunityPost> rows, CommunityActor actor) {
+    private PageSlice<FeedPost> feedView(org.springframework.data.domain.Page<CommunityPost> rows,
+            CommunityActor actor) {
         var cards = profiles.cards(rows.map(CommunityPost::getPageId).toSet());
         var items = views(rows, actor).getContent().stream().filter(post -> cards.containsKey(post.pageId()))
                 .map(post -> new FeedPost(post, cards.get(post.pageId()))).toList();
 
-        return new Slice<>(items, rows.getTotalElements(), rows.getNumber(), rows.getSize());
+        return new PageSlice<>(items, rows.getNumber(), rows.getSize(), rows.getTotalElements());
     }
 
     private Post postView(CommunityPost row, CommunityActor actor, long likeCount, boolean liked, long commentCount) {

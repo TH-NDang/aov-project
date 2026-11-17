@@ -1,9 +1,9 @@
 package com.wikiaov.community.tournament.internal.directory.application;
 
 import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.platform.PlatformErrorCode;
 import com.wikiaov.community.tournament.internal.application.TournamentViews;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
 import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository;

@@ -1,6 +1,6 @@
 package com.wikiaov.community.tournament.internal.web;
 
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.reference.application.EditorReferences;
 import com.wikiaov.community.tournament.internal.reference.application.EditorReferences.Entry;
 import com.wikiaov.community.tournament.internal.reference.application.EditorReferences.Kind;

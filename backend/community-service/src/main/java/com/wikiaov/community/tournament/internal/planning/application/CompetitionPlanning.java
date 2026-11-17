@@ -1,8 +1,8 @@
 package com.wikiaov.community.tournament.internal.planning.application;
 
 import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.*;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;

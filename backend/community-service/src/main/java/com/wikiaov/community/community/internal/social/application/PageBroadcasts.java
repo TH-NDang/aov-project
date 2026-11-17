@@ -6,6 +6,7 @@ import com.wikiaov.community.community.internal.pages.application.*;
 import com.wikiaov.community.community.internal.pages.persistence.PageRecord;
 import com.wikiaov.community.community.internal.social.persistence.*;
 import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.platform.PageSlice;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -64,9 +65,9 @@ public class PageBroadcasts {
     }
 
     @Transactional(readOnly = true)
-    public Slice<Profile> active(int page, int size) {
+    public PageSlice<Profile> active(int page, int size) {
         var since = Instant.now().minus(PageRules.LIVE_WINDOW);
-        return Slice.of(lives.active(since, PageProfiles.paging(page, size))
+        return PageSlice.from(lives.active(since, PageProfiles.paging(page, size))
                 .map(live -> profiles.read(live.getPageId(), false)));
     }
 

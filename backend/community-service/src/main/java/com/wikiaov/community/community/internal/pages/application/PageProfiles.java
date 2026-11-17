@@ -7,6 +7,7 @@ import com.wikiaov.community.community.internal.pages.persistence.*;
 import com.wikiaov.community.community.internal.social.persistence.PageFollowRepository;
 import com.wikiaov.community.community.internal.social.persistence.PageLiveRepository;
 import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.CompetitionIdentities;
 import com.wikiaov.community.tournament.CompetitionReferences;
 import java.time.Instant;
@@ -50,7 +51,7 @@ public class PageProfiles {
     }
 
     @Transactional(readOnly = true)
-    public Slice<Profile> list(String kind, String query, String personRole, int page, int size, boolean admin) {
+    public PageSlice<Profile> list(String kind, String query, String personRole, int page, int size, boolean admin) {
         if (admin && !CommunityActor.require().capabilities().contains("tournament:read"))
             throw PageAccess.forbidden();
         if (kind != null && !Set.of("TEAM", "PLAYER", "ORGANIZATION", "PERSON", "CIRCUIT").contains(kind))
@@ -58,11 +59,12 @@ public class PageProfiles {
         if (query == null || query.length() > 200)
             throw PageRules.invalid("Search is too long.");
         String roles = PagePersonRoles.filter(personRole);
-        return Slice.of(pages.search(kind, query, roles, !admin, paging(page, size)).map(row -> view(row, admin)));
+        return PageSlice
+                .from(pages.search(kind, query, roles, !admin, paging(page, size)).map(row -> view(row, admin)));
     }
 
     @Transactional(readOnly = true)
-    public Slice<Profile> adminDirectory(String kind, String query, String personRole, String country,
+    public PageSlice<Profile> adminDirectory(String kind, String query, String personRole, String country,
             List<UUID> entityIds, String sort, UUID relatedPageId, int page, int size) {
         if (!CommunityActor.require().capabilities().contains("tournament:read"))
             throw PageAccess.forbidden();
@@ -81,10 +83,11 @@ public class PageProfiles {
         var identities = entityIds.stream().map(UUID::toString).collect(java.util.stream.Collectors.joining(","));
         var rows = pages.adminDirectory(kind, query, PagePersonRoles.filter(personRole), country, identities, sort,
                 paging(page, size));
-        return Slice.of(rows.map(row -> view(row, true)));
+        return PageSlice.from(rows.map(row -> view(row, true)));
     }
 
-    private Slice<Profile> byActivity(String kind, String query, String personRole, String country, UUID relatedPageId,
+    private PageSlice<Profile> byActivity(String kind, String query, String personRole, String country,
+            UUID relatedPageId,
             int page, int size) {
         var roles = PagePersonRoles.filter(personRole);
         var kinds = kind != null ? kind : roles.isEmpty() ? "TEAM,PLAYER,ORGANIZATION,CIRCUIT" : "PLAYER";
@@ -93,7 +96,7 @@ public class PageProfiles {
         var rows = pages.findAllById(ranked.map(PageRepository.ActiveRow::getId).toList()).stream()
                 .collect(java.util.stream.Collectors.toMap(PageRecord::getId, java.util.function.Function.identity()));
 
-        return Slice.of(ranked.map(row -> view(rows.get(row.getId()), true).ranked(row.getLastActiveOn(),
+        return PageSlice.from(ranked.map(row -> view(rows.get(row.getId()), true).ranked(row.getLastActiveOn(),
                 row.getRelated() ? Boolean.TRUE : null)));
     }
 
@@ -121,15 +124,15 @@ public class PageProfiles {
     }
 
     @Transactional(readOnly = true)
-    public Slice<Profile> followed(int page, int size) {
+    public PageSlice<Profile> followed(int page, int size) {
         var actor = CommunityActor.require();
-        return Slice.of(pages.followedBy(actor.key(), paging(page, size)).map(row -> view(row, false)));
+        return PageSlice.from(pages.followedBy(actor.key(), paging(page, size)).map(row -> view(row, false)));
     }
 
     @Transactional(readOnly = true)
-    public Slice<Profile> suggestions(int page, int size) {
+    public PageSlice<Profile> suggestions(int page, int size) {
         var actor = CommunityActor.require();
-        return Slice.of(pages.suggestedFor(actor.key(), paging(page, size)).map(row -> view(row, false)));
+        return PageSlice.from(pages.suggestedFor(actor.key(), paging(page, size)).map(row -> view(row, false)));
     }
 
     /** Cards for the published pages among {@code ids}; withdrawn or unknown pages are left out. */

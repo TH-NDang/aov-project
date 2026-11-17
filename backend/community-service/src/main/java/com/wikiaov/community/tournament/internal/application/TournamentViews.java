@@ -2,11 +2,11 @@ package com.wikiaov.community.tournament.internal.application;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.persistence.VersionedRecord;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
-import org.springframework.data.domain.Page;
 
 public final class TournamentViews {
     private TournamentViews() {
@@ -55,8 +55,7 @@ public final class TournamentViews {
             String context
     ) {
         public static <T> PageSlice<Ranked<T>> unranked(PageSlice<View<T>> page) {
-            return new PageSlice<>(page.items().stream().map(row -> new Ranked<>(row, null, null)).toList(),
-                    page.totalElements(), page.page(), page.size());
+            return page.map(row -> new Ranked<>(row, null, null));
         }
     }
 
@@ -66,17 +65,6 @@ public final class TournamentViews {
             long matches,
             long played
     ) {
-    }
-
-    public record PageSlice<T>(
-            List<T> items,
-            long totalElements,
-            int page,
-            int size
-    ) {
-        public static <T> PageSlice<T> from(Page<T> page) {
-            return new PageSlice<>(page.getContent(), page.getTotalElements(), page.getNumber(), page.getSize());
-        }
     }
 
     public static <T> View<T> view(VersionedRecord row, T content) {

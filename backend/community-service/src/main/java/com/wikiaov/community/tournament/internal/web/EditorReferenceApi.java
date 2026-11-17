@@ -1,7 +1,7 @@
 package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.ApiPaths;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.reference.application.EditorReferences.Entry;
 import com.wikiaov.community.tournament.internal.reference.application.EditorReferences.Kind;
 import jakarta.servlet.http.HttpServletRequest;

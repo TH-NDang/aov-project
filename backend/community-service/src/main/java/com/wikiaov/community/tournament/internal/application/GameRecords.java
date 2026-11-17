@@ -1,6 +1,7 @@
 package com.wikiaov.community.tournament.internal.application;
 
 import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;

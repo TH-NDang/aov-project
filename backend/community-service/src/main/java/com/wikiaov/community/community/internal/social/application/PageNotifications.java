@@ -4,6 +4,7 @@ import com.wikiaov.community.community.internal.application.PageViews.*;
 import com.wikiaov.community.community.internal.pages.application.*;
 import com.wikiaov.community.community.internal.social.persistence.*;
 import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.platform.PageSlice;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -40,8 +41,8 @@ public class PageNotifications {
     }
 
     @Transactional(readOnly = true)
-    public Slice<Notification> inbox(int page, int size) {
-        return Slice.of(notifications
+    public PageSlice<Notification> inbox(int page, int size) {
+        return PageSlice.from(notifications
                 .findByActorOrderByCreatedAtDesc(CommunityActor.require().key(), PageProfiles.paging(page, size))
                 .map(row -> new Notification(row.getId(), row.getPageId(), row.getMessage(), row.getCreatedAt(),
                         row.getReadAt() != null)));

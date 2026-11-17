@@ -1,6 +1,7 @@
 package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.ApiPaths;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.PublicTournamentQueries.Summary;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;

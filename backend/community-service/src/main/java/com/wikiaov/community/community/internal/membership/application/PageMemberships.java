@@ -6,6 +6,7 @@ import com.wikiaov.community.community.internal.membership.persistence.*;
 import com.wikiaov.community.community.internal.pages.application.*;
 import com.wikiaov.community.community.internal.social.application.PageNotifications;
 import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.platform.PageSlice;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -59,8 +60,8 @@ public class PageMemberships {
 
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
-    public Slice<Claim> pending(int page, int size) {
-        return Slice.of(
+    public PageSlice<Claim> pending(int page, int size) {
+        return PageSlice.from(
                 claims.findByStatusOrderByCreatedAtDesc("PENDING", PageProfiles.paging(page, size)).map(this::view));
     }
 

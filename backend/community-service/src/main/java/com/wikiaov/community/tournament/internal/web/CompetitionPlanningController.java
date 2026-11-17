@@ -1,7 +1,7 @@
 package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.ApiPaths;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.planning.application.CompetitionPlanning;
 import com.wikiaov.community.tournament.internal.planning.application.CompetitionPlanning.View;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan;

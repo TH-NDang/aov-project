@@ -1,9 +1,9 @@
 package com.wikiaov.community.tournament.internal.roster.application;
 
 import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
 import com.wikiaov.community.tournament.internal.application.TournamentViews;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
 import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;

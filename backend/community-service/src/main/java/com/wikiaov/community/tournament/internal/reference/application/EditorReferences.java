@@ -1,8 +1,8 @@
 package com.wikiaov.community.tournament.internal.reference.application;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
 import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
 import com.wikiaov.community.tournament.internal.reference.persistence.EditorReferenceRepository;
 import com.wikiaov.community.tournament.internal.reference.persistence.EditorReferenceRepository.ReferenceRow;

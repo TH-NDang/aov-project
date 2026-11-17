@@ -36,7 +36,7 @@ public class PageController implements PageApi {
     }
 
     @GetMapping(value = ApiPaths.ROOT + "/me/pages/{id}/feed", version = "1")
-    public Slice<Post> feed(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
+    public PageSlice<Post> feed(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return social.feed(id, page, size);
     }
@@ -53,7 +53,7 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Profile> pages(String kind, String q, String personRole, int page, int size) {
+    public PageSlice<Profile> pages(String kind, String q, String personRole, int page, int size) {
         parameters("kind", "q", "personRole", "page", "size");
         return profiles.list(kind, q, personRole, page, size, false);
     }
@@ -69,7 +69,7 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Profile> adminPages(String kind, String q, String personRole, String country, List<UUID> entityIds,
+    public PageSlice<Profile> adminPages(String kind, String q, String personRole, String country, List<UUID> entityIds,
             String sort, UUID relatedPageId, int page, int size) {
         parameters("kind", "q", "personRole", "country", "entityIds", "sort", "relatedPageId", "page", "size");
         return profiles.adminDirectory(kind, q, personRole, country, entityIds, sort, relatedPageId, page, size);
@@ -149,7 +149,7 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Claim> claims(int page, int size) {
+    public PageSlice<Claim> claims(int page, int size) {
         return memberships.pending(page, size);
     }
 
@@ -199,13 +199,13 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Post> posts(UUID id, String kind, int page, int size) {
+    public PageSlice<Post> posts(UUID id, String kind, int page, int size) {
         parameters("kind", "page", "size");
         return social.posts(id, kind, page, size, false);
     }
 
     @Override
-    public Slice<Post> managePosts(UUID id, int page, int size) {
+    public PageSlice<Post> managePosts(UUID id, int page, int size) {
         return social.posts(id, null, page, size, true);
     }
 
@@ -225,19 +225,19 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<FeedPost> latestPosts(String kind, String q, int page, int size) {
+    public PageSlice<FeedPost> latestPosts(String kind, String q, int page, int size) {
         parameters("kind", "q", "page", "size");
         return social.latest(kind, q, page, size);
     }
 
     @Override
-    public Slice<FeedPost> timeline(boolean following, String kind, int page, int size) {
+    public PageSlice<FeedPost> timeline(boolean following, String kind, int page, int size) {
         parameters("following", "kind", "page", "size");
         return social.timeline(following, kind, page, size);
     }
 
     @Override
-    public Slice<Profile> live(int page, int size) {
+    public PageSlice<Profile> live(int page, int size) {
         parameters("page", "size");
         return broadcasts.active(page, size);
     }
@@ -268,19 +268,19 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Profile> follows(int page, int size) {
+    public PageSlice<Profile> follows(int page, int size) {
         parameters("page", "size");
         return profiles.followed(page, size);
     }
 
     @Override
-    public Slice<Profile> suggestions(int page, int size) {
+    public PageSlice<Profile> suggestions(int page, int size) {
         parameters("page", "size");
         return profiles.suggestions(page, size);
     }
 
     @Override
-    public Slice<Comment> comments(UUID id, int page, int size) {
+    public PageSlice<Comment> comments(UUID id, int page, int size) {
         parameters("page", "size");
         return social.comments(id, page, size);
     }
@@ -311,7 +311,7 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Report> reports(int page, int size) {
+    public PageSlice<Report> reports(int page, int size) {
         return social.reports(page, size);
     }
 
@@ -321,7 +321,7 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Notification> notifications(int page, int size) {
+    public PageSlice<Notification> notifications(int page, int size) {
         return notifications.inbox(page, size);
     }
 
