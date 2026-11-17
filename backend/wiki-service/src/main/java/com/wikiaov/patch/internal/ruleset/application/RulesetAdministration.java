@@ -15,6 +15,7 @@ import com.wikiaov.patch.internal.ruleset.persistence.entity.GameplayRuleset;
 import com.wikiaov.patch.internal.ruleset.persistence.entity.Region;
 import com.wikiaov.patch.internal.ruleset.persistence.entity.RulesetAssignment;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -50,7 +51,7 @@ public class RulesetAdministration {
         UUID id = UUID.randomUUID();
         persist(() -> regions.saveAndFlush(new Region(id, input.code(), input.displayName(), input.productName(),
                 input.defaultLocale(), input.timezone(), input.available())));
-        audit.record(AuditEntry.of(actors.require(), "REGION_CREATED", "REGION", id));
+        audit.record(AuditEntry.of(actors.require(), "REGION_CREATED", CatalogAggregates.REGION, id));
         return id;
     }
 
@@ -85,7 +86,7 @@ public class RulesetAdministration {
     }
 
     private void record(String action, UUID id) {
-        audit.record(AuditEntry.of(actors.require(), action, "PATCH", id));
+        audit.record(AuditEntry.of(actors.require(), action, CatalogAggregates.PATCH, id));
     }
 
     private static void persist(Supplier<?> operation) {

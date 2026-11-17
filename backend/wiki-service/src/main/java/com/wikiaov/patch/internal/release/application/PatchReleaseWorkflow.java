@@ -12,6 +12,7 @@ import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.ruleset.persistence.entity.Region;
 import com.wikiaov.patch.internal.season.application.RankedSeasons;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -145,7 +146,7 @@ public class PatchReleaseWorkflow {
     }
 
     private void record(String action, UUID releaseId) {
-        audit.record(AuditEntry.of(actors.require(), action, "PATCH", releaseId));
+        audit.record(AuditEntry.of(actors.require(), action, CatalogAggregates.PATCH, releaseId));
     }
 
     private static ApiException invalid(String detail) {

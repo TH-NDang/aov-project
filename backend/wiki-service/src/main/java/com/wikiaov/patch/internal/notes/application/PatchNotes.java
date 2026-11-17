@@ -7,6 +7,7 @@ import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.notes.persistence.PatchNoteRepository;
 import com.wikiaov.patch.internal.notes.persistence.entity.PatchNote;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -70,7 +71,8 @@ public class PatchNotes {
         note.setVersion(note.getVersion() + 1);
         notes.saveAndFlush(note);
         reviews.markDirty(id);
-        audit.record(new AuditEntry(actors.require(), "PATCH_NOTES_UPDATED", "PATCH", id, null, input.expectedVersion(),
+        audit.record(new AuditEntry(actors.require(), "PATCH_NOTES_UPDATED", CatalogAggregates.PATCH, id, null,
+                input.expectedVersion(),
                 note.getVersion(), null, Map.of("locale", locale)));
 
         return view(note);

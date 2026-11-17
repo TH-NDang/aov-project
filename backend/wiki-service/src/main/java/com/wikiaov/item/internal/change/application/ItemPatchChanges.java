@@ -192,7 +192,8 @@ public class ItemPatchChanges implements CatalogChangeProvider {
         fact.setRecordedBySubject(actor.subject());
         changes.saveAndFlush(fact);
         dataReviews.markDirty(input.patchVariantId());
-        audit.record(new AuditEntry(actor, "ITEM_PATCH_CHANGE_RECORDED", "ITEM", ownerId, target.getId(), null, null,
+        audit.record(new AuditEntry(actor, "ITEM_PATCH_CHANGE_RECORDED", CatalogAggregates.ITEM, ownerId,
+                target.getId(), null, null,
                 null, Map.of("changeSetId", fact.getId())));
         return fact.getId();
     }

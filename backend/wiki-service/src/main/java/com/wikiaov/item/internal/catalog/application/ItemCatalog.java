@@ -19,6 +19,7 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
@@ -349,7 +350,8 @@ public class ItemCatalog {
     }
 
     private void recordAuditEvent(String action, ItemIdentity owner, ItemRevision revision, String note) {
-        audit.record(new AuditEntry(actors.require(), "ITEM_" + action, "ITEM", owner.getId(), revision.getId(),
+        audit.record(new AuditEntry(actors.require(), "ITEM_" + action, CatalogAggregates.ITEM, owner.getId(),
+                revision.getId(),
                 revision.getVersion() == 1 ? null : revision.getVersion() - 1, revision.getVersion(), note, Map.of()));
     }
 

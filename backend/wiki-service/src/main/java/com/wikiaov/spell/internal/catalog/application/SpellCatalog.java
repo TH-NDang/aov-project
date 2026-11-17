@@ -7,6 +7,7 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
@@ -354,7 +355,8 @@ public class SpellCatalog implements SpellChangeQueries {
     }
 
     private void recordAuditEvent(String action, SpellIdentity owner, SpellRevision revision, String note) {
-        audit.record(new AuditEntry(actors.require(), "SPELL_" + action, "SPELL", owner.getId(), revision.getId(),
+        audit.record(new AuditEntry(actors.require(), "SPELL_" + action, CatalogAggregates.SPELL, owner.getId(),
+                revision.getId(),
                 revision.getVersion() == 1 ? null : revision.getVersion() - 1, revision.getVersion(), note, Map.of()));
     }
 

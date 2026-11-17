@@ -19,6 +19,7 @@ import com.wikiaov.hero.internal.stats.domain.HeroStatObservations;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.util.*;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -461,6 +462,7 @@ public class HeroAuthoring {
     }
 
     private void record(String action, UUID hero, UUID revision, Long before, Long after, String reason) {
-        audit.record(new AuditEntry(actors.require(), action, "HERO", hero, revision, before, after, reason, Map.of()));
+        audit.record(new AuditEntry(actors.require(), action, CatalogAggregates.HERO, hero, revision, before, after,
+                reason, Map.of()));
     }
 }

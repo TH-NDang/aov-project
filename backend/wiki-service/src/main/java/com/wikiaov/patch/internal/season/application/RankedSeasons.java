@@ -13,6 +13,7 @@ import com.wikiaov.patch.internal.season.persistence.SeasonScheduleRepository;
 import com.wikiaov.patch.internal.season.persistence.entity.RankedSeason;
 import com.wikiaov.patch.internal.season.persistence.entity.SeasonSchedule;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import jakarta.validation.constraints.*;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -98,7 +99,8 @@ public class RankedSeasons {
         } catch (DataIntegrityViolationException e) {
             throw conflict();
         }
-        audit.record(AuditEntry.of(actors.require(), "RANKED_SEASON_CREATED", "RANKED_SEASON", s.getId()));
+        audit.record(
+                AuditEntry.of(actors.require(), "RANKED_SEASON_CREATED", CatalogAggregates.RANKED_SEASON, s.getId()));
         return view(s);
     }
 
@@ -118,7 +120,8 @@ public class RankedSeasons {
             throw calendarError(violation);
         }
         var schedule = writeSchedule(seasonId, input, window);
-        audit.record(AuditEntry.of(actors.require(), "SEASON_SCHEDULE_CREATED", "RANKED_SEASON", seasonId));
+        audit.record(
+                AuditEntry.of(actors.require(), "SEASON_SCHEDULE_CREATED", CatalogAggregates.RANKED_SEASON, seasonId));
         return schedule.getId();
     }
 

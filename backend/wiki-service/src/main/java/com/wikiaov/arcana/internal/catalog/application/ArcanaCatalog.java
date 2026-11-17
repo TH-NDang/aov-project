@@ -18,6 +18,7 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
@@ -317,7 +318,8 @@ public class ArcanaCatalog {
     }
 
     private void recordAuditEvent(String action, ArcanaIdentity owner, ArcanaRevision revision, String note) {
-        audit.record(new AuditEntry(actors.require(), "ARCANA_" + action, "ARCANA", owner.getId(), revision.getId(),
+        audit.record(new AuditEntry(actors.require(), "ARCANA_" + action, CatalogAggregates.ARCANA, owner.getId(),
+                revision.getId(),
                 revision.getVersion() == 1 ? null : revision.getVersion() - 1, revision.getVersion(), note, Map.of()));
     }
 

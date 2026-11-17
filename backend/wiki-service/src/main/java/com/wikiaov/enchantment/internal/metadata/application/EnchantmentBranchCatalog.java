@@ -84,9 +84,10 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
             translations.save(e);
         }
         translations.flush();
-        audit.record(new AuditEntry(actors.require(), "ENCHANTMENT_METADATA_UPDATED", "ENCHANTMENT_METADATA",
-                UUID.nameUUIDFromBytes(code.getBytes(java.nio.charset.StandardCharsets.UTF_8)), null, before,
-                row.getVersion(), null, Map.of("code", code)));
+        audit.record(
+                new AuditEntry(actors.require(), "ENCHANTMENT_METADATA_UPDATED", CatalogAggregates.ENCHANTMENT_METADATA,
+                        UUID.nameUUIDFromBytes(code.getBytes(java.nio.charset.StandardCharsets.UTF_8)), null, before,
+                        row.getVersion(), null, Map.of("code", code)));
         return view(row);
     }
 
@@ -138,7 +139,8 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
             row.setDisplayOrder(index);
             row.setVersion(before + 1);
             records.saveAndFlush(row);
-            audit.record(new AuditEntry(actors.require(), "ENCHANTMENT_BRANCH_REORDERED", "ENCHANTMENT_METADATA",
+            audit.record(new AuditEntry(actors.require(), "ENCHANTMENT_BRANCH_REORDERED",
+                    CatalogAggregates.ENCHANTMENT_METADATA,
                     UUID.nameUUIDFromBytes(row.getCode().getBytes(java.nio.charset.StandardCharsets.UTF_8)), null,
                     before, row.getVersion(), null, Map.of("code", row.getCode(), "displayOrder", index)));
         }

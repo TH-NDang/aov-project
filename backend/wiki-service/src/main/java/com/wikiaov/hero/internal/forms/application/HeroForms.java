@@ -21,6 +21,7 @@ import com.wikiaov.hero.internal.forms.persistence.entity.HeroFormMembership;
 import com.wikiaov.hero.internal.profile.persistence.HeroProfileSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.util.*;
 import java.util.function.Function;
@@ -145,7 +146,7 @@ public class HeroForms {
             throw new ApiException(HeroErrorCode.HERO_FORMS_CONFLICT, "Another change to these forms was saved.");
         }
 
-        audit.record(new AuditEntry(actor, "HERO_FORMS_UPDATED", "HERO", holderId, null, null, null,
+        audit.record(new AuditEntry(actor, "HERO_FORMS_UPDATED", CatalogAggregates.HERO, holderId, null, null, null,
                 input.changeNote(), Map.of("before", current, "after",
                         input.forms().stream().map(entry -> entry.formKey() + ":" + entry.heroId()).toList())));
 

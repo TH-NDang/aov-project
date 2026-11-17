@@ -185,7 +185,8 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
         fact.setRecordedBySubject(actor.subject());
         changes.saveAndFlush(fact);
         dataReviews.markDirty(input.patchVariantId());
-        audit.record(new AuditEntry(actor, "ARCANA_PATCH_CHANGE_RECORDED", "ARCANA", ownerId, target.getId(), null,
+        audit.record(new AuditEntry(actor, "ARCANA_PATCH_CHANGE_RECORDED", CatalogAggregates.ARCANA, ownerId,
+                target.getId(), null,
                 null, null, Map.of("changeSetId", fact.getId())));
         return fact.getId();
     }

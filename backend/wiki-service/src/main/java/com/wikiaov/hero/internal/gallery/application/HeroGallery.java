@@ -19,6 +19,7 @@ import com.wikiaov.media.MediaAssets;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -157,7 +158,8 @@ public class HeroGallery {
                     "The image is already in this hero's gallery.");
         }
 
-        audit.record(new AuditEntry(actor, "HERO_GALLERY_ITEM_ATTACHED", "HERO", heroId, null, null, 0L, null,
+        audit.record(new AuditEntry(actor, "HERO_GALLERY_ITEM_ATTACHED", CatalogAggregates.HERO, heroId, null, null, 0L,
+                null,
                 Map.of("itemId", item.getId(), "assetId", input.assetId(), "kind", kind)));
         return item.getId();
     }
@@ -184,7 +186,7 @@ public class HeroGallery {
         item.setUpdatedAt(clock.instant());
         items.flush();
 
-        audit.record(new AuditEntry(actors.require(), "HERO_GALLERY_ITEM_UPDATED", "HERO", heroId, null,
+        audit.record(new AuditEntry(actors.require(), "HERO_GALLERY_ITEM_UPDATED", CatalogAggregates.HERO, heroId, null,
                 input.expectedVersion(), item.getVersion(), null, Map.of("itemId", itemId)));
         return Map.of("id", itemId, "version", item.getVersion());
     }
@@ -202,7 +204,7 @@ public class HeroGallery {
         items.delete(item);
         items.flush();
 
-        audit.record(new AuditEntry(actors.require(), "HERO_GALLERY_ITEM_REMOVED", "HERO", heroId, null,
+        audit.record(new AuditEntry(actors.require(), "HERO_GALLERY_ITEM_REMOVED", CatalogAggregates.HERO, heroId, null,
                 expectedVersion, null, null, Map.of("itemId", itemId, "assetId", item.getAssetId())));
     }
 

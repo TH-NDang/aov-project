@@ -16,6 +16,7 @@ import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatchTranslat
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -122,7 +123,7 @@ public class PatchDrafts {
     }
 
     private void record(String action, UUID id) {
-        audit.record(AuditEntry.of(actors.require(), action, "PATCH", id));
+        audit.record(AuditEntry.of(actors.require(), action, CatalogAggregates.PATCH, id));
     }
 
     private static void persist(Supplier<?> operation) {

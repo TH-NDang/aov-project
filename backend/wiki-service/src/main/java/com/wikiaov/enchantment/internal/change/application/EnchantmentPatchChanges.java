@@ -188,7 +188,8 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         fact.setRecordedBySubject(actor.subject());
         changes.saveAndFlush(fact);
         dataReviews.markDirty(input.patchVariantId());
-        audit.record(new AuditEntry(actor, "ENCHANTMENT_PATCH_CHANGE_RECORDED", "ENCHANTMENT", ownerId, target.getId(),
+        audit.record(new AuditEntry(actor, "ENCHANTMENT_PATCH_CHANGE_RECORDED", CatalogAggregates.ENCHANTMENT, ownerId,
+                target.getId(),
                 null, null, null, Map.of("changeSetId", fact.getId())));
         return fact.getId();
     }

@@ -7,6 +7,7 @@ import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.stats.persistence.PatchStatDefaultRepository;
 import com.wikiaov.patch.internal.stats.persistence.entity.PatchStatDefault;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.*;
@@ -78,7 +79,7 @@ public class PatchStatDefaults {
         row.setVersion(row.getVersion() + 1);
         defaults.saveAndFlush(row);
         reviews.markDirty(id);
-        audit.record(new AuditEntry(actors.require(), "PATCH_STAT_DEFAULT_SET", "PATCH", id, null,
+        audit.record(new AuditEntry(actors.require(), "PATCH_STAT_DEFAULT_SET", CatalogAggregates.PATCH, id, null,
                 input.expectedVersion(), row.getVersion(), null,
                 Map.of("statKey", key, "baseValue", input.baseValue())));
     }

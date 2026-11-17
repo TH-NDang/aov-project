@@ -10,6 +10,7 @@ import com.wikiaov.hero.internal.skills.persistence.SkillIdentityRepository;
 import com.wikiaov.hero.internal.skills.persistence.entity.HeroSkillImage;
 import com.wikiaov.media.*;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.util.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -89,7 +90,7 @@ public class HeroSkillImages {
         row.setVersion(before + 1);
         row.setUpdatedAt(clock.instant());
         images.saveAndFlush(row);
-        audit.record(new AuditEntry(actors.require(), "HERO_SKILL_IMAGE_SAVED", "HERO", heroId, null,
+        audit.record(new AuditEntry(actors.require(), "HERO_SKILL_IMAGE_SAVED", CatalogAggregates.HERO, heroId, null,
                 existing.isEmpty() ? null : before, row.getVersion(), null,
                 Map.of("imageId", row.getId(), "slot", sourceSlot, "variant", variantNo, "assetId", row.getAssetId())));
         return view(row);

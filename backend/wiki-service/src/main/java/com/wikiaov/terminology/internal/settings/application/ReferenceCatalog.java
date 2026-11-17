@@ -2,6 +2,7 @@ package com.wikiaov.terminology.internal.settings.application;
 
 import com.wikiaov.access.*;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.terminology.internal.application.ReferenceErrorCode;
 import com.wikiaov.terminology.internal.application.response.ReferenceSettingsView;
 import com.wikiaov.terminology.internal.domain.ReferenceSettings;
@@ -62,9 +63,10 @@ public class ReferenceCatalog {
         content.replace(input.entities());
         long before = config.getVersion();
         updateConfiguration(config, input);
-        audit.record(new AuditEntry(actors.require(), "REFERENCE_SETTINGS_UPDATED", "REFERENCE_SETTINGS",
-                config.getId(), null, before, config.getVersion(), null,
-                Map.of("entryCount", input.entities().size())));
+        audit.record(
+                new AuditEntry(actors.require(), "REFERENCE_SETTINGS_UPDATED", CatalogAggregates.REFERENCE_SETTINGS,
+                        config.getId(), null, before, config.getVersion(), null,
+                        Map.of("entryCount", input.entities().size())));
 
         return new ReferenceSettingsView(config.getVersion(), input);
     }

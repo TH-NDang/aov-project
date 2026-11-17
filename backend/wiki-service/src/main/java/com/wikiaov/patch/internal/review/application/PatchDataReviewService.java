@@ -8,6 +8,7 @@ import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.review.persistence.PatchDataReviewRepository;
 import com.wikiaov.patch.internal.review.persistence.entity.PatchDataReview;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.util.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -62,7 +63,8 @@ public class PatchDataReviewService implements PatchDataReviews {
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
         reviews.saveAndFlush(value);
-        audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_UPDATED", "PATCH", id, null, input.expectedVersion(),
+        audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_UPDATED", CatalogAggregates.PATCH, id, null,
+                input.expectedVersion(),
                 value.getVersion(), null, Map.of("state", input.state())));
         return new PatchDataReviewView(id, value.getState(), value.getVersion(), value.getCompletedAt());
     }
@@ -85,7 +87,7 @@ public class PatchDataReviewService implements PatchDataReviews {
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
         reviews.saveAndFlush(value);
-        audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_REOPENED", "PATCH", id, null, previous,
+        audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_REOPENED", CatalogAggregates.PATCH, id, null, previous,
                 value.getVersion(), null, Map.of()));
     }
 }

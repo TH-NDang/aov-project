@@ -17,6 +17,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.PageSlice;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -112,7 +113,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
             history.appendChange(id, order++, change);
 
         dataReviews.markDirty(variantId);
-        audit.record(new AuditEntry(actor, "HERO_PATCH_CHANGE_RECORDED", "HERO", input.heroId(),
+        audit.record(new AuditEntry(actor, "HERO_PATCH_CHANGE_RECORDED", CatalogAggregates.HERO, input.heroId(),
                 to == null ? null : to.id(), null, null, null,
                 Map.of("changeSetId", id, "sourceKind", input.source().name())));
         return id;
@@ -332,7 +333,8 @@ public class HeroPatchChanges implements HeroChangeQueries {
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
         history.saveAssessment(value);
-        audit.record(new AuditEntry(actor, "HERO_PATCH_ASSESSED", "HERO", heroId, null, input.expectedVersion(),
+        audit.record(new AuditEntry(actor, "HERO_PATCH_ASSESSED", CatalogAggregates.HERO, heroId, null,
+                input.expectedVersion(),
                 value.getVersion(), null, Map.of("changeSetId", changeSetId, "kind", input.kind().name())));
         return Map.of("kind", value.getKind(), "version", value.getVersion());
     }
@@ -370,7 +372,8 @@ public class HeroPatchChanges implements HeroChangeQueries {
         var actor = actors.require();
         history.appendPrevious(change.getId(), description, sourceUrl, clock.instant(), actor);
 
-        audit.record(new AuditEntry(actor, "HERO_MECHANIC_PREVIOUS_RECORDED", "HERO", heroId, null, null, null, null,
+        audit.record(new AuditEntry(actor, "HERO_MECHANIC_PREVIOUS_RECORDED", CatalogAggregates.HERO, heroId, null,
+                null, null, null,
                 Map.of("changeSetId", changeSetId, "changeId", changeId)));
         return change.getId();
     }

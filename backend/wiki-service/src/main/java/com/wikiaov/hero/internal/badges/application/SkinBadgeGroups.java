@@ -100,7 +100,8 @@ public class SkinBadgeGroups {
         }
         var translations = rows(group.getId(), input.translations());
         repository.replaceBadgeGroupTranslations(group.getId(), translations);
-        audit.record(AuditEntry.of(actors.require(), "SKIN_BADGE_GROUP_CREATED", "SKIN_BADGE_GROUP", group.getId()));
+        audit.record(AuditEntry.of(actors.require(), "SKIN_BADGE_GROUP_CREATED", CatalogAggregates.SKIN_BADGE_GROUP,
+                group.getId()));
         return view(group, translations, "vi-VN", 0, false);
     }
 
@@ -118,8 +119,9 @@ public class SkinBadgeGroups {
         var translations = rows(id, input.translations());
         repository.replaceBadgeGroupTranslations(id, translations);
         groups.flush();
-        audit.record(new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_UPDATED", "SKIN_BADGE_GROUP", id,
-                null, input.expectedVersion(), group.getVersion(), null, Map.of()));
+        audit.record(
+                new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_UPDATED", CatalogAggregates.SKIN_BADGE_GROUP, id,
+                        null, input.expectedVersion(), group.getVersion(), null, Map.of()));
         long count = badges.findAll().stream().filter(badge -> id.equals(badge.getGroupId())).count();
         return view(group, translations, "vi-VN", count, false);
     }

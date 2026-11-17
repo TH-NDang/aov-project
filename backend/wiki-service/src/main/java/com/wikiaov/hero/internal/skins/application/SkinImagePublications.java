@@ -18,6 +18,7 @@ import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
@@ -86,7 +87,8 @@ public class SkinImagePublications {
         var existing = store.revisions(heroId);
         var revision = publishedRevision(source, skinRevisionId, existing);
         store.insert(revision);
-        audit.record(new AuditEntry(actor, "HERO_SKIN_IMAGES_PUBLISHED", "HERO", heroId, revision.getId(), null,
+        audit.record(new AuditEntry(actor, "HERO_SKIN_IMAGES_PUBLISHED", CatalogAggregates.HERO, heroId,
+                revision.getId(), null,
                 1L, input.changeNote(),
                 Map.of("sourceRevisionId", source.id(), "imageSourceRevisionId", imageSource.id())));
 

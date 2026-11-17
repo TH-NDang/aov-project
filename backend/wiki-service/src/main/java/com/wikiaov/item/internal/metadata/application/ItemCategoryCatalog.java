@@ -82,7 +82,7 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
             translations.save(e);
         }
         translations.flush();
-        audit.record(new AuditEntry(actors.require(), "ITEM_METADATA_UPDATED", "ITEM_METADATA",
+        audit.record(new AuditEntry(actors.require(), "ITEM_METADATA_UPDATED", CatalogAggregates.ITEM_METADATA,
                 UUID.nameUUIDFromBytes(code.getBytes(java.nio.charset.StandardCharsets.UTF_8)), null, before,
                 row.getVersion(), null, Map.of("code", code)));
         return view(row);

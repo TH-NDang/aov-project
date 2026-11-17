@@ -221,7 +221,8 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         fact.setRecordedBySubject(actor.subject());
         changes.saveAndFlush(fact);
         dataReviews.markDirty(input.patchVariantId());
-        audit.record(new AuditEntry(actor, "SPELL_PATCH_CHANGE_RECORDED", "SPELL", ownerId, target.getId(), null, null,
+        audit.record(new AuditEntry(actor, "SPELL_PATCH_CHANGE_RECORDED", CatalogAggregates.SPELL, ownerId,
+                target.getId(), null, null,
                 null, Map.of("changeSetId", fact.getId())));
         return fact.getId();
     }
