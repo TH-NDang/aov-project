@@ -15,7 +15,7 @@
   overflow: hidden;
   border: 1px solid var(--drawer-line);
   border-bottom: 0;
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--aov-radius-media) var(--aov-radius-media) 0 0;
   background: var(--drawer-surface);
   color: var(--drawer-text);
   box-shadow: var(--aov-shadow-lg);
@@ -44,7 +44,7 @@
   left: 14px;
   width: 36px;
   height: 3px;
-  border-radius: 3px;
+  border-radius: var(--aov-radius-pill);
   background: var(--drawer-muted);
   opacity: 0.4;
 }
@@ -77,7 +77,7 @@
   width: 36px;
   height: 36px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--aov-radius-control);
   background: transparent;
   color: var(--drawer-muted);
 }
@@ -110,7 +110,7 @@
   min-height: 44px;
   padding: 10px 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--aov-radius-control);
   background: transparent;
   color: inherit;
   font-size: 13px;

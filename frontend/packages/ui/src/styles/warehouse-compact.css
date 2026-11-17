@@ -18,7 +18,7 @@
 [data-warehouse-density="compact"] [data-item-node] {
   min-height: 3.125rem;
   padding: 4px 6px;
-  border-radius: 7px;
+  border-radius: var(--aov-radius-control);
 }
 
 [data-warehouse-density="compact"] .shop-item-select {
@@ -35,7 +35,7 @@
   right: -2px;
   bottom: -2px;
   padding: 0 2px;
-  border-radius: 3px;
+  border-radius: var(--aov-radius-control);
   background: var(--background);
   line-height: 1;
   box-shadow: none;
