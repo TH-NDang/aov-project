@@ -1,5 +1,5 @@
 # Production profile. Values below have no default on purpose: a missing variable stops the service at startup,
-# instead of silently falling back to the local development values of application.yaml.
+# instead of silently falling back to the local development values of application.yml.
 spring:
   datasource:
     url: ${COMMUNITY_DATABASE_URL}
