@@ -230,6 +230,7 @@ export function PatchReleaseForm({ variant, data }: { variant: Variant; data: Pu
       data={data}
       seasonId={variant.seasonId}
       patch
+      variantId={variant.id}
     />
   )
 }
@@ -238,6 +239,7 @@ export function ScheduleForm({
   data,
   seasonId,
   patch = false,
+  variantId,
   marketId,
   dateOnly = false,
 }: {
@@ -245,6 +247,8 @@ export function ScheduleForm({
   data: PublicationOverview
   seasonId: string | null
   patch?: boolean
+  /** The patch whose releases the form edits, when `patch` is set. */
+  variantId?: string
   marketId?: string
   dateOnly?: boolean
 }) {
@@ -259,9 +263,7 @@ export function ScheduleForm({
   if (patch) {
     for (const release of data.releases.filter(
       (item) =>
-        item.variantId === endpoint.split("/")[3] &&
-        item.status !== "CANCELLED" &&
-        (!marketId || item.regionId === marketId),
+        item.variantId === variantId && item.status !== "CANCELLED" && (!marketId || item.regionId === marketId),
     )) {
       dates[`${release.regionId}:start`] = dateDraft(release.effectiveOn ?? release.effectiveAt)
       sources[release.regionId] = release.sourceUrl ?? ""

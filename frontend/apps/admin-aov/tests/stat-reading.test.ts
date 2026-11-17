@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { combatAttributeRows } from "../src/features/publishing/combat-attributes"
+import { ATTRIBUTE_SOURCE_LABELS, combatAttributeRows } from "../src/features/publishing/combat-attributes"
+import { STAT_STANDING_LABELS, statDistribution } from "../src/features/publishing/hero-stat-analysis"
 import { comparisonValue, joinStatReadings } from "../src/features/publishing/hero-comparison"
 import {
   formatStatReading,
@@ -77,6 +78,30 @@ test("the hero's own value shows the percent next to the number and in the readi
   assert.equal(row("MAGIC_DEFENSE").value, "80")
   assert.equal(row("MAGIC_DEFENSE").reading?.percent, undefined)
   assert.equal(row("HP").value, "3720")
+})
+
+test("a stat row says where its value comes from with a code and labels it from the table", () => {
+  const rows = combatAttributeRows(
+    {
+      values: [{ statKey: "HP", baseValue: 3720, percentValue: null, growthPerLevel: null, unit: "HP" }],
+      sources: [],
+    },
+    undefined,
+    [{ statKey: "ARMOR", baseValue: 150, unit: "POINT" } as Parameters<typeof combatAttributeRows>[2][number]],
+  )
+  const row = (key: string) => rows.find((item) => item.key === key)!
+
+  assert.equal(row("HP").kind, "OWN")
+  assert.equal(row("ARMOR").kind, "PATCH_DEFAULT")
+  assert.equal(ATTRIBUTE_SOURCE_LABELS[row("ARMOR").kind], "Mặc định của patch")
+})
+
+test("a value at the top of its group stands high, and the label comes from the table", () => {
+  const spread = statDistribution(900, [100, 200, 300, 400, 500, 900])
+
+  assert.equal(spread.standing, "HIGH")
+  assert.equal(spread.label, STAT_STANDING_LABELS.HIGH)
+  assert.equal(statDistribution(100, [100, 200]).standing, "FEW_SAMPLES")
 })
 
 test("a whole stat row in a comparison reads as one value", () => {

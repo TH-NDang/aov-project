@@ -7,12 +7,27 @@ function comparableReading(row: AttributeRow, peer: StatSample, patchCode: strin
     const resource = row.reading?.resource
     if (!resource || !fromPatch || observedStat(row.key, capture.values)?.resource !== resource) return
   }
-  if (row.kind === "Giá trị riêng") {
+  if (row.kind === "OWN") {
     const stat = peer.baseStats[row.key]
     return stat && { ...stat, percent: stat.percent ?? undefined }
   }
-  if (row.kind === "Ghi nhận từ ảnh" && fromPatch && capture.level === level)
-    return observedStat(row.key, capture.values)
+  if (row.kind === "CAPTURED" && fromPatch && capture.level === level) return observedStat(row.key, capture.values)
+}
+
+/** Where a value sits among the heroes it is compared with. */
+export type StatStanding =
+  "FEW_SAMPLES" | "SAME_FOR_ALL" | "COMMON" | "HALF" | "MINORITY" | "UNSEEN" | "LOW" | "HIGH" | "MIDDLE"
+
+export const STAT_STANDING_LABELS: Record<StatStanding, string> = {
+  FEW_SAMPLES: "Chưa đủ mẫu",
+  SAME_FOR_ALL: "Đồng mức",
+  COMMON: "Phổ biến",
+  HALF: "Một nửa nhóm",
+  MINORITY: "Thiểu số",
+  UNSEEN: "Chưa gặp trong nhóm",
+  LOW: "Thấp",
+  HIGH: "Cao",
+  MIDDLE: "Trung bình",
 }
 
 export function statDistribution(current: number | string, values: (number | string)[]) {
@@ -22,18 +37,18 @@ export function statDistribution(current: number | string, values: (number | str
     typeof current === "number" ? values.filter((v): v is number => typeof v === "number").sort((a, b) => a - b) : []
   const middle = Math.floor(numeric.length / 2)
   const median = numeric.length ? (numeric[middle] + numeric[Math.floor((numeric.length - 1) / 2)]) / 2 : undefined
-  let label = "Chưa đủ mẫu"
+  let standing: StatStanding = "FEW_SAMPLES"
   if (total >= 5) {
-    if (matches === total) label = "Đồng mức"
-    else if (matches > total / 2) label = "Phổ biến"
-    else if (typeof current === "string")
-      label = matches ? (matches * 2 === total ? "Một nửa nhóm" : "Thiểu số") : "Chưa gặp trong nhóm"
+    if (matches === total) standing = "SAME_FOR_ALL"
+    else if (matches > total / 2) standing = "COMMON"
+    else if (typeof current === "string") standing = matches ? (matches * 2 === total ? "HALF" : "MINORITY") : "UNSEEN"
     else {
       const rank = (numeric.filter((v) => v < current).length + matches / 2) / total
-      label = rank <= 0.25 ? "Thấp" : rank >= 0.75 ? "Cao" : "Trung bình"
+      standing = rank <= 0.25 ? "LOW" : rank >= 0.75 ? "HIGH" : "MIDDLE"
     }
   }
-  return { label, total, matches, median, min: numeric[0], max: numeric.at(-1) }
+  const label = STAT_STANDING_LABELS[standing]
+  return { standing, label, total, matches, median, min: numeric[0], max: numeric.at(-1) }
 }
 
 export function analyzeStat(row: AttributeRow, peers: StatSample[], patchCode: string, level: number | null) {

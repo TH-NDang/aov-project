@@ -119,12 +119,22 @@ export function observedAttributes(skills?: Skills | null, patchCode?: string) {
   }
 }
 
+/** Where a hero's value comes from: its own record, a capture, the patch default, or nowhere yet. */
+export type AttributeSource = "OWN" | "CAPTURED" | "PATCH_DEFAULT" | "UNRECORDED"
+
+export const ATTRIBUTE_SOURCE_LABELS: Record<AttributeSource, string> = {
+  OWN: "Giá trị riêng",
+  CAPTURED: "Ghi nhận từ ảnh",
+  PATCH_DEFAULT: "Mặc định của patch",
+  UNRECORDED: "Chưa ghi nhận",
+}
+
 export interface AttributeRow {
   key: string
   label: string
   group: Group | "Khác"
   value: string
-  kind: "Giá trị riêng" | "Ghi nhận từ ảnh" | "Mặc định của patch" | "Chưa ghi nhận"
+  kind: AttributeSource
   growth?: number | null
   observed?: string
   reference?: StatDefault
@@ -164,14 +174,8 @@ export function combatAttributeRows(
       own?.baseValue != null
         ? { value: own.baseValue, unit: own.unit, percent: own.percentValue ?? undefined, resource: capture?.resource }
         : capture
-    const kind =
-      ownValue != null
-        ? "Giá trị riêng"
-        : observed != null
-          ? "Ghi nhận từ ảnh"
-          : reference
-            ? "Mặc định của patch"
-            : "Chưa ghi nhận"
+    const kind: AttributeSource =
+      ownValue != null ? "OWN" : observed != null ? "CAPTURED" : reference ? "PATCH_DEFAULT" : "UNRECORDED"
     const label =
       key === "ATTACK_RANGE_TYPE"
         ? "Tầm đánh"

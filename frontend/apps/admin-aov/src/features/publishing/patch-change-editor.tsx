@@ -424,6 +424,7 @@ function ChangeRowEditor({
           )}
           <ValueInput
             label={`${label}: trước`}
+            side="OLD"
             value={row.oldValue}
             unit={row.unit}
             numeric
@@ -432,6 +433,7 @@ function ChangeRowEditor({
           <ArrowRight className="hidden size-4 text-muted-foreground sm:block" />
           <ValueInput
             label={`${label}: sau`}
+            side="NEW"
             value={row.newValue}
             unit={row.unit}
             numeric
@@ -488,6 +490,7 @@ function ChangeRowEditor({
           <div className="grid items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
             <ValueInput
               label={`${label}: trước`}
+              side="OLD"
               value={row.oldValue}
               multiline={row.field === "description"}
               onChange={(oldValue) => onChange({ oldValue })}
@@ -495,6 +498,7 @@ function ChangeRowEditor({
             <ArrowRight className="hidden size-4 text-muted-foreground sm:block" />
             <ValueInput
               label={`${label}: sau`}
+              side="NEW"
               value={row.newValue}
               multiline={row.field === "description"}
               onChange={(newValue) => onChange({ newValue })}
@@ -555,11 +559,13 @@ function ChangeRowEditor({
           </select>
           <ValueInput
             label={`${label}: mã ảnh trước`}
+            side="OLD"
             value={row.oldValue}
             onChange={(oldValue) => onChange({ oldValue })}
           />
           <ValueInput
             label={`${label}: mã ảnh sau`}
+            side="NEW"
             value={row.newValue}
             onChange={(newValue) => onChange({ newValue })}
           />
@@ -598,8 +604,11 @@ function ChangeRowEditor({
   )
 }
 
+const SIDE_PLACEHOLDERS = { OLD: "Trước", NEW: "Sau" } as const
+
 function ValueInput({
   label,
+  side,
   value,
   unit,
   numeric = false,
@@ -607,13 +616,15 @@ function ValueInput({
   onChange,
 }: {
   label: string
+  /** Which value of a change the field holds; a field without one is a description. */
+  side?: keyof typeof SIDE_PLACEHOLDERS
   value: string
   unit?: string
   numeric?: boolean
   multiline?: boolean
   onChange: (value: string) => void
 }) {
-  const placeholder = label.endsWith("trước") ? "Trước" : label.endsWith("sau") ? "Sau" : "Mô tả"
+  const placeholder = side ? SIDE_PLACEHOLDERS[side] : "Mô tả"
   if (multiline)
     return (
       <textarea

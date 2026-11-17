@@ -4,7 +4,13 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { cn } from "@aov/ui/lib/utils"
 import { analyzeStat, type statDistribution } from "./hero-stat-analysis"
-import { formatStat, normalizedUnit, type AttributeRow, type StatSample } from "./combat-attributes"
+import {
+  ATTRIBUTE_SOURCE_LABELS,
+  formatStat,
+  normalizedUnit,
+  type AttributeRow,
+  type StatSample,
+} from "./combat-attributes"
 import { ROLES, type Role } from "./types"
 
 function defaultStatus(row: AttributeRow, ready: boolean, error?: boolean) {
@@ -12,7 +18,7 @@ function defaultStatus(row: AttributeRow, ready: boolean, error?: boolean) {
     if (error) return "Chưa tải được mặc định"
     return ready ? "Chưa có mặc định được xác nhận" : "Đang tải mặc định…"
   }
-  if (row.kind === "Mặc định của patch") return "Dùng mặc định"
+  if (row.kind === "PATCH_DEFAULT") return "Dùng mặc định"
   if (row.matchesDefault) return "Khớp mặc định"
   if (typeof row.reading?.value === "number" && normalizedUnit(row.key, row.reading.unit) === row.reference.unit)
     return "Khác mặc định"
@@ -125,7 +131,7 @@ export function HeroStatAnalysisPanel({
                     <span
                       className={cn(
                         "type-label rounded border px-1.5 py-0.5",
-                        score.label === "Cao" || score.label === "Thấp"
+                        score.standing === "HIGH" || score.standing === "LOW"
                           ? "border-primary/40 text-primary"
                           : "text-muted-foreground",
                       )}
@@ -150,9 +156,8 @@ export function HeroStatAnalysisPanel({
                 </p>
                 {row.reading ? (
                   <p className="type-meta">
-                    {row.kind}
-                    {row.kind === "Ghi nhận từ ảnh" &&
-                      (level === null ? " · Chưa xác định cấp tướng" : ` · Cấp ${level}`)}
+                    {ATTRIBUTE_SOURCE_LABELS[row.kind]}
+                    {row.kind === "CAPTURED" && (level === null ? " · Chưa xác định cấp tướng" : ` · Cấp ${level}`)}
                   </p>
                 ) : (
                   <p className="type-meta">Chưa có số liệu riêng của tướng để xếp mức.</p>

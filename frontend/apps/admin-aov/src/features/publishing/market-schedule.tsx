@@ -440,6 +440,7 @@ function MarketVersionEditor({
                 <ScheduleForm
                   key={variant.id}
                   endpoint={`/admin/patch-variants/${variant.id}/releases`}
+                  variantId={variant.id}
                   data={data}
                   seasonId={variant.seasonId}
                   marketId={market.id}
@@ -472,6 +473,7 @@ function MarketVersionEditor({
                   <ScheduleForm
                     key={variant.id}
                     endpoint={`/admin/patch-variants/${variant.id}/releases`}
+                    variantId={variant.id}
                     data={data}
                     seasonId={variant.seasonId}
                     marketId={market.id}

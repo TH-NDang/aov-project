@@ -6,6 +6,7 @@ import { gameplayIcons, type GameplayIconName } from "@aov/ui/components/gamepla
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@aov/ui/components/tabs"
 import { HeroStatAnalysisPanel } from "./hero-stat-analysis-panel"
 import {
+  ATTRIBUTE_SOURCE_LABELS,
   combatAttributeRows,
   formatStat,
   observedAttributes,
@@ -75,8 +76,8 @@ function AttributeList({ rows, columns = false }: { rows: AttributeRow[]; column
                     <dt className="type-body break-words">{row.label}</dt>
                     <dd className="min-w-0 text-right">
                       <span className="type-body tabular-nums">{row.value}</span>
-                      {(row.kind !== "Ghi nhận từ ảnh" || row.reference) && (
-                        <span className="type-meta block">{row.kind}</span>
+                      {(row.kind !== "CAPTURED" || row.reference) && (
+                        <span className="type-meta block">{ATTRIBUTE_SOURCE_LABELS[row.kind]}</span>
                       )}
                       {row.growth != null && (
                         <span className="type-meta block">
@@ -84,7 +85,7 @@ function AttributeList({ rows, columns = false }: { rows: AttributeRow[]; column
                           {row.growth} / cấp
                         </span>
                       )}
-                      {row.kind === "Giá trị riêng" && row.observed && row.observed !== row.value && (
+                      {row.kind === "OWN" && row.observed && row.observed !== row.value && (
                         <span className="type-meta block">Ảnh ghi {row.observed}</span>
                       )}
                       {row.reference && (
@@ -161,15 +162,15 @@ export function HeroCombatAttributes({
                 <dt className="type-body text-muted-foreground">{r.label}</dt>
                 <dd className="type-body text-right tabular-nums">
                   {r.value}
-                  {!sameSource && <span className="type-meta block">{r.kind}</span>}
+                  {!sameSource && <span className="type-meta block">{ATTRIBUTE_SOURCE_LABELS[r.kind]}</span>}
                 </dd>
               </div>
             ))}
           </dl>
           {sameSource && (
             <p className="type-meta">
-              {summary[0].kind}
-              {summary[0].kind === "Ghi nhận từ ảnh" && observation?.level == null && " · Chưa xác định cấp tướng"}
+              {ATTRIBUTE_SOURCE_LABELS[summary[0].kind]}
+              {summary[0].kind === "CAPTURED" && observation?.level == null && " · Chưa xác định cấp tướng"}
             </p>
           )}
         </div>
