@@ -74,14 +74,15 @@ listed here; anything not listed follows the common rule.
 - Shared HTTP contracts have one shape in both services: `ApiPaths`, `ApiException` with a module-owned `ApiErrorCode`
   enum, `PageSlice`, `QueryParameters.requireOnly`, RFC 9457 problem details with a request id, and
   `fail-on-unknown-properties: true` for request bodies. Each lives once in the service's `platform` module; do not
-  re-implement them per module. community-service still keeps per-module page types and query checks (move them to
-  its `platform` when those modules are reworked) and still accepts unknown properties.
+  re-implement them per module.
 - An exception handler never maps `IllegalArgumentException` or another unexpected exception to a 4xx answer.
   Unexpected errors are logged and answered with 500.
-- Both services run `ModuleArchitectureTests` and `LayerArchitectureTests`. community-service has only its module test
-  (`ModuleArchitectureTest`) so far.
-- Deliberate difference: community-service may use native PostgreSQL queries for reads over its `jsonb` documents
-  (ADR-015).
+- Both services run their module test (`ModuleArchitectureTests`, `ModuleArchitectureTest` in community-service) and
+  `LayerArchitectureTests`.
+- Deliberate differences of community-service: it may use native PostgreSQL queries for reads over its `jsonb`
+  documents (ADR-015); a problem keeps its context (`usages`, `missingFields`, `references`) as top-level members
+  rather than under `context`, because Admin reads them there; `QueryParameters.requireOnly` also takes the list
+  parameters that may repeat (`on`, `ids`, `entityIds`).
 - Schema changes only through Flyway migrations in `src/main/resources/db/migration`. Never edit an applied migration. JPA `ddl-auto` stays `validate`.
 - Object storage only through the `ObjectStorage` port and `S3ObjectStorage` (AWS SDK for Java 2.x). No MinIO SDK.
 - Media bytes never pass through the backend: presigned upload to `incoming/`, then `complete` validates and copies to
