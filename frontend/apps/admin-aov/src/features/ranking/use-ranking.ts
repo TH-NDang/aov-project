@@ -74,6 +74,8 @@ export function useSnapshotActions() {
   })
   const importSet = useMutation({
     mutationFn: (body: unknown) => rankingApi.importSnapshot(body),
+    // The import dialog shows a failure next to the set; the shared toast stays quiet.
+    meta: { silent: true },
     onSuccess: (detail) => {
       client.setQueryData(rankingKeys.detail(detail.id), detail)
       return client.invalidateQueries({ queryKey: rankingKeys.list })

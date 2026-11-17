@@ -72,6 +72,8 @@ export function useCaptureActions() {
   })
   const importSet = useMutation({
     mutationFn: (body: unknown) => buildsApi.importCapture(body),
+    // The import dialog shows a failure next to the set; the shared toast stays quiet.
+    meta: { silent: true },
     onSuccess: (detail) => {
       client.setQueryData(buildKeys.detail(detail.id), detail)
       return client.invalidateQueries({ queryKey: buildKeys.list })
