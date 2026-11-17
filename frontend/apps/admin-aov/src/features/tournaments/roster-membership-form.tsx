@@ -43,6 +43,7 @@ export function RosterMembershipForm({
       else await tournamentApi.create("roster-memberships", content)
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
     },
+    meta: { silent: true },
   })
   const busy = mutation.isPending || lifecycleBusy
   useEffect(() => {

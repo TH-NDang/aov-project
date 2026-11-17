@@ -291,7 +291,7 @@ function TraitsEditor({
   const persist = useEvaluationSave(heroId, revision)
   const save = useMutation({
     mutationFn: () => persist((current) => api.saveTraits(current, cleanTraits(traits, skills), note.trim())),
-    meta: { successMessage: "Đã lưu đặc điểm vào bản nháp." },
+    meta: { silent: true, successMessage: "Đã lưu đặc điểm vào bản nháp." },
     onSuccess: onClose,
   })
   const changed = JSON.stringify(cleanTraits(traits, skills)) !== JSON.stringify(saved) || !!note.trim()
@@ -595,7 +595,7 @@ function NotesEditor({
       }
       return persist((current) => api.saveNotes(current, locale, value, note.trim()))
     },
-    meta: { successMessage: "Đã lưu nhận định vào bản nháp." },
+    meta: { silent: true, successMessage: "Đã lưu nhận định vào bản nháp." },
     onSuccess: onClose,
   })
   const changed = NOTE_FIELDS.some(([key]) => notes[key].trim() !== saved[key].trim()) || !!note.trim()

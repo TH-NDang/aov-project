@@ -203,6 +203,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       client.setQueryData([...competitionKeys, access.actorKey, entry.id], value)
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
     },
+    meta: { silent: true },
   })
   const change = useCallback(<K extends keyof CompetitionPlan>(key: K, value: CompetitionPlan[K]) => {
     setPlan((old) => ({ ...old, [key]: value }))

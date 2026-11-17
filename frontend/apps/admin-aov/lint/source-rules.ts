@@ -19,6 +19,26 @@ function pixels(value: number, unit: string) {
   return unit === "px" ? value : value * 16
 }
 
+/** The call starting at `start` (an opening parenthesis), up to its closing one. */
+function call(text: string, start: number) {
+  let depth = 0
+  for (let index = start; index < text.length; index++) {
+    if (text[index] === "(") depth++
+    else if (text[index] === ")" && --depth === 0) return text.slice(start, index + 1)
+  }
+  return text.slice(start)
+}
+
+/** Mutations whose error the screen renders itself while the shared toast would show it too. */
+function errorsShownTwice(text: string) {
+  return [...text.matchAll(/const (\w+) = useMutation(?:<[^>]*>)?\(/g)]
+    .filter((match) => {
+      const options = call(text, match.index + match[0].length - 1)
+      return !/silent:\s*true/.test(options) && new RegExp(`\\b${match[1]}\\.(error|isError)\\b`).test(text)
+    })
+    .map((match) => `:${text.slice(0, match.index).split("\n").length} ${match[1]}`)
+}
+
 // The admin reads on a 12/14/16/24 scale; see the type-* styles in packages/ui/src/styles/typography.css.
 const minimumPx = 12
 
@@ -44,6 +64,12 @@ const rules: Rule[] = [
     hint: "Use confirmAction or confirmDiscard from components/confirm-dialog.",
     files: files(source, /\.tsx?$/),
     offenders: (text) => (text.includes("window.confirm") ? [""] : []),
+  },
+  {
+    name: "a mutation whose error the screen shows keeps the shared toast quiet",
+    hint: "Add meta: { silent: true } to that useMutation, or leave the error to the toast (frontend/AGENTS.md).",
+    files: files(source, /.tsx?$/),
+    offenders: (text) => errorsShownTwice(text),
   },
   {
     name: "esports viewer components and models stay free of admin-only modules",

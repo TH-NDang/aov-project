@@ -109,7 +109,7 @@ export function HeroShopPanel({
         needsReview: form.needsReview,
         note: form.note.trim() || null,
       }),
-    meta: { successMessage: "Đã lưu giá tướng." },
+    meta: { silent: true, successMessage: "Đã lưu giá tướng." },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: shopKey(heroId) })
       setEditing(false)
@@ -431,7 +431,7 @@ export function SkinAcquisitionEditor({
         needsReview: form.needsReview,
         note: form.note.trim() || null,
       }),
-    meta: { successMessage: "Đã lưu cách nhận trang phục." },
+    meta: { silent: true, successMessage: "Đã lưu cách nhận trang phục." },
     onSuccess: async (_saved, next) => {
       await client.invalidateQueries({ queryKey: shopKey(heroId) })
       onDraftChange(null)

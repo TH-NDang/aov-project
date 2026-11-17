@@ -135,7 +135,7 @@ function VideoForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; 
   const [problem, setProblem] = useState("")
   const save = useMutation({
     mutationFn: () => tournamentApi.save("series", record, { ...record.content, sourceUrl: url.trim() || undefined }),
-    meta: { successMessage: "Đã lưu link video." },
+    meta: { silent: true, successMessage: "Đã lưu link video." },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
       onDone()
@@ -224,7 +224,7 @@ function ResultForm({
               verifiedOn: current?.verifiedOn ?? null,
             },
       }),
-    meta: { successMessage: "Đã lưu tỷ số." },
+    meta: { silent: true, successMessage: "Đã lưu tỷ số." },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
       onDone()

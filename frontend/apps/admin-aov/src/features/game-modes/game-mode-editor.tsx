@@ -72,6 +72,7 @@ export function GameModeEditorPage() {
         ],
       ),
     onError: (error) => setMessage(errorMessage(error)),
+    meta: { silent: true },
   })
 
   if (!mode.data || !content) return <Page>{mode.isError ? errorMessage(mode.error) : "Đang tải…"}</Page>

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { before, beforeEach, test } from "node:test"
-import { answerConfirm, answerMediaQueries, button, click, render, waitFor, withDom } from "./fixtures/dom"
+import { answerConfirm, answerMediaQueries, button, click, render, type, waitFor, withDom } from "./fixtures/dom"
 import { fakeBackend, json } from "./fixtures/network"
 import { sessionRoutes, signIn } from "./fixtures/session"
 
@@ -22,6 +22,8 @@ let deleteAnswer = () => json({ code: "INTERNAL_ERROR", status: 500, detail: "Bo
 const backend = fakeBackend(sessionRoutes({ capabilities: ["catalog:read", "catalog:write"] }), (request) => {
   if (request.pathname === "/admin/source-files/file-1" && request.method === "GET") return json(details)
   if (request.pathname === "/admin/source-files/file-1/delete") return deleteAnswer()
+  if (request.pathname === "/admin/source-collections" && request.method === "POST")
+    return json({ code: "SOURCE_COLLECTION_CODE_TAKEN", status: 409 }, 409)
   return undefined
 })
 withDom({
@@ -87,4 +89,32 @@ test("a file being removed cannot be removed a second time", async () => {
   release()
   await waitFor(() => closed === 1)
   assert.equal(deletes().length, 1)
+})
+
+test("a collection that cannot be saved shows its error once, next to the form", async () => {
+  const { Toaster } = await import("sonner")
+  const { queryClient } = await import("../src/app/providers")
+  const { CollectionFormSheet } = await import("../src/features/files/collection-form-sheet")
+  await render(<CollectionFormSheet open collection={null} onClose={() => {}} onSaved={() => {}} />, {
+    client: queryClient,
+    wrap: (node) => (
+      <>
+        {node}
+        <Toaster />
+      </>
+    ),
+  })
+  const field = (label: string) =>
+    [...document.querySelectorAll("label")]
+      .find((candidate) => candidate.querySelector(".type-label")?.textContent === label)!
+      .querySelector("input")!
+  await type(field("Mã bộ"), "shop-2026-09-16")
+  await type(field("Tên hiển thị"), "Cửa hàng")
+
+  await click(button("Tạo bộ"))
+
+  const taken = "Đã có bộ tệp dùng mã này. Chọn mã khác."
+  await waitFor(() => document.body.textContent?.includes(taken))
+  assert.equal(document.body.textContent!.split(taken).length - 1, 1)
+  assert.equal(document.querySelector('[role="alert"]')?.textContent, taken)
 })

@@ -113,7 +113,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       ? selectedEntry
       : (scopedRecords.find((entry) => entry.id === selectedId || entry.code === selectedId) ??
         records.find((entry) => entry.id === selectedId || entry.code === selectedId))
-  const mutation = useMutation({ mutationFn: (action: () => Promise<void>) => action() })
+  const mutation = useMutation({ mutationFn: (action: () => Promise<void>) => action(), meta: { silent: true } })
   const existingDraft = scopeState.drafts.find((entry) => entry.id === selected?.id)
   const candidates = scopedRecords.filter((entry) => {
     const text = warehouseText(entry.content.translations, context.locale)

@@ -169,6 +169,7 @@ function Editor({
         publish === undefined ? "Đã lưu hồ sơ." : publish ? "Đã xuất bản hồ sơ." : "Đã ngừng xuất bản hồ sơ.",
       )
     },
+    meta: { silent: true },
   })
   const remove = useMutation({
     mutationFn: () => pageApi.remove(entry),
@@ -176,6 +177,7 @@ function Editor({
       await client.invalidateQueries({ queryKey: pageKeys })
       void navigate(profileDirectoryPath(entry.kind, content.personRoles))
     },
+    meta: { silent: true },
   })
   const tabs: Tab[] = [
     ["overview", community ? "Thông tin chung" : "Tổng quan", Info, null],
@@ -573,10 +575,12 @@ function LiveSection({ entry }: { entry: CommunityProfile }) {
   const start = useMutation({
     mutationFn: () => pageApi.startLive(entry.id, url, title),
     onSuccess: () => client.invalidateQueries({ queryKey: pageKeys }),
+    meta: { silent: true },
   })
   const end = useMutation({
     mutationFn: () => pageApi.endLive(entry.id),
     onSuccess: () => client.invalidateQueries({ queryKey: pageKeys }),
+    meta: { silent: true },
   })
   const failure = start.error || end.error
   return (
@@ -650,6 +654,7 @@ function Representatives({ entry }: { entry: CommunityProfile }) {
       setConfirm(null)
       await client.invalidateQueries({ queryKey: pageKeys })
     },
+    meta: { silent: true },
   })
   const owned = members.data?.some((member) => member.role === "OWNER")
   return (
@@ -726,6 +731,7 @@ function Handover({ entry }: { entry: CommunityProfile }) {
       setCopied(false)
       await client.invalidateQueries({ queryKey: key })
     },
+    meta: { silent: true },
   })
   const cancel = useMutation({
     mutationFn: () => pageApi.cancelHandover(entry.id),
@@ -733,6 +739,7 @@ function Handover({ entry }: { entry: CommunityProfile }) {
       setLink("")
       await client.invalidateQueries({ queryKey: key })
     },
+    meta: { silent: true },
   })
   const busy = issue.isPending || cancel.isPending
   const failure = issue.error ?? cancel.error ?? status.error

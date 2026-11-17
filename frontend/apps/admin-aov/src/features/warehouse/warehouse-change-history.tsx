@@ -57,7 +57,7 @@ export function WarehouseChangeHistory({
   const [source, setSource] = useState(patchContext?.sourceUrl ?? "")
   const [message, setMessage] = useState("")
   const [editing, setEditing] = useState(!!patchContext)
-  const mutation = useMutation({ mutationFn: (action: () => Promise<void>) => action() })
+  const mutation = useMutation({ mutationFn: (action: () => Promise<void>) => action(), meta: { silent: true } })
   const revisions = (history.data ?? []).filter(
     (revision) =>
       revision.rulesetId === rulesetId && revision.state === "PUBLISHED" && !(kind === "spells" && revision.archived),

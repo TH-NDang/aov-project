@@ -72,7 +72,7 @@ function FinalTableEditor({
         links: links.filter((link) => link.label.trim() && link.url.trim()),
       })
     },
-    meta: { successMessage: "Đã lưu bảng kết quả." },
+    meta: { silent: true, successMessage: "Đã lưu bảng kết quả." },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
       onClose()

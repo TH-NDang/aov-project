@@ -47,6 +47,7 @@ export function SpellRemovalHistory({
       setSourceUrl("")
       setNotes("")
     },
+    meta: { silent: true },
   })
   let validSource = false
   try {

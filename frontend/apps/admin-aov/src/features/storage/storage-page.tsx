@@ -43,6 +43,7 @@ export function StoragePage() {
       client.setQueryData(["storage", saved.id], saved)
       void client.invalidateQueries({ queryKey: ["storage"], exact: true })
     },
+    meta: { silent: true },
   })
   useChangeEffect(() => {
     setEditor(null)

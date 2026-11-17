@@ -80,6 +80,7 @@ export function RecordLifecycleActions({
   })
   const mutation = useMutation({
     mutationFn: () => (entry.deletedAt ? tournamentApi.restore(kind, entry) : tournamentApi.remove(kind, entry)),
+    meta: { silent: true },
   })
   const usages = error ? lifecycleErrorUsages(error) : lifecycleUsages(impact.data?.usages)
   const stale =

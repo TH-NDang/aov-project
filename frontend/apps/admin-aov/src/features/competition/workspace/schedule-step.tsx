@@ -651,6 +651,7 @@ function ScheduleSetup({ ws, stage }: { ws: Workspace; stage: CompetitionStage }
   const generate = useMutation({
     mutationFn: () => competitionApi.preview(ws.plan, stage.code, opponent),
     onSuccess: setPreview,
+    meta: { silent: true },
   })
   const canGenerate = ["ROUND_ROBIN", "DOUBLE_ELIMINATION"].includes(stage.format)
   const linked = ws.plan.matches.some((match) => match.stageCode === stage.code && match.seriesId)

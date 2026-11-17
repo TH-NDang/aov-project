@@ -119,6 +119,7 @@ export function AutoChessEditorPage() {
         ],
       ),
     onError: (error) => setMessage(errorMessage(error)),
+    meta: { silent: true },
   })
 
   const missing = guide.isError && guide.error instanceof ApiError && guide.error.status === 404
@@ -340,6 +341,7 @@ function StartGuide({
       )
     },
     onSuccess: onCreated,
+    meta: { silent: true },
   })
   return (
     <Section title="Chưa có cẩm nang">
@@ -420,6 +422,7 @@ function CommunityModeration({
       void client.invalidateQueries({ queryKey: ["admin-game-modes", "community", modeId] })
     },
     onError: (cause) => setError(errorMessage(cause)),
+    meta: { silent: true },
   })
   const names = new Map(content.units.map((unit) => [unit.code, unit.name]))
   return (

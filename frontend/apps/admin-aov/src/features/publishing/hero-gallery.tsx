@@ -355,6 +355,7 @@ function GalleryDetail({
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: galleryKey(heroId) }),
     onError: (failure) => setError(errorMessage(failure)),
+    meta: { silent: true },
   })
   const { who, what } = imageParts(image, name)
   const status = imageStatus(image, patchName)

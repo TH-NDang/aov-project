@@ -84,6 +84,7 @@ function ReviewCard({ claim, report }: { claim?: PageClaim; report?: CommunityRe
         ? pageApi.decide(claim, positive, resolution).then(() => {})
         : pageApi.resolve(report!.id, resolution, positive),
     onSuccess: () => client.invalidateQueries({ queryKey: pageKeys }),
+    meta: { silent: true },
   })
   return (
     <article className="space-y-4 admin-section py-5">

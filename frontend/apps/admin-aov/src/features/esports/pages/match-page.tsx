@@ -153,6 +153,7 @@ function MatchView({ access }: { access: Access }) {
         )
       return created.id
     },
+    meta: { silent: true },
   })
   const roster = useMemo(() => {
     const names = new Map((players.data ?? []).map((player) => [player.id, player.content.nickname]))

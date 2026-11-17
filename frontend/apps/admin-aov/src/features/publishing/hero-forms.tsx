@@ -131,6 +131,7 @@ export function HeroFormsDialog({
       setRows(null)
       onOpenChange(false)
     },
+    meta: { silent: true },
   })
   const move = (index: number, delta: number) => {
     const next = [...current]

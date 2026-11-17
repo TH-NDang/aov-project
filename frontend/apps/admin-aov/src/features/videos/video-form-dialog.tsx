@@ -152,7 +152,7 @@ function VideoForm({
       }
       return video ? videoApi.update(video.id, saveBody(video, changes)) : videoApi.create(changes)
     },
-    meta: { successMessage: video ? "Đã lưu video." : "Đã thêm video." },
+    meta: { silent: true, successMessage: video ? "Đã lưu video." : "Đã thêm video." },
     onSuccess: async () => {
       await cache.invalidateQueries({ queryKey: videoKeys.lists })
       onClose()

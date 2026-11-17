@@ -24,6 +24,7 @@ export function PatchDataReview({ variant }: { variant: Variant }) {
       setConfirm(false)
       await cache.invalidateQueries({ queryKey: overviewKey })
     },
+    meta: { silent: true },
   })
   return (
     <div className="m-3 space-y-2 rounded-lg bg-muted/30 p-3 text-sm">

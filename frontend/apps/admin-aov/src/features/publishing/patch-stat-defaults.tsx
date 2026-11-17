@@ -52,6 +52,7 @@ export function PatchStatDefaults({ variant }: { variant: Variant }) {
     onError: () => {
       void query.refetch()
     },
+    meta: { silent: true },
   })
   return (
     <div className="m-3 space-y-3 rounded-lg border p-3">

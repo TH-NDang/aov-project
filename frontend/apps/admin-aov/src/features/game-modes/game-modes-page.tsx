@@ -203,6 +203,7 @@ function CreateModeDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
       setCode("")
       setName("")
     },
+    meta: { silent: true },
   })
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -320,6 +321,7 @@ function ImportModesDialog({
       }
     },
     onSettled: () => void client.invalidateQueries({ queryKey: gameModeKeys.all }),
+    meta: { silent: true },
   })
   return (
     <Dialog open={open} onOpenChange={(next) => !run.isPending && onOpenChange(next)}>

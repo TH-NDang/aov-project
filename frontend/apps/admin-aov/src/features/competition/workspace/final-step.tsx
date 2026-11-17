@@ -35,7 +35,7 @@ export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
           }
         }),
       }),
-    meta: { successMessage: "Đã điền thứ hạng theo nhánh đấu." },
+    meta: { silent: true, successMessage: "Đã điền thứ hạng theo nhánh đấu." },
     onSuccess: () => client.invalidateQueries({ queryKey: tournamentKeys.all }),
   })
   const fill = async () => {

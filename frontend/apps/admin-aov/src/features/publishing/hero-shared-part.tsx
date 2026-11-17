@@ -120,6 +120,7 @@ export function HeroSharedPart({
         client.invalidateQueries({ queryKey: ["hero-forms"] }),
         client.invalidateQueries({ queryKey: publishReadinessKey }),
       ]),
+    meta: { silent: true },
   })
   const busy = save.isPending || uploading
 

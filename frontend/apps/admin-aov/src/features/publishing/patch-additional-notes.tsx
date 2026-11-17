@@ -86,6 +86,7 @@ export function PatchAdditionalEditor({
       void cache.invalidateQueries({ queryKey: ["publication-overview"] })
       onSaved()
     },
+    meta: { silent: true },
   })
   if (query.isPending)
     return (

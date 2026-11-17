@@ -25,14 +25,20 @@ export function useVideoActions() {
     mutationFn: ({ video, status }: { video: AdminVideo; status: AdminVideo["status"] }) =>
       videoApi.update(video.id, saveBody(video, { status })),
     onSettled: refresh,
+    meta: { silent: true },
   })
-  const remove = useMutation({ mutationFn: (video: AdminVideo) => videoApi.remove(video), onSettled: refresh })
+  const remove = useMutation({
+    mutationFn: (video: AdminVideo) => videoApi.remove(video),
+    onSettled: refresh,
+    meta: { silent: true },
+  })
   const move = useMutation({
     mutationFn: async ({ videos, id, direction }: { videos: AdminVideo[]; id: string; direction: -1 | 1 }) => {
       for (const { video, displayOrder } of reorder(videos, id, direction))
         await videoApi.update(video.id, saveBody(video, { displayOrder }))
     },
     onSettled: refresh,
+    meta: { silent: true },
   })
 
   return {

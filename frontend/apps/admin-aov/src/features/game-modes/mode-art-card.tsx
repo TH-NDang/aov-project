@@ -39,6 +39,7 @@ export function ModeArtCard({ modeId, canWrite }: { modeId: string; canWrite: bo
       void client.invalidateQueries({ queryKey: gameModeKeys.list })
     },
     onError: () => setPreview(undefined),
+    meta: { silent: true },
   })
 
   const data = mode.data
