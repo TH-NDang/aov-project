@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import type { EntityReference, RichTextSettings } from "@aov/ui/lib/entity-rich-text"
-import type { WarehouseKind } from "../features/warehouse/warehouse-types"
+import type { WarehouseKind } from "./warehouse-types"
 import {
   warehousePath,
   wikiCatalogParameters,

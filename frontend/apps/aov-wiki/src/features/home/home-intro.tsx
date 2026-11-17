@@ -8,7 +8,7 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { usePublishedChanges } from "../../lib/wiki-patch-changes"
 import { seasonUpdatesQuery } from "./home-api"
 import { bannerOfDay } from "./home-banners"
-import { patchDayLabel } from "./patch-day-label"
+import { patchDayLabel } from "../../lib/patch-day-label"
 import { SITE_NAME } from "../../lib/seo/page-meta"
 
 /**

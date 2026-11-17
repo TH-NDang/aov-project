@@ -18,7 +18,7 @@ import {
   type WarehouseGroup,
   type WarehouseKind,
   warehouseText,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 import { warehouseViewGroups } from "./warehouse-view"
 import "./warehouse-catalogs.css"
 

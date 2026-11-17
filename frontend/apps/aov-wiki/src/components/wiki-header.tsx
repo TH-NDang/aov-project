@@ -19,8 +19,8 @@ import { wikiSections, type WikiSectionKey } from "../lib/wiki-sections"
 import { LibraryContents } from "./library-contents"
 import { WikiIcon } from "./wiki-icon"
 import { WikiSearch } from "./wiki-search"
-import { WikiAccountMenu } from "../features/auth/wiki-account"
-import { useWikiAccountPreferences } from "../features/auth/wiki-auth"
+import { WikiAccountMenu } from "./wiki-account"
+import { useWikiAccountPreferences } from "../lib/wiki-auth"
 
 type IconName =
   "search" | "globe" | "user" | "chevron" | "check" | "home" | "more" | "close" | "chevronRight" | "contents"

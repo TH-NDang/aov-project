@@ -15,7 +15,7 @@ import {
   type PublishedWarehouseRecord,
   type WarehouseGroup,
   type WarehouseKind,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 
 export type WarehouseItem = Extract<PublishedWarehouseRecord, { kind: "items" }>
 export type WarehouseArcana = Extract<PublishedWarehouseRecord, { kind: "arcana" }>

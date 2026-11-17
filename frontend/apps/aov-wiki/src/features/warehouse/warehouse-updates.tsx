@@ -4,7 +4,7 @@ import { ChangeKindLabel } from "../../components/patch-changes-row"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { changeKind, publishedNotesForSubject } from "../../lib/published-change-subjects"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
-import type { PublishedWarehouseRecord } from "./warehouse-types"
+import type { PublishedWarehouseRecord } from "../../lib/warehouse-types"
 
 export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord }) {
   const scope = useWikiContext()

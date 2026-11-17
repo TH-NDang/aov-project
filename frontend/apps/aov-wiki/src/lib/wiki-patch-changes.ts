@@ -1,10 +1,10 @@
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useWikiContext, type WikiPatch } from "../context/wiki-context"
-import { warehouseCatalogQuery } from "../features/warehouse/warehouse-api"
-import { warehouseName } from "../features/warehouse/warehouse-types"
+import { warehouseCatalogQuery } from "./warehouse-api"
+import { warehouseName } from "./warehouse-types"
 import { wikiCatalogParameters, type WikiCatalogScope } from "./wiki-catalog"
 import { changeKind, changedSubjects, type PublishedChange } from "./published-change-subjects"
-import type { WarehouseKind } from "../features/warehouse/warehouse-types"
+import type { WarehouseKind } from "./warehouse-types"
 import { wikiGetAll, wikiGetPage, type WikiPage } from "./wiki-api"
 
 /** Every query key of the shared patch change lists; reads and invalidation both use these. */

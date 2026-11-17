@@ -24,7 +24,7 @@ import {
   type PublishedWarehouseRecord,
   type WarehouseGroup,
   type WarehouseKind,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 
 /** From this width the search and a catalog's filters share one line; below it the filters take the next line. */
 const ONE_LINE = "(min-width: 1100px)"

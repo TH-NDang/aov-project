@@ -2,13 +2,13 @@ import { WikiHeader } from "./components/wiki-header"
 import { WikiHome } from "./features/home/wiki-home"
 import { Navigate, Route, Routes, useLocation, useParams, useSearchParams } from "react-router"
 import { lazy, Suspense, useEffect } from "react"
-import { HeroDirectoryLoading, HeroDetailLoading } from "./features/hero/hero-loading"
+import { HeroDirectoryLoading, HeroDetailLoading } from "./features/hero/components/hero-loading"
 import { WikiLibraryLayout } from "./layout/wiki-library-layout"
 import { SkinDirectoryLoading } from "./features/skins/skin-loading"
 import { WarehouseRouteLoading } from "./features/warehouse/warehouse-loading"
 import { useWikiContext, wikiText } from "./context/wiki-context"
 import { ContactPage } from "./features/contact/contact-page"
-import { WikiLoginCallback } from "./features/auth/wiki-account"
+import { WikiLoginCallback } from "./components/wiki-account"
 import { WikiFooter } from "./components/wiki-footer"
 import { NotFoundPage } from "./features/not-found/not-found-page"
 import { legacyWarehouseTarget, WAREHOUSE_TABS, wikiScrollKey } from "./lib/wiki-catalog"
@@ -23,10 +23,10 @@ const PatchDetailPage = lazy(() =>
   import("./features/updates/patch-detail-page").then((module) => ({ default: module.PatchDetailPage })),
 )
 const HeroDirectory = lazy(() =>
-  import("./features/hero/hero-directory").then((module) => ({ default: module.HeroDirectory })),
+  import("./features/hero/pages/hero-directory").then((module) => ({ default: module.HeroDirectory })),
 )
 const HeroDetailPage = lazy(() =>
-  import("./features/hero/hero-detail").then((module) => ({ default: module.HeroDetailPage })),
+  import("./features/hero/pages/hero-detail").then((module) => ({ default: module.HeroDetailPage })),
 )
 const SkinDirectory = lazy(() =>
   import("./features/skins/skin-directory").then((module) => ({ default: module.SkinDirectory })),

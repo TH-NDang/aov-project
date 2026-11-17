@@ -1,6 +1,6 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
-import { wikiAccessToken } from "../auth/wiki-auth"
+import { wikiAccessToken } from "../../lib/wiki-auth"
 import type { GuideContent, LineupUnit, ModeImage, RuleSection } from "./auto-chess-model"
 import { WikiApiError, wikiGet, wikiRequest, type WikiRequest } from "../../lib/wiki-api"
 

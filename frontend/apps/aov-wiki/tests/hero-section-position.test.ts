@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { activeSection } from "../src/features/hero/hero-section-position.ts"
+import { activeSection } from "../src/lib/hero-section-position.ts"
 
 const at = (id: string, top: number) => ({ id, top })
 

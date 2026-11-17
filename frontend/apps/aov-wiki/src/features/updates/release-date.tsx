@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { useWikiContext } from "../../context/wiki-context"
-import { releaseDateValue } from "./updates-api"
+import { releaseDateValue } from "../../lib/updates-api"
 
 const DAY: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { previousPatch } from "../src/features/hero/hero-patch-line.ts"
-import { statText } from "../src/features/hero/hero-stat-text.ts"
+import { previousPatch } from "../src/lib/hero-patch-line.ts"
+import { statText } from "../src/features/hero/model/hero-stat-text.ts"
 
 test("the previous version follows season and patch order inside one ruleset", () => {
   const seasons = [

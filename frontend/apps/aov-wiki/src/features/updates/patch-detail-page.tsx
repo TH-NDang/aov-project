@@ -14,9 +14,9 @@ import type { ChangeDomain } from "../../lib/wiki-patch-changes"
 import { notFoundMeta, patchMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
-import { heroDetailQuery, type HeroDetail } from "../hero/hero-api"
-import { activeSection } from "../hero/hero-section-position"
-import { ChangeDisclosure, ChangeKind, ChangeList } from "./change-list"
+import { heroDetailQuery, type HeroDetail } from "../../lib/hero-api"
+import { activeSection } from "../../lib/hero-section-position"
+import { ChangeDisclosure, ChangeKind, ChangeList } from "../../components/change-list"
 import { ReleaseDate } from "./release-date"
 import {
   patchChangesQuery,
@@ -24,7 +24,7 @@ import {
   releaseDateValue,
   type PatchChangeRow,
   type PatchRelease,
-} from "./updates-api"
+} from "../../lib/updates-api"
 import "./updates.css"
 
 const DOMAINS: { domain: ChangeDomain; title: [string, string]; tab?: string }[] = [

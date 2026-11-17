@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { seasonUpdatesQuery, type SeasonPatch } from "./home-api"
-import { patchDayLabel } from "./patch-day-label"
+import { patchDayLabel } from "../../lib/patch-day-label"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 

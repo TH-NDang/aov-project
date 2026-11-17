@@ -14,7 +14,7 @@ import {
   videoThumbnail,
   videoWatchUrl,
   type PublicVideo,
-} from "../src/features/videos/video-model.ts"
+} from "../src/components/videos/video-model.ts"
 
 const video = (changes: Partial<PublicVideo> = {}): PublicVideo => ({
   id: "v",

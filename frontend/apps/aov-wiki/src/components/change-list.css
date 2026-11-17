@@ -1,0 +1,297 @@
+.wiki-change-kind {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  color: var(--kind-color);
+  white-space: nowrap;
+}
+/* ---------- The changes of one hero: abilities apart by spacing, each field with its before and after ---------- */
+.wiki-change-groups {
+  display: grid;
+  min-width: 0;
+  gap: 20px;
+}
+.wiki-change-group {
+  min-width: 0;
+}
+.wiki-change-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.wiki-change-group-head h4 {
+  font: var(--wiki-type-entry);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  color: var(--aov-text);
+}
+.wiki-change-skill-art {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: var(--aov-accent);
+}
+.wiki-change-skill-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wiki-change-skill-link {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 36px;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--aov-accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.wiki-change-skill-link:is(:hover, :focus-visible) {
+  color: var(--aov-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wiki-change-list {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+}
+.wiki-change-group-head + .wiki-change-list {
+  margin-top: 8px;
+}
+.wiki-change-list > li {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.wiki-change-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.wiki-change-title {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+}
+.wiki-change-title strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-change-list p {
+  font: var(--wiki-type-body);
+  max-width: 72ch;
+  color: var(--aov-text-soft);
+}
+.wiki-change-list p > .wiki-change-kind {
+  margin-right: 10px;
+  vertical-align: -3px;
+}
+/* Before is quiet and after is strong; neither row is filled or coloured. */
+.wiki-change-compare {
+  display: grid;
+  gap: 2px;
+}
+.wiki-change-compare > div {
+  font: var(--wiki-type-body);
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+}
+.wiki-change-compare dt {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-change-compare dd {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+/* One term of a formula keeps its words together; the line breaks before the next operator instead. */
+.wiki-change-term {
+  display: inline-block;
+  max-width: 100%;
+}
+.wiki-change-values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-change-list .wiki-change-values {
+  color: var(--aov-text);
+}
+.wiki-change-compare [data-side="before"] dd,
+.wiki-change-old,
+.wiki-change-arrow {
+  color: var(--aov-muted);
+}
+.wiki-change-compare [data-side="after"] dd,
+.wiki-change-new {
+  color: var(--aov-text);
+  font-weight: 600;
+}
+.wiki-rank-toggle {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 36px;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin-block: -4px;
+  border-radius: var(--aov-radius-control);
+  padding-inline: 6px 8px;
+  color: var(--aov-text-soft);
+  white-space: nowrap;
+}
+.wiki-rank-toggle[aria-pressed="true"] {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-rank-toggle:is(:hover, :focus-visible) {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+/* A value at each skill level. Its row names line up with the before and after labels of fields written as two lines. */
+.wiki-change-rank-table {
+  /* Holds the text kept for screen readers, which would otherwise widen the page from a cell scrolled out of sight. */
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.wiki-change-rank-table table {
+  font: 400 0.875rem/1.25rem var(--wiki-font-reading);
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-change-rank-table :is(th, td) {
+  min-width: 56px;
+  padding: 4px 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+.wiki-change-rank-table thead :is(th, td) {
+  font: var(--wiki-type-meta);
+  border-bottom: 1px solid var(--aov-line);
+  color: var(--aov-muted);
+}
+.wiki-change-rank-table tbody th {
+  font: var(--wiki-type-meta);
+  min-width: calc(3rem + 8px);
+  padding-left: 0;
+  color: var(--aov-muted);
+  text-align: left;
+}
+.wiki-change-rank-table thead td {
+  min-width: calc(3rem + 8px);
+}
+.wiki-change-rank-table tr[data-side="before"] td {
+  color: var(--aov-muted);
+}
+.wiki-change-rank-table tr[data-side="after"] td {
+  color: var(--aov-text-soft);
+}
+.wiki-change-rank-table tr[data-side="after"] td[data-changed] {
+  color: var(--aov-text);
+  font-weight: 600;
+}
+/* Under a table of levels: the share of each stat the formula adds, names in one column and values in another. */
+.wiki-change-shares {
+  font: var(--wiki-type-body);
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px 16px;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-change-shares > div {
+  display: contents;
+}
+.wiki-change-shares dt {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-change-shares dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  color: var(--aov-text-soft);
+}
+/* A long set is cut short until the reader asks for the rest. */
+.wiki-change-detail {
+  min-width: 0;
+}
+.wiki-change-detail[data-clipped] {
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
+}
+.wiki-change-detail-inner {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+.wiki-change-toggle {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  width: fit-content;
+  min-height: 36px;
+  align-items: center;
+  justify-self: start;
+  gap: 4px;
+  border-radius: var(--aov-radius-control);
+  padding: 0 12px 0 8px;
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-change-toggle:is(:hover, :focus-visible) {
+  color: var(--aov-accent-strong);
+}
+.wiki-change-toggle svg {
+  transition: transform 140ms;
+}
+.wiki-change-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+@media (min-width: 900px) {
+  .wiki-change-group-head + .wiki-change-list {
+    padding-left: 42px;
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-change-skill-art {
+    width: 28px;
+    height: 28px;
+  }
+  .wiki-change-group-head h4 {
+    gap: 8px;
+  }
+  .wiki-change-skill-link,
+  .wiki-rank-toggle {
+    min-height: 36px;
+  }
+  .wiki-rank-toggle {
+    margin-block: -8px;
+  }
+  .wiki-change-rank-table :is(th, td) {
+    min-width: 44px;
+    padding-inline: 6px;
+  }
+  .wiki-change-toggle {
+    min-height: 40px;
+  }
+}

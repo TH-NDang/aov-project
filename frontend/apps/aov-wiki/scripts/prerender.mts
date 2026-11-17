@@ -4,7 +4,7 @@
  * Runs after `vite build` and can run again at any time without rebuilding: it reads the template from dist/200.html
  * and replaces what an earlier run wrote. See backend/docs/adr/ADR-022-wiki-static-prerender.md.
  */
-import type { HeroRole } from "../src/features/hero/hero-classifications.ts"
+import type { HeroRole } from "../src/lib/hero-classifications.ts"
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"

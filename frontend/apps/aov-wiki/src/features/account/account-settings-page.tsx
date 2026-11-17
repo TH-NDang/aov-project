@@ -11,7 +11,7 @@ import {
   clearAccountActionResult,
   useWikiSession,
   wikiAccessToken,
-} from "../auth/wiki-auth"
+} from "../../lib/wiki-auth"
 import { SITE_NAME } from "../../lib/seo/page-meta"
 import "./account.css"
 

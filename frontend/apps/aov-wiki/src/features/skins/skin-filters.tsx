@@ -2,8 +2,8 @@ import { useRef, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import type { SkinFilterOption } from "./skin-api"
-import { SkinIcon } from "./skin-icon"
+import type { SkinFilterOption } from "../../lib/skin-api"
+import { SkinIcon } from "../../components/skin-icon"
 
 export type FilterKind = "hero" | "badge"
 export type FilterOption = SkinFilterOption & { image?: string }

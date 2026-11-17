@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { signIn, useWikiSession } from "../auth/wiki-auth"
+import { signIn, useWikiSession } from "../../lib/wiki-auth"
 import {
   BOARD_SLOTS,
   cellOf,

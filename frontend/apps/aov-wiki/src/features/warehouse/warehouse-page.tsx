@@ -5,7 +5,7 @@ import { CatalogHeading } from "../../layout/catalog-heading"
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { warehouseCatalogQuery, warehouseGroupsQuery } from "./warehouse-api"
+import { warehouseCatalogQuery, warehouseGroupsQuery } from "../../lib/warehouse-api"
 import { WarehouseCatalog } from "./warehouse-catalogs"
 import { WarehouseControls } from "./warehouse-controls"
 import { WarehouseDetail } from "./warehouse-detail"
@@ -18,7 +18,7 @@ import {
   warehouseKind,
   type PublishedWarehouseRecord,
   type WarehouseEntry,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 import "./warehouse-page.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"

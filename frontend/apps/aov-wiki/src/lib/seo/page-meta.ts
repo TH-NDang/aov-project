@@ -1,4 +1,4 @@
-import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "../../features/hero/hero-classifications.ts"
+import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "../hero-classifications.ts"
 import { warehousePath, WAREHOUSE_TABS } from "../wiki-catalog.ts"
 import { warehouseText } from "@aov/ui/lib/warehouse-content"
 

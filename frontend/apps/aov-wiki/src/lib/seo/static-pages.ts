@@ -1,5 +1,5 @@
-import { formLabelRole, heroFormPath } from "../../features/hero/hero-forms.ts"
-import type { HeroRole } from "../../features/hero/hero-classifications.ts"
+import { formLabelRole, heroFormPath } from "../hero-forms.ts"
+import type { HeroRole } from "../hero-classifications.ts"
 import { warehousePath, WAREHOUSE_TABS } from "../wiki-catalog.ts"
 import { headTags } from "./head-tags.ts"
 import {

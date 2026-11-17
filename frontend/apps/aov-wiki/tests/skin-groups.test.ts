@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { groupSkins } from "../src/features/skins/skin-groups.ts"
-import type { SkinEntry } from "../src/features/skins/skin-api.ts"
+import { groupSkins } from "../src/lib/skin-groups.ts"
+import type { SkinEntry } from "../src/lib/skin-api.ts"
 
 function skin(heroCode: string, name: string, rarityCode?: string): SkinEntry {
   return { heroId: heroCode, heroCode, heroName: heroCode, skinKey: name, name, rarityCode, actualLocale: "vi-VN" }

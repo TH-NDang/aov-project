@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import type { HeroDetail, HeroListItem } from "../src/features/hero/hero-api.ts"
+import type { HeroDetail, HeroListItem } from "../src/lib/hero-api.ts"
 import {
   currentScope,
   formLabelRole,
@@ -10,7 +10,7 @@ import {
   heroWithForm,
   resolveHeroRoute,
   selectedForm,
-} from "../src/features/hero/hero-forms.ts"
+} from "../src/lib/hero-forms.ts"
 import { buildStaticPages, renderSitemap, type PublishedCatalog } from "../src/lib/seo/static-pages.ts"
 import { wikiScrollKey } from "../src/lib/wiki-catalog.ts"
 

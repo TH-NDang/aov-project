@@ -11,7 +11,7 @@ import {
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { WikiIcon } from "./wiki-icon"
-import { ContactRequestError, sendContactRequest } from "../features/contact/contact-request"
+import { ContactRequestError, sendContactRequest } from "../lib/contact-request"
 import { FeedbackImages } from "./feedback-images"
 import "./feedback-dialog.css"
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { warehouseStatValue } from "../src/features/warehouse/warehouse-types.ts"
+import { warehouseStatValue } from "../src/lib/warehouse-types.ts"
 
 test("an arcana stat keeps the game's decimal dot in Vietnamese", () => {
   assert.equal(warehouseStatValue({ key: "ARMOR", value: 3.1, unit: null }, "vi-VN"), "+3.1")

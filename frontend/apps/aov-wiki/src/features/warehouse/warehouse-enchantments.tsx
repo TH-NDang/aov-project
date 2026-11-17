@@ -10,7 +10,7 @@ import {
   type PublishedWarehouseRecord,
   type WarehouseEntry,
   type WarehouseGroup,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 
 function EnchantmentNode({
   entry,

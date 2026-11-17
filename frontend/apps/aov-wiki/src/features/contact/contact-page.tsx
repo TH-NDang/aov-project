@@ -6,7 +6,7 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { contactMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
-import { ContactRequestError, sendContactRequest } from "./contact-request"
+import { ContactRequestError, sendContactRequest } from "../../lib/contact-request"
 import { SITE_NAME } from "../../lib/seo/page-meta"
 import "./contact.css"
 

@@ -19,7 +19,7 @@ import { WikiImageCredit } from "../../components/wiki-image-credit"
 import { WarehouseUpdates } from "./warehouse-updates"
 import { WarehouseArtwork } from "./warehouse-artwork"
 import { FeedbackDialog } from "../../components/feedback-dialog"
-import { SubjectVideos } from "../videos/subject-videos"
+import { SubjectVideos } from "../../components/videos/subject-videos"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { arcanaTitle } from "./warehouse-arcana"
@@ -35,7 +35,7 @@ import {
   type WarehouseGroup,
   type WarehouseKind,
   type WarehouseText,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 
 const STAT_LABELS: Record<string, [string, string]> = {
   physicalAttack: ["Công vật lý", "Attack Damage"],

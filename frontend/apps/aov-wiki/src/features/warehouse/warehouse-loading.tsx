@@ -4,7 +4,7 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { NARROW_ITEM_LAYOUT, preferredItemLayout, useMediaQuery, type ItemLayout } from "./warehouse-layout"
 import { WarehouseTabs } from "./warehouse-tabs"
-import { warehouseKind, type WarehouseKind } from "./warehouse-types"
+import { warehouseKind, type WarehouseKind } from "../../lib/warehouse-types"
 
 /** How many placeholders stand in for each catalog, close to what its first screen holds. */
 const PLACEHOLDERS: Record<WarehouseKind, number> = { items: 15, enchantments: 4, arcana: 18, spells: 9 }
