@@ -93,7 +93,7 @@ Wiki, nên chỗ nào dùng class Tailwind thì ghi bo góc bằng token hoặc 
 - `FeedbackDialog` (`src/components/feedback-dialog.tsx`) mở từ nút "Góp ý trang này" ở chân trang của mọi trang. Trang
   tướng (Tổng quan, kỹ năng đang xem) và trình xem trang phục có nút "Đề xuất chỉnh sửa" cho đúng phần đó, kèm nội dung
   đang hiển thị để đối chiếu.
-- Góp ý được gửi qua `POST /api/wiki/v1/media/contact-requests` (`src/features/contact/contact-request.ts`) cùng tên,
+- Góp ý được gửi qua `POST /api/wiki/v1/media/contact-requests` (`src/lib/contact-request.ts`) cùng tên,
   email, đường dẫn trang và mốc dữ liệu đang xem; tối đa 4.000 ký tự. Gửi xong hiện mã tiếp nhận.
 - Nút **Lưu nháp** chỉ lưu nội dung chữ, đường dẫn trang và thời gian trên thiết bị qua `localStorage`.
 - Ảnh đính kèm (tối đa 3 ảnh PNG/JPG, 5 MB mỗi ảnh) chỉ để đối chiếu trên thiết bị, không được gửi hay lưu cùng bản
