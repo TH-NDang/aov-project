@@ -14,6 +14,10 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
+PULLED = (module.RESOURCES / "data" / "trang-bi.json").exists()
+
+
+@unittest.skipUnless(PULLED, "pull the Lien-Quan-v3 source collection first (pnpm sources:sync pull in admin-aov)")
 class WarehouseImportTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

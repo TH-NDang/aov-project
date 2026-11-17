@@ -89,7 +89,8 @@ class ImageImportTest(unittest.TestCase):
         file = Mock(name="source-file")
         file.name = "test.png"
         file.read_bytes.return_value = b"image"
-        with patch.object(module, "local_file", return_value=file), patch.object(module, "upload_ticket") as upload:
+        with patch.object(module, "local_file", return_value=file), patch.object(module, "upload_ticket") as upload, \
+                patch.object(module, "source_credit", return_value={"kind": "TEST"}):
             self.assertEqual(importer.upload_one("assets/test.png", "HERO_HEAD"), "asset")
         upload.assert_called_once_with(ticket, b"image", importer.args.upload_host)
 
