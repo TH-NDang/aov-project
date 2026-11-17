@@ -3,7 +3,7 @@ import type { ProfileLink } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
-import { useIsMobile } from "@aov/ui/hooks/use-mobile"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 
@@ -37,7 +37,7 @@ function SocialChannel({
 }) {
   const { text } = useStreamLocale()
   const titleId = useId()
-  const mobile = useIsMobile()
+  const mobile = usePageLayout() === "compact"
   const panel = useRef<HTMLDivElement>(null)
   const destination = useRef<HTMLAnchorElement>(null)
   const pinned = useRef(false)

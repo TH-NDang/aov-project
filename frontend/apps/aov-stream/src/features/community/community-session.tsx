@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router"
 import { PublicAccountMenu, PublicAccountSettings, PublicAccountSummary } from "@aov/ui/components/public-account-menu"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
-import { useIsMobile } from "@aov/ui/hooks/use-mobile"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useAccountCurrency } from "@aov/ui/lib/currency"
 import { publicAuthError } from "@aov/ui/lib/public-auth"
 import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
@@ -42,7 +42,7 @@ export function CommunitySessionButton() {
   })
   const { locale, setLocale, text } = useStreamLocale()
   const { theme, setTheme } = useStreamTheme()
-  const mobile = useIsMobile()
+  const mobile = usePageLayout() === "compact"
   const accountProps = {
     product: "stream" as const,
     locale,

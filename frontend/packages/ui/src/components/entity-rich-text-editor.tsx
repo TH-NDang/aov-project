@@ -1067,7 +1067,7 @@ export function EntityRichTextEditor({
                           {translation.locale !== locale ? " (dự phòng)" : ""}
                         </span>
                       </span>
-                      <span className="ml-auto text-[10px] text-muted-foreground" aria-hidden="true">
+                      <span className="ml-auto text-xs text-muted-foreground" aria-hidden="true">
                         ↵
                       </span>
                     </button>

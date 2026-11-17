@@ -114,7 +114,7 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
       return (
         <span
           aria-hidden="true"
-          className={`inline-flex shrink-0 items-center justify-center rounded-sm bg-muted text-[0.55em] font-semibold text-muted-foreground ${className}`}
+          className={`inline-flex shrink-0 items-center justify-center rounded-sm bg-muted text-xs leading-none font-semibold text-muted-foreground ${className}`}
         >
           {entity.id}
         </span>

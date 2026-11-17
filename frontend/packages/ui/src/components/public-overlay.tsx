@@ -3,7 +3,7 @@ import { Slot } from "radix-ui"
 import { X } from "lucide-react"
 import { Drawer as DrawerPrimitive } from "vaul"
 import { cn } from "../lib/utils"
-import { useIsMobile } from "../hooks/use-mobile"
+import { usePageLayout } from "../hooks/use-page-layout"
 import * as DialogBase from "./dialog"
 import * as PopoverBase from "./popover"
 import * as MenuBase from "./dropdown-menu"
@@ -66,7 +66,7 @@ function OverlayRoot({
   onOpenChange,
   ...props
 }: RootProps & { kind: "dialog" | "popover" | "menu" }) {
-  const isMobile = useIsMobile()
+  const isMobile = usePageLayout() === "compact"
   const mobile = mobileDrawer && isMobile
   const [localOpen, setLocalOpen] = useState(defaultOpen)
   const open = controlled ?? localOpen

@@ -10,7 +10,8 @@
     "./hooks/*": "./src/hooks/*.ts"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p lint/tsconfig.json",
+    "lint": "node --experimental-strip-types lint/source-rules.ts",
     "test": "node --experimental-strip-types --test \"tests/*.test.mjs\"",
     "test:auth": "node --experimental-strip-types --test tests/public-auth.test.mjs tests/public-auth-restore.test.mjs",
     "test:time-zone": "node --experimental-strip-types --test tests/time-zone.test.mjs tests/date-format.test.mjs",

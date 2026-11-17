@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { PublicCurrencySelect } from "./public-currency-select"
 import { PublicDateFormatSelect } from "./public-date-format-select"
 import { PublicTimeZoneSelect } from "./public-time-zone-select"
-import { useIsMobile } from "../hooks/use-mobile"
+import { usePageLayout } from "../hooks/use-page-layout"
 import "./public-account-menu.css"
 
 export type PublicAccountOptionsProps = {
@@ -25,7 +25,7 @@ export type PublicAccountOptionsProps = {
 type Props = PublicAccountOptionsProps & { triggerClassName?: string }
 
 export function PublicAccountMenu(props: Props) {
-  const mobile = useIsMobile()
+  const mobile = usePageLayout() === "compact"
   const { product, locale, name, avatarUrl, triggerClassName = "" } = props
   const [open, setOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
