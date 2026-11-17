@@ -1,5 +1,4 @@
 import { useRef, useState } from "react"
-import { useQueryClient } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
@@ -8,7 +7,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { confirmAction } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
-import { deleteOrphan, refreshSourceFiles, useSourceOrphans, type SourceOrphan } from "./files-api"
+import { useDeleteOrphan, useSourceOrphans, type SourceOrphan } from "./files-api"
 import { fileKind, formatCount, formatStorage } from "./files-format"
 
 /**
@@ -17,8 +16,8 @@ import { fileKind, formatCount, formatStorage } from "./files-format"
  */
 export function OrphansSheet({ open, writable, onClose }: { open: boolean; writable: boolean; onClose: () => void }) {
   const wide = useIsWide()
-  const client = useQueryClient()
   const orphans = useSourceOrphans(open)
+  const deletion = useDeleteOrphan()
   const rows = orphans.data?.pages.flatMap((page) => page.items) ?? []
   const total = orphans.data?.pages[0]?.totalElements ?? 0
   const [error, setError] = useState<string | null>(null)
@@ -32,12 +31,7 @@ export function OrphansSheet({ open, writable, onClose }: { open: boolean; writa
     })
     if (!accepted) return
     setError(null)
-    try {
-      await deleteOrphan(orphan.sha256)
-    } catch (cause) {
-      setError(errorMessage(cause))
-    }
-    await refreshSourceFiles(client)
+    deletion.mutate(orphan.sha256, { onError: (cause) => setError(errorMessage(cause)) })
   }
 
   return (
@@ -79,7 +73,7 @@ export function OrphansSheet({ open, writable, onClose }: { open: boolean; writa
                   </span>
                 </span>
                 {writable && (
-                  <Button variant="outline" size="sm" onClick={() => void remove(orphan)}>
+                  <Button variant="outline" size="sm" disabled={deletion.isPending} onClick={() => void remove(orphan)}>
                     <Trash2 />
                     {orphan.state === "DELETING" ? "Xóa tiếp" : "Xóa"}
                   </Button>

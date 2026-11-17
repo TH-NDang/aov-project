@@ -34,9 +34,9 @@ import { control } from "../publishing/fields"
 import { CollectionFormSheet } from "./collection-form-sheet"
 import { FileTabs } from "./file-tabs"
 import {
-  deleteCollection,
   refreshSourceFiles,
   SOURCE_CATEGORIES,
+  useDeleteCollection,
   useSourceCollection,
   useSourceCollections,
   useSourceFiles,
@@ -289,8 +289,8 @@ function CollectionDetail({
   onOpenFile: (id: string) => void
   onDeleted: () => void
 }) {
-  const client = useQueryClient()
   const collection = useSourceCollection(collectionId)
+  const deletion = useDeleteCollection()
   const [query, setQuery] = useState("")
   const [uploading, setUploading] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -322,9 +322,7 @@ function CollectionDetail({
       confirmLabel: "Xóa bộ",
     })
     if (!accepted) return
-    await deleteCollection(current)
-    await refreshSourceFiles(client)
-    onDeleted()
+    deletion.mutate(current, { onSuccess: onDeleted })
   }
 
   return (
@@ -351,9 +349,9 @@ function CollectionDetail({
                 Sửa thông tin
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => void remove()}>
+              <DropdownMenuItem disabled={deletion.isPending} onSelect={() => void remove()}>
                 <Trash2 />
-                Xóa bộ
+                {deletion.isPending ? "Đang xóa…" : "Xóa bộ"}
               </DropdownMenuItem>
             </PageActionsMenu>
           )}

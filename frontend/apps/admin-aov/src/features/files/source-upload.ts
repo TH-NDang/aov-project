@@ -1,5 +1,4 @@
-import { backendRequest } from "@/app/auth/session"
-import type { SourceFile } from "./files-api"
+import { completeUpload, requestUpload, type SourceFile } from "./files-api"
 
 /** Larger files, such as capture archives, go through the sync tool, which streams instead of holding them in memory. */
 export const MAX_BROWSER_UPLOAD_BYTES = 200_000_000
@@ -52,20 +51,6 @@ export function joinPath(folder: string, name: string) {
   return clean ? `${clean}/${name}` : name
 }
 
-type UploadResult =
-  | { status: "STORED"; file: SourceFile; upload: null }
-  | {
-      status: "UPLOAD_REQUIRED"
-      file: null
-      upload: {
-        uploadId: string
-        method: string
-        uploadUrl: string
-        headers: Record<string, string>
-        expiresAt: string
-      }
-    }
-
 /**
  * Stores one file in a collection: bytes already in R2 are placed at once; otherwise they go straight to storage with
  * the presigned PUT, never through the backend, and the backend checks them on complete.
@@ -79,17 +64,17 @@ export async function uploadSourceFile(input: {
   replace?: { fileId: string; expectedVersion: number }
   signal?: AbortSignal
 }): Promise<{ file: SourceFile; stored: boolean }> {
-  const requested = await backendRequest<UploadResult>(`/admin/source-collections/${input.collectionId}/uploads`, {
-    method: "POST",
-    body: JSON.stringify({
+  const requested = await requestUpload(
+    input.collectionId,
+    {
       path: input.path,
       sha256: input.sha256,
       sizeBytes: input.file.size,
       contentType: input.contentType,
       replace: input.replace,
-    }),
-    signal: input.signal,
-  })
+    },
+    input.signal,
+  )
   if (requested.status === "STORED") return { file: requested.file, stored: true }
 
   const { upload } = requested
@@ -103,9 +88,6 @@ export async function uploadSourceFile(input: {
   })
   if (!response.ok) throw new Error(`Không tải được tệp lên kho (HTTP ${response.status}).`)
 
-  const completed = await backendRequest<{ file: SourceFile }>(`/admin/source-uploads/${upload.uploadId}/complete`, {
-    method: "POST",
-    signal: input.signal,
-  })
+  const completed = await completeUpload(upload.uploadId, input.signal)
   return { file: completed.file, stored: false }
 }

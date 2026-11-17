@@ -1,18 +1,10 @@
 import { useState, type FormEvent } from "react"
-import { useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
 import { control } from "../publishing/fields"
-import {
-  createCollection,
-  refreshSourceFiles,
-  SOURCE_CATEGORIES,
-  updateCollection,
-  type SourceCategory,
-  type SourceCollection,
-} from "./files-api"
+import { SOURCE_CATEGORIES, useSaveCollection, type SourceCategory, type SourceCollection } from "./files-api"
 import { CATEGORY_HINTS, CATEGORY_LABELS } from "./files-format"
 
 const CODE = /^[a-z0-9]+(-[a-z0-9]+)*$/
@@ -57,33 +49,24 @@ function CollectionForm({
   collection: SourceCollection | null
   onSaved: (saved: SourceCollection) => void
 }) {
-  const client = useQueryClient()
+  const save = useSaveCollection(collection)
   const [code, setCode] = useState("")
   const [category, setCategory] = useState<SourceCategory>("IMPORT_DATA")
   const [label, setLabel] = useState(collection?.label ?? "")
   const [note, setNote] = useState(collection?.note ?? "")
   const [capturedOn, setCapturedOn] = useState(collection?.capturedOn ?? "")
   const [error, setError] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
+  const saving = save.isPending
   const codeValid = collection !== null || CODE.test(code)
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     if (!codeValid || !label.trim()) return
-    setSaving(true)
     setError(null)
-    try {
-      const input = { label: label.trim(), note: note.trim() || null, capturedOn: capturedOn || null }
-      const saved = collection
-        ? await updateCollection(collection, input)
-        : await createCollection({ ...input, code, category })
-      await refreshSourceFiles(client)
-      onSaved(saved)
-    } catch (cause) {
-      setError(errorMessage(cause))
-    } finally {
-      setSaving(false)
-    }
+    save.mutate(
+      { label: label.trim(), note: note.trim() || null, capturedOn: capturedOn || null, code, category },
+      { onSuccess: onSaved, onError: (cause) => setError(errorMessage(cause)) },
+    )
   }
 
   return (
