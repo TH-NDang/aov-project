@@ -14,6 +14,11 @@ spring:
   flyway:
     enabled: true
     default-schema: public
+  jackson:
+    deserialization:
+      # Reject unknown JSON fields (typos, stale clients). Request bodies are stored as documents, so an ignored
+      # field would be lost without a word. Jackson 3 accepts them by default.
+      fail-on-unknown-properties: true
   security:
     oauth2:
       resourceserver:

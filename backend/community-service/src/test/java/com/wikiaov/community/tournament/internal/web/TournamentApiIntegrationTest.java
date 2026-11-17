@@ -81,6 +81,25 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aRequestBodyWithAnUnknownFieldIsRefusedWithItsPath() throws Exception {
+        mvc.perform(authorized(post(ADMIN + "/teams")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":{\"code\":\"unknown-field\",\"name\":\"Unknown\",\"colour\":\"red\"}}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.errors[0].code").value("UNKNOWN_FIELD"))
+                .andExpect(jsonPath("$.errors[0].path").value("content.colour"));
+    }
+
+    @Test
+    void aRefusedRequestBodyStoresNothing() throws Exception {
+        mvc.perform(authorized(post(ADMIN + "/teams")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":{\"code\":\"never-stored\",\"name\":\"Never\",\"colour\":\"red\"}}"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(authorized(get(ADMIN + "/teams").param("q", "never-stored")))
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
     void draftsStayPrivatePublicationFreezesMetadataAndWithdrawPreservesAudit() throws Exception {
         var fixture = fixture();
         var draft = create("games", fixture.game());
