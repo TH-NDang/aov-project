@@ -324,7 +324,7 @@ class SpellCatalogQueries {
     }
 
     long patchOrdinal(UUID id) {
-        return id == null ? 0 : contexts.variant(id).rulesetOrdinal();
+        return GameplayContexts.rulesetOrdinal(contexts, id);
     }
 
     PageSlice<SpellView> archives(String region, String locale, int page, int size) {

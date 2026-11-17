@@ -345,7 +345,7 @@ public class SpellCatalog implements SpellChangeQueries {
     }
 
     private long patchOrdinal(UUID id) {
-        return id == null ? 0 : contexts.variant(id).rulesetOrdinal();
+        return GameplayContexts.rulesetOrdinal(contexts, id);
     }
 
     private void advanceVersion(SpellRevision revision) {

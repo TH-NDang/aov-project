@@ -309,6 +309,6 @@ class ArcanaCatalogQueries {
     }
 
     long patchOrdinal(UUID id) {
-        return id == null ? 0 : contexts.variant(id).rulesetOrdinal();
+        return GameplayContexts.rulesetOrdinal(contexts, id);
     }
 }
