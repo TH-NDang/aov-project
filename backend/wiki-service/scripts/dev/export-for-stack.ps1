@@ -3,7 +3,8 @@
 Exports the development databases and Keycloak accounts for the one-machine stack in infra/.
 
 .DESCRIPTION
-Writes wiki.dump, community.dump and keycloak-users.json into a new folder, by default infra/backups/db/dev-<UTC time>.
+Writes wiki.dump, community.dump, keycloak-users.json and keycloak-identity-providers.json (Google sign-in, with its
+client secret) into a new folder, by default infra/backups/db/dev-<UTC time>.
 The stack reads that folder with its dev-import and dev-users-import services (infra/README.md, section on moving the
 dev data). Nothing in the development environment changes: pg_dump only reads, and the accounts are exported from a copy
 of the Keycloak volume inside a throwaway container. The folder holds password hashes and user data; keep it private.
@@ -37,14 +38,22 @@ $realm = 'wikiaov'
 $backendPorts = @(8080, 8082)
 
 function Invoke-Docker {
-    param([string[]]$Arguments, [string]$InputText)
+    param([string[]]$Arguments, [string]$InputText, [switch]$AllowFailure)
 
-    if ($PSBoundParameters.ContainsKey('InputText')) {
-        $output = $InputText | & docker @Arguments
-    } else {
-        $output = & docker @Arguments
+    # Docker writes progress to stderr, which Windows PowerShell turns into errors once the caller redirects it, so
+    # only the exit code decides.
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        if ($PSBoundParameters.ContainsKey('InputText')) {
+            $output = $InputText | & docker @Arguments
+        } else {
+            $output = & docker @Arguments
+        }
+    } finally {
+        $ErrorActionPreference = $previous
     }
-    if ($LASTEXITCODE -ne 0) {
+    if ($LASTEXITCODE -ne 0 -and -not $AllowFailure) {
         throw "docker $($Arguments -join ' ') failed."
     }
     return $output
@@ -134,7 +143,7 @@ try {
         try {
             Invoke-Docker -Arguments ($compose + @('cp', "postgres:$temporary", (Join-Path $OutputDirectory "$database.dump"))) | Out-Null
         } finally {
-            & docker @($compose + @('exec', '-T', 'postgres', 'rm', '-f', $temporary)) | Out-Null
+            Invoke-Docker -Arguments ($compose + @('exec', '-T', 'postgres', 'rm', '-f', $temporary)) -AllowFailure | Out-Null
         }
         Write-Host "Dumped database $database."
     }
@@ -146,22 +155,40 @@ try {
     Invoke-Docker -Arguments @('create', '--name', $container, '--network', 'none', '-v', "${keycloakVolume}:/source:ro",
         '--entrypoint', '/bin/bash', $keycloakImage, '-c', $exportScript) | Out-Null
     try {
-        & docker start --attach $container | Out-Null
+        Invoke-Docker -Arguments @('start', '--attach', $container) -AllowFailure | Out-Null
         $exitCode = Invoke-Docker -Arguments @('inspect', '--format', '{{.State.ExitCode}}', $container)
         if ("$exitCode".Trim() -ne '0') {
-            & docker logs --tail 30 $container
+            Invoke-Docker -Arguments @('logs', '--tail', '30', $container) -AllowFailure | ForEach-Object { Write-Host $_ }
             throw 'The Keycloak export failed; the development Keycloak was not changed.'
         }
         Invoke-Docker -Arguments @('cp', "${container}:/tmp/realm/$realm-users-0.json",
             (Join-Path $OutputDirectory 'keycloak-users.json')) | Out-Null
+
+        # Only the identity providers (Google sign-in) leave this machine: the realm file also holds the secret of
+        # every development client, which the stack replaces with its own.
+        $realmFile = Join-Path ([IO.Path]::GetTempPath()) "$container-realm.json"
+        try {
+            Invoke-Docker -Arguments @('cp', "${container}:/tmp/realm/$realm-realm.json", $realmFile) | Out-Null
+            $realmSettings = Get-Content -LiteralPath $realmFile -Raw -Encoding UTF8 | ConvertFrom-Json
+            $providers = @($realmSettings.identityProviders | Where-Object { $_ } |
+                    Select-Object -Property * -ExcludeProperty internalId)
+            $mappers = @($realmSettings.identityProviderMappers | Where-Object { $_ } |
+                    Select-Object -Property * -ExcludeProperty id)
+            $document = [ordered]@{ identityProviders = $providers; identityProviderMappers = $mappers }
+            [IO.File]::WriteAllText((Join-Path $OutputDirectory 'keycloak-identity-providers.json'),
+                (ConvertTo-Json -InputObject $document -Depth 20), (New-Object System.Text.UTF8Encoding $false))
+        } finally {
+            Remove-Item -LiteralPath $realmFile -Force -ErrorAction SilentlyContinue
+        }
     } finally {
-        & docker rm --force $container | Out-Null
+        Invoke-Docker -Arguments @('rm', '--force', $container) -AllowFailure | Out-Null
     }
 
     $users = Get-Content -LiteralPath (Join-Path $OutputDirectory 'keycloak-users.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     $people = @($users.users | Where-Object { -not $_.serviceAccountClientId })
     $serviceAccounts = @($users.users | Where-Object { $_.serviceAccountClientId })
     Write-Host "Exported $($people.Count) accounts and $($serviceAccounts.Count) service accounts of realm $realm."
+    Write-Host "Exported identity providers: $((@($providers | ForEach-Object { $_.alias }) -join ', '))"
     Write-Host "Written: $OutputDirectory"
     Write-Host 'It holds password hashes and user data: copy it to the server privately, then delete this copy.'
 } catch {

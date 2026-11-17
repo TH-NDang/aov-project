@@ -1,6 +1,7 @@
 #!/bin/bash
 # Adds the accounts of the development realm (keycloak-users.json from export-for-stack.ps1) to this stack's realm,
 # keeping their ids, password hashes, roles and Google links, so that the data moved by dev-import still names them.
+# The Google provider of the development realm comes along (keycloak-identity-providers.json).
 # Run once, right after dev-import; see infra/README.md, section on moving the dev data.
 set -euo pipefail
 
@@ -31,9 +32,20 @@ if [ "$people" != "0" ]; then
     exit 1
 fi
 
+summary() {
+    grep -o '"\(added\|overwritten\|skipped\)" *: *[0-9]*' "$1" | tr -d '" ' | tr '\n' ' '
+    echo
+}
+
+# Google sign-in of the development realm, with the same OAuth client. A provider already set up here is kept.
+providers="/backups/db/$name/keycloak-identity-providers.json"
+if [ -f "$providers" ] && grep -q '"alias"' "$providers"; then
+    "$kcadm" create partialImport -r "$realm" -s ifResourceExists=SKIP -o -f "$providers" > /tmp/providers-result.json
+    echo "Identity providers: $(summary /tmp/providers-result.json)"
+fi
+
 "$kcadm" create partialImport -r "$realm" -s ifResourceExists=OVERWRITE -o -f "$file" > /tmp/import-result.json
-grep -o '"\(added\|overwritten\|skipped\)" *: *[0-9]*' /tmp/import-result.json | tr -d '" ' | tr '\n' ' '
-echo
+echo "Accounts: $(summary /tmp/import-result.json)"
 
 # The test accounts of the local realm have their passwords in the public repository. They are kept, disabled, so
 # that the content they wrote still has an author.

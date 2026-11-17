@@ -132,7 +132,7 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | `BACKUP_KEEP` | Số bản dump tự động giữ lại |
 | `KEYCLOAK_ADMIN_USER`, `KEYCLOAK_ADMIN_PASSWORD` | Tài khoản quản trị Keycloak, chỉ đọc ở lần đầu |
 | `ADMIN_AUTH_CLIENT_SECRET`, `WIKI_IMPORTER_CLIENT_SECRET` | Secret của client `admin-aov-backend`, `wiki-importer`; chỉ đọc khi import realm |
-| `GOOGLE_LOGIN_ENABLED` | Bật đăng nhập Google ở admin; cần cấu hình thêm provider trong Keycloak |
+| `GOOGLE_LOGIN_ENABLED` | Bật nút đăng nhập Google ở Admin; cần provider `google` trong Keycloak, có sẵn sau khi [chuyển dữ liệu dev lên](#chuyển-dữ-liệu-dev-lên) |
 | `WIKI_SERVICE_CLIENT_SECRET` | Secret client `wiki-service` cho trang Cài đặt tài khoản (ADR-028); chỉ đọc khi import realm. Sau lần import đầu (hoặc với realm đã có) chạy `backend/wiki-service/scripts/sync-account-security.ps1 -ServerUrl http://localhost:18081/idp` để bật form mã khôi phục, flow hỏi mã sau Google và áp secret |
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH`, `MAIL_STARTTLS`, `MAIL_FROM` | SMTP gửi mã xác nhận đổi mật khẩu; để trống `MAIL_HOST` thì trang Cài đặt không cho đổi mật khẩu |
 | `STORAGE_ENDPOINT` | Endpoint S3 của R2, `https://<account-id>.r2.cloudflarestorage.com` |
@@ -273,12 +273,13 @@ Hai điều làm việc này khác một lần [khôi phục](#khôi-phục) bì
    ./scripts/dev/export-for-stack.ps1
    ```
 
-   Script tạo `infra/backups/db/dev-<giờ UTC>/` gồm `wiki.dump`, `community.dump` và `keycloak-users.json`. Nó không đổi gì ở
-   dev: `pg_dump` chỉ đọc, còn tài khoản được xuất từ một bản chép của volume Keycloak trong container tạm. Nó dừng lại nếu
+   Script tạo `infra/backups/db/dev-<giờ UTC>/` gồm `wiki.dump`, `community.dump`, `keycloak-users.json` và
+   `keycloak-identity-providers.json` (provider Google của dev, kèm secret của OAuth client). Nó không đổi gì ở dev: `pg_dump`
+   chỉ đọc, còn tài khoản được xuất từ một bản chép của volume Keycloak trong container tạm. Nó dừng lại nếu
    Keycloak dev còn chạy, nếu cổng 8080 hoặc 8082 còn trả lời, hoặc nếu database có migration mà checkout này không có, vì
    stack sẽ không khởi động được trên database đó.
 3. Chép thư mục đó vào `infra/backups/db/` trên VPS bằng kênh riêng, ví dụ `scp -r`, rồi xóa bản trên máy dev. Thư mục chứa
-   mật khẩu đã băm và dữ liệu người dùng.
+   mật khẩu đã băm, dữ liệu người dùng và secret Google.
 
 **Trên VPS**, trong `infra/`, sau khi stack đã `up` một lần và realm chưa có người dùng nào (không bật `test-identity`):
 
@@ -301,7 +302,8 @@ docker compose up -d --wait
 - `dev-import` thay `wiki` và `community` bằng bản dump, rồi đổi mọi issuer kết thúc bằng `/realms/wikiaov` sang issuer của
   stack và in số giá trị đã đổi. Issuer của tác nhân ngoài Keycloak (`local-maintenance`, `urn:wikiaov:migration`) giữ nguyên.
   Chạy lại được: lần nào cũng bắt đầu từ bản dump.
-- `dev-users-import` thêm tài khoản vào realm với nguyên ID, mật khẩu đã băm, vai trò và liên kết Google.
+- `dev-users-import` thêm provider Google của dev (bỏ qua nếu stack đã có provider `google`), rồi thêm tài khoản vào realm
+  với nguyên ID, mật khẩu đã băm, vai trò và liên kết Google.
   `service-account-wiki-importer` của dev thay cho bản của realm mẫu, để nội dung nó đã nhập vẫn có tác giả. Ba tài khoản thử
   `admin`, `editor`, `publisher` bị khóa, vì mật khẩu của chúng nằm trong repo công khai. Lệnh từ chối chạy khi realm đã có
   người dùng, để sau ngày ra mắt không ai chép đè bản dev cũ lên tài khoản đang dùng.
@@ -309,9 +311,10 @@ docker compose up -d --wait
 
 Sau đó:
 
-- Tài khoản chỉ đăng nhập bằng Google chỉ dùng được khi Keycloak của stack có provider tên `google` (xem
-  [Còn lại](#còn-lại-cho-máy-chủ-thật)); liên kết đã được chuyển và có hiệu lực ngay khi provider có. Trước đó có thể đặt
-  mật khẩu cho tài khoản trong console.
+- Provider Google dùng chính OAuth client của dev. Client đó phải có redirect URI
+  `<PUBLIC_ORIGIN>/idp/realms/wikiaov/broker/google/endpoint` trong Google Cloud Console; với `https://athahub.com` thì đã có.
+  Đặt `GOOGLE_LOGIN_ENABLED=true` trong `.env` rồi `docker compose up -d --wait` để Admin hiện nút Google. Tài khoản chỉ
+  đăng nhập bằng Google vào lại đúng tài khoản cũ.
 - Chạy `sync-account-security.ps1` như với một realm mới (xem `WIKI_SERVICE_CLIENT_SECRET` ở [Biến môi trường](#biến-môi-trường)).
 - Mọi người phải đăng nhập lại: phiên đăng nhập không được chuyển. Cài đặt realm sửa tay trong console của dev cũng không.
 
@@ -342,8 +345,8 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
 - **Sao lưu ra ngoài máy**: backup hiện nằm cùng máy. Cần chỗ lưu riêng và lịch chạy.
 - **Email của Keycloak**: chưa có SMTP nên quên mật khẩu và xác minh email chưa hoạt động. Đăng ký mở sẵn như realm local
   (`registrationAllowed`), cần quyết định có giữ không.
-- **Đăng nhập Google**: tạo OAuth client, cấu hình provider với alias `google` trong Keycloak, đặt `GOOGLE_LOGIN_ENABLED=true`.
-  Tài khoản Google chuyển từ dev chỉ đăng nhập được sau bước này.
+- **Đăng nhập Google**: provider `google` đi theo khi chuyển dữ liệu dev lên; đặt `GOOGLE_LOGIN_ENABLED=true`. Chưa đăng nhập
+  thử qua Google trên origin thật.
 - **Tài khoản thật**: tạo biên tập viên và gán vai trò trong console; bật MFA nếu cần.
 - **CDN hoặc load balancer**: nếu đặt trước Caddy phải khai báo `trusted_proxies`, nếu không giới hạn tần suất theo IP sẽ sai.
 - **Theo dõi**: chưa có giám sát uptime, cảnh báo đầy đĩa hay gom log; log JSON hiện chỉ xoay vòng trong Docker.
