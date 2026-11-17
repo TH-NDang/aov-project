@@ -1,26 +1,33 @@
 package com.wikiaov.community.tournament.internal.application;
 
 import com.wikiaov.community.platform.ApiErrorCode;
+import org.springframework.http.HttpStatus;
 
 public enum TournamentErrorCode implements ApiErrorCode {
-    TOURNAMENT_RECORD_NOT_FOUND(404),
-    TOURNAMENT_INVALID_CONTENT(400),
-    TOURNAMENT_VERSION_CONFLICT(409),
-    TOURNAMENT_RECORD_IN_USE(409),
-    TOURNAMENT_RESTORE_BLOCKED(409),
-    TOURNAMENT_RECORD_DELETED(409),
-    TOURNAMENT_MEDIA_RETIRED(409),
-    TOURNAMENT_WIKI_UNAVAILABLE(502),
-    TOURNAMENT_CATALOG_LIMIT(502),
-    TOURNAMENT_PUBLICATION_INCOMPLETE(422);
+    TOURNAMENT_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND),
+    TOURNAMENT_INVALID_CONTENT(HttpStatus.BAD_REQUEST),
+    TOURNAMENT_VERSION_CONFLICT(HttpStatus.CONFLICT),
+    TOURNAMENT_RECORD_IN_USE(HttpStatus.CONFLICT),
+    TOURNAMENT_RESTORE_BLOCKED(HttpStatus.CONFLICT),
+    TOURNAMENT_RECORD_DELETED(HttpStatus.CONFLICT),
+    TOURNAMENT_MEDIA_RETIRED(HttpStatus.CONFLICT),
+    TOURNAMENT_WIKI_UNAVAILABLE(HttpStatus.BAD_GATEWAY),
+    TOURNAMENT_CATALOG_LIMIT(HttpStatus.BAD_GATEWAY),
+    TOURNAMENT_PUBLICATION_INCOMPLETE(HttpStatus.UNPROCESSABLE_CONTENT);
 
-    private final int status;
+    private final HttpStatus status;
 
-    TournamentErrorCode(int status) {
+    TournamentErrorCode(HttpStatus status) {
         this.status = status;
     }
 
-    public int status() {
+    @Override
+    public HttpStatus status() {
         return status;
+    }
+
+    @Override
+    public String title() {
+        return "Tournament request failed";
     }
 }

@@ -81,6 +81,21 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aRequestWithoutATokenIsAnsweredWithAnUnauthenticatedProblem() throws Exception {
+        mvc.perform(get(ADMIN + "/teams")).andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"))
+                .andExpect(jsonPath("$.requestId").isNotEmpty()).andExpect(header().exists("WWW-Authenticate"));
+    }
+
+    @Test
+    void aMissingCapabilityIsAnsweredWithAForbiddenProblem() throws Exception {
+        mvc.perform(post(ADMIN + "/teams").with(jwt().authorities(new SimpleGrantedAuthority("tournament:read")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"content\":{\"code\":\"forbidden\",\"name\":\"Forbidden\"}}"))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
     void aRequestBodyWithAnUnknownFieldIsRefusedWithItsPath() throws Exception {
         mvc.perform(authorized(post(ADMIN + "/teams")).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"content\":{\"code\":\"unknown-field\",\"name\":\"Unknown\",\"colour\":\"red\"}}"))

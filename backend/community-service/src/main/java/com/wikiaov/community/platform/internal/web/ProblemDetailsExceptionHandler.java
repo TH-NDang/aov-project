@@ -1,8 +1,11 @@
 package com.wikiaov.community.platform.internal.web;
 
+import com.wikiaov.community.platform.ApiErrorCode;
 import com.wikiaov.community.platform.ApiException;
 import com.wikiaov.community.platform.ApiFieldError;
 import com.wikiaov.community.platform.PlatformErrorCode;
+import com.wikiaov.community.platform.ProblemDetails;
+import jakarta.servlet.http.HttpServletRequest;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +38,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -60,11 +64,8 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
     private static final String UNIQUE_VIOLATION = "23505";
 
     @ExceptionHandler(ApiException.class)
-    ResponseEntity<Object> handleApiException(ApiException ex) {
-        if (ex.status() >= 500) {
-            log.warn("Request failed with {}: {}", ex.code(), ex.getMessage(), ex);
-        }
-        return respond(problem(ex.status(), ex.code(), ex.getMessage(), List.of(), ex.properties()), new HttpHeaders());
+    ResponseEntity<Object> handleApiException(ApiException ex, WebRequest request) {
+        return render(ex, new HttpHeaders(), request);
     }
 
     /**
@@ -78,25 +79,26 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
 
     /** A unique constraint refusing the row is a conflict; any other integrity failure is a bug. */
     @ExceptionHandler(DataIntegrityViolationException.class)
-    ResponseEntity<Object> handleIntegrityViolation(DataIntegrityViolationException ex) {
+    ResponseEntity<Object> handleIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
         if (!uniqueViolation(ex)) {
-            return handleUnexpected(ex);
+            return handleUnexpected(ex, request);
         }
         return render(PlatformErrorCode.TOURNAMENT_DUPLICATE_CODE,
                 "A record already reserves this identity, including records in the trash. Restore or edit the existing record.",
-                List.of(), new HttpHeaders());
+                List.of(), new HttpHeaders(), request);
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    ResponseEntity<Object> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex) {
+    ResponseEntity<Object> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex, WebRequest request) {
         return render(PlatformErrorCode.VERSION_CONFLICT, "The record changed. Reload before saving.", List.of(),
-                new HttpHeaders());
+                new HttpHeaders(), request);
     }
 
     @ExceptionHandler(Exception.class)
-    ResponseEntity<Object> handleUnexpected(Exception ex) {
+    ResponseEntity<Object> handleUnexpected(Exception ex, WebRequest request) {
         log.error("Unexpected error", ex);
-        return render(PlatformErrorCode.INTERNAL_ERROR, "An unexpected error occurred.", List.of(), new HttpHeaders());
+        return render(PlatformErrorCode.INTERNAL_ERROR, "An unexpected error occurred.", List.of(), new HttpHeaders(),
+                request);
     }
 
     @Override
@@ -104,18 +106,18 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status, WebRequest request) {
         ApiException cause = findCause(ex, ApiException.class);
         if (cause != null) {
-            return handleApiException(cause);
+            return render(cause, headers, request);
         }
 
         String name = ex.getPropertyName() != null ? ex.getPropertyName() : "parameter";
         if (ex instanceof MethodArgumentTypeMismatchException mismatch
                 && mismatch.getParameter().hasParameterAnnotation(PathVariable.class)) {
             return render(PlatformErrorCode.INVALID_REQUEST, "Path variable '" + name + "' has an invalid value.",
-                    List.of(new ApiFieldError(name, "INVALID_VALUE", "Invalid value.")), headers);
+                    List.of(new ApiFieldError(name, "INVALID_VALUE", "Invalid value.")), headers, request);
         }
         return render(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                 "Query parameter '" + name + "' has an invalid value.",
-                List.of(new ApiFieldError(name, "INVALID_VALUE", "Invalid value.")), headers);
+                List.of(new ApiFieldError(name, "INVALID_VALUE", "Invalid value.")), headers, request);
     }
 
     @Override
@@ -123,7 +125,8 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         return render(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                 "Query parameter '" + ex.getParameterName() + "' is required.",
-                List.of(new ApiFieldError(ex.getParameterName(), "REQUIRED", "Parameter is required.")), headers);
+                List.of(new ApiFieldError(ex.getParameterName(), "REQUIRED", "Parameter is required.")), headers,
+                request);
     }
 
     @Override
@@ -134,7 +137,7 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
                 .add(new ApiFieldError(error.getField(), constraintCode(error), error.getDefaultMessage())));
         ex.getBindingResult().getGlobalErrors()
                 .forEach(error -> errors.add(new ApiFieldError("", constraintCode(error), error.getDefaultMessage())));
-        return render(PlatformErrorCode.INVALID_REQUEST, "Request content is invalid.", errors, headers);
+        return render(PlatformErrorCode.INVALID_REQUEST, "Request content is invalid.", errors, headers, request);
     }
 
     /** Constraints on method parameters, e.g. {@code @Min(0) @RequestParam int page}. */
@@ -152,10 +155,10 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
             }
         }
 
-        PlatformErrorCode code = onlyQueryParameters
+        ApiErrorCode code = onlyQueryParameters
                 ? PlatformErrorCode.INVALID_QUERY_PARAMETER
                 : PlatformErrorCode.INVALID_REQUEST;
-        return render(code, "Request parameters are invalid.", errors, headers);
+        return render(code, "Request parameters are invalid.", errors, headers, request);
     }
 
     /** Malformed JSON, unknown fields (fail-on-unknown-properties) and values of the wrong type. */
@@ -170,7 +173,7 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
                     unknown ? "Field is not allowed." : "Value has an invalid type or format."));
         }
         return render(PlatformErrorCode.INVALID_REQUEST, "Request body is not valid JSON for this operation.", errors,
-                headers);
+                headers, request);
     }
 
     /** API version errors from Spring MVC native versioning, plus any other ErrorResponseException. */
@@ -179,10 +182,11 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode status, WebRequest request) {
         if (ex instanceof InvalidApiVersionException) {
             return render(PlatformErrorCode.INVALID_API_VERSION, "The requested API version is not supported.",
-                    List.of(), headers);
+                    List.of(), headers, request);
         }
         if (ex instanceof MissingApiVersionException) {
-            return render(PlatformErrorCode.MISSING_API_VERSION, "The API version is missing.", List.of(), headers);
+            return render(PlatformErrorCode.MISSING_API_VERSION, "The API version is missing.", List.of(), headers,
+                    request);
         }
         return super.handleErrorResponseException(ex, headers, status, request);
     }
@@ -198,9 +202,8 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
         PlatformErrorCode code = fallbackCode(ex, statusCode);
         String detail = body instanceof ProblemDetail problem && problem.getDetail() != null
                 ? problem.getDetail()
-                : "The request could not be processed.";
-        return respond(problem(statusCode.value(), code.name(), detail, List.of(), Map.of()), headers,
-                statusCode.value());
+                : code.title() + ".";
+        return render(code, detail, List.of(), headers, request);
     }
 
     static PlatformErrorCode fallbackCode(Exception ex, HttpStatusCode status) {
@@ -222,32 +225,30 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
         return status.is5xxServerError() ? PlatformErrorCode.INTERNAL_ERROR : PlatformErrorCode.INVALID_REQUEST;
     }
 
-    private static ResponseEntity<Object> render(PlatformErrorCode code, String detail, List<ApiFieldError> errors,
-            HttpHeaders headers) {
-        return respond(problem(code.status(), code.name(), detail, errors, Map.of()), headers, code.status());
+    private ResponseEntity<Object> render(ApiException ex, HttpHeaders headers, WebRequest request) {
+        if (ex.getErrorCode().status().is5xxServerError()) {
+            log.warn("Request failed with {}: {}", ex.getErrorCode().name(), ex.getMessage(), ex);
+        }
+        ProblemDetail body = ProblemDetails.of(ex.getErrorCode(), ex.getMessage(), ex.getErrors(), ex.getContext(),
+                servletRequest(request));
+        return respond(body, ex.getErrorCode(), headers);
     }
 
-    private static ResponseEntity<Object> respond(ProblemDetail body, HttpHeaders headers) {
-        return respond(body, headers, body.getStatus());
+    private static ResponseEntity<Object> render(ApiErrorCode code, String detail, List<ApiFieldError> errors,
+            HttpHeaders headers, WebRequest request) {
+        ProblemDetail body = ProblemDetails.of(code, detail, errors, Map.of(), servletRequest(request));
+        return respond(body, code, headers);
     }
 
-    private static ResponseEntity<Object> respond(ProblemDetail body, HttpHeaders headers, int status) {
+    private static ResponseEntity<Object> respond(ProblemDetail body, ApiErrorCode code, HttpHeaders headers) {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.putAll(headers);
         responseHeaders.setCacheControl(CacheControl.noStore());
-        return new ResponseEntity<>(body, responseHeaders, HttpStatusCode.valueOf(status));
+        return new ResponseEntity<>(body, responseHeaders, code.status());
     }
 
-    /** Module properties stay top-level members of the problem, where Admin reads them (e.g. {@code usages}). */
-    private static ProblemDetail problem(int status, String code, String detail, List<ApiFieldError> errors,
-            Map<String, Object> properties) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(status), detail);
-        problem.setProperty("code", code);
-        if (!errors.isEmpty()) {
-            problem.setProperty("errors", errors);
-        }
-        properties.forEach(problem::setProperty);
-        return problem;
+    private static HttpServletRequest servletRequest(WebRequest request) {
+        return ((NativeWebRequest) request).getNativeRequest(HttpServletRequest.class);
     }
 
     private static boolean uniqueViolation(Throwable ex) {

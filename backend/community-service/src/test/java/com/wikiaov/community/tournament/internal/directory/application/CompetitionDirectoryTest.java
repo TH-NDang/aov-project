@@ -51,6 +51,6 @@ class CompetitionDirectoryTest {
         var error = catchThrowableOfType(ApiException.class, () -> directories.rankedTournaments("", "", "", "", "",
                 null, "LOUDEST", TournamentLevel.ALL, null, null, PageRequest.of(0, 10)));
 
-        assertThat(error.code()).isEqualTo("INVALID_QUERY_PARAMETER");
+        assertThat(error.getErrorCode().name()).isEqualTo("INVALID_QUERY_PARAMETER");
     }
 }

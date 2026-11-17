@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @ExtendWith(OutputCaptureExtension.class)
 class ProblemDetailsExceptionHandlerTest {
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new FailingController())
-            .setControllerAdvice(new ProblemDetailsExceptionHandler()).build();
+            .setControllerAdvice(new ProblemDetailsExceptionHandler()).addFilters(new RequestIdFilter()).build();
 
     @Test
     void anIllegalArgumentExceptionIsAnsweredAsAnInternalError() throws Exception {
@@ -82,6 +83,19 @@ class ProblemDetailsExceptionHandlerTest {
     }
 
     @Test
+    void anErrorCarriesTheRequestIdOfItsAnswer() throws Exception {
+        var answer = mvc.perform(get("/api-exception")).andReturn().getResponse();
+
+        assertThat(answer.getContentAsString()).contains("\"requestId\":\"" + answer.getHeader("X-Request-Id") + "\"");
+    }
+
+    @Test
+    void anErrorNamesItsTitleAndTheFailedPath() throws Exception {
+        mvc.perform(get("/api-exception")).andExpect(jsonPath("$.title").value("Example failed"))
+                .andExpect(jsonPath("$.instance").value("/api-exception"));
+    }
+
+    @Test
     void errorsAreNeverCached() throws Exception {
         mvc.perform(get("/api-exception")).andExpect(header().string("Cache-Control", "no-store"));
     }
@@ -101,8 +115,13 @@ class ProblemDetailsExceptionHandlerTest {
         EXAMPLE_INVALID;
 
         @Override
-        public int status() {
-            return 422;
+        public HttpStatus status() {
+            return HttpStatus.UNPROCESSABLE_CONTENT;
+        }
+
+        @Override
+        public String title() {
+            return "Example failed";
         }
     }
 

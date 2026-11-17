@@ -1,18 +1,24 @@
 package com.wikiaov.community.currency.internal.application;
 
 import com.wikiaov.community.platform.ApiErrorCode;
+import org.springframework.http.HttpStatus;
 
 public enum CurrencyErrorCode implements ApiErrorCode {
-    EXCHANGE_RATE_INVALID_QUERY(400);
+    EXCHANGE_RATE_INVALID_QUERY(HttpStatus.BAD_REQUEST);
 
-    private final int status;
+    private final HttpStatus status;
 
-    CurrencyErrorCode(int status) {
+    CurrencyErrorCode(HttpStatus status) {
         this.status = status;
     }
 
     @Override
-    public int status() {
+    public HttpStatus status() {
         return status;
+    }
+
+    @Override
+    public String title() {
+        return "Exchange rate request failed";
     }
 }
