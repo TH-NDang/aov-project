@@ -18,6 +18,7 @@ import { LocalTime } from "@aov/ui/components/local-time"
 import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
 import { randomId } from "@/lib/random-id"
+import { dayKeyInZone, formatCalendarDate, formatInZone } from "@aov/ui/lib/time-zone"
 import { MatchRecordingStrip } from "@/features/esports/components/match-recording-strip"
 import { TeamLogo } from "@/features/esports/components/primitives"
 import { matchRecording } from "@/features/esports/model/match-recording"
@@ -26,7 +27,6 @@ import { matchPath } from "@/features/esports/pages/esports-shell"
 import { competitionApi } from "../competition-api"
 import { MatchPanel } from "./match-panel"
 import {
-  dayKey,
   defaultGroupMode,
   groupMatches,
   hasScore,
@@ -293,16 +293,11 @@ function dayLabel(day: string | undefined, today: string) {
   if (day === today) return "Hôm nay"
   if (day === shift(1)) return "Ngày mai"
   if (day === shift(-1)) return "Hôm qua"
-  return new Intl.DateTimeFormat("vi-VN", {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "UTC",
-  }).format(new Date(`${day}T00:00:00Z`))
+  return formatCalendarDate(day, { weekday: "long", day: "2-digit", month: "2-digit" })
 }
 
 const shortDay = (value: number, timeZone: string) =>
-  new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", timeZone }).format(new Date(value))
+  formatInZone(value, timeZone, { day: "2-digit", month: "2-digit" })
 
 function MatchGroups({
   ws,
@@ -318,7 +313,7 @@ function MatchGroups({
 }) {
   const [toggled, setToggled] = useState<Record<string, boolean>>({})
   const [openMatch, setOpenMatch] = useState<string | null>(null)
-  const today = dayKey(Date.now(), ws.plan.timezone)
+  const today = dayKeyInZone(Date.now(), ws.plan.timezone)
   return (
     <div className="space-y-3">
       {groups.map((group, index) => {
@@ -327,7 +322,7 @@ function MatchGroups({
         const span = Number.isFinite(group.firstAt)
           ? shortDay(group.firstAt, ws.plan.timezone) +
             (Number.isFinite(group.lastAt) &&
-            dayKey(group.lastAt, ws.plan.timezone) !== dayKey(group.firstAt, ws.plan.timezone)
+            dayKeyInZone(group.lastAt, ws.plan.timezone) !== dayKeyInZone(group.firstAt, ws.plan.timezone)
               ? `–${shortDay(group.lastAt, ws.plan.timezone)}`
               : "")
           : ""
@@ -409,7 +404,7 @@ function MatchLine({
   const record = ws.series.find((entry) => entry.id === match.seriesId)
   const live = ws.published ? ws.published.resolved.find((entry) => entry.key === match.key) : undefined
   const unpublished = !!ws.published && (row?.scoreA ?? null) !== (live?.scoreA ?? null)
-  const isToday = !!match.scheduledAt && dayKey(match.scheduledAt, ws.plan.timezone) === today
+  const isToday = !!match.scheduledAt && dayKeyInZone(match.scheduledAt, ws.plan.timezone) === today
   const games = ws.games?.filter((entry) => entry.content.seriesId === match.seriesId).length
   const side = (which: "a" | "b") => {
     const id = which === "a" ? row?.teamAId : row?.teamBId

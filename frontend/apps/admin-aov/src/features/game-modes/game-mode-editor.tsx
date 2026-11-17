@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
 import { ArrowDown, ArrowLeft, ArrowUp, Copy, ListPlus, Plus, Trash2, Upload } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
@@ -379,7 +380,7 @@ export function GameModeEditorPage() {
             <ul className="type-meta grid gap-1">
               {history.data?.map((revision) => (
                 <li key={revision.id}>
-                  #{revision.revisionNo} · {revision.state} · {new Date(revision.updatedAt).toLocaleString("vi-VN")}
+                  #{revision.revisionNo} · {revision.state} · <LocalTime value={revision.updatedAt} />
                   {revision.changeNote && ` · ${revision.changeNote}`}
                 </li>
               ))}

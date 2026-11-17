@@ -11,6 +11,7 @@ import type {
   RosterMembershipContent,
   TeamContent,
 } from "@aov/community-contracts"
+import { dayKeyInZone, toInstant } from "@aov/ui/lib/time-zone"
 
 export const WORKSPACE_STEPS = ["overview", "teams", "format", "schedule", "final", "publish"] as const
 export type WorkspaceStep = (typeof WORKSPACE_STEPS)[number]
@@ -52,11 +53,44 @@ export function stageProgress(stageCode: string, plan: CompetitionPlan, resolved
   return { total: matches.length, scored: matches.filter((match) => hasScore(resolved.get(match.key))).length }
 }
 
-/** Calendar day of a moment in the tournament's own time zone, as `yyyy-mm-dd`. */
-export function dayKey(value: string | number | Date, timeZone: string) {
-  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(
-    new Date(value),
+const wallClock = (timeZone: string) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  })
+
+/** The wall clock of a moment in a zone, as yyyy-mm-ddThh:mm:ss. */
+function wallTime(at: number, timeZone: string) {
+  const parts = Object.fromEntries(
+    wallClock(timeZone)
+      .formatToParts(at)
+      .map((part) => [part.type, part.value]),
   )
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`
+}
+
+/** A moment as a datetime-local value on the wall clock of the tournament's zone; empty without a moment. */
+export function zonedInputTime(value: string | null | undefined, timeZone: string) {
+  const date = toInstant(value)
+  return date ? wallTime(date.getTime(), timeZone).slice(0, 16) : ""
+}
+
+/**
+ * The moment a datetime-local value names on the wall clock of a zone, as an ISO string; null when empty or invalid.
+ * The zone's offset is read at the guessed moment and once more, so a time next to a clock change lands right.
+ */
+export function zonedInputInstant(input: string, timeZone: string) {
+  const asUtc = Date.parse(`${input}:00Z`)
+  if (!input || Number.isNaN(asUtc)) return null
+  let guess = asUtc
+  for (let round = 0; round < 2; round++) guess = asUtc - (Date.parse(`${wallTime(guess, timeZone)}Z`) - guess)
+  return new Date(guess).toISOString()
 }
 
 export type GroupMode = "round" | "day"
@@ -87,7 +121,7 @@ export function groupMatches(
 ): MatchGroup[] {
   const groups = new Map<string, MatchGroup>()
   for (const match of [...matches].sort((a, b) => matchTime(a) - matchTime(b) || a.key.localeCompare(b.key))) {
-    const day = match.scheduledAt ? dayKey(match.scheduledAt, timeZone) : undefined
+    const day = match.scheduledAt ? dayKeyInZone(match.scheduledAt, timeZone) : undefined
     const key = mode === "round" ? `round-${match.round}` : (day ?? "unscheduled")
     let group = groups.get(key)
     if (!group) {
