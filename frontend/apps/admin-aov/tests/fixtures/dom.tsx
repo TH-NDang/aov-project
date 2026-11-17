@@ -4,7 +4,7 @@
  * tree inside a fresh query client, `waitFor` waits for a condition and `flush` lets pending work settle.
  */
 import assert from "node:assert/strict"
-import { after } from "node:test"
+import { after, afterEach } from "node:test"
 import { JSDOM, type DOMWindow } from "jsdom"
 import * as React from "react"
 import { act, type ReactNode } from "react"
@@ -99,14 +99,22 @@ export function beforeDomCloses(cleanup: () => unknown) {
 }
 
 async function tearDown(dom: Dom) {
-  for (const unmount of [...mounted]) await unmount()
+  await unmountAll()
   while (closing.length) await closing.pop()!()
   dom.close()
 }
 
-/** Installs one window for the whole test file; it closes after the last test, unmounting what is still mounted. */
+async function unmountAll() {
+  for (const unmount of [...mounted]) await unmount()
+}
+
+/**
+ * Installs one window for the whole test file; it closes after the last test. What a test mounts is unmounted when
+ * that test ends, so every test starts from an empty page.
+ */
 export function withDom(options: DomOptions = {}): Dom {
   const dom = openDom(options)
+  afterEach(unmountAll)
   after(() => tearDown(dom))
   return dom
 }
