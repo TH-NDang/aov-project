@@ -49,6 +49,7 @@ import { CATEGORY_HINTS, CATEGORY_LABELS, fileKind, formatCount, formatStorage }
 import { OrphansSheet } from "./orphans-sheet"
 import { SourceFileSheet } from "./source-file-sheet"
 import { SourceUploadDialog } from "./source-upload-dialog"
+import { ErrorState, LoadingState } from "@/components/query-state"
 
 export const CATEGORY_ICONS: Record<SourceCategory, typeof Archive> = {
   HERO_CAPTURE: ScanFace,
@@ -302,16 +303,13 @@ function CollectionDetail({
 
   if (collection.isLoadingError)
     return (
-      <p role="alert" className="p-4 type-body text-destructive">
-        Không đọc được bộ tệp này; có thể bộ đã bị xóa.
-      </p>
+      <ErrorState
+        className="p-4"
+        message="Không đọc được bộ tệp này; có thể bộ đã bị xóa."
+        onRetry={() => void collection.refetch()}
+      />
     )
-  if (!collection.data)
-    return (
-      <p role="status" className="p-4 type-meta">
-        Đang tải bộ tệp…
-      </p>
-    )
+  if (!collection.data) return <LoadingState className="p-4">Đang tải bộ tệp…</LoadingState>
   const current = collection.data
   const Icon = CATEGORY_ICONS[current.category]
 

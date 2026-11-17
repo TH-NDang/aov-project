@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { Button } from "@aov/ui/components/button"
+import { Input } from "@aov/ui/components/input"
+import { Textarea } from "@aov/ui/components/textarea"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { confirmDiscard } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
@@ -110,8 +112,7 @@ function CollectionForm({
         <>
           <label className="grid gap-1.5">
             <span className="type-label">Mã bộ</span>
-            <input
-              className={control}
+            <Input
               value={code}
               required
               maxLength={120}
@@ -140,8 +141,7 @@ function CollectionForm({
       )}
       <label className="grid gap-1.5">
         <span className="type-label">Tên hiển thị</span>
-        <input
-          className={control}
+        <Input
           value={label}
           required
           maxLength={200}
@@ -151,22 +151,11 @@ function CollectionForm({
       </label>
       <label className="grid gap-1.5">
         <span className="type-label">Ngày chụp</span>
-        <input
-          className={control}
-          type="date"
-          value={capturedOn}
-          onChange={(event) => setCapturedOn(event.target.value)}
-        />
+        <Input type="date" value={capturedOn} onChange={(event) => setCapturedOn(event.target.value)} />
       </label>
       <label className="grid gap-1.5">
         <span className="type-label">Ghi chú</span>
-        <textarea
-          className={control}
-          rows={3}
-          maxLength={2000}
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-        />
+        <Textarea rows={3} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} />
       </label>
       {error && (
         <p role="alert" className="type-body text-destructive">

@@ -11,6 +11,7 @@ import {
 } from "@aov/ui/components/dialog"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { errorMessage } from "@/lib/api/errors"
+import { EmptyState, ErrorState, LoadingState } from "@/components/query-state"
 
 /** What every published capture set says about itself, whatever its kind. */
 export interface CaptureSetRow {
@@ -41,7 +42,7 @@ export function CaptureImportDialog<S extends CaptureSetRow>({
   description: string
   emptyText: string
   /** The published sets; null when the account cannot open source files. */
-  sets: { isPending: boolean; isError: boolean; error: unknown; data?: S[] | null }
+  sets: { isPending: boolean; isError: boolean; error: unknown; data?: S[] | null; refetch?: () => unknown }
   importedCodes: string[]
   /** The two lines of a set: what it is, then its counts after the capture time. */
   describe: (set: S) => { name: string; counts: string }
@@ -75,15 +76,13 @@ export function CaptureImportDialog<S extends CaptureSetRow>({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {sets.isPending ? (
-          <p className="type-body text-muted-foreground">Đang tìm bộ ảnh…</p>
+          <LoadingState>Đang tìm bộ ảnh…</LoadingState>
         ) : sets.isError ? (
-          <p className="type-body text-destructive">{errorMessage(sets.error)}</p>
+          <ErrorState error={sets.error} onRetry={sets.refetch && (() => void sets.refetch?.())} />
         ) : !sets.data ? (
-          <p className="type-body text-muted-foreground">
-            Tài khoản này không mở được tệp nguồn, nên không có bộ ảnh nào để nhập.
-          </p>
+          <EmptyState>Tài khoản này không mở được tệp nguồn, nên không có bộ ảnh nào để nhập.</EmptyState>
         ) : !sets.data.length ? (
-          <p className="type-body text-muted-foreground">{emptyText}</p>
+          <EmptyState>{emptyText}</EmptyState>
         ) : (
           <ul className="divide-y rounded-lg border">
             {sets.data.map((set) => {

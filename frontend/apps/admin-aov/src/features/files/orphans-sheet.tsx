@@ -9,6 +9,7 @@ import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
 import { useDeleteOrphan, useSourceOrphans, type SourceOrphan } from "./files-api"
 import { fileKind, formatCount, formatStorage } from "./files-format"
+import { ErrorState } from "@/components/query-state"
 
 /**
  * Bytes that no collection places and no record uses. Removing a file never deletes bytes; this is the one place that
@@ -57,9 +58,7 @@ export function OrphansSheet({ open, writable, onClose }: { open: boolean; writa
             </p>
           )}
           {orphans.isLoadingError && (
-            <p role="alert" className="type-body text-destructive">
-              Không đọc được danh sách dữ liệu tệp mồ côi.
-            </p>
+            <ErrorState message="Không đọc được danh sách dữ liệu tệp mồ côi." onRetry={() => void orphans.refetch()} />
           )}
           <ul className="grid gap-2">
             {rows.map((orphan) => (

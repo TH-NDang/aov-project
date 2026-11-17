@@ -42,6 +42,7 @@ import {
   retry,
   type GuideManifest,
 } from "./game-mode-import"
+import { EmptyState, ErrorState, LoadingState } from "@/components/query-state"
 
 const TABS = [
   ["general", "Chung"],
@@ -448,11 +449,11 @@ export function CommunityModeration({
       </div>
       {error && <p className="type-body text-destructive">{error}</p>}
       {list.isPending ? (
-        <p className="type-body">Đang tải…</p>
+        <LoadingState />
       ) : list.isLoadingError ? (
-        <p className="type-body text-destructive">{errorMessage(list.error)}</p>
+        <ErrorState error={list.error} onRetry={() => void list.refetch()} />
       ) : lineups.length === 0 ? (
-        <p className="type-body text-muted-foreground">Chưa có đội hình cộng đồng.</p>
+        <EmptyState>Chưa có đội hình cộng đồng.</EmptyState>
       ) : (
         <>
           <ul className="grid gap-2">
