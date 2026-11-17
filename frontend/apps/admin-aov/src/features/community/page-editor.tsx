@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from "react"
-import { Link, useBeforeUnload, useNavigate, useParams, useBlocker, useSearchParams } from "react-router"
+import { Link, useBeforeUnload, useNavigate, useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft,
@@ -58,7 +58,8 @@ import { ProfileCountry } from "./profile-country"
 import { ProfileTypeIcon } from "./profile-icons"
 import { CircuitChannelsField } from "./circuit-channels-field"
 import { toast } from "sonner"
-import { confirmAction } from "@/components/confirm-dialog"
+import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
+import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
 
 export function PageEditor() {
   return <AccessGate>{(access) => <EditorLoader access={access} />}</AccessGate>
@@ -142,9 +143,17 @@ function Editor({
   const dirty = JSON.stringify(content) !== JSON.stringify(entry.content)
   const community = isCommunityProfile(entry.kind)
   const missingRole = entry.kind === "PERSON" && !content.personRoles?.length
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) => (dirty || uploading) && currentLocation.pathname !== nextLocation.pathname,
-  )
+  useLeaveGuard(leavingPage(dirty || uploading), async () => {
+    if (uploading) {
+      toast.info("Ảnh đang tải lên, vui lòng chờ.")
+      return false
+    }
+    return confirmDiscard({
+      title: "Rời trang?",
+      description: "Hồ sơ có thay đổi chưa lưu.",
+      confirmLabel: "Rời trang, bỏ thay đổi",
+    })
+  })
   useBeforeUnload((event) => {
     if (dirty || uploading) {
       event.preventDefault()
@@ -480,21 +489,6 @@ function Editor({
             "Không xóa được: hồ sơ vừa thay đổi, đã từng xuất bản, hoặc đang có người đại diện, hoạt động cộng đồng, đội tuyển hay giải đấu dùng đến.",
           )}
         </p>
-      )}
-      {blocker.state === "blocked" && (
-        <div role="alertdialog" aria-label="Thay đổi chưa lưu" className="rounded-lg border bg-card p-4">
-          <p className="type-body mb-3">
-            {uploading ? "Ảnh đang tải lên, vui lòng chờ." : "Hồ sơ có thay đổi chưa lưu."}
-          </p>
-          <Button variant="outline" onClick={() => blocker.reset()}>
-            Ở lại
-          </Button>{" "}
-          {!uploading && (
-            <Button variant="destructive" onClick={() => blocker.proceed()}>
-              Rời trang, bỏ thay đổi
-            </Button>
-          )}
-        </div>
       )}
       <div className="flex flex-col gap-5 @3xl/profile-editor:grid @3xl/profile-editor:items-start @3xl/profile-editor:grid-cols-[208px_minmax(0,1fr)]">
         <aside className="sticky top-0 z-20 w-full min-w-0 shrink-0 @3xl/profile-editor:static @3xl/profile-editor:z-auto">

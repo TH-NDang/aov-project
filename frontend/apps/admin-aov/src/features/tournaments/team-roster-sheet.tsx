@@ -5,16 +5,7 @@ import { Edit3, ExternalLink, Info, Plus, Users } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@aov/ui/components/alert-dialog"
+import { confirmDiscard } from "@/components/confirm-dialog"
 import { RegistryLogo } from "./registry-logo"
 import { RecordPicker } from "./record-picker"
 import { RosterMembershipForm } from "./roster-membership-form"
@@ -87,7 +78,6 @@ export function TeamRosterSheet({
   const [editor, setEditor] = useState<{ entry?: DocumentView<RosterMembershipContent> } | null>(null)
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [pending, setPending] = useState<Action | null>(null)
   const memberships = useQuery({
     queryKey: [...tournamentKeys.all, "roster-memberships", actorKey, team.id, tournamentId],
     queryFn: ({ signal }) => tournamentApi.list("roster-memberships", signal, { teamId: team.id, tournamentId }),
@@ -122,10 +112,16 @@ export function TeamRosterSheet({
     else if (action.type === "edit") setEditor({ entry: action.entry })
   }
 
-  function request(action: Action) {
+  async function request(action: Action) {
     if (busy) return
-    if (dirty) setPending(action)
-    else apply(action)
+    if (dirty) {
+      const discard = await confirmDiscard({
+        title: "Đội hình còn thay đổi chưa lưu",
+        description: "Lưu thành viên để giữ thông tin trên máy chủ.",
+      })
+      if (!discard) return
+    }
+    apply(action)
   }
 
   return (
@@ -276,25 +272,6 @@ export function TeamRosterSheet({
           )}
         </SheetContent>
       </Sheet>
-      <AlertDialog open={!!pending} onOpenChange={(open) => !open && setPending(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Đội hình còn thay đổi chưa lưu</AlertDialogTitle>
-            <AlertDialogDescription>Lưu thành viên để giữ thông tin trên máy chủ.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Ở lại chỉnh sửa</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (pending) apply(pending)
-                setPending(null)
-              }}
-            >
-              Bỏ thay đổi
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }

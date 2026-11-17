@@ -5,6 +5,7 @@ import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { creditHttpUrl } from "@aov/ui/lib/media-credit"
 import { errorMessage } from "@/lib/api/errors"
+import { confirmAction } from "@/components/confirm-dialog"
 import { useIsWide } from "@/hooks/use-media-query"
 import { control } from "../publishing/fields"
 import {
@@ -243,6 +244,13 @@ function OwnerMergeForm({
       onSubmit={async (event) => {
         event.preventDefault()
         if (!target) return
+        const confirmed = await confirmAction({
+          title: `Gộp “${owner.name}” vào “${target.name}”?`,
+          description: `${owner.assetCount} ảnh đang ghi “${owner.name}” sẽ chuyển sang “${target.name}”, rồi “${owner.name}” bị xóa khỏi danh sách. Không hoàn tác được.`,
+          confirmLabel: "Gộp",
+        })
+        if (!confirmed) return
+
         setBusy(true)
         setError("")
         try {

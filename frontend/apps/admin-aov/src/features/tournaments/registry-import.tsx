@@ -1,18 +1,10 @@
 import { useEffect, useId, useRef, useState } from "react"
-import { useBlocker } from "react-router"
+import { useLeaveGuard } from "@/hooks/use-leave-guard"
+import { confirmAction } from "@/components/confirm-dialog"
 import { useQueryClient } from "@tanstack/react-query"
 import { Check, FileJson, LoaderCircle, Pause, Upload } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@aov/ui/components/alert-dialog"
 import {
   importCounts,
   MAX_REGISTRY_IMPORT_BYTES,
@@ -52,7 +44,20 @@ export function RegistryImportSheet({ onClose }: { onClose: () => void }) {
   const [paused, setPaused] = useState(false)
   const stop = useRef(false)
   const preparingController = useRef<AbortController | null>(null)
-  const blocker = useBlocker(running)
+  useLeaveGuard(running, async () => {
+    const pause = await confirmAction({
+      title: "Đang nhập dữ liệu",
+      description:
+        "Tạm dừng sau mục đang xử lý rồi đóng. Các mục đã nhập được giữ lại; nhập lại file sẽ đối chiếu để tiếp tục.",
+      confirmLabel: "Tạm dừng",
+      cancelLabel: "Ở lại",
+    })
+    if (pause) {
+      stop.current = true
+      setPaused(true)
+    }
+    return false
+  })
   useEffect(() => () => preparingController.current?.abort(), [])
   useEffect(() => {
     if (!running) return
@@ -279,42 +284,6 @@ export function RegistryImportSheet({ onClose }: { onClose: () => void }) {
           </footer>
         </SheetContent>
       </Sheet>
-      <AlertDialog
-        open={blocker.state === "blocked"}
-        onOpenChange={(open) => {
-          if (!open && blocker.state === "blocked") blocker.reset()
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Đang nhập dữ liệu</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tạm dừng sau mục đang xử lý rồi đóng. Các mục đã nhập được giữ lại; nhập lại file sẽ đối chiếu để tiếp
-              tục.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                if (blocker.state === "blocked") blocker.reset()
-              }}
-            >
-              Ở lại
-            </AlertDialogCancel>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                stop.current = true
-                setPaused(true)
-                if (blocker.state === "blocked") blocker.reset()
-              }}
-            >
-              Tạm dừng
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }

@@ -504,6 +504,8 @@ function MatchViewer({
   useEffect(() => {
     if (undoGame && undoGame !== focused?.gameId) setUndo(null)
   }, [undoGame, focused?.gameId])
+  const offerUndo = (gameId: string, text: string, revert: () => void) =>
+    setUndo({ id: Date.now(), gameId, text, revert })
   const retime = (target: RetimeTarget, second: number) => {
     const chapter = chapters.find((candidate) => candidate.gameId === target.gameId)
     if (!chapter || target.gameId !== focused?.gameId) return
@@ -512,7 +514,7 @@ function MatchViewer({
     const save = (change: Change) => void gameActions.current?.save((content) => change(content) ?? content)
     const move = (text: string, apply: Change, revert: Change) => {
       save(apply)
-      setUndo({ id: Date.now(), gameId: target.gameId, text, revert: () => save(revert) })
+      offerUndo(target.gameId, `Đã đổi giây · ${text}`, () => save(revert))
     }
     const onVideo = (before: number) => `${VIDEO_MARK} ${formatClock(before)} → ${formatClock(second)}`
     const game = `Ván ${view?.number ?? chapter.number}`
@@ -763,7 +765,7 @@ function MatchViewer({
             role="status"
             className="esp-num flex items-center gap-2 text-foreground animate-in fade-in"
           >
-            Đã đổi giây · {undo.text}
+            {undo.text}
             <Button
               size="sm"
               variant="secondary"
@@ -956,6 +958,7 @@ function MatchViewer({
             onVideoUrl={applyVideoToAll}
             shareLink={shareLink}
             actions={gameActions}
+            onUndoable={(text, revert) => offerUndo(focused.gameId, text, revert)}
           >
             {(parts) =>
               phone ? (

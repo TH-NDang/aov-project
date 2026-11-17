@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react"
-import { useParams, useSearchParams, useBlocker } from "react-router"
+import { useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   CalendarDays,
@@ -20,6 +20,7 @@ import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { communityRequest } from "@/app/auth/session"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
+import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
 import { pageApi, pageKeys, publicSite } from "@/features/community/page-api"
 import { StatusPill, TierBadge } from "@/features/esports/components/primitives"
 import { useRosters, useTournamentGames, useTournamentSeries } from "@/features/esports/data/use-esports-data"
@@ -155,8 +156,12 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     enabled: !!entry.publishedAt,
   })
 
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) => dirty && currentLocation.pathname !== nextLocation.pathname,
+  useLeaveGuard(leavingPage(dirty), () =>
+    confirmDiscard({
+      title: "Rời trang?",
+      description: "Bạn đang có thay đổi chưa lưu.",
+      confirmLabel: "Rời trang, bỏ thay đổi",
+    }),
   )
   useEffect(() => {
     if (!dirty) {
@@ -436,17 +441,6 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         })}
       </nav>
       {mutate.error && <LoadError error={mutate.error} onRetry={() => mutate.reset()} />}
-      {blocker.state === "blocked" && (
-        <div role="alertdialog" aria-label="Thay đổi chưa lưu" className="rounded-xl border bg-card p-5">
-          <p className="mb-3">Bạn đang có thay đổi chưa lưu.</p>
-          <Button variant="outline" onClick={() => blocker.reset()}>
-            Ở lại chỉnh sửa
-          </Button>{" "}
-          <Button variant="destructive" onClick={() => blocker.proceed()}>
-            Rời trang, bỏ thay đổi
-          </Button>
-        </div>
-      )}
       <div className="min-w-0">
         {step === "overview" && (
           <OverviewStep

@@ -3,16 +3,7 @@ import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { CalendarCog } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@aov/ui/components/alert-dialog"
+import { confirmAction } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi, type Request } from "./publishing-api"
 import type { HeroRow, Revision } from "./types"
@@ -33,7 +24,6 @@ export function BaselineMigration({
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState("")
   const [errors, setErrors] = useState<string[]>([])
-  const [confirming, setConfirming] = useState(false)
   const api = createPublishingApi(request)
   const cache = useQueryClient()
   const candidates = useQuery({
@@ -62,6 +52,50 @@ export function BaselineMigration({
       )
     },
   })
+  // Moving baselines rewrites which patch the drafts start from, so it asks first.
+  const migrate = async () => {
+    const confirmed = await confirmAction({
+      title: `Chuyển ${candidates.data?.length ?? 0} mốc dữ liệu ban đầu?`,
+      description: `Đưa các bản nháp về ${context.seasonName} / ${context.patchCode}. Giữ nguyên nội dung và ảnh đã nhập. Chỉ tiếp tục khi đây là mốc đúng của dữ liệu cũ.`,
+      confirmLabel: "Xác nhận chuyển mốc",
+      cancelLabel: "Quay lại",
+    })
+    if (!confirmed) return
+
+    const rows = candidates.data ?? []
+    setBusy(true)
+    onBusyChange(true)
+    setErrors([])
+    const failures: string[] = []
+    let completed = 0
+    try {
+      for (const [index, { hero, revision }] of rows.entries()) {
+        setProgress(`Đang chuyển ${hero.code} · ${index + 1}/${rows.length}`)
+        try {
+          const moved = await api.send<Revision>(
+            `/admin/heroes/${hero.id}/drafts/${revision.id}/baseline-context`,
+            "POST",
+            { expectedVersion: revision.version, contextId: context.contextId },
+          )
+          cache.removeQueries({ queryKey: ["publishing-preview", hero.id, moved.id] })
+          completed++
+        } catch (failure) {
+          failures.push(`${hero.code}: ${errorMessage(failure)}`)
+        }
+      }
+      await invalidateHeroCatalogs(cache)
+      await cache.invalidateQueries({ queryKey: ["baseline-migration"] })
+      await cache.invalidateQueries({ queryKey: ["publishing-revisions"] })
+      setProgress(
+        `Đã chuyển ${completed}/${rows.length} bản nháp. Kiểm tra lại bản xem trước của lần nhập để dùng phiên bản mới.`,
+      )
+      setErrors(failures)
+      onMoved()
+    } finally {
+      setBusy(false)
+      onBusyChange(false)
+    }
+  }
   return (
     <details className="mx-5 mt-5 rounded-xl border p-4" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary className="cursor-pointer text-sm font-medium">
@@ -83,63 +117,10 @@ export function BaselineMigration({
             .
           </p>
         )}
-        <Button variant="outline" disabled={busy || !candidates.data?.length} onClick={() => setConfirming(true)}>
+        <Button variant="outline" disabled={busy || !candidates.data?.length} onClick={() => void migrate()}>
           <CalendarCog className="size-4" />
           Chuyển các mốc ban đầu
         </Button>
-        <AlertDialog open={confirming} onOpenChange={setConfirming}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Chuyển {candidates.data?.length ?? 0} mốc dữ liệu ban đầu?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Đưa các bản nháp về {context.seasonName} / {context.patchCode}. Giữ nguyên nội dung và ảnh đã nhập. Chỉ
-                tiếp tục khi đây là mốc đúng của dữ liệu cũ.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Quay lại</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  const rows = candidates.data ?? []
-                  setBusy(true)
-                  onBusyChange(true)
-                  setErrors([])
-                  const failures: string[] = []
-                  let completed = 0
-                  try {
-                    for (const [index, { hero, revision }] of rows.entries()) {
-                      setProgress(`Đang chuyển ${hero.code} · ${index + 1}/${rows.length}`)
-                      try {
-                        const moved = await api.send<Revision>(
-                          `/admin/heroes/${hero.id}/drafts/${revision.id}/baseline-context`,
-                          "POST",
-                          { expectedVersion: revision.version, contextId: context.contextId },
-                        )
-                        cache.removeQueries({ queryKey: ["publishing-preview", hero.id, moved.id] })
-                        completed++
-                      } catch (failure) {
-                        failures.push(`${hero.code}: ${errorMessage(failure)}`)
-                      }
-                    }
-                    await invalidateHeroCatalogs(cache)
-                    await cache.invalidateQueries({ queryKey: ["baseline-migration"] })
-                    await cache.invalidateQueries({ queryKey: ["publishing-revisions"] })
-                    setProgress(
-                      `Đã chuyển ${completed}/${rows.length} bản nháp. Kiểm tra lại bản xem trước của lần nhập để dùng phiên bản mới.`,
-                    )
-                    setErrors(failures)
-                    onMoved()
-                  } finally {
-                    setBusy(false)
-                    onBusyChange(false)
-                  }
-                }}
-              >
-                Xác nhận chuyển mốc
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
         {progress && <p role="status">{progress}</p>}
         {candidates.error && (
           <p role="alert" className="text-destructive">

@@ -1,7 +1,6 @@
 import { useWarehouseScope, WarehouseScopeControls, WarehouseScopeEmpty } from "./warehouse-scope"
 import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { useBlocker } from "react-router"
 import { FolderPlus, LoaderCircle, PencilLine, Plus, Rows3 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
@@ -43,6 +42,7 @@ import { ItemEditor } from "./item-editor"
 import type { EditTarget, WarehouseSection } from "./warehouse-edit-section"
 import type { NewDraft } from "./warehouse-sheet"
 import { confirmDiscard } from "@/components/confirm-dialog"
+import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
 
 type Entry = WarehouseEntry<ItemContent>
 type PendingItem = { entry: Entry; content: ItemContent; patchId?: string | null }
@@ -178,9 +178,18 @@ export function BackendItemsPage() {
     if (selected) items.set(selected.id, selected)
     return [...items.values()]
   }, [catalog.data, rows, edits, selected])
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) => pending > 0 && currentLocation.pathname !== nextLocation.pathname,
-  )
+  useLeaveGuard(leavingPage(pending > 0), async () => {
+    const leave = await confirmDiscard({
+      title: `Còn ${pending} thay đổi chưa lưu`,
+      description: "Lưu thay đổi lên máy chủ trước khi rời trang, hoặc bỏ phần đang sửa.",
+      confirmLabel: "Bỏ thay đổi và rời trang",
+    })
+    if (leave) {
+      setEdits(new Map())
+      setUndo([])
+    }
+    return leave
+  })
   useEffect(() => {
     if (!pending) return
     const guard = (event: BeforeUnloadEvent) => {
@@ -655,28 +664,6 @@ export function BackendItemsPage() {
               }}
             >
               Tạo bản nháp và tiếp tục
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <AlertDialog open={blocker.state === "blocked"}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Còn {pending} thay đổi chưa lưu</AlertDialogTitle>
-            <AlertDialogDescription>
-              Lưu thay đổi lên máy chủ trước khi rời trang, hoặc bỏ phần đang sửa.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => blocker.reset?.()}>Ở lại</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setEdits(new Map())
-                setUndo([])
-                blocker.proceed?.()
-              }}
-            >
-              Bỏ thay đổi và rời trang
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

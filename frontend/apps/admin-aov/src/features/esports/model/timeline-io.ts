@@ -6,8 +6,16 @@ import type {
   Side,
   TimelineEvent as StoredEvent,
 } from "@aov/community-contracts"
-import { recordedItemEvents, seatKey, sortEvents, type ItemEvent, type SeatKey, type TimelineEvent } from "./timeline"
-import type { VodPause } from "./vod"
+import {
+  KIND_LABELS,
+  recordedItemEvents,
+  seatKey,
+  sortEvents,
+  type ItemEvent,
+  type SeatKey,
+  type TimelineEvent,
+} from "./timeline"
+import { formatClock, type VodPause } from "./vod"
 
 const toKey = (seat?: Seat | null): SeatKey | undefined => (seat ? seatKey(seat.side, seat.lane) : undefined)
 const toSeat = (key?: SeatKey): Seat | null => {
@@ -129,4 +137,17 @@ export function moveEvent(content: GameContent, id: string, gameSecond: number):
   const event = events.find((candidate) => candidate.id === id)
   if (!event) return null
   return writeTimeline(content, upsertEvent(events, { ...event, at: Math.max(0, Math.round(gameSecond)) }))
+}
+
+/** Removes one moment, with the change that puts it back: the match screen deletes at once and offers an undo. */
+export function eventRemoval(event: TimelineEvent) {
+  return {
+    text: `Đã xóa ${KIND_LABELS[event.kind].toLowerCase()} lúc ${formatClock(event.at)}`,
+    apply: (content: GameContent) =>
+      writeTimeline(
+        content,
+        readTimeline(content).filter((candidate) => candidate.id !== event.id),
+      ),
+    revert: (content: GameContent) => writeTimeline(content, upsertEvent(readTimeline(content), event)),
+  }
 }

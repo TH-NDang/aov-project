@@ -32,6 +32,7 @@ import {
   type TimelineEvent,
 } from "../src/features/esports/model/timeline"
 import {
+  eventRemoval,
   moveEvent,
   readTimeline,
   upsertEvent,
@@ -335,6 +336,41 @@ test("timeline moments round-trip through the API shape: items on participants, 
   assert.equal(replayed.sourceTimestampSeconds, 95)
   assert.deepEqual(replayed.timeline?.pauses, [])
   assert.equal(replayed.timeline?.events.length, 2, "playback changes keep recorded moments")
+})
+
+test("a deleted moment comes back unchanged with its undo", () => {
+  const content = {
+    seriesId: "s",
+    number: 1,
+    region: "VN",
+    locale: "vi-VN",
+    sides: [
+      { side: "BLUE" as const, teamId: "a", bans: [], participants: [] },
+      { side: "RED" as const, teamId: "b", bans: [], participants: [] },
+    ],
+    timeline: { pauses: [], events: [] },
+  }
+  const kill: TimelineEvent = {
+    id: "kill-1",
+    kind: "KILL",
+    at: 312,
+    killer: "RED:JUNGLE",
+    victim: "BLUE:MID",
+    assists: [],
+  }
+  const note: TimelineEvent = { id: "note-1", kind: "NOTE", at: 200, title: "Gank", side: "RED" }
+  const recorded = writeTimeline(content, [kill, note])
+
+  const removal = eventRemoval(kill)
+  const removed = removal.apply(recorded)
+  const restored = removal.revert(removed)
+
+  assert.equal(removal.text, "Đã xóa hạ gục lúc 5:12")
+  assert.deepEqual(
+    readTimeline(removed).map((event) => event.id),
+    ["note-1"],
+  )
+  assert.deepEqual(readTimeline(restored), readTimeline(recorded))
 })
 
 test("moments a few seconds apart form one teamfight, and per-side clustering keeps lanes apart", () => {

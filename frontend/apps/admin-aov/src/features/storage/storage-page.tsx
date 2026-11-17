@@ -10,17 +10,8 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { Input } from "@aov/ui/components/input"
 import { Badge } from "@aov/ui/components/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@aov/ui/components/alert-dialog"
 import { Page, PageHeader } from "@/components/page-header"
+import { confirmAction } from "@/components/confirm-dialog"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { ImportDialog, SELECT_CLASS, displayValue } from "./import-dialog"
 import { StorageDataTable } from "./storage-data-table"
@@ -46,9 +37,6 @@ export function StoragePage() {
   const [creating, setCreating] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [archived, setArchived] = useState(false)
-  const [confirmation, setConfirmation] = useState<{ title: string; description: string; next: StorageTable } | null>(
-    null,
-  )
   const mutation = useMutation({
     mutationFn: storageApi.save,
     onSuccess: (saved) => {
@@ -61,19 +49,33 @@ export function StoragePage() {
     setImportOpen(false)
     setError("")
   }, [selected])
-  const save = async (next: StorageTable) => {
-    validateTable(next)
-    await mutation.mutateAsync(next)
-  }
-  const run = async (next: StorageTable) => {
-    try {
-      await save(next)
-      toast.success("Đã lưu bảng JSON.")
-      setError("")
-    } catch (cause) {
-      setError(cause instanceof Error ? storageErrorMessage(cause.message) : "Không thể lưu.")
-    }
-  }
+  const { mutateAsync } = mutation
+  const save = useCallback(
+    async (next: StorageTable) => {
+      validateTable(next)
+      await mutateAsync(next)
+    },
+    [mutateAsync],
+  )
+  const run = useCallback(
+    async (next: StorageTable) => {
+      try {
+        await save(next)
+        toast.success("Đã lưu bảng JSON.")
+        setError("")
+      } catch (cause) {
+        setError(cause instanceof Error ? storageErrorMessage(cause.message) : "Không thể lưu.")
+      }
+    },
+    [save],
+  )
+  /** Deleting rows or columns cannot be undone, so it asks first and saves only on a yes. */
+  const confirmDelete = useCallback(
+    async (question: { title: string; description: string }, next: StorageTable) => {
+      if (await confirmAction({ ...question, confirmLabel: "Xóa" })) await run(next)
+    },
+    [run],
+  )
   const openEditor = useCallback(
     (next: Editor) => {
       setEditor(next)
@@ -95,31 +97,32 @@ export function StoragePage() {
   const deleteRow = useCallback(
     (row: StorageRow) => {
       if (!table?.idColumn) return
-      setConfirmation({
-        title: "Xóa dòng dữ liệu?",
-        description: `Dòng có ID ${rowId(row[table.idColumn])} sẽ bị xóa khỏi bảng.`,
-        next: {
+      void confirmDelete(
+        { title: "Xóa dòng dữ liệu?", description: `Dòng có ID ${rowId(row[table.idColumn])} sẽ bị xóa khỏi bảng.` },
+        {
           ...table,
           rows: table.rows.filter((item) => rowId(item[table.idColumn!]) !== rowId(row[table.idColumn!])),
         },
-      })
+      )
     },
-    [table],
+    [table, confirmDelete],
   )
   const deleteColumn = useCallback(
     (column: string) => {
       if (!table || column === table.idColumn) return
-      setConfirmation({
-        title: `Xóa cột ${column}?`,
-        description: "Các giá trị trong cột này cũng sẽ bị xóa. Bạn có thể xuất JSON để giữ bản sao.",
-        next: {
+      void confirmDelete(
+        {
+          title: `Xóa cột ${column}?`,
+          description: "Các giá trị trong cột này cũng sẽ bị xóa. Bạn có thể xuất JSON để giữ bản sao.",
+        },
+        {
           ...table,
           columns: table.columns.filter((key) => key !== column),
           rows: table.rows.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) => key !== column))),
         },
-      })
+      )
     },
-    [table],
+    [table, confirmDelete],
   )
   const submitEditor = async () => {
     try {
@@ -397,18 +400,6 @@ export function StoragePage() {
           </Button>
         </DialogContent>
       </Dialog>
-      <AlertDialog open={Boolean(confirmation)} onOpenChange={(open) => !open && setConfirmation(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{confirmation?.title}</AlertDialogTitle>
-            <AlertDialogDescription>{confirmation?.description}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmation && void run(confirmation.next)}>Xóa</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Page>
   )
 }

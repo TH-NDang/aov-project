@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { before, test } from "node:test"
 import { act, type ReactNode } from "react"
-import { button as findButton, click, confirmDialog as dialog, flush, render, withDom } from "./fixtures/dom"
+import { button as findButton, click, confirmDialog as dialog, flush, render, waitFor, withDom } from "./fixtures/dom"
 import { fakeBackend, json, noContent, type ApiRequest } from "./fixtures/network"
 import { sessionRoutes, signIn } from "./fixtures/session"
 import type { HeroShop, HeroShopPrice, SkinAcquisition } from "../src/features/publishing/publishing-api"
@@ -34,30 +34,49 @@ const shop: HeroShop = {
   skinHistory: [],
 }
 
-const backend = fakeBackend(sessionRoutes({ capabilities: ["hero:write", "hero:publish"] }), ({ method, path }) => {
-  if (path.startsWith("/admin/heroes/fixture-hero/shop") && method === "GET") return json(shop)
-  if (method === "DELETE") return noContent()
-  if (path === "/admin/seasons") return json([{ id: "season-1" }])
-  if (path === "/admin/heroes/import/contexts?seasonId=season-1")
-    return json([
-      {
-        contextId: "context-old",
-        rulesetId: "rules",
-        patchVariantId: "variant-old",
-        seasonName: "S1",
-        patchCode: "1.0",
-      },
-      {
-        contextId: "context-new",
-        rulesetId: "rules",
-        patchVariantId: "variant-new",
-        seasonName: "S1",
-        patchCode: "1.1",
-      },
-    ])
-  if (path.endsWith("/baseline-context")) return json({ id: "draft", version: 2 })
-  return undefined
-})
+const storageTable = {
+  id: "t1",
+  name: "Bảng thử",
+  version: 1,
+  columns: ["id", "name"],
+  idColumn: "id",
+  rows: [
+    { id: "1", name: "Một" },
+    { id: "2", name: "Hai" },
+  ],
+  archived: false,
+}
+
+const backend = fakeBackend(
+  sessionRoutes({ capabilities: ["hero:write", "hero:publish"] }),
+  ({ method, path, body }) => {
+    if (path === "/__storage/") return json([{ ...storageTable, rows: undefined, rowCount: 2 }])
+    if (path === "/__storage/t1" && method === "GET") return json(storageTable)
+    if (path === "/__storage/t1" && method === "PUT") return json(body)
+    if (path.startsWith("/admin/heroes/fixture-hero/shop") && method === "GET") return json(shop)
+    if (method === "DELETE") return noContent()
+    if (path === "/admin/seasons") return json([{ id: "season-1" }])
+    if (path === "/admin/heroes/import/contexts?seasonId=season-1")
+      return json([
+        {
+          contextId: "context-old",
+          rulesetId: "rules",
+          patchVariantId: "variant-old",
+          seasonName: "S1",
+          patchCode: "1.0",
+        },
+        {
+          contextId: "context-new",
+          rulesetId: "rules",
+          patchVariantId: "variant-new",
+          seasonName: "S1",
+          patchCode: "1.1",
+        },
+      ])
+    if (path.endsWith("/baseline-context")) return json({ id: "draft", version: 2 })
+    return undefined
+  },
+)
 const requests: ApiRequest[] = backend.requests
 const dom = withDom({ globals: () => ({ fetch: backend.fetch }) })
 
@@ -216,6 +235,24 @@ test("moving a baseline to another patch asks first", async () => {
     assert.equal(write.method, "POST")
     assert.match(write.path, /\/drafts\/draft\/baseline-context$/)
     assert.equal(moved.length, 1)
+  } finally {
+    await unmount()
+  }
+})
+
+test("deleting a row of a JSON table asks first", async () => {
+  const { MemoryRouter } = await import("react-router")
+  const { StoragePage } = await import("../src/features/storage/storage-page")
+  const { unmount } = await render(<StoragePage />, {
+    wrap: (node) => <MemoryRouter initialEntries={["/storage?table=t1"]}>{node}</MemoryRouter>,
+  })
+  try {
+    const deleteButton = await waitFor(() =>
+      document.querySelector<HTMLButtonElement>('button[aria-label="Xóa dòng 1"]'),
+    )
+    const write = await expectAskedBeforeWrite(() => deleteButton, /Xóa dòng dữ liệu?/, "Xóa")
+    assert.equal(write.method, "PUT")
+    assert.deepEqual((write.body as typeof storageTable).rows, [{ id: "2", name: "Hai" }])
   } finally {
     await unmount()
   }
