@@ -162,9 +162,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
                 || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(target.getCause()))
             invalid("Use a published gameplay or baseline snapshot and a published patch in the same ruleset.");
         if (removed) {
-            long targetOrdinal = target.getEffectiveFromPatchVariantId() == null
-                    ? 0
-                    : contexts.variant(target.getEffectiveFromPatchVariantId()).rulesetOrdinal();
+            long targetOrdinal = GameplayContexts.rulesetOrdinal(contexts, target.getEffectiveFromPatchVariantId());
             if (input.kinds().size() != 1 || targetOrdinal > patch.rulesetOrdinal())
                 invalid("A removal must reference a snapshot at or before the removal patch.");
         } else if (!input.patchVariantId().equals(target.getEffectiveFromPatchVariantId()))
@@ -187,10 +185,8 @@ public class SpellPatchChanges implements CatalogChangeProvider {
                     || from.getState() != RevisionState.PUBLISHED
                     || from.getEffectiveFromPatchVariantId() == null && !CatalogObservation.isUnscopedBaseline(
                             from.getCause(), from.getSourceRevisionId(), null)
-                    || (from.getEffectiveFromPatchVariantId() == null
-                            ? 0
-                            : contexts.variant(from.getEffectiveFromPatchVariantId()).rulesetOrdinal()) >= patch
-                                    .rulesetOrdinal())
+                    || (GameplayContexts.rulesetOrdinal(contexts, from.getEffectiveFromPatchVariantId())) >= patch
+                            .rulesetOrdinal())
                 invalid("The source must be an earlier published snapshot of the same entry and ruleset.");
         }
 
