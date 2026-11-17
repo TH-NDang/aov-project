@@ -117,7 +117,8 @@ public class SourceUploads {
             collections.require(collectionId);
             Optional<SourceFile> existing = files.findByCollectionIdAndPath(collectionId, path);
             if (existing.isPresent() && existing.get().getSha256().equals(sha256)) {
-                return SourceFiles.view(existing.get(), objects.findById(sha256).orElseThrow());
+                return SourceFiles.view(existing.get(),
+                        objects.findById(sha256).orElseThrow(SourceUploads::missingObject));
             }
             checkReplace(existing, replace);
 
@@ -166,7 +167,8 @@ public class SourceUploads {
                 SourceFile file = files.findById(claim.completedFileId())
                         .orElseThrow(() -> SourceErrors.fileNotFound(claim.completedFileId()));
                 return new SourceFileViews.Completed(
-                        SourceFiles.view(file, objects.findById(file.getSha256()).orElseThrow()));
+                        SourceFiles.view(file,
+                                objects.findById(file.getSha256()).orElseThrow(SourceUploads::missingObject)));
             });
         }
 
@@ -327,7 +329,7 @@ public class SourceUploads {
             objects.insertIfAbsent(claim.sha256(), MediaObjectKeys.source(claim.sha256()),
                     MediaObjectKeys.STORAGE_ALIAS, claim.sizeBytes(), claim.contentType(), claim.path(),
                     clock.instant(), actor.issuer(), actor.subject());
-            return finish(claim, objects.lockById(claim.sha256()).orElseThrow(), actor);
+            return finish(claim, objects.lockById(claim.sha256()).orElseThrow(SourceUploads::missingObject), actor);
         });
     }
 
@@ -382,6 +384,11 @@ public class SourceUploads {
         } catch (RuntimeException ex) {
             log.warn("Could not delete incoming source object {}: {}", key, ex.getMessage());
         }
+    }
+
+    /** Every stored source file and finished upload names a stored object; a missing one is a broken invariant. */
+    private static IllegalStateException missingObject() {
+        return new IllegalStateException("A source file names an object that does not exist.");
     }
 
     /** Bytes that do not match the declaration; the upload is refused for good. */

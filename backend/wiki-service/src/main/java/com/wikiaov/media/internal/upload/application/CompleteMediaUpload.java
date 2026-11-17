@@ -103,7 +103,8 @@ public class CompleteMediaUpload {
         Claim claim = claim(uploadId);
         if (claim.completedVersionId() != null) {
             return transaction.execute(status -> {
-                MediaAssetVersion version = versions.findById(claim.completedVersionId()).orElseThrow();
+                MediaAssetVersion version = versions.findById(claim.completedVersionId()).orElseThrow(
+                        () -> new IllegalStateException("A completed upload names a version that does not exist."));
                 return assetViews.result(assetAccess.requireAsset(claim.assetId()), version, false);
             });
         }

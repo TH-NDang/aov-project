@@ -39,7 +39,9 @@ public class BuildValues {
         String key = BuildRules.arcanaKey(arcana);
         UUID id = UUID.randomUUID();
         if (pages.insertIfAbsent(id, key, now) == 0)
-            return pages.findByContentKey(key).orElseThrow().getId();
+            return pages.findByContentKey(key)
+                    .orElseThrow(() -> new IllegalStateException("An arcana page was neither inserted nor found."))
+                    .getId();
 
         pageEntries.saveAllAndFlush(arcana.stream().map(part -> {
             var row = new ArcanaPageEntryRow();
@@ -55,7 +57,10 @@ public class BuildValues {
         String key = BuildRules.enchantmentKey(enchantments);
         UUID id = UUID.randomUUID();
         if (sets.insertIfAbsent(id, key, now) == 0)
-            return sets.findByContentKey(key).orElseThrow().getId();
+            return sets.findByContentKey(key)
+                    .orElseThrow(
+                            () -> new IllegalStateException("An enchantment set was neither inserted nor found."))
+                    .getId();
 
         setEntries.saveAllAndFlush(enchantments.stream().map(part -> {
             var row = new EnchantmentSetEntryRow();

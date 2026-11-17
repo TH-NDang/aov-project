@@ -130,7 +130,7 @@ public class ItemCatalog {
 
     @PreAuthorize("hasAuthority('item:write')")
     public ItemView update(UUID id, UUID revisionId, Update input) {
-        recipeLock.lockGraph().orElseThrow();
+        recipeLock.lockGraph().orElseThrow(() -> new IllegalStateException("The item recipe lock row is missing."));
         var owner = lockIdentity(id);
         var revision = requireEditableDraft(id, revisionId, input.expectedVersion());
 

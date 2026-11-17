@@ -171,7 +171,9 @@ public class PasswordChanges {
         }
 
         transaction.executeWithoutResult(status -> {
-            challenges.lockById(challengeId).orElseThrow().moveTo(USED, clock.instant());
+            challenges.lockById(challengeId)
+                    .orElseThrow(() -> new IllegalStateException("An applied password change has no challenge."))
+                    .moveTo(USED, clock.instant());
             caller.record(actor, "USER_PASSWORD_CHANGED", Map.of("challengeId", challengeId.toString()));
         });
     }

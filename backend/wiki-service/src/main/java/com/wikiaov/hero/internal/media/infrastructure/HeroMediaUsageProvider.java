@@ -94,6 +94,7 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
                 .thenComparing(OwnerName::getLocale);
 
         return names.stream().collect(Collectors.groupingBy(key,
-                Collectors.collectingAndThen(Collectors.minBy(order), best -> best.orElseThrow().getName())));
+                Collectors.collectingAndThen(Collectors.minBy(order), best -> best
+                        .orElseThrow(() -> new IllegalStateException("A grouped place has no name.")).getName())));
     }
 }

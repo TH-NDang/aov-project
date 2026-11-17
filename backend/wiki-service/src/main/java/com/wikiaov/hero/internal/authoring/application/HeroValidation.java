@@ -49,11 +49,8 @@ public class HeroValidation {
     }
 
     private void validateRatings(Ratings ratings) {
-        var scale = scales.findById(ratings.scaleCode());
-        if (scale.isEmpty())
-            throw invalid("Unknown rating scale.");
+        var range = scales.findById(ratings.scaleCode()).orElseThrow(() -> invalid("Unknown rating scale."));
 
-        var range = scale.orElseThrow();
         for (var rating : List.of(ratings.survivability(), ratings.attackDamage(), ratings.skillEffects(),
                 ratings.difficulty()))
             if (rating.compareTo(range.getMinValue()) < 0 || rating.compareTo(range.getMaxValue()) > 0)

@@ -22,10 +22,6 @@ public class HeroStore {
         this.revisions = revisions;
     }
 
-    public HeroIdentity hero(UUID id) {
-        return heroes.findById(id).orElseThrow();
-    }
-
     public HeroIdentity requireHero(UUID id) {
         return heroes.findById(id)
                 .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_NOT_FOUND, "The hero does not exist."));

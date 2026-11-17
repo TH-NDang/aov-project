@@ -66,7 +66,8 @@ public class PublicBuilds {
         var pageUse = usage(rows.values().stream().flatMap(List::stream).map(BuildRow::getArcanaPageId)
                 .filter(Objects::nonNull).collect(Collectors.toSet()));
         var sources = chosen.stream().map(capture -> {
-            var heroRow = heroes.findById(new CaptureHeroRow.Key(capture.getId(), hero.id())).orElseThrow();
+            var heroRow = heroes.findById(new CaptureHeroRow.Key(capture.getId(), hero.id()))
+                    .orElseThrow(() -> new IllegalStateException("A chosen capture has no row for its hero."));
             return new BuildViews.Source(capture.getId(), capture.getSourceKind(), capture.getSourceLabel(),
                     capture.getCapturedAt(), capture.getSourceTimeZone(),
                     capture.getPatchVariantId() == null ? null : contexts.patchCode(capture.getPatchVariantId()),

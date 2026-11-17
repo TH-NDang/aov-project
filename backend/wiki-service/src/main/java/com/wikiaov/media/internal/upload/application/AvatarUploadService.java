@@ -64,7 +64,8 @@ class AvatarUploadService implements AvatarUploads {
     public Result complete(UUID uploadId) {
         human();
         var result = complete.avatar(uploadId);
-        return new Result(result.assetId(), previewUrl(result.assetId()).orElseThrow());
+        return new Result(result.assetId(), previewUrl(result.assetId())
+                .orElseThrow(() -> new IllegalStateException("A completed avatar has no preview.")));
     }
 
     @Transactional

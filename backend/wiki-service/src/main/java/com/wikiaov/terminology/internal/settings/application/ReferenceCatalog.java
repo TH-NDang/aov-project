@@ -78,7 +78,8 @@ public class ReferenceCatalog {
     }
 
     private ReferenceConfiguration lockCurrentConfiguration(long expectedVersion) {
-        var config = configurations.lockById(ReferenceConfiguration.ID).orElseThrow();
+        var config = configurations.lockById(ReferenceConfiguration.ID)
+                .orElseThrow(ReferenceCatalog::missingConfiguration);
         if (config.getVersion() != expectedVersion)
             throw new ApiException(ReferenceErrorCode.REFERENCE_VERSION_CONFLICT,
                     "Reference settings have changed. Reload before saving.",
@@ -95,9 +96,15 @@ public class ReferenceCatalog {
     }
 
     private ReferenceSettingsView readSnapshot() {
-        var config = configurations.findById(ReferenceConfiguration.ID).orElseThrow();
+        var config = configurations.findById(ReferenceConfiguration.ID)
+                .orElseThrow(ReferenceCatalog::missingConfiguration);
         var values = content.entries();
         return new ReferenceSettingsView(config.getVersion(),
                 new ReferenceSettings(1, config.isAutoRecognize(), config.getFallbackLocale(), values));
+    }
+
+    /** The single settings row is created by a migration. */
+    private static IllegalStateException missingConfiguration() {
+        return new IllegalStateException("The reference settings row is missing.");
     }
 }

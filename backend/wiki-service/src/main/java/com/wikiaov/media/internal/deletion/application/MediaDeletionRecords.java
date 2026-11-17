@@ -150,7 +150,8 @@ public class MediaDeletionRecords {
     }
 
     private MediaDeletion lock(UUID assetId) {
-        return deletions.lock(assetId).orElseThrow();
+        return deletions.lock(assetId).orElseThrow(() -> new ApiException(MediaErrorCode.MEDIA_DELETION_NOT_FOUND,
+                "No deletion was requested for this image."));
     }
 
     private static Work work(MediaDeletion deletion) {

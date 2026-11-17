@@ -147,7 +147,8 @@ public class HeroQueries {
                 });
             result.put("forms", entries);
         }
-        structure.form(heroId).ifPresent(form -> result.put("parent", parent(form, store.hero(form.holderId()))));
+        structure.form(heroId)
+                .ifPresent(form -> result.put("parent", parent(form, store.requireHero(form.holderId()))));
     }
 
     private static Map<String, Object> parent(HeroFormStructure.Form form, HeroIdentity holder) {
@@ -160,7 +161,7 @@ public class HeroQueries {
         result.put("context", context(ctx, locale));
         result.put("id", rev.heroId());
         result.put("revisionId", rev.id());
-        result.put("code", store.hero(rev.heroId()).getCode());
+        result.put("code", store.requireHero(rev.heroId()).getCode());
         result.put("unscopedBaseline", rev.effectiveFromPatchVariantId() == null);
 
         Map<String, Object> refs = new LinkedHashMap<>();
@@ -294,7 +295,8 @@ public class HeroQueries {
             item.put("positions", positions.stream().sorted().toList());
             List<ListEntry> formEntries = new ArrayList<>();
             for (var member : members) {
-                var form = structure.form(member.identity().getId()).orElseThrow();
+                var form = structure.form(member.identity().getId())
+                        .orElseThrow(() -> new IllegalStateException("A listed form has no form structure."));
                 var formItem = member.item();
                 formItem.put("formKey", form.formKey());
                 formItem.put("roles", member.roles());
@@ -326,7 +328,7 @@ public class HeroQueries {
         String actual = translationLocale(profile.translations().stream().map(ProfileTranslation::locale).toList(),
                 locale);
         var translated = profile.translations().stream().filter(t -> t.locale().equals(actual)).findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new IllegalStateException("The selected profile locale has no translation."));
         var later = choice.laterVariantId() == null
                 ? null
                 : Map.<String, Object>of("patchVariantId", choice.laterVariantId(), "patchCode",
@@ -459,7 +461,8 @@ public class HeroQueries {
     private void localize(Map<String, Object> object, String locale) {
         var translations = (List<Map<String, Object>>) object.remove("translations");
         String actual = translationLocale(translations.stream().map(t -> (String) t.get("locale")).toList(), locale);
-        var selected = translations.stream().filter(t -> t.get("locale").equals(actual)).findFirst().orElseThrow();
+        var selected = translations.stream().filter(t -> t.get("locale").equals(actual)).findFirst()
+                .orElseThrow(() -> new IllegalStateException("The selected locale has no translation."));
         object.putAll(selected);
         object.remove("locale");
         object.put("actualLocale", actual);

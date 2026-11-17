@@ -58,7 +58,8 @@ public class MediaOwners {
 
         String key = MediaOwnerNames.key(name);
         owners.insertIfAbsent(UUID.randomUUID(), name, key, clock.instant());
-        MediaOwner owner = owners.findByNameKey(key).orElseThrow();
+        MediaOwner owner = owners.findByNameKey(key)
+                .orElseThrow(() -> new IllegalStateException("An owner was neither inserted nor found."));
         return source.withOwner(owner.getId(), owner.getName(),
                 source.contactUrl() != null ? source.contactUrl() : owner.getContactUrl());
     }

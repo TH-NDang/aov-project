@@ -138,7 +138,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
         for (var row : rows)
             structure.form((UUID) row.get("heroId")).ifPresent(form -> {
                 row.put("holderId", form.holderId());
-                row.put("holderCode", store.hero(form.holderId()).getCode());
+                row.put("holderCode", store.requireHero(form.holderId()).getCode());
                 row.put("formKey", form.formKey());
             });
         return rows;
