@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { zipSync, strToU8 } from "fflate"
-import { readImportZip, importDataDirectory } from "../src/features/publishing/import-archive"
-import { readImportDrop } from "../src/features/publishing/import-drop"
+import { readImportZip, importDataDirectory } from "../src/features/publishing/model/import/import-archive"
+import { readImportDrop } from "../src/features/publishing/model/import/import-drop"
 
 test("folder drops read every directory batch and preserve relative paths", async () => {
   const entry = (name: string) => ({
@@ -32,14 +32,14 @@ import {
   mapRelation,
   sourcePaths,
   type RelationField,
-} from "../src/features/publishing/import-relations"
+} from "../src/features/publishing/model/import/import-relations"
 import {
   indexImportFiles,
   resolveImportImage,
   normalizeImportPath,
   importImageFile,
   detectImportImageBase,
-} from "../src/features/publishing/import-files"
+} from "../src/features/publishing/model/import/import-files"
 
 test("image roots follow actual package paths and survive JSON reselection", () => {
   const image = new File(["image"], "airi.jpg")

@@ -1,6 +1,6 @@
 import { Database, GitFork } from "lucide-react"
-import { control } from "../publishing/fields"
-import { usePublicationOverview } from "../publishing/publication-overview"
+import { control } from "../publishing/components/fields"
+import { usePublicationOverview } from "../publishing/api/publication-overview"
 import type { WarehouseBaselineMode } from "./warehouse-types"
 
 export function WarehousePatchContext({

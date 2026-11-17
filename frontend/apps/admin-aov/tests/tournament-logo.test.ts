@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { uploadRegistryLogo, uploadTeamLogo } from "../src/features/tournaments/team-logo-upload"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "../src/features/publishing/api/publishing-api"
 
 test("team logos use Media ingestion and return immutable URLs without forwarding API credentials to storage", async () => {
   const calls: { path: string; init?: RequestInit }[] = []

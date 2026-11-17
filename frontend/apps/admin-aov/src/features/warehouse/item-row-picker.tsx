@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@aov/ui/components/dialog"
 import { cn } from "@aov/ui/lib/utils"
-import { HeroAsset } from "@/features/publishing/hero-asset"
+import { HeroAsset } from "@/features/publishing/components/hero-asset"
 import { shopRowPeers } from "./item-shop-position"
 import { type WarehouseEntry } from "./warehouse-types"
 import { warehouseName, type ItemContent } from "@aov/ui/lib/warehouse-content"

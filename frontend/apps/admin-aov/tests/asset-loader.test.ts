@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { ApiError } from "../src/lib/api/errors"
-import { createAssetLoader } from "../src/features/publishing/asset-loader"
-import { createPublishingApi } from "../src/features/publishing/publishing-api"
-import type { AssetDetail } from "../src/features/publishing/types"
+import { createAssetLoader } from "../src/features/publishing/model/assets/asset-loader"
+import { createPublishingApi } from "../src/features/publishing/api/publishing-api"
+import type { AssetDetail } from "../src/features/publishing/api/types"
 
 const uuid = (index: number) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`
 const asset = (id: string) => ({ id, currentUrl: `/media/${id}.webp` }) as AssetDetail

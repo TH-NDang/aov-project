@@ -34,7 +34,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
     requestAnimationFrame: (callback: () => void) => setTimeout(callback, 0),
     cancelAnimationFrame: clearTimeout,
   })
-  const { GameConfigurationPage } = await import("../src/features/publishing/game-configuration-page")
+  const { GameConfigurationPage } = await import("../src/features/publishing/pages/game-configuration-page")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -205,9 +205,9 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.ok(tabs()[0].querySelector("svg"))
     assert.ok(document.querySelector('img[src="/fixture-head.png"]'))
     assert.ok(document.querySelector('td img[src="/images/flags/vn.svg"]'))
-    const overview = cache.getQueryData<import("../src/features/publishing/publication-overview").PublicationOverview>([
-      "publication-overview",
-    ])!
+    const overview = cache.getQueryData<
+      import("../src/features/publishing/api/publication-overview").PublicationOverview
+    >(["publication-overview"])!
     await updateCache(["publication-overview"], {
       ...overview,
       markets: overview.markets.map((market) => ({ ...market, currentReleaseId: null })),

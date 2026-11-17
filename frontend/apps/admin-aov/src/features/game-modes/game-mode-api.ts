@@ -1,7 +1,7 @@
 import { backendRequest } from "@/app/auth/session"
 import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
-import { uploadHeroImage, type Request } from "../publishing/publishing-api"
-import type { PageSlice } from "../publishing/types"
+import { uploadHeroImage, type Request } from "../publishing/api/publishing-api"
+import type { PageSlice } from "../publishing/api/types"
 
 export type ModeGroup = "PVP" | "ENTERTAINMENT"
 export type AvailabilityStatus = "ALWAYS_OPEN" | "LIMITED" | "SPECIAL" | "CLOSED" | "LOCKED" | "UNKNOWN"

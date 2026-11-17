@@ -6,10 +6,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { useIsWide } from "@/hooks/use-media-query"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { AssetPicker } from "../publishing/asset-picker"
-import { Field, control } from "../publishing/fields"
+import { AssetPicker } from "../publishing/components/assets/asset-picker"
+import { Field, control } from "../publishing/components/fields"
 import { languageOptions } from "../users/profile-preference-picker"
-import type { Request } from "../publishing/publishing-api"
+import type { Request } from "../publishing/api/publishing-api"
 import {
   characterImageKeys,
   createCharacterImageApi,

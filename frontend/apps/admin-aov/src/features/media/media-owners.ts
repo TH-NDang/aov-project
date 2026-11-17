@@ -1,6 +1,6 @@
 import { useQuery, type QueryClient } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
-import type { PageSlice } from "../publishing/types"
+import type { PageSlice } from "../publishing/api/types"
 import { invalidateAllMediaAssets } from "./media-cache"
 
 /** An entry of the image owner catalog (ADR-017). */

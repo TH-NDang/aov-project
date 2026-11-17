@@ -3,14 +3,14 @@ import { test } from "node:test"
 import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "../src/features/publishing/api/publishing-api"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 test("import wizard carries patch context and never selects rows without a known baseline", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
-  const { HeroImport } = await import("../src/features/publishing/hero-import")
+  const { HeroImport } = await import("../src/features/publishing/components/import/hero-import")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
@@ -141,7 +141,7 @@ test("folder import uploads only mapped hero, skill and skin images after confir
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
-  const { HeroImport } = await import("../src/features/publishing/hero-import")
+  const { HeroImport } = await import("../src/features/publishing/components/import/hero-import")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })

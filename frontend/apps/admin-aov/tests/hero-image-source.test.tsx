@@ -4,7 +4,7 @@ import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import type { AssetDetail, AssetProvenance } from "../src/features/publishing/types"
+import type { AssetDetail, AssetProvenance } from "../src/features/publishing/api/types"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 test("hero image sources share the image request and retain current provenance, safe links and missing states", async () => {
@@ -57,8 +57,9 @@ test("hero image sources share the image request and retain current provenance, 
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroImageSource, currentImageSources } = await import("../src/features/publishing/hero-image-source")
-  const { HeroAsset } = await import("../src/features/publishing/hero-asset")
+  const { HeroImageSource, currentImageSources } =
+    await import("../src/features/publishing/components/assets/hero-image-source")
+  const { HeroAsset } = await import("../src/features/publishing/components/hero-asset")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })

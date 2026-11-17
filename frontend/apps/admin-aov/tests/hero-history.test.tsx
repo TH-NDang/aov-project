@@ -5,7 +5,7 @@ import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixturePreviousRevision } from "./fixtures/hero-workspace-data"
-import type { Revision } from "../src/features/publishing/types"
+import type { Revision } from "../src/features/publishing/api/types"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 test("hero history distinguishes baseline from changes and preserves the selected comparison", async () => {
@@ -30,8 +30,9 @@ test("hero history distinguishes baseline from changes and preserves the selecte
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroRevisionHistory } = await import("../src/features/publishing/hero-revision-history")
-  const { DescriptionComparison } = await import("../src/features/publishing/hero-comparison-view")
+  const { HeroRevisionHistory } = await import("../src/features/publishing/components/hero-revision-history")
+  const { DescriptionComparison } =
+    await import("../src/features/publishing/components/assessment/hero-comparison-view")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })

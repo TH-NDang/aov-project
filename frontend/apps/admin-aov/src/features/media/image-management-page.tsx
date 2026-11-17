@@ -29,10 +29,10 @@ import { useIsWide } from "@/hooks/use-media-query"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { AssetPicker } from "../publishing/asset-picker"
-import { control } from "../publishing/fields"
+import { AssetPicker } from "../publishing/components/assets/asset-picker"
+import { control } from "../publishing/components/fields"
 import { FileTabs } from "../files/file-tabs"
-import type { Asset, PageSlice } from "../publishing/types"
+import type { Asset, PageSlice } from "../publishing/api/types"
 import {
   LibraryImage,
   LibraryOwner,

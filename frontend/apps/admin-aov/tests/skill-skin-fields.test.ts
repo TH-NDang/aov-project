@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import type { Skin } from "../src/features/publishing/types"
+import type { Skin } from "../src/features/publishing/api/types"
 
 const skin = (skinKey: string, name: string, displayOrder = 0): Skin => ({
   skinKey,
@@ -11,7 +11,8 @@ const skin = (skinKey: string, name: string, displayOrder = 0): Skin => ({
 })
 
 test("a skin key is made from the hero part of the other keys and the Vietnamese name", async () => {
-  const { nextSkinKey, skinKeyPrefix, skinSlug } = await import("../src/features/publishing/hero-skins-editor")
+  const { nextSkinKey, skinKeyPrefix, skinSlug } =
+    await import("../src/features/publishing/components/skins/hero-skins-editor")
   assert.equal(skinSlug("Tân thủy thủ"), "tan-thuy-thu")
   assert.equal(skinSlug("Chiến Binh Hải Tộc"), "chien-binh-hai-toc")
   assert.equal(skinSlug("Đồ  Ách!"), "do-ach")
@@ -35,7 +36,7 @@ test("a skin key is made from the hero part of the other keys and the Vietnamese
 
 test("a cost line reads as label and value and is written back in the game's colour", async () => {
   const { parseCostText, composeCostText, costSeconds, costNumber } =
-    await import("../src/features/publishing/skill-cost-fields")
+    await import("../src/features/publishing/components/skills/skill-cost-fields")
   assert.deepEqual(parseCostText("<color=#FF8941>H.chiêu: 10s</color>"), {
     label: "H.chiêu",
     value: "10s",
@@ -67,7 +68,8 @@ test("a cost line reads as label and value and is written back in the game's col
 })
 
 test("the label and colour of a cost line are shared by every skill, each keeping its own value", async () => {
-  const { applyCostStyle, sharedCostStyle } = await import("../src/features/publishing/skill-cost-fields")
+  const { applyCostStyle, sharedCostStyle } =
+    await import("../src/features/publishing/components/skills/skill-cost-fields")
   const withCooldown = (skillKey: string, display: string | null) => ({
     skillKey,
     kind: "ACTIVE" as const,

@@ -169,7 +169,7 @@ test("closing a tab waits for the answer and keeps the tab when refused", async 
 
 test("browser Back waits for the answer while edits are unsaved", async () => {
   const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
-  const { HeroNavigationGuard } = await import("../src/features/publishing/hero-navigation-guard")
+  const { HeroNavigationGuard } = await import("../src/features/publishing/components/hero-navigation-guard")
   const router = createMemoryRouter(
     [
       {

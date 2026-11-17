@@ -4,7 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@aov/ui/components/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { matchesQuery } from "@/lib/text"
-import { Field, control } from "../publishing/fields"
+import { Field, control } from "../publishing/components/fields"
 import { AdminWarehouseView } from "./warehouse-view"
 import {
   RecipeItemLabel as ReadLabel,

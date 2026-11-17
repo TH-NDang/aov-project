@@ -2,13 +2,13 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "../src/features/publishing/api/publishing-api"
 
 const originalChannel = globalThis.BroadcastChannel
 Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
 const { createReferenceCatalogApi, referenceCatalogKeys, invalidateReferenceCatalog } =
   await import("../src/features/terminology/reference-api")
-const { invalidateHeroCatalogs } = await import("../src/features/publishing/publishing-cache")
+const { invalidateHeroCatalogs } = await import("../src/features/publishing/api/publishing-cache")
 const { invalidateWarehouseCatalogs } = await import("../src/features/warehouse/warehouse-api")
 Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: originalChannel })
 

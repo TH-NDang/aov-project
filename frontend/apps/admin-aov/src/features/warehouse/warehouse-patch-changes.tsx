@@ -1,11 +1,11 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { warehouseApi } from "./warehouse-api"
-import { usePublicationOverview } from "../publishing/publication-overview"
+import { usePublicationOverview } from "../publishing/api/publication-overview"
 import { Link, useSearchParams } from "react-router"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import { ExternalLink } from "lucide-react"
-import { HeroAsset } from "@/features/publishing/hero-asset"
+import { HeroAsset } from "@/features/publishing/components/hero-asset"
 import {
   CatalogChangeBadges,
   useCatalogChanges,

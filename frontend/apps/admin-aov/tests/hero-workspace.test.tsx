@@ -26,8 +26,8 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { PublishingWorkspace } = await import("../src/features/publishing/publishing-page")
-  const { updateTranslation } = await import("../src/features/publishing/translation-editor")
+  const { PublishingWorkspace } = await import("../src/features/publishing/pages/publishing-page")
+  const { updateTranslation } = await import("../src/features/publishing/components/translation-editor")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -322,7 +322,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     ) as typeof fixtureContent.SKILLS
     assert.deepEqual(skills!.skills[0].translations[0], fixtureContent.SKILLS!.skills[0].translations[0])
     assert.equal(skills!.skills[0].iconAssetId, fixtureContent.SKILLS!.skills[0].iconAssetId)
-    const { HeroCatalog } = await import("../src/features/publishing/hero-catalog")
+    const { HeroCatalog } = await import("../src/features/publishing/components/catalog/hero-catalog")
     await act(async () =>
       root.render(
         <MemoryRouter>
@@ -355,8 +355,9 @@ test("translation progress uses exact locale and source tables preserve conflict
   const originalReact = Object.getOwnPropertyDescriptor(globalThis, "React")
   Object.defineProperty(globalThis, "React", { configurable: true, writable: true, value: React })
   try {
-    const { translationStatus } = await import("../src/features/publishing/hero-translation-model")
-    const { heroReviewNotes, SkillSourceDetails } = await import("../src/features/publishing/hero-source-details")
+    const { translationStatus } = await import("../src/features/publishing/model/hero-translation-model")
+    const { heroReviewNotes, SkillSourceDetails } =
+      await import("../src/features/publishing/components/import/hero-source-details")
     const { renderToStaticMarkup } = await import("react-dom/server")
     assert.deepEqual(translationStatus(fixtureContent, "vi-VN"), {
       completed: 3,

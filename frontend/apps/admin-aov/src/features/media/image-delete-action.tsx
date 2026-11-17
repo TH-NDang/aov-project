@@ -14,7 +14,7 @@ import {
 import { useSession } from "@/app/auth/auth-gate"
 import { errorMessage } from "@/lib/api/errors"
 import { useTournamentAccess } from "../esports/data/use-esports-data"
-import type { Asset } from "../publishing/types"
+import type { Asset } from "../publishing/api/types"
 import { LibraryImage } from "./image-library-presentation"
 import { invalidateMediaAsset } from "./media-cache"
 import { deleteMediaAsset, deletionKey, readDeletionReferences, readMediaDeletion } from "./media-deletion"

@@ -93,7 +93,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { draftRepository } = await import("../src/app/drafts/draft-store")
-  const { PublishingPage } = await import("../src/features/publishing/publishing-page")
+  const { PublishingPage } = await import("../src/features/publishing/pages/publishing-page")
   const { createRoot } = await import("react-dom/client")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const router = createMemoryRouter(
@@ -184,7 +184,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     assert.equal(router.state.location.pathname + router.state.location.search, firstUrl)
     assert.equal(new URLSearchParams(router.state.location.search).get("skill"), "passive")
     // The drawer has no full-page link any more; the same address opens the full page directly.
-    const { heroPageLocation } = await import("../src/features/publishing/hero-location")
+    const { heroPageLocation } = await import("../src/features/publishing/model/hero-location")
     await act(async () => {
       await router.navigate(heroPageLocation("fixture-hero", new URLSearchParams(router.state.location.search)))
     })

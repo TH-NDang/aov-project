@@ -11,10 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
-import { HeroLanguageIcon } from "../publishing/hero-language-picker"
+import { HeroLanguageIcon } from "../publishing/components/hero-language-picker"
 import { AdminRichTextPreview } from "../terminology/rich-text-field"
 import { languageOptions } from "../users/profile-preference-picker"
-import { control } from "../publishing/fields"
+import { control } from "../publishing/components/fields"
 import { joinWrappedLines } from "./warehouse-sheet"
 import type { WarehouseTranslation } from "@aov/ui/lib/warehouse-content"
 

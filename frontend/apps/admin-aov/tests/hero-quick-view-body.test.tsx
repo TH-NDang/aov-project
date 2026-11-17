@@ -29,7 +29,7 @@ async function withView(
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
-  const { HeroQuickViewBody } = await import("../src/features/publishing/hero-quick-view-body")
+  const { HeroQuickViewBody } = await import("../src/features/publishing/components/catalog/hero-quick-view-body")
   const document = dom.window.document
   const root = createRoot(document.getElementById("root")!)
   let mounted = true

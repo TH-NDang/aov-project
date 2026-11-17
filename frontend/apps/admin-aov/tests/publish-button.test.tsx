@@ -6,7 +6,9 @@ import { act } from "react"
 import { installWindow } from "./fixtures/dom"
 
 async function withButton(
-  props: Partial<React.ComponentProps<typeof import("../src/features/publishing/publish-button").PublishButton>>,
+  props: Partial<
+    React.ComponentProps<typeof import("../src/features/publishing/components/publish-button").PublishButton>
+  >,
   run: (ui: {
     document: Document
     click: (element: Element | null | undefined) => Promise<void>
@@ -24,7 +26,7 @@ async function withButton(
   // Radix and React Router decide how to behave when first imported, so they must see the DOM above.
   const { createRoot } = await import("react-dom/client")
   const { MemoryRouter } = await import("react-router")
-  const { PublishButton } = await import("../src/features/publishing/publish-button")
+  const { PublishButton } = await import("../src/features/publishing/components/publish-button")
   const calls: string[] = []
   const root = createRoot(dom.window.document.getElementById("root")!)
   const render = (next: typeof props) =>
@@ -110,7 +112,7 @@ test("a blocked button stays clickable while a busy one does not", async () => {
 })
 
 test("baseline contexts are read season by season, because the endpoint needs a season", async () => {
-  const { loadBaselineContexts } = await import("../src/features/publishing/baseline-context-form")
+  const { loadBaselineContexts } = await import("../src/features/publishing/components/import/baseline-context-form")
   const requested: string[] = []
   const contexts = await loadBaselineContexts(async <T,>(path: string) => {
     requested.push(path)
@@ -129,7 +131,7 @@ test("baseline contexts are read season by season, because the endpoint needs a 
 })
 
 test("a saved change counts per section, and listing roles in another order is not one", async () => {
-  const { savedHeroSections } = await import("../src/features/publishing/hero-draft-changes")
+  const { savedHeroSections } = await import("../src/features/publishing/components/patch-changes/hero-draft-changes")
   const { fixtureContent } = await import("./fixtures/hero-workspace-data")
   const changed = structuredClone(fixtureContent)
   changed.PROFILE!.roles = [...changed.PROFILE!.roles].reverse()

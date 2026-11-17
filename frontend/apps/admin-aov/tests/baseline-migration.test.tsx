@@ -2,9 +2,9 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
 import { button as findButton, click, render, testQueryClient, waitFor, withDom } from "./fixtures/dom"
-import type { Request } from "../src/features/publishing/publishing-api"
-import type { ImportContext } from "../src/features/publishing/import-context"
-import type { HeroRow, Revision } from "../src/features/publishing/types"
+import type { Request } from "../src/features/publishing/api/publishing-api"
+import type { ImportContext } from "../src/features/publishing/components/import/import-context"
+import type { HeroRow, Revision } from "../src/features/publishing/api/types"
 import { fixtureRevision } from "./fixtures/hero-workspace-data"
 
 const dom = withDom({
@@ -17,7 +17,7 @@ const dom = withDom({
 })
 
 test("baseline migration confirms first, only moves eligible drafts, and retains per-row failures", async () => {
-  const { BaselineMigration } = await import("../src/features/publishing/baseline-migration")
+  const { BaselineMigration } = await import("../src/features/publishing/components/import/baseline-migration")
   const cache = testQueryClient()
   const context: ImportContext = {
     contextId: "s3-authoring-context",

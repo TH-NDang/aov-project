@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { heroContentSectionId, heroContentTabs } from "../src/features/publishing/hero-content-tabs"
+import { heroContentSectionId, heroContentTabs } from "../src/features/publishing/components/hero-content-tabs"
 
 test("a saved hero shows every content part in reading order, a new one has no videos yet", () => {
   assert.deepEqual(heroContentTabs(true), ["overview", "skills", "evaluation", "skins", "media", "videos"])

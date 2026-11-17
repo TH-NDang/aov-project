@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { confirmDiscard } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
-import { control } from "../publishing/fields"
+import { control } from "../publishing/components/fields"
 import { SOURCE_CATEGORIES, useSaveCollection, type SourceCategory, type SourceCollection } from "./files-api"
 import { CATEGORY_HINTS, CATEGORY_LABELS } from "./files-format"
 

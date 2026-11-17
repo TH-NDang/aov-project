@@ -1,7 +1,7 @@
 import { useImageContext } from "../media/character-image-context"
-import { useContentLocale } from "../publishing/publication-overview"
-import { control } from "../publishing/fields"
-import { hasRulesetChoice } from "../publishing/default-ruleset"
+import { useContentLocale } from "../publishing/api/publication-overview"
+import { control } from "../publishing/components/fields"
+import { hasRulesetChoice } from "../publishing/model/setup/default-ruleset"
 import {
   DropdownMenuItem,
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
 } from "@aov/ui/components/dropdown-menu"
 import { FilePenLine } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import type { Variant } from "../publishing/publication-overview"
+import type { Variant } from "../publishing/api/publication-overview"
 import { type WarehouseEntry } from "./warehouse-types"
 import { warehouseName } from "@aov/ui/lib/warehouse-content"
 

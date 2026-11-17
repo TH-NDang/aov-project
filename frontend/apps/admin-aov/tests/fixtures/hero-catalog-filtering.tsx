@@ -43,7 +43,7 @@ Object.defineProperty(window, "BroadcastChannel", { configurable: true, value: u
 document.documentElement.classList.toggle("dark", new URLSearchParams(location.search).get("theme") === "dark")
 const { verifySession } = await import("../../src/app/auth/session")
 await verifySession()
-const { PublishingPage } = await import("../../src/features/publishing/publishing-page")
+const { PublishingPage } = await import("../../src/features/publishing/pages/publishing-page")
 const seasonPath = `/hero?season=${id("season-new")}`
 const patchPath = `${seasonPath}&patch=${id("patch-current")}`
 

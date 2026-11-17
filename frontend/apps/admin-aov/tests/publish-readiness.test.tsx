@@ -13,14 +13,14 @@ import {
   readinessRows,
   readinessSummary,
   type HeroPublishReadiness,
-} from "../src/features/publishing/publish-readiness"
+} from "../src/features/publishing/model/publish-readiness"
 import {
   closeHeroLocation,
   heroFixLocation,
   heroSourceLocation,
   readHeroLocation,
-} from "../src/features/publishing/hero-location"
-import type { Revision } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/hero-location"
+import type { Revision } from "../src/features/publishing/api/types"
 import { createHeroFixture, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { installWindow, waitFor } from "./fixtures/dom"
@@ -363,7 +363,7 @@ test("the overview page loads once, keeps filters in the address, reveals rows o
     return Response.json({ code: "NOT_FOUND", detail: "Not in this test" }, { status: 404 })
   }
   await withDocument(fetcher, intersections.Observer, async ({ document, show, waitFor, click, search }) => {
-    const { PublishReadinessPage } = await import("../src/features/publishing/publish-readiness-page")
+    const { PublishReadinessPage } = await import("../src/features/publishing/pages/publish-readiness-page")
     const rendered = () =>
       [...document.querySelectorAll('tbody button[aria-label^="Xem tướng "]')].map((button) =>
         button.getAttribute("aria-label")!.replace("Xem tướng ", ""),
@@ -436,7 +436,7 @@ for (const canWrite of [true, false])
       return fixture.fetcher(input, init)
     }
     await withDocument(fetcher, intersectionHarness().Observer, async ({ document, show, waitFor, search }) => {
-      const { PublishingWorkspace } = await import("../src/features/publishing/publishing-page")
+      const { PublishingWorkspace } = await import("../src/features/publishing/pages/publishing-page")
       const editor = () => document.querySelector('[role="region"][aria-label="Chỉnh sửa nội dung"]')
       await show(
         <PublishingWorkspace heroId="fixture-hero" onUnsavedChange={() => undefined} />,
@@ -462,7 +462,7 @@ for (const canWrite of [true, false])
 
 test("source images still to capture show per hero, rank the list, open the skill and follow new captures", async () => {
   const { SOURCE_COVERAGE_REFRESH_MS, sourceCoverageKey } =
-    await import("../src/features/publishing/use-source-coverage")
+    await import("../src/features/publishing/api/use-source-coverage")
   const statsMissing = (code: string) =>
     hero(code, code[0]!.toUpperCase() + code.slice(1), {
       revisions: [revision(code, `${code}-1`, "DRAFT")],
@@ -593,7 +593,7 @@ test("source images still to capture show per hero, rank the list, open the skil
     fetcher,
     intersectionHarness().Observer,
     async ({ document, cache, show, waitFor, click, search }) => {
-      const { PublishReadinessPage } = await import("../src/features/publishing/publish-readiness-page")
+      const { PublishReadinessPage } = await import("../src/features/publishing/pages/publish-readiness-page")
       const rendered = () =>
         [...document.querySelectorAll('tbody button[aria-label^="Xem tướng "]')].map((button) =>
           button.getAttribute("aria-label")!.replace("Xem tướng ", ""),

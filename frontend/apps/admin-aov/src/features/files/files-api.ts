@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { backendRequest } from "@/app/auth/session"
-import type { PageSlice } from "../publishing/types"
+import type { PageSlice } from "../publishing/api/types"
 
 /** Functions a collection of private source files serves (ADR-030); the order is the browsing order. */
 export const SOURCE_CATEGORIES = [

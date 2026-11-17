@@ -6,11 +6,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { catalogOverview, createHeroCatalogFixture } from "./fixtures/hero-catalog-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import type { CatalogFilter } from "../src/features/publishing/catalog-context"
+import type { CatalogFilter } from "../src/features/publishing/components/catalog/catalog-context"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 test("catalog transport encodes search and keeps every server filter in its cache identity", async () => {
-  const { createPublishingApi, heroCatalogKey } = await import("../src/features/publishing/publishing-api")
+  const { createPublishingApi, heroCatalogKey } = await import("../src/features/publishing/api/publishing-api")
   let requested = ""
   const api = createPublishingApi(async <T,>(path: string) => {
     requested = path
@@ -63,9 +63,9 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
   })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroCatalog } = await import("../src/features/publishing/hero-catalog")
-  const { CatalogViewMode } = await import("../src/features/publishing/catalog-view-mode")
-  const { heroCatalogKey } = await import("../src/features/publishing/publishing-api")
+  const { HeroCatalog } = await import("../src/features/publishing/components/catalog/hero-catalog")
+  const { CatalogViewMode } = await import("../src/features/publishing/components/catalog/catalog-view-mode")
+  const { heroCatalogKey } = await import("../src/features/publishing/api/publishing-api")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: Infinity } },

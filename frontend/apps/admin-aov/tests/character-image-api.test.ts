@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { QueryClient } from "@tanstack/react-query"
-import { invalidateHeroCatalogs } from "../src/features/publishing/publishing-cache"
+import { invalidateHeroCatalogs } from "../src/features/publishing/api/publishing-cache"
 import {
   characterImageKeys,
   createCharacterImageApi,

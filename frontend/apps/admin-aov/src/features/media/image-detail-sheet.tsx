@@ -34,8 +34,8 @@ import {
   type MediaUsageReport,
   type UsagePlace,
 } from "./media-usage"
-import { upgradeHeroImage } from "../publishing/publishing-api"
-import type { Asset } from "../publishing/types"
+import { upgradeHeroImage } from "../publishing/api/publishing-api"
+import type { Asset } from "../publishing/api/types"
 import { invalidateMediaAsset } from "./media-cache"
 import { croppedImageTypes, FocalPointEditor } from "./focal-point-editor"
 import { ImageDeleteAction } from "./image-delete-action"

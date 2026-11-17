@@ -1,5 +1,5 @@
-import type { Request } from "../publishing/publishing-api"
-import type { PageSlice } from "../publishing/types"
+import type { Request } from "../publishing/api/publishing-api"
+import type { PageSlice } from "../publishing/api/types"
 import type { SkinBadgeRecord } from "./character-image-api"
 
 export type BadgeGroupKind = "RANK" | "THEME"

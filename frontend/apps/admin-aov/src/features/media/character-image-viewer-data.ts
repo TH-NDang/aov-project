@@ -1,4 +1,4 @@
-import type { Bindings, MediaRole, Preview, Skin } from "../publishing/types"
+import type { Bindings, MediaRole, Preview, Skin } from "../publishing/api/types"
 import type { CharacterImageEntry } from "./character-image-api"
 
 export const imageRoles: MediaRole[] = ["HEAD", "PORTRAIT", "SPLASH"]

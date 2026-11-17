@@ -1,5 +1,5 @@
 import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
-import { control } from "../publishing/fields"
+import { control } from "../publishing/components/fields"
 import { OwnerNameHints, OwnerNameInput } from "./owner-name-field"
 import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
 import { PageReferencePicker } from "@/features/community/page-reference-picker"

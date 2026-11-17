@@ -3,15 +3,15 @@ import { test } from "node:test"
 import { JSDOM } from "jsdom"
 import { act } from "react"
 import { compareSkillRanks } from "@aov/ui/lib/skill-rank-values"
-import type { Skill } from "../src/features/publishing/types"
+import type { Skill } from "../src/features/publishing/api/types"
 import { installWindow } from "./fixtures/dom"
 
 test("skill details show rank columns and comparison toggles retain the changed-cell markers", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost" })
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
-  const { SkillSourceDetails } = await import("../src/features/publishing/hero-source-details")
-  const { SkillRankComparison } = await import("../src/features/publishing/skill-rank-table")
+  const { SkillSourceDetails } = await import("../src/features/publishing/components/import/hero-source-details")
+  const { SkillRankComparison } = await import("../src/features/publishing/components/skills/skill-rank-table")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const source: Skill = {

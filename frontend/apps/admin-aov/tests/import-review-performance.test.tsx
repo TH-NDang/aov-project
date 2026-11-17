@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "../src/features/publishing/api/publishing-api"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 test("large import plans mount nested diffs and image paths only while their disclosure is open", async () => {
@@ -14,7 +14,7 @@ test("large import plans mount nested diffs and image paths only while their dis
       throw new Error("Reviewing plans must not upload or fetch images")
     },
   })
-  const { HeroImport } = await import("../src/features/publishing/hero-import")
+  const { HeroImport } = await import("../src/features/publishing/components/import/hero-import")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })

@@ -1,5 +1,5 @@
-import { SECTIONS, type Content, type Position, type Revision } from "../../src/features/publishing/types"
-import { heroReviewItems } from "../../src/features/publishing/hero-source-review"
+import { SECTIONS, type Content, type Position, type Revision } from "../../src/features/publishing/api/types"
+import { heroReviewItems } from "../../src/features/publishing/model/import/hero-source-review"
 
 const positionCodes: Record<string, Position> = {
   top: "TOP",

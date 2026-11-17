@@ -1,6 +1,6 @@
 import { QueryObserver, type QueryClient } from "@tanstack/react-query"
 import type { EntityIconResolver } from "@aov/ui/components/entity-rich-text"
-import type { AssetDetail } from "../publishing/types"
+import type { AssetDetail } from "../publishing/api/types"
 
 /** How a screen reads one image; each view caches its own payload shape under the image. */
 export type MediaAssetView = "detail" | "content" | "managed" | "avatar" | "contact"

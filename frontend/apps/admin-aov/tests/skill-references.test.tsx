@@ -10,7 +10,7 @@ import {
   type SkillReferenceOwner,
 } from "@aov/ui/lib/entity-rich-text"
 import type { ReferenceSearchPage } from "@aov/ui/lib/entity-rich-text-editor"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "../src/features/publishing/api/publishing-api"
 import type { SkillReferenceScope } from "../src/features/terminology/skill-reference-api"
 import { installWindow, withGlobals } from "./fixtures/dom"
 

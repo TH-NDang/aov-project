@@ -32,8 +32,8 @@ async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
 test("change color settings persist independent colors and synchronize all badges without changing arrow identities", async () => {
   await withDocument(async (root, dom) => {
     const { ChangeColorSettings, changeColorsStorageKey } =
-      await import("../src/features/publishing/change-color-preferences")
-    const { ChangeKindBadge } = await import("../src/features/publishing/hero-change-badges")
+      await import("../src/features/publishing/components/patch-changes/change-color-preferences")
+    const { ChangeKindBadge } = await import("../src/features/publishing/components/patch-changes/hero-change-badges")
     const document = dom.window.document
     await act(async () =>
       root.render(
@@ -102,8 +102,9 @@ test("stored preferences load on a fresh mount while malformed values and later 
   ]
   for (const { saved, buff, nerf } of values) {
     await withDocument(async (root, dom) => {
-      const { changeColorsStorageKey } = await import("../src/features/publishing/change-color-preferences")
-      const { ChangeKindBadge } = await import("../src/features/publishing/hero-change-badges")
+      const { changeColorsStorageKey } =
+        await import("../src/features/publishing/components/patch-changes/change-color-preferences")
+      const { ChangeKindBadge } = await import("../src/features/publishing/components/patch-changes/hero-change-badges")
       dom.window.localStorage.setItem(changeColorsStorageKey, saved)
       await act(async () =>
         root.render(
@@ -129,8 +130,8 @@ test("stored preferences load on a fresh mount while malformed values and later 
 test("blocked storage retains usable session preferences and reloads changes received while the settings were unmounted", async () => {
   await withDocument(async (root, dom) => {
     const { changeColorsStorageKey, useChangeColors } =
-      await import("../src/features/publishing/change-color-preferences")
-    const { ChangeKindBadge } = await import("../src/features/publishing/hero-change-badges")
+      await import("../src/features/publishing/components/patch-changes/change-color-preferences")
+    const { ChangeKindBadge } = await import("../src/features/publishing/components/patch-changes/hero-change-badges")
     function Host() {
       const { setColor } = useChangeColors()
       return (

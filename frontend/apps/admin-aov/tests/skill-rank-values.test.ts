@@ -9,10 +9,13 @@ import {
   skillSourceTable,
   splitSkillRanks,
 } from "@aov/ui/lib/skill-rank-values"
-import { markDescriptionChanges, mechanicSkillKey } from "../src/features/publishing/patch-description-marks"
-import { buildSkillComparison } from "../src/features/publishing/hero-skill-comparison"
-import type { Skill } from "../src/features/publishing/types"
-import type { HeroComparison } from "../src/features/publishing/publishing-api"
+import {
+  markDescriptionChanges,
+  mechanicSkillKey,
+} from "../src/features/publishing/model/patch-changes/patch-description-marks"
+import { buildSkillComparison } from "../src/features/publishing/model/skills/hero-skill-comparison"
+import type { Skill } from "../src/features/publishing/api/types"
+import type { HeroComparison } from "../src/features/publishing/api/publishing-api"
 
 const skill = (columns = ["Thông tin công bố"], values = ["8 - 0.3/cấp chiêu"]): Skill => ({
   skillKey: "skill-1-1",

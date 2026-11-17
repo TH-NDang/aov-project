@@ -49,7 +49,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
-  const { PublishingPage } = await import("../src/features/publishing/publishing-page")
+  const { PublishingPage } = await import("../src/features/publishing/pages/publishing-page")
   const { createRoot } = await import("react-dom/client")
   let root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -201,7 +201,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu bản dịch"]'))
     assert.ok(document.querySelector('[aria-controls="workspace-overview"][aria-selected="true"]'))
     // The drawer has no full-page link any more; the same address opens the full page directly.
-    const { heroPageLocation } = await import("../src/features/publishing/hero-location")
+    const { heroPageLocation } = await import("../src/features/publishing/model/hero-location")
     await act(async () => {
       await router.navigate(heroPageLocation("fixture-hero", new URLSearchParams(router.state.location.search)))
     })

@@ -7,8 +7,8 @@ import { ActionStrip } from "@/components/action-strip"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { control } from "../publishing/fields"
-import { usePublicationOverview } from "../publishing/publication-overview"
+import { control } from "../publishing/components/fields"
+import { usePublicationOverview } from "../publishing/api/publication-overview"
 import {
   CatalogChangeBadges,
   catalogChangeKinds,
@@ -16,8 +16,8 @@ import {
   changeDomain,
   type CatalogChangeKind,
 } from "./catalog-changes"
-import { ChangeKindSelect } from "../publishing/change-kind-select"
-import { CAUSE_NAMES } from "../publishing/version-causes"
+import { ChangeKindSelect } from "../publishing/components/patch-changes/change-kind-select"
+import { CAUSE_NAMES } from "../publishing/model/setup/version-causes"
 import { warehouseApi, invalidateWarehouseCatalogs } from "./warehouse-api"
 import { warehouseBaselineMode, type WarehouseRevision } from "./warehouse-types"
 import { type WarehouseKind } from "@aov/ui/lib/warehouse-content"

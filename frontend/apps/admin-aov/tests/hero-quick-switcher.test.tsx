@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { HeroRow } from "../src/features/publishing/types"
+import type { HeroRow } from "../src/features/publishing/api/types"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { flush, installWindow, waitFor } from "./fixtures/dom"
 
@@ -95,7 +95,7 @@ async function createSwitcher() {
   })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroQuickSwitcher } = await import("../src/features/publishing/hero-quick-switcher")
+  const { HeroQuickSwitcher } = await import("../src/features/publishing/components/catalog/hero-quick-switcher")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const selected: HeroRow[] = []

@@ -1,14 +1,18 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { patchViewAnchors, selectedPatchAnchor, patchViewRequest } from "../src/features/publishing/patch-view-anchor"
+import {
+  patchViewAnchors,
+  selectedPatchAnchor,
+  patchViewRequest,
+} from "../src/features/publishing/model/patch-changes/patch-view-anchor"
 import {
   closeHeroLocation,
   heroPageLocation,
   patchHeroLocation,
   switchHeroLocation,
-} from "../src/features/publishing/hero-location"
-import type { Revision } from "../src/features/publishing/types"
-import type { Variant } from "../src/features/publishing/publication-overview"
+} from "../src/features/publishing/model/hero-location"
+import type { Revision } from "../src/features/publishing/api/types"
+import type { Variant } from "../src/features/publishing/api/publication-overview"
 
 const variants = [
   { id: "s3", rulesetId: "standard", rulesetOrdinal: 1 },

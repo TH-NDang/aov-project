@@ -4,9 +4,9 @@ import { act, type ReactNode } from "react"
 import { button as findButton, click, confirmDialog as dialog, flush, render, waitFor, withDom } from "./fixtures/dom"
 import { fakeBackend, json, noContent, type ApiRequest } from "./fixtures/network"
 import { sessionRoutes, signIn } from "./fixtures/session"
-import type { HeroShop, HeroShopPrice, SkinAcquisition } from "../src/features/publishing/publishing-api"
+import type { HeroShop, HeroShopPrice, SkinAcquisition } from "../src/features/publishing/api/publishing-api"
 import type { AdminVideo } from "../src/features/videos/video-model"
-import type { Revision } from "../src/features/publishing/types"
+import type { Revision } from "../src/features/publishing/api/types"
 
 const price = (capturedOn: string, goldPrice: number): HeroShopPrice => ({
   availability: "ON_SALE",
@@ -113,7 +113,7 @@ async function expectAskedBeforeWrite(trigger: () => HTMLElement, title: RegExp,
 }
 
 test("deleting a dated hero price asks first", async () => {
-  const { HeroShopPanel } = await import("../src/features/publishing/hero-shop")
+  const { HeroShopPanel } = await import("../src/features/publishing/components/skins/hero-shop")
   const unmount = await mounted(<HeroShopPanel heroId="fixture-hero" canWrite />)
   try {
     const deleteButton = () => document.querySelector<HTMLButtonElement>('button[aria-label^="Xóa mốc giá"]')!
@@ -127,7 +127,7 @@ test("deleting a dated hero price asks first", async () => {
 })
 
 test("deleting a dated skin acquisition asks first", async () => {
-  const { SkinAcquisitionEditor } = await import("../src/features/publishing/hero-shop")
+  const { SkinAcquisitionEditor } = await import("../src/features/publishing/components/skins/hero-shop")
   const history = [skinStep("2026-11-01", 699), skinStep("2026-10-01", 499)]
   const unmount = await mounted(
     <SkinAcquisitionEditor
@@ -205,7 +205,7 @@ test("deleting a video asks in the shared question", async () => {
 })
 
 test("moving a baseline to another patch asks first", async () => {
-  const { BaselineContextForm } = await import("../src/features/publishing/baseline-context-form")
+  const { BaselineContextForm } = await import("../src/features/publishing/components/import/baseline-context-form")
   const revision = {
     id: "draft",
     heroId: "fixture-hero",

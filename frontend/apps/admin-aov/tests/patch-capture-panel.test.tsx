@@ -25,14 +25,14 @@ import {
   clampCaptureZoom,
   withShopGroups,
   zoomCaptureAt,
-} from "../src/features/publishing/patch-capture-model"
-import type { Skill } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/captures/patch-capture-model"
+import type { Skill } from "../src/features/publishing/api/types"
 import {
   fetchCaptureSets,
   fetchHeroCaptures,
   fetchShopCaptures,
   findHeroCode,
-} from "../src/features/publishing/use-patch-captures"
+} from "../src/features/publishing/api/use-patch-captures"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 /** A patch picture's id is the SHA-256 of its bytes, which is also what its presigned link is asked by. */
@@ -431,8 +431,8 @@ async function mount() {
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { PatchCapturePanel, PatchCaptureLink, PatchCaptureToggle } =
-    await import("../src/features/publishing/patch-capture-panel")
-  const { PatchCaptureProvider } = await import("../src/features/publishing/use-patch-captures")
+    await import("../src/features/publishing/components/captures/patch-capture-panel")
+  const { PatchCaptureProvider } = await import("../src/features/publishing/api/use-patch-captures")
   const { useState } = React
   const navigations: CaptureTarget[] = []
   const select = (selected: string, patch: Partial<{ key: string; imageId: string | null }> = {}) => ({

@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { createMemoryRouter, RouterProvider } from "react-router"
-import { useHeroLocation } from "../src/features/publishing/use-hero-location"
+import { useHeroLocation } from "../src/features/publishing/components/use-hero-location"
 import { installWindow } from "./fixtures/dom"
 
 test("warning navigation keeps both tab and skill updates made in the same event", async () => {

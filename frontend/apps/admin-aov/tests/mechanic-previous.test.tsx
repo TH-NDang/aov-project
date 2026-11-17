@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { RecordedChange } from "../src/features/publishing/patch-change-lines"
+import type { RecordedChange } from "../src/features/publishing/components/patch-changes/patch-change-lines"
 import { installWindow } from "./fixtures/dom"
 
 const rework = (previous: unknown): RecordedChange => ({
@@ -19,7 +19,7 @@ test("a mechanic change reads before and after with its source, and records the 
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost" })
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
-  const { ChangeLines } = await import("../src/features/publishing/patch-change-lines")
+  const { ChangeLines } = await import("../src/features/publishing/components/patch-changes/patch-change-lines")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document

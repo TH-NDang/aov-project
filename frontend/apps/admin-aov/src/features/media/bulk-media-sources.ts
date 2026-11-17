@@ -1,7 +1,7 @@
 import { creditHttpUrl, type MediaSourceInput } from "@aov/ui/lib/media-credit"
 import { errorMessage } from "@/lib/api/errors"
-import type { Request } from "../publishing/publishing-api"
-import type { Asset } from "../publishing/types"
+import type { Request } from "../publishing/api/publishing-api"
+import type { Asset } from "../publishing/api/types"
 
 export interface MediaSourceTarget {
   assetId: string

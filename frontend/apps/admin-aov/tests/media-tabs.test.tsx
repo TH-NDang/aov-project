@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { HotkeysProvider } from "../src/app/hotkeys"
 import { PageTabPanels, PageTabsProvider, usePageTabs } from "../src/app/layout/page-tabs"
 import { mediaTabLocation, readMediaTab } from "../src/features/media/media-location"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "../src/features/publishing/api/publishing-api"
 import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("media tab locations preserve filters and keep portrait as the canonical default", () => {

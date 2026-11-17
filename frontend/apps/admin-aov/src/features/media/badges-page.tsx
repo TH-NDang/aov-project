@@ -29,9 +29,9 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useCollapseScrollAnchor } from "@/hooks/use-collapse-scroll-anchor"
 import { errorMessage } from "@/lib/api/errors"
-import { HeroAsset } from "@/features/publishing/hero-asset"
-import { useContentLocale } from "../publishing/publication-overview"
-import type { Request } from "../publishing/publishing-api"
+import { HeroAsset } from "@/features/publishing/components/hero-asset"
+import { useContentLocale } from "../publishing/api/publication-overview"
+import type { Request } from "../publishing/api/publishing-api"
 import {
   characterImageKeys,
   createCharacterImageApi,

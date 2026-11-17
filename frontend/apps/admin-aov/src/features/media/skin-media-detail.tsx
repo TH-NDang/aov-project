@@ -1,5 +1,5 @@
-import type { MediaRole } from "../publishing/types"
-import type { Request } from "../publishing/publishing-api"
+import type { MediaRole } from "../publishing/api/types"
+import type { Request } from "../publishing/api/publishing-api"
 import { CharacterMediaViewer } from "./character-image-detail"
 
 export function SkinMediaDetail({

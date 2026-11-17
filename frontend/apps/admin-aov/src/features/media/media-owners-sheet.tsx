@@ -7,7 +7,7 @@ import { creditHttpUrl } from "@aov/ui/lib/media-credit"
 import { errorMessage } from "@/lib/api/errors"
 import { confirmAction } from "@/components/confirm-dialog"
 import { useIsWide } from "@/hooks/use-media-query"
-import { control } from "../publishing/fields"
+import { control } from "../publishing/components/fields"
 import {
   mergeMediaOwner,
   refreshAfterOwnerChange,

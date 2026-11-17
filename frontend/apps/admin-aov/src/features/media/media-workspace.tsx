@@ -5,7 +5,7 @@ import { MEDIA_NAV } from "@/app/nav"
 import { PageHeader } from "@/components/page-header"
 import { NavIcon } from "@/app/nav-icon"
 import { MEDIA_TABS, mediaTabLocation, readMediaTab, type MediaTab } from "./media-location"
-import type { Request } from "../publishing/publishing-api"
+import type { Request } from "../publishing/api/publishing-api"
 
 const CharacterImagesPage = lazy(() =>
   import("./character-images-page").then((module) => ({ default: module.CharacterImagesPage })),

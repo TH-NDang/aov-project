@@ -6,7 +6,7 @@ import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import type { Revision } from "../src/features/publishing/types"
+import type { Revision } from "../src/features/publishing/api/types"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 test("the timeline uses the new published baseline, preserves it across patches and offers automatic selection", async () => {
@@ -136,7 +136,7 @@ test("the timeline uses the new published baseline, preserves it across patches 
     ],
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroPatchTimeline } = await import("../src/features/publishing/hero-patch-view")
+  const { HeroPatchTimeline } = await import("../src/features/publishing/components/patch-changes/hero-patch-view")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
 
@@ -197,7 +197,8 @@ test("the timeline uses the new published baseline, preserves it across patches 
     await waitFor(() => dom.window.document.body.textContent!.includes("8 seconds from old anchor"))
     assert.equal(requests.at(-1)!.searchParams.has("anchorRevisionId"), false)
 
-    const { PatchChangeEditor } = await import("../src/features/publishing/patch-change-editor")
+    const { PatchChangeEditor } =
+      await import("../src/features/publishing/components/patch-changes/patch-change-editor")
     await act(async () =>
       root.render(
         <QueryClientProvider client={client}>

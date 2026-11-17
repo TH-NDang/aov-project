@@ -5,7 +5,7 @@ import { act } from "react"
 import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { Skill, Skills } from "../src/features/publishing/types"
+import type { Skill, Skills } from "../src/features/publishing/api/types"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
 import { flush, installWindow, waitFor } from "./fixtures/dom"
@@ -59,8 +59,8 @@ test("focused skill editing preserves forms, effects and translations while addi
   })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { SectionEditor } = await import("../src/features/publishing/section-editor")
-  const { nextSkillKey } = await import("../src/features/publishing/hero-skills-editor")
+  const { SectionEditor } = await import("../src/features/publishing/components/section-editor")
+  const { nextSkillKey } = await import("../src/features/publishing/components/skills/hero-skills-editor")
   const skill = (skillKey: string, formKey: string | null, displayOrder: number): Skill => ({
     skillKey,
     formKey,

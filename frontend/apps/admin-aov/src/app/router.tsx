@@ -59,7 +59,7 @@ const routes: RouteObject[] = [
             path: "game-configuration",
             handle: title("Phiên bản và thị trường"),
             lazy: async () => ({
-              Component: (await import("@/features/publishing/game-configuration-page")).GameConfigurationPage,
+              Component: (await import("@/features/publishing/pages/game-configuration-page")).GameConfigurationPage,
             }),
           },
           {
@@ -93,7 +93,9 @@ const routes: RouteObject[] = [
           {
             path: "hero",
             handle: title("Tướng"),
-            lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
+            lazy: async () => ({
+              Component: (await import("@/features/publishing/pages/publishing-page")).PublishingPage,
+            }),
           },
           {
             path: "builds",
@@ -109,7 +111,7 @@ const routes: RouteObject[] = [
             path: "hero/publish-readiness",
             handle: title("Sẵn sàng xuất bản"),
             lazy: async () => ({
-              Component: (await import("@/features/publishing/publish-readiness-page")).PublishReadinessPage,
+              Component: (await import("@/features/publishing/pages/publish-readiness-page")).PublishReadinessPage,
             }),
           },
           {
@@ -120,20 +122,24 @@ const routes: RouteObject[] = [
           {
             path: "hero/new",
             handle: title("Tạo tướng"),
-            lazy: async () => ({ Component: (await import("@/features/publishing/create-hero-page")).CreateHeroPage }),
+            lazy: async () => ({
+              Component: (await import("@/features/publishing/pages/create-hero-page")).CreateHeroPage,
+            }),
           },
           {
             path: "hero/:heroId/translations",
             handle: title("Biên dịch tướng"),
             lazy: async () => {
-              const { PublishingPage } = await import("@/features/publishing/publishing-page")
+              const { PublishingPage } = await import("@/features/publishing/pages/publishing-page")
               return { Component: () => <PublishingPage translationMode /> }
             },
           },
           {
             path: "hero/:heroId",
             handle: handle((match) => <HeroCrumb heroId={match.params.heroId} fallback="Tướng" />),
-            lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
+            lazy: async () => ({
+              Component: (await import("@/features/publishing/pages/publishing-page")).PublishingPage,
+            }),
           },
           {
             path: "heroes/*",

@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
 import { createMediaIconResolver, invalidateMediaAsset, invalidateMediaAssets } from "../src/features/media/media-cache"
-import type { AssetDetail } from "../src/features/publishing/types"
+import type { AssetDetail } from "../src/features/publishing/api/types"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 
 const entity: EntityReference = {

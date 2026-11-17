@@ -6,9 +6,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { backendRequest } from "@/app/auth/session"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
-import { HeroAsset } from "@/features/publishing/hero-asset"
-import { control } from "../publishing/fields"
-import type { Request } from "../publishing/publishing-api"
+import { HeroAsset } from "@/features/publishing/components/hero-asset"
+import { control } from "../publishing/components/fields"
+import type { Request } from "../publishing/api/publishing-api"
 import { createCharacterImageApi } from "./character-image-api"
 import {
   badgeGroupKey,

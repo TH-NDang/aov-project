@@ -6,7 +6,7 @@ import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "../src/features/publishing/api/publishing-api"
 import type { CharacterImageGroup, SkinBadgeRecord } from "../src/features/media/character-image-api"
 import { flush, installWindow, waitFor } from "./fixtures/dom"
 

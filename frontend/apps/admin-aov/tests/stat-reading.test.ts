@@ -1,14 +1,17 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { ATTRIBUTE_SOURCE_LABELS, combatAttributeRows } from "../src/features/publishing/combat-attributes"
-import { STAT_STANDING_LABELS, statDistribution } from "../src/features/publishing/hero-stat-analysis"
-import { comparisonValue, joinStatReadings } from "../src/features/publishing/hero-comparison"
+import {
+  ATTRIBUTE_SOURCE_LABELS,
+  combatAttributeRows,
+} from "../src/features/publishing/model/assessment/combat-attributes"
+import { STAT_STANDING_LABELS, statDistribution } from "../src/features/publishing/model/assessment/hero-stat-analysis"
+import { comparisonValue, joinStatReadings } from "../src/features/publishing/model/assessment/hero-comparison"
 import {
   formatStatReading,
   hasStatPercent,
   parseStatReading,
   statReadingChange,
-} from "../src/features/publishing/stat-reading"
+} from "../src/features/publishing/model/assessment/stat-reading"
 
 const readings = (input: string) => {
   const parsed = parseStatReading(input)
@@ -161,7 +164,7 @@ test("rows without a percent keep their plain number change and its difference",
 })
 
 test("the draft changes sheet lists a stat with a percent as one reading and other stats as plain numbers", async () => {
-  const { changedRows } = await import("../src/features/publishing/hero-draft-changes")
+  const { changedRows } = await import("../src/features/publishing/components/patch-changes/hero-draft-changes")
   const row = (statKey: string, baseValue: number, percentValue: number | null) => ({
     statKey,
     baseValue,

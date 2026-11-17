@@ -5,9 +5,9 @@ import {
   translationCoverage,
   appliedMarkets,
   targetVariants,
-} from "../src/features/publishing/catalog-data"
-import type { PublicationOverview } from "../src/features/publishing/publication-overview"
-import type { Content, Revision } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/catalog/catalog-data"
+import type { PublicationOverview } from "../src/features/publishing/api/publication-overview"
+import type { Content, Revision } from "../src/features/publishing/api/types"
 const overview: PublicationOverview = {
   asOf: "2026-10-16T00:00:00Z",
   rulesets: [],

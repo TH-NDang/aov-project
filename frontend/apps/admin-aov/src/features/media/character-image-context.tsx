@@ -5,9 +5,9 @@ import { createPortal } from "react-dom"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { createCharacterImageApi } from "./character-image-api"
-import { control } from "../publishing/fields"
-import { defaultRulesetId, hasRulesetChoice } from "../publishing/default-ruleset"
-import type { Request } from "../publishing/publishing-api"
+import { control } from "../publishing/components/fields"
+import { defaultRulesetId, hasRulesetChoice } from "../publishing/model/setup/default-ruleset"
+import type { Request } from "../publishing/api/publishing-api"
 
 export function useImageContext(request: Request = backendRequest) {
   const [params, setParams] = useSearchParams()

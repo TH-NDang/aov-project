@@ -4,27 +4,27 @@ import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { JSDOM } from "jsdom"
 import { fixtureContent } from "./fixtures/hero-workspace-data"
-import { changedRows } from "../src/features/publishing/hero-draft-changes"
-import { comparisonPathLabels } from "../src/features/publishing/hero-comparison"
-import { buildSkillComparison } from "../src/features/publishing/hero-skill-comparison"
+import { changedRows } from "../src/features/publishing/components/patch-changes/hero-draft-changes"
+import { comparisonPathLabels } from "../src/features/publishing/model/assessment/hero-comparison"
+import { buildSkillComparison } from "../src/features/publishing/model/skills/hero-skill-comparison"
 import {
   missingTranslationFields,
   sectionTextFields,
   translatedText,
   translationFieldLabel,
   translationStatus,
-} from "../src/features/publishing/hero-translation-model"
-import { heroWorkingSchema } from "../src/features/publishing/hero-working-copy"
-import type { HeroComparison } from "../src/features/publishing/publishing-api"
+} from "../src/features/publishing/model/hero-translation-model"
+import { heroWorkingSchema } from "../src/features/publishing/model/hero-working-copy"
+import type { HeroComparison } from "../src/features/publishing/api/publishing-api"
 import {
   SKILL_SUMMARY_LIMIT,
   SkillSummaryField,
   SkillSummaryText,
   singleParagraph,
   summaryValue,
-} from "../src/features/publishing/skill-summary-field"
-import { updateTranslation } from "../src/features/publishing/translation-editor"
-import type { Revision, Skill, Skills } from "../src/features/publishing/types"
+} from "../src/features/publishing/components/skills/skill-summary-field"
+import { updateTranslation } from "../src/features/publishing/components/translation-editor"
+import type { Revision, Skill, Skills } from "../src/features/publishing/api/types"
 
 // Source files compile with the classic JSX runtime in tests, as in the other rendering tests.
 Object.defineProperty(globalThis, "React", { configurable: true, writable: true, value: React })

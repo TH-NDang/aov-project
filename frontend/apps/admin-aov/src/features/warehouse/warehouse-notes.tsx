@@ -1,4 +1,4 @@
-import { Field } from "../publishing/fields"
+import { Field } from "../publishing/components/fields"
 
 export function WarehouseNotes({
   value,

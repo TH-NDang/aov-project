@@ -6,8 +6,8 @@ import {
   heroWorkingConflict,
   heroWorkingSchema,
   mergeHeroWorkingCopy,
-} from "../src/features/publishing/hero-working-copy"
-import { retainImageOptions } from "../src/features/publishing/image-options"
+} from "../src/features/publishing/model/hero-working-copy"
+import { retainImageOptions } from "../src/features/publishing/model/assets/image-options"
 import { fixtureContent } from "./fixtures/hero-workspace-data"
 
 test("three-way merge preserves remote changes to untouched fields and flags overlapping text edits", () => {

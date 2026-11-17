@@ -9,10 +9,10 @@ import {
   skillOptions,
   statOptions,
   suggestedRows,
-} from "../src/features/publishing/patch-change-model"
-import type { Content } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/patch-changes/patch-change-model"
+import type { Content } from "../src/features/publishing/api/types"
 import { formatPatchValue } from "@aov/ui/lib/patch-value"
-import { comparisonValue } from "../src/features/publishing/hero-comparison"
+import { comparisonValue } from "../src/features/publishing/model/assessment/hero-comparison"
 
 test("patch formulas use readable stat names while preserving coefficients, grouping and stored values", () => {
   const examples = [

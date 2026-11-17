@@ -4,7 +4,11 @@ import { useState } from "react"
 import { useSession } from "../auth/auth-gate"
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@aov/ui/components/sidebar"
 import { useBackgroundTasks } from "../background-tasks"
-import { useImportJobs, useDismissImportNotification, jobDescription } from "@/features/publishing/import-jobs"
+import {
+  useImportJobs,
+  useDismissImportNotification,
+  jobDescription,
+} from "@/features/publishing/components/import/import-jobs"
 import type { BackgroundTask } from "../background-tasks"
 type StatusTask = BackgroundTask & { serverJob?: boolean }
 export function BackgroundTaskStatus() {

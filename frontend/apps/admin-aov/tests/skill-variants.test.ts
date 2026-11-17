@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import type { SkillImage } from "../src/features/publishing/skill-artwork"
-import type { Skill } from "../src/features/publishing/types"
+import type { SkillImage } from "../src/features/publishing/components/skills/skill-artwork"
+import type { Skill } from "../src/features/publishing/api/types"
 
 const skill = (skillKey: string, displayOrder: number, extra: Partial<Skill> = {}): Skill => ({
   skillKey,
@@ -27,7 +27,7 @@ const image = (sourceSlot: number, variantNo: number, extra: Partial<SkillImage>
 })
 
 test("a new variant joins its slot right after the others, with the slot's next number and library picture", async () => {
-  const { addSkillVariant } = await import("../src/features/publishing/skill-variants")
+  const { addSkillVariant } = await import("../src/features/publishing/model/skills/skill-variants")
   const skills = [skill("skill-0-1", 0), skill("skill-1-1", 1), skill("skill-2-1", 2), skill("skill-3-1", 3)]
   const library = [image(1, 2), image(2, 2)]
 
@@ -69,7 +69,7 @@ test("a new variant joins its slot right after the others, with the slot's next 
 })
 
 test("unused pictures leave out every picture a skill shows, its states included", async () => {
-  const { unusedSkillImages } = await import("../src/features/publishing/skill-variants")
+  const { unusedSkillImages } = await import("../src/features/publishing/model/skills/skill-variants")
   const library = [image(1, 1), image(1, 2), image(2, 1), image(2, 2), image(3, 2)]
   const skills = [
     // Borrows its library picture: no icon of its own, an unambiguous slot and variant.
@@ -86,7 +86,8 @@ test("unused pictures leave out every picture a skill shows, its states included
 })
 
 test("state names come from the hero's other states first, then from the terms the description marks", async () => {
-  const { stateLabelHints, knownStateLabels } = await import("../src/features/publishing/skill-state-icons")
+  const { stateLabelHints, knownStateLabels } =
+    await import("../src/features/publishing/components/skills/skill-state-icons")
   const tide = skill("skill-1-1", 0, {
     translations: [
       {
@@ -102,7 +103,7 @@ test("state names come from the hero's other states first, then from the terms t
 })
 
 test("style tags in a description are never offered as state names", async () => {
-  const { stateLabelHints } = await import("../src/features/publishing/skill-state-icons")
+  const { stateLabelHints } = await import("../src/features/publishing/components/skills/skill-state-icons")
   const tide = skill("skill-1-1", 0, {
     translations: [
       {

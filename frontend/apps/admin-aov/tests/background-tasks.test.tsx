@@ -6,7 +6,7 @@ import { MemoryRouter, useNavigate } from "react-router"
 import { BackgroundTasksProvider, useBackgroundTasks } from "../src/app/background-tasks"
 import { PersistentWorkspace } from "../src/app/layout/persistent-workspace"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { ImportJob } from "../src/features/publishing/import-jobs"
+import type { ImportJob } from "../src/features/publishing/components/import/import-jobs"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 test("server dismissals survive fresh clients and reconcile failures without hiding new or running work", async () => {

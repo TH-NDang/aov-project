@@ -1,6 +1,6 @@
 import { cn } from "@aov/ui/lib/utils"
-import { HeroAsset } from "@/features/publishing/hero-asset"
-import type { MediaRole } from "../publishing/types"
+import { HeroAsset } from "@/features/publishing/components/hero-asset"
+import type { MediaRole } from "../publishing/api/types"
 
 const ratios: Record<MediaRole, number> = { HEAD: 1, PORTRAIT: 2 / 3, SPLASH: 16 / 9 }
 const widths = {

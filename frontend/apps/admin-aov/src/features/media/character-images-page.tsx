@@ -9,9 +9,9 @@ import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useCollapseScrollAnchor } from "@/hooks/use-collapse-scroll-anchor"
 import { errorMessage } from "@/lib/api/errors"
 import { CharacterMediaImage } from "./character-media-image"
-import { useContentLocale } from "../publishing/publication-overview"
-import type { MediaRole } from "../publishing/types"
-import type { Request } from "../publishing/publishing-api"
+import { useContentLocale } from "../publishing/api/publication-overview"
+import type { MediaRole } from "../publishing/api/types"
+import type { Request } from "../publishing/api/publishing-api"
 import {
   characterImageKeys,
   createCharacterImageApi,

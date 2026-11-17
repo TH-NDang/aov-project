@@ -5,10 +5,10 @@ import { JSDOM } from "jsdom"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@aov/ui/components/tooltip"
-import type { CaptureGroup, CaptureImage } from "../src/features/publishing/patch-capture-model"
-import type { HeroShop, SkinAcquisition } from "../src/features/publishing/publishing-api"
-import type { Skin } from "../src/features/publishing/types"
-import type { PatchCaptureWorkspace } from "../src/features/publishing/use-patch-captures"
+import type { CaptureGroup, CaptureImage } from "../src/features/publishing/model/captures/patch-capture-model"
+import type { HeroShop, SkinAcquisition } from "../src/features/publishing/api/publishing-api"
+import type { Skin } from "../src/features/publishing/api/types"
+import type { PatchCaptureWorkspace } from "../src/features/publishing/api/use-patch-captures"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
@@ -129,8 +129,8 @@ async function view(
   })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroSkinsView } = await import("../src/features/publishing/hero-skins-view")
-  const { PatchCaptureProvider } = await import("../src/features/publishing/use-patch-captures")
+  const { HeroSkinsView } = await import("../src/features/publishing/components/skins/hero-skins-view")
+  const { PatchCaptureProvider } = await import("../src/features/publishing/api/use-patch-captures")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   await verifySession()

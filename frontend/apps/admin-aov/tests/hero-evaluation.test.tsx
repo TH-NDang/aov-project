@@ -3,10 +3,10 @@ import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
-import { cleanTraits, suggestTraits, withTraitDetail } from "../src/features/publishing/hero-traits"
-import { draftHeroNotes } from "../src/features/publishing/hero-notes-draft"
-import type { HeroRankingReading } from "../src/features/publishing/publishing-api"
-import type { Content, Skill, Trait } from "../src/features/publishing/types"
+import { cleanTraits, suggestTraits, withTraitDetail } from "../src/features/publishing/model/assessment/hero-traits"
+import { draftHeroNotes } from "../src/features/publishing/model/assessment/hero-notes-draft"
+import type { HeroRankingReading } from "../src/features/publishing/api/publishing-api"
+import type { Content, Skill, Trait } from "../src/features/publishing/api/types"
 import { installWindow } from "./fixtures/dom"
 
 const skill = (
@@ -178,7 +178,7 @@ async function createView() {
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { QueryClient, QueryClientProvider } = await import("@tanstack/react-query")
-  const { HeroEvaluation } = await import("../src/features/publishing/hero-evaluation")
+  const { HeroEvaluation } = await import("../src/features/publishing/components/assessment/hero-evaluation")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const root = createRoot(dom.window.document.getElementById("root")!)
   return {

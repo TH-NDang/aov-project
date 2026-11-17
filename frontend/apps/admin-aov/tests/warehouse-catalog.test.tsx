@@ -8,7 +8,7 @@ import { withWarehouseUi, fixtureRevision } from "./fixtures/warehouse-ui"
 
 test("timeline keeps baseline separate, selects a patch, and suppresses selection after horizontal dragging", async () => {
   await withWarehouseUi(async ({ document, render }) => {
-    const { CatalogTimeline } = await import("../src/features/publishing/catalog-timeline")
+    const { CatalogTimeline } = await import("../src/features/publishing/components/catalog/catalog-timeline")
     const data = {
       markets: [],
       seasons: [
@@ -43,7 +43,7 @@ test("timeline keeps baseline separate, selects a patch, and suppresses selectio
           status: "PUBLISHED",
         },
       ],
-    } as unknown as import("../src/features/publishing/publication-overview").PublicationOverview
+    } as unknown as import("../src/features/publishing/api/publication-overview").PublicationOverview
     let selected = { seasonId: "", variantId: "" }
     await render(
       <CatalogTimeline
@@ -151,7 +151,7 @@ test("compact references use real identities, all translations and lazy media in
 
 test("enchantment scope controls clear dependent patches and show both matching branches without hero-specific copy", async () => {
   await withWarehouseUi(async ({ document, render, click }) => {
-    const { CatalogContext } = await import("../src/features/publishing/catalog-context")
+    const { CatalogContext } = await import("../src/features/publishing/components/catalog/catalog-context")
     const { EnchantmentBranches } = await import("../src/features/warehouse/enchantment-branches")
     const data = {
       seasons: [
@@ -164,7 +164,7 @@ test("enchantment scope controls clear dependent patches and show both matching 
         { id: "october", patchCode: "2026-10-15", seasonId: "s4", rulesetId: "standard", status: "PUBLISHED" },
       ],
       rulesets: [{ id: "standard", code: "aov-standard" }],
-    } as unknown as import("../src/features/publishing/publication-overview").PublicationOverview
+    } as unknown as import("../src/features/publishing/api/publication-overview").PublicationOverview
     const branches = ["tower", "chaos", "forest"].map((code, index) => ({
       code,
       version: 1,

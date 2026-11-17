@@ -11,7 +11,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
-import { usePublicationOverview } from "../publishing/publication-overview"
+import { usePublicationOverview } from "../publishing/api/publication-overview"
 import { confirmAction } from "@/components/confirm-dialog"
 import { AdminRichTextPreview } from "../terminology/rich-text-field"
 import type { WarehouseTranslation } from "@aov/ui/lib/warehouse-content"

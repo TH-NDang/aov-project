@@ -7,7 +7,7 @@ import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { draftKey, draftRepository } from "../src/app/drafts/draft-store"
-import type { PublicationOverview } from "../src/features/publishing/publication-overview"
+import type { PublicationOverview } from "../src/features/publishing/api/publication-overview"
 import { installWindow, waitFor } from "./fixtures/dom"
 
 test("season forms restore invalid input and saving one market preserves another market's draft", async () => {
@@ -73,8 +73,8 @@ test("season forms restore invalid input and saving one market preserves another
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { SeasonSetup } = await import("../src/features/publishing/season-setup")
-  const { ScheduleForm } = await import("../src/features/publishing/shared-version-setup")
+  const { SeasonSetup } = await import("../src/features/publishing/components/setup/season-setup")
+  const { ScheduleForm } = await import("../src/features/publishing/components/setup/shared-version-setup")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -200,7 +200,7 @@ test("season forms restore invalid input and saving one market preserves another
     assert.equal((retained.value as { dates: Record<string, { text: string }> }).dates["vn:start"].text, "10/09/2026")
     assert.equal((retained.base as { dates: Record<string, { text: string }> }).dates["vn:start"], undefined)
     assert.ok(retained, "Saving Thailand must not discard the unsaved Vietnam schedule")
-    const { MarketSchedule } = await import("../src/features/publishing/market-schedule")
+    const { MarketSchedule } = await import("../src/features/publishing/components/setup/market-schedule")
     const marketData: PublicationOverview = {
       ...scheduleData,
       markets: scheduleData.markets.map((m) => ({ ...m, currentRulesetId: "shared" })),

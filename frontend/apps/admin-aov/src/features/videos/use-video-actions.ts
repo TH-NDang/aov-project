@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { usePublicationOverview } from "../publishing/publication-overview"
+import { usePublicationOverview } from "../publishing/api/publication-overview"
 import { videoApi, videoKeys } from "./video-api"
 import { reorder, saveBody, type AdminVideo } from "./video-model"
 
