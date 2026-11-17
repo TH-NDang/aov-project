@@ -42,10 +42,8 @@ const FIGURES: { metric: string; word: string; per: string; high: string; low: s
 /** A large share of damage taken only reads as a strength for heroes meant to take it. */
 const HIGH_FOR: Partial<Record<string, Role[]>> = { DAMAGE_TAKEN: ["TANK", "WARRIOR"] }
 
-const amount = (value: number) =>
-  value >= 1000
-    ? Math.round(value).toLocaleString("vi-VN")
-    : value.toLocaleString("vi-VN", { maximumFractionDigits: 2 })
+/** An in-game figure as the game writes it (QUY-UOC-VIET section 3): `98000`, `1.25`, never `98.000` or `1,25`. */
+const amount = (value: number) => String(value >= 1000 ? Math.round(value) : Math.round(value * 100) / 100)
 
 function snapshotDay(snapshot: NonNullable<HeroRankingReading["snapshot"]>) {
   try {
@@ -128,9 +126,7 @@ export function draftHeroNotes({ traits, skills, roles, ranking, survivability }
   if (!has("SELF_HEAL") && !has("SHIELD") && !has("DAMAGE_REDUCTION"))
     weaknesses.push("Bộ kỹ năng không có lá chắn, hồi máu hay giảm sát thương: sống sót nhờ vị trí và trang bị.")
   if (survivability && survivability.maximum > 0 && survivability.value <= survivability.maximum * 0.4)
-    weaknesses.push(
-      `Thanh Sinh tồn của game chỉ ${survivability.value.toLocaleString("vi-VN")}/${survivability.maximum}.`,
-    )
+    weaknesses.push(`Thanh Sinh tồn của game chỉ ${amount(survivability.value)}/${amount(survivability.maximum)}.`)
 
   if (has("SELF_HEAL")) counters.push(`Trang bị giảm hồi máu cắt bớt lượng hồi từ ${detail("SELF_HEAL")}.`)
   if (has("CC_IMMUNE"))

@@ -137,7 +137,7 @@ test("the notes draft names its sources and leaves out points that do not fit th
   const strengths = notes.strengths!.split("\n")
   assert.equal(
     strengths[0],
-    "Gây nhiều sát thương: 98.000 sát thương gây ra mỗi trận, hạng 3/128 ở Đấu hạng Tinh anh ngày 11/11/2026.",
+    "Gây nhiều sát thương: 98000 sát thương gây ra mỗi trận, hạng 3/128 ở Đấu hạng Tinh anh ngày 11/11/2026.",
   )
   assert.ok(strengths.includes("Khống chế cứng: Địa chấn (choáng 1 giây)."))
   assert.doesNotMatch(notes.weaknesses!, /Ít hạ gục/, "Few kills is not a weakness of a support")
@@ -145,6 +145,22 @@ test("the notes draft names its sources and leaves out points that do not fit th
   assert.match(notes.weaknesses!, /Thanh Sinh tồn của game chỉ 3\/10/)
   assert.doesNotMatch(notes.weaknesses!, /lá chắn, hồi máu/, "The hero heals itself")
   assert.equal(notes.counterTips, "Trang bị giảm hồi máu cắt bớt lượng hồi từ Lưỡi hái.")
+})
+
+test("the notes draft writes decimal figures with a point and no thousands separator, as the game does", () => {
+  const notes = draftHeroNotes({
+    traits: [],
+    skills: kit,
+    roles: ["MAGE"],
+    ranking: {
+      ...ranking,
+      entry: { ...ranking.entry!, figures: [{ metric: "KILLS", value: 1.254, rank: 120, of: 128 }] },
+    },
+    survivability: { value: 3.5, maximum: 10 },
+  })
+
+  assert.match(notes.weaknesses!, /^Ít hạ gục: 1\.25 lần hạ gục mỗi trận,/m)
+  assert.match(notes.weaknesses!, /Thanh Sinh tồn của game chỉ 3\.5\/10\./)
 })
 
 test("without a confirmed snapshot the draft uses the traits alone", () => {
