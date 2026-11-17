@@ -76,6 +76,7 @@ export function AutoChessEditorPage() {
     retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 1,
   })
   const [content, setContent] = useState<GuideContent | null>(null)
+  const saved = guide.data?.content ?? null
   const [images, setImages] = useState<Record<string, AdminImage | { url: string }>>({})
   const [tab, setTab] = useState<Tab>("units")
   const [note, setNote] = useState("")
@@ -246,14 +247,20 @@ export function AutoChessEditorPage() {
             <RulesEditor rules={content.rules} onChange={(rules) => setContent({ ...content, rules })} />
           </Section>
         )}
-        {tab === "units" && <UnitsSection content={content} setContent={setContent} image={image} upload={upload} />}
-        {tab === "traits" && <TraitsSection content={content} setContent={setContent} image={image} upload={upload} />}
-        {tab === "items" && <ItemsSection content={content} setContent={setContent} image={image} upload={upload} />}
+        {tab === "units" && (
+          <UnitsSection content={content} saved={saved} setContent={setContent} image={image} upload={upload} />
+        )}
+        {tab === "traits" && (
+          <TraitsSection content={content} saved={saved} setContent={setContent} image={image} upload={upload} />
+        )}
+        {tab === "items" && (
+          <ItemsSection content={content} saved={saved} setContent={setContent} image={image} upload={upload} />
+        )}
         {tab === "blessings" && (
-          <BlessingsSection content={content} setContent={setContent} image={image} upload={upload} />
+          <BlessingsSection content={content} saved={saved} setContent={setContent} image={image} upload={upload} />
         )}
         {tab === "quests" && <QuestsSection content={content} setContent={setContent} />}
-        {tab === "lineups" && <LineupsSection content={content} setContent={setContent} image={image} />}
+        {tab === "lineups" && <LineupsSection content={content} saved={saved} setContent={setContent} image={image} />}
         {tab === "json" && <JsonEditor content={content} onApply={setContent} />}
         <Section title="Ghi chú thay đổi">
           <Input value={note} maxLength={4000} onChange={(event) => setNote(event.target.value)} />

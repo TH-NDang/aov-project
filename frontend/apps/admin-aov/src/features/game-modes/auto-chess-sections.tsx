@@ -24,6 +24,7 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { AdminDescriptionField } from "../terminology/rich-text-field"
 import { ClampedChips, HeroCodePicker, RowMenu, SuggestInput } from "./entry-controls"
 import type { GuideContent, GuideLineup } from "./game-mode-api"
+import { fixedCodes, fold, named, slugify } from "./guide-codes"
 
 export type Unit = GuideContent["units"][number]
 export type Trait = GuideContent["traits"][number]
@@ -32,6 +33,8 @@ type Blessing = GuideContent["blessings"][number]
 
 export interface SectionProps {
   content: GuideContent
+  /** The draft as last saved; its codes no longer follow a name. */
+  saved: GuideContent | null
   setContent: (content: GuideContent) => void
   image: (id?: string | null) => string | undefined
   upload: (file: File, label: string) => Promise<string>
@@ -59,21 +62,6 @@ const TIER_LABEL: Record<Blessing["tier"], string> = {
   LEGENDARY: "Truyền thuyết",
 }
 const LINEUP_TIER_COLOR: Record<string, string> = { S: "#e05555", A: "#e0954a", B: "#d8c35a", C: "#6aa86a" }
-
-/** Accents and case do not hide an entry from a search. */
-export const fold = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase()
-
-/** A code from a name: accents dropped, lower case, words joined by dashes. */
-export const slugify = (text: string) =>
-  fold(text)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-
-/** A new entry takes its code from its name; an existing code stays, because other entries point at it. */
-function named<T extends { code: string; name: string }>(entry: T, name: string): T {
-  const followsName = !entry.code || entry.code === slugify(entry.name)
-  return { ...entry, name, code: followsName ? slugify(name) : entry.code }
-}
 
 const swapAt = <T,>(rows: T[], at: number, next: T) => rows.map((row, index) => (index === at ? next : row))
 
@@ -559,8 +547,9 @@ const STATS = [
   ["magicResistance", "Giáp phép"],
 ] as const
 
-export function UnitsSection({ content, setContent, image, upload }: SectionProps) {
+export function UnitsSection({ content, saved, setContent, image, upload }: SectionProps) {
   const [selected, setSelected] = useState(0)
+  const fixed = fixedCodes(saved, content)
   const unit = content.units[selected]
   const update = (next: Unit) => setContent({ ...content, units: swapAt(content.units, selected, next) })
   const costs = [...new Set(content.units.map((item) => item.cost))].sort((a, b) => a - b)
@@ -658,7 +647,7 @@ export function UnitsSection({ content, setContent, image, upload }: SectionProp
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <label className="grid gap-1">
                 <span className="type-label">Tên</span>
-                <Input value={unit.name} onChange={(event) => update(named(unit, event.target.value))} />
+                <Input value={unit.name} onChange={(event) => update(named(unit, event.target.value, fixed))} />
               </label>
               <div className="grid gap-1">
                 <span className="type-label">Tướng trên Wiki (để liên kết)</span>
@@ -850,8 +839,9 @@ export function TraitPicker({
 // ---------------------------------------------------------------------------------------------------------------
 // Traits
 
-export function TraitsSection({ content, setContent, image, upload }: SectionProps) {
+export function TraitsSection({ content, saved, setContent, image, upload }: SectionProps) {
   const [selected, setSelected] = useState(0)
+  const fixed = fixedCodes(saved, content)
   const trait = content.traits[selected]
   const update = (next: Trait) => setContent({ ...content, traits: swapAt(content.traits, selected, next) })
   const members = useMemo(() => {
@@ -921,7 +911,7 @@ export function TraitsSection({ content, setContent, image, upload }: SectionPro
             <div className="flex flex-wrap items-end gap-3">
               <label className="grid min-w-48 flex-1 gap-1">
                 <span className="type-label">Tên</span>
-                <Input value={trait.name} onChange={(event) => update(named(trait, event.target.value))} />
+                <Input value={trait.name} onChange={(event) => update(named(trait, event.target.value, fixed))} />
               </label>
               <div className="grid gap-1">
                 <span className="type-label">Loại</span>
@@ -1037,8 +1027,9 @@ function stoneColor(group: { code: string; name: string }) {
   return "#9aa4b2"
 }
 
-export function ItemsSection({ content, setContent, image, upload }: SectionProps) {
+export function ItemsSection({ content, saved, setContent, image, upload }: SectionProps) {
   const [selected, setSelected] = useState(0)
+  const fixed = fixedCodes(saved, content)
   const [groupsOpen, setGroupsOpen] = useState(false)
   const item = content.items[selected]
   const update = (next: Item) => setContent({ ...content, items: swapAt(content.items, selected, next) })
@@ -1128,7 +1119,7 @@ export function ItemsSection({ content, setContent, image, upload }: SectionProp
                     onChange={(event) =>
                       setContent({
                         ...content,
-                        itemGroups: swapAt(content.itemGroups, at, named(group, event.target.value)),
+                        itemGroups: swapAt(content.itemGroups, at, named(group, event.target.value, fixed)),
                       })
                     }
                   />
@@ -1206,7 +1197,7 @@ export function ItemsSection({ content, setContent, image, upload }: SectionProp
           <FormBlock title="Thông tin">
             <label className="grid gap-1">
               <span className="type-label">Tên</span>
-              <Input value={item.name} onChange={(event) => update(named(item, event.target.value))} />
+              <Input value={item.name} onChange={(event) => update(named(item, event.target.value, fixed))} />
             </label>
             <div className="flex flex-wrap items-end gap-3">
               <div className="grid gap-1">
@@ -1284,8 +1275,9 @@ function BlessingPreview({ blessing, src }: { blessing: Blessing; src?: string }
   )
 }
 
-export function BlessingsSection({ content, setContent, image, upload }: SectionProps) {
+export function BlessingsSection({ content, saved, setContent, image, upload }: SectionProps) {
   const [selected, setSelected] = useState(0)
+  const fixed = fixedCodes(saved, content)
   const blessing = content.blessings[selected]
   const update = (next: Blessing) => setContent({ ...content, blessings: swapAt(content.blessings, selected, next) })
   return (
@@ -1361,7 +1353,7 @@ export function BlessingsSection({ content, setContent, image, upload }: Section
           <FormBlock title="Thông tin">
             <label className="grid gap-1">
               <span className="type-label">Tên</span>
-              <Input value={blessing.name} onChange={(event) => update(named(blessing, event.target.value))} />
+              <Input value={blessing.name} onChange={(event) => update(named(blessing, event.target.value, fixed))} />
             </label>
             <div className="grid gap-1">
               <span className="type-label">Bậc</span>
@@ -1884,8 +1876,9 @@ function BoardEditor({
   )
 }
 
-export function LineupsSection({ content, setContent, image }: Omit<SectionProps, "upload">) {
+export function LineupsSection({ content, saved, setContent, image }: Omit<SectionProps, "upload">) {
   const [selected, setSelected] = useState(0)
+  const fixed = fixedCodes(saved, content)
   const [search, setSearch] = useState("")
   const lineup = content.lineups[selected]
   const update = (next: GuideLineup) => setContent({ ...content, lineups: swapAt(content.lineups, selected, next) })
@@ -2017,7 +2010,7 @@ export function LineupsSection({ content, setContent, image }: Omit<SectionProps
           <FormBlock title="Thông tin" hint="Hạng là đánh giá biên tập; để trống nếu chưa kiểm chứng trong trận.">
             <label className="grid gap-1">
               <span className="type-label">Tên</span>
-              <Input value={lineup.name} onChange={(event) => update(named(lineup, event.target.value))} />
+              <Input value={lineup.name} onChange={(event) => update(named(lineup, event.target.value, fixed))} />
             </label>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               <div className="grid gap-1">
