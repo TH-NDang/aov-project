@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.*;
 
@@ -31,7 +32,7 @@ public interface HeroImportJobApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    List<HeroImportJobView> list();
+    List<HeroImportJobView> list(@Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroImportJobApi_get", summary = "Get - hero import job", description = "Get for hero import job. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
@@ -39,7 +40,8 @@ public interface HeroImportJobApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    HeroImportJobView get(@Parameter(description = "Id identifier.") UUID id);
+    HeroImportJobView get(@Parameter(description = "Id identifier.") UUID id,
+            @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroImportJobApi_dismissNotification", summary = "Dismiss notification - hero import job", description = "Dismiss notification for hero import job. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),

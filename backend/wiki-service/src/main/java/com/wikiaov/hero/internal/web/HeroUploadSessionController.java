@@ -4,6 +4,8 @@ import com.wikiaov.hero.internal.application.response.HeroUploadSessionView;
 import com.wikiaov.hero.internal.importing.application.HeroUploadSessions;
 import com.wikiaov.hero.internal.web.request.HeroUploadSessionRequest;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.QueryParameters;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +19,8 @@ public class HeroUploadSessionController implements HeroUploadSessionApi {
     }
 
     @GetMapping(version = "1")
-    public List<HeroUploadSessionView> list() {
+    public List<HeroUploadSessionView> list(HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
         return sessions.list();
     }
 

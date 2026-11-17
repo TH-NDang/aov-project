@@ -31,7 +31,8 @@ public class HeroImportController implements HeroImportApi {
     }
 
     @GetMapping(path = "/relation-fields", version = "1")
-    public java.util.Map<String, List<HeroImports.Field>> relationFields() {
+    public java.util.Map<String, List<HeroImports.Field>> relationFields(HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
         return imports.relationFields();
     }
 

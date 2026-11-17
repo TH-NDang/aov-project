@@ -42,7 +42,7 @@ public interface HeroImportApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    java.util.Map<String, List<HeroImports.Field>> relationFields();
+    java.util.Map<String, List<HeroImports.Field>> relationFields(@Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroImportApi_contexts", summary = "Contexts - hero import", description = "Contexts for hero import. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),

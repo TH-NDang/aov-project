@@ -3,6 +3,8 @@ package com.wikiaov.patch.internal.web;
 import com.wikiaov.patch.internal.stats.application.PatchStatDefaults;
 import com.wikiaov.patch.internal.stats.application.PatchStatDefaults.*;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.QueryParameters;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,7 +17,8 @@ public class PatchStatDefaultsController implements PatchStatDefaultsApi {
     private final PatchStatDefaults defaults;
 
     @GetMapping(version = "1")
-    public List<StatDefaultView> effective(@PathVariable UUID id) {
+    public List<StatDefaultView> effective(@PathVariable UUID id, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
         return defaults.effective(id);
     }
 

@@ -4,6 +4,8 @@ import com.wikiaov.hero.internal.application.HeroImportJobRequest;
 import com.wikiaov.hero.internal.application.response.HeroImportJobView;
 import com.wikiaov.hero.internal.importing.application.HeroImportJobs;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.QueryParameters;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +26,14 @@ public class HeroImportJobController implements HeroImportJobApi {
     }
 
     @GetMapping(version = "1")
-    public List<HeroImportJobView> list() {
+    public List<HeroImportJobView> list(HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
         return jobs.list();
     }
 
     @GetMapping(path = "/{id}", version = "1")
-    public HeroImportJobView get(@PathVariable UUID id) {
+    public HeroImportJobView get(@PathVariable UUID id, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
         return jobs.get(id);
     }
 
