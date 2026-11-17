@@ -164,7 +164,7 @@ function ModeRow({ mode }: { mode: AdminSummary }) {
         )}
       </span>
       <span className="grid min-w-0 gap-1">
-        <strong className="type-body truncate font-semibold">{mode.name}</strong>
+        <strong className="type-body truncate">{mode.name}</strong>
         <span className="type-meta truncate">
           {mode.code}
           {mode.order != null && ` · thứ tự ${mode.order}`}

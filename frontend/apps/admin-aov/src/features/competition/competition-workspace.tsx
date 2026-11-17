@@ -424,9 +424,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0">
-                <span
-                  className={cn("type-body block font-semibold whitespace-nowrap", !active && "text-muted-foreground")}
-                >
+                <span className={cn("type-body block whitespace-nowrap", !active && "text-muted-foreground")}>
                   {STEP_LABELS[id]}
                 </span>
                 <span className="type-meta flex items-center gap-1 whitespace-nowrap">

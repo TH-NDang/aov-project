@@ -60,6 +60,41 @@ const rules: Rule[] = [
       ),
   },
   {
+    name: "a type-* role style is not combined with a text size or font weight",
+    hint: "The role sets size and weight; drop text-{size} and font-{weight} from that element (AGENTS.md).",
+    files: files(source, /\.tsx?$/),
+    offenders: (text) =>
+      text
+        .split("\n")
+        .flatMap((line, index) =>
+          [...line.matchAll(/(["'`])([^"'`]*\btype-(?:page-title|section-title|body|label|meta)\b[^"'`]*)\1/g)]
+            .filter(([, , classes]) =>
+              /(?<![\w-])(font-(normal|medium|semibold|bold)|text-(xs|sm|base|lg|xl|\dxl|\[\d[^\]]*\]))(?![\w-])/.test(
+                classes,
+              ),
+            )
+            .map(() => `:${index + 1}`),
+        ),
+  },
+  {
+    name: "admin text stays on the 12/14/16/24 scale",
+    hint: "Use text-xs, text-sm, text-base or text-2xl, or a type-* role; the brand wordmark is the one exception.",
+    files: files(source, /\.(tsx?|css)$/),
+    offenders: (text) =>
+      text
+        .split("\n")
+        .flatMap((line, index) =>
+          line.includes("AovWordmark")
+            ? []
+            : [
+                ...line.matchAll(/(?<![\w-])text-(lg|xl|[3-9]xl)(?![\w-])/g),
+                ...[...line.matchAll(/font-size:\s*(\d+)px/g)].filter(
+                  ([, size]) => !["12", "14", "16", "24"].includes(size),
+                ),
+              ].map(([match]) => `:${index + 1} ${match}`),
+        ),
+  },
+  {
     name: "admin uses only the font weights the font files provide",
     hint: "Use 400, 500, 600 or 700 (font-normal, font-medium, font-semibold, font-bold); see frontend/AGENTS.md.",
     files: files(source, /\.(tsx?|css)$/),

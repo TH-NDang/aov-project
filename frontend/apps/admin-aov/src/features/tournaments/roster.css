@@ -126,7 +126,7 @@ button.tournament-member-body:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 12px;
 }
 .tournament-roster-form fieldset,
 .tournament-roster-extra > div {

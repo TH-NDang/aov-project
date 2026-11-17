@@ -30,7 +30,7 @@ export function AccessGate({ children }: { children: (access: Access) => ReactNo
       <EsportsPage>
         <div className="flex flex-col items-center gap-3 rounded-2xl border px-6 py-14 text-center" role="alert">
           <Trophy size={32} className="text-muted-foreground" />
-          <h1 className="text-lg font-semibold">
+          <h1 className="type-section-title">
             {access.me.isError ? "Chưa mở được dữ liệu giải đấu" : "Bạn chưa có quyền xem giải đấu"}
           </h1>
           <p className="max-w-md text-sm text-muted-foreground">

@@ -41,7 +41,7 @@ export function HeroStatistics({ stats, icon }: { stats: GameStats; icon: (key: 
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <card.icon size={13} /> {card.label}
             </p>
-            <p className="text-lg font-semibold">{card.value}</p>
+            <p className="text-base font-semibold">{card.value}</p>
           </div>
         ))}
       </div>

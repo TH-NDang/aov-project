@@ -182,7 +182,7 @@
 .tournament-logo-upload-row .tournament-registry-logo {
   width: 72px;
   height: 72px;
-  font-size: 18px;
+  font-size: 16px;
 }
 .tournament-logo-upload-row > div {
   display: flex;
@@ -436,7 +436,7 @@
 }
 .tournament-section-title {
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
 }
 .tournament-equipment-editor {
   display: flex;

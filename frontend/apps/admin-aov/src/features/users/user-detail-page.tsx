@@ -111,7 +111,7 @@ export function UserDetailPage() {
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-1">
-                <h2 className="break-words text-xl font-bold">{query.data.displayName}</h2>
+                <h2 className="type-section-title break-words">{query.data.displayName}</h2>
                 <p className="text-sm text-muted-foreground">Hồ sơ người dùng</p>
               </div>
               {canWrite && (

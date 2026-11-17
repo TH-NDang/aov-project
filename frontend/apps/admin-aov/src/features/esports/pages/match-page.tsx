@@ -688,7 +688,7 @@ function MatchViewer({
       <span className="text-xs font-semibold text-muted-foreground">
         {here ? "Đang phát" : "Ván đang chọn"} · Ván {focused.number}
       </span>
-      <span className="esp-num ml-auto flex items-center gap-2 text-lg font-bold">
+      <span className="esp-num ml-auto flex items-center gap-2 text-base font-bold">
         <TeamLogo team={focusedView.sides.BLUE.team} size={22} />
         <span className="text-[var(--esp-blue)]">{score.BLUE}</span>
         <span className="text-muted-foreground">–</span>
@@ -1247,7 +1247,7 @@ function MatchHeader({
         {won && <Crown size={16} className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[var(--esp-gold)]" />}
       </span>
       <span className={cn("flex min-w-0 flex-col gap-1", align === "right" ? "items-end" : "items-start")}>
-        <span className="block max-w-full truncate font-bold @3xl:text-lg">
+        <span className="block max-w-full truncate font-bold @3xl:text-base">
           <span className="@xl:hidden">{view.shortName}</span>
           <span className="hidden @xl:inline">{view.name}</span>
         </span>
@@ -1284,11 +1284,11 @@ function MatchHeader({
         </div>
         <div className="flex items-center gap-2 @xl:gap-3 @3xl:gap-8">
           {side(team(content.teamAId), content.result?.scoreA, winner === "A", "left")}
-          <div className="esp-num flex shrink-0 items-center gap-2 text-3xl font-bold @3xl:text-4xl">
+          <div className="esp-num flex shrink-0 items-center gap-2 text-2xl font-bold">
             <span className={winner === "B" ? "text-white/35" : winner === "A" ? "text-[var(--esp-gold)]" : ""}>
               {content.result?.scoreA ?? "–"}
             </span>
-            <span className="text-xl text-white/40">:</span>
+            <span className="text-base text-white/40">:</span>
             <span className={winner === "A" ? "text-white/35" : winner === "B" ? "text-[var(--esp-gold)]" : ""}>
               {content.result?.scoreB ?? "–"}
             </span>

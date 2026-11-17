@@ -138,7 +138,7 @@ export function OverviewStep({
             {next.map((check) => (
               <li key={check.id} className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-b-0">
                 <span className="min-w-0">
-                  <span className="type-body block font-semibold">{check.label}</span>
+                  <span className="type-body block">{check.label}</span>
                   <span className="type-meta">{check.detail}</span>
                 </span>
                 <Button type="button" variant="outline" onClick={() => ws.go(check.step)}>
@@ -149,7 +149,7 @@ export function OverviewStep({
             {detailLeft > 0 && (
               <li className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-b-0">
                 <span className="min-w-0">
-                  <span className="type-body block font-semibold">Ghi chi tiết {detailLeft} ván</span>
+                  <span className="type-body block">Ghi chi tiết {detailLeft} ván</span>
                   <span className="type-meta">Tuyển thủ, phụ trợ và thứ tự cấm chọn theo video</span>
                 </span>
                 <Button type="button" variant="outline" onClick={() => ws.go("schedule")}>

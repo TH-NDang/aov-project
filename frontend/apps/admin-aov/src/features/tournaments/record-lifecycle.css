@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12px;
 }
 .tournament-record-blocked {
   color: var(--destructive);
@@ -19,7 +19,7 @@
 .tournament-record-usages {
   display: grid;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12px;
 }
 .tournament-record-usages li,
 .tournament-record-usages li > span,
@@ -64,7 +64,7 @@
 .tournament-trash-list article > div:first-child {
   display: grid;
   gap: 3px;
-  font-size: 13px;
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
 .tournament-trash-list small {

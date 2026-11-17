@@ -81,7 +81,7 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
                 aria-selected={active}
                 onClick={() => setStageCode(entry.code)}
                 className={cn(
-                  "type-body flex min-h-9 items-center gap-2 rounded-md px-3 font-semibold transition-colors",
+                  "type-body flex min-h-9 items-center gap-2 rounded-md px-3 transition-colors",
                   active ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -443,7 +443,7 @@ function MatchLine({
         {side("a")}
         <span
           className={cn(
-            "type-body inline-flex h-7 items-center justify-center rounded-md border px-2 font-bold tabular-nums",
+            "type-body inline-flex h-7 items-center justify-center rounded-md border px-2 tabular-nums",
             scored ? "bg-muted" : "border-dashed font-semibold text-primary",
             open && "border-primary",
           )}

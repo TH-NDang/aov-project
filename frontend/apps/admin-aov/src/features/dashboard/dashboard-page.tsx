@@ -435,13 +435,13 @@ function CurrentPatchCard({ locale }: { locale: string }) {
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <dt className="text-xs text-muted-foreground">Tướng có thay đổi</dt>
-                <dd className="text-lg font-semibold tabular-nums">
+                <dd className="text-base font-semibold tabular-nums">
                   {changes.data ? formatNumber(changes.data.length) : "…"}
                 </dd>
               </div>
               <div className="border-l pl-3">
                 <dt className="text-xs text-muted-foreground">Ghi từ ghi chú cập nhật</dt>
-                <dd className="text-lg font-semibold tabular-nums">{changes.data ? formatNumber(fromNotes) : "…"}</dd>
+                <dd className="text-base font-semibold tabular-nums">{changes.data ? formatNumber(fromNotes) : "…"}</dd>
               </div>
             </dl>
             {pending > 0 && (

@@ -92,12 +92,12 @@ export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
                   key={index}
                   className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-3 border-b px-4 py-2 last:border-b-0"
                 >
-                  <span className="type-body font-bold tabular-nums">{line.place}</span>
+                  <span className="type-body tabular-nums">{line.place}</span>
                   <span className="min-w-0">
                     {line.teamId ? (
                       <span className="flex items-center gap-2.5">
                         <TeamLogo team={ws.team(line.teamId)} size={24} />
-                        <span className="type-body truncate font-semibold">{line.teamName}</span>
+                        <span className="type-body truncate">{line.teamName}</span>
                       </span>
                     ) : (
                       <Chip tone="warn">Chưa xác định</Chip>

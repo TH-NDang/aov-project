@@ -574,9 +574,7 @@ export function SecondaryEditor({
                           <h3 className="type-label">Tên và mô tả trạng thái phụ trợ</h3>
                           {content.states!.map((state, index) => (
                             <details key={index} className="rounded-xl border p-3">
-                              <summary className="type-body cursor-pointer font-semibold">
-                                {stateName(state, index)}
-                              </summary>
+                              <summary className="type-body cursor-pointer">{stateName(state, index)}</summary>
                               <div className="pt-4">
                                 <ReferenceLanguage translations={state.translations} editing={language}>
                                   <WarehouseTranslations

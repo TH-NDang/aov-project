@@ -336,7 +336,7 @@ export function WarehouseChangeHistory({
                 className={`absolute top-4 -left-[1.3rem] size-2 rounded-full ${node.revisions.some((r) => r.id === currentRevisionId) ? "bg-primary" : "bg-muted-foreground/60"}`}
               />
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <p className="type-body font-semibold">
+                <p className="type-body">
                   {node.patchId ? (variantName(node.patchId) ?? "Patch đã ghi nhận") : "Chưa rõ patch"}
                 </p>
                 {node.patchId && <span className="type-meta">{seasonName(node.patchId)}</span>}
