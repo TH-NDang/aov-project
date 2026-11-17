@@ -141,21 +141,6 @@
   .esp-loser .esp-logo {
     filter: grayscale(1);
   }
-  .esp-winner-row {
-    position: relative;
-    background: linear-gradient(
-      90deg,
-      color-mix(in oklch, var(--esp-gold) 22%, transparent),
-      color-mix(in oklch, var(--esp-gold) 6%, transparent)
-    );
-  }
-  .esp-winner-row::before {
-    content: "";
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: var(--esp-gold-fill);
-  }
   .esp-win-score {
     color: var(--esp-ink);
     background: var(--esp-gold-fill);
@@ -198,13 +183,6 @@
     background: oklch(1 0 0 / 0.08);
     border: 1px solid oklch(1 0 0 / 0.14);
     backdrop-filter: blur(8px);
-  }
-
-  .esp-tabs {
-    scrollbar-width: none;
-  }
-  .esp-tabs::-webkit-scrollbar {
-    display: none;
   }
 
   /* Logos and portraits keep their aspect and fall back to a monogram. */
@@ -991,26 +969,6 @@
   }
   .esp-feed-item[data-future="true"] {
     opacity: 0.55;
-  }
-
-  /* Bracket */
-  .esp-bracket-round {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    gap: 16px;
-    min-width: 220px;
-  }
-  .esp-bracket-slot {
-    position: relative;
-  }
-  div:not(:first-child) > .esp-bracket-round .esp-bracket-slot::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: -20px;
-    width: 20px;
-    border-top: 1px solid var(--border);
   }
 
   @keyframes esp-pulse {

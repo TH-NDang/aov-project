@@ -231,7 +231,7 @@ const routes: RouteObject[] = [
             path: "tournaments/registry",
             handle: { pageTab: false } satisfies RouteHandle,
             lazy: async () => ({
-              Component: (await import("@/features/tournaments/registry-page")).LegacyRegistryRedirect,
+              Component: (await import("@/features/tournaments/legacy-registry-redirect")).LegacyRegistryRedirect,
             }),
           },
           {
