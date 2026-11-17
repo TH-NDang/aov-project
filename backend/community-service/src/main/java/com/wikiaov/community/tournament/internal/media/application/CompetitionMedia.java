@@ -86,7 +86,13 @@ public class CompetitionMedia {
     public void requireAvailable(String url) {
         if (url == null || url.isBlank())
             return;
-        var uri = URI.create(url);
+        URI uri;
+        try {
+            uri = URI.create(url);
+        } catch (IllegalArgumentException malformed) {
+            throw new ApiException(TournamentErrorCode.TOURNAMENT_INVALID_CONTENT,
+                    "Image URLs must be absolute HTTP or HTTPS URLs.");
+        }
         var matcher = ASSET_PATH.matcher(uri.getPath());
         if (!matcher.matches())
             return;

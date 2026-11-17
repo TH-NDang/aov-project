@@ -1,0 +1,292 @@
+package com.wikiaov.community.platform.internal.web;
+
+import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.platform.ApiFieldError;
+import com.wikiaov.community.platform.PlatformErrorCode;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.TypeMismatchException;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponseException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.accept.InvalidApiVersionException;
+import org.springframework.web.accept.MissingApiVersionException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.exc.UnrecognizedPropertyException;
+
+/**
+ * Renders every error raised inside Spring MVC as {@code application/problem+json} with a stable {@code code}.
+ *
+ * <p>
+ * Only {@link ApiException} and Spring's own input errors become 4xx answers. Anything else is unexpected: it is
+ * logged and answered with 500, so a programming error never looks like a mistake in the request. Codes are chosen by
+ * exception type, never guessed from the HTTP status. Errors are {@code Cache-Control: no-store}.
+ */
+@RestControllerAdvice
+class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(ProblemDetailsExceptionHandler.class);
+    /** PostgreSQL SQLSTATE of a unique constraint violation. */
+    private static final String UNIQUE_VIOLATION = "23505";
+
+    @ExceptionHandler(ApiException.class)
+    ResponseEntity<Object> handleApiException(ApiException ex) {
+        if (ex.status() >= 500) {
+            log.warn("Request failed with {}: {}", ex.code(), ex.getMessage(), ex);
+        }
+        return respond(problem(ex.status(), ex.code(), ex.getMessage(), List.of(), ex.properties()), new HttpHeaders());
+    }
+
+    /**
+     * Spring Security answers these itself: 401 without a usable token, 403 without the capability. Rethrowing the
+     * same exception hands it back to the security filter chain instead of the 500 handler below.
+     */
+    @ExceptionHandler({AccessDeniedException.class, AuthenticationException.class})
+    void handleSecurity(RuntimeException ex) {
+        throw ex;
+    }
+
+    /** A unique constraint refusing the row is a conflict; any other integrity failure is a bug. */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ResponseEntity<Object> handleIntegrityViolation(DataIntegrityViolationException ex) {
+        if (!uniqueViolation(ex)) {
+            return handleUnexpected(ex);
+        }
+        return render(PlatformErrorCode.TOURNAMENT_DUPLICATE_CODE,
+                "A record already reserves this identity, including records in the trash. Restore or edit the existing record.",
+                List.of(), new HttpHeaders());
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    ResponseEntity<Object> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex) {
+        return render(PlatformErrorCode.VERSION_CONFLICT, "The record changed. Reload before saving.", List.of(),
+                new HttpHeaders());
+    }
+
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<Object> handleUnexpected(Exception ex) {
+        log.error("Unexpected error", ex);
+        return render(PlatformErrorCode.INTERNAL_ERROR, "An unexpected error occurred.", List.of(), new HttpHeaders());
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException ex, HttpHeaders headers,
+            HttpStatusCode status, WebRequest request) {
+        ApiException cause = findCause(ex, ApiException.class);
+        if (cause != null) {
+            return handleApiException(cause);
+        }
+
+        String name = ex.getPropertyName() != null ? ex.getPropertyName() : "parameter";
+        if (ex instanceof MethodArgumentTypeMismatchException mismatch
+                && mismatch.getParameter().hasParameterAnnotation(PathVariable.class)) {
+            return render(PlatformErrorCode.INVALID_REQUEST, "Path variable '" + name + "' has an invalid value.",
+                    List.of(new ApiFieldError(name, "INVALID_VALUE", "Invalid value.")), headers);
+        }
+        return render(PlatformErrorCode.INVALID_QUERY_PARAMETER,
+                "Query parameter '" + name + "' has an invalid value.",
+                List.of(new ApiFieldError(name, "INVALID_VALUE", "Invalid value.")), headers);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex,
+            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return render(PlatformErrorCode.INVALID_QUERY_PARAMETER,
+                "Query parameter '" + ex.getParameterName() + "' is required.",
+                List.of(new ApiFieldError(ex.getParameterName(), "REQUIRED", "Parameter is required.")), headers);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        List<ApiFieldError> errors = new ArrayList<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> errors
+                .add(new ApiFieldError(error.getField(), constraintCode(error), error.getDefaultMessage())));
+        ex.getBindingResult().getGlobalErrors()
+                .forEach(error -> errors.add(new ApiFieldError("", constraintCode(error), error.getDefaultMessage())));
+        return render(PlatformErrorCode.INVALID_REQUEST, "Request content is invalid.", errors, headers);
+    }
+
+    /** Constraints on method parameters, e.g. {@code @Min(0) @RequestParam int page}. */
+    @Override
+    protected ResponseEntity<Object> handleHandlerMethodValidationException(HandlerMethodValidationException ex,
+            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        List<ApiFieldError> errors = new ArrayList<>();
+        boolean onlyQueryParameters = true;
+        for (var result : ex.getParameterValidationResults()) {
+            String parameter = String.valueOf(result.getMethodParameter().getParameterName());
+            onlyQueryParameters &= result.getMethodParameter().hasParameterAnnotation(RequestParam.class);
+            for (MessageSourceResolvable error : result.getResolvableErrors()) {
+                String path = error instanceof FieldError field ? parameter + "." + field.getField() : parameter;
+                errors.add(new ApiFieldError(path, constraintCode(error), error.getDefaultMessage()));
+            }
+        }
+
+        PlatformErrorCode code = onlyQueryParameters
+                ? PlatformErrorCode.INVALID_QUERY_PARAMETER
+                : PlatformErrorCode.INVALID_REQUEST;
+        return render(code, "Request parameters are invalid.", errors, headers);
+    }
+
+    /** Malformed JSON, unknown fields (fail-on-unknown-properties) and values of the wrong type. */
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        List<ApiFieldError> errors = new ArrayList<>();
+        JacksonException jackson = findCause(ex, JacksonException.class);
+        if (jackson != null && !jackson.getPath().isEmpty()) {
+            boolean unknown = jackson instanceof UnrecognizedPropertyException;
+            errors.add(new ApiFieldError(jsonPath(jackson.getPath()), unknown ? "UNKNOWN_FIELD" : "INVALID_VALUE",
+                    unknown ? "Field is not allowed." : "Value has an invalid type or format."));
+        }
+        return render(PlatformErrorCode.INVALID_REQUEST, "Request body is not valid JSON for this operation.", errors,
+                headers);
+    }
+
+    /** API version errors from Spring MVC native versioning, plus any other ErrorResponseException. */
+    @Override
+    protected ResponseEntity<Object> handleErrorResponseException(ErrorResponseException ex, HttpHeaders headers,
+            HttpStatusCode status, WebRequest request) {
+        if (ex instanceof InvalidApiVersionException) {
+            return render(PlatformErrorCode.INVALID_API_VERSION, "The requested API version is not supported.",
+                    List.of(), headers);
+        }
+        if (ex instanceof MissingApiVersionException) {
+            return render(PlatformErrorCode.MISSING_API_VERSION, "The API version is missing.", List.of(), headers);
+        }
+        return super.handleErrorResponseException(ex, headers, status, request);
+    }
+
+    /** Remaining Spring MVC exceptions (404, 405, 406, 413, 415, ...): code by exception type. */
+    @Override
+    protected ResponseEntity<Object> handleExceptionInternal(Exception ex, @Nullable Object body, HttpHeaders headers,
+            HttpStatusCode statusCode, WebRequest request) {
+        if (statusCode.is5xxServerError()) {
+            log.error("Request failed with {}", statusCode.value(), ex);
+        }
+
+        PlatformErrorCode code = fallbackCode(ex, statusCode);
+        String detail = body instanceof ProblemDetail problem && problem.getDetail() != null
+                ? problem.getDetail()
+                : "The request could not be processed.";
+        return respond(problem(statusCode.value(), code.name(), detail, List.of(), Map.of()), headers,
+                statusCode.value());
+    }
+
+    static PlatformErrorCode fallbackCode(Exception ex, HttpStatusCode status) {
+        if (ex instanceof NoResourceFoundException || ex instanceof NoHandlerFoundException) {
+            return PlatformErrorCode.RESOURCE_NOT_FOUND;
+        }
+        if (ex instanceof HttpRequestMethodNotSupportedException) {
+            return PlatformErrorCode.METHOD_NOT_ALLOWED;
+        }
+        if (ex instanceof HttpMediaTypeNotAcceptableException) {
+            return PlatformErrorCode.NOT_ACCEPTABLE;
+        }
+        if (ex instanceof HttpMediaTypeNotSupportedException) {
+            return PlatformErrorCode.UNSUPPORTED_MEDIA_TYPE;
+        }
+        if (ex instanceof MaxUploadSizeExceededException) {
+            return PlatformErrorCode.PAYLOAD_TOO_LARGE;
+        }
+        return status.is5xxServerError() ? PlatformErrorCode.INTERNAL_ERROR : PlatformErrorCode.INVALID_REQUEST;
+    }
+
+    private static ResponseEntity<Object> render(PlatformErrorCode code, String detail, List<ApiFieldError> errors,
+            HttpHeaders headers) {
+        return respond(problem(code.status(), code.name(), detail, errors, Map.of()), headers, code.status());
+    }
+
+    private static ResponseEntity<Object> respond(ProblemDetail body, HttpHeaders headers) {
+        return respond(body, headers, body.getStatus());
+    }
+
+    private static ResponseEntity<Object> respond(ProblemDetail body, HttpHeaders headers, int status) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.putAll(headers);
+        responseHeaders.setCacheControl(CacheControl.noStore());
+        return new ResponseEntity<>(body, responseHeaders, HttpStatusCode.valueOf(status));
+    }
+
+    /** Module properties stay top-level members of the problem, where Admin reads them (e.g. {@code usages}). */
+    private static ProblemDetail problem(int status, String code, String detail, List<ApiFieldError> errors,
+            Map<String, Object> properties) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(status), detail);
+        problem.setProperty("code", code);
+        if (!errors.isEmpty()) {
+            problem.setProperty("errors", errors);
+        }
+        properties.forEach(problem::setProperty);
+        return problem;
+    }
+
+    private static boolean uniqueViolation(Throwable ex) {
+        SQLException sql = findCause(ex, SQLException.class);
+        return sql != null && UNIQUE_VIOLATION.equals(sql.getSQLState());
+    }
+
+    private static <T extends Throwable> @Nullable T findCause(Throwable ex, Class<T> type) {
+        for (Throwable current = ex; current != null; current = current.getCause()) {
+            if (type.isInstance(current)) {
+                return type.cast(current);
+            }
+            if (current.getCause() == current) {
+                break;
+            }
+        }
+        return null;
+    }
+
+    /** Builds {@code content.placements[1].teamId} from Jackson's reference chain. */
+    static String jsonPath(List<JacksonException.Reference> references) {
+        StringBuilder path = new StringBuilder();
+        for (JacksonException.Reference reference : references) {
+            if (reference.getPropertyName() != null) {
+                if (!path.isEmpty()) {
+                    path.append('.');
+                }
+                path.append(reference.getPropertyName());
+            } else if (reference.getIndex() >= 0) {
+                path.append('[').append(reference.getIndex()).append(']');
+            }
+        }
+        return path.toString();
+    }
+
+    /** Converts a Bean Validation constraint name such as {@code NotBlank} into {@code NOT_BLANK}. */
+    static String constraintCode(MessageSourceResolvable error) {
+        String[] codes = error.getCodes();
+        String simple = (codes == null || codes.length == 0) ? "Invalid" : codes[codes.length - 1];
+        return simple.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toUpperCase();
+    }
+}
