@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.application.response.SpellView;
 import com.wikiaov.spell.internal.catalog.persistence.SpellIdentityRepository;
 import com.wikiaov.spell.internal.catalog.persistence.SpellRevisionRepository;
@@ -45,7 +46,7 @@ class SpellCatalogQueriesTest {
         var other = revision(second, 1);
         var selectedCopy = translation(selected, "en", "Search target");
         var otherCopy = translation(other, "vi-VN", "Search target too");
-        when(revisions.findByStateNot("DISCARDED")).thenReturn(List.of(older, selected, other));
+        when(revisions.findByStateNot(RevisionState.DISCARDED)).thenReturn(List.of(older, selected, other));
         when(translations.findByRevisionIdIn(any())).thenReturn(List.of(selectedCopy, otherCopy));
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(first, second));
         when(content.hydrate(any(), any())).thenReturn(mock(SpellContent.class));
@@ -64,7 +65,7 @@ class SpellCatalogQueriesTest {
     void oversizedPageIndexReturnsEmptyPageWithoutIntegerOverflow() {
         var owner = owner("alpha");
         var revision = revision(owner, 1);
-        when(revisions.findByStateNot("DISCARDED")).thenReturn(List.of(revision));
+        when(revisions.findByStateNot(RevisionState.DISCARDED)).thenReturn(List.of(revision));
         when(translations.findByRevisionIdIn(any())).thenReturn(List.of());
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(owner));
 
@@ -87,7 +88,7 @@ class SpellCatalogQueriesTest {
     void historicalScopeOmitsUnknownPatchObservationsUntilExplicitlyRequested() {
         var owner = owner("baseline");
         var revision = revision(owner, 1);
-        revision.setState("PUBLISHED");
+        revision.setState(RevisionState.PUBLISHED);
         var season = UUID.randomUUID();
         var context = mock(GameplayContext.class);
         when(context.rulesetId()).thenReturn(rulesetId);
@@ -123,7 +124,7 @@ class SpellCatalogQueriesTest {
         revision.setOwnerId(owner.getId());
         revision.setRulesetId(rulesetId);
         revision.setRevisionNo(number);
-        revision.setState("DRAFT");
+        revision.setState(RevisionState.DRAFT);
         revision.setCause("DATA_BASELINE");
         return revision;
     }

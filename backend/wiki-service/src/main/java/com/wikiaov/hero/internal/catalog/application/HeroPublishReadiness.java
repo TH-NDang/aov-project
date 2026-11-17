@@ -18,6 +18,7 @@ import com.wikiaov.hero.internal.stats.persistence.HeroStatSnapshots;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.platform.RevisionState;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -49,7 +50,7 @@ public class HeroPublishReadiness {
 
         // The store orders each hero's revisions from newest to oldest; the newest one names the hero in the list.
         var revisions = store.revisions(heroes.stream().map(HeroIdentity::getId).toList()).stream()
-                .filter(revision -> !revision.state().equals("DISCARDED"))
+                .filter(revision -> revision.state() != RevisionState.DISCARDED)
                 .collect(Collectors.groupingBy(HeroRevisionView::heroId));
         var drafts = revisions.values().stream().flatMap(List::stream).filter(HeroPublishReadiness::isDraft).toList();
         var newest = revisions.values().stream().map(List::getFirst).toList();
@@ -113,7 +114,7 @@ public class HeroPublishReadiness {
     }
 
     private static boolean isDraft(HeroRevisionView revision) {
-        return revision.state().equals("DRAFT");
+        return revision.state() == RevisionState.DRAFT;
     }
 
     private static List<UUID> sectionIds(List<HeroRevisionView> revisions, HeroSection section) {

@@ -2,6 +2,7 @@ package com.wikiaov.hero.internal.application.response;
 
 import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.*;
 
@@ -10,7 +11,7 @@ public record HeroRevisionView(
         UUID heroId,
         UUID rulesetId,
         long revisionNo,
-        String state,
+        RevisionState state,
         long version,
         Long publicationSequence,
         Instant publishedAt,

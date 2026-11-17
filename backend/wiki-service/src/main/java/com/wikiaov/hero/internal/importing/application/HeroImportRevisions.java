@@ -11,6 +11,7 @@ import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.patch.AuthoringContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.util.*;
 
 /** Chooses the historical snapshot and the draft appropriate to an import mode. */
@@ -25,7 +26,7 @@ final class HeroImportRevisions {
 
     HeroRevisionView selectSnapshot(UUID heroId, HeroImportRequest input, AuthoringContext target) {
         var revisions = activeRevisions(heroId, target.rulesetId());
-        var draft = revisions.stream().filter(r -> r.state().equals("DRAFT")).findFirst();
+        var draft = revisions.stream().filter(r -> r.state() == RevisionState.DRAFT).findFirst();
         if (draft.isPresent())
             return requireMatchingDraft(draft.get(), input.mode(), target.patchVariantId());
         var exact = latestSnapshotAt(revisions, target.patchVariantId());
@@ -41,7 +42,7 @@ final class HeroImportRevisions {
 
     private List<HeroRevisionView> activeRevisions(UUID heroId, UUID rulesetId) {
         return authoring.revisions(heroId).stream()
-                .filter(r -> r.rulesetId().equals(rulesetId) && !r.state().equals("DISCARDED")).toList();
+                .filter(r -> r.rulesetId().equals(rulesetId) && r.state() != RevisionState.DISCARDED).toList();
     }
 
     private HeroRevisionView requireMatchingDraft(HeroRevisionView draft, Mode mode, UUID patchVariantId) {
@@ -82,7 +83,7 @@ final class HeroImportRevisions {
             return authoring.baseline(plan.heroId(), input.contextId(), input.locale(),
                     (String) plan.after().get("name"));
         var draft = authoring.read(plan.heroId(), plan.revisionId());
-        if (draft.state().equals("DRAFT"))
+        if (draft.state() == RevisionState.DRAFT)
             return draft;
         return authoring.fork(plan.heroId(), new HeroCommands.Fork(input.rulesetId(), draft.id(),
                 cause(input.mode()), contexts.authoringContext(input.contextId()).patchVariantId(),

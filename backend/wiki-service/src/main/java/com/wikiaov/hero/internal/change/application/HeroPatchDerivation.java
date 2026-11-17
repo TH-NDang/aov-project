@@ -20,6 +20,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -70,7 +71,7 @@ public class HeroPatchDerivation {
     private static Anchoring selectedAnchor(UUID heroId, UUID revisionId, List<HeroRevisionView> revisions,
             PatchVariantReference variant, Map<UUID, Long> ordinals) {
         var revision = revisions.stream().filter(candidate -> candidate.id().equals(revisionId)
-                && candidate.heroId().equals(heroId) && candidate.state().equals("PUBLISHED")
+                && candidate.heroId().equals(heroId) && candidate.state() == RevisionState.PUBLISHED
                 && candidate.rulesetId().equals(variant.rulesetId())
                 && candidate.effectiveFromPatchVariantId() != null
                 && ordinals.containsKey(candidate.effectiveFromPatchVariantId())).findFirst()
@@ -88,7 +89,7 @@ public class HeroPatchDerivation {
     private static Anchoring anchor(List<HeroRevisionView> revisions, PatchVariantReference variant,
             Map<UUID, Long> ordinals) {
         long target = variant.rulesetOrdinal();
-        var published = revisions.stream().filter(revision -> revision.state().equals("PUBLISHED")
+        var published = revisions.stream().filter(revision -> revision.state() == RevisionState.PUBLISHED
                 && revision.rulesetId().equals(variant.rulesetId())).toList();
 
         var before = published.stream().filter(revision -> ordinal(revision, ordinals) <= target)

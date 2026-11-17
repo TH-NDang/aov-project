@@ -17,9 +17,9 @@ public interface HeroReferenceProjectionRepository
             from HeroIdentity h join HeroRevision r on r.heroId = h.id
             join ProfileTranslationRow t on t.profileRevisionId = r.profileRevisionId
             left join MediaBindingRow m on m.mediaBindingRevisionId = r.mediaBindingRevisionId and m.mediaRole = 'HEAD'
-            where r.rulesetId = :rulesetId and r.state <> 'DISCARDED' and not exists (
+            where r.rulesetId = :rulesetId and r.state <> com.wikiaov.platform.RevisionState.DISCARDED and not exists (
                 select n.id from HeroRevision n where n.heroId = r.heroId and n.rulesetId = r.rulesetId
-                and n.state <> 'DISCARDED' and n.revisionNo > r.revisionNo)
+                and n.state <> com.wikiaov.platform.RevisionState.DISCARDED and n.revisionNo > r.revisionNo)
             order by h.code, t.locale
             """)
     List<HeroReferenceProjection> findAuthoringReferences(@Param("rulesetId") UUID rulesetId);

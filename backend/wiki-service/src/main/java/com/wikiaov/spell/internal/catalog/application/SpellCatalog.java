@@ -11,6 +11,7 @@ import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.SpellChangeQueries;
 import com.wikiaov.spell.internal.application.SpellCommands.Create;
 import com.wikiaov.spell.internal.application.SpellCommands.Fork;
@@ -179,7 +180,7 @@ public class SpellCatalog implements SpellChangeQueries {
         var owner = lockIdentity(id);
         var revision = requireEditableDraft(id, revisionId, input.expectedVersion());
 
-        revision.setState("DISCARDED");
+        revision.setState(RevisionState.DISCARDED);
         advanceVersion(revision);
         recordAuditEvent("DRAFT_DISCARDED", owner, revision, input.changeNote());
 
@@ -225,7 +226,7 @@ public class SpellCatalog implements SpellChangeQueries {
     }
 
     private void requireForkSource(SpellRevision source, Fork input) {
-        if (!source.getState().equals("PUBLISHED") || !source.getRulesetId().equals(input.rulesetId()))
+        if (source.getState() != RevisionState.PUBLISHED || !source.getRulesetId().equals(input.rulesetId()))
             fail("The source must be published in the selected ruleset.");
         if (!Set.of("GAME_PATCH", "CONTENT_CORRECTION", "TRANSLATION_UPDATE").contains(input.cause()))
             fail("Invalid revision cause.");
@@ -278,7 +279,7 @@ public class SpellCatalog implements SpellChangeQueries {
 
     private SpellRevision requireEditableDraft(UUID id, UUID revisionId, long expected) {
         var revision = queries.revision(id, revisionId);
-        if (!revision.getState().equals("DRAFT"))
+        if (revision.getState() != RevisionState.DRAFT)
             conflict("Only drafts can be edited.");
         if (revision.getVersion() != expected)
             throw new ApiException(SpellErrorCode.SPELL_CONFLICT, "The draft has changed.",
@@ -289,7 +290,8 @@ public class SpellCatalog implements SpellChangeQueries {
     private SpellRevision newDraft(SpellIdentity owner, UUID ruleset, UUID source, String cause, UUID effective) {
         var history = revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId());
         if (history.stream()
-                .anyMatch(revision -> revision.getRulesetId().equals(ruleset) && revision.getState().equals("DRAFT")))
+                .anyMatch(revision -> revision.getRulesetId().equals(ruleset)
+                        && revision.getState() == RevisionState.DRAFT))
             conflict("A draft already exists for the ruleset.");
 
         var actor = actors.require();
@@ -299,7 +301,7 @@ public class SpellCatalog implements SpellChangeQueries {
         revision.setRulesetId(ruleset);
         revision.setRevisionNo(history.stream().filter(v -> v.getRulesetId().equals(ruleset))
                 .mapToLong(SpellRevision::getRevisionNo).max().orElse(0) + 1);
-        revision.setState("DRAFT");
+        revision.setState(RevisionState.DRAFT);
         revision.setVersion(1);
         revision.setCause(cause);
         revision.setSourceRevisionId(source);
@@ -318,7 +320,7 @@ public class SpellCatalog implements SpellChangeQueries {
                 revision.getEffectiveFromPatchVariantId());
         if (baseline && !revision.getCause().equals("DATA_BASELINE")) {
             var source = queries.revision(revision.getOwnerId(), revision.getSourceRevisionId());
-            if (!source.getState().equals("PUBLISHED") || !source.getRulesetId().equals(revision.getRulesetId())
+            if (source.getState() != RevisionState.PUBLISHED || !source.getRulesetId().equals(revision.getRulesetId())
                     || !CatalogObservation.isUnscopedBaseline(source.getCause(), source.getSourceRevisionId(),
                             source.getEffectiveFromPatchVariantId()))
                 fail("The source must be a published baseline in the selected ruleset.");
@@ -382,7 +384,8 @@ public class SpellCatalog implements SpellChangeQueries {
         var owner = lockIdentity(id);
         var snapshot = queries.revision(id, input.revisionId());
         var content = snapshot.getGameplay();
-        if (!snapshot.getState().equals("PUBLISHED") || !content.legacy() || !content.availability().equals("REMOVED"))
+        if (snapshot.getState() != RevisionState.PUBLISHED || !content.legacy()
+                || !content.availability().equals("REMOVED"))
             fail("Removal evidence requires a published legacy spell marked as removed.");
         requireObservationContext(snapshot.getRulesetId(), input.patchVariantId(), true);
         requireEvidenceUrl(input.sourceUrl());
@@ -432,7 +435,7 @@ public class SpellCatalog implements SpellChangeQueries {
                 .filter(v -> v.getRulesetId().equals(revision.getRulesetId()))
                 .map(SpellRevision::getPublicationSequence).filter(Objects::nonNull).mapToLong(Long::longValue).max()
                 .orElse(0) + 1);
-        revision.setState("PUBLISHED");
+        revision.setState(RevisionState.PUBLISHED);
         revision.setPublishedAt(clock.instant());
         advanceVersion(revision);
         if (revision.getEffectiveFromPatchVariantId() != null

@@ -15,6 +15,7 @@ import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,7 +41,7 @@ class ItemCatalogWorkflowTest {
         var revision = new ItemRevision();
         revision.setId(revisionId);
         revision.setOwnerId(id);
-        revision.setState("DRAFT");
+        revision.setState(RevisionState.DRAFT);
         revision.setVersion(2);
         when(recipeLock.lockGraph()).thenReturn(Optional.of(new ItemRecipeLock()));
         when(identities.lockById(id)).thenReturn(Optional.of(owner));

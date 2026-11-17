@@ -4,7 +4,7 @@ import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinTranslationRow;
-
+import com.wikiaov.platform.RevisionState;
 import jakarta.persistence.criteria.*;
 import java.util.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,7 +31,7 @@ public final class HeroMediaSpecifications {
             CriteriaBuilder cb, UUID ruleset, Map<UUID, Long> ordinals, String q) {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(hero.get("id"), revision.get("heroId")));
-        predicates.add(cb.notEqual(revision.get("state"), "DISCARDED"));
+        predicates.add(cb.notEqual(revision.get("state"), RevisionState.DISCARDED));
         if (ruleset != null)
             predicates.add(cb.equal(revision.get("rulesetId"), ruleset));
         var newer = query.subquery(UUID.class);
@@ -40,7 +40,7 @@ public final class HeroMediaSpecifications {
         var otherRank = ordinal(other, ordinals, cb);
         newer.select(other.get("id")).where(cb.equal(other.get("heroId"), revision.get("heroId")),
                 cb.equal(other.get("rulesetId"), revision.get("rulesetId")),
-                cb.notEqual(other.get("state"), "DISCARDED"),
+                cb.notEqual(other.get("state"), RevisionState.DISCARDED),
                 cb.or(cb.greaterThan(otherRank, rank), cb.and(cb.equal(otherRank, rank),
                         cb.greaterThan(other.<Long>get("revisionNo"), revision.get("revisionNo")))));
         predicates.add(cb.not(cb.exists(newer)));

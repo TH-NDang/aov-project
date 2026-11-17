@@ -7,6 +7,7 @@ import com.wikiaov.arcana.internal.catalog.persistence.entity.ArcanaRevision;
 import com.wikiaov.build.BuildReference;
 import com.wikiaov.build.BuildReferenceKind;
 import com.wikiaov.build.BuildReferenceProvider;
+import com.wikiaov.platform.RevisionState;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +50,8 @@ public class ArcanaBuildReferences implements BuildReferenceProvider {
         if (found.isEmpty())
             return List.of();
         Map<UUID, ArcanaRevision> latest = revisions
-                .findByOwnerIdInAndState(found.stream().map(ArcanaIdentity::getId).toList(), "PUBLISHED").stream()
+                .findByOwnerIdInAndState(found.stream().map(ArcanaIdentity::getId).toList(), RevisionState.PUBLISHED)
+                .stream()
                 .collect(Collectors.toMap(ArcanaRevision::getOwnerId, revision -> revision,
                         (a, b) -> sequence(a) >= sequence(b) ? a : b));
         return found.stream().filter(identity -> latest.containsKey(identity.getId()))

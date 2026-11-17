@@ -14,6 +14,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.*;
 import com.wikiaov.platform.CatalogChanges.*;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,7 +59,7 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
                 ? changes.findByRulesetId(rulesetId)
                 : changes.findByRulesetIdAndPatchVariantId(rulesetId, patchVariantId);
         var snapshots = patchVariantId == null
-                ? revisions.findByRulesetIdAndState(rulesetId, "PUBLISHED")
+                ? revisions.findByRulesetIdAndState(rulesetId, RevisionState.PUBLISHED)
                 : revisions.publishedForChanges(rulesetId, patchVariantId);
         if (snapshots.isEmpty())
             return List.of();
@@ -125,7 +126,7 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
                 () -> new ApiException(ArcanaErrorCode.ARCANA_INVALID_CONTENT, "The target revision was not found."));
         var patch = contexts.variant(input.patchVariantId());
         boolean removed = input.kinds().contains(Kind.REMOVED);
-        if (!target.getState().equals("PUBLISHED") || !patch.published()
+        if (target.getState() != RevisionState.PUBLISHED || !patch.published()
                 || !target.getRulesetId().equals(patch.rulesetId())
                 || target.getEffectiveFromPatchVariantId() == null
                 || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(target.getCause()))
@@ -149,7 +150,7 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
                     .orElseThrow(() -> new ApiException(ArcanaErrorCode.ARCANA_INVALID_CONTENT,
                             "The source revision was not found."));
             if (!from.getOwnerId().equals(ownerId) || !from.getRulesetId().equals(target.getRulesetId())
-                    || !from.getState().equals("PUBLISHED") || from.getEffectiveFromPatchVariantId() == null
+                    || from.getState() != RevisionState.PUBLISHED || from.getEffectiveFromPatchVariantId() == null
                     || contexts.variant(from.getEffectiveFromPatchVariantId()).rulesetOrdinal() >= patch
                             .rulesetOrdinal())
                 invalid("The source must be an earlier published snapshot of the same entry and ruleset.");

@@ -2,6 +2,7 @@ package com.wikiaov.platform.internal.domain;
 
 import com.wikiaov.platform.CatalogSnapshots.Change;
 import com.wikiaov.platform.CatalogSnapshots.Snapshot;
+import com.wikiaov.platform.RevisionState;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +44,7 @@ public final class CatalogSnapshotSelector {
                         (first, second) -> ordinal.applyAsLong(first.patchVariantId()) >= ordinal
                                 .applyAsLong(second.patchVariantId()) ? first : second));
         return candidates.stream()
-                .filter(candidate -> candidate.state().equals("PUBLISHED")
+                .filter(candidate -> candidate.state() == RevisionState.PUBLISHED
                         && (candidate.patchVariantId() == null
                                 ? includeUnscoped && !selectedPatches.isEmpty()
                                 : applicablePatches.contains(candidate.patchVariantId())))

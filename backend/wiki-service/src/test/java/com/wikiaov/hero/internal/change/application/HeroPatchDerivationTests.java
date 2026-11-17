@@ -18,6 +18,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
@@ -42,8 +43,8 @@ class HeroPatchDerivationTests {
 
     @BeforeEach
     void setUp() {
-        old = revision(hero, ruleset, "PUBLISHED", past.id(), 1);
-        baseline = revision(hero, ruleset, "PUBLISHED", current.id(), 2);
+        old = revision(hero, ruleset, RevisionState.PUBLISHED, past.id(), 1);
+        baseline = revision(hero, ruleset, RevisionState.PUBLISHED, current.id(), 2);
         when(store.revisions(hero)).thenReturn(List.of(old, baseline));
         when(contexts.rulesetVariants(ruleset)).thenReturn(List.of(past, middle, current));
         for (var variant : List.of(past, middle, current))
@@ -134,12 +135,12 @@ class HeroPatchDerivationTests {
     @Test
     void refusesDraftDiscardedForeignAndUndatedAnchorsInsteadOfFallingBack() {
         var invalid = List.of(
-                revision(hero, ruleset, "DRAFT", current.id(), 3),
-                revision(hero, ruleset, "DISCARDED", current.id(), 4),
-                revision(UUID.randomUUID(), ruleset, "PUBLISHED", current.id(), 5),
-                revision(hero, UUID.randomUUID(), "PUBLISHED", current.id(), 6),
-                revision(hero, ruleset, "PUBLISHED", null, 7),
-                revision(hero, ruleset, "PUBLISHED", UUID.randomUUID(), 8));
+                revision(hero, ruleset, RevisionState.DRAFT, current.id(), 3),
+                revision(hero, ruleset, RevisionState.DISCARDED, current.id(), 4),
+                revision(UUID.randomUUID(), ruleset, RevisionState.PUBLISHED, current.id(), 5),
+                revision(hero, UUID.randomUUID(), RevisionState.PUBLISHED, current.id(), 6),
+                revision(hero, ruleset, RevisionState.PUBLISHED, null, 7),
+                revision(hero, ruleset, RevisionState.PUBLISHED, UUID.randomUUID(), 8));
         var revisions = new ArrayList<>(invalid);
         revisions.add(old);
         revisions.add(baseline);
@@ -169,7 +170,7 @@ class HeroPatchDerivationTests {
                 true);
     }
 
-    private HeroRevisionView revision(UUID heroId, UUID rulesetId, String state, UUID patch, long number) {
+    private HeroRevisionView revision(UUID heroId, UUID rulesetId, RevisionState state, UUID patch, long number) {
         return new HeroRevisionView(UUID.randomUUID(), heroId, rulesetId, number, state, 1, number, Instant.now(),
                 Cause.DATA_BASELINE, null, patch,
                 Map.of(HeroSection.COMBAT_STATS, UUID.randomUUID(), HeroSection.PROFILE, UUID.randomUUID()));

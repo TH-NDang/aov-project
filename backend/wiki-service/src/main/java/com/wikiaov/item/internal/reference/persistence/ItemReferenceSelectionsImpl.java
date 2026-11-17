@@ -3,6 +3,7 @@ package com.wikiaov.item.internal.reference.persistence;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemIdentity;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemRevision;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemTranslation;
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.terminology.AdminReferenceProvider.Row;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -37,8 +38,8 @@ public class ItemReferenceSelectionsImpl implements ItemReferenceSelections {
         predicates.add(builder.equal(translation.get("revisionId"), revision.get("id")));
         predicates.add(builder.equal(revision.get("rulesetId"), rulesetId));
         predicates.add(published
-                ? builder.equal(revision.get("state"), "PUBLISHED")
-                : builder.notEqual(revision.get("state"), "DISCARDED"));
+                ? builder.equal(revision.get("state"), RevisionState.PUBLISHED)
+                : builder.notEqual(revision.get("state"), RevisionState.DISCARDED));
         if (published) {
             predicates.add(builder.le(rank, cutoff));
             if (!allowUnscoped)
@@ -59,8 +60,8 @@ public class ItemReferenceSelectionsImpl implements ItemReferenceSelections {
         newerPredicates.add(builder.equal(candidate.get("ownerId"), revision.get("ownerId")));
         newerPredicates.add(builder.equal(candidate.get("rulesetId"), revision.get("rulesetId")));
         newerPredicates.add(published
-                ? builder.equal(candidate.get("state"), "PUBLISHED")
-                : builder.notEqual(candidate.get("state"), "DISCARDED"));
+                ? builder.equal(candidate.get("state"), RevisionState.PUBLISHED)
+                : builder.notEqual(candidate.get("state"), RevisionState.DISCARDED));
         if (published) {
             newerPredicates.add(builder.le(newerRank, cutoff));
             if (!allowUnscoped)

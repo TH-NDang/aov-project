@@ -7,6 +7,7 @@ import com.wikiaov.enchantment.internal.catalog.persistence.EnchantmentIdentityR
 import com.wikiaov.enchantment.internal.catalog.persistence.EnchantmentRevisionRepository;
 import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentIdentity;
 import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentRevision;
+import com.wikiaov.platform.RevisionState;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +50,9 @@ public class EnchantmentBuildReferences implements BuildReferenceProvider {
         if (found.isEmpty())
             return List.of();
         Map<UUID, EnchantmentRevision> latest = revisions
-                .findByOwnerIdInAndState(found.stream().map(EnchantmentIdentity::getId).toList(), "PUBLISHED").stream()
+                .findByOwnerIdInAndState(found.stream().map(EnchantmentIdentity::getId).toList(),
+                        RevisionState.PUBLISHED)
+                .stream()
                 .collect(Collectors.toMap(EnchantmentRevision::getOwnerId, revision -> revision,
                         (a, b) -> sequence(a) >= sequence(b) ? a : b));
         return found.stream().filter(identity -> latest.containsKey(identity.getId()))

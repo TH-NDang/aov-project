@@ -15,6 +15,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
 import com.wikiaov.media.*;
 import com.wikiaov.patch.*;
+import com.wikiaov.platform.RevisionState;
 import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -169,7 +170,7 @@ class HeroQueriesTest {
     private void observeAt(CatalogHero hero, UUID variantId) {
         var revision = store.revisions(hero.identity().getId()).getFirst();
         when(store.revisions(hero.identity().getId())).thenReturn(List.of(new HeroRevisionView(revision.id(),
-                revision.heroId(), revision.rulesetId(), 1, "PUBLISHED", 1, 1L, at.minusSeconds(60),
+                revision.heroId(), revision.rulesetId(), 1, RevisionState.PUBLISHED, 1, 1L, at.minusSeconds(60),
                 Cause.DATA_BASELINE, null, variantId, revision.sections())));
     }
 
@@ -184,7 +185,7 @@ class HeroQueriesTest {
         UUID profileId = UUID.randomUUID();
         UUID bindingsId = UUID.randomUUID();
         var revision = new HeroRevisionView(UUID.randomUUID(), identity.getId(), context.rulesetId(), 1,
-                "PUBLISHED", 1, 1L, at.minusSeconds(60), Cause.DATA_BASELINE, null, null,
+                RevisionState.PUBLISHED, 1, 1L, at.minusSeconds(60), Cause.DATA_BASELINE, null, null,
                 Map.of(HeroSection.PROFILE, profileId, HeroSection.MEDIA_BINDINGS, bindingsId));
         when(store.revisions(identity.getId())).thenReturn(List.of(revision));
         when(sections.content(HeroSection.PROFILE, profileId)).thenReturn(new Profile(

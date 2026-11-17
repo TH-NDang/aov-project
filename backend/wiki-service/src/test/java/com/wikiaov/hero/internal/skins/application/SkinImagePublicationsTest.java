@@ -17,6 +17,7 @@ import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.*;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,8 +38,8 @@ class SkinImagePublicationsTest {
     private final UUID rulesetId = UUID.randomUUID();
     private final GameplayContext context = new GameplayContext(UUID.randomUUID(), "VN", rulesetId, "aov-standard",
             UUID.randomUUID(), "2026-10-15", UUID.randomUUID(), 2, now.minusSeconds(100));
-    private final HeroRevisionView source = revision("PUBLISHED", 4, 2L);
-    private final HeroRevisionView draft = revision("DRAFT", 9, null);
+    private final HeroRevisionView source = revision(RevisionState.PUBLISHED, 4, 2L);
+    private final HeroRevisionView draft = revision(RevisionState.DRAFT, 9, null);
     private final AtomicReference<HeroRevision> inserted = new AtomicReference<>();
     private final SkinImagePublications publications = new SkinImagePublications(store, sections, queries, contexts,
             validation, actors, audit, Clock.fixed(now, ZoneOffset.UTC));
@@ -94,7 +95,7 @@ class SkinImagePublicationsTest {
             assertThat(skin.portraitAssetId()).isEqualTo(portrait);
             assertThat(skin.images().get(MediaRole.SPLASH)).containsExactly(new ImageOption(oldArt, null));
         });
-        assertThat(result.state()).isEqualTo("PUBLISHED");
+        assertThat(result.state()).isEqualTo(RevisionState.PUBLISHED);
         assertThat(result.cause()).isEqualTo(Cause.VISUAL_UPDATE);
         assertThat(result.sourceRevisionId()).isEqualTo(source.id());
         assertThat(result.effectiveFromPatchVariantId()).isEqualTo(source.effectiveFromPatchVariantId());
@@ -104,7 +105,7 @@ class SkinImagePublicationsTest {
         for (var section : HeroSection.values())
             if (section != HeroSection.SKINS)
                 assertThat(result.sections().get(section)).isEqualTo(source.sections().get(section));
-        assertThat(draft.state()).isEqualTo("DRAFT");
+        assertThat(draft.state()).isEqualTo(RevisionState.DRAFT);
         assertThat(draft.version()).isEqualTo(9);
         verify(store, never()).editableEntity(any());
         verify(sections).publish(HeroSection.SKINS, skinsId, heroId);
@@ -150,7 +151,7 @@ class SkinImagePublicationsTest {
 
     @Test
     void rejectsWrongRulesetOrNonDraftImageSources() {
-        var other = new HeroRevisionView(draft.id(), heroId, UUID.randomUUID(), 9, "DRAFT", 9,
+        var other = new HeroRevisionView(draft.id(), heroId, UUID.randomUUID(), 9, RevisionState.DRAFT, 9,
                 null, null, Cause.VISUAL_UPDATE, source.id(), context.patchVariantId(), draft.sections());
         when(store.revision(heroId, draft.id())).thenReturn(other);
 
@@ -192,7 +193,7 @@ class SkinImagePublicationsTest {
         when(sections.content(HeroSection.SKINS, draft.sections().get(HeroSection.SKINS))).thenReturn(collected);
     }
 
-    private HeroRevisionView revision(String state, long revisionNo, Long publicationSequence) {
+    private HeroRevisionView revision(RevisionState state, long revisionNo, Long publicationSequence) {
         Map<HeroSection, UUID> refs = new EnumMap<>(HeroSection.class);
         for (var section : HeroSection.values())
             refs.put(section, UUID.randomUUID());

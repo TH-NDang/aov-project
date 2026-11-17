@@ -1,5 +1,6 @@
 package com.wikiaov.spell.internal.reference.persistence;
 
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellIdentity;
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellRevision;
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellTranslation;
@@ -37,8 +38,8 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
         predicates.add(builder.equal(translation.get("revisionId"), revision.get("id")));
         predicates.add(builder.equal(revision.get("rulesetId"), rulesetId));
         predicates.add(published
-                ? builder.equal(revision.get("state"), "PUBLISHED")
-                : builder.notEqual(revision.get("state"), "DISCARDED"));
+                ? builder.equal(revision.get("state"), RevisionState.PUBLISHED)
+                : builder.notEqual(revision.get("state"), RevisionState.DISCARDED));
         predicates.add(builder.equal(translation.get("targetKey"), ""));
         if (published) {
             predicates.add(builder.le(rank, cutoff));
@@ -60,8 +61,8 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
         newerPredicates.add(builder.equal(candidate.get("ownerId"), revision.get("ownerId")));
         newerPredicates.add(builder.equal(candidate.get("rulesetId"), revision.get("rulesetId")));
         newerPredicates.add(published
-                ? builder.equal(candidate.get("state"), "PUBLISHED")
-                : builder.notEqual(candidate.get("state"), "DISCARDED"));
+                ? builder.equal(candidate.get("state"), RevisionState.PUBLISHED)
+                : builder.notEqual(candidate.get("state"), RevisionState.DISCARDED));
         if (published) {
             newerPredicates.add(builder.le(newerRank, cutoff));
             if (!allowUnscoped)

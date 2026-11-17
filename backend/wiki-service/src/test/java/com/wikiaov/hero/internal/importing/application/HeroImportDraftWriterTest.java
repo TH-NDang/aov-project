@@ -13,6 +13,7 @@ import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.platform.RevisionState;
 import java.math.BigDecimal;
 import java.util.*;
 import org.junit.jupiter.api.Test;
@@ -112,7 +113,7 @@ class HeroImportDraftWriterTest {
     }
 
     private HeroRevisionView revision(long version) {
-        return new HeroRevisionView(revisionId, heroId, rulesetId, 1L, "DRAFT", version, null, null,
+        return new HeroRevisionView(revisionId, heroId, rulesetId, 1L, RevisionState.DRAFT, version, null, null,
                 Cause.IMPORT_CORRECTION, null, UUID.randomUUID(), Map.of());
     }
 

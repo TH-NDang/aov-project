@@ -18,7 +18,7 @@ public interface ArcanaIdentityRepository extends JpaRepository<ArcanaIdentity, 
             select distinct new com.wikiaov.video.VideoSubjectName(
                 e.id, e.code, t.locale, t.name, coalesce(r.revisionNo, 0L))
             from ArcanaIdentity e
-            left join ArcanaRevision r on r.ownerId = e.id and r.state <> 'DISCARDED'
+            left join ArcanaRevision r on r.ownerId = e.id and r.state <> com.wikiaov.platform.RevisionState.DISCARDED
             left join ArcanaTranslation t on t.revisionId = r.id
             """)
     java.util.List<com.wikiaov.video.VideoSubjectName> videoSubjectNames();

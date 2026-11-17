@@ -7,6 +7,7 @@ import com.wikiaov.item.internal.catalog.persistence.ItemIdentityRepository;
 import com.wikiaov.item.internal.catalog.persistence.ItemRevisionRepository;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemIdentity;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemRevision;
+import com.wikiaov.platform.RevisionState;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +51,8 @@ public class ItemBuildReferences implements BuildReferenceProvider {
         if (found.isEmpty())
             return List.of();
         Set<UUID> published = revisions
-                .findByOwnerIdInAndState(found.stream().map(ItemIdentity::getId).toList(), "PUBLISHED").stream()
+                .findByOwnerIdInAndState(found.stream().map(ItemIdentity::getId).toList(), RevisionState.PUBLISHED)
+                .stream()
                 .map(ItemRevision::getOwnerId).collect(Collectors.toSet());
         return found.stream().filter(identity -> published.contains(identity.getId())).toList();
     }

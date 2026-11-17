@@ -7,6 +7,7 @@ import com.wikiaov.gamemode.internal.domain.RevisionRecord;
 import com.wikiaov.gamemode.internal.lineup.domain.LineupInsights;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaCredit;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ public final class GameModeViews {
     public record Revision(
             UUID id,
             long revisionNo,
-            String state,
+            RevisionState state,
             long version,
             UUID sourceRevisionId,
             String changeNote,

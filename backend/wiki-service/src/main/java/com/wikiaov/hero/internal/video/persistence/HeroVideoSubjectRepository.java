@@ -18,7 +18,7 @@ public interface HeroVideoSubjectRepository extends Repository<HeroIdentity, UUI
             select distinct new com.wikiaov.video.VideoSubjectName(
                 h.id, h.code, t.locale, t.name, coalesce(r.revisionNo, 0L))
             from HeroIdentity h
-            left join HeroRevision r on r.heroId = h.id and r.state <> 'DISCARDED'
+            left join HeroRevision r on r.heroId = h.id and r.state <> com.wikiaov.platform.RevisionState.DISCARDED
             left join ProfileTranslationRow t on t.profileRevisionId = r.profileRevisionId
             """)
     List<VideoSubjectName> heroNames();
@@ -28,7 +28,7 @@ public interface HeroVideoSubjectRepository extends Repository<HeroIdentity, UUI
                 h.id, s.skillKey, h.code, t.locale, t.name, coalesce(r.revisionNo, 0L))
             from SkillIdentityRow s
             join HeroIdentity h on h.id = s.heroId
-            left join HeroRevision r on r.heroId = s.heroId and r.state <> 'DISCARDED'
+            left join HeroRevision r on r.heroId = s.heroId and r.state <> com.wikiaov.platform.RevisionState.DISCARDED
             left join SkillTranslationRow t on t.skillSetRevisionId = r.skillsRevisionId and t.skillKey = s.skillKey
             """)
     List<VideoSubjectName> skillNames();
@@ -38,7 +38,7 @@ public interface HeroVideoSubjectRepository extends Repository<HeroIdentity, UUI
                 h.id, s.skinKey, h.code, t.locale, t.name, coalesce(r.revisionNo, 0L))
             from SkinIdentityRow s
             join HeroIdentity h on h.id = s.heroId
-            left join HeroRevision r on r.heroId = s.heroId and r.state <> 'DISCARDED'
+            left join HeroRevision r on r.heroId = s.heroId and r.state <> com.wikiaov.platform.RevisionState.DISCARDED
             left join SkinTranslationRow t on t.skinSetRevisionId = r.skinsRevisionId and t.skinKey = s.skinKey
             """)
     List<VideoSubjectName> skinNames();

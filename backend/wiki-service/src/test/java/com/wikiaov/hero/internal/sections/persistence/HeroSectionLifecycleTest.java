@@ -7,6 +7,7 @@ import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
 import com.wikiaov.hero.internal.profile.persistence.ProfileRevisionRepository;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRevision;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.*;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ class HeroSectionLifecycleTest {
 
         assertThat(revision.getId()).isNotNull();
         assertThat(revision.getHeroId()).isEqualTo(heroId);
-        assertThat(revision.getState()).isEqualTo("DRAFT");
+        assertThat(revision.getState()).isEqualTo(RevisionState.DRAFT);
         assertThat(revision.getVersion()).isEqualTo(1);
         assertThat(revision.getCreatedAt()).isEqualTo(at);
         assertThat(revision.getCreatedByIssuer()).isEqualTo("issuer");
@@ -37,12 +38,12 @@ class HeroSectionLifecycleTest {
 
     @Test
     void publicationFlushesBeforeLockingAndAfterChangingTheLockedDraft() {
-        var revision = revision("DRAFT");
+        var revision = revision(RevisionState.DRAFT);
         when(profiles.lockById(revision.getId())).thenReturn(Optional.of(revision));
 
         lifecycle.publish(profiles, revision.getId(), revision.getHeroId());
 
-        assertThat(revision.getState()).isEqualTo("PUBLISHED");
+        assertThat(revision.getState()).isEqualTo(RevisionState.PUBLISHED);
         var order = inOrder(profiles);
         order.verify(profiles).flush();
         order.verify(profiles).lockById(revision.getId());
@@ -52,20 +53,20 @@ class HeroSectionLifecycleTest {
 
     @Test
     void publicationRejectsDiscardedOrForeignSectionsWithoutASecondFlush() {
-        for (var revision : List.of(revision("DISCARDED"), revision("DRAFT"))) {
+        for (var revision : List.of(revision(RevisionState.DISCARDED), revision(RevisionState.DRAFT))) {
             reset(profiles);
             when(profiles.lockById(revision.getId())).thenReturn(Optional.of(revision));
-            var owner = revision.getState().equals("DRAFT") ? UUID.randomUUID() : revision.getHeroId();
+            var owner = revision.getState() == RevisionState.DRAFT ? UUID.randomUUID() : revision.getHeroId();
 
             assertThatThrownBy(() -> lifecycle.publish(profiles, revision.getId(), owner))
                     .isInstanceOf(IllegalStateException.class).hasMessage("Invalid section ownership or lifecycle.");
 
             verify(profiles).flush();
-            assertThat(revision.getState()).isIn("DRAFT", "DISCARDED");
+            assertThat(revision.getState()).isIn(RevisionState.DRAFT, RevisionState.DISCARDED);
         }
     }
 
-    private static ProfileRevision revision(String state) {
+    private static ProfileRevision revision(RevisionState state) {
         var revision = new ProfileRevision();
         revision.setId(UUID.randomUUID());
         revision.setHeroId(UUID.randomUUID());

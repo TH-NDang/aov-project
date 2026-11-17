@@ -8,6 +8,7 @@ import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.util.*;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
@@ -42,12 +43,12 @@ public class HeroStore {
 
     public boolean publishedSectionExists(HeroSection section, UUID id) {
         return switch (section) {
-            case PROFILE -> revisions.existsByStateAndProfileRevisionId("PUBLISHED", id);
-            case OVERVIEW_RATINGS -> revisions.existsByStateAndOverviewRatingRevisionId("PUBLISHED", id);
-            case COMBAT_STATS -> revisions.existsByStateAndCombatStatsRevisionId("PUBLISHED", id);
-            case SKILLS -> revisions.existsByStateAndSkillsRevisionId("PUBLISHED", id);
-            case SKINS -> revisions.existsByStateAndSkinsRevisionId("PUBLISHED", id);
-            case MEDIA_BINDINGS -> revisions.existsByStateAndMediaBindingRevisionId("PUBLISHED", id);
+            case PROFILE -> revisions.existsByStateAndProfileRevisionId(RevisionState.PUBLISHED, id);
+            case OVERVIEW_RATINGS -> revisions.existsByStateAndOverviewRatingRevisionId(RevisionState.PUBLISHED, id);
+            case COMBAT_STATS -> revisions.existsByStateAndCombatStatsRevisionId(RevisionState.PUBLISHED, id);
+            case SKILLS -> revisions.existsByStateAndSkillsRevisionId(RevisionState.PUBLISHED, id);
+            case SKINS -> revisions.existsByStateAndSkinsRevisionId(RevisionState.PUBLISHED, id);
+            case MEDIA_BINDINGS -> revisions.existsByStateAndMediaBindingRevisionId(RevisionState.PUBLISHED, id);
         };
     }
 

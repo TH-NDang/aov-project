@@ -11,6 +11,7 @@ import com.wikiaov.platform.CatalogChanges;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogSnapshots;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.application.SpellErrorCode;
 import com.wikiaov.spell.internal.application.response.SpellRemovalView;
 import com.wikiaov.spell.internal.application.response.SpellView;
@@ -97,8 +98,8 @@ class SpellCatalogQueries {
 
     private List<CatalogSnapshots.Snapshot<SpellRevision>> activeSnapshots(UUID rulesetId, boolean draftsOnly) {
         var records = draftsOnly
-                ? revisions.findByRulesetIdAndState(rulesetId, "DRAFT")
-                : revisions.findByStateNot("DISCARDED");
+                ? revisions.findByRulesetIdAndState(rulesetId, RevisionState.DRAFT)
+                : revisions.findByStateNot(RevisionState.DISCARDED);
         return records.stream()
                 .filter(revision -> rulesetId == null || revision.getRulesetId().equals(rulesetId))
                 .map(revision -> new CatalogSnapshots.Snapshot<>(revision.getId(), revision.getOwnerId(),
@@ -193,7 +194,7 @@ class SpellCatalogQueries {
     List<MediaUsage> usages(UUID assetId) {
         var active = contexts.active(clock.instant());
         var found = revisions.findAll().stream()
-                .filter(revision -> !revision.getState().equals("DISCARDED")
+                .filter(revision -> revision.getState() != RevisionState.DISCARDED
                         && contentRules.assets(revision.getGameplay()).contains(assetId))
                 .toList();
         var names = usageNames(found);
@@ -207,7 +208,7 @@ class SpellCatalogQueries {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
 
         for (var revision : revisions.findAll()) {
-            var assets = revision.getState().equals("DISCARDED")
+            var assets = revision.getState() == RevisionState.DISCARDED
                     ? List.<UUID>of()
                     : contentRules.assets(revision.getGameplay());
             if (assets.isEmpty())
@@ -220,13 +221,13 @@ class SpellCatalogQueries {
     }
 
     private MediaUsage usage(SpellRevision revision, List<GameplayContext> active) {
-        boolean current = revision.getState().equals("PUBLISHED")
+        boolean current = revision.getState() == RevisionState.PUBLISHED
                 && active.stream().filter(c -> c.rulesetId().equals(revision.getRulesetId()))
                         .anyMatch(c -> current(revision.getOwnerId(), c).map(v -> v.getId().equals(revision.getId()))
                                 .orElse(false));
 
         return new MediaUsage("SPELL", "SPELL", revision.getOwnerId(), revision.getId(), "ICON",
-                revision.getState().equals("DRAFT")
+                revision.getState() == RevisionState.DRAFT
                         ? MediaUsageScope.DRAFT
                         : current ? MediaUsageScope.CURRENT : MediaUsageScope.HISTORICAL);
     }
@@ -289,7 +290,7 @@ class SpellCatalogQueries {
         if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED))
             return Optional.empty();
         return revisions.findByOwnerIdOrderByRevisionNoDesc(id).stream()
-                .filter(revision -> revision.getState().equals("PUBLISHED")
+                .filter(revision -> revision.getState() == RevisionState.PUBLISHED
                         && (revision.getEffectiveFromPatchVariantId() != null
                                 || CatalogObservation.isUnscopedBaseline(revision.getCause(),
                                         revision.getSourceRevisionId(), null)
@@ -304,7 +305,7 @@ class SpellCatalogQueries {
 
     SpellView latest(SpellIdentity owner, UUID rulesetId) {
         return revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId()).stream()
-                .filter(revision -> !revision.getState().equals("DISCARDED")
+                .filter(revision -> revision.getState() != RevisionState.DISCARDED
                         && (rulesetId == null || revision.getRulesetId().equals(rulesetId)))
                 .max(Comparator.<SpellRevision>comparingLong(this::patchOrdinal)
                         .thenComparingLong(SpellRevision::getRevisionNo))
@@ -342,7 +343,7 @@ class SpellCatalogQueries {
             return new PageSlice<>(List.of(), page, size, 0);
         var rows = identities.findAll(Sort.by("code")).stream()
                 .map(owner -> revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId()).stream()
-                        .filter(revision -> revision.getState().equals("PUBLISHED")
+                        .filter(revision -> revision.getState() == RevisionState.PUBLISHED
                                 && revision.getRulesetId().equals(context.rulesetId())
                                 && contentRules.archived(revision, revision.getGameplay()))
                         .max(Comparator.comparingLong(revision -> revision.getPublicationSequence()))

@@ -14,6 +14,7 @@ import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.*;
 import com.wikiaov.platform.*;
+import com.wikiaov.platform.RevisionState;
 import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -71,7 +72,7 @@ public class HeroQueries {
     private Optional<HeroRevisionView> select(List<HeroRevisionView> revisions, GameplayContext context, Instant at,
             boolean allowUnscoped, Map<UUID, Long> ordinals) {
         return revisions.stream()
-                .filter(r -> r.state().equals("PUBLISHED") && r.rulesetId().equals(context.rulesetId())
+                .filter(r -> r.state() == RevisionState.PUBLISHED && r.rulesetId().equals(context.rulesetId())
                         && !r.publishedAt().isAfter(at))
                 .filter(r -> allowUnscoped || r.effectiveFromPatchVariantId() != null)
                 .filter(r -> ordinal(r, ordinals) <= context.rulesetOrdinal())
@@ -109,7 +110,7 @@ public class HeroQueries {
     private Optional<HeroReadMoments.Choice<HeroRevisionView>> choose(UUID heroId, HeroReadMoments.Moment moment,
             Instant at) {
         var revisions = store.revisions(heroId).stream()
-                .filter(r -> r.state().equals("PUBLISHED") && r.rulesetId().equals(moment.context().rulesetId())
+                .filter(r -> r.state() == RevisionState.PUBLISHED && r.rulesetId().equals(moment.context().rulesetId())
                         && !r.publishedAt().isAfter(at))
                 .toList();
 

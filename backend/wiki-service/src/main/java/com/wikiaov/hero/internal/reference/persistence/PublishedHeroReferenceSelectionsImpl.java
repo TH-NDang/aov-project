@@ -5,6 +5,7 @@ import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
 import com.wikiaov.hero.internal.media.persistence.entity.MediaBindingRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
 import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.platform.RevisionState;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
@@ -39,7 +40,7 @@ public class PublishedHeroReferenceSelectionsImpl implements PublishedHeroRefere
         newer.select(candidate.get("id")).where(
                 builder.equal(candidate.get("heroId"), revision.get("heroId")),
                 builder.equal(candidate.get("rulesetId"), revision.get("rulesetId")),
-                builder.equal(candidate.get("state"), "PUBLISHED"),
+                builder.equal(candidate.get("state"), RevisionState.PUBLISHED),
                 builder.lessThanOrEqualTo(candidate.get("publishedAt"), at),
                 builder.le(newerRank, context.rulesetOrdinal()),
                 allowUnscoped ? builder.conjunction() : builder.isNotNull(candidate.get("effectiveFromPatchVariantId")),
@@ -58,7 +59,7 @@ public class PublishedHeroReferenceSelectionsImpl implements PublishedHeroRefere
                 .where(builder.equal(revision.get("heroId"), hero.get("id")),
                         builder.equal(translation.get("profileRevisionId"), revision.get("profileRevisionId")),
                         builder.equal(revision.get("rulesetId"), context.rulesetId()),
-                        builder.equal(revision.get("state"), "PUBLISHED"),
+                        builder.equal(revision.get("state"), RevisionState.PUBLISHED),
                         builder.lessThanOrEqualTo(revision.get("publishedAt"), at),
                         builder.le(rank, context.rulesetOrdinal()),
                         allowUnscoped

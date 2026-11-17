@@ -11,6 +11,7 @@ import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceReposit
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillSnapshotRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillStateIconRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTranslationRow;
+import com.wikiaov.platform.RevisionState;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -77,8 +78,8 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
         predicates.add(builder.equal(skill.get("skillSetRevisionId"), revision.get("skillsRevisionId")));
         predicates.add(builder.equal(revision.get("rulesetId"), criteria.rulesetId()));
         predicates.add(criteria.published()
-                ? builder.equal(revision.get("state"), "PUBLISHED")
-                : builder.notEqual(revision.get("state"), "DISCARDED"));
+                ? builder.equal(revision.get("state"), RevisionState.PUBLISHED)
+                : builder.notEqual(revision.get("state"), RevisionState.DISCARDED));
 
         var newer = query.subquery(UUID.class);
         var candidate = newer.from(HeroRevision.class);
@@ -86,8 +87,8 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
         newerPredicates.add(builder.equal(candidate.get("heroId"), revision.get("heroId")));
         newerPredicates.add(builder.equal(candidate.get("rulesetId"), revision.get("rulesetId")));
         newerPredicates.add(criteria.published()
-                ? builder.equal(candidate.get("state"), "PUBLISHED")
-                : builder.notEqual(candidate.get("state"), "DISCARDED"));
+                ? builder.equal(candidate.get("state"), RevisionState.PUBLISHED)
+                : builder.notEqual(candidate.get("state"), RevisionState.DISCARDED));
         if (criteria.published()) {
             var rank = ordinal(builder, revision.get("effectiveFromPatchVariantId"), criteria.ordinals());
             var newerRank = ordinal(builder, candidate.get("effectiveFromPatchVariantId"), criteria.ordinals());

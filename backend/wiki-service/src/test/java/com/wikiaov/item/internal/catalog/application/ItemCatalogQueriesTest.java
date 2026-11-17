@@ -15,6 +15,7 @@ import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
@@ -43,7 +44,7 @@ class ItemCatalogQueriesTest {
         var other = revision(second, 1);
         var selectedCopy = translation(selected, "en", "Search target");
         var otherCopy = translation(other, "vi-VN", "Search target too");
-        when(revisions.findByStateNot("DISCARDED")).thenReturn(List.of(older, selected, other));
+        when(revisions.findByStateNot(RevisionState.DISCARDED)).thenReturn(List.of(older, selected, other));
         when(translations.findByRevisionIdIn(any())).thenReturn(List.of(selectedCopy, otherCopy));
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(first, second));
         when(content.hydrate(any(), any())).thenReturn(mock(ItemContent.class));
@@ -62,7 +63,7 @@ class ItemCatalogQueriesTest {
     void oversizedPageIndexReturnsEmptyPageWithoutIntegerOverflow() {
         var owner = owner("alpha");
         var revision = revision(owner, 1);
-        when(revisions.findByStateNot("DISCARDED")).thenReturn(List.of(revision));
+        when(revisions.findByStateNot(RevisionState.DISCARDED)).thenReturn(List.of(revision));
         when(translations.findByRevisionIdIn(any())).thenReturn(List.of());
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(owner));
 
@@ -87,8 +88,8 @@ class ItemCatalogQueriesTest {
         var second = owner("beta");
         var firstRevision = revision(first, 1);
         var secondRevision = revision(second, 1);
-        firstRevision.setState("PUBLISHED");
-        secondRevision.setState("PUBLISHED");
+        firstRevision.setState(RevisionState.PUBLISHED);
+        secondRevision.setState(RevisionState.PUBLISHED);
         var context = mock(GameplayContext.class);
         when(context.rulesetId()).thenReturn(rulesetId);
         when(contexts.resolve(eq("VN"), any())).thenReturn(context);
@@ -113,7 +114,7 @@ class ItemCatalogQueriesTest {
     void historicalScopeOmitsUnknownPatchObservationsUntilExplicitlyRequested() {
         var owner = owner("baseline");
         var revision = revision(owner, 1);
-        revision.setState("PUBLISHED");
+        revision.setState(RevisionState.PUBLISHED);
         var season = UUID.randomUUID();
         var context = mock(GameplayContext.class);
         when(context.rulesetId()).thenReturn(rulesetId);
@@ -149,7 +150,7 @@ class ItemCatalogQueriesTest {
         revision.setOwnerId(owner.getId());
         revision.setRulesetId(rulesetId);
         revision.setRevisionNo(number);
-        revision.setState("DRAFT");
+        revision.setState(RevisionState.DRAFT);
         revision.setCause("DATA_BASELINE");
         return revision;
     }

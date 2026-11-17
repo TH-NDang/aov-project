@@ -22,6 +22,7 @@ import com.wikiaov.hero.internal.profile.persistence.HeroProfileSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.*;
 import java.util.function.Function;
@@ -84,7 +85,7 @@ public class HeroForms {
         var members = structure.formsOf(holderId);
         var ids = Stream.concat(Stream.of(holderId), members.stream().map(Form::heroId)).toList();
         var codes = store.heroes(ids).stream().collect(Collectors.toMap(HeroIdentity::getId, HeroIdentity::getCode));
-        var revisions = store.revisions(ids).stream().filter(revision -> !revision.state().equals("DISCARDED"))
+        var revisions = store.revisions(ids).stream().filter(revision -> revision.state() != RevisionState.DISCARDED)
                 .collect(Collectors.groupingBy(HeroRevisionView::heroId));
         var newestProfiles = profiles.contents(revisions.values().stream()
                 .map(rows -> rows.getFirst().sections().get(HeroSection.PROFILE)).filter(Objects::nonNull).toList());
@@ -97,8 +98,8 @@ public class HeroForms {
             return new HeroFormsView.Form(form.heroId(), codes.get(form.heroId()), form.formKey(),
                     form.displayOrder(), names(profile.apply(form.heroId())),
                     profile.apply(form.heroId()).map(Profile::roles).orElse(Set.of()),
-                    rows.stream().anyMatch(row -> row.state().equals("PUBLISHED")),
-                    rows.stream().anyMatch(row -> row.state().equals("DRAFT")));
+                    rows.stream().anyMatch(row -> row.state() == RevisionState.PUBLISHED),
+                    rows.stream().anyMatch(row -> row.state() == RevisionState.DRAFT));
         }).toList();
 
         return new HeroFormsView(heroId, hero.getCode(), holder,
@@ -176,7 +177,7 @@ public class HeroForms {
 
     private void requireNoGameplay(UUID holderId) {
         for (var revision : store.revisions(holderId)) {
-            if (revision.state().equals("DISCARDED"))
+            if (revision.state() == RevisionState.DISCARDED)
                 continue;
             for (var section : GAMEPLAY) {
                 UUID id = revision.sections().get(section);

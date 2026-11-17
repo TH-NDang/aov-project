@@ -10,6 +10,7 @@ import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.math.BigDecimal;
 import java.util.*;
 import org.junit.jupiter.api.Test;
@@ -195,7 +196,7 @@ class HeroComparisonsTest {
         Map<HeroSection, UUID> contentIds = new EnumMap<>(HeroSection.class);
         for (var section : revisionSections)
             contentIds.put(section, UUID.randomUUID());
-        var revision = new HeroRevisionView(id, hero, revisionRuleset, 1, "DRAFT", 1, null, null,
+        var revision = new HeroRevisionView(id, hero, revisionRuleset, 1, RevisionState.DRAFT, 1, null, null,
                 source == null ? Cause.DATA_BASELINE : Cause.GAME_PATCH, source, UUID.randomUUID(),
                 contentIds);
         when(store.revision(hero, id)).thenReturn(revision);

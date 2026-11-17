@@ -20,6 +20,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.*;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -99,7 +100,7 @@ public class HeroAuthoring {
         store.lockHero(heroId);
         contexts.requireRuleset(input.rulesetId());
         var draft = store.revisions(heroId).stream()
-                .filter(r -> r.rulesetId().equals(input.rulesetId()) && r.state().equals("DRAFT")).findFirst();
+                .filter(r -> r.rulesetId().equals(input.rulesetId()) && r.state() == RevisionState.DRAFT).findFirst();
         if (draft.isPresent())
             throw new ApiException(HeroErrorCode.HERO_DRAFT_EXISTS, "This hero already has a draft for the ruleset.",
                     Map.of("existingDraftId", draft.get().id()));
@@ -107,7 +108,7 @@ public class HeroAuthoring {
         var source = input.sourceRevisionId() == null
                 ? defaultSource(heroId, input)
                 : store.revision(heroId, input.sourceRevisionId());
-        if (!source.rulesetId().equals(input.rulesetId()) || !source.state().equals("PUBLISHED"))
+        if (!source.rulesetId().equals(input.rulesetId()) || source.state() != RevisionState.PUBLISHED)
             throw HeroValidation.invalid("The source must be published and belong to the target hero and ruleset.");
 
         UUID effective = input.effectiveFromPatchVariantId() == null
@@ -134,7 +135,7 @@ public class HeroAuthoring {
         store.lockHero(heroId);
         var target = contexts.authoringContext(contextId);
         if (store.revisions(heroId).stream().anyMatch(r -> r.rulesetId().equals(target.rulesetId())
-                && r.state().equals("DRAFT")))
+                && r.state() == RevisionState.DRAFT))
             throw new ApiException(HeroErrorCode.HERO_DRAFT_EXISTS, "Finish or discard the existing draft first.");
 
         UUID draft = insertDraft(heroId, target.rulesetId(), null, Cause.DATA_BASELINE, target.patchVariantId());
@@ -158,7 +159,7 @@ public class HeroAuthoring {
             throw HeroValidation
                     .invalid("Only an independent initial baseline draft can change its observation context.");
         if (store.revisions(heroId).stream().anyMatch(revision -> revision.rulesetId().equals(draft.rulesetId())
-                && revision.state().equals("PUBLISHED")))
+                && revision.state() == RevisionState.PUBLISHED))
             throw HeroValidation.invalid("A published history exists. Create a separate historical baseline instead.");
         var target = contexts.authoringContext(input.contextId());
         if (!target.rulesetId().equals(draft.rulesetId()))
@@ -260,7 +261,7 @@ public class HeroAuthoring {
 
         draft.sections().forEach((section, id) -> sections.publish(section, id, heroId));
         var entity = store.editableEntity(draftId);
-        entity.setState("PUBLISHED");
+        entity.setState(RevisionState.PUBLISHED);
         entity.setPublicationSequence(seq);
         entity.setPublishedAt(clock.instant());
         bump(draftId);
@@ -280,7 +281,7 @@ public class HeroAuthoring {
         editable(heroId, draftId, input.expectedVersion());
 
         bump(draftId);
-        store.editableEntity(draftId).setState("DISCARDED");
+        store.editableEntity(draftId).setState(RevisionState.DISCARDED);
 
         record("HERO_DRAFT_DISCARDED", heroId, draftId, input.expectedVersion(), input.expectedVersion() + 1,
                 input.changeNote());
@@ -378,7 +379,8 @@ public class HeroAuthoring {
                                 .invalid("Specify a published source when no regional context is active."))
                 : contexts.variant(input.effectiveFromPatchVariantId()).rulesetOrdinal();
         return store.revisions(heroId).stream().filter(
-                r -> r.rulesetId().equals(input.rulesetId()) && r.state().equals("PUBLISHED") && ordinal(r) <= limit)
+                r -> r.rulesetId().equals(input.rulesetId()) && r.state() == RevisionState.PUBLISHED
+                        && ordinal(r) <= limit)
                 .max(Comparator.<HeroRevisionView>comparingLong(this::ordinal)
                         .thenComparingLong(HeroRevisionView::publicationSequence))
                 .orElseThrow(() -> HeroValidation.invalid("A published source revision is required."));
@@ -400,7 +402,7 @@ public class HeroAuthoring {
         entity.setHeroId(hero);
         entity.setRulesetId(ruleset);
         entity.setRevisionNo(no);
-        entity.setState("DRAFT");
+        entity.setState(RevisionState.DRAFT);
         entity.setVersion(1);
         entity.setCause(cause.name());
         entity.setSourceRevisionId(source);
@@ -419,7 +421,7 @@ public class HeroAuthoring {
 
     private HeroRevisionView editable(UUID hero, UUID id, long expected) {
         var r = store.revision(hero, id);
-        if (!r.state().equals("DRAFT"))
+        if (r.state() != RevisionState.DRAFT)
             throw new ApiException(HeroErrorCode.HERO_REVISION_NOT_EDITABLE, "Only drafts can be changed.");
         if (r.version() != expected)
             throw new ApiException(HeroErrorCode.HERO_REVISION_VERSION_CONFLICT, "The draft has changed.",

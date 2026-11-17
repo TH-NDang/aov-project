@@ -19,6 +19,7 @@ import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Clock;
@@ -70,14 +71,14 @@ public class HeroPatchChanges implements HeroChangeQueries {
             requireSourceUrl(input.sourceUrl());
 
         var to = input.toHeroRevisionId() == null ? null : store.revision(input.heroId(), input.toHeroRevisionId());
-        if (to != null && (!to.state().equals("PUBLISHED") || to.cause() != Cause.GAME_PATCH
+        if (to != null && (to.state() != RevisionState.PUBLISHED || to.cause() != Cause.GAME_PATCH
                 || !to.rulesetId().equals(variant.rulesetId()) || !variantId.equals(to.effectiveFromPatchVariantId())))
             throw HeroValidation
                     .invalid("The target must be a published GAME_PATCH revision for this variant and ruleset.");
         HeroRevisionView from = null;
         if (input.fromHeroRevisionId() != null) {
             from = store.revision(input.heroId(), input.fromHeroRevisionId());
-            if (!from.state().equals("PUBLISHED") || !from.rulesetId().equals(variant.rulesetId())
+            if (from.state() != RevisionState.PUBLISHED || !from.rulesetId().equals(variant.rulesetId())
                     || to != null && from.publicationSequence() >= to.publicationSequence())
                 throw HeroValidation.invalid("The source revision must precede the target in the same ruleset.");
             if (from.effectiveFromPatchVariantId() != null && contexts.variant(from.effectiveFromPatchVariantId())
@@ -255,7 +256,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
             throw HeroValidation.invalid("The hero already has a patch that introduced it.");
 
         boolean observedEarlier = store.revisions(heroId).stream()
-                .anyMatch(revision -> revision.state().equals("PUBLISHED")
+                .anyMatch(revision -> revision.state() == RevisionState.PUBLISHED
                         && revision.rulesetId().equals(variant.rulesetId())
                         && revision.effectiveFromPatchVariantId() != null
                         && contexts.variant(revision.effectiveFromPatchVariantId())
@@ -267,7 +268,8 @@ public class HeroPatchChanges implements HeroChangeQueries {
 
     private HeroRevisionView latestPublished(UUID heroId, UUID rulesetId) {
         return store.revisions(heroId).stream()
-                .filter(revision -> revision.state().equals("PUBLISHED") && revision.rulesetId().equals(rulesetId))
+                .filter(revision -> revision.state() == RevisionState.PUBLISHED
+                        && revision.rulesetId().equals(rulesetId))
                 .max(Comparator.comparing(HeroRevisionView::publicationSequence)).orElse(null);
     }
 

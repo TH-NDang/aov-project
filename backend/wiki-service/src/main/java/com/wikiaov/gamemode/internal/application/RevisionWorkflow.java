@@ -7,6 +7,7 @@ import com.wikiaov.access.CurrentActor;
 import com.wikiaov.gamemode.internal.domain.RevisionRecord;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.ApiFieldError;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -41,7 +42,7 @@ public class RevisionWorkflow {
     }
 
     public <R extends RevisionRecord> R requireEditableDraft(R revision, long expectedVersion) {
-        if (!RevisionRecord.DRAFT.equals(revision.getState()))
+        if (revision.getState() != RevisionState.DRAFT)
             throw new ApiException(GameModeErrorCode.GAME_MODE_CONFLICT, "Only drafts can be changed.");
         if (revision.getVersion() != expectedVersion)
             throw new ApiException(GameModeErrorCode.GAME_MODE_CONFLICT, "The draft has changed.",
@@ -77,13 +78,13 @@ public class RevisionWorkflow {
     }
 
     public void publish(RevisionRecord revision, String changeNote) {
-        revision.setState(RevisionRecord.PUBLISHED);
+        revision.setState(RevisionState.PUBLISHED);
         revision.setPublishedAt(now());
         advance(revision, changeNote);
     }
 
     public void discard(RevisionRecord revision, String changeNote) {
-        revision.setState(RevisionRecord.DISCARDED);
+        revision.setState(RevisionState.DISCARDED);
         advance(revision, changeNote);
     }
 

@@ -2,6 +2,7 @@ package com.wikiaov.item.internal.application.response;
 
 import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.*;
 
@@ -27,7 +28,7 @@ public record ItemView(
             String code,
             UUID rulesetId,
             long revisionNo,
-            String state,
+            RevisionState state,
             long version,
             Long publicationSequence,
             Instant publishedAt,

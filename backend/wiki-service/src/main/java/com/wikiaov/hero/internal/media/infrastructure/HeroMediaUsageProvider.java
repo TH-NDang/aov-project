@@ -6,6 +6,7 @@ import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository.Owne
 import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository.PartName;
 import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository.Usage;
 import com.wikiaov.media.*;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.*;
 import java.util.function.Function;
@@ -53,7 +54,7 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
         Map<String, MediaUsage> places = new LinkedHashMap<>();
         for (var row : rows) {
             var usage = new MediaUsage("HERO", "HERO", row.getHeroId(), row.getRevisionId(), row.getRole(),
-                    "DRAFT".equals(row.getState())
+                    row.getState() == RevisionState.DRAFT
                             ? MediaUsageScope.DRAFT
                             : current.contains(row.getRevisionId())
                                     ? MediaUsageScope.CURRENT

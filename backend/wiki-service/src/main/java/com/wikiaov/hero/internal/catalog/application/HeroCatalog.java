@@ -17,6 +17,7 @@ import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -98,7 +99,7 @@ public class HeroCatalog {
 
         var heroIds = identities.items().stream().map(hero -> hero.getId()).toList();
         var revisions = store.revisions(heroIds).stream()
-                .filter(r -> !filtered || !includeUnchanged || r.state().equals("PUBLISHED")
+                .filter(r -> !filtered || !includeUnchanged || r.state() == RevisionState.PUBLISHED
                         && snapshotVariants.contains(r.effectiveFromPatchVariantId()))
                 .collect(Collectors.groupingBy(HeroRevisionView::heroId));
         var byRevision = revisions.values().stream().flatMap(Collection::stream)
@@ -156,7 +157,7 @@ public class HeroCatalog {
             if (change.getSourceKind() == ChangeSource.PATCH_NOTES)
                 return true;
             var revision = revisions.get(change.getToHeroRevisionId());
-            return revision != null && revision.state().equals("PUBLISHED")
+            return revision != null && revision.state() == RevisionState.PUBLISHED
                     && revision.cause() == com.wikiaov.hero.internal.domain.HeroContent.Cause.GAME_PATCH;
         }).sorted(Comparator
                 .<HeroPatchChangeSet>comparingLong(change -> variants.get(change.getPatchVariantId()).rulesetOrdinal())

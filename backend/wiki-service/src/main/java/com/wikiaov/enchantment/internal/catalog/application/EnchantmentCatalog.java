@@ -23,6 +23,7 @@ import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -247,7 +248,7 @@ public class EnchantmentCatalog {
         var owner = lockIdentity(id);
         var revision = requireEditableDraft(id, revisionId, input.expectedVersion());
 
-        revision.setState("DISCARDED");
+        revision.setState(RevisionState.DISCARDED);
         advanceVersion(revision);
         recordAuditEvent("DRAFT_DISCARDED", owner, revision, input.changeNote());
 
@@ -292,7 +293,7 @@ public class EnchantmentCatalog {
     }
 
     private void requireForkSource(EnchantmentRevision source, Fork input) {
-        if (!source.getState().equals("PUBLISHED") || !source.getRulesetId().equals(input.rulesetId()))
+        if (source.getState() != RevisionState.PUBLISHED || !source.getRulesetId().equals(input.rulesetId()))
             fail("The source must be published in the selected ruleset.");
         if (!Set.of("GAME_PATCH", "CONTENT_CORRECTION", "TRANSLATION_UPDATE").contains(input.cause()))
             fail("Invalid revision cause.");
@@ -336,7 +337,7 @@ public class EnchantmentCatalog {
 
     private EnchantmentRevision requireEditableDraft(UUID id, UUID revisionId, long expected) {
         var revision = queries.revision(id, revisionId);
-        if (!revision.getState().equals("DRAFT"))
+        if (revision.getState() != RevisionState.DRAFT)
             conflict("Only drafts can be edited.");
         if (revision.getVersion() != expected)
             throw new ApiException(EnchantmentErrorCode.ENCHANTMENT_CONFLICT, "The draft has changed.",
@@ -348,7 +349,8 @@ public class EnchantmentCatalog {
             UUID effective) {
         var history = revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId());
         if (history.stream()
-                .anyMatch(revision -> revision.getRulesetId().equals(ruleset) && revision.getState().equals("DRAFT")))
+                .anyMatch(revision -> revision.getRulesetId().equals(ruleset)
+                        && revision.getState() == RevisionState.DRAFT))
             conflict("A draft already exists for the ruleset.");
 
         var actor = actors.require();
@@ -358,7 +360,7 @@ public class EnchantmentCatalog {
         revision.setRulesetId(ruleset);
         revision.setRevisionNo(history.stream().filter(v -> v.getRulesetId().equals(ruleset))
                 .mapToLong(EnchantmentRevision::getRevisionNo).max().orElse(0) + 1);
-        revision.setState("DRAFT");
+        revision.setState(RevisionState.DRAFT);
         revision.setVersion(1);
         revision.setCause(cause);
         revision.setSourceRevisionId(source);
@@ -432,7 +434,7 @@ public class EnchantmentCatalog {
                 .filter(v -> v.getRulesetId().equals(revision.getRulesetId()))
                 .map(EnchantmentRevision::getPublicationSequence).filter(Objects::nonNull).mapToLong(Long::longValue)
                 .max().orElse(0) + 1);
-        revision.setState("PUBLISHED");
+        revision.setState(RevisionState.PUBLISHED);
         revision.setPublishedAt(clock.instant());
         advanceVersion(revision);
         if (Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause()))

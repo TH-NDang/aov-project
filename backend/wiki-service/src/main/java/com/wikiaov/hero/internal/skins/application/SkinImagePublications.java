@@ -19,6 +19,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +67,7 @@ public class SkinImagePublications {
                     Map.of("currentRevisionId", source.id()));
 
         var imageSource = store.revision(heroId, input.imageSourceRevisionId());
-        if (!imageSource.state().equals("DRAFT") || !imageSource.rulesetId().equals(source.rulesetId()))
+        if (imageSource.state() != RevisionState.DRAFT || !imageSource.rulesetId().equals(source.rulesetId()))
             throw HeroValidation.invalid("The image source must be this hero's draft in the published ruleset.");
         if (imageSource.version() != input.expectedImageSourceVersion())
             throw conflict("The image source draft changed. Reload its images before publishing.",
@@ -118,7 +119,7 @@ public class SkinImagePublications {
         entity.setRulesetId(source.rulesetId());
         entity.setRevisionNo(existing.stream().filter(r -> r.rulesetId().equals(source.rulesetId()))
                 .mapToLong(HeroRevisionView::revisionNo).max().orElse(0) + 1);
-        entity.setState("PUBLISHED");
+        entity.setState(RevisionState.PUBLISHED);
         entity.setVersion(1);
         entity.setPublicationSequence(existing.stream()
                 .filter(r -> r.rulesetId().equals(source.rulesetId()) && r.publicationSequence() != null)

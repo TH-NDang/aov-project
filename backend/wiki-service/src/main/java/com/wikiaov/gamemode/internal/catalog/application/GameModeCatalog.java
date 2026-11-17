@@ -27,6 +27,7 @@ import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.media.MediaUsage;
 import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -71,9 +72,9 @@ public class GameModeCatalog {
     @Transactional(readOnly = true)
     public List<AdminSummary> adminList() {
         var all = modes.findAll();
-        var byMode = revisions.findByStateNot(RevisionRecord.DISCARDED).stream()
+        var byMode = revisions.findByStateNot(RevisionState.DISCARDED).stream()
                 .collect(Collectors.groupingBy(GameModeRevision::getModeId));
-        var guides = guideRevisions.findByStateNot(RevisionRecord.DISCARDED).stream()
+        var guides = guideRevisions.findByStateNot(RevisionState.DISCARDED).stream()
                 .collect(Collectors.groupingBy(r -> r.getModeId()));
         var art = images.hydrate(all.stream()
                 .map(mode -> latest(byMode.getOrDefault(mode.getId(), List.of())))
@@ -83,14 +84,14 @@ public class GameModeCatalog {
         return all.stream().map(mode -> {
             var list = byMode.getOrDefault(mode.getId(), List.of());
             var published = newestPublished(list);
-            var draft = list.stream().filter(r -> RevisionRecord.DRAFT.equals(r.getState())).findFirst()
+            var draft = list.stream().filter(r -> r.getState() == RevisionState.DRAFT).findFirst()
                     .orElse(null);
             var shown = draft != null ? draft : published;
             var content = shown == null ? null : shown.getContent();
             var guideList = guides.getOrDefault(mode.getId(), List.of());
-            var guidePublished = guideList.stream().filter(r -> RevisionRecord.PUBLISHED.equals(r.getState()))
+            var guidePublished = guideList.stream().filter(r -> r.getState() == RevisionState.PUBLISHED)
                     .max(Comparator.comparingLong(RevisionRecord::getRevisionNo)).orElse(null);
-            var guideDraft = guideList.stream().filter(r -> RevisionRecord.DRAFT.equals(r.getState())).findFirst()
+            var guideDraft = guideList.stream().filter(r -> r.getState() == RevisionState.DRAFT).findFirst()
                     .orElse(null);
             return new AdminSummary(mode.getId(), mode.getCode(), content == null ? mode.getCode() : content.name(),
                     content == null ? null : content.group(), content == null ? null : content.order(),
@@ -133,8 +134,8 @@ public class GameModeCatalog {
     @Transactional(readOnly = true)
     public AdminMode current(UUID id) {
         var mode = requireMode(id);
-        var revision = revisions.findByModeIdAndState(id, RevisionRecord.DRAFT)
-                .or(() -> revisions.findFirstByModeIdAndStateOrderByRevisionNoDesc(id, RevisionRecord.PUBLISHED))
+        var revision = revisions.findByModeIdAndState(id, RevisionState.DRAFT)
+                .or(() -> revisions.findFirstByModeIdAndStateOrderByRevisionNoDesc(id, RevisionState.PUBLISHED))
                 .orElseThrow(() -> new ApiException(GameModeErrorCode.GAME_MODE_REVISION_NOT_FOUND,
                         "The mode has no open draft or published revision."));
         return adminView(mode, revision);
@@ -156,15 +157,15 @@ public class GameModeCatalog {
     @PreAuthorize("hasAuthority('gamemode:write')")
     public AdminMode createDraft(UUID id, CreateDraft input) {
         var mode = lock(id);
-        var open = revisions.findByModeIdAndState(id, RevisionRecord.DRAFT);
+        var open = revisions.findByModeIdAndState(id, RevisionState.DRAFT);
         workflow.requireNoOpenDraft(open.isPresent(), open.map(GameModeRevision::getId).orElse(null));
-        var source = revisions.findFirstByModeIdAndStateOrderByRevisionNoDesc(id, RevisionRecord.PUBLISHED)
+        var source = revisions.findFirstByModeIdAndStateOrderByRevisionNoDesc(id, RevisionState.PUBLISHED)
                 .or(() -> revisions.findByModeIdOrderByRevisionNoDesc(id).stream().findFirst())
                 .orElse(null);
 
         var content = source == null ? GameModeContent.initial(mode.getCode(), null) : source.getContent();
         var draft = newRevision(mode, content,
-                source != null && RevisionRecord.PUBLISHED.equals(source.getState()) ? source.getId() : null,
+                source != null && source.getState() == RevisionState.PUBLISHED ? source.getId() : null,
                 input.changeNote());
         workflow.record("GAME_MODE_DRAFT_CREATED", AGGREGATE, id, draft, null, input.changeNote());
 
@@ -265,12 +266,12 @@ public class GameModeCatalog {
     }
 
     public Optional<GameModeRevision> latestPublished(UUID modeId) {
-        return revisions.findFirstByModeIdAndStateOrderByRevisionNoDesc(modeId, RevisionRecord.PUBLISHED);
+        return revisions.findFirstByModeIdAndStateOrderByRevisionNoDesc(modeId, RevisionState.PUBLISHED);
     }
 
     /** The content editors are working on: the open draft, else the published revision. */
     public Optional<GameModeContent> workingContent(UUID modeId) {
-        return revisions.findByModeIdAndState(modeId, RevisionRecord.DRAFT)
+        return revisions.findByModeIdAndState(modeId, RevisionState.DRAFT)
                 .or(() -> latestPublished(modeId)).map(GameModeRevision::getContent);
     }
 
@@ -279,13 +280,13 @@ public class GameModeCatalog {
     }
 
     public Map<UUID, List<MediaUsage>> allUsages() {
-        var all = revisions.findByStateNot(RevisionRecord.DISCARDED);
+        var all = revisions.findByStateNot(RevisionState.DISCARDED);
         var newest = new HashMap<UUID, Long>();
-        all.stream().filter(r -> RevisionRecord.PUBLISHED.equals(r.getState()))
+        all.stream().filter(r -> r.getState() == RevisionState.PUBLISHED)
                 .forEach(r -> newest.merge(r.getModeId(), r.getRevisionNo(), Math::max));
         var usages = new HashMap<UUID, List<MediaUsage>>();
         for (var revision : all) {
-            var scope = RevisionRecord.DRAFT.equals(revision.getState())
+            var scope = revision.getState() == RevisionState.DRAFT
                     ? MediaUsageScope.DRAFT
                     : newest.get(revision.getModeId()) == revision.getRevisionNo()
                             ? MediaUsageScope.CURRENT
@@ -327,7 +328,7 @@ public class GameModeCatalog {
         revision.setId(UUID.randomUUID());
         revision.setModeId(mode.getId());
         revision.setRevisionNo(revisions.maxRevisionNo(mode.getId()) + 1);
-        revision.setState(RevisionRecord.DRAFT);
+        revision.setState(RevisionState.DRAFT);
         revision.setVersion(1);
         revision.setContent(content);
         revision.setSourceRevisionId(sourceId);
@@ -356,7 +357,7 @@ public class GameModeCatalog {
     }
 
     private static GameModeRevision newestPublished(List<GameModeRevision> revisions) {
-        return revisions.stream().filter(r -> RevisionRecord.PUBLISHED.equals(r.getState()))
+        return revisions.stream().filter(r -> r.getState() == RevisionState.PUBLISHED)
                 .max(Comparator.comparingLong(GameModeRevision::getRevisionNo)).orElse(null);
     }
 

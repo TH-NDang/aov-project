@@ -1,6 +1,7 @@
 package com.wikiaov.item.internal.catalog.persistence.entity;
 
 import com.wikiaov.item.internal.domain.ItemContent;
+import com.wikiaov.platform.RevisionState;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -19,7 +20,8 @@ public class ItemRevision {
     private UUID ownerId;
     private UUID rulesetId;
     private long revisionNo;
-    private String state;
+    @Enumerated(EnumType.STRING)
+    private RevisionState state;
     private long version;
     private Long publicationSequence;
     private Instant publishedAt;

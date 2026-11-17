@@ -3,6 +3,7 @@ package com.wikiaov.spell.internal.catalog.infrastructure;
 import com.wikiaov.build.BuildReference;
 import com.wikiaov.build.BuildReferenceKind;
 import com.wikiaov.build.BuildReferenceProvider;
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.catalog.persistence.SpellIdentityRepository;
 import com.wikiaov.spell.internal.catalog.persistence.SpellRevisionRepository;
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellIdentity;
@@ -50,7 +51,8 @@ public class SpellBuildReferences implements BuildReferenceProvider {
         if (found.isEmpty())
             return List.of();
         Set<UUID> published = revisions
-                .findByOwnerIdInAndState(found.stream().map(SpellIdentity::getId).toList(), "PUBLISHED").stream()
+                .findByOwnerIdInAndState(found.stream().map(SpellIdentity::getId).toList(), RevisionState.PUBLISHED)
+                .stream()
                 .map(SpellRevision::getOwnerId).collect(Collectors.toSet());
         return found.stream().filter(identity -> published.contains(identity.getId())).toList();
     }

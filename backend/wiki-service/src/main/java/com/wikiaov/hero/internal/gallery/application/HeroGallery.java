@@ -20,6 +20,7 @@ import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -282,7 +283,7 @@ public class HeroGallery {
     private static int rank(Image image) {
         if (image.current())
             return 0;
-        if (image.versions().stream().anyMatch(version -> version.state().equals("DRAFT")))
+        if (image.versions().stream().anyMatch(version -> version.state() == RevisionState.DRAFT))
             return 1;
         return image.versions().isEmpty() ? 3 : 2;
     }

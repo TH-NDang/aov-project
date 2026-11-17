@@ -5,6 +5,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.*;
 import com.wikiaov.platform.CatalogChanges.*;
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.application.SpellErrorCode;
 import com.wikiaov.spell.internal.catalog.persistence.SpellIdentityRepository;
 import com.wikiaov.spell.internal.catalog.persistence.SpellRevisionRepository;
@@ -63,7 +64,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
                 ? changes.findByRulesetId(rulesetId)
                 : changes.findByRulesetIdAndPatchVariantId(rulesetId, patchVariantId);
         var snapshots = patchVariantId == null
-                ? revisions.findByRulesetIdAndState(rulesetId, "PUBLISHED")
+                ? revisions.findByRulesetIdAndState(rulesetId, RevisionState.PUBLISHED)
                 : revisions.publishedForChanges(rulesetId, patchVariantId);
         if (snapshots.isEmpty())
             return List.of();
@@ -151,7 +152,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         if (SpellObservation.archived(target.getCause(), target.getEffectiveFromPatchVariantId(), target.getGameplay()))
             invalid("Record removal evidence separately for archived spells.");
         boolean removed = input.kinds().contains(Kind.REMOVED);
-        if (!target.getState().equals("PUBLISHED") || !patch.published()
+        if (target.getState() != RevisionState.PUBLISHED || !patch.published()
                 || !target.getRulesetId().equals(patch.rulesetId())
                 || target.getEffectiveFromPatchVariantId() == null
                         && !(removed && CatalogObservation.isUnscopedBaseline(
@@ -180,7 +181,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
             if (!from.getOwnerId().equals(ownerId) || !from.getRulesetId().equals(target.getRulesetId())
                     || SpellObservation.archived(from.getCause(), from.getEffectiveFromPatchVariantId(),
                             from.getGameplay())
-                    || !from.getState().equals("PUBLISHED")
+                    || from.getState() != RevisionState.PUBLISHED
                     || from.getEffectiveFromPatchVariantId() == null && !CatalogObservation.isUnscopedBaseline(
                             from.getCause(), from.getSourceRevisionId(), null)
                     || (from.getEffectiveFromPatchVariantId() == null
