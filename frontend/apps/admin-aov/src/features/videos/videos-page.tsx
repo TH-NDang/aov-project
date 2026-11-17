@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
 import { SearchField } from "@/components/search-field"
+import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { CrawlImportDialog } from "./crawl-import-dialog"
 import { videoApi, videoKeys, type VideoFilter } from "./video-api"
@@ -33,20 +34,25 @@ const WRITE_CAPABILITIES = ["hero:write", "item:write", "enchantment:write", "ar
 
 /** Reviews what is waiting, finds any video across the catalog, and brings in collected data. */
 export function VideosPage() {
-  const [status, setStatus] = useState<VideoStatus | typeof ALL>("DRAFT")
-  const [kind, setKind] = useState<VideoSubjectKind | typeof ALL>(ALL)
-  const [purpose, setPurpose] = useState<VideoPurpose | typeof ALL>(ALL)
-  const [search, setSearch] = useState("")
-  const [query, setQuery] = useState("")
+  // Filters live in the URL, so a reload or a shared link keeps them.
+  const [statusParam, setStatus] = useSearchParam("status", "DRAFT")
+  const [kindParam, setKind] = useSearchParam("kind", ALL)
+  const [purposeParam, setPurpose] = useSearchParam("purpose", ALL)
+  const [query, setQuery] = useSearchParam("q")
+  const status = statusParam as VideoStatus | typeof ALL
+  const kind = kindParam as VideoSubjectKind | typeof ALL
+  const purpose = purposeParam as VideoPurpose | typeof ALL
+  const [search, setSearch] = useState(query)
   const [form, setForm] = useState<{ video: AdminVideo | null } | null>(null)
   const [importing, setImporting] = useState(false)
   const capabilities = useSession().actor?.capabilities ?? []
   const canWrite = WRITE_CAPABILITIES.some((capability) => capabilities.includes(capability))
 
   useEffect(() => {
+    if (search.trim() === query) return
     const timer = setTimeout(() => setQuery(search.trim()), 250)
     return () => clearTimeout(timer)
-  }, [search])
+  }, [search, query, setQuery])
 
   const filter: VideoFilter = {
     status: status === ALL ? undefined : status,

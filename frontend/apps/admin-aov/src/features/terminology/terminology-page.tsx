@@ -49,6 +49,7 @@ import { HeroAliasEditor } from "./hero-alias-editor"
 import { invalidateReferenceCatalog } from "./reference-api"
 import { confirmDiscard } from "@/components/confirm-dialog"
 import { randomId } from "@/lib/random-id"
+import { useSearchParam } from "@/hooks/use-search-param"
 
 const ReferencePreview = memo(EntityRichText)
 
@@ -91,7 +92,8 @@ export function TerminologyPage() {
   useEffect(() => {
     setSelectedValue(params.get("entry") ?? (params.get("term") ? `term:${params.get("term")}` : ""))
   }, [params])
-  const [locale, setLocale] = useState("vi-VN")
+  // The language of the translations lives in the URL, so a reload or a shared link keeps it.
+  const [locale, setLocale] = useSearchParam("locale", "vi-VN")
   const [preview, setPreview] = useState("")
   const [message, setMessage] = useState("")
   const [saving, setSaving] = useState(false)

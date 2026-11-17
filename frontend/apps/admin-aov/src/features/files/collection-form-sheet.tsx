@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
+import { confirmDiscard } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
 import { control } from "../publishing/fields"
@@ -22,8 +23,19 @@ export function CollectionFormSheet({
   onSaved: (saved: SourceCollection) => void
 }) {
   const wide = useIsWide()
+  const dirty = useRef(false)
+  // Closing with typed text asks first, like every other editor of the Admin.
+  const close = async () => {
+    if (
+      dirty.current &&
+      !(await confirmDiscard({ title: "Đóng mà không lưu?", description: "Thông tin vừa nhập sẽ mất." }))
+    )
+      return
+    dirty.current = false
+    onClose()
+  }
   return (
-    <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
+    <Sheet open={open} onOpenChange={(next) => !next && void close()}>
       <SheetContent
         side={wide ? "right" : "bottom"}
         className={wide ? "w-[min(480px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
@@ -36,7 +48,19 @@ export function CollectionFormSheet({
               : "Mỗi bộ là một lượt chụp hay một gói dữ liệu của một chức năng."}
           </SheetDescription>
         </SheetHeader>
-        {open && <CollectionForm key={collection?.id ?? "new"} collection={collection} onSaved={onSaved} />}
+        {open && (
+          <CollectionForm
+            key={collection?.id ?? "new"}
+            collection={collection}
+            onDirtyChange={(value) => {
+              dirty.current = value
+            }}
+            onSaved={(saved) => {
+              dirty.current = false
+              onSaved(saved)
+            }}
+          />
+        )}
       </SheetContent>
     </Sheet>
   )
@@ -44,9 +68,11 @@ export function CollectionFormSheet({
 
 function CollectionForm({
   collection,
+  onDirtyChange,
   onSaved,
 }: {
   collection: SourceCollection | null
+  onDirtyChange: (dirty: boolean) => void
   onSaved: (saved: SourceCollection) => void
 }) {
   const save = useSaveCollection(collection)
@@ -58,6 +84,12 @@ function CollectionForm({
   const [error, setError] = useState<string | null>(null)
   const saving = save.isPending
   const codeValid = collection !== null || CODE.test(code)
+  const dirty =
+    code !== "" ||
+    label !== (collection?.label ?? "") ||
+    note !== (collection?.note ?? "") ||
+    capturedOn !== (collection?.capturedOn ?? "")
+  useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange])
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()

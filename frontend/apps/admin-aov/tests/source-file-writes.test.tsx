@@ -1,6 +1,16 @@
 import assert from "node:assert/strict"
 import { before, beforeEach, test } from "node:test"
-import { answerConfirm, answerMediaQueries, button, click, render, type, waitFor, withDom } from "./fixtures/dom"
+import {
+  answerConfirm,
+  answerMediaQueries,
+  button,
+  click,
+  confirmDialog,
+  render,
+  type,
+  waitFor,
+  withDom,
+} from "./fixtures/dom"
 import { fakeBackend, json } from "./fixtures/network"
 import { sessionRoutes, signIn } from "./fixtures/session"
 
@@ -117,4 +127,34 @@ test("a collection that cannot be saved shows its error once, next to the form",
   await waitFor(() => document.body.textContent?.includes(taken))
   assert.equal(document.body.textContent!.split(taken).length - 1, 1)
   assert.equal(document.querySelector('[role="alert"]')?.textContent, taken)
+})
+
+test("closing the new collection form with typed text asks first", async () => {
+  const { CollectionFormSheet } = await import("../src/features/files/collection-form-sheet")
+  let closed = 0
+  await render(<CollectionFormSheet open collection={null} onClose={() => closed++} onSaved={() => {}} />)
+  const code = [...document.querySelectorAll("label")]
+    .find((candidate) => candidate.querySelector(".type-label")?.textContent === "Mã bộ")!
+    .querySelector("input")!
+  await type(code, "shop-2026-09-16")
+
+  await click(button("Close"))
+  assert.match(confirmDialog()!.textContent!, /Đóng mà không lưu\?/)
+  await answerConfirm("Ở lại chỉnh sửa")
+  assert.equal(closed, 0)
+
+  await click(button("Close"))
+  await answerConfirm("Bỏ thay đổi")
+  await waitFor(() => closed === 1)
+})
+
+test("closing an untouched collection form does not ask", async () => {
+  const { CollectionFormSheet } = await import("../src/features/files/collection-form-sheet")
+  let closed = 0
+  await render(<CollectionFormSheet open collection={null} onClose={() => closed++} onSaved={() => {}} />)
+
+  await click(button("Close"))
+
+  await waitFor(() => closed === 1)
+  assert.equal(confirmDialog(), null)
 })

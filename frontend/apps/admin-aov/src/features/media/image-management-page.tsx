@@ -78,10 +78,9 @@ const sourceTarget = (row: Row): MediaSourceTarget => ({
   label: `${row.sources?.[0]?.label || types[row.semanticType] || row.semanticType} · ${row.id.slice(0, 8)}`,
 })
 
+type ImageFilters = { type?: string; needsCredit?: boolean; usage?: MediaUsageState | "" }
+
 export function ImageManagementPage() {
-  const [type, setType] = useState("")
-  const [needsCredit, setNeedsCredit] = useState(false)
-  const [usage, setUsage] = useState<MediaUsageState | "">("")
   const [marked, setMarked] = useState<Map<string, MediaSourceTarget>>(() => new Map())
   const [bulkTargets, setBulkTargets] = useState<MediaSourceTarget[] | null>(null)
   const [ownerTargets, setOwnerTargets] = useState<OwnerTarget[] | null>(null)
@@ -90,6 +89,24 @@ export function ImageManagementPage() {
   const [uploadType, setUploadType] = useState("HERO_HEAD")
   const wide = useIsWide()
   const [params, setParams] = useSearchParams()
+  // Filters live in the URL, so a reload or a shared link keeps them.
+  const type = params.get("type") ?? ""
+  const needsCredit = params.get("needsCredit") === "true"
+  const usage = (params.get("usage") ?? "") as MediaUsageState | ""
+  const setFilters = (next: ImageFilters) => {
+    setParams(
+      (current) => {
+        const updated = new URLSearchParams(current)
+        const write = (key: string, value: string | null) => (value ? updated.set(key, value) : updated.delete(key))
+        if ("type" in next) write("type", next.type || null)
+        if ("needsCredit" in next) write("needsCredit", next.needsCredit ? "true" : null)
+        if ("usage" in next) write("usage", next.usage || null)
+        return updated
+      },
+      { replace: true },
+    )
+    setMarked(new Map())
+  }
   // The open image lives in the URL (?asset=…), so other pages can link straight to an image's sources.
   const selected = params.get("asset")
   // The table columns keep this function, so it must change with the URL it builds on.
@@ -163,13 +180,11 @@ export function ImageManagementPage() {
     staleTime: 30_000,
   })
   function showUsage(next: MediaUsageState | "") {
-    setUsage(next)
-    setMarked(new Map())
+    setFilters({ usage: next })
   }
   function showMissing(next: boolean) {
     if (next === needsCredit) return
-    setNeedsCredit(next)
-    setMarked(new Map())
+    setFilters({ needsCredit: next })
   }
   const selectable = useMemo(() => rows.filter(canSelect), [rows])
   const allMarked = selectable.length > 0 && selectable.every((row) => marked.has(row.id))
@@ -394,10 +409,7 @@ export function ImageManagementPage() {
               aria-label="Loại ảnh"
               className="h-10 w-full min-w-0 rounded-xl border bg-background px-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-48"
               value={type}
-              onChange={(e) => {
-                setType(e.target.value)
-                setMarked(new Map())
-              }}
+              onChange={(e) => setFilters({ type: e.target.value })}
             >
               <option value="">Tất cả loại ảnh</option>
               {Object.entries(types).map(([key, label]) => (
@@ -430,10 +442,7 @@ export function ImageManagementPage() {
               variant="ghost"
               className="h-10 gap-1 px-2"
               onClick={() => {
-                setType("")
-                setNeedsCredit(false)
-                setUsage("")
-                setMarked(new Map())
+                setFilters({ type: "", needsCredit: false, usage: "" })
               }}
             >
               <X aria-hidden className="size-3.5" />
@@ -657,10 +666,7 @@ export function ImageManagementPage() {
               size="sm"
               className="mt-2"
               onClick={() => {
-                setType("")
-                setNeedsCredit(false)
-                setUsage("")
-                setMarked(new Map())
+                setFilters({ type: "", needsCredit: false, usage: "" })
               }}
             >
               Xem tất cả ảnh
