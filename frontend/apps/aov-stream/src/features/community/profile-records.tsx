@@ -6,8 +6,9 @@ import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { LANE_NAMES } from "../tournaments/tournament-model"
 import { dayRange, formatDay } from "./community-ui"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
-const fold = (value: string) => value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").trim()
+const fold = (value: string) => foldSearchText(value).trim()
 
 /**
  * Finds the published competition a record of a page speaks of, so its name can open it. Records carry a competition's

@@ -1,15 +1,15 @@
 import { useState, type CSSProperties } from "react"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { foldText } from "./auto-chess-model"
 import { ModeHeading } from "./mode-ui"
 import { GuideText, type GuideIndex } from "./guide-ui"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /**
  * The game sorts items by the color of their stone (yellow-green, blue, gold, red); the group name says which. The
  * stone is part of the game's artwork, so its colors live here.
  */
 function stoneColor(code: string, name: string) {
-  const key = foldText(`${code} ${name}`)
+  const key = foldSearchText(`${code} ${name}`)
   // "xanh lam" contains "xanh la", so blue is checked first.
   if (key.includes("xanh lam") || key.includes("xanh duong")) return "#3fa2f0"
   if (key.includes("xanh la")) return "#a9c63b"

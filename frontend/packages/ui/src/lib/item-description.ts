@@ -1,5 +1,6 @@
 import type { GameplayIconName } from "../components/gameplay-icons"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /**
  * Item entries keep their stats and effects as free text in the description: a "+60 <stat>" line for each stat, then
@@ -169,13 +170,7 @@ export interface ItemTextContent {
 }
 
 function folded(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim()
+  return foldSearchText(value).replace(/\s+/g, " ").trim()
 }
 
 // Each marker is matched as the Vietnamese data writes it and as the English descriptions do.

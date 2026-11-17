@@ -4,7 +4,6 @@ import {
   costSummary,
   decodeLineup,
   encodeLineup,
-  foldText,
   ruleBlocks,
   suggestUnits,
   traitCounts,
@@ -130,5 +129,4 @@ test("rule bodies turn dash lines into lists and search ignores Vietnamese marks
     { kind: "list", items: ["Vòng đối kháng", "Vòng quái"] },
     { kind: "text", text: "Hết." },
   ])
-  assert.ok(foldText("Đấu sĩ Pháp sư").includes("dau si phap su"))
 })

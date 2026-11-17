@@ -21,9 +21,10 @@ import {
   scheduleDayLabel,
   scheduleScope,
 } from "./competition-schedule"
-import { knownScheduleDay, matchSearchKey, scheduleDay, scheduleParts, searchKey } from "./match-schedule"
+import { knownScheduleDay, matchSearchKey, scheduleDay, scheduleParts } from "./match-schedule"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /** Seasons a circuit shows before the rest fold away: two rows of three on a wide screen, three rows on a phone. */
 const GROUP_PREVIEW = { wide: 6, compact: 3 }
@@ -60,7 +61,7 @@ export function CompetitionDirectory() {
       (year === "all" || year === String(tournament.year)) &&
       (status === "all" || status === competitionStatus({ tournament, plan })) &&
       (!search.trim() ||
-        searchKey(`${tournament.name} ${plan.circuit} ${plan.organizer}`).includes(searchKey(search.trim()))),
+        foldSearchText(`${tournament.name} ${plan.circuit} ${plan.organizer}`).includes(foldSearchText(search.trim()))),
   )
   const filtered = region !== "all" || year !== "all" || status !== "all" || !!search.trim()
   const clearFilters = () => setParams(tab === "schedule" ? { tab: "schedule" } : {})
@@ -111,7 +112,7 @@ export function CompetitionDirectory() {
   }, [matches])
   const scope = switchable ? scheduleScope(params.get("scope")) : "all"
   const stage = params.get("stage") || ""
-  const needle = searchKey(search.trim())
+  const needle = foldSearchText(search.trim())
   const narrowed = matches
     .filter(({ entry, key }) => {
       const { tournament } = entry.competition.content

@@ -86,7 +86,11 @@ export interface WarehouseMetadata {
   color: string | null
   translations: { locale: string; name: string; description?: string | null; suitability?: string | null }[]
 }
-export function warehouseText<T extends { locale: string }>(translations: T[], locale = "vi-VN"): T | undefined {
+/** The translation in the reader's language, then Vietnamese, then whichever was written first. */
+export function warehouseText<T extends { locale: string }>(
+  translations: readonly T[],
+  locale = "vi-VN",
+): T | undefined {
   return (
     translations.find((text) => text.locale === locale) ??
     translations.find((text) => text.locale === "vi-VN") ??

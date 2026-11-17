@@ -22,7 +22,7 @@ import {
   type PublishedPatch,
   type StaticPage,
 } from "../src/lib/seo/static-pages.ts"
-import { translationFor } from "../src/lib/seo/page-meta.ts"
+import { warehouseText } from "@aov/ui/lib/warehouse-content"
 
 const DETAIL_CONCURRENCY = 4
 const PAGE_SIZE = 100
@@ -175,7 +175,7 @@ async function readTerms(read: Reader) {
     }
   }>("/reference-catalog")
   return settings.entities.flatMap((entity) => {
-    const text = entity.kind === "term" ? translationFor(entity.translations ?? [], STATIC_SCOPE.locale) : undefined
+    const text = entity.kind === "term" ? warehouseText(entity.translations ?? [], STATIC_SCOPE.locale) : undefined
     return text ? [{ id: entity.id, name: text.name, description: text.description }] : []
   })
 }

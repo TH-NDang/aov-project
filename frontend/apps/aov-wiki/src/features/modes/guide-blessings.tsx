@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { BLESSING_TIER_NAMES, foldText, type Blessing } from "./auto-chess-model"
+import { BLESSING_TIER_NAMES, type Blessing } from "./auto-chess-model"
 import { ModeHeading } from "./mode-ui"
 import { BlessingIcon, GuideSearch, GuideText, TIER_STYLE, type GuideIndex } from "./guide-ui"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 const BLESSING_TIERS = ["NORMAL", "EPIC", "LEGENDARY"] as const
 
@@ -56,9 +57,9 @@ export function BlessingsTab({ index }: { index: GuideIndex }) {
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [tier, setTier] = useState<Blessing["tier"] | null>(null)
   const [search, setSearch] = useState("")
-  const needle = foldText(search.trim())
+  const needle = foldSearchText(search.trim())
   const matches = (blessing: Blessing) =>
-    !needle || foldText(`${blessing.name} ${blessing.description ?? ""}`).includes(needle)
+    !needle || foldSearchText(`${blessing.name} ${blessing.description ?? ""}`).includes(needle)
   const sections = BLESSING_TIERS.filter((value) => !tier || tier === value)
     .map((value) => ({
       tier: value,

@@ -4,18 +4,14 @@ import { Link, useParams, useSearchParams } from "react-router"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { termIcon } from "@aov/ui/components/gameplay-icons"
 import { navArtIcons } from "@aov/ui/components/nav-art-icons"
-import {
-  createEntityIndex,
-  defaultEntityColor,
-  foldEntitySearch,
-  referenceTranslation,
-} from "@aov/ui/lib/entity-rich-text"
+import { createEntityIndex, defaultEntityColor, referenceTranslation } from "@aov/ui/lib/entity-rich-text"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { notFoundMeta, termMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 import "./terms.css"
 
 /** An explanation this long, or one that holds a table, needs a row of its own instead of a third of one. */
@@ -65,9 +61,9 @@ export function TermsPage() {
         ),
     [settings, locale, fallback],
   )
-  const needle = foldEntitySearch(search.trim())
+  const needle = foldSearchText(search.trim())
   const visible = terms.filter(({ translation }) =>
-    foldEntitySearch([translation.name, ...translation.aliases, translation.description].join(" ")).includes(needle),
+    foldSearchText([translation.name, ...translation.aliases, translation.description].join(" ")).includes(needle),
   )
   // Short terms come first; the styles need their number to fill the last row of the grid instead of leaving one alone.
   const short = visible.filter(({ wide }) => !wide).length

@@ -1,5 +1,6 @@
 import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "../../features/hero/hero-classifications.ts"
 import { warehousePath, WAREHOUSE_TABS } from "../wiki-catalog.ts"
+import { warehouseText } from "@aov/ui/lib/warehouse-content"
 
 export const SITE_NAME = "AOV WiKi"
 const DESCRIPTION_LENGTH = 160
@@ -176,15 +177,6 @@ export function clampDescription(value: string, limit = DESCRIPTION_LENGTH) {
   return `${(lastSpace > limit / 2 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.–—-]+$/u, "")}…`
 }
 
-/** The chosen translation, or the first one when a language has not been written yet. */
-export function translationFor<T extends { locale: string }>(translations: readonly T[], locale: string) {
-  return (
-    translations.find((translation) => translation.locale === locale) ??
-    translations.find((translation) => translation.locale === "vi-VN") ??
-    translations[0]
-  )
-}
-
 const pageImage = (media: MediaLike | null | undefined, alt: string): PageImage | undefined => {
   const version = media?.currentVersion
   return version
@@ -314,7 +306,7 @@ export function heroMeta(hero: HeroMetaSource, locale: string): PageMeta {
 }
 
 export function warehouseEntryMeta(tab: WarehouseTab, entry: WarehouseEntryLike, locale: string): PageMeta {
-  const text = translationFor(entry.content.translations, locale)
+  const text = warehouseText(entry.content.translations, locale)
   const name = text?.name ?? entry.code
   const section = pick(locale, ...SECTIONS[tab].name)
   const heading = `${name} — ${section}`

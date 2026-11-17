@@ -2,11 +2,12 @@ import { useId, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } 
 import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router"
 import { EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
-import { foldEntitySearch, referenceTranslation, type EntityReference } from "@aov/ui/lib/entity-rich-text"
+import { referenceTranslation, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { wikiReferencesQuery } from "../lib/wiki-references"
 import { WikiIcon } from "./wiki-icon"
 import { SITE_NAME } from "../lib/seo/page-meta"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 import "./wiki-search.css"
 
 const LIMIT = 8
@@ -35,7 +36,7 @@ type Match = { entity: EntityReference; name: string; to: string }
  */
 function useMatches(search: string) {
   const scope = useWikiContext()
-  const needle = foldEntitySearch(search.trim())
+  const needle = foldSearchText(search.trim())
   const references = useQuery({ ...wikiReferencesQuery(scope), enabled: needle.length > 0 })
   const matches = useMemo<Match[]>(() => {
     if (!needle || !references.data) return []
@@ -45,7 +46,7 @@ function useMatches(search: string) {
       .flatMap((entity) => {
         const translation = referenceTranslation(entity, scope.locale, fallback)
         if (!translation) return []
-        const names = [translation.name, ...translation.aliases].map(foldEntitySearch)
+        const names = [translation.name, ...translation.aliases].map(foldSearchText)
         const rank = names.includes(needle)
           ? 0
           : names.some((name) => name.startsWith(needle))

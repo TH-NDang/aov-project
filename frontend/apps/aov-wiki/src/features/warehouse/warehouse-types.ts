@@ -1,6 +1,7 @@
 import { warehouseName, warehouseText } from "@aov/ui/lib/warehouse-content"
 import type { WarehouseContents } from "@aov/ui/lib/warehouse-content"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 export type PublishedWarehouseRecord = {
   [K in WarehouseKind]: WarehouseEntry<WarehouseContents[K]> & { kind: K }
 }[WarehouseKind]
@@ -90,13 +91,11 @@ export function warehouseImage(entry: WarehouseEntry, assetId = entry.content.ic
 }
 
 export function matchesWarehouseSearch(entry: WarehouseEntry, query: string, locale = "vi-VN") {
-  const normalize = (value: string) =>
-    value.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
   const text = warehouseText(entry.content.translations, locale)
-  const haystack = normalize(
+  const haystack = foldSearchText(
     `${warehouseName(entry, locale)} ${entry.code} ${text?.summary ?? ""} ${text?.description ?? ""}`,
   )
-  return normalize(query)
+  return foldSearchText(query)
     .trim()
     .split(/\s+/)
     .every((term) => haystack.includes(term))

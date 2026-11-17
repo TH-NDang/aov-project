@@ -1,10 +1,5 @@
-import {
-  entityKindLabels,
-  foldEntitySearch,
-  referenceTranslation,
-  validSkillReference,
-  type EntityReference,
-} from "./entity-rich-text"
+import { entityKindLabels, referenceTranslation, validSkillReference, type EntityReference } from "./entity-rich-text"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 export type ReferenceSearchPage = { items: EntityReference[]; page: number; size: number; totalElements: number }
 export type EntityReferenceSearch = (request: {
@@ -89,9 +84,9 @@ export function referenceReplacementRange(
   const translation = referenceTranslation(entity, locale, fallbackLocale)
   const names = [translation?.name, ...(translation?.aliases ?? [])]
     .filter((name): name is string => !!name)
-    .map(foldEntitySearch)
+    .map(foldSearchText)
   const phrase = plainReferenceCandidates(value, { start: suggestion.end, end: suggestion.end }).find((candidate) =>
-    names.some((name) => name.startsWith(foldEntitySearch(candidate.query))),
+    names.some((name) => name.startsWith(foldSearchText(candidate.query))),
   )
   return phrase ?? suggestion
 }
@@ -142,7 +137,7 @@ export function insertReference(
 }
 
 export function referenceSearchGroup(query: string) {
-  const fold = (text: string) => foldEntitySearch(text).trim()
+  const fold = (text: string) => foldSearchText(text).trim()
   const source = fold(query).replace(/^@/, "")
   const groups = [
     ["chiêu thức", "skill"],
@@ -180,7 +175,7 @@ export function createReferenceSearchIndex(entities: EntityReference[], locale: 
         {
           entity,
           translation,
-          search: [translation.name, ...translation.aliases, entity.id].map((text) => foldEntitySearch(text).trim()),
+          search: [translation.name, ...translation.aliases, entity.id].map((text) => foldSearchText(text).trim()),
         },
       ]
     })

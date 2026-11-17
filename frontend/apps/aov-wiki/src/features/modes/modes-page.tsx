@@ -5,10 +5,10 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
-import { foldText } from "./auto-chess-model"
 import { modeCardsQuery, type ModeCard } from "./mode-api"
 import { ModeCards, ModeCardsSkeleton, modeMetaText } from "./mode-cards"
 import { AvailabilityState, GROUP_NAMES, hasSchedule, isOpen, ModeArt, ModeHeading } from "./mode-ui"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 import "./modes.css"
 import "./mode-pages.css"
 
@@ -39,9 +39,9 @@ export function ModesPage() {
   const all = modes.data?.items ?? []
 
   const visible = useMemo(() => {
-    const needle = foldText(search.trim())
+    const needle = foldSearchText(search.trim())
     return all.filter((mode) => {
-      if (needle && !foldText(`${mode.name} ${mode.summary ?? ""}`).includes(needle)) return false
+      if (needle && !foldSearchText(`${mode.name} ${mode.summary ?? ""}`).includes(needle)) return false
       if (filter === "PVP" || filter === "ENTERTAINMENT") return mode.group === filter
       if (filter === "open") return isOpen(mode.availability)
       if (filter === "guide") return mode.hasGuide

@@ -5,9 +5,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/publ
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { foldText, TRAIT_KIND_NAMES, type Trait, type Unit } from "./auto-chess-model"
+import { TRAIT_KIND_NAMES, type Trait, type Unit } from "./auto-chess-model"
 import { GoldIcon } from "./gold-icon"
 import { costStyle, GuideSearch, TraitIcon, type GuideIndex } from "./guide-ui"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 const KINDS = ["FACTION", "CLASS"] as const
 
@@ -37,12 +38,12 @@ export function useUnitFilter(index: GuideIndex) {
       },
       { replace: true, preventScrollReset: true },
     )
-  const needle = foldText(search.trim())
+  const needle = foldSearchText(search.trim())
   // Several factions or several classes widen the choice; a faction and a class narrow it to units with both.
   const pickedOf = (kind: Trait["kind"]) => picked.filter((code) => index.traits.get(code)?.kind === kind)
   const fits = (unit: Unit, codes: string[]) => !codes.length || codes.some((code) => unit.traitCodes.includes(code))
   const base = index.content.units.filter(
-    (unit) => (!cost || unit.cost === cost) && (!needle || foldText(unit.name).includes(needle)),
+    (unit) => (!cost || unit.cost === cost) && (!needle || foldSearchText(unit.name).includes(needle)),
   )
   return {
     search,

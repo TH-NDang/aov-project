@@ -1,4 +1,5 @@
 import type { HeroGlyphName } from "./hero-glyph"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 export type HeroRole = "TANK" | "WARRIOR" | "ASSASSIN" | "MAGE" | "MARKSMAN" | "SUPPORT"
 export type HeroPosition = "TOP" | "JUNGLE" | "MID" | "DRAGON" | "SUPPORT"
@@ -49,12 +50,7 @@ export function localizedHeroOptions<Value extends HeroRole | HeroPosition>(
 }
 
 export function normalizedHeroSearch(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[đĐ]/g, "d")
-    .toLocaleLowerCase("vi-VN")
-    .trim()
+  return foldSearchText(value).trim()
 }
 
 export function selectedHeroFilters<Value extends string>(

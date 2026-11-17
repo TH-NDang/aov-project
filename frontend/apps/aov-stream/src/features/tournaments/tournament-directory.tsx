@@ -8,9 +8,9 @@ import { useStreamLocale } from "../../components/stream-locale"
 import { StreamShell } from "../../components/stream-shell"
 import { FilterSelect, ScheduleNote } from "./competition-schedule"
 import { GameCard } from "./game-card"
-import { searchKey } from "./match-schedule"
 import { gamesQuery, tournamentsQuery } from "./tournament-api"
 import { seriesRound, seriesTeams } from "./tournament-model"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /** The match a game belongs to in a few words: both teams and, where the match has one, its round. */
 function matchName(game: PublishedGame, locale: string) {
@@ -31,7 +31,7 @@ export function TournamentDirectory() {
   const tournament = params.get("tournament") || ""
   const seriesId = params.get("series") || ""
   const q = params.get("q") || ""
-  const search = useDeferredValue(searchKey(q.trim()))
+  const search = useDeferredValue(foldSearchText(q.trim()))
   const games = useInfiniteQuery(gamesQuery({ tournamentId: tournament || undefined, seriesId: seriesId || undefined }))
   const tournaments = useQuery(tournamentsQuery)
   const competitions = tournaments.data?.items ?? []
@@ -39,7 +39,7 @@ export function TournamentDirectory() {
   const visible = entries.filter(
     (game) =>
       !search ||
-      searchKey(
+      foldSearchText(
         [
           game.tournament.name,
           game.series.name,

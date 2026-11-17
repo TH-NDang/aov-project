@@ -2,6 +2,7 @@ import type { CompetitionSlot } from "@aov/community-contracts"
 import { calendarDaysBetween, dayKeyInZone, formatInZone } from "@aov/ui/lib/time-zone"
 import { matchRoundLabel, matchUnderway, matchWinner } from "./competition-model.ts"
 import { matchState, type CompetitionMatch } from "./match-model.ts"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 export type ScheduleScope = "all" | "upcoming" | "results"
 
@@ -161,15 +162,6 @@ export function matchRound(entry: CompetitionMatch) {
   return matchRoundLabel(entry.match, stage) ?? stage?.name ?? null
 }
 
-/** Lower case without tone marks, so a search typed without them still finds accented names. */
-export function searchKey(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-}
-
 /** Everything a reader may type to find a match: both teams, the competition and who runs it. */
 export function matchSearchKey(entry: CompetitionMatch) {
   const { tournament, plan, teams } = entry.competition.content
@@ -177,5 +169,5 @@ export function matchSearchKey(entry: CompetitionMatch) {
     const team = side.teamId ? teams[side.teamId] : undefined
     return team ? [team.name, team.shortName, ...(team.aliases ?? [])] : []
   })
-  return searchKey([...names, tournament.name, plan.circuit, plan.organizer].filter(Boolean).join(" "))
+  return foldSearchText([...names, tournament.name, plan.circuit, plan.organizer].filter(Boolean).join(" "))
 }

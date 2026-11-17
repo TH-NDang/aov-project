@@ -23,6 +23,7 @@ import { competitionStatus } from "../tournaments/competition-model"
 import { profileKindEnglish, TimeAgo } from "./community-ui"
 import { CompetitionCard } from "../tournaments/competition-card"
 import { competitionCatalogQuery } from "../tournaments/tournament-api"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 import "./community.css"
 import "./community-explore.css"
 
@@ -137,13 +138,11 @@ function NewVideos() {
   )
 }
 
-const normalize = (value: string) => value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d")
-
 /** Published competitions whose name or circuit holds the search, those not yet finished first, then the newest. */
 function matchingCompetitions(catalog: CompetitionView[], search: string) {
   return catalog
     .filter((entry) =>
-      normalize(`${entry.content.tournament.name} ${entry.content.plan.circuit}`).includes(normalize(search)),
+      foldSearchText(`${entry.content.tournament.name} ${entry.content.plan.circuit}`).includes(foldSearchText(search)),
     )
     .sort(
       (a, b) =>
