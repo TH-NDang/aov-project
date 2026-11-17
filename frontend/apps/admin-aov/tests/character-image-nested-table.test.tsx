@@ -8,7 +8,7 @@ import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import type { Request } from "../src/features/publishing/publishing-api"
 import type { CharacterImageGroup } from "../src/features/media/character-image-api"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("full-width hero groups load on scroll, keep every candidate and separate expanding, copying and previewing", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/media" })
@@ -272,9 +272,7 @@ test("full-width hero groups load on scroll, keep every candidate and separate e
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1300))
-    })
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

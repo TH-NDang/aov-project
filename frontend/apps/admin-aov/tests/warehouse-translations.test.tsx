@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { SecondaryContent } from "../src/features/warehouse/secondary-editor"
 import type { WarehouseEntry, WarehouseRevision } from "../src/features/warehouse/warehouse-types"
 import type { SpellContent, ArcanaContent, ItemContent, EnchantmentContent } from "@aov/ui/lib/warehouse-content"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 let activeRequests: string[] = []
 let removalEvents: Record<string, unknown>[] = []
@@ -372,23 +372,19 @@ async function withUi(
           Object.defineProperty(input, "files", { configurable: true, value: [file] })
           input.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
         })
-        for (let attempt = 0; attempt < 100; attempt++) {
-          if (
+        await waitFor(
+          () =>
             document.body.textContent?.includes("Asset đã chọn: uploaded-icon") ||
-            document.querySelector('[role="alert"]')
-          )
-            return
-          await act(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 10))
-          })
-        }
+            document.querySelector('[role="alert"]'),
+          "The upload finishes or reports its error",
+        )
       },
     })
   } finally {
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

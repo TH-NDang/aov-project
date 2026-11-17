@@ -6,7 +6,7 @@ import { act } from "react"
 import type { Root } from "react-dom/client"
 import type { CatalogFilter } from "../src/features/publishing/catalog-context"
 import type { PublicationOverview } from "../src/features/publishing/publication-overview"
-import { installWindow } from "./fixtures/dom"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
@@ -195,11 +195,10 @@ test("catalog navigation remembers the season or patch, pins empty selections an
       const enter = new dom.window.Event("pointerover", { bubbles: true })
       Object.defineProperty(enter, "pointerType", { value: "mouse" })
       trigger.dispatchEvent(enter)
-      await new Promise((resolve) => setTimeout(resolve, 180))
     })
-    const check = dom.window.document.querySelector<HTMLInputElement>(
-      '[data-slot="popover-content"] input[type=checkbox]',
-    )!
+    const check = await waitFor(() =>
+      dom.window.document.querySelector<HTMLInputElement>('[data-slot="popover-content"] input[type=checkbox]'),
+    )
     assert.ok(check?.checked)
     await act(async () => check.click())
     assert.equal(patch("current-patch")?.getAttribute("aria-pressed"), "true")

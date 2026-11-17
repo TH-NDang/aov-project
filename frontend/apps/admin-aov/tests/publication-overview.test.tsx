@@ -5,7 +5,7 @@ import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow } from "./fixtures/dom"
 
 test("publication overview shows flags and hero heads, and only tabs with changes in the selected patch", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/game-configuration" })
@@ -155,8 +155,8 @@ test("publication overview shows flags and hero heads, and only tabs with change
   const updateCache = async (key: readonly unknown[], value: unknown) => {
     await act(async () => {
       cache.setQueryData(key, value)
-      await new Promise((resolve) => setTimeout(resolve, 10))
     })
+    await flush()
   }
   try {
     await verifySession()

@@ -4,6 +4,7 @@ import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import type { Root } from "react-dom/client"
+import { waitFor } from "./fixtures/dom"
 
 const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
 const moment = "2026-11-06T18:30:00Z"
@@ -161,15 +162,13 @@ test("the keyboard reaches and toggles it: focus opens, Enter and Space press, E
 test("hovering opens it and leaving closes it; a click keeps it open", async () => {
   await render(<LocalTime value={moment} />)
   await fire(shown(), "pointerover", { pointerType: "mouse" })
-  await wait(150)
-  assert.ok(popup(), "hover opens")
+  await waitFor(popup, "hover opens")
 
   await fire(shown(), "pointerout", { pointerType: "mouse" })
-  await wait(200)
-  assert.equal(popup(), null, "leaving closes")
+  await waitFor(() => popup() === null, "leaving closes")
 
   await fire(shown(), "pointerover", { pointerType: "mouse" })
-  await wait(150)
+  await waitFor(popup, "hover opens again")
   await fire(shown(), "click")
   await fire(shown(), "pointerout", { pointerType: "mouse" })
   await wait(200)

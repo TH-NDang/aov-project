@@ -4,7 +4,7 @@ import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { installWindow } from "./fixtures/dom"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 async function createView(observe = true) {
   const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true, url: "http://localhost/hero/test" })
@@ -186,15 +186,13 @@ test("scroll and resize fallback works without IntersectionObserver and cleans u
     view.setHeadingTop(15)
     await act(async () => {
       view.document.getElementById("inner-scroll")!.dispatchEvent(new view.dom.window.Event("scroll"))
-      await new Promise((resolve) => setTimeout(resolve, 30))
     })
-    assert.equal(view.host().dataset.visible, "true")
+    await waitFor(() => view.host().dataset.visible === "true", "Scrolling the heading away shows the identity")
     view.setHeadingTop(130)
     await act(async () => {
       view.dom.window.dispatchEvent(new view.dom.window.Event("resize"))
-      await new Promise((resolve) => setTimeout(resolve, 30))
     })
-    assert.equal(view.host().dataset.visible, "false")
+    await waitFor(() => view.host().dataset.visible === "false", "The heading back in view hides the identity")
     assert.equal(view.host().querySelector("img"), null)
   } finally {
     await view.close()

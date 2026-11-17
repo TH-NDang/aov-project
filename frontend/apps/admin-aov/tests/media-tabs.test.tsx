@@ -8,7 +8,7 @@ import { HotkeysProvider } from "../src/app/hotkeys"
 import { PageTabPanels, PageTabsProvider, usePageTabs } from "../src/app/layout/page-tabs"
 import { mediaTabLocation, readMediaTab } from "../src/features/media/media-location"
 import type { Request } from "../src/features/publishing/publishing-api"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("media tab locations preserve filters and keep portrait as the canonical default", () => {
   const filters = new URLSearchParams("ruleset=rule&q=airi&tab=cover")
@@ -185,9 +185,7 @@ test("media query tabs restore back/forward state and legacy links never create 
     await act(async () => root.unmount())
     client.clear()
     router.dispose()
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50))
-    })
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

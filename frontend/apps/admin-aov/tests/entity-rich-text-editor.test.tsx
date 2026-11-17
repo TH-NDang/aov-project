@@ -23,7 +23,7 @@ import {
   referenceInputValue,
   referenceInputSelection,
 } from "./fixtures/reference-input"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow } from "./fixtures/dom"
 
 const entities: EntityReference[] = [
   {
@@ -368,7 +368,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     assert.equal(observed.size, 0)
   } finally {
     await act(async () => root.unmount())
-    await new Promise((resolve) => setTimeout(resolve, 30))
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

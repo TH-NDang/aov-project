@@ -33,7 +33,7 @@ import {
   fetchShopCaptures,
   findHeroCode,
 } from "../src/features/publishing/use-patch-captures"
-import { installWindow } from "./fixtures/dom"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 /** A patch picture's id is the SHA-256 of its bytes, which is also what its presigned link is asked by. */
 const capture = (id: string, section: CaptureImage["section"], extra: Partial<CaptureImage> = {}): CaptureImage => ({
@@ -532,13 +532,10 @@ async function mount() {
     picture: () => document.querySelector<HTMLImageElement>("[data-testid=capture-frame] img"),
     /** Waits until the open picture shows these bytes; its presigned link arrives a moment after the panel. */
     showing: async (sha256: string) => {
-      for (let attempt = 0; attempt < 200; attempt++) {
-        if (document.querySelector("[data-testid=capture-frame] img")?.getAttribute("src") === link(sha256)) return
-        await act(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 5))
-        })
-      }
-      assert.fail(`The panel never showed ${link(sha256)}.`)
+      await waitFor(
+        () => document.querySelector("[data-testid=capture-frame] img")?.getAttribute("src") === link(sha256),
+        `The panel never showed ${link(sha256)}.`,
+      )
     },
     byLabel: (label: string) => document.querySelector(`[aria-label="${label}"]`),
     chip: (label: string) =>

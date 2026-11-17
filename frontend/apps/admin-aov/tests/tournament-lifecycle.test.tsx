@@ -5,7 +5,7 @@ import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import type { RecordDeletionImpact } from "@aov/community-contracts"
-import { installWindow, withGlobals } from "./fixtures/dom"
+import { flush, installWindow, withGlobals } from "./fixtures/dom"
 
 const [{ tournamentApi }, { lifecycleUsages, lifecycleErrorUsages }, { ApiError }] = await withGlobals(
   { BroadcastChannel: undefined },
@@ -80,11 +80,6 @@ async function withUi(
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
   })
-  const flush = async () => {
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 15))
-    })
-  }
   try {
     await run({
       document: dom.window.document,

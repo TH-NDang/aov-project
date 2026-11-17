@@ -9,7 +9,7 @@ import { useChangeEffect } from "../src/hooks/use-change-effect"
 import { useTable } from "@tanstack/react-table"
 import { dataTableFeatures } from "../src/components/data-table/table-features"
 import { HotkeysProvider, useHotkeys } from "../src/app/hotkeys"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow } from "./fixtures/dom"
 
 const tableRows = [
   { id: "1", name: "A" },
@@ -116,11 +116,6 @@ test("tab sessions preserve drafts, filters, route params, DOM, scroll and query
     { initialEntries: ["/heroes"] },
   )
   const root = createRoot(dom.window.document.getElementById("root")!)
-  const flush = async () => {
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20))
-    })
-  }
   const navigate = async (to: string) => {
     await act(async () => {
       await router.navigate(to)

@@ -4,7 +4,7 @@ import { act } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { JSDOM } from "jsdom"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
-import { installWindow } from "./fixtures/dom"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 const entity: EntityReference = {
   id: "hero-1",
@@ -145,9 +145,8 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     assert.ok(document.querySelector('[role="dialog"]'), "Pointer hover opens the card")
     await act(async () => {
       trigger.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: document.body }))
-      await new Promise((resolve) => setTimeout(resolve, 220))
     })
-    assert.ok(!document.querySelector('[role="dialog"]'), "Pointer leave closes an unfocused card")
+    await waitFor(() => !document.querySelector('[role="dialog"]'), "Pointer leave closes an unfocused card")
     await act(async () => trigger.focus())
     await settle()
     assert.ok(document.querySelector('[role="dialog"]'))

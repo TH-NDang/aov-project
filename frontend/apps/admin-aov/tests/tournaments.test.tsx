@@ -13,7 +13,7 @@ import {
   parseGameTime,
   selectionName,
 } from "../src/features/tournaments/tournament-model"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow } from "./fixtures/dom"
 
 const series: SeriesContent = {
   code: "final",
@@ -214,9 +214,7 @@ test("changing one game's season keeps its already observed picks and leaves oth
           <Host />
         </QueryClientProvider>,
       )
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 20))
-      })
+      await flush()
       await change("select:nth-of-type(1)", "VN")
       await change('select[aria-label="Mùa"]', "s3")
       assert.equal(latest.seasonId, "s3")

@@ -4,7 +4,7 @@ import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow } from "./fixtures/dom"
 
 const dom = new JSDOM('<div id="root"></div><button id="origin">Origin</button>', {
   url: "http://localhost/",
@@ -14,19 +14,13 @@ installWindow(dom.window)
 
 const document = dom.window.document
 
-async function settle() {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 10))
-  })
-}
-
 async function mounted(element: React.ReactNode) {
   const { createRoot } = await import("react-dom/client")
   const host = document.createElement("div")
   document.body.append(host)
   const root = createRoot(host)
   await act(async () => root.render(element))
-  await settle()
+  await flush()
   return async () => {
     await act(async () => root.unmount())
     host.remove()
@@ -43,7 +37,7 @@ function dialogButton(label: string) {
 
 async function click(element: HTMLElement) {
   await act(async () => element.click())
-  await settle()
+  await flush()
 }
 
 test("the shared question is red, opens on Cancel, answers once and returns focus", async () => {
@@ -61,7 +55,7 @@ test("the shared question is red, opens on Cancel, answers once and returns focu
     await act(async () => {
       answer = confirmAction(custom)
     })
-    await settle()
+    await flush()
     return { answer: answer! }
   }
 
@@ -86,7 +80,7 @@ test("the shared question is red, opens on Cancel, answers once and returns focu
     await act(async () => {
       document.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
     })
-    await settle()
+    await flush()
     assert.equal(await escaped.answer, false, "Escape is a refusal")
     assert.equal(dialog(), null)
 
@@ -155,7 +149,7 @@ test("closing a tab waits for the answer and keeps the tab when refused", async 
     await act(async () => {
       await router.navigate("/dirty")
     })
-    await settle()
+    await flush()
     await click(closeButton()!)
     assert.ok(dialog(), "Closing a dirty tab asks first")
     assert.ok(closeButton(), "The tab stays open while the question is unanswered")
@@ -203,7 +197,7 @@ test("browser Back waits for the answer while edits are unsaved", async () => {
     await act(async () => {
       await router.navigate(-1)
     })
-    await settle()
+    await flush()
   }
 
   try {

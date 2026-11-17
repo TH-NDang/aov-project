@@ -4,7 +4,7 @@ import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Request } from "../src/features/publishing/publishing-api"
-import { installWindow } from "./fixtures/dom"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("import wizard carries patch context and never selects rows without a known baseline", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
@@ -288,11 +288,7 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     assert.deepEqual(uploads, [])
     assert.ok(!calls.some((c) => c.path.includes("/media/")))
     await click("Lưu 1 bản nháp")
-    for (let attempt = 0; attempt < 100 && !calls.some((call) => call.path.endsWith("/jobs")); attempt++) {
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 20))
-      })
-    }
+    await waitFor(() => calls.some((call) => call.path.endsWith("/jobs")), "Saving starts the import job")
     assert.deepEqual(uploads, ["hero.png", "skill.png", "skin.png"])
     const job = calls.find((c) => c.path.endsWith("/jobs"))!
     const values = (job.body.rows as { values: Record<string, unknown> }[])[0].values

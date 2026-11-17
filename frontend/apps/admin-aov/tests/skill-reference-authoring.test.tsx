@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("admin authors natural skill mentions and restores saved references with their hero and exact skill route", async () => {
   const dom = new JSDOM('<div id="root"></div>', {
@@ -264,7 +264,7 @@ test("admin authors natural skill mentions and restores saved references with th
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await new Promise((resolve) => setTimeout(resolve, 30))
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

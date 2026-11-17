@@ -21,7 +21,7 @@ import {
 } from "@aov/ui/lib/entity-rich-text-editor"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { referenceInput, fillReferenceInput, referenceInputValue } from "./fixtures/reference-input"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow } from "./fixtures/dom"
 
 const heroId = "43dec8c3-0197-4459-bbdf-9812fbc12dd6"
 const skill: EntityReference = {
@@ -271,10 +271,8 @@ test("remote skill suggestions debounce, page on inner scroll, retain lazy paire
     assert.equal(document.querySelector("a")?.getAttribute("href"), resolveEntityRoute(skill, "admin"))
     assert.equal(document.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
   } finally {
-    await act(async () => {
-      root.unmount()
-      await new Promise((resolve) => setTimeout(resolve, 30))
-    })
+    await act(async () => root.unmount())
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

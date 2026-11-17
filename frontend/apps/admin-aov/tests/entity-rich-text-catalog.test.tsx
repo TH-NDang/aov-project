@@ -11,7 +11,7 @@ import {
   referenceInputValue,
   selectReferenceInput,
 } from "./fixtures/reference-input"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("catalog lists backend heroes, warehouse items and glossary; filters, mentions and server round-trip work", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/terminology", pretendToBeVisual: true })
@@ -306,7 +306,7 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await new Promise((resolve) => setTimeout(resolve, 30))
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

@@ -10,7 +10,7 @@ import { characterMediaOwners, ownerMainEntry } from "../src/features/media/char
 import type { Request } from "../src/features/publishing/publishing-api"
 import type { CharacterImageEntry, CharacterImageGroup } from "../src/features/media/character-image-api"
 import type { Preview } from "../src/features/publishing/types"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 function viewerFixture(): Preview {
   const content = structuredClone(fixtureContent)
@@ -318,9 +318,7 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50))
-    })
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

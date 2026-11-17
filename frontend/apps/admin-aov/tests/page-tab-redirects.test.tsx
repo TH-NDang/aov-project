@@ -6,7 +6,7 @@ import { createMemoryRouter, Navigate, RouterProvider, useNavigate } from "react
 import { HotkeysProvider } from "../src/app/hotkeys"
 import { PageTabPanels, PageTabsProvider, replacingPageTab, usePageTabs } from "../src/app/layout/page-tabs"
 import type { RouteHandle } from "../src/app/layout/site-header"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow } from "./fixtures/dom"
 
 test("redirect-only routes execute without opening ghost tabs or remounting existing page sessions", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/heroes/airi?tab=skins" })
@@ -55,10 +55,6 @@ test("redirect-only routes execute without opening ghost tabs or remounting exis
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document
-  const flush = async () =>
-    act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20))
-    })
   const navigate = async (to: string) => {
     await act(async () => {
       await router.navigate(to)
@@ -148,10 +144,6 @@ test("a redirect that replaces its page takes over that page's tab in place", as
   )
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
-  const flush = async () =>
-    act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20))
-    })
   const navigateTo = async (to: string) => {
     await act(async () => {
       await router.navigate(to)

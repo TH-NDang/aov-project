@@ -6,7 +6,7 @@ import type { GameContent } from "@aov/community-contracts"
 import type { GameView } from "../src/features/esports/model/game-view"
 import type { TimelineEvent } from "../src/features/esports/model/timeline"
 import type { VodPlayerHandle } from "../src/features/esports/components/game/vod-player"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 async function withDom(
   run: (document: Document, render: (node: React.ReactNode) => Promise<void>) => Promise<void>,
@@ -534,7 +534,7 @@ const popoverGlobals = (window: JSDOM["window"]) => ({
     disconnect() {}
   },
 })
-const settle = () => act(async () => new Promise((resolve) => setTimeout(resolve, 20)))
+const settle = () => flush()
 function type(input: HTMLInputElement, value: string) {
   const window = input.ownerDocument.defaultView!
   Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")!.set!.call(input, value)
@@ -1112,9 +1112,8 @@ test("clicking into the video hands keyboard focus back so page shortcuts keep w
     assert.equal(document.activeElement, frame)
     await act(async () => {
       window.dispatchEvent(new window.Event("blur"))
-      await new Promise((resolve) => setTimeout(resolve, 5))
     })
-    assert.notEqual(document.activeElement, frame)
+    await waitFor(() => document.activeElement !== frame, "Leaving for the video returns focus to the page")
   })
 })
 

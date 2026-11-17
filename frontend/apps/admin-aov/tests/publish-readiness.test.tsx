@@ -23,7 +23,7 @@ import {
 import type { Revision } from "../src/features/publishing/types"
 import { createHeroFixture, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { installWindow } from "./fixtures/dom"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 const standard = "standard"
 const revision = (
@@ -307,11 +307,7 @@ async function withDocument(
           ),
         ),
       waitFor: async (condition, message) => {
-        for (let attempt = 0; attempt < 500 && !condition(); attempt++)
-          await act(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 10))
-          })
-        assert.ok(condition(), message)
+        await waitFor(condition, { message, timeout: 5000 })
       },
       click: (element) => act(async () => element.click()),
       search: () => search,

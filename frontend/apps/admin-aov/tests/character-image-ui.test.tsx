@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import type { Request } from "../src/features/publishing/publishing-api"
 import type { CharacterImageGroup, SkinBadgeRecord } from "../src/features/media/character-image-api"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("backend media groups retain missing main rows, select alternatives with expected version and protect published bindings", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/portraits" })
@@ -237,9 +237,7 @@ test("backend media groups retain missing main rows, select alternatives with ex
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50))
-    })
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

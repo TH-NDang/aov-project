@@ -190,6 +190,7 @@ async function withDom(
   restoreGlobals = installWindow(window, values)
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(window.document.getElementById("root")!)
+  // The fake service answers each change after a moment, so settling waits longer than that queue.
   const settle = () => act(async () => new Promise<void>((resolve) => setTimeout(resolve, 60)))
   try {
     await run({

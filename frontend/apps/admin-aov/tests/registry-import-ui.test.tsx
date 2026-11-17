@@ -4,7 +4,7 @@ import React, { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createMemoryRouter, RouterProvider } from "react-router"
-import { installWindow } from "./fixtures/dom"
+import { flush, installWindow } from "./fixtures/dom"
 
 test("file selection previews named records without mutation until the explicit start action", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost:5175/tournaments" })
@@ -47,11 +47,6 @@ test("file selection previews named records without mutation until the explicit 
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
   const root = createRoot(dom.window.document.getElementById("root")!)
   const router = createMemoryRouter([{ path: "/", element: <RegistryImportSheet onClose={() => {}} /> }])
-  const flush = async () => {
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20))
-    })
-  }
   try {
     await act(async () =>
       root.render(

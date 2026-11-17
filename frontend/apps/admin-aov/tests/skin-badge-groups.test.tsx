@@ -10,7 +10,7 @@ import type { SkinBadgeRecord } from "../src/features/media/character-image-api"
 import { badgeGroupKeys, createSkinBadgeGroupsApi, type BadgeGroup } from "../src/features/media/skin-badge-groups-api"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 const rank: BadgeGroup = {
   id: "rank-a",
@@ -229,9 +229,7 @@ async function withUi(
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50))
-    })
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

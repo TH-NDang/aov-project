@@ -12,7 +12,7 @@ import {
   setReferenceInputSelection,
 } from "@aov/ui/lib/reference-input-dom"
 import type { EntityReferenceInputHandle } from "@aov/ui/components/entity-reference-input"
-import { installWindow } from "./fixtures/dom"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 const heroId = "00000000-0000-4000-8000-000000000001"
 const token = `<ref=skill:${heroId}.skill-1-2>Phi tiêu</ref>`
@@ -134,8 +134,10 @@ test("IME changes remain undecorated until commit, overflow rolls back, and disa
     assert.equal(highlights.size, 0, "Composition pauses do not decorate unfinished input")
     await act(async () => input().dispatchEvent(new dom.window.CompositionEvent("compositionend", { bubbles: true })))
     assert.equal(saved, "abcđ")
-    await act(async () => new Promise((resolve) => setTimeout(resolve, 400)))
-    assert.equal(highlights.size, 1, "Finishing composition schedules recognition even when the value is unchanged")
+    await waitFor(
+      () => highlights.size === 1,
+      "Finishing composition schedules recognition even when the value is unchanged",
+    )
     assert.equal(input().textContent, "abcđ")
     const before = changes
     await act(async () => root.render(<Harness disabled />))

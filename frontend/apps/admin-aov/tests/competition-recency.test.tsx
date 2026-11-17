@@ -4,7 +4,7 @@ import React, { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { DocumentView, TeamContent } from "@aov/community-contracts"
-import { installWindow, withGlobals } from "./fixtures/dom"
+import { installWindow, waitFor, withGlobals } from "./fixtures/dom"
 
 const [{ activityLabel, recordReason, regionsNamedBy, tournamentTiming }, { createTournamentApi, tournamentApi }] =
   await withGlobals({ BroadcastChannel: undefined }, () =>
@@ -172,15 +172,12 @@ test("the picker shows the server's rows with their reasons, leaves out what is 
       const trigger = document.querySelector("button")!
       await act(async () => {
         trigger.dispatchEvent(new window.MouseEvent("click", { bubbles: true }))
-        await new Promise((resolve) => setTimeout(resolve, 20))
       })
+      await waitFor(() => asked.length > 0, "Opening the picker asks for the first page")
       assert.deepEqual(asked[0], { q: "", tournamentId: "event", page: 0 })
 
       const options = () => [...document.querySelectorAll<HTMLButtonElement>(".tournament-picker-options > button")]
-      for (let attempt = 0; attempt < 50 && !options().length; attempt++)
-        await act(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 20))
-        })
+      await waitFor(() => options().length > 0, "The picker lists the teams")
       const buttons = options()
       const text = buttons.map((button) => button.textContent)
       assert.equal(buttons.length, 2, "the row already taken is left out")

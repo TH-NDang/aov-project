@@ -25,7 +25,7 @@ import {
 } from "@aov/ui/lib/entity-rich-text"
 import { analyzeStat, statDistribution } from "../src/features/publishing/hero-stat-analysis"
 import { combatAttributeRows, type StatDefault, type StatSample } from "../src/features/publishing/combat-attributes"
-import { installWindow } from "./fixtures/dom"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -755,11 +755,7 @@ async function createView() {
       act(async () => root.render(<QueryClientProvider client={client}>{node}</QueryClientProvider>)),
     click: async (node: HTMLElement) => act(async () => node.click()),
     waitFor: async (condition: () => boolean) => {
-      for (let attempt = 0; attempt < 100 && !condition(); attempt++)
-        await act(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 5))
-        })
-      assert.ok(condition(), "Expected skill view state was not reached")
+      await waitFor(condition, "Expected skill view state was not reached")
     },
     close: async () => {
       await act(async () => root.unmount())

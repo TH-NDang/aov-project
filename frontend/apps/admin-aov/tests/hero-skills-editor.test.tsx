@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Skill, Skills } from "../src/features/publishing/types"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("focused skill editing preserves forms, effects and translations while adding unique skills and selecting media", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/fixture-hero", pretendToBeVisual: true })
@@ -398,7 +398,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

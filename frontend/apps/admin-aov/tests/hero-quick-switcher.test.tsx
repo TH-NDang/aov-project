@@ -5,7 +5,7 @@ import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { HeroRow } from "../src/features/publishing/types"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -148,9 +148,7 @@ async function createSwitcher() {
       await act(async () => root.unmount())
       client.clear()
       await logout()
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 30))
-      })
+      await flush()
       dom.window.close()
       restoreGlobals()
     },
