@@ -1,6 +1,4 @@
 import assert from "node:assert/strict"
-import { readdirSync, readFileSync, statSync } from "node:fs"
-import { join } from "node:path"
 import { test } from "node:test"
 import React, { act } from "react"
 import { JSDOM } from "jsdom"
@@ -8,24 +6,6 @@ import type { GameContent } from "@aov/community-contracts"
 import type { GameView } from "../src/features/esports/model/game-view"
 import type { TimelineEvent } from "../src/features/esports/model/timeline"
 import type { VodPlayerHandle } from "../src/features/esports/components/game/vod-player"
-
-const COMPONENTS = join(import.meta.dirname, "../src/features/esports/components")
-const MODEL = join(import.meta.dirname, "../src/features/esports/model")
-
-function files(directory: string): string[] {
-  return readdirSync(directory).flatMap((name) => {
-    const path = join(directory, name)
-    return statSync(path).isDirectory() ? files(path) : /\.tsx?$/.test(name) ? [path] : []
-  })
-}
-
-test("viewer components and models stay free of admin-only modules so the public site can reuse them", () => {
-  for (const file of [...files(COMPONENTS), ...files(MODEL)]) {
-    const source = readFileSync(file, "utf8")
-    assert.doesNotMatch(source, /from "@\/(app|features\/tournaments|lib\/api)/, `${file} imports an admin module`)
-    assert.doesNotMatch(source, /tournamentApi|useSession/, `${file} reaches the admin API`)
-  }
-})
 
 async function withDom(
   run: (document: Document, render: (node: React.ReactNode) => Promise<void>) => Promise<void>,

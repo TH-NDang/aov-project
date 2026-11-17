@@ -1,8 +1,5 @@
 import assert from "node:assert/strict"
-import { readdirSync, readFileSync } from "node:fs"
-import { join } from "node:path"
 import { test } from "node:test"
-import { fileURLToPath } from "node:url"
 import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
@@ -65,14 +62,6 @@ async function click(element: HTMLElement) {
   await act(async () => element.click())
   await settle()
 }
-
-test("admin never asks through the browser's own confirm box", () => {
-  const source = fileURLToPath(new URL("../src", import.meta.url))
-  const offenders = readdirSync(source, { recursive: true, encoding: "utf8" }).filter(
-    (path) => /\.tsx?$/.test(path) && readFileSync(join(source, path), "utf8").includes("window.confirm"),
-  )
-  assert.deepEqual(offenders, [], "Use confirmAction or confirmDiscard from components/confirm-dialog")
-})
 
 test("the shared question is red, opens on Cancel, answers once and returns focus", async () => {
   const { ConfirmDialogHost, confirmAction } = await import("../src/components/confirm-dialog")

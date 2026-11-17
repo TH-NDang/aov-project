@@ -41,6 +41,8 @@ jobs:
       - run: git diff --exit-code -- apps/admin-aov/src/features/publishing/generated/hero-api.d.ts
       # Includes the Admin test files (tests/tsconfig.json), which the test runner does not type-check.
       - run: pnpm typecheck
+      # Rules about the source itself (text size, confirm boxes, module boundaries); they read files, so they are not tests.
+      - run: pnpm lint
       # Every package runs all of its tests/*.test.* files, so a new test file is picked up without editing a list.
       - run: pnpm test
       - run: pnpm build
