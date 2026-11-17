@@ -70,7 +70,7 @@ const rules: Rule[] = [
   },
   {
     name: "shared folders never import a feature, and a feature never imports another one",
-    hint: "Move what two features share to src/components (React) or src/lib (no React).",
+    hint: "Move what two features share to src/components (components) or src/lib (models, API and hooks).",
     files: files(source, /\.(tsx?)$/),
     offenders: (text, path) =>
       [...text.matchAll(/from\s+"(\.{1,2}\/[^"]+)"/g)].flatMap(([, specifier]) => {

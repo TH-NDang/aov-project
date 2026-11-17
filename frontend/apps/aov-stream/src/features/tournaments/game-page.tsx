@@ -8,9 +8,9 @@ import { StreamImage } from "../../components/stream-image"
 import { useStreamLocale } from "../../components/stream-locale"
 import { GameLoadouts } from "./game-loadouts"
 import { MatchHead, MatchTabs, seriesHeadOf } from "./match-components"
-import { orderedMatchGames } from "./match-model"
+import { orderedMatchGames } from "../../lib/match-model"
 import { ReferenceArt } from "./reference-art"
-import { gameQuery, matchGamesQuery } from "./tournament-api"
+import { gameQuery, matchGamesQuery } from "../../lib/tournament-api"
 import {
   clock,
   findReference,
@@ -21,7 +21,7 @@ import {
   referenceName,
   seriesSides,
   UNKNOWN_REFERENCE,
-} from "./tournament-model"
+} from "../../lib/tournament-model"
 
 /** A patch code that is the day the patch came out. */
 const DAY = /^\d{4}-\d{2}-\d{2}$/

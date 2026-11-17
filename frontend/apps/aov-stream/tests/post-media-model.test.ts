@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { videoEmbed, videoPoster } from "../src/features/community/post-media-model.ts"
+import { videoEmbed, videoPoster } from "../src/features/community/model/post-media-model.ts"
 
 test("YouTube watch, short, live and youtu.be links play in the privacy-enhanced player", () => {
   const src = "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"

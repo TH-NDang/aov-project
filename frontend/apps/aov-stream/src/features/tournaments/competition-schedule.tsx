@@ -8,7 +8,7 @@ import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { formatCalendarDate, useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { useStreamLocale } from "../../components/stream-locale"
 import { MatchRow } from "./match-components"
-import type { CompetitionMatch } from "./match-model"
+import type { CompetitionMatch } from "../../lib/match-model"
 import {
   dayHeading,
   knownScheduleDay,
@@ -18,7 +18,7 @@ import {
   scheduleParts,
   type ScheduleGroup,
   type ScheduleScope,
-} from "./match-schedule"
+} from "../../lib/match-schedule"
 
 /** Matches shown before the reader scrolls for more. */
 const STEP = 40

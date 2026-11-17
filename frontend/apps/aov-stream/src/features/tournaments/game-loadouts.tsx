@@ -16,7 +16,7 @@ import {
   snapshotAt,
   UNKNOWN_REFERENCE,
   type LoadoutKind,
-} from "./tournament-model"
+} from "../../lib/tournament-model"
 
 /** Each kind of loadout in Vietnamese and in English. */
 const KIND_NAMES: Record<LoadoutKind, readonly [string, string]> = {

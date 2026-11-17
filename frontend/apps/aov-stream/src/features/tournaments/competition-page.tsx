@@ -15,9 +15,9 @@ import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
 import { useStreamLocale } from "../../components/stream-locale"
-import { dayRange, hueOf } from "../community/community-ui"
-import { EntityPageLink } from "../community/public-competitions"
-import { CompetitionLogo, StatusBadge } from "./competition-card"
+import { dayRange, hueOf } from "../../components/community-ui"
+import { EntityPageLink } from "../../components/public-competitions"
+import { CompetitionLogo, StatusBadge } from "../../components/competition-card"
 import {
   bracketLanes,
   champion,
@@ -29,12 +29,12 @@ import {
   STAGE_FORMAT_NAMES,
   TIER_NAMES,
   VENUE_MODE_NAMES,
-} from "./competition-model"
+} from "../../lib/competition-model"
 import { CompetitionSchedule } from "./competition-schedule"
-import { MatchCard } from "./match-card"
-import { competitionMatches, type CompetitionMatch } from "./match-model"
-import { competitionQuery } from "./tournament-api"
-import { LANE_NAMES } from "./tournament-model"
+import { MatchCard } from "../../components/match-card"
+import { competitionMatches, type CompetitionMatch } from "../../lib/match-model"
+import { competitionQuery } from "../../lib/tournament-api"
+import { LANE_NAMES } from "../../lib/tournament-model"
 
 /** The tabs of a competition, each named in Vietnamese and in English. */
 const TABS = [

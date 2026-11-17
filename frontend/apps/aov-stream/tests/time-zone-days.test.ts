@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import type { CompetitionMatch } from "../src/features/tournaments/match-model.ts"
-import { knownScheduleDay, scheduleDay, scheduleGroups } from "../src/features/tournaments/match-schedule.ts"
+import type { CompetitionMatch } from "../src/lib/match-model.ts"
+import { knownScheduleDay, scheduleDay, scheduleGroups } from "../src/lib/match-schedule.ts"
 
 /** Long after every match below, so none of them counts as on now. */
 const LATER = Date.parse("2027-01-01T00:00:00Z")

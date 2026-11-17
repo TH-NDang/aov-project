@@ -8,7 +8,7 @@ import {
   matchSeriesId,
   matchState,
   orderedMatchGames,
-} from "../src/features/tournaments/match-model.ts"
+} from "../src/lib/match-model.ts"
 
 const planned = (key: string, extra: Partial<PlannedMatch> = {}): PlannedMatch => ({
   key,

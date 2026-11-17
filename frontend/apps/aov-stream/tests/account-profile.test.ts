@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { ApiError, createApiRequest, WIKI_API_ROOT, type ApiRequest } from "../src/lib/api-client.ts"
-import { uploadAvatar } from "../src/features/account/avatar-upload.ts"
+import { uploadAvatar } from "../src/lib/avatar-upload.ts"
 import {
   initialDraft,
   initials,
@@ -11,7 +11,7 @@ import {
   sameDraft,
   withCurrent,
   type UserProfile,
-} from "../src/features/account/profile-model.ts"
+} from "../src/lib/profile-model.ts"
 
 const unsaved: UserProfile = {
   id: null,

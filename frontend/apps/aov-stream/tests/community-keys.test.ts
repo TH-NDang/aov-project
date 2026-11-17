@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { QueryClient } from "@tanstack/react-query"
-import { communityKeys, refreshPostLists } from "../src/features/community/community-keys.ts"
+import { communityKeys, refreshPostLists } from "../src/lib/community-keys.ts"
 
 function cacheWith(...keys: readonly (readonly unknown[])[]) {
   const client = new QueryClient()

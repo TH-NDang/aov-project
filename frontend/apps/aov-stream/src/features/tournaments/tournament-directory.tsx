@@ -8,8 +8,8 @@ import { useStreamLocale } from "../../components/stream-locale"
 import { StreamShell } from "../../components/stream-shell"
 import { FilterSelect, ScheduleNote } from "./competition-schedule"
 import { GameCard } from "./game-card"
-import { gamesQuery, tournamentsQuery } from "./tournament-api"
-import { seriesRound, seriesTeams } from "./tournament-model"
+import { gamesQuery, tournamentsQuery } from "../../lib/tournament-api"
+import { seriesRound, seriesTeams } from "../../lib/tournament-model"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /** The match a game belongs to in a few words: both teams and, where the match has one, its round. */

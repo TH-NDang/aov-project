@@ -7,11 +7,11 @@ import { useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
-import { competitionStatusLabels } from "../community/community-ui"
-import { competitionCatalogQuery } from "./tournament-api"
-import { competitionMatches } from "./match-model"
-import { byRecency, bySoonest, competitionStatus, type CompetitionStatus } from "./competition-model"
-import { CompetitionCard, CompetitionFeature } from "./competition-card"
+import { competitionStatusLabels } from "../../components/community-ui"
+import { competitionCatalogQuery } from "../../lib/tournament-api"
+import { competitionMatches } from "../../lib/match-model"
+import { byRecency, bySoonest, competitionStatus, type CompetitionStatus } from "../../lib/competition-model"
+import { CompetitionCard, CompetitionFeature } from "../../components/competition-card"
 import {
   FilterSelect,
   ScheduleEmpty,
@@ -21,7 +21,7 @@ import {
   scheduleDayLabel,
   scheduleScope,
 } from "./competition-schedule"
-import { knownScheduleDay, matchSearchKey, scheduleDay, scheduleParts } from "./match-schedule"
+import { knownScheduleDay, matchSearchKey, scheduleDay, scheduleParts } from "../../lib/match-schedule"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 import { foldSearchText } from "@aov/ui/lib/search-text"

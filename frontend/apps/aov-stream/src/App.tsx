@@ -1,12 +1,16 @@
 import { Navigate, Route, Routes, useLocation } from "react-router"
 import { TournamentDirectory } from "./features/tournaments/tournament-directory"
 import { GamePage } from "./features/tournaments/game-page"
-import { CommunityHome } from "./features/community/community-home"
-import { CommunityExplore } from "./features/community/community-explore"
-import { CommunityProfilePage } from "./features/community/community-profile"
-import { CommunityAccount, CommunityPageManager, CommunityInvitation } from "./features/community/community-account"
-import { CommunityLoginCallback } from "./features/community/community-session"
-import "./features/community/community.css"
+import { CommunityHome } from "./features/community/pages/community-home"
+import { CommunityExplore } from "./features/community/pages/community-explore"
+import { CommunityProfilePage } from "./features/community/pages/community-profile"
+import {
+  CommunityAccount,
+  CommunityPageManager,
+  CommunityInvitation,
+} from "./features/community/pages/community-account"
+import { CommunityLoginCallback } from "./components/community-session"
+import "./features/community/components/community.css"
 import { PublicCompetitionPage } from "./features/tournaments/competition-page"
 import { CompetitionDirectory } from "./features/tournaments/competition-hub"
 import { MatchPage } from "./features/tournaments/match-page"

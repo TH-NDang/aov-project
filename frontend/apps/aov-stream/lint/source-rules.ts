@@ -1,6 +1,6 @@
 // Lint rules about Stream's source itself. They read files, so they run as `pnpm lint`, not as tests.
-import { readdirSync, readFileSync, statSync } from "node:fs"
-import { join, relative } from "node:path"
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
+import { dirname, join, relative, resolve, sep } from "node:path"
 import ts from "typescript"
 
 const app = join(import.meta.dirname, "..")
@@ -14,6 +14,17 @@ function files(folder: string, pattern: RegExp): string[] {
     if (statSync(path).isDirectory()) return files(path, pattern)
     return pattern.test(name) ? [path] : []
   })
+}
+
+/** `features/<name>` for a file inside a feature, otherwise the top folder under src, such as `lib`. */
+function layer(path: string) {
+  const [top, feature] = relative(source, path).split(sep)
+  return top === "features" ? `features/${feature}` : top!
+}
+
+function target(from: string, specifier: string) {
+  const base = resolve(dirname(from), specifier)
+  return ["", ".ts", ".tsx"].map((ext) => base + ext).find((path) => existsSync(path) && statSync(path).isFile())
 }
 
 const VIETNAMESE = /[àáảãạăắằẳẵặâấầẩẫậđèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵ]/i
@@ -56,6 +67,20 @@ const rules: Rule[] = [
     hint: 'Write the words as text("…", "…") from useStreamLocale, with the English beside the Vietnamese.',
     files: files(source, /\.tsx$/),
     offenders: vietnameseInMarkup,
+  },
+  {
+    name: "shared folders never import a feature, and a feature never imports another one",
+    hint: "Move what two features share to src/components (components) or src/lib (models, API and hooks).",
+    files: files(source, /\.(tsx?)$/),
+    offenders: (text, path) =>
+      [...text.matchAll(/from\s+"(\.{1,2}\/[^"]+)"/g)].flatMap(([, specifier]) => {
+        const imported = target(path, specifier!)
+        if (!imported) return []
+        const [own, theirs] = [layer(path), layer(imported)]
+        return theirs.startsWith("features/") && own !== theirs && !path.startsWith(join(source, "App"))
+          ? [` imports ${relative(source, imported)}`]
+          : []
+      }),
   },
 ]
 

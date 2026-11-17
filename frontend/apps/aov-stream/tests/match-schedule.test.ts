@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { CompetitionView, PlannedMatch, ResolvedMatch } from "@aov/community-contracts"
-import { competitionMatches } from "../src/features/tournaments/match-model.ts"
+import { competitionMatches } from "../src/lib/match-model.ts"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 import {
   dayHeading,
@@ -10,7 +10,7 @@ import {
   matchSides,
   scheduleGroups,
   scheduleParts,
-} from "../src/features/tournaments/match-schedule.ts"
+} from "../src/lib/match-schedule.ts"
 
 const HOUR = 60 * 60 * 1000
 const NOW = Date.parse("2026-11-13T05:00:00Z")

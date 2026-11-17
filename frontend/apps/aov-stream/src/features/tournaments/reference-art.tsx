@@ -1,7 +1,13 @@
 import type { Catalog, Selection } from "@aov/community-contracts"
 import { StreamImage } from "../../components/stream-image"
 import { useStreamLocale } from "../../components/stream-locale"
-import { findReference, nameInitials, referenceName, UNKNOWN_REFERENCE, type CatalogKind } from "./tournament-model"
+import {
+  findReference,
+  nameInitials,
+  referenceName,
+  UNKNOWN_REFERENCE,
+  type CatalogKind,
+} from "../../lib/tournament-model"
 
 /**
  * The picture of a hero, an item or another catalogue entry. An entry without a picture shows two letters of its name

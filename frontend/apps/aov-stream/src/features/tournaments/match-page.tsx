@@ -14,10 +14,10 @@ import {
   matchSeriesId,
   orderedMatchGames,
   type CompetitionMatch,
-} from "./match-model"
-import { matchSides, scheduleParts } from "./match-schedule"
-import { competitionQuery, matchGamesQuery } from "./tournament-api"
-import { plainNote } from "./tournament-model"
+} from "../../lib/match-model"
+import { matchSides, scheduleParts } from "../../lib/match-schedule"
+import { competitionQuery, matchGamesQuery } from "../../lib/tournament-api"
+import { plainNote } from "../../lib/tournament-model"
 
 /** Other matches shown under a match: enough to see how both teams are doing without becoming a schedule. */
 const OTHERS = 6

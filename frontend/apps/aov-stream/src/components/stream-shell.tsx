@@ -7,8 +7,8 @@ import { StreamBrand } from "./stream-brand"
 import { StreamAppSwitcher } from "./stream-app-switcher"
 import { StreamIcon, type StreamIconName } from "./stream-icon"
 import { useStreamLocale } from "./stream-locale"
-import { CommunitySessionButton } from "../features/community/community-session"
-import { SignInDialog } from "../features/community/community-signin"
+import { CommunitySessionButton } from "./community-session"
+import { SignInDialog } from "./community-signin"
 
 export const WIKI_URL = publicSiteUrl(import.meta.env.VITE_WIKI_URL, 5173, window.location.origin)
 export const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "http://localhost:5175"
