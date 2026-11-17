@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = ApiPaths.ADMIN + "/seasons", version = "1")
+@RequestMapping(ApiPaths.ADMIN + "/seasons")
 public class RankedSeasonController implements RankedSeasonApi {
     private final RankedSeasons seasons;
 
@@ -19,19 +19,19 @@ public class RankedSeasonController implements RankedSeasonApi {
         this.seasons = seasons;
     }
 
-    @GetMapping
+    @GetMapping(version = "1")
     public List<RankedSeasons.View> list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return seasons.list();
     }
 
-    @PostMapping
+    @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public RankedSeasons.View create(@RequestBody RankedSeasons.Input input) {
         return seasons.create(input);
     }
 
-    @PostMapping("/{seasonId}/schedules")
+    @PostMapping(path = "/{seasonId}/schedules", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public java.util.Map<String, UUID> schedule(@PathVariable UUID seasonId,
             @RequestBody RankedSeasons.ScheduleInput input) {

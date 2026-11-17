@@ -11,7 +11,7 @@ import java.util.Set;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = ApiPaths.ADMIN + "/heroes/import", version = "1")
+@RequestMapping(ApiPaths.ADMIN + "/heroes/import")
 public class HeroImportController implements HeroImportApi {
     private final HeroImports imports;
 
@@ -19,30 +19,30 @@ public class HeroImportController implements HeroImportApi {
         this.imports = imports;
     }
 
-    @GetMapping("/fields")
+    @GetMapping(path = "/fields", version = "1")
     public List<HeroImports.Field> fields(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return imports.fields();
     }
 
-    @PostMapping("/preview")
+    @PostMapping(path = "/preview", version = "1")
     public HeroImportPlan preview(@RequestBody HeroImportRequest request) {
         return imports.preview(request);
     }
 
-    @GetMapping("/relation-fields")
+    @GetMapping(path = "/relation-fields", version = "1")
     public java.util.Map<String, List<HeroImports.Field>> relationFields() {
         return imports.relationFields();
     }
 
-    @GetMapping("/contexts")
+    @GetMapping(path = "/contexts", version = "1")
     public List<com.wikiaov.patch.AuthoringContext> contexts(@RequestParam(required = false) java.util.UUID regionId,
             @RequestParam java.util.UUID seasonId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("regionId", "seasonId"));
         return imports.contexts(regionId, seasonId);
     }
 
-    @PostMapping("/apply")
+    @PostMapping(path = "/apply", version = "1")
     public HeroImportPlan apply(@RequestBody HeroImportRequest request) {
         return imports.apply(request);
     }

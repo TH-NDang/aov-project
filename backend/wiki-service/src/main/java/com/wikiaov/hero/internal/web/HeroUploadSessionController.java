@@ -8,7 +8,7 @@ import java.util.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = ApiPaths.ADMIN + "/heroes/import/upload-sessions", version = "1")
+@RequestMapping(ApiPaths.ADMIN + "/heroes/import/upload-sessions")
 public class HeroUploadSessionController implements HeroUploadSessionApi {
     private final HeroUploadSessions sessions;
 
@@ -16,17 +16,17 @@ public class HeroUploadSessionController implements HeroUploadSessionApi {
         this.sessions = sessions;
     }
 
-    @GetMapping
+    @GetMapping(version = "1")
     public List<HeroUploadSessionView> list() {
         return sessions.list();
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(path = "/{id}", version = "1")
     public HeroUploadSessionView save(@PathVariable UUID id, @RequestBody HeroUploadSessionRequest request) {
         return sessions.save(id, request.version(), request.state());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping(path = "/{id}", version = "1")
     public void delete(@PathVariable UUID id) {
         sessions.delete(id);
     }

@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = ApiPaths.ADMIN + "/heroes/import/jobs", version = "1")
+@RequestMapping(ApiPaths.ADMIN + "/heroes/import/jobs")
 public class HeroImportJobController implements HeroImportJobApi {
     private final HeroImportJobs jobs;
 
@@ -17,23 +17,23 @@ public class HeroImportJobController implements HeroImportJobApi {
         this.jobs = jobs;
     }
 
-    @PostMapping
+    @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public HeroImportJobView create(@RequestBody HeroImportJobRequest request) {
         return jobs.enqueue(request);
     }
 
-    @GetMapping
+    @GetMapping(version = "1")
     public List<HeroImportJobView> list() {
         return jobs.list();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(path = "/{id}", version = "1")
     public HeroImportJobView get(@PathVariable UUID id) {
         return jobs.get(id);
     }
 
-    @PutMapping("/{id}/notification-dismissal")
+    @PutMapping(path = "/{id}/notification-dismissal", version = "1")
     public HeroImportJobView dismissNotification(@PathVariable UUID id) {
         return jobs.dismissNotification(id);
     }
