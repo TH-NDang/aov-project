@@ -1,8 +1,14 @@
 package com.wikiaov.community.tournament.internal.planning.persistence;
 
-import java.util.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
+import jakarta.persistence.LockModeType;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 
 public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlanRecord, UUID> {
     /**
@@ -38,7 +44,7 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
 
     Page<CompetitionPlanRecord> findByPublishedAtIsNotNullOrderByPublishedAtDesc(Pageable pageable);
 
-    @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from CompetitionPlanRecord p where p.id = :id")
     Optional<CompetitionPlanRecord> lock(UUID id);
 

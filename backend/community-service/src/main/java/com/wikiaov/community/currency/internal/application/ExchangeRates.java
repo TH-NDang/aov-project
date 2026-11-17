@@ -7,7 +7,9 @@ import com.wikiaov.community.platform.PlatformErrorCode;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -33,10 +35,11 @@ public class ExchangeRates {
     @Transactional(readOnly = true)
     public Rates on(List<LocalDate> requested) {
         var days = requested.isEmpty() ? List.of(LocalDate.now(clock)) : requested.stream().distinct().toList();
-        if (days.size() > MAX_DAYS)
+        if (days.size() > MAX_DAYS) {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                     "Ask for at most " + MAX_DAYS + " days at a time.",
                     List.of(new ApiFieldError("on", "TOO_MANY_VALUES", "Too many days.")));
+        }
 
         var found = new HashMap<LocalDate, List<Rate>>();
         rates.effectiveOn(json.writeValueAsString(days.stream().map(LocalDate::toString).toList()),

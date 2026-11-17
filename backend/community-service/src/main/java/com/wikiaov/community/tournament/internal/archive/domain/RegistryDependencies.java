@@ -1,6 +1,9 @@
 package com.wikiaov.community.tournament.internal.archive.domain;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,15 +34,17 @@ public final class RegistryDependencies {
             add(parents, RegistryKind.SERIES, game.seriesId());
             for (var side : game.sides()) {
                 add(parents, RegistryKind.TEAM, side.teamId());
-                for (var player : side.participants())
+                for (var player : side.participants()) {
                     add(parents, RegistryKind.PLAYER, player.playerId());
+                }
             }
         }
         return parents.stream().distinct().toList();
     }
 
     private static void add(List<Parent> parents, RegistryKind kind, UUID id) {
-        if (id != null)
+        if (id != null) {
             parents.add(new Parent(kind, id));
+        }
     }
 }

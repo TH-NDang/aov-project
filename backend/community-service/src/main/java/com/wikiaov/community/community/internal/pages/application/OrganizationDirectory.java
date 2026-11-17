@@ -19,8 +19,9 @@ public class OrganizationDirectory implements CompetitionOrganizations {
                 .filter(page -> "ORGANIZATION".equals(page.getKind()))
                 .orElseThrow(() -> new IllegalArgumentException("Select an existing organization page."));
         var content = published ? row.getPublishedContent() : row.getContent();
-        if (content == null)
+        if (content == null) {
             throw new IllegalArgumentException("Publish the organization page before publishing the competition.");
+        }
 
         return new Organization(row.getId(), row.getCode(), content.name(), content.avatarUrl(),
                 row.getPublishedContent() != null);

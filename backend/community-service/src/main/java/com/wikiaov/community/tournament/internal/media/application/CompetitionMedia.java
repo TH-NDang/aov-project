@@ -1,12 +1,14 @@
 package com.wikiaov.community.tournament.internal.media.application;
 
 import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.tournament.CompetitionReferences;
 import com.wikiaov.community.tournament.internal.application.TournamentErrorCode;
 import com.wikiaov.community.tournament.internal.archive.persistence.RegistryWriteGuard;
 import com.wikiaov.community.tournament.internal.media.persistence.RetiredMediaAsset;
 import com.wikiaov.community.tournament.internal.media.persistence.RetiredMediaRepository;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -20,10 +22,10 @@ public class CompetitionMedia {
             "/(?:assets|media)/([0-9a-fA-F-]{36})/[0-9a-fA-F-]{36}\\.(?:png|jpg|webp)");
     private final RetiredMediaRepository repository;
     private final RegistryWriteGuard writes;
-    private final java.util.List<com.wikiaov.community.tournament.CompetitionReferences> additional;
+    private final List<CompetitionReferences> additional;
 
     public CompetitionMedia(RetiredMediaRepository repository, RegistryWriteGuard writes,
-            java.util.List<com.wikiaov.community.tournament.CompetitionReferences> additional) {
+            List<CompetitionReferences> additional) {
         this.repository = repository;
         this.writes = writes;
         this.additional = additional;
@@ -84,8 +86,9 @@ public class CompetitionMedia {
 
     /** Called under the same registry write lock used when retiring an image. */
     public void requireAvailable(String url) {
-        if (url == null || url.isBlank())
+        if (url == null || url.isBlank()) {
             return;
+        }
         URI uri;
         try {
             uri = URI.create(url);
@@ -94,8 +97,9 @@ public class CompetitionMedia {
                     "Image URLs must be absolute HTTP or HTTPS URLs.");
         }
         var matcher = ASSET_PATH.matcher(uri.getPath());
-        if (!matcher.matches())
+        if (!matcher.matches()) {
             return;
+        }
         if (!uri.getRawPath().equals(uri.getPath())) {
             throw new ApiException(TournamentErrorCode.TOURNAMENT_INVALID_CONTENT,
                     "Managed image URLs must use their canonical, unescaped object path.");

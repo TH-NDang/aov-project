@@ -1,7 +1,12 @@
 package com.wikiaov.community.community.internal.membership.persistence;
 
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 

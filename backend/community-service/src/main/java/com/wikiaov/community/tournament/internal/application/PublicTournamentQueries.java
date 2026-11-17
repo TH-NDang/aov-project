@@ -1,11 +1,16 @@
 package com.wikiaov.community.tournament.internal.application;
 
 import com.wikiaov.community.platform.PageSlice;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
-import com.wikiaov.community.tournament.internal.persistence.*;
-import java.util.*;
-import org.springframework.data.domain.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.persistence.GameRecord;
+import com.wikiaov.community.tournament.internal.persistence.GameRepository;
+import com.wikiaov.community.tournament.internal.persistence.PublishedOverviewRepository;
+import java.util.Objects;
+import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.DeserializationFeature;

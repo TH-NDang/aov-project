@@ -1,6 +1,8 @@
 package com.wikiaov.community.tournament.internal.persistence;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 

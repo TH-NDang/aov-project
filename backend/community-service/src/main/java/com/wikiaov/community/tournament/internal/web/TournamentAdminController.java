@@ -3,14 +3,31 @@ package com.wikiaov.community.tournament.internal.web;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.platform.QueryParameters;
 import com.wikiaov.community.tournament.internal.application.TournamentAdministration;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Create;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.TournamentStats;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Update;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Version;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
-import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.CompetitionPageEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class TournamentAdminController implements TournamentAdminApi {

@@ -1,14 +1,19 @@
 package com.wikiaov.community.tournament.internal.application;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sun.net.httpserver.HttpServer;
 import com.wikiaov.community.platform.ApiException;
 import com.wikiaov.community.tournament.internal.infrastructure.WikiCatalogClient;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class WikiCatalogTest {
     private static final UUID SEASON = UUID.randomUUID(), OTHER = UUID.randomUUID(), FIRST = UUID.randomUUID(),

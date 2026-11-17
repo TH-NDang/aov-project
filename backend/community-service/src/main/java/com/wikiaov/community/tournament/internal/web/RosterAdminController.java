@@ -2,7 +2,9 @@ package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.platform.QueryParameters;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Create;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Update;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
 import com.wikiaov.community.tournament.internal.roster.application.RosterAdministration;

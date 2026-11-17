@@ -1,18 +1,35 @@
 package com.wikiaov.community.community.internal.social.application;
 
 import com.wikiaov.community.community.internal.application.PageChecks;
-import com.wikiaov.community.community.internal.application.PageViews.*;
+import com.wikiaov.community.community.internal.application.PageViews.Comment;
+import com.wikiaov.community.community.internal.application.PageViews.FeedPost;
+import com.wikiaov.community.community.internal.application.PageViews.Liking;
+import com.wikiaov.community.community.internal.application.PageViews.Post;
+import com.wikiaov.community.community.internal.application.PageViews.Report;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.domain.PostContent;
 import com.wikiaov.community.community.internal.domain.PostStatus;
-import com.wikiaov.community.community.internal.pages.application.*;
-import com.wikiaov.community.community.internal.social.persistence.*;
+import com.wikiaov.community.community.internal.pages.application.PageAccess;
+import com.wikiaov.community.community.internal.pages.application.PageProfiles;
+import com.wikiaov.community.community.internal.social.persistence.CommunityComment;
+import com.wikiaov.community.community.internal.social.persistence.CommunityCommentRepository;
+import com.wikiaov.community.community.internal.social.persistence.CommunityPost;
+import com.wikiaov.community.community.internal.social.persistence.CommunityPostRepository;
+import com.wikiaov.community.community.internal.social.persistence.CommunityReport;
+import com.wikiaov.community.community.internal.social.persistence.CommunityReportRepository;
+import com.wikiaov.community.community.internal.social.persistence.PageFollow;
+import com.wikiaov.community.community.internal.social.persistence.PageFollowRepository;
+import com.wikiaov.community.community.internal.social.persistence.PostLikeRepository;
 import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.CompetitionAssets;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,10 +64,11 @@ public class PageCommunity {
     @Transactional(readOnly = true)
     public PageSlice<Post> posts(UUID pageId, String kind, int page, int size, boolean manage) {
         var filter = PageChecks.postKindFilter(kind);
-        if (manage)
+        if (manage) {
             access.require(pageId, CommunityActor.require(), Role.OWNER, Role.EDITOR, Role.MODERATOR);
-        else
+        } else {
             access.social(pageId);
+        }
         var result = manage
                 ? posts.findByPageIdOrderByCreatedAtDesc(pageId, PageProfiles.paging(page, size))
                 : posts.pagePosts(pageId, filter, PageProfiles.paging(page, size));
@@ -91,19 +109,24 @@ public class PageCommunity {
         assets.acquire(content.imageUrls().toArray(String[]::new));
         access.lock(pageId);
         var profile = access.social(pageId);
-        if (asPage)
+        if (asPage) {
             access.require(pageId, actor, Role.OWNER, Role.EDITOR);
+        }
         var row = id == null ? new CommunityPost() : posts.findById(id).orElseThrow(PageAccess::missing);
         if (id != null) {
-            if (!pageId.equals(row.getPageId()))
+            if (!pageId.equals(row.getPageId())) {
                 throw PageAccess.missing();
-            if (!row.getAsPage() && !row.getActor().equals(actor.key()))
+            }
+            if (!row.getAsPage() && !row.getActor().equals(actor.key())) {
                 throw PageAccess.forbidden();
+            }
             PageAccess.version(row.getVersion(), version);
-            if (row.getAsPage() != asPage)
+            if (row.getAsPage() != asPage) {
                 throw PageChecks.invalid("A post's author identity cannot change.");
-            if (row.getStatus() == PostStatus.HIDDEN)
+            }
+            if (row.getStatus() == PostStatus.HIDDEN) {
                 throw PageChecks.invalid("A moderated post cannot be republished by its author.");
+            }
         } else {
             row.setPageId(pageId);
             row.setActor(actor.key());
@@ -118,13 +141,15 @@ public class PageCommunity {
         row.setVideoUrl(content.videoUrl());
         row.setImageUrls(content.imageUrls());
         row.setStatus(publish ? PostStatus.PUBLISHED : PostStatus.DRAFT);
-        if (!publish)
+        if (!publish) {
             row.setPinnedAt(null);
+        }
         row.setUpdatedAt(Instant.now());
         posts.saveAndFlush(row);
         access.audit(pageId, actor, "PAGE_POST_SAVED");
-        if (newlyPublished && asPage)
+        if (newlyPublished && asPage) {
             notifications.followers(pageId, profile.getPublishedContent().name() + " vừa đăng bài mới.");
+        }
         return postView(row, actor, likes.countByPostId(row.getId()),
                 likes.existsByPostIdAndActor(row.getId(), actor.key()),
                 comments.countByPostIdAndHiddenFalse(row.getId()));
@@ -145,8 +170,9 @@ public class PageCommunity {
         PageChecks.text(body, PageRules.MAX_MESSAGE, true);
         var post = publishedPost(postId);
         access.lock(post.getPageId());
-        if (asPage)
+        if (asPage) {
             access.require(post.getPageId(), actor, Role.OWNER, Role.EDITOR, Role.MODERATOR);
+        }
         var row = new CommunityComment();
         row.setPostId(postId);
         row.setActor(actor.key());
@@ -155,8 +181,9 @@ public class PageCommunity {
         row.setCreatedAt(Instant.now());
         row.setAuthorName(asPage ? access.social(post.getPageId()).getPublishedContent().name() : actor.name());
         comments.saveAndFlush(row);
-        if (!post.getActor().equals(actor.key()))
+        if (!post.getActor().equals(actor.key())) {
             notifications.send(post.getActor(), post.getPageId(), "Bài viết của bạn có bình luận mới.");
+        }
         access.audit(post.getPageId(), actor, "PAGE_COMMENT_ADDED");
         return new Comment(row.getId(), postId, row.getAuthorName(), asPage, body, row.getCreatedAt(), true);
     }
@@ -165,36 +192,42 @@ public class PageCommunity {
         var actor = CommunityActor.require();
         access.lock(pageId);
         var page = access.published(pageId);
-        if (following)
+        if (following) {
             PageAccess.requireCommunity(page);
+        }
         var previous = follows.findByPageIdAndActor(pageId, actor.key());
         if (following && previous.isEmpty()) {
             var row = new PageFollow();
             row.setActor(actor.key());
             row.setPageId(pageId);
             follows.save(row);
-        } else if (!following)
+        } else if (!following) {
             previous.ifPresent(follows::delete);
+        }
     }
 
     /** Pins a published page post; the page's previously pinned post loses its pin. */
     public Post pin(UUID pageId, UUID postId, boolean pinned) {
         var actor = CommunityActor.require();
         access.lock(pageId);
-        if (!actor.editor())
+        if (!actor.editor()) {
             access.require(pageId, actor, Role.OWNER, Role.EDITOR);
+        }
         var post = posts.findById(postId).orElseThrow(PageAccess::missing);
-        if (!post.getPageId().equals(pageId))
+        if (!post.getPageId().equals(pageId)) {
             throw PageAccess.missing();
-        if (pinned && (!post.getAsPage() || post.getStatus() != PostStatus.PUBLISHED))
+        }
+        if (pinned && (!post.getAsPage() || post.getStatus() != PostStatus.PUBLISHED)) {
             throw PageChecks.invalid("Only published page posts can be pinned.");
+        }
 
-        if (pinned)
+        if (pinned) {
             posts.findByPageIdAndPinnedAtIsNotNull(pageId).filter(other -> !other.getId().equals(postId))
                     .ifPresent(other -> {
                         other.setPinnedAt(null);
                         posts.saveAndFlush(other);
                     });
+        }
         post.setPinnedAt(pinned ? Instant.now() : null);
         posts.saveAndFlush(post);
         access.audit(pageId, actor, pinned ? "PAGE_POST_PINNED" : "PAGE_POST_UNPINNED");
@@ -207,10 +240,11 @@ public class PageCommunity {
         var actor = CommunityActor.require();
         publishedPost(postId);
 
-        if (liked)
+        if (liked) {
             likes.like(UUID.randomUUID(), postId, actor.key());
-        else
+        } else {
             likes.unlike(postId, actor.key());
+        }
         return new Liking(liked, likes.countByPostId(postId));
     }
 
@@ -218,12 +252,14 @@ public class PageCommunity {
         var actor = CommunityActor.require();
         PageChecks.text(reason, PageRules.MAX_NOTE, true);
         access.published(pageId);
-        if (postId != null && !publishedPost(postId).getPageId().equals(pageId))
+        if (postId != null && !publishedPost(postId).getPageId().equals(pageId)) {
             throw PageAccess.missing();
+        }
         if (commentId != null) {
             var comment = comments.findById(commentId).orElseThrow(PageAccess::missing);
-            if (!comment.getPostId().equals(postId) || comment.getHidden())
+            if (!comment.getPostId().equals(postId) || comment.getHidden()) {
                 throw PageAccess.missing();
+            }
         }
         var row = new CommunityReport();
         row.setPageId(pageId);
@@ -253,22 +289,27 @@ public class PageCommunity {
         var actor = CommunityActor.require();
         access.lock(pageId);
         moderate(pageId, actor);
-        if (postId == null)
+        if (postId == null) {
             throw PageChecks.invalid("Choose a post.");
+        }
         var post = posts.findById(postId).orElseThrow(PageAccess::missing);
-        if (!post.getPageId().equals(pageId))
+        if (!post.getPageId().equals(pageId)) {
             throw PageAccess.missing();
+        }
         if (commentId != null) {
             var comment = comments.findById(commentId).orElseThrow(PageAccess::missing);
-            if (!comment.getPostId().equals(postId))
+            if (!comment.getPostId().equals(postId)) {
                 throw PageAccess.missing();
+            }
             comment.setHidden(hidden);
         } else {
-            if (post.getStatus() == PostStatus.DRAFT)
+            if (post.getStatus() == PostStatus.DRAFT) {
                 throw PageChecks.invalid("Drafts cannot be published by moderation.");
+            }
             post.setStatus(hidden ? PostStatus.HIDDEN : PostStatus.PUBLISHED);
-            if (hidden)
+            if (hidden) {
                 post.setPinnedAt(null);
+            }
         }
         access.audit(pageId, actor, hidden ? "PAGE_CONTENT_HIDDEN" : "PAGE_CONTENT_RESTORED");
     }
@@ -278,8 +319,9 @@ public class PageCommunity {
         PageChecks.text(resolution, PageRules.MAX_NOTE, true);
         var row = reports.findById(id).orElseThrow(PageAccess::missing);
         access.lock(row.getPageId());
-        if (hide && row.getPostId() != null)
+        if (hide && row.getPostId() != null) {
             hide(row.getPageId(), row.getPostId(), row.getCommentId(), true);
+        }
         row.setResolved(true);
         row.setResolution(resolution);
         access.audit(row.getPageId(), CommunityActor.require(), "PAGE_REPORT_RESOLVED");
@@ -287,15 +329,17 @@ public class PageCommunity {
     }
 
     private void moderate(UUID pageId, CommunityActor actor) {
-        if (!actor.publisher())
+        if (!actor.publisher()) {
             access.require(pageId, actor, Role.OWNER, Role.MODERATOR);
+        }
     }
 
     private CommunityPost publishedPost(UUID id) {
         var post = posts.findById(id).orElseThrow(PageAccess::missing);
         access.social(post.getPageId());
-        if (post.getStatus() != PostStatus.PUBLISHED)
+        if (post.getStatus() != PostStatus.PUBLISHED) {
             throw PageAccess.missing();
+        }
         return post;
     }
 
@@ -303,7 +347,7 @@ public class PageCommunity {
      * Counts likes and visible comments for a whole page of posts in batch queries; {@code actor} is null for
      * anonymous readers.
      */
-    private org.springframework.data.domain.Page<Post> views(org.springframework.data.domain.Page<CommunityPost> rows,
+    private Page<Post> views(Page<CommunityPost> rows,
             CommunityActor actor) {
         var ids = rows.map(CommunityPost::getId).getContent();
         var likeCounts = new HashMap<UUID, Long>();
@@ -312,8 +356,9 @@ public class PageCommunity {
         if (!ids.isEmpty()) {
             likes.countByPosts(ids).forEach(count -> likeCounts.put(count.getPostId(), count.getLikes()));
             comments.countByPosts(ids).forEach(count -> commentCounts.put(count.getPostId(), count.getComments()));
-            if (actor != null)
+            if (actor != null) {
                 liked.addAll(likes.likedBy(actor.key(), ids));
+            }
         }
 
         return rows.map(row -> postView(row, actor, likeCounts.getOrDefault(row.getId(), 0L),
@@ -321,7 +366,7 @@ public class PageCommunity {
     }
 
     /** Feed rows whose page was withdrawn between the two reads are dropped from the slice. */
-    private PageSlice<FeedPost> feedView(org.springframework.data.domain.Page<CommunityPost> rows,
+    private PageSlice<FeedPost> feedView(Page<CommunityPost> rows,
             CommunityActor actor) {
         var cards = profiles.cards(rows.map(CommunityPost::getPageId).toSet());
         var items = views(rows, actor).getContent().stream().filter(post -> cards.containsKey(post.pageId()))

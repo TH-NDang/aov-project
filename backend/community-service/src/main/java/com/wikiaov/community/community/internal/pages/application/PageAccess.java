@@ -4,10 +4,16 @@ import com.wikiaov.community.community.internal.application.PageErrorCode;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.membership.persistence.PageMember;
 import com.wikiaov.community.community.internal.membership.persistence.PageMemberRepository;
-import com.wikiaov.community.community.internal.pages.persistence.*;
-import com.wikiaov.community.platform.*;
+import com.wikiaov.community.community.internal.pages.persistence.PageAudit;
+import com.wikiaov.community.community.internal.pages.persistence.PageAuditRepository;
+import com.wikiaov.community.community.internal.pages.persistence.PageRecord;
+import com.wikiaov.community.community.internal.pages.persistence.PageRepository;
+import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.platform.CommunityActor;
 import java.time.Instant;
-import java.util.*;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -32,8 +38,9 @@ public class PageAccess {
 
     public PageRecord published(UUID id) {
         var page = read(id);
-        if (page.getPublishedContent() == null)
+        if (page.getPublishedContent() == null) {
             throw missing();
+        }
         return page;
     }
 
@@ -56,9 +63,10 @@ public class PageAccess {
     }
 
     public static void requireCommunity(PageRecord page) {
-        if (!community(page))
+        if (!community(page)) {
             throw new ApiException(PageErrorCode.PAGE_ACTION_FORBIDDEN,
                     "Circuit pages are editorial information pages and do not support community accounts.");
+        }
     }
 
     public void require(UUID id, CommunityActor actor, Role... roles) {
@@ -77,8 +85,9 @@ public class PageAccess {
     }
 
     public static void version(long actual, Long expected) {
-        if (expected == null || actual != expected)
+        if (expected == null || actual != expected) {
             throw new ApiException(PageErrorCode.PAGE_CONFLICT, "The page changed. Reload before saving.");
+        }
     }
 
     public static ApiException missing() {

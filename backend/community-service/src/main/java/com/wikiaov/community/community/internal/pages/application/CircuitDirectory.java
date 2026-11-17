@@ -18,8 +18,9 @@ public class CircuitDirectory implements CompetitionCircuits {
         var row = pages.findById(pageId).filter(page -> "CIRCUIT".equals(page.getKind()))
                 .orElseThrow(() -> new IllegalArgumentException("Select an existing circuit page."));
         var content = published ? row.getPublishedContent() : row.getContent();
-        if (content == null)
+        if (content == null) {
             throw new IllegalArgumentException("Publish the circuit page before publishing the competition.");
+        }
 
         return new Circuit(row.getId(), row.getCode(), content.name(), content.avatarUrl(),
                 row.getPublishedContent() != null);

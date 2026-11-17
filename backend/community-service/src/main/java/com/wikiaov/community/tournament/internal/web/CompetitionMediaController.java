@@ -14,14 +14,17 @@ class CompetitionMediaController implements CompetitionMediaApi {
         this.media = media;
     }
 
+    @Override
     public Usage usage(UUID assetId) {
         return media.usage(assetId);
     }
 
+    @Override
     public References references() {
         return media.references();
     }
 
+    @Override
     public Usage retire(UUID assetId) {
         return media.retire(assetId);
     }

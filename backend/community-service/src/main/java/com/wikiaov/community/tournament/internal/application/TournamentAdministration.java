@@ -2,13 +2,26 @@ package com.wikiaov.community.tournament.internal.application;
 
 import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.platform.PageSlice;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.TournamentStats;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.directory.application.CompetitionDirectory;
-import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.CompetitionPageEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
-import java.util.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -69,8 +82,9 @@ public class TournamentAdministration {
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
     public PageSlice<Ranked<Team>> teams(String q, RecordState state, String sort, UUID tournamentId, Pageable page) {
-        if (state != RecordState.ACTIVE || sort.equals("UPDATED"))
+        if (state != RecordState.ACTIVE || sort.equals("UPDATED")) {
             return Ranked.unranked(teams.list(q, state, page));
+        }
 
         return directory.rankedTeams(q, sort, tournamentId, page);
     }
@@ -97,8 +111,9 @@ public class TournamentAdministration {
     @Transactional(readOnly = true)
     public PageSlice<Ranked<Player>> players(String q, RecordState state, String sort, UUID teamId, UUID tournamentId,
             Pageable page) {
-        if (state != RecordState.ACTIVE || sort.equals("UPDATED"))
+        if (state != RecordState.ACTIVE || sort.equals("UPDATED")) {
             return Ranked.unranked(players.list(q, state, page));
+        }
 
         return directory.rankedPlayers(q, sort, teamId, tournamentId, page);
     }
@@ -126,8 +141,9 @@ public class TournamentAdministration {
     public PageSlice<Ranked<Tournament>> tournaments(String q, String alsoRegions, RecordState state, String status,
             String tier, String region, Integer year, String sort, TournamentLevel level, UUID teamId, UUID playerId,
             Pageable page) {
-        if (state != RecordState.ACTIVE)
+        if (state != RecordState.ACTIVE) {
             return Ranked.unranked(tournaments.list(q, state, page));
+        }
 
         return directory.rankedTournaments(q, alsoRegions, status, tier, region, year, sort, level, teamId, playerId,
                 page);
@@ -141,7 +157,7 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public java.util.List<TournamentPart> tournamentParts(UUID mainEventId) {
+    public List<TournamentPart> tournamentParts(UUID mainEventId) {
         return directory.tournamentParts(mainEventId);
     }
 
@@ -170,7 +186,7 @@ public class TournamentAdministration {
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
-    public java.util.List<TournamentStats> tournamentStats() {
+    public List<TournamentStats> tournamentStats() {
         return series.stats();
     }
 

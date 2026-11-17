@@ -1,7 +1,12 @@
 package com.wikiaov.community.tournament.internal.planning.persistence;
 
-import com.wikiaov.community.tournament.internal.planning.domain.*;
-import jakarta.persistence.*;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionSnapshot;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;

@@ -2,7 +2,15 @@ package com.wikiaov.community.tournament.internal.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftTurn;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameDraft;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameSide;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Participant;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -54,10 +62,11 @@ class SeriesPickRuleTest {
 
     private static GameSide side(Side side, UUID team, List<String> heroes) {
         var participants = new ArrayList<Participant>();
-        for (int index = 0; index < 5; index++)
+        for (int index = 0; index < 5; index++) {
             participants.add(new Participant(null, Lane.values()[index],
                     new Selection(null, index < heroes.size() ? heroes.get(index) : null), null, null, null, List.of(),
                     List.of(), null));
+        }
         return new GameSide(side, team, List.of(), participants);
     }
 }

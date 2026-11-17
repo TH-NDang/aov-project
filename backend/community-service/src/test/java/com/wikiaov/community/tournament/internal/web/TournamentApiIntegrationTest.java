@@ -4,11 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.isNull;
+import static org.mockito.Mockito.nullable;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.wikiaov.community.platform.ApiException;
 import com.wikiaov.community.testsupport.CommunityApplicationTest;
@@ -17,14 +25,58 @@ import com.wikiaov.community.tournament.internal.application.TeamRegistry;
 import com.wikiaov.community.tournament.internal.application.WikiCatalog;
 import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.CompetitionType;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftTurn;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameDraft;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameSide;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameTimeline;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Loadout;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.ObjectiveKind;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.ObservationStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Participant;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.ResolvedContext;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Seat;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.SeriesResult;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TimelineEvent;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TimelineKind;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentPlacement;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentResult;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.VenueMode;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Verification;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.VodPause;
 import java.math.BigDecimal;
 import java.sql.DriverManager;
 import java.time.LocalDate;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import org.assertj.core.api.Assertions;
 import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -211,12 +263,16 @@ class TournamentApiIntegrationTest {
         var fixture = fixture();
         var base = fixture.game();
         var turns = new ArrayList<DraftTurn>();
-        for (var side : base.sides())
-            for (var ban : side.bans())
+        for (var side : base.sides()) {
+            for (var ban : side.bans()) {
                 turns.add(new DraftTurn(turns.size() + 1, DraftKind.BAN, side.side(), ban, null));
-        for (var side : base.sides())
-            for (var participant : side.participants())
+            }
+        }
+        for (var side : base.sides()) {
+            for (var participant : side.participants()) {
                 turns.add(new DraftTurn(turns.size() + 1, DraftKind.PICK, side.side(), participant.hero(), null));
+            }
+        }
         turns.set(0, new DraftTurn(1, DraftKind.BAN, Side.BLUE, base.sides().get(0).bans().get(0), 40));
         var drafted = new Game(base.seriesId(), 1, "VN", "vi-VN", null, null, null, null, null,
                 "https://www.youtube.com/watch?v=R5rCsGqDJIg", 230, base.note(), base.sides(), false, null,
@@ -237,10 +293,11 @@ class TournamentApiIntegrationTest {
         var blue = base.sides().get(0);
         var red = base.sides().get(1);
         var renamed = new ArrayList<Participant>();
-        for (var participant : red.participants())
+        for (var participant : red.participants()) {
             renamed.add(new Participant(participant.playerId(), participant.lane(),
                     new Selection(null, participant.hero().name() + " again"), participant.spell(), null, null,
                     List.of(), List.of(), null));
+        }
         var swapped = List.of(new GameSide(Side.BLUE, red.teamId(), List.of(), renamed),
                 new GameSide(Side.RED, blue.teamId(), List.of(), blue.participants()));
         var repeat = new Game(base.seriesId(), 2, "VN", "vi-VN", null, null, null, null, null, null, null, null,
@@ -577,11 +634,12 @@ class TournamentApiIntegrationTest {
         mvc.perform(authorized(get(ADMIN + "/teams/" + team.get("id"))))
                 .andExpect(jsonPath("$.content.aliases[0]").value("FlashWolves " + key));
         for (var aliases : List.of(List.of("FW", " fw "), List.of(""), List.of("x".repeat(101)),
-                Collections.nCopies(21, "extra")))
+                Collections.nCopies(21, "extra"))) {
             mvc.perform(authorized(post(ADMIN + "/teams")).contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("content",
                             new Team("invalid-alias-" + UUID.randomUUID(), "Team", null, null, null, aliases)))))
                     .andExpect(status().isBadRequest());
+        }
     }
 
     @Test
@@ -651,9 +709,10 @@ class TournamentApiIntegrationTest {
         for (var invalid : List.of(
                 new Player("unsafe-" + UUID.randomUUID(), "Unsafe", null, null, "data:image/png,test", List.of()),
                 new Player("duplicate-alias-" + UUID.randomUUID(), "Aliases", null, null, null,
-                        List.of("Name", " name "))))
+                        List.of("Name", " name ")))) {
             mvc.perform(authorized(post(ADMIN + "/players")).contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("content", invalid)))).andExpect(status().isBadRequest());
+        }
     }
 
     @Test
@@ -849,8 +908,9 @@ class TournamentApiIntegrationTest {
                     .param("page", String.valueOf(page)).param("size", "100"))
                     .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
             slice.path("items").forEach(item -> ids.add(item.path("id").asText()));
-            if (slice.path("items").isEmpty())
+            if (slice.path("items").isEmpty()) {
                 return ids;
+            }
         }
     }
 
@@ -961,8 +1021,9 @@ class TournamentApiIntegrationTest {
                 archivePolicy.lockWrites();
                 held.countDown();
                 try {
-                    if (!attempting.await(5, TimeUnit.SECONDS))
+                    if (!attempting.await(5, TimeUnit.SECONDS)) {
                         throw new IllegalStateException("Concurrent writer did not start.");
+                    }
                 } catch (InterruptedException error) {
                     throw new IllegalStateException(error);
                 }
@@ -975,7 +1036,7 @@ class TournamentApiIntegrationTest {
                         id(team), id(other), 3, null, null, null), "race-test");
             });
             assertThat(deleting.get(10, TimeUnit.SECONDS).deletedAt()).isNotNull();
-            org.assertj.core.api.Assertions.assertThatThrownBy(() -> writing.get(10, TimeUnit.SECONDS))
+            Assertions.assertThatThrownBy(() -> writing.get(10, TimeUnit.SECONDS))
                     .hasCauseInstanceOf(ApiException.class);
         }
     }
@@ -1188,8 +1249,9 @@ class TournamentApiIntegrationTest {
                         new Selection(null, "Observed talent"), null, null, List.of(), List.of(), null));
             }
             var bans = new ArrayList<Selection>();
-            for (int index = 0; index < 4; index++)
+            for (int index = 0; index < 4; index++) {
                 bans.add(new Selection(null, "Ban " + side + index));
+            }
             sides.add(new GameSide(side, side == Side.BLUE ? id(blue) : id(red), bans, roster));
         }
         return new Fixture(tournamentId, seriesId, new Game(seriesId, 1, "VN", "vi-VN", null, null, null, null, null,

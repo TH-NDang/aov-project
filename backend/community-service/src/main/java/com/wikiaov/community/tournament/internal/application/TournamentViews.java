@@ -6,7 +6,8 @@ import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.persistence.VersionedRecord;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 public final class TournamentViews {
     private TournamentViews() {

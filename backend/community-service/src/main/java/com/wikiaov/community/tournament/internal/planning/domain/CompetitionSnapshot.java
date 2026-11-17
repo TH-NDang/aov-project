@@ -2,8 +2,14 @@ package com.wikiaov.community.tournament.internal.planning.domain;
 
 import com.wikiaov.community.tournament.CompetitionCircuits;
 import com.wikiaov.community.tournament.CompetitionOrganizations;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
-import java.util.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record CompetitionSnapshot(
         Tournament tournament,

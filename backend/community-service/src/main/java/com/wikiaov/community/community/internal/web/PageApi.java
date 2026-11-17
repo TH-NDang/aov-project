@@ -1,13 +1,34 @@
 package com.wikiaov.community.community.internal.web;
 
-import com.wikiaov.community.community.internal.application.PageViews.*;
+import com.wikiaov.community.community.internal.application.PageViews.Claim;
+import com.wikiaov.community.community.internal.application.PageViews.Comment;
+import com.wikiaov.community.community.internal.application.PageViews.FeedPost;
+import com.wikiaov.community.community.internal.application.PageViews.Handover;
+import com.wikiaov.community.community.internal.application.PageViews.Liking;
+import com.wikiaov.community.community.internal.application.PageViews.Live;
+import com.wikiaov.community.community.internal.application.PageViews.Member;
+import com.wikiaov.community.community.internal.application.PageViews.Notification;
+import com.wikiaov.community.community.internal.application.PageViews.Post;
+import com.wikiaov.community.community.internal.application.PageViews.Profile;
+import com.wikiaov.community.community.internal.application.PageViews.Report;
+import com.wikiaov.community.community.internal.application.PageViews.TeamAffiliation;
+import com.wikiaov.community.community.internal.application.PageViews.UnreadCount;
 import com.wikiaov.community.community.internal.domain.PageContent;
-import com.wikiaov.community.platform.*;
+import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.platform.PageLimits;
+import com.wikiaov.community.platform.PageSlice;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RequestMapping(version = "1")
 public interface PageApi {

@@ -19,7 +19,8 @@ public class CompetitionAssetAccess implements CompetitionAssets {
     @Override
     public void acquire(String... urls) {
         writes.acquire();
-        for (String url : urls)
+        for (String url : urls) {
             media.requireAvailable(url);
+        }
     }
 }

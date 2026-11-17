@@ -3,17 +3,39 @@ package com.wikiaov.community.tournament.internal.web;
 import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.platform.PageLimits;
 import com.wikiaov.community.platform.PageSlice;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Create;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.TournamentStats;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Update;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Version;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
-import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.CompetitionPageEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
-import java.util.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RequestMapping(version = "1")
 public interface TournamentAdminApi {
@@ -103,7 +125,7 @@ public interface TournamentAdminApi {
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/parts")
-    java.util.List<TournamentPart> tournamentParts(@RequestParam(required = false) UUID parentId,
+    List<TournamentPart> tournamentParts(@RequestParam(required = false) UUID parentId,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/{id}")
@@ -116,10 +138,10 @@ public interface TournamentAdminApi {
     View<Tournament> updateTournament(@PathVariable UUID id, @RequestBody Update<Tournament> request);
 
     @GetMapping(ApiPaths.ADMIN + "/competitions/page-stats")
-    java.util.List<CompetitionPageEntry> competitionPageStats(HttpServletRequest request);
+    List<CompetitionPageEntry> competitionPageStats(HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/stats")
-    java.util.List<TournamentStats> tournamentStats(HttpServletRequest request);
+    List<TournamentStats> tournamentStats(HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/series")
     PageSlice<View<Series>> series(@RequestParam(defaultValue = "") @Size(max = Parameters.MAX_SEARCH) String q,

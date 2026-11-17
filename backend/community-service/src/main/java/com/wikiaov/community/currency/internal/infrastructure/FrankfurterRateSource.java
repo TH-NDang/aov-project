@@ -7,7 +7,9 @@ import java.math.BigDecimal;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -36,8 +38,9 @@ class FrankfurterRateSource implements ExchangeRateSource {
                 .uri(uri -> uri.path("/v2/rates").queryParam("from", from).queryParam("to", to)
                         .queryParam("base", "USD").queryParam("quotes", String.join(",", currencies)).build())
                 .retrieve().body(Row[].class);
-        if (rows == null)
+        if (rows == null) {
             return List.of();
+        }
 
         var wanted = Set.copyOf(currencies);
         return Arrays.stream(rows).filter(row -> usable(row, wanted))

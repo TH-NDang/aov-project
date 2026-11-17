@@ -1,20 +1,34 @@
 package com.wikiaov.community.community.internal.membership.application;
 
 import com.wikiaov.community.community.internal.application.PageChecks;
-import com.wikiaov.community.community.internal.application.PageViews.*;
-import com.wikiaov.community.community.internal.domain.*;
+import com.wikiaov.community.community.internal.application.PageViews.Claim;
+import com.wikiaov.community.community.internal.application.PageViews.Handover;
+import com.wikiaov.community.community.internal.application.PageViews.Member;
 import com.wikiaov.community.community.internal.domain.ClaimStatus;
+import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
-import com.wikiaov.community.community.internal.membership.persistence.*;
-import com.wikiaov.community.community.internal.pages.application.*;
+import com.wikiaov.community.community.internal.domain.PageRules;
+import com.wikiaov.community.community.internal.membership.persistence.PageClaim;
+import com.wikiaov.community.community.internal.membership.persistence.PageClaimRepository;
+import com.wikiaov.community.community.internal.membership.persistence.PageInvitation;
+import com.wikiaov.community.community.internal.membership.persistence.PageInvitationRepository;
+import com.wikiaov.community.community.internal.membership.persistence.PageMember;
+import com.wikiaov.community.community.internal.membership.persistence.PageMemberRepository;
+import com.wikiaov.community.community.internal.pages.application.PageAccess;
+import com.wikiaov.community.community.internal.pages.application.PageProfiles;
 import com.wikiaov.community.community.internal.social.application.PageNotifications;
 import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.platform.PageSlice;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,8 +56,9 @@ public class PageMemberships {
         PageChecks.text(evidence, PageRules.MAX_MESSAGE, true);
         access.lock(pageId);
         access.social(pageId);
-        if (!access.role(pageId, actor).isEmpty())
+        if (!access.role(pageId, actor).isEmpty()) {
             throw PageChecks.invalid("This account already manages the page.");
+        }
         var row = new PageClaim();
         row.setPageId(pageId);
         row.setActor(actor.key());
@@ -77,14 +92,17 @@ public class PageMemberships {
         access.lock(initial.getPageId());
         var row = claims.findById(id).orElseThrow(PageAccess::missing);
         PageAccess.version(row.getVersion(), version);
-        if (row.getStatus() != ClaimStatus.PENDING)
+        if (row.getStatus() != ClaimStatus.PENDING) {
             throw PageChecks.invalid("The claim was already reviewed.");
-        if (row.getActor().equals(actor.key()))
+        }
+        if (row.getActor().equals(actor.key())) {
             throw PageChecks.invalid("A different administrator must review this claim.");
+        }
         if (approve) {
             PageAccess.requireCommunity(access.read(row.getPageId()));
-            if (members.existsByPageIdAndRole(row.getPageId(), Role.OWNER))
+            if (members.existsByPageIdAndRole(row.getPageId(), Role.OWNER)) {
                 throw PageChecks.invalid("The page already has an owner. Resolve the ownership dispute first.");
+            }
             add(row.getPageId(), row.getActor(), row.getName(), Role.OWNER);
         }
         row.setStatus(approve ? ClaimStatus.APPROVED : ClaimStatus.REJECTED);
@@ -100,8 +118,9 @@ public class PageMemberships {
     @Transactional(readOnly = true)
     public List<Member> members(UUID pageId) {
         var actor = CommunityActor.require();
-        if (!actor.publisher())
+        if (!actor.publisher()) {
             access.require(pageId, actor, Role.OWNER, Role.EDITOR, Role.MODERATOR);
+        }
         return members.findByPageId(pageId).stream()
                 .map(row -> new Member(row.getId(), row.getName(), row.getRole().name(),
                         row.getActor().equals(actor.key())))
@@ -112,8 +131,9 @@ public class PageMemberships {
         var actor = CommunityActor.require();
         access.lock(pageId);
         access.require(pageId, actor, Role.OWNER);
-        if (role == null || role == PageContent.Role.OWNER)
+        if (role == null || role == PageContent.Role.OWNER) {
             throw PageChecks.invalid("Invite an editor or moderator; use ownership transfer for owners.");
+        }
 
         var issued = issue(pageId, role);
         access.audit(pageId, actor, "PAGE_MEMBER_INVITED");
@@ -141,10 +161,12 @@ public class PageMemberships {
         var actor = CommunityActor.require();
         var page = access.lock(pageId);
         PageAccess.requireCommunity(page);
-        if (page.getPublishedContent() == null)
+        if (page.getPublishedContent() == null) {
             throw PageAccess.conflict("Publish the page before handing it over.");
-        if (members.existsByPageIdAndRole(pageId, Role.OWNER))
+        }
+        if (members.existsByPageIdAndRole(pageId, Role.OWNER)) {
             throw PageAccess.conflict("The page already has an owner. Revoke it before handing the page over.");
+        }
 
         expireHandovers(pageId);
         var issued = issue(pageId, Role.OWNER);
@@ -157,8 +179,9 @@ public class PageMemberships {
         var actor = CommunityActor.require();
         access.lock(pageId);
 
-        if (expireHandovers(pageId) > 0)
+        if (expireHandovers(pageId) > 0) {
             access.audit(pageId, actor, "PAGE_HANDOVER_CANCELLED");
+        }
     }
 
     public UUID accept(String token) {
@@ -169,33 +192,41 @@ public class PageMemberships {
         var row = invitations.findByTokenHash(hash(token)).orElseThrow(PageAccess::missing);
         var handover = row.getRole() == Role.OWNER;
         var owned = members.existsByPageIdAndRole(row.getPageId(), Role.OWNER);
-        if (row.getAcceptedAt() != null || !row.getExpiresAt().isAfter(Instant.now()))
+        if (row.getAcceptedAt() != null || !row.getExpiresAt().isAfter(Instant.now())) {
             throw PageChecks.invalid("Invitation expired or was already used.");
-        if (handover && owned)
+        }
+        if (handover && owned) {
             throw PageChecks.invalid("The page already has an owner.");
-        if (!handover && !owned)
+        }
+        if (!handover && !owned) {
             throw PageChecks.invalid("The page no longer has a verified owner.");
-        if (members.findByPageIdAndActor(row.getPageId(), actor.key()).isPresent())
+        }
+        if (members.findByPageIdAndActor(row.getPageId(), actor.key()).isPresent()) {
             throw PageChecks.invalid("This account already manages the page.");
+        }
 
         add(row.getPageId(), actor.key(), actor.name(), row.getRole());
         row.setAcceptedAt(Instant.now());
         access.audit(row.getPageId(), actor, handover ? "PAGE_HANDOVER_ACCEPTED" : "PAGE_INVITATION_ACCEPTED");
-        if (handover)
+        if (handover) {
             notifications.send(actor.key(), row.getPageId(), "Bạn đã nhận quyền quản trị chính của trang.");
+        }
         return row.getPageId();
     }
 
     public void revoke(UUID pageId, UUID memberId) {
         var actor = CommunityActor.require();
         access.lock(pageId);
-        if (!actor.publisher())
+        if (!actor.publisher()) {
             access.require(pageId, actor, Role.OWNER);
+        }
         var member = members.findById(memberId).orElseThrow(PageAccess::missing);
-        if (!member.getPageId().equals(pageId))
+        if (!member.getPageId().equals(pageId)) {
             throw PageAccess.missing();
-        if (member.getRole() == Role.OWNER && !actor.publisher())
+        }
+        if (member.getRole() == Role.OWNER && !actor.publisher()) {
             throw PageChecks.invalid("Transfer ownership before leaving the page.");
+        }
         members.delete(member);
         if (member.getRole() == Role.OWNER) {
             members.findByPageId(pageId).forEach(members::delete);
@@ -211,8 +242,9 @@ public class PageMemberships {
         access.lock(pageId);
         access.require(pageId, actor, Role.OWNER);
         var target = members.findById(memberId).orElseThrow(PageAccess::missing);
-        if (!target.getPageId().equals(pageId) || target.getActor().equals(actor.key()))
+        if (!target.getPageId().equals(pageId) || target.getActor().equals(actor.key())) {
             throw PageChecks.invalid("Choose another member of this page.");
+        }
         var owner = members.findByPageIdAndActor(pageId, actor.key()).orElseThrow(PageAccess::missing);
         owner.setRole(Role.EDITOR);
         members.flush();
@@ -262,7 +294,7 @@ public class PageMemberships {
         try {
             return HexFormat.of()
                     .formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));
-        } catch (java.security.NoSuchAlgorithmException error) {
+        } catch (NoSuchAlgorithmException error) {
             throw new IllegalStateException(error);
         }
     }

@@ -1,19 +1,33 @@
 package com.wikiaov.community.community.internal.pages.application;
 
 import com.wikiaov.community.community.internal.application.PageChecks;
-import com.wikiaov.community.community.internal.application.PageViews.*;
-import com.wikiaov.community.community.internal.domain.*;
+import com.wikiaov.community.community.internal.application.PageViews.Live;
+import com.wikiaov.community.community.internal.application.PageViews.PageCard;
+import com.wikiaov.community.community.internal.application.PageViews.Profile;
+import com.wikiaov.community.community.internal.application.PageViews.TeamAffiliation;
+import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
+import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.membership.persistence.PageMemberRepository;
-import com.wikiaov.community.community.internal.pages.persistence.*;
+import com.wikiaov.community.community.internal.pages.persistence.PageAuditRepository;
+import com.wikiaov.community.community.internal.pages.persistence.PageRecord;
+import com.wikiaov.community.community.internal.pages.persistence.PageRepository;
 import com.wikiaov.community.community.internal.social.persistence.PageFollowRepository;
 import com.wikiaov.community.community.internal.social.persistence.PageLiveRepository;
 import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.CompetitionAssets;
 import com.wikiaov.community.tournament.CompetitionIdentities;
 import com.wikiaov.community.tournament.CompetitionReferences;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +44,7 @@ public class PageProfiles {
     private final PageMemberRepository members;
     private final PageFollowRepository follows;
     private final CompetitionIdentities identities;
-    private final com.wikiaov.community.tournament.CompetitionAssets assets;
+    private final CompetitionAssets assets;
     private final PageAuditRepository audits;
     private final List<CompetitionReferences> references;
     private final PageRosterProfiles rosters;
@@ -38,7 +52,7 @@ public class PageProfiles {
 
     public PageProfiles(PageRepository pages, PageAccess access, PageMemberRepository members,
             PageFollowRepository follows, CompetitionIdentities identities,
-            com.wikiaov.community.tournament.CompetitionAssets assets, PageAuditRepository audits,
+            CompetitionAssets assets, PageAuditRepository audits,
             List<CompetitionReferences> references, PageRosterProfiles rosters, PageLiveRepository lives) {
         this.pages = pages;
         this.access = access;
@@ -54,12 +68,15 @@ public class PageProfiles {
 
     @Transactional(readOnly = true)
     public PageSlice<Profile> list(String kind, String query, String personRole, int page, int size, boolean admin) {
-        if (admin && !CommunityActor.require().capabilities().contains("tournament:read"))
+        if (admin && !CommunityActor.require().capabilities().contains("tournament:read")) {
             throw PageAccess.forbidden();
-        if (kind != null && !Set.of("TEAM", "PLAYER", "ORGANIZATION", "PERSON", "CIRCUIT").contains(kind))
+        }
+        if (kind != null && !Set.of("TEAM", "PLAYER", "ORGANIZATION", "PERSON", "CIRCUIT").contains(kind)) {
             throw PageChecks.invalid("Invalid page kind.");
-        if (query == null || query.length() > 200)
+        }
+        if (query == null || query.length() > 200) {
             throw PageChecks.invalid("Search is too long.");
+        }
         String roles = PageChecks.personRoleFilter(personRole);
         return PageSlice
                 .from(pages.search(kind, query, roles, !admin, paging(page, size)).map(row -> view(row, admin)));
@@ -68,21 +85,27 @@ public class PageProfiles {
     @Transactional(readOnly = true)
     public PageSlice<Profile> adminDirectory(String kind, String query, String personRole, String country,
             List<UUID> entityIds, String sort, UUID relatedPageId, int page, int size) {
-        if (!CommunityActor.require().capabilities().contains("tournament:read"))
+        if (!CommunityActor.require().capabilities().contains("tournament:read")) {
             throw PageAccess.forbidden();
-        if (kind != null && !Set.of("TEAM", "PLAYER", "ORGANIZATION", "PERSON", "CIRCUIT").contains(kind))
+        }
+        if (kind != null && !Set.of("TEAM", "PLAYER", "ORGANIZATION", "PERSON", "CIRCUIT").contains(kind)) {
             throw PageChecks.invalid("Invalid page kind.");
-        if (query == null || query.length() > 200)
+        }
+        if (query == null || query.length() > 200) {
             throw PageChecks.invalid("Search is too long.");
-        if (!Set.of("RECENT", "NAME", "ACTIVITY", "ACTIVE").contains(sort))
+        }
+        if (!Set.of("RECENT", "NAME", "ACTIVITY", "ACTIVE").contains(sort)) {
             throw PageChecks.invalid("Invalid page order.");
-        if (entityIds.size() > 100)
+        }
+        if (entityIds.size() > 100) {
             throw PageChecks.invalid("Too many identities.");
+        }
 
-        if (sort.equals("ACTIVE"))
+        if (sort.equals("ACTIVE")) {
             return byActivity(kind, query, personRole, country, relatedPageId, page, size);
+        }
 
-        var identities = entityIds.stream().map(UUID::toString).collect(java.util.stream.Collectors.joining(","));
+        var identities = entityIds.stream().map(UUID::toString).collect(Collectors.joining(","));
         var rows = pages.adminDirectory(kind, query, PageChecks.personRoleFilter(personRole), country, identities, sort,
                 paging(page, size));
         return PageSlice.from(rows.map(row -> view(row, true)));
@@ -96,7 +119,7 @@ public class PageProfiles {
         var ranked = pages.byActivity(kind, kinds, query, roles, country,
                 relatedPageId == null ? "" : relatedPageId.toString(), paging(page, size));
         var rows = pages.findAllById(ranked.map(PageRepository.ActiveRow::getId).toList()).stream()
-                .collect(java.util.stream.Collectors.toMap(PageRecord::getId, java.util.function.Function.identity()));
+                .collect(Collectors.toMap(PageRecord::getId, Function.identity()));
 
         return PageSlice.from(ranked.map(row -> view(rows.get(row.getId()), true).ranked(row.getLastActiveOn(),
                 row.getRelated() ? Boolean.TRUE : null)));
@@ -104,18 +127,21 @@ public class PageProfiles {
 
     @Transactional(readOnly = true)
     public Profile read(UUID id, boolean admin) {
-        if (admin && !CommunityActor.require().capabilities().contains("tournament:read"))
+        if (admin && !CommunityActor.require().capabilities().contains("tournament:read")) {
             throw PageAccess.forbidden();
+        }
         return view(admin ? access.read(id) : access.published(id), admin);
     }
 
     @Transactional(readOnly = true)
     public List<TeamAffiliation> teams(UUID id, boolean admin) {
-        if (admin && !CommunityActor.require().capabilities().contains("tournament:read"))
+        if (admin && !CommunityActor.require().capabilities().contains("tournament:read")) {
             throw PageAccess.forbidden();
+        }
         var person = admin ? access.read(id) : access.published(id);
-        if (!Set.of("PLAYER", "PERSON").contains(person.getKind()))
+        if (!Set.of("PLAYER", "PERSON").contains(person.getKind())) {
             throw PageChecks.invalid("Team affiliations belong to individual profiles.");
+        }
 
         return pages.teamsForMember(id.toString(), !admin).stream().flatMap(team -> {
             var content = admin ? team.getContent() : team.getPublishedContent().present(team.getPresentation());
@@ -140,11 +166,13 @@ public class PageProfiles {
     /** Cards for the published pages among {@code ids}; withdrawn or unknown pages are left out. */
     @Transactional(readOnly = true)
     public Map<UUID, PageCard> cards(Collection<UUID> ids) {
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return Map.of();
+        }
         var rows = pages.findAllById(ids).stream().filter(row -> row.getPublishedContent() != null).toList();
-        if (rows.isEmpty())
+        if (rows.isEmpty()) {
             return Map.of();
+        }
         var represented = members.withRoleAmong(Role.OWNER, rows.stream().map(PageRecord::getId).toList());
 
         var cards = new HashMap<UUID, PageCard>();
@@ -167,8 +195,9 @@ public class PageProfiles {
         var actor = CommunityActor.require();
         PageChecks.content(content);
         assets.acquire(content.avatarUrl(), content.coverUrl());
-        if (kind == null || code == null || !code.matches("[a-z0-9][a-z0-9-]{1,99}"))
+        if (kind == null || code == null || !code.matches("[a-z0-9][a-z0-9-]{1,99}")) {
             throw PageChecks.invalid("Choose a kind and a lowercase slug of 2 to 100 characters.");
+        }
         PageChecks.personRoles(kind, content);
         validateChannelOrganization(kind, content, false);
         content = rosters.resolve(kind, content);
@@ -178,8 +207,9 @@ public class PageProfiles {
                             actor.key())
                     : identities.read(kind.name(), entityId);
             entityId = identity.id();
-        } else if (entityId != null)
+        } else if (entityId != null) {
             throw PageChecks.invalid("This page kind does not link a competition identity.");
+        }
 
         var row = new PageRecord();
         row.setKind(kind.name());
@@ -256,16 +286,21 @@ public class PageProfiles {
         var row = access.lock(id);
         PageAccess.version(row.getVersion(), version);
 
-        if (row.getPublishedContent() != null || audits.existsByPageIdAndAction(id, "PAGE_PUBLISHED"))
+        if (row.getPublishedContent() != null || audits.existsByPageIdAndAction(id, "PAGE_PUBLISHED")) {
             throw PageAccess.conflict("A page that was published keeps its history. Withdraw it instead.");
-        if (pages.countActivity(id) > 0)
+        }
+        if (pages.countActivity(id) > 0) {
             throw PageAccess.conflict("The page has representatives, requests or community activity.");
-        if (pages.countRosterReferences(id.toString()) > 0)
+        }
+        if (pages.countRosterReferences(id.toString()) > 0) {
             throw PageAccess.conflict("A team roster uses this profile.");
-        if (pages.countChannelReferences(id.toString()) > 0)
+        }
+        if (pages.countChannelReferences(id.toString()) > 0) {
             throw PageAccess.conflict("A circuit references this organization's channels.");
-        if (references.stream().mapToLong(reference -> reference.identityReferences(row.getKind(), id)).sum() > 0)
+        }
+        if (references.stream().mapToLong(reference -> reference.identityReferences(row.getKind(), id)).sum() > 0) {
             throw PageAccess.conflict("A competition uses this page.");
+        }
 
         audits.deleteByPage(id);
         pages.delete(row);
@@ -292,8 +327,9 @@ public class PageProfiles {
         var actor = CommunityActor.require();
         var row = access.read(id);
         var role = access.role(id, actor);
-        if (row.getPublishedContent() == null && role.isEmpty() && !actor.editor())
+        if (row.getPublishedContent() == null && role.isEmpty() && !actor.editor()) {
             throw PageAccess.missing();
+        }
         return Map.of("role", role.map(Role::name).orElse(""), "following",
                 follows.findByPageIdAndActor(id, actor.key()).isPresent(),
                 "version", row.getVersion(), "name", actor.name());
@@ -318,24 +354,29 @@ public class PageProfiles {
     }
 
     private void validateChannelOrganization(PageContent.Kind kind, PageContent content, boolean publish) {
-        if (content.channelOrganizationId() == null)
+        if (content.channelOrganizationId() == null) {
             return;
-        if (kind != PageContent.Kind.CIRCUIT)
+        }
+        if (kind != PageContent.Kind.CIRCUIT) {
             throw PageChecks.invalid("Only circuits can reference an organization's channels.");
+        }
 
         var organization = pages.lock(content.channelOrganizationId())
                 .orElseThrow(() -> PageChecks.invalid("The channel organization does not exist."));
-        if (!"ORGANIZATION".equals(organization.getKind()))
+        if (!"ORGANIZATION".equals(organization.getKind())) {
             throw PageChecks.invalid("Channel references must point to an organization.");
-        if (publish && organization.getPublishedContent() == null)
+        }
+        if (publish && organization.getPublishedContent() == null) {
             throw PageAccess.conflict("Publish the channel organization before publishing the circuit.");
+        }
     }
 
     private Profile view(PageRecord row, boolean admin) {
         var content = admin ? row.getContent() : row.getPublishedContent();
         boolean community = PageAccess.community(row);
-        if (!admin && content != null && community)
+        if (!admin && content != null && community) {
             content = content.present(row.getPresentation());
+        }
         return new Profile(row.getId(), admin ? row.getVersion() : null, row.getCode(), row.getKind(),
                 row.getEntityId(),
                 content, row.getPublishedContent() != null,

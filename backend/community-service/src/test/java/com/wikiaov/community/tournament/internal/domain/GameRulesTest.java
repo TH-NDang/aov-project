@@ -2,15 +2,40 @@ package com.wikiaov.community.tournament.internal.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftTurn;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.EnchantmentAllocation;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.EquipmentEvent;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.EquipmentSnapshot;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.EventType;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameDraft;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameSide;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameTimeline;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.InventorySlot;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Loadout;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.ObjectiveKind;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.ObservationStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Participant;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Reference;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Seat;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TimelineEvent;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TimelineKind;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.VodPause;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 class GameRulesTest {
     private static final UUID SERIES = id(500);
-    private static final List<Reference> HEROES = java.util.stream.IntStream.rangeClosed(1, 18)
+    private static final List<Reference> HEROES = IntStream.rangeClosed(1, 18)
             .mapToObj(index -> reference(index, null, null, null)).toList();
     private static final Catalog CATALOG = new Catalog(HEROES,
             List.of(reference(200, 1, null, null), reference(201, 3, null, null)),
@@ -361,8 +386,9 @@ class GameRulesTest {
 
     private static List<InventorySlot> emptyInventory() {
         var slots = new ArrayList<InventorySlot>();
-        for (int slot = 1; slot <= 6; slot++)
+        for (int slot = 1; slot <= 6; slot++) {
             slots.add(new InventorySlot(slot, true, null));
+        }
         return slots;
     }
 
@@ -378,13 +404,15 @@ class GameRulesTest {
         var sides = new ArrayList<GameSide>();
         for (int side = 0; side < 2; side++) {
             var participants = new ArrayList<Participant>();
-            for (int lane = 0; lane < 5; lane++)
+            for (int lane = 0; lane < 5; lane++) {
                 participants.add(new Participant(id(1000 + side * 5 + lane),
                         Lane.values()[lane], selection(1 + side * 5 + lane), selection(300), null, null,
                         List.of(), List.of(), null));
+            }
             var bans = new ArrayList<Selection>();
-            for (int ban = 0; ban < 4; ban++)
+            for (int ban = 0; ban < 4; ban++) {
                 bans.add(selection(11 + side * 4 + ban));
+            }
             sides.add(new GameSide(Side.values()[side], id(600 + side), bans, participants));
         }
         return new Game(SERIES, 1, "VN", "vi-VN", null, null, null, 600, Side.BLUE, null, null, null, sides,

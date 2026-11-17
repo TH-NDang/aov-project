@@ -2,7 +2,9 @@ package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.QueryParameters;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Version;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
 import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycles;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;

@@ -2,6 +2,7 @@ package com.wikiaov.community.community.internal.domain;
 
 import java.net.URI;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -29,18 +30,21 @@ public final class PageRules {
 
     /** Checks a post and returns it trimmed, with TEXT as the default kind and no null image list. */
     public static PostContent post(PostContent input) {
-        if (input == null)
+        if (input == null) {
             throw invalid("Post content is required.");
+        }
         String kind = input.kind() == null || input.kind().isBlank() ? "TEXT" : input.kind();
-        if (!POST_KINDS.contains(kind))
+        if (!POST_KINDS.contains(kind)) {
             throw invalid("Use a TEXT, NEWS or VIDEO post.");
+        }
         List<String> images = input.imageUrls() == null ? List.of() : input.imageUrls();
         text(input.title(), MAX_NAME, "NEWS".equals(kind));
         text(input.body(), MAX_POST_BODY, !"VIDEO".equals(kind));
         text(input.videoUrl(), MAX_URL, "VIDEO".equals(kind));
         url(input.videoUrl());
-        if (images.size() > MAX_POST_IMAGES)
+        if (images.size() > MAX_POST_IMAGES) {
             throw invalid("Use at most " + MAX_POST_IMAGES + " images.");
+        }
         images.forEach(image -> {
             text(image, MAX_URL, true);
             url(image);
@@ -52,18 +56,21 @@ public final class PageRules {
 
     /** A kind used to filter posts; blank means every kind. */
     public static String postKindFilter(String kind) {
-        if (kind == null || kind.isBlank())
+        if (kind == null || kind.isBlank()) {
             return null;
-        if (!POST_KINDS.contains(kind))
+        }
+        if (!POST_KINDS.contains(kind)) {
             throw invalid("Use a TEXT, NEWS or VIDEO post.");
+        }
         return kind;
     }
 
     /** An ILIKE pattern for a search text, with its wildcards escaped; blank means no search. */
     public static String searchPattern(String query) {
         text(query, MAX_LABEL, false);
-        if (query == null || query.isBlank())
+        if (query == null || query.isBlank()) {
             return null;
+        }
         return "%" + query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
     }
 
@@ -78,34 +85,39 @@ public final class PageRules {
     }
 
     public static void text(String value, int max, boolean required) {
-        if ((required && (value == null || value.isBlank())) || (value != null && value.length() > max))
+        if ((required && (value == null || value.isBlank())) || (value != null && value.length() > max)) {
             throw invalid("Text is missing or exceeds its length limit.");
+        }
     }
 
     public static void url(String value) {
-        if (value == null || value.isBlank())
+        if (value == null || value.isBlank()) {
             return;
+        }
         try {
             var uri = URI.create(value);
             if (!("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()))
-                    || uri.getHost() == null || uri.getUserInfo() != null || value.length() > MAX_URL)
+                    || uri.getHost() == null || uri.getUserInfo() != null || value.length() > MAX_URL) {
                 throw new IllegalArgumentException();
+            }
         } catch (IllegalArgumentException error) {
             throw invalid("Use an absolute HTTP or HTTPS URL without credentials.");
         }
     }
 
     public static void content(PageContent content) {
-        if (content == null)
+        if (content == null) {
             throw invalid("Page content is required.");
+        }
         text(content.name(), MAX_NAME, true);
         text(content.shortName(), MAX_LABEL, false);
         text(content.country(), MAX_LABEL, false);
         presentation(new PageContent.Presentation(content.biography(), content.avatarUrl(), content.coverUrl(),
                 content.links()));
         if (content.sources().size() > 100 || content.history().size() > 300 || content.achievements().size() > 300
-                || content.roster().size() > 100)
+                || content.roster().size() > 100) {
             throw invalid("Too many profile entries.");
+        }
         content.sources().forEach(source -> {
             text(source.label(), MAX_NAME, true);
             text(source.url(), MAX_URL, true);
@@ -132,13 +144,15 @@ public final class PageRules {
     }
 
     public static void presentation(PageContent.Presentation value) {
-        if (value == null)
+        if (value == null) {
             throw invalid("Presentation is required.");
+        }
         text(value.biography(), MAX_BIOGRAPHY, false);
         url(value.avatarUrl());
         url(value.coverUrl());
-        if (value.links().size() > MAX_LINKS)
+        if (value.links().size() > MAX_LINKS) {
             throw invalid("Use at most " + MAX_LINKS + " links.");
+        }
         value.links().forEach(link -> {
             text(link.label(), MAX_LABEL, true);
             text(link.url(), MAX_URL, true);
@@ -146,9 +160,10 @@ public final class PageRules {
         });
     }
 
-    private static void dates(java.time.LocalDate start, java.time.LocalDate end) {
-        if (start != null && end != null && end.isBefore(start))
+    private static void dates(LocalDate start, LocalDate end) {
+        if (start != null && end != null && end.isBefore(start)) {
             throw invalid("End date precedes start date.");
+        }
     }
 
     public static InvalidPage invalid(String detail) {

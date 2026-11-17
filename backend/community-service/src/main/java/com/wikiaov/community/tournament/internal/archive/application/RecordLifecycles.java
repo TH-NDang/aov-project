@@ -1,8 +1,15 @@
 package com.wikiaov.community.tournament.internal.archive.application;
 
 import com.wikiaov.community.platform.CommunityActor;
-import com.wikiaov.community.tournament.internal.application.*;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.tournament.internal.application.GameRecords;
+import com.wikiaov.community.tournament.internal.application.PlayerRegistry;
+import com.wikiaov.community.tournament.internal.application.SeriesRegistry;
+import com.wikiaov.community.tournament.internal.application.TeamRegistry;
+import com.wikiaov.community.tournament.internal.application.TournamentErrors;
+import com.wikiaov.community.tournament.internal.application.TournamentRegistry;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
 import com.wikiaov.community.tournament.internal.roster.application.RosterAdministration;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;

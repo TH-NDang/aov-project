@@ -1,14 +1,18 @@
 package com.wikiaov.community.community.internal.social.persistence;
 
 import com.wikiaov.community.community.internal.domain.PostStatus;
-import java.util.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, UUID> {
     @Query("select p from CommunityPost p where p.pageId = :pageId and (p.status = PUBLISHED or (p.actor = :actor and p.status = DRAFT)) order by p.createdAt desc")
-    org.springframework.data.domain.Page<CommunityPost> visibleTo(UUID pageId, String actor,
-            org.springframework.data.domain.Pageable page);
+    Page<CommunityPost> visibleTo(UUID pageId, String actor,
+            Pageable page);
 
     Page<CommunityPost> findByPageIdAndStatusOrderByCreatedAtDesc(UUID pageId, PostStatus status, Pageable pageable);
 

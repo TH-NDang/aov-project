@@ -3,7 +3,9 @@ package com.wikiaov.community.tournament.internal.domain;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public final class TournamentContent {
     private TournamentContent() {

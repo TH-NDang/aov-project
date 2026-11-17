@@ -5,9 +5,21 @@ import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.platform.PlatformErrorCode;
 import com.wikiaov.community.tournament.internal.application.TournamentViews;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
-import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.CompetitionPageEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.LineupMember;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.PlayerEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamRef;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentRef;
 import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository;
-import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.*;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.CompetitionPageRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.FacetRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.LineupRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.PlayerRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.RankedRow;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.TeamRow;
 import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
@@ -17,8 +29,19 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;
-import com.wikiaov.community.tournament.internal.persistence.*;
-import java.util.*;
+import com.wikiaov.community.tournament.internal.persistence.PlayerRecord;
+import com.wikiaov.community.tournament.internal.persistence.PlayerRepository;
+import com.wikiaov.community.tournament.internal.persistence.TeamRecord;
+import com.wikiaov.community.tournament.internal.persistence.TeamRepository;
+import com.wikiaov.community.tournament.internal.persistence.TournamentRecord;
+import com.wikiaov.community.tournament.internal.persistence.TournamentRepository;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
@@ -178,8 +201,9 @@ public class CompetitionDirectory {
 
     /** The most recent roster each team has on record; its latest tournament may have none entered yet. */
     private Map<UUID, Lineup> lineups(List<UUID> teamIds) {
-        if (teamIds.isEmpty())
+        if (teamIds.isEmpty()) {
             return Map.of();
+        }
 
         var teamList = teamIds.stream().map(UUID::toString).collect(Collectors.joining(","));
         var current = directory.lineups(teamList).stream()
@@ -235,16 +259,18 @@ public class CompetitionDirectory {
     }
 
     private static TeamRef teamRef(TeamRecord row) {
-        if (row == null)
+        if (row == null) {
             return null;
+        }
 
         var team = row.getContent();
         return new TeamRef(row.getId(), team.name(), team.shortName(), team.logoUrl());
     }
 
     private static TournamentRef tournamentRef(TournamentRecord row) {
-        if (row == null)
+        if (row == null) {
             return null;
+        }
 
         var tournament = row.getContent();
         return new TournamentRef(row.getId(), tournament.name(), tournament.logoUrl(), tournament.tier(),
@@ -260,8 +286,9 @@ public class CompetitionDirectory {
     }
 
     private static List<TournamentTier> parseTiers(String tiers) {
-        if (tiers == null)
+        if (tiers == null) {
             return List.of();
+        }
 
         return Arrays.stream(tiers.split(",")).map(TournamentTier::valueOf).sorted().toList();
     }
@@ -273,8 +300,9 @@ public class CompetitionDirectory {
     }
 
     private static <E extends Enum<E>> void requireEnum(String name, String value, Class<E> type) {
-        if (value.isEmpty())
+        if (value.isEmpty()) {
             return;
+        }
 
         try {
             Enum.valueOf(type, value);

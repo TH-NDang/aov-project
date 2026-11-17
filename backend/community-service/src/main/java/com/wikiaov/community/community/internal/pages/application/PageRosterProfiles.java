@@ -4,7 +4,8 @@ import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.community.internal.pages.persistence.PageRecord;
 import com.wikiaov.community.community.internal.pages.persistence.PageRepository;
-import java.util.*;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
@@ -18,17 +19,20 @@ public class PageRosterProfiles {
     }
 
     public PageContent resolve(PageContent.Kind kind, PageContent content) {
-        if (kind != PageContent.Kind.TEAM)
+        if (kind != PageContent.Kind.TEAM) {
             return content;
+        }
         var ids = content.roster().stream().map(PageContent.Member::pageId).filter(Objects::nonNull).distinct()
                 .toList();
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return content;
+        }
         var people = pages.findAllById(ids).stream().collect(Collectors.toMap(PageRecord::getId, row -> row));
         for (var id : ids) {
             var person = people.get(id);
-            if (person == null || !Set.of("PLAYER", "PERSON").contains(person.getKind()))
+            if (person == null || !Set.of("PLAYER", "PERSON").contains(person.getKind())) {
                 throw PageChecks.invalid("Team roster members must link an existing individual profile.");
+            }
         }
 
         var roster = content.roster().stream().map(member -> member.pageId() == null

@@ -4,12 +4,15 @@ import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.platform.QueryParameters;
 import com.wikiaov.community.tournament.internal.application.PublicTournamentQueries;
 import com.wikiaov.community.tournament.internal.application.PublicTournamentQueries.Summary;
-import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.application.WikiCatalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class TournamentPublicController implements TournamentPublicApi {

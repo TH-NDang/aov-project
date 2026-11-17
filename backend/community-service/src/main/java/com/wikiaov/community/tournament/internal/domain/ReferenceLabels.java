@@ -9,14 +9,17 @@ public final class ReferenceLabels {
     }
 
     public static boolean validAliases(List<String> aliases) {
-        if (aliases == null || aliases.size() > 20)
+        if (aliases == null || aliases.size() > 20) {
             return false;
+        }
 
         var names = new HashSet<String>();
-        for (var alias : aliases)
+        for (var alias : aliases) {
             if (alias == null || alias.isBlank() || alias.length() > 100
-                    || !names.add(alias.toLowerCase(Locale.ROOT)))
+                    || !names.add(alias.toLowerCase(Locale.ROOT))) {
                 return false;
+            }
+        }
         return true;
     }
 

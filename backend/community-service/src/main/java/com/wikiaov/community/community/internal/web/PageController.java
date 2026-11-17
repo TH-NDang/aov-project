@@ -1,15 +1,40 @@
 package com.wikiaov.community.community.internal.web;
 
-import com.wikiaov.community.community.internal.application.PageViews.*;
+import com.wikiaov.community.community.internal.application.PageViews.Claim;
+import com.wikiaov.community.community.internal.application.PageViews.Comment;
+import com.wikiaov.community.community.internal.application.PageViews.FeedPost;
+import com.wikiaov.community.community.internal.application.PageViews.Handover;
+import com.wikiaov.community.community.internal.application.PageViews.Liking;
+import com.wikiaov.community.community.internal.application.PageViews.Live;
+import com.wikiaov.community.community.internal.application.PageViews.Member;
+import com.wikiaov.community.community.internal.application.PageViews.Notification;
+import com.wikiaov.community.community.internal.application.PageViews.Post;
+import com.wikiaov.community.community.internal.application.PageViews.Profile;
+import com.wikiaov.community.community.internal.application.PageViews.Report;
+import com.wikiaov.community.community.internal.application.PageViews.TeamAffiliation;
+import com.wikiaov.community.community.internal.application.PageViews.UnreadCount;
+import com.wikiaov.community.community.internal.domain.PostContent;
 import com.wikiaov.community.community.internal.membership.application.PageMemberships;
 import com.wikiaov.community.community.internal.pages.application.PageProfiles;
-import com.wikiaov.community.community.internal.social.application.*;
-import com.wikiaov.community.platform.*;
+import com.wikiaov.community.community.internal.social.application.PageBroadcasts;
+import com.wikiaov.community.community.internal.social.application.PageCommunity;
+import com.wikiaov.community.community.internal.social.application.PageNotifications;
+import com.wikiaov.community.platform.ApiPaths;
+import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.platform.PageLimits;
+import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.platform.QueryParameters;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class PageController implements PageApi {
@@ -18,7 +43,7 @@ public class PageController implements PageApi {
     private final PageCommunity social;
     private final PageNotifications notifications;
     private final PageBroadcasts broadcasts;
-    private final jakarta.servlet.http.HttpServletRequest request;
+    private final HttpServletRequest request;
 
     @GetMapping(value = ApiPaths.ROOT + "/pages/by-entity/{kind}/{id}", version = "1")
     public Profile byEntity(@PathVariable String kind, @PathVariable UUID id) {
@@ -40,7 +65,7 @@ public class PageController implements PageApi {
 
     public PageController(PageProfiles profiles, PageMemberships memberships, PageCommunity social,
             PageNotifications notifications, PageBroadcasts broadcasts,
-            jakarta.servlet.http.HttpServletRequest request) {
+            HttpServletRequest request) {
         this.profiles = profiles;
         this.memberships = memberships;
         this.social = social;
@@ -265,8 +290,8 @@ public class PageController implements PageApi {
         broadcasts.endAsEditor(id);
     }
 
-    private static com.wikiaov.community.community.internal.domain.PostContent content(PostWrite body) {
-        return new com.wikiaov.community.community.internal.domain.PostContent(body.kind(), body.title(), body.body(),
+    private static PostContent content(PostWrite body) {
+        return new PostContent(body.kind(), body.title(), body.body(),
                 body.videoUrl(), body.imageUrls());
     }
 

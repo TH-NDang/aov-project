@@ -1,9 +1,10 @@
 package com.wikiaov.community.community.internal.membership.persistence;
 
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
-import java.util.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PageInvitationRepository extends JpaRepository<PageInvitation, UUID> {
 

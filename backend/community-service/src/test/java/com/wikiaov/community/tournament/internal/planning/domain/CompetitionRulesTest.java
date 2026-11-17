@@ -1,10 +1,22 @@
 package com.wikiaov.community.tournament.internal.planning.domain;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
-import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.*;
-import java.util.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.SeriesResult;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Entry;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Match;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Slot;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Stage;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 class CompetitionRulesTest {
@@ -13,7 +25,7 @@ class CompetitionRulesTest {
     }
 
     private List<Entry> entrants(int count) {
-        return java.util.stream.IntStream.range(0, count)
+        return IntStream.range(0, count)
                 .mapToObj(i -> new Entry(UUID.randomUUID(), i + 1, "REGISTERED", "")).toList();
     }
 

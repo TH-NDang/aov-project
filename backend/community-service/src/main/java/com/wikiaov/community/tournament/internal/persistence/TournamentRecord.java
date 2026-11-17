@@ -1,7 +1,9 @@
 package com.wikiaov.community.tournament.internal.persistence;
 
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
