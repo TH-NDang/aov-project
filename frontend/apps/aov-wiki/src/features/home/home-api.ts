@@ -2,6 +2,12 @@ import { queryOptions } from "@tanstack/react-query"
 import { wikiCatalogParameters, type WikiCatalogScope } from "../../lib/wiki-catalog"
 import { wikiGet } from "../../lib/wiki-api"
 
+/** Every query key of the home page; reads and invalidation both use these. */
+export const homeKeys = {
+  seasonUpdates: (scope: WikiCatalogScope) => ["wiki", "season-updates", scope.region, scope.locale] as const,
+  sectionCounts: (scope: WikiCatalogScope) => ["wiki", "section-counts", scope.region, scope.locale] as const,
+}
+
 export interface SeasonPatch {
   id: string
   code: string
@@ -25,7 +31,7 @@ export interface SeasonUpdates {
 
 export const seasonUpdatesQuery = (scope: WikiCatalogScope) =>
   queryOptions({
-    queryKey: ["wiki", "season-updates", scope.region, scope.locale],
+    queryKey: homeKeys.seasonUpdates(scope),
     queryFn: ({ signal }) =>
       wikiGet<SeasonUpdates>(`/seasons/current/updates?${wikiCatalogParameters(scope, false)}&limit=4`, signal),
     staleTime: 60_000,
@@ -42,7 +48,7 @@ export type CountedSection = (typeof COUNTED)[number]
  */
 export const sectionCountsQuery = (scope: WikiCatalogScope) =>
   queryOptions({
-    queryKey: ["wiki", "section-counts", scope.region, scope.locale],
+    queryKey: homeKeys.sectionCounts(scope),
     queryFn: async ({ signal }) => {
       const totals = await Promise.all(
         COUNTED.map(async (section) => {

@@ -5,6 +5,16 @@ import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "../.
 import { FocalPoint } from "@aov/ui/lib/focal-point"
 import { wikiGet, wikiGetPages } from "../../lib/wiki-api"
 
+/** Every query key of the hero feature; reads and invalidation both use these. */
+export const heroKeys = {
+  catalog: (scope: WikiCatalogScope) => ["wiki", "heroes", ...wikiScopeKey(scope)] as const,
+  detail: (heroId: string, scope: WikiCatalogScope) => ["wiki", "hero", heroId, ...wikiScopeKey(scope)] as const,
+  ranking: (heroId: string, region: string) => ["wiki", "hero-ranking", heroId, region] as const,
+  traits: (region: string) => ["wiki", "hero-traits", region] as const,
+  builds: (heroCode: string, region: string) => ["wiki", "hero-builds", heroCode, region] as const,
+  shop: (heroId: string, region: string) => ["wiki", "hero-shop", heroId, region] as const,
+}
+
 export interface HeroMedia {
   assetId: string
   semanticType: string
@@ -145,7 +155,7 @@ export type HeroFormDetail = Omit<HeroDetail, "context" | "forms" | "parent"> & 
 
 export const heroCatalogQuery = (scope: WikiCatalogScope) =>
   queryOptions({
-    queryKey: ["wiki", "heroes", ...wikiScopeKey(scope)],
+    queryKey: heroKeys.catalog(scope),
     queryFn: async ({ signal }) => {
       const { first, items } = await wikiGetPages<HeroPage, HeroListItem>(
         "/heroes",
@@ -161,7 +171,7 @@ export const heroCatalogQuery = (scope: WikiCatalogScope) =>
 
 export function heroDetailQuery(heroId: string, scope: WikiCatalogScope) {
   return queryOptions({
-    queryKey: ["wiki", "hero", heroId, ...wikiScopeKey(scope)],
+    queryKey: heroKeys.detail(heroId, scope),
     queryFn: ({ signal }) =>
       wikiGet<HeroDetail>(`/heroes/${encodeURIComponent(heroId)}?${wikiCatalogParameters(scope)}`, signal),
     staleTime: 60_000,
@@ -201,7 +211,7 @@ export interface HeroTraitIndex {
 
 export function heroRankingQuery(heroId: string, region: string) {
   return queryOptions({
-    queryKey: ["wiki", "hero-ranking", heroId, region] as const,
+    queryKey: heroKeys.ranking(heroId, region),
     queryFn: ({ signal }) =>
       wikiGet<HeroRankingReading>(
         `/heroes/${encodeURIComponent(heroId)}/ranking?region=${encodeURIComponent(region)}`,
@@ -214,9 +224,74 @@ export function heroRankingQuery(heroId: string, region: string) {
 
 export function heroTraitIndexQuery(region: string) {
   return queryOptions({
-    queryKey: ["wiki", "hero-traits", region] as const,
+    queryKey: heroKeys.traits(region),
     queryFn: ({ signal }) => wikiGet<HeroTraitIndex>(`/hero-traits?region=${encodeURIComponent(region)}`, signal),
     staleTime: 300_000,
+    retry: false,
+  })
+}
+
+export interface PublicBuild {
+  contentKey: string
+  positions: number[]
+  items: { slot: number; itemId: string; code: string | null }[]
+  enchantments: { slot: number; enchantmentId: string; code: string | null }[]
+  arcanaPageId: string | null
+  arcana: { arcanaId: string; code: string | null; quantity: number }[]
+  arcanaPageUse: { builds: number; heroes: number } | null
+  spellId: string | null
+  spellCode: string | null
+}
+
+export interface BuildSource {
+  captureId: string
+  sourceKind: "PRO" | "HOT" | "SYSTEM"
+  sourceLabel: string
+  capturedAt: string
+  sourceTimeZone: string
+  patchCode: string | null
+  result: "COLLECTED" | "NO_BUILDS" | "FAILED"
+  builds: PublicBuild[]
+}
+
+export interface HeroBuildReading {
+  heroId: string
+  heroCode: string
+  regionCode: string
+  sources: BuildSource[]
+}
+
+export function heroBuildsQuery(heroCode: string, region: string) {
+  return queryOptions({
+    queryKey: heroKeys.builds(heroCode, region),
+    queryFn: ({ signal }) =>
+      wikiGet<HeroBuildReading>(`/builds?${new URLSearchParams({ hero: heroCode, region })}`, signal),
+    staleTime: 300000,
+    retry: false,
+  })
+}
+
+export type HeroAvailability = "ON_SALE" | "NOT_OPEN" | "COMING_SOON" | "UNKNOWN"
+export type SkinMethod = "VOUCHER" | "EVENT" | "NOT_OPEN" | "OTHER" | "UNKNOWN"
+
+export interface HeroShop {
+  price: {
+    availability: HeroAvailability
+    goldPrice: number | null
+    voucherPrice: number | null
+  } | null
+  skins: { skinKey: string; method: SkinMethod; voucherPrice: number | null; eventName: string | null }[]
+}
+
+/**
+ * Today's price and skin acquisition. A past patch on the hero page changes only the abilities (ADR-016), and prices
+ * were only recorded recently, so an older day would mostly show nothing.
+ */
+export function heroShopQuery(heroId: string, region: string) {
+  return queryOptions({
+    queryKey: heroKeys.shop(heroId, region),
+    queryFn: ({ signal }) => wikiGet<HeroShop>(`/heroes/${heroId}/shop?${new URLSearchParams({ region })}`, signal),
+    staleTime: 300000,
     retry: false,
   })
 }

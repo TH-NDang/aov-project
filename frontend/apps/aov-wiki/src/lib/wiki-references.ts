@@ -10,6 +10,11 @@ import {
 } from "./wiki-catalog"
 import { wikiGet } from "./wiki-api"
 
+/** Every query key of the reference catalog; reads and invalidation both use these. */
+export const referenceKeys = {
+  catalog: (scope: WikiCatalogScope) => ["wiki", "references", ...wikiScopeKey(scope), scope.section] as const,
+}
+
 const REFERENCE_TABS: Partial<Record<EntityReference["kind"], WarehouseKind>> = {
   item: "items",
   enchantment: "enchantments",
@@ -19,7 +24,7 @@ const REFERENCE_TABS: Partial<Record<EntityReference["kind"], WarehouseKind>> = 
 
 export const wikiReferencesQuery = (scope: WikiCatalogScope) =>
   queryOptions({
-    queryKey: ["wiki", "references", ...wikiScopeKey(scope), scope.section],
+    queryKey: referenceKeys.catalog(scope),
     queryFn: async ({ signal }) => {
       const { settings } = await wikiGet<{ settings: RichTextSettings }>(
         `/reference-catalog?${wikiCatalogParameters(scope)}`,

@@ -1,33 +1,8 @@
-import { queryOptions, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
-import { wikiGet } from "../../lib/wiki-api"
-
-type HeroAvailability = "ON_SALE" | "NOT_OPEN" | "COMING_SOON" | "UNKNOWN"
-type SkinMethod = "VOUCHER" | "EVENT" | "NOT_OPEN" | "OTHER" | "UNKNOWN"
-
-interface HeroShop {
-  price: {
-    availability: HeroAvailability
-    goldPrice: number | null
-    voucherPrice: number | null
-  } | null
-  skins: { skinKey: string; method: SkinMethod; voucherPrice: number | null; eventName: string | null }[]
-}
-
-/**
- * Today's price and skin acquisition. A past patch on the hero page changes only the abilities (ADR-016), and prices
- * were only recorded recently, so an older day would mostly show nothing.
- */
-function heroShopQuery(heroId: string, region: string) {
-  return queryOptions({
-    queryKey: ["wiki", "hero-shop", heroId, region] as const,
-    queryFn: ({ signal }) => wikiGet<HeroShop>(`/heroes/${heroId}/shop?${new URLSearchParams({ region })}`, signal),
-    staleTime: 300000,
-    retry: false,
-  })
-}
+import { heroShopQuery } from "./hero-api"
 
 /**
  * What the hero costs in the market being read, next to its roles. It stays out of the way when nothing is known.

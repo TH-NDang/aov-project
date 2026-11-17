@@ -3,6 +3,13 @@ import type { HeroMedia } from "../hero/hero-api"
 import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "../../lib/wiki-catalog"
 import { wikiGetPages } from "../../lib/wiki-api"
 
+/** Every query key of skins; reads and invalidation both use these. */
+export const skinKeys = {
+  collection: (scope: WikiCatalogScope) => ["wiki", "skin-collection", ...wikiScopeKey(scope)] as const,
+  hero: (heroCode: string, scope: WikiCatalogScope) =>
+    ["wiki", "hero-skins", heroCode, ...wikiScopeKey(scope)] as const,
+}
+
 export interface SkinBadge {
   code: string
   name: string
@@ -49,7 +56,7 @@ const readSkinPages = (query: URLSearchParams, signal: AbortSignal) =>
 
 export function skinCatalogQuery(scope: WikiCatalogScope) {
   return queryOptions({
-    queryKey: ["wiki", "skin-collection", ...wikiScopeKey(scope)] as const,
+    queryKey: skinKeys.collection(scope),
     queryFn: async ({ signal }) => {
       const query = wikiCatalogParameters(scope)
       const { first, items } = await readSkinPages(query, signal)
@@ -75,7 +82,7 @@ export function skinCatalogQuery(scope: WikiCatalogScope) {
 /** One hero's skins, for showing them on the hero page without loading the whole collection. */
 export function heroSkinsQuery(scope: WikiCatalogScope, heroCode: string) {
   return queryOptions({
-    queryKey: ["wiki", "hero-skins", heroCode, ...wikiScopeKey(scope)] as const,
+    queryKey: skinKeys.hero(heroCode, scope),
     queryFn: async ({ signal }) => {
       const query = wikiCatalogParameters(scope)
       query.set("hero", heroCode)

@@ -28,6 +28,7 @@ import { ModeFab, ModeHeading } from "./mode-ui"
 import {
   communityLineupsQuery,
   lineupErrorMessage,
+  modeKeys,
   myStateQuery,
   setLike,
   type LineupSort,
@@ -57,7 +58,7 @@ function useLikes(code: string) {
     onSuccess: (result) => {
       setMessage("")
       setOverrides((current) => ({ ...current, [result.lineupId]: { liked: result.liked, likes: result.likes } }))
-      void client.invalidateQueries({ queryKey: ["wiki", "game-mode", code, "insights"] })
+      void client.invalidateQueries({ queryKey: modeKeys.insights(code) })
     },
     onError: (error) => setMessage(lineupErrorMessage(error, locale)),
   })

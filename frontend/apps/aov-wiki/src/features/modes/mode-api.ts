@@ -117,6 +117,20 @@ const BASE = "/game-modes"
 /** The signed-in reader's routes live under `/users/me`, like the rest of what belongs to a reader. */
 const READER_BASE = "/users/me/game-modes"
 
+/**
+ * Every query key of game modes; reads and invalidation both use these. A mode's key starts all of its other keys, so
+ * invalidating it refreshes the guide, the lineups, the statistics and the reader's own state together.
+ */
+export const modeKeys = {
+  cards: ["wiki", "game-modes"] as const,
+  mode: (code: string) => ["wiki", "game-mode", code] as const,
+  guide: (code: string) => [...modeKeys.mode(code), "auto-chess"] as const,
+  community: (code: string, sort: string, unit: string | null | undefined) =>
+    [...modeKeys.mode(code), "community", sort, unit] as const,
+  insights: (code: string) => [...modeKeys.mode(code), "insights"] as const,
+  mine: (code: string, revision: number) => [...modeKeys.mode(code), "me", revision] as const,
+}
+
 const readPublic = <T>(path: string, signal?: AbortSignal) => wikiGet<T>(`${BASE}${path}`, signal)
 
 /** Requests of the signed-in reader; the token never goes to public reads, so those stay cacheable. */
@@ -128,14 +142,14 @@ async function readPersonal<T>(path: string, request: Pick<WikiRequest, "method"
 
 export const modeCardsQuery = () =>
   queryOptions({
-    queryKey: ["wiki", "game-modes"],
+    queryKey: modeKeys.cards,
     queryFn: ({ signal }) => readPublic<{ items: ModeCard[] }>("", signal),
     staleTime: 60_000,
   })
 
 export const modeQuery = (code: string) =>
   queryOptions({
-    queryKey: ["wiki", "game-mode", code],
+    queryKey: modeKeys.mode(code),
     queryFn: ({ signal }) => readPublic<PublicMode>(`/${encodeURIComponent(code)}`, signal),
     staleTime: 60_000,
     retry: (count, error) => !(error instanceof WikiApiError && error.status === 404) && count < 1,
@@ -143,7 +157,7 @@ export const modeQuery = (code: string) =>
 
 export const guideQuery = (code: string) =>
   queryOptions({
-    queryKey: ["wiki", "game-mode", code, "auto-chess"],
+    queryKey: modeKeys.guide(code),
     queryFn: ({ signal }) => readPublic<PublicGuide>(`/${encodeURIComponent(code)}/auto-chess`, signal),
     staleTime: 30_000,
     retry: (count, error) => !(error instanceof WikiApiError && error.status === 404) && count < 1,
@@ -152,7 +166,7 @@ export const guideQuery = (code: string) =>
 /** Community lineups load page by page as the reader scrolls. */
 export const communityLineupsQuery = (code: string, sort: LineupSort, unit: string | null) =>
   infiniteQueryOptions({
-    queryKey: ["wiki", "game-mode", code, "community", sort, unit],
+    queryKey: modeKeys.community(code, sort, unit),
     queryFn: ({ signal, pageParam }) => {
       const params = new URLSearchParams({ sort, page: String(pageParam), size: "12" })
       if (unit) params.set("unit", unit)
@@ -165,14 +179,14 @@ export const communityLineupsQuery = (code: string, sort: LineupSort, unit: stri
 
 export const insightsQuery = (code: string) =>
   queryOptions({
-    queryKey: ["wiki", "game-mode", code, "insights"],
+    queryKey: modeKeys.insights(code),
     queryFn: ({ signal }) => readPublic<Insights>(`/${encodeURIComponent(code)}/auto-chess/insights`, signal),
     staleTime: 60_000,
   })
 
 export const myStateQuery = (code: string, revision: number) =>
   queryOptions({
-    queryKey: ["wiki", "game-mode", code, "me", revision],
+    queryKey: modeKeys.mine(code, revision),
     queryFn: () => readPersonal<MyState>(`/${encodeURIComponent(code)}/auto-chess`),
     staleTime: 15_000,
     retry: false,

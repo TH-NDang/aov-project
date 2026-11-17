@@ -5,6 +5,11 @@ import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
 import { useAccountDateFormat } from "@aov/ui/lib/time-zone"
 import { WIKI_API_ROOT, wikiRequest, type WikiRequest } from "../../lib/wiki-api"
 
+/** Every query key of the signed-in account; the revision changes on every sign-in and sign-out. */
+export const accountKeys = {
+  profile: (revision: number) => ["wiki", "user-profile", revision] as const,
+}
+
 const auth = createPublicAuth({
   issuer: import.meta.env.VITE_AUTH_ISSUER || "http://localhost:8081/realms/wikiaov",
   clientId: import.meta.env.VITE_AUTH_CLIENT_ID || "aov-wiki",
@@ -51,7 +56,7 @@ async function requestProfile(request: Pick<WikiRequest, "method" | "body" | "si
 export function useWikiAccountPreferences() {
   const session = useWikiSession()
   const client = useQueryClient()
-  const key = ["wiki", "user-profile", session.revision]
+  const key = accountKeys.profile(session.revision)
   const profile = useQuery({
     queryKey: key,
     queryFn: ({ signal }) => requestProfile({ signal }),

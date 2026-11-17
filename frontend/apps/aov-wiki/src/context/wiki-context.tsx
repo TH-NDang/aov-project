@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { supportedWikiLocale, warehouseListPath, wikiScopeHref, wikiSection } from "../lib/wiki-catalog"
-import { wikiGet } from "../lib/wiki-api"
+import { catalogContextQuery, regionsQuery } from "./wiki-context-api"
 
 export interface WikiRegion {
   code: string
@@ -54,7 +54,7 @@ export interface WikiScope {
   patchVariantId: string
   includeUnscoped: boolean
 }
-type CatalogContextResponse = {
+export type CatalogContextResponse = {
   regions: WikiRegion[]
   locales: WikiLanguage[]
   seasons: {
@@ -185,21 +185,8 @@ function useWikiState() {
   useEffect(() => {
     document.documentElement.lang = locale
   }, [locale])
-  const markets = useQuery({
-    queryKey: ["wiki", "regions"],
-    queryFn: ({ signal }) => wikiGet<WikiRegion[]>("/regions", signal),
-    staleTime: 300_000,
-    retry: 1,
-  })
-  const context = useQuery({
-    queryKey: ["wiki", "catalog-context", region, locale],
-    queryFn: async ({ signal }) =>
-      normalizeOptions(
-        await wikiGet<CatalogContextResponse>(`/catalog-context?${new URLSearchParams({ region, locale })}`, signal),
-      ),
-    staleTime: 60_000,
-    retry: 1,
-  })
+  const markets = useQuery(regionsQuery)
+  const context = useQuery({ ...catalogContextQuery(region, locale), select: normalizeOptions })
   useEffect(() => {
     if (!markets.data?.some((market) => market.code === region && market.available) || !UI_LANGUAGES.has(locale)) return
     try {

@@ -5,6 +5,15 @@ import type { HeroChangeItem } from "../../lib/wiki-change-format"
 import type { ChangeDomain } from "../../lib/wiki-patch-changes"
 import { wikiGetAll } from "../../lib/wiki-api"
 
+/** Every query key of patch notes; reads and invalidation both use these. */
+export const updateKeys = {
+  releases: (scope: WikiCatalogScope) => ["wiki", "patch-releases", scope.region, scope.locale] as const,
+  patchChanges: (scope: WikiCatalogScope, release: Pick<PatchRelease, "id" | "variantId">, domain: ChangeDomain) =>
+    ["wiki", "patch-page-changes", scope.region, scope.locale, release.id, release.variantId, domain] as const,
+  heroHistory: (scope: WikiCatalogScope, heroId: string) =>
+    ["wiki", "hero-change-history", scope.region, scope.locale, heroId] as const,
+}
+
 export interface PatchRelease {
   id: string
   code: string
@@ -29,7 +38,7 @@ const readAll = <T>(path: string, params: URLSearchParams, signal: AbortSignal) 
 
 export const patchReleasesQuery = (scope: WikiCatalogScope) =>
   queryOptions({
-    queryKey: ["wiki", "patch-releases", scope.region, scope.locale],
+    queryKey: updateKeys.releases(scope),
     queryFn: ({ signal }) => readAll<PatchRelease>("/patches", wikiCatalogParameters(scope, false), signal),
     staleTime: 60_000,
     retry: 1,
@@ -37,7 +46,7 @@ export const patchReleasesQuery = (scope: WikiCatalogScope) =>
 
 export const patchChangesQuery = (scope: WikiCatalogScope, release: PatchRelease, domain: ChangeDomain) =>
   queryOptions({
-    queryKey: ["wiki", "patch-page-changes", scope.region, scope.locale, release.id, release.variantId, domain],
+    queryKey: updateKeys.patchChanges(scope, release, domain),
     queryFn: ({ signal }) => {
       const params = wikiCatalogParameters(scope, false)
       params.set("domain", domain)
@@ -50,7 +59,7 @@ export const patchChangesQuery = (scope: WikiCatalogScope, release: PatchRelease
 
 export const heroChangesQuery = (scope: WikiCatalogScope, heroId: string) =>
   queryOptions({
-    queryKey: ["wiki", "hero-change-history", scope.region, scope.locale, heroId],
+    queryKey: updateKeys.heroHistory(scope, heroId),
     queryFn: ({ signal }) =>
       readAll<PatchChangeRow>(
         `/heroes/${encodeURIComponent(heroId)}/changes`,

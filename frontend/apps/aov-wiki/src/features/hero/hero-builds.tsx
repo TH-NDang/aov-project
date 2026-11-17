@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react"
-import { queryOptions, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { EntityReferenceIcon, EntityReferencePopover } from "@aov/ui/components/entity-rich-text"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
@@ -13,47 +13,8 @@ import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { PatchName } from "./hero-patch-name"
-import { wikiGet } from "../../lib/wiki-api"
+import { heroBuildsQuery, type BuildSource, type PublicBuild } from "./hero-api"
 import "./hero-builds.css"
-
-interface PublicBuild {
-  contentKey: string
-  positions: number[]
-  items: { slot: number; itemId: string; code: string | null }[]
-  enchantments: { slot: number; enchantmentId: string; code: string | null }[]
-  arcanaPageId: string | null
-  arcana: { arcanaId: string; code: string | null; quantity: number }[]
-  arcanaPageUse: { builds: number; heroes: number } | null
-  spellId: string | null
-  spellCode: string | null
-}
-
-interface BuildSource {
-  captureId: string
-  sourceKind: "PRO" | "HOT" | "SYSTEM"
-  sourceLabel: string
-  capturedAt: string
-  sourceTimeZone: string
-  patchCode: string | null
-  result: "COLLECTED" | "NO_BUILDS" | "FAILED"
-  builds: PublicBuild[]
-}
-
-interface HeroBuilds {
-  heroId: string
-  heroCode: string
-  regionCode: string
-  sources: BuildSource[]
-}
-
-export function heroBuildsQuery(heroCode: string, region: string) {
-  return queryOptions({
-    queryKey: ["wiki", "hero-builds", heroCode, region] as const,
-    queryFn: ({ signal }) => wikiGet<HeroBuilds>(`/builds?${new URLSearchParams({ hero: heroCode, region })}`, signal),
-    staleTime: 300000,
-    retry: false,
-  })
-}
 
 const MARKETS: Record<string, [string, string]> = { VN: ["Việt Nam", "Vietnam"] }
 const CAPTURE_DAY: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }

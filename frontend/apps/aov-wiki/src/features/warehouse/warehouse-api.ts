@@ -3,6 +3,13 @@ import type { PublishedWarehouseRecord, WarehouseGroup, WarehouseKind } from "./
 import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "../../lib/wiki-catalog"
 import { wikiGet, wikiGetAll } from "../../lib/wiki-api"
 
+/** Every query key of the warehouse; reads and invalidation both use these. */
+export const warehouseKeys = {
+  catalog: (kind: WarehouseKind, scope: WikiCatalogScope) =>
+    ["wiki", "warehouse", kind, ...wikiScopeKey(scope)] as const,
+  groups: (kind: WarehouseKind, locale: string) => ["wiki", "warehouse-groups", kind, locale] as const,
+}
+
 async function readCatalogPages(kind: WarehouseKind, path: string, scope: WikiCatalogScope, signal: AbortSignal) {
   const rows = await wikiGetAll<Omit<PublishedWarehouseRecord, "kind">>(path, wikiCatalogParameters(scope), signal)
   // Each endpoint returns the content schema for its own catalog kind.
@@ -11,7 +18,7 @@ async function readCatalogPages(kind: WarehouseKind, path: string, scope: WikiCa
 
 export function warehouseCatalogQuery(kind: WarehouseKind, scope: WikiCatalogScope) {
   return queryOptions({
-    queryKey: ["wiki", "warehouse", kind, ...wikiScopeKey(scope)],
+    queryKey: warehouseKeys.catalog(kind, scope),
     queryFn: async ({ signal }) => {
       const current = await readCatalogPages(kind, `/${kind}`, scope, signal)
       if (kind !== "spells") return current
@@ -28,7 +35,7 @@ export function warehouseCatalogQuery(kind: WarehouseKind, scope: WikiCatalogSco
 
 export function warehouseGroupsQuery(kind: WarehouseKind, locale: string) {
   return queryOptions({
-    queryKey: ["wiki", "warehouse-groups", kind, locale],
+    queryKey: warehouseKeys.groups(kind, locale),
     queryFn: ({ signal }) =>
       wikiGet<WarehouseGroup[]>(
         `/${kind === "items" ? "item-categories" : "enchantment-branches"}?${new URLSearchParams({ locale })}`,

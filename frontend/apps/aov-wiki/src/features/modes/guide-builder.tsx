@@ -22,7 +22,7 @@ import { BoardGrid, BoardPiece, dragUnit, LineupViewSwitch, placeUnits, useLineu
 import { UNIT_FILTER_KEYS, UnitFilters, useUnitFilter } from "./guide-filters"
 import { costStyle, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
 import { ModeDialog, ModeHeading } from "./mode-ui"
-import { deleteLineup, lineupErrorMessage, myStateQuery, saveLineup } from "./mode-api"
+import { deleteLineup, lineupErrorMessage, modeKeys, myStateQuery, saveLineup } from "./mode-api"
 
 type Cell = { row: BoardRow; column: number }
 
@@ -788,7 +788,7 @@ function SaveLineup({
   const [name, setName] = useState("")
   const [note, setNote] = useState("")
   const [message, setMessage] = useState("")
-  const refresh = () => client.invalidateQueries({ queryKey: ["wiki", "game-mode", code] })
+  const refresh = () => client.invalidateQueries({ queryKey: modeKeys.mode(code) })
   const save = useMutation({
     mutationFn: () =>
       saveLineup(code, {
