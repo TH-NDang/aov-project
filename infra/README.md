@@ -247,31 +247,80 @@ curl -s http://localhost:18080/hero/airi | grep -i "<title>"
 
 ## Chuyển dữ liệu dev lên
 
-Khi ra mắt, stack nhận lại database và bucket của dev, và dữ liệu dev trở thành dữ liệu thật. Database `wiki` và `community`
-đi theo bản dump. Ảnh và tệp nguồn nằm nguyên trên ba bucket, vì key trong database trỏ đúng object đang có, nên không chép
-object nào.
+Khi ra mắt, stack nhận lại database và bucket của dev, và dữ liệu dev trở thành dữ liệu thật. Database `wiki`, `community` và
+các tài khoản đi theo bản xuất. Ảnh và tệp nguồn nằm nguyên trên ba bucket, vì key trong database trỏ đúng object đang có,
+nên không chép object nào.
 
-Phần đã có là `db-restore` ở [Khôi phục](#khôi-phục): nó thay cả ba database bằng `wiki.dump`, `community.dump`,
-`keycloak.dump` (`pg_dump --format=custom`) trong `backups/db/<tên>/`. Dev dùng cùng PostgreSQL 17.6 và cùng tên user `wiki`,
-`community`, nên quyền sở hữu trong hai bản dump của dev khớp với stack.
+Hai điều làm việc này khác một lần [khôi phục](#khôi-phục) bình thường:
 
-Phần còn thiếu, nên các bước chuyển chưa được viết ở đây:
+- Keycloak của dev chạy `start-dev`: realm và người dùng nằm trong file H2 của volume `keycloak-data`, không trong PostgreSQL,
+  nên không có `keycloak.dump`. Chỉ tài khoản được chuyển, realm (client, redirect URI, secret) vẫn là realm mẫu của stack.
+- Database nhận diện người dùng theo cặp issuer và subject: hồ sơ, người tạo và người sửa nội dung, đội hình và lượt thích,
+  nhật ký. Subject được giữ vì tài khoản giữ nguyên ID; issuer thì đổi, từ `http://localhost:8081/realms/wikiaov` của dev sang
+  `<PUBLIC_ORIGIN>/idp/realms/wikiaov` của stack.
 
-- **Tài khoản Keycloak.** Keycloak của dev chạy `start-dev`: realm và người dùng nằm trong file H2 của volume `keycloak-data`,
-  không trong PostgreSQL. Không có `keycloak.dump` nào của dev để đưa cho `db-restore`, và stack không có lệnh nhập một bản xuất
-  realm kèm người dùng, vì realm mẫu chỉ được import khi chưa có realm.
-- **Issuer trong database.** Database nhận diện người dùng theo cặp issuer và subject: hồ sơ, người tạo và người sửa nội dung,
-  đội hình và lượt thích, nhật ký. Issuer của dev là `http://localhost:8081/realms/wikiaov`, của stack là
-  `<PUBLIC_ORIGIN>/idp/realms/wikiaov`. Kể cả khi giữ nguyên ID người dùng, dữ liệu cũ vẫn mang issuer của dev cho tới khi
-  được đổi lại.
+**Trên máy dev**, trong `backend/wiki-service`, bằng PowerShell:
 
-Dù các bước sau này ra sao, lúc chuyển phải giữ:
+1. Dừng `wiki-service` và `community-service` để không còn gì ghi vào database. Dừng Keycloak dev, giữ PostgreSQL chạy:
 
-- Dev ngừng ghi từ lúc dump. Từ đó chỉ stack ghi vào ba bucket.
-- Bản diễn tập trên VPS trước ngày ra mắt là database thứ hai. Khi nó còn chạy, không xóa ảnh và không dọn bytes mồ côi ở cả
-  hai bên; diễn tập xong thì bỏ database đó (`docker compose down -v`) trước khi chuyển thật.
-- Lịch sử Flyway của database dev phải khớp với code đem lên. Một migration đã áp dụng mà code không có (ví dụ từ một nhánh
-  chưa merge) làm service không khởi động được.
+   ```powershell
+   docker compose stop keycloak
+   ```
+
+2. Xuất:
+
+   ```powershell
+   ./scripts/dev/export-for-stack.ps1
+   ```
+
+   Script tạo `infra/backups/db/dev-<giờ UTC>/` gồm `wiki.dump`, `community.dump` và `keycloak-users.json`. Nó không đổi gì ở
+   dev: `pg_dump` chỉ đọc, còn tài khoản được xuất từ một bản chép của volume Keycloak trong container tạm. Nó dừng lại nếu
+   Keycloak dev còn chạy, nếu cổng 8080 hoặc 8082 còn trả lời, hoặc nếu database có migration mà checkout này không có, vì
+   stack sẽ không khởi động được trên database đó.
+3. Chép thư mục đó vào `infra/backups/db/` trên VPS bằng kênh riêng, ví dụ `scp -r`, rồi xóa bản trên máy dev. Thư mục chứa
+   mật khẩu đã băm và dữ liệu người dùng.
+
+**Trên VPS**, trong `infra/`, sau khi stack đã `up` một lần và realm chưa có người dùng nào (không bật `test-identity`):
+
+```bash
+docker compose stop reverse-proxy wiki-service community-service
+```
+
+```bash
+docker compose run --rm dev-import dev-20261117T030000Z
+```
+
+```bash
+docker compose run --rm dev-users-import dev-20261117T030000Z
+```
+
+```bash
+docker compose up -d --wait
+```
+
+- `dev-import` thay `wiki` và `community` bằng bản dump, rồi đổi mọi issuer kết thúc bằng `/realms/wikiaov` sang issuer của
+  stack và in số giá trị đã đổi. Issuer của tác nhân ngoài Keycloak (`local-maintenance`, `urn:wikiaov:migration`) giữ nguyên.
+  Chạy lại được: lần nào cũng bắt đầu từ bản dump.
+- `dev-users-import` thêm tài khoản vào realm với nguyên ID, mật khẩu đã băm, vai trò và liên kết Google.
+  `service-account-wiki-importer` của dev thay cho bản của realm mẫu, để nội dung nó đã nhập vẫn có tác giả. Ba tài khoản thử
+  `admin`, `editor`, `publisher` bị khóa, vì mật khẩu của chúng nằm trong repo công khai. Lệnh từ chối chạy khi realm đã có
+  người dùng, để sau ngày ra mắt không ai chép đè bản dev cũ lên tài khoản đang dùng.
+- `up` chạy các migration mới hơn của Flyway, rồi `wiki-prerender` tạo trang tĩnh từ dữ liệu vừa chuyển.
+
+Sau đó:
+
+- Tài khoản chỉ đăng nhập bằng Google chỉ dùng được khi Keycloak của stack có provider tên `google` (xem
+  [Còn lại](#còn-lại-cho-máy-chủ-thật)); liên kết đã được chuyển và có hiệu lực ngay khi provider có. Trước đó có thể đặt
+  mật khẩu cho tài khoản trong console.
+- Chạy `sync-account-security.ps1` như với một realm mới (xem `WIKI_SERVICE_CLIENT_SECRET` ở [Biến môi trường](#biến-môi-trường)).
+- Mọi người phải đăng nhập lại: phiên đăng nhập không được chuyển. Cài đặt realm sửa tay trong console của dev cũng không.
+
+Lúc chuyển phải giữ:
+
+- Dev ngừng ghi từ lúc xuất. Từ đó chỉ stack ghi vào ba bucket.
+- Bản diễn tập trên VPS trước ngày ra mắt là database thứ hai. Có thể xuất khi backend dev còn chạy bằng
+  `-AllowRunningServices`. Khi bản diễn tập còn chạy, không xóa ảnh và không dọn bytes mồ côi ở cả hai bên; diễn tập xong thì
+  bỏ database đó (`docker compose down -v`) trước khi chuyển thật.
 
 Stack cũ còn container và volume của kho ảnh đi kèm trước đây: xem phần bổ sung ngày 17/11/2026 của ADR-021 để dọn.
 
@@ -286,14 +335,15 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
 - **R2 cho stack này**: CORS, token R2 và token purge của VPS theo [Cloudflare R2](#cloudflare-r2). R2 đã chạy thật ở dev
   (upload, CopyObject, CDN); trên origin của stack còn phải thử một lần: tải ảnh lên trong Admin, xem ảnh qua tên miền ảnh, mở
   ảnh gốc ở trang tướng.
-- **Chuyển dữ liệu dev**: còn thiếu cách đưa realm và người dùng Keycloak của dev sang, và bước đổi issuer trong database; xem
-  [Chuyển dữ liệu dev lên](#chuyển-dữ-liệu-dev-lên).
+- **Chuyển dữ liệu dev**: các bước ở [Chuyển dữ liệu dev lên](#chuyển-dữ-liệu-dev-lên) đã chạy thử trên bản chép dữ liệu dev
+  với origin loopback, chưa chạy trên VPS và chưa chạy với PowerShell 7 trên Ubuntu.
 - **Sau ngày ra mắt**: máy dev không ghi vào ba bucket thật nữa. Thu hồi token R2 của máy dev hoặc đổi nó sang chỉ đọc; khi cần
   dev tiếp thì tạo bộ bucket dev nhỏ, gần như trống, với token và địa chỉ ảnh riêng.
 - **Sao lưu ra ngoài máy**: backup hiện nằm cùng máy. Cần chỗ lưu riêng và lịch chạy.
 - **Email của Keycloak**: chưa có SMTP nên quên mật khẩu và xác minh email chưa hoạt động. Đăng ký mở sẵn như realm local
   (`registrationAllowed`), cần quyết định có giữ không.
-- **Đăng nhập Google**: tạo OAuth client, cấu hình provider trong Keycloak, đặt `GOOGLE_LOGIN_ENABLED=true`.
+- **Đăng nhập Google**: tạo OAuth client, cấu hình provider với alias `google` trong Keycloak, đặt `GOOGLE_LOGIN_ENABLED=true`.
+  Tài khoản Google chuyển từ dev chỉ đăng nhập được sau bước này.
 - **Tài khoản thật**: tạo biên tập viên và gán vai trò trong console; bật MFA nếu cần.
 - **CDN hoặc load balancer**: nếu đặt trước Caddy phải khai báo `trusted_proxies`, nếu không giới hạn tần suất theo IP sẽ sai.
 - **Theo dõi**: chưa có giám sát uptime, cảnh báo đầy đĩa hay gom log; log JSON hiện chỉ xoay vòng trong Docker.

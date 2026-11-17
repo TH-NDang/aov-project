@@ -2,6 +2,9 @@
 # Every value comes from .env; only .env.example is tracked.
 name: aov-stack
 
+# The issuer in every token, and so in every row that names a person; dev-import moves older rows to it.
+x-public-issuer: &public-issuer ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+
 x-logging: &logging
   driver: json-file
   options:
@@ -119,6 +122,20 @@ services:
       postgres:
         condition: service_healthy
 
+  # Run by hand when the stack takes over the development data: docker compose run --rm dev-import <folder>.
+  # Replaces the wiki and community databases with the export and moves its accounts to the issuer of this stack.
+  dev-import:
+    <<: *database-tool
+    profiles: [ops]
+    entrypoint: ["/bin/sh", "/scripts/dev-import.sh"]
+    environment:
+      PGUSER: ${POSTGRES_SUPERUSER:?set in .env}
+      PGPASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
+      STACK_ISSUER: *public-issuer
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   redis:
     image: redis:8.2-alpine
     restart: unless-stopped
@@ -215,6 +232,28 @@ services:
         condition: service_healthy
     logging: *logging
 
+  # Run by hand right after dev-import: docker compose run --rm dev-users-import <folder>. Adds the development
+  # accounts with their ids, so that the moved data still names them; refuses a realm that already has people.
+  dev-users-import:
+    image: aov/keycloak:${IMAGE_TAG:-local}
+    build: *keycloak-build
+    profiles: [ops]
+    entrypoint: ["/bin/bash", "/scripts/import-dev-users.sh"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?set in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in .env}
+      # The test accounts of backend/wiki-service/infra/local/keycloak/wikiaov-realm.json, whose passwords are public.
+      DISABLED_USERNAMES: admin editor publisher
+    volumes:
+      - ./keycloak/import-dev-users.sh:/scripts/import-dev-users.sh:ro
+      - ./backups/db:/backups/db:ro
+    healthcheck:
+      disable: true
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    logging: *logging
+
   wiki-service:
     image: aov/wiki-service:${IMAGE_TAG:-local}
     build:
@@ -225,7 +264,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/wiki
       DB_USERNAME: wiki
       DB_PASSWORD: ${WIKI_DB_PASSWORD:?set in .env}
-      JWT_ISSUER_URI: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+      JWT_ISSUER_URI: *public-issuer
       JWT_BACKCHANNEL_ISSUER_URI: http://keycloak:8080/idp/realms/wikiaov
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/idp/realms/wikiaov/protocol/openid-connect/certs
       ADMIN_ORIGIN: ${PUBLIC_ORIGIN:?set in .env}
@@ -284,7 +323,7 @@ services:
       COMMUNITY_DATABASE_URL: jdbc:postgresql://postgres:5432/community
       COMMUNITY_DATABASE_USER: community
       COMMUNITY_DATABASE_PASSWORD: ${COMMUNITY_DB_PASSWORD:?set in .env}
-      KEYCLOAK_ISSUER: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+      KEYCLOAK_ISSUER: *public-issuer
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/idp/realms/wikiaov/protocol/openid-connect/certs
       WIKI_BASE_URL: http://wiki-service:8080
       COMMUNITY_ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:?set in .env}
