@@ -1,0 +1,149 @@
+.wiki-guide-lineup-icon-button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: transparent;
+  color: var(--aov-text-soft);
+  cursor: pointer;
+}
+.wiki-guide-lineup-icon-button:is(:hover, [data-state="open"]) {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-guide-lineup-icon-button[data-done] {
+  color: var(--aov-success);
+}
+.wiki-guide-lineup-icon-button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+/* The main unit: an "M" tab on the portrait's top edge, where the game puts its own badge. */
+.wiki-guide-carry-mark {
+  font: var(--wiki-type-meta);
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-accent);
+  box-shadow: 0 0 0 2px var(--aov-surface);
+  color: var(--aov-on-accent);
+  font-style: normal;
+  font-weight: 700;
+  transform: translateX(-50%);
+}
+/* The board: three rows of seven square cells straight on the card, the stone floor in alternating tones. */
+.wiki-guide-board-wrap {
+  container-type: inline-size;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+.wiki-guide-board-enemy {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-guide-board {
+  display: grid;
+  gap: 4px;
+  width: min(100%, 560px);
+}
+.wiki-guide-board-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.wiki-guide-board-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+}
+.wiki-guide-board-row:nth-of-type(odd) .wiki-guide-board-cell:nth-child(even),
+.wiki-guide-board-row:nth-of-type(even) .wiki-guide-board-cell:nth-child(odd) {
+  background: color-mix(in srgb, var(--aov-raised) 55%, var(--aov-surface));
+}
+.wiki-guide-board-cell[data-over] {
+  box-shadow: inset 0 0 0 2px var(--aov-accent);
+}
+.wiki-guide-board-piece {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.wiki-guide-board-piece[draggable="true"] {
+  cursor: grab;
+}
+.wiki-guide-board-piece .wiki-guide-portrait {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-guide-board-piece .wiki-guide-carry-mark {
+  top: -7px;
+  min-width: 18px;
+  height: 18px;
+}
+.wiki-guide-board-piece[aria-pressed="true"] .wiki-guide-portrait {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+/* Names fit once the board is wide; they sit on a scrim over the portrait. */
+.wiki-guide-board-name {
+  display: none;
+}
+@container (min-width: 480px) {
+  .wiki-guide-board-name {
+    font: var(--wiki-type-meta);
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    left: 2px;
+    display: block;
+    padding: 8px 2px 1px;
+    overflow: hidden;
+    border-radius: 0 0 calc(var(--aov-radius-control) - 2px) calc(var(--aov-radius-control) - 2px);
+    background: linear-gradient(transparent, rgb(0 0 0 / 78%));
+    color: #fff;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.wiki-guide-board-bench {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  width: min(100%, 560px);
+}
+.wiki-guide-board-bench .wiki-guide-board-piece {
+  width: 44px;
+  height: 44px;
+}
+.wiki-guide-board-bench .wiki-guide-board-name {
+  display: none;
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-board,
+  .wiki-guide-board-row {
+    gap: 3px;
+  }
+}
+.wiki-guide-lineup-icon-button[data-tone="danger"]:not(:disabled):hover {
+  color: var(--aov-danger);
+}

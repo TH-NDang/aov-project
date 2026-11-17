@@ -3,6 +3,7 @@ import { useWikiText } from "../../context/wiki-context"
 import { ModeHeading } from "./mode-ui"
 import { GuideText, type GuideIndex } from "./guide-ui"
 import { foldSearchText } from "@aov/ui/lib/search-text"
+import "./guide-items.css"
 
 /**
  * The game sorts items by the color of their stone (yellow-green, blue, gold, red); the group name says which. The

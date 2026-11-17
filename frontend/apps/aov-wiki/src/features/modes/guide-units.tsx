@@ -18,6 +18,7 @@ import {
   type GuideIndex,
 } from "./guide-ui"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
+import "./guide-units.css"
 
 type StatKey = "health" | "physicalAttack" | "armor" | "magicResistance"
 const STATS: { key: StatKey; label: string; english: string }[] = [

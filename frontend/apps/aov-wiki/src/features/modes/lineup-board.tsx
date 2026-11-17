@@ -11,6 +11,7 @@ import {
   type LineupUnit,
 } from "./auto-chess-model"
 import { ChoiceSwitch, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
+import "./lineup-board.css"
 
 /*
  * A player's half of the board as the game draws it: three rows of seven square cells, the front row on top facing

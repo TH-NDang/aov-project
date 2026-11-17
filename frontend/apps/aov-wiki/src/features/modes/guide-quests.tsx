@@ -2,6 +2,7 @@ import { useWikiText } from "../../context/wiki-context"
 import { GoldIcon } from "./gold-icon"
 import { ModeHeading } from "./mode-ui"
 import type { GuideIndex } from "./guide-ui"
+import "./guide-quests.css"
 
 /** A reward in gold reads with the game's coin; any other reward stays as the editor wrote it. */
 function Reward({ text: reward }: { text?: string | null }) {

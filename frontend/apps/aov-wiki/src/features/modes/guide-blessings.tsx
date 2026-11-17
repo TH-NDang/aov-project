@@ -5,6 +5,7 @@ import { BLESSING_TIER_NAMES, type Blessing } from "./auto-chess-model"
 import { ModeHeading } from "./mode-ui"
 import { BlessingIcon, GuideSearch, GuideText, TIER_STYLE, type GuideIndex } from "./guide-ui"
 import { foldSearchText } from "@aov/ui/lib/search-text"
+import "./guide-blessings.css"
 
 const BLESSING_TIERS = ["NORMAL", "EPIC", "LEGENDARY"] as const
 

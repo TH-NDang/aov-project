@@ -15,7 +15,7 @@ import {
   type Unit,
 } from "./auto-chess-model"
 import type { PublicGuide } from "./mode-api"
-import "./guide.css"
+import "./guide-ui.css"
 
 /**
  * The game's price colors. They frame the game's own unit icons, so they are part of the artwork and stay here with the

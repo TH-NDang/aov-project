@@ -1,4 +1,5 @@
 import { useId } from "react"
+import "./gold-icon.css"
 
 /**
  * The mode's gold: a small minted coin with a rim, a star stamp and a glint. It is artwork, so it keeps its own gold in

@@ -35,6 +35,7 @@ import {
   type LineupSort,
   type PublicGuide,
 } from "./mode-api"
+import "./guide-lineups.css"
 
 const TIER_ORDER: Record<string, number> = { S: 0, A: 1, B: 2, C: 3 }
 

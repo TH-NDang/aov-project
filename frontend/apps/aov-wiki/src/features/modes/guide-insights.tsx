@@ -5,6 +5,7 @@ import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-contex
 import { ModeHeading } from "./mode-ui"
 import { insightsQuery } from "./mode-api"
 import { GuideLinks, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
+import "./guide-insights.css"
 
 type Row = { key: string; label: ReactNode; value: number }
 

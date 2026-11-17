@@ -1,0 +1,269 @@
+/* Lineups: one card per lineup (a group that stands apart, with its own actions), two side by side on wide screens. */
+.wiki-guide-lineup-tab {
+  gap: 36px;
+}
+.wiki-guide-lineup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+/* Cards of one row share its height; their content starts at the top. */
+.wiki-guide-lineup-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.wiki-guide-lineup-skeleton {
+  height: 360px;
+  animation: lineup-pulse 1.4s ease-in-out infinite;
+}
+.wiki-guide-lineup-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+/* The name with the lineup's strengths under it, as the game lists its recommended lineups. */
+.wiki-guide-lineup-title {
+  display: grid;
+  flex: 1 1 0;
+  gap: 2px;
+  min-width: 0;
+}
+.wiki-guide-lineup-title h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.wiki-guide-lineup-title p {
+  font: var(--wiki-type-meta);
+  color: var(--aov-text-soft);
+}
+/* The editors' rank: S in the accent, A on its tint, the rest quiet. */
+.wiki-guide-lineup-tier {
+  font: var(--wiki-type-category);
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  color: var(--aov-text-soft);
+}
+.wiki-guide-lineup-tier[data-tier="S"] {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.wiki-guide-lineup-tier[data-tier="A"] {
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.wiki-guide-lineup-head-actions {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+.wiki-guide-lineup-title .wiki-guide-lineup-recent {
+  color: var(--aov-accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-guide-like-button {
+  gap: 6px;
+  padding-inline: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-guide-like-button > span {
+  font-size: 1rem;
+  line-height: 1;
+}
+.wiki-guide-lineup-menu {
+  min-width: 270px;
+  padding: 6px;
+}
+.wiki-guide-lineup-menu-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-text);
+  cursor: pointer;
+}
+.wiki-guide-lineup-menu-item b {
+  font: var(--wiki-type-category);
+  display: block;
+}
+.wiki-guide-lineup-menu-item small {
+  font: var(--wiki-type-meta);
+  display: block;
+  color: var(--aov-muted);
+}
+.wiki-guide-lineup-facts {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  color: var(--aov-muted);
+}
+.wiki-guide-lineup-facts .wiki-guide-trait-tags {
+  align-items: center;
+}
+.wiki-guide-lineup-stages {
+  display: flex;
+  gap: 6px;
+}
+.wiki-guide-lineup-stage-note {
+  font: var(--wiki-type-meta);
+  color: var(--aov-text-soft);
+}
+/* Priority items and blessings: numbered chips in build order. */
+.wiki-guide-lineup-side {
+  display: grid;
+  gap: 12px;
+}
+.wiki-guide-lineup-extra {
+  display: grid;
+  gap: 6px;
+}
+.wiki-guide-lineup-extra h4 {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-guide-lineup-priority {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wiki-guide-lineup-priority li {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 4px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-guide-lineup-priority li > b {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+  font-weight: 700;
+}
+.wiki-guide-lineup-priority li > img,
+.wiki-guide-lineup-priority .wiki-guide-blessing-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-guide-lineup-tips {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--aov-line);
+  color: var(--aov-accent);
+}
+.wiki-guide-lineup-tips p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+.wiki-guide-lineup-tips b {
+  color: var(--aov-accent-strong);
+}
+/* The list view: every unit with its name, five to a row as in the game's lineup screen, then the free slots. */
+.wiki-guide-lineup-units {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px 8px;
+}
+.wiki-guide-lineup-unit {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.wiki-guide-lineup-portrait {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  max-width: 56px;
+}
+.wiki-guide-lineup-unit .wiki-guide-portrait {
+  width: 100%;
+  max-width: 56px;
+  height: auto;
+  aspect-ratio: 1;
+}
+.wiki-guide-lineup-unit-name {
+  font: var(--wiki-type-meta);
+  max-width: 100%;
+  color: var(--aov-text-soft);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.wiki-guide-lineup-unit[data-carry="true"] .wiki-guide-portrait {
+  box-shadow: 0 0 0 2px var(--aov-accent);
+}
+.wiki-guide-lineup-unit[data-extra] .wiki-guide-portrait {
+  outline: 2px dashed var(--aov-accent);
+  outline-offset: 2px;
+}
+.wiki-guide-lineup-items {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+.wiki-guide-lineup-items img {
+  width: 18px;
+  height: 18px;
+  border-radius: calc(var(--aov-radius-control) - 2px);
+}
+.wiki-guide-lineup-slot-empty {
+  justify-self: center;
+  width: 100%;
+  max-width: 56px;
+  aspect-ratio: 1;
+  border: 1px dashed var(--aov-line-strong);
+  border-radius: var(--aov-radius-card);
+  opacity: 0.55;
+}
+@media (max-width: 1179.98px) {
+  .wiki-guide-lineup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-lineup-tab {
+    gap: 28px;
+  }
+  .wiki-guide-lineup-card {
+    gap: 12px;
+    padding: 12px;
+  }
+  .wiki-guide-lineup-units {
+    gap: 10px 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-guide-lineup-skeleton {
+    animation: none;
+  }
+}

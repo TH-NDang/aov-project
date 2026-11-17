@@ -10,6 +10,7 @@ import { TRAIT_KIND_NAMES, type Trait, type Unit } from "./auto-chess-model"
 import { GoldIcon } from "./gold-icon"
 import { costStyle, GuideSearch, TraitIcon, type GuideIndex } from "./guide-ui"
 import { foldSearchText } from "@aov/ui/lib/search-text"
+import "./guide-filters.css"
 
 const KINDS = ["FACTION", "CLASS"] as const
 

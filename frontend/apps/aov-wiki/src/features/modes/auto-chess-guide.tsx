@@ -15,6 +15,7 @@ import { LineupsTab } from "./guide-lineups"
 import { BuilderTab } from "./guide-builder"
 import { InsightsTab } from "./guide-insights"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
+import "./auto-chess-guide.css"
 
 export const GUIDE_TABS = [
   { key: "tong-quan", label: "Tổng quan", english: "Overview" },

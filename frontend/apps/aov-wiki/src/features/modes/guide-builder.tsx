@@ -23,6 +23,7 @@ import { UNIT_FILTER_KEYS, UnitFilters, useUnitFilter } from "./guide-filters"
 import { costStyle, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
 import { ModeDialog, ModeHeading } from "./mode-ui"
 import { deleteLineup, lineupErrorMessage, modeKeys, myStateQuery, saveLineup } from "./mode-api"
+import "./guide-builder.css"
 
 type Cell = { row: BoardRow; column: number }
 

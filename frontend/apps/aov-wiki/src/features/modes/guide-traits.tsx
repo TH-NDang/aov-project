@@ -16,6 +16,7 @@ import {
   UnitPortrait,
   type GuideIndex,
 } from "./guide-ui"
+import "./guide-traits.css"
 
 const TRAIT_KINDS = ["FACTION", "CLASS"] as const
 
