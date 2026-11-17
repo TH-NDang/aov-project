@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.jayway.jsonpath.JsonPath;
+import com.wikiaov.DockerBacked;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.media.TestImages;
@@ -24,14 +25,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(properties = {"wiki.user.profile-defaults.locale=en-GB",
         "wiki.user.profile-defaults.time-zone=Europe/London"})
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class UserProfileIntegrationTest {
     private static final String BASE = "/api/wiki/v1";
     @Autowired

@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.wikiaov.DockerBacked;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.access.Capabilities;
@@ -51,7 +52,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
@@ -65,7 +65,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
         SourceFileAdminApiIntegrationTest.TestBeans.class})
 @ActiveProfiles("test")
 @TestPropertySource(properties = "wiki.storage.sources-bucket=" + SourceFileAdminApiIntegrationTest.SOURCES_BUCKET)
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class SourceFileAdminApiIntegrationTest {
 
     static final String SOURCES_BUCKET = "wiki-sources-test";

@@ -2,6 +2,7 @@ package com.wikiaov.hero.internal.skins.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
 import java.sql.Timestamp;
@@ -15,12 +16,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 @Transactional
 class PublicSkinCatalogRepositoryIntegrationTest {
     @Autowired

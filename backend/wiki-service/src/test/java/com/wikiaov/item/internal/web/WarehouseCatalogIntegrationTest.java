@@ -7,63 +7,40 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.wikiaov.DockerBacked;
+import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.media.*;
 import com.wikiaov.patch.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.*;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@EnabledIf("databaseAvailable")
+@Import(TestcontainersConfiguration.class)
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@DockerBacked
 class WarehouseCatalogIntegrationTest {
     private static final String ROOT = "/api/wiki/v1/admin";
     private static final UUID RULESET = UUID.randomUUID();
     private static final UUID PATCH = UUID.randomUUID();
     private static final UUID VARIANT = UUID.randomUUID();
-    private static PostgreSQLContainer database;
-
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external != null) {
-            properties.add("spring.datasource.url", () -> external);
-            properties.add("spring.datasource.username", () -> "wiki_test");
-            properties.add("spring.datasource.password", () -> "");
-        } else {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            properties.add("spring.datasource.url", database::getJdbcUrl);
-            properties.add("spring.datasource.username", database::getUsername);
-            properties.add("spring.datasource.password", database::getPassword);
-        }
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
-    }
 
     @Autowired
     MockMvc mvc;

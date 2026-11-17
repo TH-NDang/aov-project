@@ -2,28 +2,24 @@ package com.wikiaov.hero.internal.web;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.wikiaov.DockerBacked;
+import com.wikiaov.TestcontainersConfiguration;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIf;
-import org.testcontainers.DockerClientFactory;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /** ADR-024: V061 turns the two Flowborn heroes into forms of one published hero without touching their history. */
-@EnabledIf("dockerAvailable")
-class FlowbornFormsMigrationTest {
+@DockerBacked
+class FlowbornFormsMigrationIntegrationTest {
     private static final UUID FLOWBORN = UUID.fromString("1bca4c6c-88a3-476c-a3aa-4bb206837745");
-
-    static boolean dockerAvailable() {
-        return DockerClientFactory.instance().isDockerAvailable();
-    }
 
     @Test
     void createsOnePublishedHeroHoldingBothFormsAndKeepsTheirHistory() throws Exception {
-        try (var database = new PostgreSQLContainer("postgres:17.6")) {
+        try (var database = TestcontainersConfiguration.postgres()) {
             database.start();
             Flyway.configure().dataSource(database.getJdbcUrl(), database.getUsername(), database.getPassword())
                     .target("59").load().migrate();
@@ -96,7 +92,7 @@ class FlowbornFormsMigrationTest {
 
     @Test
     void leavesADatabaseWithoutFlowbornUnchanged() throws Exception {
-        try (var database = new PostgreSQLContainer("postgres:17.6")) {
+        try (var database = TestcontainersConfiguration.postgres()) {
             database.start();
             Flyway.configure().dataSource(database.getJdbcUrl(), database.getUsername(), database.getPassword())
                     .load().migrate();

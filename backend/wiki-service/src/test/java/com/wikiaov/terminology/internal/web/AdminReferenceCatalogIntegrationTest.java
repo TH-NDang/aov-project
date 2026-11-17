@@ -5,6 +5,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.wikiaov.DockerBacked;
+import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.arcana.internal.reference.persistence.ArcanaReferenceRepository;
 import com.wikiaov.enchantment.internal.reference.persistence.EnchantmentReferenceRepository;
 import com.wikiaov.hero.internal.reference.persistence.HeroReferenceRepository;
@@ -20,29 +22,30 @@ import java.util.*;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.*;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@EnabledIf("databaseAvailable")
+@Import(TestcontainersConfiguration.class)
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@DockerBacked
 class AdminReferenceCatalogIntegrationTest {
-    private static PostgreSQLContainer database;
     private final UUID ruleset = UUID.randomUUID();
     private final UUID otherRuleset = UUID.randomUUID();
     private final UUID firstPatch = UUID.randomUUID();
@@ -50,32 +53,6 @@ class AdminReferenceCatalogIntegrationTest {
     private final UUID hero = UUID.randomUUID();
     private final UUID head = UUID.randomUUID();
     private final Map<UUID, Long> ordinals = Map.of(firstPatch, 1L, secondPatch, 2L);
-
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external != null) {
-            properties.add("spring.datasource.url", () -> external);
-            properties.add("spring.datasource.username", () -> "wiki_test");
-            properties.add("spring.datasource.password", () -> "");
-        } else {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            properties.add("spring.datasource.url", database::getJdbcUrl);
-            properties.add("spring.datasource.username", database::getUsername);
-            properties.add("spring.datasource.password", database::getPassword);
-        }
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
-    }
 
     @Autowired
     MockMvc mvc;

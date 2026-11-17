@@ -3,6 +3,7 @@ package com.wikiaov.platform.internal.cache;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import jakarta.persistence.EntityManager;
@@ -19,13 +20,12 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Exercises the committed database fence with the real JPA transaction manager and PostgreSQL. */
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class CatalogCacheEpochIntegrationTest {
     @Autowired
     private CatalogCacheEpoch epochs;

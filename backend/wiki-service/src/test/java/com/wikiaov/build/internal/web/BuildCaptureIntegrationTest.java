@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
 import java.util.*;
@@ -21,7 +22,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import tools.jackson.databind.json.JsonMapper;
 
 /** ADR-026: recommended builds read from screenshots, with shared arcana pages and enchantment sets. */
@@ -29,7 +29,7 @@ import tools.jackson.databind.json.JsonMapper;
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 @SuppressWarnings("unchecked")
 class BuildCaptureIntegrationTest {
     private static final String ADMIN = "/api/wiki/v1/admin/build-captures";

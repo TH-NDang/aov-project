@@ -2,23 +2,18 @@ package com.wikiaov.patch;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.wikiaov.DockerBacked;
+import com.wikiaov.TestcontainersConfiguration;
 import java.sql.DriverManager;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIf;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
-@EnabledIf("dockerAvailable")
-class SharedSeasonMigrationTest {
-    static boolean dockerAvailable() {
-        return DockerClientFactory.instance().isDockerAvailable();
-    }
-
+@DockerBacked
+class SharedSeasonMigrationIntegrationTest {
     @Test
     void preservesExistingSeasonScheduleAndRulesetIdentity() throws Exception {
-        try (var database = new PostgreSQLContainer("postgres:17.6")) {
+        try (var database = TestcontainersConfiguration.postgres()) {
             database.start();
             Flyway.configure().dataSource(database.getJdbcUrl(), database.getUsername(), database.getPassword())
                     .target("11").load().migrate();

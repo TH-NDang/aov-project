@@ -20,10 +20,10 @@ public class SeaweedFsTestConfiguration {
               "actions": ["Admin", "Read", "Write", "List", "Tagging"]}]}
             """.formatted(ACCESS_KEY, SECRET_KEY);
 
-    // Started and stopped by Spring Boot's Testcontainers support, not by the caller.
+    /** A new, not yet started SeaweedFS server that accepts {@link #ACCESS_KEY} and {@link #SECRET_KEY}. */
+    // The builder methods return the same container; its owner starts and stops it.
     @SuppressWarnings("resource")
-    @Bean
-    GenericContainer<?> seaweedFsContainer() {
+    public static GenericContainer<?> seaweedFs() {
         return new GenericContainer<>("chrislusf/seaweedfs:4.48")
                 .withCommand("server", "-dir=/data", "-s3", "-s3.port=8333", "-s3.config=/etc/seaweedfs/s3.json")
                 .withCopyToContainer(Transferable.of(S3_CONFIG), "/etc/seaweedfs/s3.json")
@@ -31,6 +31,12 @@ public class SeaweedFsTestConfiguration {
                 // The S3 API answers anonymous requests with 403 once it is ready.
                 .waitingFor(Wait.forHttp("/").forPort(8333).forStatusCode(403)
                         .withStartupTimeout(Duration.ofMinutes(2)));
+    }
+
+    // Started and stopped by Spring Boot's Testcontainers support, not by the caller.
+    @Bean
+    GenericContainer<?> seaweedFsContainer() {
+        return seaweedFs();
     }
 
     @Bean

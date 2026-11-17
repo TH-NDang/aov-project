@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.wikiaov.DockerBacked;
 import com.wikiaov.MutableClock;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
@@ -62,7 +63,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * The admin media API end to end: real PostgreSQL, real S3-compatible storage, real presigned uploads.
@@ -73,7 +73,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class,
         MediaAdminApiIntegrationTest.TestBeans.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class MediaAdminApiIntegrationTest {
 
     private static final String BASE = "/api/wiki/v1/admin/media";
