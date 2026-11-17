@@ -30,6 +30,7 @@ aov-project/
 │   └── community-service/ Java 21, Maven Wrapper — manual tournament backend; separate DB/API
 ├── frontend/           pnpm + Turborepo: apps/aov-wiki, apps/aov-stream, apps/admin-aov, packages/ui
 ├── infra/              Production-like Docker Compose: reverse proxy, realm template, backup scripts (guide: infra/README.md)
+├── research/           Importers and checks for collected data (Python, Node), with unit tests
 └── resources/          Local copies only, git-ignored (ADR-030); resources/README.md says where the data lives.
 ```
 
@@ -179,7 +180,7 @@ These rules apply to new and touched tests; existing tests keep their names and 
 
 - Conventional Commits with a scope from this list: `wiki/<module>`, `community/<module>`, `wiki` or `community` for
   a change across one service, `fe/admin-aov`, `fe/aov-wiki`, `fe/aov-stream`, `fe/ui`, `fe/community-contracts`, `fe`
-  for the whole frontend workspace, `infra`, `ci`, `hooks`, `spec`, `agents`, `resources`. Examples:
+  for the whole frontend workspace, `infra`, `ci`, `hooks`, `spec`, `agents`, `research`, `resources`. Examples:
   `feat(wiki/hero): ...`, `fix(fe/aov-wiki): ...`, `docs(spec): ...`, `chore(infra): ...`.
 - One logical change per commit. Commit spec changes separately from code.
 - Never commit secrets (`.env`, keys, tokens). Only `.env.example` is tracked.
