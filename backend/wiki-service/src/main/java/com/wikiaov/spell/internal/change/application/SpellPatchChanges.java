@@ -141,11 +141,13 @@ public class SpellPatchChanges implements CatalogChangeProvider {
     public UUID record(UUID ownerId, CatalogChanges.Record input) {
         var owner = identities.lockById(ownerId).orElseThrow(
                 () -> new ApiException(SpellErrorCode.SPELL_NOT_FOUND, "The catalog entry was not found."));
+
         if (input.patchVariantId() == null || input.toRevisionId() == null || input.kinds() == null
                 || input.kinds().isEmpty()
                 || input.kinds().size() > 4 || input.kinds().stream().anyMatch(Objects::isNull)
                 || new HashSet<>(input.kinds()).size() != input.kinds().size())
             invalid("A patch, published target and unique change kinds are required.");
+
         var target = revisions.findById(input.toRevisionId()).filter(r -> r.getOwnerId().equals(ownerId)).orElseThrow(
                 () -> new ApiException(SpellErrorCode.SPELL_INVALID_CONTENT, "The target revision was not found."));
         var patch = contexts.variant(input.patchVariantId());
@@ -175,6 +177,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         if (!removed && !input.kinds().contains(Kind.ADDED) && !input.kinds().contains(Kind.DATA_BASELINE)
                 && (!target.getCause().equals("GAME_PATCH") || input.fromRevisionId() == null))
             invalid("Updates require a gameplay snapshot and a known previous snapshot.");
+
         if (input.fromRevisionId() != null) {
             var from = revisions.findById(input.fromRevisionId()).orElseThrow(
                     () -> new ApiException(SpellErrorCode.SPELL_INVALID_CONTENT, "The source revision was not found."));
@@ -190,6 +193,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
                                     .rulesetOrdinal())
                 invalid("The source must be an earlier published snapshot of the same entry and ruleset.");
         }
+
         var copy = input.translations() == null ? List.<Summary>of() : input.translations();
         if (copy.isEmpty() || copy.size() > 50)
             invalid("A localized change summary is required.");
@@ -202,10 +206,12 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         if (input.sourceUrl() == null || input.sourceUrl().length() > 2048
                 || !input.sourceUrl().matches("https?://[^\\s]+"))
             invalid("An HTTP source URL is required for confirmed game changes.");
+
         if (changes.existsByOwnerIdAndPatchVariantId(ownerId, input.patchVariantId())
                 || removals.existsBySpellIdAndPatchVariantId(ownerId, input.patchVariantId()))
             throw new ApiException(SpellErrorCode.SPELL_CONFLICT,
                     "A confirmed change already exists for this entry and patch.");
+
         var actor = actors.require();
         var fact = new SpellPatchChange();
         fact.setId(UUID.randomUUID());
@@ -225,6 +231,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         audit.record(new AuditEntry(actor, "SPELL_PATCH_CHANGE_RECORDED", CatalogAggregates.SPELL, ownerId,
                 target.getId(), null, null,
                 null, Map.of("changeSetId", fact.getId())));
+
         return fact.getId();
     }
 

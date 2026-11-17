@@ -119,11 +119,13 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
     public UUID record(UUID ownerId, CatalogChanges.Record input) {
         var owner = identities.lockById(ownerId).orElseThrow(
                 () -> new ApiException(EnchantmentErrorCode.ENCHANTMENT_NOT_FOUND, "The catalog entry was not found."));
+
         if (input.patchVariantId() == null || input.toRevisionId() == null || input.kinds() == null
                 || input.kinds().isEmpty()
                 || input.kinds().size() > 4 || input.kinds().stream().anyMatch(Objects::isNull)
                 || new HashSet<>(input.kinds()).size() != input.kinds().size())
             invalid("A patch, published target and unique change kinds are required.");
+
         var target = revisions.findById(input.toRevisionId()).filter(r -> r.getOwnerId().equals(ownerId))
                 .orElseThrow(() -> new ApiException(EnchantmentErrorCode.ENCHANTMENT_INVALID_CONTENT,
                         "The target revision was not found."));
@@ -148,6 +150,7 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         if (!removed && !input.kinds().contains(Kind.ADDED) && !input.kinds().contains(Kind.DATA_BASELINE)
                 && (!target.getCause().equals("GAME_PATCH") || input.fromRevisionId() == null))
             invalid("Updates require a gameplay snapshot and a known previous snapshot.");
+
         if (input.fromRevisionId() != null) {
             var from = revisions.findById(input.fromRevisionId())
                     .orElseThrow(() -> new ApiException(EnchantmentErrorCode.ENCHANTMENT_INVALID_CONTENT,
@@ -158,6 +161,7 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
                             .rulesetOrdinal())
                 invalid("The source must be an earlier published snapshot of the same entry and ruleset.");
         }
+
         var copy = input.translations() == null ? List.<Summary>of() : input.translations();
         if (copy.isEmpty() || copy.size() > 50)
             invalid("A localized change summary is required.");
@@ -170,9 +174,11 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         if (input.sourceUrl() == null || input.sourceUrl().length() > 2048
                 || !input.sourceUrl().matches("https?://[^\\s]+"))
             invalid("An HTTP source URL is required for confirmed game changes.");
+
         if (changes.existsByOwnerIdAndPatchVariantId(ownerId, input.patchVariantId()))
             throw new ApiException(EnchantmentErrorCode.ENCHANTMENT_CONFLICT,
                     "A confirmed change already exists for this entry and patch.");
+
         var actor = actors.require();
         var fact = new EnchantmentPatchChange();
         fact.setId(UUID.randomUUID());
@@ -192,6 +198,7 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         audit.record(new AuditEntry(actor, "ENCHANTMENT_PATCH_CHANGE_RECORDED", CatalogAggregates.ENCHANTMENT, ownerId,
                 target.getId(),
                 null, null, null, Map.of("changeSetId", fact.getId())));
+
         return fact.getId();
     }
 
