@@ -8,13 +8,10 @@ import * as DialogBase from "./dialog"
 import * as PopoverBase from "./popover"
 import * as MenuBase from "./dropdown-menu"
 import { DrawerContent, DrawerHandle, DrawerTitle, DrawerClose, DrawerTrigger } from "./drawer"
+import { useLocaleText } from "@aov/ui/hooks/use-locale-text"
 
-/**
- * These overlays sit under every app, so the close button reads the language of the page instead of taking it from each
- * caller. All three apps keep that language on the document element.
- */
-const closeLabel = () =>
-  typeof document !== "undefined" && document.documentElement.lang.startsWith("en") ? "Close" : "Đóng"
+/** These overlays sit under every app, so the close button takes the app's language instead of a prop. */
+const useCloseLabel = () => useLocaleText()("Đóng", "Close")
 
 const DrawerDepth = createContext(false)
 const OverlayContext = createContext({ mobile: false, close: () => {} })
@@ -36,6 +33,7 @@ export function PublicDrawerContent({
   title,
   ...props
 }: ComponentProps<typeof DrawerContent> & { title?: string }) {
+  const closeLabel = useCloseLabel()
   return (
     <DrawerContent
       {...props}
@@ -46,7 +44,7 @@ export function PublicDrawerContent({
       {title && (
         <div className="public-bottom-heading">
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerClose aria-label={closeLabel()} className="public-bottom-close">
+          <DrawerClose aria-label={closeLabel} className="public-bottom-close">
             <X size={18} aria-hidden="true" />
           </DrawerClose>
         </div>
@@ -144,6 +142,7 @@ export function DialogContent({
   ...props
 }: ComponentProps<typeof DialogBase.DialogContent>) {
   const { mobile } = useContext(OverlayContext)
+  const closeLabel = useCloseLabel()
   if (!mobile)
     return (
       <DialogBase.DialogContent showCloseButton={showCloseButton} {...props}>
@@ -154,7 +153,7 @@ export function DialogContent({
     <PublicDrawerContent {...props}>
       {children}
       {showCloseButton && (
-        <DrawerClose className="public-bottom-close" aria-label={closeLabel()}>
+        <DrawerClose className="public-bottom-close" aria-label={closeLabel}>
           <X size={18} />
         </DrawerClose>
       )}

@@ -6,6 +6,7 @@ import { PublicCurrencySelect } from "./public-currency-select"
 import { PublicDateFormatSelect } from "./public-date-format-select"
 import { PublicTimeZoneSelect } from "./public-time-zone-select"
 import { usePageLayout } from "../hooks/use-page-layout"
+import { isEnglishLocale, localeText } from "@aov/ui/lib/locale-text"
 import "./public-account-menu.css"
 
 export type PublicAccountOptionsProps = {
@@ -32,7 +33,7 @@ export function PublicAccountMenu(props: Props) {
   const hovered = useRef(false)
   const panel = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
-  const english = locale.startsWith("en")
+  const english = isEnglishLocale(locale)
   const text = (vi: string, en: string) => (english ? en : vi)
   const cancel = () => clearTimeout(timer.current)
   useEffect(() => () => clearTimeout(timer.current), [])
@@ -136,7 +137,7 @@ export function PublicAccountOptions({
 }: PublicAccountOptionsProps) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(false)
-  const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
+  const text = localeText(locale)
   return (
     <>
       <div className="public-account-heading">
@@ -205,7 +206,7 @@ export function PublicAccountSettings({
   const timeZoneId = useId()
   const dateFormatId = useId()
   const currencyId = useId()
-  const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
+  const text = localeText(locale)
   return (
     <div className="public-account-settings">
       <div className="public-account-language">
@@ -308,7 +309,7 @@ export function PublicAccountSummary({
 }: Pick<PublicAccountOptionsProps, "locale" | "name" | "loading" | "onSignIn" | "onSignOut" | "children">) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(false)
-  const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
+  const text = localeText(locale)
   const summary = (
     <>
       <span className="public-account-avatar">

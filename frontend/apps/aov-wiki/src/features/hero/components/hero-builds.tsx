@@ -14,9 +14,9 @@ import { useWikiContext, wikiText } from "../../../context/wiki-context"
 import { wikiReferencesQuery } from "../../../lib/wiki-references"
 import { PatchName } from "../../../components/hero-patch-name"
 import { heroBuildsQuery, type BuildSource, type PublicBuild } from "../../../lib/hero-api"
+import { marketName } from "@aov/ui/lib/locale-text"
 import "./hero-builds.css"
 
-const MARKETS: Record<string, [string, string]> = { VN: ["Việt Nam", "Vietnam"] }
 const CAPTURE_DAY: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
 
 type Entities = Map<string, EntityReference>
@@ -170,7 +170,7 @@ function BuildSourceBlock({
   const { locale, options } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const labels = useBuildLabels()
-  const market = MARKETS[regionCode] ?? [regionCode, regionCode]
+  const market = [marketName(regionCode, "vi-VN"), marketName(regionCode, "en-US")]
   const patch = options?.patches.find((item) => item.code === source.patchCode)
   // A phone starts from the first build, the one the game lists first; the rest open on request.
   const limit = usePageLayout() === "compact" ? 1 : source.builds.length

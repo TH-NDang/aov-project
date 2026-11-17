@@ -1,4 +1,14 @@
-import { Fragment, useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react"
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react"
 import { KeyRound, Laptop, LogOut, MonitorSmartphone, RefreshCw, ShieldCheck, Smartphone } from "lucide-react"
 import type { AccountAction, AccountActionResult, SignInOptions } from "../lib/public-auth"
 import {
@@ -12,6 +22,7 @@ import {
   type SessionList,
 } from "../lib/account-security"
 import { LocalTime } from "./local-time"
+import { isEnglishLocale, localeText } from "@aov/ui/lib/locale-text"
 import "./public-account-security.css"
 
 type Text = (vi: string, en: string) => string
@@ -28,7 +39,7 @@ export type PublicAccountSecurityProps = {
 
 /** Account settings shared by the public apps: password, signed-in devices and two-step sign-in (ADR-028). */
 export function PublicAccountSecurity({ locale, api, startAction, actionResult }: PublicAccountSecurityProps) {
-  const text: Text = useCallback((vi, en) => (locale.startsWith("en") ? en : vi), [locale])
+  const text: Text = useMemo(() => localeText(locale), [locale])
   const [overview, setOverview] = useState<SecurityOverview | null>(null)
   const [sessions, setSessions] = useState<SessionList | null>(null)
   const [loadError, setLoadError] = useState(false)
@@ -182,7 +193,7 @@ function factLine(parts: ReactNode[]) {
 function relative(value: string | null, locale: string) {
   if (!value) return null
   const seconds = Math.round((new Date(value).getTime() - Date.now()) / 1000)
-  const format = new Intl.RelativeTimeFormat(locale.startsWith("en") ? "en" : "vi", { numeric: "auto" })
+  const format = new Intl.RelativeTimeFormat(isEnglishLocale(locale) ? "en" : "vi", { numeric: "auto" })
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
     ["day", 86400],
     ["hour", 3600],

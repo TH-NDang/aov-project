@@ -5,7 +5,8 @@ import { PublicDateFormatSelect } from "@aov/ui/components/public-date-format-se
 import { PublicCurrencySelect } from "@aov/ui/components/public-currency-select"
 import { PublicTimeZoneSelect } from "@aov/ui/components/public-time-zone-select"
 import { WikiIcon } from "../components/wiki-icon"
-import { MARKET_NAMES, useWikiContext, type WikiRegion } from "./wiki-context"
+import { useWikiContext, type WikiRegion } from "./wiki-context"
+import { marketName } from "@aov/ui/lib/locale-text"
 
 const FLAGS = new Set(["VN", "US", "TH", "TW", "ID"])
 
@@ -23,7 +24,7 @@ function MarketFlag({ code }: { code: string }) {
   )
 }
 function MarketName({ region, english }: { region: WikiRegion; english: boolean }) {
-  return <>{english ? (MARKET_NAMES[region.code] ?? region.displayName) : region.displayName}</>
+  return <>{marketName(region.code, english ? "en-US" : "vi-VN", region.displayName)}</>
 }
 
 export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean }) {
@@ -97,7 +98,7 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
               {!current && <SelectItem value={region}>{region}</SelectItem>}
               {regions.map((market) => (
                 <SelectItem key={market.code} value={market.code} disabled={!market.available}>
-                  {english ? (MARKET_NAMES[market.code] ?? market.displayName) : market.displayName}
+                  {marketName(market.code, english ? "en-US" : "vi-VN", market.displayName)}
                   {!market.available ? ` · ${t("unavailable")}` : ""}
                 </SelectItem>
               ))}

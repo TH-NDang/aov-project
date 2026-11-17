@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { ArrowLeftRight, Sparkles } from "lucide-react"
 import { cn } from "../lib/utils"
+import { useLocaleText } from "@aov/ui/hooks/use-locale-text"
 
 export interface SkillFormOption {
   key: string
@@ -19,7 +20,7 @@ export function SkillFormSwitch({
   options,
   value,
   onChange,
-  label = "Dạng của chiêu",
+  label,
   disabled = false,
   className,
 }: {
@@ -30,11 +31,12 @@ export function SkillFormSwitch({
   disabled?: boolean
   className?: string
 }) {
+  const t = useLocaleText()
   if (options.length < 2) return null
   return (
     <div
       role="group"
-      aria-label={label}
+      aria-label={label ?? t("Dạng của chiêu", "Skill form")}
       data-slot="skill-form-switch"
       className={cn("inline-flex max-w-full flex-wrap items-center gap-1 rounded-lg bg-muted/60 p-1", className)}
     >
@@ -73,9 +75,9 @@ export function SkillStateToggle({
   states,
   value,
   onChange,
-  normalLabel = "Thường",
-  label = "Trạng thái của chiêu",
-  unnamed = "Chưa đặt tên",
+  normalLabel,
+  label,
+  unnamed,
   className,
 }: {
   states: string[]
@@ -86,15 +88,16 @@ export function SkillStateToggle({
   unnamed?: string
   className?: string
 }) {
+  const t = useLocaleText()
   if (!states.length) return null
   const options: [number | null, string][] = [
-    [null, normalLabel],
+    [null, normalLabel ?? t("Thường", "Normal")],
     ...states.map((state, n): [number, string] => [n, state]),
   ]
   return (
     <div
       role="group"
-      aria-label={label}
+      aria-label={label ?? t("Trạng thái của chiêu", "Skill state")}
       data-slot="skill-state-toggle"
       className={cn("inline-flex max-w-full flex-wrap items-center gap-1 rounded-lg bg-muted/50 p-1", className)}
     >
@@ -110,7 +113,7 @@ export function SkillStateToggle({
           )}
           onClick={() => onChange(state)}
         >
-          {name || unnamed}
+          {name || unnamed || t("Chưa đặt tên", "Unnamed")}
         </button>
       ))}
     </div>

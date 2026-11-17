@@ -15,6 +15,7 @@ import {
   type PublicSkill,
 } from "../../../lib/hero-api"
 import { heroFormPath } from "../../../lib/hero-forms"
+import { marketName } from "@aov/ui/lib/locale-text"
 import "./hero-evaluation.css"
 
 /** A trait an editor confirmed, with its detail line in the reader's language when one is written. */
@@ -33,7 +34,6 @@ type EvaluatedContent = HeroDetail["content"] & {
 /** The capture day reads like the one under the recommended builds. */
 const CAPTURE_DAY: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
 
-const MARKETS: Record<string, [string, string]> = { VN: ["Việt Nam", "Vietnam"] }
 const FIGURES: Record<string, [string, string]> = {
   DAMAGE_DEALT: ["Sát thương mỗi trận", "Damage per match"],
   DAMAGE_TAKEN: ["Sát thương phải chịu", "Damage taken"],
@@ -100,7 +100,7 @@ function RankingCard({ reading, links }: { reading: HeroRankingReading; links: M
     value == null ? "—" : `${value.toLocaleString(locale, { maximumFractionDigits: 2 })}%`
   const amount = (value: number | null) =>
     value == null ? "—" : value.toLocaleString(locale, { maximumFractionDigits: value >= 1000 ? 0 : 2 })
-  const market = MARKETS[snapshot.regionCode] ?? [snapshot.regionCode, snapshot.regionCode]
+  const market = [marketName(snapshot.regionCode, "vi-VN"), marketName(snapshot.regionCode, "en-US")]
   const figures = entry.figures.filter((figure) => figure.value != null && FIGURES[figure.metric])
 
   return (
