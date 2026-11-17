@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { supportedWikiLocale, warehouseListPath, wikiScopeHref, wikiSection } from "../lib/wiki-catalog"
+import { wikiGet } from "../lib/wiki-api"
 
 export interface WikiRegion {
   code: string
@@ -134,11 +135,6 @@ function readPreferences(): { region?: string; locale?: string } {
     return {}
   }
 }
-async function readPublic<T>(path: string, signal: AbortSignal): Promise<T> {
-  const response = await fetch(`/api/wiki/v1${path}`, { signal, credentials: "omit" })
-  if (!response.ok) throw new Error("Wiki browsing options are unavailable.")
-  return response.json()
-}
 function normalizeOptions(value: CatalogContextResponse): WikiOptions {
   return {
     regions: value.regions,
@@ -191,7 +187,7 @@ function useWikiState() {
   }, [locale])
   const markets = useQuery({
     queryKey: ["wiki", "regions"],
-    queryFn: ({ signal }) => readPublic<WikiRegion[]>("/regions", signal),
+    queryFn: ({ signal }) => wikiGet<WikiRegion[]>("/regions", signal),
     staleTime: 300_000,
     retry: 1,
   })
@@ -199,7 +195,7 @@ function useWikiState() {
     queryKey: ["wiki", "catalog-context", region, locale],
     queryFn: async ({ signal }) =>
       normalizeOptions(
-        await readPublic<CatalogContextResponse>(`/catalog-context?${new URLSearchParams({ region, locale })}`, signal),
+        await wikiGet<CatalogContextResponse>(`/catalog-context?${new URLSearchParams({ region, locale })}`, signal),
       ),
     staleTime: 60_000,
     retry: 1,

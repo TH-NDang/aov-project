@@ -3,6 +3,7 @@ import { wikiCatalogParameters, type WikiCatalogScope } from "../../lib/wiki-cat
 import type { PublishedChange } from "../../lib/published-change-subjects"
 import type { HeroChangeItem } from "../../lib/wiki-change-format"
 import type { ChangeDomain } from "../../lib/wiki-patch-changes"
+import { wikiGetAll } from "../../lib/wiki-api"
 
 export interface PatchRelease {
   id: string
@@ -21,26 +22,10 @@ export type PatchChangeRow = PublishedChange & {
   changes?: HeroChangeItem[]
 }
 
-interface Slice<T> {
-  items: T[]
-  totalElements: number
-}
-
 const PAGE_SIZE = 50
 
-async function readAll<T>(path: string, params: URLSearchParams, signal: AbortSignal) {
-  const items: T[] = []
-  for (let page = 0; ; page++) {
-    const query = new URLSearchParams(params)
-    query.set("page", String(page))
-    query.set("size", String(PAGE_SIZE))
-    const response = await fetch(`/api/wiki/v1${path}?${query}`, { credentials: "omit", signal })
-    if (!response.ok) throw new Error("Published updates are unavailable.")
-    const slice: Slice<T> = await response.json()
-    items.push(...slice.items)
-    if (!slice.items.length || items.length >= slice.totalElements) return items
-  }
-}
+const readAll = <T>(path: string, params: URLSearchParams, signal: AbortSignal) =>
+  wikiGetAll<T>(path, params, signal, { size: PAGE_SIZE })
 
 export const patchReleasesQuery = (scope: WikiCatalogScope) =>
   queryOptions({

@@ -5,6 +5,7 @@ import { warehouseName } from "../features/warehouse/warehouse-types"
 import { wikiCatalogParameters, type WikiCatalogScope } from "./wiki-catalog"
 import { changeKind, changedSubjects, type PublishedChange } from "./published-change-subjects"
 import type { WarehouseKind } from "../features/warehouse/warehouse-types"
+import { wikiGetAll, wikiGetPage, type WikiPage } from "./wiki-api"
 
 type Release = { id: string; variantId: string }
 export type ChangeDomain = "HERO" | "ITEM" | "ARCANA" | "ENCHANTMENT" | "SPELL"
@@ -15,26 +16,13 @@ export const warehouseChangeDomain = {
   enchantments: "ENCHANTMENT",
   spells: "SPELL",
 } as const satisfies Record<WarehouseKind, ChangeDomain>
-type Slice<T> = { items: T[]; totalElements: number }
 const size = 20
 
-async function page<T>(path: string, params: URLSearchParams, index: number, signal: AbortSignal): Promise<Slice<T>> {
-  const query = new URLSearchParams(params)
-  query.set("page", String(index))
-  query.set("size", String(size))
-  const response = await fetch(`/api/wiki/v1${path}?${query}`, { credentials: "omit", signal })
-  if (!response.ok) throw new Error("Published patch changes could not be loaded.")
-  return response.json()
-}
+const page = <T>(path: string, params: URLSearchParams, index: number, signal: AbortSignal): Promise<WikiPage<T>> =>
+  wikiGetPage<T>(path, params, index, size, signal)
 
-async function pages<T>(path: string, params: URLSearchParams, signal: AbortSignal, start = 0) {
-  const items: T[] = []
-  for (let index = start; ; index++) {
-    const result = await page<T>(path, params, index, signal)
-    items.push(...result.items)
-    if (!result.items.length || (index + 1) * size >= result.totalElements) return items
-  }
-}
+const pages = <T>(path: string, params: URLSearchParams, signal: AbortSignal, from = 0) =>
+  wikiGetAll<T>(path, params, signal, { size, from })
 
 export function useHeroChangedVariants(heroId: string) {
   const scope = useWikiContext()

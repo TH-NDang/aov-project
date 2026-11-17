@@ -1,3 +1,4 @@
+import { isWikiApiError, wikiRequest } from "../../lib/wiki-api.ts"
 interface ContactRequest {
   name: string
   email: string
@@ -16,14 +17,12 @@ export class ContactRequestError extends Error {
 }
 
 export async function sendContactRequest(input: ContactRequest) {
-  const response = await fetch("/api/wiki/v1/media/contact-requests", {
-    method: "POST",
-    credentials: "omit",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  })
-  if (!response.ok) throw new ContactRequestError(response.status)
-  const result = await response.json()
+  let result: { id?: unknown } | undefined
+  try {
+    result = await wikiRequest<{ id?: unknown }>("/media/contact-requests", { method: "POST", body: input })
+  } catch (error) {
+    throw new ContactRequestError(isWikiApiError(error) ? error.status : 0)
+  }
   if (typeof result?.id !== "string" || !result.id.trim()) throw new ContactRequestError(502)
-  return result.id as string
+  return result.id
 }

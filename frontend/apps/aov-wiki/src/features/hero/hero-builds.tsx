@@ -13,6 +13,7 @@ import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { PatchName } from "./hero-patch-name"
+import { wikiGet } from "../../lib/wiki-api"
 import "./hero-builds.css"
 
 interface PublicBuild {
@@ -48,12 +49,7 @@ interface HeroBuilds {
 export function heroBuildsQuery(heroCode: string, region: string) {
   return queryOptions({
     queryKey: ["wiki", "hero-builds", heroCode, region] as const,
-    queryFn: async ({ signal }): Promise<HeroBuilds> => {
-      const query = new URLSearchParams({ hero: heroCode, region })
-      const response = await fetch(`/api/wiki/v1/builds?${query}`, { signal, credentials: "omit" })
-      if (!response.ok) throw new Error("Recommended builds are unavailable.")
-      return response.json()
-    },
+    queryFn: ({ signal }) => wikiGet<HeroBuilds>(`/builds?${new URLSearchParams({ hero: heroCode, region })}`, signal),
     staleTime: 300000,
     retry: false,
   })

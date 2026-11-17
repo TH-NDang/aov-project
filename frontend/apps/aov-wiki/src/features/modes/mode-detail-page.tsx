@@ -11,7 +11,8 @@ import { usePageHead } from "../../lib/seo/use-page-head"
 import { AutoChessGuide, GUIDE_TABS, type GuideTab } from "./auto-chess-guide"
 import type { ModeImage } from "./auto-chess-model"
 import { AutoChessOverview } from "./auto-chess-overview"
-import { guideQuery, modeCardsQuery, modeQuery, ModeRequestError, type ModeContent } from "./mode-api"
+import { WikiApiError } from "../../lib/wiki-api"
+import { guideQuery, modeCardsQuery, modeQuery, type ModeContent } from "./mode-api"
 import { ModeCards } from "./mode-cards"
 import {
   AvailabilityState,
@@ -52,7 +53,7 @@ export function ModeDetailPage() {
           },
           locale,
         )
-      : mode.error instanceof ModeRequestError && mode.error.status === 404
+      : mode.error instanceof WikiApiError && mode.error.status === 404
         ? notFoundMeta(locale, `/modes/${encodeURIComponent(code)}`, "modes")
         : null,
   )
@@ -60,7 +61,7 @@ export function ModeDetailPage() {
   const listHref = href("/modes")
   if (mode.isPending) return <ModeDetailSkeleton />
   if (mode.isError) {
-    const missing = mode.error instanceof ModeRequestError && mode.error.status === 404
+    const missing = mode.error instanceof WikiApiError && mode.error.status === 404
     return (
       <div className="mode-page mode-detail">
         <div className="mode-notice wiki-mascot-state" role={missing ? "status" : "alert"}>

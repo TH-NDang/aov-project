@@ -3,13 +3,14 @@ import { useAccountCurrency } from "@aov/ui/lib/currency"
 import { createPublicAuth, type AccountAction } from "@aov/ui/lib/public-auth"
 import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
 import { useAccountDateFormat } from "@aov/ui/lib/time-zone"
+import { WIKI_API_ROOT, wikiRequest, type WikiRequest } from "../../lib/wiki-api"
 
 const auth = createPublicAuth({
   issuer: import.meta.env.VITE_AUTH_ISSUER || "http://localhost:8081/realms/wikiaov",
   clientId: import.meta.env.VITE_AUTH_CLIENT_ID || "aov-wiki",
   storageKey: "wiki-login",
   returnPath: "/",
-  profileUrl: "/api/wiki/v1/users/me",
+  profileUrl: `${WIKI_API_ROOT}/users/me`,
   nameField: "displayName",
   locale: () => document.documentElement.lang || "vi",
 })
@@ -42,17 +43,8 @@ type WikiProfile = {
   version: number
 }
 
-async function requestProfile(init: RequestInit = {}) {
-  const timeout = AbortSignal.timeout(20000)
-  const response = await fetch("/api/wiki/v1/users/me", {
-    ...init,
-    signal: init.signal ? AbortSignal.any([init.signal, timeout]) : timeout,
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${await auth.accessToken()}` },
-    credentials: "omit",
-    cache: "no-store",
-  })
-  if (!response.ok) throw new Error("User profile is unavailable.")
-  return (await response.json()) as WikiProfile
+async function requestProfile(request: Pick<WikiRequest, "method" | "body" | "signal"> = {}) {
+  return wikiRequest<WikiProfile>("/users/me", { ...request, token: await auth.accessToken(), timeoutMs: 20_000 })
 }
 
 /** Keeps the shared account's time zone and currency in step with this browser's choices while someone is signed in. */
@@ -72,7 +64,7 @@ export function useWikiAccountPreferences() {
     const { displayName, biography, locale, avatarAssetId, version } = await requestProfile()
     const saved = await requestProfile({
       method: "PUT",
-      body: JSON.stringify({ displayName, biography, locale, timeZone, avatarAssetId, expectedVersion: version }),
+      body: { displayName, biography, locale, timeZone, avatarAssetId, expectedVersion: version },
     })
     client.setQueryData(key, saved)
   })
@@ -80,7 +72,7 @@ export function useWikiAccountPreferences() {
     const { displayName, biography, locale, timeZone, avatarAssetId, version } = await requestProfile()
     const saved = await requestProfile({
       method: "PUT",
-      body: JSON.stringify({
+      body: {
         displayName,
         biography,
         locale,
@@ -88,7 +80,7 @@ export function useWikiAccountPreferences() {
         dateFormat,
         avatarAssetId,
         expectedVersion: version,
-      }),
+      },
     })
     client.setQueryData(key, saved)
   })
@@ -96,7 +88,7 @@ export function useWikiAccountPreferences() {
     const { displayName, biography, locale, timeZone, avatarAssetId, version } = await requestProfile()
     const saved = await requestProfile({
       method: "PUT",
-      body: JSON.stringify({
+      body: {
         displayName,
         biography,
         locale,
@@ -104,7 +96,7 @@ export function useWikiAccountPreferences() {
         currency,
         avatarAssetId,
         expectedVersion: version,
-      }),
+      },
     })
     client.setQueryData(key, saved)
   })

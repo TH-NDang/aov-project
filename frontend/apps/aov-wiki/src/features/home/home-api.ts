@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import { wikiCatalogParameters, type WikiCatalogScope } from "../../lib/wiki-catalog"
+import { wikiGet } from "../../lib/wiki-api"
 
 export interface SeasonPatch {
   id: string
@@ -25,17 +26,8 @@ export interface SeasonUpdates {
 export const seasonUpdatesQuery = (scope: WikiCatalogScope) =>
   queryOptions({
     queryKey: ["wiki", "season-updates", scope.region, scope.locale],
-    queryFn: async ({ signal }): Promise<SeasonUpdates> => {
-      const response = await fetch(
-        `/api/wiki/v1/seasons/current/updates?${wikiCatalogParameters(scope, false)}&limit=4`,
-        {
-          signal,
-          credentials: "omit",
-        },
-      )
-      if (!response.ok) throw new Error("Season updates are unavailable.")
-      return response.json()
-    },
+    queryFn: ({ signal }) =>
+      wikiGet<SeasonUpdates>(`/seasons/current/updates?${wikiCatalogParameters(scope, false)}&limit=4`, signal),
     staleTime: 60_000,
     refetchInterval: 5 * 60_000,
     retry: 1,
@@ -58,9 +50,10 @@ export const sectionCountsQuery = (scope: WikiCatalogScope) =>
             const query = wikiCatalogParameters(scope, false)
             query.set("page", "0")
             query.set("size", "1")
-            const response = await fetch(`/api/wiki/v1/${section}?${query}`, { signal, credentials: "omit" })
-            if (!response.ok) return undefined
-            const body: { totalElements?: number; page?: { totalElements?: number } } = await response.json()
+            const body = await wikiGet<{ totalElements?: number; page?: { totalElements?: number } }>(
+              `/${section}?${query}`,
+              signal,
+            )
             return body.totalElements ?? body.page?.totalElements
           } catch {
             return undefined

@@ -2,6 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
+import { wikiGet } from "../../lib/wiki-api"
 
 type HeroAvailability = "ON_SALE" | "NOT_OPEN" | "COMING_SOON" | "UNKNOWN"
 type SkinMethod = "VOUCHER" | "EVENT" | "NOT_OPEN" | "OTHER" | "UNKNOWN"
@@ -22,15 +23,7 @@ interface HeroShop {
 function heroShopQuery(heroId: string, region: string) {
   return queryOptions({
     queryKey: ["wiki", "hero-shop", heroId, region] as const,
-    queryFn: async ({ signal }): Promise<HeroShop> => {
-      const query = new URLSearchParams({ region })
-      const response = await fetch(`/api/wiki/v1/heroes/${heroId}/shop?${query}`, {
-        signal,
-        credentials: "omit",
-      })
-      if (!response.ok) throw new Error("Shop facts are unavailable.")
-      return response.json()
-    },
+    queryFn: ({ signal }) => wikiGet<HeroShop>(`/heroes/${heroId}/shop?${new URLSearchParams({ region })}`, signal),
     staleTime: 300000,
     retry: false,
   })

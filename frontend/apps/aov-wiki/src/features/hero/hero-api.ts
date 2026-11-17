@@ -3,6 +3,7 @@ import type { MediaCredit } from "@aov/ui/lib/media-credit"
 import type { HeroPosition, HeroRole } from "./hero-classifications"
 import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "../../lib/wiki-catalog"
 import { FocalPoint } from "@aov/ui/lib/focal-point"
+import { wikiGet, wikiGetPages } from "../../lib/wiki-api"
 
 export interface HeroMedia {
   assetId: string
@@ -72,7 +73,7 @@ interface HeroContext {
 interface HeroPage {
   context: HeroContext
   items: HeroListItem[]
-  totalPages: number
+  totalElements: number
 }
 
 export interface PublicSkill {
@@ -142,26 +143,16 @@ export type HeroFormDetail = Omit<HeroDetail, "context" | "forms" | "parent"> & 
   actualLocale?: string
 }
 
-async function readHeroApi<T>(path: string, signal: AbortSignal): Promise<T> {
-  const response = await fetch(`/api/wiki/v1${path}`, { signal, credentials: "omit" })
-  if (!response.ok) throw new Error("Published hero data is unavailable.")
-  return response.json()
-}
-
 export const heroCatalogQuery = (scope: WikiCatalogScope) =>
   queryOptions({
     queryKey: ["wiki", "heroes", ...wikiScopeKey(scope)],
     queryFn: async ({ signal }) => {
-      const params = wikiCatalogParameters(scope)
-      params.set("size", "100")
-      params.set("page", "0")
-      const first = await readHeroApi<HeroPage>(`/heroes?${params}`, signal)
-      const items = [...first.items]
-      for (let page = 1; page < first.totalPages; page++) {
-        params.set("page", String(page))
-        const next = await readHeroApi<HeroPage>(`/heroes?${params}`, signal)
-        items.push(...next.items)
-      }
+      const { first, items } = await wikiGetPages<HeroPage, HeroListItem>(
+        "/heroes",
+        wikiCatalogParameters(scope),
+        signal,
+        { size: 100, items: (page) => page.items, total: (page) => page.totalElements },
+      )
       return { context: first.context, items }
     },
     staleTime: 60_000,
@@ -172,7 +163,7 @@ export function heroDetailQuery(heroId: string, scope: WikiCatalogScope) {
   return queryOptions({
     queryKey: ["wiki", "hero", heroId, ...wikiScopeKey(scope)],
     queryFn: ({ signal }) =>
-      readHeroApi<HeroDetail>(`/heroes/${encodeURIComponent(heroId)}?${wikiCatalogParameters(scope)}`, signal),
+      wikiGet<HeroDetail>(`/heroes/${encodeURIComponent(heroId)}?${wikiCatalogParameters(scope)}`, signal),
     staleTime: 60_000,
     retry: 1,
   })
@@ -212,7 +203,7 @@ export function heroRankingQuery(heroId: string, region: string) {
   return queryOptions({
     queryKey: ["wiki", "hero-ranking", heroId, region] as const,
     queryFn: ({ signal }) =>
-      readHeroApi<HeroRankingReading>(
+      wikiGet<HeroRankingReading>(
         `/heroes/${encodeURIComponent(heroId)}/ranking?region=${encodeURIComponent(region)}`,
         signal,
       ),
@@ -224,7 +215,7 @@ export function heroRankingQuery(heroId: string, region: string) {
 export function heroTraitIndexQuery(region: string) {
   return queryOptions({
     queryKey: ["wiki", "hero-traits", region] as const,
-    queryFn: ({ signal }) => readHeroApi<HeroTraitIndex>(`/hero-traits?region=${encodeURIComponent(region)}`, signal),
+    queryFn: ({ signal }) => wikiGet<HeroTraitIndex>(`/hero-traits?region=${encodeURIComponent(region)}`, signal),
     staleTime: 300_000,
     retry: false,
   })

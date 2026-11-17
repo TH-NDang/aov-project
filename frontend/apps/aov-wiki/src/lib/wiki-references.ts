@@ -8,6 +8,7 @@ import {
   wikiScopeKey,
   type WikiCatalogScope,
 } from "./wiki-catalog"
+import { wikiGet } from "./wiki-api"
 
 const REFERENCE_TABS: Partial<Record<EntityReference["kind"], WarehouseKind>> = {
   item: "items",
@@ -20,12 +21,10 @@ export const wikiReferencesQuery = (scope: WikiCatalogScope) =>
   queryOptions({
     queryKey: ["wiki", "references", ...wikiScopeKey(scope), scope.section],
     queryFn: async ({ signal }) => {
-      const response = await fetch(`/api/wiki/v1/reference-catalog?${wikiCatalogParameters(scope)}`, {
+      const { settings } = await wikiGet<{ settings: RichTextSettings }>(
+        `/reference-catalog?${wikiCatalogParameters(scope)}`,
         signal,
-        credentials: "omit",
-      })
-      if (!response.ok) throw new Error("Public references are unavailable.")
-      const { settings }: { settings: RichTextSettings } = await response.json()
+      )
       return {
         ...settings,
         entities: settings.entities.map((entity) => {
