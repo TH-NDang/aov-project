@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.roster.application;
 
+import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
 import com.wikiaov.community.tournament.internal.application.TournamentViews;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
@@ -19,8 +20,6 @@ import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,8 +97,7 @@ public class RosterAdministration {
     }
 
     private static String actor() {
-        var auth = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        return auth.getToken().getIssuer() + "|" + auth.getToken().getSubject();
+        return CommunityActor.editorKey();
     }
 
     @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('tournament:read')")

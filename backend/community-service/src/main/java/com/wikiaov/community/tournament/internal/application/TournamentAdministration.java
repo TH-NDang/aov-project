@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.application;
 
+import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.directory.application.CompetitionDirectory;
@@ -9,7 +10,6 @@ import java.util.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -233,7 +233,6 @@ public class TournamentAdministration {
     }
 
     private static String actor() {
-        var auth = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        return auth.getToken().getIssuer() + "|" + auth.getToken().getSubject();
+        return CommunityActor.editorKey();
     }
 }
