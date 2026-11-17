@@ -238,7 +238,7 @@ bị ngắt theo khổ ảnh chụp). Hồi chiêu là câu cuối như trang b�
   viết như vậy.
 - Tên chỉ số viết hoa chữ đầu khi đứng đầu dòng chỉ số hoặc làm nhãn; trong câu thì viết thường.
 - Số người mỗi bên viết `5v5`, `3v3` với chữ v thường.
-- Tên sản phẩm: `AOV WiKi`, `AOV Stream`, `AOV Admin`. Wiki đang có cả `AOV WiKi` lẫn `AOV Wiki`.
+- Tên sản phẩm: `AOV WiKi`, `AOV Stream`, `AOV Admin`. Wiki lấy tên mình từ `SITE_NAME` (`apps/aov-wiki/src/lib/seo/page-meta.ts`).
 
 ## 7. Dấu câu
 

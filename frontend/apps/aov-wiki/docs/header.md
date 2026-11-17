@@ -16,8 +16,8 @@
 - Cao 56px (`--wiki-header-height`), dính ở đầu trang, nền màu thanh gần đặc (`--header-bg`) có blur, vạch vàng mờ ở
   dưới (`--header-line`). Nội dung thanh nằm trong cùng cột với trang: rộng tối đa `--aov-page-max`, lề `--wiki-gutter`,
   nên logo thẳng hàng với mép nội dung.
-- Trái: logo chuột chũi 32px dẫn về trang chủ; chữ AOV Wiki kèm mũi tên là nút mở menu chuyển ứng dụng. Danh sách
-  (`SECTIONS` trong `wiki-header.tsx`) gồm AOV Wiki và AOV Stream, có logo, mô tả và nhãn **Đang xem**. Chọn Stream mở
+- Trái: logo chuột chũi 32px dẫn về trang chủ; chữ AOV WiKi kèm mũi tên là nút mở menu chuyển ứng dụng. Danh sách
+  (`SECTIONS` trong `wiki-header.tsx`) gồm AOV WiKi và AOV Stream, có logo, mô tả và nhãn **Đang xem**. Chọn Stream mở
   frontend Stream trong cùng tab.
 - Giữa: các mục chính (`TopNavigation`) là Tướng, Trang phục, Kho trang bị, Chế độ chơi, Cập nhật, Thuật ngữ. Kho trang
   bị là một menu gồm Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, mỗi mục có hình. Mục đang ở có chữ vàng và gạch chân vàng;
@@ -25,7 +25,7 @@
   `src/lib/wiki-sections.ts`.
 - Phải: ô tìm kiếm chung (cao 36px, rộng 280px), nút thị trường dữ liệu (cờ và mã thị trường, mở bảng chọn thị trường)
   và tài khoản.
-- Dưới 1180px: ẩn chữ AOV Wiki, chỉ còn logo và mũi tên; ô tìm kiếm còn 220px.
+- Dưới 1180px: ẩn chữ AOV WiKi, chỉ còn logo và mũi tên; ô tìm kiếm còn 220px.
 - Dưới 1024px: ô tìm kiếm thành nút kính lúp. Bấm thì ô nhập thay chỗ các mục và nút chuyển thành dấu đóng; đóng tìm
   kiếm thì focus về lại nút.
 - Trang tướng (`variant="hero"`): thanh nằm trên ảnh tướng, trong suốt ở đầu trang; trong 100px cuộn đầu tiên nền, vạch
@@ -50,7 +50,7 @@
 
 Một hàng cao 48px (`WikiHeaderCompact`):
 
-- Trái: trang chủ, Liên hệ, Tài khoản và trang không tìm thấy hiện logo 28px kèm chữ AOV Wiki; các trang danh sách có nút
+- Trái: trang chủ, Liên hệ, Tài khoản và trang không tìm thấy hiện logo 28px kèm chữ AOV WiKi; các trang danh sách có nút
   về trang chủ; trang tướng có nút quay lại danh sách tướng, giữ nguyên bộ lọc đang dùng.
 - Giữa: tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
   trang này tự có `h1` mang tên riêng, nên header chỉ ghi tên mục (`pageTitleIsHeading`). Kho trang bị ghi chung "Kho
