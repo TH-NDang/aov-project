@@ -115,21 +115,6 @@ export function objectivesAt(events: TimelineEvent[], at: number) {
   return counts
 }
 
-/** Kill difference (blue minus red) as step points for the momentum line. */
-export function killMomentum(events: TimelineEvent[], duration: number) {
-  const points = [{ at: 0, diff: 0 }]
-  let diff = 0
-  for (const event of sortEvents(events)) {
-    if (event.kind !== "KILL") continue
-    const side = eventSide(event)
-    if (!side) continue
-    diff += side === "BLUE" ? 1 : -1
-    points.push({ at: event.at, diff })
-  }
-  points.push({ at: duration, diff })
-  return points
-}
-
 /**
  * Six inventory slots at a moment. `undefined` means the slot was never observed, `null` an observed
  * empty slot. Snapshots reset the state; later events are applied in order. Sales are only shown

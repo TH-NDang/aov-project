@@ -13,7 +13,7 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { RegistryEditor } from "@/features/tournaments/registry-editor"
 import { RegistryImportSheet } from "@/features/tournaments/registry-import"
 import { useRecords, useTournamentStats } from "../data/use-esports-data"
-import type { TournamentStats } from "../components/tournament-cards"
+import type { TournamentStats as ContractStats } from "@aov/community-contracts"
 import { TournamentList } from "@/features/tournaments/tournament-list"
 import { regionsNamedBy } from "@/features/tournaments/record-reason"
 import { partsByMainEvent } from "@/features/tournaments/tournament-parts"
@@ -31,6 +31,8 @@ import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { AccessGate, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
 
 type StatusFilter = "all" | NonNullable<TournamentContent["status"]>
+type TournamentStats = Omit<ContractStats, "tournamentId">
+
 const STATUS_FILTERS: StatusFilter[] = ["all", "ONGOING", "UPCOMING", "FINISHED", "ANNOUNCED", "UNKNOWN"]
 const SORTS: Record<TournamentSort, string> = {
   RECENT: "Gần đây trước",

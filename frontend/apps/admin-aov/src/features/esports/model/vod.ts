@@ -40,8 +40,6 @@ export function youtubeLinkTime(url?: string | null): number | null {
 export const youtubeWatchUrl = (videoId: string, seconds?: number | null) =>
   `https://www.youtube.com/watch?v=${videoId}${seconds != null && seconds >= 0 ? `&t=${Math.floor(seconds)}s` : ""}`
 
-export const youtubeThumbnail = (videoId: string) => `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
-
 const sortedPauses = (pauses: VodPause[]) =>
   pauses.filter((pause) => pause.durationSeconds > 0 && pause.atSeconds >= 0).sort((a, b) => a.atSeconds - b.atSeconds)
 

@@ -118,8 +118,3 @@ export function errorMessage(error: unknown): string {
   }
   return error instanceof Error ? error.message : "Đã có lỗi không xác định."
 }
-
-/** Calls `assign` for every field error of an ApiError so forms can show them inline. */
-export function forEachFieldError(error: unknown, assign: (path: string, message: string) => void) {
-  if (error instanceof ApiError) for (const item of error.problem.errors ?? []) assign(item.path, item.message)
-}

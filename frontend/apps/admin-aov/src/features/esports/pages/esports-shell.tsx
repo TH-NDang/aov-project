@@ -82,5 +82,3 @@ export function LoadError({ error, onRetry }: { error: unknown; onRetry: () => v
 
 export const tournamentPath = (tournamentId: string) => `/tournaments/${tournamentId}`
 export const matchPath = (tournamentId: string, seriesId: string) => `/tournaments/${tournamentId}/matches/${seriesId}`
-export const gamePath = (tournamentId: string, seriesId: string, gameId: string) =>
-  `${matchPath(tournamentId, seriesId)}/games/${gameId}`

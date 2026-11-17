@@ -1,5 +1,4 @@
 import type {
-  ArcanaAllocation,
   EquipmentSnapshot,
   GameContent,
   GameSide,
@@ -17,12 +16,6 @@ export const LANES: { code: Lane; name: string; short: string }[] = LANE_ORDER.m
   code,
   ...LANE_LABELS[code],
 }))
-export const OBSERVATION_LABELS = {
-  UNKNOWN: "Chưa thu thập",
-  NOT_SHOWN: "Nguồn không hiển thị",
-  PARTIAL: "Hiện một phần",
-  KNOWN: "Đã quan sát rõ",
-} as const
 export const GAME_REGIONS = ["VN", "TH", "TW", "ID", "GLOBAL"]
 export const emptySelection = (): Selection => ({ id: null, name: null })
 
@@ -78,9 +71,6 @@ export function minuteLabel(seconds: number) {
 export function parseGameTime(value: string): number | null {
   const match = value.trim().match(/^(\d{1,3}):([0-5]\d)$/)
   return match ? Number(match[1]) * 60 + Number(match[2]) : null
-}
-export function arcanaTotal(entries: ArcanaAllocation[]) {
-  return entries.reduce((total, entry) => total + entry.count, 0)
 }
 export function missingFieldLabel(path: string) {
   const special: Record<string, string> = {

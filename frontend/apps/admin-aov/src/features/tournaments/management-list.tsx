@@ -6,7 +6,6 @@ import { Table, TableBody, TableCaption, TableHead, TableHeader, TableRow } from
 import { cn } from "@aov/ui/lib/utils"
 import { SearchField } from "@/components/search-field"
 import { InfiniteScroll } from "@/components/infinite-scroll"
-import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 export const managementSelectClassName =
   "type-body h-9 min-w-0 max-w-full rounded-md border bg-background px-3 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
@@ -82,14 +81,6 @@ export function ManagementTable({
       <TableBody>{children}</TableBody>
     </Table>
   )
-}
-
-const PAGE_SIZE = 25
-
-/** Rows on screen; a selected record stays among them, however far down the list it sits. */
-export function useManagementRows<T extends { id: string }>(entries: T[], filterKey: string, selectedId?: string) {
-  const selected = entries.findIndex((entry) => entry.id === selectedId)
-  return useRevealedRows(entries, filterKey, PAGE_SIZE, selected + 1)
 }
 
 export function ManagementFooter({

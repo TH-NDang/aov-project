@@ -34,9 +34,6 @@ import { FocalPointEditor } from "./focal-point-editor"
 import { confirmDiscard } from "@/components/confirm-dialog"
 
 export const imageRoleLabels: Record<MediaRole, string> = { HEAD: "Head", PORTRAIT: "Portrait", SPLASH: "Cover" }
-export function imageHeroHref(group: CharacterImageGroup, entry?: CharacterImageEntry) {
-  return `/hero/${group.heroId}?revision=${group.revision.id}&tab=${entry?.ownerType === "SKIN" ? "skins" : "media"}`
-}
 export function CharacterImageDetail({
   selected,
   role,
