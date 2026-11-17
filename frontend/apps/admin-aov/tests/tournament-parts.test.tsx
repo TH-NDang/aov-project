@@ -3,14 +3,19 @@ import { test } from "node:test"
 import React, { act } from "react"
 import { JSDOM } from "jsdom"
 import type { DocumentView, TournamentContent, TournamentPart } from "@aov/community-contracts"
+import { installWindow, withGlobals } from "./fixtures/dom"
 
-const channel = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-const { partLabel, partPhase, partsByMainEvent, partsOnLine } =
-  await import("../src/features/tournaments/tournament-parts")
-const { initialRegistryValues, registryContent } = await import("../src/features/tournaments/registry-form-model")
-const { createTournamentApi } = await import("../src/features/tournaments/tournament-api")
-if (channel) Object.defineProperty(globalThis, "BroadcastChannel", channel)
+const [
+  { partLabel, partPhase, partsByMainEvent, partsOnLine },
+  { initialRegistryValues, registryContent },
+  { createTournamentApi },
+] = await withGlobals({ BroadcastChannel: undefined }, () =>
+  Promise.all([
+    import("../src/features/tournaments/tournament-parts"),
+    import("../src/features/tournaments/registry-form-model"),
+    import("../src/features/tournaments/tournament-api"),
+  ]),
+)
 
 const NOW = new Date("2026-11-13T05:00:00Z")
 const ZONE = "Asia/Ho_Chi_Minh"
@@ -170,18 +175,12 @@ async function withDom(run: (document: Document) => Promise<void>) {
     cancelAnimationFrame: dom.window.cancelAnimationFrame,
     IS_REACT_ACT_ENVIRONMENT: true,
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, values)
   try {
     await run(dom.window.document)
   } finally {
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
+    restoreGlobals()
     dom.window.close()
   }
 }

@@ -15,12 +15,13 @@ import {
 } from "@aov/ui/lib/entity-rich-text"
 import { countryReferences, countryReferenceFlag } from "@aov/ui/lib/country-references"
 import { referenceInputParts } from "@aov/ui/lib/reference-input-dom"
+import { withGlobals } from "./fixtures/dom"
 
-const channel = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, value: undefined })
-const { combineReferenceSearches, createCommunityReferenceApi, communityReferenceKeys, extractCommunityReferenceIds } =
-  await import("../src/features/terminology/community-reference-api")
-if (channel) Object.defineProperty(globalThis, "BroadcastChannel", channel)
+const [
+  { combineReferenceSearches, createCommunityReferenceApi, communityReferenceKeys, extractCommunityReferenceIds },
+] = await withGlobals({ BroadcastChannel: undefined }, () =>
+  Promise.all([import("../src/features/terminology/community-reference-api")]),
+)
 
 const teamId = "11111111-1111-4111-8111-111111111111"
 const playerId = "22222222-2222-4222-8222-222222222222"

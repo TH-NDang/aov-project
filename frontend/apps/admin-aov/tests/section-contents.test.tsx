@@ -4,6 +4,7 @@ import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { intersectionHarness } from "./fixtures/intersection-observer"
+import { installWindow } from "./fixtures/dom"
 
 type Contents = typeof import("../src/components/section-contents")
 
@@ -18,28 +19,10 @@ async function withUi(
 ) {
   const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true })
   const intersections = intersectionHarness()
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    MutationObserver: dom.window.MutationObserver,
-    NodeFilter: dom.window.NodeFilter,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    CustomEvent: dom.window.CustomEvent,
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     IntersectionObserver: intersections.Observer,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const contents = await import("../src/components/section-contents")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -59,10 +42,7 @@ async function withUi(
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 

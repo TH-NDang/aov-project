@@ -10,6 +10,7 @@ import type { SkinBadgeRecord } from "../src/features/media/character-image-api"
 import { badgeGroupKeys, createSkinBadgeGroupsApi, type BadgeGroup } from "../src/features/media/skin-badge-groups-api"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 const rank: BadgeGroup = {
   id: "rank-a",
@@ -116,7 +117,7 @@ async function withUi(
     document: Document
     client: QueryClient
     render: (node: React.ReactNode, location?: string) => Promise<void>
-    waitFor: (condition: () => boolean) => Promise<void>
+    waitFor: (condition: () => boolean) => Promise<unknown>
     click: (element: Element | null | undefined) => Promise<void>
     button: (text: string) => HTMLButtonElement | undefined
     input: (label: string, value: string) => Promise<void>
@@ -131,7 +132,7 @@ async function withUi(
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   const intersections = intersectionHarness()
   const fetcher: typeof fetch = async (input) => {
     const path = new URL(String(input), "http://localhost").pathname.replace("/api/wiki/v1", "")
@@ -150,20 +151,7 @@ async function withUi(
       return Response.json({ id: path.split("/").at(-1), currentUrl: "/fixture.webp", provenance: [], versions: [] })
     throw new Error(`Unexpected fixture fetch: ${path}`)
   }
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLSelectElement: dom.window.HTMLSelectElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle,
+  restoreGlobals = installWindow(dom.window, {
     requestAnimationFrame: (callback: () => void) => setTimeout(callback, 0),
     cancelAnimationFrame: clearTimeout,
     ResizeObserver: class {
@@ -171,14 +159,9 @@ async function withUi(
       unobserve() {}
       disconnect() {}
     },
-    BroadcastChannel: undefined,
     IntersectionObserver: intersections.Observer,
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { createRoot } = await import("react-dom/client")
   const { TooltipProvider } = await import("@aov/ui/components/tooltip")
@@ -208,13 +191,7 @@ async function withUi(
       ),
     )
   }
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 200 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), document.body.textContent ?? "")
-  }
+
   const click = async (element: Element | null | undefined) => {
     assert.ok(element)
     await act(async () => (element as HTMLElement).click())
@@ -256,10 +233,7 @@ async function withUi(
       await new Promise((resolve) => setTimeout(resolve, 50))
     })
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 

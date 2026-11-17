@@ -12,6 +12,7 @@ import {
   setReferenceInputSelection,
 } from "@aov/ui/lib/reference-input-dom"
 import type { EntityReferenceInputHandle } from "@aov/ui/components/entity-reference-input"
+import { installWindow } from "./fixtures/dom"
 
 const heroId = "00000000-0000-4000-8000-000000000001"
 const token = `<ref=skill:${heroId}.skill-1-2>Phi tiêu</ref>`
@@ -60,22 +61,8 @@ test("reference DOM maps atomic token boundaries without including icon or owner
 
 test("IME changes remain undecorated until commit, overflow rolls back, and disabled fieldsets reject mutations", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    Event: dom.window.Event,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { EntityReferenceInput } = await import("@aov/ui/components/entity-reference-input")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -160,31 +147,14 @@ test("IME changes remain undecorated until commit, overflow rolls back, and disa
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 
 test("reference input keeps chips atomic, stable during typing and hydration, and serializes clipboard/newlines safely", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    Event: dom.window.Event,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { EntityReferenceInput } = await import("@aov/ui/components/entity-reference-input")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -298,10 +268,7 @@ test("reference input keeps chips atomic, stable during typing and hydration, an
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 

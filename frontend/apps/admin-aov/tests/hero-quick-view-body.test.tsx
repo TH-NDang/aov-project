@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
+import { installWindow } from "./fixtures/dom"
 
 async function withView(
   reducedMotion: boolean,
@@ -26,17 +26,8 @@ async function withView(
   dom.window.clearTimeout = (id) => {
     timers.delete(id ?? 0)
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { HeroQuickViewBody } = await import("../src/features/publishing/hero-quick-view-body")
   const document = dom.window.document
@@ -77,10 +68,7 @@ async function withView(
   } finally {
     await unmount()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 

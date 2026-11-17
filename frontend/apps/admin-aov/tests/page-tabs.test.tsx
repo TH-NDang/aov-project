@@ -9,6 +9,7 @@ import { useChangeEffect } from "../src/hooks/use-change-effect"
 import { useTable } from "@tanstack/react-table"
 import { dataTableFeatures } from "../src/components/data-table/table-features"
 import { HotkeysProvider, useHotkeys } from "../src/app/hotkeys"
+import { installWindow } from "./fixtures/dom"
 
 const tableRows = [
   { id: "1", name: "A" },
@@ -19,18 +20,8 @@ const tableColumns = [{ accessorKey: "name" }]
 
 test("tab sessions preserve drafts, filters, route params, DOM, scroll and query data until closed", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    localStorage: dom.window.localStorage,
-    HTMLElement: dom.window.HTMLElement,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const client = new QueryClient({
     defaultOptions: {
@@ -256,9 +247,6 @@ test("tab sessions preserve drafts, filters, route params, DOM, scroll and query
     router.dispose()
     client.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

@@ -3,6 +3,7 @@ import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
+import { installWindow } from "./fixtures/dom"
 
 test("overflowing tabs reveal the selection and adjacent content without scrolling the page", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
@@ -39,20 +40,9 @@ test("overflowing tabs reveal the selection and adjacent content without scrolli
     this.scrollLeft = (options as ScrollToOptions).left ?? this.scrollLeft
     this.dispatchEvent(new dom.window.Event("scroll"))
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Node: dom.window.Node,
-    Element: dom.window.Element,
-    CustomEvent: dom.window.CustomEvent,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
     ResizeObserver: class {
       constructor(callback: () => void) {
         resize = callback
@@ -62,11 +52,7 @@ test("overflowing tabs reveal the selection and adjacent content without scrolli
         disconnected = true
       }
     },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { Tabs, TabsTrigger } = await import("@aov/ui/components/tabs")
   const { ScrollableTabsList } = await import("../src/components/scrollable-tabs-list")
@@ -174,9 +160,6 @@ test("overflowing tabs reveal the selection and adjacent content without scrolli
     await act(async () => root.unmount())
     assert.equal(disconnected, true)
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

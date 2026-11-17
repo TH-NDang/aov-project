@@ -4,30 +4,13 @@ import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router"
+import { installWindow } from "./fixtures/dom"
 
 const dom = new JSDOM('<div id="root"></div><button id="origin">Origin</button>', {
   url: "http://localhost/",
   pretendToBeVisual: true,
 })
-for (const [key, value] of Object.entries({
-  React,
-  window: dom.window,
-  document: dom.window.document,
-  navigator: dom.window.navigator,
-  localStorage: dom.window.localStorage,
-  HTMLElement: dom.window.HTMLElement,
-  HTMLInputElement: dom.window.HTMLInputElement,
-  Node: dom.window.Node,
-  Element: dom.window.Element,
-  MutationObserver: dom.window.MutationObserver,
-  CustomEvent: dom.window.CustomEvent,
-  getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-  requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-  cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-  IS_REACT_ACT_ENVIRONMENT: true,
-})) {
-  Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-}
+installWindow(dom.window)
 
 const document = dom.window.document
 

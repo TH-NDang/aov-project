@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
+import { installWindow } from "./fixtures/dom"
 
 test("publication overview shows flags and hero heads, and only tabs with changes in the selected patch", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/game-configuration" })
@@ -28,32 +28,12 @@ test("publication overview shows flags and hero heads, and only tabs with change
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    DocumentFragment: dom.window.DocumentFragment,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    // The change table picks overall assessments with a Radix select, which looks for its form.
-    HTMLFormElement: dom.window.HTMLFormElement,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
     requestAnimationFrame: (callback: () => void) => setTimeout(callback, 0),
     cancelAnimationFrame: clearTimeout,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { GameConfigurationPage } = await import("../src/features/publishing/game-configuration-page")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { createRoot } = await import("react-dom/client")
@@ -366,9 +346,6 @@ test("publication overview shows flags and hero heads, and only tabs with change
     await logout()
     cache.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

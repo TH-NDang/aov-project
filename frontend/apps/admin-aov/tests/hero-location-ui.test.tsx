@@ -2,12 +2,12 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "fake-indexeddb/auto"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixturePreviousRevision } from "./fixtures/hero-workspace-data"
 import { draftRepository } from "../src/app/drafts/draft-store"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("hero links restore a side panel beyond loaded rows, survive reload, and preserve state in full view and browser history", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
@@ -43,30 +43,10 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
   dom.window.HTMLElement.prototype.scrollIntoView = () => {}
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    DocumentFragment: dom.window.DocumentFragment,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
   const { PublishingPage } = await import("../src/features/publishing/publishing-page")
@@ -93,14 +73,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
         </QueryClientProvider>,
       ),
     )
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 200 && !condition(); attempt++) {
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    }
-    assert.ok(condition(), "Expected URL-backed hero workspace was not reached")
-  }
+
   const click = (selector: string) => act(async () => document.querySelector<HTMLElement>(selector)!.click())
   try {
     await verifySession()
@@ -303,9 +276,6 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await logout()
     client.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

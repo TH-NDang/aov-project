@@ -6,6 +6,7 @@ import type { GameContent } from "@aov/community-contracts"
 import type { GameView } from "../src/features/esports/model/game-view"
 import type { TimelineEvent } from "../src/features/esports/model/timeline"
 import type { VodPlayerHandle } from "../src/features/esports/components/game/vod-player"
+import { installWindow } from "./fixtures/dom"
 
 async function withDom(
   run: (document: Document, render: (node: React.ReactNode) => Promise<void>) => Promise<void>,
@@ -24,11 +25,8 @@ async function withDom(
     CSS: { escape: (value: string) => value },
     IS_REACT_ACT_ENVIRONMENT: true,
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, values)
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   try {
@@ -37,10 +35,7 @@ async function withDom(
     })
   } finally {
     await act(async () => root.unmount())
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
+    restoreGlobals()
     dom.window.close()
   }
 }

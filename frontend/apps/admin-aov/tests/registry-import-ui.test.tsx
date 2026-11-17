@@ -4,6 +4,7 @@ import React, { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createMemoryRouter, RouterProvider } from "react-router"
+import { installWindow } from "./fixtures/dom"
 
 test("file selection previews named records without mutation until the explicit start action", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost:5175/tournaments" })
@@ -28,11 +29,8 @@ test("file selection previews named records without mutation until the explicit 
     cancelAnimationFrame: clearTimeout,
     IS_REACT_ACT_ENVIRONMENT: true,
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, values)
   const { createRoot } = await import("react-dom/client")
   const { tournamentApi } = await import("../src/features/tournaments/tournament-api")
   const { RegistryImportSheet } = await import("../src/features/tournaments/registry-import")
@@ -94,9 +92,6 @@ test("file selection previews named records without mutation until the explicit 
     tournamentApi.list = apiOriginal.list
     tournamentApi.create = apiOriginal.create
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

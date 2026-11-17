@@ -24,6 +24,14 @@ export type DomOptions = {
 
 export type Dom = { window: DOMWindow; document: Document; close: () => void }
 
+function storageOf(window: DOMWindow, name: "localStorage" | "sessionStorage") {
+  try {
+    return window[name]
+  } catch {
+    return undefined
+  }
+}
+
 /** Constructors and functions every page has; the app and its libraries reach for them as globals. */
 function browserBasics(window: DOMWindow): Record<string, unknown> {
   return {
@@ -31,8 +39,9 @@ function browserBasics(window: DOMWindow): Record<string, unknown> {
     window,
     document: window.document,
     navigator: window.navigator,
-    localStorage: window.localStorage,
-    sessionStorage: window.sessionStorage,
+    // A window without an address has an opaque origin and refuses storage; such tests never use it.
+    localStorage: storageOf(window, "localStorage"),
+    sessionStorage: storageOf(window, "sessionStorage"),
     HTMLElement: window.HTMLElement,
     HTMLAnchorElement: window.HTMLAnchorElement,
     HTMLButtonElement: window.HTMLButtonElement,
@@ -56,23 +65,62 @@ function browserBasics(window: DOMWindow): Record<string, unknown> {
     StorageEvent: window.StorageEvent,
     Image: window.Image,
     getComputedStyle: window.getComputedStyle.bind(window),
-    requestAnimationFrame: window.requestAnimationFrame.bind(window),
-    cancelAnimationFrame: window.cancelAnimationFrame.bind(window),
+    // A window made without pretendToBeVisual has no animation frames; those tests never asked for them.
+    requestAnimationFrame: window.requestAnimationFrame?.bind(window),
+    cancelAnimationFrame: window.cancelAnimationFrame?.bind(window),
     // Node's own channel would carry the session between test files that run at the same time.
     BroadcastChannel: undefined,
     IS_REACT_ACT_ENVIRONMENT: true,
   }
 }
 
-/** Installs a window as the global browser now; `close` puts the previous globals back. */
-export function openDom({ url = "http://localhost/", html = '<div id="root"></div>', globals }: DomOptions = {}): Dom {
-  const dom = new JSDOM(html, { url, pretendToBeVisual: true })
-  const values = { ...browserBasics(dom.window), ...globals?.(dom.window) }
+/**
+ * Installs `window` as the global browser with the basics every page has, plus `extra` (observers, fetch, overrides).
+ * Returns the function that puts the previous globals back. Tests that build their own window use it directly.
+ */
+export function installWindow(window: DOMWindow, extra: Record<string, unknown> = {}): () => void {
+  const values = { ...browserBasics(window), ...extra }
   const originals = new Map<string, PropertyDescriptor | undefined>()
   for (const [key, value] of Object.entries(values)) {
     originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
   }
+  return () => {
+    for (const [key, descriptor] of originals) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
+      else Reflect.deleteProperty(globalThis, key)
+    }
+  }
+}
+
+/**
+ * Runs `load` with `values` installed as globals and puts the previous ones back afterwards, for modules that read a
+ * global while they load, such as the session that opens a BroadcastChannel.
+ */
+export async function withGlobals<T>(values: Record<string, unknown>, load: () => Promise<T>): Promise<T> {
+  const originals = new Map<string, PropertyDescriptor | undefined>()
+  for (const [key, value] of Object.entries(values)) {
+    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
+    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
+  }
+  try {
+    return await load()
+  } finally {
+    for (const [key, descriptor] of originals) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
+      else Reflect.deleteProperty(globalThis, key)
+    }
+  }
+}
+
+/** A jsdom window at `url`, the way every Admin test builds one. */
+export const createWindow = (url = "http://localhost/", html = '<div id="root"></div>') =>
+  new JSDOM(html, { url, pretendToBeVisual: true })
+
+/** Installs a window as the global browser now; `close` puts the previous globals back. */
+export function openDom({ url, html, globals }: DomOptions = {}): Dom {
+  const dom = createWindow(url, html)
+  const restore = installWindow(dom.window, globals?.(dom.window))
 
   let closed = false
   return {
@@ -82,10 +130,7 @@ export function openDom({ url = "http://localhost/", html = '<div id="root"></di
       if (closed) return
       closed = true
       dom.window.close()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else Reflect.deleteProperty(globalThis, key)
-      }
+      restore()
     },
   }
 }
@@ -201,13 +246,15 @@ export async function flush(rounds = 3) {
 export type WaitOptions = { timeout?: number; message?: string }
 
 /**
- * Waits until `condition` returns something other than false, null or undefined, and returns it. A condition that
+ * Waits until `condition` returns something other than false, null or undefined, and returns it; a string second
+ * argument is the failure message. A condition that
  * throws counts as not met yet; when time runs out the last error, or `message`, fails the test.
  */
 export async function waitFor<T>(
   condition: () => T | false | null | undefined,
-  { timeout = 3000, message }: WaitOptions = {},
+  options: WaitOptions | string = {},
 ): Promise<T> {
+  const { timeout = 3000, message } = typeof options === "string" ? { message: options } : options
   const deadline = Date.now() + timeout
   let failure: unknown
   for (;;) {

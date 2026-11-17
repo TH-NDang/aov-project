@@ -3,6 +3,7 @@ import { test } from "node:test"
 import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
+import { installWindow } from "./fixtures/dom"
 
 async function withButton(
   props: Partial<React.ComponentProps<typeof import("../src/features/publishing/publish-button").PublishButton>>,
@@ -18,25 +19,8 @@ async function withButton(
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   // Radix and React Router decide how to behave when first imported, so they must see the DOM above.
   const { createRoot } = await import("react-dom/client")
   const { MemoryRouter } = await import("react-router")
@@ -76,9 +60,7 @@ async function withButton(
     })
   } finally {
     await act(async () => root.unmount())
-    for (const [key, descriptor] of originals)
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
+    restoreGlobals()
     dom.window.close()
   }
 }

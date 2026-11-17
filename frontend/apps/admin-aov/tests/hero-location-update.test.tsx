@@ -1,23 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { useHeroLocation } from "../src/features/publishing/use-hero-location"
+import { installWindow } from "./fixtures/dom"
 
 test("warning navigation keeps both tab and skill updates made in the same event", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   function Navigation() {
     const { update } = useHeroLocation()
     return (
@@ -47,9 +39,6 @@ test("warning navigation keeps both tab and skill updates made in the same event
     await act(async () => root.unmount())
     router.dispose()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

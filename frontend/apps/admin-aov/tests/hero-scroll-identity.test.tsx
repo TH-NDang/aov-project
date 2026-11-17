@@ -4,6 +4,7 @@ import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { installWindow } from "./fixtures/dom"
 
 async function createView(observe = true) {
   const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true, url: "http://localhost/hero/test" })
@@ -44,24 +45,10 @@ async function createView(observe = true) {
       )
     }
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     IntersectionObserver: observe ? FakeObserver : undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { HeroScrollIdentity } = await import("../src/features/publishing/hero-scroll-identity")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -119,10 +106,7 @@ async function createView(observe = true) {
       await act(async () => root.unmount())
       client.clear()
       dom.window.close()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else Reflect.deleteProperty(globalThis, key)
-      }
+      restoreGlobals()
     },
   }
 }

@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -9,6 +8,7 @@ import { HotkeysProvider } from "../src/app/hotkeys"
 import { PageTabPanels, PageTabsProvider, usePageTabs } from "../src/app/layout/page-tabs"
 import { mediaTabLocation, readMediaTab } from "../src/features/media/media-location"
 import type { Request } from "../src/features/publishing/publishing-api"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("media tab locations preserve filters and keep portrait as the canonical default", () => {
   const filters = new URLSearchParams("ruleset=rule&q=airi&tab=cover")
@@ -22,7 +22,7 @@ test("media tab locations preserve filters and keep portrait as the canonical de
 
 test("media query tabs restore back/forward state and legacy links never create separate page sessions", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/media/head?ruleset=rule&q=airi" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   const requests: string[] = []
   const request: Request = async <T,>(path: string) => {
     requests.push(path)
@@ -34,30 +34,13 @@ test("media query tabs restore back/forward state and legacy links never create 
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    localStorage: dom.window.localStorage,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    CustomEvent: dom.window.CustomEvent,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle,
+  restoreGlobals = installWindow(dom.window, {
     requestAnimationFrame: (callback: () => void) => setTimeout(callback, 0),
     cancelAnimationFrame: clearTimeout,
-    BroadcastChannel: undefined,
     fetch: async () => {
       throw new Error("Live requests are forbidden in media routing tests")
     },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { MediaWorkspace, LegacyMediaRedirect } = await import("../src/features/media/media-workspace")
   function SessionLinks() {
     const { sessions } = usePageTabs()
@@ -98,16 +81,7 @@ test("media query tabs restore back/forward state and legacy links never create 
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const document = dom.window.document
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 200 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
-      })
-    assert.ok(
-      condition(),
-      `${router.state.location.pathname}${router.state.location.search}; selected=${selected()}; ${document.body.textContent ?? ""}`,
-    )
-  }
+
   const selected = () => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim()
   const clickTab = async (label: string) => {
     const tab = Array.from(document.querySelectorAll('[role="tab"]')).find(
@@ -215,9 +189,6 @@ test("media query tabs restore back/forward state and legacy links never create 
       await new Promise((resolve) => setTimeout(resolve, 50))
     })
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

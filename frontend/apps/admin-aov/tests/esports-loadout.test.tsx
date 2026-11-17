@@ -15,6 +15,7 @@ import {
   replacedMainPicks,
   stepArcana,
 } from "../src/features/esports/model/loadout"
+import { installWindow } from "./fixtures/dom"
 
 const stone = (code: string, name: string, color: string, tier = 3): Reference => ({
   id: code,
@@ -185,11 +186,8 @@ async function withDom(
     },
     IS_REACT_ACT_ENVIRONMENT: true,
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(window, values)
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(window.document.getElementById("root")!)
   const settle = () => act(async () => new Promise<void>((resolve) => setTimeout(resolve, 60)))
@@ -208,10 +206,7 @@ async function withDom(
     })
   } finally {
     await act(async () => root.unmount())
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
+    restoreGlobals()
     window.close()
   }
 }

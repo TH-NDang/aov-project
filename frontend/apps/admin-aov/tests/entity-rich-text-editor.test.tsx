@@ -23,6 +23,7 @@ import {
   referenceInputValue,
   referenceInputSelection,
 } from "./fixtures/reference-input"
+import { installWindow } from "./fixtures/dom"
 
 const entities: EntityReference[] = [
   {
@@ -172,28 +173,8 @@ test("editor serialization preserves source, Unicode, selection boundaries and s
 
 test("editor mention keyboard, IME, selection, paste, undo/redo and reopening retain exact text", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    Event: dom.window.Event,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { EntityRichTextEditor } = await import("@aov/ui/components/entity-rich-text-editor")
   let saved = ""
@@ -326,7 +307,13 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     let intersections!: IntersectionObserverCallback
     let observerCount = 0
     let observerRoot: Element | Document | null | undefined
-    originals.set("IntersectionObserver", Object.getOwnPropertyDescriptor(globalThis, "IntersectionObserver"))
+    const previousObserver = Object.getOwnPropertyDescriptor(globalThis, "IntersectionObserver")
+    const restoreBase = restoreGlobals
+    restoreGlobals = () => {
+      if (previousObserver) Object.defineProperty(globalThis, "IntersectionObserver", previousObserver)
+      else Reflect.deleteProperty(globalThis, "IntersectionObserver")
+      restoreBase()
+    }
     Object.defineProperty(globalThis, "IntersectionObserver", {
       configurable: true,
       value: class {
@@ -383,10 +370,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     await act(async () => root.unmount())
     await new Promise((resolve) => setTimeout(resolve, 30))
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 

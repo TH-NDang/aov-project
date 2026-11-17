@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Skill, Skills } from "../src/features/publishing/types"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("focused skill editing preserves forms, effects and translations while adding unique skills and selecting media", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/fixture-hero", pretendToBeVisual: true })
@@ -52,30 +53,10 @@ test("focused skill editing preserves forms, effects and translations while addi
       })
     return fixture.fetcher(input, init)
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    CustomEvent: dom.window.CustomEvent,
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { SectionEditor } = await import("../src/features/publishing/section-editor")
@@ -167,13 +148,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     const edit = editor().querySelector<HTMLButtonElement>('[aria-label="Sửa Mô tả"]')
     if (edit) await act(async () => edit.click())
   }
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 100 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
-      })
-    assert.ok(condition())
-  }
+
   try {
     assert.equal(nextSkillKey(original.skills), "skill-4")
     assert.equal(nextSkillKey([original.skills[0], original.skills[1]]), "skill-2")
@@ -425,9 +400,6 @@ test("focused skill editing preserves forms, effects and translations while addi
     await logout()
     await new Promise((resolve) => setTimeout(resolve, 20))
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

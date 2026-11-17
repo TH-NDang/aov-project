@@ -13,6 +13,7 @@ import {
   parseGameTime,
   selectionName,
 } from "../src/features/tournaments/tournament-model"
+import { installWindow } from "./fixtures/dom"
 
 const series: SeriesContent = {
   code: "final",
@@ -116,11 +117,8 @@ async function withUi(
     IntersectionObserver: intersections.Observer,
     IS_REACT_ACT_ENVIRONMENT: true,
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, values)
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document
@@ -150,10 +148,7 @@ async function withUi(
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 

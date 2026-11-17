@@ -14,6 +14,7 @@ import {
 import type { GameView } from "../src/features/esports/model/game-view"
 import { moveMark, observationMarks } from "../src/features/esports/model/observation-marks"
 import type { GameChapter } from "../src/features/esports/model/series-vod"
+import { installWindow } from "./fixtures/dom"
 
 const lanes = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"] as const
 const player = (lane: Participant["lane"], overrides: Partial<Participant> = {}): Participant => ({
@@ -166,11 +167,8 @@ async function withDom(run: (document: Document, render: (node: React.ReactNode)
     CSS: { escape: (value: string) => value },
     IS_REACT_ACT_ENVIRONMENT: true,
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(window, values)
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(window.document.getElementById("root")!)
   try {
@@ -179,10 +177,7 @@ async function withDom(run: (document: Document, render: (node: React.ReactNode)
     })
   } finally {
     await act(async () => root.unmount())
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
+    restoreGlobals()
     window.close()
   }
 }

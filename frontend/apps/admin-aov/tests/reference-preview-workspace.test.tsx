@@ -4,36 +4,19 @@ import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
+import { installWindow } from "./fixtures/dom"
 
 test("the try-out tab writes in the shared description box without a second pane", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/terminology", pretendToBeVisual: true })
   const document = dom.window.document
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    Element: dom.window.Element,
-    MutationObserver: dom.window.MutationObserver,
-    Event: dom.window.Event,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
     ResizeObserver: class {
       observe() {}
       disconnect() {}
     },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { ReferencePreviewWorkspace } = await import("../src/features/terminology/reference-preview-workspace")
   const root = createRoot(document.getElementById("root")!)
@@ -78,10 +61,7 @@ test("the try-out tab writes in the shared description box without a second pane
     assert.match(referenceInputValue(referenceInput(document.body)), /^Nội dung đang viết/)
   } finally {
     await act(async () => root.unmount())
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
+    restoreGlobals()
     dom.window.close()
   }
 })

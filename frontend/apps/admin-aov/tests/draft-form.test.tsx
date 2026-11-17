@@ -2,13 +2,13 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "fake-indexeddb/auto"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { draftKey, draftRepository } from "../src/app/drafts/draft-store"
 import type { PublicationOverview } from "../src/features/publishing/publication-overview"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("season forms restore invalid input and saving one market preserves another market's draft", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/game-configuration" })
@@ -67,31 +67,11 @@ test("season forms restore invalid input and saving one market preserves another
     }
     return fixture.fetcher(input, init)
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    DocumentFragment: dom.window.DocumentFragment,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLFormElement: dom.window.HTMLFormElement,
-    Event: dom.window.Event,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     FormData: dom.window.FormData,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
     fetch: fetcher,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { SeasonSetup } = await import("../src/features/publishing/season-setup")
   const { ScheduleForm } = await import("../src/features/publishing/shared-version-setup")
@@ -118,13 +98,7 @@ test("season forms restore invalid input and saving one market preserves another
       Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(input(name), value)
       input(name).dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
-  const waitFor = async (check: () => boolean) => {
-    for (let i = 0; i < 200 && !check(); i++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(check(), "Expected draft form state was not reached")
-  }
+
   try {
     await verifySession()
     await mount()
@@ -337,9 +311,6 @@ test("season forms restore invalid input and saving one market preserves another
     await logout()
     cache.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

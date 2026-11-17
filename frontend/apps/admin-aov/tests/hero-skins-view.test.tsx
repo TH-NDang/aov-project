@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { createMemoryRouter, RouterProvider } from "react-router"
@@ -10,6 +9,7 @@ import type { CaptureGroup, CaptureImage } from "../src/features/publishing/patc
 import type { HeroShop, SkinAcquisition } from "../src/features/publishing/publishing-api"
 import type { Skin } from "../src/features/publishing/types"
 import type { PatchCaptureWorkspace } from "../src/features/publishing/use-patch-captures"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -123,31 +123,10 @@ async function view(
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    Image: dom.window.Image,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: dispatchFetch,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { HeroSkinsView } = await import("../src/features/publishing/hero-skins-view")
@@ -185,13 +164,7 @@ async function view(
     assert.ok(node, "Nothing to click")
     await act(async () => (node as HTMLElement).click())
   }
-  const waitFor = async (condition: () => boolean, label = "Expected state was not reached") => {
-    for (let attempt = 0; attempt < 200 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), label)
-  }
+
   const button = (label: string) =>
     [...document.querySelectorAll("button")].find(
       (node) => node.getAttribute("aria-label") === label || node.textContent?.trim() === label,
@@ -229,10 +202,7 @@ async function view(
       client.clear()
       await logout()
       dom.window.close()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else Reflect.deleteProperty(globalThis, key)
-      }
+      restoreGlobals()
     },
   }
 }

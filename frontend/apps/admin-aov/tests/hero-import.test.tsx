@@ -1,26 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Request } from "../src/features/publishing/publishing-api"
+import { installWindow } from "./fixtures/dom"
 
 test("import wizard carries patch context and never selects rows without a known baseline", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { HeroImport } = await import("../src/features/publishing/hero-import")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -144,28 +133,14 @@ test("import wizard carries patch context and never selects rows without a known
     await act(async () => root.unmount())
     cache.clear()
     dom.window.close()
-    for (const [key, value] of originals) {
-      if (value) Object.defineProperty(globalThis, key, value)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 
 test("folder import uploads only mapped hero, skill and skin images after confirmation", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { HeroImport } = await import("../src/features/publishing/hero-import")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -329,9 +304,6 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     await act(async () => root.unmount())
     cache.clear()
     dom.window.close()
-    for (const [key, value] of originals) {
-      if (value) Object.defineProperty(globalThis, key, value)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

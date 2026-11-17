@@ -4,13 +4,15 @@ import React, { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { DocumentView, TeamContent } from "@aov/community-contracts"
+import { installWindow, withGlobals } from "./fixtures/dom"
 
-const channel = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-const { activityLabel, recordReason, regionsNamedBy, tournamentTiming } =
-  await import("../src/features/tournaments/record-reason")
-const { createTournamentApi, tournamentApi } = await import("../src/features/tournaments/tournament-api")
-if (channel) Object.defineProperty(globalThis, "BroadcastChannel", channel)
+const [{ activityLabel, recordReason, regionsNamedBy, tournamentTiming }, { createTournamentApi, tournamentApi }] =
+  await withGlobals({ BroadcastChannel: undefined }, () =>
+    Promise.all([
+      import("../src/features/tournaments/record-reason"),
+      import("../src/features/tournaments/tournament-api"),
+    ]),
+  )
 
 const NOW = new Date("2026-11-07T05:00:00Z")
 const ZONE = "Asia/Ho_Chi_Minh"
@@ -112,18 +114,12 @@ async function withDom(run: (document: Document, window: JSDOM["window"]) => Pro
     },
     IS_REACT_ACT_ENVIRONMENT: true,
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, values)
   try {
     await run(dom.window.document, dom.window)
   } finally {
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
+    restoreGlobals()
     dom.window.close()
   }
 }

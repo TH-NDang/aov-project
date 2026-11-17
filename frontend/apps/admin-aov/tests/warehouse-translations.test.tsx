@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { SecondaryContent } from "../src/features/warehouse/secondary-editor"
 import type { WarehouseEntry, WarehouseRevision } from "../src/features/warehouse/warehouse-types"
 import type { SpellContent, ArcanaContent, ItemContent, EnchantmentContent } from "@aov/ui/lib/warehouse-content"
+import { installWindow } from "./fixtures/dom"
 
 let activeRequests: string[] = []
 let removalEvents: Record<string, unknown>[] = []
@@ -150,7 +151,7 @@ async function withUi(
   const requests: string[] = []
   activeRequests = requests
   removalEvents = []
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   const fetcher: typeof fetch = async (input, init) => {
     const url = new URL(String(input), "http://localhost")
     const path = url.pathname.replace("/api/wiki/v1", "")
@@ -279,23 +280,7 @@ async function withUi(
   }
   // Session clients retain their fetch dependency, so route it to the active fixture between tests.
   activeFetcher = fetcher
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
-    HTMLSelectElement: dom.window.HTMLSelectElement,
-    HTMLFormElement: dom.window.HTMLFormElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    DocumentFragment: dom.window.DocumentFragment,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle,
+  restoreGlobals = installWindow(dom.window, {
     requestAnimationFrame: (callback: () => void) => setTimeout(callback, 0),
     cancelAnimationFrame: clearTimeout,
     ResizeObserver: class {
@@ -303,13 +288,8 @@ async function withUi(
       unobserve() {}
       disconnect() {}
     },
-    BroadcastChannel: undefined,
     fetch: fixtureFetch,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { defaultSettings } = await import("../src/features/terminology/settings-api")
@@ -410,10 +390,7 @@ async function withUi(
     await logout()
     await new Promise((resolve) => setTimeout(resolve, 20))
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 

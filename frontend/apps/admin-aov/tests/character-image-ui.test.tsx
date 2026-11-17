@@ -8,13 +8,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import type { Request } from "../src/features/publishing/publishing-api"
 import type { CharacterImageGroup, SkinBadgeRecord } from "../src/features/media/character-image-api"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("backend media groups retain missing main rows, select alternatives with expected version and protect published bindings", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/portraits" })
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   const saves: Record<string, unknown>[] = []
   const content = structuredClone(fixtureContent)
   content.MEDIA_BINDINGS = {
@@ -136,20 +137,7 @@ test("backend media groups retain missing main rows, select alternatives with ex
       return Response.json({ id: path.split("/").at(-1), currentUrl: "/fixture.png", provenance: [] })
     throw new Error(`Unexpected fixture fetch: ${path}`)
   }
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLSelectElement: dom.window.HTMLSelectElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle,
+  restoreGlobals = installWindow(dom.window, {
     requestAnimationFrame: (cb: () => void) => setTimeout(cb, 0),
     cancelAnimationFrame: clearTimeout,
     ResizeObserver: class {
@@ -157,13 +145,8 @@ test("backend media groups retain missing main rows, select alternatives with ex
       unobserve() {}
       disconnect() {}
     },
-    BroadcastChannel: undefined,
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { CharacterImagesPage } = await import("../src/features/media/character-images-page")
   const { BadgesPage } = await import("../src/features/media/badges-page")
@@ -173,13 +156,7 @@ test("backend media groups retain missing main rows, select alternatives with ex
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const document = dom.window.document
-  const waitFor = async (condition: () => boolean) => {
-    for (let count = 0; count < 150 && !condition(); count++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), document.body.textContent ?? "")
-  }
+
   const click = async (button: Element | undefined | null) => {
     assert.ok(button)
     await act(async () => (button as HTMLElement).click())
@@ -264,9 +241,6 @@ test("backend media groups retain missing main rows, select alternatives with ex
       await new Promise((resolve) => setTimeout(resolve, 50))
     })
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

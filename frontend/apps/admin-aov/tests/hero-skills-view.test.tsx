@@ -25,6 +25,7 @@ import {
 } from "@aov/ui/lib/entity-rich-text"
 import { analyzeStat, statDistribution } from "../src/features/publishing/hero-stat-analysis"
 import { combatAttributeRows, type StatDefault, type StatSample } from "../src/features/publishing/combat-attributes"
+import { installWindow } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -730,29 +731,10 @@ async function createView() {
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: dispatchFetch,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { HeroSkillsView } = await import("../src/features/publishing/hero-skills-view")
@@ -784,10 +766,7 @@ async function createView() {
       client.clear()
       await logout()
       dom.window.close()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else Reflect.deleteProperty(globalThis, key)
-      }
+      restoreGlobals()
     },
   }
 }

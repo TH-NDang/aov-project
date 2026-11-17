@@ -3,31 +3,20 @@ import assert from "node:assert/strict"
 import { JSDOM } from "jsdom"
 import { createPageTabPreviewStore } from "../src/app/layout/page-tab-preview-store"
 import { createPreviewFilter, observePageTabPreview } from "../src/app/layout/page-tab-preview"
+import { installWindow } from "./fixtures/dom"
 
 function setupDom() {
   const dom = new JSDOM('<div id="panel"><div id="scroll"><div id="row"></div></div></div>', {
     pretendToBeVisual: true,
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    window: dom.window,
-    document: dom.window.document,
-    Element: dom.window.Element,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   return {
     dom,
     panel: dom.window.document.getElementById("panel")!,
     cleanup() {
       dom.window.close()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else Reflect.deleteProperty(globalThis, key)
-      }
+      restoreGlobals()
     },
   }
 }

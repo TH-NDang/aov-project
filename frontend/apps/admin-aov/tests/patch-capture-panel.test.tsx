@@ -33,6 +33,7 @@ import {
   fetchShopCaptures,
   findHeroCode,
 } from "../src/features/publishing/use-patch-captures"
+import { installWindow } from "./fixtures/dom"
 
 /** A patch picture's id is the SHA-256 of its bytes, which is also what its presigned link is asked by. */
 const capture = (id: string, section: CaptureImage["section"], extra: Partial<CaptureImage> = {}): CaptureImage => ({
@@ -414,7 +415,7 @@ async function withPanel(run: (ui: Awaited<ReturnType<typeof mount>>) => Promise
 
 async function mount() {
   const dom = new JSDOM('<!doctype html><div id="root"></div>', { url: "http://localhost/hero/a" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   // The panel asks the backend for presigned links; this one signs every picture it is asked about.
   const restoreFetch = setFetch(async (input, init) => {
     const path = String(input).replace("/api/wiki/v1", "")
@@ -427,20 +428,7 @@ async function mount() {
     return Response.json({ code: "NOT_FOUND" }, { status: 404 })
   })
   const client = new QueryClient()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    localStorage: dom.window.localStorage,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { PatchCapturePanel, PatchCaptureLink, PatchCaptureToggle } =
     await import("../src/features/publishing/patch-capture-panel")
@@ -561,9 +549,7 @@ async function mount() {
       await act(async () => root.unmount())
       client.clear()
       restoreFetch()
-      for (const [key, descriptor] of originals)
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else delete (globalThis as Record<string, unknown>)[key]
+      restoreGlobals()
       dom.window.close()
     },
   }

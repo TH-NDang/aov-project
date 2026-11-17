@@ -1,14 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { MediaDeletion } from "../src/features/media/media-deletion"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("image deletion requires verified references and confirmation, survives reload and refreshes the library", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/image-management", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   let capabilities = ["catalog:read", "media:write"]
   let competitionCapabilities = ["tournament:read", "tournament:write"]
   let references = 1
@@ -55,39 +55,16 @@ test("image deletion requires verified references and confirmation, survives rel
     }
     throw new Error(`Unexpected request: ${path}`)
   }
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle,
-    BroadcastChannel: undefined,
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { ImageDeleteAction } = await import("../src/features/media/image-delete-action")
   const { createRoot } = await import("react-dom/client")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 200 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), document.body.textContent ?? "")
-  }
+
   const button = (text: string, scope: ParentNode = document) =>
     [...scope.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent?.trim() === text)!
   const dialog = () => document.querySelector('[role="dialog"]')!
@@ -194,9 +171,6 @@ test("image deletion requires verified references and confirmation, survives rel
     await logout()
     client.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

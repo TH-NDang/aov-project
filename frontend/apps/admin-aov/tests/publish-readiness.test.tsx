@@ -23,6 +23,7 @@ import {
 import type { Revision } from "../src/features/publishing/types"
 import { createHeroFixture, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
+import { installWindow } from "./fixtures/dom"
 
 const standard = "standard"
 const revision = (
@@ -274,29 +275,11 @@ async function withDocument(
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    DocumentFragment: dom.window.DocumentFragment,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: routedFetch,
-    BroadcastChannel: undefined,
     IntersectionObserver: observer,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const reactRoot = createRoot(dom.window.document.getElementById("root")!)
@@ -337,10 +320,7 @@ async function withDocument(
     await act(async () => reactRoot.unmount())
     await logout()
     cache.clear()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
+    restoreGlobals()
     dom.window.close()
   }
 }

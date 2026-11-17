@@ -1,12 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import type { UserProfile } from "../src/features/users/user-api"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("users load on scroll, retain rows after errors and restart server search without pagination controls", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/users" })
@@ -60,24 +60,11 @@ test("users load on scroll, retain rows after errors and restart server search w
       totalElements: matching.length,
     })
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    getComputedStyle: dom.window.getComputedStyle,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     IntersectionObserver: intersections.Observer,
-    BroadcastChannel: undefined,
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { UsersPage } = await import("../src/features/users/users-page")
@@ -88,13 +75,7 @@ test("users load on scroll, retain rows after errors and restart server search w
   })
   const rows = () => [...document.querySelectorAll('a[aria-label^="Xem hồ sơ "]')]
   const sentinel = () => document.querySelector<HTMLElement>('[aria-label="Đang tải thêm người dùng…"]')!
-  const waitFor = async (condition: () => boolean, message: string) => {
-    for (let attempt = 0; attempt < 400 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
-      })
-    assert.ok(condition(), message)
-  }
+
   const fill = async (value: string) =>
     act(async () => {
       const input = document.querySelector<HTMLInputElement>('input[aria-label="Tìm người dùng theo tên"]')!
@@ -171,9 +152,6 @@ test("users load on scroll, retain rows after errors and restart server search w
     cache.clear()
     await logout()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

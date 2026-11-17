@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -8,6 +7,7 @@ import { MemoryRouter } from "react-router"
 import { catalogOverview, createHeroCatalogFixture } from "./fixtures/hero-catalog-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import type { CatalogFilter } from "../src/features/publishing/catalog-context"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("catalog transport encodes search and keeps every server filter in its cache identity", async () => {
   const { createPublishingApi, heroCatalogKey } = await import("../src/features/publishing/publishing-api")
@@ -57,29 +57,10 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const original = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    DocumentFragment: dom.window.DocumentFragment,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle,
+  const restoreGlobals = installWindow(dom.window, {
     fetch: fixture.fetcher,
-    BroadcastChannel: undefined,
     IntersectionObserver: intersections.Observer,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    original.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { HeroCatalog } = await import("../src/features/publishing/hero-catalog")
@@ -104,13 +85,7 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
         </MemoryRouter>,
       )
     })
-  const waitFor = async (condition: () => boolean, message: string) => {
-    for (let attempt = 0; attempt < 400 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
-      })
-    assert.ok(condition(), message)
-  }
+
   const codes = () =>
     [...document.querySelectorAll<HTMLButtonElement>('tbody button[aria-label^="Xem tướng "]')].map((button) =>
       button.getAttribute("aria-label")!.replace("Xem tướng ", ""),
@@ -364,9 +339,6 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
     cache.clear()
     await logout()
     dom.window.close()
-    for (const [key, descriptor] of original) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

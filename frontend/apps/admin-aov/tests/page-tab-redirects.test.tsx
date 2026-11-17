@@ -1,28 +1,17 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act, useEffect } from "react"
 import { createMemoryRouter, Navigate, RouterProvider, useNavigate } from "react-router"
 import { HotkeysProvider } from "../src/app/hotkeys"
 import { PageTabPanels, PageTabsProvider, replacingPageTab, usePageTabs } from "../src/app/layout/page-tabs"
 import type { RouteHandle } from "../src/app/layout/site-header"
+import { installWindow } from "./fixtures/dom"
 
 test("redirect-only routes execute without opening ghost tabs or remounting existing page sessions", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/heroes/airi?tab=skins" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    localStorage: dom.window.localStorage,
-    HTMLElement: dom.window.HTMLElement,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const observedTabs: string[][] = []
   function Tabs() {
     const { sessions } = usePageTabs()
@@ -110,28 +99,14 @@ test("redirect-only routes execute without opening ghost tabs or remounting exis
     await act(async () => root.unmount())
     router.dispose()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 
 test("a redirect that replaces its page takes over that page's tab in place", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/other" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    localStorage: dom.window.localStorage,
-    HTMLElement: dom.window.HTMLElement,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   function Tabs() {
     const { sessions } = usePageTabs()
     return (
@@ -205,9 +180,6 @@ test("a redirect that replaces its page takes over that page's tab in place", as
     await act(async () => root.unmount())
     router.dispose()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

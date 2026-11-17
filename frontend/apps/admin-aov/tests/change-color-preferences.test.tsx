@@ -1,28 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import type { Root } from "react-dom/client"
+import { installWindow } from "./fixtures/dom"
 
 async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    Element: dom.window.Element,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     ResizeObserver: class {
       observe() {}
       unobserve() {}
@@ -31,11 +17,7 @@ async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
     fetch: async () => {
       throw new Error("Change color preferences must not request live data")
     },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   try {
@@ -43,10 +25,7 @@ async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 
