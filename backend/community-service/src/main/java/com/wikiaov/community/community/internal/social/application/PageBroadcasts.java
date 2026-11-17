@@ -1,5 +1,6 @@
 package com.wikiaov.community.community.internal.social.application;
 
+import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.*;
 import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.pages.application.*;
@@ -32,7 +33,7 @@ public class PageBroadcasts {
 
     public Live start(UUID pageId, String url, String title) {
         var actor = CommunityActor.require();
-        PageRules.live(url, title);
+        PageChecks.live(url, title);
         var page = access.lock(pageId);
         access.require(pageId, actor, "OWNER", "EDITOR");
 
@@ -42,7 +43,7 @@ public class PageBroadcasts {
     @PreAuthorize("hasAuthority('tournament:write') and hasAuthority('tournament:read')")
     public Live startAsEditor(UUID pageId, String url, String title) {
         var actor = CommunityActor.require();
-        PageRules.live(url, title);
+        PageChecks.live(url, title);
         var page = access.lock(pageId);
 
         return begin(page, actor, url, title);

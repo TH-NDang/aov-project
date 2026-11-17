@@ -1,7 +1,7 @@
 package com.wikiaov.community.community.internal.pages.application;
 
+import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.domain.PageContent;
-import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.pages.persistence.PageRecord;
 import com.wikiaov.community.community.internal.pages.persistence.PageRepository;
 import java.util.*;
@@ -28,7 +28,7 @@ public class PageRosterProfiles {
         for (var id : ids) {
             var person = people.get(id);
             if (person == null || !Set.of("PLAYER", "PERSON").contains(person.getKind()))
-                throw PageRules.invalid("Team roster members must link an existing individual profile.");
+                throw PageChecks.invalid("Team roster members must link an existing individual profile.");
         }
 
         var roster = content.roster().stream().map(member -> member.pageId() == null

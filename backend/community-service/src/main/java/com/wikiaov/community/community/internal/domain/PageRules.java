@@ -1,7 +1,5 @@
 package com.wikiaov.community.community.internal.domain;
 
-import com.wikiaov.community.community.internal.application.PageErrorCode;
-import com.wikiaov.community.platform.ApiException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -140,7 +138,14 @@ public final class PageRules {
             throw invalid("End date precedes start date.");
     }
 
-    public static ApiException invalid(String detail) {
-        return new ApiException(PageErrorCode.PAGE_INVALID_CONTENT, detail);
+    public static InvalidPage invalid(String detail) {
+        return new InvalidPage(detail);
+    }
+
+    /** A page, post or broadcast breaks a rule; the detail says which. */
+    public static final class InvalidPage extends RuntimeException {
+        InvalidPage(String detail) {
+            super(detail);
+        }
     }
 }

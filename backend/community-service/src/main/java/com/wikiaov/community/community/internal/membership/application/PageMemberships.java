@@ -1,5 +1,6 @@
 package com.wikiaov.community.community.internal.membership.application;
 
+import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.*;
 import com.wikiaov.community.community.internal.domain.*;
 import com.wikiaov.community.community.internal.membership.persistence.*;
@@ -36,11 +37,11 @@ public class PageMemberships {
 
     public Claim request(UUID pageId, String evidence) {
         var actor = CommunityActor.require();
-        PageRules.text(evidence, 4000, true);
+        PageChecks.text(evidence, 4000, true);
         access.lock(pageId);
         access.social(pageId);
         if (!access.role(pageId, actor).isEmpty())
-            throw PageRules.invalid("This account already manages the page.");
+            throw PageChecks.invalid("This account already manages the page.");
         var row = new PageClaim();
         row.setPageId(pageId);
         row.setActor(actor.key());
@@ -68,19 +69,19 @@ public class PageMemberships {
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
     public Claim decide(UUID id, Long version, boolean approve, String resolution) {
         var actor = CommunityActor.require();
-        PageRules.text(resolution, 2000, true);
+        PageChecks.text(resolution, 2000, true);
         var initial = claims.findById(id).orElseThrow(PageAccess::missing);
         access.lock(initial.getPageId());
         var row = claims.findById(id).orElseThrow(PageAccess::missing);
         PageAccess.version(row.getVersion(), version);
         if (!row.getStatus().equals("PENDING"))
-            throw PageRules.invalid("The claim was already reviewed.");
+            throw PageChecks.invalid("The claim was already reviewed.");
         if (row.getActor().equals(actor.key()))
-            throw PageRules.invalid("A different administrator must review this claim.");
+            throw PageChecks.invalid("A different administrator must review this claim.");
         if (approve) {
             PageAccess.requireCommunity(access.read(row.getPageId()));
             if (members.existsByPageIdAndRole(row.getPageId(), "OWNER"))
-                throw PageRules.invalid("The page already has an owner. Resolve the ownership dispute first.");
+                throw PageChecks.invalid("The page already has an owner. Resolve the ownership dispute first.");
             add(row.getPageId(), row.getActor(), row.getName(), "OWNER");
         }
         row.setStatus(approve ? "APPROVED" : "REJECTED");
@@ -108,7 +109,7 @@ public class PageMemberships {
         access.lock(pageId);
         access.require(pageId, actor, "OWNER");
         if (role == null || role == PageContent.Role.OWNER)
-            throw PageRules.invalid("Invite an editor or moderator; use ownership transfer for owners.");
+            throw PageChecks.invalid("Invite an editor or moderator; use ownership transfer for owners.");
 
         var issued = issue(pageId, role.name());
         access.audit(pageId, actor, "PAGE_MEMBER_INVITED");
@@ -158,20 +159,20 @@ public class PageMemberships {
 
     public UUID accept(String token) {
         var actor = CommunityActor.require();
-        PageRules.text(token, 200, true);
+        PageChecks.text(token, 200, true);
         var initial = invitations.findByTokenHash(hash(token)).orElseThrow(PageAccess::missing);
         PageAccess.requireCommunity(access.lock(initial.getPageId()));
         var row = invitations.findByTokenHash(hash(token)).orElseThrow(PageAccess::missing);
         var handover = row.getRole().equals("OWNER");
         var owned = members.existsByPageIdAndRole(row.getPageId(), "OWNER");
         if (row.getAcceptedAt() != null || !row.getExpiresAt().isAfter(Instant.now()))
-            throw PageRules.invalid("Invitation expired or was already used.");
+            throw PageChecks.invalid("Invitation expired or was already used.");
         if (handover && owned)
-            throw PageRules.invalid("The page already has an owner.");
+            throw PageChecks.invalid("The page already has an owner.");
         if (!handover && !owned)
-            throw PageRules.invalid("The page no longer has a verified owner.");
+            throw PageChecks.invalid("The page no longer has a verified owner.");
         if (members.findByPageIdAndActor(row.getPageId(), actor.key()).isPresent())
-            throw PageRules.invalid("This account already manages the page.");
+            throw PageChecks.invalid("This account already manages the page.");
 
         add(row.getPageId(), actor.key(), actor.name(), row.getRole());
         row.setAcceptedAt(Instant.now());
@@ -190,7 +191,7 @@ public class PageMemberships {
         if (!member.getPageId().equals(pageId))
             throw PageAccess.missing();
         if (member.getRole().equals("OWNER") && !actor.publisher())
-            throw PageRules.invalid("Transfer ownership before leaving the page.");
+            throw PageChecks.invalid("Transfer ownership before leaving the page.");
         members.delete(member);
         if (member.getRole().equals("OWNER")) {
             members.findByPageId(pageId).forEach(members::delete);
@@ -207,7 +208,7 @@ public class PageMemberships {
         access.require(pageId, actor, "OWNER");
         var target = members.findById(memberId).orElseThrow(PageAccess::missing);
         if (!target.getPageId().equals(pageId) || target.getActor().equals(actor.key()))
-            throw PageRules.invalid("Choose another member of this page.");
+            throw PageChecks.invalid("Choose another member of this page.");
         var owner = members.findByPageIdAndActor(pageId, actor.key()).orElseThrow(PageAccess::missing);
         owner.setRole("EDITOR");
         members.flush();
