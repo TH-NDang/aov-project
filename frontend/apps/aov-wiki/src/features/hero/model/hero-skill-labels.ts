@@ -1,3 +1,4 @@
+import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 /**
  * Skill data keeps some labels exactly as the game shows them in Vietnamese, with no translation of their own: the rows
  * of the level table, the cooldown and cost lines, and the names of forms and states. English readers get them through
@@ -251,7 +252,7 @@ function withinTags(value: string, translate: (text: string) => string | undefin
   return translated === undefined ? value : `${match[1]}${translated}${match[3]}`
 }
 
-const english = (locale: string) => locale.startsWith("en")
+const english = isEnglishLocale
 
 /** A row label of the level table, such as the base damage row. */
 export function localizedRankLabel(label: string, locale: string) {

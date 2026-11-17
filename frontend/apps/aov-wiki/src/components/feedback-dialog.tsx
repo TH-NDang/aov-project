@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@aov/ui/components/public-overlay"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { useWikiContext, useWikiText } from "../context/wiki-context"
 import { WikiIcon } from "./wiki-icon"
 import { ContactRequestError, sendContactRequest } from "../lib/contact-request"
 import { FeedbackImages } from "./feedback-images"
@@ -71,7 +71,7 @@ function Feedback({
   path,
 }: FeedbackProps & { path: string }) {
   const scope = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const text = useWikiText()
   const title = target ? text("Đề xuất chỉnh sửa", "Suggest an edit") : text("Góp ý trang này", "Page feedback")
   const [open, setOpen] = useState(false)
   const [field, setField] = useState(0)
@@ -336,7 +336,7 @@ function Feedback({
       <DialogContent className="wiki-feedback-dialog" showCloseButton={false}>
         <div className="wiki-feedback-heading">
           <DialogTitle>{title}</DialogTitle>
-          <DialogClose className="wiki-feedback-close" aria-label={scope.t("close")} disabled={busy}>
+          <DialogClose className="wiki-feedback-close" aria-label={text("Đóng", "Close")} disabled={busy}>
             <WikiIcon name="close" size={18} />
           </DialogClose>
         </div>

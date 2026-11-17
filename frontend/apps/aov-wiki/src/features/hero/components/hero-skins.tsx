@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { WikiIcon } from "../../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../../context/wiki-context"
+import { useWikiContext, useWikiText, wikiText } from "../../../context/wiki-context"
 import { heroSkinsQuery, type SkinEntry } from "../../../lib/skin-api"
 import { groupSkins } from "../../../lib/skin-groups"
 import { previewSource, SkinArtwork, SkinBadgeImage, SkinPreview, skinId } from "../../../components/skin-preview"
@@ -89,7 +89,7 @@ function SkinCaption({ skin, position, total }: { skin: SkinEntry; position: num
  */
 export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string }) {
   const scope = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const text = useWikiText()
   // A form shows the skins every form shares and its own, not those of the other forms (ADR-024).
   const library = owner ?? hero.code
   const query = useQuery(heroSkinsQuery(currentScope(scope), library))
@@ -151,7 +151,7 @@ export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string })
         <p className="wiki-handbook-notice" role="status">
           {text("Chưa tải được trang phục.", "The skins could not be loaded.")}{" "}
           <button type="button" onClick={() => void query.refetch()}>
-            {scope.t("retry")}
+            {wikiText(scope.locale, "Thử lại", "Retry")}
           </button>
         </p>
       ) : (

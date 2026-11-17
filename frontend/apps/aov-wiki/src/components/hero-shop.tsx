@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { useWikiContext, useWikiText } from "../context/wiki-context"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
 import { heroShopQuery } from "../lib/hero-api"
 
@@ -9,8 +9,8 @@ import { heroShopQuery } from "../lib/hero-api"
  * A form sold on its own has its own price; otherwise it shows the price of the hero that holds it (ADR-024).
  */
 export function HeroPriceTag({ heroId, fallbackHeroId }: { heroId: string; fallbackHeroId?: string }) {
-  const { locale, region } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { region } = useWikiContext()
+  const text = useWikiText()
   const { data } = useQuery(heroShopQuery(heroId, region))
   const fallback = useQuery({
     ...heroShopQuery(fallbackHeroId ?? heroId, region),
@@ -43,8 +43,8 @@ export function HeroPriceTag({ heroId, fallbackHeroId }: { heroId: string; fallb
  * answer is loading or when it was never recorded.
  */
 export function useSkinAcquisition(heroId: string, skinKey: string) {
-  const { locale, region } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { region } = useWikiContext()
+  const text = useWikiText()
   const { data } = useQuery(heroShopQuery(heroId, region))
   const row = data?.skins.find((entry) => entry.skinKey === skinKey)
   if (!row || row.method === "UNKNOWN") return null

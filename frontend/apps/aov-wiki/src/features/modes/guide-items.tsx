@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from "react"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiText } from "../../context/wiki-context"
 import { ModeHeading } from "./mode-ui"
 import { GuideText, type GuideIndex } from "./guide-ui"
 import { foldSearchText } from "@aov/ui/lib/search-text"
@@ -41,8 +41,7 @@ function StoneMark({
 
 /** Items by stone: a chip per stone filters the groups; each item reads as a row with its icon and effect. */
 export function ItemsTab({ index }: { index: GuideIndex }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const { itemGroups, items } = index.content
   const [stone, setStone] = useState<string | null>(null)
   const groups: { code: string; name: string; iconAssetId?: string | null }[] = [

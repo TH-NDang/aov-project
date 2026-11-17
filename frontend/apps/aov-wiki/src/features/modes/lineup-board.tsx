@@ -1,6 +1,6 @@
 import { useState, type DragEvent, type ReactNode } from "react"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import {
   BOARD_COLUMNS,
   BOARD_ROWS,
@@ -53,8 +53,7 @@ export function LineupViewSwitch({
   onChange: (view: LineupView) => void
   labels?: boolean
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   return (
     <ChoiceSwitch
       label={text("Cách xem đội hình", "Lineup view")}
@@ -96,8 +95,7 @@ export function BoardGrid({
   footer?: ReactNode
   onDropUnit?: (code: string, row: BoardRow, column: number) => void
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [over, setOver] = useState<string | null>(null)
   const drop = (row: BoardRow, column: number) =>
     onDropUnit && {
@@ -161,8 +159,7 @@ export function BoardPiece({
   title?: string
   draggable?: boolean
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const unit = index.units.get(item.unitCode)
   if (!unit) return null
   return (
@@ -210,8 +207,7 @@ export function LineupBoard({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const { placed, bench } = placeUnits(units.filter((item) => index.units.has(item.unitCode)))
   return (
     <BoardGrid

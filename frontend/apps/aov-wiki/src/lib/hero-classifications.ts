@@ -1,3 +1,4 @@
+import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 import type { HeroGlyphName } from "../components/hero-glyph"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 
@@ -44,7 +45,7 @@ export function localizedHeroOptions<Value extends HeroRole | HeroPosition>(
   options: readonly HeroFilterOption<Value>[],
   locale: string,
 ): readonly HeroFilterOption<Value>[] {
-  return locale.startsWith("en")
+  return isEnglishLocale(locale)
     ? options.map((option) => ({ ...option, label: ENGLISH_LABELS[option.value] }))
     : options
 }

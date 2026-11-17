@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { useWikiText } from "../context/wiki-context"
 import { WikiIcon } from "./wiki-icon"
 const MAX_IMAGES = 3
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
@@ -11,8 +11,7 @@ interface Attachment {
 }
 
 export function FeedbackImages() {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [attachmentError, setAttachmentError] = useState("")
   const previewUrls = useRef(new Map<string, string>())

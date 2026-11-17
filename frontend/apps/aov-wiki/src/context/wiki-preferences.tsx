@@ -6,7 +6,7 @@ import { PublicCurrencySelect } from "@aov/ui/components/public-currency-select"
 import { PublicTimeZoneSelect } from "@aov/ui/components/public-time-zone-select"
 import { WikiIcon } from "../components/wiki-icon"
 import { useWikiContext, type WikiRegion } from "./wiki-context"
-import { marketName } from "@aov/ui/lib/locale-text"
+import { isEnglishLocale, localeText, marketName } from "@aov/ui/lib/locale-text"
 
 const FLAGS = new Set(["VN", "US", "TH", "TW", "ID"])
 
@@ -29,10 +29,11 @@ function MarketName({ region, english }: { region: WikiRegion; english: boolean 
 
 export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean }) {
   const context = useWikiContext()
-  const { region, locale, regions, regionsPending, regionsError, setRegion, setLocale, t } = context
+  const { region, locale, regions, regionsPending, regionsError, setRegion, setLocale } = context
+  const t = localeText(locale)
   const [marketOpen, setMarketOpen] = useState(false)
   const current = regions.find((market) => market.code === region)
-  const english = locale.startsWith("en")
+  const english = isEnglishLocale(locale)
 
   if (mobile)
     return (
@@ -40,13 +41,13 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
         <div className="wiki-preference-row">
           <span>
             <WikiIcon name="globe" size={16} />
-            {t("language")}
+            {t("Ngôn ngữ", "Language")}
           </span>
           <Select value={locale} onValueChange={setLocale}>
-            <SelectTrigger className="wiki-preference-mobile-select" aria-label={t("language")}>
+            <SelectTrigger className="wiki-preference-mobile-select" aria-label={t("Ngôn ngữ", "Language")}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent drawerTitle={t("language")}>
+            <SelectContent drawerTitle={t("Ngôn ngữ", "Language")}>
               <SelectItem value="vi-VN">Tiếng Việt</SelectItem>
               <SelectItem value="en-US">English</SelectItem>
             </SelectContent>
@@ -88,18 +89,21 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
         <div className="wiki-preference-row">
           <span>
             <MarketFlag code={region} />
-            {t("market")}
+            {t("Thị trường dữ liệu", "Game market")}
           </span>
           <Select value={region} disabled={regionsPending} onValueChange={setRegion}>
-            <SelectTrigger className="wiki-preference-mobile-select" aria-label={t("market")}>
+            <SelectTrigger
+              className="wiki-preference-mobile-select"
+              aria-label={t("Thị trường dữ liệu", "Game market")}
+            >
               <SelectValue />
             </SelectTrigger>
-            <SelectContent drawerTitle={t("market")}>
+            <SelectContent drawerTitle={t("Thị trường dữ liệu", "Game market")}>
               {!current && <SelectItem value={region}>{region}</SelectItem>}
               {regions.map((market) => (
                 <SelectItem key={market.code} value={market.code} disabled={!market.available}>
                   {marketName(market.code, english ? "en-US" : "vi-VN", market.displayName)}
-                  {!market.available ? ` · ${t("unavailable")}` : ""}
+                  {!market.available ? ` · ${t("Chưa hỗ trợ", "Unavailable")}` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -107,7 +111,7 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
         </div>
         {regionsError && (
           <button className="wiki-preference-retry" type="button" onClick={() => void context.retryRegions()}>
-            {t("marketError")} {t("retry")}
+            {t("Chưa tải được thị trường.", "Markets could not be loaded.")} {t("Thử lại", "Retry")}
           </button>
         )}
       </div>
@@ -116,18 +120,26 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
   return (
     <div className="wiki-preferences-desktop">
       <Popover open={marketOpen} onOpenChange={setMarketOpen}>
-        <PopoverTrigger className="wiki-preference-trigger" aria-label={`${t("market")}: ${region}`}>
+        <PopoverTrigger
+          className="wiki-preference-trigger"
+          aria-label={`${t("Thị trường dữ liệu", "Game market")}: ${region}`}
+        >
           <MarketFlag code={region} />
           <span>{region}</span>
           <WikiIcon name="chevron" size={13} />
         </PopoverTrigger>
-        <PopoverContent className="wiki-preference-panel" drawerTitle={t("market")} align="end" sideOffset={12}>
-          <h2>{t("market")}</h2>
+        <PopoverContent
+          className="wiki-preference-panel"
+          drawerTitle={t("Thị trường dữ liệu", "Game market")}
+          align="end"
+          sideOffset={12}
+        >
+          <h2>{t("Thị trường dữ liệu", "Game market")}</h2>
           {regionsPending ? (
-            <p role="status">{t("loading")}</p>
+            <p role="status">{t("Đang tải…", "Loading…")}</p>
           ) : regionsError ? (
             <button className="wiki-preference-retry" type="button" onClick={() => void context.retryRegions()}>
-              {t("marketError")} {t("retry")}
+              {t("Chưa tải được thị trường.", "Markets could not be loaded.")} {t("Thử lại", "Retry")}
             </button>
           ) : (
             <div className="wiki-preference-options">
@@ -150,7 +162,9 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
                     </strong>
                     {!market.available && (
                       <small>
-                        {!english && market.unavailableReason ? market.unavailableReason : t("unavailable")}
+                        {!english && market.unavailableReason
+                          ? market.unavailableReason
+                          : t("Chưa hỗ trợ", "Unavailable")}
                       </small>
                     )}
                   </span>
@@ -159,7 +173,12 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
               ))}
             </div>
           )}
-          <p className="wiki-preference-note">{t("marketNote")}</p>
+          <p className="wiki-preference-note">
+            {t(
+              "Thị trường và ngôn ngữ hiển thị được chọn độc lập.",
+              "Game market and display language are independent.",
+            )}
+          </p>
         </PopoverContent>
       </Popover>
     </div>

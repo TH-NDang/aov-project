@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../wiki-icon"
 import { useVideoParam } from "./subject-videos"
 import { byPurpose, formatDuration, neighbours, purposeLabel, videoWatchUrl, type PublicVideo } from "./video-model"
@@ -21,7 +21,7 @@ export function SkillVideos({
   patchName?: (video: PublicVideo) => ReactNode
 }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const videoParam = useVideoParam()
   const [watching, setWatching] = useState(false)
   const [chosen, setChosen] = useState<Record<string, string>>({})

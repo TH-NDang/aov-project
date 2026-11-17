@@ -1,5 +1,6 @@
+import { isEnglishLocale, localeText } from "@aov/ui/lib/locale-text"
 /** Readable wording for published hero change records. Unknown keys and formulas stay as the source wrote them. */
-const text = (locale: string, vietnamese: string, english: string) => (locale.startsWith("en") ? english : vietnamese)
+const text = (locale: string, vietnamese: string, english: string) => localeText(locale)(vietnamese, english)
 
 export interface HeroChangeItem {
   id: string
@@ -49,7 +50,7 @@ export function changeFieldLabel(key: string | null | undefined, locale: string)
   const field = key.slice(key.lastIndexOf(".") + 1)
   const known = FIELDS[field]
   if (known) return text(locale, ...known)
-  if (!locale.startsWith("en")) return "Thông số"
+  if (!isEnglishLocale(locale)) return "Thông số"
   const words = field.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()
   return words.charAt(0).toUpperCase() + words.slice(1)
 }

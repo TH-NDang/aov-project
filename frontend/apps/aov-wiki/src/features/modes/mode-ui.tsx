@@ -3,7 +3,7 @@ import { PopoverPortalContainer } from "@aov/ui/components/popover"
 import { Link } from "react-router"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImageCredit } from "../../components/wiki-image-credit"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import { ruleBlocks, type ModeImage, type RuleSection } from "./auto-chess-model"
 import type { ModeAvailability, ModeDuration } from "./mode-api"
 
@@ -230,7 +230,7 @@ export function ModeDialog({
   title?: string
   children: ReactNode
 }) {
-  const { t } = useWikiContext()
+  const t = useWikiText()
   const dialog = useRef<HTMLDialogElement>(null)
   // Term cards inside the drawer mount in it: the modal drawer is in the top layer and would cover them otherwise.
   const [host, setHost] = useState<HTMLDialogElement | null>(null)
@@ -287,7 +287,7 @@ export function ModeDialog({
       >
         <span className="mode-dialog-grip" aria-hidden="true" />
         <h2 className="mode-dialog-title">{title ?? label}</h2>
-        <button type="button" className="mode-dialog-close" aria-label={t("close")} onClick={onClose}>
+        <button type="button" className="mode-dialog-close" aria-label={t("Đóng", "Close")} onClick={onClose}>
           <WikiIcon name="close" size={20} />
         </button>
       </header>

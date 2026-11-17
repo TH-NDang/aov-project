@@ -1,7 +1,7 @@
 import { useContext, type ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import { ModeHeading } from "./mode-ui"
 import { insightsQuery } from "./mode-api"
 import { GuideLinks, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
@@ -53,8 +53,7 @@ export function InsightsTab({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const insights = useQuery(insightsQuery(code))
   const links = useContext(GuideLinks)
   const { units, traits } = index.content

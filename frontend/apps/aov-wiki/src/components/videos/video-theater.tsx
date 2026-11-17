@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../wiki-icon"
 import { VideoPlayer, VideoThumbnail } from "./video-player"
 import {
@@ -56,7 +56,7 @@ export function VideoTheater({
   onClose: () => void
 }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [autoNext, setAutoNext] = useAutoNext()
   const activeRow = useRef<HTMLButtonElement>(null)
   const opener = useRef<Element | null>(null)

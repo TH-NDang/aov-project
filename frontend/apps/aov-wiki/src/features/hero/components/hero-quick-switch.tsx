@@ -1,3 +1,4 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { useRef, useState, type RefObject } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@aov/ui/components/sheet"
@@ -30,7 +31,8 @@ function HeroPicker({
   searchRef: RefObject<HTMLInputElement | null>
 }) {
   const scope = useWikiContext()
-  const { locale, t } = scope
+  const { locale } = scope
+  const t = localeText(locale)
   const roleOptions = localizedHeroOptions(HERO_ROLES, locale)
   const positionOptions = localizedHeroOptions(HERO_POSITIONS, locale)
   const query = useQuery(heroCatalogQuery(scope))
@@ -83,7 +85,7 @@ function HeroPicker({
           <SheetClose
             className="wiki-hero-switch-close"
             aria-label={wikiText(locale, "Đóng danh sách tướng", "Close hero picker")}
-            title={t("close")}
+            title={t("Đóng", "Close")}
           >
             <WikiIcon name="close" />
           </SheetClose>
@@ -133,7 +135,7 @@ function HeroPicker({
           <div className="wiki-hero-switch-state" role="status">
             <p>{wikiText(locale, "Chưa thể tải danh sách tướng.", "Could not load heroes.")}</p>
             <button type="button" disabled={query.isFetching} onClick={() => void query.refetch()}>
-              {t("retry")}
+              {t("Thử lại", "Retry")}
             </button>
           </div>
         ) : !heroes.length ? (

@@ -3,7 +3,7 @@ import { Link } from "react-router"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
 import { WikiImage } from "./wiki-image"
 import { WikiImageCredit } from "./wiki-image-credit"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../context/wiki-context"
 import { FeedbackDialog } from "./feedback-dialog"
 import type { HeroMedia } from "../lib/hero-api"
 import { SkinAcquisitionText } from "./hero-shop"
@@ -144,7 +144,7 @@ export function SkinPreview({
   heroLink?: boolean
 }) {
   const scope = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const text = useWikiText()
   const current = skin ? skinId(skin) : ""
   const list = useMemo(
     () => groups.find((group) => group.some((entry) => skinId(entry) === current)) ?? [],

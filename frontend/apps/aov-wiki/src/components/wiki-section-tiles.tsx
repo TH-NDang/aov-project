@@ -1,6 +1,6 @@
 import { Link } from "react-router"
-import { useWikiContext } from "../context/wiki-context"
-import { wikiSections, type WikiSectionKey } from "../lib/wiki-sections"
+import { useWikiContext, useWikiText } from "../context/wiki-context"
+import { wikiSections, type WikiSectionKey, SECTION_NAMES } from "../lib/wiki-sections"
 import { WikiIcon } from "./wiki-icon"
 import "./wiki-section-tiles.css"
 
@@ -15,7 +15,8 @@ export function WikiSectionTiles({
   label: string
   note?: (key: WikiSectionKey) => string | undefined
 }) {
-  const { t, href } = useWikiContext()
+  const { href } = useWikiContext()
+  const t = useWikiText()
   return (
     <nav className="wiki-section-tiles" aria-label={label}>
       <ul>
@@ -23,7 +24,7 @@ export function WikiSectionTiles({
           <li key={key}>
             <Link to={href(path)}>
               <WikiIcon name={icon} size={40} className="wiki-section-tile-icon" />
-              <strong>{key === "updates" ? t("updatesShort") : t(key)}</strong>
+              <strong>{key === "updates" ? t("Cập nhật", "Updates") : t(...SECTION_NAMES[key])}</strong>
               {note && <small>{note(key) ?? " "}</small>}
             </Link>
           </li>

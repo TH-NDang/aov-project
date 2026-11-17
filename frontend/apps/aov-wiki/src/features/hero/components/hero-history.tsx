@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Link } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../../context/wiki-context"
 import { changeSetKind, parseChangeSummary } from "../../../lib/wiki-change-format"
 import { ChangeDisclosure, ChangeKind, ChangeList } from "../../../components/change-list"
 import type { HeroChangeItem } from "../../../lib/wiki-change-format"
@@ -27,8 +27,8 @@ function HistoryChanges({ changes, hero }: { changes: HeroChangeItem[]; hero: He
  */
 export function HeroHistory({ hero, version }: { hero: HeroDetail; version: HeroVersion }) {
   const scope = useWikiContext()
-  const { locale, href } = scope
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { href } = scope
+  const text = useWikiText()
   const open = usePatchOpener()
   const limit = usePageLayout() === "compact" ? 2 : 4
   const [expanded, setExpanded] = useState(false)

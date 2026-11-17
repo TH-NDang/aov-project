@@ -1,3 +1,4 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { wikiAccessToken } from "../../lib/wiki-auth"
@@ -221,7 +222,7 @@ export function deleteLineup(code: string, lineupId: string, expectedVersion: nu
 
 /** Messages for the errors a reader can cause, in the reader's language. */
 export function lineupErrorMessage(error: unknown, locale = "vi-VN") {
-  const text = (vietnamese: string, english: string) => (locale.startsWith("en") ? english : vietnamese)
+  const text = localeText(locale)
   if (!(error instanceof WikiApiError))
     return text("Không kết nối được máy chủ. Thử lại sau.", "The server could not be reached. Try again later.")
   if (error.status === 401) return text("Đăng nhập để thích hoặc lưu đội hình.", "Sign in to like or save lineups.")

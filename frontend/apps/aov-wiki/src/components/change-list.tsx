@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { ChangeKindLabel } from "./patch-changes-row"
 import { WikiIcon } from "./wiki-icon"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../context/wiki-context"
 import { changeFieldLabel, changeSkillLabel, type HeroChangeItem } from "../lib/wiki-change-format"
 import type { HeroDetail, PublicSkill } from "../lib/hero-api"
 import { SkillIcon } from "./hero-skill-icon"
@@ -56,8 +56,7 @@ function Formula({ value }: { value: string }) {
 
 /** Before and after, side by side when both are short, otherwise one above the other with the values lined up. */
 function ValuePair({ before, after }: { before: string; after: string }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   if (before.length + after.length <= INLINE_PAIR)
     return (
       <p className="wiki-change-values">
@@ -87,8 +86,7 @@ function ValuePair({ before, after }: { before: string; after: string }) {
  * the same at every level, takes a line of its own under the table instead of a column a phone would hide.
  */
 function LevelView({ label, table }: { label: string; table: LevelTable }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const sides = [
     { key: "before" as const, name: text("Trước", "Before") },
     { key: "after" as const, name: text("Sau", "After") },
@@ -150,7 +148,7 @@ function LevelView({ label, table }: { label: string; table: LevelTable }) {
 
 function ChangeRow({ change, skill, marked }: { change: HeroChangeItem; skill?: PublicSkill; marked: boolean }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [byLevel, setByLevel] = useState(false)
   const valueKey = change.fieldKey ?? change.statKey
   // A note about the hero as a whole has no name of its own; its sentence says everything.

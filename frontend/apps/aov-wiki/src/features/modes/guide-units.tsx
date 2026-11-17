@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Link } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { encodeLineup, TRAIT_KIND_NAMES, type LabelNames, type Unit } from "./auto-chess-model"
 import { GoldIcon } from "./gold-icon"
 import { StarLevel } from "./star-level"
@@ -48,8 +48,7 @@ const isStat = (key: SortKey): key is StatKey => key !== "cost" && key !== "name
  */
 export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string) => void }) {
   const compact = usePageLayout() === "compact"
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const filter = useUnitFilter(index)
   const [view, setView] = useState<"cards" | "table">("cards")
   const [star, setStar] = useState(0)
@@ -126,7 +125,7 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
             onChange={setView}
             labels={!compact}
             options={[
-              { value: "cards", label: "Theo giá", icon: <WikiIcon name="cards" size={16} /> },
+              { value: "cards", label: text("Theo giá", "By cost"), icon: <WikiIcon name="cards" size={16} /> },
               { value: "table", label: text("Chỉ số", "Stats"), icon: <WikiIcon name="stats" size={16} /> },
             ]}
           />
@@ -135,7 +134,12 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
       <FilterSummary index={index} filter={filter} />
 
       {!units.length ? (
-        <p className="mode-empty">Không có quân cờ phù hợp. Thử tên khác hoặc bỏ bớt điều kiện lọc.</p>
+        <p className="mode-empty">
+          {text(
+            "Không có quân cờ phù hợp. Thử tên khác hoặc bỏ bớt điều kiện lọc.",
+            "No piece fits. Try another name or remove a filter.",
+          )}
+        </p>
       ) : view === "cards" ? (
         <div className="unit-ladder">
           {byCost.map((group) => (
@@ -233,7 +237,10 @@ export function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: 
                   type="button"
                   className="mode-chip"
                   aria-pressed={multiSort}
-                  title="Bấm thêm tiêu đề cột để sắp xếp tiếp theo cột đó; giữ Shift khi bấm cũng được."
+                  title={text(
+                    "Bấm thêm tiêu đề cột để sắp xếp tiếp theo cột đó; giữ Shift khi bấm cũng được.",
+                    "Tap another column heading to sort by it next; holding Shift works too.",
+                  )}
                   onClick={() => setMultiSort(!multiSort)}
                 >
                   <WikiIcon name="sort" size={16} />
@@ -300,8 +307,8 @@ export function UnitDetail({
   code: string
   onOpen: (code: string | null) => void
 }) {
-  const { href, locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { href } = useWikiContext()
+  const text = useWikiText()
   const skillIcon = index.image(unit.skill?.iconAssetId)
   const lineups = index.content.lineups.filter((lineup) => lineup.units.some((item) => item.unitCode === unit.code))
   return (

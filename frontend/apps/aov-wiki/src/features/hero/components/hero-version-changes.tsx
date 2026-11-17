@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 import { WikiIcon } from "../../../components/wiki-icon"
-import { useWikiContext, wikiText, type WikiPatch } from "../../../context/wiki-context"
+import { useWikiContext, wikiText, type WikiPatch, useWikiText } from "../../../context/wiki-context"
 import { changeSetKind, changeSkillLabel, parseChangeSummary } from "../../../lib/wiki-change-format"
 import { ChangeDisclosure, ChangeKind, ChangeList } from "../../../components/change-list"
 import { heroChangesQuery } from "../../../lib/updates-api"
@@ -144,7 +144,7 @@ export function HeroVersionChanges({
   collapsible?: boolean
 }) {
   const { locale, href } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const open = usePatchOpener()
   const { selected, previous, notes } = version
   const section = useRef<HTMLElement & { open?: boolean }>(null)

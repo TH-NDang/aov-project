@@ -1,12 +1,11 @@
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiText } from "../../context/wiki-context"
 import { GoldIcon } from "./gold-icon"
 import { ModeHeading } from "./mode-ui"
 import type { GuideIndex } from "./guide-ui"
 
 /** A reward in gold reads with the game's coin; any other reward stays as the editor wrote it. */
 function Reward({ text: reward }: { text?: string | null }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   if (!reward)
     return (
       <span className="quest-reward" data-missing="">
@@ -29,8 +28,7 @@ function Reward({ text: reward }: { text?: string | null }) {
 }
 
 export function QuestsTab({ index }: { index: GuideIndex }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const { quests } = index.content
   return (
     <section className="guide-tab-body" aria-label={text("Nhiệm vụ", "Quests")}>

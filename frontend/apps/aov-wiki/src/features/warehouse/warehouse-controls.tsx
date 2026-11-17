@@ -7,7 +7,7 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { ITEM_STAT_FILTERS } from "@aov/ui/lib/item-description"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import {
   ARCANA_COLORS,
   arcanaCandidates,
@@ -147,8 +147,7 @@ function SheetChoice({
 }
 
 function useItemLabels() {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const sorts: [ItemSort, string][] = [
     ["tier", text("Theo cấp", "By tier")],
     ["price-desc", text("Giá cao trước", "Highest price")],
@@ -167,7 +166,7 @@ function ItemCategories({
   loading,
 }: Pick<ControlsProps, "groups" | "group" | "onFilters" | "loading"> & { view: ItemCatalogView }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const board = view.layout === "shop"
   const active = board ? view.category : group
   return (
@@ -382,7 +381,7 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
   const { locale } = useWikiContext()
   const compact = usePageLayout() === "compact"
   const roomy = useMediaQuery(ONE_LINE)
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const filters = arcanaFilters(params, group)
   const labels = new Map<string, string>()
   for (const entry of arcanaCandidates(entries, filters))
@@ -525,7 +524,7 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
 function EnchantmentControls({ search, onSearch, entries, groups, group, onFilters, loading }: ControlsProps) {
   const { locale } = useWikiContext()
   const roomy = useMediaQuery(ONE_LINE)
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const branches = groups.length > 0 && (
     <ChipGroup label={text("Hệ phù hiệu", "Enchantment branch")}>
       <Chip pressed={!group} onClick={() => onFilters({ group: null })}>

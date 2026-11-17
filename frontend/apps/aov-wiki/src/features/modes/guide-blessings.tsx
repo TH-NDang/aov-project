@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiText } from "../../context/wiki-context"
 import { BLESSING_TIER_NAMES, type Blessing } from "./auto-chess-model"
 import { ModeHeading } from "./mode-ui"
 import { BlessingIcon, GuideSearch, GuideText, TIER_STYLE, type GuideIndex } from "./guide-ui"
@@ -53,8 +53,7 @@ function TierIcon({ tier, size = 18 }: { tier: Blessing["tier"]; size?: number }
 /** Blessings by tier, each a row with the game's card icon; a search and one chip per tier narrow them. */
 export function BlessingsTab({ index }: { index: GuideIndex }) {
   const compact = usePageLayout() === "compact"
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [tier, setTier] = useState<Blessing["tier"] | null>(null)
   const [search, setSearch] = useState("")
   const needle = foldSearchText(search.trim())
@@ -73,7 +72,7 @@ export function BlessingsTab({ index }: { index: GuideIndex }) {
           value={search}
           onChange={setSearch}
           label={text("Tìm chúc phúc", "Search blessings")}
-          placeholder="Tìm tên, hiệu ứng…"
+          placeholder={text("Tìm tên, hiệu ứng…", "Search names, effects…")}
         />
         <div className="mode-chip-row" role="group" aria-label={text("Bậc chúc phúc", "Blessing tiers")}>
           {BLESSING_TIERS.map((value) => (
@@ -117,7 +116,12 @@ export function BlessingsTab({ index }: { index: GuideIndex }) {
         </section>
       ))}
       {!sections.length && (
-        <p className="mode-empty">Không có chúc phúc khớp “{search.trim()}”. Thử tên khác hoặc bỏ chọn bậc.</p>
+        <p className="mode-empty">
+          {text(
+            `Không có chúc phúc khớp “${search.trim()}”. Thử tên khác hoặc bỏ chọn bậc.`,
+            `No blessing matches “${search.trim()}”. Try another name or clear the tier.`,
+          )}
+        </p>
       )}
     </section>
   )

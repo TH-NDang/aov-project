@@ -5,7 +5,7 @@ import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { createEntityIndex } from "@aov/ui/lib/entity-rich-text"
-import { useWikiContext, wikiText } from "../../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../../context/wiki-context"
 import { FeedbackDialog } from "../../../components/feedback-dialog"
 import { HeroHistory } from "./hero-history"
 import { HeroVersionChanges, HeroVersionUnchanged, useHeroVersion } from "./hero-version-changes"
@@ -80,7 +80,7 @@ function OverviewSummary({ long, children }: { long: boolean; children: ReactNod
 function useHandbook(hero: HeroDetail) {
   const scope = useWikiContext()
   const { locale } = scope
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [params, setParams] = useSearchParams()
   const skills = [...(hero.content.skills?.skills ?? [])].sort((a, b) => a.displayOrder - b.displayOrder)
   const active = skills.find((skill) => skill.skillKey === params.get("skill")) ?? skills[0]

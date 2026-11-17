@@ -1,3 +1,4 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "../hero-classifications.ts"
 import { warehousePath, WAREHOUSE_TABS } from "../wiki-catalog.ts"
 import { warehouseText } from "@aov/ui/lib/warehouse-content"
@@ -72,7 +73,7 @@ export interface PatchLike {
 export type WarehouseTab = (typeof WAREHOUSE_TABS)[number]
 export type SectionKey = "heroes" | "skins" | WarehouseTab | "updates" | "terms" | "modes"
 
-const pick = (locale: string, vietnamese: string, english: string) => (locale.startsWith("en") ? english : vietnamese)
+const pick = (locale: string, vietnamese: string, english: string) => localeText(locale)(vietnamese, english)
 
 const titled = (heading: string) => `${heading} | ${SITE_NAME}`
 

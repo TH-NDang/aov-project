@@ -1,7 +1,8 @@
 import { useSearchParams } from "react-router"
+import { MODE_PARAMS, readModeParam, writeParam } from "../../lib/search-params"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiText } from "../../context/wiki-context"
 import { TRAIT_KIND_NAMES, type Trait } from "./auto-chess-model"
 import { GoldIcon } from "./gold-icon"
 import { ModeDialog, ModeHeading } from "./mode-ui"
@@ -24,10 +25,9 @@ const TRAIT_KINDS = ["FACTION", "CLASS"] as const
  */
 export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string) => void }) {
   const layout = usePageLayout()
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [params, setParams] = useSearchParams()
-  const table = params.get("xem") === "bang"
+  const table = readModeParam(params, MODE_PARAMS.view) === "table"
   const linked = index.traits.get(params.get("trait") ?? "")
   const selected = linked ?? (layout === "wide" ? index.content.traits[0] : undefined)
   const change = (apply: (next: URLSearchParams) => void) =>
@@ -42,7 +42,7 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
   const pick = (code: string | null) =>
     change((next) => {
       // On wide screens the detail sits beside the index, so picking from the table goes back to it.
-      if (code && layout === "wide") next.delete("xem")
+      if (code && layout === "wide") writeParam(next, MODE_PARAMS.view, null)
       if (code) next.set("trait", code)
       else next.delete("trait")
     })
@@ -53,9 +53,13 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
         <ChoiceSwitch
           label={text("Cách xem", "View")}
           value={table ? "table" : "detail"}
-          onChange={(view) => change((next) => (view === "table" ? next.set("xem", "bang") : next.delete("xem")))}
+          onChange={(view) => change((next) => writeParam(next, MODE_PARAMS.view, view === "table" ? "table" : null))}
           options={[
-            { value: "detail", label: "Từng Phe/Nghề", icon: <WikiIcon name="detail" size={16} /> },
+            {
+              value: "detail",
+              label: text("Từng Phe/Nghề", "Each faction or class"),
+              icon: <WikiIcon name="detail" size={16} />,
+            },
             {
               value: "table",
               label: text("Bảng Phe × Nghề", "Faction × Class table"),
@@ -123,8 +127,7 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
 
 /** One trait in full: its tiers, the units that carry it and the traits those units bring along. */
 function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex; onOpen: (code: string) => void }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const members = [...index.membersOf(trait.code)].sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "vi"))
   const partners = new Map<string, number>()
   for (const member of members)
@@ -207,8 +210,7 @@ function TraitTable({
   onOpen: (code: string) => void
   onPick: (code: string) => void
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const factions = index.content.traits.filter((trait) => trait.kind === "FACTION")
   const classes = index.content.traits.filter((trait) => trait.kind === "CLASS")
   const head = (trait: Trait) => (
@@ -223,7 +225,12 @@ function TraitTable({
   )
   return (
     <>
-      <p className="mode-meta">Hàng là Nghề, cột là Phe. Bấm tên để xem Phe/Nghề, bấm quân cờ để xem quân cờ.</p>
+      <p className="mode-meta">
+        {text(
+          "Hàng là Nghề, cột là Phe. Bấm tên để xem Phe/Nghề, bấm quân cờ để xem quân cờ.",
+          "Rows are classes, columns are factions. Tap a name to open it, tap a piece to open the piece.",
+        )}
+      </p>
       <div
         className="trait-table-scroll"
         role="region"

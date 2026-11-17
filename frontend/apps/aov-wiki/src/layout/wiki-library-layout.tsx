@@ -3,14 +3,16 @@ import { Outlet, useLocation, useMatch } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiHeader } from "../components/wiki-header"
 import { warehouseKind } from "../lib/warehouse-types"
+import { SECTION_NAMES } from "../lib/wiki-sections"
 import "./wiki-library-layout.css"
-import { useWikiContext } from "../context/wiki-context"
+import { useWikiContext, useWikiText } from "../context/wiki-context"
 import { libraryPageMeta, type PageMeta } from "../lib/seo/page-meta"
 import { usePageHead } from "../lib/seo/use-page-head"
 
 /** The frame of every list and reference page: the header with the sections, then the page at full width. */
 export function WikiLibraryLayout() {
-  const { t, locale } = useWikiContext()
+  const { locale } = useWikiContext()
+  const t = useWikiText()
   const layout = usePageLayout()
   const { pathname } = useLocation()
   const isWarehouse = useMatch("/warehouse/*")
@@ -31,7 +33,7 @@ export function WikiLibraryLayout() {
           : isSkins
             ? "skins"
             : "heroes"
-  const pageTitle = t(active)
+  const pageTitle = t(...SECTION_NAMES[active])
   usePageHead(libraryPageMeta(pathname, locale))
 
   return (
@@ -41,7 +43,7 @@ export function WikiLibraryLayout() {
       {/* One mode or one update names itself in its own h1; the header then only says which section it belongs to. */}
       <WikiHeader
         variant={layout === "compact" && isModeDetail ? "hero" : "library"}
-        pageTitle={layout === "compact" && isWarehouse ? t("warehouse") : pageTitle}
+        pageTitle={layout === "compact" && isWarehouse ? t("Kho trang bị", "Armory") : pageTitle}
         pageTitleIsHeading={!isModeDetail && !isPatchDetail}
         section={active}
       />

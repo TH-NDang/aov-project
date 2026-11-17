@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { TraitIcon, UnitPortrait, useGuideIndex, type GuideIndex } from "./guide-ui"
 import type { PublicGuide } from "./mode-api"
 import { ModeHeading } from "./mode-ui"
@@ -91,8 +91,7 @@ function HeartIcon() {
 
 /** Eight players, knocked out one by one until one is left: the goal of a match in one picture. */
 function GoalSection() {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   // Steps 0–6 knock a player out each; step 7 holds the winner a moment before the match starts again.
   const step = useCycle(PLAYERS + 1, 900, PLAYERS - 1)
   const out = Math.min(step, PLAYERS - 1)
@@ -144,8 +143,18 @@ function GoalSection() {
             )}
           </p>
           <ul className="ov-rank-legend">
-            <li data-win="true">Hạng 1–4 tính là thắng, hạng càng cao càng nhiều điểm.</li>
-            <li>Hạng 5–8 tính là thua, hạng càng thấp càng bị trừ nhiều điểm.</li>
+            <li data-win="true">
+              {text(
+                "Hạng 1–4 tính là thắng, hạng càng cao càng nhiều điểm.",
+                "Places 1–4 count as a win; the higher the place, the more points.",
+              )}
+            </li>
+            <li>
+              {text(
+                "Hạng 5–8 tính là thua, hạng càng thấp càng bị trừ nhiều điểm.",
+                "Places 5–8 count as a loss; the lower the place, the more points are lost.",
+              )}
+            </li>
           </ul>
         </div>
       </div>
@@ -155,8 +164,8 @@ function GoalSection() {
 
 /** One round as a loop of three steps, the current one lit, with the guide's own pictures. */
 function RoundSection({ index, code }: { index: GuideIndex; code: string }) {
-  const { href, locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { href } = useWikiContext()
+  const text = useWikiText()
   const step = useCycle(3, 2400, -1)
   const base = `/modes/${encodeURIComponent(code)}`
   const lineup = index.content.lineups[0]
@@ -242,8 +251,7 @@ function RoundSection({ index, code }: { index: GuideIndex; code: string }) {
 
 /** The health formula as something to play with: pick how many units the winner kept and the stage damage. */
 function DamageSection() {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [alive, setAlive] = useState(3)
   const [stage, setStage] = useState(2)
   const lost = alive < 5 ? alive * 2 + stage : 9 + (alive - 5) + stage

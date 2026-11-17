@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { PublicAccountSecurity } from "@aov/ui/components/public-account-security"
 import { createAccountSecurityApi } from "@aov/ui/lib/account-security"
 import { WikiHeader } from "../../components/wiki-header"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import {
   signIn,
@@ -19,7 +19,7 @@ import "./account.css"
 export function AccountSettingsPage() {
   const { locale } = useWikiContext()
   const session = useWikiSession()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const api = useMemo(() => createAccountSecurityApi(wikiAccessToken), [])
   // The callback stores the result of the Keycloak action that brought the reader back; keep it for this visit only.
   const [actionResult] = useState(accountActionResult)

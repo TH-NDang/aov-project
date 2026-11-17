@@ -2,7 +2,7 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../wiki-icon"
 import { orderedPatches } from "../../lib/hero-patch-line"
 import { PatchName } from "../hero-patch-name"
@@ -105,7 +105,7 @@ function VideoCard({
   onOpen: () => void
 }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const provider = providerName(video)
   const body = (
     <>
@@ -170,7 +170,7 @@ export function VideoGallery({
   id?: string
 }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   // Rows take more height than cards, so a phone starts from fewer of them.
   const limit = usePageLayout() === "compact" ? Math.min(wideLimit, 3) : wideLimit
   const [purpose, setPurpose] = useState<VideoPurpose | null>(null)
@@ -338,7 +338,7 @@ export function SkinVideoList({
   onStop: () => void
 }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   if (!videos.length) return null
   return (
     <section className="wiki-skin-videos" aria-label={text("Video trang phục", "Skin videos")}>

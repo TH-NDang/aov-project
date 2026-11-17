@@ -10,7 +10,7 @@ import {
   type EntityReference,
 } from "@aov/ui/lib/entity-rich-text"
 import { WikiIcon } from "../../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../../context/wiki-context"
 import { wikiReferencesQuery } from "../../../lib/wiki-references"
 import { PatchName } from "../../../components/hero-patch-name"
 import { heroBuildsQuery, type BuildSource, type PublicBuild } from "../../../lib/hero-api"
@@ -87,7 +87,7 @@ function BuildRow({
   index: EntityIndex
 }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const labels = useBuildLabels()
   const spell = build.spellId ? entities.get(`spell:${build.spellId}`) : undefined
   const piece = (kind: EntityKind, id: string, round?: boolean, extra?: ReactNode) => (
@@ -168,7 +168,7 @@ function BuildSourceBlock({
   index: EntityIndex
 }) {
   const { locale, options } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const labels = useBuildLabels()
   const market = [marketName(regionCode, "vi-VN"), marketName(regionCode, "en-US")]
   const patch = options?.patches.find((item) => item.code === source.patchCode)

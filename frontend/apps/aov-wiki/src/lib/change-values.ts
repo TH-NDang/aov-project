@@ -1,3 +1,4 @@
+import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 import { formatPatchValue } from "@aov/ui/lib/patch-value"
 import {
   compareSkillRanks,
@@ -27,7 +28,7 @@ const ENGLISH_RANK_TERMS: [RegExp, string][] = [
 /** Rank values are worded in Vietnamese by the shared formula reader. */
 function rankText(value: string | null, locale: string) {
   if (!value) return "—"
-  if (!locale.startsWith("en")) return value
+  if (!isEnglishLocale(locale)) return value
   return ENGLISH_RANK_TERMS.reduce((text, [term, english]) => text.replace(term, english), value)
 }
 

@@ -4,7 +4,7 @@ import { Link } from "react-router"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText, wikiText } from "../../context/wiki-context"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import {
   TRAIT_KIND_NAMES,
@@ -263,6 +263,7 @@ export function GuideSearch({
   label: string
   placeholder: string
 }) {
+  const text = useWikiText()
   const input = useRef<HTMLInputElement>(null)
   return (
     <label className="guide-search">
@@ -279,7 +280,7 @@ export function GuideSearch({
       {value && (
         <button
           type="button"
-          aria-label="Xóa từ khóa"
+          aria-label={text("Xóa từ khóa", "Clear the search")}
           onClick={() => {
             onChange("")
             input.current?.focus()

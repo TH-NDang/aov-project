@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import { signIn, useWikiSession } from "../../lib/wiki-auth"
 import {
   BOARD_SLOTS,
@@ -45,7 +45,7 @@ export function BuilderTab({
 }) {
   const compact = usePageLayout() === "compact"
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [params, setParams] = useSearchParams()
   const { units, emblems } = useMemo(() => decodeLineup(params.toString(), index.content), [params, index])
   const filter = useUnitFilter(index)
@@ -225,7 +225,14 @@ export function BuilderTab({
           <span>{unit.name}</span>
         </button>
       ))}
-      {!filter.units.length && <p className="mode-meta">Không có quân cờ phù hợp. Thử tên khác hoặc bỏ bớt lọc.</p>}
+      {!filter.units.length && (
+        <p className="mode-meta">
+          {text(
+            "Không có quân cờ phù hợp. Thử tên khác hoặc bỏ bớt lọc.",
+            "No piece fits. Try another name or remove a filter.",
+          )}
+        </p>
+      )}
     </div>
   )
 
@@ -438,7 +445,7 @@ export function BuilderTab({
                       >
                         <span>
                           <strong>{selectedInfo.name}</strong>
-                          <small>Bấm một ô để chuyển tới đó</small>
+                          <small>{text("Bấm một ô để chuyển tới đó", "Tap a square to move it there")}</small>
                         </span>
                         <span className="builder-actions">
                           <button
@@ -613,7 +620,7 @@ export function BuilderTab({
                 action={
                   target ? (
                     <button type="button" className="guide-clear" onClick={() => setTarget(null)}>
-                      Bỏ chọn ô
+                      {text("Bỏ chọn ô", "Deselect the square")}
                     </button>
                   ) : undefined
                 }
@@ -646,7 +653,7 @@ export function BuilderTab({
                           : text(`Cần thêm ${count.missing} để kích hoạt`, `Needs ${count.missing} more to activate`)}
                       </p>
                     </div>
-                    <span className="builder-steps" aria-label="Các mốc">
+                    <span className="builder-steps" aria-label={text("Các mốc", "Thresholds")}>
                       {count.trait.tiers.map((tier, at) => (
                         <i key={tier.count} data-on={at <= count.reachedTier}>
                           {tier.count}
@@ -657,7 +664,12 @@ export function BuilderTab({
                 ))}
               </ul>
             ) : (
-              <p className="mode-meta">Chọn quân cờ để xem Phe và Nghề nào được kích hoạt.</p>
+              <p className="mode-meta">
+                {text(
+                  "Chọn quân cờ để xem Phe và Nghề nào được kích hoạt.",
+                  "Choose pieces to see which factions and classes they activate.",
+                )}
+              </p>
             )}
           </section>
           {suggestions.length > 0 && (
@@ -781,7 +793,7 @@ function SaveLineup({
   index: GuideIndex
 }) {
   const { href, locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const session = useWikiSession()
   const client = useQueryClient()
   const me = useQuery({ ...myStateQuery(code, session.revision), enabled: session.status === "authenticated" })
@@ -850,7 +862,7 @@ function SaveLineup({
             className="guide-field"
             value={name}
             maxLength={60}
-            placeholder="Ví dụ: Pháp sư lãng khách"
+            placeholder={text("Ví dụ: Pháp sư lãng khách", "For example: Wandering mages")}
             onChange={(event) => setName(event.target.value)}
           />
         </label>

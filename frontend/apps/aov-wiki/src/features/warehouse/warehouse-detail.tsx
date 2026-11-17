@@ -1,3 +1,4 @@
+import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { ItemOverview } from "@aov/ui/components/warehouse/item-overview"
 import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
 import { arcanaGroupLabel } from "@aov/ui/components/warehouse/arcana-cards"
@@ -225,7 +226,7 @@ function DetailContent({
   return (
     <>
       <div className="wiki-warehouse-detail-bar">
-        <span>{eyebrow(entry, groups, scope.locale, scope.t(kind))}</span>
+        <span>{eyebrow(entry, groups, scope.locale, wikiText(scope.locale, ...SECTION_NAMES[kind]))}</span>
         {/* Where the picture comes from sits with the other tools, so nothing covers the picture itself. */}
         {artwork?.currentVersion && (
           <WikiImageCredit
@@ -266,7 +267,7 @@ function DetailContent({
               setEditing(false)
               requestAnimationFrame(() => pencil.current?.focus())
             }}
-            target={`${scope.t(kind)} · ${warehouseName(entry, scope.locale)}${state && kind === "spells" ? " · " + (text?.name || state.key) : ""}`}
+            target={`${wikiText(scope.locale, ...SECTION_NAMES[kind])} · ${warehouseName(entry, scope.locale)}${state && kind === "spells" ? " · " + (text?.name || state.key) : ""}`}
             identity={`${kind}/${entry.code}${state && kind === "spells" ? "/" + state.key : ""}`}
             revision={entry.revision.id}
             fields={[

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { HERO_TRAIT_GROUPS, heroTraitInfo, heroTraitOrder } from "@aov/ui/lib/hero-traits"
-import { useWikiContext, wikiText } from "../../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../../context/wiki-context"
 import { WikiImage } from "../../../components/wiki-image"
 import {
   heroCatalogQuery,
@@ -93,7 +93,7 @@ function HeroChip({ id, code, links }: { id: string | null; code: string; links:
 
 function RankingCard({ reading, links }: { reading: HeroRankingReading; links: Map<string, HeroLink> }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const snapshot = reading.snapshot!
   const entry = reading.entry!
   const percent = (value: number | null) =>
@@ -178,8 +178,8 @@ function TraitList({
   traits: PublicHeroTrait[]
   links: Map<string, HeroLink>
 }) {
-  const { locale, region } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { region } = useWikiContext()
+  const text = useWikiText()
   const index = useQuery(heroTraitIndexQuery(region))
   const skills = hero.content.skills?.skills ?? []
   const skillName = (key: string) => skills.find((skill: PublicSkill) => skill.skillKey === key)?.name
@@ -241,8 +241,8 @@ const points = (value: string) =>
  * something to say, and the whole section stays away when none does.
  */
 export function HeroEvaluation({ hero }: { hero: HeroDetail }) {
-  const { locale, region } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { region } = useWikiContext()
+  const text = useWikiText()
   const ranking = useQuery(heroRankingQuery(hero.id, region))
   const links = useHeroLinks()
   const content = hero.content as EvaluatedContent

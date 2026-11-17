@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react"
 import { useSearchParams } from "react-router"
 import { WikiHeader } from "../../components/wiki-header"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { contactMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
@@ -15,7 +15,7 @@ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 /** The form readers use to send image sources, attribution requests and image reports to the editors. */
 export function ContactPage() {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   usePageHead(contactMeta(locale))
   const [params] = useSearchParams()
   const assetId = params.get("assetId")

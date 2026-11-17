@@ -4,7 +4,7 @@ import { Link, Navigate, useParams } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { modeMeta, notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
@@ -33,8 +33,8 @@ import "./mode-pages.css"
  */
 export function ModeDetailPage() {
   const { code = "", tab } = useParams()
-  const { href, locale, t } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { href, locale } = useWikiContext()
+  const text = useWikiText()
   const layout = usePageLayout()
   const mode = useQuery(modeQuery(code))
   const hasGuide = !!mode.data?.hasGuide
@@ -75,7 +75,7 @@ export function ModeDetailPage() {
               {text("Thử lại", "Retry")}
             </button>
           )}
-          <Link to={listHref}>Xem tất cả chế độ</Link>
+          <Link to={listHref}>{text("Xem tất cả chế độ", "See all modes")}</Link>
         </div>
       </div>
     )
@@ -92,7 +92,7 @@ export function ModeDetailPage() {
 
   return (
     <div className="mode-page mode-detail">
-      <CatalogHeading title={content.name} back={{ to: listHref, label: t("modes") }} />
+      <CatalogHeading title={content.name} back={{ to: listHref, label: text("Chế độ chơi", "Game modes") }} />
       {/* The compact header names the section only, so the page carries the way back and the mode's name itself. */}
       {layout === "compact" && (
         <header className="mode-compact-head">
@@ -107,7 +107,11 @@ export function ModeDetailPage() {
 
       {activeTab === "tong-quan" ? (
         <div className="mode-overview">
-          <section className="mode-intro" data-art={art ? "" : undefined} aria-label="Thông tin chế độ">
+          <section
+            className="mode-intro"
+            data-art={art ? "" : undefined}
+            aria-label={text("Thông tin chế độ", "About this mode")}
+          >
             {art && <ModeArt className="mode-intro-art" image={art} name={content.name} eager />}
             <div className="mode-intro-body">
               {content.summary && <p className="mode-intro-lead">{content.summary}</p>}
@@ -241,7 +245,7 @@ function GuideTabs({ code, active }: { code: string; active: GuideTab }) {
  */
 function ModeFacts({ content, edition }: { content: ModeContent; edition?: string | null }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const duration = durationText(content.duration, locale)
   const availability = content.availability
   // The schedule's days are calendar dates: they read as written, in the date format the reader chose.
@@ -263,8 +267,20 @@ function ModeFacts({ content, edition }: { content: ModeContent; edition?: strin
         {day(startsOn)} – {day(endsOn)}
       </>,
     ])
-  else if (startsOn) long.push([text("Thời gian mở", "Open period"), <>Từ {day(startsOn)}</>])
-  else if (endsOn) long.push([text("Thời gian mở", "Open period"), <>Đến {day(endsOn)}</>])
+  else if (startsOn)
+    long.push([
+      text("Thời gian mở", "Open period"),
+      <>
+        {text("Từ", "From")} {day(startsOn)}
+      </>,
+    ])
+  else if (endsOn)
+    long.push([
+      text("Thời gian mở", "Open period"),
+      <>
+        {text("Đến", "Until")} {day(endsOn)}
+      </>,
+    ])
   if (edition) long.push([text("Cẩm nang", "Guide"), edition])
   if (availability?.note) long.push([text("Ghi chú", "Note"), availability.note])
   return (
@@ -281,19 +297,24 @@ function ModeFacts({ content, edition }: { content: ModeContent; edition?: strin
 
 /** One plain sentence naming everything the Wiki has not recorded for the mode yet. */
 function MissingNote({ content, art, hasGuide }: { content: ModeContent; art?: ModeImage | null; hasGuide: boolean }) {
+  const text = useWikiText()
   const parts = [
-    !durationText(content.duration) && "thời lượng trận",
-    !content.playersLabel && "số người chơi",
-    !hasSchedule(content.availability) && "lịch mở",
-    !art && "hình ảnh",
-    !content.summary && "phần giới thiệu",
-    !content.rules.length && !hasGuide && "luật chơi",
+    !durationText(content.duration) && text("thời lượng trận", "match length"),
+    !content.playersLabel && text("số người chơi", "player count"),
+    !hasSchedule(content.availability) && text("lịch mở", "schedule"),
+    !art && text("hình ảnh", "image"),
+    !content.summary && text("phần giới thiệu", "introduction"),
+    !content.rules.length && !hasGuide && text("luật chơi", "rules"),
   ].filter((part): part is string => !!part)
   if (!parts.length) return null
   const last = parts.pop()
+  const list = (and: string) => (parts.length ? `${parts.join(", ")} ${and} ${last}` : last)
   return (
     <p className="mode-intro-note">
-      Wiki chưa ghi nhận {parts.length ? `${parts.join(", ")} và ${last}` : last} của chế độ này.
+      {text(
+        `Wiki chưa ghi nhận ${list("và")} của chế độ này.`,
+        `The Wiki has not recorded this mode's ${list("or")} yet.`,
+      )}
     </p>
   )
 }
@@ -304,7 +325,7 @@ function Sources({ content }: { content: ModeContent }) {
   return (
     <p className="mode-sources">
       {wikiText(locale, "Nguồn", "Sources")}: {content.sources.map((source) => source.label).join("; ")}.{" "}
-      {wikiText(locale, "Hình ảnh", "Images")}: Garena / Liên Quân Mobile.
+      {wikiText(locale, "Hình ảnh: Garena / Liên Quân Mobile.", "Images: Garena / Arena of Valor.")}
     </p>
   )
 }

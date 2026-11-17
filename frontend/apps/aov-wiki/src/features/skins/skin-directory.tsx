@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/publ
 import { usePageLayout, type PageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useRevealedCount } from "@aov/ui/hooks/use-revealed-rows"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText, wikiText } from "../../context/wiki-context"
 import { normalizedHeroSearch } from "../../lib/hero-classifications"
 import { skinCatalogQuery, type SkinEntry } from "../../lib/skin-api"
 import { HeroSkinGroup, SkinCard } from "./skin-cards"
@@ -54,7 +54,7 @@ function usePinnedBar(layout: PageLayout) {
 
 export function SkinDirectory() {
   const scope = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const text = useWikiText()
   const layout = usePageLayout()
   const columns = useSkinColumns()
   const pinned = usePinnedBar(layout)
@@ -229,7 +229,7 @@ export function SkinDirectory() {
         <h2>{text("Chưa tải được trang phục", "Skins could not be loaded")}</h2>
         <p>{text("Vui lòng kiểm tra kết nối và thử lại.", "Check your connection and try again.")}</p>
         <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
-          {scope.t("retry")}
+          {wikiText(scope.locale, "Thử lại", "Retry")}
         </button>
       </div>
     )
@@ -482,7 +482,7 @@ export function SkinDirectory() {
         <div className="wiki-skin-refresh-error" role="status">
           {text("Chưa cập nhật được danh sách.", "The collection could not be refreshed.")}
           <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
-            {scope.t("retry")}
+            {wikiText(scope.locale, "Thử lại", "Retry")}
           </button>
         </div>
       )}

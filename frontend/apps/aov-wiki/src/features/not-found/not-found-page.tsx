@@ -2,7 +2,7 @@ import { useLocation } from "react-router"
 import { WikiHeader } from "../../components/wiki-header"
 import { WikiSearch } from "../../components/wiki-search"
 import { WikiSectionTiles } from "../../components/wiki-section-tiles"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { SITE_NAME } from "../../lib/seo/page-meta"
@@ -13,7 +13,7 @@ export function NotFoundPage() {
   const { locale } = useWikiContext()
   const { pathname } = useLocation()
   usePageHead(notFoundMeta(locale, pathname))
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   return (
     <>
       <WikiHeader />

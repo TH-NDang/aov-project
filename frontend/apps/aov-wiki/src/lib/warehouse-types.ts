@@ -1,3 +1,4 @@
+import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 import { warehouseName, warehouseText } from "@aov/ui/lib/warehouse-content"
 import type { WarehouseContents } from "@aov/ui/lib/warehouse-content"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
@@ -103,7 +104,7 @@ export function matchesWarehouseSearch(entry: WarehouseEntry, query: string, loc
 
 export function warehouseStatValue(stat: WarehouseStat, locale = "vi-VN") {
   const value = formatGameNumber(stat.value, 3)
-  return `${stat.value > 0 ? "+" : ""}${value}${stat.unit === "PERCENT" || stat.unit === "%" ? "%" : stat.unit === "SECONDS" ? (locale.startsWith("en") ? " s" : " giây") : ""}`
+  return `${stat.value > 0 ? "+" : ""}${value}${stat.unit === "PERCENT" || stat.unit === "%" ? "%" : stat.unit === "SECONDS" ? (isEnglishLocale(locale) ? " s" : " giây") : ""}`
 }
 
 export function arcanaDetailDescription(text: WarehouseText | undefined, statRows: { label: string; value: string }[]) {

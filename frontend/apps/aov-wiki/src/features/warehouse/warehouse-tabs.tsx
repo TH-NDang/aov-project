@@ -1,6 +1,7 @@
+import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { useNavigate } from "react-router"
 import { PublicTabBar } from "@aov/ui/components/public-tab-bar"
-import { useWikiContext } from "../../context/wiki-context"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { warehousePath } from "../../lib/wiki-catalog"
 import { WAREHOUSE_SECTIONS, type WarehouseKind } from "../../lib/warehouse-types"
 
@@ -10,8 +11,11 @@ export function WarehouseTabs({ active }: { active: WarehouseKind }) {
   const navigate = useNavigate()
   return (
     <PublicTabBar
-      label={scope.t("warehouse")}
-      tabs={WAREHOUSE_SECTIONS.map(({ kind }) => ({ key: kind, label: scope.t(kind) }))}
+      label={wikiText(scope.locale, "Kho trang bị", "Armory")}
+      tabs={WAREHOUSE_SECTIONS.map(({ kind }) => ({
+        key: kind,
+        label: wikiText(scope.locale, ...SECTION_NAMES[kind]),
+      }))}
       active={active}
       onSelect={(key) => navigate(scope.href(warehousePath(key)))}
     />

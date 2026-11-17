@@ -1,3 +1,4 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "react-router"
 import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
@@ -62,7 +63,8 @@ export function HeroDirectory() {
   const layout = usePageLayout()
   const query = useQuery(heroCatalogQuery(scope))
   const changes = usePublishedChanges("HERO")
-  const { locale, t } = scope
+  const { locale } = scope
+  const t = localeText(locale)
   const [searchParams, setSearchParams] = useSearchParams()
   const search = (searchParams.get("q") || "").slice(0, 120)
   const roles = selectedHeroFilters(searchParams.get("role"), HERO_ROLES)
@@ -133,7 +135,7 @@ export function HeroDirectory() {
   const searchBox = (
     <label className="wiki-hero-search">
       <WikiIcon name="search" size={18} />
-      <span className="sr-only">{t("searchHeroes")}</span>
+      <span className="sr-only">{t("Tìm tướng", "Search heroes")}</span>
       <input
         type="search"
         value={search}
@@ -209,7 +211,7 @@ export function HeroDirectory() {
           <h2>{wikiText(locale, "Chưa thể tải thư viện Tướng", "Could not load the hero library")}</h2>
           <p>{wikiText(locale, "Vui lòng kiểm tra kết nối và thử lại.", "Check your connection and try again.")}</p>
           <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
-            {t("retry")}
+            {t("Thử lại", "Retry")}
           </button>
         </div>
       ) : query.data && !found ? (

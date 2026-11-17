@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { MODE_PARAMS, readModeParam, readParam, writeParam } from "../../lib/search-params"
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate, useSearchParams } from "react-router"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
@@ -10,7 +11,7 @@ import {
 } from "@aov/ui/components/public-overlay"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { signIn, useWikiSession } from "../../lib/wiki-auth"
 import {
   BOARD_SLOTS,
@@ -43,7 +44,7 @@ const SORTS: [LineupSort, LabelNames][] = [
   ["recent", ["Mới cập nhật", "Recently updated"]],
 ]
 /** How a sort reads in the address; the default sort has none. */
-const SORT_KEYS: Partial<Record<LineupSort, string>> = { trending: "dang-len", recent: "moi" }
+const SORT_KEYS: Partial<Record<LineupSort, string>> = { trending: "trending", recent: "recent" }
 
 /** Likes of the signed-in reader, with the server's answer applied right away. */
 function useLikes(code: string) {
@@ -77,8 +78,7 @@ type Likes = ReturnType<typeof useLikes>
 
 /** The heart and the count; a signed-out reader is asked to sign in, a reader's own lineup cannot be liked. */
 function LikeButton({ id, base, likes, own }: { id: string; base: number; likes: Likes; own?: boolean }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const count = likes.likes(id, base)
   const counted = text(`${count} lượt thích`, `${count} ${count === 1 ? "like" : "likes"}`)
   if (likes.session.status !== "authenticated")
@@ -126,8 +126,7 @@ function LineupUnits({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const shown = units.filter((item) => index.units.has(item.unitCode))
   return (
     <div
@@ -200,8 +199,13 @@ function LineupPieces({
 
 /** Cards while the community lineups load, in the grid they will fill. */
 function LineupSkeletons() {
+  const text = useWikiText()
   return (
-    <div className="lineup-grid" role="status" aria-label="Đang tải đội hình cộng đồng">
+    <div
+      className="lineup-grid"
+      role="status"
+      aria-label={text("Đang tải đội hình cộng đồng", "Loading community lineups")}
+    >
       <span className="lineup-card lineup-skeleton" />
       <span className="lineup-card lineup-skeleton" />
     </div>
@@ -219,28 +223,27 @@ export function LineupsTab({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
-  const { href, locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { href } = useWikiContext()
+  const text = useWikiText()
   const compact = usePageLayout() === "compact"
   const likes = useLikes(code)
   const [view, setView] = useLineupView()
   // The community list's sort and unit live in the address, so a reload or a shared link keeps them.
   const [params, setParams] = useSearchParams()
-  const sort = SORTS.find(([key]) => SORT_KEYS[key] === params.get("xep"))?.[0] ?? "popular"
-  const asked = params.get("quan")
+  const sort = SORTS.find(([key]) => SORT_KEYS[key] === readModeParam(params, MODE_PARAMS.sort))?.[0] ?? "popular"
+  const asked = readParam(params, MODE_PARAMS.lineupUnit)
   const unit = asked && index.units.has(asked) ? asked : null
-  const change = (key: "xep" | "quan", value: string | null | undefined) =>
+  const change = (key: "sort" | "lineupUnit", value: string | null | undefined) =>
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
-        if (value) next.set(key, value)
-        else next.delete(key)
+        writeParam(next, MODE_PARAMS[key], value)
         return next
       },
       { replace: true, preventScrollReset: true },
     )
-  const setSort = (value: LineupSort) => change("xep", SORT_KEYS[value])
-  const setUnit = (value: string | null) => change("quan", value)
+  const setSort = (value: LineupSort) => change("sort", SORT_KEYS[value])
+  const setUnit = (value: string | null) => change("lineupUnit", value)
   const community = useInfiniteQuery(communityLineupsQuery(code, sort, unit))
   const communityLineups = community.data?.pages.flatMap((page) => page.items) ?? []
   const communityTotal = community.data?.pages[0]?.totalElements
@@ -266,7 +269,7 @@ export function LineupsTab({
           id="lineups-editorial"
           title={text("Đội hình đề xuất", "Recommended lineups")}
           count={editorial.length}
-          note="Xếp theo hạng biên tập, rồi theo lượt thích."
+          note={text("Xếp theo hạng biên tập, rồi theo lượt thích.", "Ranked by the editors' tier, then by likes.")}
           action={<LineupViewSwitch view={view} onChange={setView} labels={!compact} />}
         />
         {editorial.length ? (
@@ -286,7 +289,9 @@ export function LineupsTab({
             ))}
           </div>
         ) : (
-          <p className="mode-meta">Biên tập viên chưa đề xuất đội hình nào.</p>
+          <p className="mode-meta">
+            {text("Biên tập viên chưa đề xuất đội hình nào.", "The editors have not suggested a lineup yet.")}
+          </p>
         )}
       </section>
 
@@ -295,7 +300,7 @@ export function LineupsTab({
           id="lineups-community"
           title={text("Đội hình cộng đồng", "Community lineups")}
           count={communityTotal}
-          note="Đội hình người đọc đã lưu và chia sẻ."
+          note={text("Đội hình người đọc đã lưu và chia sẻ.", "Lineups readers saved and shared.")}
           action={
             compact ? undefined : (
               <Link className="mode-chip" data-tone="accent" to={postHref}>
@@ -306,7 +311,11 @@ export function LineupsTab({
           }
         />
         <div className="guide-toolbar" data-stack={compact || undefined}>
-          <div className="mode-chip-row" role="group" aria-label="Sắp xếp đội hình cộng đồng">
+          <div
+            className="mode-chip-row"
+            role="group"
+            aria-label={text("Sắp xếp đội hình cộng đồng", "Sort community lineups")}
+          >
             {SORTS.map(([key, label]) => (
               <button
                 key={key}
@@ -348,7 +357,7 @@ export function LineupsTab({
                 : "Chưa có đội hình cộng đồng. Hãy là người đầu tiên chia sẻ đội hình!"}
             </p>
             <Link className="mode-chip" data-tone="accent" to={postHref}>
-              Xếp và đăng đội hình
+              {text("Xếp và đăng đội hình", "Build and share a lineup")}
             </Link>
           </div>
         ) : (
@@ -402,8 +411,7 @@ type Stage = (typeof STAGES)[number]["key"]
 
 /** Items the lineup builds first, numbered in order, each naming itself and its effect on hover. */
 function PriorityItems({ codes, index }: { codes: string[]; index: GuideIndex }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   return (
     <section className="lineup-extra" aria-label={text("Trang bị ưu tiên", "Priority items")}>
       <h4>{text("Trang bị ưu tiên", "Priority items")}</h4>
@@ -426,8 +434,7 @@ function PriorityItems({ codes, index }: { codes: string[]; index: GuideIndex })
 
 /** Blessings to take with the lineup, in order, each with the game's card icon. */
 function PriorityBlessings({ codes, index }: { codes: string[]; index: GuideIndex }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const blessings = new Map(index.content.blessings.map((blessing) => [blessing.code, blessing]))
   return (
     <section className="lineup-extra" aria-label={text("Chúc phúc ưu tiên", "Priority blessings")}>
@@ -455,8 +462,7 @@ function PriorityBlessings({ codes, index }: { codes: string[]; index: GuideInde
 
 /** Open a lineup in the builder, or copy it to paste there later with the builder's paste button. */
 function LineupCopyMenu({ builder }: { builder: string }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
   const copy = async () => {
@@ -506,8 +512,7 @@ function LineupCopyMenu({ builder }: { builder: string }) {
 
 /** Tips for playing the lineup, after a rule at the card's foot. */
 function LineupTips({ tip }: { tip?: string | null }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   if (!tip) return null
   return (
     <aside className="lineup-tips" aria-label={text("Mẹo", "Tips")}>
@@ -538,8 +543,7 @@ function EditorialLineup({
   onOpen: (code: string) => void
   builder: string
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const stages = lineup.stages ?? []
   const [stage, setStage] = useState<Stage>("LATE")
   const current = stage === "LATE" ? null : stages.find((entry) => entry.stage === stage)

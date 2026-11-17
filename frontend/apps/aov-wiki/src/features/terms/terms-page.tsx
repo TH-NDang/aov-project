@@ -1,3 +1,4 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { useEffect, useMemo, useRef, type CSSProperties } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams, useSearchParams } from "react-router"
@@ -6,7 +7,7 @@ import { termIcon } from "@aov/ui/components/gameplay-icons"
 import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 import { createEntityIndex, defaultEntityColor, referenceTranslation } from "@aov/ui/lib/entity-rich-text"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { notFoundMeta, termMeta } from "../../lib/seo/page-meta"
@@ -35,8 +36,9 @@ function lastRowShare(short: number, fromEnd: number) {
 /** The public glossary. Term mentions anywhere in the wiki link to /terms/{id}. */
 export function TermsPage() {
   const scope = useWikiContext()
-  const { locale, t, href } = scope
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { locale, href } = scope
+  const t = localeText(locale)
+  const text = useWikiText()
   const { termId } = useParams()
   const [params, setParams] = useSearchParams()
   const search = params.get("q") ?? ""
@@ -94,7 +96,7 @@ export function TermsPage() {
   return (
     <>
       <CatalogHeading
-        title={t("terms")}
+        title={t("Thuật ngữ", "Glossary")}
         lead={text(
           "Giải thích các từ dùng trong mô tả kỹ năng, trang bị và ghi chú cập nhật.",
           "Explains the words used in ability, item and patch descriptions.",
@@ -132,7 +134,7 @@ export function TermsPage() {
       {references.isPending ? (
         <>
           <p className="sr-only" role="status">
-            {t("loading")}
+            {t("Đang tải…", "Loading…")}
           </p>
           <ul className="wiki-terms-list" aria-hidden="true">
             {Array.from({ length: 12 }, (_, position) => (
@@ -144,7 +146,7 @@ export function TermsPage() {
         <div role="status" className="wiki-terms-state">
           <p>{text("Chưa tải được thuật ngữ.", "Could not load the glossary.")}</p>
           <button type="button" onClick={() => void references.refetch()}>
-            {t("retry")}
+            {t("Thử lại", "Retry")}
           </button>
         </div>
       ) : (

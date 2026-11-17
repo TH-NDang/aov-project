@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router"
 import { EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
 import { referenceTranslation, type EntityReference } from "@aov/ui/lib/entity-rich-text"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../context/wiki-context"
 import { wikiReferencesQuery } from "../lib/wiki-references"
 import { WikiIcon } from "./wiki-icon"
 import { SITE_NAME } from "../lib/seo/page-meta"
 import { foldSearchText } from "@aov/ui/lib/search-text"
+import { SECTION_NAMES } from "../lib/wiki-sections"
 import "./wiki-search.css"
 
 const LIMIT = 8
@@ -91,7 +92,8 @@ export function WikiSearch({
   onDone?: () => void
 }) {
   const navigate = useNavigate()
-  const { locale, href, t } = useWikiContext()
+  const { locale, href } = useWikiContext()
+  const t = useWikiText()
   const [search, setSearch] = useState("")
   const [focused, setFocused] = useState(false)
   const [active, setActive] = useState(0)
@@ -100,7 +102,7 @@ export function WikiSearch({
   const { matches, needle, pending, failed, retry } = useMatches(search)
   const open = focused && needle.length > 0
   const lists = LISTS.map(([path, key]) => ({
-    label: t(key),
+    label: t(...SECTION_NAMES[key]),
     to: href(`${path}?${new URLSearchParams({ q: search.trim() })}`),
   }))
   // One run of options for the keyboard: the matching names, then the lists.
@@ -191,7 +193,7 @@ export function WikiSearch({
           {matches.length === 0 && (
             <p className="wiki-search-empty" role="status">
               {pending
-                ? t("loading")
+                ? t("Đang tải…", "Loading…")
                 : failed
                   ? wikiText(
                       locale,

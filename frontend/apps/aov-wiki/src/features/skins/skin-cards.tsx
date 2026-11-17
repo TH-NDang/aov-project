@@ -1,6 +1,6 @@
 import { Link } from "react-router"
 import type { PageLayout } from "@aov/ui/hooks/use-page-layout"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import { useDragScroll } from "../../lib/use-drag-scroll"
 import type { SkinEntry } from "../../lib/skin-api"
 import { SkinIcon } from "../../components/skin-icon"
@@ -62,8 +62,8 @@ export function HeroSkinGroup({
   onCollapse: () => void
   onOpen: (skin: SkinEntry) => void
 }) {
-  const { locale, href } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { href } = useWikiContext()
+  const text = useWikiText()
   const scroll = useDragScroll("horizontal")
   const hero = skins[0]
   const titleId = `skins-${hero.heroId}`

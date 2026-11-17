@@ -1,3 +1,4 @@
+import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
 import { PublishedWarehouseView } from "./warehouse-view"
@@ -20,7 +21,7 @@ import {
   type WarehouseEntry,
 } from "../../lib/warehouse-types"
 import "./warehouse-page.css"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText, wikiText } from "../../context/wiki-context"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { notFoundMeta, warehouseEntryMeta } from "../../lib/seo/page-meta"
@@ -34,14 +35,14 @@ const OPEN_ENTRY =
 
 export default function WarehousePage() {
   const scope = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const text = useWikiText()
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const wide = usePageLayout() === "wide"
   const { tab, entryCode } = useParams()
   const kind = warehouseKind(tab ?? null)
   const changes = usePublishedChanges(warehouseChangeDomain[kind])
-  const sectionName = scope.t(kind)
+  const sectionName = wikiText(scope.locale, ...SECTION_NAMES[kind])
   const search = params.get("q") ?? ""
   const group = params.get("group") ?? ""
   const selectedId = entryCode ?? null
@@ -221,7 +222,7 @@ export default function WarehousePage() {
           <div className="wiki-warehouse-notice" role="status">
             {text("Chưa tải được bộ lọc nhóm.", "Group filters could not be loaded.")}
             <button type="button" onClick={() => void metadata.refetch()}>
-              {scope.t("retry")}
+              {wikiText(scope.locale, "Thử lại", "Retry")}
             </button>
           </div>
         )}
@@ -232,7 +233,7 @@ export default function WarehousePage() {
               "Showing cached data while the connection is unavailable.",
             )}
             <button type="button" onClick={() => void catalog.refetch()}>
-              {scope.t("retry")}
+              {wikiText(scope.locale, "Thử lại", "Retry")}
             </button>
           </div>
         )}
@@ -246,7 +247,7 @@ export default function WarehousePage() {
                 <h2>{text("Chưa tải được dữ liệu", "Data could not be loaded")}</h2>
                 <p>{text("Kiểm tra kết nối rồi thử lại.", "Check your connection and try again.")}</p>
                 <button type="button" onClick={() => void catalog.refetch()} disabled={catalog.isFetching}>
-                  {scope.t("retry")}
+                  {wikiText(scope.locale, "Thử lại", "Retry")}
                 </button>
               </div>
             ) : !filtered.length ? (

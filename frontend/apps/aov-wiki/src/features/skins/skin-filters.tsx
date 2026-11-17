@@ -1,7 +1,7 @@
 import { useRef, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
 import { WikiImage } from "../../components/wiki-image"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import type { SkinFilterOption } from "../../lib/skin-api"
 import { SkinIcon } from "../../components/skin-icon"
 
@@ -54,7 +54,7 @@ export function FilterSelect({
   onChange: (value: string) => void
 }) {
   const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const root = useRef<HTMLDivElement>(null)
   const chosen = options.find((option) => option.code === value)
   const counts = new Map<string, number>()
@@ -124,8 +124,7 @@ export function FilterSelect({
 }
 
 export function SkinSearch({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const field = useRef<HTMLInputElement>(null)
   return (
     <div className="wiki-skin-search">

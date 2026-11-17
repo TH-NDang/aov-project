@@ -1,3 +1,4 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { useState, type CSSProperties } from "react"
 import { Link, Navigate, useLocation, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -43,7 +44,8 @@ function heroMetaForm(form: HeroListForm, forms: readonly HeroListForm[], locale
 
 function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: HeroListForm; returnTo: string }) {
   const scope = useWikiContext()
-  const { locale, t } = scope
+  const { locale } = scope
+  const t = localeText(locale)
   // A past patch only changes the abilities; the rest of the page is today's hero (ADR-016).
   const past = !!(scope.seasonId || scope.patchVariantId)
   const current = useQuery(heroDetailQuery(hero.id, currentScope(scope)))
@@ -230,11 +232,11 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
           {query.isError ? (
             <div className="wiki-handbook-notice" role="status">
               {wikiText(locale, "Chưa tải được hồ sơ tướng.", "The hero profile could not be loaded.")}{" "}
-              <button onClick={() => void query.refetch()}>{t("retry")}</button>
+              <button onClick={() => void query.refetch()}>{t("Thử lại", "Retry")}</button>
             </div>
           ) : (
             <p className="wiki-handbook-notice" role="status">
-              {t("loading")}
+              {t("Đang tải…", "Loading…")}
             </p>
           )}
         </HeroStage>
@@ -245,7 +247,8 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
 
 export function HeroDetailPage() {
   const scope = useWikiContext()
-  const { locale, t } = scope
+  const { locale } = scope
+  const t = localeText(locale)
   const { heroCode, formKey } = useParams()
   const location = useLocation()
   const catalog = useQuery(heroCatalogQuery(scope))
@@ -269,7 +272,7 @@ export function HeroDetailPage() {
         </h1>
         {catalog.isError && (
           <button type="button" onClick={() => void catalog.refetch()}>
-            {t("retry")}
+            {t("Thử lại", "Retry")}
           </button>
         )}
         <Link to={scope.href(returnTo)}>{wikiText(locale, "Về thư viện Tướng", "Back to the hero library")}</Link>

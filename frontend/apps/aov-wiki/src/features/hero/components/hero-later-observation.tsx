@@ -1,5 +1,5 @@
 import { WikiIcon } from "../../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../../context/wiki-context"
 import type { HeroLaterObservation } from "../../../lib/hero-api"
 import { PatchName } from "../../../components/hero-patch-name"
 
@@ -9,8 +9,8 @@ import { PatchName } from "../../../components/hero-patch-name"
  */
 export function HeroLaterObservationNote({ later }: { later: HeroLaterObservation }) {
   const scope = useWikiContext()
-  const { locale, options, patchVariantId, setScope } = scope
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { options, patchVariantId, setScope } = scope
+  const text = useWikiText()
   const selected = options?.patches.find((patch) => patch.id === patchVariantId)
   const target = options?.patches.find((patch) => patch.id === later.patchVariantId)
   const recorded = target ? <PatchName patch={target} /> : later.patchCode
