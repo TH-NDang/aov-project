@@ -15,7 +15,6 @@ import com.wikiaov.arcana.internal.domain.ArcanaContent;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
-import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
@@ -34,14 +33,6 @@ class ArcanaCatalogQueriesTest {
     private final ArcanaCatalogQueries queries = new ArcanaCatalogQueries(patchChanges, identities, revisions,
             translations, contexts, Clock.systemUTC(), content, rules, publicMedia);
     private final UUID rulesetId = UUID.randomUUID();
-
-    @Test
-    void rejectsInvalidPageBeforeResolvingRulesetOrLoadingContent() {
-        assertThatThrownBy(() -> queries.list(rulesetId, "vi-VN", "", -1, 10))
-                .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.getErrorCode()).isEqualTo(PlatformErrorCode.INVALID_QUERY_PARAMETER));
-        verifyNoInteractions(contexts, revisions, translations, identities, content);
-    }
 
     @Test
     void searchesEveryTranslationOfSelectedRevisionAndKeepsIdentityOrdering() {

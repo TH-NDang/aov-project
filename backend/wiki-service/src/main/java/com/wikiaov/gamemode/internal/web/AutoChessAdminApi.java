@@ -7,6 +7,7 @@ import com.wikiaov.gamemode.internal.application.GameModeCommands.Visibility;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.AdminGuide;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.AdminLineup;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.Revision;
+import com.wikiaov.platform.PageLimits;
 import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +18,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import java.util.UUID;
 
@@ -98,9 +102,9 @@ public interface AutoChessAdminApi {
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
     PageSlice<AdminLineup> communityLineups(@Parameter(description = "Game mode id.") UUID modeId,
-            @Parameter(description = "Optional lineup status filter: VISIBLE or HIDDEN.") String status,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") int size,
+            @Parameter(description = "Optional lineup status filter: VISIBLE or HIDDEN.") @Pattern(regexp = "VISIBLE|HIDDEN") String status,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "autoChessAdminApi_visibility", summary = "Visibility - auto chess admin", description = "Visibility for auto chess admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('gamemode:publish').", security = @SecurityRequirement(name = "bearerAuth"), responses = {

@@ -19,7 +19,6 @@ import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogChanges;
 import com.wikiaov.platform.CatalogSnapshots;
 import com.wikiaov.platform.PageSlice;
-import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -79,7 +78,6 @@ class EnchantmentCatalogQueries {
 
     PageSlice<EnchantmentView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean draftsOnly) {
-        requirePageBounds(page, size);
         if (rulesetId != null)
             contexts.requireRuleset(rulesetId);
         String needle = q.strip().toLowerCase(Locale.ROOT);
@@ -89,11 +87,6 @@ class EnchantmentCatalogQueries {
         var copies = translationsFor(selected);
         var owners = matchingOwners(selected, copies, needle);
         return requestedPage(owners, selected, copies, page, size);
-    }
-
-    private void requirePageBounds(int page, int size) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
     }
 
     private List<CatalogSnapshots.Snapshot<EnchantmentRevision>> activeSnapshots(UUID rulesetId, boolean draftsOnly) {
@@ -247,8 +240,6 @@ class EnchantmentCatalogQueries {
 
     PageSlice<EnchantmentView> published(String region, String locale, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
         var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
                 includeUnscoped);
         var context = scope.gameplay();

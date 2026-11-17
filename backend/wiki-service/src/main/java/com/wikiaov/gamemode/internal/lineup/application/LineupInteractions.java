@@ -47,6 +47,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class LineupInteractions {
     public static final Set<String> SORTS = Set.of("popular", "trending", "recent");
+    /** The largest page of community lineups a reader asks for. */
+    public static final int MAX_PAGE_SIZE = 50;
 
     static final int INSIGHT_SAMPLE = 2000;
 

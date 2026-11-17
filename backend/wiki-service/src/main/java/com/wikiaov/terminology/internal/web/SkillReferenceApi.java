@@ -1,6 +1,7 @@
 package com.wikiaov.terminology.internal.web;
 
 import com.wikiaov.platform.*;
+import com.wikiaov.platform.PageLimits;
 import com.wikiaov.terminology.SkillReferenceProvider.Candidate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.*;
 import org.springframework.http.*;
 import org.springframework.web.context.request.WebRequest;
@@ -31,8 +34,8 @@ public interface SkillReferenceApi {
             @Parameter(description = "Search text.") String q,
             @Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Ids.") String ids,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") Integer size,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) Integer size,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "skillReferenceApi_published", summary = "Published - skill reference", description = "Published for skill reference. Public read endpoint. Unrecognized query parameters are rejected.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
@@ -50,8 +53,8 @@ public interface SkillReferenceApi {
             @Parameter(description = "Search text.") String q,
             @Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Ids.") String ids,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") Integer size,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) Integer size,
             @Parameter(description = "Optional published season in the market's current ruleset.") UUID seasonId,
             @Parameter(description = "Optional published patch variant; must belong to the selected season when supplied.") UUID patchVariantId,
             @Parameter(description = "Include observations without a known patch in an explicit historical scope; current reads always include them.") boolean includeUnscoped,

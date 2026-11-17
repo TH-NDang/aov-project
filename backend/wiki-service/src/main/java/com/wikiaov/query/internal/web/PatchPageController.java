@@ -55,8 +55,6 @@ public class PatchPageController implements PatchPageApi {
         if (!Set.of("HERO", "SPELL").contains(domain) && provider.isEmpty())
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                     "This domain does not have an implemented change provider.");
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
         var patch = patchVariantId == null
                 ? patches.published(id, region, locale)
                 : patches.publishedVariant(id, patchVariantId, region, locale);

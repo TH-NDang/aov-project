@@ -1,6 +1,7 @@
 package com.wikiaov.spell.internal.web;
 
 import com.wikiaov.platform.*;
+import com.wikiaov.platform.PageLimits;
 import com.wikiaov.spell.internal.application.SpellCommands.*;
 import com.wikiaov.spell.internal.application.response.SpellRemovalView;
 import com.wikiaov.spell.internal.application.response.SpellView;
@@ -13,6 +14,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.*;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
@@ -28,8 +31,8 @@ public interface SpellAdminApi {
     PageSlice<SpellView> list(@Parameter(description = "Ruleset id identifier.") UUID rulesetId,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(description = "Search text.") String q,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") int size,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(description = "Season id identifier.") UUID seasonId,
             @Parameter(description = "Patch variant id identifier.") UUID patchVariantId,
             @Parameter(description = "Include entries that have no changes in the selected context.") boolean includeUnchanged,

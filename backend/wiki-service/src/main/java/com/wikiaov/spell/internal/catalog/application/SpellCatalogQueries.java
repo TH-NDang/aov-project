@@ -11,7 +11,6 @@ import com.wikiaov.platform.CatalogChanges;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogSnapshots;
 import com.wikiaov.platform.PageSlice;
-import com.wikiaov.platform.PlatformErrorCode;
 import com.wikiaov.spell.internal.application.SpellErrorCode;
 import com.wikiaov.spell.internal.application.response.SpellRemovalView;
 import com.wikiaov.spell.internal.application.response.SpellView;
@@ -84,7 +83,6 @@ class SpellCatalogQueries {
 
     PageSlice<SpellView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean includeUnscoped, boolean draftsOnly) {
-        requirePageBounds(page, size);
         if (rulesetId != null)
             contexts.requireRuleset(rulesetId);
         String needle = q.strip().toLowerCase(Locale.ROOT);
@@ -95,11 +93,6 @@ class SpellCatalogQueries {
         var copies = translationsFor(selected);
         var owners = matchingOwners(selected, copies, needle);
         return requestedPage(owners, selected, copies, page, size);
-    }
-
-    private void requirePageBounds(int page, int size) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
     }
 
     private List<CatalogSnapshots.Snapshot<SpellRevision>> activeSnapshots(UUID rulesetId, boolean draftsOnly) {
@@ -257,8 +250,6 @@ class SpellCatalogQueries {
 
     PageSlice<SpellView> published(String region, String locale, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
         var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
                 includeUnscoped);
         var context = scope.gameplay();
@@ -344,8 +335,6 @@ class SpellCatalogQueries {
 
     PageSlice<SpellView> archives(String region, String locale, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
         var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
                 includeUnscoped);
         var context = scope.gameplay();

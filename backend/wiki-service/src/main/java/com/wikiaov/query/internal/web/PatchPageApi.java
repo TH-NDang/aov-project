@@ -1,6 +1,7 @@
 package com.wikiaov.query.internal.web;
 
 import com.wikiaov.platform.*;
+import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -8,6 +9,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.*;
 import org.springframework.http.*;
 
@@ -45,7 +48,7 @@ public interface PatchPageApi {
             @Parameter(description = "Public patch change domain. Only published gameplay changes are included. Existing hero details and spell removal events retain their format.", schema = @Schema(allowableValues = {
                     "HERO", "SPELL", "ITEM", "ENCHANTMENT", "ARCANA"})) String domain,
             @Parameter(description = "Optional published variant from the regional catalog, including undated variants.") UUID patchVariantId,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") int size,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(hidden = true) HttpServletRequest request);
 }

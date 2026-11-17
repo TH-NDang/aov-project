@@ -9,10 +9,8 @@ import com.wikiaov.gamemode.internal.application.response.GameModeViews.AdminLin
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.Revision;
 import com.wikiaov.gamemode.internal.guide.application.AutoChessGuides;
 import com.wikiaov.gamemode.internal.lineup.application.LineupInteractions;
-import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.PageSlice;
-import com.wikiaov.platform.PlatformErrorCode;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -81,9 +79,6 @@ public class AutoChessAdminController implements AutoChessAdminApi {
             @RequestParam(required = false) String status, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("status", "page", "size"));
-        if (status != null && !Set.of("VISIBLE", "HIDDEN").contains(status) || page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
-                    "Use status VISIBLE or HIDDEN, page from 0 and size from 1 to 100.");
         return lineups.adminList(modeId, status, page, size);
     }
 

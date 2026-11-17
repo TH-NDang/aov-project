@@ -119,8 +119,9 @@ public class SkillReferenceCatalog {
                 throw invalid("Search text and explicit identifiers cannot be combined.");
         }
         int size = requestedSize == null ? (ids.isEmpty() ? 20 : 50) : requestedSize;
-        if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE)
-            throw invalid("Use a non-negative page and a size between 1 and 100.");
+        // The bounds of page and size are declared on SkillReferenceApi; this guards the offset only.
+        if ((long) page * size > Integer.MAX_VALUE)
+            throw invalid("The page is beyond the last possible entry.");
         return new Input(locale, q, List.copyOf(ids), page, size);
     }
 
