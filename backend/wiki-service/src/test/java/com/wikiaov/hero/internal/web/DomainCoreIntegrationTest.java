@@ -627,9 +627,9 @@ class DomainCoreIntegrationTest {
         send(post(previousPath), Map.of("description", "  ", "sourceUrl", "https://example.org/old"), 422);
         send(post(previousPath), Map.of("description", "x".repeat(4001), "sourceUrl", "https://example.org/old"), 422);
         send(post(ROOT + "/admin/hero-changes/" + newerChange + "/mechanics/" + stat.get("id") + "/previous"),
-                Map.of("description", "Not a mechanic", "sourceUrl", "https://example.org/old"), 422);
+                Map.of("description", "Not a mechanic", "sourceUrl", "https://example.org/old"), 404);
         send(post(ROOT + "/admin/hero-changes/" + olderChange + "/mechanics/" + mechanic.get("id") + "/previous"),
-                Map.of("description", "Another change set", "sourceUrl", "https://example.org/old"), 422);
+                Map.of("description", "Another change set", "sourceUrl", "https://example.org/old"), 404);
         assertThat(send(post(previousPath),
                 Map.of("description", " Earlier behaviour ", "sourceUrl", "https://example.org/old?oldid=1"), 201))
                 .containsEntry("id", mechanic.get("id"));

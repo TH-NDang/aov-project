@@ -289,6 +289,10 @@ public class HeroPatchChanges implements HeroChangeQueries {
             throw HeroValidation.invalid("The source must be an http(s) URL of the official patch notes.");
     }
 
+    private static ApiException changeSetNotFound() {
+        return new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_NOT_FOUND, "The hero change set was not found.");
+    }
+
     private static boolean isHttpUrl(String value) {
         try {
             var uri = value == null ? null : new URI(value);
@@ -309,8 +313,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
     @Transactional
     @PreAuthorize("hasAuthority('patch:write')")
     public Map<String, Object> assess(UUID changeSetId, AssessmentInput input) {
-        UUID heroId = history.heroId(changeSetId)
-                .orElseThrow(() -> HeroValidation.invalid("The hero change set was not found."));
+        UUID heroId = history.heroId(changeSetId).orElseThrow(HeroPatchChanges::changeSetNotFound);
         store.lockHero(heroId);
         if (input.kind() == null)
             throw HeroValidation.invalid("An overall classification is required.");
@@ -349,9 +352,9 @@ public class HeroPatchChanges implements HeroChangeQueries {
     @PreAuthorize("hasAuthority('patch:write')")
     public UUID recordPrevious(UUID changeSetId, UUID changeId, PreviousInput input) {
         var change = history.mechanicChange(changeId).filter(item -> item.getChangeSetId().equals(changeSetId))
-                .orElseThrow(() -> HeroValidation.invalid("The mechanic change was not found in this change set."));
-        UUID heroId = history.heroId(changeSetId)
-                .orElseThrow(() -> HeroValidation.invalid("The hero change set was not found."));
+                .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_NOT_FOUND,
+                        "The mechanic change was not found in this change set."));
+        UUID heroId = history.heroId(changeSetId).orElseThrow(HeroPatchChanges::changeSetNotFound);
         store.lockHero(heroId);
 
         String description = input == null || input.description() == null ? "" : input.description().strip();
