@@ -4,16 +4,24 @@ import com.wikiaov.access.*;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PageSlice;
-import com.wikiaov.video.VideoSubject;
 import com.wikiaov.video.VideoSubjectKind;
 import com.wikiaov.video.VideoSubjectProvider;
+import com.wikiaov.video.internal.application.VideoCommands.AdminFilter;
+import com.wikiaov.video.internal.application.VideoCommands.ImportVideo;
+import com.wikiaov.video.internal.application.VideoCommands.ImportVideos;
+import com.wikiaov.video.internal.application.VideoCommands.SaveVideo;
+import com.wikiaov.video.internal.application.VideoViews.AdminVideo;
+import com.wikiaov.video.internal.application.VideoViews.ImportRejection;
+import com.wikiaov.video.internal.application.VideoViews.ImportResult;
+import com.wikiaov.video.internal.application.VideoViews.PublicVideo;
+import com.wikiaov.video.internal.application.VideoViews.PublicVideoList;
+import com.wikiaov.video.internal.application.VideoViews.SubjectList;
 import com.wikiaov.video.internal.domain.*;
 import com.wikiaov.video.internal.persistence.SubjectVideoRepository;
 import com.wikiaov.video.internal.persistence.SubjectVideoSpecifications;
 import com.wikiaov.video.internal.persistence.entity.SubjectVideo;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
@@ -60,122 +68,6 @@ public class SubjectVideos {
         this.actors = actors;
         this.audit = audit;
         this.clock = clock;
-    }
-
-    public record PublicVideo(
-            UUID id,
-            VideoSubjectKind subjectKind,
-            UUID subjectId,
-            @Nullable String subjectKey,
-            VideoPurpose purpose,
-            String title,
-            @Nullable String note,
-            String url,
-            VideoProvider provider,
-            @Nullable String providerVideoId,
-            int startSeconds,
-            @Nullable Integer durationSeconds,
-            @Nullable String channelName,
-            @Nullable LocalDate publishedOn,
-            @Nullable UUID patchVariantId
-    ) {
-    }
-
-    public record PublicVideoList(
-            List<PublicVideo> items
-    ) {
-    }
-
-    public record AdminVideo(
-            UUID id,
-            VideoSubjectKind subjectKind,
-            UUID subjectId,
-            @Nullable String subjectKey,
-            VideoPurpose purpose,
-            String title,
-            @Nullable String note,
-            String url,
-            VideoProvider provider,
-            @Nullable String providerVideoId,
-            int startSeconds,
-            @Nullable Integer durationSeconds,
-            @Nullable String channelName,
-            @Nullable LocalDate publishedOn,
-            @Nullable UUID patchVariantId,
-            int displayOrder,
-            VideoStatus status,
-            VideoOrigin origin,
-            long version,
-            Instant createdAt,
-            Instant updatedAt
-    ) {
-    }
-
-    public record AdminFilter(
-            @Nullable VideoSubjectKind subjectKind,
-            @Nullable UUID subjectId,
-            @Nullable String subjectKey,
-            @Nullable VideoStatus status,
-            @Nullable VideoPurpose purpose,
-            @Nullable VideoOrigin origin,
-            @Nullable String q
-    ) {
-    }
-
-    public record SaveVideo(
-            VideoSubjectKind subjectKind,
-            UUID subjectId,
-            @Nullable String subjectKey,
-            VideoPurpose purpose,
-            String title,
-            @Nullable String note,
-            String url,
-            @Nullable Integer startSeconds,
-            @Nullable Integer durationSeconds,
-            @Nullable String channelName,
-            @Nullable LocalDate publishedOn,
-            @Nullable UUID patchVariantId,
-            @Nullable Integer displayOrder,
-            VideoStatus status,
-            @Nullable Long expectedVersion
-    ) {
-    }
-
-    public record ImportVideo(
-            VideoSubjectKind subjectKind,
-            UUID subjectId,
-            @Nullable String subjectKey,
-            VideoPurpose purpose,
-            String title,
-            String url,
-            @Nullable Integer durationSeconds,
-            @Nullable LocalDate publishedOn,
-            @Nullable Integer displayOrder,
-            VideoStatus status
-    ) {
-    }
-
-    public record ImportVideos(
-            List<ImportVideo> items
-    ) {
-    }
-
-    public record ImportRejection(
-            int index,
-            String reason
-    ) {
-    }
-
-    public record ImportResult(
-            int created,
-            int skipped,
-            List<ImportRejection> rejected
-    ) {
-    }
-
-    public record SubjectList(
-            List<VideoSubject> items
-    ) {
     }
 
     /**

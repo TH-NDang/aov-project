@@ -1,7 +1,7 @@
 package com.wikiaov.video.internal.web;
 
 import com.wikiaov.video.VideoSubjectKind;
-import com.wikiaov.video.internal.application.SubjectVideos.PublicVideoList;
+import com.wikiaov.video.internal.application.VideoViews.PublicVideoList;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

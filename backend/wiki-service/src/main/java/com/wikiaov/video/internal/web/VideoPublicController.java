@@ -4,7 +4,7 @@ import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import com.wikiaov.video.VideoSubjectKind;
 import com.wikiaov.video.internal.application.SubjectVideos;
-import com.wikiaov.video.internal.application.SubjectVideos.PublicVideoList;
+import com.wikiaov.video.internal.application.VideoViews.PublicVideoList;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
 import java.util.UUID;
