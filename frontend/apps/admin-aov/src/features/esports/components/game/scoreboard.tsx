@@ -107,7 +107,7 @@ export function Scoreboard({
               </EntityRef>
             ))}
           </span>
-          <span className="esp-num text-2xl font-black text-[var(--side)]" aria-label={`${score[code]} hạ gục`}>
+          <span className="esp-num text-2xl font-bold text-[var(--side)]" aria-label={`${score[code]} hạ gục`}>
             {score[code]}
           </span>
         </header>

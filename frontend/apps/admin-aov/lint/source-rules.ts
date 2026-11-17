@@ -60,6 +60,23 @@ const rules: Rule[] = [
       ),
   },
   {
+    name: "admin uses only the font weights the font files provide",
+    hint: "Use 400, 500, 600 or 700 (font-normal, font-medium, font-semibold, font-bold); see frontend/AGENTS.md.",
+    files: files(source, /\.(tsx?|css)$/),
+    offenders: (text) =>
+      text
+        .split("\n")
+        .flatMap((line, index) =>
+          [
+            ...line.matchAll(/\bfont-(thin|extralight|light|extrabold|black)\b/g),
+            ...line.matchAll(/font-weight:\s*(\d+)/g),
+            ...line.matchAll(/\bfont-\[(\d+)\]/g),
+          ]
+            .filter(([, weight]) => !["400", "500", "600", "700"].includes(weight))
+            .map(([match]) => `:${index + 1} ${match}`),
+        ),
+  },
+  {
     name: "admin never asks through the browser's own confirm box",
     hint: "Use confirmAction or confirmDiscard from components/confirm-dialog.",
     files: files(source, /\.tsx?$/),

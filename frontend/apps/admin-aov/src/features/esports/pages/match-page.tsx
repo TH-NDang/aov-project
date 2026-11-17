@@ -687,7 +687,7 @@ function MatchViewer({
       <span className="text-xs font-semibold text-muted-foreground">
         {here ? "Đang phát" : "Ván đang chọn"} · Ván {focused.number}
       </span>
-      <span className="esp-num ml-auto flex items-center gap-2 text-lg font-black">
+      <span className="esp-num ml-auto flex items-center gap-2 text-lg font-bold">
         <TeamLogo team={focusedView.sides.BLUE.team} size={22} />
         <span className="text-[var(--esp-blue)]">{score.BLUE}</span>
         <span className="text-muted-foreground">–</span>
@@ -1283,7 +1283,7 @@ function MatchHeader({
         </div>
         <div className="flex items-center gap-2 @xl:gap-3 @3xl:gap-8">
           {side(team(content.teamAId), content.result?.scoreA, winner === "A", "left")}
-          <div className="esp-num flex shrink-0 items-center gap-2 text-3xl font-black @3xl:text-4xl">
+          <div className="esp-num flex shrink-0 items-center gap-2 text-3xl font-bold @3xl:text-4xl">
             <span className={winner === "B" ? "text-white/35" : winner === "A" ? "text-[var(--esp-gold)]" : ""}>
               {content.result?.scoreA ?? "–"}
             </span>
