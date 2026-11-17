@@ -208,24 +208,40 @@ public class PageProfiles {
     }
 
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
-    public Profile publish(UUID id, Long version, boolean publish) {
+    public Profile publish(UUID id, Long version) {
         assets.acquire();
         var row = access.lock(id);
         PageAccess.version(row.getVersion(), version);
-        if (publish && row.getContent().sources().isEmpty())
+        if (row.getContent().sources().isEmpty()) {
             throw PageChecks.invalid("Add at least one source before publication.");
-        if (publish)
-            validateChannelOrganization(PageContent.Kind.valueOf(row.getKind()), row.getContent(), true);
-        if (publish && row.getEntityId() != null) {
+        }
+        validateChannelOrganization(PageContent.Kind.valueOf(row.getKind()), row.getContent(), true);
+
+        if (row.getEntityId() != null) {
             var content = row.getContent();
             identities.publish(row.getKind(), row.getEntityId(), content.name(), content.shortName(), content.country(),
                     content.avatarUrl(), CommunityActor.require().key());
         }
-        row.setPublishedContent(publish ? row.getContent() : null);
-        row.setPublishedAt(publish ? Instant.now() : null);
+        row.setPublishedContent(row.getContent());
+        row.setPublishedAt(Instant.now());
         row.setUpdatedAt(Instant.now());
         pages.flush();
-        access.audit(id, CommunityActor.require(), publish ? "PAGE_PUBLISHED" : "PAGE_WITHDRAWN");
+        access.audit(id, CommunityActor.require(), "PAGE_PUBLISHED");
+        return view(row, true);
+    }
+
+    /** Takes the page out of public view; its draft, history and representatives stay. */
+    @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
+    public Profile withdraw(UUID id, Long version) {
+        assets.acquire();
+        var row = access.lock(id);
+        PageAccess.version(row.getVersion(), version);
+
+        row.setPublishedContent(null);
+        row.setPublishedAt(null);
+        row.setUpdatedAt(Instant.now());
+        pages.flush();
+        access.audit(id, CommunityActor.require(), "PAGE_WITHDRAWN");
         return view(row, true);
     }
 

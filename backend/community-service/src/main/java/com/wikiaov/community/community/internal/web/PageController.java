@@ -105,12 +105,12 @@ public class PageController implements PageApi {
 
     @Override
     public Profile publish(UUID id, Version body) {
-        return profiles.publish(id, body.version(), true);
+        return profiles.publish(id, body.version());
     }
 
     @Override
     public Profile withdraw(UUID id, Version body) {
-        return profiles.publish(id, body.version(), false);
+        return profiles.withdraw(id, body.version());
     }
 
     @Override

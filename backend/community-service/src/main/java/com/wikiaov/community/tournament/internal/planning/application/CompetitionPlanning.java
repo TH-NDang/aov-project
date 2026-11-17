@@ -148,18 +148,35 @@ public class CompetitionPlanning {
     }
 
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
-    public View publish(UUID id, Long version, boolean publish) {
+    public View publish(UUID id, Long version) {
         var actor = CommunityActor.require();
         archives.lockWrites();
         var row = locked(id, version);
-        var snapshot = inputs.snapshot(id, row.getContent(), publish);
+        var snapshot = inputs.snapshot(id, row.getContent(), true);
         consistent(snapshot);
-        if (publish && (row.getContent().entrants().size() < 2 || row.getContent().stages().isEmpty()
-                || row.getContent().sourceUrl() == null || row.getContent().sourceUrl().isBlank()))
+        if (row.getContent().entrants().size() < 2 || row.getContent().stages().isEmpty()
+                || row.getContent().sourceUrl() == null || row.getContent().sourceUrl().isBlank()) {
             throw TournamentErrors.invalid("Publication requires entrants, stages and a source URL.");
-        row.publish(publish ? snapshot : null, actor.key());
+        }
+
+        row.publish(snapshot, actor.key());
         plans.flush();
-        revisions.save(new PlanRevision(id, snapshot, publish ? "PUBLISH" : "WITHDRAW", actor.key()));
+        revisions.save(new PlanRevision(id, snapshot, "PUBLISH", actor.key()));
+        return view(row);
+    }
+
+    /** Takes the plan out of public view; the withdrawal is kept in the plan history. */
+    @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
+    public View withdraw(UUID id, Long version) {
+        var actor = CommunityActor.require();
+        archives.lockWrites();
+        var row = locked(id, version);
+        var snapshot = inputs.snapshot(id, row.getContent(), false);
+        consistent(snapshot);
+
+        row.publish(null, actor.key());
+        plans.flush();
+        revisions.save(new PlanRevision(id, snapshot, "WITHDRAW", actor.key()));
         return view(row);
     }
 

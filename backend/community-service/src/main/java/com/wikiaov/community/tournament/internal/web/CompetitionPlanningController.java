@@ -90,11 +90,11 @@ public class CompetitionPlanningController {
 
     @PostMapping("/admin/competitions/{id}/publish")
     public View publish(@PathVariable UUID id, @RequestBody Version body) {
-        return planning.publish(id, body.version(), true);
+        return planning.publish(id, body.version());
     }
 
     @PostMapping("/admin/competitions/{id}/withdraw")
     public View withdraw(@PathVariable UUID id, @RequestBody Version body) {
-        return planning.publish(id, body.version(), false);
+        return planning.withdraw(id, body.version());
     }
 }
