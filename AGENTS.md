@@ -124,7 +124,7 @@ Do not run concurrent builds against the same output directory or edit shared so
 `frontend/AGENTS.md` adds the rules for the data layer, folder structure and stylesheets.
 
 - React + TypeScript + Vite. Shared UI from `@aov/ui` (`packages/ui`).
-- Commands: `pnpm dev`, `pnpm typecheck`, `pnpm build`, `pnpm format` (run inside `frontend`).
+- Commands: `pnpm dev`, `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm format` (run inside `frontend`).
 - Formatting is owned by Prettier (`frontend/.prettierrc.json`: no semicolons, double quotes, 120 columns).
 - Lists load as the reader scrolls, never with page buttons. Put `InfiniteScroll` (`@aov/ui/components/infinite-scroll`)
   right after the last row, inside the box that scrolls. Drive it with `useInfiniteQuery` and `nextPageOf`
@@ -149,7 +149,7 @@ Do not run concurrent builds against the same output directory or edit shared so
   exists (`text-(--aov-warning)`, `bg-(--aov-success-soft)`), never Tailwind palette classes with hand-written `dark:`
   variants.
 - Typography (admin) follows a 12/14/16/24 reading scale. Never use text smaller than 12px (`text-xs`), in Tailwind
-  classes, inline styles or CSS; `pnpm run test:typography` in `apps/admin-aov` fails otherwise. Reading text is
+  classes, inline styles or CSS; `pnpm lint` fails otherwise. Reading text is
   regular weight, titles bold. Use the role styles from `packages/ui/src/styles/typography.css` instead of picking
   sizes: `type-page-title` (24/32 bold, used by `PageHeader`), `type-section-title` (16/24 bold, section `h2`),
   `type-body` (14/20), `type-label` (12/16 semibold, column headers and field labels), `type-meta` (12/16 muted).
@@ -166,12 +166,14 @@ These rules apply to new and touched tests; existing tests keep their names and 
   storage and uses the one shared container configuration and the one shared Docker gate. No other suffix; the
   architecture tests keep their existing names.
 - Frontend: every package needs a `test` script that runs every file under `tests/`. CI must run
-  `pnpm format:check`, `pnpm typecheck` (Admin's also checks `tests/`) and `pnpm test`; a test that none of these runs
-  is a gap to fix.
+  `pnpm format:check`, `pnpm typecheck` (Admin's also checks `tests/` and `lint/`), `pnpm lint` and `pnpm test`; a
+  test or lint rule that none of these runs is a gap to fix.
 - Shared set-up lives in one place per suite (`tests/fixtures/` in each frontend package, a test support package in
   each service). Do not paste a bootstrap block into a test file.
 - A test waits for a condition with the suite's shared `waitFor` helper or uses fake timers. No fixed sleeps.
-- One behavior per test, named as a sentence. Do not assert on source text or on file hashes.
+- One behavior per test, named as a sentence. A test does not assert on source text or on file hashes.
+- A rule about the source itself (no text under 12px, no `window.confirm`, which modules a folder may import) is a lint
+  check, not a test: it lives in the package's `lint/` folder, prints the offending files and runs as `pnpm lint`.
 
 ## Git
 
