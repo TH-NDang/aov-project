@@ -29,6 +29,10 @@ public interface HeroImportJobRepository extends JpaRepository<HeroImportJob, UU
     @Query(value = "SELECT * FROM hero.import_job WHERE completed < total ORDER BY updated_at LIMIT 20", nativeQuery = true)
     List<HeroImportJob> pending();
 
+    /**
+     * Native on purpose: SKIP LOCKED lets a second worker pass over a job another worker holds instead of waiting for
+     * it, and {@code @Lock} has no portable way to ask for that.
+     */
     @Query(value = "SELECT * FROM hero.import_job WHERE id = :id FOR UPDATE SKIP LOCKED", nativeQuery = true)
     Optional<HeroImportJob> lock(UUID id);
 
