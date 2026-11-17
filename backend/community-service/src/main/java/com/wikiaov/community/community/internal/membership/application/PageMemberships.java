@@ -39,7 +39,7 @@ public class PageMemberships {
 
     public Claim request(UUID pageId, String evidence) {
         var actor = CommunityActor.require();
-        PageChecks.text(evidence, 4000, true);
+        PageChecks.text(evidence, PageRules.MAX_MESSAGE, true);
         access.lock(pageId);
         access.social(pageId);
         if (!access.role(pageId, actor).isEmpty())
@@ -72,7 +72,7 @@ public class PageMemberships {
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
     public Claim decide(UUID id, Long version, boolean approve, String resolution) {
         var actor = CommunityActor.require();
-        PageChecks.text(resolution, 2000, true);
+        PageChecks.text(resolution, PageRules.MAX_NOTE, true);
         var initial = claims.findById(id).orElseThrow(PageAccess::missing);
         access.lock(initial.getPageId());
         var row = claims.findById(id).orElseThrow(PageAccess::missing);
@@ -163,7 +163,7 @@ public class PageMemberships {
 
     public UUID accept(String token) {
         var actor = CommunityActor.require();
-        PageChecks.text(token, 200, true);
+        PageChecks.text(token, PageRules.MAX_NAME, true);
         var initial = invitations.findByTokenHash(hash(token)).orElseThrow(PageAccess::missing);
         PageAccess.requireCommunity(access.lock(initial.getPageId()));
         var row = invitations.findByTokenHash(hash(token)).orElseThrow(PageAccess::missing);

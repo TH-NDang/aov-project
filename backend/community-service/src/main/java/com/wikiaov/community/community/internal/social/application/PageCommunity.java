@@ -3,6 +3,7 @@ package com.wikiaov.community.community.internal.social.application;
 import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.*;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
+import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.domain.PostContent;
 import com.wikiaov.community.community.internal.domain.PostStatus;
 import com.wikiaov.community.community.internal.pages.application.*;
@@ -141,7 +142,7 @@ public class PageCommunity {
 
     public Comment comment(UUID postId, String body, boolean asPage) {
         var actor = CommunityActor.require();
-        PageChecks.text(body, 4000, true);
+        PageChecks.text(body, PageRules.MAX_MESSAGE, true);
         var post = publishedPost(postId);
         access.lock(post.getPageId());
         if (asPage)
@@ -215,7 +216,7 @@ public class PageCommunity {
 
     public void report(UUID pageId, UUID postId, UUID commentId, String reason) {
         var actor = CommunityActor.require();
-        PageChecks.text(reason, 2000, true);
+        PageChecks.text(reason, PageRules.MAX_NOTE, true);
         access.published(pageId);
         if (postId != null && !publishedPost(postId).getPageId().equals(pageId))
             throw PageAccess.missing();
@@ -274,7 +275,7 @@ public class PageCommunity {
 
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
     public void resolve(UUID id, String resolution, boolean hide) {
-        PageChecks.text(resolution, 2000, true);
+        PageChecks.text(resolution, PageRules.MAX_NOTE, true);
         var row = reports.findById(id).orElseThrow(PageAccess::missing);
         access.lock(row.getPageId());
         if (hide && row.getPostId() != null)

@@ -5,6 +5,17 @@ import java.text.Normalizer;
 import java.util.*;
 
 public final class GameRules {
+    public static final int MAX_GAME_NUMBER = 99;
+    public static final int MAX_DRAFT_TURNS = 40;
+    public static final int MAX_PAUSES = 50;
+    public static final int MAX_TIMELINE_EVENTS = 1000;
+    /** Longest pause of a game, six hours. */
+    public static final int MAX_PAUSE_SECONDS = 21_600;
+    /** Latest game second an observation can name, one day. */
+    public static final int MAX_GAME_SECOND = 86_400;
+    /** Names of picks and selections. */
+    public static final int MAX_NAME = 200;
+
     private GameRules() {
     }
 
@@ -14,7 +25,7 @@ public final class GameRules {
             return List.of("content");
         if (!SourceUrls.valid(game.sourceUrl()))
             errors.add("sourceUrl.invalid");
-        if (game.number() != null && (game.number() < 1 || game.number() > 99))
+        if (game.number() != null && (game.number() < 1 || game.number() > MAX_GAME_NUMBER))
             errors.add("number.range");
         if (game.durationSeconds() != null && game.durationSeconds() < 0)
             errors.add("durationSeconds.range");
@@ -102,7 +113,7 @@ public final class GameRules {
 
     private static void draft(Game game, List<String> errors) {
         var draft = game.draft();
-        if (draft.turns().size() > 40) {
+        if (draft.turns().size() > MAX_DRAFT_TURNS) {
             errors.add("draft.maximum");
             return;
         }
@@ -133,7 +144,7 @@ public final class GameRules {
             if (turn.kind() == DraftKind.PICK && !present(turn.hero()))
                 errors.add(field + ".hero");
             if (present(turn.hero())) {
-                if (turn.hero().name() != null && turn.hero().name().length() > 200)
+                if (turn.hero().name() != null && turn.hero().name().length() > MAX_NAME)
                     errors.add(field + ".hero.name.length");
                 if (!heroes.add(identity(turn.hero())))
                     errors.add(field + ".hero.duplicate");
@@ -183,7 +194,7 @@ public final class GameRules {
     }
 
     private static void timeline(GameTimeline timeline, Integer duration, List<String> errors) {
-        if (timeline.pauses().size() > 50 || timeline.events().size() > 1000) {
+        if (timeline.pauses().size() > MAX_PAUSES || timeline.events().size() > MAX_TIMELINE_EVENTS) {
             errors.add("timeline.maximum");
             return;
         }
@@ -197,7 +208,8 @@ public final class GameRules {
                     errors.add(field + ".time.order");
                 previous = pause.atSeconds();
             }
-            if (pause.durationSeconds() == null || pause.durationSeconds() < 1 || pause.durationSeconds() > 21600)
+            if (pause.durationSeconds() == null || pause.durationSeconds() < 1
+                    || pause.durationSeconds() > MAX_PAUSE_SECONDS)
                 errors.add(field + ".durationSeconds.range");
         }
 
@@ -454,12 +466,12 @@ public final class GameRules {
     }
 
     private static void observed(Integer seconds, Integer duration, String path, List<String> errors) {
-        if (seconds != null && (seconds < 0 || seconds > 86400 || duration != null && seconds > duration))
+        if (seconds != null && (seconds < 0 || seconds > MAX_GAME_SECOND || duration != null && seconds > duration))
             errors.add(path + ".range");
     }
 
     private static void time(Integer seconds, Integer duration, String path, List<String> errors) {
-        if (seconds == null || seconds < 0 || seconds > 86400 || duration != null && seconds > duration)
+        if (seconds == null || seconds < 0 || seconds > MAX_GAME_SECOND || duration != null && seconds > duration)
             errors.add(path + ".atSeconds.range");
     }
 
@@ -474,7 +486,7 @@ public final class GameRules {
                 errors.add(path);
             return;
         }
-        if (selection.name() != null && selection.name().length() > 200)
+        if (selection.name() != null && selection.name().length() > MAX_NAME)
             errors.add(path + ".name.length");
         if (required && selection.id() != null && references != null && reference(selection, references) == null)
             errors.add(path + ".unavailableInPatch");

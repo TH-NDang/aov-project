@@ -11,6 +11,19 @@ public final class PageRules {
 
     /** A broadcast older than this counts as ended even if nobody switched it off. */
     public static final Duration LIVE_WINDOW = Duration.ofHours(12);
+    /** Names, titles and other one-line text. */
+    public static final int MAX_NAME = 200;
+    /** Short labels: short names, countries, roles, placements, link labels. */
+    public static final int MAX_LABEL = 100;
+    /** Links, and free text such as a report reason or a review resolution. */
+    public static final int MAX_URL = 2000;
+    public static final int MAX_NOTE = 2000;
+    /** Longer text written to a person: a claim's evidence, a comment. */
+    public static final int MAX_MESSAGE = 4000;
+    public static final int MAX_POST_BODY = 20000;
+    public static final int MAX_BIOGRAPHY = 10000;
+    public static final int MAX_POST_IMAGES = 4;
+    public static final int MAX_LINKS = 20;
 
     private static final Set<String> POST_KINDS = Set.of("TEXT", "NEWS", "VIDEO");
 
@@ -22,14 +35,14 @@ public final class PageRules {
         if (!POST_KINDS.contains(kind))
             throw invalid("Use a TEXT, NEWS or VIDEO post.");
         List<String> images = input.imageUrls() == null ? List.of() : input.imageUrls();
-        text(input.title(), 200, "NEWS".equals(kind));
-        text(input.body(), 20000, !"VIDEO".equals(kind));
-        text(input.videoUrl(), 2000, "VIDEO".equals(kind));
+        text(input.title(), MAX_NAME, "NEWS".equals(kind));
+        text(input.body(), MAX_POST_BODY, !"VIDEO".equals(kind));
+        text(input.videoUrl(), MAX_URL, "VIDEO".equals(kind));
         url(input.videoUrl());
-        if (images.size() > 4)
-            throw invalid("Use at most 4 images.");
+        if (images.size() > MAX_POST_IMAGES)
+            throw invalid("Use at most " + MAX_POST_IMAGES + " images.");
         images.forEach(image -> {
-            text(image, 2000, true);
+            text(image, MAX_URL, true);
             url(image);
         });
 
@@ -48,16 +61,16 @@ public final class PageRules {
 
     /** An ILIKE pattern for a search text, with its wildcards escaped; blank means no search. */
     public static String searchPattern(String query) {
-        text(query, 100, false);
+        text(query, MAX_LABEL, false);
         if (query == null || query.isBlank())
             return null;
         return "%" + query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
     }
 
     public static void live(String url, String title) {
-        text(url, 2000, true);
+        text(url, MAX_URL, true);
         url(url);
-        text(title, 200, true);
+        text(title, MAX_NAME, true);
     }
 
     private static String blankToNull(String value) {
@@ -75,7 +88,7 @@ public final class PageRules {
         try {
             var uri = URI.create(value);
             if (!("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()))
-                    || uri.getHost() == null || uri.getUserInfo() != null || value.length() > 2000)
+                    || uri.getHost() == null || uri.getUserInfo() != null || value.length() > MAX_URL)
                 throw new IllegalArgumentException();
         } catch (IllegalArgumentException error) {
             throw invalid("Use an absolute HTTP or HTTPS URL without credentials.");
@@ -85,34 +98,34 @@ public final class PageRules {
     public static void content(PageContent content) {
         if (content == null)
             throw invalid("Page content is required.");
-        text(content.name(), 200, true);
-        text(content.shortName(), 100, false);
-        text(content.country(), 100, false);
+        text(content.name(), MAX_NAME, true);
+        text(content.shortName(), MAX_LABEL, false);
+        text(content.country(), MAX_LABEL, false);
         presentation(new PageContent.Presentation(content.biography(), content.avatarUrl(), content.coverUrl(),
                 content.links()));
         if (content.sources().size() > 100 || content.history().size() > 300 || content.achievements().size() > 300
                 || content.roster().size() > 100)
             throw invalid("Too many profile entries.");
         content.sources().forEach(source -> {
-            text(source.label(), 200, true);
-            text(source.url(), 2000, true);
+            text(source.label(), MAX_NAME, true);
+            text(source.url(), MAX_URL, true);
             url(source.url());
         });
         content.history().forEach(item -> {
             text(item.title(), 500, true);
-            text(item.role(), 100, false);
+            text(item.role(), MAX_LABEL, false);
             url(item.sourceUrl());
             dates(item.startsOn(), item.endsOn());
         });
         content.achievements().forEach(item -> {
             text(item.title(), 300, true);
-            text(item.placement(), 100, true);
+            text(item.placement(), MAX_LABEL, true);
             url(item.sourceUrl());
         });
         content.roster().forEach(item -> {
-            text(item.name(), 200, true);
-            text(item.role(), 100, true);
-            text(item.status(), 100, false);
+            text(item.name(), MAX_NAME, true);
+            text(item.role(), MAX_LABEL, true);
+            text(item.status(), MAX_LABEL, false);
             url(item.sourceUrl());
             dates(item.startsOn(), item.endsOn());
         });
@@ -121,14 +134,14 @@ public final class PageRules {
     public static void presentation(PageContent.Presentation value) {
         if (value == null)
             throw invalid("Presentation is required.");
-        text(value.biography(), 10000, false);
+        text(value.biography(), MAX_BIOGRAPHY, false);
         url(value.avatarUrl());
         url(value.coverUrl());
-        if (value.links().size() > 20)
-            throw invalid("Use at most 20 links.");
+        if (value.links().size() > MAX_LINKS)
+            throw invalid("Use at most " + MAX_LINKS + " links.");
         value.links().forEach(link -> {
-            text(link.label(), 100, true);
-            text(link.url(), 2000, true);
+            text(link.label(), MAX_LABEL, true);
+            text(link.url(), MAX_URL, true);
             url(link.url());
         });
     }

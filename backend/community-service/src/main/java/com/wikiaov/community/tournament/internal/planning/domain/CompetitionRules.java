@@ -5,6 +5,15 @@ import java.time.ZoneId;
 import java.util.*;
 
 public final class CompetitionRules {
+    public static final int MAX_ENTRANTS = 128;
+    public static final int MAX_STAGES = 16;
+    public static final int MAX_MATCHES = 2048;
+    public static final int MAX_VENUES = 30;
+    /** Highest seed an entrant or a seeded slot can hold. */
+    public static final int MAX_SEED = 64;
+    public static final Set<Integer> BEST_OF = Set.of(1, 2, 3, 4, 5, 7, 9);
+    public static final Set<String> ENTRY_STATUSES = Set.of("INVITED", "QUALIFIED", "REGISTERED", "WITHDRAWN");
+
     private CompetitionRules() {
     }
 
@@ -18,24 +27,25 @@ public final class CompetitionRules {
         text(plan.currency(), 30);
         text(plan.sourceUrl(), 2000);
         text(plan.notes(), 20000);
-        if (plan.venues().size() > 30)
+        if (plan.venues().size() > MAX_VENUES)
             throw new IllegalArgumentException("Too many venues.");
         plan.venues().forEach(venue -> {
             text(venue.name(), 300);
             text(venue.city(), 200);
             text(venue.stageCode(), 100);
         });
-        if (plan.entrants().size() > 128 || plan.stages().size() > 16 || plan.matches().size() > 2048)
+        if (plan.entrants().size() > MAX_ENTRANTS || plan.stages().size() > MAX_STAGES
+                || plan.matches().size() > MAX_MATCHES)
             throw new IllegalArgumentException("Competition plan exceeds its limits.");
         var teams = new HashSet<UUID>();
         for (var entrant : plan.entrants()) {
             text(entrant.note(), 2000);
             if (entrant.teamId() == null || !teams.add(entrant.teamId()))
                 throw new IllegalArgumentException("Duplicate or missing entrant.");
-            if (entrant.seed() != null && (entrant.seed() < 1 || entrant.seed() > 64))
+            if (entrant.seed() != null && (entrant.seed() < 1 || entrant.seed() > MAX_SEED))
                 throw new IllegalArgumentException("Invalid seed.");
             if (entrant.status() != null
-                    && !Set.of("INVITED", "QUALIFIED", "REGISTERED", "WITHDRAWN").contains(entrant.status()))
+                    && !ENTRY_STATUSES.contains(entrant.status()))
                 throw new IllegalArgumentException("Invalid entry status.");
         }
         var stages = new HashSet<String>();
@@ -82,7 +92,7 @@ public final class CompetitionRules {
     }
 
     private static void bestOf(int value) {
-        if (!Set.of(1, 2, 3, 4, 5, 7, 9).contains(value))
+        if (!BEST_OF.contains(value))
             throw new IllegalArgumentException("Use a best-of of 1, 2, 3, 4, 5, 7 or 9.");
     }
 
@@ -97,7 +107,7 @@ public final class CompetitionRules {
         text(slot.label(), 200);
         boolean valid = switch (slot.type()) {
             case "TEAM" -> slot.teamId() != null && teams.contains(slot.teamId());
-            case "SEED" -> slot.seed() != null && slot.seed() > 0 && slot.seed() <= 64;
+            case "SEED" -> slot.seed() != null && slot.seed() > 0 && slot.seed() <= MAX_SEED;
             case "WINNER", "LOSER" -> previous.contains(slot.matchKey());
             case "TBD" -> slot.label() != null && !slot.label().isBlank();
             default -> false;
