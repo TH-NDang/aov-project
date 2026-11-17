@@ -7,9 +7,11 @@ import com.wikiaov.access.CurrentActor;
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.MediaProperties;
 import com.wikiaov.media.internal.domain.model.MediaObjectKeys;
+import com.wikiaov.media.internal.domain.model.UploadState;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
 import com.wikiaov.media.internal.source.domain.SourceContentTypes;
 import com.wikiaov.media.internal.source.domain.SourceDigest;
+import com.wikiaov.media.internal.source.domain.SourceRejection;
 import com.wikiaov.media.internal.source.persistence.SourceFileRepository;
 import com.wikiaov.media.internal.source.persistence.SourceObjectRepository;
 import com.wikiaov.media.internal.source.persistence.SourceUploadSessionRepository;
@@ -152,7 +154,7 @@ public class SourceUploads {
     public SourceFileViews.Upload status(UUID uploadId) {
         SourceUploadSession session = sessions.findById(uploadId)
                 .orElseThrow(() -> SourceErrors.uploadNotFound(uploadId));
-        String state = session.isPastDeadline(clock.instant()) ? "EXPIRED" : session.getState().name();
+        UploadState state = session.isPastDeadline(clock.instant()) ? UploadState.EXPIRED : session.getState();
         return new SourceFileViews.Upload(session.getId(), session.getCollectionId(), session.getPath(), state,
                 session.getErrorCode(), session.getExpiresAt(), session.getFileId());
     }
@@ -178,7 +180,7 @@ public class SourceUploads {
             file = placeVerified(claim, actor);
         } catch (Rejection rejection) {
             reject(claim, rejection.reason, actor);
-            throw SourceErrors.uploadRejected(rejection.reason);
+            throw SourceErrors.uploadRejected(rejection.reason.name());
         } catch (RuntimeException ex) {
             reopen(uploadId);
             throw ex;
@@ -292,7 +294,7 @@ public class SourceUploads {
             throw SourceErrors.notUploaded();
         }
         if (stat.get().sizeBytes() != claim.sizeBytes()) {
-            throw new Rejection("SIZE_MISMATCH");
+            throw new Rejection(SourceRejection.SIZE_MISMATCH);
         }
 
         SourceDigest digest;
@@ -305,13 +307,13 @@ public class SourceUploads {
         }
 
         if (digest.sizeBytes() != claim.sizeBytes()) {
-            throw new Rejection("SIZE_MISMATCH");
+            throw new Rejection(SourceRejection.SIZE_MISMATCH);
         }
         if (!digest.sha256().equals(claim.sha256())) {
-            throw new Rejection("SHA256_MISMATCH");
+            throw new Rejection(SourceRejection.SHA256_MISMATCH);
         }
         if (!SourceContentTypes.matchesSignature(claim.contentType(), digest.head())) {
-            throw new Rejection("TYPE_MISMATCH");
+            throw new Rejection(SourceRejection.TYPE_MISMATCH);
         }
     }
 
@@ -359,13 +361,13 @@ public class SourceUploads {
         return SourceFiles.view(file, object);
     }
 
-    private void reject(Claim claim, String reason, Actor actor) {
+    private void reject(Claim claim, SourceRejection reason, Actor actor) {
         transaction.executeWithoutResult(status -> sessions.findById(claim.uploadId()).ifPresent(session -> {
-            session.reject(reason, clock.instant());
+            session.reject(reason.name(), clock.instant());
             sessions.save(session);
             audit.record(new AuditEntry(actor, "SOURCE_UPLOAD_REJECTED", UPLOAD_AGGREGATE, claim.uploadId(), null,
                     null, null, null, MediaWritePolicy.metadata("collectionId", claim.collectionId().toString(),
-                            "path", claim.path(), "reason", reason)));
+                            "path", claim.path(), "reason", reason.name())));
         }));
         deleteIncomingQuietly(claim.objectKey());
     }
@@ -394,10 +396,10 @@ public class SourceUploads {
     /** Bytes that do not match the declaration; the upload is refused for good. */
     private static final class Rejection extends RuntimeException {
 
-        private final String reason;
+        private final SourceRejection reason;
 
-        Rejection(String reason) {
-            super(reason, null, false, false);
+        Rejection(SourceRejection reason) {
+            super(reason.name(), null, false, false);
             this.reason = reason;
         }
     }

@@ -119,18 +119,18 @@ public class HeroRankings {
                 snapshot.getSourceTimeZone(), heroCount);
 
         var own = rows.stream().filter(row -> row.getHeroId().equals(heroId))
-                .collect(Collectors.toMap(RankingSnapshotValueRow::getMetric, row -> row, (a, b) -> a));
+                .collect(Collectors.toMap(row -> RankingMetric.valueOf(row.getMetric()), row -> row, (a, b) -> a));
         if (own.isEmpty())
             return new HeroRankingViews.Published(view, null);
 
         return new HeroRankingViews.Published(view, entry(heroId, own, rows));
     }
 
-    private HeroRankingViews.PublishedEntry entry(UUID heroId, Map<String, RankingSnapshotValueRow> own,
+    private HeroRankingViews.PublishedEntry entry(UUID heroId, Map<RankingMetric, RankingSnapshotValueRow> own,
             List<RankingSnapshotValueRow> all) {
         var figures = Arrays.stream(RankingMetric.values()).filter(metric -> metric.kind() == RankingMetric.Kind.AMOUNT)
                 .map(metric -> {
-                    var mine = own.get(metric.name());
+                    var mine = own.get(metric);
                     var others = all.stream()
                             .filter(row -> row.getMetric().equals(metric.name()) && row.getNumberValue() != null)
                             .map(RankingSnapshotValueRow::getNumberValue).toList();
@@ -142,14 +142,15 @@ public class HeroRankings {
                 }).toList();
 
         var counterIds = Stream.of(RankingMetric.COUNTER_1, RankingMetric.COUNTER_2, RankingMetric.COUNTER_3)
-                .map(metric -> own.get(metric.name())).filter(Objects::nonNull)
+                .map(own::get).filter(Objects::nonNull)
                 .map(RankingSnapshotValueRow::getHeroValue).filter(Objects::nonNull).toList();
         Set<UUID> ids = new HashSet<>(counterIds);
         ids.add(heroId);
         var codes = codes(ids);
 
-        return new HeroRankingViews.PublishedEntry(heroId, codes.get(heroId), tier(own.get("TIER")),
-                number(own.get("WIN_RATE")), number(own.get("PICK_RATE")), number(own.get("BAN_RATE")), figures,
+        return new HeroRankingViews.PublishedEntry(heroId, codes.get(heroId), tier(own.get(RankingMetric.TIER)),
+                number(own.get(RankingMetric.WIN_RATE)), number(own.get(RankingMetric.PICK_RATE)),
+                number(own.get(RankingMetric.BAN_RATE)), figures,
                 counterIds.stream().map(id -> new HeroRankingViews.Counter(id, codes.get(id))).toList());
     }
 
