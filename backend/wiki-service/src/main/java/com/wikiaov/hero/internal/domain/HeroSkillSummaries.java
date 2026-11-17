@@ -1,7 +1,13 @@
 package com.wikiaov.hero.internal.domain;
 
-import com.wikiaov.hero.internal.domain.HeroContent.*;
-import java.util.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /** Keeps the summaries editors wrote when skills are replaced by text that carries none, such as the game's own. */
 public final class HeroSkillSummaries {

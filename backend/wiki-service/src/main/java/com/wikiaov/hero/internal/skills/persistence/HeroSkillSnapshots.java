@@ -1,7 +1,14 @@
 package com.wikiaov.hero.internal.skills.persistence;
 
 import com.wikiaov.access.Actor;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Effect;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillStateIcon;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Trait;
+import com.wikiaov.hero.internal.domain.HeroContent.TraitTranslation;
 import com.wikiaov.hero.internal.domain.HeroEvaluations;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
@@ -17,7 +24,12 @@ import com.wikiaov.hero.internal.skills.persistence.entity.SkillTraitTranslation
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTranslationRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillsRevision;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;

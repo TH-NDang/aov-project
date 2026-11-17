@@ -1,6 +1,9 @@
 package com.wikiaov.hero.internal.web;
 
-import com.wikiaov.hero.internal.application.HeroCommands.*;
+import com.wikiaov.hero.internal.application.HeroCommands.BaselineContext;
+import com.wikiaov.hero.internal.application.HeroCommands.Create;
+import com.wikiaov.hero.internal.application.HeroCommands.Fork;
+import com.wikiaov.hero.internal.application.HeroCommands.Mutation;
 import com.wikiaov.hero.internal.application.response.HeroCatalogView;
 import com.wikiaov.hero.internal.application.response.HeroComparisonView;
 import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
@@ -10,12 +13,31 @@ import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
 import com.wikiaov.hero.internal.catalog.application.HeroCatalog;
 import com.wikiaov.hero.internal.comparison.application.HeroComparisons;
 import com.wikiaov.hero.internal.domain.HeroSection;
-import com.wikiaov.hero.internal.web.request.HeroSectionRequests.*;
-import com.wikiaov.platform.*;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.BindingsRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.ProfileRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.RatingsRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.SkillsRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.SkinsRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.StatsRequest;
+import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/heroes")

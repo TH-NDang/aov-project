@@ -1,7 +1,9 @@
 package com.wikiaov.platform;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 /** Localized catalog copy and numeric modifiers shared by the small catalog APIs. */
 public final class CatalogText {

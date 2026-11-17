@@ -3,7 +3,6 @@ package com.wikiaov.enchantment.internal.web;
 import com.wikiaov.enchantment.internal.application.EnchantmentBranchCommand;
 import com.wikiaov.enchantment.internal.application.EnchantmentOrdering;
 import com.wikiaov.enchantment.internal.application.response.EnchantmentBranchView;
-import com.wikiaov.platform.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,7 +10,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import java.util.*;
+import java.util.List;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "enchantment branch")

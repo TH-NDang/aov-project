@@ -1,7 +1,6 @@
 package com.wikiaov.media.internal.storage.infrastructure;
 
 import com.wikiaov.media.internal.application.MediaProperties;
-
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 

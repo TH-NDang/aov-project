@@ -2,7 +2,9 @@ package com.wikiaov.arcana.internal.catalog.persistence;
 
 import com.wikiaov.arcana.internal.catalog.persistence.entity.ArcanaRevision;
 import com.wikiaov.platform.RevisionState;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

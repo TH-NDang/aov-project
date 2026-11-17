@@ -1,14 +1,22 @@
 package com.wikiaov.hero.internal.web;
 
-import com.wikiaov.hero.internal.application.HeroCommands.*;
+import com.wikiaov.hero.internal.application.HeroCommands.BaselineContext;
+import com.wikiaov.hero.internal.application.HeroCommands.Create;
+import com.wikiaov.hero.internal.application.HeroCommands.Fork;
+import com.wikiaov.hero.internal.application.HeroCommands.Mutation;
 import com.wikiaov.hero.internal.application.response.HeroCatalogView;
 import com.wikiaov.hero.internal.application.response.HeroComparisonView;
 import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.application.response.HeroStatusView;
-import com.wikiaov.hero.internal.web.request.HeroSectionRequests.*;
-import com.wikiaov.platform.*;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.BindingsRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.ProfileRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.RatingsRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.SkillsRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.SkinsRequest;
+import com.wikiaov.hero.internal.web.request.HeroSectionRequests.StatsRequest;
 import com.wikiaov.platform.PageLimits;
+import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,7 +26,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "hero admin")

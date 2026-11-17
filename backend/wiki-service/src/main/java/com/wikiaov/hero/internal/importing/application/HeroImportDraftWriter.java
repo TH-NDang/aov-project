@@ -4,9 +4,23 @@ import com.wikiaov.hero.internal.application.HeroImportRequest;
 import com.wikiaov.hero.internal.application.response.HeroImportPlan;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.Ratings;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Skin;
+import com.wikiaov.hero.internal.domain.HeroContent.Skins;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
 import com.wikiaov.hero.internal.domain.HeroSection;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Applies changed sections in order, carrying the current draft version between writes. */

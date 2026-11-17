@@ -1,6 +1,13 @@
 package com.wikiaov.patch.internal.web;
 
-import com.wikiaov.patch.internal.application.PatchCommands.*;
+import com.wikiaov.patch.internal.application.PatchCommands.Assignment;
+import com.wikiaov.patch.internal.application.PatchCommands.CreateRegion;
+import com.wikiaov.patch.internal.application.PatchCommands.Patch;
+import com.wikiaov.patch.internal.application.PatchCommands.Release;
+import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
+import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
+import com.wikiaov.patch.internal.application.PatchCommands.Title;
+import com.wikiaov.patch.internal.application.PatchCommands.Variant;
 import com.wikiaov.patch.internal.application.response.PatchAdminViews;
 import com.wikiaov.platform.CreatedId;
 import com.wikiaov.platform.PageLimits;
@@ -14,7 +21,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "patch admin")

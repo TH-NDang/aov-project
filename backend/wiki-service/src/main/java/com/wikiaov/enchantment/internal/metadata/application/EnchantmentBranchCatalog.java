@@ -1,6 +1,8 @@
 package com.wikiaov.enchantment.internal.metadata.application;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.enchantment.internal.application.EnchantmentBranchCommand;
 import com.wikiaov.enchantment.internal.application.EnchantmentErrorCode;
 import com.wikiaov.enchantment.internal.application.EnchantmentOrdering;
@@ -9,10 +11,22 @@ import com.wikiaov.enchantment.internal.metadata.persistence.EnchantmentBranchRe
 import com.wikiaov.enchantment.internal.metadata.persistence.EnchantmentBranchTranslationRepository;
 import com.wikiaov.enchantment.internal.metadata.persistence.entity.EnchantmentBranch;
 import com.wikiaov.enchantment.internal.metadata.persistence.entity.EnchantmentBranchTranslation;
-import com.wikiaov.media.*;
-import com.wikiaov.platform.*;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.media.MediaUsage;
+import com.wikiaov.media.MediaUsageProvider;
+import com.wikiaov.media.MediaUsageScope;
+import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogCodes;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogText.MetadataTranslation;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

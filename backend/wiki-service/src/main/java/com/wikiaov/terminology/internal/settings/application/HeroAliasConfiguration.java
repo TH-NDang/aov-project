@@ -1,7 +1,10 @@
 package com.wikiaov.terminology.internal.settings.application;
 
 import com.wikiaov.terminology.internal.settings.persistence.ReferenceTranslationRepository;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 
 /** Reads only hero identities, locales and aliases; saved text snapshots stay outside the authoring read model. */

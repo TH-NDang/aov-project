@@ -2,7 +2,11 @@ package com.wikiaov.hero.internal.application;
 
 import com.wikiaov.platform.CatalogCodes;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public final class SkinBadgeGroupCommands {

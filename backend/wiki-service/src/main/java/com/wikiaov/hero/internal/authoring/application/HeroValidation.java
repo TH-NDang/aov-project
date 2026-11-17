@@ -1,15 +1,40 @@
 package com.wikiaov.hero.internal.authoring.application;
 
 import com.wikiaov.hero.internal.application.HeroErrorCode;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.ImageOption;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Publication;
+import com.wikiaov.hero.internal.domain.HeroContent.Ratings;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Skin;
+import com.wikiaov.hero.internal.domain.HeroContent.SkinTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skins;
+import com.wikiaov.hero.internal.domain.HeroContent.Source;
+import com.wikiaov.hero.internal.domain.HeroContent.Stat;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
+import com.wikiaov.hero.internal.domain.HeroContent.Trait;
+import com.wikiaov.hero.internal.domain.HeroContent.TraitTranslation;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.ratings.persistence.RatingScaleRepository;
-import com.wikiaov.media.*;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PlatformErrorCode;
 import jakarta.validation.Validator;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.IllformedLocaleException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component

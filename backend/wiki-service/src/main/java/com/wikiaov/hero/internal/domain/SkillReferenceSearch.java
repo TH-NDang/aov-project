@@ -1,7 +1,9 @@
 package com.wikiaov.hero.internal.domain;
 
 import java.text.Normalizer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /** Source slots are explicit identifiers, never inferred from array positions or translated names. */

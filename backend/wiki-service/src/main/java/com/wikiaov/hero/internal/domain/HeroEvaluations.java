@@ -1,7 +1,17 @@
 package com.wikiaov.hero.internal.domain;
 
-import com.wikiaov.hero.internal.domain.HeroContent.*;
-import java.util.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Trait;
+import com.wikiaov.hero.internal.domain.HeroContent.TraitTranslation;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Rules for the evaluation parts of a hero draft (ADR-029): traits travel with the skills and notes with the profile,

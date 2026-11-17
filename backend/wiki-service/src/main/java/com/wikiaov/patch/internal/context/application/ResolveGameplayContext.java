@@ -1,6 +1,10 @@
 package com.wikiaov.patch.internal.context.application;
 
-import com.wikiaov.patch.*;
+import com.wikiaov.patch.AuthoringContext;
+import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.patch.RulesetReference;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.application.RegionErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;

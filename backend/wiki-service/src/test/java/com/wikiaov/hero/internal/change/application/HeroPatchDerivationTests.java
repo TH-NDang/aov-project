@@ -1,7 +1,14 @@
 package com.wikiaov.hero.internal.change.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.hero.internal.application.response.HeroPatchView.Direction;
 import com.wikiaov.hero.internal.application.response.HeroPatchView.Provenance;
@@ -12,7 +19,11 @@ import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory.Entry;
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Cause;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
+import com.wikiaov.hero.internal.domain.HeroContent.Stat;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
@@ -21,7 +32,11 @@ import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.RevisionState;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

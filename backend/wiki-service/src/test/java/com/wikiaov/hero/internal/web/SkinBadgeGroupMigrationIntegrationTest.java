@@ -1,11 +1,15 @@
 package com.wikiaov.hero.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.wikiaov.DockerBacked;
 import com.wikiaov.TestcontainersConfiguration;
 import java.sql.DriverManager;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 

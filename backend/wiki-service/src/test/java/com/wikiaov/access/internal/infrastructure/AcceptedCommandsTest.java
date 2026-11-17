@@ -1,6 +1,7 @@
 package com.wikiaov.access.internal.infrastructure;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;

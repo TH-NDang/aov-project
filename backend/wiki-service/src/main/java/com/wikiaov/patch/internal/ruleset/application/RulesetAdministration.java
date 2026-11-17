@@ -3,7 +3,6 @@ package com.wikiaov.patch.internal.ruleset.application;
 import com.wikiaov.access.AuditEntry;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
-import com.wikiaov.patch.internal.application.PatchCommands.*;
 import com.wikiaov.patch.internal.application.PatchCommands.Assignment;
 import com.wikiaov.patch.internal.application.PatchCommands.CreateRegion;
 import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;

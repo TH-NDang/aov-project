@@ -2,10 +2,13 @@ package com.wikiaov.hero.internal.importing.application;
 
 import com.wikiaov.hero.internal.application.HeroImportRequest.Mode;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
 import com.wikiaov.hero.internal.domain.HeroSkillSummaries;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Reports publication gaps separately from the historical meaning of an import. */

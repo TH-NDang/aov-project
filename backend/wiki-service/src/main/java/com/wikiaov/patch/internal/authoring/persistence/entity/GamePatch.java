@@ -1,7 +1,12 @@
 package com.wikiaov.patch.internal.authoring.persistence.entity;
 
 import com.wikiaov.patch.internal.domain.PatchStatus;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;

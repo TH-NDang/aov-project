@@ -1,7 +1,10 @@
 package com.wikiaov.item.internal.domain;
 
-import com.wikiaov.platform.CatalogText.*;
-import java.util.*;
+import com.wikiaov.platform.CatalogText.Stat;
+import com.wikiaov.platform.CatalogText.Translation;
+import java.util.BitSet;
+import java.util.List;
+import java.util.UUID;
 
 public record ItemContent(
         UUID iconAssetId,

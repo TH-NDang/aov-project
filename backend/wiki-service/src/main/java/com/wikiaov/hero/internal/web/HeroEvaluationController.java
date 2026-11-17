@@ -6,7 +6,11 @@ import com.wikiaov.hero.internal.authoring.application.HeroEvaluationCommands.Up
 import com.wikiaov.hero.internal.authoring.application.HeroEvaluationCommands.UpdateTraitsCommand;
 import com.wikiaov.platform.ApiPaths;
 import java.util.UUID;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/heroes/{heroId}/drafts/{draftId}")

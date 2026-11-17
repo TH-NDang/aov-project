@@ -2,7 +2,11 @@ package com.wikiaov.hero.internal.authoring.persistence.entity;
 
 import com.wikiaov.platform.AssignedIdentifierEntity;
 import com.wikiaov.platform.RevisionState;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;

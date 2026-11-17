@@ -1,7 +1,10 @@
 package com.wikiaov.hero.internal.profile.persistence;
 
 import com.wikiaov.access.Actor;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Position;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfilePositionRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRevision;
@@ -11,7 +14,13 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;

@@ -1,7 +1,9 @@
 package com.wikiaov.hero.internal.media.persistence;
 
 import com.wikiaov.access.Actor;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.ImageOption;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.media.persistence.entity.HeroImageOption;
 import com.wikiaov.hero.internal.media.persistence.entity.MediaBindingRow;
@@ -10,7 +12,14 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;

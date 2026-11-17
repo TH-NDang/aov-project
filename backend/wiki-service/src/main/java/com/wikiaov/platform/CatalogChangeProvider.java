@@ -1,6 +1,7 @@
 package com.wikiaov.platform;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 /** Module boundary for change records backed by published revisions. */
 public interface CatalogChangeProvider {

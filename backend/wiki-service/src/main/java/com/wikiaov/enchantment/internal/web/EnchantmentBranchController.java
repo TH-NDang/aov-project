@@ -4,10 +4,17 @@ import com.wikiaov.enchantment.internal.application.EnchantmentBranchCommand;
 import com.wikiaov.enchantment.internal.application.EnchantmentOrdering;
 import com.wikiaov.enchantment.internal.application.response.EnchantmentBranchView;
 import com.wikiaov.enchantment.internal.metadata.application.EnchantmentBranchCatalog;
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Set;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/enchantment-branches")

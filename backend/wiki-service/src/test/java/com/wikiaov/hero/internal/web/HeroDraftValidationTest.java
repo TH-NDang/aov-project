@@ -1,15 +1,35 @@
 package com.wikiaov.hero.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Publication;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillStateIcon;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Stat;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
 import com.wikiaov.hero.internal.domain.HeroSection;
-import com.wikiaov.media.*;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
 import jakarta.validation.Validation;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 

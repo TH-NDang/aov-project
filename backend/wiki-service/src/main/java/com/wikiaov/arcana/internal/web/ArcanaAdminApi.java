@@ -1,9 +1,12 @@
 package com.wikiaov.arcana.internal.web;
 
-import com.wikiaov.arcana.internal.application.ArcanaCommands.*;
+import com.wikiaov.arcana.internal.application.ArcanaCommands.Create;
+import com.wikiaov.arcana.internal.application.ArcanaCommands.Fork;
+import com.wikiaov.arcana.internal.application.ArcanaCommands.Mutation;
+import com.wikiaov.arcana.internal.application.ArcanaCommands.Update;
 import com.wikiaov.arcana.internal.application.response.ArcanaView;
-import com.wikiaov.platform.*;
 import com.wikiaov.platform.PageLimits;
+import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,7 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "arcana admin")

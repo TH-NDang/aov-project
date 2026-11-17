@@ -1,7 +1,11 @@
 package com.wikiaov.hero.internal.change.persistence;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
@@ -16,8 +20,16 @@ import com.wikiaov.hero.internal.change.persistence.entity.RoleChangeClassificat
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroChanges.Change;
+import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
+import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
+import com.wikiaov.hero.internal.domain.HeroChanges.MechanicChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.OtherChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.RoleChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.SkillChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.StatChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.Summary;
+import com.wikiaov.hero.internal.domain.HeroChanges.VisualChange;
 import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
 import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import java.math.BigDecimal;

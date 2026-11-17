@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.platform.PageSlice;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 /** Lazy, bounded skill references; no gameplay sections or draft data cross into public reads. */
 public interface SkillReferenceProvider {

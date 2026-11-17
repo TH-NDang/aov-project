@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 public record ReferenceSettings(
         int schemaVersion,

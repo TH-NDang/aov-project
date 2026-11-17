@@ -1,14 +1,19 @@
 package com.wikiaov.hero.internal.ratings.persistence;
 
 import com.wikiaov.access.Actor;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Ratings;
+import com.wikiaov.hero.internal.domain.HeroContent.Source;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.ratings.persistence.entity.RatingRevision;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

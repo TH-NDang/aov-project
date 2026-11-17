@@ -1,7 +1,6 @@
 package com.wikiaov.hero.internal.profile.persistence;
 
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfilePositionRow;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;

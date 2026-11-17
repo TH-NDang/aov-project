@@ -1,7 +1,6 @@
 package com.wikiaov.media.internal.application.response;
 
 import com.wikiaov.media.internal.domain.model.MediaVersionState;
-
 import java.util.UUID;
 
 /**

@@ -1,12 +1,20 @@
 package com.wikiaov.hero.internal.alias.persistence;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.hero.internal.alias.persistence.entity.ImageFileAlias;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeRepository;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
-import java.util.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.ImageOption;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class IdentifierAliasesTest {

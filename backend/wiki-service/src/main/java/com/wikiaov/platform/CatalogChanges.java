@@ -1,7 +1,9 @@
 package com.wikiaov.platform;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 
 /** Shared vocabulary; each catalog owns its change records and persistence. */
 public final class CatalogChanges {

@@ -1,15 +1,31 @@
 package com.wikiaov.hero.internal.reference.infrastructure;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.hero.internal.reference.persistence.HeroReferenceRepository;
-import com.wikiaov.media.*;
-import com.wikiaov.patch.*;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.terminology.AdminReferenceProvider.Row;
 import com.wikiaov.terminology.PublicReferenceProvider.Scope;
-import java.time.*;
-import java.util.*;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class HeroPublicReferencesTest {

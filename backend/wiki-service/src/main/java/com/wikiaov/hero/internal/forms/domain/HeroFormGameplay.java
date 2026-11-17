@@ -1,6 +1,9 @@
 package com.wikiaov.hero.internal.forms.domain;
 
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.Ratings;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
 import java.util.stream.Stream;
 
 /**

@@ -3,7 +3,12 @@ package com.wikiaov.build.internal.application;
 import com.wikiaov.build.BuildReference;
 import com.wikiaov.build.BuildReferenceKind;
 import com.wikiaov.build.BuildReferenceProvider;
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /** Asks the owning module of each kind about the records a build refers to. */

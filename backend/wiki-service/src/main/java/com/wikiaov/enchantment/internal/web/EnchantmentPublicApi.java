@@ -1,8 +1,8 @@
 package com.wikiaov.enchantment.internal.web;
 
 import com.wikiaov.enchantment.internal.application.response.EnchantmentView;
-import com.wikiaov.platform.*;
 import com.wikiaov.platform.PageLimits;
+import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
+import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "enchantment public")

@@ -1,7 +1,11 @@
 package com.wikiaov.arcana.internal.catalog.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.arcana.internal.application.response.ArcanaView;
 import com.wikiaov.arcana.internal.domain.ArcanaContent;

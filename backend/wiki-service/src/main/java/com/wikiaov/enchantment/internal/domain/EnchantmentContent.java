@@ -1,7 +1,8 @@
 package com.wikiaov.enchantment.internal.domain;
 
-import com.wikiaov.platform.CatalogText.*;
-import java.util.*;
+import com.wikiaov.platform.CatalogText.Translation;
+import java.util.List;
+import java.util.UUID;
 
 public record EnchantmentContent(
         UUID iconAssetId,

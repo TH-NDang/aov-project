@@ -1,14 +1,23 @@
 package com.wikiaov.terminology.internal.web;
 
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.QueryParameters;
 import com.wikiaov.terminology.SkillReferenceProvider.Candidate;
 import com.wikiaov.terminology.internal.reference.application.SkillReferenceCatalog;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.HexFormat;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.WebRequest;
 import tools.jackson.databind.json.JsonMapper;
 

@@ -2,8 +2,13 @@ package com.wikiaov.spell.internal.catalog.persistence;
 
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellIdentity;
 import jakarta.persistence.LockModeType;
-import java.util.*;
-import org.springframework.data.jpa.repository.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 
 public interface SpellIdentityRepository extends JpaRepository<SpellIdentity, UUID> {
     Optional<SpellIdentity> findByCode(String code);

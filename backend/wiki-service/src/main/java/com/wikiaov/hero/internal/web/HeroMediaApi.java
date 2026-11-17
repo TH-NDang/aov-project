@@ -1,16 +1,12 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.application.SkinBadgeCommands;
-import com.wikiaov.hero.internal.application.SkinBadgeCommands.*;
-import com.wikiaov.hero.internal.application.response.*;
 import com.wikiaov.hero.internal.application.response.HeroMediaGroup;
 import com.wikiaov.hero.internal.application.response.SkinBadgeRelation;
 import com.wikiaov.hero.internal.application.response.SkinBadgeView;
-import com.wikiaov.hero.internal.application.response.SkinBadgeView.*;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
-import com.wikiaov.platform.*;
 import com.wikiaov.platform.PageLimits;
+import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,7 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
+import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "hero media")

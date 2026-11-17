@@ -1,7 +1,11 @@
 package com.wikiaov.terminology;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /** Compact authoring projections; each module selects and reads its own records. */
 public interface AdminReferenceProvider {

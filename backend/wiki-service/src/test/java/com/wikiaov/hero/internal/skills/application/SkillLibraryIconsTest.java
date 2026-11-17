@@ -1,12 +1,19 @@
 package com.wikiaov.hero.internal.skills.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Effect;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
 import com.wikiaov.hero.internal.skills.persistence.HeroSkillImageRepository;
 import com.wikiaov.hero.internal.skills.persistence.entity.HeroSkillImage;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SkillLibraryIconsTest {

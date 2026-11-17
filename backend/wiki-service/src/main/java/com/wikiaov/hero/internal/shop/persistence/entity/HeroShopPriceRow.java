@@ -1,11 +1,18 @@
 package com.wikiaov.hero.internal.shop.persistence.entity;
 
 import com.wikiaov.platform.AssignedIdentifierEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /** What the shop asked for a hero from {@code capturedOn} until the next row. */
 @Entity

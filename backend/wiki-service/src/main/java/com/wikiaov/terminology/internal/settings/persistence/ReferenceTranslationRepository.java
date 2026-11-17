@@ -1,7 +1,8 @@
 package com.wikiaov.terminology.internal.settings.persistence;
 
 import com.wikiaov.terminology.internal.settings.persistence.entity.ReferenceTranslation;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

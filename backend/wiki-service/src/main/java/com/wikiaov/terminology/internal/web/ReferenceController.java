@@ -1,6 +1,9 @@
 package com.wikiaov.terminology.internal.web;
 
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.QueryParameters;
+import com.wikiaov.platform.ReadModelCache;
 import com.wikiaov.terminology.internal.application.response.AdminReferenceCatalogView;
 import com.wikiaov.terminology.internal.application.response.ReferenceSettingsView;
 import com.wikiaov.terminology.internal.reference.application.AdminReferenceCatalog;
@@ -13,8 +16,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.WebRequest;
 import tools.jackson.databind.json.JsonMapper;
 

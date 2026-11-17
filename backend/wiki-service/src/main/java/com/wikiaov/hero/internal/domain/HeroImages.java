@@ -1,7 +1,17 @@
 package com.wikiaov.hero.internal.domain;
 
-import com.wikiaov.hero.internal.domain.HeroContent.*;
-import java.util.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.ImageOption;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Skin;
+import com.wikiaov.hero.internal.domain.HeroContent.Skins;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 /** Retains collected artwork when an editor switches the main image. */
 public final class HeroImages {

@@ -1,6 +1,8 @@
 package com.wikiaov.hero.internal.skills.application;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.HeroSkillImageCommand;
 import com.wikiaov.hero.internal.application.response.HeroSkillImageView;
@@ -8,11 +10,15 @@ import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
 import com.wikiaov.hero.internal.skills.persistence.HeroSkillImageRepository;
 import com.wikiaov.hero.internal.skills.persistence.SkillIdentityRepository;
 import com.wikiaov.hero.internal.skills.persistence.entity.HeroSkillImage;
-import com.wikiaov.media.*;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

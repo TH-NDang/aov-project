@@ -10,9 +10,19 @@ import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRoleRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillEffectRow;
 import com.wikiaov.platform.RevisionState;
-import jakarta.persistence.criteria.*;
+import jakarta.persistence.criteria.AbstractQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class HeroCatalogSpecifications {

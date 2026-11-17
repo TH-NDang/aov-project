@@ -1,6 +1,8 @@
 package com.wikiaov.patch.internal.notes.application;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
@@ -8,7 +10,10 @@ import com.wikiaov.patch.internal.notes.persistence.PatchNoteRepository;
 import com.wikiaov.patch.internal.notes.persistence.entity.PatchNote;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
-import java.util.*;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;

@@ -5,7 +5,8 @@ import com.wikiaov.patch.RulesetReference;
 import com.wikiaov.platform.ReadModelCache;
 import com.wikiaov.platform.ReadModelCache.Area;
 import com.wikiaov.terminology.internal.application.response.AdminReferenceCatalogView;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 

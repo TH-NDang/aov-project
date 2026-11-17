@@ -1,8 +1,12 @@
 package com.wikiaov.spell.internal.web;
 
-import com.wikiaov.platform.*;
 import com.wikiaov.platform.PageLimits;
-import com.wikiaov.spell.internal.application.SpellCommands.*;
+import com.wikiaov.platform.PageSlice;
+import com.wikiaov.spell.internal.application.SpellCommands.Create;
+import com.wikiaov.spell.internal.application.SpellCommands.Fork;
+import com.wikiaov.spell.internal.application.SpellCommands.Mutation;
+import com.wikiaov.spell.internal.application.SpellCommands.Removal;
+import com.wikiaov.spell.internal.application.SpellCommands.Update;
 import com.wikiaov.spell.internal.application.response.SpellRemovalView;
 import com.wikiaov.spell.internal.application.response.SpellView;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,7 +18,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "spell admin")

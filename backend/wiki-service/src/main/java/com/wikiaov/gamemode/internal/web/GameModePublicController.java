@@ -13,7 +13,11 @@ import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ROOT + "/game-modes")

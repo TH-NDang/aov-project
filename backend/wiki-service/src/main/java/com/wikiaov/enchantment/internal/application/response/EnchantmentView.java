@@ -4,7 +4,9 @@ import com.wikiaov.enchantment.internal.domain.EnchantmentContent;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record EnchantmentView(
         UUID id,

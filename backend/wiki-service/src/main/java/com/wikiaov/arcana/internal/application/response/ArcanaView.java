@@ -4,7 +4,9 @@ import com.wikiaov.arcana.internal.domain.ArcanaContent;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record ArcanaView(
         UUID id,

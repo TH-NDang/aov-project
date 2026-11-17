@@ -1,7 +1,10 @@
 package com.wikiaov.media.internal.deletion.persistence.entity;
 
 import com.wikiaov.media.internal.shared.persistence.entity.AssignedIdEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

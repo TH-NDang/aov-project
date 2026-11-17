@@ -1,6 +1,7 @@
 package com.wikiaov.platform.internal.cache;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.wikiaov.platform.ReadModelCache.Area;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;

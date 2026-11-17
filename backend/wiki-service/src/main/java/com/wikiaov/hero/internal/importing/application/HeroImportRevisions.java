@@ -12,7 +12,11 @@ import com.wikiaov.patch.AuthoringContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.RevisionState;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 /** Chooses the historical snapshot and the draft appropriate to an import mode. */
 final class HeroImportRevisions {

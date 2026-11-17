@@ -1,6 +1,13 @@
 package com.wikiaov.patch.internal.authoring.application;
 
-import com.wikiaov.patch.internal.application.PatchCommands.*;
+import com.wikiaov.patch.internal.application.PatchCommands.Assignment;
+import com.wikiaov.patch.internal.application.PatchCommands.CreateRegion;
+import com.wikiaov.patch.internal.application.PatchCommands.Patch;
+import com.wikiaov.patch.internal.application.PatchCommands.Release;
+import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
+import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
+import com.wikiaov.patch.internal.application.PatchCommands.Title;
+import com.wikiaov.patch.internal.application.PatchCommands.Variant;
 import com.wikiaov.patch.internal.application.response.PatchAdminViews;
 import com.wikiaov.patch.internal.context.application.PatchAdminCatalog;
 import com.wikiaov.patch.internal.release.application.PatchReleaseWorkflow;

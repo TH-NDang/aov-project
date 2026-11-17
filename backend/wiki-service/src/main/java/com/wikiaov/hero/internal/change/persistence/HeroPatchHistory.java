@@ -13,7 +13,6 @@ import com.wikiaov.hero.internal.change.persistence.entity.RoleChangeClassificat
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.hero.internal.domain.HeroChanges.Change;
 import com.wikiaov.hero.internal.domain.HeroChanges.MechanicChange;
 import com.wikiaov.hero.internal.domain.HeroChanges.OtherChange;

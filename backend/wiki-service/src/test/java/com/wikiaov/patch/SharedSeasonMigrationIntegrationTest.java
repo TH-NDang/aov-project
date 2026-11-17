@@ -1,6 +1,6 @@
 package com.wikiaov.patch;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.wikiaov.DockerBacked;
 import com.wikiaov.TestcontainersConfiguration;

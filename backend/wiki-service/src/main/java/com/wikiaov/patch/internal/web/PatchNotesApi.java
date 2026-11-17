@@ -1,6 +1,7 @@
 package com.wikiaov.patch.internal.web;
 
-import com.wikiaov.patch.internal.notes.application.PatchNotes.*;
+import com.wikiaov.patch.internal.notes.application.PatchNotes.PatchNoteView;
+import com.wikiaov.patch.internal.notes.application.PatchNotes.UpdatePatchNote;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

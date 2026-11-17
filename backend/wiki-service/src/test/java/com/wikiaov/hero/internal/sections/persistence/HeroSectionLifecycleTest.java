@@ -1,7 +1,13 @@
 package com.wikiaov.hero.internal.sections.persistence;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
@@ -9,7 +15,10 @@ import com.wikiaov.hero.internal.profile.persistence.ProfileRevisionRepository;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRevision;
 import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class HeroSectionLifecycleTest {

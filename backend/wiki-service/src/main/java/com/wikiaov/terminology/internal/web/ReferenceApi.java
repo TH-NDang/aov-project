@@ -1,6 +1,5 @@
 package com.wikiaov.terminology.internal.web;
 
-import com.wikiaov.platform.*;
 import com.wikiaov.terminology.internal.application.response.AdminReferenceCatalogView;
 import com.wikiaov.terminology.internal.application.response.ReferenceSettingsView;
 import com.wikiaov.terminology.internal.web.request.SaveReferenceSettings;
@@ -16,7 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
-import org.springframework.http.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.WebRequest;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */

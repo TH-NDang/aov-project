@@ -1,20 +1,29 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.application.SkinBadgeCommands;
-import com.wikiaov.hero.internal.application.SkinBadgeCommands.*;
-import com.wikiaov.hero.internal.application.response.*;
 import com.wikiaov.hero.internal.application.response.HeroMediaGroup;
 import com.wikiaov.hero.internal.application.response.SkinBadgeRelation;
 import com.wikiaov.hero.internal.application.response.SkinBadgeView;
 import com.wikiaov.hero.internal.badges.application.SkinBadges;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
 import com.wikiaov.hero.internal.media.application.HeroMediaQueries;
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Set;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ADMIN)

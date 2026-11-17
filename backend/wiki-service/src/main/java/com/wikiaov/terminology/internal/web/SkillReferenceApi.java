@@ -1,7 +1,7 @@
 package com.wikiaov.terminology.internal.web;
 
-import com.wikiaov.platform.*;
 import com.wikiaov.platform.PageLimits;
+import com.wikiaov.platform.PageSlice;
 import com.wikiaov.terminology.SkillReferenceProvider.Candidate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,8 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
-import org.springframework.http.*;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.WebRequest;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */

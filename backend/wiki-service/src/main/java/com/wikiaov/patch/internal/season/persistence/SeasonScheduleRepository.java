@@ -1,7 +1,8 @@
 package com.wikiaov.patch.internal.season.persistence;
 
 import com.wikiaov.patch.internal.season.persistence.entity.SeasonSchedule;
-import java.util.*;
+import java.util.Optional;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SeasonScheduleRepository extends JpaRepository<SeasonSchedule, UUID> {

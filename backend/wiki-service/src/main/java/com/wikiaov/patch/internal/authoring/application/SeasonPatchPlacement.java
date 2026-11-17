@@ -1,6 +1,5 @@
 package com.wikiaov.patch.internal.authoring.application;
 
-import com.wikiaov.patch.internal.application.PatchCommands.*;
 import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;

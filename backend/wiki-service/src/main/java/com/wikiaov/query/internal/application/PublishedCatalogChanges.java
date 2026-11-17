@@ -3,7 +3,12 @@ package com.wikiaov.query.internal.application;
 import com.wikiaov.platform.CatalogChangeProvider;
 import com.wikiaov.platform.CatalogChanges.Entry;
 import com.wikiaov.platform.CatalogChanges.Kind;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public final class PublishedCatalogChanges {
     private PublishedCatalogChanges() {

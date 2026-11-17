@@ -2,7 +2,10 @@ package com.wikiaov.terminology.internal.domain;
 
 import com.wikiaov.terminology.internal.domain.ReferenceSettings.Translation;
 import java.text.Normalizer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 
 /** Supplemental hero aliases never replace canonical localized names or descriptions. */
 public final class HeroReferenceAliases {

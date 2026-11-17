@@ -1,12 +1,22 @@
 package com.wikiaov.query.internal.web;
 
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.QueryParameters;
 import com.wikiaov.query.internal.application.PatchChangesPage;
 import com.wikiaov.query.internal.application.PatchPages;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ROOT + "/patches")

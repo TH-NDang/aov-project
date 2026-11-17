@@ -5,8 +5,16 @@ import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinTranslationRow;
 import com.wikiaov.platform.RevisionState;
-import jakarta.persistence.criteria.*;
-import java.util.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class HeroMediaSpecifications {

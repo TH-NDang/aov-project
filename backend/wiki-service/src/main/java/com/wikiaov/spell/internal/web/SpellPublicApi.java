@@ -1,7 +1,7 @@
 package com.wikiaov.spell.internal.web;
 
-import com.wikiaov.platform.*;
 import com.wikiaov.platform.PageLimits;
+import com.wikiaov.platform.PageSlice;
 import com.wikiaov.spell.internal.application.response.SpellView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
+import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "spell public")

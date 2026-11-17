@@ -1,10 +1,13 @@
 package com.wikiaov.video.internal.application;
 
 import com.wikiaov.video.VideoSubjectKind;
-import com.wikiaov.video.internal.domain.*;
+import com.wikiaov.video.internal.domain.VideoOrigin;
+import com.wikiaov.video.internal.domain.VideoPurpose;
+import com.wikiaov.video.internal.domain.VideoStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 /** What the video endpoints accept. The schema names stay those of the former nested records of {@code SubjectVideos}. */

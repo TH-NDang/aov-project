@@ -3,8 +3,7 @@ package com.wikiaov.hero.internal.web;
 import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.CreatedId;
 import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,8 +16,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.*;
-import org.springframework.http.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "hero changes")

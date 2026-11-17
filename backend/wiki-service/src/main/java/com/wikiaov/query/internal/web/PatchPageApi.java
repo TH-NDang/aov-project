@@ -1,6 +1,5 @@
 package com.wikiaov.query.internal.web;
 
-import com.wikiaov.platform.*;
 import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,8 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
-import java.util.*;
-import org.springframework.http.*;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "patch page")

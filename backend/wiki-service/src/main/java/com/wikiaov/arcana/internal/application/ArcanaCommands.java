@@ -2,7 +2,11 @@ package com.wikiaov.arcana.internal.application;
 
 import com.wikiaov.arcana.internal.domain.ArcanaContent;
 import com.wikiaov.platform.CatalogCodes;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 public final class ArcanaCommands {

@@ -1,7 +1,8 @@
 package com.wikiaov.spell.internal.change.persistence;
 
 import com.wikiaov.spell.internal.change.persistence.entity.SpellPatchChange;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SpellPatchChangeRepository extends JpaRepository<SpellPatchChange, UUID> {

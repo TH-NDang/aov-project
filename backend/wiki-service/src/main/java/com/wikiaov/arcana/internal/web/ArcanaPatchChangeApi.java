@@ -1,12 +1,13 @@
 package com.wikiaov.arcana.internal.web;
 
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.CatalogChanges;
+import com.wikiaov.platform.CreatedId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.*;
+import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
 @Tag(name = "arcana patch change")

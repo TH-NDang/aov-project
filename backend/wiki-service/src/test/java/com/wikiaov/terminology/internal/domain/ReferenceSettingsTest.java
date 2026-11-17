@@ -1,9 +1,10 @@
 package com.wikiaov.terminology.internal.domain;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.wikiaov.terminology.internal.domain.ReferenceSettings.*;
-import java.util.*;
+import com.wikiaov.terminology.internal.domain.ReferenceSettings.Entry;
+import com.wikiaov.terminology.internal.domain.ReferenceSettings.Translation;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ReferenceSettingsTest {
