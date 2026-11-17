@@ -4,6 +4,7 @@ import com.wikiaov.community.tournament.internal.application.TournamentAdministr
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
+import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -100,7 +101,8 @@ public class TournamentAdminController implements TournamentAdminApi {
 
     @Override
     public PageSlice<Ranked<Tournament>> tournaments(String q, String alsoRegions, RecordState state, String status,
-            String tier, String region, Integer year, String sort, String level, UUID teamId, UUID playerId, int page,
+            String tier, String region, Integer year, String sort, TournamentLevel level, UUID teamId, UUID playerId,
+            int page,
             int size, HttpServletRequest request) {
         Parameters.only(request, "q", "alsoRegions", "state", "status", "tier", "region", "year", "sort", "level",
                 "teamId", "playerId", "page", "size");
@@ -110,7 +112,7 @@ public class TournamentAdminController implements TournamentAdminApi {
     }
 
     @Override
-    public TournamentFacets tournamentFacets(String level, HttpServletRequest request) {
+    public TournamentFacets tournamentFacets(TournamentLevel level, HttpServletRequest request) {
         Parameters.only(request, "level");
         return administration.tournamentFacets(level);
     }

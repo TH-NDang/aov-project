@@ -1,6 +1,7 @@
 package com.wikiaov.community.tournament.internal.directory.application;
 
-import com.wikiaov.community.tournament.internal.application.TournamentErrors;
+import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.platform.PlatformErrorCode;
 import com.wikiaov.community.tournament.internal.application.TournamentViews;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
@@ -34,7 +35,6 @@ public class CompetitionDirectory {
     private static final Set<String> PLAYER_SORTS = Set.of("RECENT", "TOURNAMENTS", "TITLES", "NAME");
     private static final Set<String> RECORD_SORTS = Set.of("RECENT", "NAME");
     private static final Set<String> TOURNAMENT_SORTS = Set.of("RECENT", "STATUS", "NAME", "UPDATED");
-    private static final Set<String> TOURNAMENT_LEVELS = Set.of("ALL", "MAIN");
     private static final int LINEUP_LIMIT = 7;
 
     private final DirectoryRepository directory;
@@ -123,14 +123,15 @@ public class CompetitionDirectory {
     }
 
     public PageSlice<Ranked<Tournament>> rankedTournaments(String q, String alsoRegions, String status, String tier,
-            String region, Integer year, String sort, String level, UUID teamId, UUID playerId, Pageable page) {
+            String region, Integer year, String sort, TournamentLevel level, UUID teamId, UUID playerId,
+            Pageable page) {
         requireOneOf("sort", sort, TOURNAMENT_SORTS);
-        requireOneOf("level", level, TOURNAMENT_LEVELS);
         requireEnum("status", status, TournamentStatus.class);
         requireEnum("tier", tier, TournamentTier.class);
 
         var rows = directory.rankedTournaments(q, alsoRegions, status, tier, region,
-                year == null ? "" : year.toString(), sort, level, text(teamId), text(playerId), unsorted(page));
+                year == null ? "" : year.toString(), sort, level.mainEventsOnly(), text(teamId), text(playerId),
+                unsorted(page));
         var records = byId(tournaments.findAllById(rows.map(RankedRow::getId).toList()), TournamentRecord::getId);
 
         return PageSlice.from(rows.map(row -> {
@@ -151,10 +152,8 @@ public class CompetitionDirectory {
         }).toList();
     }
 
-    public TournamentFacets tournamentFacets(String level) {
-        requireOneOf("level", level, TOURNAMENT_LEVELS);
-
-        var rows = directory.tournamentFacets(level);
+    public TournamentFacets tournamentFacets(TournamentLevel level) {
+        var rows = directory.tournamentFacets(level.mainEventsOnly());
         var statuses = rows.stream().filter(row -> row.getFacet().equals("STATUS"))
                 .collect(Collectors.toMap(FacetRow::getValue, FacetRow::getRows));
         var regions = rows.stream().filter(row -> row.getFacet().equals("REGION")).map(FacetRow::getValue).sorted()
@@ -268,8 +267,9 @@ public class CompetitionDirectory {
     }
 
     private static void requireOneOf(String name, String value, Set<String> allowed) {
-        if (!allowed.contains(value))
-            throw TournamentErrors.invalid("Unsupported " + name + ": " + value);
+        if (!allowed.contains(value)) {
+            throw unsupported(name, value);
+        }
     }
 
     private static <E extends Enum<E>> void requireEnum(String name, String value, Class<E> type) {
@@ -279,7 +279,12 @@ public class CompetitionDirectory {
         try {
             Enum.valueOf(type, value);
         } catch (IllegalArgumentException invalid) {
-            throw TournamentErrors.invalid("Unsupported " + name + ": " + value);
+            throw unsupported(name, value);
         }
+    }
+
+    /** A list option the client sent that the list does not have is a bad query parameter, not bad content. */
+    private static ApiException unsupported(String name, String value) {
+        return new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Unsupported " + name + ": " + value);
     }
 }

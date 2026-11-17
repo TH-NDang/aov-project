@@ -5,6 +5,7 @@ import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.directory.application.CompetitionDirectory;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
+import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import java.util.*;
 import org.springframework.data.domain.Pageable;
@@ -122,7 +123,7 @@ public class TournamentAdministration {
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
     public PageSlice<Ranked<Tournament>> tournaments(String q, String alsoRegions, RecordState state, String status,
-            String tier, String region, Integer year, String sort, String level, UUID teamId, UUID playerId,
+            String tier, String region, Integer year, String sort, TournamentLevel level, UUID teamId, UUID playerId,
             Pageable page) {
         if (state != RecordState.ACTIVE)
             return Ranked.unranked(tournaments.list(q, state, page));
@@ -133,7 +134,7 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public TournamentFacets tournamentFacets(String level) {
+    public TournamentFacets tournamentFacets(TournamentLevel level) {
         return directory.tournamentFacets(level);
     }
 

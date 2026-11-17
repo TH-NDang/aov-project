@@ -4,6 +4,7 @@ import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
+import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -83,7 +84,7 @@ public interface TournamentAdminApi {
             @RequestParam(defaultValue = "") String region,
             @RequestParam(required = false) Integer year,
             @RequestParam(defaultValue = "RECENT") String sort,
-            @RequestParam(defaultValue = "ALL") String level,
+            @RequestParam(defaultValue = "ALL") TournamentLevel level,
             @RequestParam(required = false) UUID teamId,
             @RequestParam(required = false) UUID playerId,
             @RequestParam(defaultValue = "0") int page,
@@ -91,7 +92,8 @@ public interface TournamentAdminApi {
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/facets")
-    TournamentFacets tournamentFacets(@RequestParam(defaultValue = "ALL") String level, HttpServletRequest request);
+    TournamentFacets tournamentFacets(@RequestParam(defaultValue = "ALL") TournamentLevel level,
+            HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/parts")
     java.util.List<TournamentPart> tournamentParts(@RequestParam(required = false) UUID parentId,

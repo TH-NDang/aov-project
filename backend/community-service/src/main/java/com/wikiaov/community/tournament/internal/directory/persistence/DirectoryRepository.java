@@ -38,13 +38,13 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
         )
         """;
 
-    /** With level MAIN a main event also answers to the names of its parts, which the list leaves out. */
+    /** A list of main events only also finds a main event by the names of its parts, which it leaves out. */
     String TOURNAMENT_FILTER = """
         t.deleted_at IS NULL
-        AND (:level <> 'MAIN' OR t.parent_id IS NULL)
+        AND (NOT :mainEventsOnly OR t.parent_id IS NULL)
         AND (strpos(t.search_names, tournament.search_key(:wanted)) > 0
              OR t.content->>'region' = ANY(string_to_array(:alsoRegions, ','))
-             OR (:level = 'MAIN' AND EXISTS (SELECT 1 FROM tournament.tournament part
+             OR (:mainEventsOnly AND EXISTS (SELECT 1 FROM tournament.tournament part
                                               WHERE part.parent_id = t.id AND part.deleted_at IS NULL
                                                 AND strpos(part.search_names, tournament.search_key(:wanted)) > 0)))
         AND (:status = '' OR t.status = :status)
@@ -263,7 +263,7 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
                CASE WHEN c.tournament_id IS NOT NULL THEN 'PARTICIPANT' END AS context
           FROM tournament.tournament t
           JOIN tournament.tournament_window w ON w.id = t.id
-          LEFT JOIN tournament.event_window e ON :level = 'MAIN' AND e.id = t.id
+          LEFT JOIN tournament.event_window e ON :mainEventsOnly AND e.id = t.id
           LEFT JOIN (SELECT tournament_id FROM tournament.tournament_team
                       WHERE team_id = CAST(NULLIF(:teamId, '') AS uuid)
                      UNION
@@ -287,7 +287,7 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
                   t.id
         """, countQuery = "SELECT count(*) FROM tournament.tournament t WHERE " + TOURNAMENT_FILTER)
     Page<RankedRow> rankedTournaments(String wanted, String alsoRegions, String status, String tier, String region,
-            String year, String sort, String level, String teamId, String playerId, Pageable page);
+            String year, String sort, boolean mainEventsOnly, String teamId, String playerId, Pageable page);
 
     /** The parts of one main event, or of every main event when none is named, each event's parts in playing order. */
     @Query(nativeQuery = true, value = """
@@ -304,7 +304,7 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
         WITH listed AS (
             SELECT status, content->>'region' AS region, season_year
               FROM tournament.tournament
-             WHERE deleted_at IS NULL AND (:level <> 'MAIN' OR parent_id IS NULL)
+             WHERE deleted_at IS NULL AND (NOT :mainEventsOnly OR parent_id IS NULL)
         )
         SELECT 'STATUS' AS facet, status AS value, count(*) AS rows FROM listed GROUP BY status
         UNION ALL
@@ -312,7 +312,7 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
         UNION ALL
         SELECT 'YEAR', CAST(season_year AS text), count(*) FROM listed WHERE season_year IS NOT NULL GROUP BY season_year
         """)
-    List<FacetRow> tournamentFacets(String level);
+    List<FacetRow> tournamentFacets(boolean mainEventsOnly);
 
     /** Roster lines of the given teams in every tournament; callers keep the tournament they want to show. */
     @Query(nativeQuery = true, value = "WITH " + DAYS + """

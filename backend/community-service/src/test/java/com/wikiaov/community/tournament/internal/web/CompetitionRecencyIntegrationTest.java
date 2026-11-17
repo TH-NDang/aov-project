@@ -3,6 +3,7 @@ package com.wikiaov.community.tournament.internal.web;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.wikiaov.community.testsupport.CommunityApplicationTest;
@@ -189,6 +190,13 @@ class CompetitionRecencyIntegrationTest {
         var main = read(get(ADMIN + "/tournaments/facets").param("level", "MAIN"));
         assertThat(every.path("total").asInt() - main.path("total").asInt()).isGreaterThanOrEqualTo(3);
         authorizedFails(get(ADMIN + "/tournaments/facets").param("level", "NOPE"));
+    }
+
+    @Test
+    void anUnknownTournamentLevelIsAnInvalidQueryParameter() throws Exception {
+        mvc.perform(authorized(get(ADMIN + "/tournaments").param("level", "NOPE")))
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
+                .andExpect(jsonPath("$.errors[0].path").value("level"));
     }
 
     @Test
