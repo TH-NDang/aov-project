@@ -1,6 +1,7 @@
 package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.platform.QueryParameters;
 import com.wikiaov.community.tournament.internal.application.TournamentAdministration;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
@@ -27,14 +28,15 @@ public class TournamentAdminController implements TournamentAdminApi {
     @Override
     public Catalog catalog(String region, String locale, UUID seasonId, UUID patchVariantId, boolean includeUnscoped,
             HttpServletRequest request) {
-        Parameters.only(request, "region", "locale", "seasonId", "patchVariantId", "includeUnscoped");
+        QueryParameters.requireOnly(request,
+                Set.of("region", "locale", "seasonId", "patchVariantId", "includeUnscoped"));
         return administration.catalog(region, locale, seasonId, patchVariantId, includeUnscoped);
     }
 
     @Override
     public PageSlice<Ranked<Team>> teams(String q, RecordState state, String sort, UUID tournamentId, int page,
             int size, HttpServletRequest request) {
-        Parameters.only(request, "q", "state", "sort", "tournamentId", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("q", "state", "sort", "tournamentId", "page", "size"));
         Parameters.search(q);
         return administration.teams(q, state, sort, tournamentId, Parameters.page(page, size, "updatedAt"));
     }
@@ -57,7 +59,7 @@ public class TournamentAdminController implements TournamentAdminApi {
     @Override
     public PageSlice<TeamEntry> teamDirectory(String q, String country, String sort, int page, int size,
             HttpServletRequest request) {
-        Parameters.only(request, "q", "country", "sort", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("q", "country", "sort", "page", "size"));
         Parameters.search(q);
         return administration.teamDirectory(q, country, sort, Parameters.page(page, size, "updatedAt"));
     }
@@ -65,7 +67,7 @@ public class TournamentAdminController implements TournamentAdminApi {
     @Override
     public PageSlice<PlayerEntry> playerDirectory(String q, String country, String lane, String status, String sort,
             int page, int size, HttpServletRequest request) {
-        Parameters.only(request, "q", "country", "lane", "status", "sort", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("q", "country", "lane", "status", "sort", "page", "size"));
         Parameters.search(q);
         return administration.playerDirectory(q, country, lane, status, sort,
                 Parameters.page(page, size, "updatedAt"));
@@ -73,14 +75,14 @@ public class TournamentAdminController implements TournamentAdminApi {
 
     @Override
     public List<CompetitionPageEntry> competitionPageStats(HttpServletRequest request) {
-        Parameters.only(request);
+        QueryParameters.requireOnly(request, Set.of());
         return administration.competitionPageStats();
     }
 
     @Override
     public PageSlice<Ranked<Player>> players(String q, RecordState state, String sort, UUID teamId, UUID tournamentId,
             int page, int size, HttpServletRequest request) {
-        Parameters.only(request, "q", "state", "sort", "teamId", "tournamentId", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("q", "state", "sort", "teamId", "tournamentId", "page", "size"));
         Parameters.search(q);
         return administration.players(q, state, sort, teamId, tournamentId, Parameters.page(page, size, "updatedAt"));
     }
@@ -105,8 +107,9 @@ public class TournamentAdminController implements TournamentAdminApi {
             String tier, String region, Integer year, String sort, TournamentLevel level, UUID teamId, UUID playerId,
             int page,
             int size, HttpServletRequest request) {
-        Parameters.only(request, "q", "alsoRegions", "state", "status", "tier", "region", "year", "sort", "level",
-                "teamId", "playerId", "page", "size");
+        QueryParameters.requireOnly(request,
+                Set.of("q", "alsoRegions", "state", "status", "tier", "region", "year", "sort", "level",
+                        "teamId", "playerId", "page", "size"));
         Parameters.search(q);
         return administration.tournaments(q, alsoRegions, state, status, tier, region, year, sort, level, teamId,
                 playerId, Parameters.page(page, size, "updatedAt"));
@@ -114,13 +117,13 @@ public class TournamentAdminController implements TournamentAdminApi {
 
     @Override
     public TournamentFacets tournamentFacets(TournamentLevel level, HttpServletRequest request) {
-        Parameters.only(request, "level");
+        QueryParameters.requireOnly(request, Set.of("level"));
         return administration.tournamentFacets(level);
     }
 
     @Override
     public List<TournamentPart> tournamentParts(UUID parentId, HttpServletRequest request) {
-        Parameters.only(request, "parentId");
+        QueryParameters.requireOnly(request, Set.of("parentId"));
         return administration.tournamentParts(parentId);
     }
 
@@ -142,14 +145,14 @@ public class TournamentAdminController implements TournamentAdminApi {
     @Override
     public PageSlice<View<Series>> series(String q, UUID tournamentId, RecordState state, int page, int size,
             HttpServletRequest request) {
-        Parameters.only(request, "q", "tournamentId", "state", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("q", "tournamentId", "state", "page", "size"));
         Parameters.search(q);
         return administration.series(q, tournamentId, state, Parameters.page(page, size, "updatedAt"));
     }
 
     @Override
     public List<TournamentStats> tournamentStats(HttpServletRequest request) {
-        Parameters.only(request);
+        QueryParameters.requireOnly(request, Set.of());
         return administration.tournamentStats();
     }
 
@@ -171,7 +174,7 @@ public class TournamentAdminController implements TournamentAdminApi {
     @Override
     public PageSlice<View<Game>> games(UUID seriesId, UUID tournamentId, RecordState state, int page, int size,
             HttpServletRequest request) {
-        Parameters.only(request, "seriesId", "tournamentId", "state", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("seriesId", "tournamentId", "state", "page", "size"));
         return administration.games(seriesId, tournamentId, state, Parameters.page(page, size, "updatedAt"));
     }
 

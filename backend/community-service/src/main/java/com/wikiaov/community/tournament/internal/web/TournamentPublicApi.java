@@ -23,7 +23,7 @@ public interface TournamentPublicApi {
             @RequestParam(defaultValue = "12") int size, HttpServletRequest request);
 
     @GetMapping(ApiPaths.ROOT + "/games/{id}")
-    PublishedGame game(@PathVariable UUID id);
+    PublishedGame game(@PathVariable UUID id, HttpServletRequest request);
 
     @GetMapping(ApiPaths.ROOT + "/tournaments")
     PageSlice<Summary<Tournament>> tournaments(@RequestParam(defaultValue = "0") int page,

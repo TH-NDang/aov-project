@@ -17,16 +17,9 @@ public class PageController implements PageApi {
     private final PageBroadcasts broadcasts;
     private final jakarta.servlet.http.HttpServletRequest request;
 
-    private void parameters(String... allowed) {
-        var names = Set.of(allowed);
-        for (var key : request.getParameterMap().keySet())
-            if (!names.contains(key))
-                throw com.wikiaov.community.community.internal.domain.PageRules
-                        .invalid("Unsupported query parameter: " + key);
-    }
-
     @GetMapping(value = ApiPaths.ROOT + "/pages/by-entity/{kind}/{id}", version = "1")
     public Profile byEntity(@PathVariable String kind, @PathVariable UUID id) {
+        QueryParameters.requireOnly(request, Set.of());
         return profiles.byEntity(kind, id);
     }
 
@@ -38,6 +31,7 @@ public class PageController implements PageApi {
     @GetMapping(value = ApiPaths.ROOT + "/me/pages/{id}/feed", version = "1")
     public PageSlice<Post> feed(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
         return social.feed(id, page, size);
     }
 
@@ -54,24 +48,28 @@ public class PageController implements PageApi {
 
     @Override
     public PageSlice<Profile> pages(String kind, String q, String personRole, int page, int size) {
-        parameters("kind", "q", "personRole", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("kind", "q", "personRole", "page", "size"));
         return profiles.list(kind, q, personRole, page, size, false);
     }
 
     @Override
     public Profile page(UUID id) {
+        QueryParameters.requireOnly(request, Set.of());
         return profiles.read(id, false);
     }
 
     @Override
     public Profile byCode(String code) {
+        QueryParameters.requireOnly(request, Set.of());
         return profiles.byCode(code);
     }
 
     @Override
     public PageSlice<Profile> adminPages(String kind, String q, String personRole, String country, List<UUID> entityIds,
             String sort, UUID relatedPageId, int page, int size) {
-        parameters("kind", "q", "personRole", "country", "entityIds", "sort", "relatedPageId", "page", "size");
+        QueryParameters.requireOnly(request,
+                Set.of("kind", "q", "personRole", "country", "sort", "relatedPageId", "page", "size"),
+                Set.of("entityIds"));
         return profiles.adminDirectory(kind, q, personRole, country, entityIds, sort, relatedPageId, page, size);
     }
 
@@ -82,13 +80,13 @@ public class PageController implements PageApi {
 
     @Override
     public List<TeamAffiliation> adminTeams(UUID id) {
-        parameters();
+        QueryParameters.requireOnly(request, Set.of());
         return profiles.teams(id, true);
     }
 
     @Override
     public List<TeamAffiliation> teams(UUID id) {
-        parameters();
+        QueryParameters.requireOnly(request, Set.of());
         return profiles.teams(id, false);
     }
 
@@ -150,6 +148,7 @@ public class PageController implements PageApi {
 
     @Override
     public PageSlice<Claim> claims(int page, int size) {
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
         return memberships.pending(page, size);
     }
 
@@ -200,12 +199,13 @@ public class PageController implements PageApi {
 
     @Override
     public PageSlice<Post> posts(UUID id, String kind, int page, int size) {
-        parameters("kind", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("kind", "page", "size"));
         return social.posts(id, kind, page, size, false);
     }
 
     @Override
     public PageSlice<Post> managePosts(UUID id, int page, int size) {
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
         return social.posts(id, null, page, size, true);
     }
 
@@ -226,19 +226,19 @@ public class PageController implements PageApi {
 
     @Override
     public PageSlice<FeedPost> latestPosts(String kind, String q, int page, int size) {
-        parameters("kind", "q", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("kind", "q", "page", "size"));
         return social.latest(kind, q, page, size);
     }
 
     @Override
     public PageSlice<FeedPost> timeline(boolean following, String kind, int page, int size) {
-        parameters("following", "kind", "page", "size");
+        QueryParameters.requireOnly(request, Set.of("following", "kind", "page", "size"));
         return social.timeline(following, kind, page, size);
     }
 
     @Override
     public PageSlice<Profile> live(int page, int size) {
-        parameters("page", "size");
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
         return broadcasts.active(page, size);
     }
 
@@ -269,19 +269,19 @@ public class PageController implements PageApi {
 
     @Override
     public PageSlice<Profile> follows(int page, int size) {
-        parameters("page", "size");
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
         return profiles.followed(page, size);
     }
 
     @Override
     public PageSlice<Profile> suggestions(int page, int size) {
-        parameters("page", "size");
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
         return profiles.suggestions(page, size);
     }
 
     @Override
     public PageSlice<Comment> comments(UUID id, int page, int size) {
-        parameters("page", "size");
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
         return social.comments(id, page, size);
     }
 
@@ -312,6 +312,7 @@ public class PageController implements PageApi {
 
     @Override
     public PageSlice<Report> reports(int page, int size) {
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
         return social.reports(page, size);
     }
 
@@ -322,6 +323,7 @@ public class PageController implements PageApi {
 
     @Override
     public PageSlice<Notification> notifications(int page, int size) {
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
         return notifications.inbox(page, size);
     }
 

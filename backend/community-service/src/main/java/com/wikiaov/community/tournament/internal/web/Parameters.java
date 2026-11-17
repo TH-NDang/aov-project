@@ -1,19 +1,11 @@
 package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import org.springframework.data.domain.*;
 
 final class Parameters {
     private Parameters() {
-    }
-
-    static void only(HttpServletRequest request, String... allowed) {
-        var names = Set.of(allowed);
-        for (var key : request.getParameterMap().keySet())
-            if (!names.contains(key))
-                throw TournamentErrors.invalid("Unsupported query parameter: " + key);
     }
 
     static void search(String q) {

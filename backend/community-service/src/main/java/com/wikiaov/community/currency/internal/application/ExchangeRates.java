@@ -2,6 +2,8 @@ package com.wikiaov.community.currency.internal.application;
 
 import com.wikiaov.community.currency.internal.persistence.ExchangeRateRepository;
 import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.platform.ApiFieldError;
+import com.wikiaov.community.platform.PlatformErrorCode;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -32,8 +34,9 @@ public class ExchangeRates {
     public Rates on(List<LocalDate> requested) {
         var days = requested.isEmpty() ? List.of(LocalDate.now(clock)) : requested.stream().distinct().toList();
         if (days.size() > MAX_DAYS)
-            throw new ApiException(CurrencyErrorCode.EXCHANGE_RATE_INVALID_QUERY,
-                    "Ask for at most " + MAX_DAYS + " days at a time.");
+            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
+                    "Ask for at most " + MAX_DAYS + " days at a time.",
+                    List.of(new ApiFieldError("on", "TOO_MANY_VALUES", "Too many days.")));
 
         var found = new HashMap<LocalDate, List<Rate>>();
         rates.effectiveOn(json.writeValueAsString(days.stream().map(LocalDate::toString).toList()),

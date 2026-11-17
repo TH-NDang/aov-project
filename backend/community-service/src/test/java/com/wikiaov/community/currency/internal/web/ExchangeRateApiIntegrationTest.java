@@ -103,14 +103,14 @@ class ExchangeRateApiIntegrationTest {
     @Test
     void badQueriesAreRejected() throws Exception {
         mvc.perform(get(RATES).param("on", "05/03/2020")).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("EXCHANGE_RATE_INVALID_QUERY"));
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
         mvc.perform(get(RATES).param("unexpected", "1")).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("EXCHANGE_RATE_INVALID_QUERY"));
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
 
         var tooMany = java.util.stream.IntStream.range(0, 61)
                 .mapToObj(index -> LocalDate.parse("2020-01-01").plusDays(index).toString()).toArray(String[]::new);
         mvc.perform(get(RATES).param("on", tooMany)).andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("EXCHANGE_RATE_INVALID_QUERY"));
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
     }
 
     @Test

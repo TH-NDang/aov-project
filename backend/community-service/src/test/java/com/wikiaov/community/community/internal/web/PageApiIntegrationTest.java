@@ -312,7 +312,14 @@ class PageApiIntegrationTest {
                 .andExpect(jsonPath("$.references").value(1));
         mvc.perform(as(post(ROOT + "/admin/media-assets/" + asset + "/retire"), "editor", true))
                 .andExpect(status().isConflict());
-        mvc.perform(get(ROOT + "/pages?unexpected=true")).andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void anUnknownQueryParameterOfAPublicPageReadIsAnInvalidQueryParameter() throws Exception {
+        mvc.perform(get(ROOT + "/pages?unexpected=true")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+        mvc.perform(get(ROOT + "/pages/by-code/anything?unexpected=true")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
     }
 
     @Test
@@ -460,7 +467,7 @@ class PageApiIntegrationTest {
                         .value("Followed organization"))
                 .andExpect(jsonPath("$.items[?(@.post.body == 'Draft news')]").isEmpty());
         mvc.perform(get(ROOT + "/pages/" + followed + "/posts")).andExpect(jsonPath("$.items[0].comments").value(1));
-        mvc.perform(get(ROOT + "/posts?following=true")).andExpect(status().isUnprocessableEntity());
+        mvc.perform(get(ROOT + "/posts?following=true")).andExpect(status().isBadRequest());
         for (var path : List.of("/me/feed", "/me/follows", "/me/suggestions", "/me/notifications/unread"))
             mvc.perform(get(ROOT + path)).andExpect(status().isUnauthorized());
 
