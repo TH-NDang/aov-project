@@ -40,8 +40,9 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
         var counted = selection(builder, count, criteria);
         count.select(builder.count(counted.skill().get("skillKey"))).where(counted.predicates());
         long total = entities.createQuery(count).getSingleResult();
-        if (criteria.offset() >= total)
+        if (criteria.offset() >= total) {
             return new Result(List.of(), total);
+        }
 
         var query = builder.createQuery(Row.class);
         var selected = selection(builder, query, criteria);
@@ -124,10 +125,12 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
 
         newer.select(candidate.get("id")).where(newerPredicates.toArray(Predicate[]::new));
         predicates.add(builder.not(builder.exists(newer)));
-        if (criteria.heroId() != null)
+        if (criteria.heroId() != null) {
             predicates.add(builder.equal(hero.get("id"), criteria.heroId()));
-        if (criteria.search().sourceSlot() != null)
+        }
+        if (criteria.search().sourceSlot() != null) {
             predicates.add(sourceSlot(builder, skill, criteria.search()));
+        }
 
         for (String word : criteria.search().words()) {
             String pattern = "%" + word.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
@@ -160,8 +163,9 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
     private static Predicate sourceSlot(CriteriaBuilder builder, Root<SkillSnapshotRow> skill,
             SkillReferenceSearch search) {
         int slot = search.sourceSlot();
-        if (search.variantNo() != null)
+        if (search.variantNo() != null) {
             return builder.equal(skill.get("skillKey"), "skill-" + slot + "-" + search.variantNo());
+        }
 
         var keys = builder.or(builder.like(skill.get("skillKey"), "skill-" + slot + "-%"),
                 builder.equal(skill.get("skillKey"), slot == 0 ? "capture-passive" : "capture-skill-" + slot));
@@ -174,8 +178,9 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
     }
 
     private static Expression<Long> ordinal(CriteriaBuilder builder, Path<UUID> patch, Map<UUID, Long> ordinals) {
-        if (ordinals.isEmpty())
+        if (ordinals.isEmpty()) {
             return builder.literal(0L);
+        }
 
         var rank = builder.<UUID, Long>selectCase(patch);
         new TreeMap<>(ordinals).forEach(rank::when);
@@ -184,16 +189,18 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
 
     @Override
     public List<Copy> selectSkillCopies(List<Row> rows) {
-        if (rows.isEmpty())
+        if (rows.isEmpty()) {
             return List.of();
+        }
 
         var builder = entities.getCriteriaBuilder();
         var query = builder.createQuery(Copy.class);
         var translation = query.from(SkillTranslationRow.class);
         var pairs = new ArrayList<Predicate>();
-        for (var row : rows)
+        for (var row : rows) {
             pairs.add(builder.and(builder.equal(translation.get("skillSetRevisionId"), row.skillSetRevisionId()),
                     builder.equal(translation.get("skillKey"), row.skillKey())));
+        }
 
         query.select(builder.construct(Copy.class, translation.get("skillSetRevisionId"), translation.get("skillKey"),
                 translation.get("locale"), translation.get("name"),

@@ -105,7 +105,8 @@ public class HeroStore {
     }
 
     private static void put(Map<HeroSection, UUID> target, HeroSection section, UUID value) {
-        if (value != null)
+        if (value != null) {
             target.put(section, value);
+        }
     }
 }

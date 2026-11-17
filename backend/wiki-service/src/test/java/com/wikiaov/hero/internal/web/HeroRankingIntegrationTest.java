@@ -302,8 +302,9 @@ class HeroRankingIntegrationTest {
     private Map<String, Object> send(MockHttpServletRequestBuilder request, Object body, int status) throws Exception {
         request.with(jwt().jwt(t -> t.issuer("https://test.example/issuer").subject("editor")).authorities(
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

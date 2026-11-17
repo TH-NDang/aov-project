@@ -105,8 +105,9 @@ public final class CatalogSnapshotScenarios {
                 snapshot(4, OTHER_OWNER, FIRST_PATCH, 1, RevisionState.DRAFT, "GAME_PATCH"),
                 snapshot(5, OTHER_OWNER, FIRST_PATCH, 2, RevisionState.DRAFT, "CONTENT_CORRECTION"));
         CatalogSnapshots.latestByOwner(candidates, patch -> {
-            if (patch == null)
+            if (patch == null) {
                 throw new AssertionError("Null patch must have ordinal zero without a lookup.");
+            }
             calls.merge(patch, 1, Integer::sum);
             return ordinal(patch);
         });
@@ -123,10 +124,12 @@ public final class CatalogSnapshotScenarios {
             Set<UUID> targets = new HashSet<>();
             List<Change> changes = new ArrayList<>();
             for (int patch = 1; patch <= 5; patch++) {
-                if (random.nextBoolean())
+                if (random.nextBoolean()) {
                     selected.add(id(patch));
-                if (random.nextBoolean())
+                }
+                if (random.nextBoolean()) {
                     applicable.add(id(patch));
+                }
             }
             for (int index = 0; index < 30; index++) {
                 int patch = random.nextInt(6);
@@ -134,8 +137,9 @@ public final class CatalogSnapshotScenarios {
                         random.nextInt(10), random.nextBoolean() ? RevisionState.PUBLISHED : RevisionState.DRAFT,
                         causes[random.nextInt(causes.length)]);
                 candidates.add(candidate);
-                if (random.nextBoolean())
+                if (random.nextBoolean()) {
                     targets.add(candidate.id());
+                }
                 changes.add(new Change(id(100 + random.nextInt(5)), id(1 + random.nextInt(5)), random.nextBoolean()));
             }
             var originalCandidates = List.copyOf(candidates);
@@ -152,9 +156,11 @@ public final class CatalogSnapshotScenarios {
     private static List<Snapshot<String>> legacyChanged(List<Snapshot<String>> candidates, Set<UUID> allowed,
             Set<UUID> explicitTargets) {
         var recorded = new HashMap<UUID, Set<UUID>>();
-        for (var r : candidates)
-            if (allowed.contains(r.patchVariantId()) && Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.cause()))
+        for (var r : candidates) {
+            if (allowed.contains(r.patchVariantId()) && Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.cause())) {
                 recorded.computeIfAbsent(r.ownerId(), ignored -> new HashSet<>()).add(r.patchVariantId());
+            }
+        }
         return candidates.stream().filter(r -> explicitTargets.contains(r.id()) || r.patchVariantId() != null
                 && recorded.getOrDefault(r.ownerId(), Set.of()).contains(r.patchVariantId())).toList();
     }
@@ -214,7 +220,8 @@ public final class CatalogSnapshotScenarios {
     }
 
     private static void equal(Object expected, Object actual) {
-        if (!expected.equals(actual))
+        if (!expected.equals(actual)) {
             throw new AssertionError("Expected " + expected + " but got " + actual);
+        }
     }
 }

@@ -60,17 +60,19 @@ public class HeroPatchDerivation {
     public HeroPatchView at(UUID heroId, UUID variantId, UUID anchorRevisionId) {
         var variant = contexts.variant(variantId);
         var revisions = store.revisions(heroId);
-        if (revisions.isEmpty())
+        if (revisions.isEmpty()) {
             throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "The hero does not exist.");
+        }
 
         Map<UUID, Long> ordinals = contexts.rulesetVariants(variant.rulesetId()).stream()
                 .collect(Collectors.toMap(PatchVariantReference::id, PatchVariantReference::rulesetOrdinal));
         var anchor = anchorRevisionId == null
                 ? anchor(revisions, variant, ordinals)
                 : selectedAnchor(heroId, anchorRevisionId, revisions, variant, ordinals);
-        if (anchor == null)
+        if (anchor == null) {
             return new HeroPatchView(heroId, variantId, new Anchor(Direction.NONE, null, null), List.of(), List.of(),
                     List.of(), List.of());
+        }
 
         var derived = new Derived(anchor.direction());
         derived.start(stats(anchor.revision()), profile(anchor.revision()));
@@ -198,20 +200,22 @@ public class HeroPatchDerivation {
         private void stat(StatChangeClassification stat, UUID changeSetId, UUID patchVariantId) {
             var value = forward ? stat.getNewValue() : stat.getOldValue();
             var previous = stats.get(stat.getStatKey());
-            if (value == null)
+            if (value == null) {
                 stats.remove(stat.getStatKey());
-            else
+            } else {
                 stats.put(stat.getStatKey(), new StatValue(stat.getStatKey(), stat.getUnitCode(), value, null,
                         previous == null ? null : previous.growthPerLevel(), Provenance.DERIVED, changeSetId,
                         patchVariantId));
+            }
         }
 
         private void role(RoleChangeClassification role, UUID changeSetId, UUID patchVariantId) {
             var code = Role.valueOf(role.getRoleCode());
-            if (role.isAdded() == forward)
+            if (role.isAdded() == forward) {
                 roles.put(code, new RoleValue(code, Provenance.DERIVED, changeSetId, patchVariantId));
-            else
+            } else {
                 roles.remove(code);
+            }
         }
 
         HeroPatchView view(UUID heroId, UUID variantId, Anchor anchor) {

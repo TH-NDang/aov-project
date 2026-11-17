@@ -40,8 +40,9 @@ public class HeroTraitIndex {
         Map<UUID, String> codes = new LinkedHashMap<>();
         Map<UUID, UUID> skillSets = new LinkedHashMap<>();
         published.forEach((hero, revision) -> {
-            if (structure.holdsForms(hero.getId()))
+            if (structure.holdsForms(hero.getId())) {
                 return;
+            }
             codes.put(hero.getId(), hero.getCode());
             skillSets.put(hero.getId(), revision.sections().get(HeroSection.SKILLS));
         });

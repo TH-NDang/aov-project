@@ -88,8 +88,9 @@ public class MediaAssetQueries {
 
     /** Ids of the assets a list with these filters would show, newest first. */
     public List<UUID> ids(@Nullable MediaSemanticType semanticType, boolean needsCredit) {
-        if (!needsCredit)
+        if (!needsCredit) {
             return assets.findIdsNewestFirst(semanticType);
+        }
 
         return assets.findNeedingCredit(semanticType, PageRequest.of(0, Integer.MAX_VALUE, NEWEST_FIRST)).stream()
                 .map(MediaAsset::getId).toList();
@@ -97,8 +98,9 @@ public class MediaAssetQueries {
 
     /** The given assets as list rows, in the given order. */
     public List<MediaAssetSummary> summaries(Collection<UUID> ids) {
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return List.of();
+        }
 
         Map<UUID, MediaAsset> found = assets.findByIdIn(ids).stream()
                 .collect(Collectors.toMap(MediaAsset::getId, Function.identity()));

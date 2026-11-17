@@ -88,9 +88,10 @@ class SkillReferenceCatalogIntegrationTest {
 
     @BeforeEach
     void fixture() {
-        for (var id : List.of(ruleset, otherRuleset))
+        for (var id : List.of(ruleset, otherRuleset)) {
             sql.update("insert into patch.gameplay_ruleset values (?,?,?,'ACTIVE',now())", id, "test-" + id,
                     "Skill refs");
+        }
         var variants = new ArrayList<PatchVariantReference>();
         int ordinal = 0;
         for (var id : List.of(firstPatch, secondPatch, futurePatch)) {
@@ -107,10 +108,11 @@ class SkillReferenceCatalogIntegrationTest {
         when(contexts.resolve(eq("VN"), any())).thenReturn(context(2));
         when(media.findAll(anyCollection())).thenAnswer(call -> {
             var result = new HashMap<UUID, MediaAssetReference>();
-            for (var id : call.<Collection<UUID>>getArgument(0))
+            for (var id : call.<Collection<UUID>>getArgument(0)) {
                 result.put(id, new MediaAssetReference(id, MediaSemanticType.HERO_SKILL_ICON, MediaAssetState.ACTIVE,
                         new MediaAssetReference.CurrentVersion(UUID.randomUUID(), "image/png", 128, 128,
                                 "/assets/" + id)));
+            }
             return result;
         });
         hero(airi, "airi");
@@ -169,8 +171,9 @@ class SkillReferenceCatalogIntegrationTest {
             assertThat(items.size()).isEqualTo(1);
             assertThat(items.get(0).get("skillKey").asString()).isEqualTo("skill-1-2");
         }
-        for (String q : List.of("airi hai quai", "Hải quái c1", "airi s1"))
+        for (String q : List.of("airi hai quai", "Hải quái c1", "airi s1")) {
             assertThat(admin(q, null).get("items").get(0).get("id").asString()).isEqualTo(airi + ".skill-1-1");
+        }
         assertThat(admin("edras hai quai", null).get("totalElements").asInt()).isZero();
     }
 
@@ -243,10 +246,12 @@ class SkillReferenceCatalogIntegrationTest {
     void validatesScopeAuthorityAndBoundedLookupInput() throws Exception {
         mvc.perform(get(path())).andExpect(status().isUnauthorized());
         mvc.perform(get(path()).with(jwt())).andExpect(status().isForbidden());
-        for (var parameter : List.of("unknown", "region"))
+        for (var parameter : List.of("unknown", "region")) {
             mvc.perform(get(path()).param(parameter, "x").with(reader())).andExpect(status().isBadRequest());
-        for (var ids : List.of("bad", airi + ".", (airi + ".skill-1-1,").repeat(50) + airi + ".skill-1-1"))
+        }
+        for (var ids : List.of("bad", airi + ".", (airi + ".skill-1-1,").repeat(50) + airi + ".skill-1-1")) {
             mvc.perform(get(path()).param("ids", ids).with(reader())).andExpect(status().isBadRequest());
+        }
         mvc.perform(get(path()).param("q", "airi").param("ids", airi + ".skill-1-1").with(reader()))
                 .andExpect(status().isBadRequest());
         mvc.perform(get(path()).param("size", "101").with(reader())).andExpect(status().isBadRequest());
@@ -305,8 +310,9 @@ class SkillReferenceCatalogIntegrationTest {
 
     private tools.jackson.databind.JsonNode admin(String q, String ids) throws Exception {
         var request = get(path()).param("rulesetId", ruleset.toString()).param("q", q).with(reader());
-        if (ids != null)
+        if (ids != null) {
             request.param("ids", ids);
+        }
         return json.readTree(
                 mvc.perform(request).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
     }
@@ -346,10 +352,11 @@ class SkillReferenceCatalogIntegrationTest {
                             + " values (?,?,'DRAFT',now(),'test','editor')",
                     id, owner);
         }
-        for (String locale : List.of("vi-VN", "en-US"))
+        for (String locale : List.of("vi-VN", "en-US")) {
             sql.update(
                     "insert into hero.hero_profile_translation(profile_revision_id,locale,name,summary) values (?,?,?,?)",
                     sections.getFirst(), locale, name, "Private full summary");
+        }
         sql.update("insert into hero.hero_media_binding values (?,'HEAD',?)", sections.get(5), head);
         int order = 0;
         for (var entry : new TreeMap<>(names).entrySet()) {
@@ -359,11 +366,12 @@ class SkillReferenceCatalogIntegrationTest {
                     "insert into hero.hero_skill_snapshot(skill_set_revision_id,hero_id,skill_key,kind,display_order,icon_asset_id)"
                             + " values (?,?,?,'ACTIVE',?,?)",
                     sections.get(3), owner, entry.getKey(), order++, icon);
-            for (String locale : List.of("vi-VN", "en-US"))
+            for (String locale : List.of("vi-VN", "en-US")) {
                 sql.update(
                         "insert into hero.hero_skill_translation(skill_set_revision_id,skill_key,locale,name,description)"
                                 + " values (?,?,?,?,?)",
                         sections.get(3), entry.getKey(), locale, entry.getValue(), "D".repeat(5000));
+            }
         }
         var id = UUID.randomUUID();
         sql.update(

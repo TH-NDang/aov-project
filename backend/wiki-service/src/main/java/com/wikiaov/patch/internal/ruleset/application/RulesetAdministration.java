@@ -69,8 +69,9 @@ public class RulesetAdministration {
     }
 
     public UUID assign(UUID regionId, Assignment input) {
-        if (input.validTo() != null && !input.validTo().isAfter(input.validFrom()))
+        if (input.validTo() != null && !input.validTo().isAfter(input.validFrom())) {
             throw invalid("Assignment end must follow its start.");
+        }
         regions.lockById(regionId).orElseThrow(RulesetAdministration::notFound);
         rulesets.lockById(input.rulesetId()).orElseThrow(RulesetAdministration::notFound);
         UUID id = UUID.randomUUID();

@@ -55,14 +55,16 @@ public class ImportMediaUsageProvider implements MediaUsageProvider {
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
         for (var session : uploads.findAll()) {
-            for (var assetId : assetIds(session.getStateJson()))
+            for (var assetId : assetIds(session.getStateJson())) {
                 usages.computeIfAbsent(assetId, ignored -> new ArrayList<>()).add(session(session.getId()));
+            }
         }
         for (var job : jobs.unfinished()) {
             var rows = json.readValue(job.getRequestJson(), HeroImportRequest[].class);
             for (int i = job.getCompleted(); i < rows.length; i++) {
-                for (var assetId : assetIds(json.writeValueAsString(rows[i].values())))
+                for (var assetId : assetIds(json.writeValueAsString(rows[i].values()))) {
                     usages.computeIfAbsent(assetId, ignored -> new ArrayList<>()).add(job(job.getId(), rows[i].code()));
+                }
             }
         }
         return usages;

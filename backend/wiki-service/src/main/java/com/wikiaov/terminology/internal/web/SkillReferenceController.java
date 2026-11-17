@@ -61,8 +61,9 @@ public class SkillReferenceController implements SkillReferenceApi {
             String tag = "\"" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
                     .digest(json.writeValueAsBytes(value))) + "\"";
             var cache = CacheControl.noCache().cachePublic();
-            if (web.checkNotModified(tag))
+            if (web.checkNotModified(tag)) {
                 return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(tag).cacheControl(cache).build();
+            }
             return ResponseEntity.ok().eTag(tag).cacheControl(cache).body(value);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

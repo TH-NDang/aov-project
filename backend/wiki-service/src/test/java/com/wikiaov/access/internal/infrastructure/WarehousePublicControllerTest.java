@@ -79,9 +79,10 @@ class WarehousePublicControllerTest {
                 .thenReturn(
                         List.of(new PublicEnchantmentBranchView("vuc-hon-mang", 1, "#f00", List.of(text), null, null)));
 
-        for (var route : List.of("items", "arcana", "enchantments", "spells"))
+        for (var route : List.of("items", "arcana", "enchantments", "spells")) {
             mvc.perform(get("/api/wiki/v1/" + route)).andExpect(status().isOk())
                     .andExpect(jsonPath("$.items").isEmpty());
+        }
         mvc.perform(get("/api/wiki/v1/item-categories")).andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].code").value("cong"))
                 .andExpect(jsonPath("$[0].translations[0].locale").value("vi-VN"));
@@ -102,11 +103,12 @@ class WarehousePublicControllerTest {
         when(spells.published("VN", "en-US", 0, 20, season, patch, true))
                 .thenReturn(new PageSlice<>(List.of(), 0, 20, 0));
 
-        for (var route : List.of("items", "arcana", "enchantments", "spells"))
+        for (var route : List.of("items", "arcana", "enchantments", "spells")) {
             mvc.perform(get("/api/wiki/v1/" + route).param("locale", "en-US")
                     .param("seasonId", season.toString()).param("patchVariantId", patch.toString())
                     .param("includeUnscoped", "true")).andExpect(status().isOk())
                     .andExpect(jsonPath("$.items").isEmpty());
+        }
         verify(items).published("VN", "en-US", 0, 20, season, patch, true);
         verify(arcana).published("VN", "en-US", 0, 20, season, patch, true);
         verify(enchantments).published("VN", "en-US", 0, 20, season, patch, true);

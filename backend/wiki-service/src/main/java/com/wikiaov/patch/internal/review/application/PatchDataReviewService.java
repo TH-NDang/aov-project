@@ -51,15 +51,18 @@ public class PatchDataReviewService implements PatchDataReviews {
         var variant = variants.lockById(id).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant was not found."));
         if (input.state() == null || !PatchDataReviewState.isName(input.state())
-                || input.expectedVersion() < 0)
+                || input.expectedVersion() < 0) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "Invalid editorial review state.");
-        if (variant.getStatus() != PatchVariantStatus.PUBLISHED)
+        }
+        if (variant.getStatus() != PatchVariantStatus.PUBLISHED) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID,
                     "Publish the patch variant before completing data review.");
+        }
         var value = reviews.findById(id).orElseGet(PatchDataReview::new);
-        if (value.getVersion() != input.expectedVersion())
+        if (value.getVersion() != input.expectedVersion()) {
             throw new ApiException(PatchErrorCode.PATCH_CONFLICT,
                     "The patch data review has changed. Reload before saving.");
+        }
         var actor = actors.require();
         value.setPatchVariantId(id);
         value.setState(PatchDataReviewState.valueOf(input.state()));
@@ -77,13 +80,15 @@ public class PatchDataReviewService implements PatchDataReviews {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void markDirty(UUID id) {
-        if (id == null)
+        if (id == null) {
             return;
+        }
         variants.lockById(id).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant was not found."));
         var value = reviews.findById(id).orElse(null);
-        if (value == null || value.getState() != PatchDataReviewState.COMPLETE)
+        if (value == null || value.getState() != PatchDataReviewState.COMPLETE) {
             return;
+        }
         var actor = actors.require();
         long previous = value.getVersion();
         value.setState(PatchDataReviewState.IN_PROGRESS);

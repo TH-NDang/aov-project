@@ -319,7 +319,7 @@ class DomainCoreIntegrationTest {
 
         assertThat(jdbc.sql("SELECT summary FROM hero.hero_skill_translation ORDER BY summary NULLS LAST")
                 .query(String.class).list()).containsExactly("Lướt tới và hất tung mục tiêu.", null, null);
-        for (var malformed : List.of(" ", "Lướt tới.\nHất tung mục tiêu."))
+        for (var malformed : List.of(" ", "Lướt tới.\nHất tung mục tiêu.")) {
             assertThatThrownBy(() -> jdbc.sql("""
                     INSERT INTO hero.hero_skill_translation (skill_set_revision_id, skill_key, locale, name,
                         description, summary)
@@ -327,6 +327,7 @@ class DomainCoreIntegrationTest {
                     """).param(UUID.randomUUID()).param(malformed).update())
                     .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
                     .hasMessageContaining("hero_skill_translation_summary_check");
+        }
     }
 
     private Map<String, Object> summaryBody(Number version, String summary) {
@@ -407,10 +408,11 @@ class DomainCoreIntegrationTest {
         send(post(path(hero, draftId) + "/publish"), Map.of("expectedVersion", number(draft, "version")), 200);
         UUID sticker = UUID.randomUUID(), oldIcon = UUID.randomUUID();
         for (var image : Map.of(sticker, MediaSemanticType.CHIBI_STICKER, oldIcon, MediaSemanticType.HERO_SKILL_ICON)
-                .entrySet())
+                .entrySet()) {
             when(media.find(image.getKey())).thenReturn(Optional.of(new MediaAssetReference(image.getKey(),
                     image.getValue(), MediaAssetState.ACTIVE, new MediaAssetReference.CurrentVersion(UUID.randomUUID(),
                             "image/webp", 128, 128, "/media/" + image.getKey() + "/v1.webp"))));
+        }
         String gallery = ROOT + "/admin/heroes/" + hero + "/gallery";
 
         // The published version's images come from the version itself.
@@ -972,7 +974,7 @@ class DomainCoreIntegrationTest {
         var start = new CountDownLatch(1);
         try {
             List<Future<Integer>> results = new ArrayList<>();
-            for (String name : List.of("Editor A", "Editor B"))
+            for (String name : List.of("Editor A", "Editor B")) {
                 results.add(executor.submit(() -> {
                     start.await();
                     String payload = json.writeValueAsString(Map.of("expectedDraftVersion", 1, "translations",
@@ -985,6 +987,7 @@ class DomainCoreIntegrationTest {
                                     .contentType(MediaType.APPLICATION_JSON).content(payload))
                             .andReturn().getResponse().getStatus();
                 }));
+            }
             start.countDown();
             assertThat(List.of(results.get(0).get(10, TimeUnit.SECONDS), results.get(1).get(10, TimeUnit.SECONDS)))
                     .containsExactlyInAnyOrder(200, 409);
@@ -1171,9 +1174,10 @@ class DomainCoreIntegrationTest {
             assertThat(publishReadiness()).hasSize(1);
             long one = statistics.getPrepareStatementCount();
 
-            for (String code : List.of("airi", "butterfly", "capheny"))
+            for (String code : List.of("airi", "butterfly", "capheny")) {
                 send(post(ROOT + "/admin/heroes"), Map.of("code", code, "initialLocale", "vi-VN", "name", code,
                         "rulesetId", ruleset, "releaseId", releaseId(variant)), 201);
+            }
             statistics.clear();
             assertThat(publishReadiness()).hasSize(4);
 
@@ -1511,8 +1515,9 @@ class DomainCoreIntegrationTest {
     }
 
     private void seedImportSeason() throws Exception {
-        if (jdbc.sql("SELECT count(*) FROM patch.ranked_season").query(Long.class).single() > 0)
+        if (jdbc.sql("SELECT count(*) FROM patch.ranked_season").query(Long.class).single() > 0) {
             return;
+        }
         var season = send(post(ROOT + "/admin/seasons"), Map.of("code", "test-season", "displayName", "S1 2026"), 201);
         send(post(ROOT + "/admin/seasons/" + season.get("id") + "/schedules"), Map.of("regionId", VN,
                 "startsAt", "2026-01-01T00:00:00Z", "endsAt", "2027-01-01T00:00:00Z"), 201);
@@ -1612,8 +1617,9 @@ class DomainCoreIntegrationTest {
         Map<String, Object> body = new HashMap<>();
         body.put("rulesetId", ruleset);
         body.put("validFrom", from);
-        if (to != null)
+        if (to != null) {
             body.put("validTo", to);
+        }
         send(post(ROOT + "/admin/regions/" + region + "/ruleset-assignments"), body, status);
     }
 
@@ -1784,8 +1790,9 @@ class DomainCoreIntegrationTest {
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write"),
                 new SimpleGrantedAuthority("hero:publish"), new SimpleGrantedAuthority("patch:write"),
                 new SimpleGrantedAuthority("patch:publish"), new SimpleGrantedAuthority("region:admin")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

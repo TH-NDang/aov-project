@@ -62,24 +62,30 @@ public class SkinImagePublications {
         var source = queries.current(heroId, context, now)
                 .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_NOT_FOUND,
                         "No published hero is available in this context."));
-        if (!source.id().equals(input.sourceRevisionId()))
+        if (!source.id().equals(input.sourceRevisionId())) {
             throw conflict("The published source changed. Reload the current hero before publishing images.",
                     Map.of("currentRevisionId", source.id()));
+        }
 
         var imageSource = store.revision(heroId, input.imageSourceRevisionId());
-        if (imageSource.state() != RevisionState.DRAFT || !imageSource.rulesetId().equals(source.rulesetId()))
+        if (imageSource.state() != RevisionState.DRAFT || !imageSource.rulesetId().equals(source.rulesetId())) {
             throw HeroValidation.invalid("The image source must be this hero's draft in the published ruleset.");
-        if (imageSource.version() != input.expectedImageSourceVersion())
+        }
+        if (imageSource.version() != input.expectedImageSourceVersion()) {
             throw conflict("The image source draft changed. Reload its images before publishing.",
                     Map.of("currentVersion", imageSource.version()));
-        if (!source.sections().containsKey(HeroSection.SKINS) || !imageSource.sections().containsKey(HeroSection.SKINS))
+        }
+        if (!source.sections().containsKey(HeroSection.SKINS)
+                || !imageSource.sections().containsKey(HeroSection.SKINS)) {
             throw HeroValidation.invalid("Both source revisions must contain a skins section.");
+        }
 
         var previous = (Skins) sections.content(HeroSection.SKINS, source.sections().get(HeroSection.SKINS));
         var collected = (Skins) sections.content(HeroSection.SKINS, imageSource.sections().get(HeroSection.SKINS));
         var merged = merge(previous, collected);
-        if (Objects.equals(previous, merged))
+        if (Objects.equals(previous, merged)) {
             return source;
+        }
         validation.validatePublication(HeroSection.SKINS, merged);
 
         var actor = actors.require();
@@ -101,8 +107,9 @@ public class SkinImagePublications {
         collected.skins().forEach(skin -> byKey.put(skin.skinKey(), skin));
         var incoming = new Skins(previous.skins().stream().map(skin -> {
             var image = byKey.get(skin.skinKey());
-            if (image == null)
+            if (image == null) {
                 return skin;
+            }
             return new Skin(skin.skinKey(), skin.displayOrder(), select(image.artAssetId(), skin.artAssetId()),
                     skin.rarityCode(), skin.translations(), select(image.headAssetId(), skin.headAssetId()),
                     select(image.portraitAssetId(), skin.portraitAssetId()), image.images());

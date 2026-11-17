@@ -127,9 +127,11 @@ class SkinImagePublicationsTest {
         assertThat(result.publicationSequence()).isEqualTo(3);
         assertThat(result.revisionNo()).isEqualTo(10);
         assertThat(result.sections()).containsEntry(HeroSection.SKINS, skinsId);
-        for (var section : HeroSection.values())
-            if (section != HeroSection.SKINS)
+        for (var section : HeroSection.values()) {
+            if (section != HeroSection.SKINS) {
                 assertThat(result.sections().get(section)).isEqualTo(source.sections().get(section));
+            }
+        }
         assertThat(draft.state()).isEqualTo(RevisionState.DRAFT);
         assertThat(draft.version()).isEqualTo(9);
         verify(store, never()).editableEntity(any());
@@ -220,8 +222,9 @@ class SkinImagePublicationsTest {
 
     private HeroRevisionView revision(RevisionState state, long revisionNo, Long publicationSequence) {
         Map<HeroSection, UUID> refs = new EnumMap<>(HeroSection.class);
-        for (var section : HeroSection.values())
+        for (var section : HeroSection.values()) {
             refs.put(section, UUID.randomUUID());
+        }
         return new HeroRevisionView(UUID.randomUUID(), heroId, rulesetId, revisionNo, state, revisionNo,
                 publicationSequence, publicationSequence == null ? null : now.minusSeconds(50),
                 Cause.VISUAL_UPDATE, null, context.patchVariantId(), refs);

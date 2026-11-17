@@ -105,8 +105,9 @@ public class LineupInteractions {
         throttle.like(key(reader));
 
         int removed = likes.deleteLike(lineupId, reader.issuer(), reader.subject());
-        if (removed == 0 && !exists(guide, lineupId))
+        if (removed == 0 && !exists(guide, lineupId)) {
             throw lineupNotFound();
+        }
 
         return new LikeState(lineupId, false, likes.countByLineup(lineupId));
     }
@@ -131,10 +132,11 @@ public class LineupInteractions {
         throttle.write(key(reader));
         validate(input, guide.content());
         if (lineups.countByModeIdAndAuthorIssuerAndAuthorSubject(modeId, reader.issuer(),
-                reader.subject()) >= CommunityLineupRules.MAX_PER_AUTHOR)
+                reader.subject()) >= CommunityLineupRules.MAX_PER_AUTHOR) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_INVALID_CONTENT,
                     "You already saved the maximum number of lineups for this mode.",
                     Map.of("limit", CommunityLineupRules.MAX_PER_AUTHOR));
+        }
 
         var now = clock.instant();
         var lineup = new CommunityLineup();
@@ -156,9 +158,10 @@ public class LineupInteractions {
         var reader = reader();
         var guide = guides.requirePublished(modeCode);
         var lineup = ownedLineup(guide.mode().getId(), lineupId, reader);
-        if (input.expectedVersion() == null || lineup.getVersion() != input.expectedVersion())
+        if (input.expectedVersion() == null || lineup.getVersion() != input.expectedVersion()) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_CONFLICT, "The lineup has changed.",
                     Map.of("currentVersion", lineup.getVersion()));
+        }
         throttle.write(key(reader));
         validate(input, guide.content());
 
@@ -174,9 +177,10 @@ public class LineupInteractions {
         var reader = reader();
         var mode = catalog.requireModeByCode(modeCode);
         var lineup = ownedLineup(mode.getId(), lineupId, reader);
-        if (lineup.getVersion() != expectedVersion)
+        if (lineup.getVersion() != expectedVersion) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_CONFLICT, "The lineup has changed.",
                     Map.of("currentVersion", lineup.getVersion()));
+        }
 
         likes.deleteByLineup(lineupId);
         lineups.delete(lineup);
@@ -237,12 +241,14 @@ public class LineupInteractions {
     public AdminLineup visibility(UUID modeId, UUID lineupId, Visibility input) {
         catalog.lock(modeId);
         var lineup = lineups.findByIdAndModeId(lineupId, modeId).orElseThrow(LineupInteractions::lineupNotFound);
-        if (lineup.getVersion() != input.expectedVersion())
+        if (lineup.getVersion() != input.expectedVersion()) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_CONFLICT, "The lineup has changed.",
                     Map.of("currentVersion", lineup.getVersion()));
+        }
         String reason = input.reason() == null || input.reason().isBlank() ? null : input.reason().strip();
-        if (input.hidden() && reason == null)
+        if (input.hidden() && reason == null) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_INVALID_CONTENT, "Give a reason for hiding a lineup.");
+        }
 
         long before = lineup.getVersion();
         lineup.setStatus(input.hidden() ? LineupStatus.HIDDEN : LineupStatus.VISIBLE);
@@ -256,13 +262,15 @@ public class LineupInteractions {
     }
 
     private String likeTarget(AutoChessGuides.Published guide, UUID lineupId, Actor reader) {
-        if (guide.content().lineups().stream().anyMatch(lineup -> lineupId.equals(lineup.id())))
+        if (guide.content().lineups().stream().anyMatch(lineup -> lineupId.equals(lineup.id()))) {
             return "EDITORIAL";
+        }
         var lineup = lineups.findByIdAndModeId(lineupId, guide.mode().getId())
                 .filter(l -> l.getStatus() == LineupStatus.VISIBLE)
                 .orElseThrow(LineupInteractions::lineupNotFound);
-        if (lineup.authoredBy(reader.issuer(), reader.subject()))
+        if (lineup.authoredBy(reader.issuer(), reader.subject())) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_INVALID_CONTENT, "You cannot like your own lineup.");
+        }
         return "COMMUNITY";
     }
 
@@ -274,15 +282,17 @@ public class LineupInteractions {
     private CommunityLineup ownedLineup(UUID modeId,
             UUID lineupId, Actor reader) {
         var lineup = lineups.findByIdAndModeId(lineupId, modeId).orElseThrow(LineupInteractions::lineupNotFound);
-        if (!lineup.authoredBy(reader.issuer(), reader.subject()))
+        if (!lineup.authoredBy(reader.issuer(), reader.subject())) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_FORBIDDEN, "Only the author can change this lineup.");
+        }
         return lineup;
     }
 
     private static void validate(SaveLineup input, AutoChessContent guide) {
         var errors = CommunityLineupRules.validate(input.name(), input.note(), input.units(), input.emblems(), guide);
-        if (!errors.isEmpty())
+        if (!errors.isEmpty()) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_INVALID_CONTENT, "The lineup is not valid.", errors);
+        }
     }
 
     private static void apply(CommunityLineup lineup,
@@ -295,8 +305,9 @@ public class LineupInteractions {
 
     private Actor reader() {
         var actor = actors.require();
-        if (actor.type() != ActorType.HUMAN)
+        if (actor.type() != ActorType.HUMAN) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_FORBIDDEN, "Only people can like or save lineups.");
+        }
         return actor;
     }
 

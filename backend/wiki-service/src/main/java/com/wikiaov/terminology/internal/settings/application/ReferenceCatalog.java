@@ -84,10 +84,11 @@ public class ReferenceCatalog {
     private ReferenceConfiguration lockCurrentConfiguration(long expectedVersion) {
         var config = configurations.lockById(ReferenceConfiguration.ID)
                 .orElseThrow(ReferenceCatalog::missingConfiguration);
-        if (config.getVersion() != expectedVersion)
+        if (config.getVersion() != expectedVersion) {
             throw new ApiException(ReferenceErrorCode.REFERENCE_VERSION_CONFLICT,
                     "Reference settings have changed. Reload before saving.",
                     Map.of("currentVersion", config.getVersion()));
+        }
         return config;
     }
 

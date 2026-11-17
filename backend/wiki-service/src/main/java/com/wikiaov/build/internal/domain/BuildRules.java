@@ -70,10 +70,11 @@ public final class BuildRules {
     private static void itemProblems(List<ItemPart> items, List<String> problems) {
         Set<Integer> slots = new HashSet<>();
         for (var item : items) {
-            if (item.slot() < 1 || item.slot() > ITEM_SLOTS)
+            if (item.slot() < 1 || item.slot() > ITEM_SLOTS) {
                 problems.add("Item slot " + item.slot() + " is outside 1-" + ITEM_SLOTS + ".");
-            else if (!slots.add(item.slot()))
+            } else if (!slots.add(item.slot())) {
                 problems.add("Item slot " + item.slot() + " is listed twice.");
+            }
         }
     }
 
@@ -82,55 +83,68 @@ public final class BuildRules {
         Set<Integer> slots = new HashSet<>();
         Set<UUID> ids = new HashSet<>();
         for (var enchantment : enchantments) {
-            if (enchantment.slot() < 1 || enchantment.slot() > ENCHANTMENT_SLOTS)
+            if (enchantment.slot() < 1 || enchantment.slot() > ENCHANTMENT_SLOTS) {
                 problems.add("Enchantment slot " + enchantment.slot() + " is outside 1-" + ENCHANTMENT_SLOTS + ".");
-            else if (!slots.add(enchantment.slot()))
+            } else if (!slots.add(enchantment.slot())) {
                 problems.add("Enchantment slot " + enchantment.slot() + " is listed twice.");
-            if (!ids.add(enchantment.enchantmentId()))
+            }
+            if (!ids.add(enchantment.enchantmentId())) {
                 problems.add("An enchantment is used twice.");
-            if (enchantment.branchCode() == null || enchantment.tier() == null)
+            }
+            if (enchantment.branchCode() == null || enchantment.tier() == null) {
                 problems.add("Enchantment in slot " + enchantment.slot() + " has no branch or tier.");
+            }
         }
-        if (problems.size() > before || !enchantmentsComplete(enchantments))
+        if (problems.size() > before || !enchantmentsComplete(enchantments)) {
             return;
+        }
 
         Map<Integer, EnchantmentPart> bySlot = enchantments.stream()
                 .collect(Collectors.toMap(EnchantmentPart::slot, part -> part));
         String main = bySlot.get(1).branchCode();
         for (int slot = 1; slot <= 3; slot++) {
             var part = bySlot.get(slot);
-            if (!main.equals(part.branchCode()))
+            if (!main.equals(part.branchCode())) {
                 problems.add("The three primary enchantments must share one branch.");
-            if (part.tier() != slot)
+            }
+            if (part.tier() != slot) {
                 problems.add("Primary enchantment slot " + slot + " must be tier " + slot + ".");
+            }
         }
         var first = bySlot.get(4);
         var second = bySlot.get(5);
-        if (main.equals(first.branchCode()) || main.equals(second.branchCode()))
+        if (main.equals(first.branchCode()) || main.equals(second.branchCode())) {
             problems.add("Secondary enchantments must come from another branch than the primary one.");
+        }
         if (first.branchCode().equals(second.branchCode())) {
-            if (!Set.of(first.tier(), second.tier()).equals(Set.of(1, 2)))
+            if (!Set.of(first.tier(), second.tier()).equals(Set.of(1, 2))) {
                 problems.add("Two secondary enchantments of one branch must be tiers 1 and 2.");
-        } else if (first.tier() != 1 || second.tier() != 1)
+            }
+        } else if (first.tier() != 1 || second.tier() != 1) {
             problems.add("Secondary enchantments of two branches must both be tier 1.");
+        }
     }
 
     private static void arcanaProblems(List<ArcanaPart> arcana, List<String> problems) {
         Set<UUID> ids = new HashSet<>();
         Map<String, Integer> perColor = new TreeMap<>();
         for (var part : arcana) {
-            if (!ids.add(part.arcanaId()))
+            if (!ids.add(part.arcanaId())) {
                 problems.add("An arcana is listed twice.");
-            if (part.quantity() < 1 || part.quantity() > ARCANA_PER_COLOR)
+            }
+            if (part.quantity() < 1 || part.quantity() > ARCANA_PER_COLOR) {
                 problems.add("An arcana quantity must be 1-" + ARCANA_PER_COLOR + ".");
-            if (part.color() == null)
+            }
+            if (part.color() == null) {
                 problems.add("An arcana has no color.");
-            else
+            } else {
                 perColor.merge(part.color(), part.quantity(), Integer::sum);
+            }
         }
         perColor.forEach((color, total) -> {
-            if (total > ARCANA_PER_COLOR)
+            if (total > ARCANA_PER_COLOR) {
                 problems.add(color + " arcana add up to " + total + "; the game allows " + ARCANA_PER_COLOR + ".");
+            }
         });
     }
 

@@ -78,8 +78,9 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
         var snapshots = patchVariantId == null
                 ? revisions.findByRulesetIdAndState(rulesetId, RevisionState.PUBLISHED)
                 : revisions.publishedForChanges(rulesetId, patchVariantId);
-        if (snapshots.isEmpty())
+        if (snapshots.isEmpty()) {
             return List.of();
+        }
 
         var byId = new HashMap<UUID, ArcanaRevision>();
         snapshots.forEach(r -> byId.put(r.getId(), r));
@@ -91,8 +92,9 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
         var result = new ArrayList<Entry>();
         for (var fact : facts) {
             var r = byId.get(fact.getToRevisionId());
-            if (r == null)
+            if (r == null) {
                 continue;
+            }
             var copy = CatalogText.select(
                     names.getOrDefault(r.getId(), List.of()).stream().map(ArcanaTranslation::content).toList(), locale);
             var summary = CatalogChanges.summary(fact.getTranslations(), locale);
@@ -107,11 +109,13 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
         for (var r : snapshots) {
             if (r.getEffectiveFromPatchVariantId() == null
                     || (patchVariantId != null && !patchVariantId.equals(r.getEffectiveFromPatchVariantId()))
-                    || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.getCause()))
+                    || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.getCause())) {
                 continue;
+            }
             if (facts.stream().anyMatch(f -> f.getOwnerId().equals(r.getOwnerId())
-                    && f.getPatchVariantId().equals(r.getEffectiveFromPatchVariantId())))
+                    && f.getPatchVariantId().equals(r.getEffectiveFromPatchVariantId()))) {
                 continue;
+            }
             String key = r.getOwnerId() + "/" + r.getEffectiveFromPatchVariantId();
             grouped.merge(key, r, (a, b) -> a.getRevisionNo() > b.getRevisionNo() ? a : b);
         }
@@ -138,8 +142,9 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
         if (input.patchVariantId() == null || input.toRevisionId() == null || input.kinds() == null
                 || input.kinds().isEmpty()
                 || input.kinds().size() > 4 || input.kinds().stream().anyMatch(Objects::isNull)
-                || new HashSet<>(input.kinds()).size() != input.kinds().size())
+                || new HashSet<>(input.kinds()).size() != input.kinds().size()) {
             invalid("A patch, published target and unique change kinds are required.");
+        }
 
         var target = revisions.findById(input.toRevisionId()).filter(r -> r.getOwnerId().equals(ownerId)).orElseThrow(
                 () -> new ApiException(ArcanaErrorCode.ARCANA_INVALID_CONTENT, "The target revision was not found."));
@@ -148,22 +153,28 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
         if (target.getState() != RevisionState.PUBLISHED || !patch.published()
                 || !target.getRulesetId().equals(patch.rulesetId())
                 || target.getEffectiveFromPatchVariantId() == null
-                || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(target.getCause()))
+                || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(target.getCause())) {
             invalid("Use a published gameplay or baseline snapshot and a published patch in the same ruleset.");
+        }
         if (removed) {
             if (input.kinds().size() != 1 || contexts.variant(target.getEffectiveFromPatchVariantId())
-                    .rulesetOrdinal() > patch.rulesetOrdinal())
+                    .rulesetOrdinal() > patch.rulesetOrdinal()) {
                 invalid("A removal must reference a snapshot at or before the removal patch.");
-        } else if (!input.patchVariantId().equals(target.getEffectiveFromPatchVariantId()))
+            }
+        } else if (!input.patchVariantId().equals(target.getEffectiveFromPatchVariantId())) {
             invalid("The target snapshot must belong to the selected patch.");
+        }
         if (input.kinds().contains(Kind.DATA_BASELINE) && input.kinds().size() != 1
-                || input.kinds().contains(Kind.ADDED) && input.kinds().size() != 1)
+                || input.kinds().contains(Kind.ADDED) && input.kinds().size() != 1) {
             invalid("Baseline and addition must be recorded separately from balance changes.");
-        if (input.kinds().contains(Kind.DATA_BASELINE) && !target.getCause().equals("DATA_BASELINE"))
+        }
+        if (input.kinds().contains(Kind.DATA_BASELINE) && !target.getCause().equals("DATA_BASELINE")) {
             invalid("Only baseline snapshots can be classified as baseline.");
+        }
         if (!removed && !input.kinds().contains(Kind.ADDED) && !input.kinds().contains(Kind.DATA_BASELINE)
-                && (!target.getCause().equals("GAME_PATCH") || input.fromRevisionId() == null))
+                && (!target.getCause().equals("GAME_PATCH") || input.fromRevisionId() == null)) {
             invalid("Updates require a gameplay snapshot and a known previous snapshot.");
+        }
 
         if (input.fromRevisionId() != null) {
             var from = revisions.findById(input.fromRevisionId())
@@ -172,26 +183,32 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
             if (!from.getOwnerId().equals(ownerId) || !from.getRulesetId().equals(target.getRulesetId())
                     || from.getState() != RevisionState.PUBLISHED || from.getEffectiveFromPatchVariantId() == null
                     || contexts.variant(from.getEffectiveFromPatchVariantId()).rulesetOrdinal() >= patch
-                            .rulesetOrdinal())
+                            .rulesetOrdinal()) {
                 invalid("The source must be an earlier published snapshot of the same entry and ruleset.");
+            }
         }
 
         var copy = input.translations() == null ? List.<Summary>of() : input.translations();
-        if (copy.isEmpty() || copy.size() > 50)
+        if (copy.isEmpty() || copy.size() > 50) {
             invalid("A localized change summary is required.");
+        }
         var locales = new HashSet<String>();
-        for (var text : copy)
+        for (var text : copy) {
             if (text == null || text.locale() == null || !text.locale().matches(CatalogLocales.PATTERN)
                     || !locales.add(text.locale()) || text.text() == null || text.text().isBlank()
-                    || text.text().length() > 4000)
+                    || text.text().length() > 4000) {
                 invalid("Invalid or duplicate summary translations.");
+            }
+        }
         if (input.sourceUrl() == null || input.sourceUrl().length() > 2048
-                || !input.sourceUrl().matches("https?://[^\\s]+"))
+                || !input.sourceUrl().matches("https?://[^\\s]+")) {
             invalid("An HTTP source URL is required for confirmed game changes.");
+        }
 
-        if (changes.existsByOwnerIdAndPatchVariantId(ownerId, input.patchVariantId()))
+        if (changes.existsByOwnerIdAndPatchVariantId(ownerId, input.patchVariantId())) {
             throw new ApiException(ArcanaErrorCode.ARCANA_CONFLICT,
                     "A confirmed change already exists for this entry and patch.");
+        }
 
         var actor = actors.require();
         var fact = new ArcanaPatchChange();

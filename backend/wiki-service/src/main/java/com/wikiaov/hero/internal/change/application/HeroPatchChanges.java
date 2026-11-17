@@ -85,39 +85,49 @@ public class HeroPatchChanges implements HeroChangeQueries {
         store.lockHero(input.heroId());
         var variant = contexts.variant(variantId);
         boolean notes = input.source() == ChangeSource.PATCH_NOTES;
-        if (!notes && input.toHeroRevisionId() == null)
+        if (!notes && input.toHeroRevisionId() == null) {
             throw HeroValidation.invalid("A snapshot change set requires a target revision.");
-        if (notes || input.sourceUrl() != null)
+        }
+        if (notes || input.sourceUrl() != null) {
             requireSourceUrl(input.sourceUrl());
+        }
 
         var to = input.toHeroRevisionId() == null ? null : store.revision(input.heroId(), input.toHeroRevisionId());
         if (to != null && (to.state() != RevisionState.PUBLISHED || to.cause() != Cause.GAME_PATCH
-                || !to.rulesetId().equals(variant.rulesetId()) || !variantId.equals(to.effectiveFromPatchVariantId())))
+                || !to.rulesetId().equals(variant.rulesetId())
+                || !variantId.equals(to.effectiveFromPatchVariantId()))) {
             throw HeroValidation
                     .invalid("The target must be a published GAME_PATCH revision for this variant and ruleset.");
+        }
         HeroRevisionView from = null;
         if (input.fromHeroRevisionId() != null) {
             from = store.revision(input.heroId(), input.fromHeroRevisionId());
             if (from.state() != RevisionState.PUBLISHED || !from.rulesetId().equals(variant.rulesetId())
-                    || to != null && from.publicationSequence() >= to.publicationSequence())
+                    || to != null && from.publicationSequence() >= to.publicationSequence()) {
                 throw HeroValidation.invalid("The source revision must precede the target in the same ruleset.");
+            }
             if (from.effectiveFromPatchVariantId() != null && contexts.variant(from.effectiveFromPatchVariantId())
-                    .rulesetOrdinal() >= variant.rulesetOrdinal())
+                    .rulesetOrdinal() >= variant.rulesetOrdinal()) {
                 throw HeroValidation.invalid("The source must precede this gameplay patch.");
+            }
         }
         Set<String> locales = new HashSet<>();
         for (var t : input.summaryTranslations()) {
             HeroValidation.locale(t.locale());
-            if (!locales.add(t.locale()))
+            if (!locales.add(t.locale())) {
                 throw HeroValidation.invalid("Summary locales must be unique.");
+            }
         }
-        if (notes)
+        if (notes) {
             validateNotes(input.changes(), latestPublished(input.heroId(), variant.rulesetId()));
-        else
-            for (var change : input.changes())
+        } else {
+            for (var change : input.changes()) {
                 validateChange(change, from, to);
-        if (input.introduces())
+            }
+        }
+        if (input.introduces()) {
             validateIntroduction(input.heroId(), variant);
+        }
 
         UUID id = UUID.randomUUID();
         var actor = actors.require();
@@ -127,11 +137,13 @@ public class HeroPatchChanges implements HeroChangeQueries {
             throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT,
                     "A change set already exists for this hero and variant.");
         }
-        for (var t : input.summaryTranslations())
+        for (var t : input.summaryTranslations()) {
             history.appendTranslation(id, t);
+        }
         int order = 0;
-        for (var change : input.changes())
+        for (var change : input.changes()) {
             history.appendChange(id, order++, change);
+        }
 
         dataReviews.markDirty(variantId);
         audit.record(new AuditEntry(actor, "HERO_PATCH_CHANGE_RECORDED", CatalogAggregates.HERO, input.heroId(),
@@ -149,20 +161,22 @@ public class HeroPatchChanges implements HeroChangeQueries {
 
     public List<Map<String, Object>> forVariant(UUID variantId, String locale) {
         HeroValidation.locale(locale);
-        if (!contexts.variant(variantId).published())
+        if (!contexts.variant(variantId).published()) {
             return List.of();
+        }
         return withForms(HeroPatchChangeViews.render(history.forVariant(variantId, locale)));
     }
 
     /** A form's change names the hero that holds it, so readers reach the form on that hero's page (ADR-024). */
     private List<Map<String, Object>> withForms(List<Map<String, Object>> rows) {
         var structure = forms.structure();
-        for (var row : rows)
+        for (var row : rows) {
             structure.form((UUID) row.get("heroId")).ifPresent(form -> {
                 row.put("holderId", form.holderId());
                 row.put("holderCode", store.requireHero(form.holderId()).getCode());
                 row.put("formKey", form.formKey());
             });
+        }
         return rows;
     }
 
@@ -188,22 +202,28 @@ public class HeroPatchChanges implements HeroChangeQueries {
             java.math.BigDecimal newValue = newer.map(Stat::baseValue).orElse(null),
                     oldValue = older.map(Stat::baseValue).orElse(null);
             if (!sameNumber(newValue, v.newValue()) || !sameNumber(oldValue, v.oldValue())
-                    || newer.isPresent() && !newer.get().unit().equals(v.unit()))
+                    || newer.isPresent() && !newer.get().unit().equals(v.unit())) {
                 throw HeroValidation.invalid("Stat changes must match the source and target snapshots.");
-            if (sameNumber(v.oldValue(), v.newValue()))
+            }
+            if (sameNumber(v.oldValue(), v.newValue())) {
                 throw HeroValidation.invalid("A stat change must change the value.");
+            }
         }
         if (change instanceof SkillChange v) {
-            if (skills(to).skills().stream().noneMatch(skill -> skill.skillKey().equals(v.skillKey())))
+            if (skills(to).skills().stream().noneMatch(skill -> skill.skillKey().equals(v.skillKey()))) {
                 throw HeroValidation.invalid("The skill key does not belong to the target snapshot.");
-            if (Objects.equals(v.oldValue(), v.newValue()))
+            }
+            if (Objects.equals(v.oldValue(), v.newValue())) {
                 throw HeroValidation.invalid("A skill change must change a value.");
+            }
         }
         if (change instanceof RoleChange v) {
             var newer = profile(to);
             var older = from == null ? new Profile(List.of(), Set.of(), List.of()) : profile(from);
-            if (newer.roles().contains(v.roleCode()) != v.added() || older.roles().contains(v.roleCode()) == v.added())
+            if (newer.roles().contains(v.roleCode()) != v.added()
+                    || older.roles().contains(v.roleCode()) == v.added()) {
                 throw HeroValidation.invalid("Role changes must match the snapshots.");
+            }
         }
         if (change instanceof VisualChange v) {
             var newer = (Bindings) sections.content(HeroSection.MEDIA_BINDINGS,
@@ -214,8 +234,9 @@ public class HeroPatchChanges implements HeroChangeQueries {
                             from.sections().get(HeroSection.MEDIA_BINDINGS));
             if (!Objects.equals(newer.bindings().get(v.mediaRole()), v.newAssetId())
                     || !Objects.equals(older.bindings().get(v.mediaRole()), v.oldAssetId())
-                    || Objects.equals(v.oldAssetId(), v.newAssetId()))
+                    || Objects.equals(v.oldAssetId(), v.newAssetId())) {
                 throw HeroValidation.invalid("Visual changes must match the snapshots.");
+            }
         }
     }
 
@@ -231,31 +252,40 @@ public class HeroPatchChanges implements HeroChangeQueries {
         for (var change : changes) {
             switch (change) {
                 case StatChange v -> {
-                    if (v.oldValue() == null || v.newValue() == null)
+                    if (v.oldValue() == null || v.newValue() == null) {
                         throw HeroValidation.invalid("A stat change from patch notes needs the old and the new value.");
-                    if (sameNumber(v.oldValue(), v.newValue()))
+                    }
+                    if (sameNumber(v.oldValue(), v.newValue())) {
                         throw HeroValidation.invalid("A stat change must change the value.");
+                    }
                     if (stats != null && stats.values().stream()
-                            .noneMatch(stat -> stat.statKey().equals(v.statKey()) && stat.unit().equals(v.unit())))
+                            .noneMatch(stat -> stat.statKey().equals(v.statKey()) && stat.unit().equals(v.unit()))) {
                         throw HeroValidation
                                 .invalid("The stat key and unit must belong to the latest published snapshot.");
-                    if (!touched.add("stat:" + v.statKey()))
+                    }
+                    if (!touched.add("stat:" + v.statKey())) {
                         throw HeroValidation.invalid("A change set may change each stat once.");
+                    }
                 }
                 case SkillChange v -> {
-                    if (v.oldValue() == null || v.newValue() == null)
+                    if (v.oldValue() == null || v.newValue() == null) {
                         throw HeroValidation
                                 .invalid("A skill change from patch notes needs the old and the new value.");
-                    if (v.oldValue().equals(v.newValue()))
+                    }
+                    if (v.oldValue().equals(v.newValue())) {
                         throw HeroValidation.invalid("A skill change must change a value.");
-                    if (skills != null && skills.skills().stream().noneMatch(s -> s.skillKey().equals(v.skillKey())))
+                    }
+                    if (skills != null && skills.skills().stream().noneMatch(s -> s.skillKey().equals(v.skillKey()))) {
                         throw HeroValidation.invalid("The skill key does not belong to the latest published snapshot.");
-                    if (!touched.add("skill:" + v.skillKey() + ":" + v.fieldKey()))
+                    }
+                    if (!touched.add("skill:" + v.skillKey() + ":" + v.fieldKey())) {
                         throw HeroValidation.invalid("A change set may change each skill field once.");
+                    }
                 }
                 case RoleChange v -> {
-                    if (!touched.add("role:" + v.roleCode()))
+                    if (!touched.add("role:" + v.roleCode())) {
                         throw HeroValidation.invalid("A change set may change each role once.");
+                    }
                 }
                 case VisualChange ignored ->
                     throw HeroValidation.invalid("Visual changes need snapshots and cannot come from patch notes.");
@@ -272,8 +302,9 @@ public class HeroPatchChanges implements HeroChangeQueries {
      * the patch that introduced it (ADR-016).
      */
     private void validateIntroduction(UUID heroId, com.wikiaov.patch.PatchVariantReference variant) {
-        if (history.introduced(heroId))
+        if (history.introduced(heroId)) {
             throw HeroValidation.invalid("The hero already has a patch that introduced it.");
+        }
 
         boolean observedEarlier = store.revisions(heroId).stream()
                 .anyMatch(revision -> revision.state() == RevisionState.PUBLISHED
@@ -281,9 +312,10 @@ public class HeroPatchChanges implements HeroChangeQueries {
                         && revision.effectiveFromPatchVariantId() != null
                         && contexts.variant(revision.effectiveFromPatchVariantId())
                                 .rulesetOrdinal() < variant.rulesetOrdinal());
-        if (observedEarlier)
+        if (observedEarlier) {
             throw HeroValidation
                     .invalid("The hero has a published revision before this patch, so this patch cannot introduce it.");
+        }
     }
 
     private HeroRevisionView latestPublished(UUID heroId, UUID rulesetId) {
@@ -306,8 +338,9 @@ public class HeroPatchChanges implements HeroChangeQueries {
     }
 
     private static void requireSourceUrl(String value) {
-        if (!isHttpUrl(value))
+        if (!isHttpUrl(value)) {
             throw HeroValidation.invalid("The source must be an http(s) URL of the official patch notes.");
+        }
     }
 
     private static ApiException changeSetNotFound() {
@@ -336,15 +369,18 @@ public class HeroPatchChanges implements HeroChangeQueries {
     public HeroAssessmentView assess(UUID changeSetId, AssessmentInput input) {
         UUID heroId = history.heroId(changeSetId).orElseThrow(HeroPatchChanges::changeSetNotFound);
         store.lockHero(heroId);
-        if (input.kind() == null)
+        if (input.kind() == null) {
             throw HeroValidation.invalid("An overall classification is required.");
+        }
         if (input.kind() == com.wikiaov.hero.internal.domain.HeroChanges.OverallKind.RELEASE
-                && !history.introduces(changeSetId))
+                && !history.introduces(changeSetId)) {
             throw HeroValidation.invalid("Only the change set that introduced the hero can be assessed as a release.");
+        }
         var value = history.assessment(changeSetId)
                 .orElseGet(com.wikiaov.hero.internal.change.persistence.entity.HeroPatchAssessment::new);
-        if (value.getVersion() != input.expectedVersion())
+        if (value.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT, "The overall assessment has changed.");
+        }
         var actor = actors.require();
         value.setChangeSetId(changeSetId);
         value.setKind(input.kind());
@@ -380,14 +416,17 @@ public class HeroPatchChanges implements HeroChangeQueries {
         store.lockHero(heroId);
 
         String description = input == null || input.description() == null ? "" : input.description().strip();
-        if (description.isEmpty() || description.length() > 4000)
+        if (description.isEmpty() || description.length() > 4000) {
             throw HeroValidation.invalid("The previous description must have between 1 and 4000 characters.");
+        }
         String sourceUrl = input.sourceUrl() == null ? null : input.sourceUrl().strip();
-        if (!isHttpUrl(sourceUrl))
+        if (!isHttpUrl(sourceUrl)) {
             throw HeroValidation.invalid("The source of the previous description must be an http(s) URL.");
-        if (history.hasPrevious(change.getId()))
+        }
+        if (history.hasPrevious(change.getId())) {
             throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT,
                     "This mechanic change already has its previous description.");
+        }
 
         var actor = actors.require();
         history.appendPrevious(change.getId(), description, sourceUrl, clock.instant(), actor);

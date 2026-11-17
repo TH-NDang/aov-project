@@ -43,8 +43,9 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
         predicates.add(builder.equal(translation.get("targetKey"), ""));
         if (published) {
             predicates.add(builder.le(rank, cutoff));
-            if (!allowUnscoped)
+            if (!allowUnscoped) {
                 predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
+            }
             predicates.add(publishedObservation(builder, revision));
         }
 
@@ -65,8 +66,9 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
                 : builder.notEqual(candidate.get("state"), RevisionState.DISCARDED));
         if (published) {
             newerPredicates.add(builder.le(newerRank, cutoff));
-            if (!allowUnscoped)
+            if (!allowUnscoped) {
                 newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
+            }
             newerPredicates.add(publishedObservation(builder, candidate));
         }
         newerPredicates.add(builder.or(builder.gt(newerRank, rank),
@@ -101,8 +103,9 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
     }
 
     private static Expression<Long> ordinal(CriteriaBuilder builder, Path<UUID> patch, Map<UUID, Long> ordinals) {
-        if (ordinals.isEmpty())
+        if (ordinals.isEmpty()) {
             return builder.literal(0L);
+        }
 
         var rank = builder.<UUID, Long>selectCase(patch);
         new TreeMap<>(ordinals).forEach(rank::when);

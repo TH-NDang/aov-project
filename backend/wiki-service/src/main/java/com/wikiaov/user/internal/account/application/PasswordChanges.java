@@ -70,10 +70,12 @@ public class PasswordChanges {
     public PasswordChallengeView start(AccountMail.Language language) {
         Actor actor = caller.human();
         String email = identity.account(actor.subject()).email();
-        if (email == null || email.isBlank())
+        if (email == null || email.isBlank()) {
             throw new ApiException(UserErrorCode.USER_EMAIL_MISSING, "The account has no email address.");
-        if (!mail.available())
+        }
+        if (!mail.available()) {
             throw new ApiException(UserErrorCode.USER_MAIL_UNAVAILABLE, "Email delivery is not configured.");
+        }
 
         String code = PasswordCode.generate(random);
         PasswordChallenge challenge = Objects.requireNonNull(transaction.execute(status -> create(actor, code)));
@@ -132,8 +134,9 @@ public class PasswordChanges {
         } catch (RuntimeException exception) {
             transaction.executeWithoutResult(status -> challenges.lockById(challengeId)
                     .ifPresent(row -> row.moveTo(FAILED, clock.instant())));
-            if (exception instanceof ApiException api)
+            if (exception instanceof ApiException api) {
                 throw api;
+            }
             throw new ApiException(UserErrorCode.USER_MAIL_UNAVAILABLE, "The code could not be sent.", exception);
         }
     }
@@ -141,15 +144,18 @@ public class PasswordChanges {
     private Verification verify(Actor actor, UUID challengeId, String code) {
         Instant now = clock.instant();
         var row = challenges.lockById(challengeId).filter(c -> c.belongsTo(actor.issuer(), actor.subject()));
-        if (row.isEmpty())
+        if (row.isEmpty()) {
             return Verification.of(Outcome.NOT_FOUND);
+        }
 
         PasswordChallenge challenge = row.get();
         boolean expired = !now.isBefore(challenge.getExpiresAt());
-        if (challenge.getStatus() == APPLYING && !expired)
+        if (challenge.getStatus() == APPLYING && !expired) {
             return Verification.of(Outcome.IN_PROGRESS);
-        if (challenge.getStatus() != PENDING || expired || challenge.getFailedAttempts() >= policy.maxAttempts())
+        }
+        if (challenge.getStatus() != PENDING || expired || challenge.getFailedAttempts() >= policy.maxAttempts()) {
             return Verification.of(Outcome.EXPIRED);
+        }
         if (!PasswordCode.matches(challengeId, code, challenge.getCodeHash())) {
             challenge.recordFailedAttempt(now);
             return new Verification(Outcome.WRONG_CODE, policy.maxAttempts() - challenge.getFailedAttempts());
@@ -192,8 +198,9 @@ public class PasswordChanges {
     private void notifyChanged(Actor actor, AccountMail.Language language) {
         try {
             String email = identity.account(actor.subject()).email();
-            if (email != null && !email.isBlank() && mail.available())
+            if (email != null && !email.isBlank() && mail.available()) {
                 mail.sendPasswordChanged(email, language);
+            }
         } catch (RuntimeException exception) {
             log.warn("Password change notice was not sent: {}", exception.getClass().getSimpleName());
         }

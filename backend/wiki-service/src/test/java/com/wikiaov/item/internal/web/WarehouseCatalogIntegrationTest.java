@@ -74,8 +74,9 @@ class WarehouseCatalogIntegrationTest {
 
     @BeforeEach
     void setup() {
-        for (String module : List.of("item", "arcana", "spell", "enchantment"))
+        for (String module : List.of("item", "arcana", "spell", "enchantment")) {
             jdbc.sql("TRUNCATE " + module + "." + module + " CASCADE").update();
+        }
         jdbc.sql("TRUNCATE item.item_category CASCADE").update();
         jdbc.sql("TRUNCATE enchantment.enchantment_branch CASCADE").update();
         jdbc.sql(
@@ -418,8 +419,9 @@ class WarehouseCatalogIntegrationTest {
             assertThat(revision.get("effectiveFromPatchVariantId")).isNull();
             var publicView = send(get("/api/wiki/v1/" + path + "/" + created.get("id")), null, 200);
             assertThat(map(publicView.get("revision")).get("id")).isEqualTo(revision.get("id"));
-            if (path.equals("spells"))
+            if (path.equals("spells")) {
                 assertThat(map(publicView.get("revision")).get("archived")).isEqualTo(false);
+            }
 
             String forks = ROOT + "/" + path + "/" + created.get("id") + "/drafts";
             send(post(forks), Map.of("rulesetId", RULESET, "sourceRevisionId", revision.get("id"),
@@ -835,8 +837,9 @@ class WarehouseCatalogIntegrationTest {
         body.put("effectiveFromPatchVariantId", VARIANT);
         body.put("initialLocale", "vi-VN");
         body.put("name", "Mục thử nghiệm");
-        if (content != null)
+        if (content != null) {
             body.put("content", content);
+        }
         return send(post(ROOT + "/" + path), body, 201);
     }
 
@@ -860,8 +863,9 @@ class WarehouseCatalogIntegrationTest {
                 "spell:write", "spell:publish", "enchantment:write", "enchantment:publish", "patch:write");
         request.with(jwt().jwt(token -> token.issuer("https://test.example/issuer").subject("editor"))
                 .authorities(grants.stream().map(SimpleGrantedAuthority::new).toArray(SimpleGrantedAuthority[]::new)));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         String response = mvc.perform(request).andExpect(status().is(expected)).andReturn().getResponse()
                 .getContentAsString();
         return response.isEmpty() ? Map.of() : json.readValue(response, Map.class);

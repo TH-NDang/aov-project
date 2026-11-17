@@ -102,18 +102,23 @@ public record ReferenceSettings(
     }
 
     private static boolean safeUrl(String value, boolean localOnly) {
-        if (!text(value, 2048, false) || !value.equals(value.strip()))
+        if (!text(value, 2048, false) || !value.equals(value.strip())) {
             return false;
+        }
         try {
             String decoded = value;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++) {
                 decoded = URLDecoder.decode(decoded.replace("+", "%2B"), StandardCharsets.UTF_8);
-            if (decoded.matches("(?s).*[\\x00-\\x20\\x7f\\\\].*") || decoded.startsWith("//"))
+            }
+            if (decoded.matches("(?s).*[\\x00-\\x20\\x7f\\\\].*") || decoded.startsWith("//")) {
                 return false;
-            if (value.startsWith("/") && decoded.startsWith("/"))
+            }
+            if (value.startsWith("/") && decoded.startsWith("/")) {
                 return true;
-            if (localOnly)
+            }
+            if (localOnly) {
                 return false;
+            }
             var uri = URI.create(value);
             return Set.of("http", "https").contains(uri.getScheme()) && uri.getHost() != null
                     && uri.getUserInfo() == null;
@@ -123,7 +128,8 @@ public record ReferenceSettings(
     }
 
     private static void require(boolean valid, String detail) {
-        if (!valid)
+        if (!valid) {
             throw new IllegalArgumentException(detail);
+        }
     }
 }

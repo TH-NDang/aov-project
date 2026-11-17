@@ -68,8 +68,9 @@ public class AuthController implements AuthApi {
     public AuthTokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
         guard(request);
         String refreshToken = cookie(request, REFRESH_COOKIE);
-        if (refreshToken == null)
+        if (refreshToken == null) {
             throw new ApiException(AuthErrorCode.AUTH_SESSION_EXPIRED, "No active session.");
+        }
         throttle.check("refresh-ip:" + request.getRemoteAddr(), 120);
         try {
             return accept(sessions.refresh(refreshToken), response);
@@ -85,8 +86,9 @@ public class AuthController implements AuthApi {
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         guard(request);
         String refreshToken = cookie(request, REFRESH_COOKIE);
-        if (refreshToken != null)
+        if (refreshToken != null) {
             identity.revoke(refreshToken);
+        }
         // Preserve the cookie on upstream failure so the user can retry revocation.
         setCookie(response, REFRESH_COOKIE, "", 0);
         return ResponseEntity.noContent().build();
@@ -95,10 +97,12 @@ public class AuthController implements AuthApi {
     @PostMapping(path = "/google", version = "1")
     public Map<String, String> google(HttpServletRequest request, HttpServletResponse response) {
         guard(request);
-        if (!properties.googleEnabled())
+        if (!properties.googleEnabled()) {
             throw new ApiException(AuthErrorCode.AUTH_GOOGLE_DISABLED, "Google login is not configured.");
-        if (properties.clientSecret().isBlank())
+        }
+        if (properties.clientSecret().isBlank()) {
             throw new ApiException(AuthErrorCode.AUTH_PROVIDER_UNAVAILABLE, "Authentication is not configured.");
+        }
         throttle.check("google-ip:" + request.getRemoteAddr(), 10);
         var flow = googleFlows.start();
         setCookie(response, "aov_oauth_" + flow.state(), flow.binding(), 300);
@@ -112,8 +116,9 @@ public class AuthController implements AuthApi {
             HttpServletRequest request, HttpServletResponse response) {
         QueryParameters.requireOnly(request,
                 Set.of("state", "code", "error", "error_description", "session_state", "iss"));
-        if (!state.matches("[A-Za-z0-9_-]{43}"))
+        if (!state.matches("[A-Za-z0-9_-]{43}")) {
             throw new ApiException(AuthErrorCode.AUTH_INVALID_STATE, "Invalid login state.");
+        }
         var flow = googleFlows.consume(state, cookie(request, "aov_oauth_" + state));
         setCookie(response, "aov_oauth_" + state, "", 0);
         String outcome = "success";
@@ -150,8 +155,9 @@ public class AuthController implements AuthApi {
     }
 
     private String cookie(HttpServletRequest request, String name) {
-        if (request.getCookies() == null)
+        if (request.getCookies() == null) {
             return null;
+        }
         return Arrays.stream(request.getCookies()).filter(cookie -> name.equals(cookie.getName()))
                 .map(jakarta.servlet.http.Cookie::getValue).findFirst().orElse(null);
     }

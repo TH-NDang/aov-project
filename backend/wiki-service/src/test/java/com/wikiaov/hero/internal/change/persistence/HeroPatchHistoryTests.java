@@ -107,8 +107,9 @@ class HeroPatchHistoryTests {
                 new VisualChange(Kind.OTHER, MediaRole.HEAD, null, asset),
                 new MechanicChange(Kind.FIX, "landing", "Fixed landing"),
                 new OtherChange(Kind.OTHER, "Other note"));
-        for (int index = 0; index < facts.size(); index++)
+        for (int index = 0; index < facts.size(); index++) {
             history.appendChange(changeSet, index, facts.get(index));
+        }
 
         var savedSet = ArgumentCaptor.forClass(HeroPatchChangeSet.class);
         verify(sets).saveAndFlush(savedSet.capture());

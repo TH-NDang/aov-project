@@ -28,12 +28,15 @@ final class BuildCaptureRules {
     }
 
     static void validateCapture(ImportCapture request) {
-        if (!CODE.matcher(request.code()).matches())
+        if (!CODE.matcher(request.code()).matches()) {
             throw invalid("A capture code is a lowercase slug.");
-        if (!REGION.matcher(request.regionCode()).matches())
+        }
+        if (!REGION.matcher(request.regionCode()).matches()) {
             throw invalid("Unknown market.");
-        if (!SOURCES.contains(request.sourceKind()))
+        }
+        if (!SOURCES.contains(request.sourceKind())) {
             throw invalid("A capture comes from the PRO, HOT or SYSTEM tab.");
+        }
         try {
             ZoneId.of(request.sourceTimeZone());
         } catch (DateTimeException e) {
@@ -44,12 +47,15 @@ final class BuildCaptureRules {
     static Set<String> validateImages(List<BuildCommands.Image> list) {
         Set<String> ids = new HashSet<>();
         for (var image : list) {
-            if (!IMAGE_ID.matcher(image.imageId()).matches())
+            if (!IMAGE_ID.matcher(image.imageId()).matches()) {
                 throw invalid("An image id is the SHA-256 of the file in lowercase hex.");
-            if (!LAYOUTS.contains(image.layout()))
+            }
+            if (!LAYOUTS.contains(image.layout())) {
                 throw invalid("Unknown screen layout " + image.layout() + ".");
-            if (!ids.add(image.imageId()))
+            }
+            if (!ids.add(image.imageId())) {
                 throw invalid("Image " + image.imageId() + " is listed twice.");
+            }
         }
         return ids;
     }
@@ -58,32 +64,40 @@ final class BuildCaptureRules {
         Set<String> codes = new HashSet<>();
         Set<Integer> orders = new HashSet<>();
         for (var hero : request.heroes()) {
-            if (!codes.add(hero.heroCode()))
+            if (!codes.add(hero.heroCode())) {
                 throw invalid("Hero " + hero.heroCode() + " is listed twice.");
-            if (!orders.add(hero.captureOrder()))
+            }
+            if (!orders.add(hero.captureOrder())) {
                 throw invalid("Two heroes share capture order " + hero.captureOrder() + ".");
-            if (!RESULTS.contains(hero.result()))
+            }
+            if (!RESULTS.contains(hero.result())) {
                 throw invalid("Unknown capture result " + hero.result() + ".");
-            if (!hero.result().equals("COLLECTED") && !hero.builds().isEmpty())
+            }
+            if (!hero.result().equals("COLLECTED") && !hero.builds().isEmpty()) {
                 throw invalid(hero.heroCode() + " has builds although it was not collected.");
+            }
             Set<Integer> positions = new HashSet<>();
             for (var build : hero.builds()) {
-                if (!positions.add(build.position()))
+                if (!positions.add(build.position())) {
                     throw invalid(hero.heroCode() + " lists position " + build.position() + " twice.");
+                }
                 String image = blankToNull(build.imageId());
-                if (image != null && !imageIds.contains(image))
+                if (image != null && !imageIds.contains(image)) {
                     throw invalid(hero.heroCode() + " build " + build.position() + " points at an unknown image.");
+                }
             }
         }
     }
 
     static void checkContent(String label, BuildContent content, boolean needsReview) {
         var problems = content.problems();
-        if (!problems.isEmpty())
+        if (!problems.isEmpty()) {
             throw new ApiException(BuildErrorCode.BUILD_INVALID, label + ": " + String.join(" ", problems),
                     Map.of("problems", problems));
-        if (!needsReview && !content.complete())
+        }
+        if (!needsReview && !content.complete()) {
             throw invalid(label + " lacks a part, so it must stay in review.");
+        }
     }
 
     static ApiException invalid(String detail) {

@@ -70,10 +70,12 @@ public class Profile implements Persistable<UUID> {
         locale = input.locale();
         timeZone = input.timeZone();
         // A client that does not know these preferences leaves them as they were.
-        if (input.dateFormat() != null)
+        if (input.dateFormat() != null) {
             dateFormat = input.dateFormat();
-        if (input.currency() != null)
+        }
+        if (input.currency() != null) {
             currency = input.currency();
+        }
         avatarAssetId = input.avatarAssetId();
         // Every accepted save must dirty the entity, even when a test clock is fixed.
         updatedAt = updatedAt != null && !now.isAfter(updatedAt) ? updatedAt.plusNanos(1000) : now;

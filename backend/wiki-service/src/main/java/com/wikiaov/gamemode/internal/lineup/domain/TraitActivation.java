@@ -31,16 +31,18 @@ public final class TraitActivation {
         var counts = new HashMap<String, Integer>();
         for (String code : new LinkedHashSet<>(unitCodes)) {
             var unit = units.get(code);
-            if (unit != null)
+            if (unit != null) {
                 unit.traitCodes().forEach(trait -> counts.merge(trait, 1, Integer::sum));
+            }
         }
         emblems.forEach(trait -> counts.merge(trait, 1, Integer::sum));
 
         var result = new ArrayList<Count>();
         for (var trait : content.traits()) {
             int count = counts.getOrDefault(trait.code(), 0);
-            if (count == 0)
+            if (count == 0) {
                 continue;
+            }
             result.add(new Count(trait.code(), count, reachedTier(trait, count)));
         }
         return result;
@@ -55,8 +57,9 @@ public final class TraitActivation {
     static int reachedTier(AutoChessContent.Trait trait, int count) {
         int reached = -1;
         for (int i = 0; i < trait.tiers().size(); i++) {
-            if (trait.tiers().get(i).count() <= count)
+            if (trait.tiers().get(i).count() <= count) {
                 reached = i;
+            }
         }
         return reached;
     }

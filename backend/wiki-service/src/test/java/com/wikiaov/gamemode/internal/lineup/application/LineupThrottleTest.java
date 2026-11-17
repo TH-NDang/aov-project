@@ -14,8 +14,9 @@ class LineupThrottleTest {
     void limitsEachReaderSeparatelyAndResetsAfterTheWindow() {
         var clock = new MutableClock(Instant.parse("2026-11-08T00:00:00Z"));
         var throttle = new LineupThrottle(clock);
-        for (int i = 0; i < LineupThrottle.LIKES_PER_WINDOW; i++)
+        for (int i = 0; i < LineupThrottle.LIKES_PER_WINDOW; i++) {
             throttle.like("reader-a");
+        }
 
         assertThatThrownBy(() -> throttle.like("reader-a")).isInstanceOfSatisfying(ApiException.class,
                 error -> org.assertj.core.api.Assertions.assertThat(error.getErrorCode())
@@ -29,8 +30,9 @@ class LineupThrottleTest {
     @Test
     void savingLineupsHasItsOwnSmallerLimit() {
         var throttle = new LineupThrottle(new MutableClock(Instant.parse("2026-11-08T00:00:00Z")));
-        for (int i = 0; i < LineupThrottle.WRITES_PER_WINDOW; i++)
+        for (int i = 0; i < LineupThrottle.WRITES_PER_WINDOW; i++) {
             throttle.write("reader-a");
+        }
 
         assertThatThrownBy(() -> throttle.write("reader-a")).isInstanceOf(ApiException.class);
         assertThatCode(() -> throttle.like("reader-a")).doesNotThrowAnyException();

@@ -23,10 +23,13 @@ public class HeroSectionLifecycle {
     public void publish(SectionRevisionRepository<? extends SectionRevision> repository, UUID id, UUID heroId) {
         repository.flush();
         var revision = repository.lockById(id).orElse(null);
-        if (revision == null || !revision.getHeroId().equals(heroId) || revision.getState() == RevisionState.DISCARDED)
+        if (revision == null || !revision.getHeroId().equals(heroId)
+                || revision.getState() == RevisionState.DISCARDED) {
             throw new IllegalStateException("Invalid section ownership or lifecycle.");
-        if (revision.getState() == RevisionState.DRAFT)
+        }
+        if (revision.getState() == RevisionState.DRAFT) {
             revision.setState(RevisionState.PUBLISHED);
+        }
         repository.flush();
     }
 }

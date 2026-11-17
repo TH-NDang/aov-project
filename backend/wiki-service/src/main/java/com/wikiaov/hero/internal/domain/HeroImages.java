@@ -19,9 +19,10 @@ public final class HeroImages {
     }
 
     public static Object retain(Object previous, Object incoming) {
-        if (previous instanceof Bindings old && incoming instanceof Bindings next)
+        if (previous instanceof Bindings old && incoming instanceof Bindings next) {
             return new Bindings(next.bindings(), next.sources(),
                     merge(old.images(), old.bindings(), next.bindings(), next.images()));
+        }
         if (previous instanceof Skins old && incoming instanceof Skins next) {
             Map<String, Skin> existing = new HashMap<>();
             old.skins().forEach(skin -> existing.put(skin.skinKey(), skin));
@@ -39,12 +40,15 @@ public final class HeroImages {
 
     private static Map<MediaRole, UUID> mains(Skin skin) {
         Map<MediaRole, UUID> result = new EnumMap<>(MediaRole.class);
-        if (skin.headAssetId() != null)
+        if (skin.headAssetId() != null) {
             result.put(MediaRole.HEAD, skin.headAssetId());
-        if (skin.portraitAssetId() != null)
+        }
+        if (skin.portraitAssetId() != null) {
             result.put(MediaRole.PORTRAIT, skin.portraitAssetId());
-        if (skin.artAssetId() != null)
+        }
+        if (skin.artAssetId() != null) {
             result.put(MediaRole.SPLASH, skin.artAssetId());
+        }
         return result;
     }
 
@@ -54,11 +58,13 @@ public final class HeroImages {
         for (var role : MediaRole.values()) {
             Map<UUID, ImageOption> options = new LinkedHashMap<>();
             previous.getOrDefault(role, List.of()).forEach(option -> options.put(option.assetId(), option));
-            if (main.containsKey(role) && !Objects.equals(main.get(role), nextMain.get(role)))
+            if (main.containsKey(role) && !Objects.equals(main.get(role), nextMain.get(role))) {
                 options.putIfAbsent(main.get(role), new ImageOption(main.get(role), null));
+            }
             incoming.getOrDefault(role, List.of()).forEach(option -> options.put(option.assetId(), option));
-            if (!options.isEmpty())
+            if (!options.isEmpty()) {
                 result.put(role, List.copyOf(options.values()));
+            }
         }
         return result;
     }

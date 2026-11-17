@@ -18,9 +18,10 @@ public class HeroAliasConfiguration {
 
     public Map<String, Map<String, List<String>>> read() {
         var result = new HashMap<String, Map<String, List<String>>>();
-        for (var row : translations.heroAliases())
+        for (var row : translations.heroAliases()) {
             result.computeIfAbsent(row.getReferenceKey(), ignored -> new HashMap<>())
                     .put(row.getLocale().toLowerCase(Locale.ROOT), row.getAliases());
+        }
         return result;
     }
 }

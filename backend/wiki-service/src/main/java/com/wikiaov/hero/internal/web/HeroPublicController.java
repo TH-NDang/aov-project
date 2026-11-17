@@ -132,8 +132,9 @@ public class HeroPublicController implements HeroPublicApi {
         var cache = immutable
                 ? CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable()
                 : CacheControl.maxAge(Duration.ZERO).cachePublic().mustRevalidate();
-        if (request.checkNotModified(tag))
+        if (request.checkNotModified(tag)) {
             return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(tag).cacheControl(cache).build();
+        }
         return ResponseEntity.ok().eTag(tag).cacheControl(cache).body(body);
     }
 }

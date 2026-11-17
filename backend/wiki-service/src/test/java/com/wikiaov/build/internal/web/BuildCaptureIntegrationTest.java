@@ -58,8 +58,9 @@ class BuildCaptureIntegrationTest {
     @BeforeEach
     void seed() {
         jdbc.sql("TRUNCATE build.capture, build.arcana_page, build.enchantment_set CASCADE").update();
-        for (String domain : List.of("item", "arcana", "enchantment", "spell"))
+        for (String domain : List.of("item", "arcana", "enchantment", "spell")) {
             jdbc.sql("TRUNCATE " + domain + "." + domain + " CASCADE").update();
+        }
         jdbc.sql("TRUNCATE hero.import_job").update();
         jdbc.sql("TRUNCATE hero.hero CASCADE").update();
         ids.clear();
@@ -78,8 +79,9 @@ class BuildCaptureIntegrationTest {
         toro = hero("toro");
         hero("krixi");
         jdbc.sql("INSERT INTO hero.hero_code_alias (legacy_code, hero_id) VALUES ('toro-old', ?)").param(toro).update();
-        for (int number = 1; number <= 7; number++)
+        for (int number = 1; number <= 7; number++) {
             catalog("item", "item-" + number, "{}", true);
+        }
         catalog("item", "item-draft", "{}", false);
         catalog("spell", "flicker", "{}", true);
         catalog("spell", "punish", "{}", true);
@@ -280,9 +282,10 @@ class BuildCaptureIntegrationTest {
                 + "created_by_issuer, created_by_subject, updated_by_issuer, updated_by_subject) "
                 + "VALUES (?, ?, ?, 1, 'DRAFT', 1, 'DATA_BASELINE', ?, cast(? as jsonb), now(), now(), 'test', "
                 + "'editor', 'test', 'editor')").params(revision, owner, ruleset, variant, gameplay).update();
-        if (published)
+        if (published) {
             jdbc.sql("UPDATE " + domain + "." + domain + "_revision SET state = 'PUBLISHED', "
                     + "publication_sequence = 1, published_at = now() WHERE id = ?").param(revision).update();
+        }
     }
 
     /**
@@ -345,15 +348,17 @@ class BuildCaptureIntegrationTest {
 
     private static List<Map<String, Object>> items(String... codes) {
         List<Map<String, Object>> items = new ArrayList<>();
-        for (int index = 0; index < codes.length; index++)
+        for (int index = 0; index < codes.length; index++) {
             items.add(Map.of("slot", index + 1, "code", codes[index]));
+        }
         return items;
     }
 
     private static List<Map<String, Object>> enchantments(String... codes) {
         List<Map<String, Object>> enchantments = new ArrayList<>();
-        for (int index = 0; index < codes.length; index++)
+        for (int index = 0; index < codes.length; index++) {
             enchantments.add(Map.of("slot", index + 1, "code", codes[index]));
+        }
         return enchantments;
     }
 
@@ -411,8 +416,9 @@ class BuildCaptureIntegrationTest {
             List<GrantedAuthority> authorities) throws Exception {
         request.with(jwt().jwt(t -> t.issuer("https://test.example/issuer").subject("editor"))
                 .authorities(authorities));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

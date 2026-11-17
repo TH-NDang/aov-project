@@ -25,8 +25,9 @@ public final class HeroStatObservations {
                 || !(effect.metadata().get("observedAttributes") instanceof Map<?, ?> capture)
                 || !"MANUAL_VISUAL_TRANSCRIPTION".equals(capture.get("method"))
                 || !"DISPLAYED_SNAPSHOT_NOT_LEVEL_ONE".equals(capture.get("scope"))
-                || !(capture.get("values") instanceof Map<?, ?> values))
+                || !(capture.get("values") instanceof Map<?, ?> values)) {
             return false;
+        }
 
         return (values.get("attackRange") instanceof String range && !range.isBlank())
                 || NUMERIC_FIELDS.stream()

@@ -21,7 +21,8 @@ public record ReadModelCacheProperties(
     public ReadModelCacheProperties {
         if (publicTtl == null || publicTtl.isNegative() || publicTtl.isZero()
                 || adminTtl == null || adminTtl.isNegative() || adminTtl.isZero()
-                || retryDelay == null || retryDelay.isNegative() || retryDelay.isZero())
+                || retryDelay == null || retryDelay.isNegative() || retryDelay.isZero()) {
             throw new IllegalArgumentException("Cache durations must be positive.");
+        }
     }
 }

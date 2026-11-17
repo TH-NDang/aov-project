@@ -89,10 +89,11 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
                                 Collectors.toCollection(LinkedHashSet::new))));
 
         Map<UUID, Profile> result = new HashMap<>();
-        for (UUID id : ids)
+        for (UUID id : ids) {
             result.put(id, new Profile(texts.getOrDefault(id, List.of()),
                     selectedRoles.getOrDefault(id, new LinkedHashSet<>()),
                     selectedPositions.getOrDefault(id, new LinkedHashSet<>()), references.getOrDefault(id, List.of())));
+        }
         return result;
     }
 

@@ -122,8 +122,9 @@ public class HeroRankings {
 
         var found = snapshots.findFirstByRegionCodeAndModeCodeAndConfirmedAtIsNotNullOrderByCapturedAtDescIdAsc(region,
                 mode);
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return new HeroRankingViews.Published(null, null);
+        }
         var snapshot = found.get();
         var rows = values.findBySnapshotId(snapshot.getId()).stream().filter(row -> !row.isNeedsReview()).toList();
         int heroCount = entries.findBySnapshotId(snapshot.getId()).size();
@@ -133,8 +134,9 @@ public class HeroRankings {
 
         var own = rows.stream().filter(row -> row.getHeroId().equals(heroId))
                 .collect(Collectors.toMap(row -> RankingMetric.valueOf(row.getMetric()), row -> row, (a, b) -> a));
-        if (own.isEmpty())
+        if (own.isEmpty()) {
             return new HeroRankingViews.Published(view, null);
+        }
 
         return new HeroRankingViews.Published(view, entry(heroId, own, rows));
     }
@@ -147,8 +149,9 @@ public class HeroRankings {
                     var others = all.stream()
                             .filter(row -> row.getMetric().equals(metric.name()) && row.getNumberValue() != null)
                             .map(RankingSnapshotValueRow::getNumberValue).toList();
-                    if (mine == null || mine.getNumberValue() == null)
+                    if (mine == null || mine.getNumberValue() == null) {
                         return new HeroRankingViews.Figure(metric.name(), null, null, others.size());
+                    }
                     int rank = 1 + (int) others.stream().filter(value -> value.compareTo(mine.getNumberValue()) > 0)
                             .count();
                     return new HeroRankingViews.Figure(metric.name(), mine.getNumberValue(), rank, others.size());
@@ -182,8 +185,9 @@ public class HeroRankings {
         var imageSizes = validateImages(request.images());
         var heroIds = resolveHeroes(request);
         validateHeroes(request, heroIds, imageSizes);
-        if (snapshots.existsByCode(request.code()))
+        if (snapshots.existsByCode(request.code())) {
             throw snapshotExists(request.code());
+        }
 
         var actor = actors.require();
         var now = clock.instant();
@@ -233,15 +237,17 @@ public class HeroRankings {
                 .ifPresent(problem -> {
                     throw invalid(problem);
                 });
-        if (request.heroId() != null && !heroes.existsById(request.heroId()))
+        if (request.heroId() != null && !heroes.existsById(request.heroId())) {
             throw invalid("The counter hero does not exist.");
+        }
 
         var snapshot = snapshots.lockById(snapshotId).orElseThrow(HeroRankings::snapshotNotFound);
         var row = values.findById(new RankingSnapshotValueRow.Key(snapshotId, heroId, metric.name()))
                 .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_RANKING_VALUE_NOT_FOUND,
                         "This value is not in the snapshot."));
-        if (row.getVersion() != request.expectedVersion())
+        if (row.getVersion() != request.expectedVersion()) {
             throw versionConflict(row.getVersion());
+        }
 
         var actor = actors.require();
         var now = clock.instant();
@@ -258,8 +264,9 @@ public class HeroRankings {
         row.setReviewedBySubject(needsReview ? null : actor.subject());
         row.setVersion(row.getVersion() + 1);
         row.setUpdatedAt(now);
-        if (needsReview && snapshot.getConfirmedAt() != null)
+        if (needsReview && snapshot.getConfirmedAt() != null) {
             reopen(snapshot, now);
+        }
         values.flush();
 
         audit.record(new AuditEntry(actor, "HERO_RANKING_VALUE_REVIEWED", AGGREGATE, snapshotId, null,
@@ -273,14 +280,17 @@ public class HeroRankings {
     @Transactional
     public Summary confirm(UUID snapshotId, ConfirmSnapshot request) {
         var snapshot = snapshots.lockById(snapshotId).orElseThrow(HeroRankings::snapshotNotFound);
-        if (snapshot.getConfirmedAt() != null)
+        if (snapshot.getConfirmedAt() != null) {
             return summaryOf(snapshot);
-        if (snapshot.getVersion() != request.expectedVersion())
+        }
+        if (snapshot.getVersion() != request.expectedVersion()) {
             throw versionConflict(snapshot.getVersion());
+        }
         long open = values.countBySnapshotIdAndNeedsReviewTrue(snapshotId);
-        if (open > 0)
+        if (open > 0) {
             throw new ApiException(HeroErrorCode.HERO_RANKING_REVIEW_OPEN,
                     open + " values still wait for review.", Map.of("needsReview", open));
+        }
 
         var actor = actors.require();
         var now = clock.instant();
@@ -300,8 +310,9 @@ public class HeroRankings {
     @Transactional
     public void delete(UUID snapshotId, long expectedVersion) {
         var snapshot = snapshots.lockById(snapshotId).orElseThrow(HeroRankings::snapshotNotFound);
-        if (snapshot.getVersion() != expectedVersion)
+        if (snapshot.getVersion() != expectedVersion) {
             throw versionConflict(snapshot.getVersion());
+        }
 
         var actor = actors.require();
         snapshots.delete(snapshot);
@@ -320,12 +331,15 @@ public class HeroRankings {
     }
 
     private void validateSnapshot(ImportSnapshot request) {
-        if (!CODE.matcher(request.code()).matches())
+        if (!CODE.matcher(request.code()).matches()) {
             throw invalid("A snapshot code is a lowercase slug.");
-        if (!REGION.matcher(request.regionCode()).matches())
+        }
+        if (!REGION.matcher(request.regionCode()).matches()) {
             throw invalid("Unknown market.");
-        if (!MODE.matcher(request.modeCode()).matches())
+        }
+        if (!MODE.matcher(request.modeCode()).matches()) {
             throw invalid("A mode code uses capital letters, digits and underscores.");
+        }
         try {
             ZoneId.of(request.sourceTimeZone());
         } catch (DateTimeException e) {
@@ -338,14 +352,18 @@ public class HeroRankings {
         Map<String, int[]> sizes = new HashMap<>();
         Set<String> pages = new HashSet<>();
         for (var image : list) {
-            if (!IMAGE_ID.matcher(image.imageId()).matches())
+            if (!IMAGE_ID.matcher(image.imageId()).matches()) {
                 throw invalid("An image id is the SHA-256 of the file in lowercase hex.");
-            if (!BOARDS.contains(image.board()))
+            }
+            if (!BOARDS.contains(image.board())) {
                 throw invalid("An image belongs to the RATES or FIGURES board.");
-            if (sizes.put(image.imageId(), new int[] {image.width(), image.height()}) != null)
+            }
+            if (sizes.put(image.imageId(), new int[] {image.width(), image.height()}) != null) {
                 throw invalid("Image " + image.imageId() + " is listed twice.");
-            if (!pages.add(image.board() + ":" + image.pageNo()))
+            }
+            if (!pages.add(image.board() + ":" + image.pageNo())) {
                 throw invalid("Page " + image.pageNo() + " of " + image.board() + " is listed twice.");
+            }
         }
         return sizes;
     }
@@ -363,13 +381,15 @@ public class HeroRankings {
                 .collect(Collectors.toMap(HeroIdentity::getCode, HeroIdentity::getId));
         List<String> unknown = new ArrayList<>();
         for (String code : codes) {
-            if (ids.containsKey(code))
+            if (ids.containsKey(code)) {
                 continue;
+            }
             heroes.findByCode(code).ifPresentOrElse(hero -> ids.put(code, hero.getId()), () -> unknown.add(code));
         }
-        if (!unknown.isEmpty())
+        if (!unknown.isEmpty()) {
             throw new ApiException(HeroErrorCode.HERO_RANKING_INVALID, "Unknown hero codes: " + unknown + ".",
                     Map.of("unknownHeroCodes", unknown));
+        }
         return ids;
     }
 
@@ -377,26 +397,31 @@ public class HeroRankings {
         Set<UUID> listed = new HashSet<>();
         Set<Integer> ratesPositions = new HashSet<>(), figuresPositions = new HashSet<>();
         for (var hero : request.heroes()) {
-            if (!listed.add(heroIds.get(hero.heroCode())))
+            if (!listed.add(heroIds.get(hero.heroCode()))) {
                 throw invalid("Hero " + hero.heroCode() + " is listed twice.");
-            if (!ROLES.contains(hero.roleOnScreen()))
+            }
+            if (!ROLES.contains(hero.roleOnScreen())) {
                 throw invalid("Unknown role " + hero.roleOnScreen() + ".");
+            }
             if ((hero.ratesPosition() != null && !ratesPositions.add(hero.ratesPosition()))
-                    || (hero.figuresPosition() != null && !figuresPositions.add(hero.figuresPosition())))
+                    || (hero.figuresPosition() != null && !figuresPositions.add(hero.figuresPosition()))) {
                 throw invalid("Two heroes share a place on one board.");
+            }
 
             Set<RankingMetric> seen = EnumSet.noneOf(RankingMetric.class);
             for (var value : hero.values()) {
                 var metric = RankingMetric.parse(value.metric())
                         .orElseThrow(() -> invalid("Unknown ranking metric " + value.metric() + "."));
-                if (!seen.add(metric))
+                if (!seen.add(metric)) {
                     throw invalid(hero.heroCode() + " lists " + metric + " twice.");
+                }
                 metric.problem(value.number(), blankToNull(value.tier()), blankToNull(value.heroCode()) != null,
                         value.needsReview()).ifPresent(problem -> {
                             throw invalid(hero.heroCode() + ": " + problem);
                         });
-                if (value.source() != null)
+                if (value.source() != null) {
                     validateSource(hero.heroCode(), metric, value.source(), imageSizes);
+                }
             }
         }
     }
@@ -404,10 +429,12 @@ public class HeroRankings {
     private static void validateSource(String heroCode, RankingMetric metric,
             HeroRankingCommands.Source source, Map<String, int[]> sizes) {
         int[] size = sizes.get(source.imageId());
-        if (size == null)
+        if (size == null) {
             throw invalid(heroCode + " " + metric + " points at an image that is not in the snapshot.");
-        if (source.x() + source.width() > size[0] || source.y() + source.height() > size[1])
+        }
+        if (source.x() + source.width() > size[0] || source.y() + source.height() > size[1]) {
             throw invalid(heroCode + " " + metric + " points outside its image.");
+        }
     }
 
     private static RankingSnapshotImageRow imageRow(UUID snapshotId,
@@ -509,8 +536,9 @@ public class HeroRankings {
     /** Heroes, values and values waiting for review, per snapshot. */
     private Map<UUID, int[]> counts(Collection<UUID> snapshotIds) {
         Map<UUID, int[]> counts = new HashMap<>();
-        if (snapshotIds.isEmpty())
+        if (snapshotIds.isEmpty()) {
             return counts;
+        }
         entries.countBySnapshot(snapshotIds).forEach(row -> counts
                 .computeIfAbsent(row.getSnapshotId(), id -> new int[3])[0] = (int) row.getTotal());
         values.countBySnapshot(snapshotIds).forEach(row -> {

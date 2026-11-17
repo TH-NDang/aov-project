@@ -29,8 +29,9 @@ class ArcanaPublicMedia {
             var visible = new LinkedHashMap<UUID, MediaAssetReference>();
             for (var id : contentRules.assets(row.content())) {
                 var asset = found.get(id);
-                if (asset != null && asset.usable())
+                if (asset != null && asset.usable()) {
                     visible.put(id, asset);
+                }
             }
             return new ArcanaView(row.id(), row.code(), row.revision(), row.content(), row.missingFields(), visible);
         }).toList();

@@ -53,9 +53,10 @@ public class PatchQueries implements PatchCatalog {
     public Map<String, Object> publishedVariant(UUID id, UUID variantId, String region, String locale) {
         validateLocale(locale);
         var context = gameplay.resolveCatalog(region, clock.instant(), null, variantId);
-        if (!context.patchId().equals(id))
+        if (!context.patchId().equals(id)) {
             throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
                     "The requested variant does not belong to this patch.");
+        }
 
         return view(id, region, locale, context.patchVariantId(), context.rulesetId(), context.effectiveAt());
     }
@@ -99,8 +100,9 @@ public class PatchQueries implements PatchCatalog {
 
     private static void validateLocale(String value) {
         try {
-            if (!new Locale.Builder().setLanguageTag(value).build().toLanguageTag().equals(value))
+            if (!new Locale.Builder().setLanguageTag(value).build().toLanguageTag().equals(value)) {
                 throw new IllegalArgumentException();
+            }
         } catch (IllegalArgumentException exception) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "Use a canonical BCP 47 locale.");
         }

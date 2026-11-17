@@ -72,8 +72,9 @@ public class PublishedHeroReferenceSelectionsImpl implements PublishedHeroRefere
     }
 
     private static Expression<Long> ordinal(CriteriaBuilder builder, Path<UUID> patch, Map<UUID, Long> ordinals) {
-        if (ordinals.isEmpty())
+        if (ordinals.isEmpty()) {
             return builder.literal(0L);
+        }
 
         var rank = builder.<UUID, Long>selectCase(patch);
         new TreeMap<>(ordinals).forEach(rank::when);

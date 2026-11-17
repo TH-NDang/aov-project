@@ -109,8 +109,9 @@ public class GameModeCatalog {
 
     @PreAuthorize("hasAuthority('gamemode:write')")
     public AdminMode create(CreateMode input) {
-        if (modes.findByCode(input.code()).isPresent())
+        if (modes.findByCode(input.code()).isPresent()) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_CODE_TAKEN, "The code is already in use.");
+        }
         var content = input.content() == null
                 ? GameModeContent.initial(input.name(), input.group())
                 : input.content();
@@ -177,8 +178,9 @@ public class GameModeCatalog {
         var mode = lock(id);
         var draft = workflow.requireEditableDraft(requireRevision(id, revisionId), input.expectedVersion());
         workflow.rejectInvalid(GameModeContentRules.validate(input.content()));
-        if (draft.getContent().equals(input.content()))
+        if (draft.getContent().equals(input.content())) {
             return adminView(mode, draft);
+        }
 
         long before = draft.getVersion();
         draft.setContent(input.content());
@@ -292,15 +294,17 @@ public class GameModeCatalog {
                             ? MediaUsageScope.CURRENT
                             : MediaUsageScope.HISTORICAL;
             var content = revision.getContent();
-            if (content.artAssetId() != null)
+            if (content.artAssetId() != null) {
                 usages.computeIfAbsent(content.artAssetId(), key -> new ArrayList<>())
                         .add(new MediaUsage("GAMEMODE", "GAME_MODE", revision.getModeId(), revision.getId(), "ART",
                                 scope).named(content.name(), null));
+            }
             for (var item : content.specialItems()) {
-                if (item.iconAssetId() != null)
+                if (item.iconAssetId() != null) {
                     usages.computeIfAbsent(item.iconAssetId(), key -> new ArrayList<>())
                             .add(new MediaUsage("GAMEMODE", "GAME_MODE", revision.getModeId(), revision.getId(),
                                     "SPECIAL_ITEM_ICON", scope).named(content.name(), item.name()));
+                }
             }
         }
         return usages;
@@ -312,11 +316,13 @@ public class GameModeCatalog {
 
     private Map<UUID, Set<MediaSemanticType>> expectedImages(GameModeContent content) {
         var expected = new HashMap<UUID, Set<MediaSemanticType>>();
-        if (content.artAssetId() != null)
+        if (content.artAssetId() != null) {
             expected.put(content.artAssetId(), GameModeImages.MODE_ART);
+        }
         content.specialItems().forEach(item -> {
-            if (item.iconAssetId() != null)
+            if (item.iconAssetId() != null) {
                 expected.put(item.iconAssetId(), GameModeImages.ICONS);
+            }
         });
         return expected;
     }

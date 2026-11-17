@@ -64,8 +64,9 @@ public class HeroPublishReadiness {
     @PreAuthorize("hasAuthority('catalog:read')")
     public List<HeroPublishReadinessView> list() {
         var heroes = store.heroes(false);
-        if (heroes.isEmpty())
+        if (heroes.isEmpty()) {
             return List.of();
+        }
 
         // The store orders each hero's revisions from newest to oldest; the newest one names the hero in the list.
         var revisions = store.revisions(heroes.stream().map(HeroIdentity::getId).toList()).stream()

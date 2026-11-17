@@ -21,18 +21,24 @@ public final class SubjectVideoSpecifications {
             String subjectKey, VideoStatus status, VideoPurpose purpose, VideoOrigin origin, String q) {
         return (root, query, builder) -> {
             var filters = new ArrayList<Predicate>();
-            if (!kinds.isEmpty())
+            if (!kinds.isEmpty()) {
                 filters.add(root.get("subjectKind").in(kinds));
-            if (subjectId != null)
+            }
+            if (subjectId != null) {
                 filters.add(builder.equal(root.get("subjectId"), subjectId));
-            if (subjectKey != null)
+            }
+            if (subjectKey != null) {
                 filters.add(builder.equal(root.get("subjectKey"), subjectKey));
-            if (status != null)
+            }
+            if (status != null) {
                 filters.add(builder.equal(root.get("status"), status));
-            if (purpose != null)
+            }
+            if (purpose != null) {
                 filters.add(builder.equal(root.get("purpose"), purpose));
-            if (origin != null)
+            }
+            if (origin != null) {
                 filters.add(builder.equal(root.get("origin"), origin));
+            }
             if (q != null && !q.isBlank()) {
                 String pattern = "%" + q.strip().toLowerCase(Locale.ROOT).replace("\\", "\\\\").replace("%", "\\%")
                         .replace("_", "\\_") + "%";

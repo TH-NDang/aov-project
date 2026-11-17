@@ -48,9 +48,11 @@ public interface AdminReferenceProvider {
 
     static List<Candidate> candidates(List<Row> rows, String kind, UUID rulesetId) {
         var grouped = new LinkedHashMap<UUID, List<Row>>();
-        for (var row : rows)
-            if (row.name() != null && !row.name().isBlank())
+        for (var row : rows) {
+            if (row.name() != null && !row.name().isBlank()) {
                 grouped.computeIfAbsent(row.id(), ignored -> new ArrayList<>()).add(row);
+            }
+        }
         return grouped.values().stream().map(values -> {
             var first = values.getFirst();
             String route = switch (kind) {

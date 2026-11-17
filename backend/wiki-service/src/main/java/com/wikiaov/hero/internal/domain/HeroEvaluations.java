@@ -41,8 +41,9 @@ public final class HeroEvaluations {
 
     /** One canonical order, so equal traits compare equal however a client sent them. */
     public static List<Trait> normalize(List<Trait> traits) {
-        if (traits == null)
+        if (traits == null) {
             return List.of();
+        }
         return traits.stream()
                 .map(trait -> new Trait(trait.code(),
                         trait.skillKeys().stream().map(String::strip).distinct().sorted().toList(),
@@ -59,8 +60,9 @@ public final class HeroEvaluations {
     }
 
     private static List<Trait> prune(List<Trait> traits, List<Skill> skills) {
-        if (traits == null)
+        if (traits == null) {
             return List.of();
+        }
         Set<String> keys = new HashSet<>();
         skills.forEach(skill -> keys.add(skill.skillKey()));
         return normalize(traits.stream()

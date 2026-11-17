@@ -64,30 +64,34 @@ public class HeroCatalog {
             UUID rulesetId, String locale, String sort, boolean includeUnchanged, String role, String position,
             Boolean hasWarnings) {
         HeroValidation.requireReachableOffset(page, size);
-        if (q.trim().length() > 100 || !Set.of("code", "edited-desc").contains(sort))
+        if (q.trim().length() > 100 || !Set.of("code", "edited-desc").contains(sort)) {
             throw HeroValidation.badQuery("Invalid hero catalog search or sort.");
+        }
         HeroValidation.locale(locale);
         var facets = new HeroCatalogFacets(
                 choices(role, Arrays.stream(Role.values()).map(Enum::name).collect(Collectors.toSet())),
                 choices(position, POSITION_CODES.keySet()).stream().map(POSITION_CODES::get)
                         .collect(Collectors.toSet()),
                 hasWarnings);
-        if (rulesetId != null)
+        if (rulesetId != null) {
             contexts.requireRuleset(rulesetId);
+        }
 
         Map<UUID, PatchVariantReference> variants = contexts.catalogVariants(seasonId).stream()
                 .filter(variant -> rulesetId == null || variant.rulesetId().equals(rulesetId))
                 .collect(Collectors.toMap(PatchVariantReference::id, variant -> variant));
         if (patchVariantId != null) {
             contexts.variant(patchVariantId);
-            if (!variants.containsKey(patchVariantId))
+            if (!variants.containsKey(patchVariantId)) {
                 throw HeroValidation.invalid("The selected patch does not belong to the selected season and ruleset.");
+            }
             variants.keySet().removeIf(id -> !id.equals(patchVariantId));
         }
 
         boolean filtered = seasonId != null || patchVariantId != null;
-        if (filtered && variants.isEmpty())
+        if (filtered && variants.isEmpty()) {
             return new PageSlice<>(List.of(), page, size, 0);
+        }
         Map<UUID, Long> scopeOrdinals = variants.values().stream().collect(Collectors.toMap(
                 PatchVariantReference::id, PatchVariantReference::rulesetOrdinal));
         Set<UUID> snapshotVariants = new HashSet<>();
@@ -100,14 +104,16 @@ public class HeroCatalog {
                         scopeOrdinals.put(v.id(), v.rulesetOrdinal());
                     });
         }
-        if (filtered && includeUnchanged && snapshotVariants.isEmpty())
+        if (filtered && includeUnchanged && snapshotVariants.isEmpty()) {
             return new PageSlice<>(List.of(), page, size, 0);
+        }
 
         var identities = catalog.page(new HeroCatalogRepository.Filter(q.trim().toLowerCase(Locale.ROOT), rulesetId,
                 variants.keySet(), scopeOrdinals, filtered && !includeUnchanged, snapshotVariants, facets), page, size,
                 sort.equals("edited-desc"));
-        if (identities.items().isEmpty())
+        if (identities.items().isEmpty()) {
             return new PageSlice<>(List.of(), page, size, identities.totalElements());
+        }
 
         var heroIds = identities.items().stream().map(hero -> hero.getId()).toList();
         var revisions = store.revisions(heroIds).stream()
@@ -166,16 +172,18 @@ public class HeroCatalog {
     private static List<HeroPatchChangeSet> selectChanges(List<HeroPatchChangeSet> changes,
             Map<UUID, PatchVariantReference> variants, Map<UUID, HeroRevisionView> revisions, boolean filtered) {
         var ordered = changes.stream().filter(change -> {
-            if (change.getSourceKind() == ChangeSource.PATCH_NOTES)
+            if (change.getSourceKind() == ChangeSource.PATCH_NOTES) {
                 return true;
+            }
             var revision = revisions.get(change.getToHeroRevisionId());
             return revision != null && revision.state() == RevisionState.PUBLISHED
                     && revision.cause() == com.wikiaov.hero.internal.domain.HeroContent.Cause.GAME_PATCH;
         }).sorted(Comparator
                 .<HeroPatchChangeSet>comparingLong(change -> variants.get(change.getPatchVariantId()).rulesetOrdinal())
                 .reversed().thenComparing(HeroPatchChangeSet::getId)).toList();
-        if (filtered)
+        if (filtered) {
             return ordered;
+        }
         Set<String> seen = new HashSet<>();
         return ordered.stream().filter(change -> seen.add(change.getHeroId() + ":"
                 + variants.get(change.getPatchVariantId()).rulesetId())).toList();
@@ -186,11 +194,13 @@ public class HeroCatalog {
     }
 
     private static Set<String> choices(String value, Set<String> allowed) {
-        if (value == null || value.isBlank())
+        if (value == null || value.isBlank()) {
             return Set.of();
+        }
         var selected = Arrays.stream(value.split(",", -1)).map(String::trim).collect(Collectors.toSet());
-        if (!allowed.containsAll(selected))
+        if (!allowed.containsAll(selected)) {
             throw HeroValidation.badQuery("Invalid hero catalog role or position.");
+        }
         return Set.copyOf(selected);
     }
 }

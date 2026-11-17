@@ -101,22 +101,25 @@ public class UserProfiles {
     }
 
     private Profile createOwnProfile(Actor actor, ProfileInput input) {
-        if (input.expectedVersion() != 0)
+        if (input.expectedVersion() != 0) {
             throw conflict();
+        }
 
         try {
             return profiles.saveAndFlush(Profile.create(actor.issuer(), actor.subject(), input, clock.instant()));
         } catch (DataIntegrityViolationException exception) {
             if (exception.getMostSpecificCause() instanceof java.sql.SQLException sql
-                    && "23505".equals(sql.getSQLState()))
+                    && "23505".equals(sql.getSQLState())) {
                 throw conflict();
+            }
             throw exception;
         }
     }
 
     private Profile update(Profile profile, ProfileInput input) {
-        if (profile.getVersion() != input.expectedVersion())
+        if (profile.getVersion() != input.expectedVersion()) {
             throw conflict();
+        }
 
         profile.update(input, clock.instant());
         try {
@@ -133,8 +136,9 @@ public class UserProfiles {
 
     private Actor human() {
         Actor actor = currentActor.require();
-        if (actor.type() != ActorType.HUMAN)
+        if (actor.type() != ActorType.HUMAN) {
             throw new ApiException(PlatformErrorCode.FORBIDDEN, "A human account is required.");
+        }
         return actor;
     }
 

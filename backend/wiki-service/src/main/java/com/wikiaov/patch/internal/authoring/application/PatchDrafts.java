@@ -60,9 +60,10 @@ public class PatchDrafts {
         entity.setCreatedByIssuer(actor.issuer());
         entity.setCreatedBySubject(actor.subject());
         persist(() -> patches.saveAndFlush(entity));
-        for (var text : input.translations())
+        for (var text : input.translations()) {
             persist(() -> translations.saveAndFlush(new GamePatchTranslation(id, text.locale(), text.title(),
                     text.summary(), text.description())));
+        }
         record("PATCH_CREATED", id);
         return id;
     }
@@ -72,9 +73,10 @@ public class PatchDrafts {
         patches.lockById(patchId).orElseThrow(PatchDrafts::notFound);
         String title = input.title().strip();
 
-        if (translations.rename(patchId, input.locale(), title) == 0)
+        if (translations.rename(patchId, input.locale(), title) == 0) {
             persist(() -> translations.saveAndFlush(new GamePatchTranslation(patchId, input.locale(), title, "",
                     null)));
+        }
 
         record("PATCH_RENAMED", patchId);
     }
@@ -85,8 +87,9 @@ public class PatchDrafts {
         long ordinal = input.rulesetOrdinal();
         if (input.beforeVariantId() != null) {
             var anchor = variants.lockById(input.beforeVariantId()).orElseThrow(PatchDrafts::notFound);
-            if (!anchor.getRulesetId().equals(input.rulesetId()))
+            if (!anchor.getRulesetId().equals(input.rulesetId())) {
                 throw invalid("The insertion anchor must belong to the same ruleset.");
+            }
             ordinal = anchor.getRulesetOrdinal();
             variants.makeOrdinalSpace(input.rulesetId(), ordinal);
         }
@@ -116,8 +119,9 @@ public class PatchDrafts {
         var snapshot = variants.snapshotById(variantId).orElseThrow(PatchDrafts::notFound);
         rulesets.lockById(snapshot.getRulesetId()).orElseThrow(PatchDrafts::notFound);
         var variant = variants.lockById(variantId).orElseThrow(PatchDrafts::notFound);
-        if (variant.getStatus() == PatchVariantStatus.PUBLISHED)
+        if (variant.getStatus() == PatchVariantStatus.PUBLISHED) {
             return;
+        }
         variant.setStatus(PatchVariantStatus.PUBLISHED);
         variant.setPublishedAt(clock.instant());
         patches.lockById(variant.getPatchId()).orElseThrow(PatchDrafts::notFound).setStatus(PatchStatus.PUBLISHED);

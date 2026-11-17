@@ -92,8 +92,9 @@ class AvatarUploadService implements AvatarUploads {
 
     private Actor human() {
         Actor actor = actors.require();
-        if (actor.type() != ActorType.HUMAN)
+        if (actor.type() != ActorType.HUMAN) {
             throw new ApiException(PlatformErrorCode.FORBIDDEN, "A human account is required.");
+        }
         return actor;
     }
 }

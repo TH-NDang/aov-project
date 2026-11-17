@@ -79,8 +79,9 @@ class ArcanaCatalogQueries {
 
     PageSlice<ArcanaView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean draftsOnly) {
-        if (rulesetId != null)
+        if (rulesetId != null) {
             contexts.requireRuleset(rulesetId);
+        }
         String needle = q.strip().toLowerCase(Locale.ROOT);
         var candidates = activeSnapshots(rulesetId, draftsOnly);
         var scoped = snapshotsInScope(candidates, rulesetId, seasonId, patchVariantId, includeUnchanged);
@@ -105,11 +106,13 @@ class ArcanaCatalogQueries {
     private List<CatalogSnapshots.Snapshot<ArcanaRevision>> snapshotsInScope(
             List<CatalogSnapshots.Snapshot<ArcanaRevision>> candidates, UUID rulesetId,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged) {
-        if (seasonId == null && patchVariantId == null)
+        if (seasonId == null && patchVariantId == null) {
             return candidates;
+        }
         var scope = CatalogPatchScope.resolve(contexts, rulesetId, seasonId, patchVariantId, includeUnchanged);
-        if (includeUnchanged)
+        if (includeUnchanged) {
             return carriedForwardSnapshots(candidates, scope);
+        }
         return changedSnapshots(candidates, rulesetId, scope.selectedPatchIds());
     }
 
@@ -163,8 +166,9 @@ class ArcanaCatalogQueries {
 
     ArcanaView latest(UUID id, UUID rulesetId) {
         var found = latest(identity(id), rulesetId);
-        if (found == null)
+        if (found == null) {
             throw new ApiException(ArcanaErrorCode.ARCANA_NOT_FOUND, "No snapshot is available.");
+        }
         return found;
     }
 
@@ -198,8 +202,9 @@ class ArcanaCatalogQueries {
             var assets = revision.getState() == RevisionState.DISCARDED
                     ? List.<UUID>of()
                     : contentRules.assets(revision.getGameplay());
-            if (assets.isEmpty())
+            if (assets.isEmpty()) {
                 continue;
+            }
             var usage = usage(revision, active);
             assets.forEach(asset -> usages.computeIfAbsent(asset, ignored -> new ArrayList<>()).add(usage));
         }
@@ -221,8 +226,9 @@ class ArcanaCatalogQueries {
 
     /** The Vietnamese name of each revision, or another language's when it has none. */
     private Map<UUID, String> usageNames(List<ArcanaRevision> found) {
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return Map.of();
+        }
 
         Map<UUID, String> names = new HashMap<>();
         translations.findByRevisionIdIn(found.stream().map(ArcanaRevision::getId).toList()).stream()
@@ -274,8 +280,9 @@ class ArcanaCatalogQueries {
                         .anyMatch(k -> k == CatalogChanges.Kind.REMOVED || k == CatalogChanges.Kind.ADDED))
                 .filter(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal() <= context.rulesetOrdinal())
                 .max(Comparator.comparingLong(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal()));
-        if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED))
+        if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED)) {
             return Optional.empty();
+        }
         return revisions.findByOwnerIdOrderByRevisionNoDesc(id).stream()
                 .filter(revision -> revision.getState() == RevisionState.PUBLISHED
                         && revision.getRulesetId().equals(context.rulesetId())

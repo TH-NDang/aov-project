@@ -48,13 +48,15 @@ public class ItemAdminController implements ItemAdminApi {
         QueryParameters.requireOnly(request,
                 Set.of("rulesetId", "locale", "q", "page", "size", "seasonId", "patchVariantId", "includeUnchanged",
                         "draftsOnly", "includeUnscoped"));
-        if (includeUnscoped && (!includeUnchanged || rulesetId == null || seasonId == null && patchVariantId == null))
+        if (includeUnscoped && (!includeUnchanged || rulesetId == null || seasonId == null && patchVariantId == null)) {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                     "Unscoped observations require a ruleset and an all-entries timeline filter.");
+        }
         if (draftsOnly) {
-            if (rulesetId == null || seasonId != null || patchVariantId != null || includeUnchanged)
+            if (rulesetId == null || seasonId != null || patchVariantId != null || includeUnchanged) {
                 throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                         "Drafts require a ruleset and no timeline filter.");
+            }
             return catalog.drafts(rulesetId, locale, q, page, size);
         }
         return catalog.list(rulesetId, locale, q, page, size, seasonId, patchVariantId, includeUnchanged,

@@ -84,9 +84,10 @@ class AdminReferenceCatalogIntegrationTest {
 
     @BeforeEach
     void fixtures() {
-        for (var id : List.of(ruleset, otherRuleset))
+        for (var id : List.of(ruleset, otherRuleset)) {
             sql.update("insert into patch.gameplay_ruleset values (?,?,?,'ACTIVE',now())", id,
                     "test-" + id, "Reference projection fixture");
+        }
         for (var entry : ordinals.entrySet()) {
             UUID patch = UUID.randomUUID();
             sql.update("insert into patch.game_patch(id,code,status,created_at,created_by_issuer,created_by_subject)"
@@ -162,8 +163,9 @@ class AdminReferenceCatalogIntegrationTest {
 
     @Test
     void projectionQueryCountIsBoundedAsCatalogGrowsAndNeverHydratesEntities() {
-        for (String domain : List.of("item", "arcana", "enchantment", "spell"))
+        for (String domain : List.of("item", "arcana", "enchantment", "spell")) {
             warehouse(domain, 0);
+        }
         var statistics = statistics();
         statistics.clear();
         assertThat(heroes.authoring(ruleset)).extracting(r -> r.name()).containsExactly("Hero draft EN", "Hero draft");
@@ -173,8 +175,9 @@ class AdminReferenceCatalogIntegrationTest {
         assertThat(spells.authoring(ruleset, ordinals)).hasSize(2);
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(5);
         assertThat(statistics.getEntityLoadCount()).isZero();
-        for (int index = 1; index <= 30; index++)
+        for (int index = 1; index <= 30; index++) {
             warehouse("item", index);
+        }
         statistics.clear();
         var rows = items.authoring(ruleset, ordinals);
         assertThat(rows).hasSize(62);
@@ -229,8 +232,9 @@ class AdminReferenceCatalogIntegrationTest {
 
     @Test
     void emptyPatchOrderUsesSequenceTiesWithoutLoadingEntities() {
-        for (String domain : List.of("item", "arcana", "enchantment", "spell"))
+        for (String domain : List.of("item", "arcana", "enchantment", "spell")) {
             warehouse(domain, 0);
+        }
         var statistics = statistics();
         statistics.clear();
         assertThat(items.authoring(ruleset, Map.of())).extracting(r -> r.name())
@@ -434,10 +438,11 @@ class AdminReferenceCatalogIntegrationTest {
                     + " (id,hero_id,state,created_at,created_by_issuer,created_by_subject) values (?,?,'DRAFT',now(),'test','editor')",
                     id, hero);
         }
-        for (String locale : List.of("vi-VN", "en-US"))
+        for (String locale : List.of("vi-VN", "en-US")) {
             sql.update(
                     "insert into hero.hero_profile_translation(profile_revision_id,locale,name,summary) values (?,?,?,?)",
                     sections.getFirst(), locale, name + (locale.equals("en-US") ? " EN" : ""), "Profile summary");
+        }
         sql.update("insert into hero.hero_media_binding values (?,'HEAD',?)", sections.get(5), head);
         sql.update(
                 "insert into hero.hero_revision(id,hero_id,ruleset_id,revision_no,state,version,publication_sequence,"
@@ -470,15 +475,17 @@ class AdminReferenceCatalogIntegrationTest {
                 sql.update("insert into " + domain + "." + domain + "_translation(id,revision_id,locale," + target
                         + "name,description) values (?,?,?," + targetValue + "?,?)", UUID.randomUUID(), revision,
                         locale, name + (locale.equals("en-US") ? " EN" : ""), "D".repeat(5000));
-                if (domain.equals("spell"))
+                if (domain.equals("spell")) {
                     sql.update("insert into spell.spell_translation(id,revision_id,locale,target_key,name,description)"
                             + " values (?,?,?,'state','State must not duplicate spell','State description')",
                             UUID.randomUUID(), revision, locale);
+                }
             }
-            if (number <= 2)
+            if (number <= 2) {
                 sql.update("update " + domain + "." + domain + "_revision set state='PUBLISHED',publication_sequence=?,"
                         + "published_at=? where id=?", number, java.sql.Timestamp.from(Instant.now().minusSeconds(60)),
                         revision);
+            }
         }
         return owner;
     }

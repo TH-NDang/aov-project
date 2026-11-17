@@ -76,8 +76,9 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
     }
 
     private List<MediaUsage> named(List<MediaUsage> usages) {
-        if (usages.isEmpty())
+        if (usages.isEmpty()) {
             return usages;
+        }
 
         var revisions = usages.stream().map(MediaUsage::revisionId).collect(Collectors.toSet());
         var heroes = preferred(repository.heroNames(revisions), OwnerName::getRevisionId);

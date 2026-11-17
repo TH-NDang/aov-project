@@ -100,8 +100,9 @@ class HeroMediaWorkspaceIntegrationTest {
         assets.clear();
         when(media.find(any(UUID.class)))
                 .thenAnswer(invocation -> Optional.ofNullable(references.get(invocation.getArgument(0))));
-        for (var type : MediaSemanticType.values())
+        for (var type : MediaSemanticType.values()) {
             assets.put(type, asset(type));
+        }
         ruleset = id(send(post(ROOT + "/admin/rulesets"),
                 Map.of("code", "media-ruleset", "description", "Media workspace fixture"), 201));
         send(post(ROOT + "/admin/regions/" + VN + "/ruleset-assignments"),
@@ -165,9 +166,10 @@ class HeroMediaWorkspaceIntegrationTest {
                 .containsExactly(skinHead.toString(), skinAlternative.toString());
         UUID heroId = uuid(draft, "heroId");
         for (UUID candidate : List.of(assets.get(MediaSemanticType.HERO_HEAD), alternate, skinHead, skinPortrait,
-                skinAlternative))
+                skinAlternative)) {
             assertThat(usages(candidate)).anyMatch(usage -> usage.ownerId().equals(heroId)
                     && usage.scope() == MediaUsageScope.DRAFT);
+        }
     }
 
     @Test
@@ -206,10 +208,11 @@ class HeroMediaWorkspaceIntegrationTest {
         var all = new HashMap<UUID, List<MediaUsage>>();
         usageProviders.forEach(provider -> provider.findAllUsages()
                 .forEach((asset, found) -> all.computeIfAbsent(asset, ignored -> new ArrayList<>()).addAll(found)));
-        for (UUID asset : List.of(head, lonelyHead, portrait, alternate))
+        for (UUID asset : List.of(head, lonelyHead, portrait, alternate)) {
             assertThat(all.get(asset)).as("the whole-module answer matches the one for a single image")
                     .usingRecursiveFieldByFieldElementComparatorIgnoringFields("ownerName", "partName")
                     .containsExactlyInAnyOrderElementsOf(usages(asset));
+        }
     }
 
     @Test
@@ -416,8 +419,9 @@ class HeroMediaWorkspaceIntegrationTest {
         send(put(path(draft) + "/media-bindings"), Map.of("expectedDraftVersion", 1, "bindings", Map.of(),
                 "images", Map.of("HEAD", Collections.singletonList(null))), 422);
         var excessive = new ArrayList<Map<String, Object>>();
-        for (int index = 0; index < 201; index++)
+        for (int index = 0; index < 201; index++) {
             excessive.add(image(asset(MediaSemanticType.HERO_HEAD), "Candidate " + index));
+        }
         send(put(path(draft) + "/media-bindings"), Map.of("expectedDraftVersion", 1, "bindings", Map.of(),
                 "images", Map.of("HEAD", excessive)), 422);
         var invalidSkin = skin("bad-skin", "Bad skin");
@@ -686,8 +690,9 @@ class HeroMediaWorkspaceIntegrationTest {
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write"),
                 new SimpleGrantedAuthority("hero:publish"), new SimpleGrantedAuthority("patch:write"),
                 new SimpleGrantedAuthority("patch:publish"), new SimpleGrantedAuthority("region:admin")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         String response = mvc.perform(request).andExpect(status().is(expectedStatus)).andReturn().getResponse()
                 .getContentAsString();
         return response.isEmpty() ? Map.of() : json.readValue(response, Map.class);

@@ -51,15 +51,17 @@ public class ResolveGameplayContext implements GameplayContexts {
 
     public GameplayContext resolveCatalog(String region, Instant at, UUID seasonId, UUID patchVariantId) {
         var current = resolve(region, at);
-        if (seasonId == null && patchVariantId == null)
+        if (seasonId == null && patchVariantId == null) {
             return current;
+        }
 
         var selected = contexts.catalogPatches(current.rulesetId(), at, current.rulesetOrdinal(), seasonId,
                 patchVariantId, PageRequest.of(0, 1)).stream().findFirst().orElseThrow(
                         () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
                                 "The requested season or patch is unavailable for this catalog."));
-        if (selected.getId().equals(current.patchVariantId()))
+        if (selected.getId().equals(current.patchVariantId())) {
             return current;
+        }
 
         var date = contexts.catalogDates(current.regionId(), List.of(selected.getId()), at).stream().findFirst()
                 .orElse(null);
@@ -73,16 +75,18 @@ public class ResolveGameplayContext implements GameplayContexts {
             try {
                 return resolve(region.getCode(), at);
             } catch (ApiException exception) {
-                if (exception.getErrorCode() == PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE)
+                if (exception.getErrorCode() == PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE) {
                     return null;
+                }
                 throw exception;
             }
         }).filter(java.util.Objects::nonNull).toList();
     }
 
     public void requireRuleset(UUID rulesetId) {
-        if (!rulesets.existsByIdAndLifecycleState(rulesetId, PatchLifecycleState.ACTIVE))
+        if (!rulesets.existsByIdAndLifecycleState(rulesetId, PatchLifecycleState.ACTIVE)) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "The ruleset is unavailable.");
+        }
     }
 
     public PatchVariantReference variant(UUID variantId) {
@@ -96,8 +100,9 @@ public class ResolveGameplayContext implements GameplayContexts {
     }
 
     public List<PatchVariantReference> catalogVariants(UUID seasonId) {
-        if (seasonId != null && !seasons.existsById(seasonId))
+        if (seasonId != null && !seasons.existsById(seasonId)) {
             throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The season does not exist.");
+        }
         return (seasonId == null ? variants.findAll() : variants.findBySeasonId(seasonId)).stream()
                 .map(this::variantView).toList();
     }
@@ -116,8 +121,9 @@ public class ResolveGameplayContext implements GameplayContexts {
 
     public AuthoringContext authoringContext(UUID contextId) {
         var shared = contexts.sharedAuthoringContext(contextId);
-        if (!shared.isEmpty())
+        if (!shared.isEmpty()) {
             return shared.getFirst();
+        }
         // Keep accepted jobs using legacy release IDs executable after migration.
         return contexts.legacyAuthoringContext(contextId).stream().findFirst()
                 .orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE,

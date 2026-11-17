@@ -52,16 +52,21 @@ public final class HeroCatalogSpecifications {
     private static Predicate[] predicates(Filter filter, CriteriaQuery<?> query, Root<HeroIdentity> hero,
             CriteriaBuilder cb) {
         List<Predicate> result = new ArrayList<>();
-        if (filter.rulesetId() != null)
+        if (filter.rulesetId() != null) {
             result.add(hasRevisionInRuleset(filter, query, hero, cb));
-        if (!filter.snapshotVariants().isEmpty())
+        }
+        if (!filter.snapshotVariants().isEmpty()) {
             result.add(hasSnapshotInVariants(filter, query, hero, cb));
-        if (filter.changesOnly())
+        }
+        if (filter.changesOnly()) {
             result.add(hasCuratedChange(filter, query, hero, cb));
-        if (!filter.q().isEmpty())
+        }
+        if (!filter.q().isEmpty()) {
             result.add(matchesSearch(filter, query, hero, cb));
-        if (filter.facets().active())
+        }
+        if (filter.facets().active()) {
             result.add(matchesFacets(filter, query, hero, cb));
+        }
 
         return result.toArray(Predicate[]::new);
     }
@@ -116,8 +121,9 @@ public final class HeroCatalogSpecifications {
         names.addAll(List.of(cb.equal(revision.get("heroId"), hero.get("id")),
                 cb.equal(translation.get("profileRevisionId"), revision.get("profileRevisionId")),
                 cb.like(cb.lower(translation.get("name")), pattern, '\\'), cb.not(cb.exists(newer))));
-        if (filter.rulesetId() != null)
+        if (filter.rulesetId() != null) {
             names.add(cb.equal(revision.get("rulesetId"), filter.rulesetId()));
+        }
         matching.select(revision.get("id")).where(names.toArray(Predicate[]::new));
 
         return cb.or(cb.like(cb.lower(hero.get("code")), codePattern, '\\'), cb.exists(matching));
@@ -147,8 +153,9 @@ public final class HeroCatalogSpecifications {
         var predicates = searchRevisionPredicates(filter, revision, matching, cb);
         predicates.add(cb.equal(revision.get("heroId"), hero.get("id")));
         predicates.add(cb.not(cb.exists(newerSearchRevision(filter, matching, revision, cb))));
-        if (filter.rulesetId() != null)
+        if (filter.rulesetId() != null) {
             predicates.add(cb.equal(revision.get("rulesetId"), filter.rulesetId()));
+        }
         if (!filter.facets().roles().isEmpty()) {
             var roles = matching.subquery(UUID.class);
             var role = roles.from(ProfileRoleRow.class);
@@ -214,8 +221,9 @@ public final class HeroCatalogSpecifications {
     }
 
     private static Expression<Long> ordinal(Filter filter, Root<HeroRevision> revision, CriteriaBuilder cb) {
-        if (filter.ordinals().isEmpty())
+        if (filter.ordinals().isEmpty()) {
             return cb.literal(-1L);
+        }
         var rank = cb.<UUID, Long>selectCase(revision.get("effectiveFromPatchVariantId"));
         filter.ordinals().forEach(rank::when);
         return rank.otherwise(-1L);

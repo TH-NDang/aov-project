@@ -139,8 +139,9 @@ public class RankedSeasons {
     private long reserveOrdinal(UUID beforeSeasonId) {
         var ordered = seasons.findAllByOrderByOrdinalDesc();
         long appendOrdinal = ordered.isEmpty() ? 1 : Math.addExact(ordered.getFirst().getOrdinal(), 1);
-        if (beforeSeasonId == null)
+        if (beforeSeasonId == null) {
             return appendOrdinal;
+        }
         long ordinal = require(beforeSeasonId).getOrdinal();
         for (var existing : ordered) {
             if (existing.getOrdinal() >= ordinal) {
@@ -153,8 +154,9 @@ public class RankedSeasons {
 
     private void requireCompatibleSchedules(RankedSeason season, UUID regionId, Window window) {
         for (var existing : schedules.findAll()) {
-            if (!existing.getRegionId().equals(regionId) || existing.getSeasonId().equals(season.getId()))
+            if (!existing.getRegionId().equals(regionId) || existing.getSeasonId().equals(season.getId())) {
                 continue;
+            }
             long order = require(existing.getSeasonId()).getOrdinal();
             window.requireSeasonOrder(season.getOrdinal(), order, existing.getStartsAt(), existing.getEndsAt());
         }
@@ -162,8 +164,9 @@ public class RankedSeasons {
 
     private void requireIncludesReleases(UUID seasonId, UUID regionId, Window window, ZoneId zone) {
         for (var release : releases.findBySeasonIdAndRegionId(seasonId, regionId)) {
-            if (release.getStatus() == PatchReleaseStatus.CANCELLED)
+            if (release.getStatus() == PatchReleaseStatus.CANCELLED) {
                 continue;
+            }
             window.requireIncludesRelease(release.getEffectiveAt(), release.getEffectiveOn(), zone);
         }
     }
@@ -194,29 +197,35 @@ public class RankedSeasons {
     }
 
     public void requireRelease(UUID seasonId, UUID regionId, Instant time) {
-        if (seasonId == null)
+        if (seasonId == null) {
             return;
+        }
         var schedule = schedules.findBySeasonIdAndRegionId(seasonId, regionId)
                 .orElse(null);
-        if (schedule == null)
+        if (schedule == null) {
             return;
+        }
         if (time.isBefore(schedule.getStartsAt())
-                || (schedule.getEndsAt() != null && !time.isBefore(schedule.getEndsAt())))
+                || (schedule.getEndsAt() != null && !time.isBefore(schedule.getEndsAt()))) {
             throw invalid("The release must be within the market season schedule.");
+        }
     }
 
     public void requireReleaseDate(UUID seasonId, UUID regionId, java.time.LocalDate date) {
-        if (seasonId == null)
+        if (seasonId == null) {
             return;
+        }
         var schedule = schedules.findBySeasonIdAndRegionId(seasonId, regionId)
                 .orElse(null);
-        if (schedule == null)
+        if (schedule == null) {
             return;
+        }
         var region = regions.findById(regionId).orElse(null);
         var zone = java.time.ZoneId.of(region.getTimezone());
         if ((schedule.getEndsAt() != null && !date.atStartOfDay(zone).toInstant().isBefore(schedule.getEndsAt()))
-                || !date.plusDays(1).atStartOfDay(zone).toInstant().isAfter(schedule.getStartsAt()))
+                || !date.plusDays(1).atStartOfDay(zone).toInstant().isAfter(schedule.getStartsAt())) {
             throw invalid("The release date must overlap its market season.");
+        }
     }
 
     private View view(RankedSeason s) {

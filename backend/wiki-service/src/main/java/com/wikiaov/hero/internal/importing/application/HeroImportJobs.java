@@ -69,9 +69,10 @@ public class HeroImportJobs {
         }
 
         // A retried request finds its own job and records nothing new.
-        if (inserted == 1)
+        if (inserted == 1) {
             audit.record(new AuditEntry(actor, "HERO_IMPORT_JOB_ENQUEUED", AGGREGATE, job.getId(), null, null, null,
                     null, Map.of("rows", job.getTotal())));
+        }
         return view(job);
     }
 
@@ -101,8 +102,9 @@ public class HeroImportJobs {
                     "A running import notification cannot be dismissed.");
         }
 
-        if (!alreadyDismissed)
+        if (!alreadyDismissed) {
             audit.record(AuditEntry.of(actor, "HERO_IMPORT_NOTIFICATION_DISMISSED", AGGREGATE, id));
+        }
         return view(owned(id));
     }
 
@@ -129,8 +131,9 @@ public class HeroImportJobs {
     @Transactional
     public void execute(Pending pending) {
         var job = repository.lock(pending.id()).orElse(null);
-        if (job == null || job.getCompleted() != pending.index() || job.getCompleted() == job.getTotal())
+        if (job == null || job.getCompleted() != pending.index() || job.getCompleted() == job.getTotal()) {
             return;
+        }
 
         var input = inputs(job)[pending.index()];
         var owner = new Actor(job.getOwnerIssuer(), job.getOwnerSubject(), ActorType.valueOf(job.getOwnerType()), null,
@@ -143,8 +146,9 @@ public class HeroImportJobs {
     @Transactional
     public void failed(Pending pending, String code, String detail) {
         var job = repository.lock(pending.id()).orElse(null);
-        if (job == null || job.getCompleted() != pending.index() || job.getCompleted() == job.getTotal())
+        if (job == null || job.getCompleted() != pending.index() || job.getCompleted() == job.getTotal()) {
             return;
+        }
 
         finish(job, new Row(inputs(job)[pending.index()].code(), false, code, detail));
     }

@@ -46,9 +46,10 @@ public class PatchPages {
             @Nullable UUID patchVariantId, int page, int size) {
         Optional<CatalogChangeProvider> provider = catalogs.stream()
                 .filter(catalog -> domain.equals(catalog.domain())).findFirst();
-        if (!LEGACY_DOMAINS.contains(domain) && provider.isEmpty())
+        if (!LEGACY_DOMAINS.contains(domain) && provider.isEmpty()) {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                     "This domain does not have an implemented change provider.");
+        }
 
         var patch = patchVariantId == null
                 ? patches.published(id, region, locale)
@@ -63,8 +64,9 @@ public class PatchPages {
 
     private List<Map<String, Object>> changes(String domain, Optional<CatalogChangeProvider> provider,
             Map<String, Object> patch, UUID variant, String locale) {
-        if (domain.equals("HERO"))
+        if (domain.equals("HERO")) {
             return heroes.forVariant(variant, locale);
+        }
         List<Map<String, Object>> legacy = domain.equals("SPELL") ? spells.forVariant(variant, locale) : List.of();
         return provider.map(catalog -> PublishedCatalogChanges.forVariant(catalog, (UUID) patch.get("rulesetId"),
                 variant, locale, legacy)).orElse(legacy);

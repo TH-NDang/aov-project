@@ -38,10 +38,11 @@ public class BuildValues {
     public UUID arcanaPage(List<ArcanaPart> arcana, Instant now) {
         String key = BuildRules.arcanaKey(arcana);
         UUID id = UUID.randomUUID();
-        if (pages.insertIfAbsent(id, key, now) == 0)
+        if (pages.insertIfAbsent(id, key, now) == 0) {
             return pages.findByContentKey(key)
                     .orElseThrow(() -> new IllegalStateException("An arcana page was neither inserted nor found."))
                     .getId();
+        }
 
         pageEntries.saveAllAndFlush(arcana.stream().map(part -> {
             var row = new ArcanaPageEntryRow();
@@ -56,11 +57,12 @@ public class BuildValues {
     public UUID enchantmentSet(List<EnchantmentPart> enchantments, Instant now) {
         String key = BuildRules.enchantmentKey(enchantments);
         UUID id = UUID.randomUUID();
-        if (sets.insertIfAbsent(id, key, now) == 0)
+        if (sets.insertIfAbsent(id, key, now) == 0) {
             return sets.findByContentKey(key)
                     .orElseThrow(
                             () -> new IllegalStateException("An enchantment set was neither inserted nor found."))
                     .getId();
+        }
 
         setEntries.saveAllAndFlush(enchantments.stream().map(part -> {
             var row = new EnchantmentSetEntryRow();
@@ -76,10 +78,12 @@ public class BuildValues {
     public void dropUnused(Collection<UUID> pageIds, Collection<UUID> setIds) {
         var unusedPages = pageIds.stream().filter(Objects::nonNull).distinct().toList();
         var unusedSets = setIds.stream().filter(Objects::nonNull).distinct().toList();
-        if (!unusedPages.isEmpty())
+        if (!unusedPages.isEmpty()) {
             pages.deleteUnused(unusedPages);
-        if (!unusedSets.isEmpty())
+        }
+        if (!unusedSets.isEmpty()) {
             sets.deleteUnused(unusedSets);
+        }
     }
 
     public List<ArcanaPageEntryRow> pageEntries(Collection<UUID> pageIds) {

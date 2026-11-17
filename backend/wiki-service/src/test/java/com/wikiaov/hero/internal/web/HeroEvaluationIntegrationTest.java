@@ -90,8 +90,9 @@ class HeroEvaluationIntegrationTest {
         }
         when(media.findAll(any())).thenAnswer(call -> {
             Map<UUID, MediaAssetReference> found = new HashMap<>();
-            for (UUID id : (Collection<UUID>) call.getArgument(0))
+            for (UUID id : (Collection<UUID>) call.getArgument(0)) {
                 media.find(id).ifPresent(asset -> found.put(id, asset));
+            }
             return found;
         });
 
@@ -321,11 +322,12 @@ class HeroEvaluationIntegrationTest {
 
     private Map<String, Object> skills(long version, List<String> keys) {
         List<Map<String, Object>> list = new ArrayList<>();
-        for (int n = 0; n < keys.size(); n++)
+        for (int n = 0; n < keys.size(); n++) {
             list.add(Map.of("skillKey", keys.get(n), "kind", "ACTIVE", "displayOrder", n + 1, "iconAssetId",
                     assets.get(MediaSemanticType.HERO_SKILL_ICON), "translations",
                     List.of(Map.of("locale", "vi-VN", "name", "Chiêu " + (n + 1), "description", "Mô tả")),
                     "effects", List.of()));
+        }
         return Map.of("expectedDraftVersion", version, "skills", list);
     }
 
@@ -359,8 +361,9 @@ class HeroEvaluationIntegrationTest {
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write"),
                 new SimpleGrantedAuthority("hero:publish"), new SimpleGrantedAuthority("patch:write"),
                 new SimpleGrantedAuthority("patch:publish"), new SimpleGrantedAuthority("region:admin")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

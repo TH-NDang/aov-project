@@ -84,8 +84,9 @@ class HeroFormsIntegrationTest {
         }
         when(media.findAll(any())).thenAnswer(call -> {
             Map<UUID, MediaAssetReference> found = new HashMap<>();
-            for (UUID id : (Collection<UUID>) call.getArgument(0))
+            for (UUID id : (Collection<UUID>) call.getArgument(0)) {
                 media.find(id).ifPresent(asset -> found.put(id, asset));
+            }
             return found;
         });
 
@@ -250,9 +251,10 @@ class HeroFormsIntegrationTest {
     /** Replaces the skins of a draft with one named skin per key, in the given order. */
     private Map<String, Object> skins(Map<String, Object> draft, String... keys) throws Exception {
         List<Map<String, Object>> skins = new ArrayList<>();
-        for (String key : keys)
+        for (String key : keys) {
             skins.add(Map.of("skinKey", key, "displayOrder", skins.size() + 1, "translations",
                     List.of(Map.of("locale", "vi-VN", "name", key))));
+        }
 
         return send(put(path(uuid(draft, "heroId"), id(draft)) + "/skins"),
                 Map.of("expectedDraftVersion", number(draft, "version"), "skins", skins), 200);
@@ -350,8 +352,9 @@ class HeroFormsIntegrationTest {
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write"),
                 new SimpleGrantedAuthority("hero:publish"), new SimpleGrantedAuthority("patch:write"),
                 new SimpleGrantedAuthority("patch:publish"), new SimpleGrantedAuthority("region:admin")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

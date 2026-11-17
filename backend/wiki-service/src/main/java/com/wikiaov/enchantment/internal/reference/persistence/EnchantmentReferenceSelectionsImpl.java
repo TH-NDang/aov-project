@@ -42,8 +42,9 @@ public class EnchantmentReferenceSelectionsImpl implements EnchantmentReferenceS
                 : builder.notEqual(revision.get("state"), RevisionState.DISCARDED));
         if (published) {
             predicates.add(builder.le(rank, cutoff));
-            if (!allowUnscoped)
+            if (!allowUnscoped) {
                 predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
+            }
         }
 
         var newer = query.subquery(UUID.class);
@@ -63,8 +64,9 @@ public class EnchantmentReferenceSelectionsImpl implements EnchantmentReferenceS
                 : builder.notEqual(candidate.get("state"), RevisionState.DISCARDED));
         if (published) {
             newerPredicates.add(builder.le(newerRank, cutoff));
-            if (!allowUnscoped)
+            if (!allowUnscoped) {
                 newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
+            }
         }
         newerPredicates.add(builder.or(builder.gt(newerRank, rank),
                 builder.and(builder.equal(newerRank, rank), builder.gt(newerSequence, sequence))));
@@ -83,8 +85,9 @@ public class EnchantmentReferenceSelectionsImpl implements EnchantmentReferenceS
     }
 
     private static Expression<Long> ordinal(CriteriaBuilder builder, Path<UUID> patch, Map<UUID, Long> ordinals) {
-        if (ordinals.isEmpty())
+        if (ordinals.isEmpty()) {
             return builder.literal(0L);
+        }
 
         var rank = builder.<UUID, Long>selectCase(patch);
         new TreeMap<>(ordinals).forEach(rank::when);

@@ -86,8 +86,9 @@ public class ReferenceController implements ReferenceApi {
             String tag = "\"" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
                     .digest(json.writeValueAsBytes(value))) + "\"";
             var cache = CacheControl.noCache().cachePublic();
-            if (request.checkNotModified(tag))
+            if (request.checkNotModified(tag)) {
                 return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(tag).cacheControl(cache).build();
+            }
             return ResponseEntity.ok().eTag(tag).cacheControl(cache).body(value);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);

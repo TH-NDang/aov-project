@@ -29,8 +29,9 @@ class AccountCaller {
 
     Actor human() {
         Actor actor = currentActor.require();
-        if (actor.type() != ActorType.HUMAN)
+        if (actor.type() != ActorType.HUMAN) {
             throw new ApiException(PlatformErrorCode.FORBIDDEN, "A human account is required.");
+        }
         return actor;
     }
 

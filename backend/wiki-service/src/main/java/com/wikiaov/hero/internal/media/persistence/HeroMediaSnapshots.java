@@ -52,9 +52,10 @@ public class HeroMediaSnapshots implements HeroSectionSnapshots {
             value.bindings()
                     .forEach((role, asset) -> bindings.save(new MediaBindingRow(revision.getId(), role.name(), asset)));
             value.images().forEach((role, images) -> {
-                for (int n = 0; n < images.size(); n++)
+                for (int n = 0; n < images.size(); n++) {
                     options.save(new HeroImageOption(revision.getId(), role.name(), n, images.get(n).assetId(),
                             images.get(n).label()));
+                }
             });
             sources.save(section(), revision.getId(), value.sources());
         }

@@ -28,8 +28,9 @@ class CatalogCacheEpochTest {
     @AfterEach
     void cleanThreadResources() {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            for (var synchronization : TransactionSynchronizationManager.getSynchronizations())
+            for (var synchronization : TransactionSynchronizationManager.getSynchronizations()) {
                 synchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+            }
         }
         TransactionSynchronizationManager.clear();
     }

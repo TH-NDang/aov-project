@@ -124,8 +124,9 @@ public class BuildCaptures {
         BuildCaptureRules.validateHeroes(request, imageIds);
         var resolved = resolve(request);
         var prepared = prepare(request, resolved);
-        if (captures.existsByCode(request.code()))
+        if (captures.existsByCode(request.code())) {
             throw captureExists(request.code());
+        }
 
         var actor = actors.require();
         var now = clock.instant();
@@ -173,8 +174,9 @@ public class BuildCaptures {
         var row = builds.findByIdAndCaptureId(buildId, captureId)
                 .orElseThrow(
                         () -> new ApiException(BuildErrorCode.BUILD_NOT_FOUND, "This build is not in the capture."));
-        if (row.getVersion() != request.expectedVersion())
+        if (row.getVersion() != request.expectedVersion()) {
             throw versionConflict(row.getVersion());
+        }
 
         var actor = actors.require();
         var now = clock.instant();
@@ -193,8 +195,9 @@ public class BuildCaptures {
         row.setVersion(row.getVersion() + 1);
         row.setUpdatedAt(now);
         replaceItems(row.getId(), content.items());
-        if (needsReview && capture.getConfirmedAt() != null)
+        if (needsReview && capture.getConfirmedAt() != null) {
             reopen(capture, now);
+        }
         builds.flush();
         values.dropUnused(Collections.singletonList(oldPage), Collections.singletonList(oldSet));
 
@@ -208,14 +211,17 @@ public class BuildCaptures {
     @Transactional
     public Summary confirm(UUID captureId, ConfirmCapture request) {
         var capture = captures.lockById(captureId).orElseThrow(BuildCaptures::captureNotFound);
-        if (capture.getConfirmedAt() != null)
+        if (capture.getConfirmedAt() != null) {
             return views.summaryOf(capture);
-        if (capture.getVersion() != request.expectedVersion())
+        }
+        if (capture.getVersion() != request.expectedVersion()) {
             throw versionConflict(capture.getVersion());
+        }
         long open = builds.countByCaptureIdAndNeedsReviewTrue(captureId);
-        if (open > 0)
+        if (open > 0) {
             throw new ApiException(BuildErrorCode.BUILD_REVIEW_OPEN, open + " builds still wait for review.",
                     Map.of("needsReview", open));
+        }
 
         var actor = actors.require();
         var now = clock.instant();
@@ -235,8 +241,9 @@ public class BuildCaptures {
     @Transactional
     public void delete(UUID captureId, long expectedVersion) {
         var capture = captures.lockById(captureId).orElseThrow(BuildCaptures::captureNotFound);
-        if (capture.getVersion() != expectedVersion)
+        if (capture.getVersion() != expectedVersion) {
             throw versionConflict(capture.getVersion());
+        }
 
         var actor = actors.require();
         var rows = builds.findByCaptureId(captureId);
@@ -349,8 +356,9 @@ public class BuildCaptures {
                 build.items().forEach(item -> itemCodes.add(item.code()));
                 build.enchantments().forEach(enchantment -> enchantmentCodes.add(enchantment.code()));
                 build.arcana().forEach(arcana -> arcanaCodes.add(arcana.code()));
-                if (blankToNull(build.spell()) != null)
+                if (blankToNull(build.spell()) != null) {
                     spellCodes.add(build.spell().trim());
+                }
             }
         }
 
@@ -365,27 +373,31 @@ public class BuildCaptures {
         missing(BuildReferenceKind.ENCHANTMENT, enchantmentCodes, resolved.enchantments(), unknown);
         missing(BuildReferenceKind.ARCANA, arcanaCodes, resolved.arcana(), unknown);
         missing(BuildReferenceKind.SPELL, spellCodes, resolved.spells(), unknown);
-        if (!unknown.isEmpty())
+        if (!unknown.isEmpty()) {
             throw new ApiException(BuildErrorCode.BUILD_INVALID, "Unknown codes: " + unknown + ".",
                     Map.of("unknownCodes", unknown));
+        }
 
         Set<UUID> heroIds = new HashSet<>();
-        for (var hero : request.heroes())
-            if (!heroIds.add(resolved.heroes().get(hero.heroCode()).id()))
+        for (var hero : request.heroes()) {
+            if (!heroIds.add(resolved.heroes().get(hero.heroCode()).id())) {
                 throw invalid("Hero " + hero.heroCode() + " is listed twice under another code.");
+            }
+        }
         return resolved;
     }
 
     private static void missing(BuildReferenceKind kind, Set<String> wanted, Map<String, BuildReference> found,
             Map<String, List<String>> unknown) {
         var absent = wanted.stream().filter(code -> !found.containsKey(code)).toList();
-        if (!absent.isEmpty())
+        if (!absent.isEmpty()) {
             unknown.put(kind.name(), absent);
+        }
     }
 
     private static List<Prepared> prepare(ImportCapture request, Resolved resolved) {
         List<Prepared> prepared = new ArrayList<>();
-        for (var hero : request.heroes())
+        for (var hero : request.heroes()) {
             for (var build : hero.builds()) {
                 var content = new BuildContent(
                         build.items().stream().map(item -> new ItemPart(item.slot(),
@@ -399,6 +411,7 @@ public class BuildCaptures {
                         build.needsReview());
                 prepared.add(new Prepared(resolved.heroes().get(hero.heroCode()).id(), build, content));
             }
+        }
         return prepared;
     }
 
@@ -421,11 +434,13 @@ public class BuildCaptures {
                 unknown);
         missingIds(BuildReferenceKind.ARCANA, request.arcana().stream().map(BuildCommands.ArcanaQuantity::arcanaId),
                 arcanaRefs, unknown);
-        if (request.spellId() != null)
+        if (request.spellId() != null) {
             missingIds(BuildReferenceKind.SPELL, Stream.of(request.spellId()), spellRefs, unknown);
-        if (!unknown.isEmpty())
+        }
+        if (!unknown.isEmpty()) {
             throw new ApiException(BuildErrorCode.BUILD_INVALID, "Unknown identifiers: " + unknown + ".",
                     Map.of("unknownIds", unknown));
+        }
 
         return new BuildContent(
                 request.items().stream().map(item -> new ItemPart(item.slot(), item.itemId()))
@@ -442,8 +457,9 @@ public class BuildCaptures {
     private static void missingIds(BuildReferenceKind kind, Stream<UUID> wanted,
             Map<UUID, BuildReference> found, Map<String, List<String>> unknown) {
         var absent = wanted.filter(id -> !found.containsKey(id)).map(UUID::toString).distinct().toList();
-        if (!absent.isEmpty())
+        if (!absent.isEmpty()) {
             unknown.put(kind.name(), absent);
+        }
     }
 
     private static EnchantmentPart enchantmentPart(int slot, BuildReference reference) {

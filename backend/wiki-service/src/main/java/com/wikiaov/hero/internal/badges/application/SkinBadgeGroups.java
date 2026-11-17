@@ -77,16 +77,18 @@ public class SkinBadgeGroups {
                     .filter(badge -> groupMatch || SkinBadges.matches(badge,
                             badgeTranslations.getOrDefault(badge.getId(), List.of()), search))
                     .count();
-            if (search.isEmpty() || groupMatch || count > 0)
+            if (search.isEmpty() || groupMatch || count > 0) {
                 matching.add(view(group, texts, locale, count, groupMatch));
+            }
         }
         long unassigned = allBadges.stream().filter(badge -> badge.getGroupId() == null)
                 .filter(badge -> SkinBadges.matches(badge,
                         badgeTranslations.getOrDefault(badge.getId(), List.of()), search))
                 .count();
-        if (search.isEmpty() || unassigned > 0)
+        if (search.isEmpty() || unassigned > 0) {
             matching.add(new SkinBadgeGroupView(null, "__ungrouped", null, 0, List.of(), null, null, true,
                     unassigned, false));
+        }
         return PageSlice.of(matching, page, size);
     }
 
@@ -116,9 +118,10 @@ public class SkinBadgeGroups {
     @PreAuthorize("hasAuthority('hero:write')")
     public SkinBadgeGroupView update(UUID id, SkinBadgeGroupCommands.Update input) {
         var group = groups.lock(id).orElseThrow(SkinBadgeGroups::missing);
-        if (group.getVersion() != input.expectedVersion())
+        if (group.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_GROUP_CONFLICT,
                     "The badge group changed. Reload before saving.");
+        }
         validate(input.translations());
         group.setKind(input.kind());
         group.setVersion(Math.addExact(group.getVersion(), 1));
@@ -134,8 +137,9 @@ public class SkinBadgeGroups {
     }
 
     public void require(UUID id) {
-        if (id != null && !groups.existsById(id))
+        if (id != null && !groups.existsById(id)) {
             throw missing();
+        }
     }
 
     private static ApiException missing() {
@@ -150,8 +154,9 @@ public class SkinBadgeGroups {
         Set<String> locales = new HashSet<>();
         for (var text : translations) {
             HeroValidation.locale(text.locale());
-            if (!locales.add(text.locale()))
+            if (!locales.add(text.locale())) {
                 throw HeroValidation.invalid("Badge group translation locales must be unique.");
+            }
         }
     }
 

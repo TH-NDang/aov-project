@@ -53,8 +53,9 @@ public class PatchStatDefaults {
     @PreAuthorize("hasAuthority('catalog:read')")
     @Transactional(readOnly = true)
     public List<StatDefaultView> effective(UUID id) {
-        if (!variants.existsById(id))
+        if (!variants.existsById(id)) {
             throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant was not found.");
+        }
         return defaults.effective(id).stream().map(d -> new StatDefaultView(d.getStatKey(), d.getBaseValue(),
                 d.getUnit(), d.getSourceUrl(), d.getVariantId(), d.getPatchCode(), d.getVersion())).toList();
     }
@@ -64,15 +65,17 @@ public class PatchStatDefaults {
         if (!key.matches("[A-Z][A-Z0-9_]{0,63}") || input.baseValue() == null || input.baseValue().precision() > 18
                 || Math.abs((long) input.baseValue().scale()) > 12 || input.unit() == null
                 || !Set.of("POINT", "PERCENT").contains(input.unit()) || input.expectedVersion() == null
-                || input.expectedVersion() < 0 || !validSource(input.sourceUrl()))
+                || input.expectedVersion() < 0 || !validSource(input.sourceUrl())) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID,
                     "Provide a numeric default, unit and HTTP source URL.");
+        }
 
         variants.lockById(id).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant was not found."));
         var row = defaults.findByVariantIdAndStatKey(id, key).orElseGet(PatchStatDefault::new);
-        if (row.getVersion() != input.expectedVersion())
+        if (row.getVersion() != input.expectedVersion()) {
             throw new ApiException(PatchErrorCode.PATCH_CONFLICT, "The default has changed. Reload before saving.");
+        }
         if (row.getId() == null) {
             row.setId(UUID.randomUUID());
             row.setVariantId(id);
@@ -90,8 +93,9 @@ public class PatchStatDefaults {
     }
 
     private static boolean validSource(String text) {
-        if (text == null || text.length() > 2048)
+        if (text == null || text.length() > 2048) {
             return false;
+        }
         try {
             var uri = URI.create(text);
             return ("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()))

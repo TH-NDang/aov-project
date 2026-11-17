@@ -62,8 +62,9 @@ class HeroPatchDerivationTests {
         baseline = revision(hero, ruleset, RevisionState.PUBLISHED, current.id(), 2);
         when(store.revisions(hero)).thenReturn(List.of(old, baseline));
         when(contexts.rulesetVariants(ruleset)).thenReturn(List.of(past, middle, current));
-        for (var variant : List.of(past, middle, current))
+        for (var variant : List.of(past, middle, current)) {
             when(contexts.variant(variant.id())).thenReturn(variant);
+        }
         when(sections.content(eq(HeroSection.COMBAT_STATS), any())).thenReturn(new Stats(
                 List.of(new Stat("HP", new BigDecimal("3500"), null, new BigDecimal("100"), "POINT")), List.of()));
         when(sections.content(eq(HeroSection.PROFILE), any()))
@@ -161,9 +162,10 @@ class HeroPatchDerivationTests {
         revisions.add(baseline);
         when(store.revisions(hero)).thenReturn(revisions);
 
-        for (var candidate : invalid)
+        for (var candidate : invalid) {
             assertThatThrownBy(() -> derivation.at(hero, past.id(), candidate.id())).isInstanceOf(ApiException.class)
                     .hasMessageContaining("The anchor must be a published revision");
+        }
         assertThatThrownBy(() -> derivation.at(hero, past.id(), UUID.randomUUID())).isInstanceOf(ApiException.class);
         verifyNoInteractions(sections, history);
     }

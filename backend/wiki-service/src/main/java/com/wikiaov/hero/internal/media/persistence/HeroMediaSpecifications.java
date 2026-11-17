@@ -27,8 +27,9 @@ public final class HeroMediaSpecifications {
             if (query.getResultType() != Long.class) {
                 List<Order> ordering = new ArrayList<>(
                         List.of(cb.asc(hero.get("code")), cb.asc(revision.get("rulesetId"))));
-                if (page)
+                if (page) {
                     ordering.add(cb.asc(revision.get("id")));
+                }
                 query.orderBy(ordering);
             }
             return cb.and(selected(query, revision, hero, cb, ruleset, ordinals, q));
@@ -40,8 +41,9 @@ public final class HeroMediaSpecifications {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(hero.get("id"), revision.get("heroId")));
         predicates.add(cb.notEqual(revision.get("state"), RevisionState.DISCARDED));
-        if (ruleset != null)
+        if (ruleset != null) {
             predicates.add(cb.equal(revision.get("rulesetId"), ruleset));
+        }
         var newer = query.subquery(UUID.class);
         var other = newer.from(HeroRevision.class);
         var rank = ordinal(revision, ordinals, cb);
@@ -72,8 +74,9 @@ public final class HeroMediaSpecifications {
     }
 
     private static Expression<Long> ordinal(Root<HeroRevision> revision, Map<UUID, Long> ordinals, CriteriaBuilder cb) {
-        if (ordinals.isEmpty())
+        if (ordinals.isEmpty()) {
             return cb.literal(-1L);
+        }
         var result = cb.<UUID, Long>selectCase(revision.get("effectiveFromPatchVariantId"));
         ordinals.forEach(result::when);
         return result.otherwise(-1L);

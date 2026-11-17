@@ -96,16 +96,18 @@ final class HeroImportContent {
         Map<String, Object> after = new LinkedHashMap<>(before);
         input.values().forEach((key, value) -> {
             var policy = input.policies().getOrDefault(key, Policy.FILL_EMPTY);
-            if (policy != Policy.SKIP && !empty(value) && (policy == Policy.OVERWRITE || empty(before.get(key))))
+            if (policy != Policy.SKIP && !empty(value) && (policy == Policy.OVERWRITE || empty(before.get(key)))) {
                 after.put(key, value);
+            }
         });
         return after;
     }
 
     /** Imported skills carry the game's text only, so the summaries editors wrote stay with their skills. */
     private static void retainSkillSummaries(Skills existing, Map<String, Object> after) {
-        if (existing == null)
+        if (existing == null) {
             return;
+        }
         var incoming = Arrays.asList((Skill[]) after.get("skills"));
         after.put("skills", HeroSkillSummaries.retain(existing.skills(), incoming).toArray(Skill[]::new));
     }
@@ -114,8 +116,9 @@ final class HeroImportContent {
         var imported = new Skins(Arrays.asList(json.convertValue(after.get("skins"), Skin[].class)), List.of());
         validation.validate(HeroSection.SKINS, imported);
         after.put("skins", aliases.skins(heroId, imported).skins().toArray(Skin[]::new));
-        if (existing == null)
+        if (existing == null) {
             return;
+        }
         var incoming = new Skins(Arrays.asList((Skin[]) after.get("skins")), List.of());
         validation.validate(HeroSection.SKINS, incoming);
         var retained = (Skins) HeroImages.retain(existing, incoming);
@@ -123,13 +126,15 @@ final class HeroImportContent {
     }
 
     private void retainHeroArtwork(Bindings existing, Map<String, Object> after) {
-        if (existing == null)
+        if (existing == null) {
             return;
+        }
         Map<MediaRole, UUID> mains = new EnumMap<>(MediaRole.class);
         for (var role : MediaRole.values()) {
             var asset = after.get(role.name().toLowerCase(Locale.ROOT));
-            if (asset != null)
+            if (asset != null) {
                 mains.put(role, UUID.fromString(asset.toString()));
+            }
         }
         var incoming = new Bindings(mains, List.of(), imageOptions(after.get("images")));
         validation.validate(HeroSection.MEDIA_BINDINGS, incoming);
@@ -138,10 +143,12 @@ final class HeroImportContent {
     }
 
     private void normalizeStatistics(Map<String, Object> after) {
-        if (!empty(after.get("overviewRatings")))
+        if (!empty(after.get("overviewRatings"))) {
             after.put("overviewRatings", json.convertValue(after.get("overviewRatings"), Ratings.class));
-        if (empty(after.get("combatStats")))
+        }
+        if (empty(after.get("combatStats"))) {
             return;
+        }
         var imported = json.convertValue(after.get("combatStats"), Stats.class);
         validation.validatePublication(HeroSection.COMBAT_STATS, imported);
         after.put("combatStats", new Stats(imported.values().stream()
@@ -155,25 +162,29 @@ final class HeroImportContent {
 
     void validate(String locale, Map<String, Object> values, Profile existing) {
         validation.validate(HeroSection.PROFILE, profile(locale, values, existing));
-        if (values.get("overviewRatings") != null)
+        if (values.get("overviewRatings") != null) {
             validation.validate(HeroSection.OVERVIEW_RATINGS,
                     json.convertValue(values.get("overviewRatings"), Ratings.class));
-        if (values.get("combatStats") != null)
+        }
+        if (values.get("combatStats") != null) {
             validation.validatePublication(HeroSection.COMBAT_STATS,
                     json.convertValue(values.get("combatStats"), Stats.class));
+        }
 
         Map<MediaRole, UUID> bindings = new EnumMap<>(MediaRole.class);
         for (var role : MediaRole.values()) {
             Object id = values.get(role.name().toLowerCase(Locale.ROOT));
-            if (id != null)
+            if (id != null) {
                 bindings.put(role, UUID.fromString((String) id));
+            }
         }
         validation.validate(HeroSection.MEDIA_BINDINGS,
                 new Bindings(bindings, List.of(), imageOptions(values.get("images"))));
 
         var skills = Arrays.asList(json.convertValue(values.get("skills"), Skill[].class));
-        if (!skills.isEmpty())
+        if (!skills.isEmpty()) {
             validation.validate(HeroSection.SKILLS, new Skills(skills, List.of()));
+        }
         validation.validate(HeroSection.SKINS,
                 new Skins(Arrays.asList(json.convertValue(values.get("skins"), Skin[].class)), List.of()));
     }
@@ -187,8 +198,9 @@ final class HeroImportContent {
 
     Profile profile(String locale, Map<String, Object> values, Profile old) {
         var translations = new ArrayList<ProfileTranslation>();
-        if (old != null)
+        if (old != null) {
             old.translations().stream().filter(t -> !t.locale().equals(locale)).forEach(translations::add);
+        }
         translations.add(new ProfileTranslation(locale, (String) values.get("name"), (String) values.get("title"),
                 (String) values.get("summary"), (String) values.get("lore")));
         return new Profile(translations,

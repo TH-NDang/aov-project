@@ -87,8 +87,9 @@ class BuildCaptureViews {
     /** Heroes, builds and builds waiting for review, per capture. */
     Map<UUID, int[]> counts(Collection<UUID> captureIds) {
         Map<UUID, int[]> counts = new HashMap<>();
-        if (captureIds.isEmpty())
+        if (captureIds.isEmpty()) {
             return counts;
+        }
         heroes.countByCapture(captureIds).forEach(row -> counts
                 .computeIfAbsent(row.getCaptureId(), id -> new int[3])[0] = (int) row.getTotal());
         builds.countByCapture(captureIds).forEach(row -> {

@@ -81,8 +81,9 @@ public class HeroAuthoring {
     public HeroRevisionView create(Create input) {
         contexts.requireRuleset(input.rulesetId());
         var target = contexts.authoringContext(input.contextId());
-        if (!target.rulesetId().equals(input.rulesetId()))
+        if (!target.rulesetId().equals(input.rulesetId())) {
             throw HeroValidation.invalid("The release does not belong to the selected ruleset.");
+        }
         HeroValidation.locale(input.initialLocale());
 
         var actor = actors.require();
@@ -121,26 +122,31 @@ public class HeroAuthoring {
         contexts.requireRuleset(input.rulesetId());
         var draft = store.revisions(heroId).stream()
                 .filter(r -> r.rulesetId().equals(input.rulesetId()) && r.state() == RevisionState.DRAFT).findFirst();
-        if (draft.isPresent())
+        if (draft.isPresent()) {
             throw new ApiException(HeroErrorCode.HERO_DRAFT_EXISTS, "This hero already has a draft for the ruleset.",
                     Map.of("existingDraftId", draft.get().id()));
+        }
 
         var source = input.sourceRevisionId() == null
                 ? defaultSource(heroId, input)
                 : store.revision(heroId, input.sourceRevisionId());
-        if (!source.rulesetId().equals(input.rulesetId()) || source.state() != RevisionState.PUBLISHED)
+        if (!source.rulesetId().equals(input.rulesetId()) || source.state() != RevisionState.PUBLISHED) {
             throw HeroValidation.invalid("The source must be published and belong to the target hero and ruleset.");
+        }
 
         UUID effective = input.effectiveFromPatchVariantId() == null
                 ? source.effectiveFromPatchVariantId()
                 : input.effectiveFromPatchVariantId();
         checkContext(input.rulesetId(), input.cause(), effective, false);
-        if (effective != null && ordinal(source) > contexts.variant(effective).rulesetOrdinal())
+        if (effective != null && ordinal(source) > contexts.variant(effective).rulesetOrdinal()) {
             throw HeroValidation.invalid("A future snapshot cannot be used to reconstruct an earlier patch.");
-        if (input.cause() == Cause.DATA_BASELINE)
+        }
+        if (input.cause() == Cause.DATA_BASELINE) {
             throw HeroValidation.invalid("Use an independent baseline import instead of copying another snapshot.");
-        if (input.cause() != Cause.GAME_PATCH && !Objects.equals(effective, source.effectiveFromPatchVariantId()))
+        }
+        if (input.cause() != Cause.GAME_PATCH && !Objects.equals(effective, source.effectiveFromPatchVariantId())) {
             throw HeroValidation.invalid("Content corrections must retain source gameplay applicability.");
+        }
 
         UUID id = insertDraft(heroId, input.rulesetId(), source.id(), input.cause(), effective);
         source.sections().forEach((s, ref) -> bind(id, s, ref));
@@ -155,8 +161,9 @@ public class HeroAuthoring {
         store.lockHero(heroId);
         var target = contexts.authoringContext(contextId);
         if (store.revisions(heroId).stream().anyMatch(r -> r.rulesetId().equals(target.rulesetId())
-                && r.state() == RevisionState.DRAFT))
+                && r.state() == RevisionState.DRAFT)) {
             throw new ApiException(HeroErrorCode.HERO_DRAFT_EXISTS, "Finish or discard the existing draft first.");
+        }
 
         UUID draft = insertDraft(heroId, target.rulesetId(), null, Cause.DATA_BASELINE, target.patchVariantId());
         for (var section : HeroSection.values()) {
@@ -175,17 +182,21 @@ public class HeroAuthoring {
     public HeroRevisionView baselineContext(UUID heroId, UUID draftId, BaselineContext input) {
         store.lockHero(heroId);
         var draft = editable(heroId, draftId, input.expectedVersion());
-        if (draft.cause() != Cause.DATA_BASELINE || draft.sourceRevisionId() != null)
+        if (draft.cause() != Cause.DATA_BASELINE || draft.sourceRevisionId() != null) {
             throw HeroValidation
                     .invalid("Only an independent initial baseline draft can change its observation context.");
+        }
         if (store.revisions(heroId).stream().anyMatch(revision -> revision.rulesetId().equals(draft.rulesetId())
-                && revision.state() == RevisionState.PUBLISHED))
+                && revision.state() == RevisionState.PUBLISHED)) {
             throw HeroValidation.invalid("A published history exists. Create a separate historical baseline instead.");
+        }
         var target = contexts.authoringContext(input.contextId());
-        if (!target.rulesetId().equals(draft.rulesetId()))
+        if (!target.rulesetId().equals(draft.rulesetId())) {
             throw HeroValidation.invalid("The baseline observation context must keep the same ruleset.");
-        if (Objects.equals(draft.effectiveFromPatchVariantId(), target.patchVariantId()))
+        }
+        if (Objects.equals(draft.effectiveFromPatchVariantId(), target.patchVariantId())) {
             return draft;
+        }
 
         store.editableEntity(draftId).setEffectiveFromPatchVariantId(target.patchVariantId());
         bump(draftId);
@@ -204,18 +215,22 @@ public class HeroAuthoring {
         var draft = editable(heroId, draftId, expected);
         validation.validate(section, content);
 
-        if (content instanceof Skins skins)
+        if (content instanceof Skins skins) {
             content = aliases.skins(heroId, skins);
-        if (content instanceof Bindings bindings)
+        }
+        if (content instanceof Bindings bindings) {
             content = aliases.bindings(bindings);
+        }
         validation.validate(section, content);
 
         Object old = sections.content(section, draft.sections().get(section));
         content = HeroImages.retain(old, content);
-        if (old instanceof Skills previous && content instanceof Skills next)
+        if (old instanceof Skills previous && content instanceof Skills next) {
             content = HeroEvaluations.retain(previous, next);
-        if (old instanceof Profile previous && content instanceof Profile next)
+        }
+        if (old instanceof Profile previous && content instanceof Profile next) {
             content = HeroEvaluations.retain(previous, next);
+        }
 
         return write(heroId, draft, section, expected, old, content, note, "HERO_SECTION_UPDATED");
     }
@@ -229,8 +244,9 @@ public class HeroAuthoring {
         String note = command.changeNote();
         store.lockHero(heroId);
         var draft = editable(heroId, draftId, expected);
-        if (traits == null)
+        if (traits == null) {
             throw HeroValidation.invalid("Send the full list of traits, empty to clear them.");
+        }
 
         var old = (Skills) sections.content(HeroSection.SKILLS, draft.sections().get(HeroSection.SKILLS));
         var content = new Skills(old.skills(), old.sources(), HeroEvaluations.normalize(traits));
@@ -249,8 +265,9 @@ public class HeroAuthoring {
         HeroValidation.locale(locale);
 
         var old = (Profile) sections.content(HeroSection.PROFILE, draft.sections().get(HeroSection.PROFILE));
-        if (old.translations().stream().noneMatch(text -> text.locale().equals(locale)))
+        if (old.translations().stream().noneMatch(text -> text.locale().equals(locale))) {
             throw HeroValidation.invalid("Add a profile translation for this locale before writing notes.");
+        }
         var content = new Profile(old.translations().stream()
                 .map(text -> text.locale().equals(locale)
                         ? text.withNotes(HeroEvaluations.note(command.strengths()),
@@ -264,10 +281,12 @@ public class HeroAuthoring {
     private HeroRevisionView write(UUID heroId, HeroRevisionView draft, HeroSection section, long expected,
             Object old, Object content, String note, String action) {
         validation.validate(section, content);
-        if (forms.holdsForms(heroId) && HeroFormGameplay.present(content))
+        if (forms.holdsForms(heroId) && HeroFormGameplay.present(content)) {
             throw formGameplay(section);
-        if (Objects.equals(old, content))
+        }
+        if (Objects.equals(old, content)) {
             return draft;
+        }
 
         UUID newId = sections.create(heroId, section, content, actors.require(), clock.instant());
         bind(draft.id(), section, newId);
@@ -296,8 +315,9 @@ public class HeroAuthoring {
         entity.setPublishedAt(clock.instant());
         bump(draftId);
 
-        if (draft.cause() == Cause.DATA_BASELINE || draft.cause() == Cause.GAME_PATCH)
+        if (draft.cause() == Cause.DATA_BASELINE || draft.cause() == Cause.GAME_PATCH) {
             dataReviews.markDirty(draft.effectiveFromPatchVariantId());
+        }
 
         record("HERO_PUBLISHED", heroId, draftId, input.expectedVersion(), input.expectedVersion() + 1,
                 input.changeNote());
@@ -342,8 +362,9 @@ public class HeroAuthoring {
 
     private void validatePublication(HeroRevisionView draft) {
         checkContext(draft.rulesetId(), draft.cause(), draft.effectiveFromPatchVariantId(), true);
-        if (draft.sections().size() != HeroSection.values().length)
+        if (draft.sections().size() != HeroSection.values().length) {
             throw HeroValidation.invalid("All hero sections are required.");
+        }
         if (forms.holdsForms(draft.heroId())) {
             validateHolderPublication(draft);
             return;
@@ -355,23 +376,26 @@ public class HeroAuthoring {
                     : sections.content(section, draft.sections().get(section));
             if (value instanceof Stats stats && stats.values().isEmpty() && draft.effectiveFromPatchVariantId() != null
                     && HeroStatObservations.hasReadings(skills,
-                            contexts.patchCode(draft.effectiveFromPatchVariantId())))
+                            contexts.patchCode(draft.effectiveFromPatchVariantId()))) {
                 validation.validate(section, stats);
-            else
+            } else {
                 validation.validatePublication(section, value);
+            }
         }
 
         var bindings = (Bindings) sections.content(HeroSection.MEDIA_BINDINGS,
                 draft.sections().get(HeroSection.MEDIA_BINDINGS));
-        if (!bindings.bindings().keySet().equals(EnumSet.allOf(MediaRole.class)))
+        if (!bindings.bindings().keySet().equals(EnumSet.allOf(MediaRole.class))) {
             throw HeroValidation.invalid("HEAD, PORTRAIT and SPLASH bindings are required for publication.");
+        }
 
         var profile = (Profile) sections.content(HeroSection.PROFILE, draft.sections().get(HeroSection.PROFILE));
         var locales = profile.translations().stream().map(ProfileTranslation::locale)
                 .collect(java.util.stream.Collectors.toSet());
         if (skills.skills().stream().anyMatch(s -> !s.translations().stream().map(SkillTranslation::locale)
-                .collect(java.util.stream.Collectors.toSet()).containsAll(locales)))
+                .collect(java.util.stream.Collectors.toSet()).containsAll(locales))) {
             throw HeroValidation.invalid("Every skill needs translations for all profile locales.");
+        }
     }
 
     /**
@@ -381,18 +405,21 @@ public class HeroAuthoring {
     private void validateHolderPublication(HeroRevisionView draft) {
         for (var section : HeroSection.values()) {
             var value = sections.content(section, draft.sections().get(section));
-            if (HeroFormGameplay.present(value))
+            if (HeroFormGameplay.present(value)) {
                 throw formGameplay(section);
-            if (section == HeroSection.PROFILE)
+            }
+            if (section == HeroSection.PROFILE) {
                 validation.validate(section, value);
-            else if (section == HeroSection.SKINS || section == HeroSection.MEDIA_BINDINGS)
+            } else if (section == HeroSection.SKINS || section == HeroSection.MEDIA_BINDINGS) {
                 validation.validatePublication(section, value);
+            }
         }
 
         var bindings = (Bindings) sections.content(HeroSection.MEDIA_BINDINGS,
                 draft.sections().get(HeroSection.MEDIA_BINDINGS));
-        if (!bindings.bindings().keySet().equals(EnumSet.allOf(MediaRole.class)))
+        if (!bindings.bindings().keySet().equals(EnumSet.allOf(MediaRole.class))) {
             throw HeroValidation.invalid("HEAD, PORTRAIT and SPLASH bindings are required for publication.");
+        }
     }
 
     private static ApiException formGameplay(HeroSection section) {
@@ -451,25 +478,29 @@ public class HeroAuthoring {
 
     private HeroRevisionView editable(UUID hero, UUID id, long expected) {
         var r = store.revision(hero, id);
-        if (r.state() != RevisionState.DRAFT)
+        if (r.state() != RevisionState.DRAFT) {
             throw new ApiException(HeroErrorCode.HERO_REVISION_NOT_EDITABLE, "Only drafts can be changed.");
-        if (r.version() != expected)
+        }
+        if (r.version() != expected) {
             throw new ApiException(HeroErrorCode.HERO_REVISION_VERSION_CONFLICT, "The draft has changed.",
                     Map.of("currentVersion", r.version()));
+        }
         return r;
     }
 
     private void checkContext(UUID ruleset, Cause cause, UUID effective, boolean published) {
         contexts.requireRuleset(ruleset);
         if (effective == null) {
-            if (cause == Cause.GAME_PATCH || cause == Cause.DATA_BASELINE)
+            if (cause == Cause.GAME_PATCH || cause == Cause.DATA_BASELINE) {
                 throw HeroValidation.invalid("Game patch revisions require a patch variant.");
+            }
             return;
         }
         var variant = contexts.variant(effective);
-        if (!variant.rulesetId().equals(ruleset) || (published && !variant.published()))
+        if (!variant.rulesetId().equals(ruleset) || (published && !variant.published())) {
             throw HeroValidation
                     .invalid("The patch variant must belong to the ruleset and be published before hero publication.");
+        }
     }
 
     private void bind(UUID draft, HeroSection section, UUID id) {

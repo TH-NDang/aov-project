@@ -49,10 +49,12 @@ public class PublicReferenceCatalogLoader {
         var document = settings.readCatalogConfiguration();
         var config = document.settings();
         var entries = new LinkedHashMap<String, Entry>();
-        for (var e : config.entities())
-            if (e.kind().equals("term"))
+        for (var e : config.entities()) {
+            if (e.kind().equals("term")) {
                 entries.put("term:" + e.id(), e);
-        for (var provider : providers)
+            }
+        }
+        for (var provider : providers) {
             for (var candidate : provider.references(scope, locale)) {
                 String id = candidate.id().toString();
                 entries.put(candidate.kind() + ":" + id, new Entry(id, candidate.kind(),
@@ -61,11 +63,13 @@ public class PublicReferenceCatalogLoader {
                         candidate.icon(), candidate.kind().equals("hero") || candidate.kind().equals("term"), null,
                         destination(candidate.kind(), id, region, locale)));
             }
+        }
         for (var custom : config.entities()) {
             String key = custom.kind() + ":" + custom.id();
             var original = entries.get(key);
-            if (original == null || custom.kind().equals("term"))
+            if (original == null || custom.kind().equals("term")) {
                 continue;
+            }
             var copies = new LinkedHashMap<String, Translation>();
             if (original.kind().equals("hero")) {
                 HeroReferenceAliases.overlay(original.translations(), custom.translations())

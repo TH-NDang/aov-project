@@ -33,8 +33,9 @@ public class ItemPublicController implements ItemPublicApi {
             HttpServletRequest request) {
         QueryParameters.requireOnly(request,
                 Set.of("region", "locale", "page", "size", "seasonId", "patchVariantId", "includeUnscoped"));
-        if (seasonId == null && patchVariantId == null)
+        if (seasonId == null && patchVariantId == null) {
             return catalog.published(region, locale, page, size);
+        }
         return catalog.published(region, locale, page, size, seasonId, patchVariantId, includeUnscoped);
     }
 
@@ -45,8 +46,9 @@ public class ItemPublicController implements ItemPublicApi {
             @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request) {
         QueryParameters.requireOnly(request,
                 Set.of("region", "locale", "seasonId", "patchVariantId", "includeUnscoped"));
-        if (seasonId == null && patchVariantId == null)
+        if (seasonId == null && patchVariantId == null) {
             return catalog.publishedOne(id, region, locale);
+        }
         return catalog.publishedOne(id, region, locale, seasonId, patchVariantId, includeUnscoped);
     }
 }

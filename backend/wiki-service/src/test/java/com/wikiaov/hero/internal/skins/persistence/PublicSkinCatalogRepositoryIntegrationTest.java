@@ -43,9 +43,10 @@ class PublicSkinCatalogRepositoryIntegrationTest {
                 values(?,?,?,'test','test')
                 """, hero, code, Timestamp.from(now));
         for (var table : List.of("hero_profile_revision", "hero_overview_rating_revision", "hero_combat_stats_revision",
-                "hero_skill_set_revision", "hero_skin_set_revision", "hero_media_binding_revision"))
+                "hero_skill_set_revision", "hero_skin_set_revision", "hero_media_binding_revision")) {
             write("insert into hero." + table + "(id,hero_id,state,created_at,created_by_issuer,created_by_subject) "
                     + "values(?,?,'DRAFT',?,'test','test')", section, hero, Timestamp.from(now));
+        }
         revision(hero, section, ruleset, 1, "PUBLISHED", now.minusSeconds(60));
         revision(hero, section, ruleset, 2, "DRAFT", null);
         revision(hero, section, ruleset, 3, "PUBLISHED", now.plusSeconds(60));
@@ -72,8 +73,9 @@ class PublicSkinCatalogRepositoryIntegrationTest {
                 values(?,'vi-VN','Bậc thử',?)
                 """, badge, icon);
         for (var table : List.of("hero_profile_revision", "hero_overview_rating_revision", "hero_combat_stats_revision",
-                "hero_skill_set_revision", "hero_skin_set_revision", "hero_media_binding_revision"))
+                "hero_skill_set_revision", "hero_skin_set_revision", "hero_media_binding_revision")) {
             write("update hero." + table + " set state='PUBLISHED' where id=?", section);
+        }
 
         assertThat(repository.candidates(ruleset, now)).singleElement().satisfies(candidate -> {
             assertThat(candidate.getHeroCode()).isEqualTo(code);
@@ -107,8 +109,9 @@ class PublicSkinCatalogRepositoryIntegrationTest {
 
     private void write(String sql, Object... values) {
         var statement = jdbc.sql(sql);
-        for (int n = 0; n < values.length; n++)
+        for (int n = 0; n < values.length; n++) {
             statement = statement.param(n + 1, values[n]);
+        }
         statement.update();
     }
 }

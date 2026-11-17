@@ -34,18 +34,21 @@ public final class CatalogTranslations {
     }
 
     public static Optional<Violation> firstViolation(List<Translation> translations) {
-        if (translations.size() > MAX_TRANSLATIONS)
+        if (translations.size() > MAX_TRANSLATIONS) {
             return Optional.of(Violation.TOO_MANY_TRANSLATIONS);
+        }
         var locales = new HashSet<String>();
         for (var translation : translations) {
             if (translation.locale() == null || !LOCALE.matcher(translation.locale()).matches()
-                    || !locales.add(translation.locale()))
+                    || !locales.add(translation.locale())) {
                 return Optional.of(Violation.INVALID_OR_DUPLICATE_LOCALE);
+            }
             if (translation.name() == null || translation.name().isBlank()
                     || translation.name().length() > MAX_NAME_LENGTH
                     || exceeds(translation.summary(), MAX_SUMMARY_LENGTH)
-                    || exceeds(translation.description(), MAX_DESCRIPTION_LENGTH))
+                    || exceeds(translation.description(), MAX_DESCRIPTION_LENGTH)) {
                 return Optional.of(Violation.INVALID_LOCALIZED_CONTENT);
+            }
         }
         return Optional.empty();
     }

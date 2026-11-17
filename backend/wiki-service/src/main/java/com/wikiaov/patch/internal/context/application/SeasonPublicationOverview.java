@@ -48,10 +48,12 @@ class SeasonPublicationOverview {
     }
 
     private static String phase(SeasonSchedule schedule, Instant now) {
-        if (schedule.getStartsOn() != null || schedule.getEndsOn() != null || schedule.getEndsAt() == null)
+        if (schedule.getStartsOn() != null || schedule.getEndsOn() != null || schedule.getEndsAt() == null) {
             return "RECORDED";
-        if (now.isBefore(schedule.getStartsAt()))
+        }
+        if (now.isBefore(schedule.getStartsAt())) {
             return "UPCOMING";
+        }
         return now.isBefore(schedule.getEndsAt()) ? "CURRENT" : "ENDED";
     }
 }

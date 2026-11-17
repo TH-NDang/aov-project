@@ -74,8 +74,9 @@ public class MediaDeletionRecords {
         MediaDeletion deletion;
         if (existing.isPresent()) {
             deletion = existing.get();
-            if (deletion.complete())
+            if (deletion.complete()) {
                 return work(deletion);
+            }
             if (deletion.getExpectedVersion() != expectedVersion) {
                 throw MediaWritePolicy.versionConflict(asset.getLockVersion());
             }
@@ -119,8 +120,9 @@ public class MediaDeletionRecords {
     @Transactional
     public void originDeleted(UUID assetId) {
         var deletion = lock(assetId);
-        if (!deletion.complete())
+        if (!deletion.complete()) {
             deletion.originDeleted();
+        }
     }
 
     @Transactional
@@ -140,8 +142,9 @@ public class MediaDeletionRecords {
     @Transactional
     public void failed(UUID assetId, String code) {
         var deletion = lock(assetId);
-        if (!deletion.complete())
+        if (!deletion.complete()) {
             deletion.failed(code);
+        }
     }
 
     private MediaDeletion require(UUID assetId) {

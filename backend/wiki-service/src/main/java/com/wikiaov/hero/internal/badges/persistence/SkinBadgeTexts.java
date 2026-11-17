@@ -30,9 +30,9 @@ public class SkinBadgeTexts {
         translations.forEach(text -> incoming.put(text.getLocale(), text));
         for (var old : badges(List.of(id))) {
             var next = incoming.remove(old.getLocale());
-            if (next == null)
+            if (next == null) {
                 badges.delete(old);
-            else {
+            } else {
                 old.setDisplayName(next.getDisplayName());
                 old.setIconAssetId(next.getIconAssetId());
             }
@@ -46,10 +46,11 @@ public class SkinBadgeTexts {
         translations.forEach(text -> incoming.put(text.getLocale(), text));
         for (var old : groups(List.of(id))) {
             var next = incoming.remove(old.getLocale());
-            if (next == null)
+            if (next == null) {
                 groups.delete(old);
-            else
+            } else {
                 old.setDisplayName(next.getDisplayName());
+            }
         }
         groups.saveAll(incoming.values());
         groups.flush();

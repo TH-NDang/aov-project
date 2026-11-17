@@ -14,13 +14,15 @@ public final class HeroReferenceAliases {
 
     public static List<String> merge(List<String> canonical, List<String> supplemental) {
         var unique = new LinkedHashMap<String, String>();
-        for (var source : List.of(canonical, supplemental))
+        for (var source : List.of(canonical, supplemental)) {
             for (var alias : source) {
                 var value = alias.strip();
-                if (!value.isEmpty())
+                if (!value.isEmpty()) {
                     unique.putIfAbsent(Normalizer.normalize(value, Normalizer.Form.NFC).toLowerCase(Locale.ROOT),
                             value);
+                }
             }
+        }
         return List.copyOf(unique.values());
     }
 

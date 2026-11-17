@@ -17,9 +17,11 @@ public class BuildReferences {
     private final Map<BuildReferenceKind, BuildReferenceProvider> providers = new EnumMap<>(BuildReferenceKind.class);
 
     public BuildReferences(List<BuildReferenceProvider> providers) {
-        for (var provider : providers)
-            if (this.providers.put(provider.kind(), provider) != null)
+        for (var provider : providers) {
+            if (this.providers.put(provider.kind(), provider) != null) {
                 throw new IllegalStateException("Two modules answer build references of kind " + provider.kind());
+            }
+        }
     }
 
     public Map<String, BuildReference> byCodes(BuildReferenceKind kind, Collection<String> codes) {
@@ -32,8 +34,9 @@ public class BuildReferences {
 
     private BuildReferenceProvider provider(BuildReferenceKind kind) {
         var provider = providers.get(kind);
-        if (provider == null)
+        if (provider == null) {
             throw new IllegalStateException("No module answers build references of kind " + kind);
+        }
         return provider;
     }
 }

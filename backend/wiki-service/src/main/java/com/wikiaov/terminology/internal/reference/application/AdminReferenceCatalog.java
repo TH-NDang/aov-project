@@ -28,8 +28,9 @@ public class AdminReferenceCatalog {
         var selected = rulesets.stream().filter(r -> r.id().equals(requestedRulesetId)).findFirst()
                 .or(() -> rulesets.stream().filter(r -> r.code().equals("aov-standard")).findFirst())
                 .or(() -> rulesets.stream().findFirst()).map(RulesetReference::id).orElse(null);
-        if (selected == null)
+        if (selected == null) {
             return new AdminReferenceCatalogView(null, List.of());
+        }
         return cache.read(Area.ADMIN_REFERENCES, selected.toString(), AdminReferenceCatalogView.class,
                 () -> loader.read(selected));
     }

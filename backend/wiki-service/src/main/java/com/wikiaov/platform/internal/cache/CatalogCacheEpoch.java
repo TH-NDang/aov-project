@@ -23,13 +23,16 @@ class CatalogCacheEpoch implements CatalogCacheChanges {
 
     @Override
     public void changed(String aggregateType) {
-        if (!CatalogAggregates.CACHED.contains(aggregateType))
+        if (!CatalogAggregates.CACHED.contains(aggregateType)) {
             return;
+        }
         if (!TransactionSynchronizationManager.isSynchronizationActive()
-                || !TransactionSynchronizationManager.isActualTransactionActive())
+                || !TransactionSynchronizationManager.isActualTransactionActive()) {
             throw new IllegalStateException("Catalog changes require an active transaction.");
-        if (TransactionSynchronizationManager.hasResource(RESOURCE))
+        }
+        if (TransactionSynchronizationManager.hasResource(RESOURCE)) {
             return;
+        }
         registerAdvance();
     }
 
@@ -58,15 +61,17 @@ class CatalogCacheEpoch implements CatalogCacheChanges {
 
         @Override
         public void beforeCommit(boolean readOnly) {
-            if (readOnly)
+            if (readOnly) {
                 throw new IllegalStateException("Catalog changes cannot commit in a read-only transaction.");
+            }
             epochs.advance();
         }
 
         @Override
         public void afterCompletion(int status) {
-            if (TransactionSynchronizationManager.getResource(RESOURCE) == marker)
+            if (TransactionSynchronizationManager.getResource(RESOURCE) == marker) {
                 TransactionSynchronizationManager.unbindResource(RESOURCE);
+            }
         }
     }
 }

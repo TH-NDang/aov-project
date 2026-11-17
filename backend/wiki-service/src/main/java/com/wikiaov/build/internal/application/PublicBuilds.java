@@ -52,23 +52,28 @@ public class PublicBuilds {
 
     @Transactional(readOnly = true)
     public BuildViews.HeroBuilds heroBuilds(String heroCode, String region) {
-        if (heroCode == null || heroCode.isBlank())
+        if (heroCode == null || heroCode.isBlank()) {
             throw new ApiException(BuildErrorCode.BUILD_INVALID, "A hero code is required.");
-        if (region == null || !REGION.matcher(region).matches())
+        }
+        if (region == null || !REGION.matcher(region).matches()) {
             throw new ApiException(BuildErrorCode.BUILD_INVALID, "Unknown market.");
+        }
         var hero = references.byCodes(BuildReferenceKind.HERO, List.of(heroCode)).get(heroCode);
-        if (hero == null)
+        if (hero == null) {
             throw new ApiException(BuildErrorCode.BUILD_HERO_NOT_FOUND, "Hero " + heroCode + " was not found.");
+        }
 
         Map<String, CaptureRow> newest = new HashMap<>();
-        for (var capture : captures.confirmedWithHero(region, hero.id()))
+        for (var capture : captures.confirmedWithHero(region, hero.id())) {
             newest.putIfAbsent(capture.getSourceKind(), capture);
+        }
         var chosen = newest.values().stream()
                 .sorted(Comparator.comparingInt(capture -> SOURCE_ORDER.indexOf(capture.getSourceKind()))).toList();
         Map<UUID, List<BuildRow>> rows = new HashMap<>();
-        for (var capture : chosen)
+        for (var capture : chosen) {
             rows.put(capture.getId(), builds
                     .findByCaptureIdAndHeroIdAndNeedsReviewFalseOrderByListPositionAsc(capture.getId(), hero.id()));
+        }
 
         var loaded = readModel.load(rows.values().stream().flatMap(List::stream).toList());
         var pageUse = usage(rows.values().stream().flatMap(List::stream).map(BuildRow::getArcanaPageId)
@@ -95,8 +100,9 @@ public class PublicBuilds {
     private static List<BuildViews.PublicBuild> merge(List<BuildRow> rows, BuildReadModel.Loaded loaded,
             Map<UUID, BuildViews.Usage> pageUse) {
         Map<String, List<BuildRow>> groups = new LinkedHashMap<>();
-        for (var row : rows)
+        for (var row : rows) {
             groups.computeIfAbsent(row.getContentKey(), key -> new ArrayList<>()).add(row);
+        }
         return groups.values().stream().map(group -> {
             var first = group.getFirst();
             return new BuildViews.PublicBuild(first.getContentKey(),

@@ -87,8 +87,9 @@ class SmtpAccountMail implements AccountMail {
 
     private void send(String to, Message message) {
         JavaMailSender mail = sender.getIfAvailable();
-        if (!configured(mail))
+        if (!configured(mail)) {
             throw unavailable(null);
+        }
         try {
             var mime = mail.createMimeMessage();
             var helper = new MimeMessageHelper(mime, false, StandardCharsets.UTF_8.name());

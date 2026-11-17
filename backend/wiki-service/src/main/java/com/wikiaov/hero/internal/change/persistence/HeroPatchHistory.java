@@ -156,8 +156,9 @@ public class HeroPatchHistory {
     }
 
     private List<Entry> entries(List<Header> headers, String locale) {
-        if (headers.isEmpty())
+        if (headers.isEmpty()) {
             return List.of();
+        }
 
         var ids = headers.stream().map(Header::getId).toList();
         var assessmentById = assessments.findAllById(ids).stream()

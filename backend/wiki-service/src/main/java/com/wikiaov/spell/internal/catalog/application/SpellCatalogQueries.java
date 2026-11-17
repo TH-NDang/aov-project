@@ -85,8 +85,9 @@ class SpellCatalogQueries {
 
     PageSlice<SpellView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean includeUnscoped, boolean draftsOnly) {
-        if (rulesetId != null)
+        if (rulesetId != null) {
             contexts.requireRuleset(rulesetId);
+        }
         String needle = q.strip().toLowerCase(Locale.ROOT);
         var candidates = activeSnapshots(rulesetId, draftsOnly);
         var scoped = snapshotsInScope(candidates, rulesetId, seasonId, patchVariantId, includeUnchanged,
@@ -112,11 +113,13 @@ class SpellCatalogQueries {
     private List<CatalogSnapshots.Snapshot<SpellRevision>> snapshotsInScope(
             List<CatalogSnapshots.Snapshot<SpellRevision>> candidates, UUID rulesetId,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean includeUnscoped) {
-        if (seasonId == null && patchVariantId == null)
+        if (seasonId == null && patchVariantId == null) {
             return candidates;
+        }
         var scope = CatalogPatchScope.resolve(contexts, rulesetId, seasonId, patchVariantId, includeUnchanged);
-        if (includeUnchanged)
+        if (includeUnchanged) {
             return carriedForwardSnapshots(candidates, scope, includeUnscoped);
+        }
         return changedSnapshots(candidates, rulesetId, scope.selectedPatchIds());
     }
 
@@ -175,8 +178,9 @@ class SpellCatalogQueries {
 
     SpellView latest(UUID id, UUID rulesetId) {
         var found = latest(identity(id), rulesetId);
-        if (found == null)
+        if (found == null) {
             throw new ApiException(SpellErrorCode.SPELL_NOT_FOUND, "No snapshot is available.");
+        }
         return found;
     }
 
@@ -210,8 +214,9 @@ class SpellCatalogQueries {
             var assets = revision.getState() == RevisionState.DISCARDED
                     ? List.<UUID>of()
                     : contentRules.assets(revision.getGameplay());
-            if (assets.isEmpty())
+            if (assets.isEmpty()) {
                 continue;
+            }
             var usage = usage(revision, active);
             assets.forEach(asset -> usages.computeIfAbsent(asset, ignored -> new ArrayList<>()).add(usage));
         }
@@ -233,8 +238,9 @@ class SpellCatalogQueries {
 
     /** The Vietnamese name of each revision, or another language's when it has none. */
     private Map<UUID, String> usageNames(List<SpellRevision> found) {
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return Map.of();
+        }
 
         Map<UUID, String> names = new HashMap<>();
         translations.findByRevisionIdIn(found.stream().map(SpellRevision::getId).toList()).stream()
@@ -285,8 +291,9 @@ class SpellCatalogQueries {
                         .anyMatch(k -> k == CatalogChanges.Kind.REMOVED || k == CatalogChanges.Kind.ADDED))
                 .filter(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal() <= context.rulesetOrdinal())
                 .max(Comparator.comparingLong(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal()));
-        if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED))
+        if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED)) {
             return Optional.empty();
+        }
         return revisions.findByOwnerIdOrderByRevisionNoDesc(id).stream()
                 .filter(revision -> revision.getState() == RevisionState.PUBLISHED
                         && (revision.getEffectiveFromPatchVariantId() != null
@@ -337,8 +344,9 @@ class SpellCatalogQueries {
         var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
                 includeUnscoped);
         var context = scope.gameplay();
-        if (!scope.allowUnscoped())
+        if (!scope.allowUnscoped()) {
             return new PageSlice<>(List.of(), page, size, 0);
+        }
         var rows = identities.findAll(Sort.by("code")).stream()
                 .map(owner -> revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId()).stream()
                         .filter(revision -> revision.getState() == RevisionState.PUBLISHED

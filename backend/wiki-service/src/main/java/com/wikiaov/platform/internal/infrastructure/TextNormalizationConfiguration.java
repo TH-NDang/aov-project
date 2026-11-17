@@ -26,8 +26,9 @@ class TextNormalizationConfiguration {
     }
 
     static String nfc(String text) {
-        if (text == null || Normalizer.isNormalized(text, Normalizer.Form.NFC))
+        if (text == null || Normalizer.isNormalized(text, Normalizer.Form.NFC)) {
             return text;
+        }
         return Normalizer.normalize(text, Normalizer.Form.NFC);
     }
 

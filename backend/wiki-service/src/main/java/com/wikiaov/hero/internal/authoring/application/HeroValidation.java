@@ -54,8 +54,9 @@ public class HeroValidation {
     }
 
     public void validate(HeroSection section, Object value) {
-        if (value == null || !validator.validate(value).isEmpty())
+        if (value == null || !validator.validate(value).isEmpty()) {
             throw invalid("The hero section is incomplete or invalid.");
+        }
 
         switch (section) {
             case PROFILE -> validateProfile((Profile) value);
@@ -78,32 +79,39 @@ public class HeroValidation {
         var range = scales.findById(ratings.scaleCode()).orElseThrow(() -> invalid("Unknown rating scale."));
 
         for (var rating : List.of(ratings.survivability(), ratings.attackDamage(), ratings.skillEffects(),
-                ratings.difficulty()))
-            if (rating.compareTo(range.getMinValue()) < 0 || rating.compareTo(range.getMaxValue()) > 0)
+                ratings.difficulty())) {
+            if (rating.compareTo(range.getMinValue()) < 0 || rating.compareTo(range.getMaxValue()) > 0) {
                 throw invalid("Rating is outside the scale.");
+            }
+        }
 
-        if (ratings.derived() && ratings.sources().isEmpty())
+        if (ratings.derived() && ratings.sources().isEmpty()) {
             throw invalid("Derived ratings require a source describing the method.");
+        }
     }
 
     private void validateStats(Stats stats) {
         unique(stats.values().stream().map(Stat::statKey).toList());
 
-        if (stats.values().stream().anyMatch(value -> value.baseValue() == null && value.growthPerLevel() == null))
+        if (stats.values().stream().anyMatch(value -> value.baseValue() == null && value.growthPerLevel() == null)) {
             throw invalid("A stat must have a numeric value.");
+        }
 
         stats.values().stream().filter(value -> value.percentValue() != null).forEach(HeroValidation::validatePercent);
     }
 
     private static void validatePercent(Stat stat) {
-        if (!PERCENT_STATS.contains(stat.statKey()))
+        if (!PERCENT_STATS.contains(stat.statKey())) {
             throw invalid("The game shows no percent beside this stat.");
+        }
 
-        if (stat.baseValue() == null)
+        if (stat.baseValue() == null) {
             throw invalid("A stat percent needs the number shown before it.");
+        }
 
-        if (stat.percentValue().signum() < 0 || stat.percentValue().compareTo(ONE_HUNDRED) > 0)
+        if (stat.percentValue().signum() < 0 || stat.percentValue().compareTo(ONE_HUNDRED) > 0) {
             throw invalid("A stat percent must be between 0 and 100.");
+        }
     }
 
     private void validateSkills(Skills skills) {
@@ -124,16 +132,18 @@ public class HeroValidation {
 
     /** A trait appears once and names only skills of the same set; its detail lines use canonical locales. */
     private static void traits(Skills skills) {
-        if (skills.traits() == null)
+        if (skills.traits() == null) {
             return;
+        }
 
         unique(skills.traits().stream().map(Trait::code).toList());
         var keys = new HashSet<String>();
         skills.skills().forEach(skill -> keys.add(skill.skillKey()));
         for (var trait : skills.traits()) {
             unique(trait.skillKeys().stream().map(String::strip).toList());
-            if (!keys.containsAll(trait.skillKeys().stream().map(String::strip).toList()))
+            if (!keys.containsAll(trait.skillKeys().stream().map(String::strip).toList())) {
                 throw invalid("A trait can only name skills of the same skill set.");
+            }
             unique(trait.translations().stream().map(TraitTranslation::locale).toList());
             trait.translations().forEach(text -> locale(text.locale()));
         }
@@ -141,24 +151,29 @@ public class HeroValidation {
 
     /** A summary reads as one short paragraph wherever it is shown, so it holds no line break. */
     private static void summary(SkillTranslation text) {
-        if (text.summary() != null && text.summary().lines().count() > 1)
+        if (text.summary() != null && text.summary().lines().count() > 1) {
             throw invalid("A skill summary is a single paragraph without line breaks.");
+        }
     }
 
     /** Each state names a different look of the same skill, so labels and pictures never repeat, the main icon included. */
     private void stateIcons(Skill skill) {
         var labels = new HashSet<String>();
         var assets = new HashSet<UUID>();
-        if (skill.iconAssetId() != null)
+        if (skill.iconAssetId() != null) {
             assets.add(skill.iconAssetId());
+        }
 
         for (var icon : skill.stateIcons()) {
-            if (icon.label() == null || icon.label().isBlank())
+            if (icon.label() == null || icon.label().isBlank()) {
                 throw invalid("A skill state icon needs a state name.");
-            if (!labels.add(icon.label().strip().toLowerCase(Locale.ROOT)))
+            }
+            if (!labels.add(icon.label().strip().toLowerCase(Locale.ROOT))) {
                 throw invalid("A skill names each state once.");
-            if (!assets.add(icon.assetId()))
+            }
+            if (!assets.add(icon.assetId())) {
                 throw invalid("A skill state icon must differ from the skill's other icons.");
+            }
 
             asset(icon.assetId(), MediaSemanticType.HERO_SKILL_ICON);
         }
@@ -195,9 +210,11 @@ public class HeroValidation {
             default -> List.of();
         };
 
-        for (var source : sources)
-            if (source.sourceUrl() != null && !source.sourceUrl().matches("https?://[^\\s]+"))
+        for (var source : sources) {
+            if (source.sourceUrl() != null && !source.sourceUrl().matches("https?://[^\\s]+")) {
                 throw invalid("Source URL must use HTTP or HTTPS.");
+            }
+        }
     }
 
     private void images(Map<MediaRole, List<ImageOption>> images, boolean skin) {
@@ -216,34 +233,39 @@ public class HeroValidation {
                 .map(v -> new com.wikiaov.platform.ApiFieldError(section.name() + "." + v.getPropertyPath(),
                         "HERO_PUBLICATION_REQUIRED", "This field is required for publication."))
                 .sorted(Comparator.comparing(com.wikiaov.platform.ApiFieldError::path)).toList();
-        if (!errors.isEmpty())
+        if (!errors.isEmpty()) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT,
                     "Complete the required fields before publishing.", errors);
+        }
     }
 
     private void asset(UUID id, MediaSemanticType type) {
-        if (id == null)
+        if (id == null) {
             return;
+        }
 
         var ref = media.find(id).orElseThrow(
                 () -> new ApiException(HeroErrorCode.HERO_INVALID_MEDIA, "The media asset does not exist."));
-        if (!ref.usable() || ref.semanticType() != type)
+        if (!ref.usable() || ref.semanticType() != type) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_MEDIA, "The asset is not usable for this semantic role.");
+        }
     }
 
     public static void locale(String value) {
         try {
             var locale = new Locale.Builder().setLanguageTag(value).build();
-            if (locale.getLanguage().isEmpty() || !locale.toLanguageTag().equals(value))
+            if (locale.getLanguage().isEmpty() || !locale.toLanguageTag().equals(value)) {
                 throw invalid("Use a canonical BCP 47 locale.");
+            }
         } catch (IllformedLocaleException e) {
             throw invalid("Use a canonical BCP 47 locale.");
         }
     }
 
     private static void unique(List<?> keys) {
-        if (new HashSet<>(keys).size() != keys.size())
+        if (new HashSet<>(keys).size() != keys.size()) {
             throw invalid("Section keys, locales and display orders must be unique.");
+        }
     }
 
     public static ApiException invalid(String detail) {
@@ -257,7 +279,8 @@ public class HeroValidation {
 
     /** Page and size bounds live on the {@code *Api}; this guards the offset of a very late page only. */
     public static void requireReachableOffset(int page, int size) {
-        if ((long) page * size > Integer.MAX_VALUE)
+        if ((long) page * size > Integer.MAX_VALUE) {
             throw badQuery("The page is beyond the last possible entry.");
+        }
     }
 }

@@ -50,15 +50,17 @@ public class HeroChangeClassificationRepository {
     }
 
     public List<Kind> kinds(Collection<UUID> ids) {
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return List.of();
+        }
 
         return kinds.kinds(ids);
     }
 
     public List<HeroChangeClassification> findByChangeSetIdIn(Collection<UUID> ids) {
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return List.of();
+        }
 
         var facts = new ArrayList<HeroChangeClassification>();
         facts.addAll(stats.findByChangeSetIdInOrderBySortOrderAscIdAsc(ids));

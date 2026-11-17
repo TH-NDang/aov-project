@@ -44,8 +44,9 @@ public class AdminReferenceCatalogLoader {
 
     private static AdminReferenceProvider.Candidate overlay(AdminReferenceProvider.Candidate candidate,
             Map<String, Map<String, List<String>>> supplemental) {
-        if (!candidate.kind().equals("hero"))
+        if (!candidate.kind().equals("hero")) {
             return candidate;
+        }
         var localized = supplemental.getOrDefault(candidate.id().toString(), Map.of());
         var translations = candidate.translations().stream()
                 .map(text -> new AdminReferenceProvider.Translation(text.locale(), text.name(),

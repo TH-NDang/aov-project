@@ -52,8 +52,9 @@ public class HeroMediaQueries {
     public PageSlice<HeroMediaGroup> list(UUID rulesetId, MediaRole role, String locale, String q, int page, int size) {
         bounds(page, size);
         HeroValidation.locale(locale);
-        if (q.trim().length() > 100)
+        if (q.trim().length() > 100) {
             throw HeroValidation.invalid("Search must contain at most 100 characters.");
+        }
         var selected = repository.page(rulesetId, ordinals(rulesetId), q.trim().toLowerCase(Locale.ROOT), page, size);
         var content = content(selected.items(), locale);
         var views = store.revisions(selected.items().stream().map(HeroRevision::getHeroId).distinct().toList()).stream()
@@ -129,19 +130,21 @@ public class HeroMediaQueries {
             var hero = content.heroes().get(revision.getHeroId());
             var text = profile(content, revision);
             for (var skin : content.skins().getOrDefault(revision.getSkinsRevisionId(), List.of())) {
-                if (Objects.equals(skin.getRarityCode(), code))
+                if (Objects.equals(skin.getRarityCode(), code)) {
                     rows.add(new SkinBadgeRelation(hero.getId(), hero.getCode(),
                             text == null ? hero.getCode() : text.getName(),
                             skin.getSkinKey(), skinName(content, revision, skin.getSkinKey()), revision.getId(),
                             skin.getArtAssetId()));
+                }
             }
         }
         return PageSlice.of(rows, page, size);
     }
 
     private Map<UUID, Long> ordinals(UUID rulesetId) {
-        if (rulesetId != null)
+        if (rulesetId != null) {
             contexts.requireRuleset(rulesetId);
+        }
         return contexts.catalogVariants(null).stream()
                 .filter(variant -> rulesetId == null || variant.rulesetId().equals(rulesetId))
                 .collect(Collectors.toMap(PatchVariantReference::id, PatchVariantReference::rulesetOrdinal));

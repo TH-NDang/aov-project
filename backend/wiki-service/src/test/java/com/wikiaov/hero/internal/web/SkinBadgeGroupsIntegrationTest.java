@@ -247,8 +247,9 @@ class SkinBadgeGroupsIntegrationTest {
             throws Exception {
         request.with(jwt().jwt(token -> token.issuer("https://test.example/issuer").subject("editor")).authorities(
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         String response = mvc.perform(request).andExpect(status().is(expectedStatus)).andReturn().getResponse()
                 .getContentAsString();
         return response.isEmpty() ? Map.of() : json.readValue(response, Map.class);

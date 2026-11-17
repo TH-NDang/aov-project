@@ -152,10 +152,12 @@ class FlowbornFormsMigrationIntegrationTest {
                 + sections.get("hero_media_binding_revision") + "','HEAD','" + head + "'),('"
                 + sections.get("hero_media_binding_revision") + "','PORTRAIT','" + portrait + "'),('"
                 + sections.get("hero_media_binding_revision") + "','SPLASH','" + splash + "')");
-        if (state.equals("PUBLISHED"))
-            for (var entry : sections.entrySet())
+        if (state.equals("PUBLISHED")) {
+            for (var entry : sections.entrySet()) {
                 c.createStatement().execute(
                         "UPDATE hero." + entry.getKey() + " SET state='PUBLISHED' WHERE id='" + entry.getValue() + "'");
+            }
+        }
 
         boolean published = state.equals("PUBLISHED");
         c.createStatement().execute("INSERT INTO hero.hero_revision(id,hero_id,ruleset_id,revision_no,state,version,"
@@ -178,8 +180,9 @@ class FlowbornFormsMigrationIntegrationTest {
             int columns = rows.getMetaData().getColumnCount();
             while (rows.next()) {
                 List<Object> row = new ArrayList<>();
-                for (int i = 1; i <= columns; i++)
+                for (int i = 1; i <= columns; i++) {
                     row.add(rows.getObject(i));
+                }
                 result.add(row);
             }
         }

@@ -49,8 +49,9 @@ class CloudflareMediaCache implements MediaCachePurge {
         URI base = URI.create(publicBase);
         boolean local = !base.isAbsolute() && publicBase.startsWith("/") && !publicBase.startsWith("//")
                 || base.getHost() != null && LOOPBACK.contains(base.getHost());
-        if (!properties.cloudflareEnabled() && local)
+        if (!properties.cloudflareEnabled() && local) {
             return;
+        }
         if (!properties.cloudflareEnabled() || !"https".equals(base.getScheme()) || base.getHost() == null
                 || base.getRawUserInfo() != null || base.getRawQuery() != null || base.getRawFragment() != null
                 || !properties.cloudflareZoneId().matches("[0-9a-fA-F]{32}")
@@ -63,8 +64,9 @@ class CloudflareMediaCache implements MediaCachePurge {
     @Override
     public void purge(List<String> publicUrls) {
         requireConfigured();
-        if (!properties.cloudflareEnabled() || publicUrls.isEmpty())
+        if (!properties.cloudflareEnabled() || publicUrls.isEmpty()) {
             return;
+        }
         var urls = publicUrls.stream().distinct().toList();
         for (String url : urls) {
             if (!url.startsWith(publicBase + "/") || URI.create(url).getRawQuery() != null
@@ -83,8 +85,9 @@ class CloudflareMediaCache implements MediaCachePurge {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Map.of("files", urls.subList(start, Math.min(start + 30, urls.size()))))
                         .retrieve().body(PurgeResponse.class);
-                if (response == null || !Boolean.TRUE.equals(response.success()))
+                if (response == null || !Boolean.TRUE.equals(response.success())) {
                     throw failed();
+                }
             }
         } catch (RestClientException exception) {
             throw failed();

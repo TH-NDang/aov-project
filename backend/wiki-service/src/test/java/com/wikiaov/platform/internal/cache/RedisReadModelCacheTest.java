@@ -217,13 +217,15 @@ class RedisReadModelCacheTest {
                     new Class<?>[] {ValueOperations.class}, (proxy, method, args) -> {
                         if (method.getName().equals("get")) {
                             reads++;
-                            if (failReads)
+                            if (failReads) {
                                 throw new RedisConnectionFailureException("Redis is offline");
+                            }
                             return values.get(args[0]);
                         }
                         if (method.getName().equals("set")) {
-                            if (failWrites)
+                            if (failWrites) {
                                 throw new RedisConnectionFailureException("Redis is offline");
+                            }
                             writes.add(new Write((String) args[0], (String) args[1], (Duration) args[2]));
                             values.put((String) args[0], (String) args[1]);
                             return null;

@@ -22,10 +22,11 @@ class ReferenceSettingsTest {
         assertThatThrownBy(
                 () -> new ReferenceSettings(1, true, "vi-VN", List.of(term(null, List.of(text, text)))).validate())
                 .isInstanceOf(IllegalArgumentException.class);
-        for (String url : List.of("javascript:alert(1)", "//evil.test/a.png", "/%252fexample.test/x", "/a%0Ab"))
+        for (String url : List.of("javascript:alert(1)", "//evil.test/a.png", "/%252fexample.test/x", "/a%0Ab")) {
             assertThatThrownBy(
                     () -> new ReferenceSettings(1, true, "vi-VN", List.of(term(url, List.of(text)))).validate())
                     .isInstanceOf(IllegalArgumentException.class);
+        }
         new ReferenceSettings(1, true, "vi-VN", List.of(term("https://example.test/icon.png", List.of(text))))
                 .validate();
     }

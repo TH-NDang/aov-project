@@ -42,38 +42,44 @@ public class RevisionWorkflow {
     }
 
     public <R extends RevisionRecord> R requireEditableDraft(R revision, long expectedVersion) {
-        if (revision.getState() != RevisionState.DRAFT)
+        if (revision.getState() != RevisionState.DRAFT) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_CONFLICT, "Only drafts can be changed.");
-        if (revision.getVersion() != expectedVersion)
+        }
+        if (revision.getVersion() != expectedVersion) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_CONFLICT, "The draft has changed.",
                     Map.of("currentVersion", revision.getVersion()));
+        }
         return revision;
     }
 
     public void requireNoOpenDraft(boolean hasDraft, UUID existingDraftId) {
-        if (hasDraft)
+        if (hasDraft) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_CONFLICT, "A draft is already open.",
                     Map.of("existingDraftId", existingDraftId));
+        }
     }
 
     public void rejectInvalid(List<ApiFieldError> errors) {
-        if (!errors.isEmpty())
+        if (!errors.isEmpty()) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_INVALID_CONTENT, "The content is not valid.",
                     errors);
+        }
     }
 
     public void rejectIncomplete(List<String> missing) {
-        if (!missing.isEmpty())
+        if (!missing.isEmpty()) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_INVALID_CONTENT,
                     "Complete the required fields before publication.", Map.of("missingFields", missing));
+        }
     }
 
     /** Applies an edit to a draft: bumps the version and stamps the editor. */
     public void advance(RevisionRecord revision, String changeNote) {
         var actor = actor();
         revision.setVersion(revision.getVersion() + 1);
-        if (changeNote != null)
+        if (changeNote != null) {
             revision.setChangeNote(changeNote);
+        }
         revision.touch(actor.issuer(), actor.subject(), now());
     }
 

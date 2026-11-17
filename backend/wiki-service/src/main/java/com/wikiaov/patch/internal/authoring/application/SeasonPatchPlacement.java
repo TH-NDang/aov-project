@@ -43,9 +43,10 @@ class SeasonPatchPlacement {
 
     private UUID requireAnchorInSameSeason(SeasonPatch input) {
         var anchor = variants.lockById(input.beforeVariantId()).orElseThrow(SeasonPatchPlacement::notFound);
-        if (!input.rulesetId().equals(anchor.getRulesetId()) || !input.seasonId().equals(anchor.getSeasonId()))
+        if (!input.rulesetId().equals(anchor.getRulesetId()) || !input.seasonId().equals(anchor.getSeasonId())) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID,
                     "Choose an insertion anchor in the same season and ruleset.");
+        }
         return input.beforeVariantId();
     }
 

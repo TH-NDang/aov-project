@@ -74,8 +74,9 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
     }
 
     private void save(UUID heroId, UUID revisionId, Skill skill, Instant at) {
-        if (identities.findById(new SkillIdentityRow.Key(heroId, skill.skillKey())).isEmpty())
+        if (identities.findById(new SkillIdentityRow.Key(heroId, skill.skillKey())).isEmpty()) {
             identities.save(new SkillIdentityRow(heroId, skill.skillKey(), at));
+        }
         identities.flush();
         snapshots.saveAndFlush(new SkillSnapshotRow(revisionId, heroId, skill.skillKey(), skill.kind().name(),
                 skill.formKey(), skill.displayOrder(), skill.iconAssetId()));
@@ -94,8 +95,9 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
 
     /** Traits refer to skills of the same revision, so they are written after every skill row exists. */
     private void saveTraits(UUID revisionId, List<Trait> list) {
-        if (list == null || list.isEmpty())
+        if (list == null || list.isEmpty()) {
             return;
+        }
 
         for (var trait : list) {
             var code = trait.code();
@@ -110,13 +112,15 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
 
     /** The trait codes of many skill sets in three queries, for lists that cover every hero. */
     public Map<UUID, List<Trait>> traits(Collection<UUID> ids) {
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return Map.of();
+        }
 
         var codes = traits.findBySkillSetRevisionIdIn(ids).stream()
                 .collect(Collectors.groupingBy(SkillTraitRow::getSkillSetRevisionId));
-        if (codes.isEmpty())
+        if (codes.isEmpty()) {
             return Map.of();
+        }
         var keys = traitSkills.findBySkillSetRevisionIdIn(ids).stream()
                 .collect(Collectors.groupingBy(row -> row.getSkillSetRevisionId() + "/" + row.getTraitCode()));
         var texts = traitTexts.findBySkillSetRevisionIdIn(ids).stream()

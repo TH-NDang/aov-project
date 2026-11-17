@@ -34,21 +34,25 @@ public class PublicEnchantmentBranchCatalog {
     }
 
     public List<PublicEnchantmentBranchView> read(String locale) {
-        if (locale == null || !locale.matches(CatalogLocales.PATTERN))
+        if (locale == null || !locale.matches(CatalogLocales.PATTERN)) {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid metadata locale.");
+        }
 
         var rows = records.findAllByOrderByDisplayOrderAscCodeAsc();
-        if (rows.isEmpty())
+        if (rows.isEmpty()) {
             return List.of();
+        }
         var codes = rows.stream().map(row -> row.getCode()).toList();
         var copies = translations.findByOwnerCodeInOrderByLocale(codes).stream()
                 .collect(Collectors.groupingBy(EnchantmentBranchTranslation::getOwnerCode));
         var ids = new HashSet<UUID>();
         rows.forEach(row -> {
-            if (row.getIconAssetId() != null)
+            if (row.getIconAssetId() != null) {
                 ids.add(row.getIconAssetId());
-            if (row.getBackgroundAssetId() != null)
+            }
+            if (row.getBackgroundAssetId() != null) {
                 ids.add(row.getBackgroundAssetId());
+            }
         });
         var assets = ids.isEmpty() ? Map.<UUID, MediaAssetReference>of() : media.findAll(ids);
 

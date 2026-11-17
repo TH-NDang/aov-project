@@ -48,9 +48,10 @@ public class CatalogContexts {
     }
 
     public CatalogContextView read(String region, String locale) {
-        if (!Set.of(CatalogLocales.DEFAULT, "en-US").contains(locale))
+        if (!Set.of(CatalogLocales.DEFAULT, "en-US").contains(locale)) {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                     "Choose a supported catalog locale: vi-VN or en-US.");
+        }
 
         var now = clock.instant();
         var context = contexts.resolve(region, now);
@@ -65,11 +66,13 @@ public class CatalogContexts {
         Map<UUID, String> titles = new LinkedHashMap<>();
         if (!patches.isEmpty()) {
             var ids = patches.stream().map(CatalogPatch::getId).toList();
-            for (var date : repository.catalogDates(context.regionId(), ids, now))
+            for (var date : repository.catalogDates(context.regionId(), ids, now)) {
                 dates.putIfAbsent(date.getPatchVariantId(), regionalDate(date, zone));
+            }
             var patchIds = patches.stream().map(CatalogPatch::getPatchId).distinct().toList();
-            for (var text : translations.preferredTexts(patchIds, locale))
+            for (var text : translations.preferredTexts(patchIds, locale)) {
                 titles.putIfAbsent(text.getPatchId(), text.getTitle());
+            }
         }
 
         var bySeason = patches.stream().filter(patch -> patch.getSeasonId() != null)

@@ -68,23 +68,26 @@ public class HeroSkinSnapshots implements HeroSectionSnapshots {
 
     private void save(UUID heroId, UUID revisionId, Skin skin, Instant at) {
         ensureBadge(skin.rarityCode(), at);
-        if (identities.findById(new SkinIdentityRow.Key(heroId, skin.skinKey())).isEmpty())
+        if (identities.findById(new SkinIdentityRow.Key(heroId, skin.skinKey())).isEmpty()) {
             identities.save(new SkinIdentityRow(heroId, skin.skinKey(), at));
+        }
         identities.flush();
         snapshots.saveAndFlush(new SkinSnapshotRow(revisionId, heroId, skin.skinKey(), skin.displayOrder(),
                 skin.artAssetId(), skin.rarityCode(), skin.headAssetId(), skin.portraitAssetId()));
         skin.images().forEach((role, options) -> {
-            for (int n = 0; n < options.size(); n++)
+            for (int n = 0; n < options.size(); n++) {
                 images.save(new SkinImageOption(revisionId, skin.skinKey(), role.name(), n,
                         options.get(n).assetId(), options.get(n).label()));
+            }
         });
         translations.saveAll(skin.translations().stream().map(t -> new SkinTranslationRow(revisionId,
                 skin.skinKey(), t.locale(), t.name(), t.description(), t.acquisitionNote())).toList());
     }
 
     private void ensureBadge(String code, Instant at) {
-        if (code == null || badges.findByCode(code).isPresent())
+        if (code == null || badges.findByCode(code).isPresent()) {
             return;
+        }
         var badge = new SkinBadge();
         badge.setId(UUID.randomUUID());
         badge.setCode(code);

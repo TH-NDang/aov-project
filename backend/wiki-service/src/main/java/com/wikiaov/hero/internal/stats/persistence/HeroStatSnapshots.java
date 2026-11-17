@@ -66,8 +66,9 @@ public class HeroStatSnapshots implements HeroSectionSnapshots {
                                 v.getGrowthPerLevel(), v.getUnitCode()), Collectors.toList())));
 
         Map<UUID, Stats> result = new HashMap<>();
-        for (UUID id : ids)
+        for (UUID id : ids) {
             result.put(id, new Stats(values.getOrDefault(id, List.of()), references.getOrDefault(id, List.of())));
+        }
         return result;
     }
 

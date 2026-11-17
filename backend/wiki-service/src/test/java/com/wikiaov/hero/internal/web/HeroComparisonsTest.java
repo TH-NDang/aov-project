@@ -214,8 +214,9 @@ class HeroComparisonsTest {
 
     private HeroRevisionView revision(UUID id, UUID source, UUID revisionRuleset, HeroSection... revisionSections) {
         Map<HeroSection, UUID> contentIds = new EnumMap<>(HeroSection.class);
-        for (var section : revisionSections)
+        for (var section : revisionSections) {
             contentIds.put(section, UUID.randomUUID());
+        }
         var revision = new HeroRevisionView(id, hero, revisionRuleset, 1, RevisionState.DRAFT, 1, null, null,
                 source == null ? Cause.DATA_BASELINE : Cause.GAME_PATCH, source, UUID.randomUUID(),
                 contentIds);

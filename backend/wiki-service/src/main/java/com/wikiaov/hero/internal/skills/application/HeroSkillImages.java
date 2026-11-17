@@ -47,8 +47,9 @@ public class HeroSkillImages {
 
     @PreAuthorize("hasAuthority('catalog:read')")
     public List<HeroSkillImageView> list(UUID heroId) {
-        if (!heroes.existsById(heroId))
+        if (!heroes.existsById(heroId)) {
             throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "The hero does not exist.");
+        }
         return images.findByHeroIdOrderBySourceSlotAscVariantNoAsc(heroId).stream().map(HeroSkillImages::view).toList();
     }
 
@@ -59,25 +60,31 @@ public class HeroSkillImages {
                 "The hero does not exist."));
         if (sourceSlot < 0 || sourceSlot > 99 || variantNo < 1 || variantNo > 100
                 || input.sourceFilename().contains("/") || input.sourceFilename().contains("\\")
-                || input.sourceFilename().equals(".") || input.sourceFilename().equals(".."))
+                || input.sourceFilename().equals(".") || input.sourceFilename().equals("..")) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT, "Invalid skill image source identity.");
-        if (input.skillKey() != null && !skills.existsByHeroIdAndSkillKey(heroId, input.skillKey()))
+        }
+        if (input.skillKey() != null && !skills.existsByHeroIdAndSkillKey(heroId, input.skillKey())) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT,
                     "A skill image can only link to an existing skill identity.");
+        }
         if (media.find(input.assetId()).filter(a -> a.usable() && a.semanticType() == MediaSemanticType.HERO_SKILL_ICON)
-                .isEmpty())
+                .isEmpty()) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_MEDIA, "Use an active uploaded hero skill icon.");
+        }
         var existing = images.findByHeroIdAndSourceSlotAndVariantNo(heroId, sourceSlot, variantNo);
         if (existing.isPresent()) {
             var row = existing.get();
             if (Objects.equals(row.getAssetId(), input.assetId()) && Objects.equals(row.getSkillKey(), input.skillKey())
                     && Objects.equals(row.getSourceFilename(), input.sourceFilename())
-                    && Objects.equals(row.getLabel(), input.label()))
+                    && Objects.equals(row.getLabel(), input.label())) {
                 return view(row);
-            if (row.getVersion() != input.expectedVersion())
+            }
+            if (row.getVersion() != input.expectedVersion()) {
                 conflict(row.getVersion());
-        } else if (input.expectedVersion() != -1)
+            }
+        } else if (input.expectedVersion() != -1) {
             conflict(-1);
+        }
         var row = existing.orElseGet(() -> {
             var created = new HeroSkillImage();
             created.setId(UUID.randomUUID());

@@ -30,8 +30,9 @@ public final class CommunityLineupRules {
 
         checks.text("name", name == null ? null : name.strip(), MAX_NAME, true);
         checks.text("note", note, MAX_NOTE, false);
-        if (units.isEmpty())
+        if (units.isEmpty()) {
             checks.fail("units", "REQUIRED", "Add at least one unit.");
+        }
         AutoChessContentRules.lineupUnits(checks, "units", units, unitCodes, itemCodes);
         checks.references("emblems", emblems, traitCodes, AutoChessContentRules.MAX_EMBLEMS);
 

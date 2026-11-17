@@ -62,8 +62,9 @@ public class HeroRatingSnapshots implements HeroSectionSnapshots {
     public Map<UUID, Ratings> contents(Collection<UUID> ids) {
         var references = sources.find(section(), ids);
         Map<UUID, Ratings> result = new HashMap<>();
-        for (var rating : revisions.findAllById(ids))
+        for (var rating : revisions.findAllById(ids)) {
             result.put(rating.getId(), ratings(rating, references.getOrDefault(rating.getId(), List.of())));
+        }
         return result;
     }
 

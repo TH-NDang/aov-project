@@ -13,8 +13,9 @@ public final class CatalogText {
     public static List<Translation> select(List<Translation> translations, String locale) {
         for (String candidate : List.of(locale, CatalogLocales.DEFAULT, "en-US")) {
             var found = translations.stream().filter(text -> text.locale().equals(candidate)).findFirst();
-            if (found.isPresent())
+            if (found.isPresent()) {
                 return List.of(found.get());
+            }
         }
         return translations.stream().sorted(Comparator.comparing(Translation::locale)).findFirst()
                 .map(List::of).orElseGet(List::of);

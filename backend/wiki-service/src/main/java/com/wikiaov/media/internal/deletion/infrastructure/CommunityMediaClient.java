@@ -57,16 +57,18 @@ class CommunityMediaClient implements CompetitionMediaGuard {
 
     private void exchange(UUID assetId, boolean retire) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (!(auth instanceof JwtAuthenticationToken jwt))
+        if (!(auth instanceof JwtAuthenticationToken jwt)) {
             throw unavailable();
+        }
         try {
             var result = client.method(retire ? HttpMethod.POST : HttpMethod.GET)
                     .uri(base + assetId + (retire ? "/retire" : "/usage"))
                     .headers(headers -> headers.setBearerAuth(jwt.getToken().getTokenValue()))
                     .retrieve().body(Usage.class);
             if (result == null || !assetId.equals(result.assetId()) || result.references() == null
-                    || result.references() < 0 || retire && !Boolean.TRUE.equals(result.retired()))
+                    || result.references() < 0 || retire && !Boolean.TRUE.equals(result.retired())) {
                 throw unavailable();
+            }
             if (result.references() > 0) {
                 throw new ApiException(MediaErrorCode.MEDIA_ASSET_IN_USE,
                         "Competition records or publication history still reference this image.",

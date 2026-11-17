@@ -25,8 +25,9 @@ class UserMediaUsage implements MediaUsageProvider {
 
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
-        for (var avatar : profiles.avatars())
+        for (var avatar : profiles.avatars()) {
             usages.computeIfAbsent(avatar.getAssetId(), ignored -> new ArrayList<>()).add(usage(avatar.getOwnerId()));
+        }
 
         return usages;
     }

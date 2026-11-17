@@ -33,23 +33,26 @@ public class ItemBuildReferences implements BuildReferenceProvider {
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findByCodeIn(codes)))
+        for (var identity : published(identities.findByCodeIn(codes))) {
             result.put(identity.getCode(), reference(identity));
+        }
         return result;
     }
 
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findAllById(ids)))
+        for (var identity : published(identities.findAllById(ids))) {
             result.put(identity.getId(), reference(identity));
+        }
         return result;
     }
 
     /** The given identities that have a published revision. */
     private List<ItemIdentity> published(List<ItemIdentity> found) {
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return List.of();
+        }
         Set<UUID> published = revisions
                 .findByOwnerIdInAndState(found.stream().map(ItemIdentity::getId).toList(), RevisionState.PUBLISHED)
                 .stream()

@@ -490,8 +490,9 @@ class MediaAdminApiIntegrationTest {
                 .andExpect(jsonPath(usageOf(competition) + ".state").value(hasItem("NONE")))
                 .andExpect(jsonPath(usageOf(competition) + ".competition").value(hasItem(nullValue())));
 
-        for (var id : List.of(shown, draftOnly, historyOnly, storedOnly))
+        for (var id : List.of(shown, draftOnly, historyOnly, storedOnly)) {
             usages.byAsset.remove(id);
+        }
     }
 
     @Test
@@ -1039,8 +1040,9 @@ class MediaAdminApiIntegrationTest {
                                 "patch:publish")
                         .map(SimpleGrantedAuthority::new).toArray(SimpleGrantedAuthority[]::new)));
         var mapper = tools.jackson.databind.json.JsonMapper.builder().build();
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body));
+        }
         String result = mvc.perform(request).andExpect(status().is(expected)).andReturn().getResponse()
                 .getContentAsString();
         return result.isEmpty() ? Map.of() : mapper.readValue(result, Map.class);

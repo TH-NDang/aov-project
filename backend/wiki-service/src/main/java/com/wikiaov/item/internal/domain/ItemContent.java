@@ -48,12 +48,14 @@ public record ItemContent(
      * quotes. Published rows keep their stored text, so readers rely on this rather than on a data migration.
      */
     public static String unwrapDescription(String description) {
-        if (description == null || description.indexOf('"') < 0)
+        if (description == null || description.indexOf('"') < 0) {
             return description;
+        }
 
         String value = description.strip();
-        if (value.startsWith("\""))
+        if (value.startsWith("\"")) {
             value = value.substring(1);
+        }
         return withoutUnpairedQuotes(value);
     }
 
@@ -62,8 +64,9 @@ public record ItemContent(
         int open = -1;
         for (int index = text.indexOf('"'); index >= 0; index = text.indexOf('"', index + 1)) {
             if (opensQuote(text, index)) {
-                if (open >= 0)
+                if (open >= 0) {
                     unpaired.set(open);
+                }
                 open = index;
             } else if (open >= 0) {
                 open = -1;
@@ -71,19 +74,23 @@ public record ItemContent(
                 unpaired.set(index);
             }
         }
-        if (open >= 0)
+        if (open >= 0) {
             unpaired.set(open);
+        }
 
         var result = new StringBuilder(text.length());
-        for (int index = 0; index < text.length(); index++)
-            if (!unpaired.get(index))
+        for (int index = 0; index < text.length(); index++) {
+            if (!unpaired.get(index)) {
                 result.append(text.charAt(index));
+            }
+        }
         return result.toString().strip();
     }
 
     private static boolean opensQuote(String text, int index) {
-        if (index == 0)
+        if (index == 0) {
             return true;
+        }
         char before = text.charAt(index - 1);
         return Character.isWhitespace(before) || before == '(' || before == '[';
     }

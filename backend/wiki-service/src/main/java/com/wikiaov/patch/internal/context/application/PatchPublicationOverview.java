@@ -112,14 +112,18 @@ class PatchPublicationOverview {
 
     private static String phase(PatchRelease release, PatchVariant variant, GamePatch patch,
             Set<UUID> currentReleaseIds, Instant now) {
-        if (release.getEffectiveOn() != null && release.getStatus() == PatchReleaseStatus.DRAFT)
+        if (release.getEffectiveOn() != null && release.getStatus() == PatchReleaseStatus.DRAFT) {
             return "AWAITING_CONFIRMATION";
-        if (release.getStatus() != PatchReleaseStatus.SCHEDULED)
+        }
+        if (release.getStatus() != PatchReleaseStatus.SCHEDULED) {
             return release.getStatus().name();
-        if (variant.getStatus() != PatchVariantStatus.PUBLISHED || patch.getStatus() != PatchStatus.PUBLISHED)
+        }
+        if (variant.getStatus() != PatchVariantStatus.PUBLISHED || patch.getStatus() != PatchStatus.PUBLISHED) {
             return "DRAFT";
-        if (release.getEffectiveAt().isAfter(now))
+        }
+        if (release.getEffectiveAt().isAfter(now)) {
             return "UPCOMING";
+        }
         return currentReleaseIds.contains(release.getId()) ? "CURRENT" : "PAST";
     }
 }

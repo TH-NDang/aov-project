@@ -107,8 +107,9 @@ final class HeroPatchChangeViews {
 
     /** What the mechanic did before its change, with the source it was written from; null until recorded. */
     private static Map<String, Object> previous(MechanicChangePrevious value) {
-        if (value == null)
+        if (value == null) {
             return null;
+        }
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("description", value.getDescription());

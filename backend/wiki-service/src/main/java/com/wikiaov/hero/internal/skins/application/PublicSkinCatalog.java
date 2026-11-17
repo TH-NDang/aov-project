@@ -67,8 +67,9 @@ public class PublicSkinCatalog {
         var at = clock.instant();
         var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);
         var selected = selectCurrent(repository.candidates(moment.context().rulesetId(), at), moment);
-        if (selected.isEmpty())
+        if (selected.isEmpty()) {
             return new PublicSkinCatalogView(new PageSlice<>(List.of(), page, size, 0), List.of(), List.of());
+        }
 
         var catalog = localize(selected, locale);
         var heroes = catalog.stream().map(row -> new Filter(row.hero().getHeroCode(), row.heroName())).distinct()
@@ -112,8 +113,9 @@ public class PublicSkinCatalog {
                 ? Map.<UUID, List<ProfileText>>of()
                 : repository.profileTexts(profileIds).stream()
                         .collect(Collectors.groupingBy(ProfileText::getProfileId));
-        if (skinsIds.isEmpty())
+        if (skinsIds.isEmpty()) {
             return List.of();
+        }
         var skins = repository.skins(skinsIds);
         var texts = repository.skinTexts(skinsIds).stream()
                 .collect(Collectors.groupingBy(text -> new SkinKey(text.getSkinsId(), text.getSkinKey())));
@@ -131,8 +133,9 @@ public class PublicSkinCatalog {
                     ProfileText::getLocale);
             String heroName = profile == null ? hero.getHeroCode() : profile.getName();
             for (var skin : byRevision.getOrDefault(hero.getSkinsId(), List.of())) {
-                if (isBaseAppearance(hero.getHeroCode(), skin.getSkinKey()))
+                if (isBaseAppearance(hero.getHeroCode(), skin.getSkinKey())) {
                     continue;
+                }
 
                 var text = translation(texts.getOrDefault(new SkinKey(skin.getSkinsId(), skin.getSkinKey()), List.of()),
                         locale, SkinText::getLocale);
@@ -153,18 +156,21 @@ public class PublicSkinCatalog {
     }
 
     private List<Entry> hydrate(List<Localized> rows) {
-        if (rows.isEmpty())
+        if (rows.isEmpty()) {
             return List.of();
+        }
         var bindingIds = rows.stream().map(row -> row.hero().getBindingsId()).filter(Objects::nonNull).distinct()
                 .toList();
         Map<UUID, UUID> heads = new HashMap<>();
-        if (!bindingIds.isEmpty())
+        if (!bindingIds.isEmpty()) {
             repository.heads(bindingIds).forEach(head -> heads.put(head.getBindingsId(), head.getAssetId()));
+        }
         Set<UUID> assetIds = new HashSet<>(heads.values());
         for (var row : rows) {
             add(assetIds, row.skin().getPortraitId(), row.skin().getHeadId(), row.skin().getArtId());
-            if (row.badge() != null)
+            if (row.badge() != null) {
                 add(assetIds, row.badge().getIconId());
+            }
         }
 
         var assets = media.findAll(assetIds);
@@ -188,9 +194,11 @@ public class PublicSkinCatalog {
     }
 
     private static void add(Set<UUID> assets, UUID... ids) {
-        for (var id : ids)
-            if (id != null)
+        for (var id : ids) {
+            if (id != null) {
                 assets.add(id);
+            }
+        }
     }
 
     private static <T> T translation(List<T> values, String locale, Function<T, String> language) {
@@ -212,11 +220,13 @@ public class PublicSkinCatalog {
 
     private static void validate(String locale, String q, String hero, String rarity) {
         HeroValidation.locale(locale);
-        if (q.length() > 120)
+        if (q.length() > 120) {
             throw HeroValidation.badQuery("Search text must be at most 120 characters.");
+        }
         if ((hero != null && (hero.isBlank() || hero.length() > 200))
-                || (rarity != null && (rarity.isBlank() || rarity.length() > 64)))
+                || (rarity != null && (rarity.isBlank() || rarity.length() > 64))) {
             throw HeroValidation.badQuery("Hero and rarity filters must be nonblank valid codes.");
+        }
     }
 
     private record SkinKey(

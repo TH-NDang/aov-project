@@ -77,10 +77,11 @@ class ScopedCatalogControllerTest {
                 .thenReturn(new ReferenceSettingsView(1, new ReferenceSettings(1, true, "vi-VN", List.of())));
 
         for (var route : List.of("heroes", "heroes/" + hero, "heroes/" + hero + "/manifest", "skins",
-                "reference-catalog"))
+                "reference-catalog")) {
             mvc.perform(get("/api/wiki/v1/" + route).param("locale", "en-US")
                     .param("seasonId", season.toString()).param("patchVariantId", patch.toString()))
                     .andExpect(status().isOk());
+        }
 
         verify(heroes).list("VN", "en-US", 0, 20, "", null, "code,asc", season, patch, false, false);
         verify(heroes).detail(hero, "VN", "en-US", false, season, patch, false);

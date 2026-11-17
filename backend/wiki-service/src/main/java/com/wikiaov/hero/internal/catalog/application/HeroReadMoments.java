@@ -35,10 +35,12 @@ public class HeroReadMoments {
         boolean historical = seasonId != null || patchVariantId != null;
 
         Map<UUID, Long> ordinals = new HashMap<>();
-        for (var variant : contexts.rulesetVariants(context.rulesetId()))
+        for (var variant : contexts.rulesetVariants(context.rulesetId())) {
             ordinals.put(variant.id(), variant.rulesetOrdinal());
-        if (!historical)
+        }
+        if (!historical) {
             return new Moment(context, scope.allowUnscoped(), false, context.rulesetOrdinal(), Map.of(), ordinals);
+        }
 
         // A later observation may come from any patch the market has already reached, never from a scheduled one.
         var current = contexts.resolve(region, at);
@@ -48,8 +50,9 @@ public class HeroReadMoments {
         Map<UUID, Long> introducedAt = new HashMap<>();
         history.introductions().forEach((heroId, variantId) -> {
             var ordinal = ordinals.get(variantId);
-            if (ordinal != null)
+            if (ordinal != null) {
                 introducedAt.put(heroId, ordinal);
+            }
         });
 
         return new Moment(context, scope.allowUnscoped(), true, newest, introducedAt, ordinals);
@@ -90,10 +93,12 @@ public class HeroReadMoments {
                     .filter(revision -> allowUnscoped || variantOf.apply(revision) != null)
                     .filter(revision -> ordinal.applyAsLong(revision) <= target)
                     .max(Comparator.comparingLong(ordinal).thenComparingLong(publicationOf));
-            if (observed.isPresent())
+            if (observed.isPresent()) {
                 return observed.map(revision -> new Choice<>(revision, null));
-            if (!historical || introducedAt.getOrDefault(heroId, 0L) > target)
+            }
+            if (!historical || introducedAt.getOrDefault(heroId, 0L) > target) {
                 return Optional.empty();
+            }
 
             return revisions.stream().filter(revision -> variantOf.apply(revision) != null)
                     .filter(revision -> ordinal.applyAsLong(revision) > target

@@ -63,12 +63,14 @@ public class AccountSecurity {
 
     public void signOut(String sessionId) {
         Actor actor = caller.human();
-        if (session.sessionId().filter(sessionId::equals).isPresent())
+        if (session.sessionId().filter(sessionId::equals).isPresent()) {
             throw new ApiException(UserErrorCode.USER_SESSION_CURRENT,
                     "Use the application's sign-out to end the current session.");
+        }
         boolean owned = identity.sessions(actor.subject()).stream().anyMatch(row -> row.id().equals(sessionId));
-        if (!owned)
+        if (!owned) {
             throw new ApiException(UserErrorCode.USER_SESSION_NOT_FOUND, "The session was not found.");
+        }
 
         identity.signOut(sessionId);
         caller.record(actor, "USER_SESSION_SIGNED_OUT", Map.of("sessions", 1));
@@ -88,11 +90,13 @@ public class AccountSecurity {
     public void removeRecoveryCodes() {
         Actor actor = caller.human();
         var account = identity.account(actor.subject());
-        if (!account.otp().isEmpty())
+        if (!account.otp().isEmpty()) {
             throw new ApiException(UserErrorCode.USER_TWO_FACTOR_ACTIVE,
                     "Recovery codes stay while an authenticator app is configured.");
-        if (account.recoveryCodes() == null)
+        }
+        if (account.recoveryCodes() == null) {
             return;
+        }
 
         identity.removeCredential(actor.subject(), account.recoveryCodes().id());
         caller.record(actor, "USER_RECOVERY_CODES_REMOVED", Map.of());

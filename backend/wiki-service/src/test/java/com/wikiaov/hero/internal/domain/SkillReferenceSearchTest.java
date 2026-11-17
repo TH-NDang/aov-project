@@ -61,8 +61,9 @@ class SkillReferenceSearchTest {
 
     @Test
     void recognizesSkillCategoryCommandsWithoutTreatingThemAsNames() {
-        for (var q : java.util.List.of("@Kỹ năng", "Kỹ năng", "chiêu thức", "chiêu", "skills"))
+        for (var q : java.util.List.of("@Kỹ năng", "Kỹ năng", "chiêu thức", "chiêu", "skills")) {
             assertThat(SkillReferenceSearch.parse(q).words()).isEmpty();
+        }
         assertThat(SkillReferenceSearch.parse("Kỹ năng Edras").words()).containsExactly("edras");
         assertThat(SkillReferenceSearch.parse("chiêu thức 2 Edras").sourceSlot()).isEqualTo(2);
     }

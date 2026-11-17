@@ -254,8 +254,9 @@ class GameModeIntegrationTest {
         publishedGuide();
         String like = READER + "/" + code + "/auto-chess/likes/" + LINEUP_ID;
         String reader = "busy-" + UUID.randomUUID();
-        for (int i = 0; i < 60; i++)
+        for (int i = 0; i < 60; i++) {
             mvc.perform(put(like).with(person(reader))).andExpect(status().isOk());
+        }
 
         mvc.perform(put(like).with(person(reader))).andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.code").value("GAME_MODE_RATE_LIMITED"));

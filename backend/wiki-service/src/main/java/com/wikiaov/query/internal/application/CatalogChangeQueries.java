@@ -24,8 +24,9 @@ public class CatalogChangeQueries {
 
     @PreAuthorize("hasAuthority('catalog:read')")
     public List<CatalogChanges.Entry> list(UUID rulesetId, String locale, String domain) {
-        if (!locale.matches(CatalogLocales.PATTERN))
+        if (!locale.matches(CatalogLocales.PATTERN)) {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid locale.");
+        }
 
         contexts.requireRuleset(rulesetId);
         var provider = providers.stream().filter(p -> p.domain().equals(domain)).findFirst()

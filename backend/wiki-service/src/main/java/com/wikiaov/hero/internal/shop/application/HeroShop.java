@@ -97,8 +97,9 @@ public class HeroShop {
     @PreAuthorize("hasAuthority('hero:write')")
     @Transactional
     public HeroShopView.Price savePrice(UUID heroId, String region, SavePrice request) {
-        if (!AVAILABILITY.contains(request.availability()))
+        if (!AVAILABILITY.contains(request.availability())) {
             throw HeroValidation.invalid("Unknown hero availability.");
+        }
         lockHero(heroId);
         requireRegion(region);
 
@@ -123,8 +124,9 @@ public class HeroShop {
         // A missing hero has no step either, so the step check below answers it.
         heroes.lockById(heroId);
         var key = new HeroShopPriceRow.Key(heroId, region, on);
-        if (!prices.existsById(key))
+        if (!prices.existsById(key)) {
             throw new ApiException(HeroErrorCode.HERO_SHOP_ENTRY_NOT_FOUND, "This price step was not found.");
+        }
 
         prices.deleteById(key);
         record("HERO_SHOP_PRICE_DELETED", heroId, Map.of("region", region, "capturedOn", on.toString()));
@@ -134,12 +136,14 @@ public class HeroShop {
     @Transactional
     public HeroShopView.SkinAcquisition saveSkin(UUID heroId, String skinKey, String region,
             SaveSkinAcquisition request) {
-        if (!METHODS.contains(request.method()))
+        if (!METHODS.contains(request.method())) {
             throw HeroValidation.invalid("Unknown skin acquisition method.");
+        }
         // A missing hero has no skin either, so the skin check below answers it.
         heroes.lockById(heroId);
-        if (!skins.existsById(new SkinIdentityRow.Key(heroId, skinKey)))
+        if (!skins.existsById(new SkinIdentityRow.Key(heroId, skinKey))) {
             throw new ApiException(HeroErrorCode.HERO_SKIN_NOT_FOUND, "Skin was not found.");
+        }
         requireRegion(region);
 
         var on = request.capturedOn() == null ? today() : request.capturedOn();
@@ -165,8 +169,9 @@ public class HeroShop {
         // A missing hero has no step either, so the step check below answers it.
         heroes.lockById(heroId);
         var key = new SkinAcquisitionRow.Key(heroId, skinKey, region, on);
-        if (!acquisitions.existsById(key))
+        if (!acquisitions.existsById(key)) {
             throw new ApiException(HeroErrorCode.HERO_SHOP_ENTRY_NOT_FOUND, "This acquisition step was not found.");
+        }
 
         acquisitions.deleteById(key);
         record("HERO_SKIN_ACQUISITION_DELETED", heroId,
@@ -186,14 +191,16 @@ public class HeroShop {
     }
 
     private void requireHero(UUID heroId) {
-        if (!heroes.existsById(heroId))
+        if (!heroes.existsById(heroId)) {
             throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "Hero was not found.");
+        }
     }
 
     /** Shop steps have no version of their own: writers of one hero wait for each other on the hero row. */
     private void lockHero(UUID heroId) {
-        if (heroes.lockById(heroId).isEmpty())
+        if (heroes.lockById(heroId).isEmpty()) {
             throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "Hero was not found.");
+        }
     }
 
     private void record(String action, UUID heroId, Map<String, Object> metadata) {
@@ -211,8 +218,9 @@ public class HeroShop {
     }
 
     private static void requireRegion(String value) {
-        if (value == null || !value.matches("[A-Z]{2,16}"))
+        if (value == null || !value.matches("[A-Z]{2,16}")) {
             throw HeroValidation.invalid("Unknown market.");
+        }
     }
 
     private static String blankToNull(String value) {

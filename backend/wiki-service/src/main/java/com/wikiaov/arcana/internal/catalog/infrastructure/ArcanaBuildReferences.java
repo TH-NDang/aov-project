@@ -32,23 +32,26 @@ public class ArcanaBuildReferences implements BuildReferenceProvider {
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findByCodeIn(codes)))
+        for (var identity : published(identities.findByCodeIn(codes))) {
             result.put(identity.identity().getCode(), identity.reference());
+        }
         return result;
     }
 
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findAllById(ids)))
+        for (var identity : published(identities.findAllById(ids))) {
             result.put(identity.identity().getId(), identity.reference());
+        }
         return result;
     }
 
     /** The given identities that have a published revision, each with its latest one. */
     private List<Published> published(List<ArcanaIdentity> found) {
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return List.of();
+        }
         Map<UUID, ArcanaRevision> latest = revisions
                 .findByOwnerIdInAndState(found.stream().map(ArcanaIdentity::getId).toList(), RevisionState.PUBLISHED)
                 .stream()

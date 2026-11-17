@@ -68,8 +68,9 @@ public class SkinBadges {
             boolean ungrouped, int page, int size) {
         HeroMediaQueries.bounds(page, size);
         HeroValidation.locale(locale);
-        if (groupId != null && ungrouped)
+        if (groupId != null && ungrouped) {
             throw HeroValidation.invalid("Choose either a badge group or ungrouped badges.");
+        }
         groups.require(groupId);
         var all = badges.findAll(Sort.by("code").and(Sort.by("id")));
         var translations = translations(all.stream().map(SkinBadge::getId).toList());
@@ -98,12 +99,14 @@ public class SkinBadges {
         badge.setId(UUID.randomUUID());
         String code = input.code();
         if (code == null) {
-            if (input.translations().isEmpty())
+            if (input.translations().isEmpty()) {
                 throw HeroValidation.invalid("A badge name is required to generate its code.");
+            }
             String region = input.regionCode() == null ? "vn" : input.regionCode();
             if (!region.equals("global") && !Locale.getISOCountries(Locale.IsoCountryCode.PART1_ALPHA2)
-                    .contains(region.toUpperCase(Locale.ROOT)))
+                    .contains(region.toUpperCase(Locale.ROOT))) {
                 throw HeroValidation.invalid("The badge region must be an ISO country code or global.");
+            }
             try {
                 code = aliases.nextBadgeCode(input.translations().getFirst().displayName(),
                         region);
@@ -132,8 +135,9 @@ public class SkinBadges {
     @PreAuthorize("hasAuthority('hero:write')")
     public SkinBadgeView update(UUID id, SkinBadgeCommands.Update input) {
         var badge = badges.lock(id).orElseThrow(() -> missing());
-        if (badge.getVersion() != input.expectedVersion())
+        if (badge.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_CONFLICT, "The skin badge changed. Reload before saving.");
+        }
         validate(input.translations());
         badge.setKind(input.kind());
         badge.setVersion(Math.addExact(badge.getVersion(), 1));
@@ -151,8 +155,9 @@ public class SkinBadges {
     @PreAuthorize("hasAuthority('hero:write')")
     public SkinBadgeView assignGroup(UUID id, SkinBadgeCommands.AssignGroup input) {
         var badge = badges.lock(id).orElseThrow(SkinBadges::missing);
-        if (badge.getVersion() != input.expectedVersion())
+        if (badge.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_CONFLICT, "The skin badge changed. Reload before saving.");
+        }
         groups.require(input.groupId());
         UUID previous = badge.getGroupId();
         badge.setGroupId(input.groupId());
@@ -160,10 +165,12 @@ public class SkinBadges {
         badge.setUpdatedAt(clock.instant());
         badges.flush();
         Map<String, Object> detail = new HashMap<>();
-        if (previous != null)
+        if (previous != null) {
             detail.put("previousGroupId", previous.toString());
-        if (input.groupId() != null)
+        }
+        if (input.groupId() != null) {
             detail.put("groupId", input.groupId().toString());
+        }
         audit.record(
                 new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_ASSIGNED", CatalogAggregates.SKIN_BADGE, id, null,
                         input.expectedVersion(), badge.getVersion(), null, detail));
@@ -172,8 +179,9 @@ public class SkinBadges {
     }
 
     static String search(String q) {
-        if (q.trim().length() > 100)
+        if (q.trim().length() > 100) {
             throw HeroValidation.invalid("Search must contain at most 100 characters.");
+        }
         return q.trim().toLowerCase(Locale.ROOT);
     }
 
@@ -186,14 +194,16 @@ public class SkinBadges {
         Set<String> locales = new HashSet<>();
         for (var translation : translations) {
             HeroValidation.locale(translation.locale());
-            if (!locales.add(translation.locale()))
+            if (!locales.add(translation.locale())) {
                 throw HeroValidation.invalid("Badge translation locales must be unique.");
+            }
             if (translation.iconAssetId() != null) {
                 var asset = media.find(translation.iconAssetId()).orElseThrow(() -> new ApiException(
                         HeroErrorCode.HERO_INVALID_MEDIA, "The badge icon does not exist."));
-                if (!asset.usable() || asset.semanticType() != MediaSemanticType.SKIN_BADGE)
+                if (!asset.usable() || asset.semanticType() != MediaSemanticType.SKIN_BADGE) {
                     throw new ApiException(HeroErrorCode.HERO_INVALID_MEDIA,
                             "Badge icons must be usable SKIN_BADGE assets.");
+                }
             }
         }
     }

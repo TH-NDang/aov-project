@@ -40,24 +40,29 @@ public class HeroUploadSessions {
     @Transactional
     public HeroUploadSessionView save(UUID id, long version, JsonNode state) {
         String payload = json.writeValueAsString(state);
-        if (!state.isObject() || payload.getBytes(StandardCharsets.UTF_8).length > 5 * 1024 * 1024)
+        if (!state.isObject() || payload.getBytes(StandardCharsets.UTF_8).length > 5 * 1024 * 1024) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT, "Upload session must be an object within 5 MB.");
+        }
         if (state.path("schemaVersion").asInt() != 1 || !state.path("label").isString()
                 || !state.path("entries").isArray() || state.path("entries").size() < 1
-                || state.path("entries").size() > 200 || !state.path("images").isObject())
+                || state.path("entries").size() > 200 || !state.path("images").isObject()) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT, "Invalid upload session manifest.");
+        }
 
         var actor = actors.require();
-        if (version == -1 && repository.create(id, actor.issuer(), actor.subject(), payload) == 1)
+        if (version == -1 && repository.create(id, actor.issuer(), actor.subject(), payload) == 1) {
             audit.record(new AuditEntry(actor, "HERO_UPLOAD_SESSION_CREATED", AGGREGATE, id, null, null, 0L, null,
                     Map.of()));
+        }
 
         var session = owned(id);
-        if (json.readTree(session.getStateJson()).equals(state))
+        if (json.readTree(session.getStateJson()).equals(state)) {
             return view(session);
-        if (session.getVersion() != version)
+        }
+        if (session.getVersion() != version) {
             throw new ApiException(HeroErrorCode.HERO_IMPORT_JOB_CONFLICT,
                     "Upload session changed. Reload before resuming.");
+        }
 
         session.setStateJson(payload);
         session.setVersion(version + 1);

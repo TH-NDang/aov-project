@@ -56,24 +56,28 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
 
     @PreAuthorize("hasAuthority('item:write')")
     public ItemCategoryView save(String code, ItemCategoryCommand input) {
-        if (!code.matches(CatalogCodes.PATTERN) || code.length() > 120)
+        if (!code.matches(CatalogCodes.PATTERN) || code.length() > 120) {
             invalid("Invalid metadata code.");
+        }
         var found = records.lockByCode(code);
         var row = found.orElseGet(() -> {
             var e = new ItemCategory();
             e.setCode(code);
             return e;
         });
-        if (row.getVersion() != input.expectedVersion())
+        if (row.getVersion() != input.expectedVersion()) {
             throw new ApiException(ItemErrorCode.ITEM_CONFLICT, "The metadata record has changed.",
                     Map.of("currentVersion", row.getVersion()));
+        }
         var locales = new HashSet<String>();
-        for (var t : input.translations())
+        for (var t : input.translations()) {
             if (t.locale() == null || !t.locale().matches(CatalogLocales.PATTERN) || !locales.add(t.locale())
                     || t.name() == null || t.name().isBlank() || t.name().length() > 255
                     || t.description() != null && t.description().length() > 32768
-                    || t.suitability() != null && t.suitability().length() > 4000)
+                    || t.suitability() != null && t.suitability().length() > 4000) {
                 invalid("Invalid metadata translation.");
+            }
+        }
         asset(input.iconAssetId(), MediaSemanticType.ITEM_ICON);
         asset(input.backgroundAssetId(), MediaSemanticType.OTHER);
         long before = row.getVersion();
@@ -112,14 +116,16 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
         for (var record : records.findAll()) {
             var owner = UUID.nameUUIDFromBytes(record.getCode().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            if (record.getIconAssetId() != null)
+            if (record.getIconAssetId() != null) {
                 usages.computeIfAbsent(record.getIconAssetId(), ignored -> new ArrayList<>()).add(new MediaUsage(
                         "ITEM", "ITEM_METADATA", owner, null, "ICON", MediaUsageScope.CURRENT).named(record.getCode(),
                                 null));
-            if (record.getBackgroundAssetId() != null)
+            }
+            if (record.getBackgroundAssetId() != null) {
                 usages.computeIfAbsent(record.getBackgroundAssetId(), ignored -> new ArrayList<>()).add(new MediaUsage(
                         "ITEM", "ITEM_METADATA", owner, null, "BACKGROUND", MediaUsageScope.CURRENT)
                         .named(record.getCode(), null));
+            }
         }
 
         return usages;
@@ -135,8 +141,9 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
     }
 
     private void asset(UUID id, MediaSemanticType type) {
-        if (id != null && media.find(id).filter(a -> a.usable() && a.semanticType() == type).isEmpty())
+        if (id != null && media.find(id).filter(a -> a.usable() && a.semanticType() == type).isEmpty()) {
             invalid("The metadata asset must be uploaded and match its semantic type.");
+        }
     }
 
     private static void invalid(String detail) {

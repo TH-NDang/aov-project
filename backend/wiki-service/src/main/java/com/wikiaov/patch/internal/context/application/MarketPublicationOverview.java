@@ -76,8 +76,9 @@ class MarketPublicationOverview {
         var schedule = currentExactSchedule(region, calendar, now);
         var release = currentRelease(region, assignment, timeline, now);
         UUID currentSeason = releaseSeason(release, timeline);
-        if (currentSeason == null && schedule != null)
+        if (currentSeason == null && schedule != null) {
             currentSeason = schedule.getSeasonId();
+        }
         return new Market(region.getId(), region.getCode(), region.getDisplayName(), region.isAvailable(),
                 assignment == null ? null : assignment.getRulesetId(), currentSeason,
                 release == null ? null : release.getId());
@@ -108,8 +109,9 @@ class MarketPublicationOverview {
     }
 
     private static UUID releaseSeason(PatchRelease release, Timeline timeline) {
-        if (release == null)
+        if (release == null) {
             return null;
+        }
         return release.getSeasonId() != null
                 ? release.getSeasonId()
                 : timeline.variantsById().get(release.getPatchVariantId()).getSeasonId();
