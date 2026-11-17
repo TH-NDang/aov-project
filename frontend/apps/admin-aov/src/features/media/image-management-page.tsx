@@ -1,5 +1,6 @@
 import { LocalTime } from "@aov/ui/components/local-time"
 import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
@@ -115,8 +116,7 @@ export function ImageManagementPage() {
         `/admin/media/assets?page=${pageParam}&size=20${type ? `&semanticType=${type}` : ""}${needsCredit ? "&needsCredit=true" : ""}${usage ? `&usage=${usage}` : ""}`,
         { signal },
       ),
-    getNextPageParam: (page) =>
-      page.items.length && (page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined,
+    getNextPageParam: nextPageOf,
   })
   // The rows appear at once and where each image is used follows, because that answer asks every module.
   const usageById = useQueries({

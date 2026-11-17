@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import { Check, ChevronDown, ChevronRight, Images, LoaderCircle, PanelRightOpen } from "lucide-react"
 import { backendRequest } from "@/app/auth/session"
@@ -231,7 +232,7 @@ export function CharacterImagesPage({
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => api.groups(context.rulesetId, role, locale, context.q, pageParam, signal),
     enabled: !!context.rulesetId,
-    getNextPageParam: (page) => ((page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined),
+    getNextPageParam: nextPageOf,
   })
   const data = useMemo<ImageGroupRow[]>(
     () =>

@@ -72,6 +72,17 @@ const rules: Rule[] = [
     offenders: (text) => errorsShownTwice(text),
   },
   {
+    name: "infinite lists find their next page with nextPageOf",
+    hint: "Use getNextPageParam: nextPageOf from @aov/ui/lib/page-slice; it also stops on an empty page.",
+    files: files(source, /\.tsx?$/),
+    offenders: (text) =>
+      text
+        .split("\n")
+        .flatMap((line, index) =>
+          /getNextPageParam:/.test(line) && !/getNextPageParam: nextPageOf\b/.test(line) ? [`:${index + 1}`] : [],
+        ),
+  },
+  {
     name: "admin makes ids with randomId",
     hint: "crypto.randomUUID is missing on plain-HTTP LAN addresses; use randomId from lib/random-id.",
     files: files(source, /\.tsx?$/).filter((path) => !path.endsWith(join("lib", "random-id.ts"))),
