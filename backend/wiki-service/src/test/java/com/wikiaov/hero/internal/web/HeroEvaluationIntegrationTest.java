@@ -230,7 +230,8 @@ class HeroEvaluationIntegrationTest {
                 null);
         assertThat(send(get(ROOT + "/heroes/" + violet + "/ranking").param("mode", "RANKED_ALL"), null, 200))
                 .containsEntry("snapshot", null);
-        send(get(ROOT + "/heroes/" + gildur + "/ranking").param("region", "vn"), null, 422);
+        assertThat(send(get(ROOT + "/heroes/" + gildur + "/ranking").param("region", "vn"), null, 400))
+                .containsEntry("code", "INVALID_QUERY_PARAMETER");
         send(get(ROOT + "/heroes/" + gildur + "/ranking").param("unknown", "1"), null, 400);
     }
 

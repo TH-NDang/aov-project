@@ -24,6 +24,7 @@ import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotRow;
 import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotValueRow;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.PlatformErrorCode;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.DateTimeException;
@@ -101,8 +102,10 @@ public class HeroRankings {
      */
     @Transactional(readOnly = true)
     public HeroRankingViews.Published published(UUID heroId, String region, String mode) {
-        if (!REGION.matcher(region).matches() || !MODE.matcher(mode).matches())
-            throw invalid("Use an upper-case market and mode code.");
+        if (!REGION.matcher(region).matches() || !MODE.matcher(mode).matches()) {
+            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
+                    "Use an upper-case market and mode code.");
+        }
 
         var found = snapshots.findFirstByRegionCodeAndModeCodeAndConfirmedAtIsNotNullOrderByCapturedAtDescIdAsc(region,
                 mode);
