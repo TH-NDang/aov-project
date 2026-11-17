@@ -3475,7 +3475,8 @@ có dòng chi tiết trả `detail: null`, `actualLocale: null`, `fallbackApplie
 `weaknesses`, `counterTips` của bản dịch đã chọn, chưa viết thì `null`.
 
 **Số liệu đấu hạng** — không cần đăng nhập; chỉ nhận `region` (mặc định `VN`, `^[A-Z]{2,16}$`) và `mode` (mặc định
-`RANKED_ELITE`, `^[A-Z][A-Z0-9_]*$`), sai trả 422 `HERO_RANKING_INVALID`, tham số lạ trả 400. Đọc bản chụp **đã xác
+`RANKED_ELITE`, `^[A-Z][A-Z0-9_]*$`); giá trị sai mẫu hay tham số lạ đều trả 400 `INVALID_QUERY_PARAMETER` như mọi
+endpoint khác. Đọc bản chụp **đã xác
 nhận** mới nhất của thị trường và chế độ:
 
 ```json
