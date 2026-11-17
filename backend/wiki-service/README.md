@@ -266,8 +266,9 @@ từng lệnh. Mã AI tạo cũng tuân theo quy tắc này; formatter không t�
 | Testcontainers integration | Migration, JPA, PostgreSQL và object storage thực |
 | `test-start-local.ps1` | Đọc môi trường literal, ưu tiên biến và không lộ secret qua dry run |
 
-Database test ngoài chỉ dùng khi bộ test hỗ trợ `WIKI_TEST_DB_URL`; đó phải là database tách biệt,
-không trỏ vào database dev/production. Một số test truncate dữ liệu.
+Test cần container tên `*IntegrationTest`, mang `@DockerBacked` và lấy PostgreSQL từ cấu hình chung
+`TestcontainersConfiguration`; máy không có Docker báo các test này là skip. Bộ test không đọc database ngoài nên không
+bao giờ chạm database dev/production.
 
 ## Cache và vận hành
 
