@@ -139,7 +139,10 @@ Do not run concurrent builds against the same output directory or edit shared so
   tournament's end date, so it reads at the rate of that day. Pass every unit a prize was recorded in; use
   `LocalPrizeText` for free text such as `plan.prizePool`. A missing rate keeps the original amount. Gold and vouchers
   are in-game currencies and never go through it.
-- Format numbers with the reader's locale, never a hard-coded `"vi-VN"` in `toLocaleString` or `Intl.NumberFormat`.
+- Format numbers of the interface (row counts, views, statistics, money) with the reader's locale, never a hard-coded
+  `"vi-VN"` in `toLocaleString` or `Intl.NumberFormat`. In-game figures are the exception: health, damage, seconds,
+  metres and percentages in hero, item, arcana and trait text and in editorial notes are written as the game writes
+  them (`1200`, `0.35`) whatever the reader's locale, as `frontend/docs/QUY-UOC-VIET.md` section 3 says.
 - Colors, radius and the font family come from `packages/ui/src/styles/tokens.css` (see `frontend/docs/DESIGN-TOKENS.md`).
   App stylesheets alias those tokens; do not declare new palette values, except for overlays on artwork.
   Status colors use the token utilities (`text-destructive`, `bg-destructive/10`) or the token itself where no utility
