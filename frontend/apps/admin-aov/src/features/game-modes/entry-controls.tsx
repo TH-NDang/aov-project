@@ -16,9 +16,7 @@ import {
 import { Input } from "@aov/ui/components/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { backendRequest } from "@/app/auth/session"
-import { commandFilter } from "@/lib/text"
-
-const fold = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase()
+import { commandFilter, normalize } from "@/lib/text"
 
 export interface MenuAction {
   label: string
@@ -119,10 +117,10 @@ export function SuggestInput({
   const [active, setActive] = useState(0)
   // Focus shows every suggestion; only typing narrows them.
   const [typing, setTyping] = useState(false)
-  const needle = typing ? fold(value.trim()) : ""
+  const needle = typing ? normalize(value.trim()) : ""
   const shown = useMemo(() => {
     const unique = [...new Set(suggestions.map((entry) => entry.trim()).filter(Boolean))]
-    return unique.filter((entry) => !needle || fold(entry).includes(needle)).slice(0, 12)
+    return unique.filter((entry) => !needle || normalize(entry).includes(needle)).slice(0, 12)
   }, [suggestions, needle])
   const choose = (entry: string) => {
     onChange(entry)
@@ -290,7 +288,7 @@ export function HeroCodePicker({
   const heroes = useQuery(heroOptionsQuery)
   const list = heroes.data ?? []
   const selected = list.find((hero) => hero.code === value)
-  const match = !value ? list.find((hero) => fold(hero.name) === fold(unitName.trim())) : undefined
+  const match = !value ? list.find((hero) => normalize(hero.name) === normalize(unitName.trim())) : undefined
 
   return (
     <div className="grid gap-1.5">

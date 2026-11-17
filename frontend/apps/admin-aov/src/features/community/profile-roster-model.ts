@@ -1,13 +1,6 @@
 import type { Lane, ProfileMember } from "@aov/community-contracts"
 import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
-
-const normalize = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-    .trim()
+import { normalize } from "@/lib/text"
 
 const laneAliases: Record<string, Lane> = {
   "duong ta than": "TOP",

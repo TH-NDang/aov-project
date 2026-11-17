@@ -11,6 +11,7 @@ import { errorMessage } from "@/lib/api/errors"
 import { fetchSourceFile, openSourceCollection } from "../files/source-collection-files"
 import { gameModeApi, gameModeKeys, uploadModeImage, type AdminSummary, type ModeGroup } from "./game-mode-api"
 import { importedImageSource, modeContentFromManifest, MODES_SOURCE, type ModeManifestEntry } from "./game-mode-import"
+import { normalize } from "@/lib/text"
 
 const GROUP_LABEL: Record<ModeGroup, string> = { PVP: "PVP", ENTERTAINMENT: "Giải trí" }
 
@@ -24,14 +25,6 @@ const FILTERS: { key: Filter; label: string; test: (mode: AdminSummary) => boole
   { key: "no-art", label: "Thiếu ảnh", test: (mode) => !mode.art },
 ]
 
-/** Accents and case do not hide a mode from a search. */
-const fold = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-
 /** Every game mode with its draft and publication state; new modes start here. */
 export function GameModesPage() {
   const actor = useSession().actor
@@ -44,9 +37,9 @@ export function GameModesPage() {
   const [search, setSearch] = useState("")
   const visible = useMemo(() => {
     const test = FILTERS.find((item) => item.key === filter)!.test
-    const needle = fold(search.trim())
+    const needle = normalize(search.trim())
     return (modes.data ?? []).filter(
-      (mode) => test(mode) && (!needle || fold(`${mode.name} ${mode.code}`).includes(needle)),
+      (mode) => test(mode) && (!needle || normalize(`${mode.name} ${mode.code}`).includes(needle)),
     )
   }, [modes.data, filter, search])
 

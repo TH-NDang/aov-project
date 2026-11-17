@@ -4,6 +4,7 @@ import { Check, ChevronDown, ImageOff, Link2Off, Search, X } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Input } from "@aov/ui/components/input"
 import { selectionName } from "./tournament-model"
+import { matchesQuery } from "@/lib/text"
 
 export function CatalogPicker({
   value,
@@ -28,19 +29,7 @@ export function CatalogPicker({
   const [search, setSearch] = useState("")
   const selected = options.find((option) => option.id === value?.id)
   const name = selected?.name || selectionName(value)
-  const normalized = search
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/gi, "d")
-    .toLocaleLowerCase()
-  const shown = options.filter((option) =>
-    `${option.name} ${option.code} ${searchAliases?.[option.id] ?? ""}`
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/đ/gi, "d")
-      .toLocaleLowerCase()
-      .includes(normalized),
-  )
+  const shown = options.filter((option) => matchesQuery(search, option.name, option.code, searchAliases?.[option.id]))
   const choose = (selection: Selection) => {
     onChange(selection)
     setOpen(false)

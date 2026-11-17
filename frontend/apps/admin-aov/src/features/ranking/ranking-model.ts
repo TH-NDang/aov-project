@@ -1,6 +1,6 @@
 import type { RankingDetail, RankingHero, RankingMetric, RankingRole, RankingValue } from "./ranking-api"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
-import { formatNumber, readerLocale } from "@/lib/text"
+import { formatNumber, normalize, readerLocale } from "@/lib/text"
 
 export type MetricKind = "TIER" | "PERCENT" | "AMOUNT" | "HERO"
 
@@ -142,14 +142,7 @@ export function formatChange(metric: RankingMetric, delta: number, locale = read
 }
 
 export function fold(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .replace(/[’‘`]/g, "'")
-    .toLowerCase()
-    .trim()
+  return normalize(text.replace(/[’‘`]/g, "'"))
 }
 
 export type SortKey = "POSITION" | RankingMetric

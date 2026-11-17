@@ -12,6 +12,7 @@ import type {
   TeamDirectoryEntry,
 } from "@aov/community-contracts"
 import { backendRequest, communityRequest } from "@/app/auth/session"
+import { normalize } from "@/lib/text"
 
 export const DIRECTORY_PAGE_SIZE = 24
 
@@ -82,8 +83,7 @@ export function useProfilesOf(actorKey: string, kind: ProfileKind, entityIds: st
   return new Map(results.flatMap((result) => result.data?.items ?? []).map((page) => [page.entityId, page]))
 }
 
-const foldName = (name: string) =>
-  name.replace(/[’‘]/g, "\x27").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim()
+const foldName = (name: string) => normalize(name.replace(/[’‘]/g, "\x27"))
 type HeroRow = { name: string; head?: { currentVersion?: { url?: string } | null } | null }
 
 /** Hero portraits by name; signature heroes are stored as the names the sources use. */

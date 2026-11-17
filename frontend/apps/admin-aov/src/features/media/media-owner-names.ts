@@ -1,4 +1,5 @@
 import type { MediaOwner } from "./media-owners"
+import { normalize } from "@/lib/text"
 
 /** Whitespace collapsed and lower case: the backend treats names equal under this as one owner. */
 export function ownerKey(name: string) {
@@ -7,11 +8,7 @@ export function ownerKey(name: string) {
 
 /** Letters and digits without accents, so a name typed without accents still matches. */
 function folded(name: string) {
-  return name
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
+  return normalize(name)
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
 }

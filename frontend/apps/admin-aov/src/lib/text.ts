@@ -45,20 +45,3 @@ export function formatNumber(value: number, options: Intl.NumberFormatOptions = 
   }
   return format.format(value)
 }
-
-const relativeFormat = new Intl.RelativeTimeFormat("vi-VN", { numeric: "auto" })
-
-export function formatRelative(value: string | number | Date): string {
-  const seconds = Math.round((new Date(value).getTime() - Date.now()) / 1000)
-  const abs = Math.abs(seconds)
-  if (abs < 60) return relativeFormat.format(seconds, "second")
-  if (abs < 3600) return relativeFormat.format(Math.round(seconds / 60), "minute")
-  if (abs < 86400) return relativeFormat.format(Math.round(seconds / 3600), "hour")
-  return relativeFormat.format(Math.round(seconds / 86400), "day")
-}
-
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-}

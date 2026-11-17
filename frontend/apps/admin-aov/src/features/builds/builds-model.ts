@@ -1,4 +1,5 @@
 import type { Build, BuildHero, CaptureDetail, ReviewBuild } from "./builds-api"
+import { normalize } from "@/lib/text"
 
 /** The part of the "Chuan bi" screenshot that shows the build (items, enchantments, arcana, spell), in image pixels. */
 export const PANEL = { x: 1410, y: 170, width: 855, height: 760, imageWidth: 2400, imageHeight: 1080 }
@@ -23,17 +24,15 @@ export interface HeroView {
   reviewOnly: boolean
 }
 
-const fold = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLocaleLowerCase()
-
 export const openBuilds = (hero: BuildHero) => hero.builds.filter((build) => build.needsReview).length
 
 /** Heroes in the order they were captured, narrowed by name or code and, if asked, to those with builds in review. */
 export function heroRows(detail: CaptureDetail, view: HeroView): BuildHero[] {
-  const query = fold(view.query.trim())
+  const query = normalize(view.query.trim())
   return detail.heroes.filter(
     (hero) =>
       (!view.reviewOnly || openBuilds(hero) > 0) &&
-      (!query || fold(`${hero.nameOnScreen} ${hero.heroCode ?? ""}`).includes(query)),
+      (!query || normalize(`${hero.nameOnScreen} ${hero.heroCode ?? ""}`).includes(query)),
   )
 }
 

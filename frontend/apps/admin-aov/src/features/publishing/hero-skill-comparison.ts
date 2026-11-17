@@ -3,6 +3,7 @@ import { joinStatReadings, plainComparisonText } from "./hero-comparison"
 import { compareSkillRanks, type RankComparison } from "./skill-rank-values"
 import type { HeroComparison } from "./publishing-api"
 import type { Skill } from "./types"
+import { normalize } from "@/lib/text"
 
 export interface CuratedHeroChange {
   type: string
@@ -42,13 +43,7 @@ const records = (value: unknown): ValueRecord[] =>
   Array.isArray(value) ? value.map(record).filter((item): item is ValueRecord => item !== null) : []
 const text = (value: unknown) => (typeof value === "string" ? value : "")
 const unique = (values: string[]) => [...new Set(values.filter(Boolean))]
-const normalized = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .replaceAll("đ", "d")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "")
+const normalized = (value: string) => normalize(value).replace(/[^a-z0-9]/g, "")
 
 export const skillComparisonFieldLabel = skillFieldLabel
 

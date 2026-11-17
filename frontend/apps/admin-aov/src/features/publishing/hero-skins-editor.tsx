@@ -9,6 +9,7 @@ import { languageOptions } from "../users/profile-preference-picker"
 import { HeroAsset } from "./hero-asset"
 import { retainImageOptions } from "./image-options"
 import type { Skin, Skins } from "./types"
+import { slugify } from "@/lib/text"
 
 type SkinText = Skin["translations"][number]
 
@@ -38,13 +39,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
  */
 /** Lower case, no accents, words joined by hyphens, as in "tan-thuy-thu" for the Vietnamese sailor skin name. */
 export function skinSlug(text: string) {
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+  return slugify(text)
 }
 
 /**

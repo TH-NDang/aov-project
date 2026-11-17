@@ -24,7 +24,8 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { AdminDescriptionField } from "../terminology/rich-text-field"
 import { ClampedChips, HeroCodePicker, RowMenu, SuggestInput } from "./entry-controls"
 import type { GuideContent, GuideLineup } from "./game-mode-api"
-import { fixedCodes, fold, named, slugify } from "./guide-codes"
+import { fixedCodes, named } from "./guide-codes"
+import { normalize, slugify } from "@/lib/text"
 
 export type Unit = GuideContent["units"][number]
 export type Trait = GuideContent["traits"][number]
@@ -366,7 +367,7 @@ function MasterDetail({
   footer?: ReactNode
 }) {
   const [search, setSearch] = useState("")
-  const needle = fold(search.trim())
+  const needle = normalize(search.trim())
   const total = groups.reduce((sum, group) => sum + group.rows.length, 0)
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -390,7 +391,7 @@ function MasterDetail({
         </label>
         <div className="grid max-h-[64vh] gap-3 overflow-y-auto pr-1">
           {groups.map((group) => {
-            const rows = group.rows.filter((row) => !needle || fold(row.title).includes(needle))
+            const rows = group.rows.filter((row) => !needle || normalize(row.title).includes(needle))
             if (!rows.length) return null
             return (
               <section key={group.key} className="grid gap-0.5">
@@ -1018,7 +1019,7 @@ export function TraitsSection({ content, saved, setContent, image, upload }: Sec
 // Items
 
 function stoneColor(group: { code: string; name: string }) {
-  const key = fold(`${group.code} ${group.name}`)
+  const key = normalize(`${group.code} ${group.name}`)
   // "xanh lam" contains "xanh la", so blue is checked first.
   if (key.includes("xanh lam") || key.includes("xanh duong")) return "#3fa2f0"
   if (key.includes("xanh la")) return "#a9c63b"
@@ -1885,7 +1886,7 @@ export function LineupsSection({ content, saved, setContent, image }: Omit<Secti
   const units = new Map(content.units.map((unit) => [unit.code, unit]))
   const traits = new Map(content.traits.map((trait) => [trait.code, trait]))
   const costs = [...new Set(content.units.map((unit) => unit.cost))].sort((a, b) => a - b)
-  const needle = fold(search.trim())
+  const needle = normalize(search.trim())
   const itemByCode = new Map(content.items.map((item) => [item.code, item]))
   const blessingByCode = new Map(content.blessings.map((blessing) => [blessing.code, blessing]))
   const itemGroups = [...content.itemGroups, { code: "", name: "Khác", slotCount: null, iconAssetId: null }].map(
@@ -2152,7 +2153,7 @@ export function LineupsSection({ content, saved, setContent, image }: Omit<Secti
             <div className="grid max-h-80 gap-2 overflow-y-auto pr-1">
               {costs.map((cost) => {
                 const pool = content.units.filter(
-                  (unit) => unit.cost === cost && (!needle || fold(unit.name).includes(needle)),
+                  (unit) => unit.cost === cost && (!needle || normalize(unit.name).includes(needle)),
                 )
                 if (!pool.length) return null
                 return (

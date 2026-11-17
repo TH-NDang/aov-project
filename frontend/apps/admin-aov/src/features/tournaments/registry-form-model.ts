@@ -6,17 +6,13 @@ import type {
   TournamentContent,
   TournamentResult,
 } from "@aov/community-contracts"
+import { normalize } from "@/lib/text"
 
 export type RegistryKind = "teams" | "players" | "tournaments" | "series"
 type Content = TeamContent | PlayerContent | TournamentContent | SeriesContent
 
 export function registrySearchText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/gi, "d")
-    .trim()
-    .toLocaleLowerCase()
+  return normalize(value)
 }
 
 export function parseTeamAliases(value: string): string[] {

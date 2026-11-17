@@ -8,6 +8,7 @@ import {
   type PublishContent,
 } from "./publish-rules"
 import type { Revision } from "./types"
+import { normalize } from "@/lib/text"
 
 export type HeroPublishReadiness = Omit<components["schemas"]["HeroPublishReadiness"], "revisions"> & {
   revisions: Revision[]
@@ -124,11 +125,9 @@ export function readinessFilter(params: URLSearchParams): ReadinessFilter {
   }
 }
 
-const folded = (value: string) => value.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLocaleLowerCase("vi")
-
 export function matchesReadinessSearch(row: ReadinessRow, q: string) {
-  const search = folded(q.trim())
-  return !search || folded(row.name).includes(search) || folded(row.code).includes(search)
+  const search = normalize(q.trim())
+  return !search || normalize(row.name).includes(search) || normalize(row.code).includes(search)
 }
 
 /** Both filters narrow together: not yet published and ready is what can go public next. */

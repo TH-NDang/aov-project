@@ -94,6 +94,17 @@ const rules: Rule[] = [
         ),
   },
   {
+    name: "admin folds accents for search in one place",
+    hint: "Use normalize, matchesQuery or slugify from lib/text; a copy tends to forget the crossed d.",
+    files: files(source, /\.tsx?$/).filter(
+      (path) => !path.endsWith(join("lib", "text.ts")) && !path.endsWith(join("esports", "model", "name-key.ts")),
+    ),
+    offenders: (text) =>
+      text
+        .split("\n")
+        .flatMap((line, index) => (/\.normalize\(\s*["']NFD["']\s*\)/.test(line) ? [`:${index + 1}`] : [])),
+  },
+  {
     name: "admin makes ids with randomId",
     hint: "crypto.randomUUID is missing on plain-HTTP LAN addresses; use randomId from lib/random-id.",
     files: files(source, /\.tsx?$/).filter((path) => !path.endsWith(join("lib", "random-id.ts"))),
