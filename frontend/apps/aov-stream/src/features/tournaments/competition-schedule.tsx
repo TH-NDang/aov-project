@@ -213,7 +213,7 @@ export function ScheduleList({
       )}
       <InfiniteScroll
         query={loader}
-        label="Đang tải thêm trận đấu"
+        label={text("Đang tải thêm trận đấu", "Loading more matches")}
         retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
       />
     </div>
@@ -309,7 +309,7 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
           label={text("Đội", "Team")}
           value={team}
           onChange={(value) => update("team", value)}
-          all="Mọi đội"
+          all={text("Mọi đội", "All teams")}
           options={teamIds.map((id) => [id, teams[id]!.name])}
         />
       )}
@@ -329,12 +329,15 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
           {selectCount > 0 &&
             (folded ? (
               <PublicFilterSheet
-                title="Lọc trận đấu"
+                title={text("Lọc trận đấu", "Filter matches")}
                 triggerLabel={text("Lọc", "Filter")}
                 count={active}
                 resetLabel={text("Xóa lọc", "Clear filters")}
                 onReset={clear}
-                resultLabel={`Xem ${total.toLocaleString(languageTag)} trận`}
+                resultLabel={text(
+                  `Xem ${total.toLocaleString(languageTag)} trận`,
+                  `Show ${total.toLocaleString(languageTag)} ${total === 1 ? "match" : "matches"}`,
+                )}
               >
                 <div className="competition-sheet-filters">{selects}</div>
               </PublicFilterSheet>

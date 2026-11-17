@@ -130,18 +130,26 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
   }))
   const played = blocks.filter((block) => block.entries.length)
   const idle = blocks.filter((block) => !block.entries.length)
-  if (query.isPending) return <div className="hub-skeleton-rows" role="status" aria-label="Đang tải lịch và kết quả" />
+  if (query.isPending)
+    return (
+      <div
+        className="hub-skeleton-rows"
+        role="status"
+        aria-label={text("Đang tải lịch và kết quả", "Loading schedule and results")}
+      />
+    )
   if (query.isLoadingError)
     return (
       <div className="hub-state" role="alert">
-        <h2>Chưa tải được lịch và kết quả</h2>
+        <h2>{text("Chưa tải được lịch và kết quả", "The schedule and results could not be loaded")}</h2>
         <p>{query.error.message}</p>
         <button type="button" className="cp-button" onClick={() => void query.refetch()}>
           {text("Thử lại", "Retry")}
         </button>
       </div>
     )
-  if (!views.length) return <p className="pf-note">Chưa có giải đấu nào của trang này được công bố.</p>
+  if (!views.length)
+    return <p className="pf-note">{text("Trang này chưa có giải đấu nào.", "This page has no tournaments yet.")}</p>
   return (
     <>
       {profile.kind === "PLAYER" && (
@@ -164,7 +172,10 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
         <section aria-labelledby="profile-idle">
           <div className="tn-heading">
             <h2 id="profile-idle">
-              Chưa có lịch của đội <small>{idle.length} giải</small>
+              {text("Chưa có lịch của đội", "No team schedule yet")}{" "}
+              <small>
+                {text(`${idle.length} giải`, `${idle.length} ${idle.length === 1 ? "tournament" : "tournaments"}`)}
+              </small>
             </h2>
           </div>
           <div className="tn-card-grid">

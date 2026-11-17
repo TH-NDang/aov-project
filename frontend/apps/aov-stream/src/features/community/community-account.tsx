@@ -114,7 +114,11 @@ export function CommunityAccount() {
           </nav>
         )}
         {session.status === "loading" ? (
-          <div className="hub-skeleton-rows" role="status" aria-label="Đang tải tài khoản" />
+          <div
+            className="hub-skeleton-rows"
+            role="status"
+            aria-label={text("Đang tải tài khoản", "Loading the account")}
+          />
         ) : !enabled ? (
           <SignInPrompt />
         ) : tab === "settings" ? (
@@ -231,7 +235,12 @@ function NotificationInbox() {
       )}
       {inbox.isLoadingError && <p className="cp-error">{inbox.error.message}</p>}
       {inbox.data && !notifications.length && (
-        <p className="cp-section-lead">Chưa có thông báo. Theo dõi trang để nhận tin khi có bài mới.</p>
+        <p className="cp-section-lead">
+          {text(
+            "Chưa có thông báo. Theo dõi trang để nhận tin khi có bài mới.",
+            "No notifications yet. Follow pages to hear about their new posts.",
+          )}
+        </p>
       )}
       {!!notifications.length && (
         <ul className="cp-rows">
@@ -288,7 +297,13 @@ function ManagedPages() {
         <div className="tn-heading">
           <h2 id="account-managed">{text("Trang bạn quản lý", "Pages you manage")}</h2>
         </div>
-        {managed.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải trang quản lý" />}
+        {managed.isPending && (
+          <div
+            className="hub-skeleton-rows"
+            role="status"
+            aria-label={text("Đang tải trang quản lý", "Loading the pages you manage")}
+          />
+        )}
         {managed.isError && <p className="cp-error">{managed.error.message}</p>}
         {managed.data &&
           (managed.data.length ? (
@@ -322,7 +337,9 @@ function ManagedPages() {
         <div className="tn-heading">
           <h2 id="account-claims">{text("Yêu cầu đại diện", "Representation requests")}</h2>
         </div>
-        {claims.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải yêu cầu" />}
+        {claims.isPending && (
+          <div className="hub-skeleton-rows" role="status" aria-label={text("Đang tải yêu cầu", "Loading requests")} />
+        )}
         {claims.isError && <p className="cp-error">{claims.error.message}</p>}
         {claims.data &&
           (claims.data.length ? (
@@ -352,12 +369,12 @@ function ManagedPages() {
 }
 
 /** What an account gives a visitor, with the two ways in. The one prompt of the account screens. */
-export function SignInPrompt({ title = "Đăng nhập để tham gia cộng đồng" }: { title?: string }) {
+export function SignInPrompt({ title }: { title?: string }) {
   const { text } = useStreamLocale()
   const [error, setError] = useState("")
   return (
     <section className="cp-signin" aria-labelledby="signin-title">
-      <h2 id="signin-title">{title}</h2>
+      <h2 id="signin-title">{title ?? text("Đăng nhập để tham gia cộng đồng", "Sign in to join the community")}</h2>
       <SignInBenefits />
       <div className="cp-signin-actions">
         <button className="cp-button cp-primary" onClick={() => openSignIn(false, setError)}>
@@ -408,10 +425,15 @@ export function CommunityPageManager() {
             <header className="tn-page-head">
               <div>
                 <h1>{text("Quản lý trang", "Manage page")}</h1>
-                <p>Người đại diện cập nhật giới thiệu, đăng bài và mời người cùng quản lý trang.</p>
+                <p>
+                  {text(
+                    "Người đại diện cập nhật giới thiệu, đăng bài và mời người cùng quản lý trang.",
+                    "Representatives update the introduction, post and invite others to manage the page.",
+                  )}
+                </p>
               </div>
             </header>
-            <SignInPrompt title="Đăng nhập để quản lý trang" />
+            <SignInPrompt title={text("Đăng nhập để quản lý trang", "Sign in to manage the page")} />
           </>
         ) : profile.isError || viewer.isError ? (
           <p className="cp-error" role="alert">
@@ -422,7 +444,12 @@ export function CommunityPageManager() {
         ) : !viewer.data.role ? (
           <div className="hub-state">
             <h2>{text("Bạn chưa có quyền quản lý trang này.", "You are not allowed to manage this page yet.")}</h2>
-            <p>Trang bạn quản lý được liệt kê trong tài khoản, mục Trang & yêu cầu.</p>
+            <p>
+              {text(
+                "Trang bạn quản lý được liệt kê trong tài khoản, mục “Trang và yêu cầu”.",
+                "The pages you manage are listed in your account, under “Pages and requests”.",
+              )}
+            </p>
             <div className="hub-state-actions">
               <Link className="cp-button" to="/account?tab=pages">
                 {text("Về Trang & yêu cầu", "Back to Pages & requests")}
@@ -499,7 +526,7 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
       {tab === "posts" && (
         <section className="cp-section" aria-labelledby="manage-posts">
           <div className="tn-heading">
-            <h2 id="manage-posts">Bài viết của trang</h2>
+            <h2 id="manage-posts">{text("Bài viết của trang", "The page's posts")}</h2>
           </div>
           <CommunityFeed
             pageId={profile.id}
@@ -554,7 +581,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
       }}
     >
       <div className="tn-heading">
-        <h2 id="manage-presentation">Giới thiệu trang</h2>
+        <h2 id="manage-presentation">{text("Giới thiệu trang", "Page introduction")}</h2>
       </div>
       <p className="cp-section-lead">
         {readOnly
@@ -602,7 +629,11 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
             <option key={platform} value={platform} />
           ))}
         </datalist>
-        {!presentation.links.length && <p className="cp-section-lead">Trang chưa có kênh liên hệ nào.</p>}
+        {!presentation.links.length && (
+          <p className="cp-section-lead">
+            {text("Trang chưa có kênh liên hệ nào.", "The page has no contact channel yet.")}
+          </p>
+        )}
         {presentation.links.map((link, index) => (
           <div className="cp-link-field" key={index}>
             <label>
@@ -724,9 +755,18 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
         </h2>
       </div>
       <p className="cp-section-lead">
-        Biên tập viên đăng bài dưới tên trang; kiểm duyệt viên ẩn nội dung vi phạm. Chỉ quản trị chính mời và thu hồi.
+        {text(
+          "Biên tập viên đăng bài dưới tên trang; kiểm duyệt viên ẩn nội dung vi phạm. Chỉ quản trị chính mời và thu hồi.",
+          "Editors post under the page's name; moderators hide content that breaks the rules. Only the main admin invites and removes people.",
+        )}
       </p>
-      {members.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải người quản lý" />}
+      {members.isPending && (
+        <div
+          className="hub-skeleton-rows"
+          role="status"
+          aria-label={text("Đang tải người quản lý", "Loading managers")}
+        />
+      )}
       {members.isError && <p className="cp-error">{members.error.message}</p>}
       {!!members.data?.length && (
         <ul className="cp-rows">
@@ -750,7 +790,10 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
                 {owner && !member.self && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="hub-icon-button cp-more" aria-label={`Thao tác với ${member.name}`}>
+                      <button
+                        className="hub-icon-button cp-more"
+                        aria-label={text(`Thao tác với ${member.name}`, `Actions for ${member.name}`)}
+                      >
                         <StreamIcon name="more" size={18} />
                       </button>
                     </DropdownMenuTrigger>
@@ -775,7 +818,11 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
                 )}
               </div>
               {confirmation?.id === member.id && (
-                <div className="cp-confirm" role="group" aria-label="Xác nhận thay đổi quyền">
+                <div
+                  className="cp-confirm"
+                  role="group"
+                  aria-label={text("Xác nhận thay đổi quyền", "Confirm the role change")}
+                >
                   <p>
                     {confirmation.action === "transfer"
                       ? text(
@@ -872,24 +919,31 @@ export function CommunityInvitation() {
         <header className="tn-page-head">
           <div>
             <h1>{text("Lời mời quản lý trang", "Invitation to manage a page")}</h1>
-            <p>Người quản trị chính của một trang mời bạn cùng quản lý trang đó.</p>
+            <p>
+              {text(
+                "Người quản trị chính của một trang mời bạn cùng quản lý trang đó.",
+                "The main admin of a page invites you to manage it with them.",
+              )}
+            </p>
           </div>
         </header>
         {session.status === "loading" ? (
           <div className="hub-skeleton-rows" role="status" aria-label={text("Đang tải", "Loading")} />
         ) : session.status !== "authenticated" ? (
-          <SignInPrompt title="Đăng nhập để nhận lời mời" />
+          <SignInPrompt title={text("Đăng nhập để nhận lời mời", "Sign in to accept the invitation")} />
         ) : !token ? (
           <section className="cp-signin" aria-labelledby="invitation-title">
-            <h2 id="invitation-title">Liên kết mời chưa đầy đủ</h2>
+            <h2 id="invitation-title">{text("Liên kết mời chưa đầy đủ", "The invitation link is incomplete")}</h2>
             <p className="cp-section-lead">
-              Liên kết thiếu mã mời. Hãy mở lại đúng liên kết bạn nhận được, hoặc xin người quản trị chính tạo liên kết
-              mới.
+              {text(
+                "Liên kết thiếu mã mời. Hãy mở lại đúng liên kết bạn nhận được, hoặc xin người quản trị chính tạo liên kết mới.",
+                "The link has no invitation code. Open the exact link you received again, or ask the main admin for a new one.",
+              )}
             </p>
           </section>
         ) : (
           <section className="cp-signin" aria-labelledby="invitation-title">
-            <h2 id="invitation-title">Nhận quyền quản lý</h2>
+            <h2 id="invitation-title">{text("Nhận quyền quản lý", "Accept the invitation")}</h2>
             <p className="cp-section-lead">
               {text(
                 "Chấp nhận để liên kết quyền quản lý với tài khoản",

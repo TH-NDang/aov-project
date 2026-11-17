@@ -410,12 +410,12 @@ export function PostCard({
               ))}
             </div>
             <label>
-              <span className="sr-only">Mô tả lý do</span>
+              <span className="sr-only">{text("Mô tả lý do", "Describe the reason")}</span>
               <textarea
                 required
                 rows={2}
                 maxLength={2000}
-                placeholder="Chọn một lý do ở trên hoặc tự mô tả…"
+                placeholder={text("Chọn một lý do ở trên hoặc tự mô tả…", "Choose a reason above or describe it…")}
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
               />

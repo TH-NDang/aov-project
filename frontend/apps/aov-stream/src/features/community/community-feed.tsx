@@ -118,7 +118,7 @@ export function CommunityFeed({
   return (
     <div className="cp-feed">
       {composer && session.status === "authenticated" && (
-        <section className="cp-composer" aria-label="Viết bài mới">
+        <section className="cp-composer" aria-label={text("Viết bài mới", "Write a new post")}>
           <form
             onSubmit={(event) => {
               event.preventDefault()
@@ -176,7 +176,7 @@ export function CommunityFeed({
             <details className="cp-composer-images">
               <summary>{text("Thêm ảnh bằng đường dẫn (tối đa 4)", "Add images by link (up to 4)")}</summary>
               <label>
-                <span className="sr-only">Đường dẫn ảnh</span>
+                <span className="sr-only">{text("Đường dẫn ảnh", "Image links")}</span>
                 <textarea
                   rows={2}
                   value={images}

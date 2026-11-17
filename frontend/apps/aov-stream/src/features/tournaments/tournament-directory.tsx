@@ -81,7 +81,13 @@ export function TournamentDirectory() {
             <p>
               {total == null
                 ? "Cấm chọn và đội hình của từng ván đã công bố."
-                : [`${total.toLocaleString(languageTag)} ván đã công bố`, !seriesId && only]
+                : [
+                    text(
+                      `${total.toLocaleString(languageTag)} ván đã xuất bản`,
+                      `${total.toLocaleString(languageTag)} published ${total === 1 ? "game" : "games"}`,
+                    ),
+                    !seriesId && only,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
             </p>
@@ -91,8 +97,8 @@ export function TournamentDirectory() {
           <label className="stream-search">
             <StreamIcon name="search" size={16} />
             <input
-              aria-label="Tìm ván đấu theo đội hoặc vòng đấu"
-              placeholder="Tìm đội, vòng đấu…"
+              aria-label={text("Tìm ván đấu theo đội hoặc vòng đấu", "Search games by team or round")}
+              placeholder={text("Tìm đội, vòng đấu…", "Search teams, rounds…")}
               value={q}
               onChange={(event) => filter("q", event.target.value)}
             />
@@ -102,7 +108,7 @@ export function TournamentDirectory() {
               label={text("Giải đấu", "Tournament")}
               value={tournament || "all"}
               onChange={(value) => filter("tournament", value)}
-              all="Mọi giải đấu"
+              all={text("Mọi giải đấu", "All tournaments")}
               options={competitions.map((entry) => [entry.id, `${entry.content.name} (${entry.gameCount})`])}
             />
           )}
@@ -130,8 +136,13 @@ export function TournamentDirectory() {
           </div>
         ) : games.isLoadingError ? (
           <div className="hub-state" role="alert">
-            <h2>Chưa tải được ván đấu</h2>
-            <p>Kho dữ liệu giải đấu chưa phản hồi. Thử lại sau ít phút.</p>
+            <h2>{text("Chưa tải được ván đấu", "The games could not be loaded")}</h2>
+            <p>
+              {text(
+                "Kho dữ liệu giải đấu chưa phản hồi. Thử lại sau ít phút.",
+                "The tournament data store is not answering. Try again in a few minutes.",
+              )}
+            </p>
             <button type="button" className="cp-button" onClick={() => void games.refetch()}>
               {text("Thử lại", "Retry")}
             </button>

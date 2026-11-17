@@ -187,7 +187,11 @@ export function PageDirectory() {
           (regions ? (
             <RegionChips regions={regions} value={region} onChange={(value) => update({ region: value })} />
           ) : region ? (
-            <div className="hub-pills" role="status" aria-label="Đang đếm trang theo khu vực">
+            <div
+              className="hub-pills"
+              role="status"
+              aria-label={text("Đang đếm trang theo khu vực", "Counting pages by region")}
+            >
               {Array.from({ length: 5 }, (_, index) => (
                 <span key={index} className="hub-skeleton" />
               ))}
@@ -211,7 +215,7 @@ export function PageDirectory() {
         </div>
       ) : query.isLoadingError ? (
         <div className="hub-state" role="alert">
-          <h3>Chưa tải được danh bạ</h3>
+          <h3>{text("Chưa tải được danh bạ", "The directory could not be loaded")}</h3>
           <p>{query.error.message}</p>
           <button type="button" className="cp-button" onClick={() => void query.refetch()}>
             {text("Thử lại", "Retry")}

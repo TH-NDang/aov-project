@@ -34,7 +34,7 @@ export function PostVideo({ url, title }: { url: string; title: string }) {
           <button
             type="button"
             className="cp-video-poster"
-            aria-label={`Phát video: ${title}`}
+            aria-label={text(`Phát video: ${title}`, `Play video: ${title}`)}
             onClick={() => setPlaying(true)}
           >
             <img src={videoPoster(embed)!} alt="" loading="lazy" />

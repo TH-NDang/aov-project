@@ -57,7 +57,7 @@ export function ProfileMatches({
   const count = compact ? 2 : 4
   if (pending)
     return (
-      <div className="tn-match-grid" role="status" aria-label="Đang tải trận đấu">
+      <div className="tn-match-grid" role="status" aria-label={text("Đang tải trận đấu", "Loading matches")}>
         {Array.from({ length: count }, (_, index) => (
           <span key={index} className="tn-match hub-skeleton pf-match-skeleton" />
         ))}

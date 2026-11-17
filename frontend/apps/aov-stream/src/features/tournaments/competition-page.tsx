@@ -150,7 +150,7 @@ export function PublicCompetitionPage() {
           </div>
           {won && (
             <div className="tn-champion">
-              <small>Nhà vô địch</small>
+              <small>{text("Nhà vô địch", "Champion")}</small>
               <span className="tn-champion-team">
                 <StreamImage src={"logoUrl" in won.winner ? won.winner.logoUrl : undefined} name={won.winner.name} />
                 <strong>{won.winner.name}</strong>
@@ -254,11 +254,16 @@ function Overview({
       <div className="tn-overview-main">
         {empty && (
           <div className="hub-state">
-            <h2>Lịch thi đấu chưa được công bố</h2>
-            <p>Trận đấu và bảng xếp hạng sẽ xuất hiện tại đây khi ban tổ chức công bố.</p>
+            <h2>{text("Lịch thi đấu chưa được công bố", "The schedule has not been announced")}</h2>
+            <p>
+              {text(
+                "Trận đấu và bảng xếp hạng sẽ xuất hiện tại đây khi ban tổ chức công bố.",
+                "Matches and standings will appear here once the organizer announces them.",
+              )}
+            </p>
             {plan.entrants.length > 0 && (
               <button type="button" className="cp-button" onClick={() => openTab("teams")}>
-                Xem {plan.entrants.length} đội tham dự
+                {text(`Xem ${plan.entrants.length} đội tham dự`, `See the ${plan.entrants.length} teams taking part`)}
               </button>
             )}
           </div>
@@ -281,7 +286,7 @@ function Overview({
             note={plan.stages.find((stage) => stage.code === table.stageCode)?.name}
             more={
               table.rows.length > 10 || standings.length > 1
-                ? { label: "Xem đầy đủ", open: () => openTab("standings") }
+                ? { label: text("Xem đầy đủ", "See all"), open: () => openTab("standings") }
                 : undefined
             }
           >
@@ -289,7 +294,7 @@ function Overview({
           </Block>
         )}
         {knockout && (
-          <Block title="Nhánh đấu" note={knockout.name}>
+          <Block title={text("Nhánh đấu", "Bracket")} note={knockout.name}>
             <Bracket stage={knockout} matches={matches} />
           </Block>
         )}
@@ -315,7 +320,7 @@ function Standings({ view, matches }: { view: CompetitionView; matches: Competit
   if (!standings.length && !knockouts.length)
     return (
       <div className="hub-state">
-        <h2>Giải chưa có bảng xếp hạng hoặc nhánh đấu</h2>
+        <h2>{text("Giải chưa có bảng xếp hạng hoặc nhánh đấu", "The tournament has no standings or bracket yet")}</h2>
       </div>
     )
   return (
@@ -366,10 +371,10 @@ function StandingsTable({
               {text("Trận", "Matches")}
             </th>
             <th scope="col">
-              <abbr title="Trận thắng – trận thua">T–B</abbr>
+              <abbr title={text("Trận thắng – trận thua", "Matches won – lost")}>{text("T–B", "W–L")}</abbr>
             </th>
             <th scope="col" className="tn-wide-only">
-              <abbr title="Ván thắng – ván thua">{text("Ván", "Games")}</abbr>
+              <abbr title={text("Ván thắng – ván thua", "Games won – lost")}>{text("Ván", "Games")}</abbr>
             </th>
             <th scope="col">
               <abbr title={text("Hiệu số ván", "Game difference")}>HS</abbr>
@@ -386,7 +391,7 @@ function StandingsTable({
               <tr key={row.teamId} data-qualified={row.qualified || undefined}>
                 <td className="tn-rank">
                   {row.rank}
-                  {row.tied && <span title="Đồng hạng">=</span>}
+                  {row.tied && <span title={text("Đồng hạng", "Tied")}>=</span>}
                   {row.qualified && (
                     <span className="sr-only">{text(", đã giành suất đi tiếp", ", secured a spot to advance")}</span>
                   )}
@@ -442,7 +447,12 @@ function Bracket({ stage, matches }: { stage: CompetitionStage; matches: Competi
   const rounds = [...new Set(entries.map((entry) => entry.match.round))].sort((a, b) => a - b)
   const laned = lanes.some((lane) => lane.key !== "rounds")
   return (
-    <div className="tn-bracket" tabIndex={0} role="group" aria-label={`Nhánh đấu ${stage.name}`}>
+    <div
+      className="tn-bracket"
+      tabIndex={0}
+      role="group"
+      aria-label={text(`Nhánh đấu ${stage.name}`, `${stage.name} bracket`)}
+    >
       <div
         className="tn-bracket-grid"
         data-laned={laned || undefined}
@@ -588,7 +598,7 @@ function Facts({ view }: { view: CompetitionView }) {
       ),
     ],
     [
-      "Hình thức",
+      text("Hình thức", "Format"),
       [
         codeName(COMPETITION_TYPE_NAMES, tournament.competitionType, text),
         codeName(VENUE_MODE_NAMES, tournament.venueMode, text),
@@ -601,7 +611,7 @@ function Facts({ view }: { view: CompetitionView }) {
       venues.length > 0 &&
         venues.map((venue, index) => <div key={index}>{[venue.name, venue.city].filter(Boolean).join(", ")}</div>),
     ],
-    ["Múi giờ của lịch", plan.timezone],
+    [text("Múi giờ của lịch", "Schedule time zone"), plan.timezone],
   ]
   const links = [
     ...(tournament.links ?? []),
@@ -663,15 +673,20 @@ function Format({ view }: { view: CompetitionView }) {
               {[
                 codeName(STAGE_FORMAT_NAMES, stage.format, text) ?? text("Lịch riêng", "Custom schedule"),
                 `BO${stage.bestOf}`,
-                stage.format === "ROUND_ROBIN" && stage.legs > 1 && `${stage.legs} lượt`,
-                stage.format === "ROUND_ROBIN" && stage.advance > 0 && `${stage.advance} đội đi tiếp`,
+                stage.format === "ROUND_ROBIN" && stage.legs > 1 && text(`${stage.legs} lượt`, `${stage.legs} legs`),
+                stage.format === "ROUND_ROBIN" &&
+                  stage.advance > 0 &&
+                  text(
+                    `${stage.advance} đội đi tiếp`,
+                    `${stage.advance} ${stage.advance === 1 ? "team advances" : "teams advance"}`,
+                  ),
               ]
                 .filter(Boolean)
                 .join(" · ")}
             </span>
             {stage.format === "ROUND_ROBIN" && stage.tieBreakers.length > 0 && (
               <small>
-                Xếp hạng phụ:{" "}
+                {text("Xếp hạng phụ:", "Tiebreakers:")}{" "}
                 {stage.tieBreakers.map((rule) => (TIE_BREAKERS[rule] ? text(...TIE_BREAKERS[rule]) : rule)).join(" → ")}
               </small>
             )}
@@ -695,7 +710,7 @@ function Awards({ view }: { view: CompetitionView }) {
   const shown = open ? all : all.slice(0, 4)
   return (
     <section className="tn-side-card">
-      <h2>Giải thưởng cá nhân</h2>
+      <h2>{text("Giải thưởng cá nhân", "Individual awards")}</h2>
       <dl className="tn-awards">
         {shown.map(([title, awards]) => (
           <div key={title}>

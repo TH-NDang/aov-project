@@ -16,7 +16,7 @@ export function HomeMatches() {
   const competitions = useFeaturedCompetitions()
   if (competitions.isPending)
     return (
-      <div className="tn-strip" role="status" aria-label="Đang tải trận đấu">
+      <div className="tn-strip" role="status" aria-label={text("Đang tải trận đấu", "Loading matches")}>
         <div className="tn-strip-row">
           {Array.from({ length: 4 }, (_, index) => (
             <span key={index} className="tn-match hub-skeleton" />
@@ -35,7 +35,12 @@ export function HomeMatches() {
           <StreamIcon name="arrow" size={15} />
         </Link>
       </div>
-      <div className="tn-strip-row" tabIndex={0} role="group" aria-label="Trận sắp diễn ra và kết quả mới nhất">
+      <div
+        className="tn-strip-row"
+        tabIndex={0}
+        role="group"
+        aria-label={text("Trận sắp diễn ra và kết quả mới nhất", "Upcoming matches and latest results")}
+      >
         {entries.map((entry) => (
           <MatchCard key={`${entry.competition.id}:${entry.match.key}`} entry={entry} context />
         ))}
@@ -58,7 +63,7 @@ export function HomeCompetitions() {
     <section className="hub-card hub-card-padded" aria-labelledby="home-competitions">
       <div className="hub-card-heading">
         <h2 id="home-competitions" className="hub-card-title">
-          Giải đang và sắp diễn ra
+          {text("Giải đang và sắp diễn ra", "Current and upcoming tournaments")}
         </h2>
         <Link to="/competitions" className="hub-card-more">
           {text("Tất cả", "All")}

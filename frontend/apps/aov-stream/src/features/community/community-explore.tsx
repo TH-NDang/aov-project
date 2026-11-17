@@ -54,7 +54,12 @@ function Browse() {
       <header className="tn-page-head">
         <div>
           <h1>{text("Khám phá", "Explore")}</h1>
-          <p>Trang của các hệ thống giải, tổ chức, đội tuyển, tuyển thủ và ban huấn luyện.</p>
+          <p>
+            {text(
+              "Trang của các hệ thống giải, tổ chức, đội tuyển, tuyển thủ và ban huấn luyện.",
+              "Pages of tournament circuits, organizations, teams, players and coaching staff.",
+            )}
+          </p>
         </div>
       </header>
       <LiveNow />
@@ -103,7 +108,7 @@ function NewVideos() {
       <div className="tn-heading">
         <h2 id="explore-videos">{text("Video mới", "New videos")}</h2>
         <Link to="/?tab=video">
-          Tất cả video
+          {text("Tất cả video", "All videos")}
           <StreamIcon name="arrow" size={15} />
         </Link>
       </div>
@@ -197,10 +202,15 @@ function SearchResults({ query }: { query: string }) {
       </header>
       {nothing && (
         <div className="hub-state">
-          <h2>Không tìm thấy gì cho “{query}”</h2>
-          <p>Thử một phần của tên, gõ có dấu như cách tên được viết.</p>
+          <h2>{text(`Không tìm thấy gì cho “${query}”`, `Nothing found for “${query}”`)}</h2>
+          <p>
+            {text(
+              "Thử một phần của tên, gõ có dấu như cách tên được viết.",
+              "Try part of the name, with accents as the name is written.",
+            )}
+          </p>
           <Link className="cp-button" to="/explore">
-            Xem danh bạ trang
+            {text("Xem danh bạ trang", "Browse the page directory")}
           </Link>
         </div>
       )}
@@ -209,7 +219,10 @@ function SearchResults({ query }: { query: string }) {
         if (group.isError)
           return (
             <p key={kind} className="cp-error" role="alert">
-              Chưa tìm được {profileKindLabels[kind].toLowerCase()}.{" "}
+              {text(
+                `Chưa tìm được ${profileKindLabels[kind].toLowerCase()}.`,
+                `No ${profileKindEnglish[kind].toLowerCase()} found.`,
+              )}{" "}
               <button type="button" onClick={() => void group.refetch()}>
                 {text("Thử lại", "Retry")}
               </button>
@@ -242,7 +255,7 @@ function SearchResults({ query }: { query: string }) {
       })}
       {catalog.isError && !catalog.data ? (
         <p className="cp-error" role="alert">
-          Chưa tìm được trong các giải đấu.{" "}
+          {text("Chưa tìm được trong các giải đấu.", "Nothing found in tournaments.")}{" "}
           <button type="button" onClick={() => void catalog.refetch()}>
             {text("Thử lại", "Retry")}
           </button>
@@ -271,7 +284,7 @@ function SearchResults({ query }: { query: string }) {
       )}
       {posts.isLoadingError ? (
         <p className="cp-error" role="alert">
-          Chưa tìm được bài viết.{" "}
+          {text("Chưa tìm được bài viết.", "No posts found.")}{" "}
           <button type="button" onClick={() => void posts.refetch()}>
             {text("Thử lại", "Retry")}
           </button>
@@ -305,7 +318,11 @@ function SearchResults({ query }: { query: string }) {
         )
       )}
       {searching && (
-        <div className="ex-searching" role="status" aria-label={`Đang tìm “${query}”`}>
+        <div
+          className="ex-searching"
+          role="status"
+          aria-label={text(`Đang tìm “${query}”`, `Searching for “${query}”`)}
+        >
           <span className="hub-skeleton" />
           <div className="cp-grid">
             {Array.from({ length: 4 }, (_, index) => (
@@ -335,7 +352,7 @@ function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
     <>
       <Link className="cp-back" to={back}>
         <StreamIcon name="back" size={16} />
-        Tất cả kết quả
+        {text("Tất cả kết quả", "All results")}
       </Link>
       <header className="tn-page-head">
         <div>
@@ -350,14 +367,14 @@ function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
           </h2>
         </div>
         {pages.isPending ? (
-          <div className="cp-grid" role="status" aria-label="Đang tìm trang">
+          <div className="cp-grid" role="status" aria-label={text("Đang tìm trang", "Searching pages")}>
             {Array.from({ length: 8 }, (_, index) => (
               <div className="hub-skeleton cp-card-skeleton" key={index} />
             ))}
           </div>
         ) : pages.isLoadingError ? (
           <div className="hub-state" role="alert">
-            <h3>Chưa tìm được trang</h3>
+            <h3>{text("Chưa tìm được trang", "No pages found")}</h3>
             <p>{pages.error.message}</p>
             <button type="button" className="cp-button" onClick={() => void pages.refetch()}>
               {text("Thử lại", "Retry")}
@@ -366,10 +383,13 @@ function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
         ) : !items.length ? (
           <div className="hub-state">
             <h3>
-              Không có {profileKindLabels[kind].toLowerCase()} nào khớp “{query}”
+              {text(
+                `Không có ${profileKindLabels[kind].toLowerCase()} nào khớp “${query}”`,
+                `No ${profileKindEnglish[kind].toLowerCase()} matches “${query}”`,
+              )}
             </h3>
             <Link className="cp-button" to={back}>
-              Xem tất cả kết quả
+              {text("Xem tất cả kết quả", "See all results")}
             </Link>
           </div>
         ) : (

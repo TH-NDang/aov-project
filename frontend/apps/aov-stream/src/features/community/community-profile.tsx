@@ -349,11 +349,13 @@ function ProfileHome({
   // Readers who are signed in can write on the page, so they get the feed even while it is empty.
   const feed = authenticated || !!postCount
   const missing = [
-    profile.kind === "TEAM" && !content.roster.length && "đội hình",
-    (profile.kind === "TEAM" || profile.kind === "PLAYER") && !achievements.length && "thành tích",
+    profile.kind === "TEAM" && !content.roster.length && text("đội hình", "roster"),
+    (profile.kind === "TEAM" || profile.kind === "PLAYER") &&
+      !achievements.length &&
+      text("thành tích", "achievements"),
     competitionCount === 0 && (organization ? "giải đấu đã tổ chức" : "giải đấu đã tham gia"),
-    !content.biography && "phần giới thiệu",
-    !content.sources.length && "nguồn đối chiếu",
+    !content.biography && text("phần giới thiệu", "introduction"),
+    !content.sources.length && text("nguồn đối chiếu", "sources"),
   ].filter((entry) => !!entry)
   return (
     <>
@@ -387,7 +389,7 @@ function ProfileHome({
             <h2 id="profile-career">{text("Sự nghiệp", "Career")}</h2>
             {history.length > PREVIEW && (
               <button type="button" onClick={() => open("history")}>
-                Tất cả {history.length} mốc
+                {text(`Tất cả ${history.length} mốc`, `All ${history.length} milestones`)}
                 <StreamIcon name="arrow" size={15} />
               </button>
             )}
@@ -401,7 +403,7 @@ function ProfileHome({
             <h2 id="profile-achievements">{text("Thành tích", "Achievements")}</h2>
             {achievements.length > PREVIEW && (
               <button type="button" onClick={() => open("achievements")}>
-                Tất cả thành tích
+                {text("Tất cả thành tích", "All achievements")}
                 <StreamIcon name="arrow" size={15} />
               </button>
             )}
@@ -415,7 +417,7 @@ function ProfileHome({
             <h2 id="profile-posts">{text("Bài viết", "Posts")}</h2>
           </div>
           {hasVideos && (
-            <div className="hub-pills" role="group" aria-label="Loại bài viết">
+            <div className="hub-pills" role="group" aria-label={text("Loại bài viết", "Post type")}>
               <button type="button" aria-pressed={!onlyVideo} onClick={() => setOnlyVideo(false)}>
                 {text("Tất cả", "All")}
               </button>
@@ -438,8 +440,15 @@ function ProfileHome({
       )}
       {missing.length > 0 && (
         <p className="pf-note">
-          Trang này chưa ghi nhận {missing.join(", ")}.
-          {!profile.represented && " Bạn có thông tin? Chọn nút ⋯ ở đầu trang để đề xuất chỉnh sửa."}
+          {text(
+            `Trang này chưa ghi nhận ${missing.join(", ")}.`,
+            `This page has no ${missing.join(", ")} recorded yet.`,
+          )}
+          {!profile.represented &&
+            text(
+              " Bạn có thông tin? Chọn nút ⋯ ở đầu trang để đề xuất chỉnh sửa.",
+              " Know more? Choose the ⋯ button at the top of the page to suggest a change.",
+            )}
         </p>
       )}
     </>

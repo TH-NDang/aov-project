@@ -27,6 +27,7 @@ const OTHERS = 6
  * a match without recorded games somewhere to go on from.
  */
 function OtherMatches({ entry }: { entry: CompetitionMatch }) {
+  const { text } = useStreamLocale()
   const teams = matchSides(entry).flatMap((side) => side.teamId ?? [])
   const { upcoming, results } = scheduleParts(
     competitionMatches([entry.competition]).filter(
@@ -42,7 +43,8 @@ function OtherMatches({ entry }: { entry: CompetitionMatch }) {
     <section className="tn-schedule-part" aria-labelledby="match-others">
       <div className="tn-heading">
         <h2 id="match-others">
-          Trận khác của hai đội <small>trong giải này</small>
+          {text("Trận khác của hai đội", "Other matches of the two teams")}{" "}
+          <small>{text("trong giải này", "in this tournament")}</small>
         </h2>
       </div>
       <ScheduleDays entries={ahead} part="upcoming" />
@@ -52,14 +54,23 @@ function OtherMatches({ entry }: { entry: CompetitionMatch }) {
 }
 
 /** What the list of games says while it has none, by where the match stands. */
-const NO_GAMES = {
-  LIVE: "Trận đang diễn ra. Các ván đấu sẽ có ở đây sau khi được ghi nhận.",
-  UPCOMING: "Trận chưa diễn ra. Các ván đấu sẽ có ở đây sau khi trận kết thúc.",
-  UNSCHEDULED: "Trận chưa diễn ra. Các ván đấu sẽ có ở đây sau khi trận kết thúc.",
-  PENDING: "Chưa có ván nào của trận này được ghi nhận.",
-  SCORED: "Chưa có ván nào của trận này được ghi nhận.",
-  FINISHED: "Chưa có ván nào của trận này được ghi nhận.",
-} as const
+const NO_GAMES: Record<string, readonly [string, string]> = {
+  LIVE: [
+    "Trận đang diễn ra. Các ván đấu sẽ có ở đây sau khi được ghi nhận.",
+    "The match is live. Its games appear here once recorded.",
+  ],
+  UPCOMING: [
+    "Trận chưa diễn ra. Các ván đấu sẽ có ở đây sau khi trận kết thúc.",
+    "The match has not been played. Its games appear here once it ends.",
+  ],
+  UNSCHEDULED: [
+    "Trận chưa diễn ra. Các ván đấu sẽ có ở đây sau khi trận kết thúc.",
+    "The match has not been played. Its games appear here once it ends.",
+  ],
+  PENDING: ["Chưa có ván nào của trận này được ghi nhận.", "No game of this match is recorded yet."],
+  SCORED: ["Chưa có ván nào của trận này được ghi nhận.", "No game of this match is recorded yet."],
+  FINISHED: ["Chưa có ván nào của trận này được ghi nhận.", "No game of this match is recorded yet."],
+}
 
 export function MatchPage() {
   const { text, languageTag } = useStreamLocale()
@@ -107,7 +118,12 @@ export function MatchPage() {
         ) : !head ? (
           <div className="hub-state" role="alert">
             <h1>{text("Chưa mở được trận đấu", "The match could not be opened")}</h1>
-            <p>Trận chưa được công bố hoặc liên kết không còn dùng được.</p>
+            <p>
+              {text(
+                "Trận chưa được xuất bản hoặc liên kết không còn dùng được.",
+                "The match is not published, or the link no longer works.",
+              )}
+            </p>
             <div className="hub-state-actions">
               <button
                 type="button"
@@ -117,7 +133,7 @@ export function MatchPage() {
                 {text("Thử lại", "Retry")}
               </button>
               <Link className="cp-button" to="/competitions?tab=schedule">
-                Xem lịch & kết quả
+                {text("Xem lịch và kết quả", "See schedule and results")}
               </Link>
             </div>
           </div>
@@ -152,7 +168,14 @@ export function MatchPage() {
             )}
             <section className="tn-match-games" aria-labelledby="match-games">
               <div className="tn-heading">
-                <h2 id="match-games">Các ván đấu {list.length > 0 && <small>{list.length} ván</small>}</h2>
+                <h2 id="match-games">
+                  {text("Các ván đấu", "Games")}{" "}
+                  {list.length > 0 && (
+                    <small>
+                      {text(`${list.length} ván`, `${list.length} ${list.length === 1 ? "game" : "games"}`)}
+                    </small>
+                  )}
+                </h2>
               </div>
               {linkedSeriesId && games.isPending ? (
                 <div
@@ -178,7 +201,7 @@ export function MatchPage() {
                   ))}
                 </div>
               ) : (
-                <p className="tn-quiet">{NO_GAMES[status ?? "FINISHED"]}</p>
+                <p className="tn-quiet">{text(...NO_GAMES[status ?? "FINISHED"])}</p>
               )}
               {(note || source) && (
                 <footer className="tn-footnote">
