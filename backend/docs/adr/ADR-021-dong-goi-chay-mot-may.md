@@ -1,6 +1,6 @@
 # ADR-021 — Đóng gói toàn hệ thống trên một máy và các đường dẫn proxy bổ sung
 
-**Trạng thái:** Chấp nhận; [bổ sung 17/11/2026](#bổ-sung-17112026-object-storage-là-cloudflare-r2) chờ người dùng duyệt
+**Trạng thái:** Chấp nhận, cùng [bổ sung 17/11/2026](#bổ-sung-17112026-object-storage-là-cloudflare-r2) được người dùng duyệt cùng ngày
 **Ngày:** 2026-11-07
 **Phạm vi:** `infra/`, `wiki-service`, `community-service`, `aov-stream`
 
@@ -69,12 +69,14 @@
   đĩa trên VPS 8 GB, và là một kho ảnh không khớp với kho thật.
 - Proxy còn hai đường cho SeaweedFS: `/media/*` đọc ảnh, `/{bucket}/*` cho presigned URL. Stack chưa có
   `STORAGE_SOURCES_BUCKET` nên các màn ảnh đối chứng của Admin không có dữ liệu.
+- Người dùng quyết định ngày 17/11/2026: khi ra mắt, database dev chuyển lên VPS và trở thành dữ liệu thật. Không tạo bộ bucket
+  mới cho VPS. Sau ngày ra mắt máy dev không ghi vào các bucket thật nữa; dev tiếp sẽ dùng một bộ bucket dev nhỏ, tạo sau.
 
 ### Quyết định
 
-1. **Bỏ `seaweedfs`, `storage-init` và volume `seaweedfs-data`.** Stack không tạo bucket và không ghi CORS. Ba bucket, token
-   và tên miền ảnh được chuẩn bị trên Cloudflare (ADR-014, ADR-030). `rclone` đặt `no_check_bucket`, nên cũng không thử tạo
-   bucket.
+1. **Bỏ `seaweedfs`, `storage-init` và volume `seaweedfs-data`.** Stack không tạo bucket và không ghi CORS. Bucket, tên miền
+   ảnh và cache rule đã có từ dev; token và CORS cho VPS được làm trên Cloudflare (ADR-014, ADR-030). `rclone` đặt
+   `no_check_bucket`, nên cũng không thử tạo bucket.
 2. **Proxy không còn đường nào tới object storage.** Ảnh công khai đi thẳng từ `https://img.<domain>/assets/...`
    (`MEDIA_PUBLIC_BASE_URL`). Trình duyệt PUT vào `incoming/` và GET `sources/` thẳng trên endpoint R2 bằng presigned URL.
    `STORAGE_PUBLIC_ENDPOINT` để trống thì URL ký sẵn dùng `STORAGE_ENDPOINT`, mà trình duyệt cũng tới được. Vì khác
@@ -110,10 +112,20 @@
      `SourceUploads`. Tệp chưa có dòng trong danh sách vẫn được đưa lên, dạng `application/octet-stream`, kèm cảnh báo.
    - ListObjects là thao tác lớp A. ADR-030 mục 2 và 9 cấm ứng dụng liệt kê object; công cụ vận hành ngoài ứng dụng thì
      vẫn được dùng, như ADR này đã chọn rclone từ đầu.
-6. **Một database, một bộ bucket.** Hai database dùng chung bucket không ghi đè nhau, vì key ảnh là UUID, nhưng vẫn xóa
-   được của nhau: tệp nguồn lưu theo SHA-256, và database chép từ database kia trỏ tới cùng object. Stack chạy thử có bộ
-   bucket và tên miền ảnh riêng; chỉ trỏ vào bucket của dev khi stack thay hẳn database dev.
-7. **Không đổi:** test Testcontainers và profile `local-storage` trong `backend/wiki-service/compose.yaml` vẫn dùng SeaweedFS
+6. **Stack nhận lại database và bucket của dev.** Stack dùng luôn `aov-media-private`, `aov-media-assets`,
+   `aov-source-private` và `img.athahub.com`; `.env.example` ghi sẵn các tên này. Database dev đi theo bản dump, còn bytes
+   nằm nguyên trên bucket nên không chép object nào. Việc trên Cloudflare chỉ còn:
+   - thêm origin thật vào CORS của `aov-media-private` và `aov-source-private`, giữ các origin `localhost`;
+   - một R2 API token mới chỉ dành cho VPS, Object Read & Write trên đúng ba bucket, để thu hồi token của máy dev không làm
+     VPS mất quyền;
+   - một token Cache Purge trên zone `athahub.com`.
+7. **Một database, một bộ bucket.** Hai database dùng chung bucket không ghi đè nhau, vì key ảnh là UUID, nhưng vẫn xóa
+   được của nhau: tệp nguồn lưu theo SHA-256, và database chép từ database kia trỏ tới cùng object. Với quyết định 6, ba
+   bucket thật luôn chỉ có một database dùng: database dev tới ngày chuyển, database của stack từ đó. Quy tắc áp dụng khi có
+   database thứ hai: dev trên máy sau ngày ra mắt, stack chạy thử với database trống, một bản diễn tập chuyển dữ liệu. Database
+   đó cần bộ bucket, token và địa chỉ ảnh riêng. Riêng bản diễn tập trên bucket thật thì khi nó còn chạy, không xóa ảnh và
+   không dọn bytes mồ côi ở cả hai bên, và database diễn tập bị bỏ trước khi chuyển thật.
+8. **Không đổi:** test Testcontainers và profile `local-storage` trong `backend/wiki-service/compose.yaml` vẫn dùng SeaweedFS
    (ADR-030 mục 14).
 
 ### Phương án đã cân nhắc
@@ -126,24 +138,29 @@
 | Giữ Content-Type bằng `rclone --metadata` (xattr) | Mất khi chép thư mục backup sang máy khác bằng công cụ thường; bind mount của Docker Desktop trên Windows không có xattr |
 | Lấy Content-Type từ database khi khôi phục | Cần cả psql và rclone trong một bước, và phải chép lại quy tắc thêm `charset` của backend |
 | Giữ SeaweedFS trong stack | Đúng thứ cần bỏ: tốn RAM và đĩa trên VPS, và là kho ảnh tách khỏi kho thật |
+| Bộ bucket mới cho VPS, chép object của dev sang | Hai bộ cùng nội dung, khoảng 4,4 GB mỗi bộ, gần chạm mức miễn phí 10 GB; thêm một lần chép chưa thử. Database dev chuyển lên nên bộ bucket thật vẫn chỉ có một database dùng |
 
 ### Hệ quả
 
 - Stack cần mạng và tài khoản Cloudflare để chạy. Làm việc không có mạng thì dùng dev với profile `local-storage`.
+- Chuyển dev lên chưa có đủ công cụ. `db-restore` nhận được `wiki.dump` và `community.dump` của dev (cùng PostgreSQL 17.6,
+  cùng tên user), nhưng còn thiếu:
+  - Keycloak của dev chạy `start-dev` với file H2 trong volume `keycloak-data`, nên không có `keycloak.dump`, và stack không có
+    lệnh nhập bản xuất realm kèm người dùng;
+  - database ghi người dùng theo cặp issuer và subject, và issuer của dev (`http://localhost:8081/realms/wikiaov`) khác issuer
+    của stack (`<PUBLIC_ORIGIN>/idp/realms/wikiaov`).
+
+  Các bước chuyển sẽ được viết sau khi có hai phần này. Lúc chuyển, dev ngừng ghi từ lúc dump.
+- Vào ngày ra mắt, token R2 của máy dev bị thu hồi hoặc đổi sang chỉ đọc.
 - Đổi `PUBLIC_ORIGIN` phải đổi cả CORS của hai bucket riêng tư trên Cloudflare.
 - Khi bật Content-Security-Policy phải cho phép endpoint R2 (`connect-src`, `img-src`) và tên miền ảnh (`img-src`). Hiện chưa
   có CSP nào nên không có gì chặn.
 - Bản chép media nằm cùng máy với stack: giữ được dữ liệu khi R2 mất object, không giữ được khi mất máy. Sao lưu ra ngoài
   máy vẫn là việc còn mở.
 - **Stack đã chạy bản cũ:** container `seaweedfs`, `storage-init` và volume `<project>_seaweedfs-data` còn lại sau khi cập
-  nhật. Stack chưa từng chạy với dữ liệu thật. Nếu volume có ảnh cần giữ:
-  1. chạy `media-backup` của bản cũ trước khi cập nhật;
-  2. chuyển `backups/media/wiki-media/assets` sang `backups/media/<bucket ảnh công khai>/assets`, và `imports` sang
-     `backups/media/<bucket riêng tư>/imports`;
-  3. chạy `media-restore` của bản mới.
-
-  Sau đó `docker compose up -d --wait --remove-orphans` bỏ hai container cũ; `docker volume rm <project>_seaweedfs-data`
-  xóa volume.
+  nhật. Stack chưa từng chạy với dữ liệu thật, nên ảnh trong volume đó chỉ là ảnh thử. Không đưa chúng lên bucket thật: không
+  database nào sẽ tham chiếu tới chúng. `docker compose up -d --wait --remove-orphans` bỏ hai container cũ;
+  `docker volume rm <project>_seaweedfs-data` xóa volume.
 
 ### Kiểm chứng (17/11/2026)
 
@@ -160,3 +177,6 @@
   - URL upload backend cấp trỏ thẳng `https://<endpoint>/<bucket riêng tư>/incoming/...`.
   - `media-backup` gọi đúng endpoint và thoát mã lỗi khi không tới được; thiếu biến bucket thì báo tên biến.
 - Chưa thử với R2 thật: upload từ origin của stack, CORS, ảnh qua CDN, `media-backup` và `media-restore` trên bucket thật.
+- Sau quyết định 6: `preflight` với `.env.example` mới chỉ còn báo năm giá trị phải điền (endpoint, hai khóa, Zone ID, token
+  purge). Volume `keycloak-data` của dev, mở ở chế độ chỉ đọc, giữ realm trong `h2/keycloakdb.mv.db`. Chưa dump hay đọc
+  database dev.
