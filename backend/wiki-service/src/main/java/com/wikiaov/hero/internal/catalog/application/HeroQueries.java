@@ -109,7 +109,12 @@ public class HeroQueries {
     /** The published revision readers see of one hero at the selected moment (ADR-016). */
     private Optional<HeroReadMoments.Choice<HeroRevisionView>> choose(UUID heroId, HeroReadMoments.Moment moment,
             Instant at) {
-        var revisions = store.revisions(heroId).stream()
+        return choose(heroId, store.revisions(heroId), moment, at);
+    }
+
+    private static Optional<HeroReadMoments.Choice<HeroRevisionView>> choose(UUID heroId,
+            List<HeroRevisionView> all, HeroReadMoments.Moment moment, Instant at) {
+        var revisions = all.stream()
                 .filter(r -> r.state() == RevisionState.PUBLISHED && r.rulesetId().equals(moment.context().rulesetId())
                         && !r.publishedAt().isAfter(at))
                 .toList();
@@ -448,9 +453,14 @@ public class HeroQueries {
         Instant at = clock.instant();
         var moment = moments.resolve(region, at, null, null, false);
 
+        var heroes = store.heroes(false);
+        var revisions = store.revisions(heroes.stream().map(HeroIdentity::getId).toList()).stream()
+                .collect(Collectors.groupingBy(HeroRevisionView::heroId));
+
         Map<HeroIdentity, HeroRevisionView> result = new LinkedHashMap<>();
-        for (var hero : store.heroes(false))
-            choose(hero.getId(), moment, at).ifPresent(choice -> result.put(hero, choice.revision()));
+        for (var hero : heroes)
+            choose(hero.getId(), revisions.getOrDefault(hero.getId(), List.of()), moment, at)
+                    .ifPresent(choice -> result.put(hero, choice.revision()));
         return result;
     }
 

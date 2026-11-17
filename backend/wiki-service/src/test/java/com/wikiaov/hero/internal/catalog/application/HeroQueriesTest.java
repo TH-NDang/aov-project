@@ -43,6 +43,23 @@ class HeroQueriesTest {
     }
 
     @Test
+    void thePublishedHeroesOfAMarketAreReadWithOneRevisionQuery() {
+        var airi = hero("airi", Map.of());
+        var baldum = hero("baldum", Map.of());
+        var ids = List.of(airi.identity().getId(), baldum.identity().getId());
+        when(store.heroes(false)).thenReturn(List.of(airi.identity(), baldum.identity()));
+        var revisions = ids.stream().flatMap(id -> store.revisions(id).stream()).toList();
+        when(store.revisions(ids)).thenReturn(revisions);
+        clearInvocations(store);
+
+        var published = queries.published("VN");
+
+        assertThat(published.keySet()).containsExactly(airi.identity(), baldum.identity());
+        verify(store).revisions(ids);
+        verify(store, never()).revisions(any(UUID.class));
+    }
+
+    @Test
     void hydratesOnlySelectedPageAndBatchesHeadAndPortraitTogether() {
         var first = hero("airi", Map.of());
         UUID headId = UUID.randomUUID();
