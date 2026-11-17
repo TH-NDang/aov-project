@@ -6,6 +6,7 @@ import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.ratings.persistence.RatingScaleRepository;
 import com.wikiaov.media.*;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.PlatformErrorCode;
 import jakarta.validation.Validator;
 import java.math.BigDecimal;
 import java.util.*;
@@ -222,5 +223,16 @@ public class HeroValidation {
 
     public static ApiException invalid(String detail) {
         return new ApiException(HeroErrorCode.HERO_INVALID_CONTENT, detail);
+    }
+
+    /** A query parameter outside its pattern or bounds (03 section 46), not invalid content. */
+    public static ApiException badQuery(String detail) {
+        return new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, detail);
+    }
+
+    /** Page and size bounds live on the {@code *Api}; this guards the offset of a very late page only. */
+    public static void requireReachableOffset(int page, int size) {
+        if ((long) page * size > Integer.MAX_VALUE)
+            throw badQuery("The page is beyond the last possible entry.");
     }
 }

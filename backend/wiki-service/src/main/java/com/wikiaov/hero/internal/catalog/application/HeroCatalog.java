@@ -50,10 +50,9 @@ public class HeroCatalog {
     public PageSlice<HeroCatalogView> list(int page, int size, String q, UUID seasonId, UUID patchVariantId,
             UUID rulesetId, String locale, String sort, boolean includeUnchanged, String role, String position,
             Boolean hasWarnings) {
-        if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE)
-            throw HeroValidation.invalid("Invalid page bounds.");
+        HeroValidation.requireReachableOffset(page, size);
         if (q.trim().length() > 100 || !Set.of("code", "edited-desc").contains(sort))
-            throw HeroValidation.invalid("Invalid hero catalog search or sort.");
+            throw HeroValidation.badQuery("Invalid hero catalog search or sort.");
         HeroValidation.locale(locale);
         var facets = new HeroCatalogFacets(
                 choices(role, Arrays.stream(Role.values()).map(Enum::name).collect(Collectors.toSet())),
@@ -178,7 +177,7 @@ public class HeroCatalog {
             return Set.of();
         var selected = Arrays.stream(value.split(",", -1)).map(String::trim).collect(Collectors.toSet());
         if (!allowed.containsAll(selected))
-            throw HeroValidation.invalid("Invalid hero catalog role or position.");
+            throw HeroValidation.badQuery("Invalid hero catalog role or position.");
         return Set.copyOf(selected);
     }
 }

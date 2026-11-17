@@ -148,7 +148,7 @@ class SkinBadgeGroupsIntegrationTest {
                 .containsEntry("actualLocale", null);
         send(post(GROUPS), Map.of("code", "duplicate-locales", "kind", "THEME", "translations",
                 List.of(text("en-US", "One"), text("en-US", "Two"))), 422);
-        send(get(GROUPS).param("size", "101"), null, 422);
+        send(get(GROUPS).param("size", "101"), null, 400);
         send(get(GROUPS).param("q", "x".repeat(101)), null, 422);
         send(get(GROUPS).param("unknown", "1"), null, 400);
         send(get(BADGES).param("groupId", group.get("id").toString()).param("ungrouped", "true"), null, 422);

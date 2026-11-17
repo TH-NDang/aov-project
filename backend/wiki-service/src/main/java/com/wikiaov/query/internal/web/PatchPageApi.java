@@ -25,8 +25,8 @@ public interface PatchPageApi {
     ResponseEntity<?> list(
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") int size,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "patchPageApi_detail", summary = "Detail - patch page", description = "Detail for patch page. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", responses = {

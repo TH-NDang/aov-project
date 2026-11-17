@@ -7,6 +7,7 @@ import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.web.request.HeroSectionRequests.*;
 import com.wikiaov.platform.*;
+import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +17,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.*;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
@@ -28,8 +31,8 @@ public interface HeroAdminApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    PageSlice<HeroCatalogView> list(@Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") int size,
+    PageSlice<HeroCatalogView> list(@Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(description = "Search text.") String q,
             @Parameter(description = "Season id identifier.") UUID seasonId,
             @Parameter(description = "Patch variant id identifier.") UUID patchVariantId,

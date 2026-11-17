@@ -582,7 +582,7 @@ class HeroMediaWorkspaceIntegrationTest {
         send(get(endpoint).param("rulesetId", ruleset.toString()).param("role", "HEAD").param("unknown", "1"), null,
                 400);
         send(get(endpoint).param("rulesetId", ruleset.toString()).param("role", "HEAD").param("size", "101"), null,
-                422);
+                400);
     }
 
     private UUID asset(MediaSemanticType type) {

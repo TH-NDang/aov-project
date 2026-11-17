@@ -147,8 +147,6 @@ public class HeroPatchChanges implements HeroChangeQueries {
 
     public PageSlice<Map<String, Object>> forHero(UUID heroId, String region, String locale, int page, int size) {
         HeroValidation.locale(locale);
-        if (page < 0 || size < 1 || size > 100)
-            throw HeroValidation.invalid("Invalid page bounds.");
         var variants = patches.releases(region).stream().filter(r -> !r.effectiveAt().isAfter(clock.instant()))
                 .collect(java.util.stream.Collectors.toMap(com.wikiaov.patch.PatchReleaseReference::variantId, r -> r,
                         (a, b) -> a));

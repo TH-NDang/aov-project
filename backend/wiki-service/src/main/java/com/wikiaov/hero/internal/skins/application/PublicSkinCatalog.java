@@ -21,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class PublicSkinCatalog {
+    /** The largest page of the public skin library (03, public skin catalog). */
+    public static final int MAX_PAGE_SIZE = 60;
+
     private final PublicSkinCatalogRepository repository;
     private final MediaAssets media;
     private final Clock clock;
@@ -43,7 +46,7 @@ public class PublicSkinCatalog {
 
     public PublicSkinCatalogView read(String region, String locale, String q, String hero, String rarity, int page,
             int size, UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
-        validate(locale, q, hero, rarity, page, size);
+        validate(locale, q, hero, rarity);
         var at = clock.instant();
         var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);
         var selected = selectCurrent(repository.candidates(moment.context().rulesetId(), at), moment);
@@ -193,14 +196,13 @@ public class PublicSkinCatalog {
         return Arrays.stream(terms).allMatch(text::contains);
     }
 
-    private static void validate(String locale, String q, String hero, String rarity, int page, int size) {
+    private static void validate(String locale, String q, String hero, String rarity) {
         HeroValidation.locale(locale);
-        if (q.length() > 120 || page < 0 || size < 1 || size > 60)
-            throw HeroValidation.invalid(
-                    "Search text must be at most 120 characters; page must be nonnegative and size between 1 and 60.");
+        if (q.length() > 120)
+            throw HeroValidation.badQuery("Search text must be at most 120 characters.");
         if ((hero != null && (hero.isBlank() || hero.length() > 200))
                 || (rarity != null && (rarity.isBlank() || rarity.length() > 64)))
-            throw HeroValidation.invalid("Hero and rarity filters must be nonblank valid codes.");
+            throw HeroValidation.badQuery("Hero and rarity filters must be nonblank valid codes.");
     }
 
     private record SkinKey(

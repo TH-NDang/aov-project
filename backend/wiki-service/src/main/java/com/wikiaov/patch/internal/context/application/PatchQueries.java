@@ -78,8 +78,6 @@ public class PatchQueries implements PatchCatalog {
 
     public PageSlice<Map<String, Object>> list(String region, String locale, int page, int size) {
         validateLocale(locale);
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PatchErrorCode.PATCH_INVALID, "Invalid page bounds.");
         var ids = releases(region).stream().map(PatchReleaseReference::patchId).distinct().toList();
         long offset = (long) page * size;
         return new PageSlice<>(ids.stream().skip(offset).limit(size).map(id -> published(id, region, locale)).toList(),

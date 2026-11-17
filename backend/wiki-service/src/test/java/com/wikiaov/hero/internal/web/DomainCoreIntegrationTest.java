@@ -175,7 +175,7 @@ class DomainCoreIntegrationTest {
         var draft = create();
         send(post(path(uuid(draft, "heroId"), id(draft)) + "/publish"),
                 Map.of("expectedVersion", 1), 422);
-        send(get(ROOT + "/admin/patches?size=101"), null, 422);
+        send(get(ROOT + "/admin/patches?size=101"), null, 400);
     }
 
     @Test
@@ -647,8 +647,8 @@ class DomainCoreIntegrationTest {
                 .isEqualTo(0);
         assertThat(send(get(ROOT + "/admin/heroes?page=1&size=1"), null, 200).get("totalElements")).isEqualTo(2);
         send(get(ROOT + "/admin/heroes?seasonId=" + season + "&patchVariantId=" + variant), null, 422);
-        send(get(ROOT + "/admin/heroes?sort=unknown"), null, 422);
-        send(get(ROOT + "/admin/heroes?q=" + "a".repeat(101)), null, 422);
+        send(get(ROOT + "/admin/heroes?sort=unknown"), null, 400);
+        send(get(ROOT + "/admin/heroes?q=" + "a".repeat(101)), null, 400);
         send(get(ROOT + "/admin/heroes?unknown=1"), null, 400);
 
         clock.set(Instant.parse("2026-10-15T07:00:00Z"));
@@ -988,7 +988,7 @@ class DomainCoreIntegrationTest {
         send(post(ROOT + "/admin/heroes/" + hero + "/drafts"),
                 Map.of("rulesetId", ruleset, "sourceRevisionId", id, "cause", "CONTENT_CORRECTION"), 409);
         mvc.perform(get(ROOT + "/heroes?region=VN&region=TH")).andExpect(status().isBadRequest());
-        mvc.perform(get(ROOT + "/heroes?size=101")).andExpect(status().isUnprocessableEntity());
+        mvc.perform(get(ROOT + "/heroes?size=101")).andExpect(status().isBadRequest());
     }
 
     private Map<String, Object> create() throws Exception {
@@ -1221,8 +1221,8 @@ class DomainCoreIntegrationTest {
         assertThat((List<?>) send(get(filtered + "&page=1"), null, 200).get("items")).isEmpty();
         assertThat(send(get(ROOT + "/admin/heroes?position=mid"), null, 200).get("totalElements")).isEqualTo(0);
         assertThat(send(get(ROOT + "/admin/heroes?role=MAGE"), null, 200).get("totalElements")).isEqualTo(0);
-        send(get(ROOT + "/admin/heroes?role=UNKNOWN"), null, 422);
-        send(get(ROOT + "/admin/heroes?position=unknown"), null, 422);
+        send(get(ROOT + "/admin/heroes?role=UNKNOWN"), null, 400);
+        send(get(ROOT + "/admin/heroes?position=unknown"), null, 400);
 
         draft = send(post(path(hero, revisionId) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
         var newer = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"), Map.of("sourceRevisionId", revisionId,

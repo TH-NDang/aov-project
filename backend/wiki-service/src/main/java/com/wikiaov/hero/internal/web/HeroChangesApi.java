@@ -4,6 +4,7 @@ import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
 import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.platform.*;
+import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +14,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.*;
 import org.springframework.http.*;
 
@@ -76,7 +79,7 @@ public interface HeroChangesApi {
     ResponseEntity<?> history(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") int size,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(hidden = true) HttpServletRequest request);
 }

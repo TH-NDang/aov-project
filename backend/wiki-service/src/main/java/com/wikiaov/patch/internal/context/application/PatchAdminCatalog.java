@@ -47,8 +47,6 @@ public class PatchAdminCatalog {
     }
 
     public PageSlice<Map<String, Object>> catalog(int page, int size) {
-        if (page < 0 || size < 1 || size > 100)
-            throw invalid("Invalid page bounds.");
         var items = patches.findAllByOrderBySequenceDesc(PageRequest.of(page, size)).stream()
                 .map(this::patchRow).toList();
         return new PageSlice<>(items, page, size, patches.count());

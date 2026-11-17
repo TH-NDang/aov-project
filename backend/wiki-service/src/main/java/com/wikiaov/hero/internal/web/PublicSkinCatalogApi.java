@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
+import com.wikiaov.hero.internal.skins.application.PublicSkinCatalog;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -8,6 +9,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 
@@ -23,8 +26,8 @@ public interface PublicSkinCatalogApi {
             @Parameter(description = "Accent-insensitive hero or skin text, at most 120 characters.") String q,
             @Parameter(description = "Exact hero code.") String hero,
             @Parameter(description = "Exact skin badge code.") String rarity,
-            @Parameter(description = "Zero-based page.") int page,
-            @Parameter(description = "Page size, from 1 to 60; default 24.") int size,
+            @Parameter(description = "Zero-based page.") @Min(0) int page,
+            @Parameter(description = "Page size, from 1 to 60; default 24.") @Min(1) @Max(PublicSkinCatalog.MAX_PAGE_SIZE) int size,
             @Parameter(description = "Optional season; selects its latest eligible published patch.") UUID seasonId,
             @Parameter(description = "Optional published patch variant, consistent with the season.") UUID patchVariantId,
             @Parameter(description = "Include unscoped baseline observations in a historical view.") boolean includeUnscoped,

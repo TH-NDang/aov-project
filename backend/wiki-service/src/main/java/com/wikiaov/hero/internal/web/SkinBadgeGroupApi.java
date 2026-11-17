@@ -5,6 +5,7 @@ import com.wikiaov.hero.internal.application.SkinBadgeGroupCommands.*;
 import com.wikiaov.hero.internal.application.response.SkinBadgeGroupView;
 import com.wikiaov.hero.internal.application.response.SkinBadgeGroupView.*;
 import com.wikiaov.platform.*;
+import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
@@ -28,8 +31,8 @@ public interface SkinBadgeGroupApi {
     })
     PageSlice<SkinBadgeGroupView> list(@Parameter(description = "Requested translation locale.") String locale,
             @Parameter(description = "Search text.") String q,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") int size,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "skinBadgeGroupApi_create", summary = "Create - skin badge group", description = "Create for skin badge group. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {

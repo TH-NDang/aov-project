@@ -52,7 +52,9 @@ class OpenApiMvcTest extends OpenApiContractChecks {
             "/game-modes/co-lien-quan/auto-chess/lineups?size=51",
             "/game-modes/co-lien-quan/auto-chess/lineups?sort=oldest",
             "/game-modes/co-lien-quan/auto-chess/lineups?unit=Not_A_Code", "/patches/" + MODE + "/changes?size=101",
-            "/admin/reference-skills?size=101", "/reference-skills?page=-1"})
+            "/admin/reference-skills?size=101", "/reference-skills?page=-1", "/admin/heroes?size=101",
+            "/heroes?page=-1", "/skins?size=61", "/admin/skin-badge-groups?size=0", "/admin/patches?size=101",
+            "/patches?page=-1"})
     void aListQueryOutsideItsDeclaredBoundsIsABadQueryParameter(String path) throws Exception {
         mvc.perform(get("/api/wiki/v1" + path).with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
                 .andExpect(status().isBadRequest())

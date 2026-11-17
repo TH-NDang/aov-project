@@ -205,7 +205,6 @@ public class HeroMediaQueries {
     }
 
     public static void bounds(int page, int size) {
-        if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE)
-            throw HeroValidation.invalid("Invalid page bounds.");
+        HeroValidation.requireReachableOffset(page, size);
     }
 }

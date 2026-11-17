@@ -246,17 +246,15 @@ public class HeroQueries {
     public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
             String sort, UUID seasonId, UUID patchVariantId, boolean includeUnscoped, boolean playable) {
         HeroValidation.locale(locale);
-        if (page < 0 || size < 1 || size > 100)
-            throw HeroValidation.invalid("Page must be nonnegative and size between 1 and 100.");
         if (!Set.of("code,asc", "code,desc").contains(sort))
-            throw HeroValidation.invalid("Only code sorting is supported.");
+            throw HeroValidation.badQuery("Only code sorting is supported.");
         if (q.length() > 120)
-            throw HeroValidation.invalid("Search text is too long.");
+            throw HeroValidation.badQuery("Search text is too long.");
         if (role != null)
             try {
                 Role.valueOf(role);
             } catch (IllegalArgumentException e) {
-                throw HeroValidation.invalid("Unknown hero role.");
+                throw HeroValidation.badQuery("Unknown hero role.");
             }
         Instant at = clock.instant();
         var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);

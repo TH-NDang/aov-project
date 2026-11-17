@@ -12,6 +12,7 @@ import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.*
 import com.wikiaov.media.*;
 import com.wikiaov.patch.*;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.PlatformErrorCode;
 import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -208,11 +209,10 @@ class PublicSkinCatalogTest {
     }
 
     @Test
-    void validatesBoundsBeforeReadingPersistenceOrMedia() {
-        assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "", null, null, -1, 24)).isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "", null, null, 0, 61)).isInstanceOf(ApiException.class);
+    void validatesSearchAndFiltersBeforeReadingPersistenceOrMedia() {
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "x".repeat(121), null, null, 0, 24))
-                .isInstanceOf(ApiException.class);
+                .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getErrorCode())
+                        .isEqualTo(PlatformErrorCode.INVALID_QUERY_PARAMETER));
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "", " ", null, 0, 24)).isInstanceOf(ApiException.class);
 
         verifyNoInteractions(repository, media, contexts);

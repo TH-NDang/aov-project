@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.platform.*;
+import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -10,6 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.security.*;
 import java.util.*;
 import org.springframework.http.*;
@@ -31,8 +34,8 @@ public interface HeroPublicApi {
     ResponseEntity<?> list(
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") int size,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(description = "Search text.") String q,
             @Parameter(description = "Hero role filter.") String role,
             @Parameter(description = "Sort expression accepted by this endpoint.") String sort,
