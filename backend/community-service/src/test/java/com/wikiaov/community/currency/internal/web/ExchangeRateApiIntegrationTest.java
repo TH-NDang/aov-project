@@ -9,42 +9,20 @@ import com.wikiaov.community.currency.internal.application.ExchangeRateSync;
 import com.wikiaov.community.currency.internal.application.port.ExchangeRateSource;
 import com.wikiaov.community.currency.internal.domain.DailyRate;
 import com.wikiaov.community.currency.internal.persistence.ExchangeRateRepository;
+import com.wikiaov.community.testsupport.CommunityApplicationTest;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@CommunityApplicationTest
 class ExchangeRateApiIntegrationTest {
-    static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:17.6");
     static final String RATES = "/api/community/v1/exchange-rates";
-    static {
-        DATABASE.start();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        properties.add("spring.datasource.url", DATABASE::getJdbcUrl);
-        properties.add("spring.datasource.username", DATABASE::getUsername);
-        properties.add("spring.datasource.password", DATABASE::getPassword);
-    }
-
-    @AfterAll
-    static void stop() {
-        DATABASE.stop();
-    }
-
     @Autowired
     MockMvc mvc;
     @Autowired

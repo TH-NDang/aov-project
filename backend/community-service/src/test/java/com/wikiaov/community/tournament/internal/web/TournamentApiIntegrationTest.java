@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.testsupport.CommunityApplicationTest;
 import com.wikiaov.community.tournament.internal.application.SeriesRegistry;
 import com.wikiaov.community.tournament.internal.application.TeamRegistry;
 import com.wikiaov.community.tournament.internal.application.WikiCatalog;
@@ -25,13 +26,9 @@ import java.util.concurrent.*;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -40,26 +37,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@CommunityApplicationTest
 class TournamentApiIntegrationTest {
-    static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:17.6");
-    static {
-        DATABASE.start();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        properties.add("spring.datasource.url", DATABASE::getJdbcUrl);
-        properties.add("spring.datasource.username", DATABASE::getUsername);
-        properties.add("spring.datasource.password", DATABASE::getPassword);
-    }
-
-    @AfterAll
-    static void stop() {
-        DATABASE.stop();
-    }
-
+    @Autowired
+    PostgreSQLContainer database;
     @Autowired
     MockMvc mvc;
     @Autowired
@@ -247,8 +228,8 @@ class TournamentApiIntegrationTest {
     @Test
     void gamesStoredBeforeTimelinesReadAsAnEmptyTimeline() throws Exception {
         var draft = create("games", fixture().game());
-        try (var connection = DriverManager.getConnection(DATABASE.getJdbcUrl(), DATABASE.getUsername(),
-                DATABASE.getPassword());
+        try (var connection = DriverManager.getConnection(database.getJdbcUrl(), database.getUsername(),
+                database.getPassword());
                 var statement = connection
                         .prepareStatement(
                                 "UPDATE tournament.game SET content = content - 'timeline' - 'draft' WHERE id = ?")) {
@@ -282,16 +263,16 @@ class TournamentApiIntegrationTest {
 
     @Test
     void gamesSavedWithABareLanguageTagAreMigratedToTheSupportedLocale() throws Exception {
-        try (var connection = DriverManager.getConnection(DATABASE.getJdbcUrl(), DATABASE.getUsername(),
-                DATABASE.getPassword()); var statement = connection.createStatement()) {
+        try (var connection = DriverManager.getConnection(database.getJdbcUrl(), database.getUsername(),
+                database.getPassword()); var statement = connection.createStatement()) {
             statement.execute("CREATE DATABASE game_locale_test");
         }
-        String url = DATABASE.getJdbcUrl().substring(0, DATABASE.getJdbcUrl().lastIndexOf('/')) + "/game_locale_test";
-        Flyway.configure().dataSource(url, DATABASE.getUsername(), DATABASE.getPassword())
+        String url = database.getJdbcUrl().substring(0, database.getJdbcUrl().lastIndexOf('/')) + "/game_locale_test";
+        Flyway.configure().dataSource(url, database.getUsername(), database.getPassword())
                 .locations("classpath:db/migration").target("14").load().migrate();
         UUID imported = UUID.randomUUID(), english = UUID.randomUUID(), open = UUID.randomUUID();
         String snapshot = snapshotWithLocale("vi");
-        try (var connection = DriverManager.getConnection(url, DATABASE.getUsername(), DATABASE.getPassword());
+        try (var connection = DriverManager.getConnection(url, database.getUsername(), database.getPassword());
                 var statement = connection.createStatement()) {
             String row = "INSERT INTO tournament.game (id,version,content,published_snapshot,created_at,updated_at,"
                     + "edited_by) VALUES ('%s',7,'%s',%s,TIMESTAMPTZ '2026-11-06 00:00:00+00',"
@@ -305,10 +286,10 @@ class TournamentApiIntegrationTest {
                     + snapshot + "')");
         }
 
-        Flyway.configure().dataSource(url, DATABASE.getUsername(), DATABASE.getPassword())
+        Flyway.configure().dataSource(url, database.getUsername(), database.getPassword())
                 .locations("classpath:db/migration").load().migrate();
         String migrated = snapshotWithLocale("vi-VN");
-        try (var connection = DriverManager.getConnection(url, DATABASE.getUsername(), DATABASE.getPassword());
+        try (var connection = DriverManager.getConnection(url, database.getUsername(), database.getPassword());
                 var statement = connection.createStatement()) {
             try (var result = statement.executeQuery("SELECT content ->> 'locale', content ->> 'note', version, "
                     + "updated_at = TIMESTAMPTZ '2026-11-06 00:00:00+00', published_snapshot = CAST('" + migrated
@@ -501,12 +482,12 @@ class TournamentApiIntegrationTest {
 
     @Test
     void searchMigrationWorksForDatabaseOwnerWithoutSuperuserAndBackfillsExistingRows() throws Exception {
-        try (var connection = DriverManager.getConnection(DATABASE.getJdbcUrl(), DATABASE.getUsername(),
-                DATABASE.getPassword()); var statement = connection.createStatement()) {
+        try (var connection = DriverManager.getConnection(database.getJdbcUrl(), database.getUsername(),
+                database.getPassword()); var statement = connection.createStatement()) {
             statement.execute("CREATE ROLE reference_owner LOGIN PASSWORD 'reference-test-only'");
             statement.execute("CREATE DATABASE reference_owner_test OWNER reference_owner");
         }
-        String url = DATABASE.getJdbcUrl().substring(0, DATABASE.getJdbcUrl().lastIndexOf('/'))
+        String url = database.getJdbcUrl().substring(0, database.getJdbcUrl().lastIndexOf('/'))
                 + "/reference_owner_test";
         Flyway.configure().dataSource(url, "reference_owner", "reference-test-only")
                 .locations("classpath:db/migration").target("1").load().migrate();
@@ -791,8 +772,8 @@ class TournamentApiIntegrationTest {
         var restored = write(post(tournament + "/restore"), Map.of("version", version(deleted)));
         assertThat(planIds()).contains(fixture.tournamentId().toString());
 
-        try (var connection = DriverManager.getConnection(DATABASE.getJdbcUrl(), DATABASE.getUsername(),
-                DATABASE.getPassword());
+        try (var connection = DriverManager.getConnection(database.getJdbcUrl(), database.getUsername(),
+                database.getPassword());
                 var statement = connection.prepareStatement("""
                         INSERT INTO tournament.plan_revision (id, tournament_id, content, action, actor, created_at)
                         VALUES (?, ?, '{}'::jsonb, 'WITHDRAW', 'test-editor', now())

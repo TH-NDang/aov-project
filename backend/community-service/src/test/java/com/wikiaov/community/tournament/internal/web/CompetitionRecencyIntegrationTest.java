@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.community.testsupport.CommunityApplicationTest;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,42 +13,19 @@ import java.time.ZoneOffset;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /** The recency rules of spec 04, on real SQL and through the API. */
-@SpringBootTest
-@AutoConfigureMockMvc
+@CommunityApplicationTest
 class CompetitionRecencyIntegrationTest {
-    static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:17.6");
-    static {
-        DATABASE.start();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        properties.add("spring.datasource.url", DATABASE::getJdbcUrl);
-        properties.add("spring.datasource.username", DATABASE::getUsername);
-        properties.add("spring.datasource.password", DATABASE::getPassword);
-    }
-
-    @AfterAll
-    static void stop() {
-        DATABASE.stop();
-    }
-
     static final String ROOT = "/api/community/v1";
     static final String ADMIN = ROOT + "/admin";
     static final LocalDate TODAY = LocalDate.now();
