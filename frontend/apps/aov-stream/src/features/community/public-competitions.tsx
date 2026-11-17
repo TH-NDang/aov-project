@@ -11,6 +11,7 @@ import { matchWinner } from "../tournaments/competition-model"
 import { MatchCard } from "../tournaments/match-card"
 import { competitionMatches, type CompetitionMatch } from "../tournaments/match-model"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { competitionsFeedQuery, dayRange, profileCompetitionFilter } from "./community-ui"
 
 /**
@@ -79,8 +80,8 @@ export function CompetitionList({ profile, title }: { profile: CommunityProfile;
 /** A team's or a player's name, linked to its page once that page is published. */
 export function EntityPageLink({ kind, id, name }: { kind: "TEAM" | "PLAYER"; id: string; name: string }) {
   const page = useQuery({
-    queryKey: ["entity-page", kind, id],
-    queryFn: () => communityApi<CommunityProfile>(`/pages/by-entity/${kind}/${id}`),
+    queryKey: communityKeys.entityPage(kind, id),
+    queryFn: () => communityApi.pageByEntity(kind, id),
     retry: false,
     staleTime: 60000,
   })

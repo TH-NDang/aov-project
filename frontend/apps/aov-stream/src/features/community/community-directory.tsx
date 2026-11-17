@@ -8,7 +8,6 @@ import {
   profileKindLabels,
   type CommunityProfile,
   type ProfileKind,
-  type PageSlice,
 } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { navArtIcons } from "@aov/ui/components/nav-art-icons"
@@ -24,6 +23,7 @@ import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { useFollowedIds, useFollowPage } from "./community-queries"
 import { Avatar, followersLabel, personRoleEnglish, profileKindEnglish, regionKey, regionName } from "./community-ui"
 import "./community.css"
@@ -106,12 +106,9 @@ export function PageDirectory() {
   const [counting, setCounting] = useState(false)
   const section = useRef<HTMLElement>(null)
   const query = useInfiniteQuery({
-    queryKey: ["public-pages", kind],
+    queryKey: communityKeys.pageDirectory(kind),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      communityApi<PageSlice<CommunityProfile>>(
-        `/pages?${new URLSearchParams({ ...(kind ? { kind } : {}), page: String(pageParam), size: "100" })}`,
-      ),
+    queryFn: ({ pageParam }) => communityApi.pages({ ...(kind ? { kind } : {}), page: String(pageParam), size: "100" }),
     getNextPageParam: nextPageOf,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,

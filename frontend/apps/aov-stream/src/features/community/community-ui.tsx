@@ -1,9 +1,10 @@
 import type { CSSProperties } from "react"
 import { infiniteQueryOptions, useQuery } from "@tanstack/react-query"
-import type { CommunityProfile, CompetitionView, PageSlice, PersonRole, ProfileKind } from "@aov/community-contracts"
+import type { CommunityProfile, PersonRole, ProfileKind } from "@aov/community-contracts"
 import { streamLanguageTag, streamText, useStreamLocale } from "../../components/stream-locale"
 import type { CompetitionStatus } from "../tournaments/competition-model"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { knownCountryName } from "@aov/ui/lib/country-references"
@@ -119,11 +120,8 @@ export function competitionStatusLabels() {
 
 export function competitionsQuery(filter: Record<string, string>, page: number, size = 12) {
   return {
-    queryKey: ["published-competitions", filter, page, size],
-    queryFn: () =>
-      communityApi<PageSlice<CompetitionView>>(
-        `/competitions?${new URLSearchParams({ ...filter, page: String(page), size: String(size) })}`,
-      ),
+    queryKey: communityKeys.competitionPage(filter, page, size),
+    queryFn: () => communityApi.competitions({ ...filter, page: String(page), size: String(size) }),
     staleTime: 60_000,
   }
 }
@@ -131,12 +129,9 @@ export function competitionsQuery(filter: Record<string, string>, page: number, 
 /** Published competitions for a list that keeps loading as the reader scrolls. */
 export function competitionsFeedQuery(filter: Record<string, string>, size = 12) {
   return infiniteQueryOptions({
-    queryKey: ["published-competitions", "feed", filter, size],
+    queryKey: communityKeys.competitionFeed(filter, size),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      communityApi<PageSlice<CompetitionView>>(
-        `/competitions?${new URLSearchParams({ ...filter, page: String(pageParam), size: String(size) })}`,
-      ),
+    queryFn: ({ pageParam }) => communityApi.competitions({ ...filter, page: String(pageParam), size: String(size) }),
     getNextPageParam: nextPageOf,
     staleTime: 60_000,
   })

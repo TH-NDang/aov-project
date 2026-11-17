@@ -5,7 +5,7 @@ import { currentTimeZone } from "@aov/ui/lib/time-zone"
 import { useStreamLocale } from "../../components/stream-locale"
 import { useCommunitySession } from "../../lib/stream-auth"
 import { AVATAR_TYPES, uploadAvatar } from "./avatar-upload"
-import { profileKey, saveProfile, useOwnProfile } from "./profile-api"
+import { accountKeys, saveProfile, useOwnProfile } from "./profile-api"
 import { ApiError } from "../../lib/api-client"
 import { wikiRequest } from "../../lib/stream-api"
 import {
@@ -167,7 +167,7 @@ function ProfileEditor({
       setDraft(profileDraft(result))
       setPreview(null)
       setLatest(null)
-      client.setQueryData(profileKey(session.revision), result)
+      client.setQueryData(accountKeys.profile(session.revision), result)
       setSaved(true)
     } catch (cause) {
       setConflict(cause instanceof ApiError && cause.code === "USER_PROFILE_CONFLICT")

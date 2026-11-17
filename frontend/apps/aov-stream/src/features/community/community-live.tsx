@@ -1,9 +1,10 @@
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import type { CommunityProfile, PageSlice } from "@aov/community-contracts"
+import type { CommunityProfile } from "@aov/community-contracts"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { Avatar, TimeAgo } from "./community-ui"
 import { videoEmbed, videoPoster } from "./post-media-model"
 import "./community-live.css"
@@ -11,8 +12,8 @@ import "./community-live.css"
 /** Pages broadcasting now; refreshed every minute so ended broadcasts drop out. */
 export function useLivePages(size = 6) {
   return useQuery({
-    queryKey: ["live-pages", size],
-    queryFn: () => communityApi<PageSlice<CommunityProfile>>(`/live?size=${size}`),
+    queryKey: communityKeys.livePages(size),
+    queryFn: () => communityApi.livePages(size),
     staleTime: 30_000,
     refetchInterval: 60_000,
   })

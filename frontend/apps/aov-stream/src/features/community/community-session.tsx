@@ -16,7 +16,7 @@ import { TimeAgo } from "./community-ui"
 import { StreamShell, WIKI_URL } from "../../components/stream-shell"
 import owlMark from "../../assets/stream-owl.svg"
 import { StreamIcon, type StreamIconName } from "../../components/stream-icon"
-import { profileKey, saveProfile, useOwnProfile } from "../account/profile-api"
+import { accountKeys, saveProfile, useOwnProfile } from "../account/profile-api"
 import { wikiRequest } from "../../lib/stream-api"
 import { profileDraft, profileRequest, type UserProfile } from "../account/profile-model"
 import { useAccountDateFormat } from "@aov/ui/lib/time-zone"
@@ -29,17 +29,17 @@ export function CommunitySessionButton() {
     // Wiki and Admin share this profile, so the copy on this page may be out of date.
     const latest = await wikiRequest<UserProfile>("/users/me")
     const saved = await saveProfile(profileRequest({ ...profileDraft(latest), timeZone }, latest.version))
-    client.setQueryData(profileKey(session.revision), saved)
+    client.setQueryData(accountKeys.profile(session.revision), saved)
   })
   useAccountDateFormat(profile.data, async (dateFormat) => {
     const latest = await wikiRequest<UserProfile>("/users/me")
     const saved = await saveProfile({ ...profileRequest(profileDraft(latest), latest.version), dateFormat })
-    client.setQueryData(profileKey(session.revision), saved)
+    client.setQueryData(accountKeys.profile(session.revision), saved)
   })
   useAccountCurrency(profile.data, async (currency) => {
     const latest = await wikiRequest<UserProfile>("/users/me")
     const saved = await saveProfile(profileRequest({ ...profileDraft(latest), currency }, latest.version))
-    client.setQueryData(profileKey(session.revision), saved)
+    client.setQueryData(accountKeys.profile(session.revision), saved)
   })
   const { locale, setLocale, text } = useStreamLocale()
   const { theme, setTheme } = useStreamTheme()

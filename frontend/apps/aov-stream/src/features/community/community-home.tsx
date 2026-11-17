@@ -1,18 +1,13 @@
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import {
-  isCommunityProfile,
-  type CommunityProfile,
-  type FeedPost,
-  type PageSlice,
-  type PostKind,
-} from "@aov/community-contracts"
+import { isCommunityProfile, type PostKind } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { CommunityAside } from "./community-aside"
 import { useCommunitySession } from "../../lib/stream-auth"
 import { ProfileCard } from "./community-directory"
@@ -114,17 +109,15 @@ function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind })
   const followedIds = useFollowedIds()
   const signedIn = session.status === "authenticated"
   const feed = useInfiniteQuery({
-    queryKey: ["community-feed", following, kind, signedIn ? session.revision : 0],
+    queryKey: communityKeys.feed(following, kind, signedIn ? session.revision : 0),
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
-      communityApi<PageSlice<FeedPost>>(
-        `${signedIn ? "/me/feed" : "/posts"}?${new URLSearchParams({
-          ...(signedIn ? { following: String(following) } : {}),
-          ...(kind ? { kind } : {}),
-          page: String(pageParam),
-          size: "10",
-        })}`,
-      ),
+      (signedIn ? communityApi.feed : communityApi.posts)({
+        ...(signedIn ? { following: String(following) } : {}),
+        ...(kind ? { kind } : {}),
+        page: String(pageParam),
+        size: "10",
+      }),
     getNextPageParam: nextPageOf,
   })
   const items = feed.data?.pages.flatMap((page) => page.items) || []
@@ -201,8 +194,8 @@ function FeaturedPages() {
   const { text } = useStreamLocale()
   const following = useFollowedIds()
   const pages = useQuery({
-    queryKey: ["page-channels"],
-    queryFn: () => communityApi<PageSlice<CommunityProfile>>("/pages?size=20"),
+    queryKey: communityKeys.channels,
+    queryFn: () => communityApi.pages({ size: "20" }),
     staleTime: 60_000,
   })
   const featured = (pages.data?.items || []).filter((page) => isCommunityProfile(page.kind)).slice(0, 6)

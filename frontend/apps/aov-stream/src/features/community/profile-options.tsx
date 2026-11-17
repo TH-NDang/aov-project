@@ -188,8 +188,9 @@ function ProfileRequestForm({ pageId, kind }: { pageId: string; kind: "suggestio
   const isClaim = kind === "claim"
   const request = useMutation({
     mutationFn: () =>
-      communityApi(
-        `/me/pages/${pageId}/${isClaim ? "claims" : "reports"}`,
+      communityApi.sendPageRequest(
+        pageId,
+        isClaim ? "claims" : "reports",
         isClaim ? { evidence: text } : { reason: text },
       ),
   })

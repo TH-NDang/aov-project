@@ -6,6 +6,7 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { competitionsFeedQuery, formatDay, regionName } from "./community-ui"
 import { ProfileHead } from "./profile-head"
 import { LiveBlock } from "./profile-home"
@@ -207,8 +208,8 @@ function hostOf(url: string) {
 function CircuitChannelOrganization({ id }: { id: string }) {
   const { text } = useStreamLocale()
   const organization = useQuery({
-    queryKey: ["public-page", id],
-    queryFn: () => communityApi<CommunityProfile>(`/pages/${encodeURIComponent(id)}`),
+    queryKey: communityKeys.publicPage(id),
+    queryFn: () => communityApi.page(id),
   })
   if (organization.isPending) return <span role="status">{text("Đang tải…", "Loading…")}</span>
   if (organization.isError || organization.data.kind !== "ORGANIZATION")

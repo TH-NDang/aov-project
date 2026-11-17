@@ -1,13 +1,6 @@
 import { Link, useSearchParams } from "react-router"
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
-import {
-  profileKindLabels,
-  type CommunityProfile,
-  type CompetitionView,
-  type FeedPost,
-  type PageSlice,
-  type ProfileKind,
-} from "@aov/community-contracts"
+import { profileKindLabels, type CompetitionView, type ProfileKind } from "@aov/community-contracts"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
@@ -15,6 +8,7 @@ import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { PageDirectory, ProfileCard, profileKinds } from "./community-directory"
 import { LiveCards, useLivePages, videoThumbnail } from "./community-live"
 import { PostCard } from "./community-post"
@@ -96,8 +90,8 @@ function NewVideos() {
   const { text } = useStreamLocale()
   const layout = usePageLayout()
   const videos = useQuery({
-    queryKey: ["video-highlights"],
-    queryFn: () => communityApi<PageSlice<FeedPost>>("/posts?kind=VIDEO&size=4"),
+    queryKey: communityKeys.videoHighlights,
+    queryFn: () => communityApi.posts({ kind: "VIDEO", size: "4" }),
     staleTime: 60_000,
   })
   const items = videos.data?.items || []
@@ -158,22 +152,16 @@ function SearchResults({ query }: { query: string }) {
   const following = useFollowedIds()
   const pages = useQueries({
     queries: SEARCH_KINDS.map((kind) => ({
-      queryKey: ["page-search", kind, query],
-      queryFn: () =>
-        communityApi<PageSlice<CommunityProfile>>(
-          `/pages?${new URLSearchParams({ kind, q: query, size: String(GROUP_SIZE) })}`,
-        ),
+      queryKey: communityKeys.pageSearch(kind, query),
+      queryFn: () => communityApi.pages({ kind, q: query, size: String(GROUP_SIZE) }),
       staleTime: 60_000,
     })),
   })
   const catalog = useQuery(competitionCatalogQuery)
   const posts = useInfiniteQuery({
-    queryKey: ["post-search", query],
+    queryKey: communityKeys.postSearch(query),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      communityApi<PageSlice<FeedPost>>(
-        `/posts?${new URLSearchParams({ q: query, page: String(pageParam), size: "10" })}`,
-      ),
+    queryFn: ({ pageParam }) => communityApi.posts({ q: query, page: String(pageParam), size: "10" }),
     getNextPageParam: nextPageOf,
   })
   const competitions = matchingCompetitions(catalog.data || [], query)
@@ -335,12 +323,9 @@ function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
   const { text, languageTag } = useStreamLocale()
   const following = useFollowedIds()
   const pages = useInfiniteQuery({
-    queryKey: ["page-search-list", kind, query],
+    queryKey: communityKeys.pageSearchList(kind, query),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      communityApi<PageSlice<CommunityProfile>>(
-        `/pages?${new URLSearchParams({ kind, q: query, page: String(pageParam), size: "24" })}`,
-      ),
+    queryFn: ({ pageParam }) => communityApi.pages({ kind, q: query, page: String(pageParam), size: "24" }),
     getNextPageParam: nextPageOf,
   })
   const items = pages.data?.pages.flatMap((page) => page.items) ?? []

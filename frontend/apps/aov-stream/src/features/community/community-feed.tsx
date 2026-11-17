@@ -1,16 +1,10 @@
 import { useState } from "react"
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import {
-  postKindLabels,
-  type CommunityPost,
-  type CommunityProfile,
-  type PageSlice,
-  type PageRole,
-  type PostKind,
-} from "@aov/community-contracts"
+import { postKindLabels, type CommunityProfile, type PageRole, type PostKind } from "@aov/community-contracts"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
+import { communityKeys, refreshPostLists } from "./community-keys"
 import { useCommunitySession } from "../../lib/stream-auth"
 import { PostCard } from "./community-post"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
@@ -35,12 +29,12 @@ const imageLines = (value: string) =>
 function usePagePicture(pageId: string) {
   const client = useQueryClient()
   const page = useQuery({
-    queryKey: ["public-page", pageId],
-    queryFn: () => communityApi<CommunityProfile>(`/pages/${pageId}`),
+    queryKey: communityKeys.publicPage(pageId),
+    queryFn: () => communityApi.page(pageId),
     initialData: () =>
       [
-        ...client.getQueriesData<CommunityProfile>({ queryKey: ["public-page"] }),
-        ...client.getQueriesData<CommunityProfile>({ queryKey: ["managed-page"] }),
+        ...client.getQueriesData<CommunityProfile>({ queryKey: communityKeys.publicPageAll }),
+        ...client.getQueriesData<CommunityProfile>({ queryKey: communityKeys.managedPageAll }),
       ]
         .map(([, data]) => data)
         .find((data) => data?.id === pageId),
@@ -84,15 +78,13 @@ export function CommunityFeed({
   const pictureUrl = usePagePicture(pageId)
   const personal = !manage && session.status === "authenticated"
   const posts = useInfiniteQuery({
-    queryKey: ["page-posts", session.revision, pageId, manage, kind],
+    queryKey: communityKeys.pagePosts(session.revision, pageId, manage, kind),
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
-      communityApi<PageSlice<CommunityPost>>(
-        `${manage || personal ? "/me" : ""}/pages/${pageId}/${personal ? "feed" : "posts"}?${new URLSearchParams({
-          page: String(pageParam),
-          size: "20",
-          ...(kind && !manage && !personal ? { kind } : {}),
-        })}`,
+      communityApi.pagePosts(
+        pageId,
+        { page: String(pageParam), size: "20", ...(kind && !manage && !personal ? { kind } : {}) },
+        { manage, personal },
       ),
     getNextPageParam: nextPageOf,
   })
@@ -106,7 +98,7 @@ export function CommunityFeed({
     imageUrls.length <= 4
   const write = useMutation({
     mutationFn: (publish: boolean) =>
-      communityApi(`/me/pages/${pageId}/posts`, {
+      communityApi.writePost(pageId, {
         kind: postKind,
         title: postKind === "NEWS" ? title : null,
         body,
@@ -120,8 +112,7 @@ export function CommunityFeed({
       setTitle("")
       setVideoUrl("")
       setImages("")
-      await client.invalidateQueries({ queryKey: ["page-posts"] })
-      await client.invalidateQueries({ queryKey: ["community-feed"] })
+      await refreshPostLists(client)
     },
   })
   return (

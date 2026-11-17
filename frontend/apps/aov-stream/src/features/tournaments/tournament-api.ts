@@ -7,13 +7,23 @@ export interface PublishedSummary<T> {
   content: T
   gameCount: number
 }
+/** Every query key of tournaments; reads and invalidation both use these. */
+export const tournamentKeys = {
+  catalog: ["competition-catalog"] as const,
+  competition: (id: string) => ["competition", id] as const,
+  seriesGames: (seriesId: string | null | undefined) => ["match-games", seriesId] as const,
+  games: (filters: { tournamentId?: string; seriesId?: string }) => ["community", "games", filters] as const,
+  game: (id: string) => ["community", "game", id] as const,
+  tournaments: ["community", "tournaments"] as const,
+}
+
 const read = <T>(path: string, signal: AbortSignal) => communityRequest<T>(path, { signal })
 
 /** Read every public page so filtering and match grouping never silently omit later pages. */
 const readPages = <T>(path: string, signal: AbortSignal) => communityGetAll<T>(path, { signal })
 
 export const competitionCatalogQuery = queryOptions({
-  queryKey: ["competition-catalog"],
+  queryKey: tournamentKeys.catalog,
   queryFn: ({ signal }) => readPages<CompetitionView>("/competitions", signal),
   staleTime: 60_000,
   retry: 1,
@@ -21,7 +31,7 @@ export const competitionCatalogQuery = queryOptions({
 
 export const competitionQuery = (id: string) =>
   queryOptions({
-    queryKey: ["competition", id],
+    queryKey: tournamentKeys.competition(id),
     queryFn: ({ signal }) => read<CompetitionView>(`/competitions/${encodeURIComponent(id)}`, signal),
     staleTime: 60_000,
     retry: 1,
@@ -29,7 +39,7 @@ export const competitionQuery = (id: string) =>
 
 export const matchGamesQuery = (seriesId?: string | null) =>
   queryOptions({
-    queryKey: ["match-games", seriesId],
+    queryKey: tournamentKeys.seriesGames(seriesId),
     queryFn: ({ signal }) => readPages<PublishedGame>(`/games?seriesId=${encodeURIComponent(seriesId!)}`, signal),
     enabled: !!seriesId,
     staleTime: 60_000,
@@ -37,7 +47,7 @@ export const matchGamesQuery = (seriesId?: string | null) =>
   })
 export function gamesQuery(filters: { tournamentId?: string; seriesId?: string } = {}) {
   return infiniteQueryOptions({
-    queryKey: ["community", "games", filters],
+    queryKey: tournamentKeys.games(filters),
     initialPageParam: 0,
     queryFn: ({ signal, pageParam }) => {
       const params = new URLSearchParams({ page: String(pageParam), size: "12" })
@@ -51,13 +61,13 @@ export function gamesQuery(filters: { tournamentId?: string; seriesId?: string }
 }
 export const gameQuery = (id: string) =>
   queryOptions({
-    queryKey: ["community", "game", id],
+    queryKey: tournamentKeys.game(id),
     queryFn: ({ signal }) => read<PublishedGame>(`/games/${encodeURIComponent(id)}`, signal),
     staleTime: 60_000,
     retry: 1,
   })
 export const tournamentsQuery = queryOptions({
-  queryKey: ["community", "tournaments"],
+  queryKey: tournamentKeys.tournaments,
   queryFn: async ({ signal }) => ({
     items: await readPages<PublishedSummary<TournamentContent>>("/tournaments", signal),
   }),

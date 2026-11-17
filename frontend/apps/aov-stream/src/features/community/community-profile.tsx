@@ -8,8 +8,6 @@ import {
   type CommunityProfile,
   type CompetitionView,
   type PageRole,
-  type PageSlice,
-  type PageViewer,
   type ProfileHistory,
 } from "@aov/community-contracts"
 import { usePageLayout, type PageLayout } from "@aov/ui/hooks/use-page-layout"
@@ -18,6 +16,7 @@ import { StreamIcon } from "../../components/stream-icon"
 import { streamText, useStreamLocale } from "../../components/stream-locale"
 import { CompetitionCard } from "../tournaments/competition-card"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { useCommunitySession } from "../../lib/stream-auth"
 import { CommunityFeed } from "./community-feed"
 import { useFollowPage } from "./community-queries"
@@ -56,11 +55,8 @@ export function CommunityProfilePage() {
   const { text } = useStreamLocale()
   const { code = "" } = useParams()
   const profile = useQuery({
-    queryKey: ["public-page", code],
-    queryFn: () =>
-      communityApi<CommunityProfile>(
-        `/pages/${/^[0-9a-f-]{36}$/i.test(code) ? encodeURIComponent(code) : `by-code/${encodeURIComponent(code)}`}`,
-      ),
+    queryKey: communityKeys.publicPage(code),
+    queryFn: () => communityApi.pageByAddress(code),
   })
   return (
     <StreamShell>
@@ -136,8 +132,8 @@ function Profile({ profile }: { profile: CommunityProfile }) {
   const content = profile.content!
   const authenticated = session.status === "authenticated"
   const viewer = useQuery({
-    queryKey: ["page-viewer", session.revision, profile.id],
-    queryFn: () => communityApi<PageViewer>(`/me/pages/${profile.id}`),
+    queryKey: communityKeys.viewer(session.revision, profile.id),
+    queryFn: () => communityApi.viewer(profile.id),
     enabled: authenticated,
   })
   const follow = useFollowPage()
@@ -341,12 +337,12 @@ function ProfileHome({
   const organized = views.slice(0, usePageLayout() === "compact" ? 3 : 6)
   const [onlyVideo, setOnlyVideo] = useState(false)
   const posts = useQuery({
-    queryKey: ["page-post-count", profile.id],
-    queryFn: () => communityApi<PageSlice<unknown>>(`/pages/${profile.id}/posts?size=1`),
+    queryKey: communityKeys.pagePostCount(profile.id),
+    queryFn: () => communityApi.pagePostCount(profile.id),
   })
   const videos = useQuery({
-    queryKey: ["page-post-count", profile.id, "VIDEO"],
-    queryFn: () => communityApi<PageSlice<unknown>>(`/pages/${profile.id}/posts?kind=VIDEO&size=1`),
+    queryKey: communityKeys.pagePostCount(profile.id, "VIDEO"),
+    queryFn: () => communityApi.pagePostCount(profile.id, "VIDEO"),
   })
   const postCount = posts.data?.totalElements
   const hasVideos = !!videos.data?.totalElements

@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react"
 import { Link } from "react-router"
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import type { CommunityComment, CommunityPost, PageCard, PageRole, PageSlice } from "@aov/community-contracts"
+import type { CommunityPost, PageCard, PageRole } from "@aov/community-contracts"
 import { profileKindLabels } from "@aov/community-contracts"
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { initials } from "../account/profile-model"
 import { communityApi } from "./community-api"
+import { communityKeys, refreshPostLists } from "./community-keys"
 import { useCommunitySession } from "../../lib/stream-auth"
 import { useFollowPage } from "./community-queries"
 import { useSignedInAction } from "./community-signin"
@@ -23,7 +24,6 @@ import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 /** Lists that show posts; every change to a post or its comments refreshes them all. */
-const postLists = ["page-posts", "community-feed"]
 
 function AuthorMark({ name, small = false }: { name: string; small?: boolean }) {
   return (
@@ -83,13 +83,12 @@ export function PostCard({
   const [editedBody, setEditedBody] = useState(post.body)
   const [editedTitle, setEditedTitle] = useState(post.title || "")
   const [reportedComment, setReportedComment] = useState<string | undefined>()
-  const refreshLists = () => Promise.all(postLists.map((key) => client.invalidateQueries({ queryKey: [key] })))
+  const refreshLists = () => refreshPostLists(client)
   // A like shown before the feed refetches; a newer `post` from the server replaces it.
   const [liking, setLiking] = useState<{ source: CommunityPost; liked: boolean; likes: number } | null>(null)
   const shown = liking?.source === post ? liking : post
   const like = useMutation({
-    mutationFn: (liked: boolean) =>
-      communityApi<{ liked: boolean; likes: number }>(`/me/posts/${post.id}/like`, { liked }),
+    mutationFn: (liked: boolean) => communityApi.likePost(post.id, liked),
     onMutate: (liked) => {
       const previous = liking
       setLiking({ source: post, liked, likes: Math.max(0, shown.likes + (liked ? 1 : -1)) })
@@ -100,45 +99,39 @@ export function PostCard({
   })
   const edit = useMutation({
     mutationFn: (publish: boolean) =>
-      communityApi(
-        `/me/pages/${post.pageId}/posts/${post.id}`,
-        {
-          version: post.version,
-          kind: post.kind,
-          title: editedTitle,
-          body: editedBody,
-          videoUrl: post.videoUrl,
-          imageUrls: post.imageUrls,
-          asPage: post.asPage,
-          publish,
-        },
-        "PUT",
-      ),
+      communityApi.editPost(post.pageId, post.id, {
+        version: post.version,
+        kind: post.kind,
+        title: editedTitle,
+        body: editedBody,
+        videoUrl: post.videoUrl,
+        imageUrls: post.imageUrls,
+        asPage: post.asPage,
+        publish,
+      }),
     onSuccess: async () => {
       setEditing(false)
       await refreshLists()
     },
   })
   const comments = useInfiniteQuery({
-    queryKey: ["post-comments", post.id],
+    queryKey: communityKeys.comments(post.id),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      communityApi<PageSlice<CommunityComment>>(`/posts/${post.id}/comments?page=${pageParam}&size=30`),
+    queryFn: ({ pageParam }) => communityApi.comments(post.id, pageParam),
     getNextPageParam: nextPageOf,
     enabled: expanded && post.status === "PUBLISHED",
   })
   const commentRows = comments.data?.pages.flatMap((page) => page.items) ?? []
   const reply = useMutation({
-    mutationFn: () => communityApi(`/me/posts/${post.id}/comments`, { body, asPage }),
+    mutationFn: () => communityApi.comment(post.id, { body, asPage }),
     onSuccess: async () => {
       setBody("")
-      await client.invalidateQueries({ queryKey: ["post-comments", post.id] })
+      await client.invalidateQueries({ queryKey: communityKeys.comments(post.id) })
       await refreshLists()
     },
   })
   const report = useMutation({
-    mutationFn: () =>
-      communityApi(`/me/pages/${post.pageId}/reports`, { postId: post.id, commentId: reportedComment, reason }),
+    mutationFn: () => communityApi.report(post.pageId, { postId: post.id, commentId: reportedComment, reason }),
     onSuccess: () => {
       setReporting(false)
       setReason("")
@@ -146,18 +139,18 @@ export function PostCard({
   })
   const hide = useMutation({
     mutationFn: (commentId?: string) =>
-      communityApi(`/me/pages/${post.pageId}/moderate`, {
+      communityApi.moderate(post.pageId, {
         postId: post.id,
         commentId,
         hidden: commentId ? true : post.status !== "HIDDEN",
       }),
     onSuccess: async () => {
       await refreshLists()
-      await client.invalidateQueries({ queryKey: ["post-comments", post.id] })
+      await client.invalidateQueries({ queryKey: communityKeys.comments(post.id) })
     },
   })
   const pin = useMutation({
-    mutationFn: () => communityApi(`/me/pages/${post.pageId}/posts/${post.id}/pin`, { pinned: !post.pinned }),
+    mutationFn: () => communityApi.pin(post.pageId, post.id, !post.pinned),
     onSuccess: refreshLists,
   })
   const canEdit = post.status !== "HIDDEN" && (post.own || (post.asPage && ["OWNER", "EDITOR"].includes(role)))

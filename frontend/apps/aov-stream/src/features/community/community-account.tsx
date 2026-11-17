@@ -25,6 +25,7 @@ import { AccountProfile } from "../account/account-profile"
 import { AccountSettings } from "../account/account-settings"
 import { initials } from "../account/profile-model"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { useCommunitySession } from "../../lib/stream-auth"
 import { CommunityFeed } from "./community-feed"
 import { openSignIn, SignInBenefits } from "./community-signin"
@@ -274,12 +275,12 @@ function ManagedPages() {
   const { text } = useStreamLocale()
   const session = useCommunitySession()
   const managed = useQuery({
-    queryKey: ["managed-pages", session.revision],
-    queryFn: () => communityApi<CommunityProfile[]>("/me/pages"),
+    queryKey: communityKeys.managedPages(session.revision),
+    queryFn: () => communityApi.managedPages(),
   })
   const claims = useQuery({
-    queryKey: ["my-claims", session.revision],
-    queryFn: () => communityApi<PageClaim[]>("/me/claims"),
+    queryKey: communityKeys.claims(session.revision),
+    queryFn: () => communityApi.claims(),
   })
   return (
     <div className="cp-section-pair">
@@ -387,13 +388,13 @@ export function CommunityPageManager() {
   const session = useCommunitySession()
   const enabled = session.status === "authenticated"
   const profile = useQuery({
-    queryKey: ["managed-page", session.revision, id],
-    queryFn: () => communityApi<CommunityProfile>(`/me/pages/${id}/profile`),
+    queryKey: communityKeys.managedPage(session.revision, id),
+    queryFn: () => communityApi.managedPage(id),
     enabled,
   })
   const viewer = useQuery({
-    queryKey: ["page-viewer", session.revision, id],
-    queryFn: () => communityApi<PageViewer>(`/me/pages/${id}`),
+    queryKey: communityKeys.viewer(session.revision, id),
+    queryFn: () => communityApi.viewer(id),
     enabled,
   })
   return (
@@ -517,10 +518,10 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
 function useManagerRefresh() {
   const client = useQueryClient()
   return async () => {
-    await client.invalidateQueries({ queryKey: ["page-viewer"] })
-    await client.invalidateQueries({ queryKey: ["public-page"] })
-    await client.invalidateQueries({ queryKey: ["managed-page"] })
-    await client.invalidateQueries({ queryKey: ["page-members"] })
+    await client.invalidateQueries({ queryKey: communityKeys.viewerAll })
+    await client.invalidateQueries({ queryKey: communityKeys.publicPageAll })
+    await client.invalidateQueries({ queryKey: communityKeys.managedPageAll })
+    await client.invalidateQueries({ queryKey: communityKeys.memberAll })
   }
 }
 
@@ -534,8 +535,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
     links: profile.content?.links || [],
   })
   const save = useMutation({
-    mutationFn: () =>
-      communityApi(`/me/pages/${profile.id}/presentation`, { version: viewer.version, content: presentation }, "PUT"),
+    mutationFn: () => communityApi.savePresentation(profile.id, { version: viewer.version, content: presentation }),
     onSuccess: refresh,
   })
   const readOnly = viewer.role === "MODERATOR"
@@ -693,18 +693,18 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
   const [copied, setCopied] = useState(false)
   const [confirmation, setConfirmation] = useState<{ id: string; action: "revoke" | "transfer" } | null>(null)
   const members = useQuery({
-    queryKey: ["page-members", session.revision, profile.id],
-    queryFn: () => communityApi<PageManager[]>(`/me/pages/${profile.id}/members`),
+    queryKey: communityKeys.members(session.revision, profile.id),
+    queryFn: () => communityApi.members(profile.id),
   })
   const invite = useMutation({
-    mutationFn: () => communityApi<{ token: string }>(`/me/pages/${profile.id}/invitations`, { role: inviteRole }),
+    mutationFn: () => communityApi.invite(profile.id, inviteRole),
     onSuccess: (value) => {
       setCopied(false)
       setInvitation(`${location.origin}${import.meta.env.BASE_URL}invitations#${value.token}`)
     },
   })
   const membership = useMutation({
-    mutationFn: () => communityApi(`/me/pages/${profile.id}/members/${confirmation!.id}/${confirmation!.action}`, {}),
+    mutationFn: () => communityApi.changeMember(profile.id, confirmation!.id, confirmation!.action),
     onSuccess: async () => {
       setConfirmation(null)
       await refresh()
@@ -862,7 +862,7 @@ export function CommunityInvitation() {
   const navigate = useNavigate()
   const [token] = useState(() => location.hash.slice(1))
   const accept = useMutation({
-    mutationFn: () => communityApi<{ pageId: string }>("/me/invitations/accept", { token }),
+    mutationFn: () => communityApi.acceptInvitation(token),
     onSuccess: (result) => navigate(`/manage/${result.pageId}`, { replace: true }),
   })
   return (

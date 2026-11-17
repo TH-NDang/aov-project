@@ -4,7 +4,6 @@ import {
   isIndividualProfile,
   profileKindLabels,
   type CommunityProfile,
-  type PageSlice,
   type ProfileLink,
 } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
@@ -12,6 +11,7 @@ import { SocialPlatformIcon } from "@aov/ui/components/social-platform-icon"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { Avatar, followersLabel, formatDay, profileKindEnglish, regionKey, regionName } from "./community-ui"
 
 function linkName(link: ProfileLink) {
@@ -125,8 +125,8 @@ function RelatedPages({ profile }: { profile: CommunityProfile }) {
   const { text } = useStreamLocale()
   const region = regionKey(profile.content?.country)
   const pages = useQuery({
-    queryKey: ["related-pages", profile.kind],
-    queryFn: () => communityApi<PageSlice<CommunityProfile>>(`/pages?kind=${profile.kind}&size=40`),
+    queryKey: communityKeys.relatedPages(profile.kind),
+    queryFn: () => communityApi.pages({ kind: profile.kind, size: "40" }),
     staleTime: 5 * 60_000,
     enabled: !!region,
   })

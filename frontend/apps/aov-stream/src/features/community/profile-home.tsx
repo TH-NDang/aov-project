@@ -9,6 +9,7 @@ import { useStreamLocale } from "../../components/stream-locale"
 import { matchStrip } from "../tournaments/competition-model"
 import { MatchCard } from "../tournaments/match-card"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 import { timeAgo } from "./community-ui"
 import { PostVideo } from "./post-media"
 import { profileMatches } from "./public-competitions"
@@ -98,18 +99,18 @@ export function LiveControl({ profile }: { profile: CommunityProfile }) {
   const [url, setUrl] = useState("")
   const [title, setTitle] = useState("")
   const refresh = async () => {
-    await client.invalidateQueries({ queryKey: ["public-page"] })
-    await client.invalidateQueries({ queryKey: ["live-pages"] })
+    await client.invalidateQueries({ queryKey: communityKeys.publicPageAll })
+    await client.invalidateQueries({ queryKey: communityKeys.livePageAll })
   }
   const start = useMutation({
-    mutationFn: () => communityApi(`/me/pages/${profile.id}/live`, { url, title }, "PUT"),
+    mutationFn: () => communityApi.startLive(profile.id, { url, title }),
     onSuccess: async () => {
       setOpen(false)
       await refresh()
     },
   })
   const end = useMutation({
-    mutationFn: () => communityApi(`/me/pages/${profile.id}/live/end`, {}),
+    mutationFn: () => communityApi.endLive(profile.id),
     onSuccess: async () => {
       setOpen(false)
       await refresh()

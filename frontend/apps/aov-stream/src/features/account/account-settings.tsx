@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PublicTimeZoneSelect } from "@aov/ui/components/public-time-zone-select"
 import { languageLabel } from "./account-profile"
 import { LANGUAGE_CODES, profileDraft, profileRequest, type UserProfile } from "./profile-model"
-import { profileKey, saveProfile, useOwnProfile } from "./profile-api"
+import { accountKeys, saveProfile, useOwnProfile } from "./profile-api"
 import { wikiRequest } from "../../lib/stream-api"
 import { useCommunitySession } from "../../lib/stream-auth"
 import { useStreamLocale } from "../../components/stream-locale"
@@ -23,7 +23,7 @@ export function AccountSettings() {
       const latest = await wikiRequest<UserProfile>("/users/me")
       return saveProfile(profileRequest({ ...profileDraft(latest), locale: next }, latest.version))
     },
-    onSuccess: (saved) => client.setQueryData(profileKey(session.revision), saved),
+    onSuccess: (saved) => client.setQueryData(accountKeys.profile(session.revision), saved),
   })
 
   return (

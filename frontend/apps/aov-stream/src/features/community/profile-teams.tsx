@@ -1,8 +1,8 @@
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import type { TeamAffiliation } from "@aov/community-contracts"
 import { useStreamLocale } from "../../components/stream-locale"
 import { communityApi } from "./community-api"
+import { communityKeys } from "./community-keys"
 
 /**
  * The teams whose published squads list this person, each with the role and standing recorded there. It reads as a
@@ -11,8 +11,8 @@ import { communityApi } from "./community-api"
 export function ProfileTeams({ pageId }: { pageId: string }) {
   const { text } = useStreamLocale()
   const query = useQuery({
-    queryKey: ["public-page-teams", pageId],
-    queryFn: () => communityApi<TeamAffiliation[]>(`/pages/${pageId}/teams`),
+    queryKey: communityKeys.pageTeams(pageId),
+    queryFn: () => communityApi.pageTeams(pageId),
   })
   if (query.isError)
     return (
