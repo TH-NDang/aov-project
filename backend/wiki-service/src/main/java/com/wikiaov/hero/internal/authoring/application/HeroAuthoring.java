@@ -202,7 +202,11 @@ public class HeroAuthoring {
 
     /** Replaces the draft's traits (ADR-029); they live in the skills section and are published with it. */
     @PreAuthorize("hasAuthority('hero:write')")
-    public HeroRevisionView updateTraits(UUID heroId, UUID draftId, long expected, List<Trait> traits, String note) {
+    public HeroRevisionView updateTraits(UUID heroId, UUID draftId,
+            HeroEvaluationCommands.UpdateTraitsCommand command) {
+        long expected = command.expectedDraftVersion();
+        List<Trait> traits = command.traits();
+        String note = command.changeNote();
         store.lockHero(heroId);
         var draft = editable(heroId, draftId, expected);
         if (traits == null)
@@ -216,8 +220,10 @@ public class HeroAuthoring {
 
     /** Replaces the editor-written notes of one profile locale (ADR-029); blank text clears a note. */
     @PreAuthorize("hasAuthority('hero:write')")
-    public HeroRevisionView updateNotes(UUID heroId, UUID draftId, long expected, String locale, String strengths,
-            String weaknesses, String counterTips, String note) {
+    public HeroRevisionView updateNotes(UUID heroId, UUID draftId, HeroEvaluationCommands.UpdateNotesCommand command) {
+        long expected = command.expectedDraftVersion();
+        String locale = command.locale();
+        String note = command.changeNote();
         store.lockHero(heroId);
         var draft = editable(heroId, draftId, expected);
         HeroValidation.locale(locale);
@@ -227,8 +233,8 @@ public class HeroAuthoring {
             throw HeroValidation.invalid("Add a profile translation for this locale before writing notes.");
         var content = new Profile(old.translations().stream()
                 .map(text -> text.locale().equals(locale)
-                        ? text.withNotes(HeroEvaluations.note(strengths), HeroEvaluations.note(weaknesses),
-                                HeroEvaluations.note(counterTips))
+                        ? text.withNotes(HeroEvaluations.note(command.strengths()),
+                                HeroEvaluations.note(command.weaknesses()), HeroEvaluations.note(command.counterTips()))
                         : text)
                 .toList(), old.roles(), old.positions(), old.sources());
 

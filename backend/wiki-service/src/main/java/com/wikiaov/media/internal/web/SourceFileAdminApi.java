@@ -1,9 +1,9 @@
 package com.wikiaov.media.internal.web;
 
+import com.wikiaov.media.internal.source.application.SourceCommands;
 import com.wikiaov.media.internal.source.application.SourceFileViews;
 import com.wikiaov.media.internal.source.domain.SourceCategory;
 import com.wikiaov.media.internal.web.request.ExpectedVersionRequest;
-import com.wikiaov.media.internal.web.request.SourceRequests;
 import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -48,14 +48,14 @@ public interface SourceFileAdminApi {
             @ApiResponse(responseCode = "201", description = "Created.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "RFC 9457 Problem Details.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    ResponseEntity<SourceFileViews.Collection> createCollection(@Valid SourceRequests.CreateCollection body);
+    ResponseEntity<SourceFileViews.Collection> createCollection(@Valid SourceCommands.CreateCollectionCommand body);
 
     @Operation(operationId = "sourceFileAdminApi_updateCollection", summary = "Describe a source collection", description = "Changes the label, note and capture day. Requires media:write.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "RFC 9457 Problem Details.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
     SourceFileViews.Collection updateCollection(@Parameter(description = "Collection identifier.") UUID collectionId,
-            @Valid SourceRequests.UpdateCollection body);
+            @Valid SourceCommands.UpdateCollectionCommand body);
 
     @Operation(operationId = "sourceFileAdminApi_deleteCollection", summary = "Delete a source collection", description = "Removes the collection and its files from the catalog. The bytes stay stored and become orphans when nothing else uses them. Requires media:write.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "204", description = "Successful operation."),
@@ -94,7 +94,8 @@ public interface SourceFileAdminApi {
             @ApiResponse(responseCode = "default", description = "RFC 9457 Problem Details.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
     ResponseEntity<SourceFileViews.UploadResult> requestUpload(
-            @Parameter(description = "Collection identifier.") UUID collectionId, @Valid SourceRequests.Upload body);
+            @Parameter(description = "Collection identifier.") UUID collectionId,
+            @Valid SourceCommands.UploadCommand body);
 
     @Operation(operationId = "sourceFileAdminApi_getUpload", summary = "Read a source file upload", description = "State of an upload. Requires catalog:read.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
@@ -113,7 +114,7 @@ public interface SourceFileAdminApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "RFC 9457 Problem Details.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    ResponseEntity<SourceFileViews.Links> linksBySha256(@Valid SourceRequests.LinksBySha256 body);
+    ResponseEntity<SourceFileViews.Links> linksBySha256(@Valid SourceCommands.LinksBySha256Command body);
 
     @Operation(operationId = "sourceFileAdminApi_linksByPath", summary = "Presigned links by path", description = "Short-lived GET URLs for up to 200 files of one collection, for example to read its manifest. Requires catalog:read.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
@@ -121,7 +122,7 @@ public interface SourceFileAdminApi {
     })
     ResponseEntity<SourceFileViews.PathLinks> linksByPath(
             @Parameter(description = "Collection identifier.") UUID collectionId,
-            @Valid SourceRequests.LinksByPath body);
+            @Valid SourceCommands.LinksByPathCommand body);
 
     @Operation(operationId = "sourceFileAdminApi_downloadLink", summary = "Presigned download link", description = "A short-lived URL that saves the file under its own name. Requires catalog:read.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),

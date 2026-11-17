@@ -1,7 +1,7 @@
 package com.wikiaov.media.internal.web;
 
+import com.wikiaov.media.internal.capacity.application.CapacityCommands;
 import com.wikiaov.media.internal.capacity.application.StorageCapacityViews;
-import com.wikiaov.media.internal.web.request.SourceRequests;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,5 +25,5 @@ public interface StorageAdminApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "RFC 9457 Problem Details.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
-    StorageCapacityViews.Estimate estimate(@Valid SourceRequests.Estimate body);
+    StorageCapacityViews.Estimate estimate(@Valid CapacityCommands.EstimateCommand body);
 }

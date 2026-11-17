@@ -1,8 +1,8 @@
 package com.wikiaov.media.internal.web;
 
+import com.wikiaov.media.internal.capacity.application.CapacityCommands;
 import com.wikiaov.media.internal.capacity.application.StorageCapacity;
 import com.wikiaov.media.internal.capacity.application.StorageCapacityViews;
-import com.wikiaov.media.internal.web.request.SourceRequests;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,8 +30,8 @@ class StorageAdminController implements StorageAdminApi {
     }
 
     @PostMapping(path = "/estimates", version = "1")
-    public StorageCapacityViews.Estimate estimate(@RequestBody SourceRequests.Estimate body) {
+    public StorageCapacityViews.Estimate estimate(@RequestBody CapacityCommands.EstimateCommand body) {
         return capacity.estimate(body.target(),
-                body.files().stream().map(SourceRequests.EstimateFile::toFile).toList());
+                body.files().stream().map(CapacityCommands.EstimateFileCommand::toFile).toList());
     }
 }

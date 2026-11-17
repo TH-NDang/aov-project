@@ -70,8 +70,14 @@ public class SourceCollections {
 
     @PreAuthorize(MediaWritePolicy.CAN_WRITE_MEDIA)
     @Transactional
-    public SourceFileViews.Collection create(String code, SourceCategory category, String label,
-            @Nullable String note, @Nullable LocalDate capturedOn) {
+    public SourceFileViews.Collection create(SourceCommands.CreateCollectionCommand command) {
+        String code = command.code();
+        SourceCategory category = command.category();
+        String label = command.label();
+        @Nullable
+        String note = command.note();
+        @Nullable
+        LocalDate capturedOn = command.capturedOn();
         var actor = actors.require();
         collections.findByCode(code).ifPresent(existing -> {
             throw codeTaken(code);
@@ -93,8 +99,13 @@ public class SourceCollections {
 
     @PreAuthorize(MediaWritePolicy.CAN_WRITE_MEDIA)
     @Transactional
-    public SourceFileViews.Collection update(UUID id, long expectedVersion, String label, @Nullable String note,
-            @Nullable LocalDate capturedOn) {
+    public SourceFileViews.Collection update(UUID id, SourceCommands.UpdateCollectionCommand command) {
+        long expectedVersion = command.expectedVersion();
+        String label = command.label();
+        @Nullable
+        String note = command.note();
+        @Nullable
+        LocalDate capturedOn = command.capturedOn();
         var actor = actors.require();
         SourceCollection collection = require(id);
         if (collection.getLockVersion() != expectedVersion) {

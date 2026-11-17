@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.web;
 
 import com.wikiaov.media.internal.source.application.SourceCollections;
+import com.wikiaov.media.internal.source.application.SourceCommands;
 import com.wikiaov.media.internal.source.application.SourceFileViews;
 import com.wikiaov.media.internal.source.application.SourceFiles;
 import com.wikiaov.media.internal.source.application.SourceLinks;
@@ -8,7 +9,6 @@ import com.wikiaov.media.internal.source.application.SourceOrphans;
 import com.wikiaov.media.internal.source.application.SourceUploads;
 import com.wikiaov.media.internal.source.domain.SourceCategory;
 import com.wikiaov.media.internal.web.request.ExpectedVersionRequest;
-import com.wikiaov.media.internal.web.request.SourceRequests;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
@@ -65,15 +65,14 @@ class SourceFileAdminController implements SourceFileAdminApi {
 
     @PostMapping(path = "/source-collections", version = "1")
     public ResponseEntity<SourceFileViews.Collection> createCollection(
-            @RequestBody SourceRequests.CreateCollection body) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(collections.create(body.code(), body.category(),
-                body.label(), body.note(), body.capturedOn()));
+            @RequestBody SourceCommands.CreateCollectionCommand body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(collections.create(body));
     }
 
     @PutMapping(path = "/source-collections/{collectionId}", version = "1")
     public SourceFileViews.Collection updateCollection(@PathVariable UUID collectionId,
-            @RequestBody SourceRequests.UpdateCollection body) {
-        return collections.update(collectionId, body.expectedVersion(), body.label(), body.note(), body.capturedOn());
+            @RequestBody SourceCommands.UpdateCollectionCommand body) {
+        return collections.update(collectionId, body);
     }
 
     @PostMapping(path = "/source-collections/{collectionId}/delete", version = "1")
@@ -105,12 +104,8 @@ class SourceFileAdminController implements SourceFileAdminApi {
 
     @PostMapping(path = "/source-collections/{collectionId}/uploads", version = "1")
     public ResponseEntity<SourceFileViews.UploadResult> requestUpload(@PathVariable UUID collectionId,
-            @RequestBody SourceRequests.Upload body) {
-        SourceUploads.Replace replace = body.replace() == null
-                ? null
-                : new SourceUploads.Replace(body.replace().fileId(), body.replace().expectedVersion());
-        SourceFileViews.UploadResult result = uploads.request(collectionId, body.path(), body.sha256(),
-                body.sizeBytes(), body.contentType(), replace);
+            @RequestBody SourceCommands.UploadCommand body) {
+        SourceFileViews.UploadResult result = uploads.request(collectionId, body);
 
         HttpStatus status = result.status() == SourceFileViews.UploadStatus.STORED ? HttpStatus.OK : HttpStatus.CREATED;
         return ResponseEntity.status(status).cacheControl(CacheControl.noStore()).body(result);
@@ -128,13 +123,13 @@ class SourceFileAdminController implements SourceFileAdminApi {
     }
 
     @PostMapping(path = "/source-files/links", version = "1")
-    public ResponseEntity<SourceFileViews.Links> linksBySha256(@RequestBody SourceRequests.LinksBySha256 body) {
+    public ResponseEntity<SourceFileViews.Links> linksBySha256(@RequestBody SourceCommands.LinksBySha256Command body) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(links.bySha256(body.sha256()));
     }
 
     @PostMapping(path = "/source-collections/{collectionId}/links", version = "1")
     public ResponseEntity<SourceFileViews.PathLinks> linksByPath(@PathVariable UUID collectionId,
-            @RequestBody SourceRequests.LinksByPath body) {
+            @RequestBody SourceCommands.LinksByPathCommand body) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
                 .body(links.byPaths(collectionId, body.paths()));
     }

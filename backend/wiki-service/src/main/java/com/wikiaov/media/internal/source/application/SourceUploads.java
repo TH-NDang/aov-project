@@ -95,8 +95,18 @@ public class SourceUploads {
     }
 
     @PreAuthorize(MediaWritePolicy.CAN_WRITE_MEDIA)
-    public SourceFileViews.UploadResult request(UUID collectionId, @Nullable String rawPath, @Nullable String rawSha256,
-            long sizeBytes, @Nullable String rawContentType, @Nullable Replace replace) {
+    public SourceFileViews.UploadResult request(UUID collectionId, SourceCommands.UploadCommand command) {
+        @Nullable
+        String rawPath = command.path();
+        @Nullable
+        String rawSha256 = command.sha256();
+        long sizeBytes = command.sizeBytes();
+        @Nullable
+        String rawContentType = command.contentType();
+        @Nullable
+        Replace replace = command.replace() == null
+                ? null
+                : new Replace(command.replace().fileId(), command.replace().expectedVersion());
         Actor actor = actors.require();
         String path = SourceErrors.requirePath(rawPath, "path");
         String sha256 = SourceErrors.requireSha256(rawSha256, "sha256");

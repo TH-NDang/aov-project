@@ -1,8 +1,8 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
-import com.wikiaov.hero.internal.web.request.HeroEvaluationRequests.NotesRequest;
-import com.wikiaov.hero.internal.web.request.HeroEvaluationRequests.TraitsRequest;
+import com.wikiaov.hero.internal.authoring.application.HeroEvaluationCommands.UpdateNotesCommand;
+import com.wikiaov.hero.internal.authoring.application.HeroEvaluationCommands.UpdateTraitsCommand;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,12 +21,12 @@ public interface HeroEvaluationApi {
             @ApiResponse(responseCode = "default", description = "RFC 9457 Problem Details.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
     HeroRevisionView updateTraits(@Parameter(description = "Hero or hero form identifier.") UUID heroId,
-            @Parameter(description = "Draft identifier.") UUID draftId, @Valid TraitsRequest body);
+            @Parameter(description = "Draft identifier.") UUID draftId, @Valid UpdateTraitsCommand body);
 
     @Operation(operationId = "heroEvaluationApi_updateNotes", summary = "Write a draft's notes", description = "Stores strengths, weaknesses and counter tips of one profile locale (ADR-029); blank text clears a note. A profile update keeps the notes. Requires hero:write.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "default", description = "RFC 9457 Problem Details.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
     HeroRevisionView updateNotes(@Parameter(description = "Hero identifier.") UUID heroId,
-            @Parameter(description = "Draft identifier.") UUID draftId, @Valid NotesRequest body);
+            @Parameter(description = "Draft identifier.") UUID draftId, @Valid UpdateNotesCommand body);
 }
