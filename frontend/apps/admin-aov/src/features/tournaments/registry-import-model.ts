@@ -3,7 +3,12 @@ import { recordLabel, RECORD_KIND_LABELS } from "./record-lifecycle-model"
 import type { TournamentRecords } from "./tournament-api"
 import { registryFormIssue } from "./registry-form-model"
 import { rosterFormIssue } from "./roster-model"
-import type { RosterMembershipContent } from "@aov/community-contracts"
+import type {
+  RosterMembershipContent,
+  TournamentAward,
+  TournamentLink,
+  TournamentPlacement,
+} from "@aov/community-contracts"
 
 export const MAX_REGISTRY_IMPORT_BYTES = 1024 * 1024
 export const IMPORT_KINDS = ["teams", "players", "tournaments", "roster-memberships", "series"] as const
@@ -87,11 +92,38 @@ function validCalendarDate(value: string) {
     new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value
   )
 }
+/** The fields of each list item the backend accepts; it refuses any other field. */
+const ITEM_FIELDS: Record<string, readonly string[]> = {
+  placements: [
+    "place",
+    "teamId",
+    "teamName",
+    "prizeUsd",
+    "prizeLocal",
+    "lastOpponent",
+    "lastScore",
+  ] satisfies (keyof TournamentPlacement)[],
+  awards: [
+    "title",
+    "playerId",
+    "recipientName",
+    "teamName",
+    "prizeUsd",
+    "prizeLocal",
+  ] satisfies (keyof TournamentAward)[],
+  links: ["label", "url"] satisfies (keyof TournamentLink)[],
+}
 function cleanField(key: string, value: unknown, label: string): unknown {
-  if (["placements", "awards", "links"].includes(key)) {
+  const itemFields = ITEM_FIELDS[key]
+  if (itemFields) {
     if (value == null) return []
     if (!Array.isArray(value)) throw new Error(`${label}: cần một danh sách.`)
-    return value.map((item) => object(item, label))
+    return value.map((item, index) => {
+      const entry = object(item, label)
+      for (const field of Object.keys(entry))
+        if (!itemFields.includes(field)) throw new Error(`${label}[${index}]: trường “${field}” chưa được hỗ trợ.`)
+      return entry
+    })
   }
   if (key === "repeatPicksAllowed") return value === true
   if (value == null) {
