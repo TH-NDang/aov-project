@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useQueries, useQuery } from "@tanstack/react-query"
+import { useQueries } from "@tanstack/react-query"
 import type {
   CareerStatus,
   CommunityProfile,
@@ -11,8 +11,9 @@ import type {
   ProfileKind,
   TeamDirectoryEntry,
 } from "@aov/community-contracts"
-import { backendRequest, communityRequest } from "@/app/auth/session"
+import { communityRequest } from "@/app/auth/session"
 import { normalize } from "@/lib/text"
+import { usePublicHeroes, type PublicHero } from "@/lib/public-heroes"
 
 export const DIRECTORY_PAGE_SIZE = 24
 
@@ -84,24 +85,11 @@ export function useProfilesOf(actorKey: string, kind: ProfileKind, entityIds: st
 }
 
 const foldName = (name: string) => normalize(name.replace(/[’‘]/g, "\x27"))
-type HeroRow = { name: string; head?: { currentVersion?: { url?: string } | null } | null }
+const portraitsByName = (heroes: PublicHero[]) => new Map(heroes.map((hero) => [foldName(hero.name), hero.head]))
 
 /** Hero portraits by name; signature heroes are stored as the names the sources use. */
 export function useHeroPortraits(enabled: boolean) {
-  const heroes = useQuery({
-    queryKey: [...directoryKeys, "hero-portraits"],
-    enabled,
-    staleTime: 3_600_000,
-    queryFn: async ({ signal }) => {
-      const rows: HeroRow[] = []
-      for (let page = 0; page < 10; page++) {
-        const result = await backendRequest<PageSlice<HeroRow>>(`/heroes?page=${page}&size=100`, { signal })
-        rows.push(...result.items)
-        if (!result.items.length || rows.length >= result.totalElements) break
-      }
-      return new Map(rows.map((hero) => [foldName(hero.name), hero.head?.currentVersion?.url]))
-    },
-  })
+  const heroes = usePublicHeroes(portraitsByName, enabled)
   return (name: string) => heroes.data?.get(foldName(name))
 }
 

@@ -30,7 +30,8 @@ import {
   type SortKey,
 } from "./ranking-model"
 import { RankingTable } from "./ranking-table"
-import { useHeroHeads, useRankingDetail, useRankingSnapshots, useSnapshotActions } from "./use-ranking"
+import { useRankingDetail, useRankingSnapshots, useSnapshotActions } from "./use-ranking"
+import { headsByCode, usePublicHeroes } from "@/lib/public-heroes"
 import { ValuePanel, type OpenValue } from "./value-panel"
 
 const NONE = "none"
@@ -75,7 +76,7 @@ export function RankingPage() {
   const compareId = comparable.some((snapshot) => snapshot.id === params.get("compare")) ? params.get("compare") : null
   const detail = useRankingDetail(selectedId)
   const compare = useRankingDetail(compareId)
-  const heads = useHeroHeads()
+  const heads = usePublicHeroes(headsByCode)
   const actions = useSnapshotActions()
 
   const rows = useMemo(
