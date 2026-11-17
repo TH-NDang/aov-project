@@ -2541,7 +2541,8 @@ toàn nội dung section hay gọi lịch sử thay đổi riêng cho từng tư
 
 Danh mục tướng hỗ trợ thêm `role` (mã vai trò phân cách dấu phẩy), `position`
 (`top`, `mid`, `rung`, `rong-ad`, `tro-thu`, phân cách dấu phẩy) và `hasWarnings=true|false`.
-Các nhóm kết hợp bằng AND, các lựa chọn trong cùng nhóm kết hợp bằng OR; giá trị vai trò/đường lạ trả 422.
+Các nhóm kết hợp bằng AND, các lựa chọn trong cùng nhóm kết hợp bằng OR; giá trị vai trò/đường lạ trả 400
+`INVALID_QUERY_PARAMETER`.
 Lọc và count trước phân trang, trên cùng snapshot mới nhất được chọn theo ruleset/phạm vi như tìm kiếm tên.
 Vai trò và đường đều lấy từ PROFILE (`top`→`TOP`, `mid`→`MID`, `rung`→`JUNGLE`, `rong-ad`→`DRAGON`, `tro-thu`→`SUPPORT`),
 không suy diễn đường từ vai trò. Dữ liệu `heroClassification.recommendedPositions` trong snapshot nguồn chỉ còn để đối chiếu; V050 đã chuyển sang PROFILE. Cảnh báo đọc `reviewFlags` (dự phòng `review_flags`) và `heroReviewFlags`;
