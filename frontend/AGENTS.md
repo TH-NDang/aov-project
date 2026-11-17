@@ -29,8 +29,9 @@ existing code is brought in line when its feature is reworked, not in bulk.
 ## Data layer
 
 - One `*-api.ts` per feature declares every endpoint of that feature. A component never contains a URL.
-- No app calls `fetch` outside its API client: `@/lib/api` in Admin. The Wiki and Stream have no shared client yet;
-  the change that reworks their data layer adds one under `src/lib/` and moves every call behind it.
+- No app calls `fetch` outside its API client: `@/lib/api` in Admin, `src/lib/wiki-api.ts` in the Wiki and
+  `src/lib/api-client.ts` in Stream, which calls both services. A failed call throws the client's error type, which
+  keeps the HTTP status and the problem `code`; a screen branches on the code, never on the message.
 - One `xKeys` object per feature builds every query key (`heroKeys.detail(id)`). No inline key arrays; reads and
   invalidation use the same object.
 - Writes go through `useMutation`. An error is shown once: by the global toast, or inline when the mutation sets
