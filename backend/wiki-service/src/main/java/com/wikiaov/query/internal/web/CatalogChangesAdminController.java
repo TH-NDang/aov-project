@@ -17,7 +17,7 @@ public class CatalogChangesAdminController implements CatalogChangesAdminApi {
 
     @GetMapping(version = "1")
     public List<CatalogChanges.Entry> list(@RequestParam UUID rulesetId,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam String domain,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, @RequestParam String domain,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("rulesetId", "locale", "domain"));
         return changes.list(rulesetId, locale, domain);

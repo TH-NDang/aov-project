@@ -21,7 +21,7 @@ public class SkinBadgeGroupController implements SkinBadgeGroupApi {
     }
 
     @GetMapping(path = "/skin-badge-groups", version = "1")
-    public PageSlice<SkinBadgeGroupView> list(@RequestParam(defaultValue = "vi-VN") String locale,
+    public PageSlice<SkinBadgeGroupView> list(@RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             @RequestParam(defaultValue = "") String q, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale", "q", "page", "size"));

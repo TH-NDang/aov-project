@@ -3,6 +3,7 @@ package com.wikiaov.patch.internal.web;
 import com.wikiaov.patch.internal.application.response.SeasonUpdatesView;
 import com.wikiaov.patch.internal.context.application.SeasonUpdates;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
@@ -24,7 +25,8 @@ public class SeasonUpdatesController implements SeasonUpdatesApi {
 
     @GetMapping(version = "1")
     public ResponseEntity<SeasonUpdatesView> current(@RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "4") int limit,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "4") int limit,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "limit"));
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())

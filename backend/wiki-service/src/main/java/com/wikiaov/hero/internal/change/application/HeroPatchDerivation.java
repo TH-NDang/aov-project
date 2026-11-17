@@ -20,6 +20,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.RevisionState;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -112,7 +113,7 @@ public class HeroPatchDerivation {
         Comparator<Entry> byPatch = Comparator
                 .comparingLong(entry -> ordinals.get(entry.header().getPatchVariantId()));
 
-        return history.forHero(heroId, "vi-VN").stream().filter(entry -> {
+        return history.forHero(heroId, CatalogLocales.DEFAULT).stream().filter(entry -> {
             Long ordinal = ordinals.get(entry.header().getPatchVariantId());
             return ordinal != null && (backward
                     ? ordinal > target && ordinal <= anchor.ordinal()

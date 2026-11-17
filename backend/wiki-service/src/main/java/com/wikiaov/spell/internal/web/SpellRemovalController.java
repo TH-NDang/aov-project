@@ -17,7 +17,7 @@ public class SpellRemovalController implements SpellRemovalApi {
 
     @GetMapping(version = "1")
     public List<Map<String, Object>> forVariant(@RequestParam UUID patchVariantId,
-            @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("patchVariantId", "locale"));
         return catalog.authoringRemovals(patchVariantId, locale);
     }

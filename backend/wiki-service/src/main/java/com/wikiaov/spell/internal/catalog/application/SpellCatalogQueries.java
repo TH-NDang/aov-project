@@ -8,6 +8,7 @@ import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogChanges;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogSnapshots;
 import com.wikiaov.platform.PageSlice;
@@ -237,7 +238,7 @@ class SpellCatalogQueries {
 
         Map<UUID, String> names = new HashMap<>();
         translations.findByRevisionIdIn(found.stream().map(SpellRevision::getId).toList()).stream()
-                .sorted(Comparator.comparing(row -> row.getLocale().equals("vi-VN")))
+                .sorted(Comparator.comparing(row -> row.getLocale().equals(CatalogLocales.DEFAULT)))
                 .forEach(row -> names.put(row.getRevisionId(), row.getName()));
 
         return names;

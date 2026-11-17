@@ -6,6 +6,7 @@ import com.wikiaov.arcana.internal.domain.ArcanaContent;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogCodes;
 import com.wikiaov.platform.CatalogText.Stat;
 import com.wikiaov.platform.CatalogTranslations;
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ class ArcanaContentRules {
     private void validateStats(List<Stat> stats) {
         var keys = new HashSet<String>();
         for (var stat : stats)
-            if (stat.key() == null || !stat.key().matches("[a-z0-9]+(?:-[a-z0-9]+)*") || stat.value() == null
+            if (stat.key() == null || !stat.key().matches(CatalogCodes.PATTERN) || stat.value() == null
                     || !keys.add(stat.key()))
                 fail("Invalid or duplicate numeric stat.");
     }

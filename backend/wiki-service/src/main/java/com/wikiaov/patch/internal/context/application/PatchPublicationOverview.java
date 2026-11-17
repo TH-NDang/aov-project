@@ -16,6 +16,7 @@ import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.review.persistence.PatchDataReviewRepository;
 import com.wikiaov.patch.internal.review.persistence.entity.PatchDataReview;
+import com.wikiaov.platform.CatalogLocales;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -70,7 +71,8 @@ class PatchPublicationOverview {
     /** Admin edits in Vietnamese, the product's language, so its title wins over the other locales. */
     private Map<UUID, String> titles() {
         return texts.findAll().stream()
-                .sorted(Comparator.comparing((GamePatchTranslation text) -> !"vi-VN".equals(text.getLocale()))
+                .sorted(Comparator
+                        .comparing((GamePatchTranslation text) -> !CatalogLocales.DEFAULT.equals(text.getLocale()))
                         .thenComparing(GamePatchTranslation::getLocale))
                 .collect(Collectors.toMap(GamePatchTranslation::getPatchId, GamePatchTranslation::getTitle,
                         (first, ignored) -> first));

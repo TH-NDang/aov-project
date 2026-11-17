@@ -1,11 +1,12 @@
 package com.wikiaov.hero.internal.application;
 
+import com.wikiaov.platform.CatalogCodes;
 import jakarta.validation.constraints.*;
 import java.util.Map;
 import java.util.UUID;
 
 public record HeroImportRequest(
-        @NotBlank @Size(max = 64) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String code,
+        @NotBlank @Size(max = 64) @Pattern(regexp = CatalogCodes.PATTERN) String code,
         @NotNull UUID rulesetId,
         @com.fasterxml.jackson.annotation.JsonAlias("releaseId") @NotNull UUID contextId,
         @NotNull Mode mode,

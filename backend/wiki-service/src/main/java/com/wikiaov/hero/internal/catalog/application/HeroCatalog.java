@@ -16,6 +16,7 @@ import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
@@ -126,7 +127,7 @@ public class HeroCatalog {
             var summary = translations.getOrDefault(change.getId(), List.of()).stream()
                     .min(Comparator.<HeroPatchChangeTranslation>comparingInt(t -> t.getLocale().equals(locale)
                             ? 0
-                            : t.getLocale().equals("vi-VN") ? 1 : 2)
+                            : t.getLocale().equals(CatalogLocales.DEFAULT) ? 1 : 2)
                             .thenComparing(HeroPatchChangeTranslation::getLocale));
             metadata.computeIfAbsent(change.getHeroId(), ignored -> new ArrayList<>())
                     .add(new GameplayChange(change.getId(), variant.rulesetId(), variant.seasonId(), variant.id(),

@@ -21,6 +21,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.RevisionState;
@@ -198,7 +199,7 @@ public class EnchantmentCatalog {
     private void requireCompleteTierMembership(EnchantmentOrdering.Nodes input, Set<UUID> ids) {
         var peers = new HashSet<UUID>();
         for (int page = 0;; page++) {
-            var slice = list(input.rulesetId(), "vi-VN", "", page, 100);
+            var slice = list(input.rulesetId(), CatalogLocales.DEFAULT, "", page, 100);
             for (var entry : slice.items())
                 if (input.branchCode().equals(entry.content().branchCode())
                         && Objects.equals(input.tier(), entry.content().tier()))

@@ -1,6 +1,7 @@
 package com.wikiaov.video.internal.web;
 
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
 import com.wikiaov.video.VideoSubjectKind;
@@ -38,7 +39,8 @@ public class VideoAdminController implements VideoAdminApi {
     }
 
     @GetMapping(path = "/subjects", version = "1")
-    public SubjectList subjects(@RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
+    public SubjectList subjects(@RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return videos.subjects(locale);
     }

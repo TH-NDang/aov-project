@@ -44,7 +44,7 @@ public class ReferenceController implements ReferenceApi {
 
     @GetMapping(path = ApiPaths.ROOT + "/reference-catalog", version = "1")
     public ResponseEntity<ReferenceSettingsView> references(@RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
             @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request,

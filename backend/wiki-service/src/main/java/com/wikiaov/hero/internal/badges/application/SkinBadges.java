@@ -115,7 +115,7 @@ public class SkinBadges {
         repository.replaceBadgeTranslations(badge.getId(), translations);
         audit.record(
                 AuditEntry.of(actors.require(), "SKIN_BADGE_CREATED", CatalogAggregates.SKIN_BADGE, badge.getId()));
-        return view(badge, translations, "vi-VN", 0);
+        return view(badge, translations, CatalogLocales.DEFAULT, 0);
     }
 
     @Transactional
@@ -133,7 +133,8 @@ public class SkinBadges {
         badges.flush();
         audit.record(new AuditEntry(actors.require(), "SKIN_BADGE_UPDATED", CatalogAggregates.SKIN_BADGE, id, null,
                 input.expectedVersion(), badge.getVersion(), null, Map.of()));
-        return view(badge, translations, "vi-VN", gallery.badgeCounts(null).getOrDefault(badge.getCode(), 0L));
+        return view(badge, translations, CatalogLocales.DEFAULT,
+                gallery.badgeCounts(null).getOrDefault(badge.getCode(), 0L));
     }
 
     @Transactional
@@ -156,7 +157,7 @@ public class SkinBadges {
         audit.record(
                 new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_ASSIGNED", CatalogAggregates.SKIN_BADGE, id, null,
                         input.expectedVersion(), badge.getVersion(), null, detail));
-        return view(badge, translations(List.of(id)).getOrDefault(id, List.of()), "vi-VN",
+        return view(badge, translations(List.of(id)).getOrDefault(id, List.of()), CatalogLocales.DEFAULT,
                 gallery.badgeCounts(null).getOrDefault(badge.getCode(), 0L));
     }
 

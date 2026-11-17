@@ -44,7 +44,7 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
 
     @PreAuthorize("hasAuthority('enchantment:write')")
     public EnchantmentBranchView save(String code, EnchantmentBranchCommand input) {
-        if (!code.matches("[a-z0-9]+(?:-[a-z0-9]+)*") || code.length() > 120)
+        if (!code.matches(CatalogCodes.PATTERN) || code.length() > 120)
             invalid("Invalid metadata code.");
         var found = records.lockByCode(code);
         var row = found.orElseGet(() -> {
@@ -57,7 +57,7 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
                     Map.of("currentVersion", row.getVersion()));
         var locales = new HashSet<String>();
         for (var t : input.translations())
-            if (t.locale() == null || !t.locale().matches("[a-z]{2,3}(?:-[A-Z]{2})?") || !locales.add(t.locale())
+            if (t.locale() == null || !t.locale().matches(CatalogLocales.PATTERN) || !locales.add(t.locale())
                     || t.name() == null || t.name().isBlank() || t.name().length() > 255
                     || t.description() != null && t.description().length() > 32768
                     || t.suitability() != null && t.suitability().length() > 4000)

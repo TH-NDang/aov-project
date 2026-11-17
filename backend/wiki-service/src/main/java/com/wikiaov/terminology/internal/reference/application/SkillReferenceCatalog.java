@@ -104,7 +104,7 @@ public class SkillReferenceCatalog {
                 throw invalid("Resolve at most 50 skill reference identifiers.");
             for (var value : values) {
                 int dot = value.indexOf('.');
-                if (dot != 36 || value.length() > 101 || !value.substring(dot + 1).matches("[a-z0-9]+(?:-[a-z0-9]+)*"))
+                if (dot != 36 || value.length() > 101 || !value.substring(dot + 1).matches(CatalogCodes.PATTERN))
                     throw invalid("Use hero UUID and skill key separated by a dot.");
                 try {
                     var owner = UUID.fromString(value.substring(0, dot));

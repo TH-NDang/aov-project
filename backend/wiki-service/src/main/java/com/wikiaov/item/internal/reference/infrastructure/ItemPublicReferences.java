@@ -4,6 +4,7 @@ import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.item.internal.reference.persistence.ItemReferenceRepository;
 import com.wikiaov.media.*;
 import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.terminology.AdminReferenceProvider;
 import com.wikiaov.terminology.PublicReferenceProvider;
 import java.time.Clock;
@@ -53,7 +54,7 @@ public class ItemPublicReferences implements PublicReferenceProvider, AdminRefer
         var output = new ArrayList<PublicReferenceProvider.Candidate>();
         for (var values : grouped.values()) {
             var copy = values.stream().filter(t -> t.locale().equals(locale)).findFirst()
-                    .or(() -> values.stream().filter(t -> t.locale().equals("vi-VN")).findFirst())
+                    .or(() -> values.stream().filter(t -> t.locale().equals(CatalogLocales.DEFAULT)).findFirst())
                     .or(() -> values.stream().filter(t -> t.locale().equals("en-US")).findFirst())
                     .orElse(values.getFirst());
             var asset = copy.iconAssetId() == null ? null : assets.get(copy.iconAssetId());

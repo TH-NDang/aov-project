@@ -1,6 +1,6 @@
 package com.wikiaov.hero.internal.ranking.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
+import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;

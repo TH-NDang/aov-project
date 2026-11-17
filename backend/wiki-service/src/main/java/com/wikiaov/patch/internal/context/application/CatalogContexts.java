@@ -9,6 +9,7 @@ import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository.
 import com.wikiaov.patch.internal.context.persistence.SeasonUpdatesRepository;
 import com.wikiaov.patch.internal.ruleset.application.Regions;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -38,7 +39,7 @@ public class CatalogContexts {
     }
 
     public CatalogContextView read(String region, String locale) {
-        if (!Set.of("vi-VN", "en-US").contains(locale))
+        if (!Set.of(CatalogLocales.DEFAULT, "en-US").contains(locale))
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                     "Choose a supported catalog locale: vi-VN or en-US.");
 
@@ -90,8 +91,8 @@ public class CatalogContexts {
     }
 
     private static List<Language> languages(String locale) {
-        boolean vietnamese = locale.equals("vi-VN");
-        return List.of(new Language("vi-VN", vietnamese ? "Tiếng Việt" : "Vietnamese", "Tiếng Việt"),
+        boolean vietnamese = locale.equals(CatalogLocales.DEFAULT);
+        return List.of(new Language(CatalogLocales.DEFAULT, vietnamese ? "Tiếng Việt" : "Vietnamese", "Tiếng Việt"),
                 new Language("en-US", vietnamese ? "Tiếng Anh" : "English", "English"));
     }
 }

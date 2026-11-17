@@ -8,6 +8,7 @@ import com.wikiaov.gamemode.internal.lineup.domain.LineupInsights;
 import com.wikiaov.gamemode.internal.lineup.domain.LineupStatus;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaCredit;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.UUID;
 
 /** HTTP response shapes of the game mode module. Text content is Vietnamese ({@code contentLocale = vi-VN}). */
 public final class GameModeViews {
-    public static final String CONTENT_LOCALE = "vi-VN";
+    public static final String CONTENT_LOCALE = CatalogLocales.DEFAULT;
 
     private GameModeViews() {
     }

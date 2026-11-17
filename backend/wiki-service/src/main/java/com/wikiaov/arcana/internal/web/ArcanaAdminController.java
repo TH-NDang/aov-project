@@ -20,7 +20,8 @@ public class ArcanaAdminController implements ArcanaAdminApi {
 
     @GetMapping(version = "1")
     public PageSlice<ArcanaView> list(@RequestParam(required = false) UUID rulesetId,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
             @RequestParam(defaultValue = "false") boolean includeUnchanged,

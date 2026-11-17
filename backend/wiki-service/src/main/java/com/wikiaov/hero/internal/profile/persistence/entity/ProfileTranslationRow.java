@@ -1,7 +1,6 @@
 package com.wikiaov.hero.internal.profile.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-
+import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.*;
 import java.util.UUID;
 import lombok.*;

@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.source.application;
 
 import com.wikiaov.media.internal.source.domain.SourceCategory;
+import com.wikiaov.platform.CatalogCodes;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -25,7 +26,7 @@ public final class SourceCommands {
 
     @Schema(name = "com.wikiaov.media.internal.web.request.SourceRequests.CreateCollection")
     public record CreateCollectionCommand(
-            @NotBlank @Size(max = 120) @Pattern(regexp = "[a-z0-9]+(-[a-z0-9]+)*", message = "must be a lower-case slug") String code,
+            @NotBlank @Size(max = 120) @Pattern(regexp = CatalogCodes.PATTERN, message = "must be a lower-case slug") String code,
             @NotNull SourceCategory category,
             @NotBlank @Size(max = 200) String label,
             @Nullable @Size(max = 2000) String note,

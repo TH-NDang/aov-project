@@ -41,7 +41,7 @@ public class HeroChangesController implements HeroChangesApi {
 
     @GetMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
     public List<Map<String, Object>> authoringChanges(@PathVariable UUID id,
-            @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return changes.forAuthoringVariant(id, locale);
     }
@@ -55,7 +55,8 @@ public class HeroChangesController implements HeroChangesApi {
 
     @GetMapping(path = ApiPaths.ROOT + "/heroes/{heroId}/changes", version = "1")
     public ResponseEntity<?> history(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size"));

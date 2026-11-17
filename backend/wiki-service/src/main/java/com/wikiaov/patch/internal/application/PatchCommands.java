@@ -1,5 +1,6 @@
 package com.wikiaov.patch.internal.application;
 
+import com.wikiaov.platform.CatalogCodes;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.time.Instant;
@@ -49,7 +50,7 @@ public final class PatchCommands {
     }
 
     public record Patch(
-            @NotBlank @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") @Size(max = 64) String code,
+            @NotBlank @Pattern(regexp = CatalogCodes.PATTERN) @Size(max = 64) String code,
             @NotEmpty @Size(max = 30) List<@Valid Translation> translations
     ) {
     }

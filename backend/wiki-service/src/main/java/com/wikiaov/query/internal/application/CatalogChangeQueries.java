@@ -4,6 +4,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogChangeProvider;
 import com.wikiaov.platform.CatalogChanges;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,7 @@ public class CatalogChangeQueries {
 
     @PreAuthorize("hasAuthority('catalog:read')")
     public List<CatalogChanges.Entry> list(UUID rulesetId, String locale, String domain) {
-        if (!locale.matches("[a-z]{2,3}(?:-[A-Z]{2})?"))
+        if (!locale.matches(CatalogLocales.PATTERN))
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid locale.");
 
         contexts.requireRuleset(rulesetId);

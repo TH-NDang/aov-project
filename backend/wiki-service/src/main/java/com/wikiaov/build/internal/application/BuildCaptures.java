@@ -30,6 +30,7 @@ import com.wikiaov.build.internal.persistence.entity.CaptureRow;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogCodes;
 import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
 import java.time.DateTimeException;
@@ -56,7 +57,7 @@ public class BuildCaptures {
     private static final Set<String> SOURCES = Set.of("PRO", "HOT", "SYSTEM");
     private static final Set<String> RESULTS = Set.of("COLLECTED", "NO_BUILDS", "FAILED");
     private static final Set<String> LAYOUTS = Set.of("PREPARE");
-    private static final Pattern CODE = Pattern.compile("[a-z0-9]+(-[a-z0-9]+)*");
+    private static final Pattern CODE = Pattern.compile(CatalogCodes.PATTERN);
     private static final Pattern REGION = Pattern.compile("[A-Z]{2,16}");
     private static final Pattern IMAGE_ID = Pattern.compile("[0-9a-f]{64}");
     private static final Sort LIST_ORDER = Sort.by(Sort.Order.desc("capturedAt"), Sort.Order.asc("id"));

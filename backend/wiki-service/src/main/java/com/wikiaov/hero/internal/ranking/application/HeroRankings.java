@@ -23,6 +23,7 @@ import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotImage
 import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotRow;
 import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotValueRow;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogCodes;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.math.BigDecimal;
@@ -50,7 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class HeroRankings {
     private static final Set<String> BOARDS = Set.of("RATES", "FIGURES");
     private static final Set<String> ROLES = Set.of("TANK", "WARRIOR", "ASSASSIN", "MAGE", "MARKSMAN", "SUPPORT");
-    private static final Pattern CODE = Pattern.compile("[a-z0-9]+(-[a-z0-9]+)*");
+    private static final Pattern CODE = Pattern.compile(CatalogCodes.PATTERN);
     private static final Pattern REGION = Pattern.compile("[A-Z]{2,16}");
     private static final Pattern MODE = Pattern.compile("[A-Z][A-Z0-9_]*");
     private static final Pattern IMAGE_ID = Pattern.compile("[0-9a-f]{64}");

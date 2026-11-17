@@ -15,6 +15,7 @@ import com.wikiaov.patch.internal.season.persistence.entity.RankedSeason;
 import com.wikiaov.patch.internal.season.persistence.entity.SeasonSchedule;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogCodes;
 import jakarta.validation.constraints.*;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -48,7 +49,7 @@ public class RankedSeasons {
 
     @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.patch.internal.application.service.RankedSeasons.Input")
     public record Input(
-            @NotBlank @Size(max = 64) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String code,
+            @NotBlank @Size(max = 64) @Pattern(regexp = CatalogCodes.PATTERN) String code,
             @NotBlank @Size(max = 120) String displayName,
             @Min(2000) @Max(9999) Integer seasonYear,
             @Positive Integer seasonNumber,

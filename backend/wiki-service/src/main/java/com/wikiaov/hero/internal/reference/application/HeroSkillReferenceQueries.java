@@ -11,6 +11,7 @@ import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.terminology.SkillReferenceProvider;
 import java.time.Instant;
@@ -110,11 +111,11 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
         var values = copies.stream().map(c -> new Translation(c.locale(), c.name(), List.of(), c.description()))
                 .toList();
         if (values.isEmpty())
-            return List.of(new Translation(locale == null ? "vi-VN" : locale, fallback, List.of(), ""));
+            return List.of(new Translation(locale == null ? CatalogLocales.DEFAULT : locale, fallback, List.of(), ""));
         if (locale == null)
             return values;
         var selected = values.stream().filter(c -> c.locale().equals(locale)).findFirst()
-                .or(() -> values.stream().filter(c -> c.locale().equals("vi-VN")).findFirst())
+                .or(() -> values.stream().filter(c -> c.locale().equals(CatalogLocales.DEFAULT)).findFirst())
                 .orElse(values.getFirst());
         return List.of(selected);
     }

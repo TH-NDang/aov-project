@@ -25,6 +25,7 @@ import com.wikiaov.hero.internal.skins.persistence.entity.SkinTranslationRow;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinTranslationRow.*;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import java.util.*;
 import java.util.function.Function;
@@ -200,7 +201,9 @@ public class HeroMediaQueries {
     }
 
     public static int localeRank(String locale, String requested) {
-        return locale.equals(requested) ? 0 : locale.equals("vi-VN") ? 1 : locale.equals("en-US") ? 2 : 3;
+        return locale.equals(requested)
+                ? 0
+                : locale.equals(CatalogLocales.DEFAULT) ? 1 : locale.equals("en-US") ? 2 : 3;
     }
 
     public static void bounds(int page, int size) {

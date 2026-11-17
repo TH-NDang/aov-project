@@ -3,6 +3,7 @@ package com.wikiaov.spell.internal.catalog.application;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogCodes;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogTranslations;
 import com.wikiaov.spell.internal.application.SpellErrorCode;
@@ -52,7 +53,7 @@ class SpellContentRules {
         if (content.states().stream().map(SpellContent.SpellState::key).distinct().count() != content.states().size())
             fail("Duplicate spell state.");
         for (var state : content.states()) {
-            if (state.key() == null || !state.key().matches("[a-z0-9]+(?:-[a-z0-9]+)*"))
+            if (state.key() == null || !state.key().matches(CatalogCodes.PATTERN))
                 fail("Invalid spell state key.");
             validateIcon(state.iconAssetId());
             CatalogTranslations.firstViolation(state.translations()).ifPresent(violation -> fail(violation.detail()));

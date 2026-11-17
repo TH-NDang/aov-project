@@ -24,7 +24,8 @@ public class SkillReferenceController implements SkillReferenceApi {
 
     @GetMapping(path = ApiPaths.ADMIN + "/reference-skills", version = "1")
     public PageSlice<Candidate> admin(@RequestParam(required = false) UUID rulesetId,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) UUID heroId, @RequestParam(required = false) String ids,
             @RequestParam(defaultValue = "0") int page, @RequestParam(required = false) Integer size,
             HttpServletRequest request) {
@@ -34,7 +35,8 @@ public class SkillReferenceController implements SkillReferenceApi {
 
     @GetMapping(path = ApiPaths.ROOT + "/reference-skills", version = "1")
     public ResponseEntity<PageSlice<Candidate>> published(@RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) UUID heroId, @RequestParam(required = false) String ids,
             @RequestParam(defaultValue = "0") int page, @RequestParam(required = false) Integer size,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,

@@ -20,6 +20,7 @@ import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public class HeroGallery {
             "SKILL", EnumSet.of(MediaSemanticType.HERO_SKILL_ICON),
             "STICKER", EnumSet.of(MediaSemanticType.CHIBI_STICKER),
             "OTHER", EnumSet.allOf(MediaSemanticType.class));
-    private static final String DISPLAY_LOCALE = "vi-VN";
+    private static final String DISPLAY_LOCALE = CatalogLocales.DEFAULT;
 
     private final HeroGalleryItemRepository items;
     private final HeroGalleryImagesRepository images;

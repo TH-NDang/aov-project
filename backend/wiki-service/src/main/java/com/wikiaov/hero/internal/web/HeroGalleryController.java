@@ -18,7 +18,8 @@ public class HeroGalleryController implements HeroGalleryApi {
     }
 
     @GetMapping(version = "1")
-    public HeroGalleryView read(@PathVariable UUID heroId, @RequestParam(defaultValue = "vi-VN") String locale,
+    public HeroGalleryView read(@PathVariable UUID heroId,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return gallery.read(heroId, locale);

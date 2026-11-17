@@ -18,7 +18,7 @@ public class ArcanaPublicController implements ArcanaPublicApi {
 
     @GetMapping(version = "1")
     public PageSlice<ArcanaView> list(@RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
             @RequestParam(defaultValue = "false") boolean includeUnscoped,
@@ -32,7 +32,7 @@ public class ArcanaPublicController implements ArcanaPublicApi {
 
     @GetMapping(path = "/{id}", version = "1")
     public ArcanaView read(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
             @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request) {
         QueryParameters.requireOnly(request,

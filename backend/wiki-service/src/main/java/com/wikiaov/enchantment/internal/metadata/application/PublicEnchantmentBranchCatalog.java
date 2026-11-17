@@ -7,6 +7,7 @@ import com.wikiaov.enchantment.internal.metadata.persistence.entity.EnchantmentB
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogText.MetadataTranslation;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.util.Comparator;
@@ -33,7 +34,7 @@ public class PublicEnchantmentBranchCatalog {
     }
 
     public List<PublicEnchantmentBranchView> read(String locale) {
-        if (locale == null || !locale.matches("[a-z]{2,3}(?:-[A-Z]{2})?"))
+        if (locale == null || !locale.matches(CatalogLocales.PATTERN))
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid metadata locale.");
 
         var rows = records.findAllByOrderByDisplayOrderAscCodeAsc();
@@ -63,7 +64,9 @@ public class PublicEnchantmentBranchCatalog {
         return values.stream()
                 .min(Comparator.comparingInt((EnchantmentBranchTranslation value) -> value.getLocale().equals(locale)
                         ? 0
-                        : value.getLocale().equals("vi-VN") ? 1 : value.getLocale().equals("en-US") ? 2 : 3)
+                        : value.getLocale().equals(CatalogLocales.DEFAULT)
+                                ? 1
+                                : value.getLocale().equals("en-US") ? 2 : 3)
                         .thenComparing(EnchantmentBranchTranslation::getLocale))
                 .map(value -> List.of(new MetadataTranslation(value.getLocale(), value.getName(),
                         value.getDescription(), value.getSuitability())))

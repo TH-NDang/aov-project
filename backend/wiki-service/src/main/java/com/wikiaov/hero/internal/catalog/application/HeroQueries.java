@@ -478,8 +478,8 @@ public class HeroQueries {
     private static String translationLocale(List<String> values, String requested) {
         return values.contains(requested)
                 ? requested
-                : values.contains("vi-VN")
-                        ? "vi-VN"
+                : values.contains(CatalogLocales.DEFAULT)
+                        ? CatalogLocales.DEFAULT
                         : values.stream().sorted().findFirst()
                                 .orElseThrow(() -> HeroValidation.invalid("A published section has no translation."));
     }

@@ -12,7 +12,7 @@ public final class CatalogTranslations {
     private static final int MAX_NAME_LENGTH = 255;
     private static final int MAX_SUMMARY_LENGTH = 2000;
     private static final int MAX_DESCRIPTION_LENGTH = 32768;
-    private static final Pattern LOCALE = Pattern.compile("[a-z]{2,3}(?:-[A-Z]{2})?");
+    private static final Pattern LOCALE = Pattern.compile(CatalogLocales.PATTERN);
 
     private CatalogTranslations() {
     }

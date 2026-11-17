@@ -6,6 +6,7 @@ import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicGu
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicLineup;
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicMode;
 import com.wikiaov.gamemode.internal.lineup.application.LineupInteractions;
+import com.wikiaov.platform.CatalogCodes;
 import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -48,7 +49,7 @@ public interface GameModePublicApi {
     })
     PageSlice<PublicLineup> lineups(@Parameter(description = "Game mode code.") String code,
             @Parameter(description = "Ranking: popular, trending or recent.") @Pattern(regexp = "popular|trending|recent") String sort,
-            @Parameter(description = "Optional unit code the lineup must contain.") @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String unit,
+            @Parameter(description = "Optional unit code the lineup must contain.") @Pattern(regexp = CatalogCodes.PATTERN) String unit,
             @Parameter(description = "Zero-based page index.") @Min(0) int page,
             @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(LineupInteractions.MAX_PAGE_SIZE) int size,
             @Parameter(hidden = true) HttpServletRequest request);

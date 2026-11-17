@@ -19,7 +19,8 @@ public class PatchPageController implements PatchPageApi {
 
     @GetMapping(version = "1")
     public ResponseEntity<PageSlice<Map<String, Object>>> list(@RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size"));
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
@@ -28,7 +29,8 @@ public class PatchPageController implements PatchPageApi {
 
     @GetMapping(path = "/{id}", version = "1")
     public ResponseEntity<Map<String, Object>> detail(@PathVariable UUID id,
-            @RequestParam(defaultValue = "VN") String region, @RequestParam(defaultValue = "vi-VN") String locale,
+            @RequestParam(defaultValue = "VN") String region,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
@@ -37,7 +39,8 @@ public class PatchPageController implements PatchPageApi {
 
     @GetMapping(path = "/{id}/changes", version = "1")
     public ResponseEntity<PatchChangesPage> changes(@PathVariable UUID id,
-            @RequestParam(defaultValue = "VN") String region, @RequestParam(defaultValue = "vi-VN") String locale,
+            @RequestParam(defaultValue = "VN") String region,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             @RequestParam(defaultValue = "HERO") String domain, @RequestParam(required = false) UUID patchVariantId,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "50") int size,
             HttpServletRequest request) {

@@ -1,7 +1,7 @@
 package com.wikiaov.hero.internal.skills.persistence.entity;
 
 import com.wikiaov.hero.internal.domain.HeroContent.TraitCode;
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
+import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

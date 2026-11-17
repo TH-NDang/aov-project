@@ -9,6 +9,7 @@ import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.*;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import java.text.Normalizer;
 import java.time.Clock;
@@ -179,7 +180,7 @@ public class PublicSkinCatalog {
     private static <T> T translation(List<T> values, String locale, Function<T, String> language) {
         return values.stream().min(Comparator.comparingInt((T value) -> language.apply(value).equals(locale)
                 ? 0
-                : language.apply(value).equals("vi-VN") ? 1 : 2).thenComparing(language)).orElse(null);
+                : language.apply(value).equals(CatalogLocales.DEFAULT) ? 1 : 2).thenComparing(language)).orElse(null);
     }
 
     private static String normalized(String value) {

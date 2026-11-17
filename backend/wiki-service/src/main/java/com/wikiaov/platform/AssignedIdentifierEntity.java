@@ -1,4 +1,4 @@
-package com.wikiaov.build.internal.persistence.entity;
+package com.wikiaov.platform;
 
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PostLoad;

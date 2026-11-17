@@ -1,6 +1,7 @@
 package com.wikiaov.gamemode.internal.domain;
 
 import com.wikiaov.platform.ApiFieldError;
+import com.wikiaov.platform.CatalogCodes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -10,7 +11,7 @@ import java.util.regex.Pattern;
 
 /** Collects field errors with stable codes while a content rule walks a document. */
 public final class ContentChecks {
-    public static final Pattern CODE = Pattern.compile("[a-z0-9]+(?:-[a-z0-9]+)*");
+    public static final Pattern CODE = Pattern.compile(CatalogCodes.PATTERN);
 
     private final List<ApiFieldError> errors = new ArrayList<>();
 

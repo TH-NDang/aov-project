@@ -1,6 +1,6 @@
 package com.wikiaov.hero.internal.authoring.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
+import com.wikiaov.platform.AssignedIdentifierEntity;
 import com.wikiaov.platform.RevisionState;
 import jakarta.persistence.*;
 import java.time.Instant;

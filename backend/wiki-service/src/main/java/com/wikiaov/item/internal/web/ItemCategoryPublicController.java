@@ -3,6 +3,7 @@ package com.wikiaov.item.internal.web;
 import com.wikiaov.item.internal.application.response.PublicItemCategoryView;
 import com.wikiaov.item.internal.metadata.application.PublicItemCategoryCatalog;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -22,7 +23,7 @@ public class ItemCategoryPublicController implements ItemCategoryPublicApi {
     }
 
     @GetMapping(version = "1")
-    public List<PublicItemCategoryView> list(@RequestParam(defaultValue = "vi-VN") String locale,
+    public List<PublicItemCategoryView> list(@RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return catalog.read(locale);

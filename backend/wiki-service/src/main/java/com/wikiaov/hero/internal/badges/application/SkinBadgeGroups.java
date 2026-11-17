@@ -100,7 +100,7 @@ public class SkinBadgeGroups {
         repository.replaceBadgeGroupTranslations(group.getId(), translations);
         audit.record(AuditEntry.of(actors.require(), "SKIN_BADGE_GROUP_CREATED", CatalogAggregates.SKIN_BADGE_GROUP,
                 group.getId()));
-        return view(group, translations, "vi-VN", 0, false);
+        return view(group, translations, CatalogLocales.DEFAULT, 0, false);
     }
 
     @Transactional
@@ -121,7 +121,7 @@ public class SkinBadgeGroups {
                 new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_UPDATED", CatalogAggregates.SKIN_BADGE_GROUP, id,
                         null, input.expectedVersion(), group.getVersion(), null, Map.of()));
         long count = badges.findAll().stream().filter(badge -> id.equals(badge.getGroupId())).count();
-        return view(group, translations, "vi-VN", count, false);
+        return view(group, translations, CatalogLocales.DEFAULT, count, false);
     }
 
     public void require(UUID id) {

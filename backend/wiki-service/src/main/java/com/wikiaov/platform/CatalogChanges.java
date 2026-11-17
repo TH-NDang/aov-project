@@ -57,7 +57,7 @@ public final class CatalogChanges {
     }
 
     public static Summary summary(List<Summary> copy, String locale) {
-        for (String candidate : List.of(locale, "vi-VN", "en-US"))
+        for (String candidate : List.of(locale, CatalogLocales.DEFAULT, "en-US"))
             for (var text : copy)
                 if (candidate.equals(text.locale()))
                     return text;

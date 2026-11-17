@@ -160,7 +160,7 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
             invalid("A localized change summary is required.");
         var locales = new HashSet<String>();
         for (var text : copy)
-            if (text == null || text.locale() == null || !text.locale().matches("[a-z]{2,3}(?:-[A-Z]{2})?")
+            if (text == null || text.locale() == null || !text.locale().matches(CatalogLocales.PATTERN)
                     || !locales.add(text.locale()) || text.text() == null || text.text().isBlank()
                     || text.text().length() > 4000)
                 invalid("Invalid or duplicate summary translations.");

@@ -6,6 +6,7 @@ import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository.Owne
 import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository.PartName;
 import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository.Usage;
 import com.wikiaov.media.*;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.*;
@@ -17,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class HeroMediaUsageProvider implements MediaUsageProvider {
     private static final UUID ANY_ASSET = new UUID(0, 0);
-    private static final String DISPLAY_LOCALE = "vi-VN";
+    private static final String DISPLAY_LOCALE = CatalogLocales.DEFAULT;
 
     private final HeroMediaUsageRepository repository;
     private final HeroQueries queries;

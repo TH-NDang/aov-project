@@ -29,7 +29,8 @@ public class HeroMediaController implements HeroMediaApi {
 
     @GetMapping(path = "/hero-media", version = "1")
     public PageSlice<HeroMediaGroup> gallery(@RequestParam UUID rulesetId, @RequestParam MediaRole role,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("rulesetId", "role", "locale", "q", "page", "size"));
@@ -38,7 +39,8 @@ public class HeroMediaController implements HeroMediaApi {
 
     @GetMapping(path = "/skin-badges", version = "1")
     public PageSlice<SkinBadgeView> badges(@RequestParam(required = false) UUID rulesetId,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) UUID groupId, @RequestParam(defaultValue = "false") boolean ungrouped,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request) {
@@ -65,7 +67,8 @@ public class HeroMediaController implements HeroMediaApi {
 
     @GetMapping(path = "/skin-badges/{id}/skins", version = "1")
     public PageSlice<SkinBadgeRelation> skins(@PathVariable UUID id, @RequestParam UUID rulesetId,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("rulesetId", "locale", "page", "size"));
         return badges.skins(id, rulesetId, locale, page, size);

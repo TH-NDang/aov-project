@@ -1,5 +1,6 @@
 package com.wikiaov.build.internal.persistence.entity;
 
+import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
