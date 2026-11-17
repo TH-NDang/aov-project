@@ -549,7 +549,7 @@
 }
 .wiki-hero-scope-note > button {
   display: inline-flex;
-  min-height: 24px;
+  min-height: 36px;
   align-items: center;
   gap: 4px;
   color: var(--aov-accent);
@@ -688,7 +688,7 @@ section.wiki-version-changes,
 }
 .wiki-version-links :is(a, button) {
   display: inline-flex;
-  min-height: 24px;
+  min-height: 36px;
   align-items: center;
   gap: 4px;
   color: var(--aov-accent);

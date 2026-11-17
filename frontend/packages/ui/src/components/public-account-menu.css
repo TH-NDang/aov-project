@@ -291,7 +291,7 @@ button.public-account-summary:disabled {
   align-items: center;
   gap: 5px;
   padding: 6px 9px;
-  min-height: 30px;
+  min-height: 36px;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;

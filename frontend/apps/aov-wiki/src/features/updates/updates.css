@@ -619,7 +619,7 @@
 .wiki-change-skill-link {
   font: var(--wiki-type-meta);
   display: inline-flex;
-  min-height: 28px;
+  min-height: 36px;
   flex: none;
   align-items: center;
   gap: 4px;
@@ -719,7 +719,7 @@
 .wiki-rank-toggle {
   font: var(--wiki-type-meta);
   display: inline-flex;
-  min-height: 28px;
+  min-height: 36px;
   flex: none;
   align-items: center;
   gap: 4px;

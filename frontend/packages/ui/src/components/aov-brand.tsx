@@ -14,7 +14,7 @@ export function AovWordmark({ product = "Wiki", className }: { product?: "Wiki" 
         className,
       )}
     >
-      <span className="font-black">AOV</span> <span className="font-semibold">{product}</span>
+      <span className="font-bold">AOV</span> <span className="font-semibold">{product}</span>
     </span>
   )
 }

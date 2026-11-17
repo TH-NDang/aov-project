@@ -347,8 +347,9 @@ a.wiki-skin-preview-hero:hover {
 }
 .wiki-skin-preview-credit > button {
   position: static;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
   flex: none;
   border: 0;
   background: transparent;

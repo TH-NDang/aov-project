@@ -447,7 +447,7 @@
 }
 .wiki-skin-group-link {
   display: inline-flex;
-  min-height: 32px;
+  min-height: 36px;
   flex: none;
   align-items: center;
   gap: 6px;

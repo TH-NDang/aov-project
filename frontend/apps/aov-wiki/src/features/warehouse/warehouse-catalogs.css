@@ -383,9 +383,9 @@
 }
 /* The question mark beside a region's label keeps a target a finger can hit. */
 .wiki-item-board button[data-item-region-help] {
-  width: 32px;
-  height: 32px;
-  margin-block: -6px;
+  width: 36px;
+  height: 36px;
+  margin-block: -8px;
 }
 /* Finished items of the middle column: a rule and a label instead of a frame around cards. */
 .wiki-item-board .shop-viewport section > section {

@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react"
 import { flushSync } from "react-dom"
 import { Link, useLocation, useNavigate } from "react-router"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { StreamBrand } from "./stream-brand"
 import { StreamAppSwitcher } from "./stream-app-switcher"
@@ -57,6 +58,7 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
   const [searchOpen, setSearchOpen] = useState(pathname === "/explore" && !!new URLSearchParams(search).get("q"))
   const searchInput = useRef<HTMLInputElement>(null)
   const searchTrigger = useRef<HTMLButtonElement>(null)
+  const compact = usePageLayout() === "compact"
   const openSearch = () => {
     flushSync(() => setSearchOpen(true))
     searchInput.current?.focus()
@@ -68,6 +70,17 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
       else searchInput.current?.blur()
     })
   }
+  // On phones the tabs are a row of their own under the brand row, so they come last in the bar.
+  const topnav = (
+    <nav className="hub-topnav" aria-label={text("Điều hướng chính", "Main navigation")}>
+      {destinations.map((item) => (
+        <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
+          <StreamIcon name={item.icon} size={16} />
+          {text(item.label, item.english)}
+        </Link>
+      ))}
+    </nav>
+  )
   return (
     <div className="hub-shell">
       <a href="#main" className="stream-skip">
@@ -81,14 +94,7 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
             </Link>
             <StreamAppSwitcher wikiUrl={WIKI_URL} />
           </div>
-          <nav className="hub-topnav" aria-label={text("Điều hướng chính", "Main navigation")}>
-            {destinations.map((item) => (
-              <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
-                <StreamIcon name={item.icon} size={16} />
-                {text(item.label, item.english)}
-              </Link>
-            ))}
-          </nav>
+          {!compact && topnav}
           <button
             type="button"
             className="hub-icon-button hub-search-back"
@@ -112,6 +118,7 @@ export function StreamShell({ children, aside, lead }: { children: ReactNode; as
             </button>
             <CommunitySessionButton />
           </div>
+          {compact && topnav}
         </div>
       </header>
       <main id="main" className="hub-body" tabIndex={-1}>

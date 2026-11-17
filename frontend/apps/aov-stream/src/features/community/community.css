@@ -321,7 +321,7 @@
   background: transparent;
   color: var(--hub-muted);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 700;
   white-space: nowrap;
   transition:
     background-color 160ms,
@@ -377,7 +377,7 @@
   background: linear-gradient(135deg, hsl(var(--hub-hue, 222) 52% 40%), hsl(calc(var(--hub-hue, 222) + 48) 58% 24%));
   color: #fff;
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
 }
 /* A member's initials, drawn the same way. */
 .cp-author-mark {
@@ -805,7 +805,7 @@
   gap: 0 16px;
 }
 .cp-comment-tools .cp-text-button {
-  min-height: 32px;
+  min-height: 36px;
   padding: 0;
   color: var(--hub-muted);
   font-size: 12px;

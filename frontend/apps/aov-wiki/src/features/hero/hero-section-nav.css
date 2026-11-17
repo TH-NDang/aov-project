@@ -12,7 +12,7 @@
 .wiki-hero-nav-list a {
   font: var(--wiki-type-meta);
   display: flex;
-  min-height: 32px;
+  min-height: 36px;
   align-items: center;
   gap: 8px;
   border-radius: var(--aov-radius-control);

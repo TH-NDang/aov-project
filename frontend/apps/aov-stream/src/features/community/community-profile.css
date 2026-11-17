@@ -205,8 +205,9 @@
   overflow-wrap: anywhere;
 }
 .pf-social-popover-heading > button {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
 }
 .pf-social-host {
   margin: 8px 0;

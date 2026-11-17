@@ -75,8 +75,9 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
   border: 0;
   border-radius: var(--aov-radius-control);
   background: none;
@@ -646,7 +647,7 @@ a.guide-trait-tag:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 30px;
+  min-height: 36px;
   padding: 0 12px;
   border: 0;
   background: none;
@@ -1564,7 +1565,7 @@ a.guide-trait-tag:hover {
   box-shadow: 0 0 0 2px var(--aov-surface);
   color: var(--aov-on-accent);
   font-style: normal;
-  font-weight: 800;
+  font-weight: 700;
   transform: translateX(-50%);
 }
 
@@ -1876,7 +1877,7 @@ a.guide-trait-tag:hover {
   color: var(--aov-accent-strong);
 }
 .carry-toggle {
-  font-weight: 800;
+  font-weight: 700;
 }
 .builder-actions .carry-toggle[aria-pressed="true"] {
   background: var(--aov-accent);
