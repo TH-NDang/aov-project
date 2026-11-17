@@ -2,20 +2,20 @@
  * The list of game modes, one mode's page and the overview of the auto-chess guide. What these share with the guide's
  * tabs (the page stack, section headings, chips, the tab row) lives in modes.css, which is loaded first.
  */
-.mode-group {
+.wiki-mode-group {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-width: 0;
 }
-.mode-clamp {
+.wiki-mode-clamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
 /* A dead end says what happened and offers the next step, centered in the page column. */
-.mode-notice {
+.wiki-mode-notice {
   font: var(--wiki-type-body);
   display: grid;
   justify-items: center;
@@ -24,24 +24,24 @@
   color: var(--aov-muted);
   text-align: center;
 }
-.mode-notice :is(h1, h2) {
+.wiki-mode-notice :is(h1, h2) {
   font: var(--wiki-type-section);
   color: var(--aov-text);
 }
-.mode-notice a {
+.wiki-mode-notice a {
   font: var(--wiki-type-category);
   display: inline-flex;
   align-items: center;
   min-height: 36px;
   color: var(--aov-accent);
 }
-.mode-notice a:hover {
+.wiki-mode-notice a:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 /* The list's search field, with its icon and a button that empties it. */
-.mode-find {
+.wiki-mode-find {
   font: var(--wiki-type-body);
   display: flex;
   flex: 0 1 300px;
@@ -53,11 +53,11 @@
   background: var(--aov-surface);
   color: var(--aov-muted);
 }
-.mode-find:focus-within {
+.wiki-mode-find:focus-within {
   border-color: var(--aov-accent);
   background: var(--aov-sunken);
 }
-.mode-find label {
+.wiki-mode-find label {
   display: flex;
   flex: 1;
   align-items: center;
@@ -67,10 +67,10 @@
   padding-left: 12px;
   cursor: text;
 }
-.mode-find svg {
+.wiki-mode-find svg {
   flex: none;
 }
-.mode-find input {
+.wiki-mode-find input {
   font: inherit;
   flex: 1;
   min-width: 0;
@@ -80,13 +80,13 @@
   background: transparent;
   color: var(--aov-text);
 }
-.mode-find input::placeholder {
+.wiki-mode-find input::placeholder {
   color: var(--aov-muted);
 }
-.mode-find input::-webkit-search-cancel-button {
+.wiki-mode-find input::-webkit-search-cancel-button {
   display: none;
 }
-.mode-find button {
+.wiki-mode-find button {
   display: grid;
   flex: none;
   place-items: center;
@@ -98,13 +98,13 @@
   color: var(--aov-muted);
   cursor: pointer;
 }
-.mode-find button:hover {
+.wiki-mode-find button:hover {
   color: var(--aov-text);
 }
 
 /* Whether a mode is open: a dot and the game's wording, green while it can be played, muted otherwise. */
-.mode-state,
-.mode-tag {
+.wiki-mode-state,
+.wiki-mode-tag {
   font: var(--wiki-type-meta);
   display: inline-flex;
   align-items: center;
@@ -112,7 +112,7 @@
   color: var(--aov-muted);
   white-space: nowrap;
 }
-.mode-state::before {
+.wiki-mode-state::before {
   content: "";
   flex: none;
   width: 6px;
@@ -120,43 +120,43 @@
   border-radius: 50%;
   background: currentColor;
 }
-.mode-state[data-tone="open"] {
+.wiki-mode-state[data-tone="open"] {
   color: var(--aov-success);
 }
 /* Marks a mode that has a guide. */
-.mode-tag {
+.wiki-mode-tag {
   color: var(--aov-accent);
 }
 
 /* A mode's picture. Without one, the section's emblem sits drained of color on a quiet tone close to the card's. */
-.mode-art {
+.wiki-mode-art {
   position: relative;
   display: block;
   overflow: hidden;
   background: var(--aov-raised);
 }
-.mode-art > img {
+.wiki-mode-art > img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.mode-art[data-empty] {
+.wiki-mode-art[data-empty] {
   background: color-mix(in srgb, var(--aov-raised) 55%, var(--aov-surface));
 }
-.mode-art-fallback {
+.wiki-mode-art-fallback {
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
 }
-.mode-art-fallback > * {
+.wiki-mode-art-fallback > * {
   opacity: 0.6;
   filter: grayscale(1);
 }
 
 /* A mode with a guide: one plain surface, the art on the left, that opens the guide wherever it is pressed. */
-.mode-feature {
+.wiki-mode-feature {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
@@ -165,46 +165,46 @@
   background: var(--aov-surface);
   transition: background 0.15s ease;
 }
-.mode-feature:has(.mode-cta:hover) {
+.wiki-mode-feature:has(.wiki-mode-cta:hover) {
   background: var(--aov-raised);
 }
-.mode-feature-art {
+.wiki-mode-feature-art {
   aspect-ratio: 16 / 9;
 }
-.mode-feature-body {
+.wiki-mode-feature-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
   gap: 6px;
   padding: 16px 24px;
 }
-.mode-feature-kicker {
+.wiki-mode-feature-kicker {
   color: var(--aov-accent);
   font: 600 0.75rem/1rem var(--wiki-font-reading);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.mode-feature h2 {
+.wiki-mode-feature h2 {
   font: 700 1.375rem/1.75rem var(--wiki-font-reading);
   color: var(--aov-text);
   letter-spacing: -0.01em;
 }
-.mode-feature-meta {
+.wiki-mode-feature-meta {
   font: var(--wiki-type-meta);
   display: flex;
   flex-wrap: wrap;
   gap: 2px 12px;
   color: var(--aov-muted);
 }
-.mode-feature .mode-prose {
+.wiki-mode-feature .wiki-mode-prose {
   max-width: 72ch;
 }
-.mode-feature .mode-chip-row {
+.wiki-mode-feature .wiki-mode-chip-row {
   align-items: center;
   margin-top: 1px;
 }
 /* The link that opens the guide covers the whole feature; the chips beside it stay on top. */
-.mode-cta {
+.wiki-mode-cta {
   font: var(--wiki-type-category);
   display: inline-flex;
   flex: none;
@@ -216,35 +216,35 @@
   text-decoration: none;
   white-space: nowrap;
 }
-.mode-cta::after {
+.wiki-mode-cta::after {
   content: "";
   position: absolute;
   inset: 0;
 }
-.mode-cta:hover {
+.wiki-mode-cta:hover {
   color: var(--aov-accent-strong);
 }
-.mode-feature .mode-chip {
+.wiki-mode-feature .wiki-mode-chip {
   position: relative;
   z-index: 1;
 }
 
 /* Wide: a grid of cards. Each group sets its own column count, so its rows fill. */
-.mode-grid {
+.wiki-mode-grid {
   display: grid;
   grid-template-columns: repeat(var(--mode-columns-narrow, 4), minmax(0, 1fr));
   gap: 12px;
 }
 @media (min-width: 1180px) {
-  .mode-grid {
+  .wiki-mode-grid {
     grid-template-columns: repeat(var(--mode-columns, 6), minmax(0, 1fr));
   }
 }
-.mode-grid > li {
+.wiki-mode-grid > li {
   display: grid;
   min-width: 0;
 }
-.mode-card {
+.wiki-mode-card {
   display: grid;
   grid-template-rows: auto 1fr;
   min-width: 0;
@@ -255,14 +255,14 @@
   text-decoration: none;
   transition: background 0.15s ease;
 }
-a.mode-card:hover {
+a.wiki-mode-card:hover {
   background: var(--aov-raised);
 }
-.mode-card-art {
+.wiki-mode-card-art {
   aspect-ratio: 16 / 9;
 }
 /* Tags over a card's picture sit on their own dark backing above a soft shade, so they read on any art. */
-.mode-card-art:not([data-empty]):has(.mode-badges > *)::after {
+.wiki-mode-card-art:not([data-empty]):has(.wiki-mode-badges > *)::after {
   content: "";
   position: absolute;
   inset: 0 0 auto;
@@ -270,7 +270,7 @@ a.mode-card:hover {
   background: linear-gradient(rgb(8 12 22 / 55%), transparent);
   pointer-events: none;
 }
-.mode-badges {
+.wiki-mode-badges {
   position: absolute;
   z-index: 1;
   top: 8px;
@@ -281,7 +281,7 @@ a.mode-card:hover {
   gap: 6px;
 }
 /* One line makes a pill; a label too long for a narrow card wraps inside the same backing. */
-.mode-badges > * {
+.wiki-mode-badges > * {
   max-width: 100%;
   padding: 3px 9px;
   border-radius: var(--aov-radius-pill);
@@ -289,35 +289,35 @@ a.mode-card:hover {
   font-weight: 600;
   white-space: normal;
 }
-.mode-card[data-closed] .mode-art > img,
-.mode-row[data-closed] .mode-art > img {
+.wiki-mode-card[data-closed] .wiki-mode-art > img,
+.wiki-mode-row[data-closed] .wiki-mode-art > img {
   filter: saturate(0.5) brightness(0.75);
 }
-.mode-card-body {
+.wiki-mode-card-body {
   display: grid;
   align-content: start;
   gap: 2px;
   min-height: 66px;
   padding: 10px 12px 12px;
 }
-.mode-card-body h3,
-.mode-row-body h3 {
+.wiki-mode-card-body h3,
+.wiki-mode-row-body h3 {
   font: var(--wiki-type-entry);
   color: var(--aov-text);
   overflow-wrap: anywhere;
 }
-.mode-card-body p,
-.mode-row-body p {
+.wiki-mode-card-body p,
+.wiki-mode-row-body p {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
 
 /* Compact: a list of rows with a small picture. */
-.mode-list {
+.wiki-mode-list {
   display: grid;
   gap: 8px;
 }
-.mode-row {
+.wiki-mode-row {
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr);
   gap: 12px;
@@ -329,75 +329,75 @@ a.mode-card:hover {
   color: inherit;
   text-decoration: none;
 }
-a.mode-row:active {
+a.wiki-mode-row:active {
   background: var(--aov-raised);
 }
-.mode-row-art {
+.wiki-mode-row-art {
   aspect-ratio: 16 / 9;
   border-radius: var(--aov-radius-control);
 }
-.mode-row-art .mode-art-fallback > * {
+.wiki-mode-row-art .wiki-mode-art-fallback > * {
   width: 22px;
   height: 22px;
 }
-.mode-row-body {
+.wiki-mode-row-body {
   display: grid;
   gap: 2px;
   min-width: 0;
   padding-right: 4px;
 }
-.mode-row-body .mode-row-tags {
+.wiki-mode-row-body .wiki-mode-row-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 2px 12px;
 }
-.mode-row-tags:empty {
+.wiki-mode-row-tags:empty {
   display: none;
 }
 
 /* The list of modes: the page head with its filters, the guide, then the game's groups. */
-.mode-page.mode-index {
+.wiki-mode-page.wiki-mode-index {
   gap: 32px;
 }
-.mode-index-head,
-.mode-index-loading {
+.wiki-mode-index-head,
+.wiki-mode-index-loading {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
 }
-.mode-index-loading {
+.wiki-mode-index-loading {
   gap: 32px;
 }
-.mode-feature[data-skeleton] {
+.wiki-mode-feature[data-skeleton] {
   min-height: 202px;
 }
 /* A group's heading while it loads: a bar where the name will be, over the same rule. */
-.mode-heading[data-skeleton]::before {
+.wiki-mode-heading[data-skeleton]::before {
   content: "";
   width: 120px;
   height: 24px;
   border-radius: var(--aov-radius-control);
   background: var(--aov-surface);
 }
-.mode-footnote {
+.wiki-mode-footnote {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
 
 /* One mode. The compact header has no cover to lie over here, so it is solid from the first pixel. */
-.wiki-library-shell:has(.mode-detail) .wiki-compact-header::before {
+.wiki-library-shell:has(.wiki-mode-detail) .wiki-compact-header::before {
   opacity: 1;
 }
-.mode-compact-head {
+.wiki-mode-compact-head {
   display: grid;
   justify-items: start;
 }
-.mode-compact-head h1 {
+.wiki-mode-compact-head h1 {
   font: var(--wiki-type-page);
   color: var(--aov-text);
   letter-spacing: -0.02em;
 }
-.mode-back {
+.wiki-mode-back {
   font: var(--wiki-type-meta);
   display: inline-flex;
   align-items: center;
@@ -408,7 +408,7 @@ a.mode-row:active {
   text-decoration: none;
 }
 /* Stands where the way back and the name will be while the mode loads. */
-.mode-skeleton-title {
+.wiki-mode-skeleton-title {
   width: min(60%, 320px);
   height: 36px;
   margin: 26px 0 4px;
@@ -416,47 +416,47 @@ a.mode-row:active {
   background: var(--aov-surface);
 }
 /* A guide tab while the guide loads keeps the shape of the tab: heading, controls, a grid of entries. */
-.guide-skeleton {
+.wiki-guide-skeleton {
   display: grid;
   gap: 16px;
   padding-top: 20px;
 }
-.guide-skeleton-bar {
+.wiki-guide-skeleton-bar {
   width: min(100%, 420px);
   height: 36px;
   border-radius: var(--aov-radius-control);
   background: var(--aov-surface);
 }
-.guide-skeleton-grid {
+.wiki-guide-skeleton-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: 12px;
 }
-.guide-skeleton-grid > span {
+.wiki-guide-skeleton-grid > span {
   height: 88px;
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
 }
 /* The page under the name: what the mode is, then each part as a section. */
-.mode-overview {
+.wiki-mode-overview {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 36px;
   min-width: 0;
 }
 /* The mode at a glance: its art as the large picture, what is recorded about it beside or under it. */
-.mode-intro {
+.wiki-mode-intro {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-width: 0;
 }
-.mode-intro-art {
+.wiki-mode-intro-art {
   aspect-ratio: 2 / 1;
   border-radius: var(--aov-radius-media);
 }
 /* One reading measure for the summary, the facts, the note and the sources, so their lines end together. */
-.mode-intro-body {
+.wiki-mode-intro-body {
   font: var(--wiki-type-body);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -465,83 +465,83 @@ a.mode-row:active {
   min-width: 0;
   max-width: 72ch;
 }
-.mode-intro-lead {
+.wiki-mode-intro-lead {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
 }
-.mode-intro-note,
-.mode-sources {
+.wiki-mode-intro-note,
+.wiki-mode-sources {
   color: var(--aov-muted);
 }
 /* On a phone the sources stand on their own after the rules. */
-.mode-overview > .mode-sources {
+.wiki-mode-overview > .wiki-mode-sources {
   max-width: 72ch;
 }
-.mode-intro-note {
+.wiki-mode-intro-note {
   font: var(--wiki-type-body);
 }
-.mode-sources {
+.wiki-mode-sources {
   font: var(--wiki-type-meta);
 }
-.mode-intro[data-skeleton] .mode-intro-body > span {
+.wiki-mode-intro[data-skeleton] .wiki-mode-intro-body > span {
   height: 20px;
   border-radius: var(--aov-radius-control);
   background: var(--aov-surface);
 }
-.mode-intro[data-skeleton] .mode-intro-body > span:last-child {
+.wiki-mode-intro[data-skeleton] .wiki-mode-intro-body > span:last-child {
   width: 60%;
 }
 /* Facts as cells, a label over its value: two across on a phone, as many as fit on a wide page. */
-.mode-facts {
+.wiki-mode-facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px 20px;
 }
-.mode-facts > div {
+.wiki-mode-facts > div {
   display: grid;
   align-content: start;
   gap: 2px;
   min-width: 0;
 }
 /* A long fact takes two cells. */
-.mode-facts > [data-wide] {
+.wiki-mode-facts > [data-wide] {
   grid-column: span 2;
 }
-.mode-facts dt {
+.wiki-mode-facts dt {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
-.mode-facts dd {
+.wiki-mode-facts dd {
   font: var(--wiki-type-body);
   color: var(--aov-text);
   overflow-wrap: anywhere;
 }
-.mode-facts .mode-state {
+.wiki-mode-facts .wiki-mode-state {
   font: inherit;
 }
 @media (min-width: 900px) {
   /* The page title carries its own space below, so what follows it sits closer than the page's gap. */
-  .mode-detail > .guide-tabs {
+  .wiki-mode-detail > .wiki-guide-tabs {
     margin-top: -20px;
   }
-  .mode-detail > .wiki-catalog-heading + .mode-overview {
+  .wiki-mode-detail > .wiki-catalog-heading + .wiki-mode-overview {
     margin-top: -12px;
   }
-  .mode-intro[data-art] {
+  .wiki-mode-intro[data-art] {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
     gap: 40px;
   }
-  .mode-facts {
+  .wiki-mode-facts {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 16px 32px;
   }
   /* Beside the art the facts are rows, a label then its value, with a thin rule between them. */
-  .mode-intro[data-art] .mode-facts {
+  .wiki-mode-intro[data-art] .wiki-mode-facts {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     border-top: 1px solid var(--aov-line);
   }
-  .mode-intro[data-art] .mode-facts > div {
+  .wiki-mode-intro[data-art] .wiki-mode-facts > div {
     grid-template-columns: 124px minmax(0, 1fr);
     grid-column: auto;
     gap: 16px;
@@ -551,11 +551,11 @@ a.mode-row:active {
   }
 }
 /* A long part that starts folded: a heading row that opens it, straight on the page. */
-.mode-fold {
+.wiki-mode-fold {
   min-width: 0;
   border-top: 1px solid color-mix(in srgb, var(--aov-accent) 24%, transparent);
 }
-.mode-fold > summary {
+.wiki-mode-fold > summary {
   font: var(--wiki-type-section);
   display: flex;
   align-items: center;
@@ -566,46 +566,46 @@ a.mode-row:active {
   cursor: pointer;
   list-style: none;
 }
-.mode-fold > summary::-webkit-details-marker {
+.wiki-mode-fold > summary::-webkit-details-marker {
   display: none;
 }
-.mode-fold > summary:hover {
+.wiki-mode-fold > summary:hover {
   color: var(--aov-accent-strong);
 }
-.mode-fold > summary svg {
+.wiki-mode-fold > summary svg {
   flex: none;
   color: var(--aov-muted);
   transition: transform 0.16s ease;
 }
-.mode-fold[open] > summary {
+.wiki-mode-fold[open] > summary {
   margin-bottom: 8px;
 }
-.mode-fold[open] > summary svg {
+.wiki-mode-fold[open] > summary svg {
   transform: rotate(180deg);
 }
 /* Rules, grouped the way the game groups them; on a wide page the groups stand side by side. */
-.mode-rules {
+.wiki-mode-rules {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 20px 32px;
   align-items: start;
 }
-.mode-rule-group {
+.wiki-mode-rule-group {
   display: grid;
   align-content: start;
   gap: 10px;
   min-width: 0;
 }
-.mode-rule-group > h3,
-.mode-rule-group > summary {
+.wiki-mode-rule-group > h3,
+.wiki-mode-rule-group > summary {
   font: var(--wiki-type-category);
   border-bottom: 1px solid var(--aov-line);
   color: var(--aov-text);
 }
-.mode-rule-group > h3 {
+.wiki-mode-rule-group > h3 {
   padding-bottom: 8px;
 }
-.mode-rule-group > summary {
+.wiki-mode-rule-group > summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -614,47 +614,47 @@ a.mode-row:active {
   cursor: pointer;
   list-style: none;
 }
-.mode-rule-group > summary::-webkit-details-marker {
+.wiki-mode-rule-group > summary::-webkit-details-marker {
   display: none;
 }
-.mode-rule-group > summary::after {
+.wiki-mode-rule-group > summary::after {
   content: "+";
   color: var(--aov-muted);
 }
-.mode-rule-group[open] > summary::after {
+.wiki-mode-rule-group[open] > summary::after {
   content: "−";
 }
-.mode-rule {
+.wiki-mode-rule {
   display: grid;
   gap: 4px;
 }
-.mode-rule + .mode-rule {
+.wiki-mode-rule + .wiki-mode-rule {
   margin-top: 6px;
 }
-.mode-rule > :is(h3, h4) {
+.wiki-mode-rule > :is(h3, h4) {
   font: var(--wiki-type-entry);
   color: var(--aov-text);
 }
-.mode-rule p,
-.mode-rule li {
+.wiki-mode-rule p,
+.wiki-mode-rule li {
   font: var(--wiki-type-body);
   max-width: 72ch;
   color: var(--aov-text-soft);
 }
-.mode-rule ul {
+.wiki-mode-rule ul {
   display: grid;
   gap: 2px;
   padding-left: 18px;
   list-style: disc;
 }
 /* Heroes and items of a mode: plain rows with a thin rule between them. */
-.mode-hero-list,
-.mode-item-list {
+.wiki-mode-hero-list,
+.wiki-mode-item-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   gap: 0 32px;
 }
-.mode-hero-list li {
+.wiki-mode-hero-list li {
   font: var(--wiki-type-body);
   display: flex;
   flex-wrap: wrap;
@@ -664,38 +664,38 @@ a.mode-row:active {
   border-bottom: 1px solid var(--aov-line);
   color: var(--aov-text);
 }
-.mode-hero-list a {
+.wiki-mode-hero-list a {
   color: var(--aov-accent);
   font-weight: 600;
 }
-.mode-hero-list a:hover {
+.wiki-mode-hero-list a:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.mode-hero-list small {
+.wiki-mode-hero-list small {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
-.mode-item-list li {
+.wiki-mode-item-list li {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
   gap: 12px;
   padding: 12px 0;
   border-bottom: 1px solid var(--aov-line);
 }
-.mode-item-list li > img,
-.mode-item-list li > span {
+.wiki-mode-item-list li > img,
+.wiki-mode-item-list li > span {
   width: 44px;
   height: 44px;
   border-radius: var(--aov-radius-card);
   background: var(--aov-raised);
   object-fit: cover;
 }
-.mode-item-list h3 {
+.wiki-mode-item-list h3 {
   font: var(--wiki-type-entry);
   color: var(--aov-text);
 }
-.mode-item-list p {
+.wiki-mode-item-list p {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
   white-space: pre-line;
@@ -703,72 +703,72 @@ a.mode-row:active {
 
 @media (max-width: 899.98px) {
   /* The list's own search takes a row; its chips scroll on the next one, out to the screen's edges. */
-  .mode-page.mode-index {
+  .wiki-mode-page.wiki-mode-index {
     gap: 24px;
   }
-  .mode-find {
+  .wiki-mode-find {
     flex: 1 1 100%;
     height: 40px;
   }
   /* 16px so an iPhone does not zoom into the field. */
-  .mode-find input {
+  .wiki-mode-find input {
     font-size: 16px;
   }
-  .mode-index .mode-filter-bar > .mode-chip-row {
+  .wiki-mode-index .wiki-mode-filter-bar > .wiki-mode-chip-row {
     max-width: none;
     margin-inline: calc(-1 * var(--wiki-gutter));
     padding-inline: var(--wiki-gutter);
   }
   /* The guide as a short surface: a small picture beside its name, its links on a row that scrolls. */
-  .mode-feature {
+  .wiki-mode-feature {
     grid-template-columns: clamp(96px, 30vw, 128px) minmax(0, 1fr);
     column-gap: 12px;
     padding: 10px;
   }
-  .mode-feature-art {
+  .wiki-mode-feature-art {
     grid-row: 1 / span 3;
     align-self: center;
     border-radius: var(--aov-radius-control);
   }
-  .mode-feature-body {
+  .wiki-mode-feature-body {
     display: contents;
   }
-  .mode-feature h2 {
+  .wiki-mode-feature h2 {
     font: 700 1.25rem/1.625rem var(--wiki-font-reading);
   }
-  .mode-feature .mode-prose {
+  .wiki-mode-feature .wiki-mode-prose {
     display: none;
   }
-  .mode-feature .mode-chip-row {
+  .wiki-mode-feature .wiki-mode-chip-row {
     grid-column: 1 / -1;
     margin: 5px -10px -5px;
     padding-inline: 10px;
   }
-  .mode-cta {
+  .wiki-mode-cta {
     min-height: 36px;
   }
-  .mode-feature[data-skeleton] {
+  .wiki-mode-feature[data-skeleton] {
     min-height: 138px;
   }
-  .mode-overview {
+  .wiki-mode-overview {
     gap: 28px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mode-card,
-  .mode-feature {
+  .wiki-mode-card,
+  .wiki-mode-feature {
     transition: none;
   }
 }
 
 /* Overview in pictures: the goal, a round and the cost of a loss. Each is a section whose figure sits on one surface. */
-.ov-split {
+.wiki-mode-overview-split {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-width: 0;
 }
-.ov-figure {
+.wiki-mode-overview-figure {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
@@ -778,41 +778,41 @@ a.mode-row:active {
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
 }
-.ov-copy {
+.wiki-mode-overview-copy {
   display: grid;
   align-content: center;
   gap: 12px;
   min-width: 0;
 }
-.ov-text,
-.ov-step p,
-.ov-rank-legend,
-.ov-notes {
+.wiki-mode-overview-text,
+.wiki-mode-overview-step p,
+.wiki-mode-overview-rank-legend,
+.wiki-mode-overview-notes {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
 }
-.ov-text,
-.ov-notes {
+.wiki-mode-overview-text,
+.wiki-mode-overview-notes {
   max-width: 72ch;
 }
-.ov-text strong {
+.wiki-mode-overview-text strong {
   color: var(--aov-text);
 }
 @media (min-width: 900px) {
-  .ov-split {
+  .wiki-mode-overview-split {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 32px;
   }
 }
 
 /* Goal: eight players, knocked out one by one, over the rank each seat ends on. */
-.ov-players,
-.ov-ranks {
+.wiki-mode-overview-players,
+.wiki-mode-overview-ranks {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 8px;
 }
-.ov-player {
+.wiki-mode-overview-player {
   display: grid;
   justify-items: center;
   gap: 6px;
@@ -821,7 +821,7 @@ a.mode-row:active {
     filter 0.35s ease,
     transform 0.35s ease;
 }
-.ov-player b {
+.wiki-mode-overview-player b {
   font: var(--wiki-type-category);
   display: grid;
   place-items: center;
@@ -833,7 +833,7 @@ a.mode-row:active {
   background: var(--aov-sunken);
   color: var(--aov-text);
 }
-.ov-player i {
+.wiki-mode-overview-player i {
   display: block;
   justify-self: stretch;
   height: 4px;
@@ -841,12 +841,12 @@ a.mode-row:active {
   background: var(--aov-success);
   transition: width 0.35s ease;
 }
-.ov-player[data-out] {
+.wiki-mode-overview-player[data-out] {
   opacity: 0.3;
   filter: grayscale(1);
   transform: scale(0.88);
 }
-.ov-player[data-winner] b {
+.wiki-mode-overview-player[data-winner] b {
   border-color: var(--aov-accent);
   background: var(--aov-accent);
   color: var(--aov-on-accent);
@@ -858,7 +858,7 @@ a.mode-row:active {
     box-shadow: 0 0 0 8px transparent;
   }
 }
-.ov-ranks span {
+.wiki-mode-overview-ranks span {
   font: var(--wiki-type-meta);
   font-weight: 700;
   display: grid;
@@ -869,28 +869,28 @@ a.mode-row:active {
   color: var(--aov-danger);
   font-variant-numeric: tabular-nums;
 }
-.ov-ranks span[data-win] {
+.wiki-mode-overview-ranks span[data-win] {
   background: var(--aov-success-soft);
   color: var(--aov-success);
 }
-.ov-rank-legend {
+.wiki-mode-overview-rank-legend {
   display: grid;
   gap: 6px;
 }
-.ov-rank-legend li {
+.wiki-mode-overview-rank-legend li {
   display: grid;
   grid-template-columns: 10px minmax(0, 1fr);
   gap: 10px;
   align-items: baseline;
 }
-.ov-rank-legend li::before {
+.wiki-mode-overview-rank-legend li::before {
   content: "";
   width: 10px;
   height: 10px;
   border-radius: 3px;
   background: var(--aov-danger);
 }
-.ov-rank-legend li[data-win]::before {
+.wiki-mode-overview-rank-legend li[data-win]::before {
   background: var(--aov-success);
 }
 
@@ -898,12 +898,12 @@ a.mode-row:active {
  * A round: three steps in a loop, each on its own surface, the current one outlined, a moving dash between them.
  * The steps share their rows, so titles, pictures and texts line up across the three.
  */
-.ov-steps {
+.wiki-mode-overview-steps {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0 16px;
 }
-.ov-step {
+.wiki-mode-overview-step {
   position: relative;
   display: grid;
   grid-template-rows: subgrid;
@@ -919,12 +919,12 @@ a.mode-row:active {
     background 0.3s ease,
     box-shadow 0.3s ease;
 }
-.ov-step[data-active] {
+.wiki-mode-overview-step[data-active] {
   background: color-mix(in srgb, var(--aov-accent) 8%, var(--aov-surface));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--aov-accent) 70%, transparent);
 }
 /* The dashed link to the next step, flowing toward it. */
-.ov-step:not(:last-child)::after {
+.wiki-mode-overview-step:not(:last-child)::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -939,14 +939,14 @@ a.mode-row:active {
     background-position: 6px 0;
   }
 }
-.ov-step h3 {
+.wiki-mode-overview-step h3 {
   font: var(--wiki-type-entry);
   display: flex;
   gap: 8px;
   align-items: center;
   color: var(--aov-text);
 }
-.ov-step-number {
+.wiki-mode-overview-step-number {
   font: var(--wiki-type-meta);
   display: grid;
   flex: none;
@@ -961,47 +961,47 @@ a.mode-row:active {
     background 0.3s ease,
     color 0.3s ease;
 }
-.ov-step[data-active] .ov-step-number {
+.wiki-mode-overview-step[data-active] .wiki-mode-overview-step-number {
   background: var(--aov-accent);
   color: var(--aov-on-accent);
 }
 /* A reference inside the text: the same size, only its color differs, underlined when pointed at. */
-.ov-step p a {
+.wiki-mode-overview-step p a {
   color: var(--aov-accent);
 }
-.ov-step p a:hover {
+.wiki-mode-overview-step p a:hover {
   color: var(--aov-accent-strong);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.ov-step-art {
+.wiki-mode-overview-step-art {
   display: flex;
   gap: 8px;
   align-items: center;
   min-height: 56px;
 }
-.ov-step-art > :not(.ov-hit-bar, .ov-fight) {
+.wiki-mode-overview-step-art > :not(.wiki-mode-overview-hit-bar, .wiki-mode-overview-fight) {
   flex: none;
 }
-.ov-step-art .guide-portrait[data-size] {
+.wiki-mode-overview-step-art .wiki-guide-portrait[data-size] {
   width: 48px;
   height: 48px;
 }
-.ov-plus {
+.wiki-mode-overview-plus {
   font: var(--wiki-type-section);
   color: var(--aov-muted);
 }
-.ov-item {
+.wiki-mode-overview-item {
   width: 40px;
   height: 40px;
   border-radius: var(--aov-radius-control);
 }
 /* The two kinds of rounds side by side, a thin rule between them. */
-.ov-fights {
+.wiki-mode-overview-fights {
   gap: 0;
   align-items: stretch;
 }
-.ov-fight {
+.wiki-mode-overview-fight {
   display: grid;
   flex: 1 1 0;
   align-content: start;
@@ -1010,24 +1010,24 @@ a.mode-row:active {
   min-width: 0;
   color: var(--aov-accent);
 }
-.ov-fight + .ov-fight {
+.wiki-mode-overview-fight + .wiki-mode-overview-fight {
   margin-left: 16px;
   padding-left: 16px;
   border-left: 1px solid var(--aov-line);
 }
-.ov-fight b {
+.wiki-mode-overview-fight b {
   font: var(--wiki-type-category);
   color: var(--aov-text);
 }
-.ov-fight small {
+.wiki-mode-overview-fight small {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
-.ov-hit {
+.wiki-mode-overview-hit {
   gap: 10px;
   color: var(--aov-danger);
 }
-.ov-hit-bar {
+.wiki-mode-overview-hit-bar {
   position: relative;
   flex: 1;
   height: 10px;
@@ -1035,14 +1035,14 @@ a.mode-row:active {
   border-radius: var(--aov-radius-pill);
   background: var(--aov-raised);
 }
-.ov-hit-bar i {
+.wiki-mode-overview-hit-bar i {
   position: absolute;
   inset: 0 auto 0 0;
   width: 100%;
   border-radius: inherit;
   background: var(--aov-success);
 }
-.ov-step[data-active] .ov-hit-bar i {
+.wiki-mode-overview-step[data-active] .wiki-mode-overview-hit-bar i {
   animation: ov-hit 2.2s ease-in-out;
 }
 @keyframes ov-hit {
@@ -1057,22 +1057,22 @@ a.mode-row:active {
 }
 
 /* The cost of a loss: pick units and stage damage, watch the health bar. */
-.ov-field {
+.wiki-mode-overview-field {
   display: grid;
   gap: 8px;
 }
-.ov-label {
+.wiki-mode-overview-label {
   font: var(--wiki-type-category);
   color: var(--aov-text-soft);
 }
-.ov-alive {
+.wiki-mode-overview-alive {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 32px)) max-content;
   gap: 6px;
   align-items: center;
   justify-content: start;
 }
-.ov-alive button {
+.wiki-mode-overview-alive button {
   height: 32px;
   padding: 0;
   border: 1px dashed var(--aov-line-strong);
@@ -1083,29 +1083,29 @@ a.mode-row:active {
     background 0.15s ease,
     border-color 0.15s ease;
 }
-.ov-alive button:hover {
+.wiki-mode-overview-alive button:hover {
   border-color: var(--aov-accent);
 }
-.ov-alive button[data-on] {
+.wiki-mode-overview-alive button[data-on] {
   border-style: solid;
   border-color: var(--aov-accent);
   background: var(--aov-accent-soft);
 }
-.ov-alive b,
-.ov-stepper b {
+.wiki-mode-overview-alive b,
+.wiki-mode-overview-stepper b {
   font: var(--wiki-type-section);
   min-width: 28px;
   color: var(--aov-text);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-.ov-stepper {
+.wiki-mode-overview-stepper {
   display: inline-flex;
   gap: 8px;
   align-items: center;
   justify-self: start;
 }
-.ov-stepper button {
+.wiki-mode-overview-stepper button {
   font: var(--wiki-type-section);
   display: grid;
   place-items: center;
@@ -1117,14 +1117,14 @@ a.mode-row:active {
   color: var(--aov-text);
   cursor: pointer;
 }
-.ov-stepper button:hover:not(:disabled) {
+.wiki-mode-overview-stepper button:hover:not(:disabled) {
   background: color-mix(in srgb, var(--aov-text) 10%, var(--aov-raised));
 }
-.ov-stepper button:disabled {
+.wiki-mode-overview-stepper button:disabled {
   opacity: 0.4;
   cursor: default;
 }
-.ov-formula {
+.wiki-mode-overview-formula {
   font: var(--wiki-type-section);
   display: flex;
   flex-wrap: wrap;
@@ -1133,23 +1133,23 @@ a.mode-row:active {
   color: var(--aov-text-soft);
   font-variant-numeric: tabular-nums;
 }
-.ov-formula strong {
+.wiki-mode-overview-formula strong {
   color: var(--aov-danger);
 }
-.ov-health {
+.wiki-mode-overview-health {
   position: relative;
   height: 22px;
   overflow: hidden;
   border-radius: var(--aov-radius-pill);
   background: var(--aov-raised);
 }
-.ov-health i {
+.wiki-mode-overview-health i {
   position: absolute;
   inset: 0 auto 0 0;
   background: var(--aov-success);
   transition: width 0.45s ease;
 }
-.ov-health .ov-health-lost {
+.wiki-mode-overview-health .wiki-mode-overview-health-lost {
   inset: 0 auto 0 auto;
   background: color-mix(in srgb, var(--aov-danger) 70%, transparent);
   transition:
@@ -1157,7 +1157,7 @@ a.mode-row:active {
     width 0.45s ease;
 }
 /* The remaining health never drops under half, so the label always lies on the green part. */
-.ov-health span {
+.wiki-mode-overview-health span {
   font: var(--wiki-type-meta);
   position: absolute;
   inset: 0;
@@ -1167,7 +1167,7 @@ a.mode-row:active {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.ov-notes {
+.wiki-mode-overview-notes {
   display: grid;
   align-content: center;
   gap: 8px;
@@ -1176,20 +1176,20 @@ a.mode-row:active {
 }
 
 @media (max-width: 899.98px) {
-  .ov-figure {
+  .wiki-mode-overview-figure {
     padding: 14px;
   }
-  .ov-players,
-  .ov-ranks {
+  .wiki-mode-overview-players,
+  .wiki-mode-overview-ranks {
     gap: 4px;
   }
-  .ov-steps {
+  .wiki-mode-overview-steps {
     grid-template-columns: minmax(0, 1fr);
   }
-  .ov-step + .ov-step {
+  .wiki-mode-overview-step + .wiki-mode-overview-step {
     margin-top: 14px;
   }
-  .ov-step:not(:last-child)::after {
+  .wiki-mode-overview-step:not(:last-child)::after {
     top: auto;
     right: auto;
     bottom: -14px;
@@ -1199,14 +1199,14 @@ a.mode-row:active {
     background: linear-gradient(180deg, var(--aov-accent) 50%, transparent 0) 0 0 / 2px 6px repeat-y;
     animation-name: ov-flow-down;
   }
-  .ov-step-art {
+  .wiki-mode-overview-step-art {
     min-height: 0;
   }
-  .ov-alive {
+  .wiki-mode-overview-alive {
     grid-template-columns: repeat(10, minmax(0, 1fr)) max-content;
     gap: 5px;
   }
-  .ov-alive button {
+  .wiki-mode-overview-alive button {
     height: 36px;
   }
 }
@@ -1216,15 +1216,15 @@ a.mode-row:active {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ov-player,
-  .ov-step,
-  .ov-step-number,
-  .ov-health i {
+  .wiki-mode-overview-player,
+  .wiki-mode-overview-step,
+  .wiki-mode-overview-step-number,
+  .wiki-mode-overview-health i {
     transition: none;
   }
-  .ov-player[data-winner] b,
-  .ov-step:not(:last-child)::after,
-  .ov-step[data-active] .ov-hit-bar i {
+  .wiki-mode-overview-player[data-winner] b,
+  .wiki-mode-overview-step:not(:last-child)::after,
+  .wiki-mode-overview-step[data-active] .wiki-mode-overview-hit-bar i {
     animation: none;
   }
 }

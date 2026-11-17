@@ -115,17 +115,17 @@ export function BoardGrid({
       },
     }
   return (
-    <div className="board-wrap">
-      <span className="board-enemy" aria-hidden="true">
+    <div className="wiki-guide-board-wrap">
+      <span className="wiki-guide-board-enemy" aria-hidden="true">
         {text("↑ Phía đối thủ", "↑ Opponent's side")}
       </span>
-      <div className="board" role="grid" aria-label={label} data-slot={slot}>
+      <div className="wiki-guide-board" role="grid" aria-label={label} data-slot={slot}>
         {BOARD_ROWS.map((row) => (
-          <div key={row} className="board-row" role="row" aria-label={text(...ROW_NAMES[row])}>
+          <div key={row} className="wiki-guide-board-row" role="row" aria-label={text(...ROW_NAMES[row])}>
             {COLUMNS.map((column) => (
               <div
                 key={column}
-                className="board-cell"
+                className="wiki-guide-board-cell"
                 role="gridcell"
                 aria-label={text(`${ROW_NAMES[row][0]}, ô ${column}`, `${ROW_NAMES[row][1]}, cell ${column}`)}
                 data-cell={`${row}-${column}`}
@@ -165,7 +165,7 @@ export function BoardPiece({
   return (
     <button
       type="button"
-      className="board-piece"
+      className="wiki-guide-board-piece"
       aria-pressed={selected}
       title={title ?? `${unit.name}${item.carry ? text(" · chủ lực", " · carry") : ""}`}
       draggable={draggable || undefined}
@@ -174,11 +174,11 @@ export function BoardPiece({
     >
       <UnitPortrait unit={unit} index={index} />
       {item.carry && (
-        <em className="carry-mark" aria-label={text("Chủ lực", "Carry")}>
+        <em className="wiki-guide-carry-mark" aria-label={text("Chủ lực", "Carry")}>
           M
         </em>
       )}
-      <span className="board-name">{unit.name}</span>
+      <span className="wiki-guide-board-name">{unit.name}</span>
     </button>
   )
 }
@@ -218,8 +218,8 @@ export function LineupBoard({
       }}
       footer={
         bench.length > 0 && (
-          <div className="board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
-            <span className="mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
+          <div className="wiki-guide-board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
+            <span className="wiki-mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
             {bench.map((item) => (
               <BoardPiece key={item.unitCode} item={item} index={index} onClick={() => onOpen(item.unitCode)} />
             ))}
@@ -241,13 +241,13 @@ export function ActiveTraits({ units, emblems, index }: { units: LineupUnit[]; e
   if (!counts.length) return null
   return (
     <div
-      className="guide-trait-tags"
+      className="wiki-guide-trait-tags"
       aria-label={wikiText(locale, "Phe và Nghề kích hoạt", "Active Factions and Classes")}
     >
       {counts.map((count) => (
         <span
           key={count.trait.code}
-          className="guide-trait-tag"
+          className="wiki-guide-trait-tag"
           data-active="true"
           title={count.trait.tiers[count.reachedTier]?.effect}
         >

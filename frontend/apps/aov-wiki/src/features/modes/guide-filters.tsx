@@ -79,12 +79,12 @@ export type UnitFilter = ReturnType<typeof useUnitFilter>
 function CostChips({ filter }: { filter: UnitFilter }) {
   const text = useWikiText()
   return (
-    <div className="mode-chip-row" role="group" aria-label={text("Giá", "Cost")}>
+    <div className="wiki-mode-chip-row" role="group" aria-label={text("Giá", "Cost")}>
       {filter.costs.map((cost) => (
         <button
           key={cost}
           type="button"
-          className="mode-chip guide-cost-chip"
+          className="wiki-mode-chip wiki-guide-cost-chip"
           style={costStyle(cost)}
           aria-pressed={filter.cost === cost}
           aria-label={text(`${cost} vàng`, `${cost} gold`)}
@@ -113,7 +113,7 @@ function TraitChoices({
 }) {
   const { locale } = useWikiContext()
   return (
-    <fieldset className="guide-choices">
+    <fieldset className="wiki-guide-choices">
       <legend className={legend ? undefined : "sr-only"}>{wikiText(locale, ...TRAIT_KIND_NAMES[kind])}</legend>
       <div>
         {index.content.traits
@@ -125,7 +125,7 @@ function TraitChoices({
               <button
                 key={trait.code}
                 type="button"
-                className="mode-chip guide-trait-choice"
+                className="wiki-mode-chip wiki-guide-trait-choice"
                 aria-pressed={on}
                 data-empty={(!on && count === 0) || undefined}
                 onClick={() => filter.toggle(trait.code)}
@@ -149,13 +149,13 @@ function TraitMenu({ kind, index, filter }: { kind: Trait["kind"]; index: GuideI
   return (
     <Popover mobileDrawer={false}>
       <PopoverTrigger asChild>
-        <button type="button" className="mode-chip guide-menu-chip" data-active={chosen > 0 || undefined}>
+        <button type="button" className="wiki-mode-chip wiki-guide-menu-chip" data-active={chosen > 0 || undefined}>
           {name}
           {chosen > 0 && <small>{chosen}</small>}
           <WikiIcon name="chevron" size={14} />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={8} drawerTitle={name} className="guide-trait-menu">
+      <PopoverContent align="start" sideOffset={8} drawerTitle={name} className="wiki-guide-trait-menu">
         <TraitChoices kind={kind} index={index} filter={filter} legend={false} />
       </PopoverContent>
     </Popover>
@@ -190,11 +190,11 @@ export function UnitFilters({
   )
   if (inline)
     return (
-      <div className="guide-filter-stack">
+      <div className="wiki-guide-filter-stack">
         {search}
         <CostChips filter={filter} />
         {KINDS.map((kind) => (
-          <div key={kind} className="guide-choice-row">
+          <div key={kind} className="wiki-guide-choice-row">
             <TraitChoices kind={kind} index={index} filter={filter} />
           </div>
         ))}
@@ -202,7 +202,7 @@ export function UnitFilters({
     )
   if (layout === "compact")
     return (
-      <div className="guide-toolbar">
+      <div className="wiki-guide-toolbar">
         {search}
         <PublicFilterSheet
           title={text("Lọc quân cờ", "Filter pieces")}
@@ -212,7 +212,7 @@ export function UnitFilters({
           onReset={filter.reset}
           resultLabel={text(`Xem ${filter.units.length} quân cờ`, `Show ${filter.units.length} pieces`)}
         >
-          <fieldset className="guide-choices">
+          <fieldset className="wiki-guide-choices">
             <legend>{text("Giá", "Cost")}</legend>
             <CostChips filter={filter} />
           </fieldset>
@@ -224,13 +224,13 @@ export function UnitFilters({
       </div>
     )
   return (
-    <div className="guide-toolbar">
+    <div className="wiki-guide-toolbar">
       {search}
       <CostChips filter={filter} />
       {KINDS.map((kind) => (
         <TraitMenu key={kind} kind={kind} index={index} filter={filter} />
       ))}
-      {end && <div className="guide-toolbar-end">{end}</div>}
+      {end && <div className="wiki-guide-toolbar-end">{end}</div>}
     </div>
   )
 }
@@ -240,7 +240,7 @@ export function FilterSummary({ index, filter }: { index: GuideIndex; filter: Un
   const text = useWikiText()
   const any = filter.active > 0 || !!filter.search.trim()
   return (
-    <div className="guide-summary" role="status">
+    <div className="wiki-guide-summary" role="status">
       <span>
         {filter.units.length} {text("quân cờ", filter.units.length === 1 ? "unit" : "units")}
         {any && ` / ${index.content.units.length}`}
@@ -251,7 +251,7 @@ export function FilterSummary({ index, filter }: { index: GuideIndex; filter: Un
           <button
             key={code}
             type="button"
-            className="mode-chip"
+            className="wiki-mode-chip"
             aria-label={text(`Bỏ lọc ${trait?.name ?? code}`, `Clear the ${trait?.name ?? code} filter`)}
             onClick={() => filter.toggle(code)}
           >
@@ -262,7 +262,7 @@ export function FilterSummary({ index, filter }: { index: GuideIndex; filter: Un
         )
       })}
       {any && (
-        <button type="button" className="guide-clear" onClick={filter.clear}>
+        <button type="button" className="wiki-guide-clear" onClick={filter.clear}>
           {text("Bỏ lọc", "Clear filters")}
         </button>
       )}

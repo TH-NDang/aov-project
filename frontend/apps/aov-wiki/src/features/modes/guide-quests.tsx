@@ -8,13 +8,13 @@ function Reward({ text: reward }: { text?: string | null }) {
   const text = useWikiText()
   if (!reward)
     return (
-      <span className="quest-reward" data-missing="">
+      <span className="wiki-guide-quest-reward" data-missing="">
         {text("Chưa ghi phần thưởng", "Reward not recorded yet")}
       </span>
     )
   const gold = /^(\d+)\s*vàng$/iu.exec(reward.trim())
   return (
-    <span className="quest-reward">
+    <span className="wiki-guide-quest-reward">
       {gold ? (
         <>
           <GoldIcon size={16} />
@@ -31,8 +31,8 @@ export function QuestsTab({ index }: { index: GuideIndex }) {
   const text = useWikiText()
   const { quests } = index.content
   return (
-    <section className="guide-tab-body" aria-label={text("Nhiệm vụ", "Quests")}>
-      <section className="mode-section" aria-labelledby="guide-quests">
+    <section className="wiki-guide-tab-body" aria-label={text("Nhiệm vụ", "Quests")}>
+      <section className="wiki-mode-section" aria-labelledby="guide-quests">
         <ModeHeading
           id="guide-quests"
           title={text("Nhiệm vụ", "Quests")}
@@ -43,9 +43,9 @@ export function QuestsTab({ index }: { index: GuideIndex }) {
           )}
         />
         {quests.length ? (
-          <ol className="guide-entries" data-columns="2">
+          <ol className="wiki-guide-entries" data-columns="2">
             {quests.map((quest, at) => (
-              <li key={quest.code} className="quest">
+              <li key={quest.code} className="wiki-guide-quest">
                 <b aria-hidden="true">{at + 1}</b>
                 <p>{quest.task}</p>
                 <Reward text={quest.reward} />
@@ -53,7 +53,7 @@ export function QuestsTab({ index }: { index: GuideIndex }) {
             ))}
           </ol>
         ) : (
-          <p className="mode-meta">
+          <p className="wiki-mode-meta">
             {text(
               "Bản Bách khoa đã thu thập chưa có nhiệm vụ nào.",
               "The collected edition of the Encyclopedia has no quests yet.",

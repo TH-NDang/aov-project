@@ -48,8 +48,8 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
     })
 
   return (
-    <section className="guide-tab-body" aria-label={text("Phe và Nghề", "Factions and Classes")}>
-      <div className="guide-toolbar">
+    <section className="wiki-guide-tab-body" aria-label={text("Phe và Nghề", "Factions and Classes")}>
+      <div className="wiki-guide-toolbar">
         <ChoiceSwitch
           label={text("Cách xem", "View")}
           value={table ? "table" : "detail"}
@@ -71,24 +71,24 @@ export function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code:
       {table ? (
         <TraitTable index={index} onOpen={onOpen} onPick={pick} />
       ) : (
-        <div className="trait-browser">
-          <div className="trait-index">
+        <div className="wiki-guide-trait-browser">
+          <div className="wiki-guide-trait-index">
             {TRAIT_KINDS.map((kind) => {
               const traits = index.content.traits.filter((trait) => trait.kind === kind)
               if (!traits.length) return null
               return (
-                <section key={kind} className="mode-section" aria-labelledby={`trait-kind-${kind}`}>
+                <section key={kind} className="wiki-mode-section" aria-labelledby={`trait-kind-${kind}`}>
                   <ModeHeading
                     id={`trait-kind-${kind}`}
                     title={text(...TRAIT_KIND_NAMES[kind])}
                     count={traits.length}
                   />
-                  <div className="trait-index-grid">
+                  <div className="wiki-guide-trait-index-grid">
                     {traits.map((trait) => (
                       <button
                         key={trait.code}
                         type="button"
-                        className="trait-index-item"
+                        className="wiki-guide-trait-index-item"
                         aria-pressed={selected?.code === trait.code}
                         onClick={() => pick(trait.code)}
                       >
@@ -134,13 +134,13 @@ function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex
     for (const code of member.traitCodes) if (code !== trait.code) partners.set(code, (partners.get(code) ?? 0) + 1)
   const together = [...partners].sort((a, b) => b[1] - a[1])
   return (
-    <article className="trait-detail" aria-label={`${text(...TRAIT_KIND_NAMES[trait.kind])} ${trait.name}`}>
-      <header className="trait-detail-head">
+    <article className="wiki-guide-trait-detail" aria-label={`${text(...TRAIT_KIND_NAMES[trait.kind])} ${trait.name}`}>
+      <header className="wiki-guide-trait-detail-head">
         <TraitIcon trait={trait} index={index} size={56} />
         <div>
-          <span className="mode-meta">{text(...TRAIT_KIND_NAMES[trait.kind])}</span>
+          <span className="wiki-mode-meta">{text(...TRAIT_KIND_NAMES[trait.kind])}</span>
           <h2>{trait.name}</h2>
-          <span className="mode-meta">
+          <span className="wiki-mode-meta">
             {text(
               `${members.length} quân cờ · mốc`,
               `${members.length} ${members.length === 1 ? "unit" : "units"} · thresholds`,
@@ -150,27 +150,27 @@ function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex
         </div>
       </header>
       {trait.description && (
-        <p className="mode-prose">
+        <p className="wiki-mode-prose">
           <GuideText text={trait.description} />
         </p>
       )}
       <TierList trait={trait} />
-      {trait.note && <p className="guide-note">{trait.note}</p>}
-      <section className="guide-detail-block" aria-label={text("Quân cờ liên quan", "Related units")}>
+      {trait.note && <p className="wiki-guide-note">{trait.note}</p>}
+      <section className="wiki-guide-detail-block" aria-label={text("Quân cờ liên quan", "Related units")}>
         <h3>{text("Quân cờ liên quan", "Related units")}</h3>
         {members.length ? (
-          <div className="trait-members">
+          <div className="wiki-guide-trait-members">
             {members.map((member) => (
               <button
                 key={member.code}
                 type="button"
-                className="trait-member"
+                className="wiki-guide-trait-member"
                 style={costStyle(member.cost)}
                 onClick={() => onOpen(member.code)}
               >
                 <UnitPortrait unit={member} index={index} size="md" />
                 <span>{member.name}</span>
-                <small className="guide-cost" aria-label={text(`${member.cost} vàng`, `${member.cost} gold`)}>
+                <small className="wiki-guide-cost" aria-label={text(`${member.cost} vàng`, `${member.cost} gold`)}>
                   <GoldIcon size={12} />
                   {member.cost}
                 </small>
@@ -178,20 +178,20 @@ function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex
             ))}
           </div>
         ) : (
-          <p className="mode-meta">
+          <p className="wiki-mode-meta">
             {text("Chưa có quân cờ trong bản đã thu thập.", "No units in the collected edition yet.")}
           </p>
         )}
       </section>
       {together.length > 0 && (
-        <section className="guide-detail-block" aria-label={text("Hay đi cùng", "Often paired with")}>
+        <section className="wiki-guide-detail-block" aria-label={text("Hay đi cùng", "Often paired with")}>
           <h3>{text("Hay đi cùng", "Often paired with")}</h3>
-          <div className="guide-trait-tags">
+          <div className="wiki-guide-trait-tags">
             {together.map(([code, count]) => (
               <TraitTag key={code} code={code} index={index} count={count} />
             ))}
           </div>
-          <p className="mode-meta">
+          <p className="wiki-mode-meta">
             {text("Số là số quân cờ có cả hai Phe/Nghề.", "The number is how many units have both Factions/Classes.")}
           </p>
         </section>
@@ -225,23 +225,23 @@ function TraitTable({
   )
   return (
     <>
-      <p className="mode-meta">
+      <p className="wiki-mode-meta">
         {text(
           "Hàng là Nghề, cột là Phe. Bấm tên để xem Phe/Nghề, bấm quân cờ để xem quân cờ.",
           "Rows are classes, columns are factions. Tap a name to open it, tap a piece to open the piece.",
         )}
       </p>
       <div
-        className="trait-table-scroll"
+        className="wiki-guide-trait-table-scroll"
         role="region"
         aria-label={text("Bảng Phe × Nghề", "Faction × Class table")}
         tabIndex={0}
       >
-        <table className="trait-table">
+        <table className="wiki-guide-trait-table">
           <thead>
             <tr>
               <th scope="col">
-                <span className="mode-meta">{text("Nghề \\ Phe", "Class \\ Faction")}</span>
+                <span className="wiki-mode-meta">{text("Nghề \\ Phe", "Class \\ Faction")}</span>
               </th>
               {factions.map((trait) => (
                 <th key={trait.code} scope="col">

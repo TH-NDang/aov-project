@@ -133,7 +133,7 @@ export function BuilderTab({
     pieceToFocus.current = null
     document
       .querySelector<HTMLElement>(
-        `[data-slot="${BOARD_SLOT}"] .board-cell[data-cell="${cell.row}-${cell.column}"] .board-piece`,
+        `[data-slot="${BOARD_SLOT}"] .wiki-guide-board-cell[data-cell="${cell.row}-${cell.column}"] .wiki-guide-board-piece`,
       )
       ?.focus()
   })
@@ -184,8 +184,8 @@ export function BuilderTab({
     write(units.map((unit) => (unit === item ? { ...unit, carry: !unit.carry } : unit)))
   /** On wide screens the pool waits under the board: bring it into view and move keyboard focus to its first unit. */
   const focusPool = () => {
-    const pool = document.getElementById("builder-pool")
-    pool?.querySelector<HTMLElement>(".builder-pool-unit:not(:disabled)")?.focus({ preventScroll: true })
+    const pool = document.getElementById("wiki-guide-builder-pool")
+    pool?.querySelector<HTMLElement>(".wiki-guide-builder-pool-unit:not(:disabled)")?.focus({ preventScroll: true })
     pool?.scrollIntoView({ block: "nearest", behavior: "smooth" })
   }
   /** An empty cell chooses where the next unit goes: the pool under the board on wide screens, a sheet on phones. */
@@ -207,12 +207,12 @@ export function BuilderTab({
   }
 
   const pool = (
-    <div className="builder-pool" id="builder-pool">
+    <div className="wiki-guide-builder-pool" id="wiki-guide-builder-pool">
       {filter.units.map((unit) => (
         <button
           key={unit.code}
           type="button"
-          className="builder-pool-unit"
+          className="wiki-guide-builder-pool-unit"
           aria-pressed={chosen.has(unit.code)}
           style={costStyle(unit.cost)}
           title={unit.traitCodes.map((code) => index.traits.get(code)?.name).join(" · ")}
@@ -226,7 +226,7 @@ export function BuilderTab({
         </button>
       ))}
       {!filter.units.length && (
-        <p className="mode-meta">
+        <p className="wiki-mode-meta">
           {text(
             "Không có quân cờ phù hợp. Thử tên khác hoặc bỏ bớt lọc.",
             "No piece fits. Try another name or remove a filter.",
@@ -244,7 +244,7 @@ export function BuilderTab({
         <button
           key={slot}
           type="button"
-          className="builder-slot builder-slot-empty"
+          className="wiki-guide-builder-slot wiki-guide-builder-slot-empty"
           data-extra={slot >= BOARD_SLOTS || undefined}
           aria-label={
             slot >= BOARD_SLOTS
@@ -253,7 +253,7 @@ export function BuilderTab({
           }
           onClick={() => (compact ? setPicking(true) : focusPool())}
         >
-          <span className="builder-slot-plus" aria-hidden="true">
+          <span className="wiki-guide-builder-slot-plus" aria-hidden="true">
             +
           </span>
           <span>{slot >= BOARD_SLOTS ? text("Ô thêm", "Extra slot") : text("Thêm quân", "Add unit")}</span>
@@ -262,26 +262,26 @@ export function BuilderTab({
     return (
       <div
         key={item.unitCode}
-        className="builder-slot"
+        className="wiki-guide-builder-slot"
         data-extra={slot >= BOARD_SLOTS || undefined}
         style={costStyle(unit.cost)}
       >
         <button
           type="button"
-          className="builder-slot-portrait"
+          className="wiki-guide-builder-slot-portrait"
           title={text(`Xem ${unit.name}`, `View ${unit.name}`)}
           onClick={() => onOpen(unit.code)}
         >
           <UnitPortrait unit={unit} index={index} size="sm" />
         </button>
         <strong>{unit.name}</strong>
-        <span className="builder-actions">
+        <span className="wiki-guide-builder-actions">
           <button
             type="button"
             aria-pressed={item.carry}
             aria-label={text(`${unit.name} là chủ lực`, `${unit.name} is a carry`)}
             title={text("Chủ lực (M)", "Carry (M)")}
-            className="carry-toggle"
+            className="wiki-guide-carry-toggle"
             onClick={() => toggleCarry(item)}
           >
             M
@@ -300,24 +300,24 @@ export function BuilderTab({
   }
 
   return (
-    <div className="guide-tab-body">
-      <div className="builder">
-        <div className="builder-main">
-          <section className="builder-card" aria-label={text("Đội hình đang xếp", "Lineup being built")}>
-            <header className="builder-card-head">
-              <span className="builder-count">
+    <div className="wiki-guide-tab-body">
+      <div className="wiki-guide-builder">
+        <div className="wiki-guide-builder-main">
+          <section className="wiki-guide-builder-card" aria-label={text("Đội hình đang xếp", "Lineup being built")}>
+            <header className="wiki-guide-builder-card-head">
+              <span className="wiki-guide-builder-count">
                 {text("Đội hình", "Lineup")}{" "}
                 <b>
                   {Math.min(units.length, BOARD_SLOTS)}/{BOARD_SLOTS}
                 </b>
                 {units.length > BOARD_SLOTS ? text(" + ô thêm", " + extra slot") : ""}
               </span>
-              <span className="builder-tools">
+              <span className="wiki-guide-builder-tools">
                 <LineupViewSwitch view={view} onChange={setView} />
                 {compact && (
                   <button
                     type="button"
-                    className="lineup-icon-button"
+                    className="wiki-guide-lineup-icon-button"
                     aria-label={text("Thêm quân cờ", "Add a unit")}
                     title={text("Thêm quân cờ", "Add a unit")}
                     disabled={full}
@@ -328,7 +328,7 @@ export function BuilderTab({
                 )}
                 <button
                   type="button"
-                  className="lineup-icon-button"
+                  className="wiki-guide-lineup-icon-button"
                   aria-label={
                     copied
                       ? text("Đã chép đường dẫn", "Link copied")
@@ -347,7 +347,7 @@ export function BuilderTab({
                 </button>
                 <button
                   type="button"
-                  className="lineup-icon-button"
+                  className="wiki-guide-lineup-icon-button"
                   aria-label={text("Dán đội hình đã sao chép", "Paste a copied lineup")}
                   title={text("Dán đội hình đã sao chép", "Paste a copied lineup")}
                   onClick={() => void paste()}
@@ -356,7 +356,7 @@ export function BuilderTab({
                 </button>
                 <button
                   type="button"
-                  className="lineup-icon-button"
+                  className="wiki-guide-lineup-icon-button"
                   data-tone="danger"
                   aria-label={text("Xóa hết", "Clear all")}
                   title={text("Xóa hết", "Clear all")}
@@ -369,7 +369,7 @@ export function BuilderTab({
                   <WikiIcon name="broom" size={18} />
                 </button>
                 {!compact && (
-                  <button type="button" className="guide-primary" onClick={() => setPosting(true)}>
+                  <button type="button" className="wiki-guide-primary" onClick={() => setPosting(true)}>
                     {text("Đăng đội hình", "Post a lineup")}
                   </button>
                 )}
@@ -400,7 +400,7 @@ export function BuilderTab({
                   return (
                     <button
                       type="button"
-                      className="board-empty"
+                      className="wiki-guide-board-empty"
                       data-target={selected || targeted ? true : undefined}
                       aria-pressed={targeted || undefined}
                       aria-label={
@@ -424,8 +424,8 @@ export function BuilderTab({
                 footer={
                   <>
                     {bench.length > 0 && (
-                      <div className="board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
-                        <span className="mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
+                      <div className="wiki-guide-board-bench" aria-label={text("Chưa xếp chỗ", "Not placed yet")}>
+                        <span className="wiki-mode-meta">{text("Chưa xếp chỗ", "Not placed yet")}</span>
                         {bench.map((item) => (
                           <BoardPiece
                             key={item.unitCode}
@@ -440,18 +440,18 @@ export function BuilderTab({
                     )}
                     {selectedUnit && selectedInfo && (
                       <div
-                        className="board-selected"
+                        className="wiki-guide-board-selected"
                         aria-label={text(`Đang chọn ${selectedInfo.name}`, `${selectedInfo.name} selected`)}
                       >
                         <span>
                           <strong>{selectedInfo.name}</strong>
                           <small>{text("Bấm một ô để chuyển tới đó", "Tap a square to move it there")}</small>
                         </span>
-                        <span className="builder-actions">
+                        <span className="wiki-guide-builder-actions">
                           <button
                             type="button"
                             aria-pressed={selectedUnit.carry}
-                            className="carry-toggle"
+                            className="wiki-guide-carry-toggle"
                             title={text("Chủ lực (M)", "Carry (M)")}
                             aria-label={text(`${selectedInfo.name} là chủ lực`, `${selectedInfo.name} is a carry`)}
                             onClick={() => toggleCarry(selectedUnit)}
@@ -492,11 +492,13 @@ export function BuilderTab({
               />
             ) : (
               <>
-                <div className="builder-slots">{Array.from({ length: BOARD_SLOTS }, (_, slot) => slotAt(slot))}</div>
+                <div className="wiki-guide-builder-slots">
+                  {Array.from({ length: BOARD_SLOTS }, (_, slot) => slotAt(slot))}
+                </div>
                 {/* An item opens one more slot; it stays apart so the board reads as the game's ten. */}
-                <div className="builder-extra">
+                <div className="wiki-guide-builder-extra">
                   {slotAt(BOARD_SLOTS)}
-                  <p className="mode-meta">
+                  <p className="wiki-mode-meta">
                     <b>{text("Ô thêm", "Extra slot")}</b>
                     {text(
                       ` · cho quân thứ ${BOARD_SLOTS + 1} khi có trang bị mở thêm ô.`,
@@ -507,15 +509,15 @@ export function BuilderTab({
               </>
             )}
             {/* Emblems come from blessings such as the heart ones: each adds one to a faction or class without a unit. */}
-            <div className="builder-emblems">
-              <div className="builder-emblems-head">
-                <span className="builder-count">
+            <div className="wiki-guide-builder-emblems">
+              <div className="wiki-guide-builder-emblems-head">
+                <span className="wiki-guide-builder-count">
                   {text("Huy hiệu", "Emblems")}{" "}
                   <b>
                     {emblems.length}/{MAX_EMBLEMS}
                   </b>
                 </span>
-                <span className="mode-meta">
+                <span className="wiki-mode-meta">
                   {text(
                     "+1 vào một Phe/Nghề, như khi có chúc phúc “Trái tim…”",
                     "+1 to a Faction/Class, as with a “Trái tim…” blessing",
@@ -523,7 +525,7 @@ export function BuilderTab({
                 </span>
                 <button
                   type="button"
-                  className="lineup-icon-button"
+                  className="wiki-guide-lineup-icon-button"
                   aria-label={text("Thêm huy hiệu", "Add an emblem")}
                   title={text("Thêm huy hiệu", "Add an emblem")}
                   disabled={emblems.length >= MAX_EMBLEMS}
@@ -533,14 +535,14 @@ export function BuilderTab({
                 </button>
               </div>
               {emblems.length > 0 && (
-                <div className="guide-trait-tags">
+                <div className="wiki-guide-trait-tags">
                   {emblems.map((emblem, at) => {
                     const trait = index.traits.get(emblem)
                     return (
                       <button
                         key={`${emblem}-${at}`}
                         type="button"
-                        className="guide-trait-tag"
+                        className="wiki-guide-trait-tag"
                         aria-label={text(
                           `Bỏ huy hiệu ${trait?.name ?? emblem}`,
                           `Remove emblem ${trait?.name ?? emblem}`,
@@ -565,26 +567,26 @@ export function BuilderTab({
             </div>
             {pasting.open && (
               <form
-                className="builder-paste"
+                className="wiki-guide-builder-paste"
                 onSubmit={(event) => {
                   event.preventDefault()
                   applyPasted(pasting.text)
                 }}
               >
                 <input
-                  className="guide-field"
+                  className="wiki-guide-field"
                   autoFocus
                   value={pasting.text}
                   placeholder={text("Dán đường dẫn hoặc mã đội hình…", "Paste a lineup link or code…")}
                   aria-label={text("Đội hình đã sao chép", "Copied lineup")}
                   onChange={(event) => setPasting({ ...pasting, text: event.target.value })}
                 />
-                <button type="submit" className="guide-primary" disabled={!pasting.text.trim()}>
+                <button type="submit" className="wiki-guide-primary" disabled={!pasting.text.trim()}>
                   {text("Dùng", "Use")}
                 </button>
                 <button
                   type="button"
-                  className="mode-chip"
+                  className="wiki-mode-chip"
                   onClick={() => setPasting({ open: false, text: "", message: "" })}
                 >
                   {text("Hủy", "Cancel")}
@@ -592,19 +594,23 @@ export function BuilderTab({
               </form>
             )}
             {pasting.message && (
-              <p className="mode-meta" role="status">
+              <p className="wiki-mode-meta" role="status">
                 {pasting.message}
               </p>
             )}
           </section>
           {compact && (
-            <button type="button" className="guide-primary builder-post" onClick={() => setPosting(true)}>
+            <button
+              type="button"
+              className="wiki-guide-primary wiki-guide-builder-post"
+              onClick={() => setPosting(true)}
+            >
               {text("Đăng đội hình", "Post a lineup")}
             </button>
           )}
 
           {!compact && (
-            <section className="mode-section" aria-labelledby="builder-pool-title">
+            <section className="wiki-mode-section" aria-labelledby="builder-pool-title">
               <ModeHeading
                 id="builder-pool-title"
                 title={text("Quân cờ", "Units")}
@@ -619,7 +625,7 @@ export function BuilderTab({
                 }
                 action={
                   target ? (
-                    <button type="button" className="guide-clear" onClick={() => setTarget(null)}>
+                    <button type="button" className="wiki-guide-clear" onClick={() => setTarget(null)}>
                       {text("Bỏ chọn ô", "Deselect the square")}
                     </button>
                   ) : undefined
@@ -631,17 +637,17 @@ export function BuilderTab({
           )}
         </div>
 
-        <aside className="builder-side">
-          <section className="mode-section" aria-labelledby="builder-traits">
+        <aside className="wiki-guide-builder-side">
+          <section className="wiki-mode-section" aria-labelledby="wiki-guide-builder-traits">
             <ModeHeading
-              id="builder-traits"
+              id="wiki-guide-builder-traits"
               title={text("Phe & Nghề", "Factions & Classes")}
               count={counts.length || undefined}
             />
             {counts.length ? (
-              <ul className="builder-traits">
+              <ul className="wiki-guide-builder-traits">
                 {counts.map((count) => (
-                  <li key={count.trait.code} className="builder-trait" data-active={count.reachedTier >= 0}>
+                  <li key={count.trait.code} className="wiki-guide-builder-trait" data-active={count.reachedTier >= 0}>
                     <TraitIcon trait={count.trait} index={index} size={28} />
                     <div>
                       <strong>
@@ -653,7 +659,7 @@ export function BuilderTab({
                           : text(`Cần thêm ${count.missing} để kích hoạt`, `Needs ${count.missing} more to activate`)}
                       </p>
                     </div>
-                    <span className="builder-steps" aria-label={text("Các mốc", "Thresholds")}>
+                    <span className="wiki-guide-builder-steps" aria-label={text("Các mốc", "Thresholds")}>
                       {count.trait.tiers.map((tier, at) => (
                         <i key={tier.count} data-on={at <= count.reachedTier}>
                           {tier.count}
@@ -664,7 +670,7 @@ export function BuilderTab({
                 ))}
               </ul>
             ) : (
-              <p className="mode-meta">
+              <p className="wiki-mode-meta">
                 {text(
                   "Chọn quân cờ để xem Phe và Nghề nào được kích hoạt.",
                   "Choose pieces to see which factions and classes they activate.",
@@ -673,14 +679,14 @@ export function BuilderTab({
             )}
           </section>
           {suggestions.length > 0 && (
-            <section className="mode-section" aria-labelledby="builder-suggestions">
-              <ModeHeading id="builder-suggestions" title={text("Gợi ý thêm", "Suggested additions")} />
-              <div className="builder-suggestions">
+            <section className="wiki-mode-section" aria-labelledby="wiki-guide-builder-suggestions">
+              <ModeHeading id="wiki-guide-builder-suggestions" title={text("Gợi ý thêm", "Suggested additions")} />
+              <div className="wiki-guide-builder-suggestions">
                 {suggestions.map(({ unit, gains, shared }) => (
                   <button
                     key={unit.code}
                     type="button"
-                    className="builder-suggestion"
+                    className="wiki-guide-builder-suggestion"
                     style={costStyle(unit.cost)}
                     onClick={() => toggleUnit(unit.code)}
                     disabled={full}
@@ -717,7 +723,7 @@ export function BuilderTab({
             : text("Chọn quân cờ", "Choose a unit")
         }
       >
-        <div className="unit-picker">
+        <div className="wiki-guide-unit-picker">
           <UnitFilters index={index} filter={filter} inline />
           {pool}
         </div>
@@ -728,20 +734,20 @@ export function BuilderTab({
         label={text("Chọn huy hiệu", "Choose emblems")}
         title={`${text("Chọn huy hiệu", "Choose emblems")} · ${emblems.length}/${MAX_EMBLEMS}`}
       >
-        <div className="trait-index">
-          <p className="mode-meta">
+        <div className="wiki-guide-trait-index">
+          <p className="wiki-mode-meta">
             {text(
               "Mỗi huy hiệu cộng 1 vào Phe/Nghề đó; có thể chọn cùng một Phe/Nghề nhiều lần.",
               "Each emblem adds 1 to that Faction/Class; the same Faction/Class can be chosen more than once.",
             )}
           </p>
           {(["FACTION", "CLASS"] as const).map((kind) => (
-            <section key={kind} className="mode-section" aria-labelledby={`emblem-kind-${kind}`}>
+            <section key={kind} className="wiki-mode-section" aria-labelledby={`emblem-kind-${kind}`}>
               <ModeHeading
                 id={`emblem-kind-${kind}`}
                 title={kind === "FACTION" ? text("Phe", "Faction") : text("Nghề", "Class")}
               />
-              <div className="trait-index-grid">
+              <div className="wiki-guide-trait-index-grid">
                 {index.content.traits
                   .filter((trait) => trait.kind === kind)
                   .map((trait) => {
@@ -750,7 +756,7 @@ export function BuilderTab({
                       <button
                         key={trait.code}
                         type="button"
-                        className="trait-index-item"
+                        className="wiki-guide-trait-index-item"
                         aria-pressed={taken > 0}
                         disabled={emblems.length >= MAX_EMBLEMS}
                         onClick={() => write(units, [...emblems, trait.code])}
@@ -826,22 +832,22 @@ function SaveLineup({
 
   if (session.status !== "authenticated")
     return (
-      <div className="lineup-post">
-        <p className="mode-prose">
+      <div className="wiki-guide-lineup-post">
+        <p className="wiki-mode-prose">
           {text(
             "Đăng nhập để lưu đội hình, chia sẻ với cộng đồng và nhận lượt thích.",
             "Sign in to save lineups, share them with the community and get likes.",
           )}
         </p>
-        <button type="button" className="guide-primary" onClick={() => void signIn()}>
+        <button type="button" className="wiki-guide-primary" onClick={() => void signIn()}>
           {text("Đăng nhập", "Sign in")}
         </button>
       </div>
     )
 
   return (
-    <div className="lineup-post">
-      <p className="mode-meta">
+    <div className="wiki-guide-lineup-post">
+      <p className="wiki-mode-meta">
         {members.length
           ? text(
               `${members.length} quân: ${members.join(", ")}`,
@@ -850,7 +856,7 @@ function SaveLineup({
           : "Đội hình chưa có quân cờ nào."}
       </p>
       <form
-        className="builder-form"
+        className="wiki-guide-builder-form"
         onSubmit={(event) => {
           event.preventDefault()
           if (name.trim() && units.length) save.mutate()
@@ -859,7 +865,7 @@ function SaveLineup({
         <label>
           <span>{text("Tên đội hình", "Lineup name")}</span>
           <input
-            className="guide-field"
+            className="wiki-guide-field"
             value={name}
             maxLength={60}
             placeholder={text("Ví dụ: Pháp sư lãng khách", "For example: Wandering mages")}
@@ -869,26 +875,26 @@ function SaveLineup({
         <label>
           <span>{text("Ghi chú lối chơi (tùy chọn)", "Gameplay notes (optional)")}</span>
           <textarea
-            className="guide-field"
+            className="wiki-guide-field"
             value={note}
             maxLength={280}
             rows={3}
             onChange={(event) => setNote(event.target.value)}
           />
         </label>
-        <button type="submit" className="guide-primary" disabled={!name.trim() || !units.length || save.isPending}>
+        <button type="submit" className="wiki-guide-primary" disabled={!name.trim() || !units.length || save.isPending}>
           {save.isPending ? text("Đang lưu…", "Saving…") : text("Lưu và chia sẻ", "Save and share")}
         </button>
         {message && (
-          <p className="mode-message" role="status">
+          <p className="wiki-mode-message" role="status">
             {message}
           </p>
         )}
       </form>
       {me.data && me.data.lineups.length > 0 && (
-        <section className="guide-detail-block" aria-labelledby="my-lineups">
-          <h3 id="my-lineups">{text("Đội hình của tôi", "My lineups")}</h3>
-          <ul className="my-lineups">
+        <section className="wiki-guide-detail-block" aria-labelledby="wiki-guide-my-lineups">
+          <h3 id="wiki-guide-my-lineups">{text("Đội hình của tôi", "My lineups")}</h3>
+          <ul className="wiki-guide-my-lineups">
             {me.data.lineups.map((lineup) => (
               <li key={lineup.id}>
                 <Link
@@ -898,13 +904,13 @@ function SaveLineup({
                 >
                   {lineup.name}
                 </Link>
-                <span className="mode-meta">
+                <span className="wiki-mode-meta">
                   ♥ {lineup.likes}
                   {lineup.status === "HIDDEN" && text(" · đã bị ẩn", " · hidden")}
                 </span>
                 <button
                   type="button"
-                  className="mode-chip"
+                  className="wiki-mode-chip"
                   disabled={remove.isPending}
                   onClick={() => remove.mutate({ id: lineup.id, version: lineup.version })}
                 >

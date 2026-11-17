@@ -13,11 +13,11 @@ function Bars({ rows, label }: { rows: Row[]; label: string }) {
   const { locale } = useWikiContext()
   const max = Math.max(1, ...rows.map((row) => row.value))
   return (
-    <ol className="insight-bars" aria-label={label}>
+    <ol className="wiki-guide-insight-bars" aria-label={label}>
       {rows.map((row) => (
-        <li key={row.key} className="insight-bar">
-          <span className="insight-label">{row.label}</span>
-          <span className="insight-track" aria-hidden="true">
+        <li key={row.key} className="wiki-guide-insight-bar">
+          <span className="wiki-guide-insight-label">{row.label}</span>
+          <span className="wiki-guide-insight-track" aria-hidden="true">
             <i style={{ width: `${(row.value / max) * 100}%` }} />
           </span>
           <b>{row.value.toLocaleString(locale)}</b>
@@ -31,11 +31,15 @@ function Bars({ rows, label }: { rows: Row[]; label: string }) {
 function BarsLoading({ rows }: { rows: number }) {
   const { locale } = useWikiContext()
   return (
-    <ol className="insight-bars" role="status" aria-label={wikiText(locale, "Đang tải thống kê", "Loading statistics")}>
+    <ol
+      className="wiki-guide-insight-bars"
+      role="status"
+      aria-label={wikiText(locale, "Đang tải thống kê", "Loading statistics")}
+    >
       {Array.from({ length: rows }, (_, at) => (
-        <li key={at} className="insight-bar" data-loading="">
-          <span className="insight-label" />
-          <span className="insight-track" />
+        <li key={at} className="wiki-guide-insight-bar" data-loading="">
+          <span className="wiki-guide-insight-label" />
+          <span className="wiki-guide-insight-track" />
           <b />
         </li>
       ))}
@@ -67,7 +71,7 @@ export function InsightsTab({
   const unitLabel = (unitCode: string) => {
     const unit = index.units.get(unitCode)
     return unit ? (
-      <button type="button" className="guide-name-button" onClick={() => onOpen(unit.code)}>
+      <button type="button" className="wiki-guide-name-button" onClick={() => onOpen(unit.code)}>
         <UnitPortrait unit={unit} index={index} size="xs" />
         {unit.name}
       </button>
@@ -85,17 +89,17 @@ export function InsightsTab({
       </>
     )
     return links ? (
-      <Link className="guide-name-button" to={links.traitHref(trait.code)}>
+      <Link className="wiki-guide-name-button" to={links.traitHref(trait.code)}>
         {body}
       </Link>
     ) : (
-      <span className="guide-name-button">{body}</span>
+      <span className="wiki-guide-name-button">{body}</span>
     )
   }
   const failed = (
-    <div className="guide-state" role="alert">
+    <div className="wiki-guide-state" role="alert">
       <p>{text("Chưa tải được thống kê đội hình.", "Lineup statistics could not be loaded.")}</p>
-      <button type="button" className="mode-chip" onClick={() => void insights.refetch()}>
+      <button type="button" className="wiki-mode-chip" onClick={() => void insights.refetch()}>
         {text("Thử lại", "Retry")}
       </button>
     </div>
@@ -104,8 +108,8 @@ export function InsightsTab({
   const community = insights.data?.communityLineupCount ?? 0
 
   return (
-    <div className="guide-tab-body">
-      <p className="insights-lead">
+    <div className="wiki-guide-tab-body">
+      <p className="wiki-guide-insights-lead">
         {insights.data
           ? text(
               `Tính từ ${editorial} đội hình đề xuất và ${community} đội hình cộng đồng. `,
@@ -118,8 +122,8 @@ export function InsightsTab({
         )}
       </p>
       {/* Phones read the sections in this order; wide screens place them in two columns (see guide.css). */}
-      <div className="insights">
-        <section className="mode-section" data-area="units" aria-labelledby="insight-units">
+      <div className="wiki-guide-insights">
+        <section className="wiki-mode-section" data-area="units" aria-labelledby="insight-units">
           <ModeHeading
             id="insight-units"
             title={text("Quân cờ được dùng nhiều", "Most used units")}
@@ -143,7 +147,7 @@ export function InsightsTab({
             />
           )}
         </section>
-        <section className="mode-section" data-area="traits" aria-labelledby="insight-traits">
+        <section className="wiki-mode-section" data-area="traits" aria-labelledby="insight-traits">
           <ModeHeading
             id="insight-traits"
             title={text("Phe & Nghề hay kích hoạt", "Most activated Factions & Classes")}
@@ -167,7 +171,7 @@ export function InsightsTab({
             />
           )}
         </section>
-        <section className="mode-section" data-area="costs" aria-labelledby="insight-costs">
+        <section className="wiki-mode-section" data-area="costs" aria-labelledby="insight-costs">
           <ModeHeading id="insight-costs" title={text("Số quân cờ theo giá", "Number of units by cost")} />
           <Bars
             label={text("Số quân cờ theo giá", "Number of units by cost")}
@@ -180,7 +184,7 @@ export function InsightsTab({
               }))}
           />
         </section>
-        <section className="mode-section" data-area="health" aria-labelledby="insight-health">
+        <section className="wiki-mode-section" data-area="health" aria-labelledby="insight-health">
           <ModeHeading id="insight-health" title={text("Máu cao nhất ở 3 sao", "Highest HP at 3 stars")} />
           <Bars
             label={text("Máu cao nhất ở 3 sao", "Highest HP at 3 stars")}
@@ -191,7 +195,7 @@ export function InsightsTab({
             }))}
           />
         </section>
-        <section className="mode-section" data-area="attack" aria-labelledby="insight-attack">
+        <section className="wiki-mode-section" data-area="attack" aria-labelledby="insight-attack">
           <ModeHeading
             id="insight-attack"
             title={text("Công vật lý cao nhất ở 3 sao", "Highest Attack Damage at 3 stars")}
@@ -205,7 +209,7 @@ export function InsightsTab({
             }))}
           />
         </section>
-        <section className="mode-section" data-area="members" aria-labelledby="insight-members">
+        <section className="wiki-mode-section" data-area="members" aria-labelledby="insight-members">
           <ModeHeading
             id="insight-members"
             title={text("Phe & Nghề theo số quân cờ", "Factions & Classes by number of units")}

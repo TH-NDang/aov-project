@@ -129,7 +129,7 @@ export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideT
       {tab === "xep-doi-hinh" && <BuilderTab code={code} index={index} onOpen={showUnit} />}
       {tab === "phan-tich" && <InsightsTab code={code} index={index} onOpen={showUnit} />}
       {/* Where the data comes from closes every tab, out of the way of what the reader came for. */}
-      <p className="guide-edition">
+      <p className="wiki-guide-edition">
         {guide.content.edition ?? text("Bách khoa Cờ Liên quân", "Auto-chess encyclopedia")}
         {guide.content.observedOn && (
           <>

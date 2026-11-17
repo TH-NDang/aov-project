@@ -13,7 +13,7 @@ export function StarLevel({ level, size = 14 }: { level: number; size?: number }
   const { locale } = useWikiContext()
   return (
     <span
-      className="star-level"
+      className="wiki-guide-star-level"
       data-level={level}
       role="img"
       aria-label={wikiText(locale, `${level} sao`, `${level}-star`)}

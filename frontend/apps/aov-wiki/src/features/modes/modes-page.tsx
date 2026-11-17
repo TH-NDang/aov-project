@@ -88,14 +88,14 @@ export function ModesPage() {
   }
 
   return (
-    <div className="mode-page mode-index">
-      <div className="mode-index-head">
+    <div className="wiki-mode-page wiki-mode-index">
+      <div className="wiki-mode-index-head">
         <CatalogHeading
           title={text("Chế độ chơi", "Game modes")}
           lead={all.length ? `${counts}. ${text(...SCHEDULE_NOTE)}` : SCHEDULE_NOTE}
         />
-        <div className="mode-filter-bar" role="group" aria-label={text("Lọc chế độ", "Filter modes")}>
-          <div className="mode-find">
+        <div className="wiki-mode-filter-bar" role="group" aria-label={text("Lọc chế độ", "Filter modes")}>
+          <div className="wiki-mode-find">
             <label>
               <WikiIcon name="search" size={18} />
               <input
@@ -116,12 +116,12 @@ export function ModesPage() {
               </button>
             )}
           </div>
-          <div ref={chips} className="mode-chip-row">
+          <div ref={chips} className="wiki-mode-chip-row">
             {FILTERS.map((item) => (
               <button
                 key={item.key}
                 type="button"
-                className="mode-chip"
+                className="wiki-mode-chip"
                 aria-pressed={filter === item.key}
                 onClick={() => update({ filter: item.key === "all" ? null : item.key })}
               >
@@ -134,34 +134,34 @@ export function ModesPage() {
 
       {modes.isPending ? (
         <div
-          className="mode-index-loading"
+          className="wiki-mode-index-loading"
           role="status"
           aria-label={text("Đang tải danh sách chế độ", "Loading the list of modes")}
         >
-          <div className="mode-feature" data-skeleton="true" />
+          <div className="wiki-mode-feature" data-skeleton="true" />
           {[6, 10].map((count) => (
-            <div key={count} className="mode-group">
-              <div className="mode-heading" data-skeleton="true" />
+            <div key={count} className="wiki-mode-group">
+              <div className="wiki-mode-heading" data-skeleton="true" />
               <ModeCardsSkeleton count={count} />
             </div>
           ))}
         </div>
       ) : modes.isError ? (
-        <div className="mode-notice wiki-mascot-state" role="alert">
+        <div className="wiki-mode-notice wiki-mascot-state" role="alert">
           <h2>{text("Chưa tải được danh sách chế độ", "The list of modes could not be loaded")}</h2>
-          <button type="button" className="mode-chip" onClick={() => modes.refetch()}>
+          <button type="button" className="wiki-mode-chip" onClick={() => modes.refetch()}>
             {text("Thử lại", "Retry")}
           </button>
         </div>
       ) : all.length === 0 ? (
-        <p className="mode-notice wiki-mascot-state" role="status">
+        <p className="wiki-mode-notice wiki-mascot-state" role="status">
           {text("Chưa có chế độ nào.", "No modes yet.")}
         </p>
       ) : visible.length === 0 ? (
-        <div className="mode-notice wiki-mascot-state" role="status">
+        <div className="wiki-mode-notice wiki-mascot-state" role="status">
           <h2>{text("Không có chế độ nào khớp", "No mode matches")}</h2>
           <p>{text("Thử từ khóa khác hoặc bỏ bộ lọc đang chọn.", "Try other words or clear the filters.")}</p>
-          <button type="button" className="mode-chip" onClick={() => update({ search: null, filter: null })}>
+          <button type="button" className="wiki-mode-chip" onClick={() => update({ search: null, filter: null })}>
             {text("Xóa bộ lọc", "Clear filters")}
           </button>
         </div>
@@ -174,7 +174,7 @@ export function ModesPage() {
             const entries = listed.filter((mode) => mode.group === group)
             if (!entries.length) return null
             return (
-              <section key={group} className="mode-group" aria-labelledby={`mode-group-${group}`}>
+              <section key={group} className="wiki-mode-group" aria-labelledby={`mode-group-${group}`}>
                 <ModeHeading
                   id={`mode-group-${group}`}
                   title={text(GROUP_NAMES[group][0], GROUP_NAMES[group][1])}
@@ -186,7 +186,7 @@ export function ModesPage() {
           })}
           {/* Wide screens read this under the page title; phones have no title block, so it closes the list. */}
           {layout === "compact" && (
-            <p className="mode-footnote">
+            <p className="wiki-mode-footnote">
               {unknownShown > 0 &&
                 text(`${unknownShown} chế độ chưa rõ lịch mở. `, `${unknownShown} modes have no known schedule. `)}
               {text(...SCHEDULE_NOTE)}
@@ -208,33 +208,33 @@ function GuideFeature({ mode }: { mode: ModeCard }) {
   const base = `/modes/${encodeURIComponent(mode.code)}`
   const meta = modeMetaText(mode, locale)
   return (
-    <article className="mode-feature">
-      <ModeArt className="mode-feature-art" image={mode.art} name={mode.name} inCard eager />
-      <div className="mode-feature-body">
-        <p className="mode-feature-kicker">{text("Cẩm nang", "Guide")}</p>
+    <article className="wiki-mode-feature">
+      <ModeArt className="wiki-mode-feature-art" image={mode.art} name={mode.name} inCard eager />
+      <div className="wiki-mode-feature-body">
+        <p className="wiki-mode-feature-kicker">{text("Cẩm nang", "Guide")}</p>
         <h2>{mode.name}</h2>
-        <p className="mode-feature-meta">
+        <p className="wiki-mode-feature-meta">
           {meta && <span>{meta}</span>}
           <AvailabilityState availability={mode.availability} quiet />
         </p>
-        {mode.summary && <p className="mode-prose mode-clamp">{mode.summary}</p>}
-        <nav className="mode-chip-row" aria-label={text(`Cẩm nang ${mode.name}`, `${mode.name} guide`)}>
-          <Link className="mode-cta" to={href(base)}>
+        {mode.summary && <p className="wiki-mode-prose wiki-mode-clamp">{mode.summary}</p>}
+        <nav className="wiki-mode-chip-row" aria-label={text(`Cẩm nang ${mode.name}`, `${mode.name} guide`)}>
+          <Link className="wiki-mode-cta" to={href(base)}>
             {text("Mở cẩm nang", "Open the guide")}
             <WikiIcon name="arrow" size={16} />
           </Link>
           {mode.guideKind === "AUTO_CHESS" && (
             <>
-              <Link className="mode-chip" to={href(`${base}/quan-co`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/quan-co`)}>
                 {text("Quân cờ", "Units")}
               </Link>
-              <Link className="mode-chip" to={href(`${base}/phe-nghe`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/phe-nghe`)}>
                 {text("Phe & Nghề", "Factions & Classes")}
               </Link>
-              <Link className="mode-chip" to={href(`${base}/doi-hinh`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/doi-hinh`)}>
                 {text("Đội hình", "Lineups")}
               </Link>
-              <Link className="mode-chip" to={href(`${base}/xep-doi-hinh`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/xep-doi-hinh`)}>
                 {text("Xếp đội hình", "Lineup builder")}
               </Link>
             </>

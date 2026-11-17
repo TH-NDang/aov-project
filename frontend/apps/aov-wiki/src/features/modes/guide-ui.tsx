@@ -105,7 +105,7 @@ export function UnitPortrait({
 }) {
   const src = index.image(unit.portraitAssetId)
   return (
-    <span className="guide-portrait" data-size={size} style={costStyle(unit.cost)}>
+    <span className="wiki-guide-portrait" data-size={size} style={costStyle(unit.cost)}>
       {src ? (
         <img src={src} alt="" loading="lazy" decoding="async" />
       ) : (
@@ -119,9 +119,9 @@ export function UnitPortrait({
 export function TraitIcon({ trait, index, size = 20 }: { trait?: Trait; index: GuideIndex; size?: number }) {
   const src = trait ? index.image(trait.iconAssetId) : undefined
   return src ? (
-    <img className="guide-trait-icon" src={src} alt="" width={size} height={size} loading="lazy" />
+    <img className="wiki-guide-trait-icon" src={src} alt="" width={size} height={size} loading="lazy" />
   ) : (
-    <span className="guide-trait-icon" style={{ width: size, height: size }} aria-hidden="true" />
+    <span className="wiki-guide-trait-icon" style={{ width: size, height: size }} aria-hidden="true" />
   )
 }
 
@@ -141,18 +141,18 @@ export function UnitTraits({ unit, index, as }: { unit: Unit; index: GuideIndex;
   // Names read as one line of text; tags wrap freely, so neither needs the divider the icons use.
   if (as === "names")
     return (
-      <span className="unit-traits" data-as={as}>
+      <span className="wiki-guide-unit-traits" data-as={as}>
         {[...factions, ...classes].map((trait) => trait.name).join(" · ")}
       </span>
     )
   const part = (traits: Trait[], kind: string) =>
     traits.length > 0 && (
-      <span className="unit-trait-part" data-kind={kind}>
+      <span className="wiki-guide-unit-trait-part" data-kind={kind}>
         {traits.map((trait) =>
           as === "icons" ? (
             <span
               key={trait.code}
-              className="trait-tip"
+              className="wiki-guide-trait-tip"
               role="img"
               aria-label={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
               data-tip={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
@@ -166,10 +166,10 @@ export function UnitTraits({ unit, index, as }: { unit: Unit; index: GuideIndex;
       </span>
     )
   return (
-    <span className="unit-traits" data-as={as}>
+    <span className="wiki-guide-unit-traits" data-as={as}>
       {part(factions, "Phe")}
       {as === "icons" && factions.length > 0 && classes.length > 0 && (
-        <i className="unit-trait-divider" aria-hidden="true" />
+        <i className="wiki-guide-unit-trait-divider" aria-hidden="true" />
       )}
       {part(classes, "Nghề")}
     </span>
@@ -190,7 +190,7 @@ export function TraitTag({ code, index, count }: { code: string; index: GuideInd
   )
   return links ? (
     <Link
-      className="guide-trait-tag"
+      className="wiki-guide-trait-tag"
       data-link="true"
       to={links.traitHref(trait.code)}
       title={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
@@ -198,7 +198,10 @@ export function TraitTag({ code, index, count }: { code: string; index: GuideInd
       {body}
     </Link>
   ) : (
-    <span className="guide-trait-tag" title={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}>
+    <span
+      className="wiki-guide-trait-tag"
+      title={`${wikiText(locale, ...TRAIT_KIND_NAMES[trait.kind])}: ${trait.name}`}
+    >
       {body}
     </span>
   )
@@ -218,7 +221,7 @@ export const TIER_STYLE: Record<Blessing["tier"], CSSProperties> = {
 export function BlessingIcon({ blessing, index }: { blessing: Blessing; index: GuideIndex }) {
   const src = index.image(blessing.iconAssetId)
   return (
-    <span className="blessing-icon" style={TIER_STYLE[blessing.tier]} aria-hidden="true">
+    <span className="wiki-guide-blessing-icon" style={TIER_STYLE[blessing.tier]} aria-hidden="true">
       {src && <img src={src} alt="" loading="lazy" decoding="async" />}
     </span>
   )
@@ -233,11 +236,11 @@ function emphasizeNumbers(text?: string | null) {
 /** Tiers as the game draws them: the count in a ring that fills one step per tier. */
 export function TierList({ trait, count }: { trait: Trait; count?: number }) {
   return (
-    <div className="guide-tiers">
+    <div className="wiki-guide-tiers">
       {trait.tiers.map((tier, at) => (
         <p
           key={tier.count}
-          className="guide-tier"
+          className="wiki-guide-tier"
           data-reached={count !== undefined && count >= tier.count}
           style={{ "--tier-progress": (at + 1) / trait.tiers.length } as CSSProperties}
         >
@@ -266,7 +269,7 @@ export function GuideSearch({
   const text = useWikiText()
   const input = useRef<HTMLInputElement>(null)
   return (
-    <label className="guide-search">
+    <label className="wiki-guide-search">
       <WikiIcon name="search" size={18} />
       <input
         ref={input}
@@ -308,7 +311,7 @@ export function ChoiceSwitch<Value extends string | number>({
   labels?: boolean
 }) {
   return (
-    <div className="guide-switch" role="group" aria-label={label} data-labels={labels || undefined}>
+    <div className="wiki-guide-switch" role="group" aria-label={label} data-labels={labels || undefined}>
       {options.map((option) => (
         <button
           key={option.value}
