@@ -62,11 +62,10 @@ public class MediaUsageOverview {
 
         var matching = queries.ids(semanticType, needsCredit).stream()
                 .filter(id -> index.summary(id).state() == filter).toList();
-        int from = (int) Math.min((long) page * size, matching.size());
-        var rows = queries.summaries(matching.subList(from, Math.min(from + size, matching.size())));
+        var slice = PageSlice.of(matching, page, size);
+        var rows = queries.summaries(slice.items());
 
-        return new PageSlice<>(rows.stream().map(row -> row.withUsage(index.summary(row.id()))).toList(), page, size,
-                matching.size());
+        return slice.withItems(rows.stream().map(row -> row.withUsage(index.summary(row.id()))).toList());
     }
 
     public MediaUsageTotals totals(@Nullable MediaSemanticType semanticType, boolean needsCredit) {

@@ -156,7 +156,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
                     var release = variants.get((UUID) row.get("patchVariantId"));
                     row.put("patch", patches.published(release.patchId(), region, locale));
                 }).toList();
-        return new PageSlice<>(all.stream().skip((long) page * size).limit(size).toList(), page, size, all.size());
+        return PageSlice.of(all, page, size);
     }
 
     private void validateChange(Change change, HeroRevisionView from, HeroRevisionView to) {

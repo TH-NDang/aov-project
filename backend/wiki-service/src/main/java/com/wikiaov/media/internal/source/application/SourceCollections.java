@@ -56,10 +56,7 @@ public class SourceCollections {
                 .sorted(BROWSING_ORDER)
                 .toList();
 
-        int from = (int) Math.min((long) page * size, rows.size());
-        int to = Math.min(from + size, rows.size());
-        return new PageSlice<>(rows.subList(from, to).stream().map(SourceCollections::view).toList(), page, size,
-                rows.size());
+        return PageSlice.of(rows, page, size).map(SourceCollections::view);
     }
 
     @Transactional(readOnly = true)

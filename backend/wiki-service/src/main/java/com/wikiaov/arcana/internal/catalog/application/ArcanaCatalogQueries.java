@@ -151,15 +151,13 @@ class ArcanaCatalogQueries {
 
     private PageSlice<ArcanaView> requestedPage(List<ArcanaIdentity> owners, Map<UUID, ArcanaRevision> selected,
             Map<UUID, List<ArcanaTranslation>> copies, int page, int size) {
-        int start = (int) Math.min((long) page * size, owners.size());
-        var pageRows = owners.subList(start, Math.min(start + size, owners.size())).stream().map(owner -> {
+        return PageSlice.of(owners, page, size).map(owner -> {
             var revision = selected.get(owner.getId());
             var copy = copies.getOrDefault(revision.getId(), List.of());
             var c = revisionContent.hydrate(revision, copy);
             return new ArcanaView(owner.getId(), owner.getCode(), revisionContent.revisionView(owner, revision), c,
                     contentRules.readiness(revision, c));
-        }).toList();
-        return new PageSlice<>(pageRows, page, size, owners.size());
+        });
     }
 
     ArcanaView latest(UUID id, UUID rulesetId) {
@@ -247,9 +245,8 @@ class ArcanaCatalogQueries {
                         .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
                         .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
                 .filter(Objects::nonNull).toList();
-        int start = (int) Math.min((long) page * size, rows.size());
-        return new PageSlice<>(publicMedia.hydrate(rows.subList(start, Math.min(start + size, rows.size()))), page,
-                size, rows.size());
+        var slice = PageSlice.of(rows, page, size);
+        return slice.withItems(publicMedia.hydrate(slice.items()));
     }
 
     ArcanaView publishedOne(UUID id, String region, String locale) {

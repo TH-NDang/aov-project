@@ -69,12 +69,9 @@ public class SkinBadges {
                 .filter(badge -> matches(badge, translations.getOrDefault(badge.getId(), List.of()), search))
                 .toList();
         var counts = gallery.badgeCounts(rulesetId);
-        int from = Math.min(page * size, matching.size());
-        var items = matching.subList(from, Math.min(from + size, matching.size())).stream()
+        return PageSlice.of(matching, page, size)
                 .map(badge -> view(badge, translations.getOrDefault(badge.getId(), List.of()), locale,
-                        counts.getOrDefault(badge.getCode(), 0L)))
-                .toList();
-        return new PageSlice<>(items, page, size, matching.size());
+                        counts.getOrDefault(badge.getCode(), 0L)));
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")

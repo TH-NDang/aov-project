@@ -134,8 +134,7 @@ public class HeroMediaQueries {
                             skin.getArtAssetId()));
             }
         }
-        int from = Math.min(page * size, rows.size());
-        return new PageSlice<>(rows.subList(from, Math.min(from + size, rows.size())), page, size, rows.size());
+        return PageSlice.of(rows, page, size);
     }
 
     private Map<UUID, Long> ordinals(UUID rulesetId) {

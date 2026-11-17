@@ -78,9 +78,7 @@ public class SkinBadgeGroups {
         if (search.isEmpty() || unassigned > 0)
             matching.add(new SkinBadgeGroupView(null, "__ungrouped", null, 0, List.of(), null, null, true,
                     unassigned, false));
-        int from = Math.min(page * size, matching.size());
-        return new PageSlice<>(matching.subList(from, Math.min(from + size, matching.size())), page, size,
-                matching.size());
+        return PageSlice.of(matching, page, size);
     }
 
     @Transactional

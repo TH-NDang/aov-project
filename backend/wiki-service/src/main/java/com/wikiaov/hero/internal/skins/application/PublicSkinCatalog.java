@@ -73,10 +73,7 @@ public class PublicSkinCatalog {
                         .thenComparing(row -> row.skin().getSkinKey()))
                 .toList();
 
-        long offset = (long) page * size;
-        var slice = offset >= matching.size()
-                ? List.<Localized>of()
-                : matching.subList((int) offset, (int) Math.min(offset + size, matching.size()));
+        var slice = PageSlice.of(matching, page, size).items();
         var items = hydrate(slice);
         return new PublicSkinCatalogView(new PageSlice<>(items, page, size, matching.size()), heroes, rarities);
     }

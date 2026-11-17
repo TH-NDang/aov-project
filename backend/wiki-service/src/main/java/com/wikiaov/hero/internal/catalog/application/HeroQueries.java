@@ -311,10 +311,7 @@ public class HeroQueries {
             all.add(new ListEntry(item, hero.bindingsId(), formEntries));
         }
 
-        long offset = (long) page * size;
-        var selected = offset >= all.size()
-                ? List.<ListEntry>of()
-                : all.subList((int) offset, (int) Math.min(offset + size, all.size()));
+        var selected = PageSlice.of(all, page, size).items();
         var items = listMedia(selected);
 
         return Map.of("context", context(ctx, locale), "items", items, "page", page, "size", size, "totalElements",

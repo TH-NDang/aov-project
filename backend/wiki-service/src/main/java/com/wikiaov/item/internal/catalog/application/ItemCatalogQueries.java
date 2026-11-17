@@ -155,15 +155,13 @@ class ItemCatalogQueries {
 
     private PageSlice<ItemView> requestedPage(List<ItemIdentity> owners, Map<UUID, ItemRevision> selected,
             Map<UUID, List<ItemTranslation>> copies, int page, int size) {
-        int start = (int) Math.min((long) page * size, owners.size());
-        var pageRows = owners.subList(start, Math.min(start + size, owners.size())).stream().map(owner -> {
+        return PageSlice.of(owners, page, size).map(owner -> {
             var revision = selected.get(owner.getId());
             var copy = copies.getOrDefault(revision.getId(), List.of());
             var c = revisionContent.hydrate(revision, copy);
             return new ItemView(owner.getId(), owner.getCode(), revisionContent.revisionView(owner, revision), c,
                     contentRules.readiness(revision, c));
-        }).toList();
-        return new PageSlice<>(pageRows, page, size, owners.size());
+        });
     }
 
     ItemView latest(UUID id, UUID rulesetId) {
@@ -251,9 +249,8 @@ class ItemCatalogQueries {
                         .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
                         .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
                 .filter(Objects::nonNull).toList();
-        int start = (int) Math.min((long) page * size, rows.size());
-        return new PageSlice<>(publicMedia.hydrate(rows.subList(start, Math.min(start + size, rows.size()))), page,
-                size, rows.size());
+        var slice = PageSlice.of(rows, page, size);
+        return slice.withItems(publicMedia.hydrate(slice.items()));
     }
 
     ItemView publishedOne(UUID id, String region, String locale) {
