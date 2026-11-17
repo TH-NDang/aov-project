@@ -423,7 +423,7 @@ export function UnitDetail({
           className="wiki-mode-chip"
           data-tone="accent"
           to={href(
-            `/modes/${encodeURIComponent(code)}/xep-doi-hinh?${encodeLineup([{ unitCode: unit.code, carry: true }], [])}`,
+            `/modes/${encodeURIComponent(code)}/builder?${encodeLineup([{ unitCode: unit.code, carry: true }], [])}`,
           )}
         >
           {text(`Xếp đội hình với ${unit.name}`, `Build a lineup with ${unit.name}`)}

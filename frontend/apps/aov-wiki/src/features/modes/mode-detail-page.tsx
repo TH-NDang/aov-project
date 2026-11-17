@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Link, Navigate, useParams } from "react-router"
+import { Link, Navigate, useLocation, useParams } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
@@ -8,7 +8,8 @@ import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-contex
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { modeMeta, notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
-import { AutoChessGuide, GUIDE_TABS, type GuideTab } from "./auto-chess-guide"
+import { AutoChessGuide } from "./auto-chess-guide"
+import { GUIDE_TABS, readGuideTab, type GuideTab } from "./auto-chess-model"
 import type { ModeImage } from "./auto-chess-model"
 import { AutoChessOverview } from "./auto-chess-overview"
 import { WikiApiError } from "../../lib/wiki-api"
@@ -33,6 +34,7 @@ import "./mode-pages.css"
  */
 export function ModeDetailPage() {
   const { code = "", tab } = useParams()
+  const location = useLocation()
   const { href, locale } = useWikiContext()
   const text = useWikiText()
   const layout = usePageLayout()
@@ -82,9 +84,13 @@ export function ModeDetailPage() {
   }
 
   const { content, images } = mode.data
-  const known = GUIDE_TABS.some((item) => item.key === tab)
-  if (tab && (!hasGuide || !known)) return <Navigate to={href(`/modes/${encodeURIComponent(code)}`)} replace />
-  const activeTab = (tab ?? "tong-quan") as GuideTab
+  const named = tab ? readGuideTab(tab) : null
+  if (tab && (!hasGuide || !named)) return <Navigate to={href(`/modes/${encodeURIComponent(code)}`)} replace />
+  if (named?.moved)
+    return (
+      <Navigate to={{ pathname: `/modes/${encodeURIComponent(code)}/${named.tab}`, search: location.search }} replace />
+    )
+  const activeTab: GuideTab = named?.tab ?? "overview"
   const art = content.artAssetId ? images[content.artAssetId] : null
   // A guide's rules repeat and extend the mode's, so the page shows one list: the longer one.
   const guideRules = guide.data?.content.rules ?? []
@@ -105,7 +111,7 @@ export function ModeDetailPage() {
       )}
       {hasGuide && <GuideTabs code={code} active={activeTab} />}
 
-      {activeTab === "tong-quan" ? (
+      {activeTab === "overview" ? (
         <div className="wiki-mode-overview">
           <section
             className="wiki-mode-intro"
@@ -229,7 +235,7 @@ function GuideTabs({ code, active }: { code: string; active: GuideTab }) {
           key={item.key}
           className="wiki-guide-tab"
           aria-current={active === item.key ? "page" : undefined}
-          to={href(`/modes/${encodeURIComponent(code)}${item.key === "tong-quan" ? "" : `/${item.key}`}`)}
+          to={href(`/modes/${encodeURIComponent(code)}${item.key === "overview" ? "" : `/${item.key}`}`)}
           preventScrollReset
         >
           {wikiText(locale, item.label, item.english)}

@@ -259,8 +259,8 @@ export function LineupsTab({
       (guide.lineupLikes[b.id]?.likes ?? 0) - (guide.lineupLikes[a.id]?.likes ?? 0),
   )
   const builderLink = (units: LineupUnit[], emblems: string[]) =>
-    href(`/modes/${encodeURIComponent(code)}/xep-doi-hinh?${encodeLineup(units, emblems)}`)
-  const postHref = href(`/modes/${encodeURIComponent(code)}/xep-doi-hinh`)
+    href(`/modes/${encodeURIComponent(code)}/builder?${encodeLineup(units, emblems)}`)
+  const postHref = href(`/modes/${encodeURIComponent(code)}/builder`)
 
   return (
     <div className="wiki-guide-tab-body wiki-guide-lineup-tab">

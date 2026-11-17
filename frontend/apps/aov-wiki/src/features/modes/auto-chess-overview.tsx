@@ -201,10 +201,10 @@ function RoundSection({ index, code }: { index: GuideIndex; code: string }) {
           </div>
           <p>
             {text("Kết hợp ", "Combine ")}
-            <Link to={href(`${base}/quan-co`)}>{text("quân cờ", "units")}</Link>,{" "}
-            <Link to={href(`${base}/phe-nghe`)}>{text("Phe/Nghề", "Factions/Classes")}</Link>
+            <Link to={href(`${base}/units`)}>{text("quân cờ", "units")}</Link>,{" "}
+            <Link to={href(`${base}/traits`)}>{text("Phe/Nghề", "Factions/Classes")}</Link>
             {text(" và ", " and ")}
-            <Link to={href(`${base}/trang-bi`)}>{text("trang bị", "items")}</Link>.
+            <Link to={href(`${base}/items`)}>{text("trang bị", "items")}</Link>.
           </p>
         </li>
         <li className="wiki-mode-overview-step" data-active={step === 1 || undefined}>

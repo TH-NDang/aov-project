@@ -225,16 +225,16 @@ function GuideFeature({ mode }: { mode: ModeCard }) {
           </Link>
           {mode.guideKind === "AUTO_CHESS" && (
             <>
-              <Link className="wiki-mode-chip" to={href(`${base}/quan-co`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/units`)}>
                 {text("Quân cờ", "Units")}
               </Link>
-              <Link className="wiki-mode-chip" to={href(`${base}/phe-nghe`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/traits`)}>
                 {text("Phe & Nghề", "Factions & Classes")}
               </Link>
-              <Link className="wiki-mode-chip" to={href(`${base}/doi-hinh`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/lineups`)}>
                 {text("Đội hình", "Lineups")}
               </Link>
-              <Link className="wiki-mode-chip" to={href(`${base}/xep-doi-hinh`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/builder`)}>
                 {text("Xếp đội hình", "Lineup builder")}
               </Link>
             </>

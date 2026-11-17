@@ -119,9 +119,7 @@ export function SaveLineup({
             {me.data.lineups.map((lineup) => (
               <li key={lineup.id}>
                 <Link
-                  to={href(
-                    `/modes/${encodeURIComponent(code)}/xep-doi-hinh?${encodeLineup(lineup.units, lineup.emblems)}`,
-                  )}
+                  to={href(`/modes/${encodeURIComponent(code)}/builder?${encodeLineup(lineup.units, lineup.emblems)}`)}
                 >
                   {lineup.name}
                 </Link>

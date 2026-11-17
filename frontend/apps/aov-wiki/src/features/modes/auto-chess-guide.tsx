@@ -15,21 +15,8 @@ import { LineupsTab } from "./guide-lineups"
 import { BuilderTab } from "./guide-builder"
 import { InsightsTab } from "./guide-insights"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
+import type { GuideTab } from "./auto-chess-model"
 import "./auto-chess-guide.css"
-
-export const GUIDE_TABS = [
-  { key: "tong-quan", label: "Tổng quan", english: "Overview" },
-  { key: "quan-co", label: "Quân cờ", english: "Units" },
-  { key: "phe-nghe", label: "Phe & Nghề", english: "Factions & Classes" },
-  { key: "trang-bi", label: "Trang bị", english: "Equipment" },
-  { key: "chuc-phuc", label: "Chúc phúc", english: "Blessings" },
-  { key: "nhiem-vu", label: "Nhiệm vụ", english: "Quests" },
-  { key: "doi-hinh", label: "Đội hình", english: "Lineups" },
-  { key: "xep-doi-hinh", label: "Xếp đội hình", english: "Lineup builder" },
-  { key: "phan-tich", label: "Phân tích", english: "Analysis" },
-] as const
-
-export type GuideTab = (typeof GUIDE_TABS)[number]["key"]
 
 const plain = (value?: string | null) => (value ?? "").replace(/<[^>]+>/g, "")
 
@@ -60,7 +47,7 @@ function guideReferences(
       ),
       icon: index.image(trait.iconAssetId) ?? null,
       autoMatch: true,
-      destinations: { wiki: href(`${base}/phe-nghe?trait=${encodeURIComponent(trait.code)}`) },
+      destinations: { wiki: href(`${base}/traits?trait=${encodeURIComponent(trait.code)}`) },
     })),
     ...index.content.units.map((unit) => ({
       id: `guide-unit-${unit.code}`,
@@ -77,7 +64,7 @@ function guideReferences(
       ),
       icon: index.image(unit.portraitAssetId) ?? null,
       autoMatch: false,
-      destinations: { wiki: href(`${base}/quan-co?unit=${encodeURIComponent(unit.code)}`) },
+      destinations: { wiki: href(`${base}/units?unit=${encodeURIComponent(unit.code)}`) },
     })),
     ...index.content.items.map((item) => ({
       id: `guide-item-${item.code}`,
@@ -88,7 +75,7 @@ function guideReferences(
       ),
       icon: index.image(item.iconAssetId) ?? null,
       autoMatch: true,
-      destinations: { wiki: href(`${base}/trang-bi`) },
+      destinations: { wiki: href(`${base}/items`) },
     })),
   ]
 }
@@ -101,7 +88,7 @@ export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideT
     () => ({
       entities: guideReferences(index, code, href, locale),
       traitHref: (traitCode: string) =>
-        href(`/modes/${encodeURIComponent(code)}/phe-nghe?trait=${encodeURIComponent(traitCode)}`),
+        href(`/modes/${encodeURIComponent(code)}/traits?trait=${encodeURIComponent(traitCode)}`),
     }),
     [index, code, href, locale],
   )
@@ -121,14 +108,14 @@ export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideT
 
   return (
     <GuideLinks.Provider value={links}>
-      {tab === "quan-co" && <UnitsTab index={index} onOpen={showUnit} />}
-      {tab === "phe-nghe" && <TraitsTab index={index} onOpen={showUnit} />}
-      {tab === "trang-bi" && <ItemsTab index={index} />}
-      {tab === "chuc-phuc" && <BlessingsTab index={index} />}
-      {tab === "nhiem-vu" && <QuestsTab index={index} />}
-      {tab === "doi-hinh" && <LineupsTab code={code} guide={guide} index={index} onOpen={showUnit} />}
-      {tab === "xep-doi-hinh" && <BuilderTab code={code} index={index} onOpen={showUnit} />}
-      {tab === "phan-tich" && <InsightsTab code={code} index={index} onOpen={showUnit} />}
+      {tab === "units" && <UnitsTab index={index} onOpen={showUnit} />}
+      {tab === "traits" && <TraitsTab index={index} onOpen={showUnit} />}
+      {tab === "items" && <ItemsTab index={index} />}
+      {tab === "blessings" && <BlessingsTab index={index} />}
+      {tab === "quests" && <QuestsTab index={index} />}
+      {tab === "lineups" && <LineupsTab code={code} guide={guide} index={index} onOpen={showUnit} />}
+      {tab === "builder" && <BuilderTab code={code} index={index} onOpen={showUnit} />}
+      {tab === "insights" && <InsightsTab code={code} index={index} onOpen={showUnit} />}
       {/* Where the data comes from closes every tab, out of the way of what the reader came for. */}
       <p className="wiki-guide-edition">
         {guide.content.edition ?? text("Bách khoa Cờ Liên quân", "Auto-chess encyclopedia")}

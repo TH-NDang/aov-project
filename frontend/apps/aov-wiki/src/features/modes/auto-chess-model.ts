@@ -1,5 +1,41 @@
 /** Shapes and pure rules of the auto-chess guide, shared by the Wiki pages and their tests. */
 
+/** The guide's tabs in their order; the key is the last segment of the tab's address. */
+export const GUIDE_TABS = [
+  { key: "overview", label: "Tổng quan", english: "Overview" },
+  { key: "units", label: "Quân cờ", english: "Units" },
+  { key: "traits", label: "Phe & Nghề", english: "Factions & Classes" },
+  { key: "items", label: "Trang bị", english: "Equipment" },
+  { key: "blessings", label: "Chúc phúc", english: "Blessings" },
+  { key: "quests", label: "Nhiệm vụ", english: "Quests" },
+  { key: "lineups", label: "Đội hình", english: "Lineups" },
+  { key: "builder", label: "Xếp đội hình", english: "Lineup builder" },
+  { key: "insights", label: "Phân tích", english: "Analysis" },
+] as const
+
+export type GuideTab = (typeof GUIDE_TABS)[number]["key"]
+
+/** Addresses written before the tabs had English names, so old links and shared lineups still open. */
+const LEGACY_GUIDE_TABS: Record<string, GuideTab> = {
+  "tong-quan": "overview",
+  "quan-co": "units",
+  "phe-nghe": "traits",
+  "trang-bi": "items",
+  "chuc-phuc": "blessings",
+  "nhiem-vu": "quests",
+  "doi-hinh": "lineups",
+  "xep-doi-hinh": "builder",
+  "phan-tich": "insights",
+}
+
+/** The tab an address segment names: `tab` when it is current, `moved` when it is an old name, nothing otherwise. */
+export function readGuideTab(segment: string): { tab: GuideTab; moved: boolean } | null {
+  const current = GUIDE_TABS.find((item) => item.key === segment)
+  if (current) return { tab: current.key, moved: false }
+  const moved = LEGACY_GUIDE_TABS[segment]
+  return moved ? { tab: moved, moved: true } : null
+}
+
 export interface ModeCredit {
   type: string
   label: string
