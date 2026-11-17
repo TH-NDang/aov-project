@@ -10,8 +10,6 @@ import {
   type CrawlVideo,
 } from "../src/features/videos/crawl-import"
 import {
-  formatClock,
-  parseClock,
   previewLink,
   purposesFor,
   reorder,
@@ -20,6 +18,7 @@ import {
   type AdminVideo,
   type VideoSubject,
 } from "../src/features/videos/video-model"
+import { formatClock, parseClock } from "@/lib/clock"
 
 const hero = (id: string, code: string, name: string, aliases: string[] = []): VideoSubject => ({
   kind: "HERO",

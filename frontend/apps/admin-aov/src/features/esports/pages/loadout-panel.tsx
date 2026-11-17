@@ -18,7 +18,7 @@ import type { GameView, IconRef } from "../model/game-view"
 import { LANE_LABELS } from "../model/labels"
 import type { LoadoutPart } from "../model/loadout"
 import { seatSide, type SeatKey } from "../model/timeline"
-import { formatClock } from "../model/vod"
+import { formatClock } from "@/lib/clock"
 
 /** The game clock for the player position, and back to video time for display and seeking. */
 export type LoadoutClock = {

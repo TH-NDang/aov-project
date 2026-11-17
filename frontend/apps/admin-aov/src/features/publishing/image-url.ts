@@ -1,3 +1,4 @@
+import { MAX_IMAGE_BYTES, UPLOAD_IMAGE_TYPES } from "@/lib/image-types"
 /** Download directly in the browser; never forward API credentials to an image host. */
 export async function imageFromUrl(input: string): Promise<File> {
   const url = new URL(input)
@@ -15,9 +16,8 @@ export async function imageFromUrl(input: string): Promise<File> {
   })
   if (!response.ok || !response.body) throw new Error("Không tải được ảnh từ liên kết.")
   const type = response.headers.get("content-type")?.split(";")[0] ?? ""
-  if (!["image/png", "image/jpeg", "image/webp"].includes(type))
-    throw new Error("Liên kết phải trỏ trực tiếp tới ảnh PNG, JPEG hoặc WebP.")
-  const limit = 25 * 1024 * 1024
+  if (!UPLOAD_IMAGE_TYPES.includes(type)) throw new Error("Liên kết phải trỏ trực tiếp tới ảnh PNG, JPEG hoặc WebP.")
+  const limit = MAX_IMAGE_BYTES
   const reader = response.body.getReader()
   const chunks: Uint8Array<ArrayBuffer>[] = []
   let size = 0

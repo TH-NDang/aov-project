@@ -21,7 +21,7 @@ import {
   type TimelineKind,
 } from "../../model/timeline"
 import { nameKey } from "../../model/name-key"
-import { formatClock, parseClock } from "../../model/vod"
+import { formatClock, parseClock } from "@/lib/clock"
 import { HeroIcon, ItemSlot, LaneIcon, TimeTag, VIDEO_MARK, VideoMark } from "../primitives"
 import { KIND_ICONS } from "./event-text"
 

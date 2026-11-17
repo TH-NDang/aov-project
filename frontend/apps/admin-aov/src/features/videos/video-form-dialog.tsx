@@ -23,9 +23,7 @@ import { VideoPlayerDialog } from "./video-player-dialog"
 import { lookupYoutubeVideo, videoApi, videoKeys } from "./video-api"
 import {
   capabilityFor,
-  formatClock,
   isWebLink,
-  parseClock,
   previewLink,
   PURPOSE_LABELS,
   purposesFor,
@@ -37,6 +35,7 @@ import {
   type VideoPurpose,
   type VideoSubject,
 } from "./video-model"
+import { formatClock, parseClock } from "@/lib/clock"
 
 const NO_PATCH = "none"
 

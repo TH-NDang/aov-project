@@ -17,7 +17,7 @@ import type { GameView } from "../model/game-view"
 import type { ProgressTarget, RecordingProgress, StepStatus } from "../model/recording-progress"
 import { STATE_LABELS } from "../components/game/progress-badge"
 import { RelativeDate } from "../components/relative-date"
-import { formatClock } from "../model/vod"
+import { formatClock } from "@/lib/clock"
 
 const ICONS: Record<StepStatus, typeof CircleCheck> = { done: CircleCheck, partial: CircleDot, todo: CircleDashed }
 

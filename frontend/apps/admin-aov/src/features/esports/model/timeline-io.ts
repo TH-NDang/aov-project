@@ -16,7 +16,7 @@ import {
   type SeatKey,
   type TimelineEvent,
 } from "./timeline"
-import { formatClock } from "./vod"
+import { formatClock } from "@/lib/clock"
 
 const toKey = (seat?: Seat | null): SeatKey | undefined => (seat ? seatKey(seat.side, seat.lane) : undefined)
 const toSeat = (key?: SeatKey): Seat | null => {

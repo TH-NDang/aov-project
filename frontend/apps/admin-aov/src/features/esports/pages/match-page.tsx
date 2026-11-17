@@ -70,7 +70,8 @@ import {
   type GameChapter,
 } from "../model/series-vod"
 import { killScoreAt, type TimelineEvent, type TimelineKind } from "../model/timeline"
-import { formatClock, parseClock, youtubeLinkTime, youtubeVideoId } from "../model/vod"
+import { youtubeLinkTime, youtubeVideoId } from "../model/vod"
+import { formatClock, parseClock } from "@/lib/clock"
 import { seriesLocks } from "../model/series-rules"
 import { earliestLive, moveTurn, readDraft, setDraftTimes } from "../model/draft"
 import { MARK_LABELS, moveMark } from "../model/observation-marks"

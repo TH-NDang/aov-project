@@ -1,7 +1,5 @@
 import { imageFromUrl } from "./image-url"
-
-const imageLimit = 25 * 1024 * 1024
-const imageTypes = ["image/png", "image/jpeg", "image/webp"]
+import { isUploadableImage } from "@/lib/image-types"
 
 function validatedImage(file: File, path: string): File {
   const type =
@@ -10,7 +8,7 @@ function validatedImage(file: File, path: string): File {
       path.split(".").at(-1)!.toLowerCase()
     ] ??
       "")
-  if (!imageTypes.includes(type) || file.size === 0 || file.size > imageLimit)
+  if (!isUploadableImage({ type, size: file.size }))
     throw new Error(`Ảnh ${path} phải là PNG, JPEG hoặc WebP, tối đa 25 MB.`)
   return file.type ? file : new File([file], file.name, { type })
 }

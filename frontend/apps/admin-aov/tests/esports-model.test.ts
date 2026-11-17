@@ -39,14 +39,8 @@ import {
   withPlayback,
   writeTimeline,
 } from "../src/features/esports/model/timeline-io"
-import {
-  formatClock,
-  gameToVideo,
-  parseClock,
-  videoToGame,
-  youtubeLinkTime,
-  youtubeVideoId,
-} from "../src/features/esports/model/vod"
+import { gameToVideo, videoToGame, youtubeLinkTime, youtubeVideoId } from "../src/features/esports/model/vod"
+import { formatClock, parseClock } from "@/lib/clock"
 
 const series = (
   id: string,

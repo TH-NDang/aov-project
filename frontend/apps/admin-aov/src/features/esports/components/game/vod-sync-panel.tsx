@@ -6,7 +6,8 @@ import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { cn } from "@aov/ui/lib/utils"
 import type { TeamView } from "../../model/game-view"
-import { formatClock, gameToVideo, parseClock, videoToGame, youtubeLinkTime, youtubeVideoId } from "../../model/vod"
+import { gameToVideo, videoToGame, youtubeLinkTime, youtubeVideoId } from "../../model/vod"
+import { formatClock, parseClock } from "@/lib/clock"
 import { TeamLogo, TimeTag, VIDEO_MARK, VideoMark } from "../primitives"
 
 /** What the panel can change; every key is optional so one save carries only what was edited. */

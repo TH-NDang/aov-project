@@ -166,20 +166,6 @@ export function isWebLink(url: string) {
   }
 }
 
-export function formatClock(seconds: number) {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const rest = String(Math.floor(seconds % 60)).padStart(2, "0")
-  return hours ? `${hours}:${String(minutes).padStart(2, "0")}:${rest}` : `${minutes}:${rest}`
-}
-
-/** Reads `90`, `1:30` or `1:02:03` as seconds; null when the text is empty or not a time. */
-export function parseClock(text: string): number | null {
-  const value = text.trim()
-  if (!/^\d+(?::\d{1,2}){0,2}$/.test(value)) return null
-  return value.split(":").reduce((total, part) => total * 60 + Number(part), 0)
-}
-
 export function subjectId(subject: Pick<VideoSubject, "kind" | "id" | "key">) {
   return `${subject.kind}:${subject.id}:${subject.key ?? ""}`
 }

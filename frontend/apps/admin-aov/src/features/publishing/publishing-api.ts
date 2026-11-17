@@ -17,6 +17,7 @@ import { SECTIONS } from "./types"
 import type { UploadTicket } from "../users/avatar-upload"
 import type { HeroPublishReadiness } from "./publish-readiness"
 import type { HeroForms, ReplaceHeroForms } from "./hero-forms-model"
+import { isUploadableImage } from "@/lib/image-types"
 export type Request = <T>(path: string, init?: RequestInit) => Promise<T>
 
 const sectionKeys = {
@@ -275,8 +276,7 @@ export async function uploadHeroImage(
   source: import("@aov/ui/lib/media-credit").MediaSourceInput,
   fetcher: typeof fetch = fetch,
 ): Promise<string> {
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || !file.size || file.size > 25 * 1024 * 1024)
-    throw new Error("Chọn ảnh PNG, JPEG hoặc WebP tối đa 25 MB.")
+  if (!isUploadableImage(file)) throw new Error("Chọn ảnh PNG, JPEG hoặc WebP tối đa 25 MB.")
   const api = createPublishingApi(request)
   const asset = await api.send<{ id: string }>("/admin/media/assets", "POST", { semanticType, source })
   const ticket = await api.send<UploadTicket>(`/admin/media/assets/${asset.id}/version-uploads`, "POST", {
@@ -310,8 +310,7 @@ export async function upgradeHeroImage(
   fetcher: typeof fetch = fetch,
   source?: import("@aov/ui/lib/media-credit").MediaSourceInput,
 ): Promise<void> {
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || !file.size || file.size > 25 * 1024 * 1024)
-    throw new Error("Chọn ảnh PNG, JPEG hoặc WebP tối đa 25 MB.")
+  if (!isUploadableImage(file)) throw new Error("Chọn ảnh PNG, JPEG hoặc WebP tối đa 25 MB.")
   const api = createPublishingApi(request)
   const ticket = await api.send<UploadTicket>(`/admin/media/assets/${assetId}/version-uploads`, "POST", {
     source,

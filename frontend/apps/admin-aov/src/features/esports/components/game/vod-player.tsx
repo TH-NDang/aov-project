@@ -16,7 +16,8 @@ import {
   Youtube,
 } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
-import { formatClock, youtubeWatchUrl } from "../../model/vod"
+import { youtubeWatchUrl } from "../../model/vod"
+import { formatClock } from "@/lib/clock"
 import { usePhoneLayout } from "./floating-panel"
 
 type YTPlayer = {

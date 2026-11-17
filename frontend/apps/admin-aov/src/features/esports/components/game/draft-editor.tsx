@@ -17,7 +17,7 @@ import {
 import type { GameView, IconRef } from "../../model/game-view"
 import { LANE_LABELS } from "../../model/labels"
 import { heroKeys, type HeroLocks } from "../../model/series-rules"
-import { formatClock } from "../../model/vod"
+import { formatClock } from "@/lib/clock"
 import { HeroIcon, LaneIcon, TeamLogo, TimeTag, VIDEO_MARK } from "../primitives"
 import { ReferencePicker } from "./reference-picker"
 

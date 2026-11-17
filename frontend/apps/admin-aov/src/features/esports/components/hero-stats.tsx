@@ -3,7 +3,7 @@ import { Clock3, Shield, Swords } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import type { IconRef } from "../model/game-view"
 import { rate, type GameStats, type HeroStat } from "../model/statistics"
-import { formatClock } from "../model/vod"
+import { formatClock } from "@/lib/clock"
 import { HeroIcon } from "./primitives"
 
 type SortKey = "presence" | "picks" | "bans" | "winrate"
