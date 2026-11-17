@@ -1,5 +1,8 @@
 package com.wikiaov.build.internal.application;
 
+import static com.wikiaov.build.internal.application.BuildCaptureRules.blankToNull;
+import static com.wikiaov.build.internal.application.BuildCaptureRules.invalid;
+
 import com.wikiaov.access.AuditEntry;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
@@ -30,15 +33,10 @@ import com.wikiaov.build.internal.persistence.entity.CaptureRow;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
-import com.wikiaov.platform.CatalogCodes;
 import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
-import java.time.DateTimeException;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
@@ -54,12 +52,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class BuildCaptures {
-    private static final Set<String> SOURCES = Set.of("PRO", "HOT", "SYSTEM");
-    private static final Set<String> RESULTS = Set.of("COLLECTED", "NO_BUILDS", "FAILED");
-    private static final Set<String> LAYOUTS = Set.of("PREPARE");
-    private static final Pattern CODE = Pattern.compile(CatalogCodes.PATTERN);
-    private static final Pattern REGION = Pattern.compile("[A-Z]{2,16}");
-    private static final Pattern IMAGE_ID = Pattern.compile("[0-9a-f]{64}");
     private static final Sort LIST_ORDER = Sort.by(Sort.Order.desc("capturedAt"), Sort.Order.asc("id"));
     private static final String AGGREGATE = "BUILD_CAPTURE";
 
@@ -71,6 +63,7 @@ public class BuildCaptures {
     private final BuildValues values;
     private final BuildReadModel readModel;
     private final BuildReferences references;
+    private final BuildCaptureViews views;
     private final GameplayContexts contexts;
     private final CurrentActor actors;
     private final AuditLog audit;
@@ -78,8 +71,8 @@ public class BuildCaptures {
 
     public BuildCaptures(CaptureRepository captures, CaptureImageRepository images, CaptureHeroRepository heroes,
             BuildRepository builds, BuildItemRepository buildItems, BuildValues values, BuildReadModel readModel,
-            BuildReferences references, GameplayContexts contexts, CurrentActor actors, AuditLog audit,
-            Clock clock) {
+            BuildReferences references, BuildCaptureViews views, GameplayContexts contexts, CurrentActor actors,
+            AuditLog audit, Clock clock) {
         this.captures = captures;
         this.images = images;
         this.heroes = heroes;
@@ -88,6 +81,7 @@ public class BuildCaptures {
         this.values = values;
         this.readModel = readModel;
         this.references = references;
+        this.views = views;
         this.contexts = contexts;
         this.actors = actors;
         this.audit = audit;
@@ -99,24 +93,25 @@ public class BuildCaptures {
     public PageSlice<Summary> list(String region, String source, int page, int size) {
         var result = captures.findAll(CaptureRepository.matching(region, source),
                 PageRequest.of(page, size, LIST_ORDER));
-        var counts = counts(result.getContent().stream().map(CaptureRow::getId).toList());
+        var counts = views.counts(result.getContent().stream().map(CaptureRow::getId).toList());
 
-        return new PageSlice<>(result.getContent().stream().map(row -> summary(row, counts.get(row.getId()))).toList(),
+        return new PageSlice<>(
+                result.getContent().stream().map(row -> views.summary(row, counts.get(row.getId()))).toList(),
                 page, size, result.getTotalElements());
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
     @Transactional(readOnly = true)
     public Detail detail(UUID captureId) {
-        return detailOf(captures.findById(captureId).orElseThrow(BuildCaptures::captureNotFound));
+        return views.detailOf(captures.findById(captureId).orElseThrow(BuildCaptures::captureNotFound));
     }
 
     @PreAuthorize("hasAuthority('hero:write')")
     @Transactional
     public Detail importCapture(ImportCapture request) {
-        validateCapture(request);
-        var imageIds = validateImages(request.images());
-        validateHeroes(request, imageIds);
+        BuildCaptureRules.validateCapture(request);
+        var imageIds = BuildCaptureRules.validateImages(request.images());
+        BuildCaptureRules.validateHeroes(request, imageIds);
         var resolved = resolve(request);
         var prepared = prepare(request, resolved);
         if (captures.existsByCode(request.code()))
@@ -150,7 +145,7 @@ public class BuildCaptures {
                 .map(hero -> heroRow(capture.getId(), resolved.heroes().get(hero.heroCode()).id(), hero)).toList());
         insertBuilds(capture.getId(), prepared, now);
 
-        var detail = detailOf(capture);
+        var detail = views.detailOf(capture);
         audit.record(new AuditEntry(actor, "BUILD_CAPTURE_IMPORTED", AGGREGATE, capture.getId(), null, null, 1L, null,
                 Map.of("code", capture.getCode(), "heroes", detail.heroCount(), "builds", detail.buildCount(),
                         "needsReview", detail.needsReviewCount())));
@@ -162,7 +157,7 @@ public class BuildCaptures {
     public BuildViews.Reviewed review(UUID captureId, UUID buildId, ReviewBuild request) {
         var content = contentOf(request);
         boolean needsReview = request.needsReview();
-        checkContent("This build", content, needsReview);
+        BuildCaptureRules.checkContent("This build", content, needsReview);
 
         var capture = captures.lockById(captureId).orElseThrow(BuildCaptures::captureNotFound);
         var row = builds.findByIdAndCaptureId(buildId, captureId)
@@ -196,7 +191,7 @@ public class BuildCaptures {
         audit.record(new AuditEntry(actor, "BUILD_REVIEWED", AGGREGATE, captureId, null, row.getVersion() - 1,
                 row.getVersion(), null, Map.of("buildId", buildId, "needsReview", needsReview, "changed",
                         !Objects.equals(oldKey, row.getContentKey()))));
-        return new BuildViews.Reviewed(readModel.load(List.of(row)).view(row), summaryOf(capture));
+        return new BuildViews.Reviewed(readModel.load(List.of(row)).view(row), views.summaryOf(capture));
     }
 
     @PreAuthorize("hasAuthority('hero:publish')")
@@ -204,7 +199,7 @@ public class BuildCaptures {
     public Summary confirm(UUID captureId, ConfirmCapture request) {
         var capture = captures.lockById(captureId).orElseThrow(BuildCaptures::captureNotFound);
         if (capture.getConfirmedAt() != null)
-            return summaryOf(capture);
+            return views.summaryOf(capture);
         if (capture.getVersion() != request.expectedVersion())
             throw versionConflict(capture.getVersion());
         long open = builds.countByCaptureIdAndNeedsReviewTrue(captureId);
@@ -223,7 +218,7 @@ public class BuildCaptures {
 
         audit.record(new AuditEntry(actor, "BUILD_CAPTURE_CONFIRMED", AGGREGATE, captureId, null,
                 capture.getVersion() - 1, capture.getVersion(), null, Map.of("code", capture.getCode())));
-        return summaryOf(capture);
+        return views.summaryOf(capture);
     }
 
     @PreAuthorize("hasAuthority('hero:write')")
@@ -334,56 +329,6 @@ public class BuildCaptures {
                 .map(GameplayContext::patchVariantId).findFirst().orElse(null);
     }
 
-    private void validateCapture(ImportCapture request) {
-        if (!CODE.matcher(request.code()).matches())
-            throw invalid("A capture code is a lowercase slug.");
-        if (!REGION.matcher(request.regionCode()).matches())
-            throw invalid("Unknown market.");
-        if (!SOURCES.contains(request.sourceKind()))
-            throw invalid("A capture comes from the PRO, HOT or SYSTEM tab.");
-        try {
-            ZoneId.of(request.sourceTimeZone());
-        } catch (DateTimeException e) {
-            throw invalid("The source time zone is not an IANA time zone.");
-        }
-    }
-
-    private static Set<String> validateImages(List<BuildCommands.Image> list) {
-        Set<String> ids = new HashSet<>();
-        for (var image : list) {
-            if (!IMAGE_ID.matcher(image.imageId()).matches())
-                throw invalid("An image id is the SHA-256 of the file in lowercase hex.");
-            if (!LAYOUTS.contains(image.layout()))
-                throw invalid("Unknown screen layout " + image.layout() + ".");
-            if (!ids.add(image.imageId()))
-                throw invalid("Image " + image.imageId() + " is listed twice.");
-        }
-        return ids;
-    }
-
-    private static void validateHeroes(ImportCapture request, Set<String> imageIds) {
-        Set<String> codes = new HashSet<>();
-        Set<Integer> orders = new HashSet<>();
-        for (var hero : request.heroes()) {
-            if (!codes.add(hero.heroCode()))
-                throw invalid("Hero " + hero.heroCode() + " is listed twice.");
-            if (!orders.add(hero.captureOrder()))
-                throw invalid("Two heroes share capture order " + hero.captureOrder() + ".");
-            if (!RESULTS.contains(hero.result()))
-                throw invalid("Unknown capture result " + hero.result() + ".");
-            if (!hero.result().equals("COLLECTED") && !hero.builds().isEmpty())
-                throw invalid(hero.heroCode() + " has builds although it was not collected.");
-            Set<Integer> positions = new HashSet<>();
-            for (var build : hero.builds()) {
-                if (!positions.add(build.position()))
-                    throw invalid(hero.heroCode() + " lists position " + build.position() + " twice.");
-                String image = blankToNull(build.imageId());
-                if (image != null && !imageIds.contains(image))
-                    throw invalid(hero.heroCode() + " build " + build.position() + " points at an unknown image.");
-            }
-        }
-    }
-
     /** Every code the request uses, resolved by its owner; any unknown code rejects the import. */
     private Resolved resolve(ImportCapture request) {
         Set<String> heroCodes = new TreeSet<>(), itemCodes = new TreeSet<>(), enchantmentCodes = new TreeSet<>(),
@@ -440,7 +385,8 @@ public class BuildCaptures {
                         build.arcana().stream().map(arcana -> arcanaPart(resolved.arcana().get(arcana.code()),
                                 arcana.quantity())).toList(),
                         blankToNull(build.spell()) == null ? null : resolved.spells().get(build.spell().trim()).id());
-                checkContent(hero.heroCode() + " build " + build.position(), content, build.needsReview());
+                BuildCaptureRules.checkContent(hero.heroCode() + " build " + build.position(), content,
+                        build.needsReview());
                 prepared.add(new Prepared(resolved.heroes().get(hero.heroCode()).id(), build, content));
             }
         return prepared;
@@ -498,15 +444,6 @@ public class BuildCaptures {
         return new ArcanaPart(reference.id(), quantity, reference.color());
     }
 
-    private static void checkContent(String label, BuildContent content, boolean needsReview) {
-        var problems = content.problems();
-        if (!problems.isEmpty())
-            throw new ApiException(BuildErrorCode.BUILD_INVALID, label + ": " + String.join(" ", problems),
-                    Map.of("problems", problems));
-        if (!needsReview && !content.complete())
-            throw invalid(label + " lacks a part, so it must stay in review.");
-    }
-
     private static CaptureImageRow imageRow(UUID captureId, BuildCommands.Image image) {
         var row = new CaptureImageRow();
         row.setCaptureId(captureId);
@@ -528,63 +465,6 @@ public class BuildCaptures {
         return row;
     }
 
-    private Detail detailOf(CaptureRow capture) {
-        var imageRows = images.findByCaptureIdOrderByFileNameAsc(capture.getId());
-        var heroRows = heroes.findByCaptureIdOrderByCaptureOrderAsc(capture.getId());
-        var buildRows = builds.findByCaptureId(capture.getId());
-
-        var loaded = readModel.load(buildRows);
-        var heroRefs = references.byIds(BuildReferenceKind.HERO,
-                heroRows.stream().map(CaptureHeroRow::getHeroId).toList());
-        Map<UUID, List<BuildRow>> byHero = buildRows.stream().collect(Collectors.groupingBy(BuildRow::getHeroId));
-        var heroViews = heroRows.stream().map(row -> new BuildViews.HeroEntry(row.getHeroId(),
-                Optional.ofNullable(heroRefs.get(row.getHeroId())).map(BuildReference::code).orElse(null),
-                row.getNameOnScreen(), row.getCaptureOrder(), row.getResult(),
-                byHero.getOrDefault(row.getHeroId(), List.of()).stream()
-                        .sorted(Comparator.comparingInt(BuildRow::getListPosition)).map(loaded::view).toList()))
-                .toList();
-        int open = (int) buildRows.stream().filter(BuildRow::isNeedsReview).count();
-
-        return new Detail(capture.getId(), capture.getCode(), capture.getRegionCode(), capture.getSourceKind(),
-                capture.getSourceLabel(), capture.getCapturedAt(), capture.getSourceTimeZone(),
-                capture.getPatchVariantId(), patchCode(capture), capture.getConfirmedAt(), heroRows.size(),
-                buildRows.size(), open, capture.getVersion(), capture.getSourceRun(), capture.getSourceNote(),
-                capture.getCreatedAt(),
-                imageRows.stream().map(row -> new BuildViews.Image(row.getImageId(), row.getFileName(),
-                        row.getWidth(), row.getHeight(), row.getLayout())).toList(),
-                heroViews);
-    }
-
-    private Summary summaryOf(CaptureRow capture) {
-        return summary(capture, counts(List.of(capture.getId())).get(capture.getId()));
-    }
-
-    private Summary summary(CaptureRow row, int[] count) {
-        int[] safe = count == null ? new int[3] : count;
-        return new Summary(row.getId(), row.getCode(), row.getRegionCode(), row.getSourceKind(), row.getSourceLabel(),
-                row.getCapturedAt(), row.getSourceTimeZone(), row.getPatchVariantId(), patchCode(row),
-                row.getConfirmedAt(), safe[0], safe[1], safe[2], row.getVersion());
-    }
-
-    private String patchCode(CaptureRow row) {
-        return row.getPatchVariantId() == null ? null : contexts.patchCode(row.getPatchVariantId());
-    }
-
-    /** Heroes, builds and builds waiting for review, per capture. */
-    private Map<UUID, int[]> counts(Collection<UUID> captureIds) {
-        Map<UUID, int[]> counts = new HashMap<>();
-        if (captureIds.isEmpty())
-            return counts;
-        heroes.countByCapture(captureIds).forEach(row -> counts
-                .computeIfAbsent(row.getCaptureId(), id -> new int[3])[0] = (int) row.getTotal());
-        builds.countByCapture(captureIds).forEach(row -> {
-            var count = counts.computeIfAbsent(row.getCaptureId(), id -> new int[3]);
-            count[1] = (int) row.getTotal();
-            count[2] = (int) row.getNeedsReview();
-        });
-        return counts;
-    }
-
     private record Resolved(
             Map<String, BuildReference> heroes,
             Map<String, BuildReference> items,
@@ -601,10 +481,6 @@ public class BuildCaptures {
     ) {
     }
 
-    private static ApiException invalid(String detail) {
-        return new ApiException(BuildErrorCode.BUILD_INVALID, detail);
-    }
-
     private static ApiException captureNotFound() {
         return new ApiException(BuildErrorCode.BUILD_CAPTURE_NOT_FOUND, "Build capture was not found.");
     }
@@ -617,10 +493,6 @@ public class BuildCaptures {
     private static ApiException versionConflict(long current) {
         return new ApiException(BuildErrorCode.BUILD_VERSION_CONFLICT, "Someone else changed this first.",
                 Map.of("currentVersion", current));
-    }
-
-    private static String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
     }
 
 }
