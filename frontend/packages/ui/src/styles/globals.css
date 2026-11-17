@@ -19,10 +19,10 @@
 .public-panel {
   color-scheme: light;
   --chart-1: var(--aov-chart);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --chart-2: var(--aov-chart-2);
+  --chart-3: var(--aov-chart-3);
+  --chart-4: var(--aov-chart-4);
+  --chart-5: var(--aov-chart-5);
   --background: var(--aov-bg);
   --foreground: var(--aov-text);
   --card: var(--aov-surface);
@@ -103,10 +103,6 @@
 
 .dark {
   color-scheme: dark;
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
 }
 
 /* Native selects keep their behavior and open a list in the app's own style where the browser allows it. */

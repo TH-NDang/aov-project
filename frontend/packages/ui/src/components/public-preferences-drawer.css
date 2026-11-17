@@ -11,10 +11,10 @@
   animation-duration: 240ms;
 }
 .public-preferences-drawer[data-product="wiki"] {
-  background: #202329;
+  background: var(--aov-popover);
 }
 .public-preferences-overlay[data-vaul-overlay] {
-  background: #0005;
+  background: var(--aov-overlay);
   animation-duration: 240ms;
 }
 .public-preferences-handle[data-vaul-handle] {
