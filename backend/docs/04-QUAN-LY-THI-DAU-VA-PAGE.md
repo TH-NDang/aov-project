@@ -44,7 +44,7 @@ Người dùng chọn Đấu Trường Danh Vọng Mùa Đông 2026 làm giải 
 | Bước | Nội dung |
 |---|---|
 | Tổng quan | Thông tin giải, tổ chức, hệ thống giải, địa điểm; việc nên làm tiếp và tiến độ ghi nhận |
-| Đội & đội hình | Gộp hai bước "đội tham dự" và "đội hình": mỗi đội một khối có logo, trạng thái tham dự và đội hình ở giải này vẽ ra ngay (năm vị trí chính thức có ảnh và tên tuyển thủ, rồi dự bị, người đã rời); sửa đội hình mở bảng riêng |
+| Đội & đội hình | Gộp hai bước "đội tham dự" và "đội hình": mỗi đội một khối có logo, trạng thái tham dự và đội hình ở giải này vẽ ra ngay (năm vị trí chính thức có ảnh và tên tuyển thủ, rồi dự bị, người đã rời); sửa đội hình mở bảng riêng. Biểu tượng bút ở dòng đội mở bảng sửa bản ghi đội và bản ghi các tuyển thủ trong đội hình của giải (18/11/2026), là nơi duy nhất sửa các bản ghi này từ khi màn Registry cũ bị bỏ |
 | Thể thức | Mỗi giai đoạn một thẻ tóm tắt; chọn thẻ mới mở phần sửa |
 | Lịch & kết quả | Tab theo giai đoạn. Vòng tròn: trận gom theo vòng hoặc theo ngày, bảng xếp hạng nằm cạnh. Loại trực tiếp và nhánh thắng/thua: sơ đồ nhánh dựng từ suất WINNER/LOSER |
 | Chung cuộc | Thứ hạng chung cuộc, tiền thưởng và giải thưởng của giải (`placements`, `awards`, `links`) |
