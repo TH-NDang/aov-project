@@ -83,7 +83,7 @@ export function CompetitionCard({ entry, within }: { entry: CompetitionView; wit
   const won = champion(tournament, teams)
   return (
     <Link className="tn-card" to={`/competitions/${entry.id}`} data-status={status ?? undefined}>
-      <CompetitionLogo name={tournament.name} url={tournament.logoUrl} />
+      <CompetitionLogo name={tournament.name} url={tournament.logoUrl} className="tn-card-logo" />
       <span className="tn-card-body">
         <strong title={tournament.name}>{seasonName(tournament.name, within)}</strong>
         <span className="tn-card-meta">

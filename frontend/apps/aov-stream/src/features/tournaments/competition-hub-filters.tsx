@@ -186,7 +186,11 @@ export function DirectoryFilters({
         />
       </label>
       {scheduled && schedule.switchable && layout === "wide" && (
-        <ScheduleScopePills value={schedule.scope} onChange={(value) => update("scope", value)} />
+        <ScheduleScopePills
+          value={schedule.scope}
+          onChange={(value) => update("scope", value)}
+          className="competition-scope"
+        />
       )}
       {layout === "compact" ? (
         (!scheduled || schedule.selects > 0) && (

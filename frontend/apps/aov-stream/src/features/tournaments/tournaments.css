@@ -79,6 +79,9 @@ a.tn-match:focus-visible {
 .tn-match[data-live] {
   border-color: color-mix(in srgb, var(--hub-red) 55%, var(--hub-border));
 }
+.tn-match[data-final] {
+  border-color: var(--hub-accent-border);
+}
 .tn-match-meta,
 .tn-match-foot {
   display: flex;

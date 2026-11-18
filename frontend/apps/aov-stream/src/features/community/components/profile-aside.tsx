@@ -44,7 +44,7 @@ export function ProfileAside({ profile, channels = true }: { profile: CommunityP
       <section className="tn-side-card pf-about">
         <h2>{text("Thông tin chung", "General information")}</h2>
         {content.biography && <p className="pf-bio">{content.biography}</p>}
-        <dl className="tn-facts">
+        <dl className="tn-facts" data-variant="about">
           {content.shortName && (
             <div>
               <dt>{text("Tên viết tắt", "Short name")}</dt>
@@ -72,7 +72,7 @@ export function ProfileAside({ profile, channels = true }: { profile: CommunityP
           </div>
         </dl>
         {!profile.represented && (
-          <p className="cp-meta">
+          <p className="cp-meta pf-about-note">
             {text(
               "Bạn là người đại diện? Chọn nút ⋯ ở đầu trang để gửi yêu cầu quản lý.",
               "Are you a representative? Select the ⋯ button at the top of the page to send a request to manage it.",

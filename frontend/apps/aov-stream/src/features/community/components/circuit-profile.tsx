@@ -118,7 +118,7 @@ function CircuitIntro({ text }: { text: string }) {
         {text}
       </p>
       {foldable && (
-        <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <button type="button" className="tn-more pf-intro-more" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? ui("Thu gọn", "Show less") : ui("Xem thêm", "Show more")}
         </button>
       )}
@@ -138,7 +138,7 @@ function CircuitFacts({
   return (
     <section className="tn-side-card pf-about">
       <h2>{text("Thông tin", "Information")}</h2>
-      <dl className="tn-facts">
+      <dl className="tn-facts" data-variant="about">
         {content.shortName && (
           <div>
             <dt>{text("Tên viết tắt", "Short name")}</dt>

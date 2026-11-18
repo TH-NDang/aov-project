@@ -123,7 +123,7 @@
 .tn-card:hover {
   background: var(--hub-hover);
 }
-.tn-card > .tn-logo {
+.tn-card > .tn-card-logo {
   width: 48px;
   height: 48px;
   border-radius: var(--hub-radius-sm);
@@ -431,9 +431,6 @@
   grid-row: 1 / span 2;
   align-self: center;
 }
-.tn-bracket-round[data-lane="final"] > .tn-match {
-  border-color: var(--hub-accent-border);
-}
 .tn-bracket-round[data-lane="final"] > .tn-bracket-title {
   color: var(--hub-accent-strong);
 }
@@ -536,6 +533,15 @@
   color: var(--hub-text);
   font-size: 14px;
   overflow-wrap: anywhere;
+}
+/* A page's about card: each value sits in a line with its mark, and the card ends without a rule under the last. */
+.tn-facts[data-variant="about"] > div:last-child {
+  border-bottom: 0;
+}
+.tn-facts[data-variant="about"] dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .tn-links {
   display: flex;

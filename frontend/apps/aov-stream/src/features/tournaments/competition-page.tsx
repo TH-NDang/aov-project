@@ -475,7 +475,7 @@ function Bracket({ stage, matches }: { stage: CompetitionStage; matches: Competi
                     <h3 className="tn-bracket-title">{text(...LANE_TITLES[lane.key as "upper"])}</h3>
                   )}
                   {list.map((match) => (
-                    <MatchCard key={match.key} entry={byKey.get(match.key)!} brief />
+                    <MatchCard key={match.key} entry={byKey.get(match.key)!} brief final={lane.key === "final"} />
                   ))}
                 </div>
               </Fragment>

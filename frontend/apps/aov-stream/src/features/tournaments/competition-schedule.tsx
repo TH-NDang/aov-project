@@ -39,17 +39,23 @@ export function scheduleDayLabel(day: string, locale: string) {
   return day === "unscheduled" ? "các trận chờ xếp lịch" : `ngày ${formatCalendarDate(day, undefined, locale)}`
 }
 
-/** The quick switch between everything, what is ahead and what was played. */
+/** The quick switch between everything, what is ahead and what was played. `className` places it in its bar. */
 export function ScheduleScopePills({
   value,
   onChange,
+  className,
 }: {
   value: ScheduleScope
   onChange: (scope: ScheduleScope) => void
+  className?: string
 }) {
   const { text } = useStreamLocale()
   return (
-    <div className="hub-pills" role="group" aria-label={text("Trạng thái trận đấu", "Match status")}>
+    <div
+      className={className ? `hub-pills ${className}` : "hub-pills"}
+      role="group"
+      aria-label={text("Trạng thái trận đấu", "Match status")}
+    >
       {SCOPES.map(([key, label]) => (
         <button type="button" key={key} aria-pressed={value === key} onClick={() => onChange(key)}>
           {text(...label)}
@@ -201,7 +207,7 @@ export function ScheduleList({
         ([part, total, shown]) =>
           shown.length > 0 && (
             <section className="tn-schedule-part" key={part} aria-labelledby={`schedule-${part}`}>
-              <div className="tn-heading">
+              <div className="tn-heading tn-schedule-heading">
                 <h2 id={`schedule-${part}`}>
                   {text(...PART_TITLES[part])}{" "}
                   <small>
@@ -330,7 +336,13 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
     <div className="tn-schedule-view">
       {(switchable || selectCount > 0) && (
         <div className="tn-schedule-bar">
-          {switchable && <ScheduleScopePills value={scope} onChange={(value) => update("scope", value)} />}
+          {switchable && (
+            <ScheduleScopePills
+              value={scope}
+              onChange={(value) => update("scope", value)}
+              className="tn-schedule-scope"
+            />
+          )}
           {selectCount > 0 &&
             (folded ? (
               <PublicFilterSheet

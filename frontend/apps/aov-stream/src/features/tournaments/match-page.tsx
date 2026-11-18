@@ -41,7 +41,7 @@ function OtherMatches({ entry }: { entry: CompetitionMatch }) {
   if (!ahead.length && !played.length) return null
   return (
     <section className="tn-schedule-part" aria-labelledby="match-others">
-      <div className="tn-heading">
+      <div className="tn-heading tn-schedule-heading">
         <h2 id="match-others">
           {text("Trận khác của hai đội", "Other matches of the two teams")}{" "}
           <small>{text("trong giải này", "in this tournament")}</small>

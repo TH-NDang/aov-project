@@ -58,7 +58,7 @@
   align-items: center;
   gap: 8px;
 }
-.tn-schedule-bar > .hub-pills {
+.tn-schedule-bar > .tn-schedule-scope {
   min-width: 0;
   flex: 0 1 auto;
 }
@@ -78,7 +78,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.competition-filters > .hub-pills {
+.competition-filters > .competition-scope {
   flex: none;
 }
 /* The sentence wraps in its own column, so the way out stays beside it instead of dropping to a line of its own. */
@@ -115,7 +115,7 @@
   min-width: 0;
   gap: 16px;
 }
-.tn-schedule-part > .tn-heading {
+.tn-schedule-part > .tn-schedule-heading {
   margin-bottom: -4px;
 }
 .tn-day {
