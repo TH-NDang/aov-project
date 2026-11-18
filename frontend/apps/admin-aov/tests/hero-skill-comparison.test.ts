@@ -5,8 +5,8 @@ import {
   skillComparisonFieldLabel,
   type CuratedHeroChange,
 } from "../src/features/publishing/model/skills/hero-skill-comparison"
-import type { HeroComparison } from "../src/features/publishing/api/publishing-api"
-import type { Revision, Skill } from "../src/features/publishing/api/types"
+import type { HeroComparison } from "@/lib/api/publishing-api"
+import type { Revision, Skill } from "@/lib/hero-types"
 import { skillFieldLabel } from "@/features/publishing/model/skills/skill-field-labels"
 
 const skill = (key: string, metadata: Record<string, unknown> = {}, description = "Mô tả kỹ năng"): Skill => ({

@@ -1,4 +1,4 @@
-import type { Bindings, MediaRole, Preview, Skin } from "../../publishing/api/types"
+import type { Bindings, MediaRole, Preview, Skin } from "@/lib/hero-types"
 import type { CharacterImageEntry } from "../api/character-image-api"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 

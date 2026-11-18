@@ -31,7 +31,7 @@ import { useCollapseScrollAnchor } from "@/hooks/use-collapse-scroll-anchor"
 import { errorMessage } from "@/lib/api/errors"
 import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
 import { useContentLocale } from "../../publishing/api/publication-overview"
-import type { Request } from "../../publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import {
   characterImageKeys,
   createCharacterImageApi,

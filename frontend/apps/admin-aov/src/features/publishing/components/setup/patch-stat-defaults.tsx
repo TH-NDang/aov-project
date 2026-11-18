@@ -8,7 +8,7 @@ import { Field } from "../editing/fields"
 import { STAT_LABELS, statLabel } from "../../model/patch-changes/patch-change-model"
 import { formatStat, statUnit, type StatDefault } from "../../model/assessment/combat-attributes"
 import type { Variant } from "../../api/publication-overview"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 import { NativeSelect } from "@/components/native-select"
 
 export function useStatDefaults(id?: string) {

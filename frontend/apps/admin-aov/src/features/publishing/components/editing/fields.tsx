@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes, ReactNode } from "react"
-import type { Source } from "../../api/types"
+import type { Source } from "@/lib/hero-types"
 import { Button } from "@aov/ui/components/button"
 import { AdminDescriptionField } from "../../../terminology/rich-text-field"
 import { BookOpenText } from "lucide-react"

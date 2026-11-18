@@ -1,5 +1,5 @@
 import { useImageContext } from "../../../media/components/characters/character-image-context"
-import { useContentLocale } from "../../../publishing/api/publication-overview"
+import { useContentLocale, type Variant } from "../../../publishing/api/publication-overview"
 import { hasRulesetChoice } from "@/lib/default-ruleset"
 import {
   DropdownMenuItem,
@@ -9,7 +9,6 @@ import {
 } from "@aov/ui/components/dropdown-menu"
 import { FilePenLine } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import type { Variant } from "../../../publishing/api/publication-overview"
 import { type WarehouseEntry } from "../../model/warehouse-types"
 import { warehouseName } from "@aov/ui/lib/warehouse-content"
 import { NativeSelect } from "@/components/native-select"

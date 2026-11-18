@@ -1,17 +1,19 @@
-import type {
-  CompetitionPlan,
-  CompetitionSlot,
-  CompetitionSnapshot,
-  CompetitionStage,
-  CompetitionStanding,
-  DocumentView,
-  GameContent,
-  PlannedMatch,
-  ResolvedMatch,
-  RosterMembershipContent,
-  TeamContent,
+import {
+  type CompetitionPlan,
+  type CompetitionSlot,
+  type CompetitionSnapshot,
+  type CompetitionStage,
+  type CompetitionStanding,
+  type DocumentView,
+  type GameContent,
+  type PlannedMatch,
+  type ResolvedMatch,
+  type RosterMembershipContent,
+  type TeamContent,
+  matchName,
+  matchTitleText,
+  slotLabel,
 } from "@aov/community-contracts"
-import { matchName, matchTitleText, slotLabel } from "@aov/community-contracts"
 import { localeText } from "@aov/ui/lib/locale-text"
 import { dayKeyInZone, toInstant } from "@aov/ui/lib/time-zone"
 

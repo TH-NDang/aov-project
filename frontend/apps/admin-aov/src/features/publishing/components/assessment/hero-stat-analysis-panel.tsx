@@ -11,8 +11,8 @@ import {
   type AttributeRow,
   type StatSample,
 } from "../../model/assessment/combat-attributes"
-import { ROLES, type Role } from "../../api/types"
-import { publishingKeys } from "../../api/publishing-api"
+import { ROLES, type Role } from "@/lib/hero-types"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 function defaultStatus(row: AttributeRow, ready: boolean, error?: boolean) {
   if (!row.reference) {

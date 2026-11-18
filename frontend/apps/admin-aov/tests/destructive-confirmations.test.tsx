@@ -4,9 +4,9 @@ import { act, type ReactNode } from "react"
 import { button as findButton, click, confirmDialog as dialog, flush, render, waitFor, withDom } from "./fixtures/dom"
 import { fakeBackend, json, noContent, type ApiRequest } from "./fixtures/network"
 import { sessionRoutes, signIn } from "./fixtures/session"
-import type { HeroShop, HeroShopPrice, SkinAcquisition } from "../src/features/publishing/api/publishing-api"
+import type { HeroShop, HeroShopPrice, SkinAcquisition } from "@/lib/api/publishing-api"
 import type { AdminVideo } from "../src/features/videos/video-model"
-import type { Revision } from "../src/features/publishing/api/types"
+import type { Revision } from "@/lib/hero-types"
 
 const price = (capturedOn: string, goldPrice: number): HeroShopPrice => ({
   availability: "ON_SALE",

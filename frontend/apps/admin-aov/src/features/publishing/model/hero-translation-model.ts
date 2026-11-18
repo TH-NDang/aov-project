@@ -1,4 +1,4 @@
-import type { Content } from "../api/types"
+import type { Content } from "@/lib/hero-types"
 
 export type TranslatableSection = "PROFILE" | "SKILLS" | "SKINS"
 export const translationFields = {

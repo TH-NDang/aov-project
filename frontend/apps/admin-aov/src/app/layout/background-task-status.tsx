@@ -3,13 +3,12 @@ import { Activity, CheckCircle2, CircleAlert, LoaderCircle, X } from "lucide-rea
 import { useState } from "react"
 import { useSession } from "../auth/auth-gate"
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@aov/ui/components/sidebar"
-import { useBackgroundTasks } from "../background-tasks"
+import { useBackgroundTasks, type BackgroundTask } from "../background-tasks"
 import {
   useImportJobs,
   useDismissImportNotification,
   jobDescription,
 } from "@/features/publishing/components/import/import-jobs"
-import type { BackgroundTask } from "../background-tasks"
 type StatusTask = BackgroundTask & { serverJob?: boolean }
 export function BackgroundTaskStatus() {
   const { actor } = useSession()

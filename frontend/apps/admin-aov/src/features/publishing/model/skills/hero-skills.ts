@@ -1,6 +1,6 @@
 import { skillSlot } from "@aov/ui/lib/skill-rank-values"
 import { groupSkillKit } from "@aov/ui/lib/skill-kit"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 export function selectSkillTranslation(skill: Skill, locale: string) {

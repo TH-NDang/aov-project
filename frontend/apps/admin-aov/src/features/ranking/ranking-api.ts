@@ -1,6 +1,6 @@
 import { backendRequest } from "@/app/auth/session"
 import { fetchPublishedSets, isSourceAccessDenied } from "../files/capture-sets"
-import type { Request } from "../publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 
 export type RankingBoard = "RATES" | "FIGURES"
 export type RankingRole = "TANK" | "WARRIOR" | "ASSASSIN" | "MAGE" | "MARKSMAN" | "SUPPORT"

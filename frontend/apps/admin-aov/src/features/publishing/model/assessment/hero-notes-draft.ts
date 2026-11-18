@@ -1,6 +1,6 @@
-import type { HeroRankingReading } from "../../api/publishing-api"
+import type { HeroRankingReading } from "@/lib/api/publishing-api"
 import { selectSkillTranslation } from "../skills/hero-skills"
-import type { HeroNotes, Role, Skill, Trait, TraitCode } from "../../api/types"
+import type { HeroNotes, Role, Skill, Trait, TraitCode } from "@/lib/hero-types"
 
 /** The per-match figures a draft can talk about, with the words for a high and a low rank. */
 const FIGURES: { metric: string; word: string; per: string; high: string; low: string; lowFor?: Role[] }[] = [

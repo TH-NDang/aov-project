@@ -2,7 +2,6 @@ import { useState } from "react"
 import type { Lane, ProfileMember, RosterStanding } from "@aov/community-contracts"
 import { Input } from "@aov/ui/components/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
-import { LANE_ORDER } from "@/features/esports/model/labels"
 import {
   choosePosition,
   chooseStanding,
@@ -17,6 +16,7 @@ import {
 } from "../model/profile-roster-model"
 import { RosterRoleIcon } from "./profile-roster-lineup"
 import { NativeSelect } from "@/components/native-select"
+import { LANE_ORDER } from "@/lib/lanes"
 
 const STANDINGS: RosterStanding[] = ["ACTIVE", "SUBSTITUTE", "STAFF", "LEFT"]
 const STAFF = Object.keys(rosterStaffLabels) as RosterStaff[]

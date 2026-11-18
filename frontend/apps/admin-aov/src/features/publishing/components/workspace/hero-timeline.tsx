@@ -1,10 +1,9 @@
 import { useQueries } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
 import { CatalogTimeline, type TimelineCount } from "../catalog/catalog-timeline"
-import type { CatalogFilter } from "../catalog/catalog-context"
 import type { PublicationOverview } from "../../api/publication-overview"
-import { activeCatalogScope } from "../../model/catalog/catalog-scope"
-import { publishingKeys } from "../../api/publishing-api"
+import { activeCatalogScope, type CatalogFilter } from "@/lib/catalog-scope"
+import { publishingKeys } from "@/lib/api/publishing-api"
 export function HeroTimeline({
   data,
   rulesetId,

@@ -3,12 +3,12 @@ import {
   catalogScopePatch,
   draftInCatalogScope,
   showAllCatalogEntries,
-} from "../../../publishing/model/catalog/catalog-scope"
+  type CatalogFilter,
+} from "@/lib/catalog-scope"
 import { useCallback, useMemo } from "react"
 import { useCatalogScopePreference } from "../../../publishing/components/catalog/catalog-scope-memory"
 import { useSearchParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { type CatalogFilter } from "../../../publishing/components/catalog/catalog-context"
 import { CatalogTimeline } from "../../../publishing/components/catalog/catalog-timeline"
 import { usePublicationOverview, type PublicationOverview } from "../../../publishing/api/publication-overview"
 import { errorMessage, isApiError } from "@/lib/api/errors"

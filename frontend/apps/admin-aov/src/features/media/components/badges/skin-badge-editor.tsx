@@ -9,7 +9,7 @@ import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../../../publishing/components/assets/asset-picker"
 import { Field } from "../../../publishing/components/editing/fields"
 import { languageOptions } from "../../../users/profile-preference-picker"
-import type { Request } from "../../../publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import {
   characterImageKeys,
   createCharacterImageApi,

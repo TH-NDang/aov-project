@@ -5,7 +5,7 @@ import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import type { Revision } from "../src/features/publishing/api/types"
+import type { Revision } from "@/lib/hero-types"
 import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("the timeline uses the new published baseline, preserves it across patches and offers automatic selection", async () => {

@@ -8,7 +8,7 @@ import { AdminDescriptionField } from "../../../terminology/rich-text-field"
 import { plainComparisonText } from "../../model/assessment/hero-comparison"
 import { isRecord } from "../../model/import/import-relations"
 import { rankSummary, rankValues, skillRankCount, skillSourceTable } from "@aov/ui/lib/skill-rank-values"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
 import { Input } from "@aov/ui/components/input"
 

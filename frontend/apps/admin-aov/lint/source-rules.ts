@@ -249,9 +249,13 @@ const rules: Rule[] = [
     hint: "Code two features use lives in src/lib or src/components; move what it needs there too (frontend/AGENTS.md).",
     files: files(join(source, "lib"), /\.tsx?$/),
     offenders: (text) =>
-      text
-        .split("\n")
-        .flatMap((line, index) => (/from "(@\/features\/|(\.\.\/)+features\/)/.test(line) ? [`:${index + 1}`] : [])),
+      text.split("\n").flatMap((line, index) =>
+        /from "(@\/features\/|(\.\.\/)+features\/)/.test(line) &&
+        // The types generated from the wiki-service contract are no feature code; frontend/AGENTS.md fixes their path.
+        !/^import type \{ components \} from "@\/features\/publishing\/generated\/hero-api"$/.test(line)
+          ? [`:${index + 1}`]
+          : [],
+      ),
   },
   {
     name: "query keys come from the feature's keys object",

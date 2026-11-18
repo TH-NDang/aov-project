@@ -1,8 +1,8 @@
 import { useQuery, type QueryClient } from "@tanstack/react-query"
 import { invalidateReferenceCatalog } from "../../terminology/reference-api"
 import { backendRequest } from "@/app/auth/session"
-import type { Request } from "../../publishing/api/publishing-api"
-import type { PageSlice } from "../../publishing/api/types"
+import type { Request } from "@/lib/api/publishing-api"
+import type { PageSlice } from "@/lib/hero-types"
 import type { WarehouseEntry, WarehouseMetadata, WarehouseRevision, SpellRemoval } from "../model/warehouse-types"
 import type { WarehouseContents, WarehouseKind, EnchantmentContent } from "@aov/ui/lib/warehouse-content"
 

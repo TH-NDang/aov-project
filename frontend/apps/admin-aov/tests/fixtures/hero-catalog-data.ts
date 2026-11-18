@@ -1,4 +1,4 @@
-import type { HeroGameplayChange, HeroRow, PageSlice, Revision } from "../../src/features/publishing/api/types"
+import type { HeroGameplayChange, HeroRow, PageSlice, Revision } from "@/lib/hero-types"
 import type { PublicationOverview } from "../../src/features/publishing/api/publication-overview"
 import { fixtureContent } from "./hero-workspace-data"
 

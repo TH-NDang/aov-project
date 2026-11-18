@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { sameDraftValue } from "@/app/drafts/draft-store"
 import { reconcileDraft } from "@/app/drafts/draft-merge"
-import { SECTIONS, type Content, type Section } from "../api/types"
+import { SECTIONS, type Content, type Section } from "@/lib/hero-types"
 
 export type HeroWorkingCopy = { content: Content; notes: Partial<Record<Section | "PROFILE_LORE", string>> }
 const text = z.string()

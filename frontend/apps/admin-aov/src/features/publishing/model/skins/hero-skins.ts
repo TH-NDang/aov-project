@@ -1,4 +1,4 @@
-import type { Skin } from "../../api/types"
+import type { Skin } from "@/lib/hero-types"
 
 const baseAppearanceKey = /^(.+)-(?:mac-dinh|heroskin|default)-1$/
 

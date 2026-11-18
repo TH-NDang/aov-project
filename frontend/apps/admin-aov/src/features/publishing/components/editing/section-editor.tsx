@@ -20,7 +20,7 @@ import {
   type Skins,
   type Bindings,
   type MediaRole,
-} from "../../api/types"
+} from "@/lib/hero-types"
 
 export function emptySection(section: Section, locale: string): NonNullable<Content[Section]> {
   switch (section) {

@@ -1,4 +1,4 @@
-import { catalogScopePatch, resolveCatalogScope } from "../model/catalog/catalog-scope"
+import { catalogScopePatch, resolveCatalogScope, type CatalogFilter } from "@/lib/catalog-scope"
 import { useCatalogScopePreference } from "../components/catalog/catalog-scope-memory"
 import { HeroTimeline } from "../components/workspace/hero-timeline"
 import {
@@ -32,7 +32,7 @@ import { useSession } from "@/app/auth/auth-gate"
 import { replacingPageTab, usePageCloseGuard } from "@/app/layout/page-tabs"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 
-import { createPublishingApi, publishingKeys } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { invalidateHeroCatalogs } from "../api/publishing-cache"
 import { BaselineContextForm } from "../components/import/baseline-context-form"
 import { DraftPencil, type NewDraft } from "../../warehouse/components/sheet/warehouse-sheet"
@@ -69,7 +69,6 @@ import { statPatchContext } from "../model/assessment/combat-attributes"
 import { useStatDefaults } from "../components/setup/patch-stat-defaults"
 import { replaceProfilePart, type ProfileEditorPart } from "../components/editing/hero-profile-editor"
 
-import { type CatalogFilter } from "../components/catalog/catalog-context"
 import { usePublicationOverview, useContentLocale } from "../api/publication-overview"
 import { publicationPatchLink, publishBlockers, usesObservedStats } from "../model/publish-rules"
 import {
@@ -81,7 +80,7 @@ import {
   type Revision,
   type Section,
   type Skill,
-} from "../api/types"
+} from "@/lib/hero-types"
 import {
   heroLocationId,
   heroPageLocation,

@@ -1,7 +1,7 @@
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { skillSlot, skillVariant } from "./hero-skills"
 import { skillImageMatch, type SkillImage } from "../../components/skills/skill-artwork"
-import type { Content, Revision } from "../../api/types"
+import type { Content, Revision } from "@/lib/hero-types"
 
 export function revisionSkillReferences(
   revision: Revision,

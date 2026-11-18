@@ -8,7 +8,6 @@ import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
 import { LaneIcon, PlayerPhoto, TeamLogo } from "@/features/esports/components/primitives"
 import { useRecords } from "@/features/esports/data/use-esports-data"
-import { LANE_LABELS } from "@/features/esports/model/labels"
 import { RecordPicker } from "@/features/tournaments/components/record-picker"
 import { TeamRecordSheet } from "@/features/tournaments/components/team-record-sheet"
 import { TeamRosterSheet } from "@/features/tournaments/components/team-roster-sheet"
@@ -17,6 +16,7 @@ import { rosterBoard, rosterOrder } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
 import { useRosterPlayers } from "./use-roster-players"
 import { NativeSelect } from "@/components/native-select"
+import { LANE_LABELS } from "@/lib/lanes"
 
 const ENTRY_STATUS: Record<string, string> = {
   REGISTERED: "Đã đăng ký",

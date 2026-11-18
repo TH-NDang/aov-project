@@ -12,7 +12,7 @@ import { HeroAsset } from "../editing/hero-asset"
 import { skillSlot } from "../../model/skills/hero-skills"
 import type { SkillImage } from "./skill-artwork"
 import { MAX_STATE_ICONS, stateIconsOf } from "./skill-state-icons"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 
 const slotName = (slot: number) => (slot === 0 ? "Nội tại" : `Chiêu ${slot}`)
 

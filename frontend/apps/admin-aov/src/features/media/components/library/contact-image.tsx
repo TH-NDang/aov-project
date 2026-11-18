@@ -6,7 +6,7 @@ import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import { backendRequest } from "@/app/auth/session"
 import { ImagePreview } from "@/components/image-preview"
 import { MediaSourceEditor } from "../sources/media-source-editor"
-import type { AssetProvenance } from "../../../publishing/api/types"
+import type { AssetProvenance } from "@/lib/hero-types"
 import { mediaKeys } from "../../api/media-cache"
 
 interface ContactAsset {

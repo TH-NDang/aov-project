@@ -1,5 +1,5 @@
-import type { Request } from "../../publishing/api/publishing-api"
-import type { PageSlice } from "../../publishing/api/types"
+import type { Request } from "@/lib/api/publishing-api"
+import type { PageSlice } from "@/lib/hero-types"
 import type { SkinBadgeRecord } from "./character-image-api"
 import type { components } from "../../publishing/generated/hero-api"
 

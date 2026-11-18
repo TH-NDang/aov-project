@@ -1,5 +1,5 @@
 import { randomId } from "@/lib/random-id"
-import type { ChangeSource, Content, Role } from "../../api/types"
+import type { ChangeSource, Content, Role } from "@/lib/hero-types"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 // Kept local so this model does not import the hero content view, which imports the stat labels from here.

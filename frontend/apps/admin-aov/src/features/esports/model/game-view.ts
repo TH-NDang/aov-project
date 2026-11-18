@@ -11,10 +11,10 @@ import type {
   Side,
   TeamContent,
 } from "@aov/community-contracts"
-import { LANE_ORDER } from "./labels"
 import { IMPORTED_HERO_CODES } from "./imported-hero-names"
 import { compactKey, nameKey } from "./name-key"
 import { seatKey, type SeatKey } from "./timeline"
+import { LANE_ORDER } from "@/lib/lanes"
 
 export type IconRef = { id?: string | null; name: string; iconUrl?: string | null; tier?: number | null }
 export type TeamView = { id: string; name: string; shortName: string; logoUrl?: string; country?: string }

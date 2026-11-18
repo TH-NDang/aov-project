@@ -1,6 +1,6 @@
 import { backendRequest } from "@/app/auth/session"
 import { createAssetLoader } from "./asset-loader"
-import { createPublishingApi } from "../../api/publishing-api"
+import { createPublishingApi } from "@/lib/api/publishing-api"
 import { mediaKeys } from "@/features/media/api/media-cache"
 
 const loadAsset = createAssetLoader(createPublishingApi(backendRequest))

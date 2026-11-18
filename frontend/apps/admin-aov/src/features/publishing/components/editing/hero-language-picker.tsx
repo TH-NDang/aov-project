@@ -12,7 +12,7 @@ import {
 } from "@aov/ui/components/dropdown-menu"
 import { languageOptions } from "../../../users/profile-preference-picker"
 import { translationStatus, translationStatusLabel } from "../../model/hero-translation-model"
-import type { Content } from "../../api/types"
+import type { Content } from "@/lib/hero-types"
 
 const languageFlags: Record<string, string> = {
   "vi-VN": "vn",

@@ -21,7 +21,7 @@ import { skillFieldLabel } from "@/features/publishing/model/skills/skill-field-
 import { CAUSE_NAMES } from "@/lib/version-causes"
 import { RecordPatchNotesSheet } from "./patch-notes-sheet"
 import { usePublicationOverview } from "../../api/publication-overview"
-import { type Content, type Revision } from "../../api/types"
+import { type Content, type Revision } from "@/lib/hero-types"
 import { useHeroLocation } from "../workspace/use-hero-location"
 import { patchViewAnchors, selectedPatchAnchor, patchViewRequest } from "../../model/patch-changes/patch-view-anchor"
 import { formatPatchValue } from "@aov/ui/lib/patch-value"
@@ -29,7 +29,7 @@ import { SkillChangeList } from "../skills/skill-change-list"
 import { compareSkillRanks, rankPartLabel, splitSkillRankValues } from "@aov/ui/lib/skill-rank-values"
 import { SkillRankValues } from "../skills/skill-rank-table"
 import { formatStatReading } from "../../model/assessment/stat-reading"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 import { NativeSelect } from "@/components/native-select"
 
 const provenanceTone: Record<Provenance, string> = {

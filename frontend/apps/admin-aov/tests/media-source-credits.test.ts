@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { buildResourceMediaSources, findResourceMediaSource } from "../../../packages/ui/src/lib/resource-media-sources"
 import { creditHttpUrl, currentMediaSources, needsMediaCredit } from "../../../packages/ui/src/lib/media-credit"
-import { uploadHeroImage, upgradeHeroImage, type Request } from "../src/features/publishing/api/publishing-api"
+import { uploadHeroImage, upgradeHeroImage, type Request } from "@/lib/api/publishing-api"
 
 test("source resolution follows exact bytes, including renamed files, and preserves derived artwork", () => {
   const index = buildResourceMediaSources({

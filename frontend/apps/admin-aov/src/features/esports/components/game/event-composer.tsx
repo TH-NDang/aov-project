@@ -1,6 +1,5 @@
-import type { ObjectiveKind } from "@aov/community-contracts"
+import type { ObjectiveKind, Reference, Side } from "@aov/community-contracts"
 import { useId, useState, type ReactNode } from "react"
-import type { Reference, Side } from "@aov/community-contracts"
 import { Clock3, Save, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"

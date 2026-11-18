@@ -30,7 +30,7 @@ import { LoadoutPanel } from "./loadout-panel"
 import type { LoadoutPart } from "../model/loadout"
 import { ProgressPanel } from "./progress-panel"
 import { chapterVideo, type GameChapter } from "../model/series-vod"
-import { videoToGame } from "../model/vod"
+import { videoToGame, youtubeWatchUrl } from "../model/vod"
 import { eventRemoval, readTimeline, upsertEvent, withPlayback, writeTimeline } from "../model/timeline-io"
 import {
   clusterEvents,
@@ -41,7 +41,6 @@ import {
   type TimelineEvent,
   type TimelineKind,
 } from "../model/timeline"
-import { youtubeWatchUrl } from "../model/vod"
 
 export type Panel =
   | {

@@ -8,7 +8,7 @@ import { backendRequest } from "@/app/auth/session"
 import { useIsWide } from "@/hooks/use-media-query"
 import { errorMessage } from "@/lib/api/errors"
 import { Field } from "../../../publishing/components/editing/fields"
-import type { Request } from "../../../publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import { languageOptions } from "../../../users/profile-preference-picker"
 import { characterImageKeys, type SkinBadgeRecord } from "../../api/character-image-api"
 import {

@@ -6,8 +6,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { createCharacterImageApi } from "../../api/character-image-api"
 import { defaultRulesetId, hasRulesetChoice } from "@/lib/default-ruleset"
-import type { Request } from "../../../publishing/api/publishing-api"
-import { publishingKeys } from "../../../publishing/api/publishing-api"
+import { type Request, publishingKeys } from "@/lib/api/publishing-api"
 import { NativeSelect } from "@/components/native-select"
 
 export function useImageContext(request: Request = backendRequest) {

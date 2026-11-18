@@ -15,7 +15,7 @@ import {
   type RelationMapping,
   type RelatedImage,
 } from "../../model/import/import-relations"
-import { type Request, publishingKeys } from "../../api/publishing-api"
+import { type Request, publishingKeys } from "@/lib/api/publishing-api"
 import { createUploadSession, resumeUploadSession, type UploadSession } from "./import-upload-session"
 import {
   Upload,

@@ -3,7 +3,7 @@ import { Badge } from "@aov/ui/components/badge"
 import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { MediaImage } from "@/components/media-image"
-import { POSITIONS, ROLES, type Position, type Role } from "../../api/types"
+import { POSITIONS, ROLES, type Position, type Role } from "@/lib/hero-types"
 
 export const roleIcons: Record<Role, string> = {
   TANK: "do-don",

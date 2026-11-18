@@ -13,7 +13,7 @@ import {
   plainComparisonText,
   textDifference,
 } from "../../model/assessment/hero-comparison"
-import type { HeroComparison } from "../../api/publishing-api"
+import type { HeroComparison } from "@/lib/api/publishing-api"
 import type { SkillComparisonGroup } from "../../model/skills/hero-skill-comparison"
 
 export type DescriptionDiffMode = "inline" | "split"

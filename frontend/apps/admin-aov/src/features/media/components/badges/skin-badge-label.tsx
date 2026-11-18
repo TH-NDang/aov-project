@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
 import { useContentLocale } from "../../../publishing/api/publication-overview"
-import type { Request } from "../../../publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import { createCharacterImageApi, characterImageKeys } from "../../api/character-image-api"
 import { SkinBadgeArtwork } from "./skin-badge-artwork"
 

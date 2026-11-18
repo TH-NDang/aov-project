@@ -1,5 +1,5 @@
-import { createPublishingApi, type Request } from "../../publishing/api/publishing-api"
-import type { Bindings, ImageOption, MediaRole, PageSlice, Preview, Revision, Skins } from "../../publishing/api/types"
+import { createPublishingApi, type Request } from "@/lib/api/publishing-api"
+import type { Bindings, ImageOption, MediaRole, PageSlice, Preview, Revision, Skins } from "@/lib/hero-types"
 import type { components } from "../../publishing/generated/hero-api"
 
 type Schemas = components["schemas"]

@@ -21,7 +21,7 @@ import { CAUSE_NAMES } from "@/lib/version-causes"
 import { warehouseApi, invalidateWarehouseCatalogs, warehouseKeys } from "../../api/warehouse-api"
 import { warehouseBaselineMode, type WarehouseRevision } from "../../model/warehouse-types"
 import { type WarehouseKind } from "@aov/ui/lib/warehouse-content"
-import { publishingKeys } from "../../../publishing/api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 import { NativeSelect } from "@/components/native-select"
 import { Input } from "@aov/ui/components/input"
 

@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react"
-import type { CatalogFilter } from "./catalog-context"
 import type { PublicationOverview } from "../../api/publication-overview"
+import { type CatalogFilter } from "@/lib/catalog-scope"
 
 const storageKey = "aov.admin.catalog-scope.v1"
 const catalogPaths = new Set(["/hero", "/items", "/arcana", "/enchantments", "/spells", "/game-configuration"])

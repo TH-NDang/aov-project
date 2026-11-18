@@ -8,7 +8,7 @@ import { getSession } from "@/app/auth/session"
 import { useIsWide } from "@/hooks/use-media-query"
 import { heroContentAssetQuery } from "../../model/assets/hero-content-asset"
 import { sourceHttpUrl } from "../../model/import/hero-source-review"
-import type { AssetDetail } from "../../api/types"
+import type { AssetDetail } from "@/lib/hero-types"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import { ImageDetailSheet } from "../../../media/components/library/image-detail-sheet"
 import {

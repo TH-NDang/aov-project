@@ -4,9 +4,9 @@ import type { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import type { Root } from "react-dom/client"
-import type { CatalogFilter } from "../src/features/publishing/components/catalog/catalog-context"
 import type { PublicationOverview } from "../src/features/publishing/api/publication-overview"
 import { createWindow, installWindow, waitFor } from "./fixtures/dom"
+import { type CatalogFilter } from "@/lib/catalog-scope"
 
 async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
   const dom = createWindow("http://localhost/publishing")
@@ -388,7 +388,7 @@ test("timeline preserves catalog display mode across patches and hides data filt
   await withDocument(async (root, dom) => {
     const { MemoryRouter, useSearchParams } = await import("react-router")
     const { CatalogTimeline } = await import("../src/features/publishing/components/catalog/catalog-timeline")
-    const { catalogScopePatch } = await import("../src/features/publishing/model/catalog/catalog-scope")
+    const { catalogScopePatch } = await import("@/lib/catalog-scope")
     const { patchHeroLocation } = await import("../src/features/publishing/model/hero-location")
     const data: PublicationOverview = {
       asOf: "2026-11-03T00:00:00Z",

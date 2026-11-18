@@ -14,7 +14,7 @@ import {
   type AttributeRow,
   type StatDefault,
 } from "../../model/assessment/combat-attributes"
-import type { Role, Skills, Stats } from "../../api/types"
+import type { Role, Skills, Stats } from "@/lib/hero-types"
 
 type AttributeView = "all" | "compare"
 

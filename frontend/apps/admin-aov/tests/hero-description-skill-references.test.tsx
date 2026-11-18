@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import type { Skill } from "../src/features/publishing/api/types"
+import type { Skill } from "@/lib/hero-types"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import {
   createEntityIndex,

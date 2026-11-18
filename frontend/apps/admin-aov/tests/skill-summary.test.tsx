@@ -14,7 +14,7 @@ import {
   translationStatus,
 } from "../src/features/publishing/model/hero-translation-model"
 import { heroWorkingSchema } from "../src/features/publishing/model/hero-working-copy"
-import type { HeroComparison } from "../src/features/publishing/api/publishing-api"
+import type { HeroComparison } from "@/lib/api/publishing-api"
 import {
   SKILL_SUMMARY_LIMIT,
   SkillSummaryField,
@@ -23,7 +23,7 @@ import {
   summaryValue,
 } from "../src/features/publishing/components/skills/skill-summary-field"
 import { updateTranslation } from "../src/features/publishing/components/editing/translation-editor"
-import type { Revision, Skill, Skills } from "../src/features/publishing/api/types"
+import type { Revision, Skill, Skills } from "@/lib/hero-types"
 import { installGlobals, parseHtml } from "./fixtures/dom"
 
 // Source files compile with the classic JSX runtime in tests, as in the other rendering tests.

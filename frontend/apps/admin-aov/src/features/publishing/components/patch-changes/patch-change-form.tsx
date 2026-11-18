@@ -7,8 +7,8 @@ import { Box } from "../editing/fields"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
 import { PatchChangeEditor } from "./patch-change-editor"
 import { suggestedRows } from "../../model/patch-changes/patch-change-model"
-import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
-import type { Revision } from "../../api/types"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
+import type { Revision } from "@/lib/hero-types"
 
 const api = createPublishingApi(backendRequest)
 

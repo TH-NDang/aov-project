@@ -37,8 +37,8 @@ import {
   type CaptureImage,
 } from "../../model/captures/patch-capture-model"
 import { CaptureCardThumbnail, PatchCaptureLink } from "../captures/patch-capture-panel"
-import type { SkinAcquisition } from "../../api/publishing-api"
-import type { Skin } from "../../api/types"
+import type { SkinAcquisition } from "@/lib/api/publishing-api"
+import type { Skin } from "@/lib/hero-types"
 import { usePatchCaptureContext } from "../../api/use-patch-captures"
 import { useSourceUrls } from "../../../files/source-links"
 import { formatGameNumber } from "@aov/ui/lib/game-number"

@@ -1,5 +1,5 @@
 import type { CommunityProfile, Lane, ProfileMember, RosterStanding } from "@aov/community-contracts"
-import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
+import { LANE_LABELS, LANE_ORDER } from "@/lib/lanes"
 
 export const rosterLaneLabels: Record<Lane, string> = Object.fromEntries(
   LANE_ORDER.map((lane) => [lane, LANE_LABELS[lane].name]),

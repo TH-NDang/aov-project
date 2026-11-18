@@ -1,13 +1,6 @@
 import { isUploadableImage } from "@/lib/image-types"
+import type { UploadTicket } from "@/lib/api/publishing-api"
 
-export interface UploadTicket {
-  uploadId: string
-  assetId: string
-  method: string
-  uploadUrl: string
-  headers: Record<string, string>
-  expiresAt: string
-}
 export interface AvatarResult {
   assetId: string
   avatarUrl: string

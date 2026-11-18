@@ -4,7 +4,7 @@ import { useSession } from "@/app/auth/auth-gate"
 import { selfProfile, userKeys } from "../../users/user-api"
 
 import type { components } from "../generated/hero-api"
-import { publishingKeys } from "./publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 export type Market = components["schemas"]["PublicationMarket"]
 export type Season = components["schemas"]["PublicationSeason"]
 export type Variant = components["schemas"]["PublicationVariant"]

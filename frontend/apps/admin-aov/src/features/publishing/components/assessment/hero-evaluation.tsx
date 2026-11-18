@@ -10,7 +10,7 @@ import { backendRequest } from "@/app/auth/session"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 import { SectionHeading, sectionFrame } from "@/components/section-contents"
 import { errorMessage, isApiError } from "@/lib/api/errors"
-import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { heroRatingScale } from "@aov/ui/lib/hero-rating-scale"
 import { selectSkillTranslation, skillLabel } from "../../model/skills/hero-skills"
 import { draftHeroNotes } from "../../model/assessment/hero-notes-draft"
@@ -25,7 +25,7 @@ import {
   withTraitDetail,
   type TraitSuggestion,
 } from "../../model/assessment/hero-traits"
-import type { Content, HeroNotes, Revision, Skill, Trait, TraitCode } from "../../api/types"
+import type { Content, HeroNotes, Revision, Skill, Trait, TraitCode } from "@/lib/hero-types"
 
 const api = createPublishingApi(backendRequest)
 const NOTE_MAX = 4000

@@ -31,7 +31,7 @@ import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../../publishing/components/assets/asset-picker"
 import { FileTabs } from "../../files/file-tabs"
-import type { Asset, PageSlice } from "../../publishing/api/types"
+import type { Asset, PageSlice } from "@/lib/hero-types"
 import {
   LibraryImage,
   LibraryOwner,

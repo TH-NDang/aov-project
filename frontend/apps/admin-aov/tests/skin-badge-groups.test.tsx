@@ -4,7 +4,7 @@ import * as React from "react"
 import { act } from "react"
 import { MemoryRouter, useLocation } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { Request } from "../src/features/publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import type { SkinBadgeRecord } from "../src/features/media/api/character-image-api"
 import {
   badgeGroupKeys,

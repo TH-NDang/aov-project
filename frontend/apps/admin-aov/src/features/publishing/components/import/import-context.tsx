@@ -6,9 +6,9 @@ import { ContextSetup } from "../setup/context-setup"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import type { Region } from "../../api/types"
+import type { Region } from "@/lib/hero-types"
 import type { components } from "../../generated/hero-api"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 import { NativeSelect } from "@/components/native-select"
 
 export type ImportContext = components["schemas"]["AuthoringContext"]

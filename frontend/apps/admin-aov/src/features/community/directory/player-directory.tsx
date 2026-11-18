@@ -5,7 +5,6 @@ import type { CareerStatus, Lane, PlayerDirectoryEntry } from "@aov/community-co
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { tournamentPath, type Access } from "@/features/esports/pages/esports-shell"
 import { HeroIcon, LaneIcon, Monogram, PlayerPhoto } from "@/features/esports/components/primitives"
-import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
 import { initials } from "@/features/esports/model/game-view"
 import { ManagementToolbar } from "@/features/tournaments/components/management-list"
 import { CAREER_STATUSES } from "@/features/tournaments/components/tournament-metadata"
@@ -31,6 +30,7 @@ import {
 } from "./directory-shell"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { NativeSelect } from "@/components/native-select"
+import { LANE_LABELS, LANE_ORDER } from "@/lib/lanes"
 
 const section = directorySections[1]
 const SORTS: Record<PlayerSort, string> = {

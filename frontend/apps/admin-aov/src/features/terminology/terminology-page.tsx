@@ -18,7 +18,7 @@ import { useIsWide } from "@/hooks/use-media-query"
 import { languageOptions } from "../users/profile-preference-picker"
 import { memo, useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { EntityRichText } from "@aov/ui/components/entity-rich-text"
+import { EntityRichText, EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
 import {
   createEntityIndex,
   managedCommunityReference,
@@ -42,7 +42,6 @@ import { ReferencePreviewWorkspace } from "./reference-preview-workspace"
 import { AdminDescriptionField } from "./rich-text-field"
 import { useSkillReferences } from "./use-skill-references"
 import { useCommunityReferences, useReferenceSearch } from "./use-community-references"
-import { EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
 import { TermIconPicker } from "./term-icon-picker"
 import { mergeReferenceCatalog, updateHeroAliases } from "./hero-aliases"
 import { HeroAliasEditor } from "./hero-alias-editor"

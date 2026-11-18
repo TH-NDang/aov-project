@@ -1,6 +1,6 @@
 import { backendRequest } from "@/app/auth/session"
 import { fetchPublishedSets, isSourceAccessDenied } from "../files/capture-sets"
-import type { Request } from "../publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 
 export type BuildSourceKind = "PRO" | "HOT" | "SYSTEM"
 export type CaptureResult = "COLLECTED" | "NO_BUILDS" | "FAILED"

@@ -23,7 +23,7 @@ import {
 } from "../../api/publication-overview"
 import { invalidateReferenceCatalog } from "../../../terminology/reference-api"
 import { ScheduleForm } from "./shared-version-setup"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 import { NativeSelect } from "@/components/native-select"
 
 export type MarketMode = "season" | "patch"

@@ -1,6 +1,6 @@
 import type { Variant } from "../../api/publication-overview"
-import type { Revision } from "../../api/types"
-import { publishingKeys } from "../../api/publishing-api"
+import type { Revision } from "@/lib/hero-types"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 /** Only published, dated snapshots can be selected as explicit evidence. */
 export function patchViewAnchors(revisions: Revision[], heroId: string, rulesetId: string, variants: Variant[]) {

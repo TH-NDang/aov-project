@@ -4,7 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { EditorToolSheet } from "../editing/editor-tool-sheet"
 import { Field } from "../editing/fields"
 import { selectSkillTranslation, skillLabel, skillSlot } from "../../model/skills/hero-skills"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 import { NativeSelect } from "@/components/native-select"
 import { Input } from "@aov/ui/components/input"
 

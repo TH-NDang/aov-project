@@ -37,7 +37,7 @@ import {
 } from "./patch-notes-sheet"
 import { PatchAdditionalNotes } from "../setup/patch-additional-notes"
 import { selectCatalogRevisions } from "../../model/catalog/catalog-data"
-import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { warehouseKeys } from "../../../warehouse/api/warehouse-api"
 
 type ChangeSet = RecordedChangeSet

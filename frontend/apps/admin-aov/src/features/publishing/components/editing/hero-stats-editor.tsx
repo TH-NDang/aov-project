@@ -16,7 +16,7 @@ import {
   hasStatPercent,
   parseStatReading,
 } from "../../model/assessment/stat-reading"
-import type { Skills, Stats } from "../../api/types"
+import type { Skills, Stats } from "@/lib/hero-types"
 import { NativeSelect } from "@/components/native-select"
 import { Input } from "@aov/ui/components/input"
 

@@ -1,5 +1,13 @@
-import type { CatalogFilter } from "../../components/catalog/catalog-context"
-import type { PublicationOverview, Variant } from "../../api/publication-overview"
+import type { components } from "@/features/publishing/generated/hero-api"
+
+type PublicationOverview = components["schemas"]["PublicationOverview"]
+type Variant = components["schemas"]["PublicationVariant"]
+
+/** The season and release a catalog shows; empty strings show every one. */
+export interface CatalogFilter {
+  seasonId: string
+  variantId: string
+}
 
 const scope = (variant?: Variant): CatalogFilter => ({
   seasonId: variant?.seasonId ?? "",

@@ -16,7 +16,7 @@ import {
   type SkinAcquisition,
   type SkinMethod,
   publishingKeys,
-} from "../../api/publishing-api"
+} from "@/lib/api/publishing-api"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { captureGroupKeys } from "../../model/captures/patch-capture-model"
 import { PatchCaptureLink } from "../captures/patch-capture-panel"

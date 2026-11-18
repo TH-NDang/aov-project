@@ -1,7 +1,7 @@
 import { Info, Swords } from "lucide-react"
 import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
 import { skillImageMatch, useHeroSkillImages, type SkillImage } from "./skill-artwork"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 
 interface ComparisonSkillIconProps {
   before: Skill | null

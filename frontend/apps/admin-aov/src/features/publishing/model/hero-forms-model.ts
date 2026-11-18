@@ -1,11 +1,10 @@
 import type { components } from "../generated/hero-api"
 import { retainImageOptions } from "./assets/image-options"
-import type { Bindings, MediaRole, Profile, Revision, Role } from "../api/types"
+import type { Bindings, MediaRole, Profile, Revision, Role } from "@/lib/hero-types"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
+import type { HeroForms, ReplaceHeroForms } from "@/lib/api/publishing-api"
 
-export type HeroForms = components["schemas"]["HeroForms"]
 export type HeroForm = components["schemas"]["HeroForm"]
-export type ReplaceHeroForms = components["schemas"]["ReplaceHeroForms"]
 
 /** One entry of the switcher: one form of the hero (ADR-024). */
 export interface HeroFormChoice {

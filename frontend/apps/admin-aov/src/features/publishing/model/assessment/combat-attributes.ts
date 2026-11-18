@@ -3,7 +3,7 @@ import { plainComparisonText } from "./hero-comparison"
 import { isRecord } from "../import/import-relations"
 import { formatStatNumber, formatStatReading } from "./stat-reading"
 import type { components } from "../../generated/hero-api"
-import type { Content, Role, Skills, Stats } from "../../api/types"
+import type { Content, Role, Skills, Stats } from "@/lib/hero-types"
 
 export type StatDefault = components["schemas"]["PatchStatDefault"]
 export type StatSample = components["schemas"]["HeroStatSample"]

@@ -7,7 +7,7 @@ import {
   type MediaSourceTarget,
 } from "../src/features/media/model/bulk-media-sources"
 import type { MediaCredit } from "@aov/ui/lib/media-credit"
-import type { Request } from "../src/features/publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import { latency } from "./fixtures/latency"
 
 const targets = (count: number): MediaSourceTarget[] =>

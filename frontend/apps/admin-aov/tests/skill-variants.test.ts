@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { SkillImage } from "../src/features/publishing/components/skills/skill-artwork"
-import type { Skill } from "../src/features/publishing/api/types"
+import type { Skill } from "@/lib/hero-types"
 
 const skill = (skillKey: string, displayOrder: number, extra: Partial<Skill> = {}): Skill => ({
   skillKey,

@@ -1,7 +1,7 @@
 import { useId } from "react"
 import { Input } from "@aov/ui/components/input"
 import { AdminEntityText } from "../../../terminology/catalog"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 
 /** A cost line as the game writes it: a label, then a value, in one colour. */
 export interface CostText {

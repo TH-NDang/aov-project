@@ -1,25 +1,38 @@
-import type {
-  Asset,
-  AssetDetail,
-  Cause,
-  Content,
-  HeroNotes,
-  HeroRow,
-  PageSlice,
-  Preview,
-  Region,
-  Revision,
-  Ruleset,
-  Section,
-  Trait,
-} from "./types"
-import { SECTIONS } from "./types"
-import type { UploadTicket } from "../../users/avatar-upload"
-import type { HeroPublishReadiness } from "../model/publish-readiness"
-import type { HeroForms, ReplaceHeroForms } from "../model/hero-forms-model"
+import {
+  type Asset,
+  type AssetDetail,
+  type Cause,
+  type Content,
+  type HeroNotes,
+  type HeroRow,
+  type PageSlice,
+  type Preview,
+  type Region,
+  type Revision,
+  type Ruleset,
+  type Section,
+  type Trait,
+  SECTIONS,
+} from "@/lib/hero-types"
 import { isUploadableImage } from "@/lib/image-types"
-import type { components } from "../generated/hero-api"
+import type { components } from "@/features/publishing/generated/hero-api"
 export type Request = <T>(path: string, init?: RequestInit) => Promise<T>
+
+/** Where to send the bytes of one upload: a presigned address that stays valid until `expiresAt`. */
+export interface UploadTicket {
+  uploadId: string
+  assetId: string
+  method: string
+  uploadUrl: string
+  headers: Record<string, string>
+  expiresAt: string
+}
+
+export type HeroPublishReadiness = Omit<components["schemas"]["HeroPublishReadiness"], "revisions"> & {
+  revisions: Revision[]
+}
+export type HeroForms = components["schemas"]["HeroForms"]
+export type ReplaceHeroForms = components["schemas"]["ReplaceHeroForms"]
 
 const sectionKeys = {
   PROFILE: "profile",

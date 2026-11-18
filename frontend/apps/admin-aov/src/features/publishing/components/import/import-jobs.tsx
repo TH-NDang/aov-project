@@ -7,7 +7,7 @@ import { errorMessage } from "@/lib/api/errors"
 import { invalidateHeroCatalogs } from "../../api/publishing-cache"
 
 import type { components } from "../../generated/hero-api"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 export type ImportJob = components["schemas"]["HeroImportJobView"]
 export function useDismissImportNotification() {
   const { actor } = useSession()

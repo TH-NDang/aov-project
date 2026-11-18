@@ -7,11 +7,11 @@ import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { confirmDiscard } from "@/components/confirm-dialog"
 import { LaneIcon } from "@/features/esports/components/primitives"
-import { LANE_LABELS } from "@/features/esports/model/labels"
 import { tournamentApi, tournamentError, tournamentKeys } from "../api/tournament-api"
 import { RegistryLogo } from "./registry-logo"
 import { TeamRecordForm } from "./team-record-form"
 import { TeamRegionBadge, teamRegionName } from "./team-region"
+import { LANE_LABELS } from "@/lib/lanes"
 
 type Editing = { kind: "teams" | "players"; id: string } | null
 

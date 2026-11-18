@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { invalidateReferenceCatalog } from "../../terminology/reference-api"
 import { characterImageKeys } from "../../media/api/character-image-api"
-import { publishingKeys } from "./publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 /** Refresh catalogs derived from hero revisions, including media groups and badge usage. */
 export function invalidateHeroCatalogs(cache: QueryClient) {

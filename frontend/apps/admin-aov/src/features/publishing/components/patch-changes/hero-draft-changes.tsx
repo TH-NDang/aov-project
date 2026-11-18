@@ -7,12 +7,12 @@ import { AdminEntityText } from "../../../terminology/catalog"
 import { comparisonFieldLabels, comparisonImages, comparisonValue } from "../../model/assessment/hero-comparison"
 import { HeroAsset } from "../editing/hero-asset"
 import { comparableSection, sameHeroSection, type HeroWorkingCopy } from "../../model/hero-working-copy"
-import type { HeroDraftChangeSet } from "../../api/publishing-api"
+import type { HeroDraftChangeSet } from "@/lib/api/publishing-api"
 import { SKILL_FIELD_LABELS, skillFieldLabel } from "../../model/skills/skill-field-labels"
 import { SkillRankComparison } from "../skills/skill-rank-table"
 import { compareSkillRanks } from "@aov/ui/lib/skill-rank-values"
 import { statReadingChange, type StatNumbers } from "../../model/assessment/stat-reading"
-import { SECTIONS, type Section } from "../../api/types"
+import { SECTIONS, type Section } from "@/lib/hero-types"
 
 type Row = { label: string; field: string; before: unknown; after: unknown }
 type SectionRows = { section: Section; name: string; rows: Row[] }

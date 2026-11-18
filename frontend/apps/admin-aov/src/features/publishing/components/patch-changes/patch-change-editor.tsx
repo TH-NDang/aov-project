@@ -6,7 +6,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { ChangeKindSelect } from "./change-kind-select"
-import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { SKILL_FIELD_LABELS } from "../../model/skills/skill-field-labels"
 import {
   KIND_LABELS,
@@ -23,7 +23,7 @@ import {
   type ChangeRow,
   type ChangeRowType,
 } from "../../model/patch-changes/patch-change-model"
-import { ROLES, type ChangeSource, type Content } from "../../api/types"
+import { ROLES, type ChangeSource, type Content } from "@/lib/hero-types"
 import { HeroAsset } from "../editing/hero-asset"
 import { skillImageMatch, useHeroSkillImages } from "../skills/skill-artwork"
 import { SkillChangeList } from "../skills/skill-change-list"

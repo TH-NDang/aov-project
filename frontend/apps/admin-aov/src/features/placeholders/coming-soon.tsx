@@ -1,5 +1,4 @@
-import type { LucideIcon } from "lucide-react"
-import { CheckCircle2 } from "lucide-react"
+import { type LucideIcon, CheckCircle2 } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@aov/ui/components/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@aov/ui/components/empty"

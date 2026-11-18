@@ -6,7 +6,7 @@ import { backendRequest } from "@/app/auth/session"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 import { ChangeKindSelect } from "../patch-changes/change-kind-select"
 import { ChangeKindBadge } from "../patch-changes/hero-change-badges"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 export interface HeroAssessment {
   id: string

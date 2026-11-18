@@ -8,7 +8,7 @@ import { groupHeroSkills, selectSkillTranslation, skillLabel, skillVariantLabel 
 import { SkillArtwork, SkillArtworkStack, skillImageMatch, useHeroSkillImages } from "./skill-artwork"
 import { SkillSourceBadges, SkillSourceDetails } from "../import/hero-source-details"
 import { ImageCreditSummary } from "../assets/image-credit-summary"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 import { HeroTranslationNotice } from "../workspace/hero-translation-notice"
 import { PatchCaptureLink } from "../captures/patch-capture-panel"
 import { captureGroupKeys } from "../../model/captures/patch-capture-model"

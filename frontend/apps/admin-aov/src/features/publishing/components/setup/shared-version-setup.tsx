@@ -20,7 +20,7 @@ import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatus } from "@/app/drafts/draft-status"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 import { NativeSelect } from "@/components/native-select"
 import { Input } from "@aov/ui/components/input"
 

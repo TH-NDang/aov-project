@@ -4,8 +4,8 @@ import * as React from "react"
 import { act } from "react"
 import { cleanTraits, suggestTraits, withTraitDetail } from "../src/features/publishing/model/assessment/hero-traits"
 import { draftHeroNotes } from "../src/features/publishing/model/assessment/hero-notes-draft"
-import type { HeroRankingReading } from "../src/features/publishing/api/publishing-api"
-import type { Content, Skill, Trait } from "../src/features/publishing/api/types"
+import type { HeroRankingReading } from "@/lib/api/publishing-api"
+import type { Content, Skill, Trait } from "@/lib/hero-types"
 import { createWindow, installWindow } from "./fixtures/dom"
 
 const skill = (

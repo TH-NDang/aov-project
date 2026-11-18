@@ -12,7 +12,6 @@ import {
   readinessFilter,
   readinessRows,
   readinessSummary,
-  type HeroPublishReadiness,
 } from "../src/features/publishing/model/publish-readiness"
 import {
   closeHeroLocation,
@@ -20,10 +19,11 @@ import {
   heroSourceLocation,
   readHeroLocation,
 } from "../src/features/publishing/model/hero-location"
-import type { Revision } from "../src/features/publishing/api/types"
+import type { Revision } from "@/lib/hero-types"
 import { createHeroFixture, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { createWindow, installWindow, waitFor } from "./fixtures/dom"
+import { type HeroPublishReadiness } from "@/lib/api/publishing-api"
 
 const standard = "standard"
 const revision = (
@@ -463,7 +463,7 @@ for (const canWrite of [true, false])
 
 test("source images still to capture show per hero, rank the list, open the skill and follow new captures", async () => {
   const { SOURCE_COVERAGE_REFRESH_MS } = await import("../src/features/publishing/api/use-source-coverage")
-  const { publishingKeys } = await import("../src/features/publishing/api/publishing-api")
+  const { publishingKeys } = await import("@/lib/api/publishing-api")
   const statsMissing = (code: string) =>
     hero(code, code[0]!.toUpperCase() + code.slice(1), {
       revisions: [revision(code, `${code}-1`, "DRAFT")],

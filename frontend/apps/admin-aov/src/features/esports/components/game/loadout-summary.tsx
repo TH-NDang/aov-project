@@ -2,7 +2,6 @@ import type { ReactNode } from "react"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@aov/ui/components/hover-card"
 import { cn } from "@aov/ui/lib/utils"
 import type { GameSeat } from "../../model/game-view"
-import { LANE_LABELS } from "../../model/labels"
 import {
   ARCANA_COLORS,
   STONES_PER_COLOR,
@@ -12,6 +11,7 @@ import {
   type LoadoutPart,
 } from "../../model/loadout"
 import { HeroIcon, LaneIcon } from "../primitives"
+import { LANE_LABELS } from "@/lib/lanes"
 
 const stoneCounts = (loadout: GameSeat["arcana"]) =>
   Object.fromEntries(

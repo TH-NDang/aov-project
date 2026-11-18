@@ -1,9 +1,13 @@
 import { Link } from "react-router"
 import { CalendarDays, ChevronRight, Layers } from "lucide-react"
-import type { DocumentView, TournamentContent, TournamentPart } from "@aov/community-contracts"
+import type {
+  DocumentView,
+  TournamentContent,
+  TournamentPart,
+  TournamentStats as ContractStats,
+} from "@aov/community-contracts"
 import { TableCell, TableRow } from "@aov/ui/components/table"
 import { StatusPill } from "@/features/esports/components/primitives"
-import type { TournamentStats as ContractStats } from "@aov/community-contracts"
 import { dateRange, TIER_LABELS } from "@/features/esports/model/labels"
 import { ManagementTable } from "./management-list"
 import { PartPhaseDot } from "./part-phase-dot"

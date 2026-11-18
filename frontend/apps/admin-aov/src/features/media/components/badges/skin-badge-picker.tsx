@@ -7,7 +7,7 @@ import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { backendRequest } from "@/app/auth/session"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
-import type { Request } from "../../../publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import { createCharacterImageApi, characterImageKeys } from "../../api/character-image-api"
 import {
   badgeGroupKey,

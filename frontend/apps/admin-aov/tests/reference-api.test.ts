@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
-import type { Request } from "../src/features/publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import { withGlobals } from "./fixtures/dom"
 
 const {

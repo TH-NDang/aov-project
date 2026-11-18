@@ -2,10 +2,11 @@ import { useState, type ReactNode } from "react"
 import type { Lane, TournamentContent } from "@aov/community-contracts"
 import { cn } from "@aov/ui/lib/utils"
 import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
-import { LANE_LABELS, STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
+import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { initials, type IconRef, type TeamView } from "../model/game-view"
 import type { SlotState } from "../model/timeline"
 import { VIDEO_MARK } from "../model/vod"
+import { LANE_LABELS } from "@/lib/lanes"
 
 const safeImage = (url?: string | null) => (!!url && /^(https?:\/\/|\/)/i.test(url) ? url : null)
 

@@ -3,8 +3,8 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { HeroAsset } from "../editing/hero-asset"
 import { skillSlot, skillVariant } from "../../model/skills/hero-skills"
-import type { Skill } from "../../api/types"
-import { publishingKeys } from "../../api/publishing-api"
+import type { Skill } from "@/lib/hero-types"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 export interface SkillImage {
   id: string

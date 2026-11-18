@@ -1,10 +1,4 @@
-import {
-  SECTIONS,
-  type Content,
-  type HeroRow,
-  type Position,
-  type Revision,
-} from "../../src/features/publishing/api/types"
+import { SECTIONS, type Content, type HeroRow, type Position, type Revision } from "@/lib/hero-types"
 import { heroReviewItems } from "../../src/features/publishing/model/import/hero-source-review"
 
 const positionCodes: Record<string, Position> = {

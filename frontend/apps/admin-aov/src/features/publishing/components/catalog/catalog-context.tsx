@@ -2,10 +2,7 @@ import { CalendarDays, GitCompareArrows, RotateCcw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { type PublicationOverview } from "../../api/publication-overview"
 import { NativeSelect } from "@/components/native-select"
-export interface CatalogFilter {
-  seasonId: string
-  variantId: string
-}
+import type { CatalogFilter } from "@/lib/catalog-scope"
 export function CatalogContext({
   data,
   value,

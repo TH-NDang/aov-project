@@ -9,7 +9,7 @@ import type {
   SeriesContent,
   Side,
 } from "@aov/community-contracts"
-import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
+import { LANE_LABELS, LANE_ORDER } from "@/lib/lanes"
 
 /** Lanes in map order with their names; the names come from the one table the match screens use. */
 export const LANES: { code: Lane; name: string; short: string }[] = LANE_ORDER.map((code) => ({

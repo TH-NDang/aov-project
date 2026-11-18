@@ -15,11 +15,11 @@ import {
 } from "../components/game/draft-editor"
 import { ReferencePicker } from "../components/game/reference-picker"
 import type { GameView, IconRef } from "../model/game-view"
-import { LANE_LABELS } from "../model/labels"
 import type { LoadoutPart } from "../model/loadout"
 import { seatSide, type SeatKey } from "../model/timeline"
 import { formatClock } from "@/lib/clock"
 import { NativeSelect } from "@/components/native-select"
+import { LANE_LABELS } from "@/lib/lanes"
 
 /** The game clock for the player position, and back to video time for display and seeking. */
 export type LoadoutClock = {

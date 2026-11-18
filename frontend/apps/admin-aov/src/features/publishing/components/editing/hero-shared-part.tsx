@@ -28,9 +28,9 @@ import {
   type SharedText,
 } from "../../model/hero-forms-model"
 import { heroPageLocation } from "../../model/hero-location"
-import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { invalidateHeroCatalogs } from "../../api/publishing-cache"
-import type { MediaRole } from "../../api/types"
+import type { MediaRole } from "@/lib/hero-types"
 
 const api = createPublishingApi(backendRequest)
 

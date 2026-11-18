@@ -4,7 +4,7 @@ import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixturePreviousRevision } from "./fixtures/hero-workspace-data"
-import type { Revision } from "../src/features/publishing/api/types"
+import type { Revision } from "@/lib/hero-types"
 import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("hero history distinguishes baseline from changes and preserves the selected comparison", async () => {
