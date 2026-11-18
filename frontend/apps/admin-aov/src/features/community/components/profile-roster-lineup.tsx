@@ -14,7 +14,7 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react"
-import type { CommunityProfile, ProfileMember } from "@aov/community-contracts"
+import type { CommunityProfile, Lane, ProfileMember } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
@@ -29,8 +29,16 @@ import { LaneIcon } from "@/features/esports/components/primitives"
 import { ProfileIconButton } from "./profile-form-primitives"
 import { groupRoster, rosterLaneLabels, rosterPosition, type RosterEntry } from "../model/profile-roster-model"
 
-export function RosterRoleIcon({ role, size = 20 }: { role: string; size?: number }) {
-  const { lane, staff } = rosterPosition(role)
+/** A lane's icon, a staff role's icon, or a person for a member with neither. */
+export function RosterRoleIcon({
+  lane,
+  staff,
+  size = 20,
+}: {
+  lane?: Lane | null
+  staff?: "coach" | "analyst" | null
+  size?: number
+}) {
   if (lane) return <LaneIcon lane={lane} size={size} />
   const Icon = staff === "analyst" ? ChartNoAxesCombined : staff === "coach" ? ClipboardList : UserRound
   return <Icon aria-hidden="true" size={size} className="shrink-0" />
@@ -162,7 +170,7 @@ function Member({
 }: LineupProps & { entry: RosterEntry; featured?: boolean; showStatus?: boolean }) {
   const profile = profiles.get(member.pageId || "")
   const name = profile?.content?.name || member.name
-  const position = rosterPosition(member.role)
+  const position = rosterPosition(member, profile)
   const roleLabel = position.lane ? rosterLaneLabels[position.lane] : member.role
   const nameLabel = (
     <span className="inline-flex min-w-0 items-center justify-center gap-1">
@@ -265,7 +273,7 @@ function Member({
                 tabIndex={0}
                 className="flex items-center justify-center gap-2 border-b bg-muted/40 px-2 py-2 text-muted-foreground"
               >
-                <RosterRoleIcon role={member.role} />
+                <RosterRoleIcon lane={position.lane} staff={position.staff} />
                 <span className="type-meta truncate">
                   {position.lane === "MID" ? "Giữa" : position.lane === "DRAGON" ? "Rồng" : roleLabel}
                 </span>
@@ -286,7 +294,7 @@ function Member({
           <div className="min-w-0 flex-1">
             {nameLabel}
             <p className="type-meta mt-0.5 flex items-center gap-1.5">
-              <RosterRoleIcon role={member.role} size={16} />
+              <RosterRoleIcon lane={position.lane} staff={position.staff} size={16} />
               <span className="break-words">{roleLabel}</span>
             </p>
             {showStatus && <p className="type-meta mt-1 break-words">{member.status || "Chưa rõ trạng thái"}</p>}

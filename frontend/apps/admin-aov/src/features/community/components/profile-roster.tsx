@@ -10,21 +10,11 @@ import { pageApi, pageKeys } from "../api/page-api"
 import { CreateProfileSheet } from "./create-profile-sheet"
 import { Field, Section } from "./profile-form-primitives"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
-import { ProfileRosterMemberChoice } from "./profile-roster-member-choice"
+import { RosterPositionField, RosterStandingFields } from "./profile-roster-codes"
+import { choosePosition } from "../model/profile-roster-model"
 import { ProfileRosterLineup, RosterAvatar as PersonAvatar } from "./profile-roster-lineup"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
-
-const positions = [
-  "Đường Tà thần",
-  "Đi rừng",
-  "Đường giữa",
-  "Đường Rồng",
-  "Trợ thủ",
-  "Huấn luyện viên",
-  "Phân tích đội tuyển",
-]
-const statuses = ["Chính thức", "Dự bị", "Đã rời đội", "Cho mượn", "Thử việc"]
 
 export function ProfileRoster({
   value,
@@ -104,7 +94,9 @@ function MemberSheet({
   onClose: () => void
   onApply: (member: ProfileMember) => void
 }) {
-  const [draft, setDraft] = useState<ProfileMember>(member || { name: "", role: "", status: "Chính thức" })
+  const [draft, setDraft] = useState<ProfileMember>(
+    member || { name: "", role: "", standing: "ACTIVE", status: "Chính thức" },
+  )
   const [choosing, setChoosing] = useState(!member?.pageId)
   const [group, setGroup] = useState<"PLAYER" | "COACHING">("PLAYER")
   const [search, setSearch] = useState("")
@@ -117,18 +109,13 @@ function MemberSheet({
     enabled: !!draft.pageId,
   })
   const choose = (profile: CommunityProfile) => {
-    setDraft((old) => ({
-      ...old,
-      pageId: profile.id,
-      name: profile.content?.name || profile.code,
-      role:
-        old.role ||
-        (profile.content?.personRoles?.includes("COACH")
-          ? "Huấn luyện viên"
-          : profile.content?.personRoles?.includes("TEAM_ANALYST")
-            ? "Phân tích đội tuyển"
-            : ""),
-    }))
+    setDraft((old) => {
+      const chosen = { ...old, pageId: profile.id, name: profile.content?.name || profile.code }
+      const roles = profile.content?.personRoles ?? []
+      if (old.role || profile.kind === "PLAYER") return chosen
+      if (roles.includes("COACH")) return choosePosition(chosen, "COACH")
+      return roles.includes("TEAM_ANALYST") ? choosePosition(chosen, "ANALYST") : chosen
+    })
     setChoosing(false)
   }
   const set = (key: keyof ProfileMember, value: string) =>
@@ -240,21 +227,8 @@ function MemberSheet({
             >
               <fieldset disabled={disabled} className="space-y-4">
                 <div className="grid items-start gap-4 sm:grid-cols-2">
-                  <ProfileRosterMemberChoice
-                    label="Vị trí trong đội *"
-                    value={draft.role}
-                    options={positions}
-                    roleIcons
-                    disabled={disabled}
-                    required
-                    onChange={(value) => set("role", value)}
-                  />
-                  <ProfileRosterMemberChoice
-                    label="Trạng thái"
-                    value={draft.status || ""}
-                    options={statuses}
-                    onChange={(value) => set("status", value)}
-                  />
+                  <RosterPositionField member={draft} disabled={disabled} onChange={setDraft} />
+                  <RosterStandingFields member={draft} disabled={disabled} onChange={setDraft} />
                 </div>
                 <details className="rounded-lg border p-3">
                   <summary className="type-body cursor-pointer">
