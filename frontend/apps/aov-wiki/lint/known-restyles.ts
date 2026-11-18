@@ -2,7 +2,6 @@
 // feature is reworked: the variation moves to the owning sheet behind a modifier that the owning component sets.
 // `pnpm lint` fails on a restyle missing here and on an entry no rule matches any more, so the list only shrinks.
 export const knownRestyles = [
-  "components/skin-preview.css .wiki-edit-heading",
   "components/videos/skill-videos.css .wiki-video-meta",
   "components/videos/skill-videos.css .wiki-video-title",
   "components/wiki-header.css .wiki-search",
@@ -11,7 +10,6 @@ export const knownRestyles = [
   "features/hero/components/hero-handbook.css .wiki-change-group",
   "features/hero/components/hero-handbook.css .wiki-change-groups",
   "features/hero/components/hero-handbook.css .wiki-change-kind",
-  "features/hero/components/hero-handbook.css .wiki-edit-heading",
   "features/hero/components/hero-handbook.css .wiki-hero-epithet",
   "features/hero/components/hero-handbook.css .wiki-hero-profile",
   "features/hero/components/hero-handbook.css .wiki-hero-profile-art",
@@ -22,7 +20,6 @@ export const knownRestyles = [
   "features/hero/components/hero-handbook.css .wiki-hero-role-extras",
   "features/hero/components/hero-handbook.css .wiki-hero-role-strip",
   "features/hero/components/hero-handbook.css .wiki-hero-video-button",
-  "features/hero/components/hero-handbook.css .wiki-version-picker",
   "features/hero/components/hero-skins.css .wiki-image",
   "features/hero/components/hero-skins.css .wiki-skin-badge",
   "features/hero/components/hero-skins.css .wiki-skin-missing",

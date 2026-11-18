@@ -196,7 +196,7 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
   const later = page?.laterObservation
   const picker = (
     <>
-      <WikiVersionPicker changedVariants={history.data} />
+      <WikiVersionPicker changedVariants={history.data} className="wiki-hero-version-picker" />
       {later && <HeroLaterObservationNote later={later} />}
     </>
   )

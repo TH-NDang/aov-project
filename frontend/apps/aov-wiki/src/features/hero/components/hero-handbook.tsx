@@ -354,7 +354,7 @@ function OverviewPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handboo
   const { text, rich, profile, facts, videos, videoParam } = handbook
   return (
     <>
-      <div className="wiki-edit-heading" id="wiki-hero-overview" tabIndex={-1}>
+      <div className="wiki-edit-heading wiki-hero-overview-heading" id="wiki-hero-overview" tabIndex={-1}>
         <h2>{text("Tổng quan", "Overview")}</h2>
         <FeedbackDialog
           target={`${profile?.name ?? hero.code} · ${text("Tổng quan", "Overview")}`}

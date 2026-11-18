@@ -247,7 +247,7 @@
 .wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-info {
   padding: 12px 16px 20px;
 }
-.wiki-skin-preview-info .wiki-edit-heading {
+.wiki-skin-preview-info .wiki-skin-preview-heading {
   align-items: start;
 }
 .wiki-skin-preview-info [data-slot="dialog-title"] {
@@ -371,7 +371,7 @@ a.wiki-skin-preview-hero:hover {
     border-left: 1px solid var(--aov-line);
     contain: size;
   }
-  .wiki-skin-preview[data-slot="dialog-content"] .wiki-edit-heading {
+  .wiki-skin-preview[data-slot="dialog-content"] .wiki-skin-preview-heading {
     padding-right: 36px;
   }
   .wiki-skin-preview[data-slot="dialog-content"] .wiki-skin-preview-close {

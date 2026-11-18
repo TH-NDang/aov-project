@@ -327,7 +327,7 @@ export function SkinPreview({
               </div>
             )}
             <div className="wiki-skin-preview-info">
-              <div className="wiki-edit-heading">
+              <div className="wiki-edit-heading wiki-skin-preview-heading">
                 <DialogTitle>{skin.name}</DialogTitle>
                 <FeedbackDialog
                   target={`${skin.heroName} · ${skin.name}`}

@@ -209,10 +209,10 @@
   margin-top: 20px;
 }
 /* The overview needs no title of its own beside the hero's name; the row keeps the report button. */
-.wiki-hero-stage-info .wiki-edit-heading {
+.wiki-hero-stage-info .wiki-hero-overview-heading {
   margin-bottom: 4px;
 }
-.wiki-hero-stage-info .wiki-edit-heading h2 {
+.wiki-hero-stage-info .wiki-hero-overview-heading h2 {
   margin: 0;
   color: var(--aov-muted);
   font: 600 0.75rem/1rem var(--wiki-font-reading);
@@ -554,9 +554,8 @@ button.wiki-handbook-action svg:first-child {
   padding: 12px var(--aov-gutter) 0;
   margin: auto;
 }
-.wiki-hero-scope .wiki-version-picker {
+.wiki-hero-scope .wiki-hero-version-picker {
   max-width: 100%;
-  margin: 0;
 }
 .wiki-hero-scope-note {
   font: var(--wiki-type-meta);
