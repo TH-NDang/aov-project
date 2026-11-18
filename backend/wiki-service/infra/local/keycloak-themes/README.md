@@ -38,8 +38,13 @@ secret trong frontend. Token chỉ nằm trong bộ nhớ, giao dịch PKCE tạ
 ## Theme `aov-admin`
 
 Client `admin-aov-backend` dùng theme `aov-admin` (`login_theme=aov-admin`). Admin chỉ mở Keycloak khi đăng nhập
-Google, nên theme này chỉ thay trang lỗi (`error.ftl`), các trang khác kế thừa theme `keycloak`. Trang lỗi không hiện
-màn hình riêng mà trả một mã (`REJECTED`, `ACCOUNT_DISABLED`, `EXPIRED`, `UNKNOWN`) về Admin, nơi hiện câu tiếng Việt:
+Google (`kc_idp_hint=google`, `ui_locales=vi`), nên người dùng chỉ gặp trang Keycloak ở vài bước sau Google: nhập mã xác
+thực 2 bước, mã khôi phục, chọn cách xác minh, liên kết tài khoản. `template.ftl` vẽ các trang đó giống hộp đăng nhập của
+Admin (logo AOV Admin, nền tối, nút vàng, font Be Vietnam Pro); form vẫn là form gốc của Keycloak. Trang nhập mã có tiêu
+đề và lời dẫn riêng theo `pageId`. Bản dịch tiếng Việt nằm trong `messages_vi.properties`.
+
+Trang lỗi (`error.ftl`) không hiện màn hình riêng mà trả một mã (`REJECTED`, `ACCOUNT_DISABLED`, `EXPIRED`, `UNKNOWN`)
+về Admin, nơi hiện câu tiếng Việt:
 
 - Đăng nhập trong popup: trang gửi mã cho cửa sổ Admin rồi tự đóng. Admin chỉ nhận mã từ đúng popup của nó, ở origin
   của Keycloak.
