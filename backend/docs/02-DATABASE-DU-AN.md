@@ -1949,6 +1949,8 @@ Migration V074 bổ sung `unverified BOOLEAN NOT NULL DEFAULT FALSE` vào `media
 ghi mà không có bằng chứng ảnh từ đâu tới, ví dụ nguồn giữ chỗ hệ thống ghi khi phiên bản mới tải lên không kèm nguồn.
 Nguồn `unverified` không bao giờ được tính là ghi công đầy đủ. Migration đánh dấu các dòng cũ có `source_label` chứa
 “Chưa xác minh”, đúng như bộ lọc cũ nhận ra chúng; từ đó bộ lọc đọc cột này thay cho câu chữ của nhãn.
+Từ 18/11/2026 nguồn giữ chỗ được ghi với `source_label` rỗng: cờ mang ý nghĩa, giao diện tự ghi chữ cho nguồn
+`unverified`. Dòng cũ giữ nhãn đã ghi, không cần migration.
 
 ## Video theo đối tượng — V047 (ADR-019)
 

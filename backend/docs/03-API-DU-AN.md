@@ -1358,6 +1358,13 @@ của phiên bản đang dùng; chỉ dùng nguồn cấp asset nếu phiên b�
 Ảnh đại diện người dùng (`USER_AVATAR`) thuộc về chính người dùng tải lên, không cần ghi nguồn hay chủ
 sở hữu nên không bao giờ nằm trong kết quả `needsCredit=true` (01/11/2026).
 
+Mỗi nguồn trong `provenance` của chi tiết asset, `sources` của danh sách admin và
+`MediaAssetReference.currentVersion.sources` (cùng các API public nhúng nó) có thêm `unverified` (boolean, 18/11/2026).
+`true` là nguồn giữ chỗ hệ thống ghi khi phiên bản mới tải lên không kèm nguồn, hoặc dòng cũ mà V074 nhận ra theo nhãn.
+Client đọc cờ này, không so khớp câu chữ của `label`, và tự ghi chữ cho nguồn chưa xác minh. Nguồn giữ chỗ ghi từ ngày
+này có `label` rỗng; dòng cũ giữ nhãn đã ghi. `SourceRequest` không nhận `unverified`: nguồn người biên tập gửi luôn là
+`false`, nên client không gửi lại nguyên một nguồn đọc từ response khi ghi nguồn mới.
+
 Đọc nhiều asset trong một lần gọi, dùng cho màn hình hiện nhiều ảnh cùng lúc (07/11/2026):
 
 ```http
