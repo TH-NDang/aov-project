@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.wikiaov.hero.internal.application.response.HeroComparisonWarning;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.comparison.application.HeroComparisons;
@@ -54,6 +55,36 @@ class HeroComparisonsTest {
         assertThat(result.before()).isEmpty();
         assertThat(result.after()).containsKey(HeroSection.PROFILE);
         assertThat(result.changes()).isEmpty();
+    }
+
+    @Test
+    void aBaselineWarnsWithACodeThatItIsNoEvidenceOfAGameChange() {
+        var target = revision(UUID.randomUUID(), null, ruleset, HeroSection.PROFILE);
+        when(sections.content(HeroSection.PROFILE, target.sections().get(HeroSection.PROFILE)))
+                .thenReturn(new Profile(List.of(new ProfileTranslation("vi-VN", "Airi", null, null, null)), Set.of(),
+                        List.of()));
+
+        var result = comparisons.compare(hero, target.id(), null);
+
+        assertThat(JsonMapper.builder().build().writeValueAsString(result.warnings()))
+                .isEqualTo("[{\"code\":\"NO_EARLIER_SNAPSHOT\"}]");
+    }
+
+    @Test
+    void aComparisonWarnsWithACodeThatDifferencesDoNotNameTheirPatch() {
+        var source = revision(UUID.randomUUID(), null, ruleset, HeroSection.PROFILE);
+        var target = revision(UUID.randomUUID(), source.id(), ruleset, HeroSection.PROFILE);
+        when(sections.content(HeroSection.PROFILE, source.sections().get(HeroSection.PROFILE)))
+                .thenReturn(new Profile(List.of(new ProfileTranslation("vi-VN", "Airi", null, null, null)), Set.of(),
+                        List.of()));
+        when(sections.content(HeroSection.PROFILE, target.sections().get(HeroSection.PROFILE)))
+                .thenReturn(new Profile(List.of(new ProfileTranslation("vi-VN", "Airi Mới", null, null, null)),
+                        Set.of(), List.of()));
+
+        var result = comparisons.compare(hero, target.id(), null);
+
+        assertThat(result.warnings()).extracting(HeroComparisonWarning::code)
+                .containsExactly(HeroComparisonWarning.Code.SNAPSHOT_DIFFERENCE_UNPROVEN);
     }
 
     @Test
