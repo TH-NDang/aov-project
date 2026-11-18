@@ -148,4 +148,14 @@ class CompetitionRulesTest {
         assertThat(MatchTitle.valid(MatchTitle.roundRobin(1, 100))).isFalse();
         assertThat(MatchTitle.valid(MatchTitle.numbered(Kind.LOWER_ROUND, 0, 1))).isFalse();
     }
+
+    @Test
+    void aMatchBetweenTwoOpenSlotsNeedsNoNamesSoReadersCanWordThem() {
+        var entries = entrants(2);
+        var stage = group(1, List.of());
+        var open = new Slot("TBD", null, null, null, null);
+        var match = new Match("M1", "GROUP", 1, null, 5, null, open, open, null, MatchTitle.of(Kind.EXTRA));
+
+        CompetitionRules.validate(plan(entries, stage, List.of(match)));
+    }
 }

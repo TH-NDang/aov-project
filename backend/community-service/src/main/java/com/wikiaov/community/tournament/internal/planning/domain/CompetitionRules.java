@@ -111,7 +111,8 @@ public final class CompetitionRules {
             bestOf(match.bestOf());
             slot(match.a(), teams, previous);
             slot(match.b(), teams, previous);
-            if (Objects.equals(match.a(), match.b())) {
+            // Two open slots are still two sides; any other slot may not face itself.
+            if (!"TBD".equals(match.a().type()) && Objects.equals(match.a(), match.b())) {
                 throw new IllegalArgumentException("A match needs different participant slots.");
             }
             if (match.seriesId() != null && !series.add(match.seriesId())) {
@@ -142,7 +143,8 @@ public final class CompetitionRules {
             case "TEAM" -> slot.teamId() != null && teams.contains(slot.teamId());
             case "SEED" -> slot.seed() != null && slot.seed() > 0 && slot.seed() <= MAX_SEED;
             case "WINNER", "LOSER" -> previous.contains(slot.matchKey());
-            case "TBD" -> slot.label() != null && !slot.label().isBlank();
+            // An open slot may carry the editor's description; without one, readers word it as undecided.
+            case "TBD" -> true;
             default -> false;
         };
         if (!valid) {
