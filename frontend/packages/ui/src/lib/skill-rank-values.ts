@@ -1,5 +1,6 @@
-import { formatPatchValue } from "./patch-value"
-import { referenceInputPlainText } from "./reference-input-dom"
+import { formatPatchValue } from "@aov/ui/lib/patch-value"
+import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 /** The parts of a skill that say how many levels it has, common to the admin and public skill records. */
 export interface RankSkill {
@@ -24,7 +25,6 @@ export function skillSlot(skill: RankSkill): number | null {
 type RecordValue = Record<string, unknown>
 const record = (value: unknown): RecordValue | null =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as RecordValue) : null
-const numeric = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 6, useGrouping: false })
 const rankColumn = (value: unknown) => /^(?:lv\.?|cấp(?: chiêu)?)\s*(\d+)$/i.exec(String(value).trim())
 const clean = (value: string) =>
   plainComparisonText(value)
@@ -73,9 +73,9 @@ export function rankSummary(value: unknown, columns?: readonly string[]): string
   if (!numbers.every((n, i) => Number.isSafeInteger(n) && (!i || n - numbers[i - 1] === step))) return fallback
   const unit = first[2] === "giây" ? " giây" : (first[2] ?? "")
   const suffix = first[3] ? " " + first[3].trim() : ""
-  const base = numeric.format(numbers[0] / scale) + unit
+  const base = formatGameNumber(numbers[0] / scale) + unit
   if (!step) return base + suffix
-  const increment = (step > 0 ? "+" : "−") + numeric.format(Math.abs(step) / scale) + unit
+  const increment = (step > 0 ? "+" : "−") + formatGameNumber(Math.abs(step) / scale) + unit
   return `${base} (${increment}/cấp chiêu)${suffix}`
 }
 
@@ -185,10 +185,10 @@ function evaluateRank(expression: string, rank: number): Linear | null {
 
 function displayLinear(value: Linear): string {
   const terms = Object.entries(value.terms).filter(([, coefficient]) => Math.abs(coefficient) > 1e-10)
-  let result = value.constant || !terms.length ? numeric.format(value.constant) : ""
+  let result = value.constant || !terms.length ? formatGameNumber(value.constant) : ""
   for (const [key, coefficient] of terms) {
     const label = formatPatchValue(`1*${key}`).replace(/^1 × /, "")
-    result += `${result ? (coefficient < 0 ? " − " : " + ") : coefficient < 0 ? "−" : ""}${numeric.format(Math.abs(coefficient))} × ${label}`
+    result += `${result ? (coefficient < 0 ? " − " : " + ") : coefficient < 0 ? "−" : ""}${formatGameNumber(Math.abs(coefficient))} × ${label}`
   }
   return result
 }
@@ -211,14 +211,14 @@ export function rankValues(value: unknown, count: number): (string | null)[] | n
     const base = Number(percent[1].replace(",", ".").replace("−", "-"))
     const step = Number(percent[3].replace(",", ".")) * (percent[2] === "+" ? 1 : -1)
     const values = Array.from({ length: count }, (_, index) => base + step * index)
-    return values.every(Number.isFinite) ? values.map((number) => `${numeric.format(number)}%`) : null
+    return values.every(Number.isFinite) ? values.map((number) => `${formatGameNumber(number)}%`) : null
   }
   const text = formula(String(value))
   const scalar = /^(-?\d+(?:[.,]\d+)?)\s*(s|giây|%)?$/i.exec(text)
   if (scalar)
     return Array.from(
       { length: count },
-      () => numeric.format(Number(scalar[1].replace(",", "."))) + (scalar[2] === "%" ? "%" : ""),
+      () => formatGameNumber(Number(scalar[1].replace(",", "."))) + (scalar[2] === "%" ? "%" : ""),
     )
   if (!/\b(?:rank|physicalAttack|bonusPhysicalAttack|magicAttack|maxHealth|heroLevel)\b/.test(text)) return null
   const values = Array.from({ length: count }, (_, index) => evaluateRank(text, index + 1))
@@ -326,7 +326,9 @@ export function splitSkillRanks(
       if (!linear) return null
       const number = exact(key === "base" ? linear.constant : (linear.terms[key] ?? 0))
       // A stat's share reads as the game writes it, a percentage of the stat; a hero-level term stays a per-level number.
-      return key === "base" || key === "heroLevel" ? numeric.format(number) : `${numeric.format(exact(number * 100))}%`
+      return key === "base" || key === "heroLevel"
+        ? formatGameNumber(number)
+        : `${formatGameNumber(exact(number * 100))}%`
     }
     const oldValues = old.map(read)
     const newValues = next.map(read)

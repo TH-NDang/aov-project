@@ -364,7 +364,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     const formula = editor().querySelector<HTMLInputElement>('[aria-label="Hồi chiêu · Tổng quan"]')!
     await type(formula, "7")
     await type(formula, "7 - 0.5/cấp chiêu")
-    assert.match(editor().querySelector("tbody")!.textContent!, /6,5/)
+    assert.match(editor().querySelector("tbody")!.textContent!, /6.5/)
     await act(async () => button("Lưu phần này").click())
     assert.deepEqual(saved?.skills[0].translations, formulaSkill.translations)
     assert.deepEqual(saved?.skills[0].effects[0].metadata.levelTable, {

@@ -44,7 +44,7 @@ test("skill details show rank columns and comparison toggles retain the changed-
     assert.equal(document.querySelector("tbody th")?.textContent, "Hồi chiêu (giây)")
     assert.deepEqual(
       [...document.querySelectorAll("tbody td")].map((cell) => cell.textContent),
-      ["8", "7,7", "7,4", "7,1", "6,8", "6,5", "8 - 0.3/cấp chiêu"],
+      ["8", "7.7", "7.4", "7.1", "6.8", "6.5", "8 - 0.3/cấp chiêu"],
     )
     assert.equal(document.querySelectorAll("tbody td:last-child").length, 1)
     assert.doesNotMatch(document.body.textContent!, /\brank\b/)
