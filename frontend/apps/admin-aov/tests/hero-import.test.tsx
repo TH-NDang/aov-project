@@ -21,8 +21,8 @@ test("import wizard carries patch context and never selects rows without a known
     if (path.endsWith("/relation-fields")) return { skills: [], skins: [] } as T
     if (path.endsWith("/fields"))
       return [
-        { key: "name", label: "Tên tướng", type: "text" },
-        { key: "roles", label: "Vai trò", type: "json" },
+        { key: "name", type: "text" },
+        { key: "roles", type: "json" },
       ] as T
     const body = JSON.parse(String(init?.body))
     calls.push({ path, body })
@@ -159,18 +159,16 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     if (path.endsWith("/relation-fields"))
       return {
         skills: ["skillKey", "kind", "name", "description"]
-          .map((key) => ({ key, label: key, type: "text" }))
-          .concat([{ key: "iconAssetId", label: "iconAssetId", type: "image" }]),
-        skins: ["skinKey", "name"]
-          .map((key) => ({ key, label: key, type: "text" }))
-          .concat([{ key: "artAssetId", label: "artAssetId", type: "image" }]),
+          .map((key) => ({ key, type: "text" }))
+          .concat([{ key: "iconAssetId", type: "image" }]),
+        skins: ["skinKey", "name"].map((key) => ({ key, type: "text" })).concat([{ key: "artAssetId", type: "image" }]),
       } as T
     if (path.endsWith("/fields"))
       return [
-        { key: "name", label: "Name", type: "text" },
-        { key: "portrait", label: "Portrait", type: "image" },
-        { key: "skills", label: "Skills", type: "json" },
-        { key: "skins", label: "Skins", type: "json" },
+        { key: "name", type: "text" },
+        { key: "portrait", type: "image" },
+        { key: "skills", type: "json" },
+        { key: "skins", type: "json" },
       ] as T
     const body = JSON.parse(String(init?.body ?? "{}"))
     calls.push({ path, body })
@@ -274,8 +272,8 @@ test("folder import uploads only mapped hero, skill and skin images after confir
       await new Promise((r) => setTimeout(r, 30))
     })
     for (const [label, value] of [
-      ["skills: iconAssetId", "icon"],
-      ["skins: artAssetId", "cover"],
+      ["skills: Ảnh icon kỹ năng", "icon"],
+      ["skins: Ảnh nền trang phục", "cover"],
     ]) {
       const select = dom.window.document.querySelector<HTMLSelectElement>(`select[aria-label="${label}"]`)!
       assert.ok(select)

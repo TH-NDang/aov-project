@@ -7,6 +7,7 @@ import {
   type RelationMapping,
 } from "../../model/import/import-relations"
 import type { ImportField, ImportPolicy } from "../../model/import/hero-import-types"
+import { importFieldLabel } from "../../model/import/import-labels"
 import { RelationMappingFields } from "./relation-mapping"
 import { control } from "../fields"
 
@@ -120,7 +121,7 @@ export function ImportMappingStep({
         {fields?.map((field) => (
           <div key={field.key} className="grid gap-3 p-3 sm:grid-cols-3 sm:items-start">
             <div className="text-sm">
-              <span className="font-medium">{field.label}</span>
+              <span className="font-medium">{importFieldLabel(field.key)}</span>
               <span className="mt-1 block text-xs text-muted-foreground">
                 {field.type === "image"
                   ? "Đường dẫn trong thư mục / HTTPS / UUID asset"
@@ -131,7 +132,7 @@ export function ImportMappingStep({
             </div>
             <div className="min-w-0">
               <select
-                aria-label={`Cột nguồn cho ${field.label}`}
+                aria-label={`Cột nguồn cho ${importFieldLabel(field.key)}`}
                 className={control}
                 value={mapping[field.key] ?? ""}
                 onChange={(e) => {
@@ -164,7 +165,7 @@ export function ImportMappingStep({
               )}
             </div>
             <select
-              aria-label={`Xử lý ${field.label}`}
+              aria-label={`Xử lý ${importFieldLabel(field.key)}`}
               className={control}
               value={policies[field.key] ?? "FILL_EMPTY"}
               onChange={(e) => {
