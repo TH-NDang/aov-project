@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.web;
 
+import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.platform.QueryParameters;
 import com.wikiaov.community.tournament.internal.application.PublicTournamentQueries;
@@ -12,6 +13,9 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tourna
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -25,34 +29,45 @@ public class TournamentPublicController implements TournamentPublicApi {
     }
 
     @Override
-    public Catalog catalog(String region, String locale, UUID seasonId, UUID patchVariantId, boolean includeUnscoped,
-            HttpServletRequest request) {
+    @GetMapping(path = ApiPaths.ROOT + "/catalog", version = "1")
+    public Catalog catalog(@RequestParam(defaultValue = "VN") String region,
+            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(required = false) UUID seasonId,
+            @RequestParam(required = false) UUID patchVariantId,
+            @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request) {
         QueryParameters.requireOnly(request,
                 Set.of("region", "locale", "seasonId", "patchVariantId", "includeUnscoped"));
         return catalog.read(region, locale, seasonId, patchVariantId, includeUnscoped);
     }
 
     @Override
-    public PageSlice<PublishedGame> games(UUID tournamentId, UUID seriesId, int page, int size,
-            HttpServletRequest request) {
+    @GetMapping(path = ApiPaths.ROOT + "/games", version = "1")
+    public PageSlice<PublishedGame> games(@RequestParam(required = false) UUID tournamentId,
+            @RequestParam(required = false) UUID seriesId, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("tournamentId", "seriesId", "page", "size"));
         return queries.games(tournamentId, seriesId, Parameters.pageable(page, size, "published_at"));
     }
 
     @Override
-    public PublishedGame game(UUID id, HttpServletRequest request) {
+    @GetMapping(path = ApiPaths.ROOT + "/games/{id}", version = "1")
+    public PublishedGame game(@PathVariable UUID id, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return queries.game(id);
     }
 
     @Override
-    public PageSlice<Summary<Tournament>> tournaments(int page, int size, HttpServletRequest request) {
+    @GetMapping(path = ApiPaths.ROOT + "/tournaments", version = "1")
+    public PageSlice<Summary<Tournament>> tournaments(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "24") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("page", "size"));
         return queries.tournaments(Parameters.pageable(page, size, "publishedAt"));
     }
 
     @Override
-    public PageSlice<Summary<Series>> series(UUID tournamentId, int page, int size, HttpServletRequest request) {
+    @GetMapping(path = ApiPaths.ROOT + "/series", version = "1")
+    public PageSlice<Summary<Series>> series(@RequestParam(required = false) UUID tournamentId,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size,
+            HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("tournamentId", "page", "size"));
         return queries.series(tournamentId, Parameters.pageable(page, size, "publishedAt"));
     }
