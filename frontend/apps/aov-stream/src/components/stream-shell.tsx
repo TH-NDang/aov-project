@@ -179,7 +179,7 @@ function SearchForm({
   function submit(event: FormEvent) {
     event.preventDefault()
     const q = value.trim()
-    navigate(q ? `/explore?${new URLSearchParams({ q })}` : "/explore")
+    void navigate(q ? `/explore?${new URLSearchParams({ q })}` : "/explore")
     inputRef.current?.blur()
   }
   return (
