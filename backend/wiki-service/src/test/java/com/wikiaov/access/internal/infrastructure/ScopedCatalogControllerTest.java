@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.wikiaov.hero.internal.application.response.HeroListView;
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
 import com.wikiaov.hero.internal.catalog.application.HeroQueries;
+import com.wikiaov.hero.internal.catalog.application.HeroSectionPages;
 import com.wikiaov.hero.internal.skins.application.PublicSkinCatalog;
 import com.wikiaov.hero.internal.web.HeroPublicController;
 import com.wikiaov.hero.internal.web.PublicSkinCatalogController;
@@ -42,6 +43,9 @@ class ScopedCatalogControllerTest {
 
     @MockitoBean
     HeroQueries heroes;
+
+    @MockitoBean
+    HeroSectionPages sectionPages;
 
     @MockitoBean
     PublicSkinCatalog skins;
