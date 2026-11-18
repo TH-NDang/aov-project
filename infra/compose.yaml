@@ -2,25 +2,33 @@
 # Every value comes from .env; only .env.example is tracked.
 name: aov-stack
 
+# The issuer in every token, and so in every row that names a person; dev-import moves older rows to it.
+x-public-issuer: &public-issuer ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+
 x-logging: &logging
   driver: json-file
   options:
     max-size: 10m
     max-file: "3"
 
+# Object storage is Cloudflare R2 (ADR-021, ADR-030). Its values default to empty instead of stopping Compose, so that
+# preflight can list every one that is missing at once.
 x-storage-tool: &storage-tool
   image: rclone/rclone:1.71
   entrypoint: ["/bin/sh", "/scripts/media.sh"]
   environment:
     RCLONE_CONFIG_STORE_TYPE: s3
-    RCLONE_CONFIG_STORE_PROVIDER: Other
-    RCLONE_CONFIG_STORE_ENDPOINT: ${STORAGE_ENDPOINT:-http://seaweedfs:8333}
-    RCLONE_CONFIG_STORE_REGION: ${STORAGE_REGION:-us-east-1}
-    RCLONE_CONFIG_STORE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:?set in .env}
-    RCLONE_CONFIG_STORE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:?set in .env}
+    RCLONE_CONFIG_STORE_PROVIDER: Cloudflare
+    RCLONE_CONFIG_STORE_ENDPOINT: ${STORAGE_ENDPOINT:-}
+    RCLONE_CONFIG_STORE_REGION: ${STORAGE_REGION:-auto}
+    RCLONE_CONFIG_STORE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:-}
+    RCLONE_CONFIG_STORE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:-}
     RCLONE_CONFIG_STORE_FORCE_PATH_STYLE: ${STORAGE_PATH_STYLE:-true}
-    STORAGE_BUCKET: ${STORAGE_BUCKET:-wiki-media}
+    # Buckets are prepared on Cloudflare (ADR-014); never try to create one.
+    RCLONE_CONFIG_STORE_NO_CHECK_BUCKET: "true"
+    STORAGE_BUCKET: ${STORAGE_BUCKET:-}
     STORAGE_ASSETS_BUCKET: ${STORAGE_ASSETS_BUCKET:-}
+    STORAGE_SOURCES_BUCKET: ${STORAGE_SOURCES_BUCKET:-}
   logging: *logging
 
 x-database-tool: &database-tool
@@ -35,7 +43,7 @@ x-database-tool: &database-tool
   logging: *logging
 
 services:
-  # One-shot: stops the start when a public origin still has sample secrets.
+  # One-shot: stops the start while an R2 value is missing, or when a public origin still has sample secrets.
   preflight:
     image: postgres:17.6
     entrypoint: ["/bin/sh", "/scripts/preflight.sh"]
@@ -50,8 +58,19 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in .env}
       ADMIN_AUTH_CLIENT_SECRET: ${ADMIN_AUTH_CLIENT_SECRET:?set in .env}
       WIKI_IMPORTER_CLIENT_SECRET: ${WIKI_IMPORTER_CLIENT_SECRET:?set in .env}
-      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:?set in .env}
+      WIKI_SERVICE_CLIENT_SECRET: ${WIKI_SERVICE_CLIENT_SECRET:?set in .env}
       REDIS_PASSWORD: ${REDIS_PASSWORD:?set in .env}
+      STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:-}
+      STORAGE_PUBLIC_ENDPOINT: ${STORAGE_PUBLIC_ENDPOINT:-}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:-}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-}
+      STORAGE_ASSETS_BUCKET: ${STORAGE_ASSETS_BUCKET:-}
+      STORAGE_SOURCES_BUCKET: ${STORAGE_SOURCES_BUCKET:-}
+      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-}
+      MEDIA_CLOUDFLARE_PURGE_ENABLED: ${MEDIA_CLOUDFLARE_PURGE_ENABLED:-false}
+      CLOUDFLARE_ZONE_ID: ${CLOUDFLARE_ZONE_ID:-}
+      CLOUDFLARE_CACHE_PURGE_TOKEN: ${CLOUDFLARE_CACHE_PURGE_TOKEN:-}
     volumes:
       - ./scripts:/scripts:ro
     logging: *logging
@@ -103,6 +122,20 @@ services:
       postgres:
         condition: service_healthy
 
+  # Run by hand when the stack takes over the development data: docker compose run --rm dev-import <folder>.
+  # Replaces the wiki and community databases with the export and moves its accounts to the issuer of this stack.
+  dev-import:
+    <<: *database-tool
+    profiles: [ops]
+    entrypoint: ["/bin/sh", "/scripts/dev-import.sh"]
+    environment:
+      PGUSER: ${POSTGRES_SUPERUSER:?set in .env}
+      PGPASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
+      STACK_ISSUER: *public-issuer
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   redis:
     image: redis:8.2-alpine
     restart: unless-stopped
@@ -128,35 +161,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?set in .env}
     logging: *logging
 
-  # Bundled S3-compatible storage (ADR-006). A hosted service only needs the STORAGE_* values in .env.
-  seaweedfs:
-    image: chrislusf/seaweedfs:4.48
-    restart: unless-stopped
-    command: server -ip=seaweedfs -ip.bind=0.0.0.0 -dir=/data -s3 -s3.port=8333
-    environment:
-      AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:?set in .env}
-      AWS_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:?set in .env}
-    volumes:
-      - seaweedfs-data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1:8333/healthz && wget --quiet --spider http://127.0.0.1:8888/healthz"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 20s
-    logging: *logging
-
-  # One-shot: production buckets are prepared outside the application (ADR-014).
-  storage-init:
-    <<: *storage-tool
-    command: ["init"]
-    volumes:
-      - ./scripts:/scripts:ro
-    depends_on:
-      seaweedfs:
-        condition: service_healthy
-
-  # Run by hand: docker compose run --rm media-backup
+  # Run by hand: docker compose run --rm media-backup. Copies new R2 objects into backups/media/.
   media-backup:
     <<: *storage-tool
     profiles: [ops]
@@ -164,11 +169,8 @@ services:
     volumes:
       - ./backups:/backups
       - ./scripts:/scripts:ro
-    depends_on:
-      seaweedfs:
-        condition: service_healthy
 
-  # Run by hand: docker compose run --rm media-restore
+  # Run by hand: docker compose run --rm media-restore. Puts back the objects missing from R2.
   media-restore:
     <<: *storage-tool
     profiles: [ops]
@@ -176,9 +178,6 @@ services:
     volumes:
       - ./backups:/backups:ro
       - ./scripts:/scripts:ro
-    depends_on:
-      seaweedfs:
-        condition: service_healthy
 
   keycloak:
     image: aov/keycloak:${IMAGE_TAG:-local}
@@ -233,6 +232,29 @@ services:
         condition: service_healthy
     logging: *logging
 
+  # Run by hand right after dev-import: docker compose run --rm dev-users-import <folder>. Adds the Google provider and
+  # the accounts of the development realm, with their ids, so that the moved data still names them; refuses a realm
+  # that already has people.
+  dev-users-import:
+    image: aov/keycloak:${IMAGE_TAG:-local}
+    build: *keycloak-build
+    profiles: [ops]
+    entrypoint: ["/bin/bash", "/scripts/import-dev-users.sh"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?set in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in .env}
+      # The test accounts of backend/wiki-service/infra/local/keycloak/wikiaov-realm.json, whose passwords are public.
+      DISABLED_USERNAMES: admin editor publisher
+    volumes:
+      - ./keycloak/import-dev-users.sh:/scripts/import-dev-users.sh:ro
+      - ./backups/db:/backups/db:ro
+    healthcheck:
+      disable: true
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    logging: *logging
+
   wiki-service:
     image: aov/wiki-service:${IMAGE_TAG:-local}
     build:
@@ -243,7 +265,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/wiki
       DB_USERNAME: wiki
       DB_PASSWORD: ${WIKI_DB_PASSWORD:?set in .env}
-      JWT_ISSUER_URI: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+      JWT_ISSUER_URI: *public-issuer
       JWT_BACKCHANNEL_ISSUER_URI: http://keycloak:8080/idp/realms/wikiaov
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/idp/realms/wikiaov/protocol/openid-connect/certs
       ADMIN_ORIGIN: ${PUBLIC_ORIGIN:?set in .env}
@@ -261,19 +283,25 @@ services:
       MAIL_FROM: ${MAIL_FROM:-}
       AUTH_SECURE_COOKIES: ${AUTH_SECURE_COOKIES:-true}
       GOOGLE_LOGIN_ENABLED: ${GOOGLE_LOGIN_ENABLED:-false}
-      STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:-http://seaweedfs:8333}
-      # Browsers upload through the proxy on the same origin unless a hosted service signs its own URLs.
-      STORAGE_PUBLIC_ENDPOINT: ${STORAGE_PUBLIC_ENDPOINT:-${PUBLIC_ORIGIN}}
-      STORAGE_REGION: ${STORAGE_REGION:-us-east-1}
-      STORAGE_BUCKET: ${STORAGE_BUCKET:-wiki-media}
+      # Cloudflare R2; preflight has checked these values. Browsers upload and read source files straight from R2 with
+      # presigned URLs, and public images come from the bucket's own domain: no byte passes this stack.
+      STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:-}
+      # Empty writes STORAGE_ENDPOINT into presigned URLs, which browsers reach as well.
+      STORAGE_PUBLIC_ENDPOINT: ${STORAGE_PUBLIC_ENDPOINT:-}
+      STORAGE_REGION: ${STORAGE_REGION:-auto}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-}
       STORAGE_ASSETS_BUCKET: ${STORAGE_ASSETS_BUCKET:-}
+      STORAGE_SOURCES_BUCKET: ${STORAGE_SOURCES_BUCKET:-}
       STORAGE_PATH_STYLE: ${STORAGE_PATH_STYLE:-true}
-      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:?set in .env}
-      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:?set in .env}
-      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-/media}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:-}
+      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-}
       MEDIA_CLOUDFLARE_PURGE_ENABLED: ${MEDIA_CLOUDFLARE_PURGE_ENABLED:-false}
       CLOUDFLARE_ZONE_ID: ${CLOUDFLARE_ZONE_ID:-}
       CLOUDFLARE_CACHE_PURGE_TOKEN: ${CLOUDFLARE_CACHE_PURGE_TOKEN:-}
+      # Optional real R2 usage in Admin (ADR-030 section 9); empty shows the database figures only.
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
+      CLOUDFLARE_ANALYTICS_TOKEN: ${CLOUDFLARE_ANALYTICS_TOKEN:-}
       COMMUNITY_API_BASE_URL: http://community-service:8082
       READ_MODEL_CACHE_ENABLED: "true"
       REDIS_HOST: redis
@@ -284,8 +312,6 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-      storage-init:
-        condition: service_completed_successfully
     logging: *logging
 
   community-service:
@@ -298,7 +324,7 @@ services:
       COMMUNITY_DATABASE_URL: jdbc:postgresql://postgres:5432/community
       COMMUNITY_DATABASE_USER: community
       COMMUNITY_DATABASE_PASSWORD: ${COMMUNITY_DB_PASSWORD:?set in .env}
-      KEYCLOAK_ISSUER: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+      KEYCLOAK_ISSUER: *public-issuer
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/idp/realms/wikiaov/protocol/openid-connect/certs
       WIKI_BASE_URL: http://wiki-service:8080
       COMMUNITY_ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:?set in .env}
@@ -324,7 +350,6 @@ services:
     restart: unless-stopped
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
-      STORAGE_BUCKET: ${STORAGE_BUCKET:-wiki-media}
     ports:
       - ${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-18080}:80
       - ${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-18443}:443
@@ -337,8 +362,6 @@ services:
       community-service:
         condition: service_healthy
       keycloak:
-        condition: service_healthy
-      seaweedfs:
         condition: service_healthy
       # Waits for it but starts either way: a failed run leaves the pages online, and "up --wait" reports the failure.
       wiki-prerender:
@@ -369,6 +392,5 @@ services:
 
 volumes:
   postgres-data:
-  seaweedfs-data:
   caddy-data:
   wiki-site:

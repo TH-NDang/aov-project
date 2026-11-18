@@ -120,6 +120,18 @@ try {
             }
         }
     }
+    # Keycloak fails a top-level flow in which nothing ran, which is the case for an account without two-step sign-in
+    # once the conditional sub-flow is skipped. A required "Allow access" step after it ends the flow successfully.
+    # It must stay REQUIRED: an ALTERNATIVE step would be offered under "Try another way" and skip the code.
+    $allowAccess = @(Get-Executions $postBrokerFlow | Where-Object { $_.level -eq 0 -and $_.providerId -eq 'allow-access-authenticator' })
+    if (-not $allowAccess.Count) {
+        $null = Invoke-Admin POST "/authentication/flows/$([Uri]::EscapeDataString($postBrokerFlow))/executions/execution" @{provider = 'allow-access-authenticator'}
+        $allowAccess = @(Get-Executions $postBrokerFlow | Where-Object { $_.level -eq 0 -and $_.providerId -eq 'allow-access-authenticator' })
+    }
+    if ($allowAccess[0].requirement -ne 'REQUIRED') {
+        $allowAccess[0].requirement = 'REQUIRED'
+        $null = Invoke-Admin PUT "/authentication/flows/$([Uri]::EscapeDataString($postBrokerFlow))/executions" $allowAccess[0]
+    }
     foreach ($provider in @(Invoke-Admin GET '/identity-provider/instances')) {
         if ($provider.postBrokerLoginFlowAlias -ne $postBrokerFlow) {
             $provider | Add-Member -NotePropertyName postBrokerLoginFlowAlias -NotePropertyValue $postBrokerFlow -Force

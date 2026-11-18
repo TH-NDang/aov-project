@@ -35,6 +35,31 @@ chính xác theo tên miền triển khai. Dùng HTTPS. Không đặt theme này
 Frontend dùng `VITE_AUTH_ISSUER`, `VITE_AUTH_CLIENT_ID` tương ứng trước khi build. Không có client
 secret trong frontend. Token chỉ nằm trong bộ nhớ, giao dịch PKCE tạm trong sessionStorage.
 
+## Theme `aov-admin`
+
+Client `admin-aov-backend` dùng theme `aov-admin` (`login_theme=aov-admin`). Admin chỉ mở Keycloak khi đăng nhập
+Google (`kc_idp_hint=google`, `ui_locales=vi`), nên người dùng chỉ gặp trang Keycloak ở vài bước sau Google: nhập mã xác
+thực 2 bước, mã khôi phục, chọn cách xác minh, liên kết tài khoản. `template.ftl` vẽ các trang đó giống hộp đăng nhập của
+Admin (logo AOV Admin, nền tối, nút vàng, font Be Vietnam Pro); form vẫn là form gốc của Keycloak. Trang nhập mã có tiêu
+đề và lời dẫn riêng theo `pageId`. Bản dịch tiếng Việt nằm trong `messages_vi.properties`.
+
+Trang lỗi (`error.ftl`) không hiện màn hình riêng mà trả một mã (`REJECTED`, `ACCOUNT_DISABLED`, `EXPIRED`, `UNKNOWN`)
+về Admin, nơi hiện câu tiếng Việt:
+
+- Đăng nhập trong popup: trang gửi mã cho cửa sổ Admin rồi tự đóng. Admin chỉ nhận mã từ đúng popup của nó, ở origin
+  của Keycloak.
+- Trình duyệt chặn popup: Admin chuyển cả trang sang Keycloak. Trang lỗi quay về base URL của client
+  (`<PUBLIC_ORIGIN>/admin/`, dev là `http://localhost:5175/`) kèm `#google-error=<mã>`. Admin chỉ hiện lỗi khi chính
+  tab đó đã bắt đầu lượt đăng nhập (`sessionStorage`), rồi xóa mã khỏi địa chỉ. Lượt thành công đi qua
+  `google-complete.html`, trang này đưa người dùng về đúng trang Admin đang mở.
+
+Realm import mới đã có hai thuộc tính này. Với realm đã tồn tại, đặt chúng một lần bằng tài khoản quản trị master, ví
+dụ trong container Keycloak:
+
+```bash
+kcadm.sh update clients/<id của admin-aov-backend> -r wikiaov -s attributes.login_theme=aov-admin -s baseUrl=<PUBLIC_ORIGIN>/admin/
+```
+
 Ảnh mascot được sao chép từ asset frontend; khi đổi logo cần cập nhật bản trong `resources/img` của theme.
 Sau khi sửa theme trên môi trường bật cache, triển khai lại/restart Keycloak theo quy trình vận hành.
 Khi nâng Keycloak cần kiểm tra lại template kế thừa, script password visibility, đăng ký và MFA.

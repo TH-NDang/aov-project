@@ -91,7 +91,8 @@ class KeycloakTokens implements IdentityTokens {
                 .queryParam("response_type", "code").queryParam("scope", "openid")
                 .queryParam("state", state).queryParam("code_challenge", challenge)
                 .queryParam("code_challenge_method", "S256").queryParam("kc_idp_hint", "google")
-                .build().encode().toUriString();
+                // Admin is Vietnamese only, so the Keycloak pages it can reach (theme aov-admin) follow it.
+                .queryParam("ui_locales", "vi").build().encode().toUriString();
     }
 
     private MultiValueMap<String, String> form(String grant) {

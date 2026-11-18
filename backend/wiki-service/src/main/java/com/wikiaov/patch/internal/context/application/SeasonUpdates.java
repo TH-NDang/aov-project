@@ -1,6 +1,5 @@
 package com.wikiaov.patch.internal.context.application;
 
-import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.application.response.SeasonUpdatesView;
@@ -8,7 +7,6 @@ import com.wikiaov.patch.internal.context.persistence.SeasonUpdatesRepository;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
-import java.time.Instant;
 import java.util.IllformedLocaleException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,7 +33,7 @@ public class SeasonUpdates {
     public SeasonUpdatesView read(String region, String locale, int limit) {
         validate(locale, limit);
         var now = clock.instant();
-        var context = currentContext(region, now);
+        var context = contexts.find(region, now).orElse(null);
         if (context == null)
             return new SeasonUpdatesView(region, locale, now, null, null, List.of());
 
@@ -51,16 +49,6 @@ public class SeasonUpdates {
                 .toList();
         var seasonView = new SeasonUpdatesView.Season(season.getId(), season.getCode(), season.getDisplayName());
         return new SeasonUpdatesView(region, locale, now, seasonView, context.patchId(), patches);
-    }
-
-    private GameplayContext currentContext(String region, Instant now) {
-        try {
-            return contexts.resolve(region, now);
-        } catch (ApiException exception) {
-            if (exception.getErrorCode() == PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE)
-                return null;
-            throw exception;
-        }
     }
 
     private Map<UUID, SeasonUpdatesRepository.Text> preferredTexts(List<SeasonUpdatesRepository.Release> releases,

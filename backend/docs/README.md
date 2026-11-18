@@ -40,7 +40,7 @@ trong `target/openapi/`, không được xem là một đặc tả thủ công c
 | [017](adr/ADR-017-media-owner-catalog.md) | Danh mục chủ sở hữu ảnh: chuẩn hóa tên, đổi tên và gộp |
 | [019](adr/ADR-019-video-theo-doi-tuong.md) | Gắn nhiều video cho tướng, kỹ năng, trang phục và kho trang bị; nhập dữ liệu thu thập |
 | [020](adr/ADR-020-ty-gia-va-hien-thi-tien.md) | Lịch sử tỷ giá theo ngày, job lấy tỷ giá định kỳ và hiển thị tiền theo đơn vị người dùng chọn |
-| [021](adr/ADR-021-dong-goi-chay-mot-may.md) | Đóng gói toàn hệ thống trên một máy: Keycloak ở `/idp/`, tách địa chỉ công khai và nội bộ, upload qua proxy cùng origin |
+| [021](adr/ADR-021-dong-goi-chay-mot-may.md) | Đóng gói toàn hệ thống trên một máy: Keycloak ở `/idp/`, tách địa chỉ công khai và nội bộ; từ 17/11/2026 ảnh và upload đi thẳng R2, stack nhận lại database và bucket của dev, backup media chép R2 ra đĩa |
 | [022](adr/ADR-022-wiki-static-prerender.md) | Prerender tĩnh cho Wiki công khai: tiêu đề, xem trước, sitemap từ dữ liệu đã xuất bản, địa chỉ kho trang bị theo path |
 | [023](adr/ADR-023-che-do-choi-va-tuong-tac-doi-hinh.md) | Chế độ chơi, cẩm nang Cờ Liên quân, đội hình cộng đồng và lượt thích trong `wiki-service` |
 | [024](adr/ADR-024-tuong-nhieu-dang.md) | Tướng nhiều dạng (Flowborn): tướng danh mục chứa các dạng chơi được, mỗi dạng giữ danh tính và lịch sử riêng |

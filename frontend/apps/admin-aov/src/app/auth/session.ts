@@ -1,5 +1,11 @@
 import { randomId } from "@/lib/random-id"
-import { createAuthRequest, isGoogleCompletion } from "./auth-api"
+import {
+  GOOGLE_REDIRECT_KEY,
+  createAuthRequest,
+  googleRedirectOutcome,
+  isGoogleCompletion,
+  isGoogleError,
+} from "./auth-api"
 import { createAuthenticatedClient } from "@/lib/api/authenticated-client"
 import { ApiError } from "@/lib/api/errors"
 
@@ -36,6 +42,44 @@ const messages: Record<string, string> = {
   AUTH_GOOGLE_DISABLED: "Đăng nhập Google chưa được cấu hình.",
   AUTH_ORIGIN_REJECTED: "Địa chỉ admin chưa được cho phép trong cấu hình máy chủ.",
   FORBIDDEN: "Tài khoản chưa được cấp quyền truy cập trang quản trị.",
+}
+// Codes sent by the Keycloak error page of the Google popup (theme aov-admin).
+const googleErrors: Record<string, string> = {
+  REJECTED: "Đăng nhập Google bị từ chối. Vui lòng thử lại hoặc báo quản trị viên.",
+  ACCOUNT_DISABLED: "Tài khoản này đang bị khóa. Hãy liên hệ quản trị viên.",
+  EXPIRED: "Phiên đăng nhập Google đã hết hạn. Vui lòng thử lại.",
+  UNKNOWN: "Đăng nhập Google không thành công. Vui lòng thử lại.",
+}
+const googleCancelled = "Đăng nhập Google đã hủy hoặc không thành công."
+/** Reads and clears the outcome of a same-page Google sign-in; returns the message to show, if any. */
+function takeGoogleRedirect(): string | undefined {
+  let saved: string | null = null
+  try {
+    saved = sessionStorage.getItem(GOOGLE_REDIRECT_KEY)
+    sessionStorage.removeItem(GOOGLE_REDIRECT_KEY)
+  } catch {
+    /* Storage is blocked: no same-page sign-in can have been started. */
+  }
+  const outcome = googleRedirectOutcome(saved, location.hash)
+  if (new URLSearchParams(location.hash.replace(/^#/, "")).has("google-error"))
+    history.replaceState(history.state, "", location.pathname + location.search)
+  if (outcome?.kind === "keycloak-error") return googleErrors[outcome.code] ?? googleErrors.UNKNOWN
+  if (outcome?.kind === "completion" && outcome.status !== "success") return messages[outcome.status] ?? googleCancelled
+  return undefined
+}
+/** Same-page Google sign-in, used when the browser blocks the popup. The page leaves, so this never settles. */
+async function loginGoogleInPage(): Promise<never> {
+  const result = await authRequest<{ state: string; authorizationUrl: string }>("google")
+  try {
+    sessionStorage.setItem(
+      GOOGLE_REDIRECT_KEY,
+      JSON.stringify({ state: result.state, returnTo: location.pathname + location.search }),
+    )
+  } catch {
+    /* Without storage the sign-in still works; only a failure message is lost. */
+  }
+  window.location.assign(result.authorizationUrl)
+  return new Promise<never>(() => {})
 }
 export function authMessage(error: unknown): string {
   if (error instanceof ApiError) return messages[error.code] ?? "Không thể hoàn tất đăng nhập. Vui lòng thử lại."
@@ -126,6 +170,7 @@ export async function verifySession() {
   }
 }
 export async function initializeSession() {
+  const googleError = takeGoogleRedirect()
   try {
     const response = await fetch("/api/wiki/v1/auth/config", { cache: "no-store", signal: AbortSignal.timeout(10000) })
     if (response.ok) {
@@ -136,6 +181,7 @@ export async function initializeSession() {
     /* The session request below reports backend connection errors. */
   }
   await verifySession()
+  if (googleError && session.status === "anonymous") publish({ error: googleError })
 }
 /** `otp` is the six-digit authenticator code for accounts with two-step sign-in (ADR-028). */
 export async function loginPassword(username: string, password: string, otp?: string) {
@@ -169,9 +215,10 @@ export function loginGoogle(): Promise<void> {
       ",top=" +
       Math.max(0, window.screenY + (window.outerHeight - 740) / 2),
   )
-  if (!popup) return Promise.reject(new Error("Trình duyệt đã chặn cửa sổ đăng nhập. Hãy cho phép popup rồi thử lại."))
+  if (!popup) return loginGoogleInPage()
   return new Promise((resolve, reject) => {
     let state: string | undefined
+    let keycloakOrigin: string | undefined
     let done = false
     const cleanup = () => {
       done = true
@@ -188,10 +235,14 @@ export function loginGoogle(): Promise<void> {
       }
     }
     const receive = (event: MessageEvent) => {
+      if (!done && keycloakOrigin && isGoogleError(event, popup, keycloakOrigin)) {
+        fail(googleErrors[event.data.code] ?? googleErrors.UNKNOWN)
+        return
+      }
       if (done || !state || !isGoogleCompletion(event, popup, state, window.location.origin)) return
       const status = event.data.status
       if (status !== "success") {
-        fail(messages[status] ?? "Đăng nhập Google đã hủy hoặc không thành công.")
+        fail(messages[status] ?? googleCancelled)
         return
       }
       cleanup()
@@ -207,6 +258,7 @@ export function loginGoogle(): Promise<void> {
       (result) => {
         if (done) return
         state = result.state
+        keycloakOrigin = new URL(result.authorizationUrl, window.location.href).origin
         popup.location.href = result.authorizationUrl
       },
       (error) => fail(authMessage(error)),

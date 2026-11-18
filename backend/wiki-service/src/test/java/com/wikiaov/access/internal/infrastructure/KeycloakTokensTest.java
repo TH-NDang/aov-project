@@ -82,6 +82,13 @@ class KeycloakTokensTest {
     }
 
     @Test
+    void googleSignInGoesStraightToGoogleWithVietnamesePages() {
+        var url = tokens.authorizationUrl("state", "challenge", "https://wiki.example.test/callback");
+
+        assertThat(url).contains("kc_idp_hint=google", "ui_locales=vi");
+    }
+
+    @Test
     void aWrongPasswordIsTheUsersErrorNotAnOutage() {
         status = 401;
         answer = """
