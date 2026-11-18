@@ -44,7 +44,8 @@ test("order popup compares peers, retains the proposed order on failure and save
 
 test("branch editor replaces numeric ordering with the peer popup and hides suitability without dropping translations", async () => {
   await withWarehouseUi(async ({ document, render, click }) => {
-    const { EnchantmentBranchEditor } = await import("../src/features/warehouse/components/secondary/secondary-editor")
+    const { EnchantmentBranchEditor } =
+      await import("../src/features/warehouse/components/secondary/enchantment-branch-editor")
     const branch = {
       code: "forest",
       version: 1,
@@ -86,8 +87,8 @@ test("branch editor replaces numeric ordering with the peer popup and hides suit
 test("warehouse sheets fork or resume a draft only from their single pencil and open it editing", async () => {
   await withWarehouseUi(async ({ document, render, click }) => {
     const window = document.defaultView!
-    const { SecondaryEditor, newSecondaryContent } =
-      await import("../src/features/warehouse/components/secondary/secondary-editor")
+    const { SecondaryEditor } = await import("../src/features/warehouse/components/secondary/secondary-editor")
+    const { newSecondaryContent } = await import("../src/features/warehouse/model/secondary-content")
     const calls: string[] = []
     const props = {
       kind: "enchantments" as const,

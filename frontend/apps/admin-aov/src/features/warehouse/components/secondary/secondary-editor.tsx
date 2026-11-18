@@ -1,22 +1,18 @@
 import { WarehouseChangeHistory } from "../history/warehouse-change-history"
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useState } from "react"
 import {
   ChartNoAxesCombined,
   History,
   Image,
-  Languages,
   Layers,
   LayoutList,
-  LoaderCircle,
   Plus,
-  Settings2,
   SlidersHorizontal,
   Trash2,
   Clapperboard,
   FileText,
 } from "lucide-react"
 import { SubjectVideosPanel } from "../../../videos/subject-videos-panel"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
 import { Button } from "@aov/ui/components/button"
 import type { WarehouseSection } from "../sheet/warehouse-edit-section"
 import { SecondaryAttributes } from "./secondary-attributes"
@@ -28,7 +24,7 @@ import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../../../publishing/components/assets/asset-picker"
 import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
 import { VersionFacts } from "../../../publishing/components/setup/version-facts"
-import { Field, control } from "../../../publishing/components/editing/fields"
+import { Field } from "../../../publishing/components/editing/fields"
 import { WarehouseTranslations } from "../sheet/warehouse-translations"
 import { WarehousePatchContext } from "../history/warehouse-patch-context"
 import { warehouseMissingFieldLabel } from "../../model/warehouse-labels"
@@ -56,22 +52,17 @@ import {
   versionLabel,
   type NewDraft,
 } from "../sheet/warehouse-sheet"
-import {
-  warehouseBaselineMode,
-  type WarehouseMetadata,
-  type WarehouseEntry,
-  type WarehouseRevision,
-} from "../../model/warehouse-types"
-import {
-  warehouseText,
-  type WarehouseContent,
-  type WarehouseStat,
-  type SpellContent,
-  type EnchantmentContent,
-} from "@aov/ui/lib/warehouse-content"
+import { warehouseBaselineMode, type WarehouseEntry, type WarehouseRevision } from "../../model/warehouse-types"
+import { warehouseText, type EnchantmentContent } from "@aov/ui/lib/warehouse-content"
 import { confirmDiscard } from "@/components/confirm-dialog"
-
-export type SecondaryKind = "arcana" | "spells" | "enchantments"
+import {
+  SecondaryKind,
+  SecondaryContent,
+  SecondaryBranch,
+  secondaryNames,
+  semanticTypes,
+} from "../../model/secondary-content"
+import { SecondaryMechanics } from "./secondary-mechanics"
 
 /** Sections of an arcana, spell or enchantment content page, in reading order; patch and notes have a tab. */
 const SECONDARY_SECTIONS = {
@@ -84,60 +75,6 @@ const SECONDARY_SECTIONS = {
 } as const
 type SecondarySectionKey = keyof typeof SECONDARY_SECTIONS
 const partIcons = { mechanics: SlidersHorizontal, stats: ChartNoAxesCombined, states: Layers }
-export interface SecondaryContent extends WarehouseContent {
-  color?: "RED" | "PURPLE" | "GREEN"
-  tier?: number
-  stats?: WarehouseStat[]
-  branchCode?: string
-  position?: number | null
-  cooldownSeconds?: number | null
-  unlockType?: "ACCOUNT_CREATION" | "LEVEL" | "UNKNOWN"
-  unlockLevel?: number | null
-  chargeRechargeSeconds?: number | null
-  maxCharges?: number | null
-  defaultStateKey?: string | null
-  referenceImages?: { assetId: string; notes: string | null }[]
-  availability?: "AVAILABLE" | "REMOVED" | "UNKNOWN"
-  legacy?: boolean
-  displayOrder?: number
-  states?: SpellContent["states"]
-}
-export type SecondaryBranch = WarehouseMetadata
-
-export const secondaryNames: Record<SecondaryKind, string> = {
-  arcana: "ngọc",
-  spells: "phụ trợ",
-  enchantments: "phù hiệu",
-}
-const semanticTypes: Record<SecondaryKind, string> = {
-  arcana: "ARCANA_ICON",
-  spells: "SPELL_ICON",
-  enchantments: "ENCHANTMENT_ICON",
-}
-
-export function newSecondaryContent(kind: SecondaryKind, locale: string, branchCode = ""): SecondaryContent {
-  const shared = {
-    iconAssetId: null,
-    notes: null,
-    translations: [{ locale, name: "", summary: null, description: null }],
-  }
-  if (kind === "arcana") return { ...shared, color: "RED", tier: 3, stats: [] }
-  if (kind === "enchantments") return { ...shared, branchCode, tier: 1, position: 0 }
-  return {
-    ...shared,
-    cooldownSeconds: null,
-    unlockType: "UNKNOWN",
-    unlockLevel: null,
-    chargeRechargeSeconds: null,
-    maxCharges: null,
-    defaultStateKey: null,
-    referenceImages: [],
-    availability: "UNKNOWN",
-    legacy: false,
-    displayOrder: 0,
-    states: [],
-  }
-}
 
 /**
  * An arcana, spell or enchantment read as a page, laid out like the item sheet: a compact header holding the version
@@ -891,462 +828,6 @@ export function SecondaryEditor({
             </TabsContent>
           </div>
         </Tabs>
-      </SheetContent>
-    </Sheet>
-  )
-}
-
-function SecondaryMechanics({
-  part,
-  kind,
-  content,
-  onChange,
-  branches,
-  locale,
-  disabled,
-  enchantmentOrderControl,
-}: {
-  kind: SecondaryKind
-  content: SecondaryContent
-  onChange: (value: Partial<SecondaryContent>) => void
-  branches: SecondaryBranch[]
-  locale: string
-  disabled: boolean
-  part: "mechanics" | "states" | "stats"
-  enchantmentOrderControl?: ReactNode
-}) {
-  if (kind === "enchantments")
-    return (
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-1.5 sm:col-span-2">
-          <span className="type-label">Hệ phù hiệu</span>
-          <Select
-            value={content.branchCode || ""}
-            disabled={disabled}
-            onValueChange={(branchCode) => onChange({ branchCode })}
-          >
-            <SelectTrigger className="w-full" aria-label="Hệ phù hiệu">
-              <SelectValue placeholder="Chọn hệ" />
-            </SelectTrigger>
-            <SelectContent>
-              {content.branchCode && !branches.some((branch) => branch.code === content.branchCode) && (
-                <SelectItem value={content.branchCode}>{content.branchCode}</SelectItem>
-              )}
-              {branches.map((branch) => (
-                <SelectItem key={branch.code} value={branch.code}>
-                  <span className="flex items-center gap-2">
-                    <HeroAsset id={branch.iconAssetId} frameAspectRatio={1} className="size-5 rounded-full" />
-                    {warehouseText(branch.translations, locale)?.name || branch.code}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <TierField value={content.tier ?? 1} disabled={disabled} onChange={(tier) => onChange({ tier })} />
-        <div className="self-end">{enchantmentOrderControl}</div>
-      </div>
-    )
-  if (kind === "arcana")
-    return (
-      <div className="space-y-5">
-        {part === "mechanics" && (
-          <div className="grid grid-cols-2 gap-4">
-            <label className="grid gap-1.5 text-sm">
-              <span>Màu ngọc</span>
-              <select
-                className={control}
-                value={content.color ?? "RED"}
-                disabled={disabled}
-                onChange={(event) => onChange({ color: event.target.value as SecondaryContent["color"] })}
-              >
-                <option value="RED">Đỏ</option>
-                <option value="PURPLE">Tím</option>
-                <option value="GREEN">Xanh</option>
-              </select>
-            </label>
-            <TierField value={content.tier ?? 3} disabled={disabled} onChange={(tier) => onChange({ tier })} />
-          </div>
-        )}
-      </div>
-    )
-  return (
-    <div className="space-y-5">
-      {part === "mechanics" && (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field
-              label="Hồi chiêu (giây)"
-              type="number"
-              min={0}
-              value={content.cooldownSeconds ?? ""}
-              onChange={(value) => onChange({ cooldownSeconds: value === "" ? null : Number(value) })}
-              disabled={disabled}
-            />
-            <label className="grid gap-1.5 text-sm">
-              <span>Khả dụng</span>
-              <select
-                className={control}
-                value={content.availability ?? "UNKNOWN"}
-                disabled={disabled}
-                onChange={(event) => onChange({ availability: event.target.value as SecondaryContent["availability"] })}
-              >
-                <option value="AVAILABLE">Đang có</option>
-                <option value="REMOVED">Đã gỡ</option>
-                <option value="UNKNOWN">Chưa xác định</option>
-              </select>
-            </label>
-            <Field
-              label="Thứ tự hiển thị"
-              type="number"
-              min={0}
-              step={1}
-              value={content.displayOrder ?? 0}
-              onChange={(value) => onChange({ displayOrder: Number(value) })}
-              disabled={disabled}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Field
-              label="Số lần tích trữ"
-              type="number"
-              min={1}
-              step={1}
-              value={content.maxCharges ?? ""}
-              onChange={(value) => onChange({ maxCharges: value === "" ? null : Number(value) })}
-              disabled={disabled}
-            />
-            <Field
-              label="Thời gian tích (giây)"
-              type="number"
-              min={0}
-              value={content.chargeRechargeSeconds ?? ""}
-              onChange={(value) => onChange({ chargeRechargeSeconds: value === "" ? null : Number(value) })}
-              disabled={disabled}
-            />
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={content.legacy ?? false}
-              disabled={disabled}
-              onChange={(event) => onChange({ legacy: event.target.checked })}
-            />{" "}
-            Phụ trợ cũ
-          </label>
-        </>
-      )}
-      {part === "states" && (
-        <section className="space-y-3">
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={disabled}
-              onClick={() =>
-                onChange({
-                  states: [
-                    ...(content.states ?? []),
-                    {
-                      key: "",
-                      iconAssetId: null,
-                      translations: [{ locale, name: "", summary: null, description: null }],
-                    },
-                  ],
-                })
-              }
-            >
-              <Plus className="size-4" /> Thêm
-            </Button>
-          </div>
-          {content.states?.map((state, index) => (
-            <div key={index} className="flex items-end gap-2">
-              <div className="flex-1">
-                <Field
-                  label={`Mã trạng thái ${index + 1}`}
-                  value={state.key}
-                  disabled={disabled}
-                  onChange={(key) =>
-                    onChange({
-                      states: content.states!.map((entry, n) => (n === index ? { ...entry, key } : entry)),
-                      ...(content.defaultStateKey === state.key ? { defaultStateKey: key || null } : {}),
-                    })
-                  }
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={disabled}
-                aria-label={`Bỏ trạng thái ${index + 1}`}
-                onClick={() =>
-                  onChange({
-                    states: content.states!.filter((_, n) => n !== index),
-                    ...(content.defaultStateKey === state.key ? { defaultStateKey: null } : {}),
-                  })
-                }
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
-          ))}
-          {!!content.states?.length && (
-            <label className="grid gap-1.5 text-sm">
-              <span>Trạng thái mặc định</span>
-              <select
-                className={control}
-                value={content.defaultStateKey ?? ""}
-                disabled={disabled}
-                onChange={(event) => onChange({ defaultStateKey: event.target.value || null })}
-              >
-                <option value="">Chưa chọn</option>
-                {content.states
-                  .filter((state) => state.key)
-                  .map((state) => (
-                    <option key={state.key} value={state.key}>
-                      {warehouseText(state.translations, locale)?.name || state.key}
-                    </option>
-                  ))}
-              </select>
-            </label>
-          )}
-        </section>
-      )}
-    </div>
-  )
-}
-
-function TierField({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: number
-  onChange: (value: number) => void
-  disabled: boolean
-}) {
-  return (
-    <label className="grid gap-1.5 text-sm">
-      <span>Cấp</span>
-      <select
-        className={control}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        disabled={disabled}
-      >
-        {[1, 2, 3].map((tier) => (
-          <option key={tier} value={tier}>
-            {["I", "II", "III"][tier - 1]}
-          </option>
-        ))}
-      </select>
-    </label>
-  )
-}
-
-export function EnchantmentBranchEditor({
-  branch,
-  locale,
-  kind = "enchantments",
-  onSave,
-  onClose,
-  branches = [],
-  onReorderBranches,
-}: {
-  branch: WarehouseMetadata | null
-  locale: string
-  kind?: "items" | "enchantments"
-  onSave: (value: WarehouseMetadata) => Promise<void>
-  onClose: () => void
-  branches?: WarehouseMetadata[]
-  onReorderBranches?: (ids: string[]) => Promise<void>
-}) {
-  const wide = useIsWide()
-  const entityName = kind === "items" ? "nhóm trang bị" : "hệ phù hiệu"
-  const [value, setValue] = useState<WarehouseMetadata>(
-    branch ?? {
-      code: "",
-      version: 0,
-      displayOrder: 0,
-      iconAssetId: null,
-      backgroundAssetId: null,
-      color: "#d6ad57",
-      translations: [{ locale, name: "", description: null, suitability: null }],
-    },
-  )
-  const [dirty, setDirty] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState("")
-  const displayColor = kind === "enchantments" ? enchantmentBranchColor(value) : (value.color ?? "#d6ad57")
-  function update(patch: Partial<WarehouseMetadata>) {
-    setValue((current) => ({ ...current, ...patch }))
-    setDirty(true)
-  }
-  async function close() {
-    if (busy || uploading) return
-    if (
-      !dirty ||
-      (await confirmDiscard({ title: "Đóng phần chỉnh sửa?", description: `Có thay đổi ${entityName} chưa lưu.` }))
-    )
-      onClose()
-  }
-  useEffect(() => {
-    if (!dirty && !busy && !uploading) return
-    const guard = (event: BeforeUnloadEvent) => {
-      event.preventDefault()
-      event.returnValue = ""
-    }
-    window.addEventListener("beforeunload", guard)
-    return () => window.removeEventListener("beforeunload", guard)
-  }, [dirty, busy, uploading])
-  async function save() {
-    if (
-      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.code) ||
-      !value.translations.length ||
-      value.translations.some((text) => !text.name.trim())
-    ) {
-      setError("Cần mã không dấu và tên của các bản dịch đã thêm.")
-      return
-    }
-    setBusy(true)
-    setError("")
-    try {
-      await onSave({
-        ...value,
-        translations: value.translations.map(({ locale, name, description, suitability }) => ({
-          locale,
-          name,
-          description: description || null,
-          suitability: suitability || null,
-        })),
-      })
-    } catch (cause) {
-      setError(errorMessage(cause))
-    } finally {
-      setBusy(false)
-    }
-  }
-  return (
-    <Sheet open onOpenChange={(open) => !open && void close()}>
-      <SheetContent
-        side={wide ? "right" : "bottom"}
-        className={
-          wide
-            ? "flex w-[min(640px,94vw)] flex-col overflow-hidden sm:max-w-none"
-            : "flex max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl"
-        }
-      >
-        <SheetHeader className="pr-8">
-          <SheetTitle>{branch ? `Chỉnh sửa ${entityName}` : `Tạo ${entityName}`}</SheetTitle>
-          <SheetDescription>Thiết lập bố cục và các bản dịch.</SheetDescription>
-        </SheetHeader>
-        <div className="min-h-0 flex-auto overflow-y-auto px-4 pb-4">
-          <Tabs defaultValue="information" className="gap-5">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="information">
-                <Settings2 className="size-4" /> Thông tin
-              </TabsTrigger>
-              <TabsTrigger value="translations">
-                <Languages className="size-4" /> Bản dịch
-              </TabsTrigger>
-              <TabsTrigger value="images">
-                <Image className="size-4" /> Ảnh
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="information" className="space-y-4">
-              <Field
-                label={kind === "items" ? "Mã nhóm" : "Mã hệ"}
-                value={value.code}
-                onChange={(code) => update({ code })}
-                disabled={!!branch || busy}
-              />
-              {kind === "items" ? (
-                <Field
-                  label="Thứ tự hiển thị"
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={value.displayOrder}
-                  onChange={(displayOrder) => update({ displayOrder: Number(displayOrder) })}
-                  disabled={busy}
-                />
-              ) : (
-                <WarehouseOrderPicker
-                  label="Thứ tự các hệ"
-                  items={branches.map((entry) => ({
-                    id: entry.code,
-                    name: warehouseText(entry.translations, locale)?.name ?? entry.code,
-                    iconAssetId: entry.iconAssetId,
-                    color: enchantmentBranchColor(entry),
-                  }))}
-                  disabled={!branch || dirty || busy || uploading || !onReorderBranches}
-                  disabledReason={
-                    !branch ? "Lưu hệ mới trước khi sắp xếp." : dirty ? "Lưu thay đổi trước khi sắp xếp." : undefined
-                  }
-                  onSave={async (ids) => {
-                    await onReorderBranches?.(ids)
-                  }}
-                />
-              )}
-              <label className="grid gap-1.5 text-sm">
-                <span>Màu nhận diện</span>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    aria-label="Màu nhận diện hệ"
-                    className="h-10 w-14 cursor-pointer rounded-md border bg-background p-1"
-                    value={displayColor}
-                    disabled={busy}
-                    onChange={(event) => update({ color: event.target.value })}
-                  />
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {value.color?.trim() || `${displayColor} · Mặc định`}
-                  </span>
-                </div>
-              </label>
-            </TabsContent>
-            <TabsContent value="translations">
-              <WarehouseTranslations
-                value={value.translations}
-                onChange={(translations) => update({ translations })}
-                locale={locale}
-                disabled={busy}
-                showSummary={false}
-              />
-            </TabsContent>
-            <TabsContent value="images" className="space-y-5">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Biểu tượng</h3>
-                <AssetPicker
-                  semanticType={kind === "items" ? "ITEM_ICON" : "ENCHANTMENT_ICON"}
-                  value={value.iconAssetId}
-                  onChange={(iconAssetId) => update({ iconAssetId })}
-                  onBusyChange={setUploading}
-                />
-              </div>
-              <div className="space-y-2 border-t pt-4">
-                <h3 className="text-sm font-medium">Ảnh nền</h3>
-                <AssetPicker
-                  semanticType="OTHER"
-                  value={value.backgroundAssetId}
-                  onChange={(backgroundAssetId) => update({ backgroundAssetId })}
-                  onBusyChange={setUploading}
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
-          {error && (
-            <p role="alert" className="mt-4 text-sm text-destructive">
-              {error}
-            </p>
-          )}
-        </div>
-        <footer className="flex shrink-0 justify-end border-t p-4">
-          <Button disabled={!dirty || busy || uploading} onClick={() => void save()}>
-            {(busy || uploading) && <LoaderCircle className="size-4 animate-spin" />} Lưu {entityName}
-          </Button>
-        </footer>
       </SheetContent>
     </Sheet>
   )

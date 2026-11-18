@@ -33,14 +33,14 @@ import {
   type SpellContent,
   type WarehouseContents,
 } from "@aov/ui/lib/warehouse-content"
+import { SecondaryEditor } from "./secondary-editor"
+import { EnchantmentBranchEditor } from "./enchantment-branch-editor"
 import {
-  EnchantmentBranchEditor,
   newSecondaryContent,
-  SecondaryEditor,
   secondaryNames,
   type SecondaryContent,
   type SecondaryKind,
-} from "./secondary-editor"
+} from "../../model/secondary-content"
 import { publishingKeys } from "../../../publishing/api/publishing-api"
 
 type SecondaryEntry = WarehouseEntry<WarehouseContents[SecondaryKind]>
