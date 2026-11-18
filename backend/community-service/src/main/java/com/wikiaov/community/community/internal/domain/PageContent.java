@@ -104,9 +104,9 @@ public record PageContent(
     }
 
     /**
-     * A member of a team's roster. {@code lane} and {@code standing} are what readers group and mark members by;
-     * {@code role} and {@code status} stay the wording shown as written, such as a lane with a captain's mark or a
-     * standing with its season.
+     * A member of a team's roster. {@code lane}, {@code standing} and {@code captain} (absent means no) are what
+     * readers group and mark members by; {@code role} and {@code status} stay the wording shown as written, such as a
+     * lane with a captain's mark or a standing with its season.
      */
     public record Member(
             UUID pageId,
@@ -117,7 +117,8 @@ public record PageContent(
             LocalDate endsOn,
             String sourceUrl,
             @Nullable Lane lane,
-            @Nullable Standing standing
+            @Nullable Standing standing,
+            @Nullable Boolean captain
     ) {
     }
 
