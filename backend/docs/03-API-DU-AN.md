@@ -2351,6 +2351,23 @@ Thay thế request import ở mục trước: bắt buộc thêm releaseId và m
 
 Preview thêm classification (NEW_TO_CATALOG, BASELINE, CHANGED, UNCHANGED, INSUFFICIENT_DATA), canApply, sourcePatchVariantId, warnings. NEW_TO_CATALOG chỉ nói chưa có identity trong kho. Thiếu mốc trả canApply=false; apply từ chối 422. Preview không viết DB hoặc tải ảnh. expectedRevisionId/version tham chiếu chính snapshot dùng để so sánh, kiểm tra lại dưới khóa Hero khi apply.
 
+`warnings` là mảng `{code, skillKey, locale}`. Backend không gửi câu chữ: Admin ghi lời cho từng `code`.
+`skillKey` và `locale` là `null` khi cảnh báo không thuộc một kỹ năng hay một bản dịch. Thứ tự: vai trò, rồi từng
+kỹ năng (mô tả và tóm tắt của từng bản dịch, rồi nguồn), cuối cùng là các cảnh báo về mốc.
+
+| `code` | Tham số | Ý nghĩa |
+|---|---|---|
+| `MISSING_ROLES` | — | Tướng chưa có vai trò; cần bổ sung trước khi xuất bản. |
+| `MISSING_SKILL_DESCRIPTION` | `skillKey`, `locale` | Bản dịch kỹ năng chưa có mô tả; cần bổ sung trước khi xuất bản. |
+| `STALE_SKILL_SUMMARY` | `skillKey`, `locale` | Mô tả đã đổi, tóm tắt cũ được giữ nguyên; cần xem lại tóm tắt. |
+| `SKILL_SOURCE_NEEDS_REVIEW` | `skillKey` | Dữ liệu thu thập của kỹ năng còn cờ cảnh báo; không tự suy đoán nội dung bị thiếu. |
+| `NO_SNAPSHOT_TO_CORRECT` | — | CORRECTION nhưng patch này chưa có mốc để sửa; cần nhập dữ liệu ban đầu. |
+| `NO_EARLIER_SNAPSHOT` | — | Chưa có mốc trước patch này để so sánh; nhập dữ liệu ban đầu, không suy ngược từ tương lai. |
+| `BASELINE_IS_KNOWN_STATE` | — | BASELINE ghi trạng thái đã biết tại patch đã chọn, không xác nhận tướng mới ra mắt hay vừa được cập nhật. |
+| `SNAPSHOT_DIFFERENCE_UNPROVEN` | — | PATCH_UPDATE có mốc trước: khác biệt giữa các mốc chưa chứng minh game thay đổi ở patch này; hệ thống không tự tạo changelog. |
+
+Tác vụ import lưu kết quả từng dòng (`code`, `succeeded`, `errorCode`, `detail`), không lưu `warnings`.
+
 POST admin/heroes bắt buộc releaseId, tạo DATA_BASELINE gắn patch tương ứng. Import mốc độc lập cho tướng đã có không sao chép snapshot tương lai. Publish và sửa dữ liệu cũ không tự lan thay đổi vào những snapshot về sau.
 
 POST admin/patches/{id}/variants thêm beforeVariantId tùy chọn: chèn trước variant đó trong cùng ruleset (rulesetOrdinal gửi giá trị dương nhưng được suy ra từ anchor). Không có beforeVariantId thì ordinal phải là vị trí dương chưa dùng. Khóa ruleset tuần tự hóa việc chèn và đặt lịch release. OpenAPI import/mùa/context và TypeScript được cập nhật cùng nhau.
@@ -2916,7 +2933,7 @@ Mỗi bản dịch của kỹ năng có trường tùy chọn `summary`: văn b�
   fallback locale (`null` khi bản dịch đó chưa có tóm tắt); không fallback riêng cho từng trường.
 - Import: `values.skills[].translations[].summary` được nhận như các trường khác của bản dịch. Khi kỹ năng nhập vào
   không mang tóm tắt, tóm tắt đang có của cùng `skillKey` và locale được giữ; nếu mô tả của bản dịch đó đổi, `warnings`
-  có thêm dòng "Cần xem lại tóm tắt kỹ năng <skillKey> (<locale>): mô tả đã đổi, tóm tắt cũ được giữ nguyên."
+  có thêm `{code: "STALE_SKILL_SUMMARY", skillKey, locale}` để người biên tập xem lại tóm tắt.
 - `GET /admin/heroes/publish-readiness` và các API tham chiếu kỹ năng không trả `summary`.
 
 
