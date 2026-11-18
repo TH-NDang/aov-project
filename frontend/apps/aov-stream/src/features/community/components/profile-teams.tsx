@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { communityApi } from "../../../lib/community-api"
 import { communityKeys } from "../../../lib/community-keys"
+import { memberWords } from "../model/team-roster-model"
 
 /**
  * The teams whose published squads list this person, each with the role and standing recorded there. It reads as a
@@ -32,7 +33,7 @@ export function ProfileTeams({ pageId }: { pageId: string }) {
             {team.teamAvatarUrl && <img src={team.teamAvatarUrl} alt="" />}
             {team.teamName}
           </Link>
-          <span>{[team.member.role, team.member.status].filter(Boolean).join(" · ")}</span>
+          <span>{Object.values(memberWords(team.member, text)).filter(Boolean).join(" · ")}</span>
         </li>
       ))}
     </ul>
