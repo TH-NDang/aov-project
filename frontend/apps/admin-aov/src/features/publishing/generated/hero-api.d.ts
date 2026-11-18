@@ -533,7 +533,6 @@ export interface components {
     ImportPolicy: "FILL_EMPTY" | "OVERWRITE" | "SKIP"
     ImportField: {
       key: string
-      label: string
       /** @enum {string} */
       type: "text" | "json" | "image"
     }
@@ -649,7 +648,6 @@ export interface components {
     }
     ImportRelationField: {
       key: string
-      label: string
       type: string
     }
     PublicationMarket: {

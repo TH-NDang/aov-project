@@ -47,6 +47,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.RevisionState;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.JsonToken;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.exc.MismatchedInputException;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -92,6 +94,16 @@ class HeroImportsTest {
         sections.put(HeroSection.SKILLS, new Skills(List.of(), List.of()));
         sections.put(HeroSection.SKINS, new Skins(List.of(), List.of()));
         sections.put(HeroSection.MEDIA_BINDINGS, new Bindings(Map.of(), List.of()));
+    }
+
+    @Test
+    void importFieldsCarryOnlyTheirKeyAndTypeSoAdminNamesThem() {
+        List<JsonNode> fields = new ArrayList<>();
+        json.valueToTree(imports.fields()).forEach(fields::add);
+        json.valueToTree(imports.relationFields()).forEach(relation -> relation.forEach(fields::add));
+
+        assertThat(fields).hasSizeGreaterThan(20)
+                .allSatisfy(field -> assertThat(field.propertyNames()).containsExactly("key", "type"));
     }
 
     @Test

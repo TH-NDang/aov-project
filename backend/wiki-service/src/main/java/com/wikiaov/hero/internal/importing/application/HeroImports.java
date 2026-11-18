@@ -34,41 +34,35 @@ public class HeroImports {
     private final HeroImportWarnings warnings;
     private final HeroImportDraftWriter drafts;
 
+    /**
+     * A field an import file may fill. Admin names it from {@code key}; the server sends no display text.
+     *
+     * @param type how Admin reads the column: {@code text}, {@code number}, {@code json} or {@code image}
+     */
     @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.hero.internal.application.service.HeroImports.Field")
     public record Field(
             String key,
-            String label,
             String type
     ) {
     }
 
     public static final List<Field> FIELDS = List.of(
-            new Field("name", "Tên tướng", "text"), new Field("title", "Danh hiệu", "text"),
-            new Field("summary", "Giới thiệu", "text"), new Field("lore", "Cốt truyện", "text"),
-            new Field("roles", "Vai trò (mảng JSON)", "json"),
-            new Field("overviewRatings", "Đánh giá tổng quan (JSON)", "json"),
-            new Field("combatStats", "Chỉ số chiến đấu (JSON)", "json"),
-            new Field("skills", "Kỹ năng (mảng JSON)", "json"),
-            new Field("skins", "Trang phục (mảng JSON)", "json"),
-            new Field("images", "Các lựa chọn ảnh tướng (JSON)", "json"),
-            new Field("head", "Ảnh đại diện", "image"),
-            new Field("portrait", "Ảnh chân dung", "image"),
-            new Field("splash", "Ảnh nền", "image"));
+            new Field("name", "text"), new Field("title", "text"), new Field("summary", "text"),
+            new Field("lore", "text"), new Field("roles", "json"), new Field("overviewRatings", "json"),
+            new Field("combatStats", "json"), new Field("skills", "json"), new Field("skins", "json"),
+            new Field("images", "json"), new Field("head", "image"), new Field("portrait", "image"),
+            new Field("splash", "image"));
 
     public static final Map<String, List<Field>> RELATION_FIELDS = Map.of(
-            "skills", List.of(new Field("skillKey", "Mã kỹ năng", "text"),
-                    new Field("kind", "Loại kỹ năng", "text"), new Field("formKey", "Mã dạng tướng", "text"),
-                    new Field("displayOrder", "Thứ tự", "number"), new Field("name", "Tên kỹ năng", "text"),
-                    new Field("description", "Mô tả kỹ năng", "text"), new Field("effects", "Hiệu ứng", "json"),
-                    new Field("iconAssetId", "Ảnh icon kỹ năng", "image")),
-            "skins", List.of(new Field("skinKey", "Mã trang phục", "text"),
-                    new Field("displayOrder", "Thứ tự", "number"), new Field("rarityCode", "Mã bậc", "text"),
-                    new Field("name", "Tên trang phục", "text"), new Field("description", "Mô tả", "text"),
-                    new Field("acquisitionNote", "Cách sở hữu", "text"),
-                    new Field("artAssetId", "Ảnh nền trang phục", "image"),
-                    new Field("headAssetId", "Ảnh head trang phục", "image"),
-                    new Field("portraitAssetId", "Ảnh portrait trang phục", "image"),
-                    new Field("images", "Các lựa chọn ảnh (JSON)", "json")));
+            "skills", List.of(new Field("skillKey", "text"), new Field("kind", "text"),
+                    new Field("formKey", "text"), new Field("displayOrder", "number"), new Field("name", "text"),
+                    new Field("description", "text"), new Field("effects", "json"),
+                    new Field("iconAssetId", "image")),
+            "skins", List.of(new Field("skinKey", "text"), new Field("displayOrder", "number"),
+                    new Field("rarityCode", "text"), new Field("name", "text"), new Field("description", "text"),
+                    new Field("acquisitionNote", "text"), new Field("artAssetId", "image"),
+                    new Field("headAssetId", "image"), new Field("portraitAssetId", "image"),
+                    new Field("images", "json")));
 
     public HeroImports(HeroIdentityRepository heroes, HeroAuthoring authoring, HeroValidation validation,
             GameplayContexts contexts, JsonMapper json, IdentifierAliases aliases) {
