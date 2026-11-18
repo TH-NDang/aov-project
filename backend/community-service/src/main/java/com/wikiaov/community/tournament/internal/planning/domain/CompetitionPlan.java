@@ -39,12 +39,24 @@ public record CompetitionPlan(
     ) {
     }
 
+    /** How a team takes part in the competition; absent when the sources do not say. */
+    public enum EntryStatus {
+        INVITED,
+        QUALIFIED,
+        REGISTERED,
+        WITHDRAWN
+    }
+
     public record Entry(
             UUID teamId,
             Integer seed,
-            String status,
+            @Nullable EntryStatus status,
             String note
     ) {
+        /** A team that withdrew keeps its entry but plays no match. */
+        public boolean plays() {
+            return status != EntryStatus.WITHDRAWN;
+        }
     }
 
     public record Stage(

@@ -22,7 +22,6 @@ public final class CompetitionRules {
     /** Highest seed an entrant or a seeded slot can hold. */
     public static final int MAX_SEED = 64;
     public static final Set<Integer> BEST_OF = Set.of(1, 2, 3, 4, 5, 7, 9);
-    public static final Set<String> ENTRY_STATUSES = Set.of("INVITED", "QUALIFIED", "REGISTERED", "WITHDRAWN");
 
     private CompetitionRules() {
     }
@@ -58,10 +57,6 @@ public final class CompetitionRules {
             }
             if (entrant.seed() != null && (entrant.seed() < 1 || entrant.seed() > MAX_SEED)) {
                 throw new IllegalArgumentException("Invalid seed.");
-            }
-            if (entrant.status() != null
-                    && !ENTRY_STATUSES.contains(entrant.status())) {
-                throw new IllegalArgumentException("Invalid entry status.");
             }
         }
         var stages = new HashSet<String>();
@@ -154,7 +149,7 @@ public final class CompetitionRules {
 
     public static List<Match> roundRobin(Stage stage, List<Entry> entrants) {
         var rotation = new ArrayList<>(
-                entrants.stream().filter(e -> !"WITHDRAWN".equals(e.status())).map(Entry::teamId).toList());
+                entrants.stream().filter(Entry::plays).map(Entry::teamId).toList());
         if (rotation.size() < 2) {
             throw new IllegalArgumentException("At least two entrants are required.");
         }

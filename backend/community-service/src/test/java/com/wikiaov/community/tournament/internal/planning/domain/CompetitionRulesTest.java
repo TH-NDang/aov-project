@@ -8,6 +8,7 @@ import com.wikiaov.community.tournament.internal.domain.MatchTitle.Kind;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.SeriesResult;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Entry;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.EntryStatus;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Match;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Slot;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Stage;
@@ -28,7 +29,7 @@ class CompetitionRulesTest {
 
     private List<Entry> entrants(int count) {
         return IntStream.range(0, count)
-                .mapToObj(i -> new Entry(UUID.randomUUID(), i + 1, "REGISTERED", "")).toList();
+                .mapToObj(i -> new Entry(UUID.randomUUID(), i + 1, EntryStatus.REGISTERED, "")).toList();
     }
 
     private CompetitionPlan plan(List<Entry> entrants, Stage stage, List<Match> matches) {

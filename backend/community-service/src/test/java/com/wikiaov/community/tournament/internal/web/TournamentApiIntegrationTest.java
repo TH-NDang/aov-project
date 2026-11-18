@@ -892,6 +892,23 @@ class TournamentApiIntegrationTest {
                 fixture.tournamentId())).containsExactly("SAVE");
     }
 
+    @Test
+    void anEntrantStatusOutsideTheKnownOnesIsRefusedWithItsPath() throws Exception {
+        var team = id(create("teams", new Team("entrant-" + UUID.randomUUID(), "Entrant team", null, null, null)));
+        var tournament = id(create("tournaments",
+                new Tournament("entrants-" + UUID.randomUUID(), "Entrants", "VN", 2026, null, null, null, null)));
+        String plan = ADMIN + "/competitions/" + tournament;
+
+        mvc.perform(authorized(put(plan)).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", 0, "content",
+                        Map.of("entrants", List.of(Map.of("teamId", team.toString(), "status", "RETIRED")))))))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.errors[0].path").value("content.entrants[0].status"));
+        var saved = write(put(plan), Map.of("version", 0, "content",
+                Map.of("entrants", List.of(Map.of("teamId", team.toString(), "status", "WITHDRAWN")))));
+        assertThat(json.valueToTree(saved).at("/content/plan/entrants/0/status").asText()).isEqualTo("WITHDRAWN");
+    }
+
     private List<String> storedActions(String sql, UUID id) throws Exception {
         try (var connection = DriverManager.getConnection(database.getJdbcUrl(), database.getUsername(),
                 database.getPassword()); var statement = connection.prepareStatement(sql)) {

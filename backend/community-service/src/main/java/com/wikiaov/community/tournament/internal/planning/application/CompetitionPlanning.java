@@ -207,7 +207,7 @@ public class CompetitionPlanning {
             return switch (stage.format()) {
                 case "ROUND_ROBIN" -> CompetitionRules.roundRobin(stage, content.entrants());
                 case "DOUBLE_ELIMINATION" -> {
-                    if (content.entrants().stream().filter(entry -> !"WITHDRAWN".equals(entry.status())).count() < 6) {
+                    if (content.entrants().stream().filter(CompetitionPlan.Entry::plays).count() < 6) {
                         throw TournamentErrors.invalid("The AOG playoff template requires six entrants.");
                     }
                     yield CompetitionRules.aogPlayoffs(stage, opponent);
