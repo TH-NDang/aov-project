@@ -71,6 +71,36 @@ Bước "Công bố" tách mục bắt buộc (nguồn kiểm chứng, ít nhấ
 nếu có liên kết) khỏi mục nên bổ sung (đội hình, lịch, giờ đấu, kết quả khớp suất, kết quả đủ, thứ hạng chung
 cuộc). Mục nên bổ sung không chặn công bố.
 
+### Tên trận theo mã (18/11/2026)
+
+Người dùng chọn cách này ngày 18/11/2026 để tên trận do lịch tự động sinh ra hiển thị đúng ngôn ngữ người đọc. Trận
+trong kế hoạch và loạt trận có thêm `title` {kind, leg, round, number}: mã cho biết trận là gì trong giai đoạn, kèm các
+số cần thiết. Ứng dụng đọc (Admin, Stream) viết tên từ `title` bằng ngôn ngữ người đọc, không đọc chữ để quyết định
+hiển thị. `label` của trận và `name` của loạt trận là tên biên tập viên tự đặt, không bắt buộc; khi có thì hiển thị thay
+cho `title`. Đổi tên không bỏ `title`, xóa tên thì trận lại hiển thị theo `title`.
+
+| kind | Số | Tiếng Việt | Tiếng Anh |
+|---|---|---|---|
+| ROUND_ROBIN | `leg`, `round` | Lượt 1 · Vòng 2 | Leg 1 · Round 2 |
+| UPPER_SEMIFINAL | `number` | Bán kết nhánh thắng 1 | Upper bracket semifinal 1 |
+| UPPER_FINAL | — | Chung kết nhánh thắng | Upper bracket final |
+| LOWER_ROUND | `round`, `number` | Vòng 1 nhánh thua · 2 | Lower bracket round 1 · 2 |
+| LOWER_SEMIFINAL | — | Bán kết nhánh thua | Lower bracket semifinal |
+| LOWER_FINAL | — | Chung kết nhánh thua | Lower bracket final |
+| GRAND_FINAL | — | Chung kết tổng | Grand final |
+| EXTRA | — | Trận bổ sung | Additional match |
+
+- Lịch tạo tự động (vòng tròn, mẫu playoffs AOG) chỉ có `title`, không có `label`. Trận Admin thêm thủ công có `title`
+  EXTRA.
+- `title` phải có `kind`; `leg`, `round`, `number` nếu có thì từ 1 đến 99. Sai trả 400 `TOURNAMENT_INVALID_CONTENT`, ở
+  kế hoạch lẫn ở loạt trận.
+- Lưu kế hoạch đồng bộ `label` sang `name` và `title` sang `title` của loạt trận đã liên kết; materialize tạo loạt trận
+  có cả hai.
+- Suất TBD không còn bắt buộc nhãn. Suất chưa có nhãn được ứng dụng viết là "Chưa xác định" / "TBD"; Admin không ghi
+  sẵn "Đội A", "Đội B" nữa.
+- Snapshot công bố, lịch sử kế hoạch và snapshot ván đã chụp trước đây không có `title`; ứng dụng hiển thị tên đã lưu
+  trong đó cho tới lần công bố sau.
+
 ## Page và quyền đại diện
 
 ### Tham chiếu hồ sơ (03/11/2026)
@@ -462,6 +492,13 @@ khóa đã đúng dạng giữ nguyên.
 V018 phục vụ "Nội dung thông báo": thêm vào `community.notification` cột `kind` (mã loại) và `parameters` (jsonb, mặc
 định `{}`), bỏ ràng buộc bắt buộc của `message` và thêm ràng buộc mỗi dòng có `kind` hoặc `message`. Dòng cũ giữ
 nguyên `message` và không có `kind`; dòng mới không lưu `message`.
+
+V019 phục vụ "Tên trận theo mã", chạy một lần trên dữ liệu đã lưu. Trong bản nháp kế hoạch (`competition_plan.content`),
+nhãn trận trùng đúng một mẫu đã sinh ("Lượt N · Vòng M", "Bán kết nhánh thắng N", "Vòng N nhánh thua · M", "Chung kết
+nhánh thắng", "Bán kết nhánh thua", "Chung kết nhánh thua", "Chung kết tổng", "Trận bổ sung") đổi thành `title` và bỏ
+`label`; nhãn "Đội A", "Đội B" của suất TBD bị bỏ. Loạt trận có `content.name` trùng các mẫu đó cũng đổi thành `title`,
+cột `name` theo đó để trống. Nhãn khác, lịch sử kế hoạch (`plan_revision`), snapshot công bố của giải và snapshot ván
+giữ nguyên.
 
 ## API
 
