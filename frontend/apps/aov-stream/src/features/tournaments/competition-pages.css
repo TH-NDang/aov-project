@@ -265,6 +265,9 @@
   text-transform: uppercase;
 }
 .tn-champion-team {
+  --stream-image-size: 36px;
+  --stream-image-radius: var(--aov-radius-control);
+  --stream-image-plate: rgb(255 255 255 / 10%);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -272,12 +275,6 @@
   font-size: 18px;
   font-weight: 700;
   line-height: 24px;
-}
-.tn-champion-team > .stream-image {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--aov-radius-control);
-  background: rgb(255 255 255 / 10%);
 }
 .tn-overview {
   display: grid;
@@ -372,16 +369,12 @@
   white-space: normal;
 }
 .tn-team {
+  --stream-image-size: 28px;
+  --stream-image-radius: var(--aov-radius-control);
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 10px;
-}
-.tn-team > .stream-image {
-  width: 28px;
-  height: 28px;
-  flex: none;
-  border-radius: var(--aov-radius-control);
 }
 .tn-team a:hover,
 .tn-team-card a:hover,
@@ -473,6 +466,8 @@
   background: var(--hub-surface);
 }
 .tn-team-card > h2 {
+  --stream-image-size: 40px;
+  --stream-image-radius: var(--hub-radius-sm);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -481,11 +476,6 @@
   font-size: 16px;
   font-weight: 700;
   line-height: 22px;
-}
-.tn-team-card > h2 > .stream-image {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--hub-radius-sm);
 }
 .tn-team-card ul {
   margin: 0;

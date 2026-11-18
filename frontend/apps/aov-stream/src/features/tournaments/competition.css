@@ -184,6 +184,8 @@
   font-weight: 700;
 }
 .tn-fixture-team {
+  --stream-image-size: 24px;
+  --stream-image-radius: var(--aov-radius-control);
   display: flex;
   min-width: 0;
   align-items: center;
@@ -197,15 +199,12 @@
 .tn-fixture-team[data-side="b"] {
   grid-area: b;
 }
-.tn-fixture-team > .stream-image,
 .tn-fixture-blank {
   width: 24px;
   height: 24px;
   flex: none;
-  border-radius: var(--aov-radius-control);
-}
-.tn-fixture-blank {
   border: 1px dashed var(--hub-border-strong);
+  border-radius: var(--aov-radius-control);
 }
 .tn-fixture-team > strong {
   min-width: 0;
@@ -326,6 +325,11 @@
   line-height: 28px;
 }
 .tn-duel-team {
+  --stream-image-size: 72px;
+  --stream-image-radius: var(--hub-radius);
+  --stream-image-plate: rgb(255 255 255 / 10%);
+  --stream-image-ink: rgb(255 255 255 / 82%);
+  --stream-image-initials: 20px;
   display: flex;
   min-width: 0;
   align-items: center;
@@ -345,22 +349,12 @@
   color: rgb(255 255 255 / 72%);
   font-weight: 600;
 }
-.tn-duel-team > .stream-image,
 .tn-duel-blank {
   width: 72px;
   height: 72px;
   flex: none;
-  border-radius: var(--hub-radius);
-}
-.tn-duel-team > .stream-image {
-  background: rgb(255 255 255 / 10%);
-}
-.tn-duel-team > .stream-image > span {
-  color: rgb(255 255 255 / 82%);
-  font-size: 20px;
-}
-.tn-duel-blank {
   border: 1px dashed rgb(255 255 255 / 40%);
+  border-radius: var(--hub-radius);
 }
 .tn-duel-score {
   display: grid;
@@ -600,9 +594,9 @@
     min-width: 0;
   }
   .tn-fixture-team {
+    --stream-image-size: 22px;
     gap: 6px;
   }
-  .tn-fixture-team > .stream-image,
   .tn-fixture-blank {
     width: 22px;
     height: 22px;
@@ -633,11 +627,11 @@
   }
   .tn-duel-team,
   .tn-duel-team[data-side="a"] {
+    --stream-image-size: 56px;
     flex-direction: column;
     gap: 8px;
     text-align: center;
   }
-  .tn-duel-team > .stream-image,
   .tn-duel-blank {
     width: 56px;
     height: 56px;

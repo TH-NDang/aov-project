@@ -789,16 +789,22 @@ button:disabled {
 .stream-search input::placeholder {
   color: var(--hub-muted);
 }
+/*
+ * A logo or picture on its plate. Its surroundings size it with --stream-image-size and round it with
+ * --stream-image-radius; on a dark banner they set --stream-image-plate, and --stream-image-ink and
+ * --stream-image-initials for the letters shown in place of a missing picture.
+ */
 .stream-image {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 100%;
-  height: 100%;
+  width: var(--stream-image-size, 100%);
+  height: var(--stream-image-size, 100%);
   overflow: hidden;
-  background: var(--hub-plate);
+  border-radius: var(--stream-image-radius, 0);
+  background: var(--stream-image-plate, var(--hub-plate));
   vertical-align: middle;
 }
 .stream-image img {
@@ -812,8 +818,8 @@ button:disabled {
   opacity: 1;
 }
 .stream-image > span {
-  color: var(--hub-on-plate);
-  font-size: 12px;
+  color: var(--stream-image-ink, var(--hub-on-plate));
+  font-size: var(--stream-image-initials, 12px);
   font-weight: 700;
 }
 /* The quiet line under a list that has nothing more to load. */

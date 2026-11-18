@@ -129,17 +129,14 @@ a.tn-match:focus-visible {
   white-space: nowrap;
 }
 .tn-match-team {
+  --stream-image-size: 24px;
+  --stream-image-radius: var(--aov-radius-control);
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   line-height: 20px;
-}
-.tn-match-team > .stream-image {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--aov-radius-control);
 }
 .tn-match-team > strong {
   overflow: hidden;

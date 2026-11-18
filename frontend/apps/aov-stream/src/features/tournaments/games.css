@@ -107,6 +107,8 @@
   line-height: 16px;
 }
 .tn-game-team {
+  --stream-image-size: 24px;
+  --stream-image-radius: var(--aov-radius-control);
   display: flex;
   min-width: 0;
   align-items: center;
@@ -119,12 +121,6 @@
 }
 .tn-game-team[data-slot="b"] {
   grid-area: b;
-}
-.tn-game-team > .stream-image {
-  width: 24px;
-  height: 24px;
-  flex: none;
-  border-radius: var(--aov-radius-control);
 }
 .tn-game-team > strong {
   min-width: 0;
@@ -208,16 +204,12 @@
   --side: var(--hub-red);
 }
 .tn-draft-head {
+  --stream-image-size: 40px;
+  --stream-image-radius: var(--hub-radius-sm);
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 12px;
-}
-.tn-draft-head > .stream-image {
-  width: 40px;
-  height: 40px;
-  flex: none;
-  border-radius: var(--hub-radius-sm);
 }
 .tn-draft-head > div {
   display: grid;
