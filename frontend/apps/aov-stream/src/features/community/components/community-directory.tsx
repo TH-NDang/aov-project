@@ -200,7 +200,7 @@ export function PageDirectory() {
               aria-label={text("Đang đếm trang theo khu vực", "Counting pages by region")}
             >
               {Array.from({ length: 5 }, (_, index) => (
-                <span key={index} className="hub-skeleton" />
+                <span key={index} className="hub-skeleton pg-chip-skeleton" />
               ))}
             </div>
           ) : (

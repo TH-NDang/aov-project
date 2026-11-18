@@ -131,7 +131,7 @@ export function TournamentDirectory() {
         {games.isPending ? (
           <div className="tn-game-grid" role="status" aria-label={text("Đang tải ván đấu", "Loading games")}>
             {Array.from({ length: 6 }, (_, index) => (
-              <span className="hub-skeleton" key={index} aria-hidden="true" />
+              <span className="hub-skeleton tn-game-card-skeleton" key={index} aria-hidden="true" />
             ))}
           </div>
         ) : games.isLoadingError ? (

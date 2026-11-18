@@ -90,7 +90,7 @@
   display: grid;
   gap: 12px;
 }
-.ex-searching > .hub-skeleton {
+.ex-searching > .ex-heading-skeleton {
   width: 160px;
   height: 24px;
 }

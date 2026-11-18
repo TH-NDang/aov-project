@@ -323,7 +323,7 @@ function SearchResults({ query }: { query: string }) {
           role="status"
           aria-label={text(`Đang tìm “${query}”`, `Searching for “${query}”`)}
         >
-          <span className="hub-skeleton" />
+          <span className="hub-skeleton ex-heading-skeleton" />
           <div className="cp-grid">
             {Array.from({ length: 4 }, (_, index) => (
               <div className="hub-skeleton cp-card-skeleton" key={index} />

@@ -187,7 +187,7 @@ export function MatchPage() {
                   aria-label={text("Đang tải các ván của trận", "Loading the games of this match")}
                 >
                   {Array.from({ length: 3 }, (_, index) => (
-                    <span key={index} className="hub-skeleton" />
+                    <span key={index} className="hub-skeleton tn-game-skeleton" />
                   ))}
                 </div>
               ) : games.isError && !games.data ? (

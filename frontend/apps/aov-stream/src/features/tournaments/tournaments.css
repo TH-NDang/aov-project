@@ -223,7 +223,7 @@ a.tn-match:focus-visible {
 .tn-strip-row > * {
   scroll-snap-align: start;
 }
-.tn-strip-row > .hub-skeleton {
+.tn-strip-row > .tn-strip-skeleton {
   height: 112px;
   border: 0;
 }

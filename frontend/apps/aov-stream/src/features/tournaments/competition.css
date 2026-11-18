@@ -512,12 +512,12 @@
 .tn-game-list > .tn-game:focus-visible {
   outline-offset: -2px;
 }
-.tn-game-list > .hub-skeleton {
+.tn-game-list > .tn-game-skeleton {
   display: block;
   height: 64px;
   border-radius: 0;
 }
-.tn-game-list > .hub-skeleton + .hub-skeleton {
+.tn-game-list > .tn-game-skeleton + .tn-game-skeleton {
   margin-top: 1px;
 }
 /* What is not there, said once. */

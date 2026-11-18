@@ -16,13 +16,13 @@
 .pg-filters .hub-pills > [aria-pressed="true"] > small {
   color: inherit;
 }
-.pg-filters .hub-pills > .hub-skeleton {
+.pg-filters .hub-pills > .pg-chip-skeleton {
   width: 104px;
   height: 32px;
   flex: none;
   border-radius: var(--aov-radius-pill);
 }
-.pg-filters .hub-pills > .hub-skeleton:first-child {
+.pg-filters .hub-pills > .pg-chip-skeleton:first-child {
   width: 120px;
 }
 .pg-region-menu {
