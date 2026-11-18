@@ -26,6 +26,10 @@ This block is written and re-added by `turbo` before repository-scoped commands 
 These rules supplement "Frontend conventions" in the repository `AGENTS.md`. They apply to new and touched code;
 existing code is brought in line when its feature is reworked, not in bulk.
 
+`pnpm lint` checks what it can of them: ESLint (`frontend/eslint.config.mjs`: rules of hooks, hook dependencies,
+promises nobody awaits) and each package's source rules in `lint/`. An `eslint-disable` comment says why after ` -- `.
+An allow list in a lint rule holds only code that existed when the rule came, and it only shrinks.
+
 ## Data layer
 
 - One `*-api.ts` per feature declares every endpoint of that feature. A component never contains a URL.
@@ -34,6 +38,8 @@ existing code is brought in line when its feature is reworked, not in bulk.
   keeps the HTTP status and the problem `code`; a screen branches on the code, never on the message.
 - One `xKeys` object per feature builds every query key (`heroKeys.detail(id)`). No inline key arrays; reads and
   invalidation use the same object.
+- A screen picks a translation of catalog content with `pickTranslation` (`@aov/ui/lib/translation-fallback`): the
+  requested locale, then en-US, then vi-VN, then the first by locale tag, the same order as the backend.
 - Writes go through `useMutation`. An error is shown once: by the global toast, or inline when the mutation sets
   `meta: { silent: true }`.
 - Response types come from the generated OpenAPI file where one exists (`pnpm generate:hero-api` writes
@@ -55,6 +61,7 @@ existing code is brought in line when its feature is reworked, not in bulk.
 - A layout switch is written exactly as `@media (max-width: 899.98px)` (compact) or `@media (min-width: 900px)`
   (wide), the same boundary as `usePageLayout`. Other widths only adjust proportions inside one layout.
 - One stylesheet per component, imported by that component. A sheet never restyles a class owned by another sheet,
-  and a rule is changed where it is declared, not by appending a second declaration.
+  and a rule is changed where it is declared, not by appending a second declaration. A variation is a prop or a
+  modifier class set by the owning component; the restyles that predate the rule are listed in `lint/known-restyles.ts`.
 - Class names carry the app or feature prefix (`wiki-`, `hub-`, `cp-`, `esp-`).
 - Font weights are 400, 500, 600 or 700, in CSS and in Tailwind classes: the only ones the font files provide.
