@@ -8,7 +8,7 @@ import type {
 import { Field } from "@/features/community/components/profile-form-primitives"
 import { CompetitionChoiceField } from "../competition-choice-field"
 import { bestOfOptions, stageNameOptions } from "../competition-field-options"
-import { FORMAT_NAMES } from "./model"
+import { FORMAT_NAMES, matchLabel } from "./model"
 
 export const selectClass = "h-10 w-full rounded-md border bg-background px-3 text-sm"
 
@@ -105,10 +105,10 @@ export function SlotEditor({
         <optgroup label="Kết quả trận trước">
           {previous.flatMap((match) => [
             <option key={`${match.key}-W`} value={`WINNER:${match.key}`}>
-              Thắng {match.label || match.key}
+              Thắng {matchLabel(match)}
             </option>,
             <option key={`${match.key}-L`} value={`LOSER:${match.key}`}>
-              Thua {match.label || match.key}
+              Thua {matchLabel(match)}
             </option>,
           ])}
         </optgroup>

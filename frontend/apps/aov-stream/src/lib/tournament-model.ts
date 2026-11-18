@@ -5,7 +5,10 @@ import type {
   Participant,
   PublishedGame,
   Selection,
+  SeriesContent,
 } from "@aov/community-contracts"
+import { matchTitleText } from "@aov/community-contracts/match-titles"
+import { localeText } from "@aov/ui/lib/locale-text"
 
 export type CatalogKind = "heroes" | "items" | "arcana" | "enchantments" | "spells"
 
@@ -106,9 +109,14 @@ export function plainNote(note: string) {
     .join("\n")
 }
 
-/** A series name without the pairing ("Round 18 · FPL vs SGP" reads "Round 18"): the teams stand beside it. */
-export function seriesRound(name?: string | null) {
-  const parts = (name ?? "")
+/**
+ * A series name without the pairing ("Round 18 · FPL vs SGP" reads "Round 18"): the teams stand beside it. A series
+ * without a name reads its title in `locale`.
+ */
+export function seriesRound(series?: Pick<SeriesContent, "name" | "title"> | null, locale = "vi-VN") {
+  const name = series?.name?.trim()
+  if (!name) return matchTitleText(series?.title, localeText(locale))
+  const parts = name
     .split("·")
     .map((part) => part.trim())
     .filter((part) => part && !/\bvs\.?\b/i.test(part))

@@ -12,6 +12,7 @@ import {
   defaultGroupMode,
   groupMatches,
   layoutBracket,
+  matchLabel,
   pendingChanges,
   resolvedIndex,
   resultProblem,
@@ -189,6 +190,23 @@ test("an unresolved side reads as the seeded team, or as the match it waits for"
   assert.equal(slotText(seed(9), value, teams), "Hạt giống 9")
   assert.equal(slotText(winner("LF"), value, teams), "Thắng LF")
   assert.equal(slotText(loser("UF"), value, teams), "Thua UF")
+})
+
+test("a generated match is called by its title and a typed name wins over it", () => {
+  const final = match("GF", 5, winner("UF"), winner("LF"), { label: null, title: { kind: "GRAND_FINAL" } })
+
+  assert.equal(matchLabel(final), "Chung kết tổng")
+  assert.equal(matchLabel({ ...final, label: "Chung kết Mùa Đông" }), "Chung kết Mùa Đông")
+  assert.equal(matchLabel({ ...final, title: null }), "GF")
+})
+
+test("a side waiting for a titled match and an unnamed open slot read in Admin's words", () => {
+  const titled = playoffs.map((entry) =>
+    entry.key === "UF" ? { ...entry, label: null, title: { kind: "UPPER_FINAL" as const } } : entry,
+  )
+
+  assert.equal(slotText(winner("UF"), plan(titled), teams), "Thắng Chung kết nhánh thắng")
+  assert.equal(slotText({ type: "TBD" }, plan(titled), teams), "Chưa xác định")
 })
 
 test("a score must fit the best-of and carry a source", () => {

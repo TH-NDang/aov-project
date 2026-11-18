@@ -39,9 +39,9 @@ export function GameCard({
   competition?: boolean
   round?: boolean
 }) {
-  const { text } = useStreamLocale()
+  const { text, languageTag } = useStreamLocale()
   const { number, durationSeconds, winner } = game.content
-  const round = layout === "card" && named ? seriesRound(game.series.name) : null
+  const round = layout === "card" && named ? seriesRound(game.series, languageTag) : null
   return (
     <Link className="tn-game" data-layout={layout} to={`/games/${game.id}`}>
       <span className="tn-game-title">

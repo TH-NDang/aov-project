@@ -5,6 +5,8 @@ import type {
   TeamContent,
   TournamentContent,
 } from "@aov/community-contracts"
+import { matchTitleText } from "@aov/community-contracts/match-titles"
+import { localeText } from "@aov/ui/lib/locale-text"
 import { currentTimeZone, dayKeyInZone, isValidTimeZone } from "@aov/ui/lib/time-zone"
 import { tournamentPodium, type PodiumTeam } from "@aov/ui/lib/tournament-podium"
 import { matchState, type CompetitionMatch } from "./match-model.ts"
@@ -49,11 +51,14 @@ export function matchWinner(entry: CompetitionMatch): "a" | "b" | null {
 }
 
 /**
- * A match label worth showing beside the teams. Imported plans repeat the stage and the two team codes in every label
- * ("Playoffs · BAC vs ANK"), which says nothing the row does not already show.
+ * A match label worth showing beside the teams, in `locale`. A name an editor typed wins; imported plans repeat the
+ * stage and the two team codes in every name ("Playoffs · BAC vs ANK"), which says nothing the row does not already
+ * show. A match without a name reads its title.
  */
-export function matchRoundLabel(match: PlannedMatch, stage?: Pick<CompetitionStage, "name"> | null) {
-  const parts = match.label
+export function matchRoundLabel(match: PlannedMatch, stage?: Pick<CompetitionStage, "name"> | null, locale = "vi-VN") {
+  const name = match.label?.trim()
+  if (!name) return matchTitleText(match.title, localeText(locale))
+  const parts = name
     .split("·")
     .map((part) => part.trim())
     .filter((part) => part && !/\bvs\.?\b/i.test(part) && part !== stage?.name)

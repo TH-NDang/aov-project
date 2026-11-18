@@ -11,6 +11,8 @@ import type {
   RosterMembershipContent,
   TeamContent,
 } from "@aov/community-contracts"
+import { matchName, matchTitleText, slotLabel } from "@aov/community-contracts"
+import { localeText } from "@aov/ui/lib/locale-text"
 import { dayKeyInZone, toInstant } from "@aov/ui/lib/time-zone"
 
 export const WORKSPACE_STEPS = ["overview", "teams", "format", "schedule", "final", "publish"] as const
@@ -161,18 +163,18 @@ export function restingTeams(group: MatchGroup, teamIds: string[], resolved: Map
   return teamIds.filter((id) => !playing.has(id))
 }
 
+/** Admin reads Vietnamese. */
+const adminText = localeText("vi-VN")
+
+/** What a planned match is called in Admin: the name an editor typed, its title, or at least its key. */
+export const matchLabel = (match: PlannedMatch) => matchName(match, adminText) || match.key
+
+/** The title of a planned match in Admin's words, which its name field shows until an editor types one. */
+export const matchTitleLabel = (match: PlannedMatch) => matchTitleText(match.title, adminText)
+
 /** How one side of a planned match reads before its team is known. */
 export function slotText(slot: CompetitionSlot, plan: CompetitionPlan, teams: Record<string, TeamContent>): string {
-  if (slot.type === "TEAM") return teams[slot.teamId || ""]?.name || "Đội chưa có thông tin"
-  if (slot.type === "SEED") {
-    const seeded = plan.playoffSeeds[slot.seed ?? 0]
-    return (seeded && teams[seeded]?.name) || `Hạt giống ${slot.seed}`
-  }
-  if (slot.type === "WINNER" || slot.type === "LOSER") {
-    const source = plan.matches.find((match) => match.key === slot.matchKey)
-    return `${slot.type === "WINNER" ? "Thắng" : "Thua"} ${source?.label || slot.matchKey}`
-  }
-  return slot.label || "Chưa xác định"
+  return slotLabel(slot, plan, teams, adminText)
 }
 
 export type BracketLane = "upper" | "lower" | "final"
@@ -500,7 +502,7 @@ export function pendingChanges(draft: CompetitionSnapshot, published: Competitio
       continue
     }
     if (now?.teamAId !== was?.teamAId || now?.teamBId !== was?.teamBId)
-      changes.push({ kind: "match", text: `Đổi cặp đấu: ${match.label || pair}` })
+      changes.push({ kind: "match", text: `Đổi cặp đấu: ${matchName(match, adminText) || pair}` })
     if (hasScore(now) && !hasScore(was))
       changes.push({ kind: "score", text: `Tỷ số mới: ${pair} ${now!.scoreA} : ${now!.scoreB}` })
     else if (!hasScore(now) && hasScore(was))
@@ -606,21 +608,21 @@ export function suggestedPlacements(
           place: "1",
           teamId: decided.winner ?? undefined,
           teamName: name(decided.winner),
-          reason: `Thắng ${final.match.label}`,
+          reason: `Thắng ${matchLabel(final.match)}`,
           lastOpponent: name(decided.loser) || undefined,
           lastScore: decided.winnerScore,
         }
-      : { place: "1", teamName: "", reason: `Chờ ${final.match.label}` },
+      : { place: "1", teamName: "", reason: `Chờ ${matchLabel(final.match)}` },
     decided
       ? {
           place: "2",
           teamId: decided.loser ?? undefined,
           teamName: name(decided.loser),
-          reason: `Thua ${final.match.label}`,
+          reason: `Thua ${matchLabel(final.match)}`,
           lastOpponent: name(decided.winner) || undefined,
           lastScore: decided.loserScore,
         }
-      : { place: "2", teamName: "", reason: `Chờ ${final.match.label}` },
+      : { place: "2", teamName: "", reason: `Chờ ${matchLabel(final.match)}` },
   )
   let next = 3
   const eliminating = layout.nodes
@@ -637,11 +639,11 @@ export function suggestedPlacements(
               place,
               teamId: result.loser ?? undefined,
               teamName: name(result.loser),
-              reason: `Thua ${node.match.label} · ${result.loserScore}`,
+              reason: `Thua ${matchLabel(node.match)} · ${result.loserScore}`,
               lastOpponent: name(result.winner) || undefined,
               lastScore: result.loserScore,
             }
-          : { place, teamName: "", reason: `Chờ ${node.match.label}` },
+          : { place, teamName: "", reason: `Chờ ${matchLabel(node.match)}` },
       )
     }
     next += group.length

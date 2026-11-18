@@ -2,7 +2,7 @@ import type { PlannedMatch } from "@aov/community-contracts"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { cn } from "@aov/ui/lib/utils"
 import { TeamLogo } from "@/features/esports/components/primitives"
-import { BRACKET, hasScore, layoutBracket, slotText, type BracketNode } from "./model"
+import { BRACKET, hasScore, layoutBracket, matchLabel, slotText, type BracketNode } from "./model"
 import type { Workspace } from "./parts"
 
 const LANE_NAMES = { upper: "Nhánh thắng", lower: "Nhánh thua", final: "Chung kết" } as const
@@ -116,7 +116,7 @@ function BracketCard({
       style={{ left: node.x, top: node.y, width: BRACKET.nodeWidth, height: BRACKET.nodeHeight }}
     >
       <span className="type-meta flex h-7 items-center justify-between gap-2 border-b px-2.5">
-        <span className={cn("truncate", selected && "text-primary")}>{match.label || match.key}</span>
+        <span className={cn("truncate", selected && "text-primary")}>{matchLabel(match)}</span>
         <LocalTime
           className="shrink-0"
           value={match.scheduledAt}

@@ -74,7 +74,7 @@ export function MatchRow({ entry, competition = false }: { entry: CompetitionMat
   const { plan, tournament } = view.content
   const [a, b] = matchSides(entry, languageTag)
   const status = matchStatus(entry)
-  const round = matchRound(entry)
+  const round = matchRound(entry, languageTag)
   const meta = [
     status === "PENDING" && <em>{text(...matchStateLabels.PENDING)}</em>,
     round,
@@ -152,7 +152,7 @@ export function matchHeadOf(entry: CompetitionMatch, locale: string): Head {
   const team = (side: MatchSide): HeadTeam => ({ ...side, name: side.fullName, shortName: side.name })
   return {
     tint: entry.competition.content.tournament.name,
-    kicker: [matchRound(entry), `BO${entry.match.bestOf}`].filter(Boolean).join(" · "),
+    kicker: [matchRound(entry, locale), `BO${entry.match.bestOf}`].filter(Boolean).join(" · "),
     teams: [team(a), team(b)],
   }
 }
@@ -161,7 +161,7 @@ export function matchHeadOf(entry: CompetitionMatch, locale: string): Head {
 export function seriesHeadOf(game: PublishedGame, locale = "vi-VN"): Head {
   return {
     tint: game.tournament.name,
-    kicker: [seriesRound(game.series.name), `BO${game.series.bestOf}`].filter(Boolean).join(" · "),
+    kicker: [seriesRound(game.series, locale), `BO${game.series.bestOf}`].filter(Boolean).join(" · "),
     teams: seriesTeams(game, locale),
   }
 }

@@ -50,7 +50,7 @@ export function MatchCard({
   const { languageTag } = useStreamLocale()
   const { competition, match } = entry
   const { tournament } = competition.content
-  const round = matchRound(entry)
+  const round = matchRound(entry, languageTag)
   return (
     <Link
       className="tn-match"
@@ -68,7 +68,7 @@ export function MatchCard({
       ) : (
         (round || !brief) && (
           <span className="tn-match-meta">
-            <span>{round ?? match.label}</span>
+            <span>{round}</span>
           </span>
         )
       )}
