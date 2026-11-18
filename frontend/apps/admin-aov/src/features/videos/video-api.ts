@@ -28,7 +28,6 @@ export interface VideoPage {
   page: number
   size: number
   totalElements: number
-  totalPages: number
 }
 
 export interface ImportResult {
