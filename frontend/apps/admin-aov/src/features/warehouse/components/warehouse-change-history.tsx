@@ -18,9 +18,10 @@ import {
 } from "./catalog-changes"
 import { ChangeKindSelect } from "../../publishing/components/patch-changes/change-kind-select"
 import { CAUSE_NAMES } from "../../publishing/model/setup/version-causes"
-import { warehouseApi, invalidateWarehouseCatalogs } from "../api/warehouse-api"
+import { warehouseApi, invalidateWarehouseCatalogs, warehouseKeys } from "../api/warehouse-api"
 import { warehouseBaselineMode, type WarehouseRevision } from "../model/warehouse-types"
 import { type WarehouseKind } from "@aov/ui/lib/warehouse-content"
+import { publishingKeys } from "../../publishing/api/publishing-api"
 
 const revisionLabels: Record<WarehouseRevision["cause"], string> = CAUSE_NAMES
 
@@ -47,7 +48,7 @@ export function WarehouseChangeHistory({
   const changes = useCatalogChanges(kind, rulesetId, locale)
   const overview = usePublicationOverview()
   const history = useQuery({
-    queryKey: ["warehouse", "history", kind, entryId],
+    queryKey: warehouseKeys.history(kind, entryId),
     queryFn: () => warehouseApi.revisions(kind, entryId),
   })
   const [selectedTarget, setTarget] = useState("")
@@ -294,7 +295,7 @@ export function WarehouseChangeHistory({
                     }),
                   })
                   await invalidateWarehouseCatalogs(client)
-                  await client.invalidateQueries({ queryKey: ["publication-overview"] })
+                  await client.invalidateQueries({ queryKey: publishingKeys.overview })
                   setMessage("Đã xác nhận lịch sử thay đổi.")
                   setEditing(false)
                   patchContext?.onSaved()

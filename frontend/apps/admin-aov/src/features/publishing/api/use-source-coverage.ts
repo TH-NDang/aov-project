@@ -2,13 +2,13 @@ import { useMemo } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { fetchPublishedSets, isSourceAccessDenied } from "../../files/capture-sets"
 import type { HeroSourceCoverage } from "../model/captures/source-image-gaps"
+import { publishingKeys } from "./publishing-api"
 
 /**
  * New captures arrive when someone publishes a set with the sync tool, so the page looks again on its own. A look costs
  * two small API calls; the set itself downloads again only when it changed.
  */
 export const SOURCE_COVERAGE_REFRESH_MS = 30_000
-export const sourceCoverageKey = ["source-coverage"] as const
 
 export type SourceCoverageState =
   /** The account cannot open source files (no catalog:read). */
@@ -51,14 +51,14 @@ const live = { refetchInterval: SOURCE_COVERAGE_REFRESH_MS, refetchOnWindowFocus
 /** The capture sets on disk, and each hero's coverage in the sets `patchesFor` picks from them. */
 export function useSourceCoverage(patchesFor: (patches: string[]) => string[]): SourceCoverageState {
   const sets = useQuery({
-    queryKey: [...sourceCoverageKey, "sets"],
+    queryKey: publishingKeys.sourceCoverageSets,
     queryFn: () => fetchCaptureSetList(),
     ...live,
   })
   const wanted = useMemo(() => (sets.data ? patchesFor(sets.data) : []), [sets.data, patchesFor])
   const coverage = useQueries({
     queries: wanted.map((patchCode) => ({
-      queryKey: [...sourceCoverageKey, "patch", patchCode],
+      queryKey: publishingKeys.sourceCoveragePatch(patchCode),
       queryFn: () => fetchSourceCoverage(patchCode),
       ...live,
     })),

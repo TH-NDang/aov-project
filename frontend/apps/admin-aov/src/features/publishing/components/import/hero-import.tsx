@@ -15,7 +15,7 @@ import {
   type RelationMapping,
   type RelatedImage,
 } from "../../model/import/import-relations"
-import { type Request } from "../../api/publishing-api"
+import { type Request, publishingKeys } from "../../api/publishing-api"
 import { createUploadSession, resumeUploadSession, type UploadSession } from "./import-upload-session"
 import { control } from "../fields"
 import {
@@ -75,11 +75,11 @@ export function HeroImport({
     request<T>(`/admin/heroes/import/${path}`, { method: "POST", body: JSON.stringify(body) })
   const cache = useQueryClient()
   const fields = useQuery({
-    queryKey: ["hero-import-fields"],
+    queryKey: publishingKeys.importFields,
     queryFn: () => request<Field[]>("/admin/heroes/import/fields"),
   })
   const relationFields = useQuery({
-    queryKey: ["hero-import-relation-fields"],
+    queryKey: publishingKeys.importRelationFields,
     queryFn: () => request<Record<Relation, RelationField[]>>("/admin/heroes/import/relation-fields"),
   })
   const folderInput = useRef<HTMLInputElement>(null)
@@ -407,7 +407,7 @@ export function HeroImport({
         completed: total,
         total,
       })
-      await cache.invalidateQueries({ queryKey: ["hero-import-jobs"] })
+      await cache.invalidateQueries({ queryKey: publishingKeys.allImportJobs })
     } catch (cause) {
       setAwaitingRetry(!!submission.current)
       setError(errorMessage(cause))
@@ -421,7 +421,7 @@ export function HeroImport({
       })
     } finally {
       setBusy(false)
-      await cache.invalidateQueries({ queryKey: ["hero-upload-sessions"] })
+      await cache.invalidateQueries({ queryKey: publishingKeys.uploadSessions })
     }
   }
   const modes = [

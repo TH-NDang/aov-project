@@ -20,7 +20,7 @@ import { useSession } from "@/app/auth/auth-gate"
 import { defaultRulesetId } from "@/features/publishing/model/setup/default-ruleset"
 import { HeroAsset } from "@/features/publishing/components/hero-asset"
 import { useContentLocale } from "@/features/publishing/api/publication-overview"
-import { createPublishingApi } from "@/features/publishing/api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/features/publishing/api/publishing-api"
 import { useWarehouseCatalog } from "@/features/warehouse/api/warehouse-api"
 import { warehouseName } from "@aov/ui/lib/warehouse-content"
 import { commandFilter } from "@/lib/text"
@@ -41,7 +41,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
   const canReadCatalog = !!actor?.capabilities.includes("catalog:read")
   const locale = useContentLocale()
   const rulesets = useQuery({
-    queryKey: ["publishing-rulesets"],
+    queryKey: publishingKeys.rulesets,
     queryFn: publishing.rulesets,
     enabled: open && canReadCatalog,
     staleTime: 60000,

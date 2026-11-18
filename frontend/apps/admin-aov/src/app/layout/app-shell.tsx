@@ -22,7 +22,7 @@ function readSidebarCookie(): boolean {
 function AccountPreferences() {
   const { actor } = useSession()
   const profile = useQuery({
-    queryKey: [...userKeys.self, actor?.issuer, actor?.subject],
+    queryKey: userKeys.selfOf(actor?.issuer, actor?.subject),
     queryFn: ({ signal }) => selfProfile(signal),
     enabled: !!actor,
     refetchInterval: 600000,

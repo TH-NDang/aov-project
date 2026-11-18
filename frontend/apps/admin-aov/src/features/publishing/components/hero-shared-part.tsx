@@ -28,7 +28,7 @@ import {
   type SharedText,
 } from "../model/hero-forms-model"
 import { heroPageLocation } from "../model/hero-location"
-import { createPublishingApi, heroPreviewKey, publishReadinessKey } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import { invalidateHeroCatalogs } from "../api/publishing-cache"
 import type { MediaRole } from "../api/types"
 
@@ -67,12 +67,12 @@ export function HeroSharedPart({
   const [uploading, setUploading] = useState(false)
   const [picking, setPicking] = useState<MediaRole | null>(null)
   const revisions = useQuery({
-    queryKey: ["publishing-revisions", holder.id],
+    queryKey: publishingKeys.revisions(holder.id),
     queryFn: () => api.revisions(holder.id),
   })
   const current = sharedPartRevision(revisions.data ?? [])
   const read = useQuery({
-    queryKey: heroPreviewKey(holder.id, current?.id ?? ""),
+    queryKey: publishingKeys.preview(holder.id, current?.id ?? ""),
     queryFn: () => api.read(holder.id, current!.id),
     enabled: !!current,
     staleTime: Infinity,
@@ -115,10 +115,10 @@ export function HeroSharedPart({
     onSettled: () =>
       Promise.all([
         invalidateHeroCatalogs(client),
-        client.invalidateQueries({ queryKey: ["publishing-revisions", holder.id] }),
-        client.invalidateQueries({ queryKey: ["publishing-preview", holder.id] }),
-        client.invalidateQueries({ queryKey: ["hero-forms"] }),
-        client.invalidateQueries({ queryKey: publishReadinessKey }),
+        client.invalidateQueries({ queryKey: publishingKeys.revisions(holder.id) }),
+        client.invalidateQueries({ queryKey: publishingKeys.previews(holder.id) }),
+        client.invalidateQueries({ queryKey: publishingKeys.allForms }),
+        client.invalidateQueries({ queryKey: publishingKeys.publishReadiness }),
       ]),
     meta: { silent: true },
   })

@@ -32,7 +32,7 @@ import { useSession } from "@/app/auth/auth-gate"
 import { replacingPageTab, usePageCloseGuard } from "@/app/layout/page-tabs"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 
-import { createPublishingApi, heroPreviewKey } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import { invalidateHeroCatalogs } from "../api/publishing-cache"
 import { BaselineContextForm } from "../components/import/baseline-context-form"
 import { DraftPencil, type NewDraft } from "../../warehouse/components/warehouse-sheet"
@@ -187,7 +187,7 @@ export function PublishingPage({ translationMode = false }: { translationMode?: 
   const { heroId = "" } = useParams()
   // Shares the workspace's revisions query; the backend rejects a hero code in the id slot, e.g. /hero/airi.
   const revisions = useQuery({
-    queryKey: ["publishing-revisions", heroId],
+    queryKey: publishingKeys.revisions(heroId),
     queryFn: () => api.revisions(heroId),
     enabled: !!heroId,
   })
@@ -203,7 +203,7 @@ export function PublishingPage({ translationMode = false }: { translationMode?: 
 function HeroCodeRedirect({ code }: { code: string }) {
   const location = useLocation()
   const lookup = useQuery({
-    queryKey: ["publishing-hero-code", code.toLowerCase()],
+    queryKey: publishingKeys.heroByCode(code.toLowerCase()),
     queryFn: ({ signal }) => api.heroes(0, { q: code }, signal),
   })
   const match = lookup.data?.items.find((row) => row.code.toLowerCase() === code.toLowerCase())
@@ -312,15 +312,15 @@ export function PublishingWorkspace({
     updateLocation({ section: value, translationKey: null, translationField: null })
   const setContentLocale = (value: string) => updateLocation({ readLocale: value })
   const setTargetLocale = (value: string) => updateLocation({ target: value })
-  const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: api.rulesets })
-  const regions = useQuery({ queryKey: ["publishing-regions"], queryFn: api.regions })
+  const rulesets = useQuery({ queryKey: publishingKeys.rulesets, queryFn: api.rulesets })
+  const regions = useQuery({ queryKey: publishingKeys.regions, queryFn: api.regions })
   const revisions = useQuery({
-    queryKey: ["publishing-revisions", heroId],
+    queryKey: publishingKeys.revisions(heroId),
     queryFn: () => api.revisions(heroId),
     enabled: !!heroId,
   })
   const read = useQuery({
-    queryKey: heroPreviewKey(heroId, selectedId),
+    queryKey: publishingKeys.preview(heroId, selectedId),
     queryFn: () => api.read(heroId, selectedId),
     enabled: !!heroId && !!selectedId,
     staleTime: Infinity,
@@ -359,7 +359,7 @@ export function PublishingWorkspace({
   const statDefaults = useStatDefaults(statPatch?.id)
   const writable = canWrite && revision?.state === "DRAFT"
   const savedChanges = useQuery({
-    queryKey: ["hero-draft-changes", heroId, revision?.id, revision?.version],
+    queryKey: publishingKeys.draftChange(heroId, revision?.id, revision?.version),
     queryFn: () => api.draftChanges(heroId, revision!.id),
     enabled: !!writable,
     retry: false,
@@ -544,7 +544,7 @@ export function PublishingWorkspace({
       await action()
       toast.success(success)
       await invalidateHeroCatalogs(queryClient)
-      await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
+      await queryClient.invalidateQueries({ queryKey: publishingKeys.comparisons(heroId) })
       await revisions.refetch()
     } catch (failure) {
       onFailure(errorMessage(failure))
@@ -554,7 +554,7 @@ export function PublishingWorkspace({
   }
   async function openRevision(next: Revision) {
     const data = await api.read(next.heroId, next.id)
-    queryClient.setQueryData(["publishing-preview", next.heroId, next.id], data)
+    queryClient.setQueryData(publishingKeys.preview(next.heroId, next.id), data)
     setSelectedId(next.id)
     updateLocation({ revision: next.id, compare: null, changes: null })
     setEditing(false)
@@ -905,7 +905,7 @@ export function PublishingWorkspace({
                 const value = sectionValue ?? emptySection(section, editorLocale)
                 const next = await api.save(revision, section, value, note)
                 const saved = await api.read(heroId, revision.id)
-                queryClient.setQueryData(["publishing-preview", heroId, revision.id], saved)
+                queryClient.setQueryData(publishingKeys.preview(heroId, revision.id), saved)
                 const notes = { ...localDraft.value.notes }
                 delete notes[noteKey]
                 const content = {
@@ -1329,7 +1329,7 @@ export function PublishingWorkspace({
                           onMove={async (next) => {
                             await openRevision(next)
                             await invalidateHeroCatalogs(queryClient)
-                            await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
+                            await queryClient.invalidateQueries({ queryKey: publishingKeys.comparisons(heroId) })
                             await revisions.refetch()
                             toast.success("Đã đổi patch, giữ nguyên nội dung và ảnh.")
                           }}

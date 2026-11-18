@@ -62,6 +62,9 @@ export const characterImageKeys = {
     ["skin-badges", "list", rulesetId, locale, q.trim()] as const,
   badgeSkins: (id: string, rulesetId: string, locale: string) =>
     ["skin-badges", "skins", id, rulesetId, locale] as const,
+  selectedBadge: (locale: string, code: string | null | undefined) =>
+    ["skin-badges", "selected", locale, code] as const,
+  dashboardBadges: ["skin-badges", "dashboard"] as const,
 }
 export function createCharacterImageApi(request: Request) {
   const params = (values: Record<string, string | number>) => {

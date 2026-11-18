@@ -10,6 +10,22 @@ export const warehouseKeys = {
   all: ["warehouse"] as const,
   catalog: (kind: WarehouseKind, rulesetId: string, locale: string) => ["warehouse", kind, rulesetId, locale] as const,
   metadata: (kind: "items" | "enchantments") => ["warehouse", "metadata", kind] as const,
+  drafts: (kind: WarehouseKind, rulesetId: string, locale: string) =>
+    ["warehouse", kind, rulesetId, locale, "drafts"] as const,
+  scope: (
+    kind: WarehouseKind,
+    rulesetId: string,
+    locale: string,
+    seasonId: string | undefined,
+    variantId: string | undefined,
+    showAll: boolean,
+  ) => ["warehouse", kind, rulesetId, locale, "scope", seasonId, variantId, showAll] as const,
+  snapshot: (kind: WarehouseKind, rulesetId: string, locale: string, variantId: string | null | undefined) =>
+    ["warehouse", kind, rulesetId, locale, "snapshot", variantId] as const,
+  changes: (kind: string, rulesetId: string, locale: string) =>
+    ["warehouse", "changes", kind, rulesetId, locale] as const,
+  history: (kind: string, entryId: string) => ["warehouse", "history", kind, entryId] as const,
+  removals: (id: string, rulesetId: string) => ["warehouse", "removals", id, rulesetId] as const,
 }
 export function invalidateWarehouseCatalogs(client: QueryClient) {
   return Promise.all([client.invalidateQueries({ queryKey: warehouseKeys.all }), invalidateReferenceCatalog(client)])

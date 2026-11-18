@@ -51,8 +51,6 @@ const contentFromWire = (content: Record<string, unknown>) =>
   Object.fromEntries(
     Object.entries(sectionKeys).map(([key, wire]) => [key, content[wire] ?? content[key]]),
   ) as HeroDraftChangeSet["before"]
-export const heroPreviewKey = (heroId: string, revisionId: string) =>
-  ["publishing-preview", heroId, revisionId] as const
 export interface HeroCatalogQuery {
   role?: string
   position?: string
@@ -65,25 +63,92 @@ export interface HeroCatalogQuery {
   locale?: string
   sort?: "code" | "edited-desc"
 }
-/** Sits under the catalog's key, so saving or publishing a hero refreshes it with the other lists. */
-export const publishReadinessKey = ["publishing-heroes", "publish-readiness"] as const
-export const heroCatalogKey = (query: HeroCatalogQuery) =>
-  [
-    "publishing-heroes",
-    "infinite",
-    {
-      q: query.q?.trim() ?? "",
-      seasonId: query.seasonId ?? "",
-      patchVariantId: query.patchVariantId ?? "",
-      rulesetId: query.rulesetId ?? "",
-      locale: query.locale ?? "vi-VN",
-      sort: query.sort ?? "code",
-      includeUnchanged: query.includeUnchanged ?? "false",
-      role: query.role ?? "",
-      position: query.position ?? "",
-      hasWarnings: query.hasWarnings ?? "",
-    },
-  ] as const
+type Maybe = string | null | undefined
+
+/**
+ * Every query key of hero publishing. Reads and invalidations build their keys here; a key without its last parts is
+ * the prefix that refreshes all of them.
+ */
+export const publishingKeys = {
+  heroes: ["publishing-heroes"] as const,
+  heroCatalog: (query: HeroCatalogQuery) =>
+    [
+      "publishing-heroes",
+      "infinite",
+      {
+        q: query.q?.trim() ?? "",
+        seasonId: query.seasonId ?? "",
+        patchVariantId: query.patchVariantId ?? "",
+        rulesetId: query.rulesetId ?? "",
+        locale: query.locale ?? "vi-VN",
+        sort: query.sort ?? "code",
+        includeUnchanged: query.includeUnchanged ?? "false",
+        role: query.role ?? "",
+        position: query.position ?? "",
+        hasWarnings: query.hasWarnings ?? "",
+      },
+    ] as const,
+  /** Sits under the catalog's key, so saving or publishing a hero refreshes it with the other lists. */
+  publishReadiness: ["publishing-heroes", "publish-readiness"] as const,
+  dashboardHeroes: ["publishing-heroes", "dashboard"] as const,
+  quickSwitch: (issuer: Maybe, subject: Maybe, rulesetId: string, locale: string, query: string) =>
+    ["publishing-heroes", "quick-switch", issuer, subject, rulesetId, locale, query] as const,
+  heroByCode: (code: string) => ["publishing-hero-code", code] as const,
+  allRevisions: ["publishing-revisions"] as const,
+  revisions: (heroId: string) => ["publishing-revisions", heroId] as const,
+  allPreviews: ["publishing-preview"] as const,
+  previews: (heroId: string) => ["publishing-preview", heroId] as const,
+  preview: (heroId: string, revisionId: string) => ["publishing-preview", heroId, revisionId] as const,
+  allComparisons: ["hero-comparison"] as const,
+  comparisons: (heroId: string) => ["hero-comparison", heroId] as const,
+  comparison: (heroId: string, revisionId: string, version: number, sourceId: Maybe) =>
+    ["hero-comparison", heroId, revisionId, version, sourceId] as const,
+  draftChanges: (heroId: string) => ["hero-draft-changes", heroId] as const,
+  draftChange: (heroId: string, revisionId: Maybe, version: number | undefined) =>
+    ["hero-draft-changes", heroId, revisionId, version] as const,
+  allPatchChanges: ["patch-changes"] as const,
+  patchChanges: (variantId: Maybe, locale: string) => ["patch-changes", variantId, locale] as const,
+  overview: ["publication-overview"] as const,
+  rulesets: ["publishing-rulesets"] as const,
+  regions: ["publishing-regions"] as const,
+  allAuthoringSeasons: ["authoring-seasons"] as const,
+  authoringSeasons: (regionId: Maybe) => ["authoring-seasons", regionId] as const,
+  allAuthoringContexts: ["authoring-contexts"] as const,
+  authoringContexts: (regionId: Maybe, seasonId: Maybe) => ["authoring-contexts", regionId, seasonId] as const,
+  allRankedSeasons: ["ranked-seasons"] as const,
+  rankedSeasons: (region: Maybe) => ["ranked-seasons", region] as const,
+  uploadSessions: ["hero-upload-sessions"] as const,
+  allImportJobs: ["hero-import-jobs"] as const,
+  importJobs: (issuer: Maybe, subject: Maybe) => ["hero-import-jobs", issuer, subject] as const,
+  importFields: ["hero-import-fields"] as const,
+  importRelationFields: ["hero-import-relation-fields"] as const,
+  baselineContexts: ["baseline-contexts"] as const,
+  allBaselineMigrations: ["baseline-migration"] as const,
+  baselineMigration: (contextId: Maybe) => ["baseline-migration", contextId] as const,
+  allPatchStatDefaults: ["patch-stat-defaults"] as const,
+  patchStatDefaults: (variantId: Maybe) => ["patch-stat-defaults", variantId] as const,
+  allForms: ["hero-forms"] as const,
+  forms: (heroId: string) => ["hero-forms", heroId] as const,
+  formCandidates: (code: string) => ["hero-form-candidates", code] as const,
+  patchViews: (heroId: string) => ["hero-patch-view", heroId] as const,
+  patchView: (heroId: string, variantId: Maybe, anchorRevisionId: Maybe) =>
+    ["hero-patch-view", heroId, variantId, anchorRevisionId] as const,
+  allStatSamples: ["hero-stat-samples"] as const,
+  statSamples: (variantId: Maybe) => ["hero-stat-samples", variantId] as const,
+  skillImages: (heroId: Maybe) => ["hero-skill-images", heroId] as const,
+  rankingReading: (heroId: Maybe) => ["hero-ranking-reading", heroId] as const,
+  gallery: (heroId: string) => ["hero-gallery", heroId] as const,
+  galleryView: (heroId: string, locale: string, reload: string) => ["hero-gallery", heroId, locale, reload] as const,
+  captureHeroCode: (heroId: string) => ["patch-capture-hero-code", heroId] as const,
+  captures: (patchCode: string, heroCode: Maybe) => ["patch-captures", patchCode, heroCode] as const,
+  shopCaptures: (heroCode: Maybe) => ["shop-captures", heroCode] as const,
+  captureSets: ["patch-capture-sets"] as const,
+  shop: (heroId: string, region: string) => ["hero-shop", heroId, region] as const,
+  additionalNotes: (variantId: string, locale: string) => ["patch-additional-notes", variantId, locale] as const,
+  sourceCoverage: ["source-coverage"] as const,
+  sourceCoverageSets: ["source-coverage", "sets"] as const,
+  sourceCoveragePatch: (patchCode: string) => ["source-coverage", "patch", patchCode] as const,
+}
 /** Translate the API's camelCase section keys at the boundary, keeping editor keys internal. */
 function previewFromApi(value: WirePreview): Preview {
   return {

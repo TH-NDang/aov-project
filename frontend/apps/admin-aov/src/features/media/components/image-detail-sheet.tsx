@@ -132,7 +132,7 @@ function useTournamentUses(assetId: string | null) {
   }, [assetId, teams.data, players.data, tournaments.data])
   // Plans, pages and posts name images too, without a row of their own here.
   const references = useQuery({
-    queryKey: ["media-asset-competition-usage", assetId],
+    queryKey: mediaKeys.competitionUsage(assetId),
     enabled,
     retry: false,
     queryFn: ({ signal }) =>
@@ -263,7 +263,7 @@ export function ImageDetailSheet({
     queryFn: () => backendRequest<Details>(`/admin/media/assets/${assetId}`),
   })
   const usages = useQuery({
-    queryKey: ["managed-image-usages", assetId],
+    queryKey: mediaKeys.managedUsages(assetId),
     enabled: !!assetId,
     queryFn: () => backendRequest<MediaUsageReport>(`/admin/media/assets/${assetId}/usages`),
   })

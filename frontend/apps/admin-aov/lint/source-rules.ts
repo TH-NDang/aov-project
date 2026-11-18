@@ -192,6 +192,19 @@ const rules: Rule[] = [
     offenders: (text) => (text.includes("crypto.randomUUID") ? [""] : []),
   },
   {
+    name: "query keys come from the feature's keys object",
+    hint: "Build the key with the feature's xKeys object (publishingKeys.revisions(id)); reads and invalidations share it.",
+    // The tournament, esports, community and competition screens were being reworked by another change when the
+    // other features moved to key objects; they follow when their data layer is reworked.
+    files: files(source, /\.tsx?$/).filter(
+      (path) => !/[\\/]features[\\/](tournaments|esports|community|competition)[\\/]/.test(path),
+    ),
+    offenders: (text) =>
+      [...text.matchAll(/(?:queryKey:|(?:get|set)QueryData(?:<[^>]*>)?\()\s*\[/g)].map(
+        (match) => `:${text.slice(0, match.index).split("\n").length}`,
+      ),
+  },
+  {
     name: "admin tests build their browser with the shared kit",
     hint: "Use createWindow, withDom, inDom or parseHtml from tests/fixtures/dom.tsx instead of new JSDOM(...).",
     // These tournament, esports and community tests were being reworked by another change when the kit took over;

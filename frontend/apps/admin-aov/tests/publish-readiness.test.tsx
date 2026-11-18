@@ -461,8 +461,8 @@ for (const canWrite of [true, false])
   })
 
 test("source images still to capture show per hero, rank the list, open the skill and follow new captures", async () => {
-  const { SOURCE_COVERAGE_REFRESH_MS, sourceCoverageKey } =
-    await import("../src/features/publishing/api/use-source-coverage")
+  const { SOURCE_COVERAGE_REFRESH_MS } = await import("../src/features/publishing/api/use-source-coverage")
+  const { publishingKeys } = await import("../src/features/publishing/api/publishing-api")
   const statsMissing = (code: string) =>
     hero(code, code[0]!.toUpperCase() + code.slice(1), {
       revisions: [revision(code, `${code}-1`, "DRAFT")],
@@ -629,14 +629,14 @@ test("source images still to capture show per hero, rank the list, open the skil
         assert.ok(search().includes(part), part)
 
       // The sets are read again on a timer; here the reviewer has just recorded Bijan's new attributes image.
-      const queries = cache.getQueryCache().findAll({ queryKey: sourceCoverageKey })
+      const queries = cache.getQueryCache().findAll({ queryKey: publishingKeys.sourceCoverage })
       assert.ok(queries.length >= 2)
       for (const query of queries)
         assert.equal((query.options as { refetchInterval?: number }).refetchInterval, SOURCE_COVERAGE_REFRESH_MS)
       bijanValues = shown
       const before = captureRequests.length
       await act(async () => {
-        await cache.refetchQueries({ queryKey: sourceCoverageKey })
+        await cache.refetchQueries({ queryKey: publishingKeys.sourceCoverage })
       })
       assert.ok(captureRequests.length > before)
       await waitFor(() => !rendered().includes("bijan"), "a hero whose capture arrived leaves the list")

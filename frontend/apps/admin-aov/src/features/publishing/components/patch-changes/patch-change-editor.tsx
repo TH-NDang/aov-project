@@ -6,7 +6,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { ChangeKindSelect } from "./change-kind-select"
-import { createPublishingApi } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
 import { SKILL_FIELD_LABELS } from "../../model/skills/skill-field-labels"
 import {
   KIND_LABELS,
@@ -116,9 +116,9 @@ export function PatchChangeEditor({
         introducesHero: introduces,
       })
       await Promise.all([
-        cache.invalidateQueries({ queryKey: ["patch-changes"] }),
-        cache.invalidateQueries({ queryKey: ["publishing-heroes"] }),
-        cache.invalidateQueries({ queryKey: ["hero-patch-view", heroId] }),
+        cache.invalidateQueries({ queryKey: publishingKeys.allPatchChanges }),
+        cache.invalidateQueries({ queryKey: publishingKeys.heroes }),
+        cache.invalidateQueries({ queryKey: publishingKeys.patchViews(heroId) }),
       ])
       onSaved(result.id)
     } catch (failure) {

@@ -28,7 +28,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { createPublishingApi, heroPreviewKey, heroCatalogKey, type HeroCatalogQuery } from "../../api/publishing-api"
+import { createPublishingApi, type HeroCatalogQuery, publishingKeys } from "../../api/publishing-api"
 import { heroFormNote } from "../../model/hero-forms-model"
 import { type HeroGameplayChange, type HeroRow } from "../../api/types"
 import {
@@ -151,7 +151,7 @@ export function HeroCatalog({
     rulesetId: ruleset,
   }
   const heroes = useInfiniteQuery({
-    queryKey: heroCatalogKey(query),
+    queryKey: publishingKeys.heroCatalog(query),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => api.heroes(pageParam, query, signal),
     getNextPageParam: nextPageOf,
@@ -706,7 +706,7 @@ export function HeroQuickView({
 }) {
   const [params, setParams] = useSearchParams()
   const restored = useQuery({
-    queryKey: ["publishing-revisions", heroId],
+    queryKey: publishingKeys.revisions(heroId),
     queryFn: () => api.revisions(heroId),
     enabled: !!heroId,
   })
@@ -788,7 +788,7 @@ export function HeroQuickView({
 function useHeroPreview(hero: CatalogRow) {
   const r = hero.selectedRevision
   return useQuery({
-    queryKey: heroPreviewKey(hero.id, r?.id ?? ""),
+    queryKey: publishingKeys.preview(hero.id, r?.id ?? ""),
     queryFn: () => api.read(hero.id, r!.id),
     enabled: !!r,
     staleTime: 30000,

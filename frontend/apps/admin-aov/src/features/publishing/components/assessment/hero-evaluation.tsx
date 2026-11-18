@@ -10,7 +10,7 @@ import { backendRequest } from "@/app/auth/session"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 import { SectionHeading, sectionFrame } from "@/components/section-contents"
 import { errorMessage, isApiError } from "@/lib/api/errors"
-import { createPublishingApi, heroPreviewKey } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
 import { heroRatingScale } from "@aov/ui/lib/hero-rating-scale"
 import { selectSkillTranslation, skillLabel } from "../../model/skills/hero-skills"
 import { draftHeroNotes } from "../../model/assessment/hero-notes-draft"
@@ -47,11 +47,11 @@ function useEvaluationSave(heroId: string | undefined, revision: Revision | unde
   return async (write: (revision: Revision) => Promise<unknown>) => {
     if (!heroId || !revision) throw new Error("Chưa có bản nháp để lưu.")
     await write(revision)
-    client.setQueryData(heroPreviewKey(heroId, revision.id), await api.read(heroId, revision.id))
+    client.setQueryData(publishingKeys.preview(heroId, revision.id), await api.read(heroId, revision.id))
     await Promise.all([
-      client.invalidateQueries({ queryKey: ["publishing-revisions", heroId] }),
-      client.invalidateQueries({ queryKey: ["hero-draft-changes", heroId] }),
-      client.invalidateQueries({ queryKey: ["publishing-heroes"] }),
+      client.invalidateQueries({ queryKey: publishingKeys.revisions(heroId) }),
+      client.invalidateQueries({ queryKey: publishingKeys.draftChanges(heroId) }),
+      client.invalidateQueries({ queryKey: publishingKeys.heroes }),
     ])
   }
 }
@@ -582,7 +582,7 @@ function NotesEditor({
   // The machine draft reads Vietnamese rules, so only the Vietnamese notes offer it.
   const drafting = locale === "vi-VN"
   const ranking = useQuery({
-    queryKey: ["hero-ranking-reading", heroId],
+    queryKey: publishingKeys.rankingReading(heroId),
     queryFn: () => api.ranking(heroId!),
     enabled: !!heroId && drafting,
     staleTime: 60000,

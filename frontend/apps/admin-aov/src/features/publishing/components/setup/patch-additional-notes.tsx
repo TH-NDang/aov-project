@@ -4,15 +4,15 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 import { control } from "../fields"
+import { publishingKeys } from "../../api/publishing-api"
 
 type Note = { body: string; version: number }
-const key = (variantId: string, locale: string) => ["patch-additional-notes", variantId, locale] as const
 const path = (variantId: string, locale: string) =>
   `/admin/patch-variants/${variantId}/notes/${encodeURIComponent(locale)}`
 
 function useAdditionalNotes(variantId: string, locale: string) {
   return useQuery({
-    queryKey: key(variantId, locale),
+    queryKey: publishingKeys.additionalNotes(variantId, locale),
     queryFn: ({ signal }) => backendRequest<Note>(path(variantId, locale), { signal }),
     staleTime: 60000,
   })
@@ -82,8 +82,8 @@ export function PatchAdditionalEditor({
         body: JSON.stringify({ body: note.body, expectedVersion: note.version }),
       }),
     onSuccess: (saved) => {
-      cache.setQueryData(key(variantId, locale), saved)
-      void cache.invalidateQueries({ queryKey: ["publication-overview"] })
+      cache.setQueryData(publishingKeys.additionalNotes(variantId, locale), saved)
+      void cache.invalidateQueries({ queryKey: publishingKeys.overview })
       onSaved()
     },
     meta: { silent: true },

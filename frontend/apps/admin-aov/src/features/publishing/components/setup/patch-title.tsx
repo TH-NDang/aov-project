@@ -6,7 +6,8 @@ import { Input } from "@aov/ui/components/input"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { overviewKey, type Variant } from "../../api/publication-overview"
+import type { Variant } from "../../api/publication-overview"
+import { publishingKeys } from "../../api/publishing-api"
 
 /** The overview shows the Vietnamese title, so that is the one renamed here. */
 const TITLE_LOCALE = "vi-VN"
@@ -31,7 +32,7 @@ export function PatchTitle({ variant }: { variant: Variant }) {
         method: "PUT",
         body: JSON.stringify({ locale: TITLE_LOCALE, title: next }),
       })
-      await cache.invalidateQueries({ queryKey: overviewKey })
+      await cache.invalidateQueries({ queryKey: publishingKeys.overview })
       setDraft(null)
     } catch (cause) {
       setError(errorMessage(cause))

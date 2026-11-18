@@ -7,11 +7,12 @@ import { errorMessage } from "@/lib/api/errors"
 import { invalidateHeroCatalogs } from "../../api/publishing-cache"
 
 import type { components } from "../../generated/hero-api"
+import { publishingKeys } from "../../api/publishing-api"
 export type ImportJob = components["schemas"]["HeroImportJobView"]
 export function useDismissImportNotification() {
   const { actor } = useSession()
   const cache = useQueryClient()
-  const queryKey = ["hero-import-jobs", actor?.issuer, actor?.subject]
+  const queryKey = publishingKeys.importJobs(actor?.issuer, actor?.subject)
   return useMutation({
     mutationFn: (id: string) =>
       backendRequest<ImportJob>(`/admin/heroes/import/jobs/${id}/notification-dismissal`, { method: "PUT" }),
@@ -30,7 +31,7 @@ export function useImportJobs() {
   const { actor } = useSession()
   const cache = useQueryClient()
   const query = useQuery({
-    queryKey: ["hero-import-jobs", actor?.issuer, actor?.subject],
+    queryKey: publishingKeys.importJobs(actor?.issuer, actor?.subject),
     queryFn: () => backendRequest<ImportJob[]>("/admin/heroes/import/jobs"),
     enabled: !!actor?.capabilities.includes("hero:write"),
     refetchInterval: 3000,
@@ -41,13 +42,13 @@ export function useImportJobs() {
     .map((job) => `${job.id}:${job.updatedAt}`)
     .join(",")
   useEffect(() => {
-    if (updates) void cache.invalidateQueries({ queryKey: ["publishing-heroes"] })
+    if (updates) void cache.invalidateQueries({ queryKey: publishingKeys.heroes })
   }, [updates, cache])
   useEffect(() => {
     if (!finishedUpdates) return
     void invalidateHeroCatalogs(cache)
-    for (const key of ["publishing-preview", "publishing-revisions", "hero-comparison"])
-      void cache.invalidateQueries({ queryKey: [key] })
+    for (const queryKey of [publishingKeys.allPreviews, publishingKeys.allRevisions, publishingKeys.allComparisons])
+      void cache.invalidateQueries({ queryKey })
   }, [finishedUpdates, cache])
   return query
 }

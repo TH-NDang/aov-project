@@ -4,15 +4,15 @@ import { useSession } from "@/app/auth/auth-gate"
 import { selfProfile, userKeys } from "../../users/user-api"
 
 import type { components } from "../generated/hero-api"
+import { publishingKeys } from "./publishing-api"
 export type Market = components["schemas"]["PublicationMarket"]
 export type Season = components["schemas"]["PublicationSeason"]
 export type Variant = components["schemas"]["PublicationVariant"]
 export type Release = components["schemas"]["PublicationRelease"]
 export type PublicationOverview = components["schemas"]["PublicationOverview"]
-export const overviewKey = ["publication-overview"] as const
 export function usePublicationOverview(enabled = true) {
   return useQuery({
-    queryKey: overviewKey,
+    queryKey: publishingKeys.overview,
     queryFn: () => backendRequest<PublicationOverview>("/admin/publication-overview"),
     refetchInterval: 60000,
     enabled,
@@ -21,7 +21,7 @@ export function usePublicationOverview(enabled = true) {
 function useContentProfile() {
   const { actor } = useSession()
   const profile = useQuery({
-    queryKey: [...userKeys.self, actor?.issuer, actor?.subject],
+    queryKey: userKeys.selfOf(actor?.issuer, actor?.subject),
     queryFn: ({ signal }) => selfProfile(signal),
     enabled: !!actor,
   })

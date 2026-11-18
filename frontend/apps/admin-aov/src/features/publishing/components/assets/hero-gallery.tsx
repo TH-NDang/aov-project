@@ -15,6 +15,7 @@ import { HeroAsset } from "../hero-asset"
 import { usePublicationOverview } from "../../api/publication-overview"
 import { selectSkillTranslation, skillLabel } from "../../model/skills/hero-skills"
 import type { Content } from "../../api/types"
+import { publishingKeys } from "../../api/publishing-api"
 
 export type GalleryKind = "HERO_ART" | "SKIN" | "SKILL" | "STICKER" | "OTHER"
 export interface GalleryImage {
@@ -111,8 +112,6 @@ const PREVIEW_SHAPE = {
   square: { className: "mx-auto w-full max-w-40", ratio: 1 },
 } as const
 
-export const galleryKey = (heroId: string) => ["hero-gallery", heroId] as const
-
 /**
  * Every image of the hero in one place (ADR-027): those its versions show, the current one first and older ones after,
  * and images attached straight to the hero, such as skill icons from before a rework or stickers. Tabs split them by
@@ -135,7 +134,7 @@ export function HeroGallery({
   reloadKey: string
 }) {
   const gallery = useQuery({
-    queryKey: [...galleryKey(heroId), locale, reloadKey],
+    queryKey: publishingKeys.galleryView(heroId, locale, reloadKey),
     queryFn: () =>
       backendRequest<{ items: GalleryImage[] }>(
         `/admin/heroes/${encodeURIComponent(heroId)}/gallery?locale=${encodeURIComponent(locale)}`,
@@ -353,7 +352,7 @@ function GalleryDetail({
       backendRequest(`/admin/heroes/${heroId}/gallery/${attachment!.id}?expectedVersion=${attachment!.version}`, {
         method: "DELETE",
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: galleryKey(heroId) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: publishingKeys.gallery(heroId) }),
     onError: (failure) => setError(errorMessage(failure)),
     meta: { silent: true },
   })
@@ -433,7 +432,7 @@ function GalleryDetail({
               method: "PUT",
               body: JSON.stringify({ expectedVersion: attachment.version, ...value }),
             })
-            await queryClient.invalidateQueries({ queryKey: galleryKey(heroId) })
+            await queryClient.invalidateQueries({ queryKey: publishingKeys.gallery(heroId) })
             setEditing(false)
           }}
         />
@@ -655,7 +654,7 @@ function AddToGallery({
                 method: "POST",
                 body: JSON.stringify({ assetId, ...value }),
               })
-              await queryClient.invalidateQueries({ queryKey: galleryKey(heroId) })
+              await queryClient.invalidateQueries({ queryKey: publishingKeys.gallery(heroId) })
               onAdded(assetId)
               onOpenChange(false)
               setAssetId(null)

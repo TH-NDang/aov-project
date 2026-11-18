@@ -9,6 +9,7 @@ import type { components } from "../../generated/hero-api"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { DraftStatus } from "@/app/drafts/draft-status"
+import { publishingKeys } from "../../api/publishing-api"
 type Season = components["schemas"]["Season"]
 const seasonDraftSchema = z.object({
   code: z.string(),
@@ -26,7 +27,10 @@ export function SeasonSetup({ onDone }: { onDone?: () => void }) {
     initialValue: { code: "", displayName: "", year: "", number: "", beforeSeasonId: "" },
     schema: seasonDraftSchema,
   })
-  const seasons = useQuery({ queryKey: ["ranked-seasons"], queryFn: () => backendRequest<Season[]>("/admin/seasons") })
+  const seasons = useQuery({
+    queryKey: publishingKeys.allRankedSeasons,
+    queryFn: () => backendRequest<Season[]>("/admin/seasons"),
+  })
   return (
     <form
       className="space-y-4"
@@ -48,9 +52,9 @@ export function SeasonSetup({ onDone }: { onDone?: () => void }) {
           })
           await draft.discard()
           await Promise.all([
-            cache.invalidateQueries({ queryKey: ["ranked-seasons"] }),
-            cache.invalidateQueries({ queryKey: ["publication-overview"] }),
-            cache.invalidateQueries({ queryKey: ["authoring-seasons"] }),
+            cache.invalidateQueries({ queryKey: publishingKeys.allRankedSeasons }),
+            cache.invalidateQueries({ queryKey: publishingKeys.overview }),
+            cache.invalidateQueries({ queryKey: publishingKeys.allAuthoringSeasons }),
           ])
           onDone?.()
         } catch (cause) {
@@ -117,7 +121,7 @@ export function SeasonSetup({ onDone }: { onDone?: () => void }) {
 export function ReleaseSeasonFields({ regions }: { regions: Region[] }) {
   const [region, setRegion] = useState("")
   const seasons = useQuery({
-    queryKey: ["ranked-seasons", region],
+    queryKey: publishingKeys.rankedSeasons(region),
     queryFn: () => backendRequest<Season[]>("/admin/seasons"),
     enabled: !!region,
   })

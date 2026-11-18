@@ -2,13 +2,13 @@ import { useQuery } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
 import { useContentLocale } from "../../publishing/api/publication-overview"
 import type { Request } from "../../publishing/api/publishing-api"
-import { createCharacterImageApi } from "../api/character-image-api"
+import { createCharacterImageApi, characterImageKeys } from "../api/character-image-api"
 import { SkinBadgeArtwork } from "./skin-badge-artwork"
 
 /** Looks up one skin badge by code; badges are listed per locale, so it pages until the code turns up. */
 export function useSkinBadge(code: string | null, language: string, request: Request = backendRequest) {
   const result = useQuery({
-    queryKey: ["skin-badges", "selected", language, code],
+    queryKey: characterImageKeys.selectedBadge(language, code),
     queryFn: async ({ signal }) => {
       const api = createCharacterImageApi(request)
       const first = await api.badges("", language, code!, 0, signal)

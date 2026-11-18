@@ -5,7 +5,8 @@ import { Button } from "@aov/ui/components/button"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { overviewKey, type Variant } from "../../api/publication-overview"
+import type { Variant } from "../../api/publication-overview"
+import { publishingKeys } from "../../api/publishing-api"
 export function PatchDataReview({ variant }: { variant: Variant }) {
   const cache = useQueryClient()
   const [confirm, setConfirm] = useState(false)
@@ -22,7 +23,7 @@ export function PatchDataReview({ variant }: { variant: Variant }) {
       }),
     onSuccess: async () => {
       setConfirm(false)
-      await cache.invalidateQueries({ queryKey: overviewKey })
+      await cache.invalidateQueries({ queryKey: publishingKeys.overview })
     },
     meta: { silent: true },
   })

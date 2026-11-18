@@ -13,7 +13,7 @@ import { AssetPicker } from "../../publishing/components/assets/asset-picker"
 import { CharacterMediaImage } from "./character-media-image"
 import { HeroImageSource } from "../../publishing/components/assets/hero-image-source"
 import { Field } from "../../publishing/components/fields"
-import { heroPreviewKey, type Request } from "../../publishing/api/publishing-api"
+import { type Request, publishingKeys } from "../../publishing/api/publishing-api"
 import { invalidateHeroCatalogs } from "../../publishing/api/publishing-cache"
 import { useContentLocale } from "../../publishing/api/publication-overview"
 import type { MediaRole } from "../../publishing/api/types"
@@ -95,7 +95,7 @@ export function CharacterMediaViewer({
   const { actor } = useSession()
   const canWrite = !!actor?.capabilities.includes("hero:write")
   const preview = useQuery({
-    queryKey: heroPreviewKey(heroId, revisionId),
+    queryKey: publishingKeys.preview(heroId, revisionId),
     queryFn: () => api.read(heroId, revisionId),
     staleTime: 0,
     refetchOnWindowFocus: false,
@@ -192,7 +192,7 @@ export function CharacterMediaViewer({
       )
       await Promise.all([
         invalidateHeroCatalogs(client),
-        client.invalidateQueries({ queryKey: heroPreviewKey(heroId, revisionId) }),
+        client.invalidateQueries({ queryKey: publishingKeys.preview(heroId, revisionId) }),
       ])
       onClose()
     } catch (error) {

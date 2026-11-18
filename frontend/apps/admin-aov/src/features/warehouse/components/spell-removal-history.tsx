@@ -24,7 +24,7 @@ export function SpellRemovalHistory({
   const client = useQueryClient()
   const overview = usePublicationOverview()
   const query = useQuery({
-    queryKey: [...warehouseKeys.all, "removals", id, rulesetId],
+    queryKey: warehouseKeys.removals(id, rulesetId),
     queryFn: () => warehouseApi.spellRemovals(id, rulesetId),
   })
   const [adding, setAdding] = useState(false)
@@ -41,7 +41,6 @@ export function SpellRemovalHistory({
       }),
     onSuccess: async () => {
       await invalidateWarehouseCatalogs(client)
-      await client.invalidateQueries({ queryKey: ["patch-spell-removals"] })
       setAdding(false)
       setPatchId(null)
       setSourceUrl("")

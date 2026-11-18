@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { warehouseApi } from "../api/warehouse-api"
+import { warehouseApi, warehouseKeys } from "../api/warehouse-api"
 import { usePublicationOverview } from "../../publishing/api/publication-overview"
 import { Link, useSearchParams } from "react-router"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
@@ -35,7 +35,7 @@ export function WarehousePatchChanges({
   const overview = usePublicationOverview()
   const reviewed = overview.data?.variants.find((v) => v.id === variantId)?.dataReviewState === "COMPLETE"
   const snapshot = useQuery({
-    queryKey: ["warehouse", kind, rulesetId, locale, "snapshot", variantId],
+    queryKey: warehouseKeys.snapshot(kind, rulesetId, locale, variantId),
     queryFn: ({ signal }) =>
       warehouseApi.list(kind, rulesetId, locale, signal, { patchVariantId: variantId, includeUnchanged: true }),
     enabled: showAll && !!rulesetId,

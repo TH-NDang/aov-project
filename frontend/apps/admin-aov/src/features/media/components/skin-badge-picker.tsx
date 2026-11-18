@@ -9,7 +9,7 @@ import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { HeroAsset } from "@/features/publishing/components/hero-asset"
 import { control } from "../../publishing/components/fields"
 import type { Request } from "../../publishing/api/publishing-api"
-import { createCharacterImageApi } from "../api/character-image-api"
+import { createCharacterImageApi, characterImageKeys } from "../api/character-image-api"
 import {
   badgeGroupKey,
   badgeGroupKeys,
@@ -35,7 +35,7 @@ export function SkinBadgePicker({
   const [q, setQ] = useState("")
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const selected = useQuery({
-    queryKey: ["skin-badges", "selected", locale, value],
+    queryKey: characterImageKeys.selectedBadge(locale, value),
     queryFn: ({ signal }) => api.badges("", locale, value!, 0, signal),
     enabled: !!value,
     staleTime: 60000,

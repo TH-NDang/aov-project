@@ -5,6 +5,7 @@ import type { CatalogFilter } from "../components/catalog/catalog-context"
 import type { PublicationOverview } from "./publication-overview"
 import type { RecordedChangeSet } from "../components/patch-changes/patch-change-lines"
 import type { HeroGameplayChange } from "./types"
+import { publishingKeys } from "./publishing-api"
 
 /** Reuse the timeline's patch queries; a catalog page alone only contains each hero's latest change. */
 export function useHeroScopeChanges(
@@ -57,7 +58,7 @@ export function useHeroScopeChanges(
   )
   return useQueries({
     queries: variants.map((variant) => ({
-      queryKey: ["patch-changes", variant.id, locale],
+      queryKey: publishingKeys.patchChanges(variant.id, locale),
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         backendRequest<RecordedChangeSet[]>(
           `/admin/patch-variants/${variant.id}/hero-changes?locale=${encodeURIComponent(locale)}`,

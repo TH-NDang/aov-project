@@ -9,6 +9,7 @@ import { errorMessage } from "@/lib/api/errors"
 import { control } from "../fields"
 import type { Region } from "../../api/types"
 import type { components } from "../../generated/hero-api"
+import { publishingKeys } from "../../api/publishing-api"
 
 export type ImportContext = components["schemas"]["AuthoringContext"]
 type Season = components["schemas"]["Season"]
@@ -37,12 +38,12 @@ export function ImportContextPicker({
     if (value?.seasonId) setSeasonId(value.seasonId)
   }, [value?.seasonId])
   const seasons = useQuery({
-    queryKey: ["authoring-seasons", regionId],
+    queryKey: publishingKeys.authoringSeasons(regionId),
 
     queryFn: () => backendRequest<Season[]>("/admin/seasons"),
   })
   const patches = useQuery({
-    queryKey: ["authoring-contexts", regionId, seasonId],
+    queryKey: publishingKeys.authoringContexts(regionId, seasonId),
     enabled: !!seasonId,
     queryFn: () => backendRequest<ImportContext[]>(`/admin/heroes/import/contexts?seasonId=${seasonId}`),
   })

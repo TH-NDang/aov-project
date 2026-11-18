@@ -15,6 +15,7 @@ import {
   type HeroShopPrice,
   type SkinAcquisition,
   type SkinMethod,
+  publishingKeys,
 } from "../../api/publishing-api"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { captureGroupKeys } from "../../model/captures/patch-capture-model"
@@ -25,7 +26,6 @@ const api = createPublishingApi(backendRequest)
 
 /** The shop is read for one market so far; the data is kept per market so others can follow. */
 const SHOP_REGION = "VN"
-const shopKey = (heroId: string) => ["hero-shop", heroId, SHOP_REGION]
 
 const availabilityLabels: Record<HeroAvailability, string> = {
   ON_SALE: "Đang bán",
@@ -50,7 +50,7 @@ const today = () => new Date().toLocaleDateString("en-CA")
 
 export function useHeroShop(heroId?: string) {
   return useQuery({
-    queryKey: shopKey(heroId ?? ""),
+    queryKey: publishingKeys.shop(heroId ?? "", SHOP_REGION),
     queryFn: () => api.shop(heroId!, SHOP_REGION),
     enabled: !!heroId,
     staleTime: 60000,
@@ -113,7 +113,7 @@ export function HeroShopPanel({
       }),
     meta: { silent: true, successMessage: "Đã lưu giá tướng." },
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: shopKey(heroId) })
+      await client.invalidateQueries({ queryKey: publishingKeys.shop(heroId, SHOP_REGION) })
       setEditing(false)
     },
   })
@@ -293,7 +293,7 @@ function PriceHistory({ heroId, rows, canWrite }: { heroId: string; rows: HeroSh
   const remove = useMutation({
     mutationFn: (capturedOn: string) => api.deleteShopPrice(heroId, SHOP_REGION, capturedOn),
     meta: { successMessage: "Đã xóa mốc giá." },
-    onSuccess: () => client.invalidateQueries({ queryKey: shopKey(heroId) }),
+    onSuccess: () => client.invalidateQueries({ queryKey: publishingKeys.shop(heroId, SHOP_REGION) }),
   })
   if (rows.length < 2) return null
   return (
@@ -423,7 +423,7 @@ export function SkinAcquisitionEditor({
   const remove = useMutation({
     mutationFn: (capturedOn: string) => api.deleteSkinAcquisition(heroId, skinKey, SHOP_REGION, capturedOn),
     meta: { successMessage: "Đã xóa mốc cách nhận." },
-    onSuccess: () => client.invalidateQueries({ queryKey: shopKey(heroId) }),
+    onSuccess: () => client.invalidateQueries({ queryKey: publishingKeys.shop(heroId, SHOP_REGION) }),
   })
   const save = useMutation({
     mutationFn: (_next: boolean) =>
@@ -437,7 +437,7 @@ export function SkinAcquisitionEditor({
       }),
     meta: { silent: true, successMessage: "Đã lưu cách nhận trang phục." },
     onSuccess: async (_saved, next) => {
-      await client.invalidateQueries({ queryKey: shopKey(heroId) })
+      await client.invalidateQueries({ queryKey: publishingKeys.shop(heroId, SHOP_REGION) })
       onDraftChange(null)
       if (next) onNext?.()
       else onEditingChange?.(false)

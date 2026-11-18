@@ -20,6 +20,7 @@ import {
 import { BadgeGroupSelect } from "./skin-badge-group-editor"
 import { toast } from "sonner"
 import { confirmDiscard } from "@/components/confirm-dialog"
+import { mediaKeys } from "../api/media-cache"
 
 export const badgeKindLabels: Record<BadgeKind, string> = {
   UNKNOWN: "Chưa phân loại",
@@ -43,7 +44,7 @@ export function SkinBadgeEditor({
   const client = useQueryClient()
   const [regionCode, setRegionCode] = useState("vn")
   const regions = useQuery({
-    queryKey: ["game-regions"],
+    queryKey: mediaKeys.gameRegions,
     queryFn: () => createCharacterImageApi(request).regions(),
     enabled: !badge,
     staleTime: 60000,

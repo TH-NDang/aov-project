@@ -12,6 +12,7 @@ import {
   type StatSample,
 } from "../../model/assessment/combat-attributes"
 import { ROLES, type Role } from "../../api/types"
+import { publishingKeys } from "../../api/publishing-api"
 
 function defaultStatus(row: AttributeRow, ready: boolean, error?: boolean) {
   if (!row.reference) {
@@ -66,7 +67,7 @@ export function HeroStatAnalysisPanel({
 }) {
   const [sameRole, setSameRole] = useState(false)
   const query = useQuery({
-    queryKey: ["hero-stat-samples", variantId],
+    queryKey: publishingKeys.statSamples(variantId),
     queryFn: ({ signal }) =>
       backendRequest<StatSample[]>(`/admin/patch-variants/${variantId}/hero-stat-samples`, { signal }),
     staleTime: 60000,

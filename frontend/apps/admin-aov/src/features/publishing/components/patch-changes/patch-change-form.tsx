@@ -7,7 +7,7 @@ import { Box } from "../fields"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
 import { PatchChangeEditor } from "./patch-change-editor"
 import { suggestedRows } from "../../model/patch-changes/patch-change-model"
-import { createPublishingApi, heroPreviewKey } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
 import type { Revision } from "../../api/types"
 
 const api = createPublishingApi(backendRequest)
@@ -20,7 +20,7 @@ export function PatchChangeForm({ revision, locale }: { revision: Revision; loca
   const variantId = revision.effectiveFromPatchVariantId!
   const [savedId, setSavedId] = useState<string | null>(null)
   const changes = useQuery({
-    queryKey: ["patch-changes", variantId, locale],
+    queryKey: publishingKeys.patchChanges(variantId, locale),
     queryFn: () =>
       backendRequest<RecordedChangeSet[]>(
         `/admin/patch-variants/${variantId}/hero-changes?locale=${encodeURIComponent(locale)}`,
@@ -28,12 +28,12 @@ export function PatchChangeForm({ revision, locale }: { revision: Revision; loca
     staleTime: 30000,
   })
   const after = useQuery({
-    queryKey: heroPreviewKey(revision.heroId, revision.id),
+    queryKey: publishingKeys.preview(revision.heroId, revision.id),
     queryFn: () => api.read(revision.heroId, revision.id),
     staleTime: 60000,
   })
   const before = useQuery({
-    queryKey: heroPreviewKey(revision.heroId, revision.sourceRevisionId ?? ""),
+    queryKey: publishingKeys.preview(revision.heroId, revision.sourceRevisionId ?? ""),
     queryFn: () => api.read(revision.heroId, revision.sourceRevisionId!),
     enabled: !!revision.sourceRevisionId,
     staleTime: 60000,

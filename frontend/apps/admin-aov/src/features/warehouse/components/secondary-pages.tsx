@@ -41,6 +41,7 @@ import {
   type SecondaryContent,
   type SecondaryKind,
 } from "./secondary-editor"
+import { publishingKeys } from "../../publishing/api/publishing-api"
 
 type SecondaryEntry = WarehouseEntry<WarehouseContents[SecondaryKind]>
 const titles: Record<SecondaryKind, string> = { enchantments: "Phù hiệu", arcana: "Bảng ngọc", spells: "Phụ trợ" }
@@ -158,7 +159,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
   }
   async function refresh() {
     await invalidateWarehouseCatalogs(client)
-    await client.invalidateQueries({ queryKey: ["publication-overview"] })
+    await client.invalidateQueries({ queryKey: publishingKeys.overview })
   }
   async function save(code: string, content: SecondaryContent, patchId: string | null) {
     await mutation.mutateAsync(async () => {

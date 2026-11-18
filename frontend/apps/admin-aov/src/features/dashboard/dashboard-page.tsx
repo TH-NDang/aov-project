@@ -24,7 +24,7 @@ import { NAV_ICONS } from "@/app/aov-nav-icon"
 import { formatNumber } from "@/lib/text"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
-import { createPublishingApi } from "../publishing/api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../publishing/api/publishing-api"
 import type { PageSlice } from "../publishing/api/types"
 import { useContentLocale, usePublicationOverview } from "../publishing/api/publication-overview"
 import { dateLabel } from "@/features/publishing/model/setup/schedule-date"
@@ -34,6 +34,7 @@ import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/a
 import { warehouseText } from "@aov/ui/lib/warehouse-content"
 import { cn } from "@aov/ui/lib/utils"
 import { mediaKeys } from "@/features/media/api/media-cache"
+import { characterImageKeys } from "../media/api/character-image-api"
 
 const publishing = createPublishingApi(backendRequest)
 
@@ -67,7 +68,7 @@ export function DashboardPage() {
   const { actor } = useSession()
   const canReadHeroes = actor?.capabilities.includes("catalog:read") ?? false
   const heroes = useQuery({
-    queryKey: ["publishing-heroes", "dashboard"],
+    queryKey: publishingKeys.dashboardHeroes,
     queryFn: () => publishing.heroes(),
     enabled: canReadHeroes,
     staleTime: 30000,
@@ -79,14 +80,14 @@ export function DashboardPage() {
     staleTime: 30000,
   })
   const badges = useQuery({
-    queryKey: ["skin-badges", "dashboard"],
+    queryKey: characterImageKeys.dashboardBadges,
     queryFn: () => backendRequest<PageSlice<unknown>>("/admin/skin-badges?page=0&size=1"),
     enabled: canReadHeroes,
     staleTime: 30000,
   })
   const locale = useContentLocale()
   const rulesets = useQuery({
-    queryKey: ["publishing-rulesets"],
+    queryKey: publishingKeys.rulesets,
     queryFn: publishing.rulesets,
     enabled: canReadHeroes,
     staleTime: 60000,
@@ -399,7 +400,7 @@ function CurrentPatchCard({ locale }: { locale: string }) {
   const season = data?.seasons.find((entry) => entry.id === (variant?.seasonId ?? market?.currentSeasonId))
   const pending = data?.releases.filter((entry) => entry.phase === "AWAITING_CONFIRMATION").length ?? 0
   const changes = useQuery({
-    queryKey: ["patch-changes", variant?.id, locale],
+    queryKey: publishingKeys.patchChanges(variant?.id, locale),
     queryFn: () =>
       backendRequest<{ heroId: string; sourceKind?: string }[]>(
         `/admin/patch-variants/${variant!.id}/hero-changes?locale=${encodeURIComponent(locale)}`,

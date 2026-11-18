@@ -1,7 +1,7 @@
 import { useQuery, type QueryClient } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
 import type { PageSlice } from "../../publishing/api/types"
-import { invalidateAllMediaAssets } from "../api/media-cache"
+import { invalidateAllMediaAssets, mediaKeys } from "../api/media-cache"
 
 /** An entry of the image owner catalog (ADR-017). */
 export interface MediaOwner {
@@ -12,12 +12,10 @@ export interface MediaOwner {
   version: number
 }
 
-export const mediaOwnerKeys = { all: ["media-owners"] as const }
-
 /** The catalog is small, so one page of the most used owners serves suggestions and the management sheet. */
 export function useMediaOwners(enabled = true) {
   return useQuery({
-    queryKey: mediaOwnerKeys.all,
+    queryKey: mediaKeys.owners,
     queryFn: async ({ signal }) =>
       (await backendRequest<PageSlice<MediaOwner>>("/admin/media/owners?size=100", { signal })).items,
     enabled,
@@ -42,6 +40,6 @@ export async function mergeMediaOwner(owner: MediaOwner, target: MediaOwner) {
 
 /** Renames and merges rewrite the owner on every source, so every cached image view is refreshed. */
 export async function refreshAfterOwnerChange(client: QueryClient) {
-  await client.invalidateQueries({ queryKey: mediaOwnerKeys.all })
+  await client.invalidateQueries({ queryKey: mediaKeys.owners })
   await invalidateAllMediaAssets(client)
 }

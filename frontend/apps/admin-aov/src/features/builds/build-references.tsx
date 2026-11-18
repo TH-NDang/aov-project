@@ -9,7 +9,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { defaultRulesetId } from "@/features/publishing/model/setup/default-ruleset"
 import { useContentLocale } from "@/features/publishing/api/publication-overview"
-import { createPublishingApi } from "@/features/publishing/api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/features/publishing/api/publishing-api"
 import { useReferenceCatalog } from "@/features/terminology/catalog"
 import { useWarehouseCatalog } from "@/features/warehouse/api/warehouse-api"
 
@@ -36,7 +36,7 @@ const publishing = createPublishingApi(backendRequest)
 /** The tier of every arcana, by identifier, read from the arcana warehouse of the default ruleset. */
 function useArcanaTiers() {
   const locale = useContentLocale()
-  const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: publishing.rulesets, staleTime: 60000 })
+  const rulesets = useQuery({ queryKey: publishingKeys.rulesets, queryFn: publishing.rulesets, staleTime: 60000 })
   const arcana = useWarehouseCatalog("arcana", defaultRulesetId(rulesets.data), locale)
   return useMemo(
     () => (arcana.data ? new Map(arcana.data.map((entry) => [entry.id, entry.content.tier])) : undefined),

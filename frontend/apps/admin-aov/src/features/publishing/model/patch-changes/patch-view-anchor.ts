@@ -1,5 +1,6 @@
 import type { Variant } from "../../api/publication-overview"
 import type { Revision } from "../../api/types"
+import { publishingKeys } from "../../api/publishing-api"
 
 /** Only published, dated snapshots can be selected as explicit evidence. */
 export function patchViewAnchors(revisions: Revision[], heroId: string, rulesetId: string, variants: Variant[]) {
@@ -32,7 +33,7 @@ export function patchViewRequest(heroId: string, variantId: string, anchorRevisi
   const query = new URLSearchParams({ patchVariantId: variantId })
   if (anchorRevisionId) query.set("anchorRevisionId", anchorRevisionId)
   return {
-    queryKey: ["hero-patch-view", heroId, variantId, anchorRevisionId],
+    queryKey: publishingKeys.patchView(heroId, variantId, anchorRevisionId),
     path: `/admin/heroes/${encodeURIComponent(heroId)}/patch-view?${query}`,
   }
 }

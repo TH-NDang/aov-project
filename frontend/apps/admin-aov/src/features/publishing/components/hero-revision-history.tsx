@@ -8,7 +8,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { AdminReferenceProvider } from "../../terminology/catalog"
-import { createPublishingApi } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import { control } from "./fields"
 import { usePublicationOverview } from "../api/publication-overview"
 import { comparisonFieldLabels } from "../model/assessment/hero-comparison"
@@ -69,12 +69,12 @@ function RevisionHistoryContent({
       ? chosenSource
       : (revision.sourceRevisionId ?? "")
   const comparison = useQuery({
-    queryKey: ["hero-comparison", heroId, revision.id, revision.version, sourceId],
+    queryKey: publishingKeys.comparison(heroId, revision.id, revision.version, sourceId),
     queryFn: () => api.comparison(heroId, revision.id, sourceId || undefined),
     staleTime: 30000,
   })
   const curated = useQuery({
-    queryKey: ["patch-changes", revision.effectiveFromPatchVariantId, locale],
+    queryKey: publishingKeys.patchChanges(revision.effectiveFromPatchVariantId, locale),
     queryFn: () =>
       backendRequest<ChangeSet[]>(
         `/admin/patch-variants/${revision.effectiveFromPatchVariantId}/hero-changes?locale=${encodeURIComponent(locale)}`,

@@ -24,6 +24,7 @@ import {
 import { invalidateReferenceCatalog } from "../../../terminology/reference-api"
 import { ScheduleForm } from "./shared-version-setup"
 import { control } from "../fields"
+import { publishingKeys } from "../../api/publishing-api"
 
 export type MarketMode = "season" | "patch"
 
@@ -97,9 +98,9 @@ export function ConfirmRelease({ id }: { id: string }) {
           setError("")
           try {
             await backendRequest(`/admin/patch-releases/${id}/confirm`, { method: "POST" })
-            await cache.invalidateQueries({ queryKey: ["publication-overview"] })
+            await cache.invalidateQueries({ queryKey: publishingKeys.overview })
             await Promise.all([
-              cache.invalidateQueries({ queryKey: ["authoring-contexts"] }),
+              cache.invalidateQueries({ queryKey: publishingKeys.allAuthoringContexts }),
               invalidateReferenceCatalog(cache),
             ])
             toast.success("Đã xác nhận patch đang áp dụng.")
@@ -514,8 +515,8 @@ function ApplyPatchNow({ market, variant }: { market: Market; variant: Variant }
               }),
             })
             await Promise.all([
-              cache.invalidateQueries({ queryKey: ["publication-overview"] }),
-              cache.invalidateQueries({ queryKey: ["authoring-contexts"] }),
+              cache.invalidateQueries({ queryKey: publishingKeys.overview }),
+              cache.invalidateQueries({ queryKey: publishingKeys.allAuthoringContexts }),
               invalidateReferenceCatalog(cache),
             ])
             toast.success(`Đã áp dụng ${variant.patchCode} cho ${market.displayName}.`)

@@ -139,9 +139,12 @@ export const fileKeys = {
     ["source-collections", category ?? "ALL", query] as const,
   allCollections: ["source-collections"] as const,
   collection: (id: string) => ["source-collection", id] as const,
+  anyCollection: ["source-collection"] as const,
   files: (collectionId: string, query: string) => ["source-files", collectionId, query] as const,
   allFiles: ["source-files"] as const,
   file: (id: string) => ["source-file", id] as const,
+  link: (sha256: string) => ["source-link", sha256] as const,
+  anyFile: ["source-file"] as const,
   orphans: ["source-orphans"] as const,
   links: (sha256s: readonly string[]) => ["source-links", ...sha256s] as const,
 }
@@ -390,9 +393,9 @@ export const useDownloadLink = () => useMutation({ mutationFn: downloadLink })
 export async function refreshSourceFiles(client: QueryClient) {
   await Promise.all([
     client.invalidateQueries({ queryKey: fileKeys.allCollections }),
-    client.invalidateQueries({ queryKey: ["source-collection"] }),
+    client.invalidateQueries({ queryKey: fileKeys.anyCollection }),
     client.invalidateQueries({ queryKey: fileKeys.allFiles }),
-    client.invalidateQueries({ queryKey: ["source-file"] }),
+    client.invalidateQueries({ queryKey: fileKeys.anyFile }),
     client.invalidateQueries({ queryKey: fileKeys.orphans }),
     client.invalidateQueries({ queryKey: fileKeys.summary }),
   ])

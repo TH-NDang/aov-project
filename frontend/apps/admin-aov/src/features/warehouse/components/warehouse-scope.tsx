@@ -56,7 +56,7 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
   const overview = usePublicationOverview()
   const catalog = useWarehouseCatalog(kind, rulesetId, locale)
   const draftQuery = useQuery({
-    queryKey: [...warehouseKeys.catalog(kind, rulesetId, locale), "drafts"],
+    queryKey: warehouseKeys.drafts(kind, rulesetId, locale),
     queryFn: async ({ signal }) => {
       try {
         return await warehouseApi.list(kind, rulesetId, locale, signal, { draftsOnly: true })
@@ -125,7 +125,7 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
     return result
   }, [matched, data])
   const query = useQuery({
-    queryKey: [...warehouseKeys.catalog(kind, rulesetId, locale), "scope", value.seasonId, value.variantId, showAll],
+    queryKey: warehouseKeys.scope(kind, rulesetId, locale, value.seasonId, value.variantId, showAll),
     queryFn: async ({ signal }) => {
       const filter = {
         seasonId: value.seasonId,

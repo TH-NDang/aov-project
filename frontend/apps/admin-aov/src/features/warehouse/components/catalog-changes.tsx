@@ -8,6 +8,7 @@ import type { CatalogFilter } from "../../publishing/components/catalog/catalog-
 import type { PublicationOverview } from "../../publishing/api/publication-overview"
 import type { TimelineCount } from "../../publishing/components/catalog/catalog-timeline"
 import type { WarehouseKind } from "@aov/ui/lib/warehouse-content"
+import { warehouseKeys } from "../api/warehouse-api"
 
 export const catalogChangeKinds = {
   DATA_BASELINE: { label: "Nhập dữ liệu", icon: changeKindIcons.DATA_BASELINE },
@@ -49,7 +50,7 @@ export const changeDomain: Record<WarehouseKind, string> = {
 }
 export function useCatalogChanges(kind: WarehouseKind, rulesetId: string, locale: string) {
   return useQuery({
-    queryKey: ["warehouse", "changes", kind, rulesetId, locale],
+    queryKey: warehouseKeys.changes(kind, rulesetId, locale),
     queryFn: ({ signal }) =>
       backendRequest<CatalogChange[]>(
         `/admin/catalog-changes?${new URLSearchParams({ domain: changeDomain[kind], rulesetId, locale })}`,

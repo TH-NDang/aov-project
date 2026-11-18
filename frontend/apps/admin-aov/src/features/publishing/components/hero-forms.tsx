@@ -17,15 +17,14 @@ import { MediaImage } from "@/components/media-image"
 import { errorMessage } from "@/lib/api/errors"
 import { roleIcons } from "./hero-classification-badges"
 import { formCandidates, heroFormChoices, replaceFormsBody, type HeroForms } from "../model/hero-forms-model"
-import { createPublishingApi } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import { ROLES } from "../api/types"
 
 const api = createPublishingApi(backendRequest)
-export const heroFormsKey = (heroId: string) => ["hero-forms", heroId]
 
 export function useHeroForms(heroId?: string) {
   return useQuery({
-    queryKey: heroFormsKey(heroId ?? ""),
+    queryKey: publishingKeys.forms(heroId ?? ""),
     queryFn: () => api.forms(heroId!),
     enabled: !!heroId,
     staleTime: 60_000,
@@ -115,7 +114,7 @@ export function HeroFormsDialog({
   const current: FormRow[] =
     rows ?? (forms.data?.forms ?? []).map((form) => ({ id: form.id, code: form.code, label: form.code }))
   const candidates = useQuery({
-    queryKey: ["hero-form-candidates", hero.code],
+    queryKey: publishingKeys.formCandidates(hero.code),
     queryFn: async () => (await api.heroes(0, { q: `${hero.code}-` })).items,
     enabled: open,
     staleTime: 30_000,
@@ -124,9 +123,9 @@ export function HeroFormsDialog({
   const save = useMutation({
     mutationFn: () => api.replaceForms(hero.id, replaceFormsBody(forms.data as HeroForms, hero.code, current)),
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: ["hero-forms"] })
+      await client.invalidateQueries({ queryKey: publishingKeys.allForms })
       // The catalog and publish readiness group forms under their hero, so they read the new list too.
-      await client.invalidateQueries({ queryKey: ["publishing-heroes"] })
+      await client.invalidateQueries({ queryKey: publishingKeys.heroes })
       toast.success("Đã lưu danh sách dạng")
       setRows(null)
       onOpenChange(false)

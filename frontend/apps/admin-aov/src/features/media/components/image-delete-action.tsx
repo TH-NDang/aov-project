@@ -16,8 +16,8 @@ import { errorMessage } from "@/lib/api/errors"
 import { useTournamentAccess } from "../../esports/data/use-esports-data"
 import type { Asset } from "../../publishing/api/types"
 import { LibraryImage } from "./image-library-presentation"
-import { invalidateMediaAsset } from "../api/media-cache"
-import { deleteMediaAsset, deletionKey, readDeletionReferences, readMediaDeletion } from "../model/media-deletion"
+import { invalidateMediaAsset, mediaKeys } from "../api/media-cache"
+import { deleteMediaAsset, readDeletionReferences, readMediaDeletion } from "../model/media-deletion"
 
 export function ImageDeleteAction({
   asset,
@@ -49,7 +49,7 @@ export function ImageDeleteAction({
     setConfirmed(false)
   }, [asset.version])
   const status = useQuery({
-    queryKey: deletionKey(asset.id),
+    queryKey: mediaKeys.deletion(asset.id),
     queryFn: ({ signal }) => readMediaDeletion(asset.id, signal),
     enabled: writable && (open || asset.state === "BLOCKED"),
     retry: false,
@@ -60,7 +60,7 @@ export function ImageDeleteAction({
         : false,
   })
   const references = useQuery({
-    queryKey: ["media-deletion-references", asset.id],
+    queryKey: mediaKeys.deletionReferences(asset.id),
     queryFn: ({ signal }) => readDeletionReferences(asset.id, signal),
     enabled: open && permitted && status.isSuccess && status.data === null,
     retry: false,
@@ -100,8 +100,8 @@ export function ImageDeleteAction({
         progress?.expectedVersion ?? asset.version,
         resuming ? "Tiếp tục yêu cầu xóa ảnh đã xác nhận." : reason,
       )
-      await client.cancelQueries({ queryKey: deletionKey(asset.id) })
-      client.setQueryData(deletionKey(asset.id), result)
+      await client.cancelQueries({ queryKey: mediaKeys.deletion(asset.id) })
+      client.setQueryData(mediaKeys.deletion(asset.id), result)
     } catch (cause) {
       setError(errorMessage(cause))
       setConfirmed(false)

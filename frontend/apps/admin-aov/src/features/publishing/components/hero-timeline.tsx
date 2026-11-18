@@ -4,6 +4,7 @@ import { CatalogTimeline, type TimelineCount } from "./catalog/catalog-timeline"
 import type { CatalogFilter } from "./catalog/catalog-context"
 import type { PublicationOverview } from "../api/publication-overview"
 import { activeCatalogScope } from "../model/catalog/catalog-scope"
+import { publishingKeys } from "../api/publishing-api"
 export function HeroTimeline({
   data,
   rulesetId,
@@ -18,7 +19,7 @@ export function HeroTimeline({
   const variants = data.variants.filter((v) => !rulesetId || v.rulesetId === rulesetId)
   const queries = useQueries({
     queries: variants.map((v) => ({
-      queryKey: ["patch-changes", v.id, "vi-VN"],
+      queryKey: publishingKeys.patchChanges(v.id, "vi-VN"),
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         backendRequest<{ heroId: string }[]>(`/admin/patch-variants/${v.id}/hero-changes?locale=vi-VN`, { signal }),
       staleTime: 60000,

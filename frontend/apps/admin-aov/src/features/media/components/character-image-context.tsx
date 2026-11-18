@@ -8,11 +8,12 @@ import { createCharacterImageApi } from "../api/character-image-api"
 import { control } from "../../publishing/components/fields"
 import { defaultRulesetId, hasRulesetChoice } from "../../publishing/model/setup/default-ruleset"
 import type { Request } from "../../publishing/api/publishing-api"
+import { publishingKeys } from "../../publishing/api/publishing-api"
 
 export function useImageContext(request: Request = backendRequest) {
   const [params, setParams] = useSearchParams()
   const rulesets = useQuery({
-    queryKey: ["publishing-rulesets"],
+    queryKey: publishingKeys.rulesets,
     queryFn: () => createCharacterImageApi(request).rulesets(),
   })
   const requested = params.get("ruleset") ?? ""

@@ -6,6 +6,7 @@ import { backendRequest } from "@/app/auth/session"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 import { ChangeKindSelect } from "../patch-changes/change-kind-select"
 import { ChangeKindBadge } from "../patch-changes/hero-change-badges"
+import { publishingKeys } from "../../api/publishing-api"
 
 export interface HeroAssessment {
   id: string
@@ -34,8 +35,8 @@ function useAssessment(change: HeroAssessment) {
   const client = useQueryClient()
   const refresh = () =>
     Promise.all([
-      client.invalidateQueries({ queryKey: ["patch-changes"] }),
-      client.invalidateQueries({ queryKey: ["publishing-heroes"] }),
+      client.invalidateQueries({ queryKey: publishingKeys.allPatchChanges }),
+      client.invalidateQueries({ queryKey: publishingKeys.heroes }),
     ])
   return useMutation({
     mutationFn: async (kind: string) => {
