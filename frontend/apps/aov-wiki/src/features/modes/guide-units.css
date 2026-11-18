@@ -262,8 +262,8 @@
   display: grid;
   gap: 4px;
 }
-.wiki-guide-skill h3,
-.wiki-guide-detail-block h3 {
+/* Set like the heading of a detail block (guide-ui.css). */
+.wiki-guide-skill h3 {
   font: var(--wiki-type-entry);
   display: flex;
   align-items: center;

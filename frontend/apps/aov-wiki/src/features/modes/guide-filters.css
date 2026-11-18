@@ -73,6 +73,23 @@
   gap: 12px;
   min-width: 0;
 }
+/* In the unit picker's drawer the filters stay at its top while the units scroll under them. */
+.wiki-guide-unit-picker > .wiki-guide-filter-stack {
+  position: sticky;
+  top: -18px;
+  z-index: 2;
+  margin-top: -18px;
+  padding-block: 18px 10px;
+  border-bottom: 1px solid var(--aov-line);
+  background: var(--aov-popover);
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-unit-picker > .wiki-guide-filter-stack {
+    top: -14px;
+    margin-top: -14px;
+    padding-top: 14px;
+  }
+}
 /* What the filters left, and the chosen traits as chips that remove themselves. */
 .wiki-guide-summary {
   font: var(--wiki-type-meta);

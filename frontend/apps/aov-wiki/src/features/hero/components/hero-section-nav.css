@@ -80,16 +80,13 @@
   outline-offset: 3px;
 }
 
-/* Leaves room under the page's last links for the floating button. */
-body:has(.wiki-hero-nav-fab) .wiki-site-footer {
-  padding-bottom: 72px;
+/* Leaves room under the page's last links for the floating button (wiki-footer.css reads it). */
+body:has(.wiki-hero-nav-fab) {
+  --wiki-floating-button-space: 72px;
 }
 
 @media (min-width: 1180px) {
-  /* Wide enough that the longest one-line entry stays on one line when it is the chosen, bolder one. */
-  .wiki-handbook {
-    grid-template-columns: minmax(0, 1fr) 176px;
-  }
+  /* The handbook keeps a 176px column for this list (hero-handbook.css). */
   .wiki-hero-nav:not([hidden]) {
     position: sticky;
     top: calc(var(--wiki-header-height) + 16px);
@@ -101,8 +98,8 @@ body:has(.wiki-hero-nav-fab) .wiki-site-footer {
   .wiki-hero-nav-fab {
     display: none;
   }
-  body:has(.wiki-hero-nav-fab) .wiki-site-footer {
-    padding-bottom: 0;
+  body:has(.wiki-hero-nav-fab) {
+    --wiki-floating-button-space: 0;
   }
   .wiki-handbook .wiki-hero-nav h2 {
     font: 600 0.75rem/1rem var(--wiki-font-reading);

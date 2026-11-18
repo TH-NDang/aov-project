@@ -676,3 +676,14 @@
     height: 22px;
   }
 }
+
+/* Each hero's skins come up as they scroll into view, in browsers that can drive an animation from scrolling. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .wiki-skin-group {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 26%;
+    }
+  }
+}

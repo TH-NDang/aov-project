@@ -604,13 +604,3 @@
     transition: none;
   }
 }
-button.wiki-handbook-action {
-  padding: 0;
-  text-align: left;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-button.wiki-handbook-action svg:first-child {
-  fill: currentColor;
-}

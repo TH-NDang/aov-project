@@ -9,6 +9,8 @@
 }
 /* Cards of one row share its height; their content starts at the top. */
 .wiki-guide-lineup-card {
+  --mode-chip-bg: var(--aov-raised);
+  --mode-chip-hover: var(--aov-wiki-panel-high);
   display: grid;
   align-content: start;
   gap: 14px;

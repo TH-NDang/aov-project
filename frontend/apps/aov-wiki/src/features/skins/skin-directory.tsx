@@ -225,7 +225,7 @@ export function SkinDirectory() {
   if (query.isPending) content = <SkinGridSkeleton />
   else if (query.isError && !query.data)
     content = (
-      <div className="wiki-skin-state" role="status">
+      <div className="wiki-skin-state wiki-mascot-state" role="status">
         <h2>{text("Chưa tải được trang phục", "Skins could not be loaded")}</h2>
         <p>{text("Vui lòng kiểm tra kết nối và thử lại.", "Check your connection and try again.")}</p>
         <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
@@ -235,7 +235,7 @@ export function SkinDirectory() {
     )
   else if (!groups.length)
     content = (
-      <div className="wiki-skin-state" role="status">
+      <div className="wiki-skin-state wiki-mascot-state" role="status">
         <h2>
           {hasFilters
             ? text("Không tìm thấy trang phục phù hợp", "No matching skins")

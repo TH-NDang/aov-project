@@ -154,6 +154,10 @@
   color: var(--aov-accent);
   font-variant-numeric: tabular-nums;
 }
+/* The coin takes the price's gold too. */
+.wiki-item-row-price svg {
+  color: currentColor;
+}
 
 /* One look for every entry of a catalog that can be opened: a quiet surface, and a gold outline once chosen. */
 :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-pressed="true"] {
@@ -696,4 +700,17 @@
   color: var(--aov-text-soft);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+}
+
+/* Rows and cards come up as they scroll into view, in browsers that can drive an animation from scrolling. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .wiki-item-row,
+    .wiki-arcana-row,
+    .wiki-spell-card {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 26%;
+    }
+  }
 }

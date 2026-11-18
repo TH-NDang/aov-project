@@ -243,3 +243,14 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* The heroes come up as they scroll into view, in browsers that can drive an animation from scrolling. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .wiki-hero-grid > * {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 26%;
+    }
+  }
+}

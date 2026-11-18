@@ -1,6 +1,5 @@
 @import "@aov/ui/styles.css";
 @import "./styles/typography.css";
-@import "./styles/motion.css";
 @import "./styles/controls.css";
 
 /* The Wiki's palette: the shared token names take the Wiki's colours from tokens.css. The Wiki is always dark. */
@@ -135,10 +134,7 @@
 }
 
 /* Empty results and missing pages show the wiki mascot, so a dead end still feels like the product. */
-.wiki-mascot-state::before,
-.wiki-hero-list-state::before,
-.wiki-skin-state::before,
-.wiki-warehouse-empty::before {
+.wiki-mascot-state::before {
   content: "";
   display: block;
   width: 72px;

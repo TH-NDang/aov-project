@@ -207,7 +207,7 @@ export function HeroDirectory() {
         retry={changes.retry}
       />
       {query.isError && !query.data ? (
-        <div className="wiki-hero-list-state" role="status">
+        <div className="wiki-hero-list-state wiki-mascot-state" role="status">
           <h2>{wikiText(locale, "Chưa thể tải thư viện Tướng", "Could not load the hero library")}</h2>
           <p>{wikiText(locale, "Vui lòng kiểm tra kết nối và thử lại.", "Check your connection and try again.")}</p>
           <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
@@ -215,7 +215,7 @@ export function HeroDirectory() {
           </button>
         </div>
       ) : query.data && !found ? (
-        <div className="wiki-hero-list-state" role="status">
+        <div className="wiki-hero-list-state wiki-mascot-state" role="status">
           <h2>
             {hasFilters
               ? wikiText(locale, "Không tìm thấy tướng phù hợp", "No matching heroes")

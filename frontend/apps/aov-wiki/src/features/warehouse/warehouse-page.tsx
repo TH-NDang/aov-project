@@ -245,7 +245,7 @@ export default function WarehousePage() {
             {catalog.isPending ? (
               <WarehouseSkeleton kind={kind} layout={itemView.preferred} />
             ) : catalog.isError && !catalog.data ? (
-              <div className="wiki-warehouse-empty" role="status">
+              <div className="wiki-warehouse-empty wiki-mascot-state" role="status">
                 <h2>{text("Chưa tải được dữ liệu", "Data could not be loaded")}</h2>
                 <p>{text("Kiểm tra kết nối rồi thử lại.", "Check your connection and try again.")}</p>
                 <button type="button" onClick={() => void catalog.refetch()} disabled={catalog.isFetching}>
@@ -253,7 +253,7 @@ export default function WarehousePage() {
                 </button>
               </div>
             ) : !filtered.length ? (
-              <div className="wiki-warehouse-empty" role="status">
+              <div className="wiki-warehouse-empty wiki-mascot-state" role="status">
                 <h2>
                   {search
                     ? text("Không có kết quả phù hợp", "No matching results")
