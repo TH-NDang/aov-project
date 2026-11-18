@@ -1,8 +1,11 @@
 package com.wikiaov.community.tournament.internal.planning.persistence;
 
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionSnapshot;
+import com.wikiaov.community.tournament.internal.planning.domain.PlanRevisionAction;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -19,14 +22,15 @@ public class PlanRevision {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private CompetitionSnapshot content;
-    private String action;
+    @Enumerated(EnumType.STRING)
+    private PlanRevisionAction action;
     private String actor;
     private Instant createdAt;
 
     protected PlanRevision() {
     }
 
-    public PlanRevision(UUID tournamentId, CompetitionSnapshot content, String action, String actor) {
+    public PlanRevision(UUID tournamentId, CompetitionSnapshot content, PlanRevisionAction action, String actor) {
         this.id = UUID.randomUUID();
         this.tournamentId = tournamentId;
         this.content = content;

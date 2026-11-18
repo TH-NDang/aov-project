@@ -876,6 +876,37 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void publicationHistoryAndPlanRevisionsKeepStoringTheirActionsAsText() throws Exception {
+        var fixture = fixture();
+        var draft = create("games", fixture.game());
+        String path = ADMIN + "/games/" + draft.get("id");
+        var published = write(post(path + "/publish"), Map.of("version", version(draft)));
+        write(post(path + "/withdraw"), Map.of("version", version(published)));
+        write(put(ADMIN + "/competitions/" + fixture.tournamentId()), Map.of("version", 0, "content", Map.of()));
+
+        assertThat(
+                storedActions("SELECT action FROM tournament.game_publication WHERE game_id = ? ORDER BY published_at",
+                        UUID.fromString(draft.get("id").toString())))
+                .containsExactly("PUBLICATION", "WITHDRAWAL");
+        assertThat(storedActions("SELECT action FROM tournament.plan_revision WHERE tournament_id = ?",
+                fixture.tournamentId())).containsExactly("SAVE");
+    }
+
+    private List<String> storedActions(String sql, UUID id) throws Exception {
+        try (var connection = DriverManager.getConnection(database.getJdbcUrl(), database.getUsername(),
+                database.getPassword()); var statement = connection.prepareStatement(sql)) {
+            statement.setObject(1, id);
+            var actions = new ArrayList<String>();
+            try (var rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    actions.add(rows.getString(1));
+                }
+            }
+            return actions;
+        }
+    }
+
+    @Test
     void aTournamentsOwnDraftPlanGoesToTheTrashWithItWhilePublishedPlanHistoryKeepsProtectingIt() throws Exception {
         var fixture = fixture();
         String tournament = ADMIN + "/tournaments/" + fixture.tournamentId();

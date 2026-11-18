@@ -1,8 +1,11 @@
 package com.wikiaov.community.tournament.internal.persistence;
 
+import com.wikiaov.community.tournament.internal.domain.PublicationAction;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -18,7 +21,8 @@ public class PublicationRecord {
     private UUID gameId;
     private Instant publishedAt;
     private String actor;
-    private String action;
+    @Enumerated(EnumType.STRING)
+    private PublicationAction action;
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private PublishedGame snapshot;
@@ -27,10 +31,10 @@ public class PublicationRecord {
     }
 
     public PublicationRecord(UUID id, UUID gameId, PublishedGame snapshot, String actor) {
-        this(id, gameId, snapshot, actor, "PUBLICATION");
+        this(id, gameId, snapshot, actor, PublicationAction.PUBLICATION);
     }
 
-    public PublicationRecord(UUID id, UUID gameId, PublishedGame snapshot, String actor, String action) {
+    public PublicationRecord(UUID id, UUID gameId, PublishedGame snapshot, String actor, PublicationAction action) {
         this.id = id;
         this.gameId = gameId;
         this.snapshot = snapshot;

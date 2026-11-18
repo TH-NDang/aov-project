@@ -1,6 +1,7 @@
 package com.wikiaov.community.tournament.internal.planning.persistence;
 
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,7 +55,8 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
     /**
      * Plans and plan history that name a record. The plan of the record's own tournament (its series, games and roster
      * rows belong to it too) is left out while it has never been published: such a draft is part of the tournament and
-     * goes to the trash with it. Once published or withdrawn, the plan and its history keep protecting the record.
+     * goes to the trash with it. Once published or withdrawn ({@code publicActions} names the revision actions that say
+     * so), the plan and its history keep protecting the record.
      */
     @Query(value = """
         WITH owner AS (
@@ -70,7 +72,7 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
           SELECT p.id FROM tournament.competition_plan p, owner
           WHERE CAST(p.id AS text) = owner.tournament_id AND p.published_snapshot IS NULL
             AND NOT EXISTS (SELECT 1 FROM tournament.plan_revision r
-                            WHERE r.tournament_id = p.id AND r.action IN ('PUBLISH', 'WITHDRAW'))
+                            WHERE r.tournament_id = p.id AND r.action IN (:publicActions))
         )
         SELECT (SELECT count(*) FROM tournament.competition_plan p
                 WHERE p.id NOT IN (SELECT id FROM own_draft)
@@ -80,7 +82,7 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
                 WHERE r.tournament_id NOT IN (SELECT id FROM own_draft)
                   AND CAST(r.content AS text) LIKE concat('%', :id, '%'))
         """, nativeQuery = true)
-    long countReferences(String kind, String id);
+    long countReferences(String kind, String id, Collection<String> publicActions);
 
     @Query(value = "select (select count(*) from tournament.competition_plan where cast(published_snapshot as text) like concat('%/', :id, '/%')) + (select count(*) from tournament.plan_revision where cast(content as text) like concat('%/', :id, '/%'))", nativeQuery = true)
     long countMedia(String id);

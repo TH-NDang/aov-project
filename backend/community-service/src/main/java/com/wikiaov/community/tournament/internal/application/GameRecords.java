@@ -10,6 +10,7 @@ import com.wikiaov.community.tournament.internal.archive.application.RegistryArc
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
 import com.wikiaov.community.tournament.internal.domain.GameRules;
+import com.wikiaov.community.tournament.internal.domain.PublicationAction;
 import com.wikiaov.community.tournament.internal.domain.SeriesPickRule;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
@@ -153,7 +154,8 @@ public class GameRecords {
         TournamentErrors.version(row.getVersion(), version);
         if (row.getPublishedSnapshot() != null) {
             publications.save(
-                    new PublicationRecord(UUID.randomUUID(), id, row.getPublishedSnapshot(), actor, "WITHDRAWAL"));
+                    new PublicationRecord(UUID.randomUUID(), id, row.getPublishedSnapshot(), actor,
+                            PublicationAction.WITHDRAWAL));
         }
         row.withdraw(actor);
         games.flush();

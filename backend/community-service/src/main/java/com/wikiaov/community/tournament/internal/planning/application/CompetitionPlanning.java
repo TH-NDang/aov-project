@@ -11,6 +11,7 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tourna
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionRules;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionSnapshot;
+import com.wikiaov.community.tournament.internal.planning.domain.PlanRevisionAction;
 import com.wikiaov.community.tournament.internal.planning.persistence.CompetitionPlanRecord;
 import com.wikiaov.community.tournament.internal.planning.persistence.CompetitionPlanRepository;
 import com.wikiaov.community.tournament.internal.planning.persistence.PlanRevision;
@@ -132,7 +133,8 @@ public class CompetitionPlanning {
         }
         row.save(snapshot.plan(), actor.key());
         plans.saveAndFlush(row);
-        revisions.save(new PlanRevision(id, inputs.snapshot(id, row.getContent()), "SAVE", actor.key()));
+        revisions.save(
+                new PlanRevision(id, inputs.snapshot(id, row.getContent()), PlanRevisionAction.SAVE, actor.key()));
         return view(row);
     }
 
@@ -157,7 +159,8 @@ public class CompetitionPlanning {
         }
         row.save(row.getContent().schedule(matches), actor.key());
         plans.flush();
-        revisions.save(new PlanRevision(id, inputs.snapshot(id, row.getContent()), "MATERIALIZE", actor.key()));
+        revisions.save(new PlanRevision(id, inputs.snapshot(id, row.getContent()), PlanRevisionAction.MATERIALIZE,
+                actor.key()));
         return view(row);
     }
 
@@ -175,7 +178,7 @@ public class CompetitionPlanning {
 
         row.publish(snapshot, actor.key());
         plans.flush();
-        revisions.save(new PlanRevision(id, snapshot, "PUBLISH", actor.key()));
+        revisions.save(new PlanRevision(id, snapshot, PlanRevisionAction.PUBLISH, actor.key()));
         return view(row);
     }
 
@@ -190,7 +193,7 @@ public class CompetitionPlanning {
 
         row.publish(null, actor.key());
         plans.flush();
-        revisions.save(new PlanRevision(id, snapshot, "WITHDRAW", actor.key()));
+        revisions.save(new PlanRevision(id, snapshot, PlanRevisionAction.WITHDRAW, actor.key()));
         return view(row);
     }
 
