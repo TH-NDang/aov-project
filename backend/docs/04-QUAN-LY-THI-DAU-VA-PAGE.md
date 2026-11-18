@@ -497,8 +497,8 @@ Lỗi dùng chung một dạng với wiki-service: RFC 9457 kèm `code`, `reques
 `errors[]` {path, code, message} khi lỗi gắn với một trường; ngữ cảnh của module (`usages`, `missingFields`, `references`) vẫn là
 thành viên cấp trên của problem. Tham số truy vấn lạ, lặp lại, sai kiểu hoặc ngoài giới hạn trang trả 400 INVALID_QUERY_PARAMETER
 (`on`, `ids`, `entityIds` được lặp). Field JSON lạ trong body bị từ chối: 400 INVALID_REQUEST, `errors[].code = UNKNOWN_FIELD`.
-Hai lần ghi đồng thời vào cùng bản ghi trả 409 VERSION_CONFLICT; ràng buộc unique trả 409 TOURNAMENT_DUPLICATE_CODE (tên giữ
-nguyên vì Admin và Stream đọc mã này). Thiếu hoặc sai token trả 401 UNAUTHENTICATED, thiếu quyền 403 FORBIDDEN. Lỗi không lường
+Hai lần ghi đồng thời vào cùng bản ghi trả 409 VERSION_CONFLICT; ràng buộc unique trả 409 DUPLICATE_RECORD,
+ở mọi module của service. Thiếu hoặc sai token trả 401 UNAUTHENTICATED, thiếu quyền 403 FORBIDDEN. Lỗi không lường
 trước được ghi log và trả 500 INTERNAL_ERROR.
 
 ## Vận hành dev
