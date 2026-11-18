@@ -130,6 +130,18 @@ không có trường này được coi là không chính thức. History/roster 
 UUID mùa giải. Bản nháp riêng bản xuất bản; công bố cần ít nhất một nguồn. Đại diện có lớp trình bày
 riêng (giới thiệu, ảnh, liên kết), không được sửa thành tích, lịch sử, đội hình hay kết quả biên tập.
 
+Thứ hạng của thành tích (18/11/2026): `placement` là chữ hiển thị đúng như biên tập viên viết ("Vô địch", "Champion",
+"MVP"). Thứ hạng lưu riêng bằng số, cùng cách ghi hạng với `placements` của giải: `place` là hạng chung cuộc (1 là vô
+địch, 2 là á quân), `placeTo` là hạng cuối của một hạng đồng hạng ("5-8" là `place` 5, `placeTo` 8); `award: true` đánh
+dấu giải thưởng cá nhân (MVP, tuyển thủ xuất sắc), không có hạng. `place` từ 1 đến 999; `placeTo` chỉ có khi có `place`,
+lớn hơn `place` và tối đa 999; giải thưởng cá nhân không có `place`. Sai trả 422 PAGE_INVALID_CONTENT.
+
+Stream chọn dấu của mỗi giải (cúp cho vô địch, số hạng, dấu giải thưởng) theo hạng tốt nhất đã lưu. Thành tích cũ chưa có
+thứ hạng được đọc từ chữ bằng một hàm dùng chung của `@aov/community-contracts`, hiểu cả tiếng Việt và tiếng Anh ("Vô
+địch", "Champion", "1st", "Á quân", "Runner-up", "Hạng 3", "3rd", "Hạng 5-8", "5th–8th", "Top 8" là hạng 5–8); chữ
+không đọc được coi là giải thưởng như trước. Admin chọn thứ hạng trong form thành tích. Người đại diện không sửa thành
+tích nên Stream không có ô nhập.
+
 Nội dung giao diện phân theo loại hồ sơ: ORGANIZATION có giới thiệu, lịch sử hoạt động và giải đấu tổ chức;
 TEAM có đội hình/ban huấn luyện, lịch sử và thành tích; PLAYER có sự nghiệp và thành tích. Tổ chức không
 hiển thị hoặc cho nhập đội hình/thành tích thi đấu; dữ liệu cũ vẫn giữ nguyên khi lưu các mục khác.
