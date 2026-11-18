@@ -6,6 +6,7 @@ import com.wikiaov.community.community.internal.application.PageViews.FeedPost;
 import com.wikiaov.community.community.internal.application.PageViews.Liking;
 import com.wikiaov.community.community.internal.application.PageViews.Post;
 import com.wikiaov.community.community.internal.application.PageViews.Report;
+import com.wikiaov.community.community.internal.domain.NotificationKind;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.domain.PostContent;
@@ -28,6 +29,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -148,7 +150,8 @@ public class PageCommunity {
         posts.saveAndFlush(row);
         access.audit(pageId, actor, "PAGE_POST_SAVED");
         if (newlyPublished && asPage) {
-            notifications.followers(pageId, profile.getPublishedContent().name() + " vừa đăng bài mới.");
+            notifications.followers(pageId, NotificationKind.PAGE_POST_PUBLISHED,
+                    Map.of(NotificationKind.PAGE_NAME, profile.getPublishedContent().name()));
         }
         return postView(row, actor, likes.countByPostId(row.getId()),
                 likes.existsByPostIdAndActor(row.getId(), actor.key()),
@@ -182,7 +185,7 @@ public class PageCommunity {
         row.setAuthorName(asPage ? access.social(post.getPageId()).getPublishedContent().name() : actor.name());
         comments.saveAndFlush(row);
         if (!post.getActor().equals(actor.key())) {
-            notifications.send(post.getActor(), post.getPageId(), "Bài viết của bạn có bình luận mới.");
+            notifications.send(post.getActor(), post.getPageId(), NotificationKind.POST_COMMENTED);
         }
         access.audit(post.getPageId(), actor, "PAGE_COMMENT_ADDED");
         return new Comment(row.getId(), postId, row.getAuthorName(), asPage, body, row.getCreatedAt(), true);
@@ -325,7 +328,7 @@ public class PageCommunity {
         row.setResolved(true);
         row.setResolution(resolution);
         access.audit(row.getPageId(), CommunityActor.require(), "PAGE_REPORT_RESOLVED");
-        notifications.send(row.getActor(), row.getPageId(), "Báo cáo của bạn đã được xử lý.");
+        notifications.send(row.getActor(), row.getPageId(), NotificationKind.REPORT_RESOLVED);
     }
 
     private void moderate(UUID pageId, CommunityActor actor) {

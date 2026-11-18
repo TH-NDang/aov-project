@@ -1,11 +1,22 @@
 package com.wikiaov.community.community.internal.social.persistence;
 
+import com.wikiaov.community.community.internal.domain.NotificationKind;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.Nullable;
 
+/**
+ * One line of an account's inbox. New rows carry a kind and its parameters; rows written before kinds existed keep
+ * the sentence they were sent with in {@code message} and have no kind.
+ */
 @Entity
 @Table(schema = "community", name = "notification")
 public class PageNotification {
@@ -13,47 +24,54 @@ public class PageNotification {
     private UUID id;
     private String actor;
     private UUID pageId;
-    private String message;
-    private Instant readAt;
+    @Enumerated(EnumType.STRING)
+    private @Nullable NotificationKind kind;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, String> parameters = Map.of();
+    private @Nullable String message;
+    private @Nullable Instant readAt;
     private Instant createdAt;
 
-    public PageNotification() {
-        this.id = UUID.randomUUID();
+    protected PageNotification() {
+    }
+
+    public static PageNotification of(String actor, UUID pageId, NotificationKind kind,
+            Map<String, String> parameters, Instant createdAt) {
+        var row = new PageNotification();
+        row.id = UUID.randomUUID();
+        row.actor = actor;
+        row.pageId = pageId;
+        row.kind = kind;
+        row.parameters = Map.copyOf(parameters);
+        row.createdAt = createdAt;
+        return row;
     }
 
     public UUID getId() {
         return id;
     }
 
-    public void setId(UUID value) {
-        this.id = value;
-    }
-
     public String getActor() {
         return actor;
-    }
-
-    public void setActor(String value) {
-        this.actor = value;
     }
 
     public UUID getPageId() {
         return pageId;
     }
 
-    public void setPageId(UUID value) {
-        this.pageId = value;
+    public @Nullable NotificationKind getKind() {
+        return kind;
     }
 
-    public String getMessage() {
+    public Map<String, String> getParameters() {
+        return parameters;
+    }
+
+    public @Nullable String getMessage() {
         return message;
     }
 
-    public void setMessage(String value) {
-        this.message = value;
-    }
-
-    public Instant getReadAt() {
+    public @Nullable Instant getReadAt() {
         return readAt;
     }
 
@@ -64,9 +82,4 @@ public class PageNotification {
     public Instant getCreatedAt() {
         return createdAt;
     }
-
-    public void setCreatedAt(Instant value) {
-        this.createdAt = value;
-    }
-
 }

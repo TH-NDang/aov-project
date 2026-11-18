@@ -3,6 +3,7 @@ package com.wikiaov.community.community.internal.social.application;
 import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.Live;
 import com.wikiaov.community.community.internal.application.PageViews.Profile;
+import com.wikiaov.community.community.internal.domain.NotificationKind;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PageRules;
@@ -14,6 +15,7 @@ import com.wikiaov.community.community.internal.social.persistence.PageLiveRepos
 import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.platform.PageSlice;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -99,8 +101,8 @@ public class PageBroadcasts {
         lives.saveAndFlush(row);
         access.audit(page.getId(), actor, starting ? "PAGE_LIVE_STARTED" : "PAGE_LIVE_UPDATED");
         if (starting) {
-            notifications.followers(page.getId(),
-                    page.getPublishedContent().name() + " đang phát trực tiếp: " + row.getTitle());
+            notifications.followers(page.getId(), NotificationKind.PAGE_LIVE_STARTED, Map.of(NotificationKind.PAGE_NAME,
+                    page.getPublishedContent().name(), NotificationKind.TITLE, row.getTitle()));
         }
 
         return new Live(row.getUrl(), row.getTitle(), row.getStartedAt());

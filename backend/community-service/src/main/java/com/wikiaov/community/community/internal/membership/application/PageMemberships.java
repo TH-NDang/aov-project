@@ -5,6 +5,7 @@ import com.wikiaov.community.community.internal.application.PageViews.Claim;
 import com.wikiaov.community.community.internal.application.PageViews.Handover;
 import com.wikiaov.community.community.internal.application.PageViews.Member;
 import com.wikiaov.community.community.internal.domain.ClaimStatus;
+import com.wikiaov.community.community.internal.domain.NotificationKind;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PageRules;
@@ -111,7 +112,7 @@ public class PageMemberships {
         claims.flush();
         access.audit(row.getPageId(), actor, approve ? "PAGE_CLAIM_APPROVED" : "PAGE_CLAIM_REJECTED");
         notifications.send(row.getActor(), row.getPageId(),
-                approve ? "Yêu cầu quản lý trang đã được chấp thuận." : "Yêu cầu quản lý trang cần được xem lại.");
+                approve ? NotificationKind.PAGE_CLAIM_APPROVED : NotificationKind.PAGE_CLAIM_REJECTED);
         return view(row);
     }
 
@@ -209,7 +210,7 @@ public class PageMemberships {
         row.setAcceptedAt(Instant.now());
         access.audit(row.getPageId(), actor, handover ? "PAGE_HANDOVER_ACCEPTED" : "PAGE_INVITATION_ACCEPTED");
         if (handover) {
-            notifications.send(actor.key(), row.getPageId(), "Bạn đã nhận quyền quản trị chính của trang.");
+            notifications.send(actor.key(), row.getPageId(), NotificationKind.PAGE_OWNERSHIP_RECEIVED);
         }
         return row.getPageId();
     }
@@ -234,7 +235,7 @@ public class PageMemberships {
                     .forEach(invitation -> invitation.setExpiresAt(Instant.now()));
         }
         access.audit(pageId, actor, "PAGE_MEMBERSHIP_REVOKED");
-        notifications.send(member.getActor(), pageId, "Quyền quản lý trang của bạn đã được thu hồi.");
+        notifications.send(member.getActor(), pageId, NotificationKind.PAGE_MEMBERSHIP_REVOKED);
     }
 
     public void transfer(UUID pageId, UUID memberId) {
@@ -252,7 +253,7 @@ public class PageMemberships {
         invitations.findByPageIdAndAcceptedAtIsNull(pageId)
                 .forEach(invitation -> invitation.setExpiresAt(Instant.now()));
         access.audit(pageId, actor, "PAGE_OWNERSHIP_TRANSFERRED");
-        notifications.send(target.getActor(), pageId, "Bạn đã nhận quyền quản trị chính của trang.");
+        notifications.send(target.getActor(), pageId, NotificationKind.PAGE_OWNERSHIP_RECEIVED);
     }
 
     private Map<String, Object> issue(UUID pageId, Role role) {

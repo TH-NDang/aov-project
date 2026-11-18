@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.community.testsupport.ApiCalls;
 import com.wikiaov.community.testsupport.CommunityApplicationTest;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -33,6 +35,8 @@ class PageApiIntegrationTest {
     MockMvc mvc;
     @Autowired
     JsonMapper json;
+    @Autowired
+    JdbcTemplate jdbc;
     @MockitoBean
     JwtDecoder decoder;
     static final String ROOT = "/api/community/v1";
@@ -622,6 +626,40 @@ class PageApiIntegrationTest {
         send(put(ROOT + "/admin/pages/" + id + "/live"), "editor", true,
                 Map.of("url", "https://www.facebook.com/live/xyz", "title", "Chung kết"));
         mvc.perform(as(get(ROOT + "/me/notifications"), fan, false)).andExpect(jsonPath("$.totalElements").value(2));
+    }
+
+    @Test
+    void notificationsCarryAKindAndItsParametersWhileOlderSentencesStayReadable() throws Exception {
+        String owner = "kind-owner-" + UUID.randomUUID();
+        String fan = "kind-fan-" + UUID.randomUUID();
+        String name = "Kinds " + UUID.randomUUID();
+        String id = ownedOrganization(name, owner);
+        send(post(ROOT + "/me/pages/" + id + "/follow"), fan, false, Map.of("following", true));
+        jdbc.update("""
+                INSERT INTO community.notification(id, actor, page_id, message, created_at)
+                VALUES (?, ?, ?, 'Bài viết của bạn có bình luận mới.', now() - interval '1 day')
+                """, UUID.randomUUID(), ApiCalls.ISSUER + "\n" + fan, UUID.fromString(id));
+
+        var news = send(post(ROOT + "/me/pages/" + id + "/posts"), owner, false,
+                Map.of("body", "Official news", "asPage", true, "publish", true));
+        send(put(ROOT + "/me/pages/" + id + "/live"), owner, false,
+                Map.of("url", "https://www.youtube.com/live/abc", "title", "Week 3"));
+        send(post(ROOT + "/me/posts/" + news.path("id").asText() + "/comments"), fan, false,
+                Map.of("body", "Hello", "asPage", false));
+
+        var heard = send(get(ROOT + "/me/notifications"), fan, false, null).path("items");
+        assertThat(heard).extracting(item -> item.path("kind").isNull() ? null : item.path("kind").asText())
+                .containsExactly("PAGE_LIVE_STARTED", "PAGE_POST_PUBLISHED", null);
+        assertThat(heard.get(0).path("parameters").path("pageName").asText()).isEqualTo(name);
+        assertThat(heard.get(0).path("parameters").path("title").asText()).isEqualTo("Week 3");
+        assertThat(heard.get(0).has("message")).isFalse();
+        assertThat(heard.get(1).path("parameters").path("pageName").asText()).isEqualTo(name);
+        assertThat(heard.get(2).path("message").asText()).isEqualTo("Bài viết của bạn có bình luận mới.");
+        assertThat(heard.get(2).path("parameters").isEmpty()).isTrue();
+        var owned = send(get(ROOT + "/me/notifications"), owner, false, null).path("items");
+        assertThat(owned).extracting(item -> item.path("kind").asText())
+                .containsExactly("POST_COMMENTED", "PAGE_OWNERSHIP_RECEIVED");
+        assertThat(owned.get(0).path("parameters").isEmpty()).isTrue();
     }
 
     /** A published organization whose owner received the page through a handover code. */
