@@ -74,7 +74,7 @@ export function useVideoParam() {
       set(video, false, { ...(location.state as object | null), openedVideo: true, playlist }),
     select: (video: PublicVideo) => set(video, true, location.state),
     close: () => {
-      if (entry?.openedVideo) navigate(-1)
+      if (entry?.openedVideo) void navigate(-1)
       else set(null, true, location.state)
     },
   }

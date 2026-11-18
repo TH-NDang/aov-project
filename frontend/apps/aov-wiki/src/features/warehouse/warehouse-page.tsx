@@ -65,7 +65,7 @@ export default function WarehousePage() {
   // Rich text and patch notes link entries by id, but the page for sharing and indexing is the one named by code.
   useEffect(() => {
     if (selectedCode && selectedId !== selectedCode)
-      navigate({ pathname: warehousePath(kind, selectedCode), search: window.location.search }, { replace: true })
+      void navigate({ pathname: warehousePath(kind, selectedCode), search: window.location.search }, { replace: true })
   }, [kind, navigate, selectedCode, selectedId])
 
   usePageHead(
@@ -139,7 +139,7 @@ export default function WarehousePage() {
       const home = onBoard ? board : (entry.content.categoryCode ?? positions[0]?.categoryCode)
       if (home) next.set("group", home)
     }
-    navigate(
+    void navigate(
       { pathname: warehousePath(kind, entry.code), search: `?${next}` },
       // Going from one entry to the next should not fill the back button; opening the sheet still can be undone by it.
       { replace: wide || !!selectedId },
@@ -154,7 +154,7 @@ export default function WarehousePage() {
     // An item opened from a link chose the board; the board stays on it once the item closes.
     const next = new URLSearchParams(params)
     if (kind === "items" && itemView.layout === "shop" && itemView.category) next.set("group", itemView.category)
-    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
+    void navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
   }
 
   function setSearch(value: string) {
@@ -176,7 +176,7 @@ export default function WarehousePage() {
       if (value) next.set(key, value)
       else next.delete(key)
     }
-    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
+    void navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
   }
 
   const changed = filtered.filter((entry) => changes.subjects.has(entry.id))
