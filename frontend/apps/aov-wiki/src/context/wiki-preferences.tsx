@@ -62,7 +62,7 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
         <div className="wiki-preference-row">
           <span>
             <WikiIcon name="clock" size={16} />
-            {english ? "Time zone" : "Múi giờ"}
+            {t("Múi giờ", "Time zone")}
           </span>
           <PublicTimeZoneSelect
             locale={locale}
@@ -73,7 +73,7 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
         <div className="wiki-preference-row">
           <span>
             <WikiIcon name="clock" size={16} />
-            {english ? "Date format" : "Định dạng ngày"}
+            {t("Định dạng ngày", "Date format")}
           </span>
           <PublicDateFormatSelect
             locale={locale}
@@ -84,7 +84,7 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
         <div className="wiki-preference-row">
           <span>
             <WikiIcon name="coins" size={16} />
-            {english ? "Currency" : "Tiền tệ"}
+            {t("Tiền tệ", "Currency")}
           </span>
           <PublicCurrencySelect
             locale={locale}

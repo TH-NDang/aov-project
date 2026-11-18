@@ -358,8 +358,11 @@ export function LineupsTab({
           <div className="wiki-guide-state">
             <p>
               {unit
-                ? "Chưa có đội hình cộng đồng nào có quân cờ này."
-                : "Chưa có đội hình cộng đồng. Hãy là người đầu tiên chia sẻ đội hình!"}
+                ? text("Chưa có đội hình cộng đồng nào có quân cờ này.", "No community lineup uses this unit yet.")
+                : text(
+                    "Chưa có đội hình cộng đồng. Hãy là người đầu tiên chia sẻ đội hình!",
+                    "No community lineups yet. Be the first to share one!",
+                  )}
             </p>
             <Link className="wiki-mode-chip" data-tone="accent" to={postHref}>
               {text("Xếp và đăng đội hình", "Build and share a lineup")}

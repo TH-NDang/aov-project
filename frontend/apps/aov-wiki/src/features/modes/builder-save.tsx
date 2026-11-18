@@ -74,7 +74,7 @@ export function SaveLineup({
               `${members.length} quân: ${members.join(", ")}`,
               `${members.length} ${members.length === 1 ? "unit" : "units"}: ${members.join(", ")}`,
             )
-          : "Đội hình chưa có quân cờ nào."}
+          : text("Đội hình chưa có quân cờ nào.", "The lineup has no units yet.")}
       </p>
       <form
         className="wiki-guide-builder-form"

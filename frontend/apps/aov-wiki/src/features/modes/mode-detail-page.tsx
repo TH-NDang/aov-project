@@ -338,6 +338,7 @@ function Sources({ content }: { content: ModeContent }) {
 
 /** A mode with little recorded still leads somewhere: four more modes of its group, the open ones first. */
 function OtherModes({ code, group }: { code: string; group: ModeContent["group"] }) {
+  const text = useWikiText()
   const modes = useQuery(modeCardsQuery())
   const peers = (modes.data?.items ?? []).filter((mode) => mode.group === group)
   const at = peers.findIndex((mode) => mode.code === code)
@@ -350,7 +351,14 @@ function OtherModes({ code, group }: { code: string; group: ModeContent["group"]
   if (!others.length) return null
   return (
     <section className="wiki-mode-section" aria-labelledby="mode-others">
-      <ModeHeading id="mode-others" title={group === "PVP" ? "Chế độ PVP khác" : "Chế độ giải trí khác"} />
+      <ModeHeading
+        id="mode-others"
+        title={
+          group === "PVP"
+            ? text("Chế độ PVP khác", "Other PVP modes")
+            : text("Chế độ giải trí khác", "Other casual modes")
+        }
+      />
       <ModeCards modes={others} />
     </section>
   )

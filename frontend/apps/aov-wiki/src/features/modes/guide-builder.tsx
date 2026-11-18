@@ -123,7 +123,10 @@ export function BuilderTab({
                         `Chọn quân cho ${ROW_NAMES[target.row][0].toLowerCase()}, ô ${target.column}.`,
                         `Choose a unit for the ${ROW_NAMES[target.row][1].toLowerCase()}, cell ${target.column}.`,
                       )
-                    : "Bấm để thêm vào đội hình, hoặc kéo thả lên một ô của bàn cờ."
+                    : text(
+                        "Bấm để thêm vào đội hình, hoặc kéo thả lên một ô của bàn cờ.",
+                        "Tap to add a unit to the lineup, or drag it onto a cell of the board.",
+                      )
                 }
                 action={
                   target ? (
