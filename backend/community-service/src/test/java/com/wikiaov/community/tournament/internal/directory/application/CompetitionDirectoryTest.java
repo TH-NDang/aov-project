@@ -30,8 +30,7 @@ class CompetitionDirectoryTest {
         when(directory.rankedTournaments(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
                 anyString(), eq(true), anyString(), anyString(), any(Pageable.class))).thenReturn(Page.empty());
 
-        directories.rankedTournaments("", "", "", "", "", null, "RECENT", TournamentLevel.MAIN, null, null,
-                PageRequest.of(0, 10));
+        directories.rankedTournaments(filter("RECENT", TournamentLevel.MAIN), PageRequest.of(0, 10));
 
         verify(directory).rankedTournaments(anyString(), anyString(), anyString(), anyString(), anyString(),
                 anyString(), anyString(), eq(true), anyString(), anyString(), any(Pageable.class));
@@ -48,9 +47,13 @@ class CompetitionDirectoryTest {
 
     @Test
     void anUnsupportedOrderIsAnInvalidQueryParameter() {
-        var error = catchThrowableOfType(ApiException.class, () -> directories.rankedTournaments("", "", "", "", "",
-                null, "LOUDEST", TournamentLevel.ALL, null, null, PageRequest.of(0, 10)));
+        var error = catchThrowableOfType(ApiException.class, () -> directories
+                .rankedTournaments(filter("LOUDEST", TournamentLevel.ALL), PageRequest.of(0, 10)));
 
         assertThat(error.getErrorCode().name()).isEqualTo("INVALID_QUERY_PARAMETER");
+    }
+
+    private static TournamentFilter filter(String sort, TournamentLevel level) {
+        return new TournamentFilter("", "", "", "", "", null, sort, level, null, null);
     }
 }

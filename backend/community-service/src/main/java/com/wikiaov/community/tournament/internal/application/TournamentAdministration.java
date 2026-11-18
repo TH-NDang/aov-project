@@ -12,6 +12,8 @@ import com.wikiaov.community.tournament.internal.directory.application.Directory
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
+import com.wikiaov.community.tournament.internal.directory.application.PlayerFilter;
+import com.wikiaov.community.tournament.internal.directory.application.TournamentFilter;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
@@ -68,9 +70,8 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public PageSlice<PlayerEntry> playerDirectory(String q, String country, String lane, String status, String sort,
-            Pageable page) {
-        return directory.players(q, country, lane, status, sort, page);
+    public PageSlice<PlayerEntry> playerDirectory(PlayerFilter filter, Pageable page) {
+        return directory.players(filter, page);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
@@ -138,15 +139,12 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public PageSlice<Ranked<Tournament>> tournaments(String q, String alsoRegions, RecordState state, String status,
-            String tier, String region, Integer year, String sort, TournamentLevel level, UUID teamId, UUID playerId,
-            Pageable page) {
+    public PageSlice<Ranked<Tournament>> tournaments(TournamentFilter filter, RecordState state, Pageable page) {
         if (state != RecordState.ACTIVE) {
-            return Ranked.unranked(tournaments.list(q, state, page));
+            return Ranked.unranked(tournaments.list(filter.q(), state, page));
         }
 
-        return directory.rankedTournaments(q, alsoRegions, status, tier, region, year, sort, level, teamId, playerId,
-                page);
+        return directory.rankedTournaments(filter, page);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")

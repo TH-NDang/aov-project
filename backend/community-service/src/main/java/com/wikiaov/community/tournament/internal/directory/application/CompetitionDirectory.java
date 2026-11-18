@@ -73,13 +73,13 @@ public class CompetitionDirectory {
         this.tournaments = tournaments;
     }
 
-    public PageSlice<PlayerEntry> players(String q, String country, String lane, String status, String sort,
-            Pageable page) {
-        requireOneOf("sort", sort, PLAYER_SORTS);
-        requireEnum("lane", lane, Lane.class);
-        requireEnum("status", status, CareerStatus.class);
+    public PageSlice<PlayerEntry> players(PlayerFilter filter, Pageable page) {
+        requireOneOf("sort", filter.sort(), PLAYER_SORTS);
+        requireEnum("lane", filter.lane(), Lane.class);
+        requireEnum("status", filter.status(), CareerStatus.class);
 
-        var rows = directory.players(ReferenceLabels.literalSearch(q), q, country, lane, status, sort, unsorted(page));
+        var rows = directory.players(ReferenceLabels.literalSearch(filter.q()), filter.q(), filter.country(),
+                filter.lane(), filter.status(), filter.sort(), unsorted(page));
         var people = byId(players.findAllById(rows.map(PlayerRow::getId).toList()), PlayerRecord::getId);
         var latestTeams = byId(teams.findAllById(rows.map(PlayerRow::getTeamId).filter(Objects::nonNull).toSet()),
                 TeamRecord::getId);
@@ -145,16 +145,14 @@ public class CompetitionDirectory {
         }));
     }
 
-    public PageSlice<Ranked<Tournament>> rankedTournaments(String q, String alsoRegions, String status, String tier,
-            String region, Integer year, String sort, TournamentLevel level, UUID teamId, UUID playerId,
-            Pageable page) {
-        requireOneOf("sort", sort, TOURNAMENT_SORTS);
-        requireEnum("status", status, TournamentStatus.class);
-        requireEnum("tier", tier, TournamentTier.class);
+    public PageSlice<Ranked<Tournament>> rankedTournaments(TournamentFilter filter, Pageable page) {
+        requireOneOf("sort", filter.sort(), TOURNAMENT_SORTS);
+        requireEnum("status", filter.status(), TournamentStatus.class);
+        requireEnum("tier", filter.tier(), TournamentTier.class);
 
-        var rows = directory.rankedTournaments(q, alsoRegions, status, tier, region,
-                year == null ? "" : year.toString(), sort, level.mainEventsOnly(), text(teamId), text(playerId),
-                unsorted(page));
+        var rows = directory.rankedTournaments(filter.q(), filter.alsoRegions(), filter.status(), filter.tier(),
+                filter.region(), filter.year() == null ? "" : filter.year().toString(), filter.sort(),
+                filter.level().mainEventsOnly(), text(filter.teamId()), text(filter.playerId()), unsorted(page));
         var records = byId(tournaments.findAllById(rows.map(RankedRow::getId).toList()), TournamentRecord::getId);
 
         return PageSlice.from(rows.map(row -> {

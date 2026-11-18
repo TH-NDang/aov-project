@@ -18,9 +18,18 @@ public interface CompetitionIdentities {
     ) {
     }
 
+    /** What a published page tells the identity it stands for. */
+    record Details(
+            String name,
+            String shortName,
+            String country,
+            String imageUrl
+    ) {
+    }
+
     Identity read(Kind kind, UUID id);
 
     Identity create(Kind kind, String code, String name, String country, String imageUrl, String actor);
 
-    void publish(Kind kind, UUID id, String name, String shortName, String country, String imageUrl, String actor);
+    void publish(Kind kind, UUID id, Details details, String actor);
 }

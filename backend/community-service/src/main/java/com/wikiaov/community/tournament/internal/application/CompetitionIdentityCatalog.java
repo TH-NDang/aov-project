@@ -48,18 +48,18 @@ class CompetitionIdentityCatalog implements CompetitionIdentities {
     }
 
     @Override
-    public void publish(Kind kind, UUID id, String name, String shortName, String country, String imageUrl,
-            String actor) {
+    public void publish(Kind kind, UUID id, Details details, String actor) {
         if (kind == Kind.TEAM) {
             var row = teams.get(id);
             var previous = row.content();
-            teams.update(id, row.version(),
-                    new Team(previous.code(), name, shortName, country, imageUrl, previous.aliases()), actor);
+            teams.update(id, row.version(), new Team(previous.code(), details.name(), details.shortName(),
+                    details.country(), details.imageUrl(), previous.aliases()), actor);
         } else if (kind == Kind.PLAYER) {
             var row = players.get(id);
             var previous = row.content();
             players.update(id, row.version(),
-                    new Player(previous.code(), name, previous.fullName(), country, imageUrl, previous.aliases(),
+                    new Player(previous.code(), details.name(), previous.fullName(), details.country(),
+                            details.imageUrl(), previous.aliases(),
                             previous.birthDate(), previous.lane(), previous.careerStatus(),
                             previous.signatureHeroes()),
                     actor);

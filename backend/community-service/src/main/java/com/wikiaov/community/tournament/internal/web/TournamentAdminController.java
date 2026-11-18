@@ -15,6 +15,8 @@ import com.wikiaov.community.tournament.internal.directory.application.Directory
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TeamEntry;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
+import com.wikiaov.community.tournament.internal.directory.application.PlayerFilter;
+import com.wikiaov.community.tournament.internal.directory.application.TournamentFilter;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
@@ -83,7 +85,7 @@ public class TournamentAdminController implements TournamentAdminApi {
     public PageSlice<PlayerEntry> playerDirectory(String q, String country, String lane, String status, String sort,
             int page, int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("q", "country", "lane", "status", "sort", "page", "size"));
-        return administration.playerDirectory(q, country, lane, status, sort,
+        return administration.playerDirectory(new PlayerFilter(q, country, lane, status, sort),
                 Parameters.pageable(page, size, "updatedAt"));
     }
 
@@ -124,8 +126,8 @@ public class TournamentAdminController implements TournamentAdminApi {
         QueryParameters.requireOnly(request,
                 Set.of("q", "alsoRegions", "state", "status", "tier", "region", "year", "sort", "level",
                         "teamId", "playerId", "page", "size"));
-        return administration.tournaments(q, alsoRegions, state, status, tier, region, year, sort, level, teamId,
-                playerId, Parameters.pageable(page, size, "updatedAt"));
+        var filter = new TournamentFilter(q, alsoRegions, status, tier, region, year, sort, level, teamId, playerId);
+        return administration.tournaments(filter, state, Parameters.pageable(page, size, "updatedAt"));
     }
 
     @Override

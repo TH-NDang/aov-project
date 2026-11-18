@@ -42,6 +42,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class PageProfiles {
+    /**
+     * What the admin directory is narrowed and ordered by. {@code kind} and {@code personRole} may be null; an empty
+     * country or identity list leaves its filter out. {@code relatedPageId} names the page in context, whose related
+     * pages an order by activity shows first.
+     */
+    public record DirectoryFilter(
+            @Nullable String kind,
+            String query,
+            @Nullable String personRole,
+            String country,
+            List<UUID> entityIds,
+            String sort,
+            @Nullable UUID relatedPageId
+    ) {
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(PageProfiles.class);
     /** Most identities an admin directory can be narrowed to. */
     private static final int MAX_IDENTITY_FILTER = 100;
@@ -91,38 +107,38 @@ public class PageProfiles {
     }
 
     @Transactional(readOnly = true)
-    public PageSlice<Profile> adminDirectory(String kind, String query, String personRole, String country,
-            List<UUID> entityIds, String sort, UUID relatedPageId, int page, int size) {
+    public PageSlice<Profile> adminDirectory(DirectoryFilter filter, int page, int size) {
         if (!CommunityActor.require().capabilities().contains("tournament:read")) {
             throw PageAccess.forbidden();
         }
-        var filter = kind(kind);
-        if (query == null || query.length() > PageRules.MAX_SEARCH) {
+        var kind = kind(filter.kind());
+        if (filter.query() == null || filter.query().length() > PageRules.MAX_SEARCH) {
             throw PageChecks.invalid("Search is too long.");
         }
-        if (!Set.of("RECENT", "NAME", "ACTIVITY", "ACTIVE").contains(sort)) {
+        if (!Set.of("RECENT", "NAME", "ACTIVITY", "ACTIVE").contains(filter.sort())) {
             throw PageChecks.invalid("Invalid page order.");
         }
-        if (entityIds.size() > MAX_IDENTITY_FILTER) {
+        if (filter.entityIds().size() > MAX_IDENTITY_FILTER) {
             throw PageChecks.invalid("Too many identities.");
         }
 
-        if (sort.equals("ACTIVE")) {
-            return byActivity(filter, query, personRole, country, relatedPageId, page, size);
+        if (filter.sort().equals("ACTIVE")) {
+            return byActivity(kind, filter, page, size);
         }
 
-        var identities = entityIds.stream().map(UUID::toString).collect(Collectors.joining(","));
-        var rows = pages.adminDirectory(name(filter), INDIVIDUALS, query, PageChecks.personRoleFilter(personRole),
-                country, identities, sort, paging(page, size));
+        var identities = filter.entityIds().stream().map(UUID::toString).collect(Collectors.joining(","));
+        var rows = pages.adminDirectory(name(kind), INDIVIDUALS, filter.query(),
+                PageChecks.personRoleFilter(filter.personRole()), filter.country(), identities, filter.sort(),
+                paging(page, size));
         return PageSlice.from(rows.map(row -> view(row, true)));
     }
 
-    private PageSlice<Profile> byActivity(Kind kind, String query, String personRole, String country,
-            UUID relatedPageId, int page, int size) {
-        var roles = PageChecks.personRoleFilter(personRole);
+    private PageSlice<Profile> byActivity(@Nullable Kind kind, DirectoryFilter filter, int page, int size) {
+        var roles = PageChecks.personRoleFilter(filter.personRole());
         var kinds = kind != null ? Set.of(kind) : roles.isEmpty() ? ACTIVE_KINDS : Set.of(Kind.PLAYER);
+        var related = filter.relatedPageId() == null ? "" : filter.relatedPageId().toString();
         var ranked = pages.byActivity(name(kind), String.join(",", Kind.names(kinds)), IDENTITIES, INDIVIDUALS,
-                query, roles, country, relatedPageId == null ? "" : relatedPageId.toString(), paging(page, size));
+                filter.query(), roles, filter.country(), related, paging(page, size));
         var rows = pages.findAllById(ranked.map(PageRepository.ActiveRow::getId).toList()).stream()
                 .collect(Collectors.toMap(PageRecord::getId, Function.identity()));
 
@@ -257,8 +273,9 @@ public class PageProfiles {
 
         if (row.getEntityId() != null) {
             var content = row.getContent();
-            identities.publish(identityKind(row.getKind()), row.getEntityId(), content.name(), content.shortName(),
-                    content.country(), content.avatarUrl(), CommunityActor.require().key());
+            var details = new CompetitionIdentities.Details(content.name(), content.shortName(), content.country(),
+                    content.avatarUrl());
+            identities.publish(identityKind(row.getKind()), row.getEntityId(), details, CommunityActor.require().key());
         }
         row.setPublishedContent(row.getContent());
         row.setPublishedAt(Instant.now());

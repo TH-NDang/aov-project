@@ -98,7 +98,8 @@ public class PageController implements PageApi {
         QueryParameters.requireOnly(request,
                 Set.of("kind", "q", "personRole", "country", "sort", "relatedPageId", "page", "size"),
                 Set.of("entityIds"));
-        return profiles.adminDirectory(kind, q, personRole, country, entityIds, sort, relatedPageId, page, size);
+        var filter = new PageProfiles.DirectoryFilter(kind, q, personRole, country, entityIds, sort, relatedPageId);
+        return profiles.adminDirectory(filter, page, size);
     }
 
     @Override

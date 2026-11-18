@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,15 @@ public class CompetitionPlanning {
             long version,
             Instant publishedAt,
             CompetitionSnapshot content
+    ) {
+    }
+
+    /** What a list of published competitions is narrowed to; a null id leaves its filter out. */
+    public record PublishedFilter(
+            @Nullable UUID teamId,
+            @Nullable UUID playerId,
+            @Nullable UUID organizerPageId,
+            @Nullable UUID circuitPageId
     ) {
     }
 
@@ -88,12 +98,10 @@ public class CompetitionPlanning {
     }
 
     @Transactional(readOnly = true)
-    public PageSlice<View> published(int page, int size, UUID teamId, UUID playerId, UUID organizerPageId,
-            UUID circuitPageId) {
+    public PageSlice<View> published(PublishedFilter filter, int page, int size) {
         return PageSlice.from(plans
-                .published(teamId == null ? "" : teamId.toString(), playerId == null ? "" : playerId.toString(),
-                        organizerPageId == null ? "" : organizerPageId.toString(),
-                        circuitPageId == null ? "" : circuitPageId.toString(), PageRequest.of(page, size))
+                .published(text(filter.teamId()), text(filter.playerId()), text(filter.organizerPageId()),
+                        text(filter.circuitPageId()), PageRequest.of(page, size))
                 .map(row -> new View(row.getId(), 0, row.getPublishedAt(), row.getPublishedSnapshot())));
     }
 
@@ -218,6 +226,10 @@ public class CompetitionPlanning {
         } catch (IllegalArgumentException error) {
             throw TournamentErrors.invalid(error.getMessage());
         }
+    }
+
+    private static String text(@Nullable UUID id) {
+        return id == null ? "" : id.toString();
     }
 
     private CompetitionPlanRecord locked(UUID id, Long version) {

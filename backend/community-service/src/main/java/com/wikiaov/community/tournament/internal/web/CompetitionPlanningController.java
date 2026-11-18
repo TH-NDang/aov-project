@@ -58,7 +58,8 @@ public class CompetitionPlanningController {
             HttpServletRequest request) {
         QueryParameters.requireOnly(request,
                 Set.of("page", "size", "teamId", "playerId", "organizerPageId", "circuitPageId"));
-        return planning.published(page, size, teamId, playerId, organizerPageId, circuitPageId);
+        var filter = new CompetitionPlanning.PublishedFilter(teamId, playerId, organizerPageId, circuitPageId);
+        return planning.published(filter, page, size);
     }
 
     @GetMapping("/admin/competitions")
