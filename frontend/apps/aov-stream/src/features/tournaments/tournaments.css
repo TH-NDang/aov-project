@@ -28,6 +28,10 @@
   font-size: 13px;
   font-weight: 400;
 }
+/* A title that is a link turns to the accent when pointed at. */
+.tn-heading h2 > a:hover {
+  color: var(--hub-accent-strong);
+}
 /* The link keeps the heading's line height while its area to press is 36px tall. */
 .tn-heading > a,
 .tn-heading > button {

@@ -2,9 +2,6 @@
 // feature is reworked: the variation moves to the owning sheet behind a modifier that the owning component sets.
 // `pnpm lint` fails on a restyle missing here and on an entry no rule matches any more, so the list only shrinks.
 export const knownRestyles = [
-  "components/account/account.css .cp-actions",
-  "components/account/account.css .cp-error",
-  "components/account/account.css .cp-meta",
   "components/stream-app-switcher.css .public-app-trigger",
   "components/stream-app-switcher.css .public-app-wordmark",
   "features/community/components/community-directory.css .cp-avatar",
@@ -21,7 +18,6 @@ export const knownRestyles = [
   "features/community/components/community-profile.css .hub-menu-item",
   "features/community/components/community-profile.css .hub-pills",
   "features/community/components/community-profile.css .tn-facts",
-  "features/community/components/community-profile.css .tn-heading",
   "features/community/components/community-profile.css .tn-match-grid",
   "features/community/components/community-profile.css .tn-more",
   "features/community/components/community-profile.css .tn-team-card",
@@ -35,7 +31,6 @@ export const knownRestyles = [
   "features/tournaments/competition-pages.css .hub-status",
   "features/tournaments/competition-pages.css .tn-logo",
   "features/tournaments/competition-pages.css .tn-match",
-  "features/tournaments/competition.css .cp-back",
   "features/tournaments/competition.css .hub-banner-stats",
   "features/tournaments/competition.css .hub-kicker",
   "features/tournaments/competition.css .hub-pills",
@@ -46,10 +41,8 @@ export const knownRestyles = [
   "features/tournaments/competition.css .tn-heading",
   "features/tournaments/competition.css .tn-live",
   "features/tournaments/games.css .competition-select",
-  "features/tournaments/games.css .cp-back",
   "features/tournaments/games.css .hub-skeleton",
   "features/tournaments/games.css .stream-search",
-  "features/tournaments/games.css .tn-heading",
   "features/tournaments/games.css .tn-page-head",
   "features/tournaments/tournaments.css .hub-skeleton",
   "features/tournaments/tournaments.css .hub-status",

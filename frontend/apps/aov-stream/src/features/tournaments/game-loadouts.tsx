@@ -198,7 +198,7 @@ export function GameLoadouts({ game }: { game: PublishedGame }) {
   if (!kinds.length)
     return (
       <section className="tn-loadouts" aria-labelledby="game-loadouts">
-        <div className="tn-heading">
+        <div className="tn-heading" data-flush="">
           <h2 id="game-loadouts">{text(...ALL_KINDS)}</h2>
         </div>
         <p className="tn-quiet">
@@ -219,7 +219,7 @@ export function GameLoadouts({ game }: { game: PublishedGame }) {
   const missing = players.length - recorded.length
   return (
     <section className="tn-loadouts" aria-labelledby="game-loadouts">
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="game-loadouts">{kinds.length > 1 ? text(...ALL_KINDS) : text(...KIND_NAMES[kind])}</h2>
       </div>
       {kinds.length > 1 && (

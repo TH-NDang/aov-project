@@ -264,9 +264,6 @@
   min-width: 0;
   gap: 16px;
 }
-.pf-page .tn-heading h2 > a:hover {
-  color: var(--hub-accent-strong);
-}
 .pf-bio {
   max-width: 72ch;
   margin: 0;

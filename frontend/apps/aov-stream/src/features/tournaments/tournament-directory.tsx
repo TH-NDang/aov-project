@@ -71,7 +71,7 @@ export function TournamentDirectory() {
     <StreamShell>
       <title>{text("Tra cứu ván đấu — AOV Stream", "Game lookup — AOV Stream")}</title>
       <div className="tn-games">
-        <Link className="cp-back" to="/competitions">
+        <Link className="cp-back" data-flush="" to="/competitions">
           <StreamIcon name="back" size={16} />
           {text("Giải đấu", "Tournaments")}
         </Link>

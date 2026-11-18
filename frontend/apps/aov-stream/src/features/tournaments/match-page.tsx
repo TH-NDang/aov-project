@@ -104,6 +104,7 @@ export function MatchPage() {
       <div className="tn-match-page">
         <Link
           className="cp-back"
+          data-flush=""
           to={tournamentId ? `/competitions/${tournamentId}?tab=matches` : "/competitions?tab=schedule"}
         >
           <StreamIcon name="back" size={16} />
@@ -167,7 +168,7 @@ export function MatchPage() {
               />
             )}
             <section className="tn-match-games" aria-labelledby="match-games">
-              <div className="tn-heading">
+              <div className="tn-heading" data-flush="">
                 <h2 id="match-games">
                   {text("Các ván đấu", "Games")}{" "}
                   {list.length > 0 && (

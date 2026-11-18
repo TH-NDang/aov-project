@@ -32,6 +32,11 @@
 .cp-back:hover {
   color: var(--hub-text);
 }
+/* At the head of a column that spaces its parts with a gap, the link keeps no margin and only its own width. */
+.cp-back[data-flush] {
+  align-self: flex-start;
+  margin: 0;
+}
 .cp-meta,
 .cp-muted {
   color: var(--hub-muted);
@@ -144,6 +149,10 @@
   align-items: center;
   gap: 8px;
 }
+/* Text buttons have no box of their own, so a row that holds them keeps them further apart. */
+.cp-actions[data-spacing="loose"] {
+  gap: 4px 16px;
+}
 .cp-button {
   display: inline-flex;
   align-items: center;
@@ -215,6 +224,13 @@
   background: var(--hub-danger-soft);
   color: var(--hub-danger);
   font-size: 14px;
+}
+/* An error box that holds a sentence and an action spaces the two. */
+.cp-error p {
+  margin: 0 0 10px;
+}
+.cp-error p:last-child {
+  margin: 0;
 }
 .cp-success {
   display: inline-flex;

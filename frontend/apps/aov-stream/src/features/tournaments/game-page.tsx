@@ -137,7 +137,7 @@ function PublishedGameView({
     <StreamShell>
       <title>{`${head.teams[0].name} vs ${head.teams[1].name} · ${text(`Ván ${number}`, `Game ${number}`)} — AOV Stream`}</title>
       <div className="tn-match-page" aria-busy={busy || undefined}>
-        <Link className="cp-back" to={`/competitions/${game.series.tournamentId}?tab=matches`}>
+        <Link className="cp-back" data-flush="" to={`/competitions/${game.series.tournamentId}?tab=matches`}>
           <StreamIcon name="back" size={16} />
           {game.tournament.name}
         </Link>

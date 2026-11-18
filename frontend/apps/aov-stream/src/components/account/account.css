@@ -30,10 +30,7 @@
   align-items: center;
   gap: 20px;
 }
-.account-avatar-field .cp-actions {
-  gap: 4px 16px;
-}
-.account-avatar-field .cp-meta {
+.account-avatar-note {
   margin: 8px 0 0;
   line-height: 16px;
 }
@@ -81,12 +78,6 @@
   gap: 12px;
   color: var(--hub-text-soft);
   font-size: 14px;
-}
-.account-profile .cp-error p {
-  margin: 0 0 10px;
-}
-.account-profile .cp-error p:last-child {
-  margin: 0;
 }
 /* What the profile states without editing it; changing it belongs to Settings. */
 .account-profile-fact {

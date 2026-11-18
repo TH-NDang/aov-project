@@ -291,10 +291,6 @@
   flex-direction: column;
   gap: var(--hub-layout-gap);
 }
-.tn-match-page > .cp-back {
-  align-self: flex-start;
-  margin: 0;
-}
 .tn-match-page[aria-busy="true"] > :not(.cp-back, .tn-duel, .tn-game-tabs) {
   opacity: 0.5;
 }
@@ -496,9 +492,6 @@
   display: grid;
   min-width: 0;
   gap: 12px;
-}
-.tn-match-games > .tn-heading {
-  margin-bottom: 0;
 }
 .tn-game-list {
   overflow: hidden;
