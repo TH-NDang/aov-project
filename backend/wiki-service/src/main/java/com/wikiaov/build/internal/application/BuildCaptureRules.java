@@ -2,8 +2,10 @@ package com.wikiaov.build.internal.application;
 
 import com.wikiaov.build.internal.application.BuildCommands.ImportCapture;
 import com.wikiaov.build.internal.domain.BuildContent;
+import com.wikiaov.build.internal.domain.BuildSource;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogCodes;
+import com.wikiaov.platform.EnumNames;
 import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.util.HashSet;
@@ -17,7 +19,6 @@ import java.util.regex.Pattern;
  * heroes and the content of each build. A broken rule is {@code BUILD_INVALID}.
  */
 final class BuildCaptureRules {
-    private static final Set<String> SOURCES = Set.of("PRO", "HOT", "SYSTEM");
     private static final Set<String> RESULTS = Set.of("COLLECTED", "NO_BUILDS", "FAILED");
     private static final Set<String> LAYOUTS = Set.of("PREPARE");
     private static final Pattern CODE = Pattern.compile(CatalogCodes.PATTERN);
@@ -34,7 +35,7 @@ final class BuildCaptureRules {
         if (!REGION.matcher(request.regionCode()).matches()) {
             throw invalid("Unknown market.");
         }
-        if (!SOURCES.contains(request.sourceKind())) {
+        if (EnumNames.find(BuildSource.class, request.sourceKind()) == null) {
             throw invalid("A capture comes from the PRO, HOT or SYSTEM tab.");
         }
         try {

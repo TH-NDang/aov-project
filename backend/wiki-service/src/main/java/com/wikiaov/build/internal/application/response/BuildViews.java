@@ -1,5 +1,6 @@
 package com.wikiaov.build.internal.application.response;
 
+import com.wikiaov.build.internal.domain.BuildSource;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -14,7 +15,7 @@ public final class BuildViews {
             UUID id,
             String code,
             String regionCode,
-            String sourceKind,
+            BuildSource sourceKind,
             String sourceLabel,
             Instant capturedAt,
             String sourceTimeZone,
@@ -32,7 +33,7 @@ public final class BuildViews {
             UUID id,
             String code,
             String regionCode,
-            String sourceKind,
+            BuildSource sourceKind,
             String sourceLabel,
             Instant capturedAt,
             String sourceTimeZone,
@@ -131,7 +132,7 @@ public final class BuildViews {
     /** The newest confirmed capture of one game tab that lists the hero. */
     public record Source(
             UUID captureId,
-            String sourceKind,
+            BuildSource sourceKind,
             String sourceLabel,
             Instant capturedAt,
             String sourceTimeZone,

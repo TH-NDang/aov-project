@@ -20,6 +20,7 @@ import com.wikiaov.build.internal.domain.BuildRules;
 import com.wikiaov.build.internal.domain.BuildRules.ArcanaPart;
 import com.wikiaov.build.internal.domain.BuildRules.EnchantmentPart;
 import com.wikiaov.build.internal.domain.BuildRules.ItemPart;
+import com.wikiaov.build.internal.domain.BuildSource;
 import com.wikiaov.build.internal.persistence.BuildItemRepository;
 import com.wikiaov.build.internal.persistence.BuildRepository;
 import com.wikiaov.build.internal.persistence.CaptureHeroRepository;
@@ -134,7 +135,7 @@ public class BuildCaptures {
         capture.setId(UUID.randomUUID());
         capture.setCode(request.code());
         capture.setRegionCode(request.regionCode());
-        capture.setSourceKind(request.sourceKind());
+        capture.setSourceKind(BuildSource.valueOf(request.sourceKind()));
         capture.setSourceLabel(request.sourceLabel().trim());
         capture.setCapturedAt(request.capturedAt());
         capture.setSourceTimeZone(request.sourceTimeZone());

@@ -4,6 +4,7 @@ import com.wikiaov.access.CurrentActor;
 import com.wikiaov.media.internal.application.response.MediaDeletionView;
 import com.wikiaov.media.internal.deletion.application.port.CompetitionMediaGuard;
 import com.wikiaov.media.internal.deletion.application.port.MediaCachePurge;
+import com.wikiaov.media.internal.deletion.domain.MediaDeletionState;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
 import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
 import com.wikiaov.platform.ApiException;
@@ -42,12 +43,12 @@ public class DeleteMediaAsset {
         competition.requireUnused(assetId);
 
         var work = records.prepare(assetId, expectedVersion, reason, actor);
-        if ("COMPLETE".equals(work.state())) {
+        if (work.state() == MediaDeletionState.COMPLETE) {
             return records.get(assetId);
         }
         try {
             competition.retire(assetId);
-            if (!"ORIGIN_DELETED".equals(work.state())) {
+            if (work.state() != MediaDeletionState.ORIGIN_DELETED) {
                 for (String key : work.keys()) {
                     storage.delete(key);
                 }

@@ -7,6 +7,7 @@ import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.response.MediaDeletionView;
 import com.wikiaov.media.internal.asset.application.MediaAssetAccess;
 import com.wikiaov.media.internal.asset.persistence.MediaAssetVersionRepository;
+import com.wikiaov.media.internal.deletion.domain.MediaDeletionState;
 import com.wikiaov.media.internal.deletion.persistence.MediaDeletionRepository;
 import com.wikiaov.media.internal.deletion.persistence.entity.MediaDeletion;
 import com.wikiaov.media.internal.domain.model.UploadState;
@@ -50,7 +51,7 @@ public class MediaDeletionRecords {
 
     public record Work(
             UUID assetId,
-            String state,
+            MediaDeletionState state,
             List<String> keys,
             List<String> urls
     ) {
