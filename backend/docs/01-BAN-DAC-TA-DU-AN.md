@@ -2172,7 +2172,7 @@ Danh mục tướng dùng mùa/patch để lọc các thay đổi gameplay đã 
 
 Tìm mã hoặc tên được thực hiện ở backend trước phân trang; khi không lọc mùa/patch, tên lấy từ snapshot chưa bị hủy mới nhất của từng ruleset theo thứ tự gameplay rồi số revision, nhận cả các bản dịch đã có. Khi lọc mùa/patch, tên lấy từ đích của change set mới nhất trong phạm vi, không dùng tên của patch khác. Tạo bổ sung snapshot lịch sử sau này không làm tên cũ thay tên ở patch mới hơn. Tìm mã cho phép khoảng trắng thay dấu gạch nối, không thêm cơ chế suy đoán ngôn ngữ hoặc bỏ dấu. Lần sửa gần nhất lấy từ timestamp thực lưu: lớn nhất của hero.created_at và hero_revision.updated_at của tướng, gồm tạo, import, bản dịch và hủy nháp. Không dùng ngày patch, published_at hay thời điểm đọc để giả làm ngày sửa. Có thể sắp xếp theo mã hoặc ngày sửa giảm dần, giữ thứ tự mã/UUID khi bằng nhau.
 
-Ngôn ngữ đọc theo locale hồ sơ người dùng, dự phòng vi-VN rồi bản có sẵn, có nhãn dự phòng. Ngôn ngữ nhập vẫn được chọn trong tạo/sửa/import. Tiến độ dịch dựa trên trường bắt buộc và trường tùy chọn đã có nội dung ở bất kỳ ngôn ngữ nào của cùng snapshot, gồm profile/kỹ năng/trang phục; mẫu số là bộ ngôn ngữ hỗ trợ của admin. Đủ nội dung không đồng nghĩa đã duyệt hoặc đã kiểm chứng nguồn; chưa triển khai workflow duyệt/stale translation trong đợt này.
+Ngôn ngữ đọc theo locale hồ sơ người dùng, dự phòng en-US, vi-VN rồi bản có sẵn theo thứ tự locale, có nhãn dự phòng. Ngôn ngữ nhập vẫn được chọn trong tạo/sửa/import. Tiến độ dịch dựa trên trường bắt buộc và trường tùy chọn đã có nội dung ở bất kỳ ngôn ngữ nào của cùng snapshot, gồm profile/kỹ năng/trang phục; mẫu số là bộ ngôn ngữ hỗ trợ của admin. Đủ nội dung không đồng nghĩa đã duyệt hoặc đã kiểm chứng nguồn; chưa triển khai workflow duyệt/stale translation trong đợt này.
 
 
 ## Mùa dùng chung và lịch thị trường (16/10/2026)
@@ -2285,7 +2285,7 @@ mới nhất theo thứ tự gameplay rồi revisionNo, không theo ngày tạo 
 
 Tên tướng và trang phục dùng các bản dịch hiện có. Bậc/nhãn trang phục có mã ổn định dùng chung,
 nhưng tên hiển thị và icon riêng cho từng ngôn ngữ. Có thể thêm bản dịch chưa có icon, giữ nguyên
-các bản dịch khác. Khi thiếu ngôn ngữ yêu cầu, dự phòng cả cặp tên/icon từ vi-VN, en-US rồi locale
+các bản dịch khác. Khi thiếu ngôn ngữ yêu cầu, dự phòng cả cặp tên/icon từ en-US, vi-VN rồi locale
 đầu tiên; UI ghi rõ ngôn ngữ thực tế. Một bản dịch đã tồn tại nhưng thiếu icon hiển thị ô trống,
 không ghép icon của ngôn ngữ khác. Loại chưa phân loại là UNKNOWN, không suy luận bậc/sự kiện.
 

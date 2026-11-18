@@ -1745,7 +1745,7 @@ FK nội bộ tới nhóm. `hero.skin_badge.group_id` nullable tham chiếu nhó
 thị chính. Không có nhóm thật mang mã __ungrouped; đó là read model tổng hợp các nhãn group_id=null.
 
 Nhóm là metadata tổ chức, không phải section gameplay và không làm thay đổi rarity_code hay loại
-nhãn đã có. Tên nhóm hỗ trợ bản dịch, cùng chuỗi dự phòng exact locale → vi-VN → en-US → locale
+nhãn đã có. Tên nhóm hỗ trợ bản dịch, cùng chuỗi dự phòng exact locale → en-US → vi-VN → locale
 đầu tiên. Thêm/sửa nhóm có audit và expectedVersion; chuyển nhóm tăng version của nhãn. Sửa tên/icon
 nhãn bằng hợp đồng cũ giữ nguyên group_id, tránh client/import cũ vô tình bỏ nhóm.
 ### Alias sau chuẩn hóa mã ảnh và nhân vật
