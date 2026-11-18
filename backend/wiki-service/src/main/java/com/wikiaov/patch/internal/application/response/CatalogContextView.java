@@ -10,10 +10,9 @@ public record CatalogContextView(
         List<Season> seasons,
         Current current
 ) {
+    /** A locale code such as {@code vi-VN}; the frontend names the language, the server sends no language name. */
     public record Language(
-            String code,
-            String name,
-            String nativeName
+            String code
     ) {
     }
 
