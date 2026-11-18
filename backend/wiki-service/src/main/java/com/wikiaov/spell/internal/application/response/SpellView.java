@@ -1,6 +1,7 @@
 package com.wikiaov.spell.internal.application.response;
 
 import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.domain.SpellContent;
 import java.time.Instant;
@@ -34,7 +35,7 @@ public record SpellView(
             long version,
             Long publicationSequence,
             Instant publishedAt,
-            String cause,
+            CatalogCause cause,
             UUID effectiveFromPatchVariantId,
             UUID sourceRevisionId,
             Instant createdAt,

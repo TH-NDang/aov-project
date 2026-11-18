@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.application.response.SpellView;
 import com.wikiaov.spell.internal.catalog.persistence.SpellIdentityRepository;
@@ -137,7 +138,7 @@ class SpellCatalogQueriesTest {
         revision.setRulesetId(rulesetId);
         revision.setRevisionNo(number);
         revision.setState(RevisionState.DRAFT);
-        revision.setCause("DATA_BASELINE");
+        revision.setCause(CatalogCause.DATA_BASELINE);
         return revision;
     }
 

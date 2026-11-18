@@ -16,6 +16,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.CatalogChangeProvider;
 import com.wikiaov.platform.CatalogChanges;
 import com.wikiaov.platform.CatalogChanges.Entry;
@@ -33,7 +34,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -113,7 +113,7 @@ public class ItemPatchChanges implements CatalogChangeProvider {
         for (var r : snapshots) {
             if (r.getEffectiveFromPatchVariantId() == null
                     || (patchVariantId != null && !patchVariantId.equals(r.getEffectiveFromPatchVariantId()))
-                    || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.getCause())) {
+                    || !r.getCause().gameplay()) {
                 continue;
             }
             if (facts.stream().anyMatch(f -> f.getOwnerId().equals(r.getOwnerId())
@@ -130,7 +130,7 @@ public class ItemPatchChanges implements CatalogChangeProvider {
             result.add(new Entry(r.getId(), domain(), owner.getId(), owner.getCode(),
                     copy.isEmpty() ? owner.getCode() : copy.getFirst().name(), r.getIconAssetId(), rulesetId,
                     r.getEffectiveFromPatchVariantId(), r.getSourceRevisionId(), r.getId(),
-                    List.of(r.getCause().equals("DATA_BASELINE") ? Kind.DATA_BASELINE : Kind.UPDATED),
+                    List.of(r.getCause() == CatalogCause.DATA_BASELINE ? Kind.DATA_BASELINE : Kind.UPDATED),
                     null, null, null, false, r.getPublishedAt()));
         }
         result.sort(Comparator.comparing(Entry::code).thenComparing(e -> e.patchVariantId().toString()));
@@ -159,7 +159,7 @@ public class ItemPatchChanges implements CatalogChangeProvider {
                 || target.getEffectiveFromPatchVariantId() == null
                         && !(removed && CatalogObservation.isUnscopedBaseline(
                                 target.getCause(), target.getSourceRevisionId(), null))
-                || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(target.getCause())) {
+                || !target.getCause().gameplay()) {
             invalid("Use a published gameplay or baseline snapshot and a published patch in the same ruleset.");
         }
         if (removed) {
@@ -174,11 +174,11 @@ public class ItemPatchChanges implements CatalogChangeProvider {
                 || input.kinds().contains(Kind.ADDED) && input.kinds().size() != 1) {
             invalid("Baseline and addition must be recorded separately from balance changes.");
         }
-        if (input.kinds().contains(Kind.DATA_BASELINE) && !target.getCause().equals("DATA_BASELINE")) {
+        if (input.kinds().contains(Kind.DATA_BASELINE) && target.getCause() != CatalogCause.DATA_BASELINE) {
             invalid("Only baseline snapshots can be classified as baseline.");
         }
         if (!removed && !input.kinds().contains(Kind.ADDED) && !input.kinds().contains(Kind.DATA_BASELINE)
-                && (!target.getCause().equals("GAME_PATCH") || input.fromRevisionId() == null)) {
+                && (target.getCause() != CatalogCause.GAME_PATCH || input.fromRevisionId() == null)) {
             invalid("Updates require a gameplay snapshot and a known previous snapshot.");
         }
 

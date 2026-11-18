@@ -27,6 +27,7 @@ import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.List;
@@ -164,7 +165,7 @@ class ItemCatalogQueriesTest {
         revision.setRulesetId(rulesetId);
         revision.setRevisionNo(number);
         revision.setState(RevisionState.DRAFT);
-        revision.setCause("DATA_BASELINE");
+        revision.setCause(CatalogCause.DATA_BASELINE);
         return revision;
     }
 

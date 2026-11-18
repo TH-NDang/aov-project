@@ -2,6 +2,7 @@ package com.wikiaov.item.internal.application.response;
 
 import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.List;
@@ -34,7 +35,7 @@ public record ItemView(
             long version,
             Long publicationSequence,
             Instant publishedAt,
-            String cause,
+            CatalogCause cause,
             UUID effectiveFromPatchVariantId,
             UUID sourceRevisionId,
             Instant createdAt,

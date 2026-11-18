@@ -3,6 +3,7 @@ package com.wikiaov.item.internal.reference.persistence;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemIdentity;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemRevision;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemTranslation;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.RevisionState;
 import com.wikiaov.terminology.AdminReferenceProvider.Row;
 import jakarta.persistence.EntityManager;
@@ -88,8 +89,8 @@ public class ItemReferenceSelectionsImpl implements ItemReferenceSelections {
 
     private static Predicate publishedObservation(CriteriaBuilder builder, Path<?> revision) {
         return builder.or(builder.isNotNull(revision.get("effectiveFromPatchVariantId")),
-                builder.equal(revision.get("cause"), "DATA_BASELINE"),
-                builder.and(revision.get("cause").in("CONTENT_CORRECTION", "TRANSLATION_UPDATE"),
+                builder.equal(revision.get("cause"), CatalogCause.DATA_BASELINE),
+                builder.and(revision.get("cause").in(CatalogCause.CONTENT_CORRECTION, CatalogCause.TRANSLATION_UPDATE),
                         builder.isNotNull(revision.get("sourceRevisionId"))));
     }
 
