@@ -1,5 +1,5 @@
 import { randomId } from "@/lib/random-id"
-import { createAuthRequest, isGoogleCompletion } from "./auth-api"
+import { createAuthRequest, isGoogleCompletion, isGoogleError } from "./auth-api"
 import { createAuthenticatedClient } from "@/lib/api/authenticated-client"
 import { ApiError } from "@/lib/api/errors"
 
@@ -36,6 +36,13 @@ const messages: Record<string, string> = {
   AUTH_GOOGLE_DISABLED: "Đăng nhập Google chưa được cấu hình.",
   AUTH_ORIGIN_REJECTED: "Địa chỉ admin chưa được cho phép trong cấu hình máy chủ.",
   FORBIDDEN: "Tài khoản chưa được cấp quyền truy cập trang quản trị.",
+}
+// Codes sent by the Keycloak error page of the Google popup (theme aov-admin).
+const googleErrors: Record<string, string> = {
+  REJECTED: "Đăng nhập Google bị từ chối. Vui lòng thử lại hoặc báo quản trị viên.",
+  ACCOUNT_DISABLED: "Tài khoản này đang bị khóa. Hãy liên hệ quản trị viên.",
+  EXPIRED: "Phiên đăng nhập Google đã hết hạn. Vui lòng thử lại.",
+  UNKNOWN: "Đăng nhập Google không thành công. Vui lòng thử lại.",
 }
 export function authMessage(error: unknown): string {
   if (error instanceof ApiError) return messages[error.code] ?? "Không thể hoàn tất đăng nhập. Vui lòng thử lại."
@@ -172,6 +179,7 @@ export function loginGoogle(): Promise<void> {
   if (!popup) return Promise.reject(new Error("Trình duyệt đã chặn cửa sổ đăng nhập. Hãy cho phép popup rồi thử lại."))
   return new Promise((resolve, reject) => {
     let state: string | undefined
+    let keycloakOrigin: string | undefined
     let done = false
     const cleanup = () => {
       done = true
@@ -188,6 +196,10 @@ export function loginGoogle(): Promise<void> {
       }
     }
     const receive = (event: MessageEvent) => {
+      if (!done && keycloakOrigin && isGoogleError(event, popup, keycloakOrigin)) {
+        fail(googleErrors[event.data.code] ?? googleErrors.UNKNOWN)
+        return
+      }
       if (done || !state || !isGoogleCompletion(event, popup, state, window.location.origin)) return
       const status = event.data.status
       if (status !== "success") {
@@ -207,6 +219,7 @@ export function loginGoogle(): Promise<void> {
       (result) => {
         if (done) return
         state = result.state
+        keycloakOrigin = new URL(result.authorizationUrl, window.location.href).origin
         popup.location.href = result.authorizationUrl
       },
       (error) => fail(authMessage(error)),

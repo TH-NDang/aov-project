@@ -1,7 +1,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { createAuthenticatedClient } from "../src/lib/api/authenticated-client.ts"
-import { createAuthRequest, isGoogleCompletion } from "../src/app/auth/auth-api.ts"
+import { createAuthRequest, isGoogleCompletion, isGoogleError } from "../src/app/auth/auth-api.ts"
 
 test("password login goes only to backend and includes the CSRF header", async () => {
   const request = createAuthRequest(async (url, init) => {
@@ -50,6 +50,26 @@ test("Google completion requires exact origin, popup identity and current state"
   assert.equal(isGoogleCompletion({ ...valid, source: {} } as MessageEvent, popup, "current", origin), false)
   assert.equal(isGoogleCompletion(valid, popup, "previous", origin), false)
   assert.equal(isGoogleCompletion({ ...valid, data: null } as MessageEvent, popup, "current", origin), false)
+})
+
+test("a Google sign-in error is accepted only from the popup at the Keycloak origin", () => {
+  const popup = {} as Window
+  const keycloakOrigin = "http://localhost:8081"
+  const valid = {
+    origin: keycloakOrigin,
+    source: popup,
+    data: { type: "aov-google-error", code: "REJECTED" },
+  } as MessageEvent
+  assert.equal(isGoogleError(valid, popup, keycloakOrigin), true)
+  assert.equal(
+    isGoogleError({ ...valid, origin: "https://evil.example" } as MessageEvent, popup, keycloakOrigin),
+    false,
+  )
+  assert.equal(isGoogleError({ ...valid, source: {} } as MessageEvent, popup, keycloakOrigin), false)
+  assert.equal(
+    isGoogleError({ ...valid, data: { type: "aov-google-error" } } as MessageEvent, popup, keycloakOrigin),
+    false,
+  )
 })
 
 test("refreshes credentials before sending a same-origin API request", async () => {

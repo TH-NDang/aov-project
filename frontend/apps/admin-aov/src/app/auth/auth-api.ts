@@ -33,3 +33,13 @@ export function isGoogleCompletion(event: MessageEvent, popup: Window, state: st
     typeof event.data.status === "string"
   )
 }
+
+// The Keycloak error page of the popup (theme aov-admin) sends a code instead of showing its own screen.
+export function isGoogleError(event: MessageEvent, popup: Window, keycloakOrigin: string) {
+  return (
+    event.origin === keycloakOrigin &&
+    event.source === popup &&
+    event.data?.type === "aov-google-error" &&
+    typeof event.data.code === "string"
+  )
+}
