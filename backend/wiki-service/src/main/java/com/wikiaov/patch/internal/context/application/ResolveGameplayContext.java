@@ -12,6 +12,7 @@ import com.wikiaov.patch.internal.season.persistence.RankedSeasonRepository;
 import com.wikiaov.platform.ApiException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -35,12 +36,15 @@ public class ResolveGameplayContext implements GameplayContexts {
         this.rulesets = rulesets;
     }
 
-    public GameplayContext resolve(String region, Instant at) {
+    public Optional<GameplayContext> find(String region, Instant at) {
         regions.findByCodeAndLifecycleState(region, "ACTIVE").orElseThrow(
                 () -> new ApiException(RegionErrorCode.UNSUPPORTED_REGION, "The requested region is unavailable."));
-        return contexts.effective(region, at, PageRequest.of(0, 1)).stream().findFirst()
-                .orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE,
-                        "No verified gameplay context is available for this region and time."));
+        return contexts.effective(region, at, PageRequest.of(0, 1)).stream().findFirst();
+    }
+
+    public GameplayContext resolve(String region, Instant at) {
+        return find(region, at).orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE,
+                "No verified gameplay context is available for this region and time."));
     }
 
     public GameplayContext resolveCatalog(String region, Instant at, UUID seasonId, UUID patchVariantId) {
@@ -63,15 +67,8 @@ public class ResolveGameplayContext implements GameplayContexts {
     }
 
     public List<GameplayContext> active(Instant at) {
-        return regions.findByLifecycleState("ACTIVE").stream().map(region -> {
-            try {
-                return resolve(region.getCode(), at);
-            } catch (ApiException exception) {
-                if (exception.getErrorCode() == PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE)
-                    return null;
-                throw exception;
-            }
-        }).filter(java.util.Objects::nonNull).toList();
+        return regions.findByLifecycleState("ACTIVE").stream().flatMap(region -> find(region.getCode(), at).stream())
+                .toList();
     }
 
     public void requireRuleset(UUID rulesetId) {
