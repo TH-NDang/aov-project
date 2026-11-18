@@ -10,8 +10,6 @@ export const knownRestyles = [
   "components/videos/skill-videos.css .wiki-video-meta",
   "components/videos/skill-videos.css .wiki-video-title",
   "components/videos/subject-videos.css .public-bottom-body",
-  "components/wiki-footer.css .wiki-feedback-trigger",
-  "components/wiki-footer.css .with-label",
   "components/wiki-header.css .public-app-wordmark",
   "components/wiki-header.css .wiki-search",
   "features/account/account.css .pas-section",

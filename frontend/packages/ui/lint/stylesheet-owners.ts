@@ -2,8 +2,9 @@
 // sheets, with the shared library's sheets as owners too.
 //
 // A class belongs to the sheet that declares it in a selector of one compound, such as `.wiki-footer-main` or
-// `.wiki-footer-main[data-open]:hover`. A class no sheet declares that way belongs to every sheet that names it, and
-// a class two sheets declare belongs to neither.
+// `.wiki-footer-main[data-open]:hover`; a class two sheets declare belongs to neither. A class no sheet declares that way
+// belongs to the library's sheets that name it, or else to every sheet that names it, so a modifier only ever written
+// in context (`.wiki-feedback-trigger.with-label`) is not caught.
 // A rule styles the classes of its subject, the last compound of its selector that names a class:
 // `.wiki-hero-card .wiki-hero-glyph` styles the glyph, `.cp-tabs button::after` styles the tabs. Classes inside
 // `:has()` and `:not()` only choose where the rule applies.
@@ -128,17 +129,23 @@ export function foreignRules(checked: Sheet[], owners: Sheet[], root: string): F
     const base = only ? (classes(only, true).length > 0 ? classes(only, true) : classes(only)) : []
     if (base.length === 1) add(declared, base[0]!, selector.sheet)
   }
-  const owner = (owned: string) => [...(declared.get(owned) ?? named.get(owned)!)]
-
   const own = new Set(checked.map(name))
+  // A class only named in context belongs to the shared library when the library names it: its components set it.
+  const lent = (owned: string) => [...named.get(owned)!].filter((sheet) => !own.has(sheet))
+  const owner = (owned: string) => {
+    const declarers = declared.get(owned)
+    if (declarers) return [...declarers]
+    return lent(owned).length > 0 ? lent(owned) : [...named.get(owned)!]
+  }
+
   const found: ForeignRule[] = []
   for (const selector of all) {
     if (!own.has(selector.sheet)) continue
     const { styled, anyOwned } = subject(selector)
     const others = (owned: string) => owner(owned).filter((sheet) => sheet !== selector.sheet)
     const mine = (owned: string) => others(owned).length < owner(owned).length
-    // A class two sheets declare belongs to neither of them.
-    const shared = (owned: string) => mine(owned) && others(owned).length > 0
+    // A class two sheets declare belongs to neither of them; one no sheet declares belongs to every sheet naming it.
+    const shared = (owned: string) => declared.has(owned) && mine(owned) && others(owned).length > 0
     const foreign = anyOwned
       ? styled.some((owned) => mine(owned) && !shared(owned))
         ? []
