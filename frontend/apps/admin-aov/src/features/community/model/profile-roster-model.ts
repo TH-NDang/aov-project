@@ -1,6 +1,5 @@
 import type { CommunityProfile, Lane, ProfileMember, RosterStanding } from "@aov/community-contracts"
 import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
-import { normalize } from "@/lib/text"
 
 export const rosterLaneLabels: Record<Lane, string> = Object.fromEntries(
   LANE_ORDER.map((lane) => [lane, LANE_LABELS[lane].name]),
@@ -18,13 +17,13 @@ export type RosterStaff = keyof typeof rosterStaffLabels
 
 export type RosterGroup = "starting" | "substitute" | "staff" | "other" | "former"
 export type RosterEntry = { member: ProfileMember; index: number }
-type Codes = Pick<ProfileMember, "role" | "status" | "lane" | "standing">
+type Codes = Pick<ProfileMember, "role" | "status" | "lane" | "standing" | "captain">
 
 const parts = (value?: string | null) => (value || "").split(" · ").filter(Boolean)
 
 /**
- * A member's lane and staff kind from its codes; a staff member counts as an analyst only when its linked profile is
- * one and no coach. The captain's mark is still read from the role's words: no code holds it yet.
+ * A member's lane, staff kind and captaincy from its codes; a staff member counts as an analyst only when its linked
+ * profile is one and no coach.
  */
 export function rosterPosition(member: Codes, profile?: CommunityProfile) {
   const roles = profile?.content?.personRoles ?? []
@@ -37,7 +36,7 @@ export function rosterPosition(member: Codes, profile?: CommunityProfile) {
   return {
     lane: member.lane ?? undefined,
     staff,
-    captain: /(?:^|[\s·|])(?:doi truong|captain)(?:$|[\s·|])/.test(normalize(member.role)),
+    captain: member.captain === true,
   } as const
 }
 
@@ -77,7 +76,7 @@ export function positionChoice(member: Codes): PositionChoice {
 }
 
 /**
- * The codes and wording a pick writes. A lane keeps the notes after the role's first part (a captain's mark) and
+ * The codes and wording a pick writes. A lane keeps the notes after the role's first part and
  * moves a staff member back to the lineup; a staff role clears the lane and makes the member staff.
  */
 export function choosePosition<T extends Codes>(member: T, choice: Exclude<PositionChoice, "" | "CUSTOM">): T {

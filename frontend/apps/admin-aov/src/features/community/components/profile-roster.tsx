@@ -1,8 +1,9 @@
 import { useDeferredValue, useState } from "react"
 import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
-import { CalendarDays, ClipboardList, Gamepad2, Plus, Search, UsersRound } from "lucide-react"
+import { CalendarDays, ClipboardList, Crown, Gamepad2, Plus, Search, UsersRound } from "lucide-react"
 import { personRoleLabels, type CommunityProfile, type ProfileMember } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
+import { Checkbox } from "@aov/ui/components/checkbox"
 import { Input } from "@aov/ui/components/input"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
@@ -230,6 +231,14 @@ function MemberSheet({
                   <RosterPositionField member={draft} disabled={disabled} onChange={setDraft} />
                   <RosterStandingFields member={draft} disabled={disabled} onChange={setDraft} />
                 </div>
+                <label className="type-body flex w-fit items-center gap-2">
+                  <Checkbox
+                    checked={draft.captain === true}
+                    onCheckedChange={(checked) => setDraft({ ...draft, captain: checked === true || null })}
+                  />
+                  <Crown className="size-4 text-(--aov-warning)" aria-hidden />
+                  Đội trưởng
+                </label>
                 <details className="rounded-lg border p-3">
                   <summary className="type-body cursor-pointer">
                     <CalendarDays className="mr-2 inline size-4" />
