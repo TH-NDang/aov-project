@@ -24,9 +24,17 @@ export type ProfileHistory = {
   role?: string | null
   sourceUrl?: string | null
 }
+/**
+ * A result of a team or player. `placement` is the wording, shown as written; the rank is stored beside it: `place` is
+ * the final place (1 is the title), `placeTo` the last place of a shared standing (8 for "5-8"), and `award` marks an
+ * individual award, which has no place. Older records have none of the three; `achievementRank` then reads the wording.
+ */
 export type ProfileAchievement = {
   title: string
   placement: string
+  place?: number | null
+  placeTo?: number | null
+  award?: boolean | null
   date?: string | null
   tournamentId?: string | null
   sourceUrl?: string | null
