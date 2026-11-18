@@ -5,7 +5,7 @@ import { act } from "react"
 import type { WarehouseEntry } from "../src/features/warehouse/model/warehouse-types"
 import type { ItemContent } from "@aov/ui/lib/warehouse-content"
 import { withWarehouseUi, fixtureRevision } from "./fixtures/warehouse-ui"
-import { installGlobals } from "./fixtures/dom"
+import { flush, installGlobals } from "./fixtures/dom"
 
 test("item details show verified upgrades and select pictured ingredients only after an explicit choice", async () => {
   await withWarehouseUi(async ({ document, render, click, client }) => {
@@ -422,8 +422,8 @@ test("shop paints wire underlays first and skips unchanged layout measurements d
       await act(async () => {
         resize()
         resize()
-        await new Promise((resolve) => setTimeout(resolve, 10))
       })
+      await flush()
     }
     await notify()
     const wires = [...canvas.querySelectorAll("[data-recipe-line]")]
@@ -520,16 +520,16 @@ test("connector drag previews its wire, snaps near compatible targets, and cance
     await act(async () => {
       pointer("pointerdown", 116)
       pointer("pointermove", 220)
-      await new Promise((resolve) => setTimeout(resolve, 10))
     })
+    await flush()
     const preview = document.querySelector('[data-connection-preview="dragging"]')!
     assert.ok(preview)
     assert.match(preview.querySelectorAll("path")[1].getAttribute("d")!, /^M.* C/)
     assert.equal(target.getAttribute("data-connection-compatible"), "true")
     await act(async () => {
       pointer("pointermove", 284)
-      await new Promise((resolve) => setTimeout(resolve, 10))
     })
+    await flush()
     assert.ok(document.querySelector('[data-connection-preview="snapped"]'))
     assert.equal(target.getAttribute("data-connection-target"), "true")
     await act(async () => pointer("pointerup", 284))
@@ -539,8 +539,8 @@ test("connector drag previews its wire, snaps near compatible targets, and cance
     await act(async () => {
       pointer("pointerdown", 116)
       pointer("pointermove", 220)
-      await new Promise((resolve) => setTimeout(resolve, 10))
     })
+    await flush()
     await act(async () =>
       window.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })),
     )

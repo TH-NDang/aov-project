@@ -296,9 +296,11 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.equal(input("Ghi chú thay đổi").disabled, false)
     await click(button("Lưu phần này"))
     await waitFor(() => fixture.writes.length === 3 && !document.querySelector('[aria-label="Chỉnh sửa nội dung"]'))
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 5050))
-    })
+    // The pending information edits are kept as a local draft a moment later; that save must reach no server.
+    await waitFor(() =>
+      Object.values(draftRepository.store.getState().slots).every((slot) => slot.persistence !== "pending"),
+    )
+    assert.equal(fixture.writes.length, 3)
     assert.equal(
       fixture.content.PROFILE!.translations[0].name,
       "Saved hero",

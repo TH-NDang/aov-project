@@ -13,6 +13,7 @@ import {
   type GuideManifest,
   type ModeManifestEntry,
 } from "../src/features/game-modes/game-mode-import"
+import { latency } from "./fixtures/latency"
 
 // A small fixed sample with the shape of the source collections; scripts/check-source-data.ts checks the full sets.
 const sample = new URL("./fixtures/game-modes/", import.meta.url)
@@ -84,7 +85,7 @@ test("uploads run a few at a time and keep their order", async () => {
   const result = await mapLimit([5, 1, 4, 2, 3], 2, async (value) => {
     running++
     peak = Math.max(peak, running)
-    await new Promise((resolve) => setTimeout(resolve, value))
+    await latency(value)
     running--
     return value * 10
   })

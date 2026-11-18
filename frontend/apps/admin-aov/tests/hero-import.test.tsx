@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Request } from "../src/features/publishing/api/publishing-api"
-import { createWindow, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("import wizard carries patch context and never selects rows without a known baseline", async () => {
   const dom = createWindow("http://localhost/publishing")
@@ -49,8 +49,8 @@ test("import wizard carries patch context and never selects rows without a known
     assert.ok(button, `Missing button: ${text}`)
     await act(async () => {
       button.click()
-      await new Promise((r) => setTimeout(r, 20))
     })
+    await flush()
   }
   try {
     await act(async () => {
@@ -78,11 +78,8 @@ test("import wizard carries patch context and never selects rows without a known
           />
         </QueryClientProvider>,
       )
-      await new Promise((r) => setTimeout(r, 30))
     })
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 30))
-    })
+    await flush(6)
     const radio = dom.window.document.querySelector<HTMLInputElement>('input[value="PATCH_UPDATE"]')!
     await act(async () => {
       radio.click()
@@ -103,8 +100,8 @@ test("import wizard carries patch context and never selects rows without a known
     })
     await act(async () => {
       file.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-      await new Promise((r) => setTimeout(r, 20))
     })
+    await flush()
     await click("Kiểm tra 2")
     assert.match(dom.window.document.body.textContent!, /Thiếu mốc so sánh/)
     assert.match(dom.window.document.body.textContent!, /Chưa có mốc trước patch này để so sánh/)
@@ -194,8 +191,8 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     assert.ok(button, `Missing button: ${text}`)
     await act(async () => {
       button.click()
-      await new Promise((r) => setTimeout(r, 20))
     })
+    await flush()
   }
   try {
     await act(async () => {
@@ -223,11 +220,8 @@ test("folder import uploads only mapped hero, skill and skin images after confir
           />
         </QueryClientProvider>,
       )
-      await new Promise((r) => setTimeout(r, 30))
     })
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 30))
-    })
+    await flush(6)
     const rows = [
       {
         code: "airi",
@@ -269,8 +263,8 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     await act(async () => {
       data.value = "data/heroes.json"
       data.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-      await new Promise((r) => setTimeout(r, 30))
     })
+    await flush()
     for (const [label, value] of [
       ["skills: Ảnh icon kỹ năng", "icon"],
       ["skins: Ảnh nền trang phục", "cover"],

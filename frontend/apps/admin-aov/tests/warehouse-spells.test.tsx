@@ -5,6 +5,7 @@ import type { SecondaryContent } from "../src/features/warehouse/components/seco
 import type { WarehouseEntry, WarehouseRevision } from "../src/features/warehouse/model/warehouse-types"
 import type { SpellContent } from "@aov/ui/lib/warehouse-content"
 import { withWarehouseUi, fixtureRevision } from "./fixtures/warehouse-ui"
+import { waitFor } from "./fixtures/dom"
 
 test("creating a spell uploads its icon from the information tab and saves the completed media reference", async () => {
   await withWarehouseUi(async ({ document, requests, render, upload, click }) => {
@@ -342,12 +343,7 @@ test("archived spells stay separate, gameplay revisions require a patch, and lat
     })
     assert.equal(recordButton.disabled, false)
     await click("Ghi nhận lịch sử")
-    for (let attempt = 0; attempt < 100 && !document.body.textContent?.includes("Đã loại bỏ · 2026-10-15"); attempt++) {
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
-      })
-    }
-    assert.ok(document.body.textContent?.includes("Đã loại bỏ · 2026-10-15"))
+    await waitFor(() => document.body.textContent?.includes("Đã loại bỏ · 2026-10-15"), "The removal is recorded")
     assert.equal(document.querySelector('a[href="https://example.com/evidence"]')?.getAttribute("rel"), "noreferrer")
   })
 })

@@ -240,18 +240,26 @@ export async function render(node: ReactNode, { client = testQueryClient(), wrap
 }
 
 const tick = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
+// Tests without a page (a query client, a fake service) wait outside act, which React expects only with a window.
+const inPage = () => (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT === true
 
-/** Lets resolved requests and the renders they cause finish; it waits for no condition and no fixed time. */
+/**
+ * Lets resolved requests and the renders they cause finish; it waits for no condition and no fixed time. Without a
+ * page it lets a query client deliver what its requests answered.
+ */
 export async function flush(rounds = 3) {
-  for (let round = 0; round < rounds; round++) await act(tick)
+  for (let round = 0; round < rounds; round++) await (inPage() ? act(tick) : tick())
 }
 
 export type WaitOptions = { timeout?: number; message?: string }
 
+const pause = () => new Promise<void>((resolve) => setTimeout(resolve, 5))
+
 /**
  * Waits until `condition` returns something other than false, null or undefined, and returns it; a string second
  * argument is the failure message. A condition that
- * throws counts as not met yet; when time runs out the last error, or `message`, fails the test.
+ * throws counts as not met yet; when time runs out the last error, or `message`, fails the test. It works with or
+ * without a page, so unit tests of caches and services wait with it too.
  */
 export async function waitFor<T>(
   condition: () => T | false | null | undefined,
@@ -269,10 +277,11 @@ export async function waitFor<T>(
       failure = error
     }
     if (Date.now() > deadline) break
-    await act(() => new Promise<void>((resolve) => setTimeout(resolve, 5)))
+    await (inPage() ? act(pause) : pause())
   }
   if (failure instanceof Error && !message) throw failure
-  assert.fail(message ?? `Condition was not met within ${timeout} ms. Page text: ${document.body.textContent ?? ""}`)
+  const page = globalThis.document ? ` Page text: ${globalThis.document.body.textContent ?? ""}` : ""
+  assert.fail(message ?? `Condition was not met within ${timeout} ms.${page}`)
 }
 
 /** Clicks an element inside act, failing with `what` when it is missing. */

@@ -123,7 +123,7 @@ test("saved skill lookup is bounded, rejects malformed identities and survives a
   )
 })
 
-test("remote skill suggestions debounce, page on inner scroll, retain lazy paired icons and insert the exact variant", async () => {
+test("remote skill suggestions debounce, page on inner scroll, retain lazy paired icons and insert the exact variant", async (t) => {
   const dom = createWindow()
   const observer = intersectionHarness()
   let restoreGlobals = () => {}
@@ -185,9 +185,13 @@ test("remote skill suggestions debounce, page on inner scroll, retain lazy paire
     act(async () => {
       fillReferenceInput(area(), text)
     })
+  // The editor searches 300 ms after the last keystroke. The clock moves past it at once; one turn of the event loop
+  // then lets the answered search render.
+  t.mock.timers.enable({ apis: ["setTimeout"] })
   const wait = (ms = 340) =>
     act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, ms))
+      t.mock.timers.tick(ms)
+      await new Promise((resolve) => setImmediate(resolve))
     })
   try {
     await act(async () => root.render(<Harness />))
@@ -270,6 +274,7 @@ test("remote skill suggestions debounce, page on inner scroll, retain lazy paire
     assert.equal(document.querySelector("a")?.getAttribute("href"), resolveEntityRoute(skill, "admin"))
     assert.equal(document.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
   } finally {
+    t.mock.timers.reset()
     await act(async () => root.unmount())
     await flush()
     dom.window.close()

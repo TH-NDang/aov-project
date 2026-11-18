@@ -8,6 +8,7 @@ import {
 } from "../src/features/media/model/bulk-media-sources"
 import type { MediaCredit } from "@aov/ui/lib/media-credit"
 import type { Request } from "../src/features/publishing/api/publishing-api"
+import { latency } from "./fixtures/latency"
 
 const targets = (count: number): MediaSourceTarget[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -33,7 +34,7 @@ test("bulk source writes are bounded, isolate failures and retry only unsuccessf
     const target = selected.find((item) => path.includes(`/assets/${item.assetId}`))!
     active++
     peak = Math.max(peak, active)
-    await new Promise((resolve) => setTimeout(resolve, 1))
+    await latency(1)
     active--
     if (init?.method === "POST") {
       writes.push({ path, body: String(init.body) })
@@ -101,9 +102,17 @@ test("stopping during reads prevents new writes and leaves the remaining images 
 test("stopping lets in-flight writes finish but does not schedule the remaining images", async () => {
   let stopped = false
   const finish: (() => void)[] = []
+  let threeWriting!: () => void
+  const writing = new Promise<void>((resolve) => {
+    threeWriting = resolve
+  })
   const request: Request = async <T>(path: string, init?: RequestInit) => {
     const id = path.match(/asset-(\d+)/)![1]
-    if (init?.method === "POST") await new Promise<void>((resolve) => finish.push(resolve))
+    if (init?.method === "POST")
+      await new Promise<void>((resolve) => {
+        finish.push(resolve)
+        if (finish.length === 3) threeWriting()
+      })
     return { state: "ACTIVE", currentVersionId: `version-${id}` } as T
   }
   const running = addMediaSourcesInBulk(
@@ -113,7 +122,7 @@ test("stopping lets in-flight writes finish but does not schedule the remaining 
     () => {},
     () => stopped,
   )
-  while (finish.length < 3) await new Promise((resolve) => setTimeout(resolve, 1))
+  await writing
   stopped = true
   finish.forEach((resolve) => resolve())
   const results = await running

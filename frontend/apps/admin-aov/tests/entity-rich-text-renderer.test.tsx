@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { act } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
-import { createWindow, installWindow, parseHtml, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, parseHtml, waitFor } from "./fixtures/dom"
 
 const entity: EntityReference = {
   id: "hero-1",
@@ -104,10 +104,6 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     act(async () => {
       root.render(<EntityRichText text="Lữ Bố" entities={entities} locale={locale} context={context} />)
     })
-  const settle = () =>
-    act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 20))
-    })
   try {
     await verifyAllowlistedFormatting()
     const markup = renderToStaticMarkup(
@@ -137,32 +133,32 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     await mount()
     let trigger = document.querySelector<HTMLElement>('[role="button"]')!
     await act(async () => trigger.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true })))
-    await settle()
+    await flush()
     assert.ok(document.querySelector('[role="dialog"]'), "Pointer hover opens the card")
     await act(async () => {
       trigger.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: document.body }))
     })
     await waitFor(() => !document.querySelector('[role="dialog"]'), "Pointer leave closes an unfocused card")
     await act(async () => trigger.focus())
-    await settle()
+    await flush()
     assert.ok(document.querySelector('[role="dialog"]'))
     assert.equal(document.querySelector("script"), null)
     assert.ok(document.body.textContent?.includes("Chiến binh <script>alert(1)</script>"))
     assert.equal(document.querySelector("a")?.getAttribute("href"), "/hero/hero-1")
     assert.equal(document.querySelector("a a"), null)
     await act(async () => document.querySelector<HTMLAnchorElement>("a")!.focus())
-    await settle()
+    await flush()
     assert.ok(document.querySelector('[role="dialog"]'), "Card remains available when focusing its link")
     await act(async () =>
       document.activeElement!.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true })),
     )
-    await settle()
+    await flush()
     assert.equal(document.querySelector('[role="dialog"]'), null)
 
     await mount("wiki", "en-US")
     trigger = document.querySelector<HTMLElement>('[role="button"]')!
     await act(async () => trigger.click())
-    await settle()
+    await flush()
     assert.equal(document.querySelector("a")?.getAttribute("href"), "/heroes/lu-bo")
     assert.ok(document.body.textContent?.includes("Shown in vi-VN"), "The Wiki card speaks the page language")
     assert.ok(document.querySelector('[role="dialog"]'), "Click opens the card without requiring hover")
@@ -170,7 +166,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     await mount("admin", "en-US")
     trigger = document.querySelector<HTMLElement>('[role="button"]')!
     await act(async () => trigger.click())
-    await settle()
+    await flush()
     assert.ok(
       document.body.textContent?.includes("Ngôn ngữ dự phòng: vi-VN"),
       "Admin keeps its own language while it shows English content",
@@ -188,7 +184,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     const ally = { ...entity, id: "hero-2", translations: [{ ...entity.translations[0]!, name: "Ally hero" }] }
     await mount("admin", "vi-VN", [described, ally])
     await act(async () => document.querySelector<HTMLElement>('[role="button"]')!.click())
-    await settle()
+    await flush()
     const description = document.querySelector<HTMLParagraphElement>('[role="dialog"] p')!
     assert.equal(description.querySelector("strong > em")?.textContent, "Formatted")
     assert.equal(description.querySelector("span")?.style.color, "rgb(18, 171, 52)")
@@ -203,7 +199,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
       `[aria-label="Đóng thông tin ${entity.translations[0]!.name}"]`,
     )!
     await act(async () => close.click())
-    await settle()
+    await flush()
     assert.equal(document.querySelector('[role="dialog"]'), null, "Touch users can explicitly close the card")
 
     let iconLoads = 0
@@ -222,7 +218,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
         />,
       ),
     )
-    await settle()
+    await flush()
     const image = document.querySelector<HTMLImageElement>('img[src="http://localhost:9000/hero-head.png"]')!
     assert.ok(image, "Matched hero mentions resolve actual uploaded head assets lazily")
     assert.equal(iconLoads, 1)
@@ -240,7 +236,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     }
     await mount("admin", "vi-VN", [unsafe])
     await act(async () => document.querySelector<HTMLElement>('[role="button"]')!.click())
-    await settle()
+    await flush()
     assert.equal(document.querySelector("a")?.getAttribute("href"), "/hero/hero-1")
     assert.equal(document.querySelector("img"), null)
     assert.ok(!document.body.innerHTML.includes("javascript:"))
@@ -286,7 +282,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     assert.equal(malformedDocument.querySelectorAll("img, [style]").length, 0)
   } finally {
     await act(async () => root.unmount())
-    await settle()
+    await flush()
     dom.window.close()
     restoreGlobals()
   }

@@ -11,7 +11,6 @@ let root: Root
 let chooseTimeZone: (zone: string | null) => Promise<void>
 let LocalTime: typeof import("@aov/ui/components/local-time").LocalTime
 
-const wait = (ms: number) => act(() => new Promise<void>((resolve) => setTimeout(resolve, ms)))
 const shown = () => dom.window.document.querySelector("time")!
 const popup = () => dom.window.document.querySelector(".local-time-popup")
 const text = () => (popup()?.textContent ?? "").replaceAll(" ", " ")
@@ -139,7 +138,7 @@ test("the keyboard reaches and toggles it: focus opens, Enter and Space press, E
   assert.equal(popup(), null, "a press focuses it without opening before the click decides")
 })
 
-test("hovering opens it and leaving closes it; a click keeps it open", async () => {
+test("hovering opens it and leaving closes it; a click keeps it open", async (t) => {
   await render(<LocalTime value={moment} />)
   await fire(shown(), "pointerover", { pointerType: "mouse" })
   await waitFor(popup, "hover opens")
@@ -149,17 +148,27 @@ test("hovering opens it and leaving closes it; a click keeps it open", async () 
 
   await fire(shown(), "pointerover", { pointerType: "mouse" })
   await waitFor(popup, "hover opens again")
-  await fire(shown(), "click")
-  await fire(shown(), "pointerout", { pointerType: "mouse" })
-  await wait(200)
-  assert.ok(popup(), "a click during hover pins it")
+  t.mock.timers.enable({ apis: ["setTimeout"] })
+  try {
+    await fire(shown(), "click")
+    await fire(shown(), "pointerout", { pointerType: "mouse" })
+    await act(async () => t.mock.timers.tick(200))
+    assert.ok(popup(), "a click during hover pins it")
+  } finally {
+    t.mock.timers.reset()
+  }
 })
 
-test("a tap works where there is no hover", async () => {
+test("a tap works where there is no hover", async (t) => {
   await render(<LocalTime value={moment} />)
-  await fire(shown(), "pointerover", { pointerType: "touch" })
-  await wait(150)
-  assert.equal(popup(), null, "touch never opens by hovering")
+  t.mock.timers.enable({ apis: ["setTimeout"] })
+  try {
+    await fire(shown(), "pointerover", { pointerType: "touch" })
+    await act(async () => t.mock.timers.tick(150))
+    assert.equal(popup(), null, "touch never opens by hovering")
+  } finally {
+    t.mock.timers.reset()
+  }
   await fire(shown(), "pointerdown", { pointerType: "touch" })
   await fire(shown(), "click")
   assert.ok(popup())
@@ -240,7 +249,7 @@ test("quick choices save one at a time, newest last, and the profile does not un
     assert.equal(currentTimeZone(), "Europe/Paris", "the first write landing does not undo the newest choice")
 
     pending.shift()!()
-    await wait(1)
+    await waitFor(() => saved.length === 2)
     assert.deepEqual(saved, ["Asia/Seoul", "Europe/Paris"], "choices in between are skipped")
   } finally {
     // A save left waiting would hold up every later choice in this file.

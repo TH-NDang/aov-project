@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router"
 import type { WarehouseEntry } from "../src/features/warehouse/model/warehouse-types"
 import type { ArcanaContent } from "@aov/ui/lib/warehouse-content"
 import { withWarehouseUi, fixtureRevision, interceptFetch } from "./fixtures/warehouse-ui"
+import { flush } from "./fixtures/dom"
 
 test("arcana keeps tier III visible, collapses lower tiers and reveals filtered results with circular icons", async () => {
   await withWarehouseUi(async ({ document, client, render }) => {
@@ -243,8 +244,8 @@ test("arcana filters follow the loaded patch and distinguish missing changes fro
     assert.equal(select().disabled, true)
     await act(async () => {
       resolveScope(Response.json({ items: [records[3]], totalElements: 1, hasNext: false }))
-      await new Promise((resolve) => setTimeout(resolve, 10))
     })
+    await flush()
     assert.equal(params.get("stat"), "armor")
     assert.equal(select().disabled, false)
     assert.deepEqual(shown(), ["Xem green-armor"])
@@ -280,8 +281,8 @@ test("arcana filters follow the loaded patch and distinguish missing changes fro
         [...warehouseKeys.catalog("arcana", "standard", "vi-VN"), "scope", "", "patch-fixture", true],
         [],
       )
-      await new Promise((resolve) => setTimeout(resolve, 0))
     })
+    await flush()
     assert.equal(params.has("stat"), false)
     assert.equal(select().disabled, true)
     assert.deepEqual(shown(), [])
@@ -291,8 +292,8 @@ test("arcana filters follow the loaded patch and distinguish missing changes fro
         records[0],
         { ...records[1], revision: { ...records[1].revision, effectiveFromPatchVariantId: "another-patch" } },
       ])
-      await new Promise((resolve) => setTimeout(resolve, 0))
     })
+    await flush()
     assert.deepEqual(shown(), ["Xem red-magic"])
     assert.match(document.body.textContent!, /Nháp · Chưa gắn patch/)
     assert.ok(document.querySelector('[aria-label="Mở danh sách bản nháp (2)"]'))
@@ -350,8 +351,8 @@ test("arcana uses terminology colors and live overrides without adding hover or 
     }
     await act(async () => {
       client.setQueryData(["rich-text-settings"], { settings, version: 2 })
-      await new Promise((resolve) => setTimeout(resolve, 0))
     })
+    await flush()
     const card = document.querySelector<HTMLButtonElement>('[aria-label="Xem Đỏ III Công phép/Tốc đánh"]')!
     assert.equal(card.querySelector<HTMLElement>("p")!.style.color, "")
     assert.equal(card.querySelector("p [style]"), null)

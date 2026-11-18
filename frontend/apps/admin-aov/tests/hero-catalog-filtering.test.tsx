@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router"
 import { catalogOverview, createHeroCatalogFixture } from "./fixtures/hero-catalog-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import type { CatalogFilter } from "../src/features/publishing/components/catalog/catalog-context"
-import { createWindow, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("catalog transport encodes search and keeps every server filter in its cache identity", async () => {
   const { createPublishingApi, heroCatalogKey } = await import("../src/features/publishing/api/publishing-api")
@@ -228,10 +228,8 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
       () => search().value === "Voyage" && codes().length === 1 && codes()[0] === "zz-search-target",
       "Returning to a cached search restores its own rows",
     )
-    await act(async () => {
-      releaseSlow!()
-      await new Promise((resolve) => setTimeout(resolve, 30))
-    })
+    await act(async () => releaseSlow!())
+    await flush()
     releaseSlow = undefined
     assert.deepEqual(
       codes(),

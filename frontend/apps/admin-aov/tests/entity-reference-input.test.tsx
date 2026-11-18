@@ -58,7 +58,7 @@ test("reference DOM maps atomic token boundaries without including icon or owner
   dom.window.close()
 })
 
-test("IME changes remain undecorated until commit, overflow rolls back, and disabled fieldsets reject mutations", async () => {
+test("IME changes remain undecorated until commit, overflow rolls back, and disabled fieldsets reject mutations", async (t) => {
   const dom = createWindow()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
@@ -127,10 +127,16 @@ test("IME changes remain undecorated until commit, overflow rolls back, and disa
     assert.equal(input().textContent, "abc")
     assert.equal(ends, 1)
     await act(async () => input().dispatchEvent(new dom.window.CompositionEvent("compositionstart", { bubbles: true })))
-    await type("abcđ")
-    assert.equal(saved, "abcđ")
-    await act(async () => new Promise((resolve) => setTimeout(resolve, 400)))
-    assert.equal(highlights.size, 0, "Composition pauses do not decorate unfinished input")
+    // Recognition runs 350 ms after the text changes; the clock moves past it without waiting.
+    t.mock.timers.enable({ apis: ["setTimeout"] })
+    try {
+      await type("abcđ")
+      assert.equal(saved, "abcđ")
+      await act(async () => t.mock.timers.tick(400))
+      assert.equal(highlights.size, 0, "Composition pauses do not decorate unfinished input")
+    } finally {
+      t.mock.timers.reset()
+    }
     await act(async () => input().dispatchEvent(new dom.window.CompositionEvent("compositionend", { bubbles: true })))
     assert.equal(saved, "abcđ")
     await waitFor(

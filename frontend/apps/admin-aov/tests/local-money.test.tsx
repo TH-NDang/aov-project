@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { after, before, beforeEach, test } from "node:test"
 import { act } from "react"
 import type { Root } from "react-dom/client"
-import { createWindow, installWindow, QuietResizeObserver } from "./fixtures/dom"
+import { createWindow, flush, installWindow, QuietResizeObserver } from "./fixtures/dom"
 
 const dom = createWindow()
 let restoreGlobals = () => {}
@@ -23,7 +23,6 @@ const dayRates: Record<string, { currency: string; unitsPerUsd: number; rateDate
 const requests: string[] = []
 let failNext = false
 
-const wait = (ms: number) => act(() => new Promise<void>((resolve) => setTimeout(resolve, ms)))
 const shown = () => dom.window.document.querySelector(".local-money")
 const body = () => dom.window.document.getElementById("root")!.textContent ?? ""
 const popup = () => dom.window.document.querySelector(".local-time-popup")
@@ -31,7 +30,7 @@ const spaced = (text: string | null | undefined) => (text ?? "").replace(/[  
 
 async function render(element: React.ReactElement) {
   await act(async () => root.render(element))
-  await wait(10)
+  await flush()
 }
 
 function fire(target: Element, type: string, init: Record<string, unknown> = {}) {
