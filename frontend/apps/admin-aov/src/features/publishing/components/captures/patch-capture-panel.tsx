@@ -334,10 +334,13 @@ function CaptureViewer({
     observer.observe(element)
     return () => observer.disconnect()
   }, [frame])
-  const point = (clientX: number, clientY: number) => {
-    const bounds = frame.current!.getBoundingClientRect()
-    return { x: clientX - bounds.left, y: clientY - bounds.top }
-  }
+  const point = useCallback(
+    (clientX: number, clientY: number) => {
+      const bounds = frame.current!.getBoundingClientRect()
+      return { x: clientX - bounds.left, y: clientY - bounds.top }
+    },
+    [frame],
+  )
   // React's wheel listener is passive, and the page behind must not scroll while zooming.
   useEffect(() => {
     const element = frame.current
@@ -350,7 +353,7 @@ function CaptureViewer({
     }
     element.addEventListener("wheel", onWheel, { passive: false })
     return () => element.removeEventListener("wheel", onWheel)
-  }, [frame, onZoom])
+  }, [frame, onZoom, point])
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     const region = (event.target as Element).closest?.("[data-capture-region]")?.getAttribute("data-capture-region")
     press.current = { x: event.clientX, y: event.clientY, region: region ?? null }

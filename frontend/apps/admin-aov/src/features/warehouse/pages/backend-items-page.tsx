@@ -105,16 +105,17 @@ export function BackendItemsPage() {
   const [name, setName] = useState("")
   const [code, setCode] = useState("")
   const pending = edits.size
+  const { badgeKinds } = scope
   const rows = useMemo(
     () =>
       scope.entries.map((base) => {
         const item = {
           ...base,
-          changeKinds: scope.badgeKinds(base),
+          changeKinds: badgeKinds(base),
         }
         return withPendingEdits(item, edits.get(item.id))
       }),
-    [scope.entries, edits, scope.scoped, scope.latest, scope.showAll, scope.baselineIds, scope.reviewed],
+    [scope.entries, edits, badgeKinds],
   )
   const searchMatches = useMemo(
     () => (context.q ? new Set(itemSearchMatches(rows, context.q, context.locale).map((item) => item.id)) : null),

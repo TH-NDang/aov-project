@@ -4,7 +4,7 @@ import {
   draftInCatalogScope,
   showAllCatalogEntries,
 } from "../../publishing/model/catalog/catalog-scope"
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { useCatalogScopePreference } from "../../publishing/components/catalog/catalog-scope-memory"
 import { useSearchParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -93,7 +93,12 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
   )
   const currentFilter = data && activeCatalogScope(data)
   const preferred = useCatalogScopePreference(data, requested)
-  const value = preferred.seasonId || preferred.variantId ? preferred : (currentFilter ?? preferred)
+  const chosen = preferred.seasonId || preferred.variantId ? preferred : (currentFilter ?? preferred)
+  // One object per scope, so what is worked out from it follows the scope and not each render's copy.
+  const value = useMemo<CatalogFilter>(
+    () => ({ seasonId: chosen.seasonId, variantId: chosen.variantId }),
+    [chosen.seasonId, chosen.variantId],
+  )
   const scoped = !!(value.seasonId || value.variantId)
   const changes = useCatalogChanges(kind, rulesetId, locale)
   const onChange = (next: CatalogFilter) =>
@@ -109,10 +114,7 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
       },
       { replace: true, preventScrollReset: true },
     )
-  const matched = useMemo(
-    () => scopedChanges(changes.data ?? [], data, value),
-    [changes.data, data, value.seasonId, value.variantId],
-  )
+  const matched = useMemo(() => scopedChanges(changes.data ?? [], data, value), [changes.data, data, value])
   const latest = useMemo(() => {
     const result = new Map<string, (typeof matched)[number]>()
     for (const change of matched.filter(isGameplayChange)) {
@@ -172,19 +174,22 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
     if (!scoped) return catalog.data ?? []
     const rows = query.data ?? []
     return showAll ? appendVisibleDrafts(rows, drafts, value, data?.variants ?? []) : rows
-  }, [scoped, showAll, catalog.data, query.data, drafts, value.seasonId, value.variantId, data?.variants])
+  }, [scoped, showAll, catalog.data, query.data, drafts, value, data?.variants])
   const reviewed = variants.length > 0 && variants.every((v) => v.dataReviewState === "COMPLETE")
   const baselineIds = useMemo(
     () => new Set(matched.filter((row) => !isGameplayChange(row)).map((row) => row.ownerId)),
     [matched],
   )
-  const badgeKinds = ({ id, revision }: WarehouseEntry): CatalogBadgeKind[] => {
-    if (revision.state === "DRAFT" && showAll) return []
-    const kinds = latest.get(id)?.kinds
-    if (kinds) return kinds
-    if (baselineIds.has(id) || !revision.effectiveFromPatchVariantId) return []
-    return scoped && showAll ? [reviewed ? "UNCHANGED" : "INHERITED"] : []
-  }
+  const badgeKinds = useCallback(
+    ({ id, revision }: WarehouseEntry): CatalogBadgeKind[] => {
+      if (revision.state === "DRAFT" && showAll) return []
+      const kinds = latest.get(id)?.kinds
+      if (kinds) return kinds
+      if (baselineIds.has(id) || !revision.effectiveFromPatchVariantId) return []
+      return scoped && showAll ? [reviewed ? "UNCHANGED" : "INHERITED"] : []
+    },
+    [showAll, latest, baselineIds, scoped, reviewed],
+  )
   return {
     kind,
     catalog,

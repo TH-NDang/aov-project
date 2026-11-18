@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
+import { useEffect, useEffectEvent, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useSearchParams } from "react-router"
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, CircleHelp, Pencil } from "lucide-react"
@@ -114,11 +114,11 @@ export function HeroSkinsView({
     : []
   const firstCapture = ownCaptures[0]?.id
   const panelOpen = !!captures?.open
-  const selectCapture = captures?.select
-  // An open panel follows the skin, without taking the keyboard from the form.
+  // An open panel follows the skin, without taking the keyboard from the form. Only a new skin or a newly opened panel
+  // moves the picture; choosing another card by hand must stick.
+  const showCapture = useEffectEvent((imageId: string) => captures?.select(captureGroupKeys.skins, imageId))
   useEffect(() => {
-    if (panelOpen && firstCapture) selectCapture?.(captureGroupKeys.skins, firstCapture)
-    // Only a new skin or a newly opened panel moves the picture; choosing another card by hand must stick.
+    if (panelOpen && firstCapture) showCapture(firstCapture)
   }, [panelOpen, firstCapture])
 
   useEffect(() => {
@@ -132,9 +132,10 @@ export function HeroSkinsView({
   }, [selectedKey, shownFilter])
 
   // Stepping through skins should not flash an empty stage, so the neighbours' pictures are fetched ahead.
-  const neighbourImage = [next ?? list[0], previous].map((skin) => skin?.artAssetId)
+  const nextImage = (next ?? list[0])?.artAssetId
+  const previousImage = previous?.artAssetId
   useEffect(() => {
-    for (const id of neighbourImage) {
+    for (const id of [nextImage, previousImage]) {
       if (!id) continue
       void client
         .fetchQuery(heroContentAssetQuery(id))
@@ -143,7 +144,7 @@ export function HeroSkinsView({
         })
         .catch(() => {})
     }
-  }, [neighbourImage[0], neighbourImage[1]])
+  }, [client, nextImage, previousImage])
 
   if (!selected) return null
 

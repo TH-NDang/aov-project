@@ -1,5 +1,7 @@
 import {
+  useCallback,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -211,12 +213,15 @@ export function BroadcastTimeline({
     return () => observer.disconnect()
   }, [])
 
-  const scrollTo = (second: number, behavior: ScrollBehavior = "auto") => {
-    const element = viewport.current
-    if (!element) return
-    const position = (second / duration) * (track.current?.clientWidth ?? 0)
-    element.scrollTo?.({ left: position - element.clientWidth / 2, behavior })
-  }
+  const scrollTo = useCallback(
+    (second: number, behavior: ScrollBehavior = "auto") => {
+      const element = viewport.current
+      if (!element) return
+      const position = (second / duration) * (track.current?.clientWidth ?? 0)
+      element.scrollTo?.({ left: position - element.clientWidth / 2, behavior })
+    },
+    [duration],
+  )
   // Keep the playhead in view after jumps and when the scale changes.
   const previous = useRef(current)
   useEffect(() => {
@@ -227,16 +232,18 @@ export function BroadcastTimeline({
     if (!jumped || !element || press.current?.moved) return
     const position = (current / duration) * (track.current?.clientWidth ?? 0)
     if (position < element.scrollLeft || position > element.scrollLeft + element.clientWidth) scrollTo(current)
-  }, [current, duration])
+  }, [current, duration, scrollTo])
   const pinching = useTimelineZoom({ viewport, track, duration, shown, current, setSpan, scrollTo })
   // While the span follows the focused game, a change of game brings that whole game into view.
   const following = span === null
   const focusedId = focused?.gameId
   const focusedMiddle = focused ? (focused.from + focused.end) / 2 : null
+  // The middle is read when the game or the mode changes, not each time the game's length is corrected.
+  const showFocusedGame = useEffectEvent(() => {
+    if (focusedMiddle !== null) scrollTo(focusedMiddle)
+  })
   useEffect(() => {
-    if (following && focusedMiddle !== null) scrollTo(focusedMiddle)
-    // The middle is read when the game or the mode changes, not each time the game's length is corrected.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (following) showFocusedGame()
   }, [following, focusedId])
 
   // The saved game has arrived (or the save failed): the marker shows what is stored again.

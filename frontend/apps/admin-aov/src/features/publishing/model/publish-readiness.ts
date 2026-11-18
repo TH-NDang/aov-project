@@ -131,7 +131,10 @@ export function matchesReadinessSearch(row: ReadinessRow, q: string) {
 }
 
 /** Both filters narrow together: not yet published and ready is what can go public next. */
-export function filterReadinessRows(rows: readonly ReadinessRow[], filter: ReadinessFilter) {
+export function filterReadinessRows(
+  rows: readonly ReadinessRow[],
+  filter: Pick<ReadinessFilter, "q" | "unpublished" | "draft">,
+) {
   return rows.filter(
     (row) =>
       matchesReadinessSearch(row, filter.q) &&
