@@ -85,6 +85,22 @@
   color: var(--aov-muted);
   font: var(--wiki-type-meta);
 }
+/* A card while the list loads (HeroCardSkeleton): the same box and lines, with bars where the words will be. */
+.wiki-hero-card[data-skeleton] {
+  pointer-events: none;
+}
+.wiki-hero-card[data-skeleton] :is(.wiki-hero-card-name, .wiki-hero-card-roles)::before {
+  content: "";
+  display: inline-block;
+  width: 64%;
+  height: 0.7em;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  vertical-align: middle;
+}
+.wiki-hero-card[data-skeleton] .wiki-hero-card-roles::before {
+  width: 44%;
+}
 
 /* A card too narrow for the roles in words centres the name and draws roles and lanes as one line of marks. */
 @container hero-card (max-width: 127.98px) {
@@ -124,6 +140,16 @@
   }
   .wiki-hero-card-note {
     flex: 0 0 100%;
+  }
+  /* A loading card holds its line of marks as tall as one mark. */
+  .wiki-hero-card[data-skeleton] .wiki-hero-card-roles {
+    width: 44%;
+    min-height: 14px;
+    align-items: center;
+  }
+  .wiki-hero-card[data-skeleton] .wiki-hero-card-roles::before {
+    width: 100%;
+    height: 8px;
   }
 }
 

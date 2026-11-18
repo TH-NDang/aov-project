@@ -113,10 +113,6 @@
 .wiki-hero-switch-filters[data-dragging] * {
   cursor: grabbing;
 }
-/* The row clips what leaves it, so the focus ring is drawn inside the chip. */
-.wiki-hero-switch-filters .wiki-hero-chip:focus-visible {
-  outline-offset: -2px;
-}
 .wiki-hero-switch-scroll {
   min-width: 0;
   min-height: 0;
@@ -178,9 +174,6 @@
   /* 16px keeps iOS from zooming the page when the field gets focus. */
   .wiki-hero-switch-search.wiki-hero-search input {
     font-size: 16px;
-  }
-  .wiki-hero-switch-filters .wiki-hero-chip {
-    height: 36px;
   }
 }
 @media (max-width: 640px) {

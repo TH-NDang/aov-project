@@ -55,3 +55,12 @@
   background: var(--aov-accent-soft);
   color: var(--aov-accent-strong);
 }
+/* The quick switch's rows clip what leaves them, so the focus ring is drawn inside the chip. */
+.wiki-hero-chips[data-layout="sheet"] .wiki-hero-chip:focus-visible {
+  outline-offset: -2px;
+}
+@media (max-width: 899.98px) {
+  .wiki-hero-chips[data-layout="sheet"] .wiki-hero-chip {
+    height: 36px;
+  }
+}
