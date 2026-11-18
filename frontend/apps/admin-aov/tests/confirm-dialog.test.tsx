@@ -67,6 +67,34 @@ test("a question shows its details between the text and the buttons", async () =
   }
 })
 
+test("a question that loses nothing does not draw its action red", async () => {
+  const { ConfirmDialogHost, confirmAction } = await import("../src/components/confirm-dialog")
+  const unmount = await mounted(<ConfirmDialogHost />)
+  try {
+    const ask = async (tone?: "publish") => {
+      let answer: Promise<boolean> | undefined
+      await act(async () => {
+        answer = confirmAction({
+          title: "Xuất bản ván 1?",
+          description: "Dữ liệu sẽ được chốt.",
+          confirmLabel: "Xác nhận",
+          tone,
+        })
+      })
+      await flush()
+      const variant = dialogButton("Xác nhận").getAttribute("data-variant")
+      await click(dialogButton("Hủy"))
+      await answer
+      return variant
+    }
+
+    assert.equal(await ask(), "destructive")
+    assert.equal(await ask("publish"), "default")
+  } finally {
+    await unmount()
+  }
+})
+
 test("a question its details block answers only with Cancel, also when a link in them leads away", async () => {
   const { ConfirmDialogHost, cancelConfirm, confirmAction } = await import("../src/components/confirm-dialog")
   const unmount = await mounted(<ConfirmDialogHost />)

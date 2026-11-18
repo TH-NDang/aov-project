@@ -63,6 +63,7 @@ export function ProgressPanel({
       details: <PublishSummary progress={progress} game={game} />,
       confirmLabel: "Xác nhận và xuất bản",
       cancelLabel: "Kiểm tra lại",
+      tone: "publish",
     })
     if (!accepted) return
 

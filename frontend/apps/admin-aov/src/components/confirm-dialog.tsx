@@ -20,6 +20,8 @@ export interface ConfirmOptions {
   cancelLabel?: string
   /** The details say the action cannot run yet, such as a record still in use: only Cancel answers. */
   confirmDisabled?: boolean
+  /** `publish` for an action that loses nothing, such as publishing checked work: its button is not red. */
+  tone?: "destructive" | "publish"
 }
 
 interface ConfirmRequest extends ConfirmOptions {
@@ -51,8 +53,8 @@ function focusToRestore() {
 
 /**
  * Asks in the app's own dialog and resolves with the answer. A newer question cancels one still open, so an answer can
- * never apply to the wrong action. Every question guards something that cannot be undone: the action is red and focus
- * opens on Cancel, so a stray Enter keeps the user's work.
+ * never apply to the wrong action. A question guards something that cannot be undone: the action is red, unless its
+ * tone says it loses nothing, and focus opens on Cancel, so a stray Enter keeps the user's work.
  */
 export function confirmAction(options: ConfirmOptions) {
   const { open, request } = useConfirmStore.getState()
@@ -104,7 +106,11 @@ export function ConfirmDialogHost() {
         {request?.details && <div className="type-body min-w-0 break-words">{request.details}</div>}
         <AlertDialogFooter>
           <AlertDialogCancel>{request?.cancelLabel ?? "Hủy"}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" disabled={request?.confirmDisabled} onClick={() => answer(true)}>
+          <AlertDialogAction
+            variant={request?.tone === "publish" ? "default" : "destructive"}
+            disabled={request?.confirmDisabled}
+            onClick={() => answer(true)}
+          >
             {request?.confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
