@@ -15,6 +15,7 @@ public interface PublishedOverviewRepository extends Repository<GameRecord, UUID
         long getGameCount();
     }
 
+    /** Native: groups by the tournament inside the jsonb snapshots with window functions. */
     @Query(value = """
         WITH observations AS (
             SELECT published_snapshot->'series'->>'tournamentId' AS group_id,
@@ -32,6 +33,7 @@ public interface PublishedOverviewRepository extends Repository<GameRecord, UUID
         """, nativeQuery = true)
     Page<SummaryRow> tournaments(Pageable page);
 
+    /** Native: groups by the series inside the jsonb snapshots with window functions. */
     @Query(value = """
         WITH observations AS (
             SELECT published_snapshot->'content'->>'seriesId' AS group_id,

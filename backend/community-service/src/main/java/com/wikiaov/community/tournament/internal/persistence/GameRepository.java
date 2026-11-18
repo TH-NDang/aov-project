@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface GameRepository extends JpaRepository<GameRecord, UUID> {
+    /** Native: filters by ids inside the jsonb published snapshot. */
     @Query(value = "select * from tournament.game where published_at is not null and (cast(:tournamentId as text) is null or published_snapshot->'series'->>'tournamentId'=cast(:tournamentId as text)) and (cast(:seriesId as text) is null or published_snapshot->'content'->>'seriesId'=cast(:seriesId as text))", countQuery = "select count(*) from tournament.game where published_at is not null and (cast(:tournamentId as text) is null or published_snapshot->'series'->>'tournamentId'=cast(:tournamentId as text)) and (cast(:seriesId as text) is null or published_snapshot->'content'->>'seriesId'=cast(:seriesId as text))", nativeQuery = true)
     Page<GameRecord> findPublic(String tournamentId, String seriesId, Pageable page);
 

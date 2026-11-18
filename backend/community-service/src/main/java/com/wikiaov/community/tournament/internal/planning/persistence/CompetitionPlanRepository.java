@@ -15,7 +15,8 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
     /**
      * The seasons of an organizer or circuit, in the order of the tournament list. A tournament in the trash takes its
      * plan with it. A part of a main event is a season of a page only when its main event is not one already: a
-     * qualifier run by the same organizer comes with its main event instead of standing beside it.
+     * qualifier run by the same organizer comes with its main event instead of standing beside it. Native: orders by
+     * the recency views of V013 and V016, which PostgreSQL functions compute.
      */
     @Query(value = """
         SELECT p.* FROM tournament.competition_plan p
@@ -49,6 +50,7 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
     @Query("select p from CompetitionPlanRecord p where p.id = :id")
     Optional<CompetitionPlanRecord> lock(UUID id);
 
+    /** Native for the jsonb path over the entrants. */
     @Query(value = "select count(*) from tournament.competition_plan p where jsonb_path_exists(p.content, '$.entrants[*] ? (@.teamId == $id)', jsonb_build_object('id', cast(:id as text)))", nativeQuery = true)
     long countTeamReferences(String id);
 
@@ -56,7 +58,8 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
      * Plans and plan history that name a record. The plan of the record's own tournament (its series, games and roster
      * rows belong to it too) is left out while it has never been published: such a draft is part of the tournament and
      * goes to the trash with it. Once published or withdrawn ({@code publicActions} names the revision actions that say
-     * so), the plan and its history keep protecting the record.
+     * so), the plan and its history keep protecting the record. Native: looks for the id in the text of the jsonb
+     * documents.
      */
     @Query(value = """
         WITH owner AS (
@@ -84,9 +87,11 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
         """, nativeQuery = true)
     long countReferences(String kind, String id, Collection<String> publicActions);
 
+    /** Native: looks for the image path in the text of the jsonb documents. */
     @Query(value = "select (select count(*) from tournament.competition_plan where cast(published_snapshot as text) like concat('%/', :id, '/%')) + (select count(*) from tournament.plan_revision where cast(content as text) like concat('%/', :id, '/%'))", nativeQuery = true)
     long countMedia(String id);
 
+    /** Native: finds image paths in the jsonb documents with a PostgreSQL regular expression. */
     @Query(value = """
         SELECT pairs.asset FROM (
         SELECT DISTINCT found.owner, lower(m[2]) AS asset FROM (
@@ -97,6 +102,7 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
         """, nativeQuery = true)
     List<String> allMedia();
 
+    /** Native: filters by ids inside the jsonb published snapshot. */
     @Query(value = """
         SELECT * FROM tournament.competition_plan WHERE published_at IS NOT NULL
           AND (:team = '' OR jsonb_exists(published_snapshot->'teams', :team))

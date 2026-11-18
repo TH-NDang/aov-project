@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface TeamRepository extends JpaRepository<TeamRecord, UUID> {
+    /** Native for the accent-folding search function of V002. */
     @Query(value = """
         SELECT * FROM tournament.team
          WHERE (:state='ALL' OR (:state='ACTIVE' AND deleted_at IS NULL) OR (:state='DELETED' AND deleted_at IS NOT NULL))

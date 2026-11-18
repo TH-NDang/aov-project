@@ -19,6 +19,7 @@ import org.springframework.data.jpa.repository.Query;
  */
 public interface PageRepository extends JpaRepository<PageRecord, UUID> {
 
+    /** Native: matches the name and personnel roles inside the jsonb documents. */
     @Query(value = """
         SELECT * FROM community.page
         WHERE (:kind IS NULL OR kind = :kind) AND (:published = false OR published_content IS NOT NULL)
@@ -39,7 +40,8 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
             boolean published, Pageable pageable);
 
     /**
-     * Admin directory listing: drafts included, with the country, identity and ordering a directory asks for.
+     * Admin directory listing: drafts included, with the country, identity and ordering a directory asks for. Native:
+     * filters and orders by fields of the jsonb draft.
      */
     @Query(value = """
         SELECT * FROM community.page
@@ -66,7 +68,8 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
      * Pages for a picker or directory ordered by activity. An exact name comes first, then pages tied to the page in
      * context by their history, then the strength of the name match and the last activity. Activity is read from the
      * one view the tournament module publishes for this; {@code kinds} tells it which of its parts are needed, and a
-     * page of an {@code identities} kind is found there by the identity it stands for.
+     * page of an {@code identities} kind is found there by the identity it stands for. Native: uses the search
+     * functions of V013 and the jsonb history.
      */
     @Query(value = """
         SELECT p.id AS id,
@@ -110,6 +113,7 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
 
     Optional<PageRecord> findByCode(String code);
 
+    /** Native: looks for the member inside the jsonb roster. */
     @Query(value = """
         SELECT * FROM community.page
         WHERE kind = :team AND (:published = false OR published_content IS NOT NULL)
@@ -119,6 +123,7 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
         """, nativeQuery = true)
     List<PageRecord> teamsForMember(String team, String memberId, boolean published);
 
+    /** Native: looks for the member inside the jsonb rosters. */
     @Query(value = """
         SELECT count(*) FROM community.page WHERE kind = :team AND (
           content->'roster' @> jsonb_build_array(jsonb_build_object('pageId', CAST(:memberId AS text))) OR
@@ -126,13 +131,14 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
         """, nativeQuery = true)
     long countRosterReferences(String team, String memberId);
 
+    /** Native: reads the channel organization inside the jsonb documents. */
     @Query(value = """
         SELECT count(*) FROM community.page WHERE kind = :circuit AND (
           content->>'channelOrganizationId' = :id OR published_content->>'channelOrganizationId' = :id)
         """, nativeQuery = true)
     long countChannelReferences(String circuit, String id);
 
-    /** Pages the account follows; {@code editorial} is the kind with no followers. */
+    /** Native: orders by the name inside the jsonb document. {@code editorial} is the kind with no followers. */
     @Query(value = """
         SELECT p.* FROM community.page p JOIN community.follow f ON f.page_id = p.id
         WHERE f.actor = :actor AND p.published_content IS NOT NULL AND p.kind <> :editorial
@@ -143,31 +149,30 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
         """, nativeQuery = true)
     Page<PageRecord> followedBy(String actor, String editorial, Pageable pageable);
 
-    /**
-     * Published pages the account neither follows nor manages, the most followed first. {@code editorial} is the kind
-     * with no followers.
-     */
+    /** Published pages the account neither follows nor manages, the most followed first; circuits have no followers. */
     @Query(value = """
-        SELECT p.* FROM community.page p
-        WHERE p.published_content IS NOT NULL AND p.kind <> :editorial
-          AND NOT EXISTS (SELECT 1 FROM community.follow f WHERE f.page_id = p.id AND f.actor = :actor)
-          AND NOT EXISTS (SELECT 1 FROM community.page_member m WHERE m.page_id = p.id AND m.actor = :actor)
-        ORDER BY (SELECT count(*) FROM community.follow f WHERE f.page_id = p.id) DESC, p.updated_at DESC, p.id
+        select p from PageRecord p
+        where p.publishedContent is not null and p.kind <> CIRCUIT
+          and not exists (select 1 from PageFollow f where f.pageId = p.id and f.actor = :actor)
+          and not exists (select 1 from PageMember m where m.pageId = p.id and m.actor = :actor)
+        order by (select count(f) from PageFollow f where f.pageId = p.id) desc, p.updatedAt desc, p.id
         """, countQuery = """
-        SELECT count(*) FROM community.page p
-        WHERE p.published_content IS NOT NULL AND p.kind <> :editorial
-          AND NOT EXISTS (SELECT 1 FROM community.follow f WHERE f.page_id = p.id AND f.actor = :actor)
-          AND NOT EXISTS (SELECT 1 FROM community.page_member m WHERE m.page_id = p.id AND m.actor = :actor)
-        """, nativeQuery = true)
-    Page<PageRecord> suggestedFor(String actor, String editorial, Pageable pageable);
+        select count(p) from PageRecord p
+        where p.publishedContent is not null and p.kind <> CIRCUIT
+          and not exists (select 1 from PageFollow f where f.pageId = p.id and f.actor = :actor)
+          and not exists (select 1 from PageMember m where m.pageId = p.id and m.actor = :actor)
+        """)
+    Page<PageRecord> suggestedFor(String actor, Pageable pageable);
 
     Optional<PageRecord> findByKindAndEntityId(Kind kind, UUID entityId);
 
     long countByKindAndEntityId(Kind kind, UUID entityId);
 
+    /** Native: looks for the image path in the text of the jsonb documents. */
     @Query(value = "select count(*) from community.page where cast(content as text) like concat('%/', :id, '/%') or cast(published_content as text) like concat('%/', :id, '/%') or cast(presentation as text) like concat('%/', :id, '/%')", nativeQuery = true)
     long countMedia(String id);
 
+    /** Native: finds image paths in the jsonb documents with a PostgreSQL regular expression. */
     @Query(value = """
         SELECT pairs.asset FROM (
         SELECT DISTINCT found.owner, lower(m[2]) AS asset FROM (
@@ -184,14 +189,15 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
     Optional<PageRecord> lock(UUID id);
 
     /** Representatives, requests and community activity that keep a page from being deleted. */
-    @Query(value = """
-        SELECT (SELECT count(*) FROM community.page_member WHERE page_id = :id)
-             + (SELECT count(*) FROM community.page_claim WHERE page_id = :id)
-             + (SELECT count(*) FROM community.page_invitation WHERE page_id = :id)
-             + (SELECT count(*) FROM community.post WHERE page_id = :id)
-             + (SELECT count(*) FROM community.follow WHERE page_id = :id)
-             + (SELECT count(*) FROM community.report WHERE page_id = :id)
-             + (SELECT count(*) FROM community.notification WHERE page_id = :id)
-        """, nativeQuery = true)
+    @Query("""
+        select (select count(m) from PageMember m where m.pageId = p.id)
+             + (select count(c) from PageClaim c where c.pageId = p.id)
+             + (select count(i) from PageInvitation i where i.pageId = p.id)
+             + (select count(s) from CommunityPost s where s.pageId = p.id)
+             + (select count(f) from PageFollow f where f.pageId = p.id)
+             + (select count(r) from CommunityReport r where r.pageId = p.id)
+             + (select count(n) from PageNotification n where n.pageId = p.id)
+          from PageRecord p where p.id = :id
+        """)
     long countActivity(UUID id);
 }

@@ -183,7 +183,7 @@ public class PageProfiles {
     public PageSlice<Profile> suggestions(int page, int size) {
         var actor = CommunityActor.require();
         return PageSlice.from(
-                pages.suggestedFor(actor.key(), Kind.CIRCUIT.name(), paging(page, size)).map(row -> view(row, false)));
+                pages.suggestedFor(actor.key(), paging(page, size)).map(row -> view(row, false)));
     }
 
     /** Cards for the published pages among {@code ids}; withdrawn or unknown pages are left out. */

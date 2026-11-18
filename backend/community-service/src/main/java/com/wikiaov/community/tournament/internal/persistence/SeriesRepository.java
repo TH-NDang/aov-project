@@ -11,6 +11,7 @@ public interface SeriesRepository extends JpaRepository<SeriesRecord, UUID> {
     /**
      * Inside a tournament matches run in schedule order, undated ones last. Across tournaments the stronger name match
      * comes first, then the most recent. The id ends both orders so that paging never repeats or skips a match.
+     * Native for the search functions of V013.
      */
     @Query(nativeQuery = true, value = """
         SELECT s.* FROM tournament.series s
@@ -32,7 +33,7 @@ public interface SeriesRepository extends JpaRepository<SeriesRecord, UUID> {
         """)
     Page<SeriesRecord> search(String query, String tournamentId, String state, Pageable page);
 
-    /** Per-tournament counters, so a list of tournaments never has to load every match. */
+    /** Per-tournament counters, so a list of tournaments never has to load every match. Native: reads the jsonb result. */
     @Query(nativeQuery = true, value = """
         SELECT s.tournament_id AS tournamentId,
                count(*) AS matches,

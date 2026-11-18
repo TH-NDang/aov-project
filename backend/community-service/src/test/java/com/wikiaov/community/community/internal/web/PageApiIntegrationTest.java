@@ -387,6 +387,20 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void aDraftWithAFollowerIsKeptWhenItsDeletionIsAsked() throws Exception {
+        var draft = send(post(ROOT + "/admin/pages"), "editor", true, Map.of("kind", "ORGANIZATION", "code",
+                "followed-" + UUID.randomUUID(), "content", Map.of("name", "Followed draft")));
+        jdbc.update("INSERT INTO community.follow (id, page_id, actor) VALUES (?, ?, ?)", UUID.randomUUID(),
+                UUID.fromString(draft.path("id").asText()), "early-fan");
+
+        mvc.perform(as(post(ROOT + "/admin/pages/" + draft.path("id").asText() + "/delete"), "editor", true)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":" + draft.path("version").asLong() + "}"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("PAGE_CONFLICT"))
+                .andExpect(jsonPath("$.detail").value("The page has representatives, requests or community activity."));
+    }
+
+    @Test
     void theAuditTrailKeepsStoringItsActionsAsText() throws Exception {
         String code = "audited-" + UUID.randomUUID();
         var created = send(post(ROOT + "/admin/pages"), "editor", true,

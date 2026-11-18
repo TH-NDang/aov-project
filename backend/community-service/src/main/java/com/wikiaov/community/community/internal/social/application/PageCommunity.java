@@ -92,7 +92,7 @@ public class PageCommunity {
         var filter = PageChecks.postKindFilter(kind);
         var pattern = PageChecks.searchPattern(query);
         return feedView(
-                posts.published(PostStatus.PUBLISHED.name(), null, filter, pattern, PageProfiles.paging(page, size)),
+                posts.published(null, filter, pattern, PageProfiles.paging(page, size)),
                 null);
     }
 
@@ -101,7 +101,7 @@ public class PageCommunity {
         var actor = CommunityActor.require();
         var filter = PageChecks.postKindFilter(kind);
         return feedView(
-                posts.published(PostStatus.PUBLISHED.name(), following ? actor.key() : null, filter, null,
+                posts.published(following ? actor.key() : null, filter, null,
                         PageProfiles.paging(page, size)),
                 actor);
     }
