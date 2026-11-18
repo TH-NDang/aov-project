@@ -159,7 +159,10 @@ export function SkinPreview({
   const reportShown = useCallback((media: HeroMedia | undefined) => setShown({ skin: current, media }), [current])
   const media = (shown?.skin === current ? shown.media : undefined) ?? (skin ? previewMedia(skin) : undefined)
   const sources = media?.currentVersion?.sources ?? []
-  const owner = sources.map((source) => source.ownerName?.trim() || source.label.trim()).find(Boolean)
+  const owner = sources
+    .filter((source) => !source.unverified)
+    .map((source) => source.ownerName?.trim() || source.label.trim())
+    .find(Boolean)
 
   function step(delta: number) {
     if (canStep) onMove(list[(index + delta + list.length) % list.length])
