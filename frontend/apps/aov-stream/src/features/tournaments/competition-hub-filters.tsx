@@ -177,9 +177,15 @@ export function DirectoryFilters({
       <label className="stream-search competition-search">
         <StreamIcon name="search" size={16} />
         <input
-          aria-label={scheduled ? "Tìm trận đấu theo đội hoặc giải" : text("Tìm giải đấu", "Search tournaments")}
+          aria-label={
+            scheduled
+              ? text("Tìm trận đấu theo đội hoặc giải", "Search matches by team or tournament")
+              : text("Tìm giải đấu", "Search tournaments")
+          }
           placeholder={
-            scheduled ? "Tìm đội, giải đấu…" : text("Tìm giải đấu, hệ thống giải…", "Search tournaments, circuits…")
+            scheduled
+              ? text("Tìm đội, giải đấu…", "Search teams, tournaments…")
+              : text("Tìm giải đấu, hệ thống giải…", "Search tournaments, circuits…")
           }
           value={search}
           onChange={(event) => update("q", event.target.value)}
@@ -195,14 +201,17 @@ export function DirectoryFilters({
       {layout === "compact" ? (
         (!scheduled || schedule.selects > 0) && (
           <PublicFilterSheet
-            title={scheduled ? "Lọc trận đấu" : text("Lọc giải đấu", "Filter tournaments")}
+            title={scheduled ? text("Lọc trận đấu", "Filter matches") : text("Lọc giải đấu", "Filter tournaments")}
             triggerLabel={text("Lọc", "Filter")}
             count={[region, year, ...(scheduled ? [] : [status])].filter((value) => value !== "all").length}
             resetLabel={text("Xóa lọc", "Clear filters")}
             onReset={clearFilters}
             resultLabel={
               scheduled
-                ? `Xem ${schedule.fixtureCount.toLocaleString(languageTag)} trận`
+                ? text(
+                    `Xem ${schedule.fixtureCount.toLocaleString(languageTag)} trận`,
+                    `Show ${schedule.fixtureCount.toLocaleString(languageTag)} ${schedule.fixtureCount === 1 ? "match" : "matches"}`,
+                  )
                 : text(
                     `Xem ${visible.length} giải đấu`,
                     `Show ${visible.length} ${visible.length === 1 ? "tournament" : "tournaments"}`,

@@ -239,11 +239,18 @@ export function ScheduleEmpty({ filtered, onClear }: { filtered: boolean; onClea
   const { text } = useStreamLocale()
   return (
     <div className="hub-state">
-      <h2>{filtered ? "Không có trận phù hợp" : "Chưa có lịch thi đấu"}</h2>
+      <h2>
+        {filtered
+          ? text("Không có trận phù hợp", "No matching matches")
+          : text("Chưa có lịch thi đấu", "No schedule yet")}
+      </h2>
       <p>
         {filtered
-          ? "Không trận nào khớp với bộ lọc đang chọn."
-          : "Lịch và kết quả sẽ xuất hiện tại đây khi được công bố."}
+          ? text("Không trận nào khớp với bộ lọc đang chọn.", "No match fits the chosen filters.")
+          : text(
+              "Lịch và kết quả sẽ xuất hiện tại đây khi được công bố.",
+              "The schedule and results will appear here once they are published.",
+            )}
       </p>
       {filtered && onClear && (
         <button type="button" className="cp-button" onClick={onClear}>

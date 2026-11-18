@@ -88,8 +88,14 @@ export function CommunityAccount() {
             <h1>{text("Tài khoản", "Account")}</h1>
             <p>
               {enabled
-                ? `${session.name} · hồ sơ và cài đặt dùng chung cho AOV Stream, Wiki và Admin`
-                : "Một tài khoản AOV dùng chung cho AOV Stream, Wiki và Admin."}
+                ? text(
+                    `${session.name} · hồ sơ và cài đặt dùng chung cho AOV Stream, Wiki và Admin`,
+                    `${session.name} · profile and settings shared by AOV Stream, Wiki and Admin`,
+                  )
+                : text(
+                    "Một tài khoản AOV dùng chung cho AOV Stream, Wiki và Admin.",
+                    "One AOV account shared by AOV Stream, Wiki and Admin.",
+                  )}
             </p>
           </div>
         </header>
@@ -586,7 +592,10 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
       </div>
       <p className="cp-section-lead">
         {readOnly
-          ? "Kiểm duyệt viên xem được phần này; quản trị chính và biên tập viên mới sửa được."
+          ? text(
+              "Kiểm duyệt viên xem được phần này; quản trị chính và biên tập viên mới sửa được.",
+              "Moderators can see this part; only the main administrator and editors can change it.",
+            )
           : text(
               "Lịch sử và kết quả thi đấu được biên tập riêng; bạn có thể đề xuất chỉnh sửa từ trang công khai.",
               "History and competition results are edited separately; you can suggest edits from the public page.",

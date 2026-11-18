@@ -157,7 +157,9 @@ export function PublicCompetitionPage() {
               </span>
               {won.runnerUp && (
                 <span>
-                  {won.score ? `Thắng ${won.score} trước ` : text("Á quân: ", "Runner-up: ")}
+                  {won.score
+                    ? text(`Thắng ${won.score} trước `, `Won ${won.score} against `)
+                    : text("Á quân: ", "Runner-up: ")}
                   {won.runnerUp.name}
                 </span>
               )}
@@ -270,7 +272,7 @@ function Overview({
         )}
         {shown.length > 0 && (
           <Block
-            title={ahead.length ? text("Sắp diễn ra", "Upcoming") : "Trận gần nhất"}
+            title={ahead.length ? text("Sắp diễn ra", "Upcoming") : text("Trận gần nhất", "Latest matches")}
             more={{ label: text("Lịch & kết quả", "Schedule & results"), open: () => openTab("matches") }}
           >
             <div className="tn-match-grid">
@@ -331,7 +333,7 @@ function Standings({ view, matches }: { view: CompetitionView; matches: Competit
           title={
             plan.stages.find((stage) => stage.code === table.stageCode)?.name ?? text("Bảng xếp hạng", "Standings")
           }
-          note={table.complete ? "Đã hoàn tất" : "Tạm tính"}
+          note={table.complete ? text("Đã hoàn tất", "Final") : text("Tạm tính", "Provisional")}
         >
           <StandingsTable view={view} table={table} />
         </Block>
@@ -504,8 +506,11 @@ function Teams({ view }: { view: CompetitionView }) {
       {withoutRoster > 0 && (
         <p className="cp-muted">
           {withoutRoster === plan.entrants.length
-            ? "Đội hình của các đội chưa được công bố."
-            : `${withoutRoster} trong ${plan.entrants.length} đội chưa công bố đội hình.`}
+            ? text("Đội hình của các đội chưa được công bố.", "The teams' rosters have not been published yet.")
+            : text(
+                `${withoutRoster} trong ${plan.entrants.length} đội chưa công bố đội hình.`,
+                `${withoutRoster} of ${plan.entrants.length} teams have not published a roster yet.`,
+              )}
         </p>
       )}
       <div className="tn-team-grid">
@@ -551,7 +556,7 @@ function Teams({ view }: { view: CompetitionView }) {
                         {row.status === "SUBSTITUTE"
                           ? text("Dự bị", "Substitute")
                           : row.status === "INACTIVE"
-                            ? "Không thi đấu"
+                            ? text("Không thi đấu", "Inactive")
                             : row.status === "ACTIVE"
                               ? row.lane
                                 ? text(LANE_NAMES[row.lane][0], LANE_NAMES[row.lane][1])
@@ -743,7 +748,12 @@ function Awards({ view }: { view: CompetitionView }) {
       </dl>
       {all.length > 4 && (
         <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open ? text("Thu gọn", "Show less") : `Xem thêm ${all.length - 4} giải thưởng`}
+          {open
+            ? text("Thu gọn", "Show less")
+            : text(
+                `Xem thêm ${all.length - 4} giải thưởng`,
+                `Show ${all.length - 4} more ${all.length - 4 === 1 ? "award" : "awards"}`,
+              )}
         </button>
       )}
     </section>

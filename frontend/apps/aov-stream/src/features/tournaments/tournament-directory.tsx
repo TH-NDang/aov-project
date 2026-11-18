@@ -80,7 +80,10 @@ export function TournamentDirectory() {
             <h1>{text("Tra cứu ván đấu", "Game lookup")}</h1>
             <p>
               {total == null
-                ? "Cấm chọn và đội hình của từng ván đã công bố."
+                ? text(
+                    "Cấm chọn và đội hình của từng ván đã công bố.",
+                    "Bans, picks and lineups of every published game.",
+                  )
                 : [
                     text(
                       `${total.toLocaleString(languageTag)} ván đã xuất bản`,
@@ -157,11 +160,16 @@ export function TournamentDirectory() {
         ) : games.hasNextPage ? null : (
           <div className="hub-state">
             <h2>
-              {filtered ? "Không tìm thấy ván phù hợp" : text("Chưa có ván đấu được công bố", "No games published yet")}
+              {filtered
+                ? text("Không tìm thấy ván phù hợp", "No matching games found")
+                : text("Chưa có ván đấu được công bố", "No games published yet")}
             </h2>
             <p>
               {filtered
-                ? "Thử tên đội khác hoặc bỏ bộ lọc đang chọn."
+                ? text(
+                    "Thử tên đội khác hoặc bỏ bộ lọc đang chọn.",
+                    "Try another team name or clear the chosen filters.",
+                  )
                 : text(
                     "Các ván đã được rà soát và xuất bản sẽ xuất hiện tại đây.",
                     "Games that have been reviewed and published will appear here.",

@@ -122,14 +122,14 @@ function PublishedGameView({
   const patch = (
     <span title={scope?.patchTitle || undefined}>
       {scope?.unknown ? (
-        "Chưa rõ phiên bản"
+        text("Chưa rõ phiên bản", "Unknown patch")
       ) : scope?.seasonName && patchCode ? (
         <>
           <span className="tn-duel-season">{scope.seasonName} · </span>
           {patchCode}
         </>
       ) : (
-        patchCode || scope?.seasonName || "Phiên bản đã lưu"
+        patchCode || scope?.seasonName || text("Phiên bản đã lưu", "Recorded patch")
       )}
     </span>
   )

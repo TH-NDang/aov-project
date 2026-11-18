@@ -58,8 +58,14 @@ export function CompetitionList({ profile, title }: { profile: CommunityProfile;
       ) : !competitions.length ? (
         <p className="pf-note">
           {seasons
-            ? "Hệ thống giải này chưa có mùa nào được công bố."
-            : "Chưa có giải đấu nào của tổ chức được công bố."}
+            ? text(
+                "Hệ thống giải này chưa có mùa nào được công bố.",
+                "No season of this circuit has been published yet.",
+              )
+            : text(
+                "Chưa có giải đấu nào của tổ chức được công bố.",
+                "No tournament of this organization has been published yet.",
+              )}
         </p>
       ) : (
         <div className="tn-card-grid">
@@ -231,7 +237,12 @@ function CompetitionMatches({
       </div>
       {entries.length > preview && (
         <button type="button" className="tn-more" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open ? text("Thu gọn", "Show less") : `Xem thêm ${entries.length - preview} trận`}
+          {open
+            ? text("Thu gọn", "Show less")
+            : text(
+                `Xem thêm ${entries.length - preview} trận`,
+                `Show ${entries.length - preview} more ${entries.length - preview === 1 ? "match" : "matches"}`,
+              )}
           <StreamIcon name={open ? "chevronLeft" : "chevronRight"} size={14} />
         </button>
       )}

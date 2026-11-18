@@ -155,9 +155,9 @@ export function CommunityFeed({
             <label>
               <span className={postKind === "TEXT" ? "sr-only" : undefined}>
                 {postKind === "VIDEO"
-                  ? "Mô tả (không bắt buộc)"
+                  ? text("Mô tả (không bắt buộc)", "Description (optional)")
                   : postKind === "NEWS"
-                    ? "Nội dung"
+                    ? text("Nội dung", "Content")
                     : text("Nội dung bài viết", "Post content")}
               </span>
               <textarea

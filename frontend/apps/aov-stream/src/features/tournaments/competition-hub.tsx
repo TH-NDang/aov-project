@@ -221,7 +221,10 @@ function CircuitGroup({ entries, open, other }: { entries: CompetitionView[]; op
           {name}{" "}
           <small>
             {other
-              ? `${entries.length} giải`
+              ? text(
+                  `${entries.length} giải`,
+                  `${entries.length} ${entries.length === 1 ? "tournament" : "tournaments"}`,
+                )
               : text(`${entries.length} mùa giải`, `${entries.length} ${entries.length === 1 ? "season" : "seasons"}`)}
           </small>
         </h2>
@@ -238,7 +241,12 @@ function CircuitGroup({ entries, open, other }: { entries: CompetitionView[]; op
       </div>
       {(hidden > 0 || (expanded && !open && entries.length > preview)) && (
         <button ref={toggle} type="button" className="tn-more" aria-expanded={expanded} onClick={fold}>
-          {expanded ? text("Thu gọn", "Show less") : `Xem thêm ${hidden} ${other ? "giải" : "mùa giải"}`}
+          {expanded
+            ? text("Thu gọn", "Show less")
+            : text(
+                `Xem thêm ${hidden} ${other ? "giải" : "mùa giải"}`,
+                `Show ${hidden} more ${other ? (hidden === 1 ? "tournament" : "tournaments") : hidden === 1 ? "season" : "seasons"}`,
+              )}
           <StreamIcon name={expanded ? "chevronLeft" : "chevronRight"} size={14} />
         </button>
       )}

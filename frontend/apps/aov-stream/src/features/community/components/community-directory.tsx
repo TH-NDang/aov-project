@@ -208,7 +208,9 @@ export function PageDirectory() {
               <div className="hub-pills">
                 <button type="button" aria-disabled={counting || undefined} onClick={() => setCounting(true)}>
                   <StreamIcon name="compass" size={16} />
-                  {counting ? "Đang đếm trang theo khu vực…" : "Lọc theo khu vực"}
+                  {counting
+                    ? text("Đang đếm trang theo khu vực…", "Counting pages by region…")
+                    : text("Lọc theo khu vực", "Filter by region")}
                 </button>
               </div>
             )
@@ -232,12 +234,12 @@ export function PageDirectory() {
         <div className="hub-state">
           <h3>
             {kind || narrowed
-              ? "Không có trang nào khớp bộ lọc"
+              ? text("Không có trang nào khớp bộ lọc", "No pages match the filters")
               : text("Danh bạ đang được xây dựng", "The directory is being built")}
           </h3>
           <p>
             {kind || narrowed
-              ? "Thử một loại trang hoặc một khu vực khác."
+              ? text("Thử một loại trang hoặc một khu vực khác.", "Try another kind of page or another region.")
               : text(
                   "Trang đã đối chiếu và công bố sẽ xuất hiện tại đây.",
                   "Pages that have been cross-checked and published will appear here.",
