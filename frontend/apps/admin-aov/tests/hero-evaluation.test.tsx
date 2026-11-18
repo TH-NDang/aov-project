@@ -269,6 +269,7 @@ test("checking a suggested trait fills in its skills and detail, and only change
           version: 4,
           cause: "CONTENT_CORRECTION",
           sections: {} as never,
+          publicationSequence: null,
           publishedAt: null,
           sourceRevisionId: null,
           effectiveFromPatchVariantId: null,

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { HeroRow } from "../src/features/publishing/api/types"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { fixtureHeroRow } from "./fixtures/hero-workspace-data"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -22,11 +23,9 @@ async function withSwitcher(run: (ui: Awaited<ReturnType<typeof createSwitcher>>
 async function createSwitcher() {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/current", pretendToBeVisual: true })
   const intersections = intersectionHarness()
-  const heroes: HeroRow[] = Array.from({ length: 21 }, (_, index) => ({
-    id: `hero-${index}`,
-    code: `code-${index}`,
-    revisions: [],
-  }))
+  const heroes: HeroRow[] = Array.from({ length: 21 }, (_, index) =>
+    fixtureHeroRow({ id: `hero-${index}`, code: `code-${index}`, revisions: [] }),
+  )
   const calls: { path: string; signal: AbortSignal | null | undefined }[] = []
   const held = new Map<string, { signal: AbortSignal | null | undefined; finish: () => void }>()
   currentFetch = async (input, init) => {

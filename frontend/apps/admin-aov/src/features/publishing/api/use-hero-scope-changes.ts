@@ -37,9 +37,12 @@ export function useHeroScopeChanges(
             rulesetId: variant.rulesetId,
             fromHeroRevisionId: entry.fromHeroRevisionId ?? null,
             toHeroRevisionId: entry.toHeroRevisionId ?? null,
-            sourceKind: entry.sourceKind,
-            overallKind: entry.overallKind,
-            changeKinds: [...new Set(entry.changes.map((change) => change.changeKind))],
+            sourceKind: entry.sourceKind ?? "SNAPSHOT",
+            // hero-changes answers a map, so its kinds arrive typed as plain strings; they are the same names.
+            overallKind: (entry.overallKind ?? null) as HeroGameplayChange["overallKind"],
+            changeKinds: [
+              ...new Set(entry.changes.map((change) => change.changeKind as HeroGameplayChange["changeKinds"][number])),
+            ],
             summary: entry.summary ?? null,
             actualLocale: entry.actualLocale ?? null,
             recordedAt: "",

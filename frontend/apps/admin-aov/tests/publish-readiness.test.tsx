@@ -41,6 +41,7 @@ const revision = (
   version: 1,
   cause: "DATA_BASELINE",
   sections: {} as Revision["sections"],
+  publicationSequence: null,
   publishedAt: null,
   sourceRevisionId: null,
   effectiveFromPatchVariantId: "patch-published",

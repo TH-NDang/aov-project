@@ -67,6 +67,7 @@ test("backend media groups retain missing main rows, select alternatives with ex
     actualLocale: "en-US",
     fallbackApplied: false,
     skinCount: 1,
+    groupId: null,
   }
   const request: Request = async <T,>(path: string, init?: RequestInit) => {
     if (path === "/admin/rulesets")

@@ -5,7 +5,7 @@ import { button as findButton, click, render, testQueryClient, waitFor, withDom 
 import type { Request } from "../src/features/publishing/api/publishing-api"
 import type { ImportContext } from "../src/features/publishing/components/import/import-context"
 import type { HeroRow, Revision } from "../src/features/publishing/api/types"
-import { fixtureRevision } from "./fixtures/hero-workspace-data"
+import { fixtureHeroRow, fixtureRevision } from "./fixtures/hero-workspace-data"
 
 const dom = withDom({
   url: "http://localhost/publishing/import",
@@ -42,27 +42,39 @@ test("baseline migration confirms first, only moves eligible drafts, and retains
   const eligibleA = draft("airi", 7)
   const eligibleB = draft("aleister", 11)
   const heroes: HeroRow[] = [
-    { id: "airi", code: "airi", revisions: [eligibleA] },
-    {
+    fixtureHeroRow({ id: "airi", code: "airi", revisions: [eligibleA] }),
+    fixtureHeroRow({
       id: "aleister",
       code: "aleister",
       revisions: [eligibleB, draft("aleister-other", 2, { rulesetId: "other-rules", state: "PUBLISHED" })],
-    },
-    {
+    }),
+    fixtureHeroRow({
       id: "published",
       code: "published",
       revisions: [draft("published", 20), draft("published-history", 1, { state: "PUBLISHED" })],
-    },
-    { id: "derived", code: "derived", revisions: [draft("derived", 30, { sourceRevisionId: "earlier-revision" })] },
-    { id: "correction", code: "correction", revisions: [draft("correction", 40, { cause: "CONTENT_CORRECTION" })] },
-    { id: "not-draft", code: "not-draft", revisions: [draft("not-draft", 50, { state: "PUBLISHED" })] },
-    { id: "other-rules", code: "other-rules", revisions: [draft("other-rules", 60, { rulesetId: "other-rules" })] },
-    {
+    }),
+    fixtureHeroRow({
+      id: "derived",
+      code: "derived",
+      revisions: [draft("derived", 30, { sourceRevisionId: "earlier-revision" })],
+    }),
+    fixtureHeroRow({
+      id: "correction",
+      code: "correction",
+      revisions: [draft("correction", 40, { cause: "CONTENT_CORRECTION" })],
+    }),
+    fixtureHeroRow({ id: "not-draft", code: "not-draft", revisions: [draft("not-draft", 50, { state: "PUBLISHED" })] }),
+    fixtureHeroRow({
+      id: "other-rules",
+      code: "other-rules",
+      revisions: [draft("other-rules", 60, { rulesetId: "other-rules" })],
+    }),
+    fixtureHeroRow({
       id: "already-there",
       code: "already-there",
       revisions: [draft("already-there", 70, { effectiveFromPatchVariantId: context.patchVariantId })],
-    },
-    { id: "discarded", code: "discarded", revisions: [draft("discarded", 80, { state: "DISCARDED" })] },
+    }),
+    fixtureHeroRow({ id: "discarded", code: "discarded", revisions: [draft("discarded", 80, { state: "DISCARDED" })] }),
   ]
   const mutations: { path: string; body: Record<string, unknown>; settled: boolean }[] = []
   const pageRequests: number[] = []

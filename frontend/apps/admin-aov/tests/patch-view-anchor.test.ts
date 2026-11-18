@@ -28,6 +28,7 @@ const revision = (id: string, patch: string, props: Partial<Revision> = {}): Rev
   version: 1,
   cause: "DATA_BASELINE",
   sections: {} as Revision["sections"],
+  publicationSequence: null,
   publishedAt: "2026-11-01T00:00:00Z",
   sourceRevisionId: null,
   effectiveFromPatchVariantId: patch,

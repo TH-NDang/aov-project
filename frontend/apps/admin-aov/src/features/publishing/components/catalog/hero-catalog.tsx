@@ -701,7 +701,7 @@ export function HeroQuickView({
   onClose,
 }: {
   heroId: string
-  hero: HeroRow | null
+  hero: Pick<HeroRow, "code" | "revisions"> | null
   ruleset: string
   onClose: () => void
 }) {

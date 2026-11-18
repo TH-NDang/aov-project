@@ -68,7 +68,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  "/admin/heroes/import/contexts": {
+  "/api/wiki/v1/admin/heroes/import/contexts": {
     parameters: {
       query?: never
       header?: never
@@ -687,7 +687,8 @@ export interface components {
       patchTitle?: string | null
       rulesetId: string
       rulesetOrdinal: number
-      status: string
+      /** @enum {string} */
+      status: "DRAFT" | "PUBLISHED"
       /** Format: uuid */
       seasonId: string | null
       /** @enum {string} */
@@ -704,7 +705,8 @@ export interface components {
       seasonId: string | null
       effectiveAt: string | null
       sourceUrl: string | null
-      status: string
+      /** @enum {string} */
+      status: "DRAFT" | "SCHEDULED" | "CANCELLED"
       phase: string
       /** Format: date */
       effectiveOn: string | null
@@ -819,14 +821,22 @@ export interface components {
       /** Format: int64 */
       version: number
       /** Format: int64 */
-      publicationSequence?: number | null
+      publicationSequence: number | null
       /** Format: date-time */
-      publishedAt?: string | null
-      cause: string
+      publishedAt: string | null
+      /** @enum {string} */
+      cause:
+        | "DATA_BASELINE"
+        | "GAME_PATCH"
+        | "CONTENT_CORRECTION"
+        | "TRANSLATION"
+        | "IMPORT_CORRECTION"
+        | "VISUAL_UPDATE"
+        | "OTHER"
       /** Format: uuid */
-      sourceRevisionId?: string | null
+      sourceRevisionId: string | null
       /** Format: uuid */
-      effectiveFromPatchVariantId?: string | null
+      effectiveFromPatchVariantId: string | null
       sections: {
         [key: string]: string
       }
@@ -977,6 +987,11 @@ export interface components {
       /** @enum {string} */
       sourceKind: "SNAPSHOT" | "PATCH_NOTES"
       changeKinds: ("BUFF" | "NERF" | "ADJUSTMENT" | "REWORK" | "FIX" | "OTHER")[]
+      /**
+       * @description The editor's overall assessment of the change set; null until one is recorded.
+       * @enum {string|null}
+       */
+      overallKind: "BUFF" | "NERF" | "ADJUSTMENT" | "REWORK" | "FIX" | "RELEASE" | "OTHER" | null
       /** Format: date-time */
       recordedAt: string
       summary: string | null
@@ -990,6 +1005,15 @@ export interface components {
       /** Format: date-time */
       lastEditedAt: string | null
       gameplayChanges: components["schemas"]["HeroCatalogGameplayChange"][]
+      /**
+       * Format: uuid
+       * @description The hero that holds this one as a form; null for a hero that is not a form.
+       */
+      holderId: string | null
+      /** @description The form's key within its holder. */
+      formKey: string | null
+      /** @description The forms this hero holds, in switcher order; empty when it holds none. */
+      formIds: string[]
     }
     HeroCatalogPage: {
       items: components["schemas"]["HeroCatalogRow"][]
@@ -1203,7 +1227,7 @@ export interface components {
     }
     HeroPublishDraftProfile: {
       translations: components["schemas"]["HeroPublishName"][]
-      roles: string[]
+      roles: ("TANK" | "WARRIOR" | "ASSASSIN" | "MAGE" | "MARKSMAN" | "SUPPORT")[]
     }
     HeroPublishDraftRatings: {
       scaleCode: string | null

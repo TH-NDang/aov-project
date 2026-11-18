@@ -33,9 +33,11 @@ export interface UploadState {
   images: Record<string, ImageCheckpoint>
   prepared?: boolean
 }
-export interface UploadSession {
-  id: string
-  version: number
+/**
+ * The contract stores the state as any object; Admin writes and reads it as an UploadState. A session not saved yet has
+ * no updatedAt.
+ */
+export type UploadSession = Omit<components["schemas"]["HeroUploadSessionView"], "state" | "updatedAt"> & {
   updatedAt?: string
   state: UploadState
 }
