@@ -24,6 +24,8 @@ export type PublicAccountOptionsProps = {
   children?: ReactNode
 }
 type Props = PublicAccountOptionsProps & { triggerClassName?: string }
+/** `sheet` gives the settings and the links the roomier rows of the preferences sheet phones open. */
+export type PublicAccountLayout = "menu" | "sheet"
 
 export function PublicAccountMenu(props: Props) {
   const mobile = usePageLayout() === "compact"
@@ -149,7 +151,7 @@ export function PublicAccountOptions({
           <small>{text("Tài khoản AOV của bạn", "Your AOV account")}</small>
         </div>
       </div>
-      {children && <div className="public-account-links">{children}</div>}
+      {children && <PublicAccountLinks>{children}</PublicAccountLinks>}
       <PublicAccountSettings
         product={product}
         locale={locale}
@@ -191,6 +193,21 @@ export function PublicAccountOptions({
   )
 }
 
+/** The pages an app adds to the account panel, such as the reader's profile. */
+export function PublicAccountLinks({
+  layout = "menu",
+  children,
+}: {
+  layout?: PublicAccountLayout
+  children: ReactNode
+}) {
+  return (
+    <div className="public-account-links" data-layout={layout}>
+      {children}
+    </div>
+  )
+}
+
 export function PublicAccountSettings({
   product,
   locale,
@@ -201,14 +218,20 @@ export function PublicAccountSettings({
   ],
   theme,
   onThemeChange,
-}: Pick<PublicAccountOptionsProps, "product" | "locale" | "onLocaleChange" | "languages" | "theme" | "onThemeChange">) {
+  layout = "menu",
+}: Pick<
+  PublicAccountOptionsProps,
+  "product" | "locale" | "onLocaleChange" | "languages" | "theme" | "onThemeChange"
+> & {
+  layout?: PublicAccountLayout
+}) {
   const languageId = useId()
   const timeZoneId = useId()
   const dateFormatId = useId()
   const currencyId = useId()
   const text = localeText(locale)
   return (
-    <div className="public-account-settings">
+    <div className="public-account-settings" data-layout={layout}>
       <div className="public-account-language">
         <label htmlFor={languageId}>
           <Globe2 size={17} aria-hidden="true" />
@@ -306,7 +329,10 @@ export function PublicAccountSummary({
   onSignIn,
   onSignOut,
   children,
-}: Pick<PublicAccountOptionsProps, "locale" | "name" | "loading" | "onSignIn" | "onSignOut" | "children">) {
+  layout = "menu",
+}: Pick<PublicAccountOptionsProps, "locale" | "name" | "loading" | "onSignIn" | "onSignOut" | "children"> & {
+  layout?: PublicAccountLayout
+}) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(false)
   const text = localeText(locale)
@@ -360,7 +386,7 @@ export function PublicAccountSummary({
           <LogIn className="public-account-summary-action" size={19} aria-hidden="true" />
         </button>
       )}
-      {name && children && <div className="public-account-links">{children}</div>}
+      {name && children && <PublicAccountLinks layout={layout}>{children}</PublicAccountLinks>}
       {error && (
         <p className="public-account-error" role="alert">
           {text("Chưa mở được đăng nhập. Vui lòng thử lại.", "Could not open sign-in. Please try again.")}

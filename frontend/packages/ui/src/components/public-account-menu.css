@@ -368,6 +368,43 @@ button.public-account-summary:disabled {
   color: var(--aov-danger);
   font-size: 13px;
 }
+/* The preferences sheet on phones: the settings in one framed box with taller rows, the links two to a row. */
+.public-account-settings[data-layout="sheet"] {
+  border: 1px solid var(--account-line);
+  border-radius: var(--aov-radius-card);
+  padding: 0 12px;
+  background: var(--account-fill);
+}
+.public-account-settings[data-layout="sheet"] .public-account-language {
+  min-height: 48px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.public-account-settings[data-layout="sheet"] .public-account-language-trigger {
+  font-size: 12px;
+}
+.public-account-settings[data-layout="sheet"] .public-account-appearance {
+  min-height: 48px;
+  margin: 0;
+  padding: 6px 0;
+  border-top: 1px solid var(--account-line);
+}
+.public-account-settings[data-layout="sheet"] .public-account-appearance legend {
+  font-size: 12px;
+}
+.public-account-links[data-layout="sheet"] {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 0;
+}
+.public-account-links[data-layout="sheet"] a {
+  min-height: 44px;
+  font-size: 12px;
+}
+.public-account-links[data-layout="sheet"] svg {
+  flex-shrink: 0;
+}
 .public-account-language:has(> .public-time-zone-error) {
   flex-wrap: wrap;
 }

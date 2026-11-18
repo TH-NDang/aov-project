@@ -34,7 +34,7 @@ export function WikiAccountMenu({ inline = false }: { inline?: boolean }) {
   }
   return inline ? (
     <div className="public-account-panel public-account-inline" data-product="wiki">
-      <PublicAccountSummary {...accountProps} />
+      <PublicAccountSummary {...accountProps} layout="sheet" />
     </div>
   ) : (
     <PublicAccountMenu {...accountProps} />

@@ -150,42 +150,6 @@
   flex-shrink: 0;
   color: var(--account-accent);
 }
-.public-preferences-body .public-account-settings {
-  border: 1px solid var(--account-line);
-  border-radius: var(--aov-radius-card);
-  padding: 0 12px;
-  background: var(--account-fill);
-}
-.public-preferences-body .public-account-language {
-  min-height: 48px;
-  padding: 4px 0;
-  font-size: 12px;
-}
-.public-preferences-body .public-account-language-trigger {
-  font-size: 12px;
-}
-.public-preferences-body .public-account-appearance {
-  min-height: 48px;
-  margin: 0;
-  padding: 6px 0;
-  border-top: 1px solid var(--account-line);
-}
-.public-preferences-body .public-account-appearance legend {
-  font-size: 12px;
-}
-.public-preferences-body .public-account-links {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-  padding: 0;
-}
-.public-preferences-body .public-account-links a {
-  min-height: 44px;
-  font-size: 12px;
-}
-.public-preferences-body .public-account-links svg {
-  flex-shrink: 0;
-}
 @media (max-width: 360px) {
   .public-preferences-body {
     padding-inline: 12px;
