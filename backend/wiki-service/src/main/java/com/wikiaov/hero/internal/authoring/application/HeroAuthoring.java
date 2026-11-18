@@ -349,6 +349,14 @@ public class HeroAuthoring {
         return store.revision(heroId, revisionId);
     }
 
+    /** The revision with the stored content of each of its sections, read in one transaction. */
+    @PreAuthorize("hasAuthority('catalog:read')")
+    @Transactional(readOnly = true)
+    public HeroRevisionRead readWithContent(UUID heroId, UUID revisionId) {
+        return new HeroRevisionRead(store.revision(heroId, revisionId),
+                HeroRevisionRead.Content.of(preview(heroId, revisionId)));
+    }
+
     @PreAuthorize("hasAuthority('catalog:read')")
     @Transactional(readOnly = true)
     public List<HeroRevisionView> revisions(UUID heroId) {

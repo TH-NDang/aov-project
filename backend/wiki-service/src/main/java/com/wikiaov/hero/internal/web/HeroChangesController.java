@@ -1,5 +1,6 @@
 package com.wikiaov.hero.internal.web;
 
+import com.wikiaov.hero.HeroChangeEntry;
 import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
@@ -8,10 +9,10 @@ import com.wikiaov.hero.internal.domain.HeroChanges;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CreatedId;
+import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.CacheControl;
@@ -60,7 +61,7 @@ public class HeroChangesController implements HeroChangesApi {
 
     @Override
     @GetMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
-    public List<Map<String, Object>> authoringChanges(@PathVariable UUID id,
+    public List<HeroChangeEntry> authoringChanges(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return changes.forAuthoringVariant(id, locale);
@@ -76,7 +77,8 @@ public class HeroChangesController implements HeroChangesApi {
 
     @Override
     @GetMapping(path = ApiPaths.ROOT + "/heroes/{heroId}/changes", version = "1")
-    public ResponseEntity<?> history(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<PageSlice<HeroChangeEntry>> history(@PathVariable UUID heroId,
+            @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,

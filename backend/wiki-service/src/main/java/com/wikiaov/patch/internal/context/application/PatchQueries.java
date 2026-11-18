@@ -3,6 +3,7 @@ package com.wikiaov.patch.internal.context.application;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.patch.PatchReleaseReference;
+import com.wikiaov.patch.PublishedPatch;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchRepository;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchTranslationRepository;
@@ -15,10 +16,8 @@ import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +43,7 @@ public class PatchQueries implements PatchCatalog {
     }
 
     @Override
-    public Map<String, Object> published(UUID id, String region, String locale) {
+    public PublishedPatch published(UUID id, String region, String locale) {
         validateLocale(locale);
         var release = releases(region).stream().filter(r -> r.patchId().equals(id)).findFirst()
                 .orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
@@ -53,7 +52,7 @@ public class PatchQueries implements PatchCatalog {
     }
 
     @Override
-    public Map<String, Object> publishedVariant(UUID id, UUID variantId, String region, String locale) {
+    public PublishedPatch publishedVariant(UUID id, UUID variantId, String region, String locale) {
         validateLocale(locale);
         var context = gameplay.resolveCatalog(region, clock.instant(), null, variantId);
         if (!context.patchId().equals(id)) {
@@ -64,33 +63,22 @@ public class PatchQueries implements PatchCatalog {
         return view(id, region, locale, context.patchVariantId(), context.rulesetId(), context.effectiveAt());
     }
 
-    private Map<String, Object> view(UUID id, String region, String locale, UUID variantId, UUID rulesetId,
+    private PublishedPatch view(UUID id, String region, String locale, UUID variantId, UUID rulesetId,
             Instant effectiveAt) {
         var patch = patches.findByIdAndStatus(id, PatchStatus.PUBLISHED).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "Patch resource does not exist."));
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("id", patch.getId());
-        result.put("code", patch.getCode());
-        result.put("sequence", patch.getSequence());
         var text = CatalogLocales.pick(translations.findByPatchId(id), locale, GamePatchTranslation::getLocale);
-        if (text != null) {
-            result.put("locale", text.getLocale());
-            result.put("title", text.getTitle());
-            result.put("summary", text.getSummary());
-            result.put("description", text.getDescription());
-            result.put("actualLocale", text.getLocale());
-            result.put("fallbackApplied", !locale.equals(text.getLocale()));
-        }
-        result.put("region", region);
-        result.put("requestedLocale", locale);
-        result.put("variantId", variantId);
-        result.put("rulesetId", rulesetId);
-        result.put("effectiveAt", effectiveAt);
-        return result;
+
+        return new PublishedPatch(patch.getId(), patch.getCode(), patch.getSequence(),
+                text == null
+                        ? null
+                        : new PublishedPatch.Text(text.getLocale(), text.getTitle(), text.getSummary(),
+                                text.getDescription(), text.getLocale(), !locale.equals(text.getLocale())),
+                region, locale, variantId, rulesetId, effectiveAt);
     }
 
     @Override
-    public PageSlice<Map<String, Object>> list(String region, String locale, int page, int size) {
+    public PageSlice<PublishedPatch> list(String region, String locale, int page, int size) {
         validateLocale(locale);
         var ids = releases(region).stream().map(PatchReleaseReference::patchId).distinct().toList();
         long offset = (long) page * size;

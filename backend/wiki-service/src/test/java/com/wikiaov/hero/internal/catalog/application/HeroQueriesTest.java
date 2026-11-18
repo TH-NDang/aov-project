@@ -45,7 +45,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.json.JsonMapper;
 
 class HeroQueriesTest {
     private final HeroStore store = mock(HeroStore.class);
@@ -57,7 +56,7 @@ class HeroQueriesTest {
             "aov-standard", UUID.randomUUID(), "2026-10-15", UUID.randomUUID(), 2, at);
     private final HeroForms forms = mock(HeroForms.class);
     private final HeroPatchHistory history = mock(HeroPatchHistory.class);
-    private final HeroQueries queries = new HeroQueries(store, sections, contexts, media, new JsonMapper(),
+    private final HeroQueries queries = new HeroQueries(store, sections, contexts, media,
             Clock.fixed(at, ZoneOffset.UTC), forms, mock(SkillLibraryIcons.class),
             new HeroReadMoments(contexts, history));
 

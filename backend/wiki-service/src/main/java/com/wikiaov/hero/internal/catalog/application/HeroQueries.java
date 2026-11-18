@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.databind.json.JsonMapper;
 
 @Service
 @Transactional(readOnly = true)
@@ -56,19 +55,17 @@ public class HeroQueries {
     private final HeroSections sections;
     private final GameplayContexts contexts;
     private final MediaAssets media;
-    private final JsonMapper json;
     private final Clock clock;
     private final HeroForms forms;
     private final SkillLibraryIcons libraryIcons;
     private final HeroReadMoments moments;
 
     public HeroQueries(HeroStore store, HeroSections sections, GameplayContexts contexts, MediaAssets media,
-            JsonMapper json, Clock clock, HeroForms forms, SkillLibraryIcons libraryIcons, HeroReadMoments moments) {
+            Clock clock, HeroForms forms, SkillLibraryIcons libraryIcons, HeroReadMoments moments) {
         this.store = store;
         this.sections = sections;
         this.contexts = contexts;
         this.media = media;
-        this.json = json;
         this.clock = clock;
         this.forms = forms;
         this.libraryIcons = libraryIcons;
@@ -207,7 +204,8 @@ public class HeroQueries {
 
         if (!manifest) {
             Map<String, Object> content = new LinkedHashMap<>();
-            rev.sections().forEach((s, id) -> content.put(sectionKey(s), publicContent(s, id, locale)));
+            rev.sections().forEach((s, id) -> content.put(sectionKey(s),
+                    HeroSectionPages.content(s, sections.content(s, id), locale)));
             result.put("content", content);
 
             addHeroMedia(result, rev);
@@ -466,47 +464,6 @@ public class HeroQueries {
     ) {
     }
 
-    public Map<String, Object> section(HeroSection section, UUID id, String locale) {
-        HeroValidation.locale(locale);
-        if (!store.publishedSectionExists(section, id)) {
-            throw new ApiException(HeroErrorCode.HERO_REVISION_NOT_FOUND, "No published section exists with this ID.");
-        }
-        return Map.of("id", id, "content", publicContent(section, id, locale));
-    }
-
-    private Map<String, Object> publicContent(HeroSection section, UUID id, String locale) {
-        Map<String, Object> content = new LinkedHashMap<>(json.convertValue(sections.content(section, id), Map.class));
-        content.remove("sources");
-        if (section == HeroSection.PROFILE) {
-            localize(content, locale);
-        }
-        if (section == HeroSection.SKILLS || section == HeroSection.SKINS) {
-            String key = section == HeroSection.SKILLS ? "skills" : "skins";
-            for (var item : (List<Map<String, Object>>) content.get(key)) {
-                localize(item, locale);
-            }
-        }
-        if (section == HeroSection.SKILLS) {
-            for (var trait : (List<Map<String, Object>>) content.getOrDefault("traits", List.of())) {
-                localizeDetail(trait, locale);
-            }
-        }
-        return content;
-    }
-
-    /** A trait may have no detail line yet; it is still shown, without one. */
-    private void localizeDetail(Map<String, Object> trait, String locale) {
-        var translations = (List<?>) trait.get("translations");
-        if (translations != null && !translations.isEmpty()) {
-            localize(trait, locale);
-            return;
-        }
-        trait.remove("translations");
-        trait.put("detail", null);
-        trait.put("actualLocale", null);
-        trait.put("fallbackApplied", false);
-    }
-
     /** The published revision readers see today of every hero in a market, keyed by hero, in code order. */
     public Map<HeroIdentity, HeroRevisionView> published(String region) {
         Instant at = clock.instant();
@@ -522,17 +479,6 @@ public class HeroQueries {
                     .ifPresent(choice -> result.put(hero, choice.revision()));
         }
         return result;
-    }
-
-    private void localize(Map<String, Object> object, String locale) {
-        var translations = (List<Map<String, Object>>) object.remove("translations");
-        String actual = translationLocale(translations.stream().map(t -> (String) t.get("locale")).toList(), locale);
-        var selected = translations.stream().filter(t -> t.get("locale").equals(actual)).findFirst()
-                .orElseThrow(() -> new IllegalStateException("The selected locale has no translation."));
-        object.putAll(selected);
-        object.remove("locale");
-        object.put("actualLocale", actual);
-        object.put("fallbackApplied", !locale.equals(actual));
     }
 
     private static String translationLocale(List<String> values, String requested) {

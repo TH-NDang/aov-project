@@ -9,6 +9,7 @@ import com.wikiaov.hero.internal.application.response.HeroComparisonView;
 import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.application.response.HeroStatusView;
+import com.wikiaov.hero.internal.authoring.application.HeroRevisionRead;
 import com.wikiaov.hero.internal.web.request.HeroSectionRequests.BindingsRequest;
 import com.wikiaov.hero.internal.web.request.HeroSectionRequests.ProfileRequest;
 import com.wikiaov.hero.internal.web.request.HeroSectionRequests.RatingsRequest;
@@ -28,7 +29,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
@@ -76,10 +76,10 @@ public interface HeroAdminApi {
     List<HeroRevisionView> revisions(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(hidden = true) HttpServletRequest request);
 
-    @Operation(operationId = "heroAdminApi_read", summary = "Read - hero admin", description = "Read for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+    @Operation(operationId = "heroAdminApi_read", summary = "Read - hero admin", description = "One revision of a hero with the stored content of each section it holds. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
-    Map<String, Object> read(@Parameter(description = "Hero id identifier.") UUID heroId,
+    HeroRevisionRead read(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Revision id identifier.") UUID revisionId,
             @Parameter(hidden = true) HttpServletRequest request);
 

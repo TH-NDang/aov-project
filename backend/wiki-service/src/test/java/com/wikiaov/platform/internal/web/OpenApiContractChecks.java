@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.patch.PatchCatalog;
+import com.wikiaov.patch.PublishedPatch;
 import com.wikiaov.platform.CatalogChangeProvider;
 import com.wikiaov.platform.CatalogChanges;
 import com.wikiaov.query.internal.application.PatchPages;
@@ -279,7 +280,7 @@ abstract class OpenApiContractChecks {
         var spells = mock(SpellChangeQueries.class);
         var patchId = UUID.randomUUID();
         var variantId = UUID.randomUUID();
-        when(patches.published(patchId, "VN", "vi-VN")).thenReturn(Map.of("variantId", variantId));
+        when(patches.published(patchId, "VN", "vi-VN")).thenReturn(patch(patchId, variantId, UUID.randomUUID()));
         when(heroes.forVariant(variantId, "vi-VN")).thenReturn(List.of());
         when(spells.forVariant(variantId, "vi-VN")).thenReturn(List.of());
         var controller = new PatchPageController(new PatchPages(patches, heroes, spells, List.of()));
@@ -301,7 +302,7 @@ abstract class OpenApiContractChecks {
         var owner = UUID.randomUUID();
         when(items.domain()).thenReturn("ITEM");
         when(patches.publishedVariant(patch, variant, "VN", "vi-VN"))
-                .thenReturn(Map.of("variantId", variant, "rulesetId", ruleset));
+                .thenReturn(patch(patch, variant, ruleset));
         var change = new CatalogChanges.Entry(UUID.randomUUID(), "ITEM", owner, "blade", "Blade", null, ruleset,
                 variant, null,
                 UUID.randomUUID(), List.of(CatalogChanges.Kind.BUFF), "Attack increased.", "en-US", null, true, null);
@@ -321,6 +322,10 @@ abstract class OpenApiContractChecks {
         assertThat(row.get("summary")).isEqualTo("Attack increased.");
         assertThat(row.get("actualLocale")).isEqualTo("en-US");
         assertThat(response.totalElements()).isEqualTo(1);
+    }
+
+    private static PublishedPatch patch(UUID id, UUID variant, UUID ruleset) {
+        return new PublishedPatch(id, "patch", 1, null, "VN", "vi-VN", variant, ruleset, null);
     }
 
     Set<String> domainValues(JsonNode spec, String path) {

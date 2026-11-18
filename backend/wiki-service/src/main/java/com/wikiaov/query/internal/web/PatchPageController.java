@@ -1,5 +1,6 @@
 package com.wikiaov.query.internal.web;
 
+import com.wikiaov.patch.PublishedPatch;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
@@ -7,7 +8,6 @@ import com.wikiaov.platform.QueryParameters;
 import com.wikiaov.query.internal.application.PatchChangesPage;
 import com.wikiaov.query.internal.application.PatchPages;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.CacheControl;
@@ -29,7 +29,7 @@ public class PatchPageController implements PatchPageApi {
 
     @Override
     @GetMapping(version = "1")
-    public ResponseEntity<PageSlice<Map<String, Object>>> list(@RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<PageSlice<PublishedPatch>> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
@@ -40,7 +40,7 @@ public class PatchPageController implements PatchPageApi {
 
     @Override
     @GetMapping(path = "/{id}", version = "1")
-    public ResponseEntity<Map<String, Object>> detail(@PathVariable UUID id,
+    public ResponseEntity<PublishedPatch> detail(@PathVariable UUID id,
             @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request) {

@@ -2,6 +2,7 @@ package com.wikiaov.query.internal.application;
 
 import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.patch.PatchCatalog;
+import com.wikiaov.patch.PublishedPatch;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogChangeProvider;
 import com.wikiaov.platform.PageSlice;
@@ -33,11 +34,11 @@ public class PatchPages {
         this.catalogs = catalogs;
     }
 
-    public PageSlice<Map<String, Object>> list(String region, String locale, int page, int size) {
+    public PageSlice<PublishedPatch> list(String region, String locale, int page, int size) {
         return patches.list(region, locale, page, size);
     }
 
-    public Map<String, Object> detail(UUID id, String region, String locale) {
+    public PublishedPatch detail(UUID id, String region, String locale) {
         return patches.published(id, region, locale);
     }
 
@@ -54,21 +55,21 @@ public class PatchPages {
         var patch = patchVariantId == null
                 ? patches.published(id, region, locale)
                 : patches.publishedVariant(id, patchVariantId, region, locale);
-        UUID variant = (UUID) patch.get("variantId");
-        List<Map<String, Object>> all = changes(domain, provider, patch, variant, locale);
+        UUID variant = patch.variantId();
+        List<?> all = changes(domain, provider, patch, variant, locale);
 
         var slice = PageSlice.of(all, page, size);
-        return new PatchChangesPage(patch, variant, patch.get("effectiveAt"), slice.items(), page, size,
+        return new PatchChangesPage(patch, variant, patch.effectiveAt(), slice.items(), page, size,
                 slice.totalElements());
     }
 
-    private List<Map<String, Object>> changes(String domain, Optional<CatalogChangeProvider> provider,
-            Map<String, Object> patch, UUID variant, String locale) {
+    private List<?> changes(String domain, Optional<CatalogChangeProvider> provider, PublishedPatch patch,
+            UUID variant, String locale) {
         if (domain.equals("HERO")) {
             return heroes.forVariant(variant, locale);
         }
         List<Map<String, Object>> legacy = domain.equals("SPELL") ? spells.forVariant(variant, locale) : List.of();
-        return provider.map(catalog -> PublishedCatalogChanges.forVariant(catalog, (UUID) patch.get("rulesetId"),
+        return provider.map(catalog -> PublishedCatalogChanges.forVariant(catalog, patch.rulesetId(),
                 variant, locale, legacy)).orElse(legacy);
     }
 }
