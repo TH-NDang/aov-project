@@ -123,10 +123,7 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
         if (locale == null) {
             return values;
         }
-        var selected = values.stream().filter(c -> c.locale().equals(locale)).findFirst()
-                .or(() -> values.stream().filter(c -> c.locale().equals(CatalogLocales.DEFAULT)).findFirst())
-                .orElse(values.getFirst());
-        return List.of(selected);
+        return List.of(CatalogLocales.pick(values, locale, Translation::locale));
     }
 
     private static String key(UUID section, String skillKey) {

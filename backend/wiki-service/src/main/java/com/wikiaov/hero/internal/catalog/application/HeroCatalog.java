@@ -142,10 +142,7 @@ public class HeroCatalog {
         for (var change : selected) {
             var variant = variants.get(change.getPatchVariantId());
             var summary = translations.getOrDefault(change.getId(), List.of()).stream()
-                    .min(Comparator.<HeroPatchChangeTranslation>comparingInt(t -> t.getLocale().equals(locale)
-                            ? 0
-                            : t.getLocale().equals(CatalogLocales.DEFAULT) ? 1 : 2)
-                            .thenComparing(HeroPatchChangeTranslation::getLocale));
+                    .min(CatalogLocales.preference(locale, HeroPatchChangeTranslation::getLocale));
             metadata.computeIfAbsent(change.getHeroId(), ignored -> new ArrayList<>())
                     .add(new GameplayChange(change.getId(), variant.rulesetId(), variant.seasonId(), variant.id(),
                             change.getFromHeroRevisionId(), change.getToHeroRevisionId(), change.getSourceKind(),

@@ -484,8 +484,8 @@ class HeroMediaWorkspaceIntegrationTest {
                 .containsEntry("actualLocale", "th-TH").containsEntry("fallbackApplied", false);
         assertThat(rows(thai.get("items")).getFirst().get("iconAssetId")).isNull();
         var fallback = send(get(endpoint).param("locale", "fr-FR"), null, 200);
-        assertThat(rows(fallback.get("items")).getFirst()).containsEntry("displayName", "Celestial")
-                .containsEntry("iconAssetId", vietnameseIcon.toString()).containsEntry("actualLocale", "vi-VN")
+        assertThat(rows(fallback.get("items")).getFirst()).containsEntry("displayName", "Celestial English")
+                .containsEntry("iconAssetId", englishIcon.toString()).containsEntry("actualLocale", "en-US")
                 .containsEntry("fallbackApplied", true);
         var empty = send(post(endpoint), Map.of("code", "unclassified", "kind", "UNKNOWN", "translations", List.of()),
                 201);

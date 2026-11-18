@@ -98,10 +98,9 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
         return name.getRevisionId() + ":" + name.getPartKey();
     }
 
-    /** Vietnamese first, then a stable choice, so a place keeps its name between requests. */
+    /** Vietnamese first, then the catalog fallback order, so a place keeps its name between requests. */
     private static <K, T extends OwnerName> Map<K, String> preferred(List<T> names, Function<T, K> key) {
-        Comparator<OwnerName> order = Comparator.comparing((OwnerName name) -> !DISPLAY_LOCALE.equals(name.getLocale()))
-                .thenComparing(OwnerName::getLocale);
+        Comparator<OwnerName> order = CatalogLocales.preference(DISPLAY_LOCALE, OwnerName::getLocale);
 
         return names.stream().collect(Collectors.groupingBy(key,
                 Collectors.collectingAndThen(Collectors.minBy(order), best -> best

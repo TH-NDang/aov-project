@@ -228,7 +228,7 @@ class ItemCatalogQueries {
                         : current ? MediaUsageScope.CURRENT : MediaUsageScope.HISTORICAL);
     }
 
-    /** The Vietnamese name of each revision, or another language's when it has none. */
+    /** The name of each revision for Admin, which reads Vietnamese, falling back as a reader of that locale would. */
     private Map<UUID, String> usageNames(List<ItemRevision> found) {
         if (found.isEmpty()) {
             return Map.of();
@@ -236,8 +236,8 @@ class ItemCatalogQueries {
 
         Map<UUID, String> names = new HashMap<>();
         translations.findByRevisionIdIn(found.stream().map(ItemRevision::getId).toList()).stream()
-                .sorted(Comparator.comparing(row -> row.getLocale().equals(CatalogLocales.DEFAULT)))
-                .forEach(row -> names.put(row.getRevisionId(), row.getName()));
+                .sorted(CatalogLocales.preference(CatalogLocales.DEFAULT, ItemTranslation::getLocale))
+                .forEach(row -> names.putIfAbsent(row.getRevisionId(), row.getName()));
 
         return names;
     }

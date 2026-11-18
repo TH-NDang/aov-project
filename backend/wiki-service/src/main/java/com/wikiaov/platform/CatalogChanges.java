@@ -1,9 +1,9 @@
 package com.wikiaov.platform;
 
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /** Shared vocabulary; each catalog owns its change records and persistence. */
 public final class CatalogChanges {
@@ -58,14 +58,8 @@ public final class CatalogChanges {
     ) {
     }
 
-    public static Summary summary(List<Summary> copy, String locale) {
-        for (String candidate : List.of(locale, CatalogLocales.DEFAULT, "en-US")) {
-            for (var text : copy) {
-                if (candidate.equals(text.locale())) {
-                    return text;
-                }
-            }
-        }
-        return copy.stream().sorted(Comparator.comparing(Summary::locale)).findFirst().orElse(null);
+    /** The summary a reader of {@code locale} sees, following the catalog fallback order, or null when none exists. */
+    public static @Nullable Summary summary(List<Summary> copy, String locale) {
+        return CatalogLocales.pick(copy, locale, Summary::locale);
     }
 }

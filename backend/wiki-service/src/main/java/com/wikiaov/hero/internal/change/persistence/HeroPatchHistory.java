@@ -23,7 +23,6 @@ import com.wikiaov.hero.internal.domain.HeroChanges.Summary;
 import com.wikiaov.hero.internal.domain.HeroChanges.VisualChange;
 import com.wikiaov.platform.CatalogLocales;
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -174,9 +173,7 @@ public class HeroPatchHistory {
                 : previous.findAllById(mechanicIds).stream()
                         .collect(Collectors.toMap(MechanicChangePrevious::getMechanicChangeId, Function.identity()));
 
-        var preferred = Comparator.comparing((HeroPatchChangeTranslation t) -> !t.getLocale().equals(locale))
-                .thenComparing(t -> !t.getLocale().equals(CatalogLocales.DEFAULT))
-                .thenComparing(HeroPatchChangeTranslation::getLocale);
+        var preferred = CatalogLocales.preference(locale, HeroPatchChangeTranslation::getLocale);
 
         return headers.stream().map(header -> new Entry(header, assessmentById.get(header.getId()),
                 copyById.getOrDefault(header.getId(), List.of()).stream().min(preferred).orElse(null),

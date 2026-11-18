@@ -42,6 +42,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -534,12 +535,11 @@ public class HeroQueries {
     }
 
     private static String translationLocale(List<String> values, String requested) {
-        return values.contains(requested)
-                ? requested
-                : values.contains(CatalogLocales.DEFAULT)
-                        ? CatalogLocales.DEFAULT
-                        : values.stream().sorted().findFirst()
-                                .orElseThrow(() -> HeroValidation.invalid("A published section has no translation."));
+        String selected = CatalogLocales.pick(values, requested, Function.identity());
+        if (selected == null) {
+            throw HeroValidation.invalid("A published section has no translation.");
+        }
+        return selected;
     }
 
     public static String sectionKey(HeroSection s) {

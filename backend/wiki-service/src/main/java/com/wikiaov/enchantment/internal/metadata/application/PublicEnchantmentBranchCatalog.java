@@ -10,7 +10,6 @@ import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogText.MetadataTranslation;
 import com.wikiaov.platform.PlatformErrorCode;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -65,16 +64,11 @@ public class PublicEnchantmentBranchCatalog {
     }
 
     private static List<MetadataTranslation> select(List<EnchantmentBranchTranslation> values, String locale) {
-        return values.stream()
-                .min(Comparator.comparingInt((EnchantmentBranchTranslation value) -> value.getLocale().equals(locale)
-                        ? 0
-                        : value.getLocale().equals(CatalogLocales.DEFAULT)
-                                ? 1
-                                : value.getLocale().equals("en-US") ? 2 : 3)
-                        .thenComparing(EnchantmentBranchTranslation::getLocale))
-                .map(value -> List.of(new MetadataTranslation(value.getLocale(), value.getName(),
-                        value.getDescription(), value.getSuitability())))
-                .orElseGet(List::of);
+        var value = CatalogLocales.pick(values, locale, EnchantmentBranchTranslation::getLocale);
+        return value == null
+                ? List.of()
+                : List.of(new MetadataTranslation(value.getLocale(), value.getName(), value.getDescription(),
+                        value.getSuitability()));
     }
 
     private static MediaAssetReference usable(Map<UUID, MediaAssetReference> assets, UUID id) {

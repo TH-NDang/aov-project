@@ -1,5 +1,6 @@
 package com.wikiaov.video;
 
+import com.wikiaov.platform.CatalogLocales;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -28,8 +29,8 @@ public record VideoSubjectName(
     }
 
     /**
-     * Picks the newest name in {@code locale}, or the newest in any locale, and keeps the others as aliases so imported
-     * data can still match a name that has since been renamed.
+     * Picks the newest name in the best locale of the catalog fallback order for {@code locale}, and keeps the others as
+     * aliases so imported data can still match a name that has since been renamed.
      */
     public static List<VideoSubject> collapse(VideoSubjectKind kind, List<VideoSubjectName> rows, String locale,
             Map<UUID, List<String>> extraAliases) {
@@ -44,8 +45,8 @@ public record VideoSubjectName(
             String fallback = first.key() != null ? first.key() : first.code();
             List<VideoSubjectName> named = group.stream().filter(row -> row.name() != null && !row.name().isBlank())
                     .sorted(Comparator.comparingLong(VideoSubjectName::revision).reversed()).toList();
-            String name = named.stream().filter(row -> locale.equals(row.locale())).findFirst()
-                    .or(() -> named.stream().findFirst()).map(VideoSubjectName::name).orElse(fallback);
+            VideoSubjectName best = CatalogLocales.pick(named, locale, VideoSubjectName::locale);
+            String name = best == null ? fallback : best.name();
 
             var aliases = new LinkedHashSet<String>();
             named.stream().map(VideoSubjectName::name).filter(other -> !other.equals(name)).forEach(aliases::add);

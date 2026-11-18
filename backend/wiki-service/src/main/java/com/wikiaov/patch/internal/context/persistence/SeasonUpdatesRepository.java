@@ -38,9 +38,8 @@ public interface SeasonUpdatesRepository extends Repository<PatchRelease, UUID> 
     @Query("""
             select t.patchId as patchId,t.locale as locale,t.title as title,t.summary as summary
             from GamePatchTranslation t where t.patchId in :patchIds
-            order by t.patchId,case when t.locale=:locale then 0 when t.locale='vi-VN' then 1 else 2 end,t.locale
             """)
-    List<Text> preferredTexts(Collection<UUID> patchIds, String locale);
+    List<Text> texts(Collection<UUID> patchIds);
 
     interface Season {
         UUID getId();

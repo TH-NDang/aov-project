@@ -6,10 +6,12 @@ import com.wikiaov.patch.PatchReleaseReference;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchRepository;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchTranslationRepository;
+import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatchTranslation;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
 import com.wikiaov.patch.internal.domain.PatchStatus;
 import com.wikiaov.patch.internal.ruleset.application.Regions;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
 import java.time.Instant;
@@ -18,7 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,14 +70,15 @@ public class PatchQueries implements PatchCatalog {
         result.put("id", patch.getId());
         result.put("code", patch.getCode());
         result.put("sequence", patch.getSequence());
-        translations.preferred(id, locale, PageRequest.of(0, 1)).stream().findFirst().ifPresent(text -> {
+        var text = CatalogLocales.pick(translations.findByPatchId(id), locale, GamePatchTranslation::getLocale);
+        if (text != null) {
             result.put("locale", text.getLocale());
             result.put("title", text.getTitle());
             result.put("summary", text.getSummary());
             result.put("description", text.getDescription());
             result.put("actualLocale", text.getLocale());
             result.put("fallbackApplied", !locale.equals(text.getLocale()));
-        });
+        }
         result.put("region", region);
         result.put("requestedLocale", locale);
         result.put("variantId", variantId);

@@ -6,6 +6,7 @@ import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.application.response.SeasonUpdatesView;
 import com.wikiaov.patch.internal.context.persistence.SeasonUpdatesRepository;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.time.Instant;
@@ -71,9 +72,9 @@ public class SeasonUpdates {
         Map<UUID, SeasonUpdatesRepository.Text> result = new LinkedHashMap<>();
         if (!releases.isEmpty()) {
             var patchIds = releases.stream().map(SeasonUpdatesRepository.Release::getId).distinct().toList();
-            for (var text : repository.preferredTexts(patchIds, locale)) {
-                result.putIfAbsent(text.getPatchId(), text);
-            }
+            repository.texts(patchIds).stream()
+                    .sorted(CatalogLocales.preference(locale, SeasonUpdatesRepository.Text::getLocale))
+                    .forEach(text -> result.putIfAbsent(text.getPatchId(), text));
         }
         return result;
     }

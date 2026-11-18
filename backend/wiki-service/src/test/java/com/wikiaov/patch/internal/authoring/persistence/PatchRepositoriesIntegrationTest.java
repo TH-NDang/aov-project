@@ -201,16 +201,14 @@ class PatchRepositoriesIntegrationTest {
     }
 
     @Test
-    void mapsTheDatabaseSequenceAndChoosesTheSameTranslationFallbackOrder() {
+    void mapsTheDatabaseSequenceAndReadsEveryTranslationOfAPatch() {
         assertThat(patches.findById(patch).orElseThrow().getSequence()).isPositive();
         translations.saveAndFlush(new GamePatchTranslation(patch, "en-US", "English", "", null));
         translations.saveAndFlush(new GamePatchTranslation(patch, "vi-VN", "Vietnamese", "", null));
         translations.saveAndFlush(new GamePatchTranslation(patch, "de-DE", "German", "", null));
 
-        assertThat(translations.preferred(patch, "en-US", PageRequest.of(0, 1))).singleElement()
-                .extracting(GamePatchTranslation::getLocale).isEqualTo("en-US");
-        assertThat(translations.preferred(patch, "fr-FR", PageRequest.of(0, 1))).singleElement()
-                .extracting(GamePatchTranslation::getLocale).isEqualTo("vi-VN");
+        assertThat(translations.findByPatchId(patch)).extracting(GamePatchTranslation::getLocale)
+                .containsExactlyInAnyOrder("en-US", "vi-VN", "de-DE");
     }
 
     @Test
@@ -266,16 +264,14 @@ class PatchRepositoriesIntegrationTest {
     }
 
     @Test
-    void seasonUpdatesReadTranslationCandidatesInOneDeterministicBatch() {
+    void seasonUpdatesReadTheTranslationCandidatesOfEveryPatchInOneBatch() {
         write("insert into patch.game_patch_translation(patch_id,locale,title,summary) values(?,'vi-VN','Local','')",
                 patch);
         write("insert into patch.game_patch_translation(patch_id,locale,title,summary) values(?,'en-US','English','')",
                 patch);
 
-        assertThat(seasonUpdates.preferredTexts(java.util.List.of(patch), "en-US"))
-                .extracting(SeasonUpdatesRepository.Text::getLocale).containsExactly("en-US", "vi-VN");
-        assertThat(seasonUpdates.preferredTexts(java.util.List.of(patch), "fr-FR"))
-                .extracting(SeasonUpdatesRepository.Text::getLocale).containsExactly("vi-VN", "en-US");
+        assertThat(seasonUpdates.texts(java.util.List.of(patch))).extracting(SeasonUpdatesRepository.Text::getLocale)
+                .containsExactlyInAnyOrder("en-US", "vi-VN");
     }
 
     @Test

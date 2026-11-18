@@ -55,10 +55,7 @@ public class EnchantmentPublicReferences implements PublicReferenceProvider, Adm
                 .filter(Objects::nonNull).collect(Collectors.toSet()));
         var output = new ArrayList<PublicReferenceProvider.Candidate>();
         for (var values : grouped.values()) {
-            var copy = values.stream().filter(t -> t.locale().equals(locale)).findFirst()
-                    .or(() -> values.stream().filter(t -> t.locale().equals(CatalogLocales.DEFAULT)).findFirst())
-                    .or(() -> values.stream().filter(t -> t.locale().equals("en-US")).findFirst())
-                    .orElse(values.getFirst());
+            var copy = CatalogLocales.pick(values, locale, AdminReferenceProvider.Row::locale);
             var asset = copy.iconAssetId() == null ? null : assets.get(copy.iconAssetId());
             String icon = asset != null && asset.usable() ? asset.currentVersion().url() : null;
             output.add(new PublicReferenceProvider.Candidate(copy.id(), "enchantment", copy.name(), copy.description(),
