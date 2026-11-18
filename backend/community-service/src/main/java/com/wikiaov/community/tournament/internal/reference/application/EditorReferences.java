@@ -4,10 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
 import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
-import com.wikiaov.community.tournament.internal.reference.persistence.EditorReferenceRepository;
-import com.wikiaov.community.tournament.internal.reference.persistence.EditorReferenceRepository.ReferenceRow;
+import com.wikiaov.community.tournament.internal.reference.persistence.EditorReferenceSearch;
+import com.wikiaov.community.tournament.internal.reference.persistence.EditorReferenceSearch.ReferenceRow;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
@@ -22,11 +23,11 @@ import tools.jackson.databind.json.JsonMapper;
 public class EditorReferences {
     /** Most saved ids one lookup resolves. */
     private static final int MAX_IDS = 50;
-    private final EditorReferenceRepository repository;
+    private final EditorReferenceSearch references;
     private final JsonMapper json;
 
-    public EditorReferences(EditorReferenceRepository repository, JsonMapper json) {
-        this.repository = repository;
+    public EditorReferences(EditorReferenceSearch references, JsonMapper json) {
+        this.references = references;
         this.json = json;
     }
 
@@ -68,30 +69,34 @@ public class EditorReferences {
 
         String escaped = ReferenceLabels.literalSearch(query);
         var unsorted = PageRequest.of(page.getPageNumber(), page.getPageSize());
-        var scope = kind == null ? "" : kind.name();
+        boolean teams = kind == null || kind == Kind.TEAM;
+        boolean players = kind == null || kind == Kind.PLAYER;
         var rows = ids == null
-                ? repository.ranked(escaped, query, scope, unsorted)
-                : repository.search(escaped, scope, true, ids.stream().distinct().toList(), unsorted);
+                ? references.ranked(escaped, query, teams, players, unsorted)
+                : references.byIds(escaped, teams, players, ids.stream().distinct().toList(), unsorted);
 
         return PageSlice.from(rows.map(this::entry));
     }
 
     private Entry entry(ReferenceRow row) {
         var aliases = new LinkedHashSet<String>();
-        aliases.add(row.getCode());
-        if (row.getShortName() != null && !row.getShortName().isBlank()) {
-            aliases.add(row.getShortName());
+        aliases.add(row.code());
+        if (row.shortName() != null && !row.shortName().isBlank()) {
+            aliases.add(row.shortName());
         }
-        if (row.getAliasesJson() != null && !row.getAliasesJson().equals("null")) {
-            aliases.addAll(json.readValue(row.getAliasesJson(), new TypeReference<List<String>>() {
+        if (row.aliasesJson() != null && !row.aliasesJson().equals("null")) {
+            aliases.addAll(json.readValue(row.aliasesJson(), new TypeReference<List<String>>() {
             }));
         }
-        aliases.remove(row.getName());
-        var translation = new Translation("vi-VN", row.getName(), List.copyOf(aliases), "");
-        String tab = row.getKind().equals("team") ? "teams" : "players";
-        String destination = "/tournaments?tab=" + tab + "&" + row.getKind() + "=" + row.getId();
+        aliases.remove(row.name());
+        var translation = new Translation("vi-VN", row.name(), List.copyOf(aliases), "");
+        var kind = Kind.valueOf(row.kind());
+        // The answer names the kind in lower case, as the editor links and reference ids expect.
+        String name = kind.name().toLowerCase(Locale.ROOT);
+        String tab = kind == Kind.TEAM ? "teams" : "players";
+        String destination = "/tournaments?tab=" + tab + "&" + name + "=" + row.id();
 
-        return new Entry(row.getId().toString(), row.getKind(), List.of(translation), row.getIcon(), true,
+        return new Entry(row.id().toString(), name, List.of(translation), row.icon(), true,
                 new Destinations(destination));
     }
 }

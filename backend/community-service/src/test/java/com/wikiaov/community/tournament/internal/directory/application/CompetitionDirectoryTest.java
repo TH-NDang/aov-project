@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.wikiaov.community.platform.ApiException;
-import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryListings;
 import com.wikiaov.community.tournament.internal.persistence.PlayerRepository;
 import com.wikiaov.community.tournament.internal.persistence.TeamRepository;
 import com.wikiaov.community.tournament.internal.persistence.TournamentRepository;
@@ -21,7 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 class CompetitionDirectoryTest {
-    private final DirectoryRepository directory = mock(DirectoryRepository.class);
+    private final DirectoryListings directory = mock(DirectoryListings.class);
     private final CompetitionDirectory directories = new CompetitionDirectory(directory, mock(TeamRepository.class),
             mock(PlayerRepository.class), mock(TournamentRepository.class));
 
