@@ -19,6 +19,7 @@ import { StreamIcon, type StreamIconName } from "./stream-icon"
 import { accountKeys, saveProfile, useOwnProfile } from "../lib/profile-api"
 import { wikiRequest } from "../lib/stream-api"
 import { profileDraft, profileRequest, type UserProfile } from "../lib/profile-model"
+import { notificationText } from "../lib/notification-text"
 import { useAccountDateFormat } from "@aov/ui/lib/time-zone"
 
 export function CommunitySessionButton() {
@@ -175,7 +176,7 @@ function NotificationBell() {
                 void navigate(`/pages/${item.pageId}`)
               }}
             >
-              <span>{item.message}</span>
+              <span>{notificationText(item, text)}</span>
               <TimeAgo value={item.createdAt} />
             </button>
           ))}

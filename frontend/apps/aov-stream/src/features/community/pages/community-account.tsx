@@ -37,6 +37,7 @@ import {
   useUnreadCount,
 } from "../../../lib/community-queries"
 import { Avatar, followersLabel, hueOf, profileKindEnglish } from "../../../components/community-ui"
+import { notificationText } from "../../../lib/notification-text"
 
 const roleLabels: Record<PageManager["role"], readonly [string, string]> = {
   OWNER: ["Quản trị chính", "Owner"],
@@ -250,7 +251,7 @@ function NotificationInbox() {
               <span className="cp-row-text">
                 <Link to={`/pages/${item.pageId}`} onClick={() => !item.read && read.one.mutate(item.id)}>
                   {!item.read && <span className="sr-only">{text("Chưa đọc: ", "Unread: ")}</span>}
-                  {item.message}
+                  {notificationText(item, text)}
                 </Link>
                 <small>
                   <LocalTime value={item.createdAt} locale={languageTag} />

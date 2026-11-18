@@ -146,7 +146,29 @@ export type CommunityComment = {
   createdAt: string
   own: boolean
 }
-export type CommunityNotification = { id: string; pageId: string; message: string; createdAt: string; read: boolean }
+/** What a notification tells its reader; the app words it in the reader's language. See spec 04, notifications. */
+export type NotificationKind =
+  | "PAGE_POST_PUBLISHED"
+  | "PAGE_LIVE_STARTED"
+  | "POST_COMMENTED"
+  | "REPORT_RESOLVED"
+  | "PAGE_CLAIM_APPROVED"
+  | "PAGE_CLAIM_REJECTED"
+  | "PAGE_OWNERSHIP_RECEIVED"
+  | "PAGE_MEMBERSHIP_REVOKED"
+/**
+ * An inbox line. `kind` and its `parameters` (`pageName`, plus `title` for a broadcast) say what happened; a line sent
+ * before kinds existed has no kind and keeps the sentence it was stored with in `message`.
+ */
+export type CommunityNotification = {
+  id: string
+  pageId: string
+  kind?: NotificationKind | null
+  parameters?: Record<string, string>
+  message?: string | null
+  createdAt: string
+  read: boolean
+}
 export type CommunityReport = {
   id: string
   pageId: string
