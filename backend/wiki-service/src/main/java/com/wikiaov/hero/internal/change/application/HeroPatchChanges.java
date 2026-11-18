@@ -10,6 +10,8 @@ import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
+import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchAssessment;
+import com.wikiaov.hero.internal.domain.HeroChanges;
 import com.wikiaov.hero.internal.domain.HeroChanges.Change;
 import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
 import com.wikiaov.hero.internal.domain.HeroChanges.MechanicChange;
@@ -30,10 +32,14 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.patch.PatchDataReviews;
+import com.wikiaov.patch.PatchReleaseReference;
+import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.RevisionState;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Clock;
@@ -44,6 +50,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -81,7 +88,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
 
     @Transactional
     @PreAuthorize("hasAuthority('patch:write')")
-    public UUID record(UUID variantId, com.wikiaov.hero.internal.domain.HeroChanges.Record input) {
+    public UUID record(UUID variantId, HeroChanges.Record input) {
         store.lockHero(input.heroId());
         var variant = contexts.variant(variantId);
         boolean notes = input.source() == ChangeSource.PATCH_NOTES;
@@ -183,7 +190,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
     public PageSlice<Map<String, Object>> forHero(UUID heroId, String region, String locale, int page, int size) {
         HeroValidation.locale(locale);
         var variants = patches.releases(region).stream().filter(r -> !r.effectiveAt().isAfter(clock.instant()))
-                .collect(java.util.stream.Collectors.toMap(com.wikiaov.patch.PatchReleaseReference::variantId, r -> r,
+                .collect(Collectors.toMap(PatchReleaseReference::variantId, r -> r,
                         (a, b) -> a));
         var all = HeroPatchChangeViews.render(history.forHero(heroId, locale)).stream()
                 .filter(row -> variants.containsKey((UUID) row.get("patchVariantId"))).peek(row -> {
@@ -199,7 +206,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
             var oldStats = from == null ? new Stats(List.of(), List.of()) : stats(from);
             var newer = newStats.values().stream().filter(stat -> stat.statKey().equals(v.statKey())).findFirst();
             var older = oldStats.values().stream().filter(stat -> stat.statKey().equals(v.statKey())).findFirst();
-            java.math.BigDecimal newValue = newer.map(Stat::baseValue).orElse(null),
+            BigDecimal newValue = newer.map(Stat::baseValue).orElse(null),
                     oldValue = older.map(Stat::baseValue).orElse(null);
             if (!sameNumber(newValue, v.newValue()) || !sameNumber(oldValue, v.oldValue())
                     || newer.isPresent() && !newer.get().unit().equals(v.unit())) {
@@ -301,7 +308,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
      * A hero is introduced once, and readers of earlier patches stop seeing it, so no published observation may precede
      * the patch that introduced it (ADR-016).
      */
-    private void validateIntroduction(UUID heroId, com.wikiaov.patch.PatchVariantReference variant) {
+    private void validateIntroduction(UUID heroId, PatchVariantReference variant) {
         if (history.introduced(heroId)) {
             throw HeroValidation.invalid("The hero already has a patch that introduced it.");
         }
@@ -357,9 +364,9 @@ public class HeroPatchChanges implements HeroChangeQueries {
         }
     }
 
-    @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.AssessmentInput")
+    @Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.AssessmentInput")
     public record AssessmentInput(
-            com.wikiaov.hero.internal.domain.HeroChanges.OverallKind kind,
+            HeroChanges.OverallKind kind,
             long expectedVersion
     ) {
     }
@@ -372,12 +379,12 @@ public class HeroPatchChanges implements HeroChangeQueries {
         if (input.kind() == null) {
             throw HeroValidation.invalid("An overall classification is required.");
         }
-        if (input.kind() == com.wikiaov.hero.internal.domain.HeroChanges.OverallKind.RELEASE
+        if (input.kind() == HeroChanges.OverallKind.RELEASE
                 && !history.introduces(changeSetId)) {
             throw HeroValidation.invalid("Only the change set that introduced the hero can be assessed as a release.");
         }
         var value = history.assessment(changeSetId)
-                .orElseGet(com.wikiaov.hero.internal.change.persistence.entity.HeroPatchAssessment::new);
+                .orElseGet(HeroPatchAssessment::new);
         if (value.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT, "The overall assessment has changed.");
         }
@@ -395,7 +402,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
         return new HeroAssessmentView(value.getKind(), value.getVersion());
     }
 
-    @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.PreviousInput")
+    @Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.PreviousInput")
     public record PreviousInput(
             String description,
             String sourceUrl
@@ -437,7 +444,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
         return change.getId();
     }
 
-    private static boolean sameNumber(java.math.BigDecimal a, java.math.BigDecimal b) {
+    private static boolean sameNumber(BigDecimal a, BigDecimal b) {
         return a == null ? b == null : b != null && a.compareTo(b) == 0;
     }
 

@@ -4,6 +4,7 @@ import com.wikiaov.patch.internal.application.response.PatchDataReviewView;
 import com.wikiaov.patch.internal.review.application.PatchDataReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,5 +18,5 @@ public interface PatchDataReviewApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     PatchDataReviewView update(@Parameter(description = "Id identifier.") UUID id,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) PatchDataReviewService.Update input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) PatchDataReviewService.Update input);
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -42,7 +43,7 @@ class QueryParametersTest {
 
     @Test
     void pageSliceComputesTotalPages() {
-        assertThat(new PageSlice<>(java.util.List.of(), 0, 20, 0).totalPages()).isZero();
-        assertThat(new PageSlice<>(java.util.List.of("a"), 0, 20, 41).totalPages()).isEqualTo(3);
+        assertThat(new PageSlice<>(List.of(), 0, 20, 0).totalPages()).isZero();
+        assertThat(new PageSlice<>(List.of("a"), 0, 20, 41).totalPages()).isEqualTo(3);
     }
 }

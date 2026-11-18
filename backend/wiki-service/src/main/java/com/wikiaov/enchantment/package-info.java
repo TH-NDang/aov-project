@@ -1,3 +1,5 @@
 /** enchantment module. Public contracts belong here; implementation belongs in internal. */
-@org.springframework.modulith.ApplicationModule
+@ApplicationModule
 package com.wikiaov.enchantment;
+
+import org.springframework.modulith.ApplicationModule;

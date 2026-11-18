@@ -4,6 +4,7 @@ import com.wikiaov.hero.internal.application.response.HeroSkillImageView;
 import com.wikiaov.hero.internal.web.request.SaveHeroSkillImage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,6 @@ public interface HeroSkillImageApi {
     HeroSkillImageView save(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Source slot.") int sourceSlot,
             @Parameter(description = "Variant no.") int variantNo,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SaveHeroSkillImage body,
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SaveHeroSkillImage body,
             @Parameter(hidden = true) HttpServletRequest request);
 }

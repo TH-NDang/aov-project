@@ -11,6 +11,7 @@ import com.wikiaov.spell.internal.application.response.SpellRemovalView;
 import com.wikiaov.spell.internal.application.response.SpellView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,7 +52,7 @@ public interface SpellAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     SpellView create(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Create input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Create input);
 
     @Operation(operationId = "spellAdminApi_history", summary = "History - spell admin", description = "History for spell admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
@@ -70,28 +71,28 @@ public interface SpellAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     SpellView fork(@Parameter(description = "Id identifier.") UUID id,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Fork input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Fork input);
 
     @Operation(operationId = "spellAdminApi_update", summary = "Update - spell admin", description = "Update for spell admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('spell:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     SpellView update(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Revision id identifier.") UUID revisionId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Update input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Update input);
 
     @Operation(operationId = "spellAdminApi_publish", summary = "Publish - spell admin", description = "Publish for spell admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('spell:publish').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     SpellView publish(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Revision id identifier.") UUID revisionId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation input);
 
     @Operation(operationId = "spellAdminApi_discard", summary = "Discard - spell admin", description = "Discard for spell admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('spell:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     SpellView discard(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Revision id identifier.") UUID revisionId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation input);
 
     @Operation(operationId = "spellAdminApi_removals", summary = "Removals - spell admin", description = "Removals for spell admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
@@ -104,5 +105,5 @@ public interface SpellAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     SpellRemovalView recordRemoval(@Parameter(description = "Id identifier.") UUID id,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Removal input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Removal input);
 }

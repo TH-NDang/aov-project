@@ -28,6 +28,7 @@ import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.terminology.SkillReferenceProvider;
 import jakarta.persistence.EntityManagerFactory;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,12 +47,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
@@ -308,7 +311,7 @@ class SkillReferenceCatalogIntegrationTest {
                 });
     }
 
-    private tools.jackson.databind.JsonNode admin(String q, String ids) throws Exception {
+    private JsonNode admin(String q, String ids) throws Exception {
         var request = get(path()).param("rulesetId", ruleset.toString()).param("q", q).with(reader());
         if (ids != null) {
             request.param("ids", ids);
@@ -321,7 +324,7 @@ class SkillReferenceCatalogIntegrationTest {
         return "/api/wiki/v1/admin/reference-skills";
     }
 
-    private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor reader() {
+    private static SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor reader() {
         return jwt().authorities(new SimpleGrantedAuthority("catalog:read"));
     }
 
@@ -381,7 +384,7 @@ class SkillReferenceCatalogIntegrationTest {
                         + "updated_at,created_by_issuer,created_by_subject,updated_by_issuer,updated_by_subject)"
                         + " values (?,?,?,?,?,1,?,?,'DATA_BASELINE',?,?,?,?,?,?,?,now(),now(),'test','editor','test','editor')",
                 id, owner, scope, number, state, state.equals("PUBLISHED") ? (long) number : null,
-                state.equals("PUBLISHED") ? java.sql.Timestamp.from(Instant.now().minusSeconds(60)) : null,
+                state.equals("PUBLISHED") ? Timestamp.from(Instant.now().minusSeconds(60)) : null,
                 patch, sections.get(0), sections.get(1), sections.get(2), sections.get(3), sections.get(4),
                 sections.get(5));
         return id;

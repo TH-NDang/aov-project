@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -142,7 +143,7 @@ class SpellCatalogQueries {
         var explicitTargets = patchChanges.findAll().stream()
                 .filter(f -> (rulesetId == null || rulesetId.equals(f.getRulesetId()))
                         && allowed.contains(f.getPatchVariantId()))
-                .map(f -> f.getToRevisionId()).collect(java.util.stream.Collectors.toSet());
+                .map(f -> f.getToRevisionId()).collect(Collectors.toSet());
         removals.findAll().stream().filter(f -> (rulesetId == null || rulesetId.equals(f.getRulesetId()))
                 && allowed.contains(f.getPatchVariantId())).map(f -> f.getRevisionId())
                 .forEach(explicitTargets::add);
@@ -152,7 +153,7 @@ class SpellCatalogQueries {
     private Map<UUID, List<SpellTranslation>> translationsFor(Map<UUID, SpellRevision> selected) {
         return translations.findByRevisionIdIn(selected.values().stream().map(SpellRevision::getId).toList())
                 .stream()
-                .collect(java.util.stream.Collectors.groupingBy(SpellTranslation::getRevisionId));
+                .collect(Collectors.groupingBy(SpellTranslation::getRevisionId));
     }
 
     private List<SpellIdentity> matchingOwners(Map<UUID, SpellRevision> selected,

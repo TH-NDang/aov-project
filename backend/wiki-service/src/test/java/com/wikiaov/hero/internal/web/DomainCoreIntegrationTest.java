@@ -18,6 +18,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.wikiaov.DockerBacked;
 import com.wikiaov.MutableClock;
 import com.wikiaov.TestcontainersConfiguration;
+import com.wikiaov.hero.internal.importing.application.HeroImportJobs;
+import com.wikiaov.hero.internal.importing.infrastructure.HeroImportWorker;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssetState;
 import com.wikiaov.media.MediaAssets;
@@ -25,6 +27,7 @@ import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.media.MediaUsageProvider;
 import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.patch.GameplayContexts;
+import jakarta.persistence.EntityManagerFactory;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +41,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.hamcrest.Matchers;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +52,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -94,13 +101,13 @@ class DomainCoreIntegrationTest {
     @Autowired
     MutableClock clock;
     @Autowired
-    jakarta.persistence.EntityManagerFactory entityManagers;
+    EntityManagerFactory entityManagers;
     @MockitoBean
     MediaAssets media;
     @Autowired
     List<MediaUsageProvider> usageProviders;
     @Autowired
-    com.wikiaov.hero.internal.importing.application.HeroImportJobs importJobs;
+    HeroImportJobs importJobs;
     private UUID ruleset, variant, patch;
     private final Map<MediaSemanticType, UUID> assets = new EnumMap<>(MediaSemanticType.class);
 
@@ -278,7 +285,7 @@ class DomainCoreIntegrationTest {
                 INSERT INTO hero.hero_combat_stat_value (stats_revision_id, stat_key, percent_value, unit_code)
                 VALUES (?, 'MAGIC_DEFENSE', 1, 'POINT')
                 """).param(UUID.randomUUID()).update())
-                .isInstanceOf(org.springframework.dao.DataAccessException.class);
+                .isInstanceOf(DataAccessException.class);
     }
 
     private static Map<String, Object> statBody(Number version, Map<String, Object> stat) {
@@ -326,7 +333,7 @@ class DomainCoreIntegrationTest {
                         description, summary)
                     VALUES (?, 'skill-1', 'en-US', 'Skill', 'Description', ?)
                     """).param(UUID.randomUUID()).param(malformed).update())
-                    .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+                    .isInstanceOf(DataIntegrityViolationException.class)
                     .hasMessageContaining("hero_skill_translation_summary_check");
         }
     }
@@ -359,12 +366,12 @@ class DomainCoreIntegrationTest {
         var refs = (Map<String, String>) draft.get("sections");
         String profile = refs.get("profile");
         var section = mvc.perform(get(ROOT + "/hero-profile-revisions/" + profile)).andExpect(status().isOk())
-                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("immutable")))
+                .andExpect(header().string("Cache-Control", Matchers.containsString("immutable")))
                 .andReturn();
         assertThatThrownBy(
                 () -> jdbc.sql("UPDATE hero.hero_profile_translation SET name='Tampered' WHERE profile_revision_id=?")
                         .param(UUID.fromString(profile)).update())
-                .isInstanceOf(org.springframework.dao.DataAccessException.class);
+                .isInstanceOf(DataAccessException.class);
         var correction = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"),
                 Map.of("rulesetId", ruleset, "sourceRevisionId", draftId, "cause", "CONTENT_CORRECTION"), 201);
         UUID c = uuid(correction, "id");
@@ -1013,7 +1020,7 @@ class DomainCoreIntegrationTest {
                 201);
         UUID profile = UUID.fromString((String) ((Map<?, ?>) other.get("sections")).get("profile"));
         assertThatThrownBy(() -> jdbc.sql("UPDATE hero.hero_revision SET profile_revision_id=? WHERE id=?")
-                .params(profile, id).update()).isInstanceOf(org.springframework.dao.DataAccessException.class);
+                .params(profile, id).update()).isInstanceOf(DataAccessException.class);
         send(post(ROOT + "/admin/heroes/" + hero + "/drafts"),
                 Map.of("rulesetId", ruleset, "sourceRevisionId", id, "cause", "CONTENT_CORRECTION"), 409);
         mvc.perform(get(ROOT + "/heroes?region=VN&region=TH")).andExpect(status().isBadRequest());
@@ -1167,7 +1174,7 @@ class DomainCoreIntegrationTest {
 
     @Test
     void publishReadinessRunsTheSameQueriesWhateverTheNumberOfHeroes() throws Exception {
-        var statistics = entityManagers.unwrap(org.hibernate.SessionFactory.class).getStatistics();
+        var statistics = entityManagers.unwrap(SessionFactory.class).getStatistics();
         statistics.setStatisticsEnabled(true);
         try {
             create();
@@ -1691,7 +1698,7 @@ class DomainCoreIntegrationTest {
         assertThatThrownBy(() -> importJobs.execute(remaining)).isInstanceOf(RuntimeException.class);
         assertThat(jdbc.sql("SELECT count(*) FROM hero.hero WHERE code='broken-hero'").query(Long.class).single())
                 .isZero();
-        var worker = new com.wikiaov.hero.internal.importing.infrastructure.HeroImportWorker(importJobs);
+        var worker = new HeroImportWorker(importJobs);
         worker.tick();
         worker.tick();
         assertThat(send(get(endpoint + "/" + jobId), null, 200))

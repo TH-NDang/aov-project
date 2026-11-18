@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,7 +33,7 @@ public interface AuthApi {
                             @ApiResponse(responseCode = "200", headers = @Header(name = "Set-Cookie", description = "HttpOnly session or flow-binding cookie update; refresh tokens are not returned in JSON.", schema = @Schema(type = "string")), description = "Successful operation.", useReturnTypeSchema = true)
                     })
     AuthTokenResponse login(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid LoginRequest body,
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid LoginRequest body,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) HttpServletResponse response);
 

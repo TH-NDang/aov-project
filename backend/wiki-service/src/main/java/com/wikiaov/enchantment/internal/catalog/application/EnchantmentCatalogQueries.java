@@ -32,6 +32,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -134,14 +135,14 @@ class EnchantmentCatalogQueries {
         var explicitTargets = patchChanges.findAll().stream()
                 .filter(f -> (rulesetId == null || rulesetId.equals(f.getRulesetId()))
                         && allowed.contains(f.getPatchVariantId()))
-                .map(f -> f.getToRevisionId()).collect(java.util.stream.Collectors.toSet());
+                .map(f -> f.getToRevisionId()).collect(Collectors.toSet());
         return CatalogSnapshots.changedAt(candidates, allowed, explicitTargets);
     }
 
     private Map<UUID, List<EnchantmentTranslation>> translationsFor(Map<UUID, EnchantmentRevision> selected) {
         return translations
                 .findByRevisionIdIn(selected.values().stream().map(EnchantmentRevision::getId).toList()).stream()
-                .collect(java.util.stream.Collectors.groupingBy(EnchantmentTranslation::getRevisionId));
+                .collect(Collectors.groupingBy(EnchantmentTranslation::getRevisionId));
     }
 
     private List<EnchantmentIdentity> matchingOwners(Map<UUID, EnchantmentRevision> selected,

@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -228,7 +229,7 @@ public class GameModeCatalog {
                 .collect(Collectors.toMap(GameMode::getId, Function.identity()));
         var guides = new HashSet<>(guideRevisions.publishedModeIds(byId.keySet()));
         var art = images.hydrate(published.stream().map(r -> r.getContent().artAssetId())
-                .filter(java.util.Objects::nonNull).toList());
+                .filter(Objects::nonNull).toList());
 
         var cards = published.stream().map(revision -> {
             var content = revision.getContent();

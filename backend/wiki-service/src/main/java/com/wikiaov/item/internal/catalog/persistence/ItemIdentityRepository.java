@@ -1,6 +1,7 @@
 package com.wikiaov.item.internal.catalog.persistence;
 
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemIdentity;
+import com.wikiaov.video.VideoSubjectName;
 import jakarta.persistence.LockModeType;
 import java.util.Collection;
 import java.util.List;
@@ -26,5 +27,5 @@ public interface ItemIdentityRepository extends JpaRepository<ItemIdentity, UUID
             left join ItemRevision r on r.ownerId = e.id and r.state <> com.wikiaov.platform.RevisionState.DISCARDED
             left join ItemTranslation t on t.revisionId = r.id
             """)
-    java.util.List<com.wikiaov.video.VideoSubjectName> videoSubjectNames();
+    List<VideoSubjectName> videoSubjectNames();
 }

@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -387,7 +388,7 @@ public class HeroQueries {
                 rev.sections().get(HeroSection.MEDIA_BINDINGS), later);
     }
 
-    private static <T> Set<T> union(List<Published> heroes, java.util.function.Function<Published, Set<T>> values) {
+    private static <T> Set<T> union(List<Published> heroes, Function<Published, Set<T>> values) {
         Set<T> result = new LinkedHashSet<>();
         heroes.forEach(hero -> result.addAll(values.apply(hero)));
         return result;
@@ -399,8 +400,8 @@ public class HeroQueries {
             return List.of();
         }
 
-        var everyEntry = entries.stream().flatMap(entry -> java.util.stream.Stream.concat(
-                java.util.stream.Stream.of(entry), entry.forms().stream())).toList();
+        var everyEntry = entries.stream().flatMap(entry -> Stream.concat(
+                Stream.of(entry), entry.forms().stream())).toList();
         Map<UUID, Bindings> bindings = new HashMap<>();
         Set<UUID> assetIds = new HashSet<>();
         for (var entry : everyEntry) {

@@ -8,6 +8,7 @@ import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.RevisionState;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
@@ -61,7 +62,7 @@ public class HeroStore {
                 "The hero does not exist."));
     }
 
-    public com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision editableEntity(UUID id) {
+    public HeroRevision editableEntity(UUID id) {
         return revisions.findById(id).orElseThrow(() -> new ApiException(HeroErrorCode.HERO_REVISION_NOT_FOUND,
                 "The hero revision does not exist."));
     }
@@ -74,7 +75,7 @@ public class HeroStore {
         revisions.saveAndFlush(revision);
     }
 
-    public java.time.Instant createdAt(UUID revisionId) {
+    public Instant createdAt(UUID revisionId) {
         return editableEntity(revisionId).getCreatedAt();
     }
 
@@ -91,7 +92,7 @@ public class HeroStore {
         return revisions.findByHeroIdInOrderByRevisionNoDesc(heroIds).stream().map(this::view).toList();
     }
 
-    private HeroRevisionView view(com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision r) {
+    private HeroRevisionView view(HeroRevision r) {
         Map<HeroSection, UUID> sections = new EnumMap<>(HeroSection.class);
         put(sections, HeroSection.PROFILE, r.getProfileRevisionId());
         put(sections, HeroSection.OVERVIEW_RATINGS, r.getOverviewRatingRevisionId());

@@ -1,9 +1,11 @@
 package com.wikiaov.media.internal.upload.application;
 
 import com.wikiaov.access.Actor;
+import com.wikiaov.access.ActorType;
 import com.wikiaov.access.AuditEntry;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
+import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.MediaProperties;
 import com.wikiaov.media.internal.application.SourceInput;
@@ -22,6 +24,7 @@ import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
 import com.wikiaov.media.internal.upload.persistence.MediaUploadSessionRepository;
 import com.wikiaov.media.internal.upload.persistence.entity.MediaUploadSession;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
@@ -88,11 +91,11 @@ public class CompleteMediaUpload {
         Actor actor = currentActor.require();
         var session = requireSession(uploadId);
         var asset = assetAccess.requireAsset(session.getAssetId());
-        if (actor.type() != com.wikiaov.access.ActorType.HUMAN
-                || asset.getSemanticType() != com.wikiaov.media.MediaSemanticType.USER_AVATAR
+        if (actor.type() != ActorType.HUMAN
+                || asset.getSemanticType() != MediaSemanticType.USER_AVATAR
                 || !session.getCreatedByIssuer().equals(actor.issuer())
                 || !session.getCreatedBySubject().equals(actor.subject())) {
-            throw new ApiException(com.wikiaov.platform.PlatformErrorCode.FORBIDDEN,
+            throw new ApiException(PlatformErrorCode.FORBIDDEN,
                     "Avatar upload is not owned by this caller.");
         }
 

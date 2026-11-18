@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
@@ -254,7 +255,7 @@ public class StorageCapacity {
     }
 
     private Set<String> known(Target target, List<EstimateFile> files) {
-        List<String> sha256s = files.stream().map(EstimateFile::sha256).filter(java.util.Objects::nonNull).distinct()
+        List<String> sha256s = files.stream().map(EstimateFile::sha256).filter(Objects::nonNull).distinct()
                 .toList();
         Set<String> known = new HashSet<>();
         for (int start = 0; start < sha256s.size(); start += LOOKUP_CHUNK) {

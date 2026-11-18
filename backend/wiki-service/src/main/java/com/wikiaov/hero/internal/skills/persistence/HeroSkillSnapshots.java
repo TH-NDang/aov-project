@@ -14,6 +14,7 @@ import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
+import com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillEffectRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillIdentityRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillSnapshotRow;
@@ -56,7 +57,7 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
     }
 
     @Override
-    public com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository<?> revisions() {
+    public SectionRevisionRepository<?> revisions() {
         return revisions;
     }
 

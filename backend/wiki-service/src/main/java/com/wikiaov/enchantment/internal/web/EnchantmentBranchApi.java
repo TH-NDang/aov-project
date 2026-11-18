@@ -5,6 +5,7 @@ import com.wikiaov.enchantment.internal.application.EnchantmentOrdering;
 import com.wikiaov.enchantment.internal.application.response.EnchantmentBranchView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,11 +27,11 @@ public interface EnchantmentBranchApi {
     })
     EnchantmentBranchView save(
             @Parameter(description = "Authorization code returned by the identity provider.") String code,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid EnchantmentBranchCommand input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid EnchantmentBranchCommand input);
 
     @Operation(operationId = "enchantmentBranchApi_reorder", summary = "Reorder - enchantment branch", description = "Reorder for enchantment branch. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('enchantment:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     List<EnchantmentBranchView> reorder(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid EnchantmentOrdering.Branches input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid EnchantmentOrdering.Branches input);
 }

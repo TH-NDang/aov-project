@@ -11,6 +11,8 @@ import com.wikiaov.hero.internal.application.HeroCommands.Mutation;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
+import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
+import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
 import com.wikiaov.hero.internal.domain.CharacterCodes;
 import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
 import com.wikiaov.hero.internal.domain.HeroContent.Cause;
@@ -29,6 +31,7 @@ import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormGameplay;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.hero.internal.stats.domain.HeroStatObservations;
+import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
@@ -43,6 +46,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -89,7 +93,7 @@ public class HeroAuthoring {
         var actor = actors.require();
         UUID id = UUID.randomUUID();
         try {
-            var hero = new com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity();
+            var hero = new HeroIdentity();
             hero.setId(id);
             hero.setCode(CharacterCodes.hero(input.code()));
             hero.setCreatedAt(clock.instant());
@@ -391,9 +395,9 @@ public class HeroAuthoring {
 
         var profile = (Profile) sections.content(HeroSection.PROFILE, draft.sections().get(HeroSection.PROFILE));
         var locales = profile.translations().stream().map(ProfileTranslation::locale)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
         if (skills.skills().stream().anyMatch(s -> !s.translations().stream().map(SkillTranslation::locale)
-                .collect(java.util.stream.Collectors.toSet()).containsAll(locales))) {
+                .collect(Collectors.toSet()).containsAll(locales))) {
             throw HeroValidation.invalid("Every skill needs translations for all profile locales.");
         }
     }
@@ -431,7 +435,7 @@ public class HeroAuthoring {
     private HeroRevisionView defaultSource(UUID heroId, Fork input) {
         long limit = input.effectiveFromPatchVariantId() == null
                 ? contexts.active(clock.instant()).stream().filter(c -> c.rulesetId().equals(input.rulesetId()))
-                        .mapToLong(com.wikiaov.patch.GameplayContext::rulesetOrdinal).max()
+                        .mapToLong(GameplayContext::rulesetOrdinal).max()
                         .orElseThrow(() -> HeroValidation
                                 .invalid("Specify a published source when no regional context is active."))
                 : contexts.variant(input.effectiveFromPatchVariantId()).rulesetOrdinal();
@@ -454,7 +458,7 @@ public class HeroAuthoring {
                 .mapToLong(HeroRevisionView::revisionNo).max().orElse(0) + 1;
         UUID id = UUID.randomUUID();
         var a = actors.require();
-        var entity = new com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision();
+        var entity = new HeroRevision();
         entity.setId(id);
         entity.setHeroId(hero);
         entity.setRulesetId(ruleset);

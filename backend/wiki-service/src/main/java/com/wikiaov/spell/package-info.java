@@ -1,3 +1,5 @@
 /** spell module. Public contracts belong here; implementation belongs in internal. */
-@org.springframework.modulith.ApplicationModule
+@ApplicationModule
 package com.wikiaov.spell;
+
+import org.springframework.modulith.ApplicationModule;

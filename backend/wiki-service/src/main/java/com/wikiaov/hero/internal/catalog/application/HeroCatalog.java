@@ -7,10 +7,12 @@ import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.catalog.domain.HeroCatalogFacets;
 import com.wikiaov.hero.internal.catalog.persistence.HeroCatalogRepository;
+import com.wikiaov.hero.internal.change.persistence.HeroPatchAssessmentRepository;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeTranslation;
 import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
 import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
+import com.wikiaov.hero.internal.domain.HeroContent;
 import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
@@ -44,13 +46,13 @@ public class HeroCatalog {
     private static final Map<String, String> POSITION_CODES = Map.of("top", "TOP", "mid", "MID", "rung", "JUNGLE",
             "rong-ad", "DRAGON", "tro-thu", "SUPPORT");
 
-    private final com.wikiaov.hero.internal.change.persistence.HeroPatchAssessmentRepository assessments;
+    private final HeroPatchAssessmentRepository assessments;
     private final HeroCatalogRepository catalog;
     private final HeroStore store;
     private final GameplayContexts contexts;
     private final HeroForms forms;
 
-    public HeroCatalog(com.wikiaov.hero.internal.change.persistence.HeroPatchAssessmentRepository assessments,
+    public HeroCatalog(HeroPatchAssessmentRepository assessments,
             HeroCatalogRepository catalog, HeroStore store, GameplayContexts contexts, HeroForms forms) {
         this.assessments = assessments;
         this.catalog = catalog;
@@ -174,7 +176,7 @@ public class HeroCatalog {
             }
             var revision = revisions.get(change.getToHeroRevisionId());
             return revision != null && revision.state() == RevisionState.PUBLISHED
-                    && revision.cause() == com.wikiaov.hero.internal.domain.HeroContent.Cause.GAME_PATCH;
+                    && revision.cause() == HeroContent.Cause.GAME_PATCH;
         }).sorted(Comparator
                 .<HeroPatchChangeSet>comparingLong(change -> variants.get(change.getPatchVariantId()).rulesetOrdinal())
                 .reversed().thenComparing(HeroPatchChangeSet::getId)).toList();

@@ -18,6 +18,7 @@ import com.wikiaov.patch.internal.season.persistence.RankedSeasonRepository;
 import com.wikiaov.platform.ApiException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -80,7 +81,7 @@ public class ResolveGameplayContext implements GameplayContexts {
                 }
                 throw exception;
             }
-        }).filter(java.util.Objects::nonNull).toList();
+        }).filter(Objects::nonNull).toList();
     }
 
     public void requireRuleset(UUID rulesetId) {

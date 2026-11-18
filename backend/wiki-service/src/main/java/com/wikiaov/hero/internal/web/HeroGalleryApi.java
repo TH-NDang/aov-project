@@ -4,6 +4,7 @@ import com.wikiaov.hero.internal.gallery.application.HeroGalleryView;
 import com.wikiaov.platform.CreatedId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +26,7 @@ public interface HeroGalleryApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     CreatedId attach(@Parameter(description = "Hero id identifier.") UUID heroId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) HeroGalleryView.Attach body,
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) HeroGalleryView.Attach body,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroGalleryApi_update", summary = "Update - hero gallery", description = "Changes how an attached image is described. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
@@ -33,7 +34,7 @@ public interface HeroGalleryApi {
     })
     HeroGalleryView.Saved update(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Gallery item identifier.") UUID itemId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) HeroGalleryView.Update body,
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) HeroGalleryView.Update body,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroGalleryApi_remove", summary = "Remove - hero gallery", description = "Takes an attached image out of the hero's gallery; the image stays in media. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {

@@ -20,6 +20,7 @@ import com.wikiaov.hero.internal.change.persistence.entity.RoleChangeClassificat
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
+import com.wikiaov.hero.internal.domain.HeroChanges;
 import com.wikiaov.hero.internal.domain.HeroChanges.Change;
 import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
 import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
@@ -59,7 +60,7 @@ class HeroPatchHistoryTests {
         var ids = List.of(first.getId(), second.getId(), third.getId());
         var assessment = new HeroPatchAssessment();
         assessment.setChangeSetId(second.getId());
-        assessment.setKind(com.wikiaov.hero.internal.domain.HeroChanges.OverallKind.BUFF);
+        assessment.setKind(HeroChanges.OverallKind.BUFF);
         var fact = new OtherChangeClassification();
         fact.setChangeSetId(first.getId());
         when(sets.historyForVariant(variant)).thenReturn(List.of(first, second, third));
@@ -95,7 +96,7 @@ class HeroPatchHistoryTests {
         UUID asset = UUID.randomUUID();
         var actor = new Actor("issuer", "editor", ActorType.HUMAN, "Editor", Set.of());
         var at = Instant.parse("2026-10-20T03:00:00Z");
-        var source = new com.wikiaov.hero.internal.domain.HeroChanges.Record(UUID.randomUUID(), null, null, null,
+        var source = new HeroChanges.Record(UUID.randomUUID(), null, null, null,
                 target,
                 List.of(new Summary("vi-VN", "Summary")), List.of(new OtherChange(Kind.OTHER, "Note")), null);
         history.create(changeSet, variant, source, at, actor);

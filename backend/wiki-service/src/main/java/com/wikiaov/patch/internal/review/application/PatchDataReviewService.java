@@ -13,6 +13,7 @@ import com.wikiaov.patch.internal.review.persistence.PatchDataReviewRepository;
 import com.wikiaov.patch.internal.review.persistence.entity.PatchDataReview;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Clock;
 import java.util.Map;
 import java.util.UUID;
@@ -39,7 +40,7 @@ public class PatchDataReviewService implements PatchDataReviews {
         this.clock = clock;
     }
 
-    @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.patch.internal.application.service.PatchDataReviewService.Update")
+    @Schema(name = "com.wikiaov.patch.internal.application.service.PatchDataReviewService.Update")
     public record Update(
             String state,
             long expectedVersion

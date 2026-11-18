@@ -1,5 +1,6 @@
 package com.wikiaov.access.internal.application;
 
+import java.net.URI;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
@@ -15,7 +16,7 @@ public record AuthProperties(
         @DefaultValue("/api/wiki/v1/auth/google/callback") String googleCallbackPath
 ) {
     public AuthProperties {
-        java.net.URI origin = java.net.URI.create(adminOrigin);
+        URI origin = URI.create(adminOrigin);
         if (origin.getHost() == null || origin.getUserInfo() != null || origin.getQuery() != null
                 || origin.getFragment() != null || (origin.getPath() != null && !origin.getPath().isEmpty())
                 || !("https".equals(origin.getScheme()) || (!secureCookies && "http".equals(origin.getScheme())))) {

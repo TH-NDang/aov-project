@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -43,7 +44,7 @@ public class StatRow extends AssignedIdentifierEntity<StatRow.Key> {
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class Key implements java.io.Serializable {
+    public static class Key implements Serializable {
         public UUID statsRevisionId;
         public String statKey;
     }

@@ -20,6 +20,7 @@ import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogCodes;
 import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogText.MetadataTranslation;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -101,7 +102,7 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
         }
         translations.flush();
         audit.record(new AuditEntry(actors.require(), "ITEM_METADATA_UPDATED", CatalogAggregates.ITEM_METADATA,
-                UUID.nameUUIDFromBytes(code.getBytes(java.nio.charset.StandardCharsets.UTF_8)), null, before,
+                UUID.nameUUIDFromBytes(code.getBytes(StandardCharsets.UTF_8)), null, before,
                 row.getVersion(), null, Map.of("code", code)));
         return view(row);
     }
@@ -115,7 +116,7 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
         for (var record : records.findAll()) {
-            var owner = UUID.nameUUIDFromBytes(record.getCode().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            var owner = UUID.nameUUIDFromBytes(record.getCode().getBytes(StandardCharsets.UTF_8));
             if (record.getIconAssetId() != null) {
                 usages.computeIfAbsent(record.getIconAssetId(), ignored -> new ArrayList<>()).add(new MediaUsage(
                         "ITEM", "ITEM_METADATA", owner, null, "ICON", MediaUsageScope.CURRENT).named(record.getCode(),

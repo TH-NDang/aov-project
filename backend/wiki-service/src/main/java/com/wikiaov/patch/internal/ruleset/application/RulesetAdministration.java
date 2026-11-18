@@ -17,6 +17,10 @@ import com.wikiaov.patch.internal.ruleset.persistence.entity.RulesetAssignment;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
+import java.time.DateTimeException;
+import java.time.ZoneId;
+import java.util.IllformedLocaleException;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.function.Supplier;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -43,9 +47,9 @@ public class RulesetAdministration {
 
     public UUID region(CreateRegion input) {
         try {
-            java.time.ZoneId.of(input.timezone());
-            new java.util.Locale.Builder().setLanguageTag(input.defaultLocale()).build();
-        } catch (java.time.DateTimeException | java.util.IllformedLocaleException exception) {
+            ZoneId.of(input.timezone());
+            new Locale.Builder().setLanguageTag(input.defaultLocale()).build();
+        } catch (DateTimeException | IllformedLocaleException exception) {
             throw invalid("The region locale or time zone is invalid.");
         }
         UUID id = UUID.randomUUID();

@@ -11,6 +11,7 @@ import com.wikiaov.access.internal.web.request.LoginRequest;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.net.URI;
@@ -165,6 +166,6 @@ public class AuthController implements AuthApi {
             return null;
         }
         return Arrays.stream(request.getCookies()).filter(cookie -> name.equals(cookie.getName()))
-                .map(jakarta.servlet.http.Cookie::getValue).findFirst().orElse(null);
+                .map(Cookie::getValue).findFirst().orElse(null);
     }
 }

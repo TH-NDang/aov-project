@@ -11,6 +11,7 @@ import com.wikiaov.hero.internal.media.persistence.entity.MediaRevision;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
+import com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +41,7 @@ public class HeroMediaSnapshots implements HeroSectionSnapshots {
     }
 
     @Override
-    public com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository<?> revisions() {
+    public SectionRevisionRepository<?> revisions() {
         return revisions;
     }
 

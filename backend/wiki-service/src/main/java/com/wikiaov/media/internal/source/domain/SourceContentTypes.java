@@ -1,5 +1,6 @@
 package com.wikiaov.media.internal.source.domain;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
@@ -74,6 +75,6 @@ public final class SourceContentTypes {
     }
 
     private static String ascii(byte[] bytes, int offset, int length) {
-        return new String(bytes, offset, length, java.nio.charset.StandardCharsets.US_ASCII);
+        return new String(bytes, offset, length, StandardCharsets.US_ASCII);
     }
 }

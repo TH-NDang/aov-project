@@ -26,7 +26,7 @@ public record ArcanaContent(
 
     public ArcanaContent publicCopy(String locale) {
         return new ArcanaContent(iconAssetId, color, tier, stats,
-                com.wikiaov.platform.CatalogText.select(translations, locale), null);
+                CatalogText.select(translations, locale), null);
     }
 
     public ArcanaContent withTranslations(List<Translation> copy) {

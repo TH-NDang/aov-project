@@ -10,11 +10,13 @@ import com.wikiaov.gamemode.internal.domain.AutoChessContent.UnitStats;
 import com.wikiaov.gamemode.internal.domain.ContentChecks;
 import com.wikiaov.platform.ApiFieldError;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Structural and reference rules of an auto-chess guide snapshot (spec 01, game modes section). */
@@ -122,7 +124,7 @@ public final class AutoChessContentRules {
     /**
      * Gives every lineup without an id a new one and keeps the ids of the source revision, so likes survive edits.
      */
-    public static AutoChessContent assignLineupIds(AutoChessContent content, java.util.function.Supplier<UUID> ids) {
+    public static AutoChessContent assignLineupIds(AutoChessContent content, Supplier<UUID> ids) {
         if (content.lineups().stream().allMatch(lineup -> lineup.id() != null)) {
             return content;
         }
@@ -223,7 +225,7 @@ public final class AutoChessContentRules {
 
     private static Set<String> items(ContentChecks checks, AutoChessContent content) {
         var groups = new HashSet<String>();
-        var groupSlots = new java.util.HashMap<String, Integer>();
+        var groupSlots = new HashMap<String, Integer>();
         checks.size("itemGroups", content.itemGroups(), 20);
         for (int i = 0; i < content.itemGroups().size(); i++) {
             var group = content.itemGroups().get(i);

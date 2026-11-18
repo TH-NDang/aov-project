@@ -1,5 +1,6 @@
 package com.wikiaov.hero.internal.application;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.platform.CatalogCodes;
 import jakarta.validation.Valid;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import java.util.UUID;
 
 public final class HeroCommands {
@@ -19,7 +21,7 @@ public final class HeroCommands {
             @NotBlank @Size(max = 16) String initialLocale,
             @NotBlank @Size(max = 120) String name,
             @NotNull UUID rulesetId,
-            @com.fasterxml.jackson.annotation.JsonAlias("releaseId") @NotNull UUID contextId
+            @JsonAlias("releaseId") @NotNull UUID contextId
     ) {
     }
 
@@ -50,8 +52,8 @@ public final class HeroCommands {
      * without forms.
      */
     public record ReplaceForms(
-            @NotNull @Size(max = 20) java.util.List<@NotNull UUID> expectedForms,
-            @NotNull @Size(max = 20) java.util.List<@NotNull @Valid FormEntry> forms,
+            @NotNull @Size(max = 20) List<@NotNull UUID> expectedForms,
+            @NotNull @Size(max = 20) List<@NotNull @Valid FormEntry> forms,
             @Size(max = 4000) String changeNote
     ) {
     }

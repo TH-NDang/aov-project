@@ -24,6 +24,7 @@ import com.wikiaov.hero.internal.ratings.persistence.RatingScaleRepository;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.ApiFieldError;
 import com.wikiaov.platform.PlatformErrorCode;
 import jakarta.validation.Validator;
 import java.math.BigDecimal;
@@ -230,9 +231,9 @@ public class HeroValidation {
         validate(section, value);
 
         var errors = validator.validate(value, Publication.class).stream()
-                .map(v -> new com.wikiaov.platform.ApiFieldError(section.name() + "." + v.getPropertyPath(),
+                .map(v -> new ApiFieldError(section.name() + "." + v.getPropertyPath(),
                         "HERO_PUBLICATION_REQUIRED", "This field is required for publication."))
-                .sorted(Comparator.comparing(com.wikiaov.platform.ApiFieldError::path)).toList();
+                .sorted(Comparator.comparing(ApiFieldError::path)).toList();
         if (!errors.isEmpty()) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT,
                     "Complete the required fields before publishing.", errors);

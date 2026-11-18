@@ -30,6 +30,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -196,7 +197,7 @@ public class LineupInteractions {
         var found = lineups.findAllById(ids).stream()
                 .collect(Collectors.toMap(l -> l.getId(), Function.identity()));
         var counts = likeCounts.counts(modeId, ids);
-        var items = ids.stream().map(found::get).filter(java.util.Objects::nonNull)
+        var items = ids.stream().map(found::get).filter(Objects::nonNull)
                 .map(l -> publicView(l, counts.get(l.getId()))).toList();
 
         return new PageSlice<>(items, page, size, lineups.countVisible(modeId, unit));

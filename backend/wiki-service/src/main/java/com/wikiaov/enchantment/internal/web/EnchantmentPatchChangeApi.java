@@ -4,6 +4,7 @@ import com.wikiaov.platform.CatalogChanges;
 import com.wikiaov.platform.CreatedId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,5 +18,5 @@ public interface EnchantmentPatchChangeApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     CreatedId record(@Parameter(description = "Id identifier.") UUID id,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) CatalogChanges.Record input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) CatalogChanges.Record input);
 }

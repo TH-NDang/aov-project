@@ -1,7 +1,10 @@
 package com.wikiaov.user.internal.domain;
 
 import java.time.ZoneId;
+import java.util.Currency;
+import java.util.IllformedLocaleException;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -30,21 +33,21 @@ public record ProfileInput(
         Locale parsed;
         try {
             parsed = new Locale.Builder().setLanguageTag(locale).build();
-        } catch (java.util.IllformedLocaleException ex) {
+        } catch (IllformedLocaleException ex) {
             throw new IllegalArgumentException("Invalid language tag.", ex);
         }
         if (parsed.getLanguage().isEmpty()
-                || !java.util.Set.of(Locale.getISOLanguages()).contains(parsed.getLanguage())) {
+                || !Set.of(Locale.getISOLanguages()).contains(parsed.getLanguage())) {
             throw new IllegalArgumentException("Unsupported profile language.");
         }
-        if (dateFormat != null && !java.util.Set.of("AUTO", "DMY", "MDY", "YMD").contains(dateFormat)) {
+        if (dateFormat != null && !Set.of("AUTO", "DMY", "MDY", "YMD").contains(dateFormat)) {
             throw new IllegalArgumentException("Unknown date format.");
         }
         locale = parsed.toLanguageTag();
         if (!ZoneId.getAvailableZoneIds().contains(timeZone)) {
             throw new IllegalArgumentException("Unknown IANA time zone.");
         }
-        if (currency != null && java.util.Currency.getAvailableCurrencies().stream()
+        if (currency != null && Currency.getAvailableCurrencies().stream()
                 .noneMatch(known -> known.getCurrencyCode().equals(currency))) {
             throw new IllegalArgumentException("Unknown ISO currency.");
         }

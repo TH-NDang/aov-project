@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
 
 class SourceDomainTest {
@@ -77,6 +79,6 @@ class SourceDomainTest {
     }
 
     private static String sha256(byte[] bytes) throws Exception {
-        return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes));
+        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
     }
 }

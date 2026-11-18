@@ -29,6 +29,7 @@ import com.wikiaov.spell.internal.change.persistence.SpellPatchChangeRepository;
 import com.wikiaov.spell.internal.change.persistence.SpellRemovalRepository;
 import com.wikiaov.spell.internal.change.persistence.entity.SpellRemoval;
 import com.wikiaov.spell.internal.domain.SpellContent;
+import java.net.URI;
 import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
@@ -468,7 +469,7 @@ public class SpellCatalog implements SpellChangeQueries {
 
     private void requireEvidenceUrl(String sourceUrl) {
         try {
-            var url = java.net.URI.create(sourceUrl);
+            var url = URI.create(sourceUrl);
             if (url.getHost() == null || url.getScheme() == null
                     || !Set.of("http", "https").contains(url.getScheme().toLowerCase(Locale.ROOT))
                     || url.getUserInfo() != null) {

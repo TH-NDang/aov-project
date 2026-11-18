@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,10 +87,10 @@ public class ItemPatchChanges implements CatalogChangeProvider {
         var byId = new HashMap<UUID, ItemRevision>();
         snapshots.forEach(r -> byId.put(r.getId(), r));
         var names = translations.findByRevisionIdIn(new ArrayList<>(byId.keySet())).stream()
-                .collect(java.util.stream.Collectors.groupingBy(ItemTranslation::getRevisionId));
+                .collect(Collectors.groupingBy(ItemTranslation::getRevisionId));
         var owners = identities.findAllById(snapshots.stream().map(ItemRevision::getOwnerId).distinct().toList())
                 .stream()
-                .collect(java.util.stream.Collectors.toMap(ItemIdentity::getId, i -> i));
+                .collect(Collectors.toMap(ItemIdentity::getId, i -> i));
         var result = new ArrayList<Entry>();
         for (var fact : facts) {
             var r = byId.get(fact.getToRevisionId());

@@ -1,3 +1,5 @@
 /** item module. Public contracts belong here; implementation belongs in internal. */
-@org.springframework.modulith.ApplicationModule
+@ApplicationModule
 package com.wikiaov.item;
+
+import org.springframework.modulith.ApplicationModule;

@@ -13,6 +13,7 @@ import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
+import com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinIdentityRow;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinImageOption;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinSnapshotRow;
@@ -50,7 +51,7 @@ public class HeroSkinSnapshots implements HeroSectionSnapshots {
     }
 
     @Override
-    public com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository<?> revisions() {
+    public SectionRevisionRepository<?> revisions() {
         return revisions;
     }
 

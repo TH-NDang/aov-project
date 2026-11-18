@@ -8,6 +8,7 @@ import com.wikiaov.hero.internal.ratings.persistence.entity.RatingRevision;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
+import com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ public class HeroRatingSnapshots implements HeroSectionSnapshots {
     }
 
     @Override
-    public com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository<?> revisions() {
+    public SectionRevisionRepository<?> revisions() {
         return revisions;
     }
 

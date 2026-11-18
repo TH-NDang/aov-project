@@ -19,6 +19,7 @@ import com.wikiaov.platform.PageLimits;
 import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -61,13 +62,13 @@ public interface HeroAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     HeroRevisionView create(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Create body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Create body);
 
     @Operation(operationId = "heroAdminApi_fork", summary = "Fork - hero admin", description = "Fork for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     HeroRevisionView fork(@Parameter(description = "Hero id identifier.") UUID heroId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Fork body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Fork body);
 
     @Operation(operationId = "heroAdminApi_revisions", summary = "Revisions - hero admin", description = "Revisions for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
@@ -102,61 +103,61 @@ public interface HeroAdminApi {
     })
     HeroRevisionView publish(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Draft id identifier.") UUID draftId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation body);
 
     @Operation(operationId = "heroAdminApi_baselineContext", summary = "Baseline context - hero admin", description = "Baseline context for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     HeroRevisionView baselineContext(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Draft id identifier.") UUID draftId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid BaselineContext body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid BaselineContext body);
 
     @Operation(operationId = "heroAdminApi_discard", summary = "Discard - hero admin", description = "Discard for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     HeroRevisionView discard(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Draft id identifier.") UUID draftId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation body);
 
     @Operation(operationId = "heroAdminApi_updateProfile", summary = "Update profile - hero admin", description = "Update profile for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     HeroRevisionView updateProfile(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Draft id identifier.") UUID draftId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ProfileRequest body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ProfileRequest body);
 
     @Operation(operationId = "heroAdminApi_updateRatings", summary = "Update ratings - hero admin", description = "Update ratings for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     HeroRevisionView updateRatings(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Draft id identifier.") UUID draftId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid RatingsRequest body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid RatingsRequest body);
 
     @Operation(operationId = "heroAdminApi_updateStats", summary = "Update stats - hero admin", description = "Update stats for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     HeroRevisionView updateStats(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Draft id identifier.") UUID draftId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid StatsRequest body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid StatsRequest body);
 
     @Operation(operationId = "heroAdminApi_updateSkills", summary = "Update skills - hero admin", description = "Update skills for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     HeroRevisionView updateSkills(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Draft id identifier.") UUID draftId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkillsRequest body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkillsRequest body);
 
     @Operation(operationId = "heroAdminApi_updateSkins", summary = "Update skins - hero admin", description = "Update skins for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     HeroRevisionView updateSkins(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Draft id identifier.") UUID draftId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkinsRequest body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkinsRequest body);
 
     @Operation(operationId = "heroAdminApi_updateBindings", summary = "Update bindings - hero admin", description = "Update bindings for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     HeroRevisionView updateBindings(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Draft id identifier.") UUID draftId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid BindingsRequest body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid BindingsRequest body);
 }

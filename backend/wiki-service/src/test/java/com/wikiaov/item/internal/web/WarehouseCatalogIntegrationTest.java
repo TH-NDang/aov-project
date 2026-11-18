@@ -23,6 +23,7 @@ import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -333,7 +334,7 @@ class WarehouseCatalogIntegrationTest {
                 "sourceRevisionId", publishedRevision.get("id"), "cause", "GAME_PATCH", "effectiveFromPatchVariantId",
                 VARIANT), 422);
         var gameplayContext = new GameplayContext(UUID.randomUUID(), "VN", RULESET,
-                "warehouse-tests", PATCH, "warehouse-tests", VARIANT, 1, java.time.Instant.now());
+                "warehouse-tests", PATCH, "warehouse-tests", VARIANT, 1, Instant.now());
         when(contexts.resolve(eq("VN"), any())).thenReturn(gameplayContext);
         when(contexts.active(any())).thenReturn(List.of(gameplayContext));
         assertThat(number(send(get("/api/wiki/v1/spells"), null, 200), "totalElements")).isZero();
@@ -522,7 +523,7 @@ class WarehouseCatalogIntegrationTest {
 
     private void currentWarehouseContext() {
         when(contexts.resolve(eq("VN"), any())).thenReturn(new GameplayContext(UUID.randomUUID(), "VN", RULESET,
-                "warehouse-tests", PATCH, "warehouse-tests", VARIANT, 1, java.time.Instant.now()));
+                "warehouse-tests", PATCH, "warehouse-tests", VARIANT, 1, Instant.now()));
     }
 
     private Map<String, Object> availableSpellContent() {
@@ -785,11 +786,11 @@ class WarehouseCatalogIntegrationTest {
                 .param("patchVariantId", removalVariant.toString()), null, 200);
         assertThat(number(removalScope, "totalElements")).isEqualTo(1);
         when(contexts.resolve(eq("VN"), any())).thenReturn(new GameplayContext(UUID.randomUUID(), "VN", RULESET,
-                "warehouse-tests", removalPatch, "removal", removalVariant, 99, java.time.Instant.now()));
+                "warehouse-tests", removalPatch, "removal", removalVariant, 99, Instant.now()));
         var publicRemoved = send(get("/api/wiki/v1/arcana"), null, 200);
         assertThat(number(publicRemoved, "totalElements")).isZero();
         when(contexts.resolve(eq("VN"), any())).thenReturn(new GameplayContext(UUID.randomUUID(), "VN", RULESET,
-                "warehouse-tests", PATCH, "baseline", VARIANT, 1, java.time.Instant.now()));
+                "warehouse-tests", PATCH, "baseline", VARIANT, 1, Instant.now()));
         assertThat(number(send(get("/api/wiki/v1/arcana"), null, 200), "totalElements")).isEqualTo(1);
         send(get(ROOT + "/arcana").param("rulesetId", RULESET.toString()).param("patchVariantId", VARIANT.toString()),
                 null, 200);

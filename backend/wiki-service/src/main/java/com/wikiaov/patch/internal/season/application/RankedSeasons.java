@@ -18,6 +18,7 @@ import com.wikiaov.patch.internal.season.persistence.entity.SeasonSchedule;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogCodes;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -26,6 +27,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
@@ -56,7 +58,7 @@ public class RankedSeasons {
         this.actors = actors;
     }
 
-    @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.patch.internal.application.service.RankedSeasons.Input")
+    @Schema(name = "com.wikiaov.patch.internal.application.service.RankedSeasons.Input")
     public record Input(
             @NotBlank @Size(max = 64) @Pattern(regexp = CatalogCodes.PATTERN) String code,
             @NotBlank @Size(max = 120) String displayName,
@@ -66,7 +68,7 @@ public class RankedSeasons {
     ) {
     }
 
-    @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.patch.internal.application.service.RankedSeasons.View")
+    @Schema(name = "com.wikiaov.patch.internal.application.service.RankedSeasons.View")
     public record View(
             UUID id,
             String code,
@@ -77,13 +79,13 @@ public class RankedSeasons {
     ) {
     }
 
-    @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.patch.internal.application.service.RankedSeasons.ScheduleInput")
+    @Schema(name = "com.wikiaov.patch.internal.application.service.RankedSeasons.ScheduleInput")
     public record ScheduleInput(
             @NotNull UUID regionId,
             Instant startsAt,
             Instant endsAt,
-            java.time.LocalDate startsOn,
-            java.time.LocalDate endsOn
+            LocalDate startsOn,
+            LocalDate endsOn
     ) {
     }
 
@@ -211,7 +213,7 @@ public class RankedSeasons {
         }
     }
 
-    public void requireReleaseDate(UUID seasonId, UUID regionId, java.time.LocalDate date) {
+    public void requireReleaseDate(UUID seasonId, UUID regionId, LocalDate date) {
         if (seasonId == null) {
             return;
         }
@@ -221,7 +223,7 @@ public class RankedSeasons {
             return;
         }
         var region = regions.findById(regionId).orElse(null);
-        var zone = java.time.ZoneId.of(region.getTimezone());
+        var zone = ZoneId.of(region.getTimezone());
         if ((schedule.getEndsAt() != null && !date.atStartOfDay(zone).toInstant().isBefore(schedule.getEndsAt()))
                 || !date.plusDays(1).atStartOfDay(zone).toInstant().isAfter(schedule.getStartsAt())) {
             throw invalid("The release date must overlap its market season.");

@@ -1,5 +1,6 @@
 package com.wikiaov.enchantment.internal.domain;
 
+import com.wikiaov.platform.CatalogText;
 import com.wikiaov.platform.CatalogText.Translation;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,7 @@ public record EnchantmentContent(
 
     public EnchantmentContent publicCopy(String locale) {
         return new EnchantmentContent(iconAssetId, branchCode, tier, position,
-                com.wikiaov.platform.CatalogText.select(translations, locale), null);
+                CatalogText.select(translations, locale), null);
     }
 
     public EnchantmentContent withTranslations(List<Translation> copy) {
