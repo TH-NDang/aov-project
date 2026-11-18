@@ -28,6 +28,7 @@ import { competitionApi } from "../competition-api"
 import { MatchPanel } from "./match-panel"
 import {
   defaultGroupMode,
+  extraMatch,
   groupMatches,
   hasScore,
   isLeagueStage,
@@ -690,20 +691,7 @@ function ScheduleSetup({ ws, stage }: { ws: Workspace; stage: CompetitionStage }
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
-              ws.change("matches", [
-                ...ws.plan.matches,
-                {
-                  key: `M_${randomId().slice(0, 8)}`,
-                  stageCode: stage.code,
-                  round: 1,
-                  label: "Trận bổ sung",
-                  bestOf: stage.bestOf,
-                  a: { type: "TBD", label: "Đội A" },
-                  b: { type: "TBD", label: "Đội B" },
-                },
-              ])
-            }
+            onClick={() => ws.change("matches", [...ws.plan.matches, extraMatch(stage, `M_${randomId().slice(0, 8)}`)])}
           >
             <Plus aria-hidden /> Thêm trận thủ công
           </Button>

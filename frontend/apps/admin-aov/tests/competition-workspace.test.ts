@@ -10,6 +10,7 @@ import type {
 } from "@aov/community-contracts"
 import {
   defaultGroupMode,
+  extraMatch,
   groupMatches,
   layoutBracket,
   matchLabel,
@@ -207,6 +208,16 @@ test("a side waiting for a titled match and an unnamed open slot read in Admin's
 
   assert.equal(slotText(winner("UF"), plan(titled), teams), "Thắng Chung kết nhánh thắng")
   assert.equal(slotText({ type: "TBD" }, plan(titled), teams), "Chưa xác định")
+})
+
+test("a match added by hand is titled as additional and leaves both sides open and unnamed", () => {
+  const added = extraMatch({ code: "PLAYOFF", bestOf: 5 }, "M_extra")
+
+  assert.deepEqual(
+    [added.label, added.title, added.a, added.b, added.bestOf],
+    [null, { kind: "EXTRA" }, { type: "TBD" }, { type: "TBD" }, 5],
+  )
+  assert.equal(matchLabel(added), "Trận bổ sung")
 })
 
 test("a score must fit the best-of and carry a source", () => {

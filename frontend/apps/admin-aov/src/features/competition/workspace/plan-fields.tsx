@@ -83,7 +83,7 @@ export function SlotEditor({
                 ? { type, seed: Number(id) }
                 : type === "WINNER" || type === "LOSER"
                   ? { type, matchKey: id }
-                  : { type: "TBD", label },
+                  : { type: "TBD" },
           )
         }}
       >

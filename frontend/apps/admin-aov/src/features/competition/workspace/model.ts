@@ -172,6 +172,23 @@ export const matchLabel = (match: PlannedMatch) => matchName(match, adminText) |
 /** The title of a planned match in Admin's words, which its name field shows until an editor types one. */
 export const matchTitleLabel = (match: PlannedMatch) => matchTitleText(match.title, adminText)
 
+/**
+ * A match an editor adds by hand to a stage: titled as an additional match, with both sides open and unnamed, so every
+ * reader words them in its own language.
+ */
+export function extraMatch(stage: Pick<CompetitionStage, "code" | "bestOf">, key: string): PlannedMatch {
+  return {
+    key,
+    stageCode: stage.code,
+    round: 1,
+    label: null,
+    title: { kind: "EXTRA" },
+    bestOf: stage.bestOf,
+    a: { type: "TBD" },
+    b: { type: "TBD" },
+  }
+}
+
 /** How one side of a planned match reads before its team is known. */
 export function slotText(slot: CompetitionSlot, plan: CompetitionPlan, teams: Record<string, TeamContent>): string {
   return slotLabel(slot, plan, teams, adminText)
