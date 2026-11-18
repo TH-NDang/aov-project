@@ -17,8 +17,9 @@ import { formatPatchValue } from "@aov/ui/lib/patch-value"
 import { SkillChangeList } from "../skills/skill-change-list"
 import { compareSkillRanks, splitSkillRanks } from "@aov/ui/lib/skill-rank-values"
 import { SkillRankComparison, SkillRankPartsComparison } from "../skills/skill-rank-table"
-import { ROLES, type ChangeSource, type Content, type Role, type Skill } from "../../api/types"
-import { publishingKeys } from "../../api/publishing-api"
+import { ROLES, type ChangeSource, type Content, type Role, type Skill } from "@/lib/hero-types"
+import { publishingKeys } from "@/lib/api/publishing-api"
+import { Input } from "@aov/ui/components/input"
 
 export interface RecordedChange {
   id: string
@@ -374,8 +375,7 @@ function MechanicChangeText({
           </label>
           <label className="grid gap-1.5">
             <span className="type-label">Liên kết nguồn</span>
-            <input
-              className={control}
+            <Input
               type="url"
               placeholder="https://…"
               value={sourceUrl}

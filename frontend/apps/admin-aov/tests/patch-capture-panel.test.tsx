@@ -25,7 +25,7 @@ import {
   withShopGroups,
   zoomCaptureAt,
 } from "../src/features/publishing/model/captures/patch-capture-model"
-import type { Skill } from "../src/features/publishing/api/types"
+import type { Skill } from "@/lib/hero-types"
 import {
   fetchCaptureSets,
   fetchHeroCaptures,

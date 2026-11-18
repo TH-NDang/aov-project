@@ -13,10 +13,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Page, PageHeader } from "@/components/page-header"
 import { confirmAction } from "@/components/confirm-dialog"
 import { useSearchParam } from "@/hooks/use-search-param"
-import { ImportDialog, SELECT_CLASS, displayValue } from "./import-dialog"
+import { ImportDialog, displayValue } from "./import-dialog"
 import { StorageDataTable } from "./storage-data-table"
 import { storageApi, storageKeys } from "./storage-api"
 import { rowId, validColumn, validateTable, type StorageRow, type StorageTable } from "./storage-model"
+import { NativeSelect } from "@/components/native-select"
 
 type Editor = { kind: "create" | "rename" | "column" | "row"; column?: string; row?: StorageRow }
 
@@ -221,7 +222,7 @@ export function StoragePage() {
       <div className="flex flex-wrap items-end gap-3">
         <label className="grid min-w-56 gap-2 text-sm">
           Bảng dữ liệu
-          <select className={SELECT_CLASS} value={selected} onChange={(event) => setSelected(event.target.value)}>
+          <NativeSelect className="w-full" value={selected} onChange={(event) => setSelected(event.target.value)}>
             <option value="">Chọn bảng…</option>
             {tables.data
               ?.filter((item) => archived || !item.archived)
@@ -230,7 +231,7 @@ export function StoragePage() {
                   {item.name} · {item.rowCount} dòng{item.archived ? " (đã ẩn)" : ""}
                 </option>
               ))}
-          </select>
+          </NativeSelect>
         </label>
         <label className="flex h-9 items-center gap-2 text-sm">
           <input type="checkbox" checked={archived} onChange={(event) => setArchived(event.target.checked)} />
@@ -322,9 +323,9 @@ export function StoragePage() {
               ) : (
                 <label className="flex items-center gap-2 text-sm">
                   Cột ID
-                  <select
+                  <NativeSelect
                     aria-label="Cột ID"
-                    className={`${SELECT_CLASS} w-auto`}
+
                     value={table.idColumn ?? ""}
                     disabled={mutation.isPending}
                     onChange={(event) => void run({ ...table, idColumn: event.target.value || null })}
@@ -333,7 +334,7 @@ export function StoragePage() {
                     {table.columns.map((column) => (
                       <option key={column}>{column}</option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </label>
               )}
             </div>

@@ -1,5 +1,5 @@
 import { isRecord } from "./import-relations"
-import type { Section, Skill } from "../../api/types"
+import type { Section, Skill } from "@/lib/hero-types"
 
 const provenanceTypes = new Set([
   "unlabeled_icons",

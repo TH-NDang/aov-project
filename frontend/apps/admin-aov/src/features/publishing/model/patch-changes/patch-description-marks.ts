@@ -1,5 +1,5 @@
 import { skillSlot, splitSkillRanks, type RankPart, type RankVariable } from "@aov/ui/lib/skill-rank-values"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 
 /**
  * The skill a mechanic note is about. Notes name it the way the patch notes do (the passive, or skill N) or by its key;

@@ -1,6 +1,5 @@
 import { useImageContext } from "../../../media/components/characters/character-image-context"
-import { useContentLocale } from "../../../publishing/api/publication-overview"
-import { control } from "../../../publishing/components/editing/fields"
+import { useContentLocale, type Variant } from "../../../publishing/api/publication-overview"
 import { hasRulesetChoice } from "@/lib/default-ruleset"
 import {
   DropdownMenuItem,
@@ -10,9 +9,9 @@ import {
 } from "@aov/ui/components/dropdown-menu"
 import { FilePenLine } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import type { Variant } from "../../../publishing/api/publication-overview"
 import { type WarehouseEntry } from "../../model/warehouse-types"
 import { warehouseName } from "@aov/ui/lib/warehouse-content"
+import { NativeSelect } from "@/components/native-select"
 
 export function WarehouseDraftMenu<T extends WarehouseEntry>({
   entries,
@@ -60,9 +59,9 @@ export function useWarehouseContext() {
 export function WarehouseRulesetSelect({ context }: { context: ReturnType<typeof useWarehouseContext> }) {
   if (!hasRulesetChoice(context.rulesets.data)) return null
   return (
-    <select
+    <NativeSelect
       aria-label="Bộ quy tắc"
-      className={`${control} h-9 w-auto max-w-52 py-0`}
+      className="max-w-52"
       value={context.rulesetId}
       onChange={(event) => context.setRuleset(event.target.value)}
       disabled={context.rulesets.isPending}
@@ -72,6 +71,6 @@ export function WarehouseRulesetSelect({ context }: { context: ReturnType<typeof
           {ruleset.code}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   )
 }

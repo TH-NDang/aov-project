@@ -34,9 +34,9 @@ import {
   type MediaUsageReport,
   type UsagePlace,
 } from "../../model/media-usage"
-import { upgradeHeroImage } from "../../../publishing/api/publishing-api"
-import type { Asset } from "../../../publishing/api/types"
-import { invalidateMediaAsset } from "../../api/media-cache"
+import { upgradeHeroImage } from "@/lib/api/publishing-api"
+import type { Asset } from "@/lib/hero-types"
+import { invalidateMediaAsset, mediaKeys } from "../../api/media-cache"
 import { croppedImageTypes, FocalPointEditor } from "./focal-point-editor"
 import { ImageDeleteAction } from "./image-delete-action"
 import { MediaSourceFields } from "../sources/media-source-fields"
@@ -52,7 +52,6 @@ import {
   sourceOrigin,
   visibleSources,
 } from "../../model/media-source-gaps"
-import { mediaKeys } from "../../api/media-cache"
 
 /** Lifecycle of the image record; whether anything shows the image is the separate usage count. */
 export const imageStates: Record<string, string> = {

@@ -4,7 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@aov/ui/components/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { matchesQuery } from "@/lib/text"
-import { Field, control } from "../../../publishing/components/editing/fields"
+import { Field } from "../../../publishing/components/editing/fields"
 import { AdminWarehouseView } from "../catalog/warehouse-view"
 import {
   RecipeItemLabel as ReadLabel,
@@ -16,6 +16,7 @@ import { type WarehouseEntry } from "../../model/warehouse-types"
 import { warehouseName, type ItemContent } from "@aov/ui/lib/warehouse-content"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
+import { NativeSelect } from "@/components/native-select"
 
 type Item = WarehouseEntry<ItemContent>
 
@@ -145,8 +146,7 @@ export function ItemRecipe({
     <section className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="type-section-title">Công thức trực tiếp</h3>
-        <select
-          className={`${control} w-auto`}
+        <NativeSelect
           aria-label="Trạng thái công thức"
           value={content.recipeStatus}
           onChange={(event) => {
@@ -159,7 +159,7 @@ export function ItemRecipe({
               {label}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
       {rows.map(({ itemId: id, item, quantity }, index) => (
         <div key={id} className="flex min-w-0 items-center gap-2 border-b py-1.5">

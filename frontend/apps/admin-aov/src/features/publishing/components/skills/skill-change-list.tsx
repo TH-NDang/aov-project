@@ -3,7 +3,7 @@ import { Swords } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { selectSkillTranslation, skillLabel, skillVariantLabel } from "../../model/skills/hero-skills"
 import { SkillArtwork } from "./skill-artwork"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 
 /** Group by exact skill identity at its first occurrence, preserving the order of fields and standalone rows. */
 export function SkillChangeList<T>({

@@ -20,7 +20,7 @@ import {
   type ImportProgress,
   type PreparedImportRow,
 } from "../model/registry-import-runner"
-import { tournamentError, tournamentIssueFields, tournamentKeys } from "../api/tournament-api"
+import { exceptDeletionImpact, tournamentError, tournamentIssueFields, tournamentKeys } from "../api/tournament-api"
 
 const OPERATIONS: Record<ImportOperation, string> = {
   create: "Tạo mới",
@@ -112,7 +112,7 @@ export function RegistryImportSheet({ onClose }: { onClose: () => void }) {
     } finally {
       await client.invalidateQueries({
         queryKey: tournamentKeys.all,
-        predicate: (query) => query.queryKey[2] !== "deletion-impact",
+        predicate: exceptDeletionImpact,
       })
       setRunning(false)
     }

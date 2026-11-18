@@ -1,13 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import {
-  createPublishingApi,
-  uploadHeroImage,
-  upgradeHeroImage,
-  type Request,
-} from "../src/features/publishing/api/publishing-api"
+import { createPublishingApi, uploadHeroImage, upgradeHeroImage, type Request } from "@/lib/api/publishing-api"
 import { contentBlockers, publicationPatchIssue } from "../src/features/publishing/model/publish-rules"
-import type { Revision } from "../src/features/publishing/api/types"
+import type { Revision } from "@/lib/hero-types"
 import { observedAttributes } from "../src/features/publishing/model/assessment/combat-attributes"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { mediaPath } from "../../../tooling/media-proxy.mts"

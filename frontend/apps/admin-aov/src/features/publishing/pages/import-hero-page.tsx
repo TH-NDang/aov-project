@@ -10,7 +10,7 @@ import { useBackgroundTasks } from "@/app/background-tasks"
 import { errorMessage } from "@/lib/api/errors"
 import { ImportContextPicker, type ImportContext } from "../components/import/import-context"
 import { HeroImport, type ImportActivity } from "../components/import/hero-import"
-import { createPublishingApi, publishingKeys } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { ImportJobHistory } from "../components/import/import-jobs"
 import { ImportUploadRecovery } from "../components/import/import-upload-recovery"
 const api = createPublishingApi(backendRequest)

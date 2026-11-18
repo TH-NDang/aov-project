@@ -7,13 +7,11 @@ import {
   type PublishBlockerKey,
   type PublishContent,
 } from "./publish-rules"
-import type { Revision } from "../api/types"
+import type { Revision } from "@/lib/hero-types"
 import { normalize } from "@/lib/text"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
+import type { HeroPublishReadiness } from "@/lib/api/publishing-api"
 
-export type HeroPublishReadiness = Omit<components["schemas"]["HeroPublishReadiness"], "revisions"> & {
-  revisions: Revision[]
-}
 export type Draft = components["schemas"]["HeroPublishDraft"]
 
 export type ReadinessStatus = "READY" | "BLOCKED" | "NO_DRAFT"

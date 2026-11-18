@@ -4,7 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { heroReviewItems, type HeroReviewItem } from "../../model/import/hero-source-review"
 import { selectSkillTranslation, skillLabel, skillVariantLabel } from "../../model/skills/hero-skills"
-import { SECTIONS, type Skill } from "../../api/types"
+import { SECTIONS, type Skill } from "@/lib/hero-types"
 
 export function HeroReviewNotice({
   skills,

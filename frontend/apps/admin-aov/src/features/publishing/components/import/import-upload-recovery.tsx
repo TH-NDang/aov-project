@@ -8,7 +8,7 @@ import { indexImportFiles, normalizeImportPath } from "../../model/import/import
 import { resumeUploadSession, uploadSessionsPath, type UploadSession } from "./import-upload-session"
 import { useBackgroundTasks } from "@/app/background-tasks"
 import { confirmAction } from "@/components/confirm-dialog"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 export function ImportUploadRecovery({
   disabled,

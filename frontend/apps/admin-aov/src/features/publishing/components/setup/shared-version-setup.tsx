@@ -20,7 +20,9 @@ import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatus } from "@/app/drafts/draft-status"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 const patchDraftSchema = z.object({
   seasonId: z.string(),
@@ -115,8 +117,8 @@ export function SharedPatchSetup({
       <fieldset disabled={busy || !overview.data || !draft.ready || draft.invalid} className="grid gap-4">
         <label className="grid gap-1 text-sm">
           Mùa
-          <select
-            className={control}
+          <NativeSelect
+            className="w-full"
             required
             value={seasonId}
             onChange={(e) => {
@@ -130,13 +132,13 @@ export function SharedPatchSetup({
                 {s.displayName}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         {hasRulesetChoice(overview.data?.rulesets) && (
           <label className="grid gap-1 text-sm">
             Bộ quy tắc
-            <select
-              className={control}
+            <NativeSelect
+              className="w-full"
               required
               value={rulesetId}
               onChange={(e) => {
@@ -149,12 +151,12 @@ export function SharedPatchSetup({
                   {r.code}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
         )}
         <label className="grid gap-1 text-sm">
           Vị trí
-          <select {...form.register("before")} className={control}>
+          <NativeSelect {...form.register("before")} className="w-full">
             <option value="">Cuối mùa đã chọn</option>
             {overview.data?.variants
               .filter((v) => v.seasonId === seasonId && v.rulesetId === rulesetId)
@@ -163,13 +165,13 @@ export function SharedPatchSetup({
                   Chèn trước {v.patchCode}
                 </option>
               ))}
-          </select>
+          </NativeSelect>
         </label>
         <label className="grid gap-1 text-sm">
           Mã patch
-          <input
+          <Input
             {...form.register("code")}
-            className={control}
+
             required
             maxLength={64}
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
@@ -178,7 +180,7 @@ export function SharedPatchSetup({
         <DataLanguage value={locale} onChange={(value) => form.setValue("locale", value)} />
         <label className="grid gap-1 text-sm">
           Tiêu đề
-          <input {...form.register("title")} className={control} required maxLength={200} />
+          <Input {...form.register("title")} required maxLength={200} />
         </label>
         <label className="grid gap-1 text-sm">
           Tóm tắt
@@ -394,10 +396,10 @@ export function ScheduleForm({
       {patch && (
         <label className="grid gap-2 text-sm">
           Nguồn cập nhật
-          <input
+          <Input
             name="source"
             type="url"
-            className={control}
+
             disabled={busy || !draft.ready || draft.invalid || draft.conflict || !regionId}
             placeholder="https://…"
             value={draft.value.sources[regionId] ?? ""}
@@ -499,8 +501,7 @@ function ScheduleDateField({
       </legend>
       <input type="hidden" name={name} value={value} />
       <div className="flex gap-2">
-        <input
-          className={control}
+        <Input
           aria-label={label}
           placeholder="dd/mm/yyyy"
           inputMode="numeric"
@@ -583,7 +584,7 @@ function ScheduleDateField({
       {withTime && date && (
         <label className="grid gap-2 text-sm">
           Giờ ({Intl.DateTimeFormat().resolvedOptions().timeZone})
-          <input
+          <Input
             name={`${name}Time`}
             type="text"
             inputMode="numeric"
@@ -591,7 +592,7 @@ function ScheduleDateField({
             pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
             maxLength={5}
             required
-            className={control}
+
             aria-label={`Giờ ${label.toLowerCase()}`}
             value={draft.time}
             onChange={(event) => onChange({ ...draft, time: event.target.value })}

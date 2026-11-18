@@ -1,9 +1,10 @@
 import type { InputHTMLAttributes, ReactNode } from "react"
-import type { Source } from "../../api/types"
+import type { Source } from "@/lib/hero-types"
 import { Button } from "@aov/ui/components/button"
 import { AdminDescriptionField } from "../../../terminology/rich-text-field"
 import { BookOpenText } from "lucide-react"
 import { EditorToolSheet } from "./editor-tool-sheet"
+import { Input } from "@aov/ui/components/input"
 export const control = "w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-50"
 export function Field({
   label,
@@ -44,7 +45,7 @@ export function Field({
           required={props.required}
         />
       ) : (
-        <input {...props} className={control} value={value} onChange={(e) => onChange(e.target.value)} />
+        <Input {...props} value={value} onChange={(e) => onChange(e.target.value)} />
       )}
     </label>
   )

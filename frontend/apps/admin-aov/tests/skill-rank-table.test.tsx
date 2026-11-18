@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
 import { compareSkillRanks } from "@aov/ui/lib/skill-rank-values"
-import type { Skill } from "../src/features/publishing/api/types"
+import type { Skill } from "@/lib/hero-types"
 import { createWindow, installWindow } from "./fixtures/dom"
 
 test("skill details show rank columns and comparison toggles retain the changed-cell markers", async () => {

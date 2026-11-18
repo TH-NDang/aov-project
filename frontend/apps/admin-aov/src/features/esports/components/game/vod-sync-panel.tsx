@@ -1,6 +1,5 @@
-import type { VodPause } from "@aov/community-contracts"
+import type { VodPause, Side } from "@aov/community-contracts"
 import { useEffect, useRef, useState } from "react"
-import type { Side } from "@aov/community-contracts"
 import { Clock3, Crown, Flag, Link2, Pause, Plus, RefreshCw, Save, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"

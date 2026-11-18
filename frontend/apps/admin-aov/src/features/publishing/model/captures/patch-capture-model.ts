@@ -5,7 +5,7 @@ import type {
 import type { ShopCaptureImage, ShopCardBox } from "../../../../../server/shop-capture-manifest.ts"
 import type { HeroContentTab, HeroWorkspaceView } from "../hero-location"
 import { selectSkillTranslation, skillLabel, skillSlot } from "../skills/hero-skills"
-import type { Section, Skill } from "../../api/types"
+import type { Section, Skill } from "@/lib/hero-types"
 
 /** SHOP: the results name this card as where a price or an acquisition was read, but nobody has confirmed it in game. */
 export type CaptureLink = PatchLink | "SHOP"

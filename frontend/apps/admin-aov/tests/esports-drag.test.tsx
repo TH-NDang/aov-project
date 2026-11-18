@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import React, { act } from "react"
-import { JSDOM } from "jsdom"
+import { act } from "react"
 import type { GameContent, Participant } from "@aov/community-contracts"
 import {
   clampSpan,
@@ -14,7 +13,7 @@ import {
 import type { GameView } from "../src/features/esports/model/game-view"
 import { moveMark, observationMarks } from "../src/features/esports/model/observation-marks"
 import type { GameChapter } from "../src/features/esports/model/series-vod"
-import { installWindow } from "./fixtures/dom"
+import { inPage } from "./fixtures/esports-ui"
 
 const lanes = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"] as const
 const player = (lane: Participant["lane"], overrides: Partial<Participant> = {}): Participant => ({
@@ -151,37 +150,6 @@ test("the edges of the ban/pick phase and the loadout marks move only where the 
   })
 })
 
-async function withDom(run: (document: Document, render: (node: React.ReactNode) => Promise<void>) => Promise<void>) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost:5175/tournaments" })
-  const window = dom.window
-  const values = {
-    React,
-    window,
-    document: window.document,
-    navigator: window.navigator,
-    HTMLElement: window.HTMLElement,
-    Element: window.Element,
-    Node: window.Node,
-    MutationObserver: window.MutationObserver,
-    getComputedStyle: window.getComputedStyle.bind(window),
-    CSS: { escape: (value: string) => value },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  }
-  let restoreGlobals = () => {}
-  restoreGlobals = installWindow(window, values)
-  const { createRoot } = await import("react-dom/client")
-  const root = createRoot(window.document.getElementById("root")!)
-  try {
-    await run(window.document, async (node) => {
-      await act(async () => root.render(node))
-    })
-  } finally {
-    await act(async () => root.unmount())
-    restoreGlobals()
-    window.close()
-  }
-}
-
 const seat = (side: "BLUE" | "RED", lane: "MID" | "JUNGLE", name: string) => ({
   key: `${side}:${lane}` as const,
   side,
@@ -217,7 +185,7 @@ const view = {
 } as unknown as GameView
 
 test("dragging an edge or a mark makes the video follow, and a cancelled drag puts it back", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
     const window = document.defaultView!
     const moved: [string, number][] = []
@@ -384,7 +352,7 @@ test("the track opens on a span that holds the focused game, whatever the length
 })
 
 test("the track zooms around the pointer with Ctrl + wheel and with a two-finger pinch", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
     const window = document.defaultView!
     await render(

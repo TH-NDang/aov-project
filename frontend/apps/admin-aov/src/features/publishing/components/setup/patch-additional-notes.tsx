@@ -4,7 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 import { control } from "../editing/fields"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 type Note = { body: string; version: number }
 const path = (variantId: string, locale: string) =>

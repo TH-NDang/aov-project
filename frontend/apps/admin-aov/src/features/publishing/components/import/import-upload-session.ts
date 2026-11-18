@@ -4,9 +4,8 @@ import { findResourceMediaSource } from "@aov/ui/lib/resource-media-sources"
 import { importMediaSources } from "../../model/import/import-media-sources"
 import { ApiError } from "@/lib/api/errors"
 import { importImageFile } from "../../model/import/import-files"
-import type { Request } from "../../api/publishing-api"
+import type { Request, UploadTicket } from "@/lib/api/publishing-api"
 import type { RelatedImage } from "../../model/import/import-relations"
-import type { UploadTicket } from "../../../users/avatar-upload"
 import type { components } from "../../generated/hero-api"
 
 type Input = components["schemas"]["HeroImportRequest"]

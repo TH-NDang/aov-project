@@ -4,13 +4,14 @@ import { Button } from "@aov/ui/components/button"
 import { confirmAction } from "@/components/confirm-dialog"
 import { SkinBadgePicker } from "../../../media/components/badges/skin-badge-picker"
 import { AssetPicker } from "../assets/asset-picker"
-import { Field, control } from "../editing/fields"
+import { Field } from "../editing/fields"
 import { languageOptions } from "../../../users/profile-preference-picker"
 import { HeroAsset } from "../editing/hero-asset"
 import { retainImageOptions } from "../../model/assets/image-options"
-import type { Skin, Skins } from "../../api/types"
+import type { Skin, Skins } from "@/lib/hero-types"
 import { slugify } from "@/lib/text"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
+import { NativeSelect } from "@/components/native-select"
 
 type SkinText = Skin["translations"][number]
 
@@ -216,8 +217,8 @@ export function HeroSkinsEditor({
                           <div className="grid gap-3 @min-[600px]:grid-cols-[10rem_minmax(0,1fr)]">
                             <label className="grid gap-1.5 text-sm">
                               Ngôn ngữ
-                              <select
-                                className={control}
+                              <NativeSelect
+                                className="w-full"
                                 required
                                 value={row.locale}
                                 onChange={(event) => setText(index, textIndex, { locale: event.target.value })}
@@ -235,7 +236,7 @@ export function HeroSkinsEditor({
                                     {option.label}
                                   </option>
                                 ))}
-                              </select>
+                              </NativeSelect>
                             </label>
                             <Field
                               label={TEXT_FIELDS[0][1]}

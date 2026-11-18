@@ -4,8 +4,8 @@ import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixturePreviousRevision } from "./fixtures/hero-workspace-data"
-import type { HeroComparison } from "../src/features/publishing/api/publishing-api"
-import type { Revision, Skill } from "../src/features/publishing/api/types"
+import type { HeroComparison } from "@/lib/api/publishing-api"
+import type { Revision, Skill } from "@/lib/hero-types"
 import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("history deduplicates real patch skill facts and uses gameplay categories only for their exact revision pair", async () => {

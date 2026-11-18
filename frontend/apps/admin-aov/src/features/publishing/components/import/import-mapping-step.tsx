@@ -9,7 +9,7 @@ import {
 import type { ImportField, ImportPolicy } from "../../model/import/hero-import-types"
 import { importFieldLabel } from "../../model/import/import-labels"
 import { RelationMappingFields } from "./relation-mapping"
-import { control } from "../editing/fields"
+import { NativeSelect } from "@/components/native-select"
 
 function sampleValue(value: unknown): string {
   if (value == null || value === "") return "Trống"
@@ -98,8 +98,8 @@ export function ImportMappingStep({
             Dùng mã ổn định như airi. Không tạo lại ID khi cập nhật.
           </span>
         </span>
-        <select
-          className={control}
+        <NativeSelect
+          className="w-full"
           value={idColumn}
           onChange={(e) => {
             setIdColumn(e.target.value)
@@ -110,7 +110,7 @@ export function ImportMappingStep({
           {columns.map((c) => (
             <option key={c}>{c}</option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       <div className="hidden grid-cols-3 gap-4 px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
         <span>Trường dữ liệu</span>
@@ -131,9 +131,9 @@ export function ImportMappingStep({
               </span>
             </div>
             <div className="min-w-0">
-              <select
+              <NativeSelect
                 aria-label={`Cột nguồn cho ${importFieldLabel(field.key)}`}
-                className={control}
+                className="w-full"
                 value={mapping[field.key] ?? ""}
                 onChange={(e) => {
                   setMapping({ ...mapping, [field.key]: e.target.value })
@@ -154,7 +154,7 @@ export function ImportMappingStep({
                 {columns.map((c) => (
                   <option key={c}>{c}</option>
                 ))}
-              </select>
+              </NativeSelect>
               {mapping[field.key] && (
                 <p
                   className="mt-1 truncate text-xs text-muted-foreground"
@@ -164,9 +164,9 @@ export function ImportMappingStep({
                 </p>
               )}
             </div>
-            <select
+            <NativeSelect
               aria-label={`Xử lý ${importFieldLabel(field.key)}`}
-              className={control}
+              className="w-full"
               value={policies[field.key] ?? "FILL_EMPTY"}
               onChange={(e) => {
                 setPolicies({ ...policies, [field.key]: e.target.value as ImportPolicy })
@@ -176,7 +176,7 @@ export function ImportMappingStep({
               <option value="FILL_EMPTY">Chỉ bổ sung chỗ trống</option>
               <option value="OVERWRITE">Ghi đè giá trị</option>
               <option value="SKIP">Bỏ qua</option>
-            </select>
+            </NativeSelect>
           </div>
         ))}
       </div>

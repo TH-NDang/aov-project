@@ -16,6 +16,7 @@ import {
   textOptions,
   venueStageOptions,
 } from "./competition-field-options"
+import { NativeSelect } from "@/components/native-select"
 
 const detailKeys = ["sourceUrl", "prizePool", "currency", "timezone", "notes"] as const
 type Details = Pick<CompetitionPlan, (typeof detailKeys)[number]>
@@ -374,8 +375,8 @@ function VenueDrawer({
       />
       <label className="grid min-w-0 gap-2">
         <span className="type-label">Giai đoạn</span>
-        <select
-          className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+        <NativeSelect
+          className="w-full"
           disabled={disabled}
           value={draft.stageCode}
           onChange={(event) => setDraft((current) => ({ ...current, stageCode: event.target.value }))}
@@ -386,7 +387,7 @@ function VenueDrawer({
               {option.label}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {!stages.length && <p className="type-meta">Thêm giai đoạn ở bước Thể thức rồi chọn tại đây.</p>}
     </CompetitionEditSheet>

@@ -8,8 +8,9 @@ import { AdminDescriptionField } from "../../../terminology/rich-text-field"
 import { plainComparisonText } from "../../model/assessment/hero-comparison"
 import { isRecord } from "../../model/import/import-relations"
 import { rankSummary, rankValues, skillRankCount, skillSourceTable } from "@aov/ui/lib/skill-rank-values"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
+import { Input } from "@aov/ui/components/input"
 
 const SKILL_STAT_NAMES = [
   "Sát thương vật lý",
@@ -97,8 +98,7 @@ export function SkillTagsEditor({
 }
 
 type Table = Record<string, unknown>
-const cellInput =
-  "w-full min-w-16 rounded-md border border-input bg-background px-2 py-1.5 text-sm focus-visible:outline-ring"
+const cellInput = "min-w-16 px-2"
 const rankLabels = (count: number) => Array.from({ length: count }, (_, i) => `Cấp ${i + 1}`)
 
 export function SkillTableEditor({
@@ -172,7 +172,7 @@ export function SkillTableEditor({
                 const calculated = formulaRanks > 1 && values.length === 1
                 function valueInput(i: number, label: string) {
                   return (
-                    <input
+                    <Input
                       className={cellInput}
                       aria-label={`${name || "Thông số"} · ${label}`}
                       value={String(values[i] ?? "")}
@@ -197,7 +197,7 @@ export function SkillTableEditor({
                           ))}
                         </datalist>
                       )}
-                      <input
+                      <Input
                         className={cellInput}
                         required
                         aria-label={`Tên thông số ${index + 1}`}
@@ -290,7 +290,7 @@ function RankSummaryInput({
   return (
     <Popover open={changed && open} onOpenChange={setOpen}>
       <PopoverAnchor asChild>
-        <input
+        <Input
           className={`${cellInput} min-w-52`}
           aria-label={`${name} · Tổng quan`}
           aria-invalid={changed && !valid}

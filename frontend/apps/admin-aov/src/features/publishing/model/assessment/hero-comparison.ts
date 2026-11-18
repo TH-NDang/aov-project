@@ -1,6 +1,6 @@
 import { formatPatchValue } from "@aov/ui/lib/patch-value"
 import { statReadingChange, type StatNumbers } from "./stat-reading"
-import { POSITIONS } from "../../api/types"
+import { POSITIONS } from "@/lib/hero-types"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"

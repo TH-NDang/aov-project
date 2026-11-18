@@ -1,4 +1,4 @@
-import type { ImageOption, MediaRole } from "../../api/types"
+import type { ImageOption, MediaRole } from "@/lib/hero-types"
 
 /** Keep former and replacement primary images available in the same owner/role gallery. */
 export function retainImageOptions(

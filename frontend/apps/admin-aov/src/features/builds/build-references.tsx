@@ -9,7 +9,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { defaultRulesetId } from "@/lib/default-ruleset"
 import { useContentLocale } from "@/features/publishing/api/publication-overview"
-import { createPublishingApi, publishingKeys } from "@/features/publishing/api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { useReferenceCatalog } from "@/features/terminology/catalog"
 import { useWarehouseCatalog } from "@/features/warehouse/api/warehouse-api"
 

@@ -2,9 +2,11 @@ import { useEffect, useRef } from "react"
 import { Settings2, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { EditorToolSheet } from "../editing/editor-tool-sheet"
-import { Field, control } from "../editing/fields"
+import { Field } from "../editing/fields"
 import { selectSkillTranslation, skillLabel, skillSlot } from "../../model/skills/hero-skills"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 const kindLabels: Record<Skill["kind"], string> = { PASSIVE: "Nội tại", ACTIVE: "Chủ động", OTHER: "Khác" }
 type Settings = Pick<Skill, "skillKey" | "kind" | "formKey">
@@ -60,19 +62,23 @@ function SkillKeyFields({
       <div className="grid grid-cols-2 gap-3">
         <label className="grid gap-1.5 text-sm">
           Ô chiêu
-          <select className={control} value={slot} onChange={(event) => change(Number(event.target.value), variant)}>
+          <NativeSelect
+            className="w-full"
+            value={slot}
+            onChange={(event) => change(Number(event.target.value), variant)}
+          >
             {SLOTS.map((value) => (
               <option key={value} value={value}>
                 {slotName(value)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <label className="grid gap-1.5 text-sm">
           Biến thể
-          <input
+          <Input
             ref={variantField}
-            className={control}
+
             type="number"
             min={1}
             max={99}
@@ -137,8 +143,8 @@ export function SkillSettings({
           <SkillKeyFields skill={skill} draft={draft} usedKeys={usedKeys} locked={locked} onChange={update} />
           <label className="grid gap-1.5 text-sm">
             Loại
-            <select
-              className={control}
+            <NativeSelect
+              className="w-full"
               value={draft.kind}
               onChange={(event) => update({ ...draft, kind: event.target.value as Skill["kind"] })}
             >
@@ -147,7 +153,7 @@ export function SkillSettings({
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           <Field
             label="Dạng tướng (nếu có)"

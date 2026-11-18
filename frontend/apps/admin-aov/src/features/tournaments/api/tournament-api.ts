@@ -27,7 +27,86 @@ export interface TournamentRecords {
 }
 export type RecordKind = keyof TournamentRecords
 type Request = <T>(path: string, init?: RequestInit) => Promise<T>
-export const tournamentKeys = { all: ["community", "tournaments"] as const }
+type CatalogScope = Pick<GameContent, "region" | "locale" | "seasonId" | "patchVariantId" | "includeUnscoped">
+
+const all = ["community", "tournaments"] as const
+/**
+ * Every cache key of the tournament records and their views. All of them start with `all`, so one invalidation after a
+ * write refreshes every screen; the third part names what is cached (a record kind or a view), then whose session read
+ * it, then what the view narrows to.
+ */
+export const tournamentKeys = {
+  all,
+  /** Every cached list or row of one kind, such as all games after one game is saved. */
+  kind: (kind: RecordKind) => [...all, kind] as const,
+  me: (actorKey: string) => [...all, "me", actorKey] as const,
+  list: (kind: RecordKind, actorKey: string) => [...all, kind, actorKey] as const,
+  inTournament: (kind: RecordKind, actorKey: string, tournamentId: string) =>
+    [...all, kind, actorKey, "tournament", tournamentId] as const,
+  one: (kind: RecordKind, actorKey: string, id: string | null) => [...all, kind, actorKey, "one", id] as const,
+  /** The games of one series, or every game when no series is named. */
+  seriesGames: (actorKey: string, seriesId?: string) => [...all, "games", actorKey, seriesId ?? "*"] as const,
+  teamRosters: (actorKey: string, teamId: string, tournamentId: string) =>
+    [...all, "roster-memberships", actorKey, teamId, tournamentId] as const,
+  stats: (actorKey: string) => [...all, "tournament-stats", actorKey] as const,
+  catalog: (actorKey: string, scope?: CatalogScope) =>
+    [
+      ...all,
+      "catalog",
+      actorKey,
+      scope?.region,
+      scope?.locale,
+      scope?.seasonId ?? "",
+      scope?.patchVariantId ?? "",
+      !!scope?.includeUnscoped,
+    ] as const,
+  hub: (
+    actorKey: string,
+    search: string,
+    filters: { status: string; tier: string; region: string; year: string },
+    sort: TournamentSort,
+  ) => [...all, "hub", actorKey, search, filters.status, filters.tier, filters.region, filters.year, sort] as const,
+  hubFacets: (actorKey: string) => [...all, "hub-facets", actorKey] as const,
+  /** The parts of one main event, or of every event with "every". */
+  parts: (actorKey: string, mainEventId: string) => [...all, "parts", actorKey, mainEventId] as const,
+  /** The parts of the tournament open in the registry editor, to tell whether it may become a part itself. */
+  ownParts: (tournamentId: string | undefined) => [...all, "parts", tournamentId] as const,
+  picker: (kind: RankedKind, search: string, context?: PickerContext) =>
+    [...all, "picker", kind, search, context ?? null] as const,
+  pickerSelected: (kind: RankedKind, id: string | null | undefined) => [...all, "picker-selected", kind, id] as const,
+  trash: (actorKey: string, kind: RecordKind) => [...all, "trash", actorKey, kind] as const,
+  /** Rows of every state that name the parents of what sits in the trash. */
+  trashLookup: (actorKey: string, kind: RecordKind) => [...all, "trash-lookup", actorKey, kind] as const,
+  deletionImpact: (actorKey: string, kind: RecordKind, id: string, version: number) =>
+    [...all, "deletion-impact", actorKey, kind, id, version] as const,
+  /**
+   * Seasons and patches of the Wiki for one market. They belong to the Wiki, so a tournament write leaves them alone:
+   * the key stays outside `all`.
+   */
+  catalogContext: (region: string, locale: string) => ["tournament", "wiki-context", region, locale] as const,
+}
+
+/** For an invalidation after a write: a deletion check is read afresh each time its question opens. */
+export const exceptDeletionImpact = ({ queryKey }: { queryKey: readonly unknown[] }) =>
+  queryKey[2] !== "deletion-impact"
+
+/** Seasons and patches the Wiki offers for one market, to scope a game to its gameplay version. */
+export type CatalogContext = {
+  seasons: {
+    id: string
+    name: string
+    patches: { id: string; code: string; title: string; regionalDate?: string | null }[]
+  }[]
+}
+
+/** Read from the public Wiki API without the session: every market's seasons are public. */
+export async function fetchCatalogContext(region: string, locale: string, signal?: AbortSignal) {
+  const params = new URLSearchParams({ region, locale })
+  const response = await fetch(`/api/wiki/v1/catalog-context?${params}`, { signal, credentials: "omit" })
+  if (!response.ok) throw new Error("Catalog context unavailable")
+  return (await response.json()) as CatalogContext
+}
+
 export type TournamentSort = "RECENT" | "STATUS" | "NAME"
 /** MAIN keeps a list to main events; each then also answers to the names of its parts. */
 export type TournamentLevel = "ALL" | "MAIN"

@@ -10,8 +10,6 @@ import { OwnerNameHints, OwnerNameInput } from "../../media/components/owner-nam
 import { MediaUploadReferences, type UploadReferences } from "../../media/components/media-upload-references"
 
 /** The same look as the shared text input, for the owner field that needs suggestions. */
-const inputClass =
-  "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 aria-invalid:border-destructive md:text-sm dark:bg-input/30"
 
 export function RegistryLogo({ url, name, portrait = false }: { url?: string; name: string; portrait?: boolean }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
@@ -152,7 +150,6 @@ export function RegistryLogoField({
             Chủ sở hữu ảnh (bắt buộc khi tải lên)
             <OwnerNameInput
               ref={ownerInput}
-              className={inputClass}
               value={owner}
               disabled={busy}
               aria-invalid={(!!error && !owner.trim()) || undefined}

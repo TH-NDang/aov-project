@@ -15,7 +15,7 @@ import { Badge } from "@aov/ui/components/badge"
 import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
 import { translationLanguageLabel } from "../workspace/hero-translation-notice"
 import { SkillSummaryField, summaryValue } from "../skills/skill-summary-field"
-import type { Content, Profile, Skills, Skins } from "../../api/types"
+import type { Content, Profile, Skills, Skins } from "@/lib/hero-types"
 
 type TextRow = {
   locale: string

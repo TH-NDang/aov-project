@@ -6,6 +6,7 @@ import { pageApi, pageKeys } from "../api/page-api"
 import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
 import { RecordPicker } from "@/features/tournaments/components/record-picker"
 import type { PickerContext } from "@/features/tournaments/api/tournament-api"
+import { NativeSelect } from "@/components/native-select"
 
 export function ProfilePicker({
   label,
@@ -19,11 +20,11 @@ export function ProfilePicker({
   const [search, setSearch] = useState("")
   const access = useTournamentAccess()
   const query = useQuery({
-    queryKey: [...pageKeys, access.actorKey, "picker", search],
+    queryKey: pageKeys.picker(access.actorKey, search),
     queryFn: () => pageApi.list("", search),
   })
   const selected = useQuery({
-    queryKey: [...pageKeys, access.actorKey, value],
+    queryKey: pageKeys.page(access.actorKey, value),
     queryFn: () => pageApi.read(value!),
     enabled: !!value,
   })
@@ -40,9 +41,9 @@ export function ProfilePicker({
           onChange={(event) => setSearch(event.target.value)}
         />
       </label>
-      <select
+      <NativeSelect
         aria-label={label}
-        className="h-10 rounded-md border bg-background px-3 text-sm"
+
         value={value || ""}
         onChange={(event) => onChange(event.target.value)}
       >
@@ -56,7 +57,7 @@ export function ProfilePicker({
             {row.lastActiveOn ? ` · ${formatDate(row.lastActiveOn)}` : ""}
           </option>
         ))}
-      </select>
+      </NativeSelect>
       {query.isError && <p className="type-meta text-destructive">Chưa tải được danh sách hồ sơ.</p>}
     </div>
   )

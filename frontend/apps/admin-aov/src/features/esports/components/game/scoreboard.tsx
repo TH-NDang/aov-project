@@ -1,6 +1,5 @@
-import type { ObjectiveKind } from "@aov/community-contracts"
+import type { ObjectiveKind, Side } from "@aov/community-contracts"
 import { useMemo } from "react"
-import type { Side } from "@aov/community-contracts"
 import { Ban, Crown, Flag, History, PackagePlus, TriangleAlert, UserPlus } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import type { GameView, IconRef } from "../../model/game-view"

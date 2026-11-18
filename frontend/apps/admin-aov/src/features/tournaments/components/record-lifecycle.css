@@ -31,7 +31,7 @@
 .tournament-record-usages li {
   justify-content: space-between;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--aov-radius-control);
   background: var(--muted);
 }
 .tournament-record-usages a {
@@ -50,7 +50,7 @@
   display: grid;
   gap: 1px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: var(--aov-radius-card);
   background: var(--border);
 }
 .tournament-trash-list article {

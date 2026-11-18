@@ -8,9 +8,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@aov/ui/components/sheet"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@aov/ui/lib/utils"
-import type { CatalogFilter } from "./catalog-context"
 import { type PublicationOverview, type Variant } from "../../api/publication-overview"
 import { dateLabel } from "@/lib/schedule-date"
+import { type CatalogFilter } from "@/lib/catalog-scope"
 
 export interface TimelineCount {
   changes: number

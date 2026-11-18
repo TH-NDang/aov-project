@@ -2,9 +2,9 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
 import { button as findButton, click, render, testQueryClient, waitFor, withDom } from "./fixtures/dom"
-import type { Request } from "../src/features/publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import type { ImportContext } from "../src/features/publishing/components/import/import-context"
-import type { HeroRow, Revision } from "../src/features/publishing/api/types"
+import type { HeroRow, Revision } from "@/lib/hero-types"
 import { fixtureHeroRow, fixtureRevision } from "./fixtures/hero-workspace-data"
 
 const dom = withDom({

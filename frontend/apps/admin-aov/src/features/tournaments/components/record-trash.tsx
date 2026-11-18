@@ -7,6 +7,7 @@ import { registrySearchText } from "../model/registry-form-model"
 import { RECORD_KIND_LABELS, recordLabel } from "../model/record-lifecycle-model"
 import { RecordLifecycleActions } from "./record-lifecycle-actions"
 import { tournamentApi, tournamentError, tournamentKeys, type RecordKind } from "../api/tournament-api"
+import { NativeSelect } from "@/components/native-select"
 
 export function RecordTrash({
   initialKind,
@@ -20,27 +21,27 @@ export function RecordTrash({
   const [kind, setKind] = useState(initialKind)
   const [search, setSearch] = useState("")
   const records = useQuery({
-    queryKey: [...tournamentKeys.all, "trash", actorKey, kind],
+    queryKey: tournamentKeys.trash(actorKey, kind),
     queryFn: ({ signal }) => tournamentApi.list(kind, signal, { state: "DELETED" }),
   })
   const needsParents = kind === "roster-memberships" || kind === "series" || kind === "games"
   const teams = useQuery({
-    queryKey: [...tournamentKeys.all, "trash-lookup", actorKey, "teams"],
+    queryKey: tournamentKeys.trashLookup(actorKey, "teams"),
     queryFn: ({ signal }) => tournamentApi.list("teams", signal, { state: "ALL" }),
     enabled: needsParents,
   })
   const players = useQuery({
-    queryKey: [...tournamentKeys.all, "trash-lookup", actorKey, "players"],
+    queryKey: tournamentKeys.trashLookup(actorKey, "players"),
     queryFn: ({ signal }) => tournamentApi.list("players", signal, { state: "ALL" }),
     enabled: kind === "roster-memberships",
   })
   const tournaments = useQuery({
-    queryKey: [...tournamentKeys.all, "trash-lookup", actorKey, "tournaments"],
+    queryKey: tournamentKeys.trashLookup(actorKey, "tournaments"),
     queryFn: ({ signal }) => tournamentApi.list("tournaments", signal, { state: "ALL" }),
     enabled: needsParents,
   })
   const series = useQuery({
-    queryKey: [...tournamentKeys.all, "trash-lookup", actorKey, "series"],
+    queryKey: tournamentKeys.trashLookup(actorKey, "series"),
     queryFn: ({ signal }) => tournamentApi.list("series", signal, { state: "ALL" }),
     enabled: kind === "games",
   })
@@ -85,7 +86,7 @@ export function RecordTrash({
           <Trash2 size={16} />
           Thùng rác
         </span>
-        <select
+        <NativeSelect
           aria-label="Loại mục trong thùng rác"
           value={kind}
           onChange={(event) => setKind(event.target.value as RecordKind)}
@@ -95,7 +96,7 @@ export function RecordTrash({
               {name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         <SearchField
           className="w-full sm:w-64"
           label="Tìm trong thùng rác"

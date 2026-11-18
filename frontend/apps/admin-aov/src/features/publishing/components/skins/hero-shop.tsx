@@ -16,11 +16,12 @@ import {
   type SkinAcquisition,
   type SkinMethod,
   publishingKeys,
-} from "../../api/publishing-api"
+} from "@/lib/api/publishing-api"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { captureGroupKeys } from "../../model/captures/patch-capture-model"
 import { PatchCaptureLink } from "../captures/patch-capture-panel"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
+import { NativeSelect } from "@/components/native-select"
 
 const api = createPublishingApi(backendRequest)
 
@@ -45,7 +46,6 @@ const methodLabels: Record<SkinMethod, string> = {
 const amount = (value: number | null | undefined) => (value == null ? "—" : formatGameNumber(value))
 const capturedDate = (value: string | null | undefined) => (value ? formatCalendarDate(value) : null)
 const numberOrNull = (value: string) => (value.trim() === "" ? null : Number(value))
-const control = "h-9 w-full rounded-md border bg-background px-2.5 text-sm disabled:opacity-50"
 const today = () => new Date().toLocaleDateString("en-CA")
 
 export function useHeroShop(heroId?: string) {
@@ -160,8 +160,8 @@ export function HeroShopPanel({
           <p className="type-label mb-3">Giá tướng</p>
           <form className="grid gap-3" onSubmit={submit}>
             <Field label="Trạng thái">
-              <select
-                className={control}
+              <NativeSelect
+                className="w-full"
                 value={form.availability}
                 onChange={(event) => setForm({ ...form, availability: event.target.value as HeroAvailability })}
               >
@@ -170,7 +170,7 @@ export function HeroShopPanel({
                     {label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Giá vàng">

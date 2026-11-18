@@ -41,7 +41,7 @@ import {
   type SecondaryContent,
   type SecondaryKind,
 } from "../../model/secondary-content"
-import { publishingKeys } from "../../../publishing/api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 type SecondaryEntry = WarehouseEntry<WarehouseContents[SecondaryKind]>
 const titles: Record<SecondaryKind, string> = { enchantments: "Phù hiệu", arcana: "Bảng ngọc", spells: "Phụ trợ" }

@@ -45,6 +45,6 @@ export function useSeriesVideo(games: DocumentView<GameContent>[]) {
   const client = useQueryClient()
   return useMutation({
     mutationFn: (url: string) => writeSeriesVideo(tournamentApi, games, url),
-    onSettled: () => client.invalidateQueries({ queryKey: [...tournamentKeys.all, "games"] }),
+    onSettled: () => client.invalidateQueries({ queryKey: tournamentKeys.kind("games") }),
   })
 }

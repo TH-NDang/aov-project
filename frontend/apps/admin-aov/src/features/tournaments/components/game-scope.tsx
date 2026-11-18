@@ -2,14 +2,9 @@ import { useQuery } from "@tanstack/react-query"
 import type { GameContent } from "@aov/community-contracts"
 import { CalendarDays, GitBranch } from "lucide-react"
 import { GAME_REGIONS } from "../model/tournament-model"
+import { fetchCatalogContext, tournamentKeys } from "../api/tournament-api"
+import { NativeSelect } from "@/components/native-select"
 
-interface ContextOptions {
-  seasons: {
-    id: string
-    name: string
-    patches: { id: string; code: string; title: string; regionalDate?: string | null }[]
-  }[]
-}
 export function GameScope({
   content,
   onChange,
@@ -22,13 +17,8 @@ export function GameScope({
   tournamentRegion?: string
 }) {
   const query = useQuery({
-    queryKey: ["tournament", "wiki-context", content.region, content.locale],
-    queryFn: async ({ signal }) => {
-      const params = new URLSearchParams({ region: content.region, locale: content.locale })
-      const response = await fetch(`/api/wiki/v1/catalog-context?${params}`, { signal, credentials: "omit" })
-      if (!response.ok) throw new Error("Catalog context unavailable")
-      return response.json() as Promise<ContextOptions>
-    },
+    queryKey: tournamentKeys.catalogContext(content.region, content.locale),
+    queryFn: ({ signal }) => fetchCatalogContext(content.region, content.locale, signal),
     staleTime: 60000,
     retry: 1,
   })
@@ -39,7 +29,7 @@ export function GameScope({
     <section className="tournament-game-scope" aria-label="Phiên bản gameplay của ván">
       <label>
         <span>Thị trường</span>
-        <select
+        <NativeSelect
           aria-label="Thị trường của ván"
           value={content.region}
           disabled={disabled}
@@ -52,7 +42,7 @@ export function GameScope({
               {region}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {content.region === "GLOBAL" && tournamentRegion && !GAME_REGIONS.includes(tournamentRegion) && (
         <p className="tournament-scope-note">
@@ -65,7 +55,7 @@ export function GameScope({
           <CalendarDays size={13} />
           Mùa
         </span>
-        <select
+        <NativeSelect
           aria-label="Mùa"
           value={content.seasonId ?? ""}
           disabled={disabled || query.isPending}
@@ -78,14 +68,14 @@ export function GameScope({
             </option>
           ))}
           {content.seasonId && !season && <option value={content.seasonId}>Mùa đã liên kết</option>}
-        </select>
+        </NativeSelect>
       </label>
       <label>
         <span>
           <GitBranch size={13} />
           Patch của ván
         </span>
-        <select
+        <NativeSelect
           aria-label="Patch của ván"
           value={content.patchVariantId ?? ""}
           disabled={disabled || query.isPending}
@@ -109,7 +99,7 @@ export function GameScope({
           {content.patchVariantId && !patches.some((patch) => patch.id === content.patchVariantId) && (
             <option value={content.patchVariantId}>Patch đã liên kết</option>
           )}
-        </select>
+        </NativeSelect>
       </label>
       {query.isError && (
         <p className="tournament-scope-note">

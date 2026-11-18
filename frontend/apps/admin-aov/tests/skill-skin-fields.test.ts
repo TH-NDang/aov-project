@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import type { Skin } from "../src/features/publishing/api/types"
+import type { Skin } from "@/lib/hero-types"
 
 const skin = (skinKey: string, name: string, displayOrder = 0): Skin => ({
   skinKey,

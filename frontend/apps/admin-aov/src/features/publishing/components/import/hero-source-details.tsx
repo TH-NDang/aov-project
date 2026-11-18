@@ -4,7 +4,7 @@ import { AlertTriangle, ChevronDown, Clock3, Droplets, ExternalLink, Pencil } fr
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { AdminEntityText } from "../../../terminology/catalog"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 import { heroReviewItems, sourceHttpUrl, sourceReviewNotes } from "../../model/import/hero-source-review"
 import { hasRankFormula, skillSourceTable } from "@aov/ui/lib/skill-rank-values"
 import { SkillTagsEditor, SkillTableEditor } from "../skills/skill-source-editor"

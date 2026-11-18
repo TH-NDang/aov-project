@@ -10,7 +10,7 @@ import {
   statOptions,
   suggestedRows,
 } from "../src/features/publishing/model/patch-changes/patch-change-model"
-import type { Content } from "../src/features/publishing/api/types"
+import type { Content } from "@/lib/hero-types"
 import { formatPatchValue } from "@aov/ui/lib/patch-value"
 import { comparisonValue } from "../src/features/publishing/model/assessment/hero-comparison"
 

@@ -7,7 +7,7 @@ import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import type { Variant } from "../../api/publication-overview"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 /** The overview shows the Vietnamese title, so that is the one renamed here. */
 const TITLE_LOCALE = "vi-VN"

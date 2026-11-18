@@ -13,10 +13,10 @@ import { AssetPicker } from "../../../publishing/components/assets/asset-picker"
 import { CharacterMediaImage } from "./character-media-image"
 import { HeroImageSource } from "../../../publishing/components/assets/hero-image-source"
 import { Field } from "../../../publishing/components/editing/fields"
-import { type Request, publishingKeys } from "../../../publishing/api/publishing-api"
+import { type Request, publishingKeys } from "@/lib/api/publishing-api"
 import { invalidateHeroCatalogs } from "../../../publishing/api/publishing-cache"
 import { useContentLocale } from "../../../publishing/api/publication-overview"
-import type { MediaRole } from "../../../publishing/api/types"
+import type { MediaRole } from "@/lib/hero-types"
 import {
   characterMediaOwners,
   ownerImageRoles,

@@ -2,7 +2,7 @@ import { useMemo } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { fetchPublishedSets, isSourceAccessDenied } from "../../files/capture-sets"
 import type { HeroSourceCoverage } from "../model/captures/source-image-gaps"
-import { publishingKeys } from "./publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 
 /**
  * New captures arrive when someone publishes a set with the sync tool, so the page looks again on its own. A look costs

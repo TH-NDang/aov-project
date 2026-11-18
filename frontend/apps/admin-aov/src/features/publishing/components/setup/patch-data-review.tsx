@@ -6,7 +6,7 @@ import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import type { Variant } from "../../api/publication-overview"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
 export function PatchDataReview({ variant }: { variant: Variant }) {
   const cache = useQueryClient()
   const [confirm, setConfirm] = useState(false)

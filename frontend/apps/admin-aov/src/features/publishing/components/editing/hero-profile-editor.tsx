@@ -1,7 +1,7 @@
 import { Field } from "./fields"
 import { languageOptions } from "../../../users/profile-preference-picker"
 import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
-import { POSITIONS, ROLES, type Position, type Profile, type Role } from "../../api/types"
+import { POSITIONS, ROLES, type Position, type Profile, type Role } from "@/lib/hero-types"
 
 export type ProfileEditorPart = "information" | "lore"
 

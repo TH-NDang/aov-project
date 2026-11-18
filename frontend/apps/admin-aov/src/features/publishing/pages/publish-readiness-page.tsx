@@ -30,7 +30,7 @@ import {
   type ReadinessRow,
 } from "../model/publish-readiness"
 import type { PublishBlocker } from "../model/publish-rules"
-import { createPublishingApi, publishingKeys } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import {
   orderByCaptures,
   readinessCapturePatches,

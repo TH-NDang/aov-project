@@ -5,7 +5,7 @@ import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { positions, positionLanes } from "../../model/hero-classifications"
 import { patchHeroLocation } from "../../model/hero-location"
-import { ROLES } from "../../api/types"
+import { ROLES } from "@/lib/hero-types"
 
 const selected = (value: string | null, options: Record<string, string>) =>
   Object.keys(options).filter((key) => (value ?? "").split(",").includes(key))

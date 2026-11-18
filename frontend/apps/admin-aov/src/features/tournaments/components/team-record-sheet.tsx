@@ -7,11 +7,11 @@ import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { confirmDiscard } from "@/components/confirm-dialog"
 import { LaneIcon } from "@/features/esports/components/primitives"
-import { LANE_LABELS } from "@/features/esports/model/labels"
 import { tournamentApi, tournamentError, tournamentKeys } from "../api/tournament-api"
 import { RegistryLogo } from "./registry-logo"
 import { TeamRecordForm } from "./team-record-form"
 import { TeamRegionBadge, teamRegionName } from "./team-region"
+import { LANE_LABELS } from "@/lib/lanes"
 
 type Editing = { kind: "teams" | "players"; id: string } | null
 
@@ -37,12 +37,12 @@ export function TeamRecordSheet({
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
   const team = useQuery({
-    queryKey: [...tournamentKeys.all, "teams", actorKey, "one", teamId],
+    queryKey: tournamentKeys.one("teams", actorKey, teamId),
     queryFn: ({ signal }) => tournamentApi.read("teams", teamId, signal),
   })
   const players = useQueries({
     queries: playerIds.map((id) => ({
-      queryKey: [...tournamentKeys.all, "players", actorKey, "one", id],
+      queryKey: tournamentKeys.one("players", actorKey, id),
       queryFn: ({ signal }: { signal: AbortSignal }) => tournamentApi.read("players", id, signal),
     })),
   })

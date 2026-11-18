@@ -1,6 +1,6 @@
 import { isRecord } from "./import-relations"
 import { sourceContentWarning, sourceHttpUrl, sourceSkillWarnings } from "./hero-source-review"
-import type { Source } from "../../api/types"
+import type { Source } from "@/lib/hero-types"
 
 export interface SourceDataset {
   rows: Record<string, unknown>[]

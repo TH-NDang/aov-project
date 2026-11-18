@@ -64,9 +64,6 @@ export const directoryApi = {
     ),
 }
 
-/** Under the page keys, so every profile save that refreshes the pages refreshes the directory too. */
-export const directoryKeys = [...pageKeys, "directory"] as const
-
 /**
  * Pages of the identities on screen, so a row can open its profile and show whether it is published. Asked for one
  * batch at a time: a list that keeps growing would otherwise repeat every earlier id and outgrow the request URL.
@@ -77,7 +74,7 @@ export function useProfilesOf(actorKey: string, kind: ProfileKind, entityIds: st
   )
   const results = useQueries({
     queries: batches.map((ids) => ({
-      queryKey: [...directoryKeys, actorKey, "profiles-of", kind, ids],
+      queryKey: pageKeys.directory.profilesOf(actorKey, kind, ids),
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         directoryApi.profiles({ kind, entityIds: ids, size: ids.length }, signal),
       staleTime: 30_000,

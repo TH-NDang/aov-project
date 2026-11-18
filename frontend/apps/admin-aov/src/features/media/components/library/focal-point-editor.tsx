@@ -5,8 +5,7 @@ import { Button } from "@aov/ui/components/button"
 import { focalPosition, type FocalPoint } from "@aov/ui/lib/focal-point"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { invalidateMediaAsset } from "../../api/media-cache"
-import { mediaKeys } from "../../api/media-cache"
+import { invalidateMediaAsset, mediaKeys } from "../../api/media-cache"
 
 interface VersionPoint {
   id: string

@@ -13,7 +13,47 @@ import type {
 } from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
 
-export const pageKeys = ["community-pages"] as const
+const pages = ["community-pages"] as const
+const directory = [...pages, "directory"] as const
+/**
+ * Every cache key of the community pages. A save invalidates `all`, which also refreshes the directory, kept under it;
+ * most keys name whose session read them, since an editor sees unpublished pages that a reader does not.
+ */
+export const pageKeys = {
+  all: pages,
+  /** One page, read by an editor (`actorKey`) or as the public site shows it (`"public"`). */
+  page: (actorKey: string, id: string | null | undefined) => [...pages, actorKey, id] as const,
+  members: (pageId: string) => [...pages, pageId, "members"] as const,
+  handover: (pageId: string) => [...pages, pageId, "handover"] as const,
+  teams: (actorKey: string, pageId: string) => [...pages, actorKey, pageId, "teams"] as const,
+  claims: (actorKey: string) => [...pages, actorKey, "claims"] as const,
+  reports: (actorKey: string) => [...pages, actorKey, "reports"] as const,
+  picker: (actorKey: string, search: string) => [...pages, actorKey, "picker", search] as const,
+  referencePicker: (actorKey: string, kind: ProfileKind | "", search: string) =>
+    [...pages, actorKey, "reference-picker", kind, search] as const,
+  rosterPicker: (actorKey: string, group: string, search: string, teamPageId: string | undefined) =>
+    [...pages, actorKey, "roster-picker", group, search, teamPageId] as const,
+  directory: {
+    all: directory,
+    count: (actorKey: string, kind: ProfileKind, group: PersonRoleFilter | undefined) =>
+      [...directory, actorKey, "count", kind, group] as const,
+    profilesOf: (actorKey: string, kind: ProfileKind, ids: string[]) =>
+      [...directory, actorKey, "profiles-of", kind, ids] as const,
+    competitionPages: (actorKey: string, kind: ProfileKind, search: string, sort: "NAME" | "ACTIVE") =>
+      [...directory, actorKey, kind, search, sort] as const,
+    competitionPageStats: (actorKey: string) => [...directory, actorKey, "competition-page-stats"] as const,
+    people: (actorKey: string, group: string, role: PersonRoleFilter | undefined, search: string, sort: string) =>
+      [...directory, actorKey, "people", group, role, search, sort] as const,
+    players: (
+      actorKey: string,
+      search: string,
+      filters: { country: string; lane: string; status: string },
+      sort: string,
+    ) => [...directory, actorKey, "players", search, filters.country, filters.lane, filters.status, sort] as const,
+    teams: (actorKey: string, search: string, country: string, sort: string) =>
+      [...directory, actorKey, "teams", search, country, sort] as const,
+  },
+}
 export const publicSite = import.meta.env?.VITE_STREAM_URL || "http://localhost:5174"
 const send = <T>(path: string, method: string, body?: unknown) =>
   communityRequest<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) })

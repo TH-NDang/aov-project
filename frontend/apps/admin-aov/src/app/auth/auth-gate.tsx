@@ -14,13 +14,13 @@ import {
   cancelLogin,
   authMessage,
 } from "./session"
+import { Input } from "@aov/ui/components/input"
 
 export function useSession() {
   return useSyncExternalStore(subscribeSession, getSession)
 }
 
-const inputStyle =
-  "h-12 w-full rounded-xl border border-input bg-muted px-3.5 text-base placeholder:text-muted-foreground focus:outline-2 focus:outline-ring sm:text-sm"
+const inputStyle = "h-12 rounded-xl bg-muted px-3.5 sm:text-sm dark:bg-muted"
 export function AuthGate({ children }: { children: ReactNode }) {
   const session = useSession()
   const queryClient = useQueryClient()
@@ -112,7 +112,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
               <label htmlFor="admin-username" className="text-xs text-(--aov-text-soft)">
                 Tên người dùng hoặc email
               </label>
-              <input
+              <Input
                 id="admin-username"
                 name="username"
                 autoComplete="username"
@@ -132,7 +132,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 Mật khẩu
               </label>
               <div className="relative">
-                <input
+                <Input
                   id="admin-password"
                   name="password"
                   type={visible ? "text" : "password"}
@@ -162,7 +162,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
               <label htmlFor="admin-otp" className="text-xs text-(--aov-text-soft)">
                 Mã xác thực 2 bước (nếu tài khoản đã bật)
               </label>
-              <input
+              <Input
                 id="admin-otp"
                 name="otp"
                 inputMode="numeric"

@@ -31,7 +31,7 @@ import { SectionSources } from "../editing/fields"
 import { SkillSettings } from "./skill-settings"
 import { SkillSummaryField, summaryValue } from "./skill-summary-field"
 import { skillLabel, skillSlot, skillVariantLabel } from "../../model/skills/hero-skills"
-import type { Skill, Skills } from "../../api/types"
+import type { Skill, Skills } from "@/lib/hero-types"
 
 export function nextSkillKey(skills: readonly Pick<Skill, "skillKey">[]): string {
   const used = new Set(skills.map((skill) => skill.skillKey))

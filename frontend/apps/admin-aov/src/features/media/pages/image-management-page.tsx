@@ -30,9 +30,8 @@ import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../../publishing/components/assets/asset-picker"
-import { control } from "../../publishing/components/editing/fields"
 import { FileTabs } from "../../files/file-tabs"
-import type { Asset, PageSlice } from "../../publishing/api/types"
+import type { Asset, PageSlice } from "@/lib/hero-types"
 import {
   LibraryImage,
   LibraryOwner,
@@ -58,6 +57,7 @@ import type { MediaSourceTarget } from "../model/bulk-media-sources"
 import { Link, useSearchParams } from "react-router"
 import { formatNumber } from "@/lib/text"
 import { mediaKeys } from "../api/media-cache"
+import { NativeSelect } from "@/components/native-select"
 
 const types = IMAGE_TYPE_LABELS
 const states = imageStates
@@ -407,9 +407,9 @@ export function ImageManagementPage() {
         <div className="flex min-w-0 flex-auto flex-wrap items-center gap-2 sm:flex-nowrap">
           <label className="flex min-w-40 flex-1 items-center sm:min-w-0 sm:flex-none">
             <span className="sr-only">Loại ảnh</span>
-            <select
+            <NativeSelect
               aria-label="Loại ảnh"
-              className="h-10 w-full min-w-0 rounded-xl border bg-background px-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-48"
+              className="w-full min-w-0 font-medium sm:w-48"
               value={type}
               onChange={(e) => setFilters({ type: e.target.value })}
             >
@@ -419,13 +419,13 @@ export function ImageManagementPage() {
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           <label className="flex min-w-40 flex-1 items-center sm:min-w-0 sm:flex-none">
             <span className="sr-only">Nơi dùng</span>
-            <select
+            <NativeSelect
               aria-label="Nơi dùng"
-              className="h-10 w-full min-w-0 rounded-xl border bg-background px-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-52"
+              className="w-full min-w-0 font-medium sm:w-52"
               value={usage}
               onChange={(event) => showUsage(event.target.value as MediaUsageState | "")}
             >
@@ -436,7 +436,7 @@ export function ImageManagementPage() {
                   {usageTotals.data ? ` (${formatNumber(usageTotals.data.states[state])})` : ""}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           {(type || needsCredit || usage) && (
             <Button
@@ -768,7 +768,11 @@ export function ImageManagementPage() {
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-6">
             <label className="grid gap-2 text-sm">
               Loại ảnh
-              <select className={control} value={uploadType} onChange={(event) => setUploadType(event.target.value)}>
+              <NativeSelect
+                className="w-full"
+                value={uploadType}
+                onChange={(event) => setUploadType(event.target.value)}
+              >
                 {/* Avatars are uploaded by their users from the profile, without an owner. */}
                 {Object.entries(types)
                   .filter(([key]) => !needsNoCredit(key))
@@ -777,7 +781,7 @@ export function ImageManagementPage() {
                       {label}
                     </option>
                   ))}
-              </select>
+              </NativeSelect>
             </label>
             <AssetPicker
               key={uploadType}

@@ -18,7 +18,6 @@ import type { CompetitionPlan, CompetitionView, TeamContent } from "@aov/communi
 import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
-import { communityRequest } from "@/app/auth/session"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
 import { pageApi, pageKeys, publicSite } from "@/features/community/api/page-api"
@@ -73,7 +72,7 @@ export function CompetitionWorkspace() {
 function Loader({ access }: { access: Access }) {
   const { tournamentId = "" } = useParams()
   const query = useQuery({
-    queryKey: [...competitionKeys, access.actorKey, tournamentId],
+    queryKey: competitionKeys.plan(access.actorKey, tournamentId),
     queryFn: () => competitionApi.read(tournamentId),
   })
   if (query.isError)
@@ -119,19 +118,19 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
   const rosters = useRosters(entry.id)
   const games = useTournamentGames(entry.id)
   const tournament = useQuery({
-    queryKey: [...tournamentKeys.all, "tournaments", access.actorKey, "one", entry.id],
+    queryKey: tournamentKeys.one("tournaments", access.actorKey, entry.id),
     queryFn: ({ signal }) => tournamentApi.read("tournaments", entry.id, signal),
   })
   // A tournament is either a main event or a part of one; both show the same row of tabs.
   const mainEventId = entry.content.tournament.parentTournamentId || entry.id
   const isPart = mainEventId !== entry.id
   const mainEvent = useQuery({
-    queryKey: [...tournamentKeys.all, "tournaments", access.actorKey, "one", mainEventId],
+    queryKey: tournamentKeys.one("tournaments", access.actorKey, mainEventId),
     queryFn: ({ signal }) => tournamentApi.read("tournaments", mainEventId, signal),
     enabled: isPart,
   })
   const parts = useQuery({
-    queryKey: [...tournamentKeys.all, "parts", access.actorKey, mainEventId],
+    queryKey: tournamentKeys.parts(access.actorKey, mainEventId),
     queryFn: ({ signal }) => tournamentApi.tournamentParts(mainEventId, signal),
     staleTime: 30_000,
   })
@@ -145,14 +144,14 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     [mainEventId, isPart, mainEvent.data, entry.content.tournament.name, parts.data],
   )
   const organization = useQuery({
-    queryKey: [...pageKeys, access.actorKey, plan.organizerPageId],
+    queryKey: pageKeys.page(access.actorKey, plan.organizerPageId),
     queryFn: () => pageApi.read(plan.organizerPageId!),
     enabled: !!plan.organizerPageId,
   })
   // What readers see now; compared with the draft to list what a new publication would change.
   const published = useQuery({
-    queryKey: [...competitionKeys, "published", entry.id, entry.publishedAt],
-    queryFn: () => communityRequest<CompetitionView>(`/competitions/${entry.id}`),
+    queryKey: competitionKeys.published(entry.id, entry.publishedAt),
+    queryFn: () => competitionApi.readPublished(entry.id),
     enabled: !!entry.publishedAt,
   })
 
@@ -203,7 +202,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
               ? "Đã mở nhập kết quả cho các cặp đã xác định."
               : "Đã lưu bản nháp.",
       )
-      client.setQueryData([...competitionKeys, access.actorKey, entry.id], value)
+      client.setQueryData(competitionKeys.plan(access.actorKey, entry.id), value)
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
     },
     meta: { silent: true },

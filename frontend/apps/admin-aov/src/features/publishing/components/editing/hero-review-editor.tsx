@@ -12,7 +12,7 @@ import {
 } from "@aov/ui/components/sheet"
 import { heroReviewItems, setHeroReviewResolved } from "../../model/import/hero-source-review"
 import { selectSkillTranslation, skillLabel } from "../../model/skills/hero-skills"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 
 export function HeroReviewEditor({
   skills,

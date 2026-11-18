@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { useSearchParams } from "react-router"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
-import { publishingKeys } from "../../api/publishing-api"
-import { type HeroRow } from "../../api/types"
+import { publishingKeys } from "@/lib/api/publishing-api"
+import { type HeroRow } from "@/lib/hero-types"
 import { heroLocationId, patchHeroLocation } from "../../model/hero-location"
 import { HeroNavigationGuard } from "../workspace/hero-navigation-guard"
 import { HeroQuickViewBody } from "./hero-quick-view-body"
@@ -12,7 +12,7 @@ import { confirmDiscard } from "@/components/confirm-dialog"
 import { api } from "./hero-catalog-cells"
 
 const HeroWorkspace = lazy(() =>
-  import("../../pages/publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
+  import("../workspace/publishing-workspace").then((module) => ({ default: module.PublishingWorkspace })),
 )
 
 export function HeroQuickView({

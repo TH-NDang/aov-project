@@ -13,7 +13,7 @@ test("hero catalog keeps every loaded row and exposes the hero code and actions 
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { HeroCatalog } = await import("../src/features/publishing/components/catalog/hero-catalog")
-  const { publishingKeys } = await import("../src/features/publishing/api/publishing-api")
+  const { publishingKeys } = await import("@/lib/api/publishing-api")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: 0 } } })

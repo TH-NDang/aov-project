@@ -1,5 +1,5 @@
 import { ApiError } from "@/lib/api/errors"
-import type { AssetDetail } from "../../api/types"
+import type { AssetDetail } from "@/lib/hero-types"
 
 /** The backend refuses more ids than this in one request. */
 const idsPerRequest = 100

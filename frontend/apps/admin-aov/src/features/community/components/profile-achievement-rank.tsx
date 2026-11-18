@@ -2,6 +2,7 @@ import { useState } from "react"
 import type { ProfileAchievement } from "@aov/community-contracts"
 import { chooseRank, RANK_CHOICES, rankChoice, typedPlace, type RankChoice } from "../model/achievement-rank-model"
 import { Field } from "./profile-form-primitives"
+import { NativeSelect } from "@/components/native-select"
 
 type Rank = Pick<ProfileAchievement, "place" | "placeTo" | "award">
 
@@ -13,8 +14,8 @@ export function ProfileAchievementRank({ value, onChange }: { value: Rank; onCha
     <>
       <label className="grid min-w-0 gap-2">
         <span className="type-label">Xếp hạng</span>
-        <select
-          className="type-body h-10 w-full rounded-md border bg-background px-3"
+        <NativeSelect
+          className="w-full"
           value={choice}
           onChange={(event) => {
             const next = event.target.value as RankChoice
@@ -27,7 +28,7 @@ export function ProfileAchievementRank({ value, onChange }: { value: Rank; onCha
               {option.label}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {choice === "OTHER" && (
         <div className="grid min-w-0 grid-cols-2 gap-3">

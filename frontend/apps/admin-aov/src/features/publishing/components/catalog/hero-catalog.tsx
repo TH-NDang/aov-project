@@ -10,11 +10,10 @@ import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { cn } from "@aov/ui/lib/utils"
 import { errorMessage } from "@/lib/api/errors"
-import { type HeroCatalogQuery, publishingKeys } from "../../api/publishing-api"
+import { type HeroCatalogQuery, publishingKeys } from "@/lib/api/publishing-api"
 import { heroFormNote } from "../../model/hero-forms-model"
-import { type HeroGameplayChange } from "../../api/types"
+import { type HeroGameplayChange } from "@/lib/hero-types"
 import { heroCatalogRows, appliedMarkets } from "../../model/catalog/catalog-data"
-import type { CatalogFilter } from "./catalog-context"
 import { type PublicationOverview } from "../../api/publication-overview"
 import { dateLabel } from "@/lib/schedule-date"
 import { ChangeKindBadges } from "../patch-changes/hero-change-badges"
@@ -23,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { closeHeroLocation, heroLocationId, openHeroLocation, patchHeroLocation } from "../../model/hero-location"
 import { useHeroEntries } from "../patch-changes/patch-notes-sheet"
-import { showAllCatalogEntries } from "../../model/catalog/catalog-scope"
+import { showAllCatalogEntries, type CatalogFilter } from "@/lib/catalog-scope"
 import { useHeroScopeChanges } from "../../api/use-hero-scope-changes"
 import { HeroCatalogFilters, heroCatalogFacets } from "./hero-catalog-filters"
 import {
@@ -38,6 +37,7 @@ import {
   HeroTranslations,
 } from "./hero-catalog-cells"
 import { HeroQuickView } from "./hero-quick-view"
+import { NativeSelect } from "@/components/native-select"
 
 const helper = createColumnHelper<typeof features, CatalogRow>()
 const defaultFilter: CatalogFilter = { seasonId: "", variantId: "" }
@@ -377,9 +377,9 @@ export function HeroCatalog({
           <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             <ArrowDownWideNarrow aria-hidden className="size-3.5" />
             <span className="sr-only">Sắp xếp</span>
-            <select
+            <NativeSelect
               aria-label="Sắp xếp tướng"
-              className="h-8 max-w-full rounded-lg border border-border/70 bg-background px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-8 max-w-full border-border/70 px-2 text-xs text-foreground md:text-xs"
               value={sort}
               onChange={(event) =>
                 setParams(
@@ -394,7 +394,7 @@ export function HeroCatalog({
             >
               <option value="code">Mã tướng (A–Z)</option>
               <option value="edited-desc">Chỉnh sửa gần nhất</option>
-            </select>
+            </NativeSelect>
           </label>
         </div>
       </div>

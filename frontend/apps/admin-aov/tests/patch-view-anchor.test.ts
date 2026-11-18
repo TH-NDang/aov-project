@@ -11,7 +11,7 @@ import {
   patchHeroLocation,
   switchHeroLocation,
 } from "../src/features/publishing/model/hero-location"
-import type { Revision } from "../src/features/publishing/api/types"
+import type { Revision } from "@/lib/hero-types"
 import type { Variant } from "../src/features/publishing/api/publication-overview"
 
 const variants = [

@@ -15,6 +15,7 @@ import { AVAILABILITY_LABEL, missingLabel } from "./game-mode-import"
 import { confirmAction } from "@/components/confirm-dialog"
 import { HeroCodePicker, RowMenu } from "./entry-controls"
 import { RulesEditor } from "./rules-editor"
+import { NativeSelect } from "@/components/native-select"
 
 /** Discarding a draft drops every change saved in it, so it asks first. */
 export const confirmDraftDiscard = () =>
@@ -26,7 +27,6 @@ export const confirmDraftDiscard = () =>
   })
 
 export const field = "grid gap-1"
-export const selectClass = "h-9 rounded-md border bg-transparent px-3 type-body"
 
 /** Mode editor: one open draft at a time, saved with the version it was read at, then published. */
 export function GameModeEditorPage() {
@@ -158,15 +158,14 @@ export function GameModeEditorPage() {
               </label>
               <label className={field}>
                 <span className="type-label">Nhóm</span>
-                <select
-                  className={selectClass}
+                <NativeSelect
                   value={content.group ?? ""}
                   onChange={(event) => set({ group: (event.target.value || null) as ModeContent["group"] })}
                 >
                   <option value="">Chưa chọn</option>
                   <option value="PVP">PVP</option>
                   <option value="ENTERTAINMENT">Chế độ giải trí</option>
-                </select>
+                </NativeSelect>
               </label>
               <label className={field}>
                 <span className="type-label">Thứ tự trong nhóm</span>
@@ -219,14 +218,13 @@ export function GameModeEditorPage() {
               </label>
               <label className={field}>
                 <span className="type-label">Cẩm nang chi tiết</span>
-                <select
-                  className={selectClass}
+                <NativeSelect
                   value={content.guideKind}
                   onChange={(event) => set({ guideKind: event.target.value as ModeContent["guideKind"] })}
                 >
                   <option value="NONE">Không có</option>
                   <option value="AUTO_CHESS">Cờ Liên Quân</option>
-                </select>
+                </NativeSelect>
               </label>
             </div>
             <label className={field}>
@@ -305,8 +303,7 @@ export function GameModeEditorPage() {
           <Section title="Tình trạng mở">
             <label className={field}>
               <span className="type-label">Trạng thái</span>
-              <select
-                className={selectClass}
+              <NativeSelect
                 value={content.availability?.status ?? ""}
                 onChange={(event) =>
                   set({
@@ -323,7 +320,7 @@ export function GameModeEditorPage() {
                     {label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
             {(
               [

@@ -5,7 +5,7 @@ import { Input } from "@aov/ui/components/input"
 import { SkillStateToggle } from "@aov/ui/components/skill-kit"
 import { AssetPicker } from "../assets/asset-picker"
 import { HeroAsset } from "../editing/hero-asset"
-import type { Skill, SkillStateIcon } from "../../api/types"
+import type { Skill, SkillStateIcon } from "@/lib/hero-types"
 
 export const MAX_STATE_ICONS = 10
 

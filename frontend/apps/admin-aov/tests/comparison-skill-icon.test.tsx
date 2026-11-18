@@ -5,7 +5,7 @@ import * as React from "react"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { SkillImage } from "../src/features/publishing/components/skills/skill-artwork"
-import type { Skill } from "../src/features/publishing/api/types"
+import type { Skill } from "@/lib/hero-types"
 import { createWindow, installWindow, waitFor, withGlobals } from "./fixtures/dom"
 
 const skill = (

@@ -33,7 +33,7 @@ export function ProfileRoster({
   const ids = [...new Set(value.flatMap((row) => (row.pageId ? [row.pageId] : [])))]
   const profiles = useQueries({
     queries: ids.map((id) => ({
-      queryKey: [...pageKeys, access.actorKey, id],
+      queryKey: pageKeys.page(access.actorKey, id),
       queryFn: () => pageApi.read(id),
       staleTime: 60_000,
     })),
@@ -105,7 +105,7 @@ function MemberSheet({
   const [created, setCreated] = useState(false)
   const access = useTournamentAccess()
   const selected = useQuery({
-    queryKey: [...pageKeys, access.actorKey, draft.pageId],
+    queryKey: pageKeys.page(access.actorKey, draft.pageId),
     queryFn: () => pageApi.read(draft.pageId!),
     enabled: !!draft.pageId,
   })
@@ -302,7 +302,7 @@ function PersonResults({
   const deferred = useDeferredValue(search)
   const access = useTournamentAccess()
   const query = useInfiniteQuery({
-    queryKey: [...pageKeys, access.actorKey, "roster-picker", group, deferred, teamPageId],
+    queryKey: pageKeys.rosterPicker(access.actorKey, group, deferred, teamPageId),
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       pageApi.list(

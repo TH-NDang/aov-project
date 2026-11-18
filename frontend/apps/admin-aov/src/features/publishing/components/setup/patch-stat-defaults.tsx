@@ -4,11 +4,12 @@ import { Button } from "@aov/ui/components/button"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { Field, control } from "../editing/fields"
+import { Field } from "../editing/fields"
 import { STAT_LABELS, statLabel } from "../../model/patch-changes/patch-change-model"
 import { formatStat, statUnit, type StatDefault } from "../../model/assessment/combat-attributes"
 import type { Variant } from "../../api/publication-overview"
-import { publishingKeys } from "../../api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
+import { NativeSelect } from "@/components/native-select"
 
 export function useStatDefaults(id?: string) {
   return useQuery({
@@ -101,13 +102,13 @@ export function PatchStatDefaults({ variant }: { variant: Variant }) {
         >
           <label className="type-label grid gap-1">
             Thuộc tính
-            <select className={control} value={edit.key} onChange={(e) => start(e.target.value)}>
+            <NativeSelect className="w-full" value={edit.key} onChange={(e) => start(e.target.value)}>
               {Object.entries(STAT_LABELS).map(([key, label]) => (
                 <option key={key} value={key}>
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           <Field
             type="number"

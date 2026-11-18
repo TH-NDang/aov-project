@@ -1,5 +1,5 @@
-import { LANE_LABELS } from "@/features/esports/model/labels"
-import type { components } from "../generated/hero-api"
+import type { components } from "@/features/publishing/generated/hero-api"
+import { LANE_LABELS } from "@/lib/lanes"
 export const SECTIONS = [
   ["PROFILE", "profile", "Thông tin"],
   ["OVERVIEW_RATINGS", "overview-ratings", "Đánh giá"],

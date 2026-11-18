@@ -12,14 +12,12 @@ import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
 import { ApiError, errorMessage } from "@/lib/api/errors"
 import { fetchSourceFile, openSourceCollection } from "../files/source-collection-files"
-import {
-  BlessingsSection,
-  ItemsSection,
-  LineupsSection,
-  QuestsSection,
-  TraitsSection,
-  UnitsSection,
-} from "./auto-chess-sections"
+import { BlessingsSection } from "./auto-chess/blessings-section"
+import { ItemsSection } from "./auto-chess/items-section"
+import { LineupsSection } from "./auto-chess/lineups-section"
+import { QuestsSection } from "./auto-chess/quests-section"
+import { TraitsSection } from "./auto-chess/traits-section"
+import { UnitsSection } from "./auto-chess/units-section"
 import { confirmDraftDiscard, field, Section } from "./game-mode-editor"
 import { ModeArtCard } from "./mode-art-card"
 import { RulesEditor } from "./rules-editor"

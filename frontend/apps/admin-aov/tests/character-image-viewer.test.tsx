@@ -6,9 +6,9 @@ import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { characterMediaOwners, ownerMainEntry } from "../src/features/media/model/character-image-viewer-data"
-import type { Request } from "../src/features/publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import type { CharacterImageEntry, CharacterImageGroup } from "../src/features/media/api/character-image-api"
-import type { Preview } from "../src/features/publishing/api/types"
+import type { Preview } from "@/lib/hero-types"
 import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 function viewerFixture(): Preview {

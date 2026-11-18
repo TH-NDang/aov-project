@@ -3,7 +3,7 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-qu
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
 import { useNavigate, useSearchParams } from "react-router"
-import type { DocumentView, TournamentContent } from "@aov/community-contracts"
+import type { DocumentView, TournamentContent, TournamentStats as ContractStats } from "@aov/community-contracts"
 import { Plus, Trash2, Upload } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
@@ -13,7 +13,6 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
 import { RegistryImportSheet } from "@/features/tournaments/components/registry-import"
 import { useTournamentStats } from "../data/use-esports-data"
-import type { TournamentStats as ContractStats } from "@aov/community-contracts"
 import { TournamentList } from "@/features/tournaments/components/tournament-list"
 import { regionsNamedBy } from "@/features/tournaments/model/record-reason"
 import { partsByMainEvent } from "@/features/tournaments/model/tournament-parts"
@@ -25,10 +24,10 @@ import {
   ManagementLoading,
   ManagementPanel,
   ManagementToolbar,
-  managementSelectClassName,
 } from "@/features/tournaments/components/management-list"
 import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { AccessGate, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
+import { NativeSelect } from "@/components/native-select"
 
 type StatusFilter = "all" | NonNullable<TournamentContent["status"]>
 type TournamentStats = Omit<ContractStats, "tournamentId">
@@ -57,7 +56,7 @@ function Hub({ access }: { access: Access }) {
   const year = params.get("year") ?? ""
   const settled = useDebounced(search)
   const tournaments = useInfiniteQuery({
-    queryKey: [...tournamentKeys.all, "hub", access.actorKey, settled, status, tier, region, year, order],
+    queryKey: tournamentKeys.hub(access.actorKey, settled, { status, tier, region, year }, order),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       tournamentApi.searchTournaments(
@@ -80,19 +79,19 @@ function Hub({ access }: { access: Access }) {
     placeholderData: keepPreviousData,
   })
   const facets = useQuery({
-    queryKey: [...tournamentKeys.all, "hub-facets", access.actorKey],
+    queryKey: tournamentKeys.hubFacets(access.actorKey),
     queryFn: ({ signal }) => tournamentApi.tournamentFacets(signal, "MAIN"),
     staleTime: 30_000,
   })
   const parts = useQuery({
-    queryKey: [...tournamentKeys.all, "parts", access.actorKey, "every"],
+    queryKey: tournamentKeys.parts(access.actorKey, "every"),
     queryFn: ({ signal }) => tournamentApi.tournamentParts(undefined, signal),
     staleTime: 30_000,
   })
   const partsByEvent = useMemo(() => partsByMainEvent(parts.data ?? []), [parts.data])
   const counters = useTournamentStats()
   const plans = useQuery({
-    queryKey: [...competitionKeys, access.actorKey, "summaries"],
+    queryKey: competitionKeys.summaries(access.actorKey),
     queryFn: competitionApi.summaries,
   })
 
@@ -186,11 +185,11 @@ function Hub({ access }: { access: Access }) {
             placeholder="Tên giải đấu, mã hoặc khu vực…"
             onReset={filtered ? resetFilters : undefined}
           >
-            <select
+            <NativeSelect
               aria-label="Hạng giải"
               value={tier}
               onChange={(event) => setFilter("tier", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Tất cả hạng giải</option>
               {Object.entries(TIER_LABELS).map(([value, label]) => (
@@ -198,12 +197,12 @@ function Hub({ access }: { access: Access }) {
                   {label}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Khu vực giải đấu"
               value={region}
               onChange={(event) => setFilter("region", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Mọi khu vực</option>
               {regions.map((value) => (
@@ -211,12 +210,12 @@ function Hub({ access }: { access: Access }) {
                   {regionName(value)}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Năm giải đấu"
               value={year}
               onChange={(event) => setFilter("year", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Mọi năm</option>
               {years.map((value) => (
@@ -224,19 +223,19 @@ function Hub({ access }: { access: Access }) {
                   {value}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Sắp xếp giải đấu"
               value={order}
               onChange={(event) => setOrder(event.target.value as TournamentSort)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               {Object.entries(SORTS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </ManagementToolbar>
           {visible.length ? (
             <TournamentList

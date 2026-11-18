@@ -4,11 +4,11 @@ import { changeKindIcons } from "@aov/ui/components/change-kind-icons"
 import { backendRequest } from "@/app/auth/session"
 import { cn } from "@aov/ui/lib/utils"
 import { changeTone, useChangeColors } from "../../../publishing/components/patch-changes/change-color-preferences"
-import type { CatalogFilter } from "../../../publishing/components/catalog/catalog-context"
 import type { PublicationOverview } from "../../../publishing/api/publication-overview"
 import type { TimelineCount } from "../../../publishing/components/catalog/catalog-timeline"
 import type { WarehouseKind } from "@aov/ui/lib/warehouse-content"
 import { warehouseKeys } from "../../api/warehouse-api"
+import { type CatalogFilter } from "@/lib/catalog-scope"
 
 export const catalogChangeKinds = {
   DATA_BASELINE: { label: "Nhập dữ liệu", icon: changeKindIcons.DATA_BASELINE },

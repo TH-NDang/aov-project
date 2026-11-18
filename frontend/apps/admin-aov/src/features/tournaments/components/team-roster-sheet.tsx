@@ -79,7 +79,7 @@ export function TeamRosterSheet({
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
   const memberships = useQuery({
-    queryKey: [...tournamentKeys.all, "roster-memberships", actorKey, team.id, tournamentId],
+    queryKey: tournamentKeys.teamRosters(actorKey, team.id, tournamentId),
     queryFn: ({ signal }) => tournamentApi.list("roster-memberships", signal, { teamId: team.id, tournamentId }),
     enabled: !!tournamentId,
   })

@@ -10,8 +10,8 @@ import {
   type CaptureImage,
   type CaptureTarget,
 } from "../model/captures/patch-capture-model"
-import { createPublishingApi, type HeroCatalogQuery, publishingKeys } from "./publishing-api"
-import type { HeroRow, PageSlice, Skill } from "./types"
+import { createPublishingApi, type HeroCatalogQuery, publishingKeys } from "@/lib/api/publishing-api"
+import type { HeroRow, PageSlice, Skill } from "@/lib/hero-types"
 
 const api = createPublishingApi(backendRequest)
 const OPEN_KEY = "aov-admin:hero-captures-open"

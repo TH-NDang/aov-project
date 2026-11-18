@@ -13,6 +13,7 @@ import { ProfileTypeIcon } from "./profile-icons"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { NativeSelect } from "@/components/native-select"
 
 export function PageReferencePicker({
   value,
@@ -38,12 +39,12 @@ export function PageReferencePicker({
   const [filter, setFilter] = useState<ProfileKind | "">(kind || "")
   const [search, setSearch] = useState("")
   const selected = useQuery({
-    queryKey: [...pageKeys, actorKey, value],
+    queryKey: pageKeys.page(actorKey, value),
     queryFn: () => pageApi.read(value!),
     enabled: !!value,
   })
   const results = useInfiniteQuery({
-    queryKey: [...pageKeys, actorKey, "reference-picker", kind || filter, search],
+    queryKey: pageKeys.referencePicker(actorKey, kind || filter, search),
     initialPageParam: 0,
     queryFn: ({ pageParam }) => pageApi.list(kind || filter, search, pageParam),
     getNextPageParam: nextPageOf,
@@ -115,9 +116,9 @@ export function PageReferencePicker({
               />
             </div>
             {!kind && (
-              <select
+              <NativeSelect
                 aria-label="Loại hồ sơ tham chiếu"
-                className="rounded-md border bg-background px-2 text-sm"
+                className="px-2"
                 value={filter}
                 onChange={(event) => {
                   setFilter(event.target.value as ProfileKind | "")
@@ -129,7 +130,7 @@ export function PageReferencePicker({
                     {name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             )}
           </div>
           {results.isPending ? (

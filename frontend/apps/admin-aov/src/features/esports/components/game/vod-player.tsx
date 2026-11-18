@@ -19,6 +19,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { youtubeWatchUrl } from "../../model/vod"
 import { formatClock } from "@/lib/clock"
 import { usePhoneLayout } from "./floating-panel"
+import { NativeSelect } from "@/components/native-select"
 
 type YTPlayer = {
   seekTo(seconds: number, allowSeekAhead: boolean): void
@@ -435,7 +436,7 @@ export const VodPlayer = forwardRef<
       >
         <div
           className={cn(
-            "flex cursor-grab touch-none items-center gap-2 bg-zinc-900 px-2 py-1.5 text-xs select-none active:cursor-grabbing",
+            "flex cursor-grab touch-none items-center gap-2 bg-black/90 px-2 py-1.5 text-xs select-none active:cursor-grabbing",
             !floating && "hidden",
           )}
           role="toolbar"
@@ -486,7 +487,7 @@ export const VodPlayer = forwardRef<
           />
         </div>
         <div
-          className="flex h-10 shrink-0 items-center gap-0.5 bg-zinc-900 px-1.5 text-xs"
+          className="flex h-10 shrink-0 items-center gap-0.5 bg-black/90 px-1.5 text-xs"
           aria-label="Điều khiển video"
         >
           <button type="button" className={control} aria-label={playing ? "Tạm dừng" : "Phát"} onClick={toggle}>
@@ -556,10 +557,10 @@ export const VodPlayer = forwardRef<
               }
             }}
           />
-          <select
+          <NativeSelect
             value={rate}
             aria-label="Tốc độ phát"
-            className="h-7 shrink-0 rounded-md bg-transparent px-1 text-xs hover:bg-white/15 [&>option]:text-black"
+            className="h-7 shrink-0 border-0 bg-transparent px-1 text-xs shadow-none hover:bg-white/15 md:text-xs dark:bg-transparent [&>option]:text-black"
             onChange={(event) => {
               const next = Number(event.target.value)
               setRate(next)
@@ -571,7 +572,7 @@ export const VodPlayer = forwardRef<
                 {value}×
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <button
             type="button"
             className={cn(control, youtubeControls && "bg-white/20")}

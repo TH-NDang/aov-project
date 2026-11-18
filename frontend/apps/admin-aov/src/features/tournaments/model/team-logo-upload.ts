@@ -1,4 +1,4 @@
-import { createPublishingApi, uploadHeroImage, type Request } from "../../publishing/api/publishing-api"
+import { createPublishingApi, uploadHeroImage, type Request } from "@/lib/api/publishing-api"
 
 export class RegistryLogoUploadError extends Error {
   constructor() {

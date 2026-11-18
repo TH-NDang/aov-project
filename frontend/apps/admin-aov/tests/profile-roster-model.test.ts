@@ -16,7 +16,7 @@ const member = (extra: Partial<ProfileMember> = {}): ProfileMember => ({ name: "
 
 test("a roster names its lanes like the match screens do", async () => {
   const { rosterLaneLabels } = await import("../src/features/community/model/profile-roster-model")
-  const { LANE_LABELS } = await import("../src/features/esports/model/labels")
+  const { LANE_LABELS } = await import("../src/lib/lanes")
   const { LANES } = await import("../src/features/tournaments/model/tournament-model")
 
   assert.equal(rosterLaneLabels.SUPPORT, LANE_LABELS.SUPPORT.name)

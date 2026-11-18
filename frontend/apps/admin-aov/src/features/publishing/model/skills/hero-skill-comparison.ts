@@ -1,8 +1,8 @@
 import { SKILL_FIELD_LABELS as fieldLabels, skillFieldLabel } from "./skill-field-labels"
 import { joinStatReadings, plainComparisonText } from "../assessment/hero-comparison"
 import { compareSkillRanks, type RankComparison } from "@aov/ui/lib/skill-rank-values"
-import type { HeroComparison } from "../../api/publishing-api"
-import type { Skill } from "../../api/types"
+import type { HeroComparison } from "@/lib/api/publishing-api"
+import type { Skill } from "@/lib/hero-types"
 import { normalize } from "@/lib/text"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 

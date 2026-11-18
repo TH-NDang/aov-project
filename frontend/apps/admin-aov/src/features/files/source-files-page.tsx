@@ -30,7 +30,6 @@ import { MasterDetail } from "@/components/master-detail"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { Page, PageHeader } from "@/components/page-header"
 import { SearchField } from "@/components/search-field"
-import { control } from "../publishing/components/editing/fields"
 import { CollectionFormSheet } from "./collection-form-sheet"
 import { FileTabs } from "./file-tabs"
 import {
@@ -50,6 +49,7 @@ import { OrphansSheet } from "./orphans-sheet"
 import { SourceFileSheet } from "./source-file-sheet"
 import { SourceUploadDialog } from "./source-upload-dialog"
 import { ErrorState, LoadingState } from "@/components/query-state"
+import { NativeSelect } from "@/components/native-select"
 
 export const CATEGORY_ICONS: Record<SourceCategory, typeof Archive> = {
   HERO_CAPTURE: ScanFace,
@@ -126,8 +126,8 @@ export function SourceFilesPage() {
       <div className="flex flex-wrap items-center gap-2" role="region" aria-label="Bộ lọc tệp nguồn">
         <label className="flex items-center gap-2">
           <span className="type-label">Chức năng</span>
-          <select
-            className={cn(control, "w-auto min-w-48")}
+          <NativeSelect
+            className="min-w-48"
             value={category ?? ""}
             onChange={(event) => update({ category: event.target.value || null, collection: null, file: null })}
           >
@@ -137,7 +137,7 @@ export function SourceFilesPage() {
                 {CATEGORY_LABELS[key]}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <SearchField
           value={query}

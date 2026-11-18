@@ -2,6 +2,7 @@ import { useCallback, useId, useSyncExternalStore } from "react"
 import { ArrowDown, ArrowUp, Palette, RotateCcw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { NativeSelect } from "@/components/native-select"
 
 export const changeColorsStorageKey = "aov.admin.change-colors.v1"
 export const changeColorPalette = {
@@ -172,19 +173,19 @@ export function ChangeColorSettings({ className = "" }: { className?: string }) 
                 </span>
                 {label}
               </label>
-              <select
+              <NativeSelect
                 id={`${fieldId}-${kind}`}
                 aria-label={`Màu ${label.toLocaleLowerCase("vi-VN")}`}
                 value={color}
                 onChange={(event) => setColor(kind, event.target.value as ChangeColorName)}
-                className="h-9 min-w-28 rounded-md border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="min-w-28 px-2"
               >
                 {Object.entries(changeColorPalette).map(([value, option]) => (
                   <option key={value} value={value}>
                     {option.label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           )
         })}

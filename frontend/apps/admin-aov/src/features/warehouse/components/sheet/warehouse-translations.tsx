@@ -3,10 +3,11 @@ import { Languages, Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { AdminRichTextPreview } from "../../../terminology/rich-text-field"
-import { Field, control } from "../../../publishing/components/editing/fields"
+import { Field } from "../../../publishing/components/editing/fields"
 import { languageOptions } from "../../../users/profile-preference-picker"
 import type { WarehouseTranslation } from "@aov/ui/lib/warehouse-content"
 import { WithReference } from "./warehouse-translation-panel"
+import { NativeSelect } from "@/components/native-select"
 
 /** The floating reference for this editor's fields, read from the same kind of text in another language. */
 const Reference = WithReference<WarehouseText>
@@ -63,8 +64,8 @@ export function WarehouseTranslations({
         <Languages className="size-4 text-muted-foreground" />
         <label className="min-w-0 flex-1">
           <span className="sr-only">Ngôn ngữ bản dịch</span>
-          <select
-            className={control}
+          <NativeSelect
+            className="w-full"
             value={language}
             disabled={disabled && !preview}
             aria-label="Ngôn ngữ bản dịch"
@@ -79,7 +80,7 @@ export function WarehouseTranslations({
                 {value.some((entry) => entry.locale === code) ? " · Đã có" : " · Chưa có"}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <Badge variant="outline">{value.length} bản dịch</Badge>
       </div>

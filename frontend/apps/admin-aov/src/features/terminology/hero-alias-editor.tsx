@@ -8,6 +8,7 @@ import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { errorMessage } from "@/lib/api/errors"
 import { languageOptions } from "../users/profile-preference-picker"
 import { normalizeHeroAliases } from "./hero-aliases"
+import { NativeSelect } from "@/components/native-select"
 
 export type HeroAliasUpdate = { locale: string; aliases: string[] }
 
@@ -79,9 +80,9 @@ function HeroAliasForm({
           <Languages className="size-3.5" />
           Ngôn ngữ
         </span>
-        <select
+        <NativeSelect
           aria-label="Ngôn ngữ tên gọi khác"
-          className="h-9 rounded-md border bg-background px-2 text-sm"
+          className="px-2"
           disabled={busy}
           value={language}
           onChange={(event) => setLanguage(event.target.value)}
@@ -91,7 +92,7 @@ function HeroAliasForm({
               {languageOptions.find((option) => option.value === text.locale)?.label || text.locale}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       <label className="grid gap-1.5 text-xs">
         Tên gọi khác, mỗi dòng một tên

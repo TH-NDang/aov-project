@@ -1,7 +1,7 @@
 import { skillSlot, skillVariant } from "./hero-skills"
 import { skillImageMatch, type SkillImage } from "../../components/skills/skill-artwork"
 import { stateIconsOf } from "../../components/skills/skill-state-icons"
-import type { Skill } from "../../api/types"
+import type { Skill } from "@/lib/hero-types"
 
 /**
  * Library pictures no skill of the draft shows yet: not a skill's own icon, not the picture a skill borrows from the

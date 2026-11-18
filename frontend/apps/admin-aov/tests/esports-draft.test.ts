@@ -1,0 +1,187 @@
+import assert from "node:assert/strict"
+import { test } from "node:test"
+import { gameStatistics } from "../src/features/esports/model/statistics"
+import { draftGame } from "./fixtures/esports-model"
+
+test("a team cannot pick again what it played earlier in the series, until the last game of the BO", async () => {
+  const { draftUnavailable, seriesLocks, unavailableReason, allowedOptions } =
+    await import("../src/features/esports/model/series-rules")
+  const games = [
+    draftGame(1, { teamId: "a", picks: ["Florentino", "Nakroth"], bans: ["Aoi"] }, { teamId: "b", picks: ["Lauriel"] }),
+    // Teams swap sides in game 2; the rule follows the team, not the side.
+    draftGame(2, { teamId: "b", picks: ["Capheny"] }, { teamId: "a", picks: ["Ẻlsu"] }),
+  ]
+  const locks = seriesLocks(games, 3, 5)
+  assert.equal(locks.decider, false)
+  assert.deepEqual(
+    locks.byTeam.get("a")!.map((use) => [use.gameNumber, use.hero.name]),
+    [
+      [1, "Florentino"],
+      [1, "Nakroth"],
+      [2, "Ẻlsu"],
+    ],
+  )
+  assert.deepEqual(
+    locks.byTeam.get("b")!.map((use) => use.hero.name),
+    ["Lauriel", "Capheny"],
+  )
+
+  const game3 = draftGame(3, { teamId: "a", picks: [null, "Murad"], bans: ["Lauriel"] }, { teamId: "b", picks: [] })
+  const name = (id: string) => (id === "a" ? "AZT" : "EMW")
+  const pickA = draftUnavailable(game3.content, { side: "BLUE", kind: "pick", index: 0 }, locks, name)
+  assert.equal(
+    unavailableReason(pickA, { name: "florentino" }),
+    "AZT đã dùng ở ván 1",
+    "names match case-insensitively",
+  )
+  assert.equal(unavailableReason(pickA, { name: "Elsu" }), "AZT đã dùng ở ván 2", "and without accents")
+  assert.equal(unavailableReason(pickA, { name: "Lauriel" }), "Đã bị cấm ở ván này")
+  assert.equal(unavailableReason(pickA, { name: "Murad" }), "AZT đã chọn ở ván này")
+  assert.equal(unavailableReason(pickA, { name: "Aoi" }), null, "a ban from an earlier game no longer applies")
+  assert.equal(unavailableReason(pickA, { name: "Capheny" }), null, "the other team's earlier picks stay open")
+
+  const pickB = draftUnavailable(game3.content, { side: "RED", kind: "pick", index: 0 }, locks, name)
+  assert.equal(unavailableReason(pickB, { name: "Florentino" }), null)
+  assert.equal(unavailableReason(pickB, { name: "Capheny" }), "EMW đã dùng ở ván 2")
+
+  const ban = draftUnavailable(game3.content, { side: "RED", kind: "ban", index: 0 }, locks, name)
+  assert.equal(unavailableReason(ban, { name: "Florentino" }), null, "bans may target heroes locked for a team")
+  assert.equal(unavailableReason(ban, { name: "Murad" }), "AZT đã chọn ở ván này")
+
+  const own = draftUnavailable(game3.content, { side: "BLUE", kind: "pick", index: 1 }, locks, name)
+  assert.equal(unavailableReason(own, { name: "Murad" }), null, "a slot can keep its own hero")
+  const catalog = ["Florentino", "Murad", "Aoi", "Lauriel"].map((hero) => ({ id: hero.toLowerCase(), name: hero }))
+  assert.deepEqual(
+    allowedOptions(catalog, pickA).map((hero) => hero.name),
+    ["Aoi"],
+  )
+
+  const decider = seriesLocks(
+    [...games, draftGame(3, { teamId: "a", picks: ["Murad"] }, { teamId: "b", picks: [] })],
+    5,
+    5,
+  )
+  assert.equal(decider.decider, true)
+  assert.equal(decider.byTeam.size, 0, "the last game of the BO opens every hero again")
+  assert.equal(seriesLocks(games, 1, 5).byTeam.size, 0, "game 1 has nothing before it")
+})
+
+test("draft turns build bans and provisional line-ups, and teammates swap heroes without leaving the team", async () => {
+  const { assignHero, earliestLive, withTurns } = await import("../src/features/esports/model/draft")
+  const base = draftGame(2, { teamId: "a", picks: [] }, { teamId: "b", picks: [] }).content as Parameters<
+    typeof withTurns
+  >[0]
+  const turn = (order: number, kind: "BAN" | "PICK", side: "BLUE" | "RED", name: string, atSecond?: number) => ({
+    order,
+    kind,
+    side,
+    hero: { id: null, name },
+    atSecond,
+  })
+  const drafted = withTurns(base, [
+    turn(1, "BAN", "BLUE", "Aoi", 110),
+    turn(2, "PICK", "BLUE", "Murad", 120),
+    turn(3, "PICK", "RED", "Lauriel", 125),
+    turn(4, "PICK", "BLUE", "Omen", 130),
+  ])
+  assert.deepEqual(
+    drafted.sides[0]!.bans.map((ban) => ban.name),
+    ["Aoi", null, null, null],
+  )
+  assert.deepEqual(
+    drafted.sides[0]!.participants.map((participant) => participant.hero.name),
+    ["Murad", "Omen", null, null, null],
+    "picks fill empty lanes in pick order",
+  )
+
+  // Omen goes top: the top laner's Murad moves to jungle, where Omen was.
+  const swapped = assignHero(drafted, "BLUE", 0, { id: null, name: "Omen" })
+  assert.deepEqual(
+    swapped.sides[0]!.participants.map((participant) => participant.hero.name),
+    ["Omen", "Murad", null, null, null],
+  )
+  // Undoing the last pick removes it from the line-up and keeps the swap of the rest.
+  const undone = withTurns(swapped, swapped.draft!.turns.slice(0, -1))
+  assert.deepEqual(
+    undone.sides[0]!.participants.map((participant) => participant.hero.name),
+    [null, "Murad", null, null, null],
+  )
+  assert.equal(earliestLive({ startSecond: 100, lockedSecond: 140, turns: drafted.draft!.turns }), 140)
+})
+
+test("a hero written with a plain apostrophe matches the catalog's curly one everywhere", async () => {
+  const { referenceIndex } = await import("../src/features/esports/model/game-view")
+  const { heroKeys } = await import("../src/features/esports/model/series-rules")
+  const { nameKey } = await import("../src/features/esports/model/name-key")
+  const catalog = [{ id: "ybneth", code: "ybneth", name: "Y’bneth", iconUrl: "/ybneth.png" }]
+
+  assert.equal(nameKey("Y'bneth"), nameKey("Y’bneth"))
+  assert.equal(nameKey("  Tel‘Annas "), nameKey("Tel'Annas"))
+  assert.equal(
+    referenceIndex(catalog)({ name: "Y'bneth" })?.iconUrl,
+    "/ybneth.png",
+    "the imported name finds its picture",
+  )
+
+  const imported = heroKeys({ name: "Y'bneth" })
+  const recorded = heroKeys({ id: "ybneth", name: "Y’bneth" })
+  assert.ok(
+    imported.some((key) => recorded.includes(key)),
+    "a series rule sees both spellings as one hero",
+  )
+
+  const content = (heroName: string, id?: string) =>
+    ({
+      seriesId: "s",
+      number: 1,
+      region: "VN",
+      locale: "vi-VN",
+      winner: "BLUE",
+      sides: [
+        { side: "BLUE", teamId: "a", bans: [], participants: [{ lane: "MID", hero: { id, name: heroName } }] },
+        { side: "RED", teamId: "b", bans: [{ name: "Y'bneth" }], participants: [] },
+      ],
+    }) as unknown as Parameters<typeof gameStatistics>[0][number]
+  const stats = gameStatistics([content("Y'bneth"), content("Y’bneth", "ybneth")])
+  const ybneth = stats.heroes.filter((entry) => nameKey(entry.name) === nameKey("Y'bneth"))
+  assert.equal(ybneth.length, 1, "statistics count one hero, not two spellings")
+  assert.equal(ybneth[0]!.picks, 2)
+  assert.equal(ybneth[0]!.bans, 2)
+  assert.equal(ybneth[0]!.name, "Y’bneth", "the catalog's spelling is shown")
+})
+
+test("an imported hero name finds its catalog hero by code or by the checked list, and shows the catalog name", async () => {
+  const { referenceIndex } = await import("../src/features/esports/model/game-view")
+  const hero = (id: string, code: string, name: string) => ({ id, code, name, iconUrl: `/${code}.png` })
+  const lookup = referenceIndex([
+    hero("lubu", "lu-bu", "Lữ Bố"),
+    hero("richter", "riktor", "Richter"),
+    hero("diaochan", "diaochan", "Điêu Thuyền"),
+    hero("ming", "ming", "Ming"),
+    hero("flowborn-mid", "flowborn-mid", "Flowborn Pháp sư"),
+    hero("helen", "helen", "Helen"),
+    hero("bolt-baron", "bolt-baron", "Bolt Baron"),
+    hero("dolia", "dolia", "Dolia"),
+  ])
+  assert.deepEqual(
+    ["Lu Bu", "Riktor", "Diao Chan", "Ming Shiyin", "Flowborn Mage"].map((name) => lookup({ name })?.name),
+    ["Lữ Bố", "Richter", "Điêu Thuyền", "Ming", "Flowborn Pháp sư"],
+  )
+  assert.deepEqual(
+    ["Payna", "Peura", "Sikong Zhen", "Doria"].map((name) => lookup({ name })?.name),
+    ["Helen", "Helen", "Bolt Baron", "Dolia"],
+    "a reworked hero and the Honor of Kings names of two others",
+  )
+  assert.equal(lookup({ name: "Lu Bu" })?.iconUrl, "/lu-bu.png")
+  assert.equal(
+    lookup({ name: "The Joker" })?.iconUrl,
+    undefined,
+    "a hero the catalog lacks keeps its recorded name only",
+  )
+  assert.equal(lookup({ name: "The Joker" })?.name, "The Joker")
+  assert.equal(
+    lookup({ id: "lubu", name: "Lu Bu" })?.name,
+    "Lu Bu",
+    "a selection with an id keeps the name recorded with it",
+  )
+})

@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import type { AssetDetail, AssetProvenance } from "../src/features/publishing/api/types"
+import type { AssetDetail, AssetProvenance } from "@/lib/hero-types"
 import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("hero image sources share the image request and retain current provenance, safe links and missing states", async () => {

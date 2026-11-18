@@ -16,7 +16,7 @@ import { HeroCombatAttributes } from "../assessment/hero-combat-attributes"
 import { PatchCaptureLink } from "../captures/patch-capture-panel"
 import { captureGroupKeys } from "../../model/captures/patch-capture-model"
 import type { StatDefault } from "../../model/assessment/combat-attributes"
-import type { Content, Profile, Section } from "../../api/types"
+import type { Content, Profile, Section } from "@/lib/hero-types"
 
 // Groups are divided by a line between them; the card's own edge already opens the first one. `admin-section` is not
 // used here: its unlayered border would win over `first:border-t-0`.

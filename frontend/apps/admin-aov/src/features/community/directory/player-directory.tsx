@@ -5,16 +5,15 @@ import type { CareerStatus, Lane, PlayerDirectoryEntry } from "@aov/community-co
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { tournamentPath, type Access } from "@/features/esports/pages/esports-shell"
 import { HeroIcon, LaneIcon, Monogram, PlayerPhoto } from "@/features/esports/components/primitives"
-import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
 import { initials } from "@/features/esports/model/game-view"
-import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
+import { ManagementToolbar } from "@/features/tournaments/components/management-list"
 import { CAREER_STATUSES } from "@/features/tournaments/components/tournament-metadata"
 import { TEAM_REGIONS } from "@/features/tournaments/components/team-region"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
+import { pageKeys } from "../api/page-api"
 import { ProfileCountry } from "../components/profile-country"
 import {
   directoryApi,
-  directoryKeys,
   useDebounced,
   useHeroPortraits,
   useProfilesOf,
@@ -30,6 +29,8 @@ import {
   useDirectoryFilters,
 } from "./directory-shell"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { NativeSelect } from "@/components/native-select"
+import { LANE_LABELS, LANE_ORDER } from "@/lib/lanes"
 
 const section = directorySections[1]
 const SORTS: Record<PlayerSort, string> = {
@@ -53,7 +54,7 @@ export function PlayerDirectory({ access }: { access: Access }) {
   const sort = (filters.values.sort || "RECENT") as PlayerSort
   const search = useDebounced(q)
   const players = useInfiniteQuery({
-    queryKey: [...directoryKeys, access.actorKey, "players", search, country, lane, status, sort],
+    queryKey: pageKeys.directory.players(access.actorKey, search, { country, lane, status }, sort),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       directoryApi.players({ q: search, country, lane, status, sort, page: pageParam }, signal),
@@ -97,11 +98,11 @@ export function PlayerDirectory({ access }: { access: Access }) {
             placeholder="Tên thi đấu, tên thật hoặc mã…"
             onReset={filters.filtered ? filters.reset : undefined}
           >
-            <select
+            <NativeSelect
               aria-label="Quốc gia tuyển thủ"
               value={country}
               onChange={(event) => filters.setFilter("country", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Mọi quốc gia</option>
               {TEAM_REGIONS.map((region) => (
@@ -109,12 +110,12 @@ export function PlayerDirectory({ access }: { access: Access }) {
                   {region.name}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Trạng thái thi đấu"
               value={status}
               onChange={(event) => filters.setFilter("status", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Mọi trạng thái</option>
               {Object.entries(CAREER_STATUSES).map(([value, label]) => (
@@ -122,19 +123,19 @@ export function PlayerDirectory({ access }: { access: Access }) {
                   {label}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Sắp xếp tuyển thủ"
               value={sort}
               onChange={(event) => filters.setFilter("sort", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               {Object.entries(SORTS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </ManagementToolbar>
         }
       >

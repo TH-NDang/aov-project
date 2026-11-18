@@ -28,14 +28,14 @@ export function PageReview() {
 function Review({ actorKey }: { actorKey: string }) {
   const [tab, setTab] = useState("claims")
   const claims = useInfiniteQuery({
-    queryKey: [...pageKeys, actorKey, "claims"],
+    queryKey: pageKeys.claims(actorKey),
     initialPageParam: 0,
     queryFn: ({ pageParam }) => pageApi.claims(pageParam),
     getNextPageParam: nextPageOf,
     enabled: tab === "claims",
   })
   const reports = useInfiniteQuery({
-    queryKey: [...pageKeys, actorKey, "reports"],
+    queryKey: pageKeys.reports(actorKey),
     initialPageParam: 0,
     queryFn: ({ pageParam }) => pageApi.reports(pageParam),
     getNextPageParam: nextPageOf,
@@ -83,7 +83,7 @@ function ReviewCard({ claim, report }: { claim?: PageClaim; report?: CommunityRe
       claim
         ? pageApi.decide(claim, positive, resolution).then(() => {})
         : pageApi.resolve(report!.id, resolution, positive),
-    onSuccess: () => client.invalidateQueries({ queryKey: pageKeys }),
+    onSuccess: () => client.invalidateQueries({ queryKey: pageKeys.all }),
     meta: { silent: true },
   })
   return (

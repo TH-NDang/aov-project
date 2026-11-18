@@ -1,7 +1,6 @@
-import type { Content, HeroGameplayChange, HeroRow, Revision } from "../../api/types"
+import type { Content, HeroGameplayChange, HeroRow, Revision } from "@/lib/hero-types"
 import type { PublicationOverview, Variant } from "../../api/publication-overview"
-import type { CatalogFilter } from "../../components/catalog/catalog-context"
-import { draftInCatalogScope } from "./catalog-scope"
+import { draftInCatalogScope, type CatalogFilter } from "@/lib/catalog-scope"
 
 export function targetVariants(data: PublicationOverview, filter: CatalogFilter): Variant[] {
   if (filter.variantId) return data.variants.filter((v) => v.id === filter.variantId)

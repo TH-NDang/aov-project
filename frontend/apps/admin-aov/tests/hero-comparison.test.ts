@@ -324,7 +324,7 @@ test("skill warning matching handles both array paths and named source slots wit
 test("review resolution clears all copies of one warning, preserves evidence and can be reopened", () => {
   const flag = { field: "hero.skills[1].description", note: "Clipped description", status: "visible_text_preserved" }
   const other = { ...flag, field: "hero.skills[2].description" }
-  const skills: import("../src/features/publishing/api/types").Skill[] = [1, 2].map((index) => ({
+  const skills: import("@/lib/hero-types").Skill[] = [1, 2].map((index) => ({
     skillKey: `skill-${index}-1`,
     kind: "ACTIVE",
     displayOrder: index,
@@ -383,7 +383,7 @@ test("skill source details render a safe source link and keep clipped text in he
       await import("../src/features/publishing/components/import/hero-source-details")
     const { renderToStaticMarkup } = await import("react-dom/server")
     const note = "Mô tả đã bị cắt, cần bổ sung phần còn lại."
-    const skill: import("../src/features/publishing/api/types").Skill = {
+    const skill: import("@/lib/hero-types").Skill = {
       skillKey: "skill-1-1",
       kind: "ACTIVE",
       formKey: null,

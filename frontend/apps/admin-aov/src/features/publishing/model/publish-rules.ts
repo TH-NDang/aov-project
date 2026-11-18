@@ -1,5 +1,5 @@
 import { observedAttributes } from "./assessment/combat-attributes"
-import type { Content, MediaRole, Revision, Section } from "../api/types"
+import type { Content, MediaRole, Revision, Section } from "@/lib/hero-types"
 
 /**
  * What decides whether a draft may be published, for the header button and the overview of all heroes alike. The

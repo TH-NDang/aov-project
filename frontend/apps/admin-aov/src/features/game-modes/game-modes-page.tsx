@@ -12,6 +12,7 @@ import { fetchSourceFile, openSourceCollection } from "../files/source-collectio
 import { gameModeApi, gameModeKeys, uploadModeImage, type AdminSummary, type ModeGroup } from "./game-mode-api"
 import { importedImageSource, modeContentFromManifest, MODES_SOURCE, type ModeManifestEntry } from "./game-mode-import"
 import { normalize } from "@/lib/text"
+import { NativeSelect } from "@/components/native-select"
 
 const GROUP_LABEL: Record<ModeGroup, string> = { PVP: "PVP", ENTERTAINMENT: "Giải trí" }
 
@@ -228,14 +229,10 @@ function CreateModeDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           </label>
           <label className="grid gap-1">
             <span className="type-label">Nhóm</span>
-            <select
-              className="h-9 rounded-md border bg-transparent px-3"
-              value={group}
-              onChange={(event) => setGroup(event.target.value as ModeGroup)}
-            >
+            <NativeSelect value={group} onChange={(event) => setGroup(event.target.value as ModeGroup)}>
               <option value="PVP">PVP</option>
               <option value="ENTERTAINMENT">Chế độ giải trí</option>
-            </select>
+            </NativeSelect>
           </label>
           {create.isError && <p className="type-body text-destructive">{errorMessage(create.error)}</p>}
         </form>

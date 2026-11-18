@@ -15,9 +15,8 @@ import {
   type RelationMapping,
   type RelatedImage,
 } from "../../model/import/import-relations"
-import { type Request, publishingKeys } from "../../api/publishing-api"
+import { type Request, publishingKeys } from "@/lib/api/publishing-api"
 import { createUploadSession, resumeUploadSession, type UploadSession } from "./import-upload-session"
-import { control } from "../editing/fields"
 import {
   Upload,
   FolderOpen,
@@ -43,6 +42,7 @@ import type {
 } from "../../model/import/hero-import-types"
 import { ImportMappingStep } from "./import-mapping-step"
 import { ImportEntryCard } from "./import-entry-card"
+import { NativeSelect } from "@/components/native-select"
 
 export interface ImportActivity {
   status: "idle" | "running" | "review" | "completed" | "error"
@@ -536,8 +536,8 @@ export function HeroImport({
             .map((row) => (
               <label key={String(row.__sourceCode)} className="grid gap-2 text-sm sm:max-w-md">
                 Xác nhận danh tính: {String(row.__sourceCode)}
-                <select
-                  className={control}
+                <NativeSelect
+                  className="w-full"
                   value={String(row.code)}
                   disabled={busy}
                   onChange={(event) => {
@@ -552,7 +552,7 @@ export function HeroImport({
                   <option value="">Chọn dạng Flowborn phù hợp</option>
                   <option value="flowborn-ad">Flowborn · Xạ thủ</option>
                   <option value="flowborn-mid">Flowborn · Pháp sư</option>
-                </select>
+                </NativeSelect>
                 <span className="text-xs text-muted-foreground">
                   {((row.skills as Record<string, unknown>[]) ?? []).map((skill) => String(skill.name)).join(" · ")}
                 </span>
@@ -671,8 +671,8 @@ export function HeroImport({
               <>
                 <label className="block text-sm">
                   Tệp dữ liệu trong gói
-                  <select
-                    className={control}
+                  <NativeSelect
+                    className="w-full"
                     value={dataPath}
                     onChange={(event) => {
                       const file = files.get(event.target.value)
@@ -685,7 +685,7 @@ export function HeroImport({
                       .map((path) => (
                         <option key={path}>{path}</option>
                       ))}
-                  </select>
+                  </NativeSelect>
                 </label>
                 <details className="text-sm">
                   <summary className="cursor-pointer text-muted-foreground">
@@ -693,8 +693,8 @@ export function HeroImport({
                   </summary>
                   <label className="mt-3 block text-sm">
                     Thư mục gốc của đường dẫn ảnh
-                    <select
-                      className={control}
+                    <NativeSelect
+                      className="w-full"
                       value={base}
                       onChange={(event) => {
                         setBase(event.target.value)
@@ -714,7 +714,7 @@ export function HeroImport({
                         .map((path) => (
                           <option key={path}>{path}</option>
                         ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                   <p className="mt-2 text-xs text-muted-foreground">
                     Mặc định tính từ thư mục chứa JSON/CSV. Với đường dẫn assets/…, chọn gốc bộ tài nguyên.
@@ -730,8 +730,8 @@ export function HeroImport({
         {!!Object.keys(arrayChoices).length && (
           <label className="block text-sm">
             Mảng dữ liệu trong JSON
-            <select
-              className={control}
+            <NativeSelect
+              className="w-full"
               value=""
               onChange={(event) => {
                 try {
@@ -747,7 +747,7 @@ export function HeroImport({
                   {key} ({value.length} bản ghi)
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
         )}
         {step === 1 && (

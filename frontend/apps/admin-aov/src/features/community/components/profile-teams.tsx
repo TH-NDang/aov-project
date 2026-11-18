@@ -10,7 +10,7 @@ import { Section } from "./profile-form-primitives"
 export function ProfileTeams({ pageId }: { pageId: string }) {
   const access = useTournamentAccess()
   const query = useQuery({
-    queryKey: [...pageKeys, access.actorKey, pageId, "teams"],
+    queryKey: pageKeys.teams(access.actorKey, pageId),
     queryFn: () => pageApi.teams(pageId),
   })
   return (

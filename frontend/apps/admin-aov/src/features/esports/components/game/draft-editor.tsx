@@ -15,11 +15,12 @@ import {
   withTurns,
 } from "../../model/draft"
 import type { GameView, IconRef } from "../../model/game-view"
-import { LANE_LABELS } from "../../model/labels"
 import { heroKeys, type HeroLocks } from "../../model/series-rules"
 import { formatClock } from "@/lib/clock"
 import { HeroIcon, LaneIcon, TeamLogo, TimeTag, VIDEO_MARK } from "../primitives"
 import { ReferencePicker } from "./reference-picker"
+import { NativeSelect } from "@/components/native-select"
+import { LANE_LABELS } from "@/lib/lanes"
 
 export type RosterOption = { id: string; name: string; lane?: Lane | null; status?: RosterStatus }
 
@@ -421,11 +422,11 @@ export function DraftEditor({
                   )}
                 />
               </ReferencePicker>
-              <select
+              <NativeSelect
                 aria-label={`Tuyển thủ ${LANE_LABELS[participant.lane].name} của ${team.name}`}
                 value={participant.playerId ?? ""}
                 onChange={(event) => update(index, { playerId: event.target.value || null })}
-                className="h-7 min-w-0 flex-1 rounded-md border bg-background px-1.5 text-xs"
+                className="h-7 min-w-0 flex-1 px-1.5 text-xs md:text-xs"
               >
                 <option value="">Tuyển thủ…</option>
                 {members.map((member) => (
@@ -433,7 +434,7 @@ export function DraftEditor({
                     {rosterOptionLabel(member, participant.lane)}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </li>
           ))}
         </ul>

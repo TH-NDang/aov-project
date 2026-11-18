@@ -8,15 +8,15 @@ import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
 import { LaneIcon, PlayerPhoto, TeamLogo } from "@/features/esports/components/primitives"
 import { useRecords } from "@/features/esports/data/use-esports-data"
-import { LANE_LABELS } from "@/features/esports/model/labels"
 import { RecordPicker } from "@/features/tournaments/components/record-picker"
 import { TeamRecordSheet } from "@/features/tournaments/components/team-record-sheet"
 import { TeamRosterSheet } from "@/features/tournaments/components/team-roster-sheet"
 import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 import { rosterBoard, rosterOrder } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
-import { selectClass } from "./plan-fields"
 import { useRosterPlayers } from "./use-roster-players"
+import { NativeSelect } from "@/components/native-select"
+import { LANE_LABELS } from "@/lib/lanes"
 
 const ENTRY_STATUS: Record<string, string> = {
   REGISTERED: "Đã đăng ký",
@@ -104,7 +104,7 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
   const [rosterTeam, setRosterTeam] = useState<string | null>(null)
   const [recordTeam, setRecordTeam] = useState<string | null>(null)
   const team = useQuery({
-    queryKey: [...tournamentKeys.all, "teams", ws.access.actorKey, "one", rosterTeam],
+    queryKey: tournamentKeys.one("teams", ws.access.actorKey, rosterTeam),
     queryFn: ({ signal }) => tournamentApi.read("teams", rosterTeam!, signal),
     enabled: !!rosterTeam,
   })
@@ -180,9 +180,9 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
                   <Pencil aria-hidden />
                 </Button>
                 {editing && ws.canEdit ? (
-                  <select
+                  <NativeSelect
                     aria-label={`Trạng thái ${view.name}`}
-                    className={cn(selectClass, "h-9 w-40")}
+                    className="w-40"
                     value={entry.status || "REGISTERED"}
                     onChange={(event) =>
                       setEntrants(
@@ -197,7 +197,7 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
                         {label}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 ) : (
                   <Chip tone={entry.status === "WITHDRAWN" ? "danger" : "neutral"}>
                     {ENTRY_STATUS[entry.status] ?? ENTRY_STATUS.REGISTERED}

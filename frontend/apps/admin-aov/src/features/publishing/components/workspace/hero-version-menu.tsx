@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { cn } from "@aov/ui/lib/utils"
-import type { Content, Revision, Ruleset } from "../../api/types"
+import type { Content, Revision, Ruleset } from "@/lib/hero-types"
 import { HeroLanguageIcon, HeroLanguageItems } from "../editing/hero-language-picker"
 
 export const REVISION_STATES: Record<Revision["state"], string> = {

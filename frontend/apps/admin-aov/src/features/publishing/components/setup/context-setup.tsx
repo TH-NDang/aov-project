@@ -6,15 +6,16 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
-import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { assignSharedRuleset, defaultRulesetId } from "@/lib/default-ruleset"
 import { SeasonSetup } from "./season-setup"
 import { DataLanguage } from "../editing/data-language"
-import { control } from "../editing/fields"
-import type { Region } from "../../api/types"
+import type { Region } from "@/lib/hero-types"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { DraftStatus } from "@/app/drafts/draft-status"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 const api = createPublishingApi(backendRequest)
 const regionDraftSchema = z.object({
   code: z.string(),
@@ -137,31 +138,24 @@ export function CreateRegion({ onDone }: { onDone: (regionId: string) => void })
       <fieldset disabled={busy || !draft.ready || draft.invalid} className="space-y-4">
         <label className="grid gap-2 text-sm">
           Mã thị trường
-          <input
-            className={control}
-            {...form.register("code")}
-            required
-            pattern="[A-Z][A-Z0-9-]{1,15}"
-            maxLength={16}
-            placeholder="VN"
-          />
+          <Input {...form.register("code")} required pattern="[A-Z][A-Z0-9-]{1,15}" maxLength={16} placeholder="VN" />
         </label>
         <label className="grid gap-2 text-sm">
           Tên thị trường
-          <input {...form.register("displayName")} className={control} required maxLength={80} />
+          <Input {...form.register("displayName")} required maxLength={80} />
         </label>
         <label className="grid gap-2 text-sm">
           Tên trò chơi
-          <input {...form.register("productName")} className={control} required maxLength={80} />
+          <Input {...form.register("productName")} required maxLength={80} />
         </label>
         <DataLanguage value={locale} onChange={(value) => form.setValue("locale", value)} />
         <label className="grid gap-2 text-sm">
           Múi giờ
-          <select {...form.register("timezone")} className={control}>
+          <NativeSelect {...form.register("timezone")} className="w-full">
             {["UTC", ...Intl.supportedValuesOf("timeZone")].map((zone) => (
               <option key={zone}>{zone}</option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input {...form.register("available")} type="checkbox" />

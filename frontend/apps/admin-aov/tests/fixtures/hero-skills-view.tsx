@@ -5,7 +5,7 @@
 import * as React from "react"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { Skill } from "../../src/features/publishing/api/types"
+import type { Skill } from "@/lib/hero-types"
 import type { SkillImage } from "../../src/features/publishing/components/skills/skill-artwork"
 import { createHeroFixture } from "./hero-workspace-data"
 import { createWindow, installWindow, waitFor } from "./dom"

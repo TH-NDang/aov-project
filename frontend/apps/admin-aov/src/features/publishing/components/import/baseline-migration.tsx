@@ -5,8 +5,8 @@ import { CalendarCog } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { confirmAction } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
-import { createPublishingApi, type Request, publishingKeys } from "../../api/publishing-api"
-import type { HeroRow, Revision } from "../../api/types"
+import { createPublishingApi, type Request, publishingKeys } from "@/lib/api/publishing-api"
+import type { HeroRow, Revision } from "@/lib/hero-types"
 import type { ImportContext } from "./import-context"
 
 export function BaselineMigration({

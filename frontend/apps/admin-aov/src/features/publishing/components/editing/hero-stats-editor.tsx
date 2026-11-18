@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { Field, control } from "./fields"
+import { Field } from "./fields"
 import { STAT_LABELS } from "../../model/patch-changes/patch-change-model"
 import {
   combatAttributeRows,
@@ -16,7 +16,9 @@ import {
   hasStatPercent,
   parseStatReading,
 } from "../../model/assessment/stat-reading"
-import type { Skills, Stats } from "../../api/types"
+import type { Skills, Stats } from "@/lib/hero-types"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 const units: Record<string, string> = {
   POINT: "Điểm",
@@ -55,10 +57,10 @@ function StatReadingField({
       <label className="type-body" htmlFor={inputId}>
         Số và phần trăm trong game
       </label>
-      <input
+      <Input
         ref={input}
         id={inputId}
-        className={control}
+
         value={text}
         placeholder="150 | 20%"
         autoComplete="off"
@@ -181,8 +183,8 @@ export function HeroStatsEditor({
           <div className="flex items-end gap-2">
             <label className="type-body grid min-w-0 flex-1 gap-1.5">
               Chỉ số
-              <select
-                className={control}
+              <NativeSelect
+                className="w-full"
                 value={Object.hasOwn(STAT_LABELS, stat.statKey) ? stat.statKey : "custom"}
                 onChange={(event) => {
                   const statKey = event.target.value === "custom" ? "" : event.target.value
@@ -203,7 +205,7 @@ export function HeroStatsEditor({
                   </option>
                 ))}
                 <option value="custom">Chỉ số khác</option>
-              </select>
+              </NativeSelect>
             </label>
             <Button
               type="button"
@@ -255,8 +257,8 @@ export function HeroStatsEditor({
             {!hasStatPercent(stat.statKey) && (
               <label className="type-body col-span-2 grid gap-1.5 sm:col-span-1">
                 Đơn vị
-                <select
-                  className={control}
+                <NativeSelect
+                  className="w-full"
                   value={stat.unit}
                   onChange={(event) => update(index, { unit: event.target.value })}
                 >
@@ -266,7 +268,7 @@ export function HeroStatsEditor({
                     </option>
                   ))}
                   {!Object.hasOwn(units, stat.unit) && <option value={stat.unit}>Đơn vị hiện tại ({stat.unit})</option>}
-                </select>
+                </NativeSelect>
               </label>
             )}
           </div>

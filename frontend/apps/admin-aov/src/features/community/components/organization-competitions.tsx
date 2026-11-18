@@ -18,7 +18,7 @@ export function OrganizationCompetitions({
 }) {
   const circuit = kind === "CIRCUIT"
   const query = useInfiniteQuery({
-    queryKey: [...competitionKeys, actorKey, kind, organizationId],
+    queryKey: competitionKeys.ofOrganization(actorKey, kind, organizationId),
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       circuit

@@ -1,5 +1,5 @@
 import { HERO_TRAITS, HERO_TRAIT_GROUPS } from "@aov/ui/lib/hero-traits"
-import type { Skill, Trait, TraitCode } from "../../api/types"
+import type { Skill, Trait, TraitCode } from "@/lib/hero-types"
 import { skillLabel } from "../skills/hero-skills"
 
 /**

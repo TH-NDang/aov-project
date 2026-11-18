@@ -21,7 +21,9 @@ import { CAUSE_NAMES } from "@/lib/version-causes"
 import { warehouseApi, invalidateWarehouseCatalogs, warehouseKeys } from "../../api/warehouse-api"
 import { warehouseBaselineMode, type WarehouseRevision } from "../../model/warehouse-types"
 import { type WarehouseKind } from "@aov/ui/lib/warehouse-content"
-import { publishingKeys } from "../../../publishing/api/publishing-api"
+import { publishingKeys } from "@/lib/api/publishing-api"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 const revisionLabels: Record<WarehouseRevision["cause"], string> = CAUSE_NAMES
 
@@ -179,9 +181,9 @@ export function WarehouseChangeHistory({
       ) : (
         <label className="grid gap-1.5 text-sm">
           Bản dữ liệu đã xuất bản
-          <select
+          <NativeSelect
             aria-label="Bản dữ liệu đã xuất bản"
-            className={control}
+            className="w-full"
             value={target}
             onChange={(event) => {
               const id = event.target.value
@@ -196,7 +198,7 @@ export function WarehouseChangeHistory({
                 {variants.find((v) => v.id === r.effectiveFromPatchVariantId)?.patchCode ?? "Chưa rõ patch"}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
       )}
       {/* On the timeline the form opens under one patch, so the patch is that node's. */}
@@ -213,9 +215,9 @@ export function WarehouseChangeHistory({
           {(!patchContext || (needsComparison && comparisonRevisions.length > 1)) && (
             <label className="grid gap-1.5 text-sm">
               Bản trước để đối chiếu
-              <select
+              <NativeSelect
                 aria-label="Bản trước để đối chiếu"
-                className={control}
+                className="w-full"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
               >
@@ -228,7 +230,7 @@ export function WarehouseChangeHistory({
                       : "Nhập dữ liệu, chưa rõ patch"}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
           )}
           <label className="grid gap-1.5 text-sm">
@@ -243,10 +245,10 @@ export function WarehouseChangeHistory({
           </label>
           <label className="grid gap-1.5 text-sm">
             Liên kết nguồn xác minh
-            <input
+            <Input
               aria-label="Liên kết nguồn xác minh"
               type="url"
-              className={control}
+
               value={source}
               onChange={(e) => setSource(e.target.value)}
               placeholder="https://"

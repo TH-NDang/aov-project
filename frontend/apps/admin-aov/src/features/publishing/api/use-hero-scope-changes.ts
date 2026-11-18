@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from "react"
 import { useQueries, type UseQueryResult } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
-import type { CatalogFilter } from "../components/catalog/catalog-context"
 import type { PublicationOverview } from "./publication-overview"
 import type { RecordedChangeSet } from "../components/patch-changes/patch-change-lines"
-import type { HeroGameplayChange } from "./types"
-import { publishingKeys } from "./publishing-api"
+import type { HeroGameplayChange } from "@/lib/hero-types"
+import { publishingKeys } from "@/lib/api/publishing-api"
+import { type CatalogFilter } from "@/lib/catalog-scope"
 
 /** Reuse the timeline's patch queries; a catalog page alone only contains each hero's latest change. */
 export function useHeroScopeChanges(

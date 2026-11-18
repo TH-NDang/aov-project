@@ -18,6 +18,8 @@ export interface ConfirmOptions {
   details?: ReactNode
   confirmLabel: string
   cancelLabel?: string
+  /** The details say the action cannot run yet, such as a record still in use: only Cancel answers. */
+  confirmDisabled?: boolean
 }
 
 interface ConfirmRequest extends ConfirmOptions {
@@ -62,6 +64,11 @@ export function confirmAction(options: ConfirmOptions) {
   })
 }
 
+/** Answers the open question with Cancel, for a link in its details that leads elsewhere in the app. */
+export function cancelConfirm() {
+  answer(false)
+}
+
 /** The usual question before throwing away unsaved edits. */
 export function confirmDiscard({
   confirmLabel = "Bỏ thay đổi",
@@ -97,7 +104,7 @@ export function ConfirmDialogHost() {
         {request?.details && <div className="type-body min-w-0 break-words">{request.details}</div>}
         <AlertDialogFooter>
           <AlertDialogCancel>{request?.cancelLabel ?? "Hủy"}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={() => answer(true)}>
+          <AlertDialogAction variant="destructive" disabled={request?.confirmDisabled} onClick={() => answer(true)}>
             {request?.confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

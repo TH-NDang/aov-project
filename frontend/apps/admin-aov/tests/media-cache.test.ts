@@ -6,7 +6,7 @@ import {
   invalidateMediaAsset,
   invalidateMediaAssets,
 } from "../src/features/media/api/media-cache"
-import type { AssetDetail } from "../src/features/publishing/api/types"
+import type { AssetDetail } from "@/lib/hero-types"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { waitFor } from "./fixtures/dom"
 

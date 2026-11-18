@@ -58,7 +58,7 @@ export function CreateProfileSheet({
       }),
     meta: { silent: true, successMessage: "Đã tạo hồ sơ." },
     onSuccess: async (entry) => {
-      await client.invalidateQueries({ queryKey: pageKeys })
+      await client.invalidateQueries({ queryKey: pageKeys.all })
       onClose()
       onCreated(entry)
     },

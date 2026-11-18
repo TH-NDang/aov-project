@@ -1,5 +1,5 @@
 import type { PublishBlockerKey } from "./publish-rules"
-import type { Section } from "../api/types"
+import type { Section } from "@/lib/hero-types"
 
 export type HeroContentTab = "overview" | "skills" | "evaluation" | "skins" | "media" | "videos"
 export type HeroWorkspaceView = "overview" | "translations" | "history"

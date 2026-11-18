@@ -17,6 +17,8 @@ import {
 } from "./media-owners"
 import { ownerKey, similarOwner } from "@/features/media/model/media-owner-names"
 import { toast } from "sonner"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 type Editing = { owner: MediaOwner; mode: "edit" | "merge" }
 
@@ -46,7 +48,7 @@ export function MediaOwnersSheet({ writable, onClose }: { writable: boolean; onC
           <label className="relative block">
             <span className="sr-only">Tìm chủ sở hữu</span>
             <Search aria-hidden="true" className="absolute top-2.5 left-3 size-4 text-muted-foreground" />
-            <input
+            <Input
               className={`${control} pl-9`}
               value={query}
               placeholder="Tìm chủ sở hữu"
@@ -178,8 +180,7 @@ function OwnerEditForm({ owner, onDone }: { owner: MediaOwner; onDone: () => voi
     >
       <label className="grid gap-1 text-sm">
         Tên chủ sở hữu
-        <input
-          className={control}
+        <Input
           maxLength={200}
           required
           autoFocus
@@ -190,8 +191,7 @@ function OwnerEditForm({ owner, onDone }: { owner: MediaOwner; onDone: () => voi
       </label>
       <label className="grid gap-1 text-sm">
         Trang liên hệ
-        <input
-          className={control}
+        <Input
           type="url"
           maxLength={2048}
           value={contact}
@@ -265,8 +265,8 @@ function OwnerMergeForm({
     >
       <label className="grid gap-1 text-sm">
         Gộp vào
-        <select
-          className={control}
+        <NativeSelect
+          className="w-full"
           value={targetId}
           disabled={busy}
           onChange={(event) => setTargetId(event.target.value)}
@@ -276,7 +276,7 @@ function OwnerMergeForm({
               {candidate.name} · {candidate.assetCount} ảnh
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {target && (
         <p className="type-meta">

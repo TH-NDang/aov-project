@@ -1,4 +1,4 @@
-import type { Source } from "../../api/types"
+import type { Source } from "@/lib/hero-types"
 import { cn } from "@aov/ui/lib/utils"
 
 export function HeroContentSources({ sources, compact = false }: { sources: Source[]; compact?: boolean }) {

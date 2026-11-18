@@ -7,7 +7,7 @@ import {
   type UploadSession,
   type UploadEntry,
 } from "../src/features/publishing/components/import/import-upload-session"
-import type { Request } from "../src/features/publishing/api/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 
 function fixture() {
   let saved: UploadSession | undefined

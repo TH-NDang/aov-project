@@ -4,22 +4,21 @@ import { useQuery } from "@tanstack/react-query"
 import { ArrowRight, ArrowUpRight, ChevronDown, History, Info, RotateCw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
-import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { AdminReferenceProvider } from "../../../terminology/catalog"
-import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
-import { control } from "../editing/fields"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
 import { usePublicationOverview } from "../../api/publication-overview"
 import { comparisonFieldLabels } from "../../model/assessment/hero-comparison"
 import { comparisonWarningText } from "../../model/assessment/comparison-warnings"
 import { buildSkillComparison, type CuratedHeroChange } from "../../model/skills/hero-skill-comparison"
 import { OtherComparisonCard, SkillComparisonCard } from "../assessment/hero-comparison-view"
 import { ChangeColorSettings } from "../patch-changes/change-color-preferences"
-import type { Content, Revision } from "../../api/types"
+import type { Content, Revision } from "@/lib/hero-types"
 import { useHeroLocation } from "./use-hero-location"
 import { heroLocationId } from "../../model/hero-location"
 import { CAUSE_NAMES } from "@/lib/version-causes"
+import { NativeSelect } from "@/components/native-select"
 
 const api = createPublishingApi(backendRequest)
 const causeNames: Record<string, string> = CAUSE_NAMES
@@ -129,9 +128,9 @@ function RevisionHistoryContent({
           <div className="grid items-end gap-3 @min-[620px]:grid-cols-[1fr_auto_1fr]">
             <label className="grid min-w-0 gap-1.5 text-xs text-muted-foreground">
               Bản đối chiếu
-              <select
+              <NativeSelect
                 aria-label="Bản đối chiếu"
-                className={`${control} text-foreground`}
+                className="w-full text-foreground"
                 value={sourceId}
                 onChange={(event) => updateLocation({ compare: event.target.value, changes: null })}
               >
@@ -145,7 +144,7 @@ function RevisionHistoryContent({
                       {revisionName(item)}
                     </option>
                   ))}
-              </select>
+              </NativeSelect>
             </label>
             <ArrowRight className="mb-3 hidden size-4 text-muted-foreground @min-[620px]:block" />
             <div className="grid min-w-0 gap-1.5 text-xs text-muted-foreground">
@@ -198,9 +197,9 @@ function RevisionHistoryContent({
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 {skills.length > 0 && <Badge variant="secondary">{skills.length} kỹ năng</Badge>}
                 {otherChanges.length > 0 && <Badge variant="outline">{otherChanges.length} mục khác</Badge>}
-                <select
+                <NativeSelect
                   aria-label="Lọc phần thay đổi"
-                  className={cn(control, "w-auto max-w-48")}
+                  className="max-w-48"
                   value={section}
                   onChange={(event) => updateLocation({ changes: event.target.value })}
                 >
@@ -210,7 +209,7 @@ function RevisionHistoryContent({
                       {comparisonFieldLabels[key] ?? key}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <ChangeColorSettings />

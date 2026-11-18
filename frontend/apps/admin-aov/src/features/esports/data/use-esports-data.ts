@@ -12,7 +12,7 @@ function useActorKey() {
 export function useTournamentAccess() {
   const actorKey = useActorKey()
   const me = useQuery({
-    queryKey: [...tournamentKeys.all, "me", actorKey],
+    queryKey: tournamentKeys.me(actorKey),
     queryFn: ({ signal }) => tournamentApi.me(signal),
     retry: 1,
     staleTime: 60_000,
@@ -32,7 +32,7 @@ type ListKind = "teams" | "players" | "tournaments" | "series"
 export function useRecords<K extends ListKind>(kind: K, enabled = true) {
   const actorKey = useActorKey()
   return useQuery({
-    queryKey: [...tournamentKeys.all, kind, actorKey],
+    queryKey: tournamentKeys.list(kind, actorKey),
     queryFn: ({ signal }) => tournamentApi.list(kind, signal),
     enabled,
     staleTime: 30_000,
@@ -43,7 +43,7 @@ export function useRecords<K extends ListKind>(kind: K, enabled = true) {
 export function useTournamentSeries(tournamentId: string, enabled = true) {
   const actorKey = useActorKey()
   return useQuery({
-    queryKey: [...tournamentKeys.all, "series", actorKey, "tournament", tournamentId],
+    queryKey: tournamentKeys.inTournament("series", actorKey, tournamentId),
     queryFn: ({ signal }) => tournamentApi.list("series", signal, { tournamentId }),
     enabled: enabled && !!tournamentId,
     staleTime: 30_000,
@@ -53,7 +53,7 @@ export function useTournamentSeries(tournamentId: string, enabled = true) {
 export function useTournamentStats() {
   const actorKey = useActorKey()
   return useQuery({
-    queryKey: [...tournamentKeys.all, "tournament-stats", actorKey],
+    queryKey: tournamentKeys.stats(actorKey),
     queryFn: ({ signal }) => tournamentApi.tournamentStats(signal),
     staleTime: 30_000,
   })
@@ -62,7 +62,7 @@ export function useTournamentStats() {
 export function useRosters(tournamentId: string, enabled = true) {
   const actorKey = useActorKey()
   return useQuery({
-    queryKey: [...tournamentKeys.all, "roster-memberships", actorKey, "tournament", tournamentId],
+    queryKey: tournamentKeys.inTournament("roster-memberships", actorKey, tournamentId),
     queryFn: ({ signal }) => tournamentApi.list("roster-memberships", signal, { tournamentId }),
     enabled: enabled && !!tournamentId,
     staleTime: 30_000,
@@ -74,7 +74,7 @@ export function useRosters(tournamentId: string, enabled = true) {
 export function useTournamentGames(tournamentId: string, enabled = true) {
   const actorKey = useActorKey()
   return useQuery({
-    queryKey: [...tournamentKeys.all, "games", actorKey, "tournament", tournamentId],
+    queryKey: tournamentKeys.inTournament("games", actorKey, tournamentId),
     queryFn: ({ signal }) => tournamentApi.list("games", signal, { tournamentId }),
     enabled: enabled && !!tournamentId,
     staleTime: 15_000,
@@ -84,7 +84,7 @@ export function useTournamentGames(tournamentId: string, enabled = true) {
 export function useGames(seriesId?: string, enabled = true) {
   const actorKey = useActorKey()
   return useQuery({
-    queryKey: [...tournamentKeys.all, "games", actorKey, seriesId ?? "*"],
+    queryKey: tournamentKeys.seriesGames(actorKey, seriesId),
     queryFn: ({ signal }) => tournamentApi.list("games", signal, seriesId ? seriesId : undefined),
     enabled,
     staleTime: 15_000,
@@ -94,16 +94,7 @@ export function useGames(seriesId?: string, enabled = true) {
 export function useGameCatalog(content?: GameContent) {
   const actorKey = useActorKey()
   return useQuery({
-    queryKey: [
-      ...tournamentKeys.all,
-      "catalog",
-      actorKey,
-      content?.region,
-      content?.locale,
-      content?.seasonId ?? "",
-      content?.patchVariantId ?? "",
-      !!content?.includeUnscoped,
-    ],
+    queryKey: tournamentKeys.catalog(actorKey, content),
     queryFn: ({ signal }) => tournamentApi.catalog(content!, signal),
     enabled: !!content,
     staleTime: 5 * 60_000,
