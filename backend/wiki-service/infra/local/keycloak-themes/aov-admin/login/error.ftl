@@ -1,5 +1,5 @@
-<#-- Errors of the Google sign-in popup that Admin opens. The page hands a stable code to the Admin window, which shows
-     its own message and closes the popup; without an opener it tells the reader where to go. -->
+<#-- Errors of the Google sign-in that Admin starts. In the popup the page hands a stable code to the Admin window and
+     closes; when popups were blocked it returns to Admin (the client's base URL) with the code in the fragment. -->
 <#assign code = "UNKNOWN">
 <#if message?has_content>
     <#assign summary = message.summary>
@@ -23,7 +23,7 @@
     <script src="${url.resourcesPath}/js/aov-admin-error.js" defer></script>
 </head>
 <body>
-    <main class="aov-admin-error" data-code="${code}">
+    <main class="aov-admin-error" data-code="${code}"<#if client?? && client.baseUrl?has_content> data-return="${client.baseUrl}"</#if>>
         <h1>Đăng nhập chưa hoàn tất</h1>
         <p>Hãy đóng cửa sổ này và thử lại từ trang quản trị.</p>
         <#if message?has_content>

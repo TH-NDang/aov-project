@@ -37,17 +37,22 @@ secret trong frontend. Token chỉ nằm trong bộ nhớ, giao dịch PKCE tạ
 
 ## Theme `aov-admin`
 
-Client `admin-aov-backend` dùng theme `aov-admin` (`login_theme=aov-admin`). Admin chỉ mở Keycloak trong popup đăng
-nhập Google, nên theme này chỉ thay trang lỗi (`error.ftl`), các trang khác kế thừa theme `keycloak`. Khi có lỗi, trang
-gửi một mã (`REJECTED`, `ACCOUNT_DISABLED`, `EXPIRED`, `UNKNOWN`) về cửa sổ Admin rồi tự đóng; Admin chỉ nhận mã từ đúng
-popup của nó ở origin của Keycloak và hiện câu tiếng Việt trong hộp đăng nhập. Mở trang không qua popup thì nó chỉ ghi
-hãy quay lại trang quản trị.
+Client `admin-aov-backend` dùng theme `aov-admin` (`login_theme=aov-admin`). Admin chỉ mở Keycloak khi đăng nhập
+Google, nên theme này chỉ thay trang lỗi (`error.ftl`), các trang khác kế thừa theme `keycloak`. Trang lỗi không hiện
+màn hình riêng mà trả một mã (`REJECTED`, `ACCOUNT_DISABLED`, `EXPIRED`, `UNKNOWN`) về Admin, nơi hiện câu tiếng Việt:
 
-Realm import mới đã có thuộc tính này. Với realm đã tồn tại, đặt nó một lần bằng tài khoản quản trị master, ví dụ trong
-container Keycloak:
+- Đăng nhập trong popup: trang gửi mã cho cửa sổ Admin rồi tự đóng. Admin chỉ nhận mã từ đúng popup của nó, ở origin
+  của Keycloak.
+- Trình duyệt chặn popup: Admin chuyển cả trang sang Keycloak. Trang lỗi quay về base URL của client
+  (`<PUBLIC_ORIGIN>/admin/`, dev là `http://localhost:5175/`) kèm `#google-error=<mã>`. Admin chỉ hiện lỗi khi chính
+  tab đó đã bắt đầu lượt đăng nhập (`sessionStorage`), rồi xóa mã khỏi địa chỉ. Lượt thành công đi qua
+  `google-complete.html`, trang này đưa người dùng về đúng trang Admin đang mở.
+
+Realm import mới đã có hai thuộc tính này. Với realm đã tồn tại, đặt chúng một lần bằng tài khoản quản trị master, ví
+dụ trong container Keycloak:
 
 ```bash
-kcadm.sh update clients/<id của admin-aov-backend> -r wikiaov -s attributes.login_theme=aov-admin
+kcadm.sh update clients/<id của admin-aov-backend> -r wikiaov -s attributes.login_theme=aov-admin -s baseUrl=<PUBLIC_ORIGIN>/admin/
 ```
 
 Ảnh mascot được sao chép từ asset frontend; khi đổi logo cần cập nhật bản trong `resources/img` của theme.

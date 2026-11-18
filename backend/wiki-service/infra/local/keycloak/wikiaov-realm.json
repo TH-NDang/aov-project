@@ -436,6 +436,7 @@
     {
       "clientId": "admin-aov-backend",
       "name": "Admin backend authentication gateway",
+      "baseUrl": "http://localhost:5175/",
       "enabled": true,
       "publicClient": false,
       "secret": "${ADMIN_AUTH_CLIENT_SECRET}",
