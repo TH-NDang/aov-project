@@ -27,13 +27,25 @@
 .wiki-feedback-close:focus-visible {
   outline-offset: -2px;
 }
-.wiki-feedback-trigger.with-label {
+/* The footer's link variant reads as one more link of its list, with its name, like the links beside it. */
+.wiki-feedback-trigger[data-variant="link"] {
   font: var(--wiki-type-meta);
   display: inline-flex;
   width: auto;
+  height: auto;
+  min-height: 36px;
   align-items: center;
-  gap: 6px;
-  padding-inline: 8px;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--aov-text);
+  text-align: left;
+  text-decoration: none;
+}
+.wiki-feedback-trigger[data-variant="link"]:is(:hover, :focus-visible) {
+  background: none;
+  color: var(--aov-accent);
 }
 
 /* The dialog: a floating surface with the title, one line about what happens, the form and one main action. */
@@ -223,6 +235,9 @@
   .wiki-feedback-close {
     width: 40px;
     height: 40px;
+  }
+  .wiki-feedback-trigger[data-variant="link"] {
+    min-height: 40px;
   }
 }
 @media (max-width: 379.98px) {
