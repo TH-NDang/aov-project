@@ -272,6 +272,22 @@ hồ sơ nhanh. Tên/ảnh lấy từ hồ sơ đã chọn; vị trí, trạng t
 Vai trò kiêm nhiệm của tuyển thủ là tùy chọn; vị trí thi đấu chỉ chọn trong đội. Các mục lịch sử,
 thành tích và nguồn thu gọn thành dòng tóm tắt, mở ô nhập qua icon sửa.
 
+### Vị trí và trạng thái theo mã (18/11/2026)
+
+Người dùng chọn cách này ngày 18/11/2026. Mỗi thành viên đội hình có thêm hai mã, không bắt buộc:
+
+- `lane`: vị trí thi đấu, cùng mã với đội hình của giải (TOP, JUNGLE, MID, DRAGON, SUPPORT).
+- `standing`: ACTIVE (đội hình chính), SUBSTITUTE (dự bị), STAFF (ban huấn luyện), LEFT (đã rời đội).
+
+`role` và `status` vẫn là chữ hiển thị đúng như đã ghi ("Đi rừng · Đội trưởng", "Dự bị · AOG Winter 2026"); ứng dụng
+đọc mã để nhóm thành viên, chọn icon vị trí và đánh dấu người ngồi ngoài, rồi viết tên nhóm và vị trí bằng ngôn ngữ người
+đọc. Thành viên STAFF không có `lane`; sai trả 422 `PAGE_INVALID_CONTENT`, mã không có trong danh sách trả 400.
+
+Admin chọn vị trí trong đội từ danh sách: chọn một vị trí thi đấu ghi `lane` cùng chữ của vị trí đó; chọn huấn luyện
+viên hoặc phân tích đội tuyển ghi `standing` STAFF và bỏ `lane`; chữ tùy chỉnh đi kèm ô chọn vị trí thi đấu riêng.
+Trạng thái chọn theo mã, kèm ô ghi chú tự do cho `status`. Stream nhóm đội hình theo `standing` (chính thức, dự bị,
+ban huấn luyện, đã rời đội; dòng chưa có mã ở nhóm "Thành viên"), hiện icon và tên vị trí theo `lane`.
+
 ## Dữ liệu giải lịch sử (06/11/2026)
 
 Giải đã kết thúc được nhập từ nguồn ngoài (Liquipedia, kho phân tích YouTube) nên mô hình nhận thêm những gì
@@ -499,6 +515,15 @@ nhánh thắng", "Bán kết nhánh thua", "Chung kết nhánh thua", "Chung k�
 `label`; nhãn "Đội A", "Đội B" của suất TBD bị bỏ. Loạt trận có `content.name` trùng các mẫu đó cũng đổi thành `title`,
 cột `name` theo đó để trống. Nhãn khác, lịch sử kế hoạch (`plan_revision`), snapshot công bố của giải và snapshot ván
 giữ nguyên.
+
+V020 phục vụ "Vị trí và trạng thái theo mã", chạy một lần trên bản nháp và bản công bố của mọi page TEAM. Mã chỉ được
+điền khi chữ nói rõ, theo đúng các cách đọc Admin đã dùng: phần đầu của `role` là tên một vị trí ("Đi rừng", "Đường
+giữa", "Jungle", "Support"…) thì có `lane`; là huấn luyện viên hoặc phân tích đội tuyển thì `standing` STAFF. Phần đầu
+của `status` "Đã rời đội"/"Inactive" thì LEFT, "Ban huấn luyện" thì STAFF, "Dự bị"/"Substitute" thì SUBSTITUTE, "Đội
+hình chính"/"Chính thức"/"Active" thì ACTIVE. Khi chữ không nói gì: `lane` lấy theo vị trí của tuyển thủ mà page
+PLAYER liên kết đại diện; `standing` (chỉ khi `status` để trống) lấy theo dòng đội hình giải gần nhất của tuyển thủ đó
+với chính đội này (ACTIVE, SUBSTITUTE, INACTIVE thành LEFT). Chữ khác ("Cho mượn", "Thử việc", vai trò tự ghi) không
+được đoán; `role` và `status` giữ nguyên.
 
 ## API
 
