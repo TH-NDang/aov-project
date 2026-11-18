@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 @CommunityApplicationTest
 class PageApiIntegrationTest {
@@ -861,6 +862,77 @@ class PageApiIntegrationTest {
         send(post(ROOT + "/admin/competitions/" + id + "/withdraw"), "publisher", true,
                 Map.of("version", again.path("version").asLong()));
         mvc.perform(get(ROOT + "/competitions/" + id)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void generatedMatchesCarryTheirTitleIntoTheirSeriesAndKeepItWhenRenamed() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String a = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "titled-a-" + suffix, "name", "First"))).path("id").asText();
+        String b = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "titled-b-" + suffix, "name", "Second"))).path("id").asText();
+        String id = send(post(ROOT + "/admin/tournaments"), "editor", true,
+                Map.of("content", Map.of("code", "titled-" + suffix, "name", "Titled season", "region", "VN")))
+                .path("id").asText();
+        var content = new HashMap<String, Object>();
+        content.put("sourceUrl", "https://example.com/rules");
+        content.put("entrants", List.of(Map.of("teamId", a), Map.of("teamId", b)));
+        content.put("stages", List.of(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN", "bestOf", 3,
+                "legs", 1, "winPoints", 1, "lossPoints", 0, "advance", 1)));
+
+        var preview = send(post(ROOT + "/admin/competitions/preview"), "editor", true,
+                Map.of("content", content, "stageCode", "GROUP", "opponent", 3));
+        assertThat(preview.get(0).path("label").isNull()).isTrue();
+        assertThat(preview.get(0).path("title").path("kind").asText()).isEqualTo("ROUND_ROBIN");
+        assertThat(preview.get(0).path("title").path("leg").asInt()).isEqualTo(1);
+        assertThat(preview.get(0).path("title").path("round").asInt()).isEqualTo(1);
+        content.put("matches", preview);
+        var saved = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", 0, "content", content));
+        var materialized = send(post(ROOT + "/admin/competitions/" + id + "/materialize"), "editor", true,
+                Map.of("version", saved.path("version").asLong()));
+        var match = materialized.path("content").path("plan").path("matches").get(0);
+        String seriesId = match.path("seriesId").asText();
+        var created = send(get(ROOT + "/admin/series/" + seriesId), "editor", true, null).path("content");
+        assertThat(created.path("name").isNull()).isTrue();
+        assertThat(created.path("title").path("kind").asText()).isEqualTo("ROUND_ROBIN");
+
+        ((ObjectNode) match).put("label", "Opening match");
+        content.put("matches", List.of(match));
+        send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", materialized.path("version").asLong(), "content", content));
+        var named = send(get(ROOT + "/admin/series/" + seriesId), "editor", true, null).path("content");
+        assertThat(named.path("name").asText()).isEqualTo("Opening match");
+        assertThat(named.path("title").path("kind").asText()).isEqualTo("ROUND_ROBIN");
+    }
+
+    @Test
+    void matchTitlesWithoutAKindOrWithNumbersOutOfRangeAreRejected() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String a = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "untitled-a-" + suffix, "name", "First"))).path("id").asText();
+        String b = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "untitled-b-" + suffix, "name", "Second"))).path("id").asText();
+        String id = send(post(ROOT + "/admin/tournaments"), "editor", true,
+                Map.of("content", Map.of("code", "untitled-" + suffix, "name", "Untitled season", "region", "VN")))
+                .path("id").asText();
+
+        for (var title : List.<Map<String, Object>>of(Map.of("round", 1), Map.of("kind", "LOWER_ROUND", "round", 0),
+                Map.of("kind", "ROUND_ROBIN", "leg", 1, "round", 100))) {
+            var content = new HashMap<String, Object>();
+            content.put("sourceUrl", "https://example.com/rules");
+            content.put("entrants", List.of(Map.of("teamId", a), Map.of("teamId", b)));
+            content.put("stages", List.of(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN",
+                    "bestOf", 3, "legs", 1, "winPoints", 1, "lossPoints", 0, "advance", 1)));
+            content.put("matches", List.of(Map.of("key", "M1", "stageCode", "GROUP", "round", 1, "bestOf", 3,
+                    "a", Map.of("type", "TEAM", "teamId", a), "b", Map.of("type", "TEAM", "teamId", b),
+                    "title", title)));
+            mvc.perform(as(put(ROOT + "/admin/competitions/" + id), "editor", true)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(Map.of("version", 0, "content", content))))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("TOURNAMENT_INVALID_CONTENT"));
+        }
     }
 
     @Test

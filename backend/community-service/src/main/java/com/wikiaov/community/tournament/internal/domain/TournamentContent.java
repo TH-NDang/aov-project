@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class TournamentContent {
     private TournamentContent() {
@@ -292,9 +293,20 @@ public final class TournamentContent {
             String sourceUrl,
             String note,
             SeriesResult result,
-            boolean repeatPicksAllowed
+            boolean repeatPicksAllowed,
+            @Nullable MatchTitle title
     ) {
-        /** {@code repeatPicksAllowed}: this match was played without the rule against re-picking a hero. */
+        /**
+         * A series without a title: {@code name} alone says what it is. {@code repeatPicksAllowed}: this match was
+         * played without the rule against re-picking a hero.
+         */
+        public Series(String code, UUID tournamentId, String name, String stage, UUID teamAId, UUID teamBId,
+                Integer bestOf, Instant scheduledAt, String sourceUrl, String note, SeriesResult result,
+                boolean repeatPicksAllowed) {
+            this(code, tournamentId, name, stage, teamAId, teamBId, bestOf, scheduledAt, sourceUrl, note, result,
+                    repeatPicksAllowed, null);
+        }
+
         public Series(String code, UUID tournamentId, String name, String stage, UUID teamAId, UUID teamBId,
                 Integer bestOf, Instant scheduledAt, String sourceUrl, String note, SeriesResult result) {
             this(code, tournamentId, name, stage, teamAId, teamBId, bestOf, scheduledAt, sourceUrl, note, result,

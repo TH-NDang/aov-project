@@ -3,6 +3,8 @@ package com.wikiaov.community.tournament.internal.planning.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.wikiaov.community.tournament.internal.domain.MatchTitle;
+import com.wikiaov.community.tournament.internal.domain.MatchTitle.Kind;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.SeriesResult;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Entry;
@@ -109,11 +111,41 @@ class CompetitionRulesTest {
         var entries = entrants(2);
         var stage = group(1, List.of());
         var fixture = new Match("M1", "GROUP", 1, "", 5, null, Slot.outcome("M1", true),
-                Slot.team(entries.getFirst().teamId()), null);
+                Slot.team(entries.getFirst().teamId()), null, null);
         assertThatThrownBy(() -> CompetitionRules.validate(plan(entries, stage, List.of(fixture))))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> CompetitionRules
                 .validate(plan(List.of(entries.getFirst(), entries.getFirst()), stage, List.of())))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void roundRobinFixturesCarryTheirLegAndRoundAsATitleWithoutAName() {
+        var fixtures = CompetitionRules.roundRobin(group(2, List.of()), entrants(4));
+
+        assertThat(fixtures).allSatisfy(match -> assertThat(match.label()).isNull());
+        assertThat(fixtures.getFirst().title()).isEqualTo(MatchTitle.roundRobin(1, 1));
+        assertThat(fixtures.getLast().title()).isEqualTo(MatchTitle.roundRobin(2, 3));
+    }
+
+    @Test
+    void playoffFixturesCarryTheirBracketTitleWithoutAName() {
+        var stage = new Stage("PO", "Playoffs", "DOUBLE_ELIMINATION", 7, 1, 1, 0, 1, List.of(), "", "");
+
+        var titles = CompetitionRules.aogPlayoffs(stage, 3).stream().map(Match::title).toList();
+
+        assertThat(titles).containsExactly(MatchTitle.numbered(Kind.UPPER_SEMIFINAL, null, 1),
+                MatchTitle.numbered(Kind.UPPER_SEMIFINAL, null, 2), MatchTitle.numbered(Kind.LOWER_ROUND, 1, 1),
+                MatchTitle.numbered(Kind.LOWER_ROUND, 1, 2), MatchTitle.of(Kind.UPPER_FINAL),
+                MatchTitle.of(Kind.LOWER_SEMIFINAL), MatchTitle.of(Kind.LOWER_FINAL), MatchTitle.of(Kind.GRAND_FINAL));
+    }
+
+    @Test
+    void aTitleNeedsAKindAndNumbersFromOneToNinetyNine() {
+        assertThat(MatchTitle.valid(null)).isTrue();
+        assertThat(MatchTitle.valid(MatchTitle.roundRobin(1, 99))).isTrue();
+        assertThat(MatchTitle.valid(new MatchTitle(null, 1, 1, null))).isFalse();
+        assertThat(MatchTitle.valid(MatchTitle.roundRobin(1, 100))).isFalse();
+        assertThat(MatchTitle.valid(MatchTitle.numbered(Kind.LOWER_ROUND, 0, 1))).isFalse();
     }
 }
