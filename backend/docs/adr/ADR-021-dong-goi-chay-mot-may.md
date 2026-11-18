@@ -299,3 +299,18 @@
 - Image `web` trên GHCR chỉ dành cho một origin (biến repo `STACK_PUBLIC_ORIGIN`, mặc định `https://athahub.com`), vì frontend
   biên dịch sẵn địa chỉ.
 - Lần đầu chuyển sang cách này, container proxy được thay một lần.
+
+### Kiểm chứng (18/11/2026)
+
+- `docker compose config` hợp lệ với `.env.example`; shellcheck không báo gì với `deploy.sh`. Caddyfile hợp lệ với image Caddy
+  mới, và `caddy adapt` cho thấy upstream động của hai backend với `try_duration` 10 giây.
+- Test của Wiki: bundle của bản đang chạy còn sau một lần đưa ra và mất ở lần sau; site cũ chưa có danh sách giữ bundle của nó
+  một lần; trang gỡ xuất bản và bundle cũ hơn bị xóa.
+- Trên VPS, với dữ liệu thật, một máy đo từ ngoài gọi `/`, `/admin/`, `/api/wiki/v1/regions` và một API công khai của
+  community-service khoảng mỗi giây trong lúc cập nhật:
+  - Lần chuyển sang cách mới (commit có cả `compose.yaml` và `proxy/Dockerfile` đổi, image build trên VPS vì GHCR chưa có): 309
+    giây; hai backend đổi xong mà không request nào lỗi; đúng 1 request lỗi lúc thay container Caddy, như mục 5 đã tính.
+  - `deploy.sh --refresh` (hai backend, `web-publish`, `wiki-prerender`, reload Caddyfile): 138 giây, 285 request, không lỗi
+    nào. Container Caddy và Keycloak không bị khởi động lại.
+- Chưa thử: tải image từ GHCR (chưa có commit nào của `main` có workflow `images.yml`), timer tự triển khai một commit của `main`,
+  một commit có migration thật trong lúc hai bản cùng chạy, và đổi Keycloak.
