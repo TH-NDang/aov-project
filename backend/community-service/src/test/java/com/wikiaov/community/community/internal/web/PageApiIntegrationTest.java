@@ -369,6 +369,24 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void pagesAreFilteredAndFoundByTheExactNameOfTheirKind() throws Exception {
+        String marker = "kind" + UUID.randomUUID().toString().substring(0, 8);
+        var team = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "TEAM", "code", marker + "-team", "content", Map.of("name", marker + " Team")));
+        send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "ORGANIZATION", "code", marker + "-host", "content", Map.of("name", marker + " Host")));
+
+        var teams = send(get(ROOT + "/admin/pages").param("q", marker).param("kind", "TEAM"), "editor", true, null);
+        assertThat(teams.path("totalElements").asInt()).isEqualTo(1);
+        assertThat(teams.path("items").get(0).path("kind").asText()).isEqualTo("TEAM");
+        mvc.perform(as(get(ROOT + "/admin/pages").param("kind", "team"), "editor", true))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("PAGE_INVALID_CONTENT"));
+        mvc.perform(get(ROOT + "/pages/by-entity/SQUAD/" + team.path("entityId").asText()))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("PAGE_NOT_FOUND"));
+    }
+
+    @Test
     void aPageLargerThanTheListLimitIsAnInvalidQueryParameter() throws Exception {
         mvc.perform(get(ROOT + "/pages").param("size", "101")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))

@@ -59,7 +59,7 @@ public class PageAccess {
     }
 
     public static boolean community(PageRecord page) {
-        return !"CIRCUIT".equals(page.getKind());
+        return page.getKind().community();
     }
 
     public static void requireCommunity(PageRecord page) {

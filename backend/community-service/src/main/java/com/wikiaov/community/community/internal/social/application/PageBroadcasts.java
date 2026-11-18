@@ -75,7 +75,7 @@ public class PageBroadcasts {
     @Transactional(readOnly = true)
     public PageSlice<Profile> active(int page, int size) {
         var since = Instant.now().minus(PageRules.LIVE_WINDOW);
-        return PageSlice.from(lives.active(since, PageContent.Kind.CIRCUIT.name(), PageProfiles.paging(page, size))
+        return PageSlice.from(lives.active(since, PageContent.Kind.CIRCUIT, PageProfiles.paging(page, size))
                 .map(live -> profiles.read(live.getPageId(), false)));
     }
 

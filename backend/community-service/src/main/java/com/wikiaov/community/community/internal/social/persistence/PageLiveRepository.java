@@ -1,5 +1,6 @@
 package com.wikiaov.community.community.internal.social.persistence;
 
+import com.wikiaov.community.community.internal.domain.PageContent.Kind;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -18,5 +19,5 @@ public interface PageLiveRepository extends JpaRepository<PageLive, UUID> {
             where l.startedAt > :since and g.publishedContent is not null and g.kind <> :editorialKind
             order by l.startedAt desc, l.pageId
             """)
-    Page<PageLive> active(Instant since, String editorialKind, Pageable pageable);
+    Page<PageLive> active(Instant since, Kind editorialKind, Pageable pageable);
 }

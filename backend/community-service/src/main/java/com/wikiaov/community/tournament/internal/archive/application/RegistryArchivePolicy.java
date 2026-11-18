@@ -43,7 +43,7 @@ public class RegistryArchivePolicy {
                         .map(usage -> usage(DependentKind.valueOf(usage.type()), usage.count(), kind,
                                 row.getId()))
                         .toList());
-        long extra = additional.stream().mapToLong(provider -> provider.identityReferences(kind.name(), row.getId()))
+        long extra = additional.stream().mapToLong(provider -> provider.identityReferences(kind.subject(), row.getId()))
                 .sum();
         if (extra > 0) {
             references.add(usage(DependentKind.COMPETITION_PAGE, extra, kind, row.getId()));
