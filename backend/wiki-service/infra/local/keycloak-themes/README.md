@@ -36,6 +36,9 @@ Frontend dùng `VITE_AUTH_ISSUER`, `VITE_AUTH_CLIENT_ID` tương ứng trước 
 secret trong frontend. Token chỉ nằm trong bộ nhớ, giao dịch PKCE tạm trong sessionStorage.
 
 Ảnh mascot được sao chép từ asset frontend; khi đổi logo cần cập nhật bản trong `resources/img` của theme.
+Màu và phông lấy từ khối token ở đầu `resources/css/aov-login.css`, chép nguyên từ
+`frontend/packages/ui/src/styles/tokens.css`. Không sửa tay khối này: sau khi đổi token, chạy
+`node --experimental-strip-types lint/login-theme-tokens.ts --write` trong `frontend/packages/ui`.
 Sau khi sửa theme trên môi trường bật cache, triển khai lại/restart Keycloak theo quy trình vận hành.
 Khi nâng Keycloak cần kiểm tra lại template kế thừa, script password visibility, đăng ký và MFA.
 
