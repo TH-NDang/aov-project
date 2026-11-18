@@ -226,18 +226,7 @@ public class SubjectVideos {
      */
     public ImportResult importVideos(ImportVideos input) {
         Actor actor = actors.require();
-        if (input == null || input.items() == null || input.items().isEmpty() || input.items().size() > IMPORT_LIMIT) {
-            throw invalid("Provide between 1 and " + IMPORT_LIMIT + " videos.");
-        }
-        if (input.items().stream().anyMatch(Objects::isNull)) {
-            throw invalid("Every imported row must be present.");
-        }
-        for (ImportVideo row : input.items()) {
-            if (row.subjectKind() == null || row.status() == null) {
-                throw invalid("Every imported row needs a subject kind and a status.");
-            }
-            requireCapabilities(actor, row.subjectKind(), row.status());
-        }
+        validateImport(actor, input);
 
         Set<UUID> subjectIds = input.items().stream().map(ImportVideo::subjectId).filter(Objects::nonNull)
                 .collect(Collectors.toSet());
@@ -246,11 +235,7 @@ public class SubjectVideos {
                 .map(v -> identity(v.getSubjectKind(), v.getSubjectId(), v.getSubjectKey(), v.getUrl(),
                         v.getStartSeconds()))
                 .collect(Collectors.toCollection(HashSet::new));
-        Map<String, Integer> nextOrder = new HashMap<>();
-        for (SubjectVideo video : existing) {
-            nextOrder.merge(subjectIdentity(video.getSubjectKind(), video.getSubjectId(), video.getSubjectKey()),
-                    video.getDisplayOrder() + 1, Math::max);
-        }
+        Map<String, Integer> nextOrder = nextOrders(existing);
         Map<String, Boolean> subjects = new HashMap<>();
 
         int created = 0;
@@ -288,6 +273,31 @@ public class SubjectVideos {
         }
 
         return new ImportResult(created, skipped, rejected);
+    }
+
+    private void validateImport(Actor actor, ImportVideos input) {
+        if (input == null || input.items() == null || input.items().isEmpty() || input.items().size() > IMPORT_LIMIT) {
+            throw invalid("Provide between 1 and " + IMPORT_LIMIT + " videos.");
+        }
+        if (input.items().stream().anyMatch(Objects::isNull)) {
+            throw invalid("Every imported row must be present.");
+        }
+        for (ImportVideo row : input.items()) {
+            if (row.subjectKind() == null || row.status() == null) {
+                throw invalid("Every imported row needs a subject kind and a status.");
+            }
+            requireCapabilities(actor, row.subjectKind(), row.status());
+        }
+    }
+
+    /** The display order the next video of each subject takes, after the videos it already has. */
+    private static Map<String, Integer> nextOrders(List<SubjectVideo> existing) {
+        Map<String, Integer> nextOrder = new HashMap<>();
+        for (SubjectVideo video : existing) {
+            nextOrder.merge(subjectIdentity(video.getSubjectKind(), video.getSubjectId(), video.getSubjectKey()),
+                    video.getDisplayOrder() + 1, Math::max);
+        }
+        return nextOrder;
     }
 
     private String importProblem(ImportVideo row, Map<String, Boolean> subjects) {

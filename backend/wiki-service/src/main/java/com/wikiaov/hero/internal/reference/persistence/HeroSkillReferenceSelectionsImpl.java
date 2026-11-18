@@ -134,31 +134,37 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
         }
 
         for (String word : criteria.search().words()) {
-            String pattern = "%" + word.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
-            var ownerCopy = query.subquery(String.class);
-            var profile = ownerCopy.from(ProfileTranslationRow.class);
-            ownerCopy.select(profile.get("locale")).where(
-                    builder.equal(profile.get("profileRevisionId"), revision.get("profileRevisionId")),
-                    builder.like(normalized(builder, profile.get("name")), pattern, '!'));
-            var skillCopy = query.subquery(String.class);
-            var translation = skillCopy.from(SkillTranslationRow.class);
-            skillCopy.select(translation.get("locale")).where(
-                    builder.equal(translation.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
-                    builder.equal(translation.get("skillKey"), skill.get("skillKey")),
-                    builder.like(normalized(builder, translation.get("name")), pattern, '!'));
-            // A variant is also found by the name of its form and a skill by the label of one of its state icons.
-            var stateCopy = query.subquery(Integer.class);
-            var state = stateCopy.from(SkillStateIconRow.class);
-            stateCopy.select(state.get("iconOrder")).where(
-                    builder.equal(state.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
-                    builder.equal(state.get("skillKey"), skill.get("skillKey")),
-                    builder.like(normalized(builder, state.get("label")), pattern, '!'));
-            predicates.add(builder.or(builder.like(normalized(builder, hero.get("code")), pattern, '!'),
-                    builder.exists(ownerCopy), builder.exists(skillCopy),
-                    builder.like(normalized(builder, skill.get("formKey")), pattern, '!'), builder.exists(stateCopy)));
+            predicates.add(wordMatch(builder, query, hero, revision, skill, word));
         }
 
         return new Selection(hero, revision, skill, predicates.toArray(Predicate[]::new));
+    }
+
+    /** A search word found in the hero code or name, the skill name, the form key or a state icon label. */
+    private static Predicate wordMatch(CriteriaBuilder builder, CriteriaQuery<?> query, Root<HeroIdentity> hero,
+            Root<HeroRevision> revision, Root<SkillSnapshotRow> skill, String word) {
+        String pattern = "%" + word.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        var ownerCopy = query.subquery(String.class);
+        var profile = ownerCopy.from(ProfileTranslationRow.class);
+        ownerCopy.select(profile.get("locale")).where(
+                builder.equal(profile.get("profileRevisionId"), revision.get("profileRevisionId")),
+                builder.like(normalized(builder, profile.get("name")), pattern, '!'));
+        var skillCopy = query.subquery(String.class);
+        var translation = skillCopy.from(SkillTranslationRow.class);
+        skillCopy.select(translation.get("locale")).where(
+                builder.equal(translation.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
+                builder.equal(translation.get("skillKey"), skill.get("skillKey")),
+                builder.like(normalized(builder, translation.get("name")), pattern, '!'));
+        // A variant is also found by the name of its form and a skill by the label of one of its state icons.
+        var stateCopy = query.subquery(Integer.class);
+        var state = stateCopy.from(SkillStateIconRow.class);
+        stateCopy.select(state.get("iconOrder")).where(
+                builder.equal(state.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
+                builder.equal(state.get("skillKey"), skill.get("skillKey")),
+                builder.like(normalized(builder, state.get("label")), pattern, '!'));
+        return builder.or(builder.like(normalized(builder, hero.get("code")), pattern, '!'),
+                builder.exists(ownerCopy), builder.exists(skillCopy),
+                builder.like(normalized(builder, skill.get("formKey")), pattern, '!'), builder.exists(stateCopy));
     }
 
     private static Predicate sourceSlot(CriteriaBuilder builder, Root<SkillSnapshotRow> skill,

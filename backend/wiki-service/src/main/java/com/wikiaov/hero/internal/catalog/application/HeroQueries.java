@@ -284,20 +284,8 @@ public class HeroQueries {
      */
     public HeroListView list(String region, String locale, int page, int size, String q, String role,
             String sort, UUID seasonId, UUID patchVariantId, boolean includeUnscoped, boolean playable) {
-        HeroValidation.locale(locale);
-        if (!Set.of("code,asc", "code,desc").contains(sort)) {
-            throw HeroValidation.badQuery("Only code sorting is supported.");
-        }
-        if (q.length() > 120) {
-            throw HeroValidation.badQuery("Search text is too long.");
-        }
-        if (role != null) {
-            try {
-                Role.valueOf(role);
-            } catch (IllegalArgumentException e) {
-                throw HeroValidation.badQuery("Unknown hero role.");
-            }
-        }
+        validateListQuery(locale, sort, q, role);
+
         Instant at = clock.instant();
         var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);
         var ctx = moment.context();
@@ -335,28 +323,7 @@ public class HeroQueries {
                 continue;
             }
 
-            var item = hero.item();
-            item.put("roles", roles);
-            item.put("positions", positions.stream().sorted().toList());
-            List<ListEntry> formEntries = new ArrayList<>();
-            for (var member : members) {
-                var form = structure.form(member.identity().getId())
-                        .orElseThrow(() -> new IllegalStateException("A listed form has no form structure."));
-                var formItem = member.item();
-                formItem.put("formKey", form.formKey());
-                formItem.put("roles", member.roles());
-                formItem.put("positions", member.positions().stream().sorted().toList());
-                formEntries.add(new ListEntry(formItem, member.bindingsId(), List.of()));
-            }
-            if (holder) {
-                item.put("forms", formEntries.stream().map(ListEntry::item).toList());
-            }
-            if (playable) {
-                structure.form(id).ifPresent(form -> item.put("parent",
-                        Map.of("id", form.holderId(), "code", codes.get(form.holderId()), "formKey", form.formKey())));
-            }
-
-            all.add(new ListEntry(item, hero.bindingsId(), formEntries));
+            all.add(listEntry(hero, members, roles, positions, holder, playable, structure, codes));
         }
 
         // Paged in memory: each hero shows the revision the read moment chooses and carries its forms, so the page is
@@ -365,6 +332,52 @@ public class HeroQueries {
         var items = listMedia(selected.items());
 
         return new HeroListView(listContext(ctx, locale), selected.withItems(items));
+    }
+
+    private static void validateListQuery(String locale, String sort, String q, String role) {
+        HeroValidation.locale(locale);
+        if (!Set.of("code,asc", "code,desc").contains(sort)) {
+            throw HeroValidation.badQuery("Only code sorting is supported.");
+        }
+        if (q.length() > 120) {
+            throw HeroValidation.badQuery("Search text is too long.");
+        }
+        if (role != null) {
+            try {
+                Role.valueOf(role);
+            } catch (IllegalArgumentException e) {
+                throw HeroValidation.badQuery("Unknown hero role.");
+            }
+        }
+    }
+
+    /** One listed hero, as a holder with its forms, or as a playable form naming the hero that holds it. */
+    private static ListEntry listEntry(Published hero, List<Published> members, Set<Role> roles,
+            Set<Position> positions, boolean holder, boolean playable, HeroFormStructure structure,
+            Map<UUID, String> codes) {
+        UUID id = hero.identity().getId();
+        var item = hero.item();
+        item.put("roles", roles);
+        item.put("positions", positions.stream().sorted().toList());
+        List<ListEntry> formEntries = new ArrayList<>();
+        for (var member : members) {
+            var form = structure.form(member.identity().getId())
+                    .orElseThrow(() -> new IllegalStateException("A listed form has no form structure."));
+            var formItem = member.item();
+            formItem.put("formKey", form.formKey());
+            formItem.put("roles", member.roles());
+            formItem.put("positions", member.positions().stream().sorted().toList());
+            formEntries.add(new ListEntry(formItem, member.bindingsId(), List.of()));
+        }
+        if (holder) {
+            item.put("forms", formEntries.stream().map(ListEntry::item).toList());
+        }
+        if (playable) {
+            structure.form(id).ifPresent(form -> item.put("parent",
+                    Map.of("id", form.holderId(), "code", codes.get(form.holderId()), "formKey", form.formKey())));
+        }
+
+        return new ListEntry(item, hero.bindingsId(), formEntries);
     }
 
     private static HeroListView.Context listContext(GameplayContext c, String locale) {

@@ -14,6 +14,7 @@ import com.wikiaov.enchantment.internal.change.persistence.EnchantmentPatchChang
 import com.wikiaov.enchantment.internal.change.persistence.entity.EnchantmentPatchChange;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
+import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogCause;
@@ -92,6 +93,16 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         var owners = identities.findAllById(snapshots.stream().map(EnchantmentRevision::getOwnerId).distinct().toList())
                 .stream()
                 .collect(Collectors.toMap(EnchantmentIdentity::getId, i -> i));
+        var result = new ArrayList<Entry>(recordedEntries(facts, byId, names, owners, rulesetId, locale));
+        result.addAll(observedEntries(snapshots, facts, patchVariantId, names, owners, rulesetId, locale));
+        result.sort(Comparator.comparing(Entry::code).thenComparing(e -> e.patchVariantId().toString()));
+        return result;
+    }
+
+    /** The changes editors confirmed, each with the name and icon of the snapshot it points at. */
+    private List<Entry> recordedEntries(List<EnchantmentPatchChange> facts, Map<UUID, EnchantmentRevision> byId,
+            Map<UUID, List<EnchantmentTranslation>> names, Map<UUID, EnchantmentIdentity> owners, UUID rulesetId,
+            String locale) {
         var result = new ArrayList<Entry>();
         for (var fact : facts) {
             var r = byId.get(fact.getToRevisionId());
@@ -109,6 +120,18 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
                     summary == null ? null : summary.text(), summary == null ? null : summary.locale(),
                     fact.getSourceUrl(), true, fact.getRecordedAt()));
         }
+        return result;
+    }
+
+    /**
+     * The published baselines and gameplay snapshots of a patch that no confirmed change covers, newest revision per
+     * entry and patch, listed as unconfirmed observations.
+     */
+    private List<Entry> observedEntries(List<EnchantmentRevision> snapshots, List<EnchantmentPatchChange> facts,
+            UUID patchVariantId,
+            Map<UUID, List<EnchantmentTranslation>> names, Map<UUID, EnchantmentIdentity> owners, UUID rulesetId,
+            String locale) {
+        var result = new ArrayList<Entry>();
         var grouped = new HashMap<String, EnchantmentRevision>();
         for (var r : snapshots) {
             if (r.getEffectiveFromPatchVariantId() == null
@@ -134,7 +157,6 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
                     List.of(r.getCause() == CatalogCause.DATA_BASELINE ? Kind.DATA_BASELINE : Kind.UPDATED),
                     null, null, null, false, r.getPublishedAt()));
         }
-        result.sort(Comparator.comparing(Entry::code).thenComparing(e -> e.patchVariantId().toString()));
         return result;
     }
 
@@ -182,17 +204,7 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
             invalid("Updates require a gameplay snapshot and a known previous snapshot.");
         }
 
-        if (input.fromRevisionId() != null) {
-            var from = revisions.findById(input.fromRevisionId())
-                    .orElseThrow(() -> new ApiException(EnchantmentErrorCode.ENCHANTMENT_INVALID_CONTENT,
-                            "The source revision was not found."));
-            if (!from.getOwnerId().equals(ownerId) || !from.getRulesetId().equals(target.getRulesetId())
-                    || from.getState() != RevisionState.PUBLISHED || from.getEffectiveFromPatchVariantId() == null
-                    || contexts.variant(from.getEffectiveFromPatchVariantId()).rulesetOrdinal() >= patch
-                            .rulesetOrdinal()) {
-                invalid("The source must be an earlier published snapshot of the same entry and ruleset.");
-            }
-        }
+        requireSource(ownerId, input, target, patch);
 
         var copy = input.translations() == null ? List.<Summary>of() : input.translations();
         if (copy.isEmpty() || copy.size() > 50) {
@@ -216,6 +228,29 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
                     "A confirmed change already exists for this entry and patch.");
         }
 
+        return save(ownerId, input, target);
+    }
+
+    /** The previous snapshot a change names is an earlier published snapshot of the same entry and ruleset. */
+    private void requireSource(UUID ownerId, CatalogChanges.Record input, EnchantmentRevision target,
+            PatchVariantReference patch) {
+        if (input.fromRevisionId() == null) {
+            return;
+        }
+
+        var from = revisions.findById(input.fromRevisionId())
+                .orElseThrow(() -> new ApiException(EnchantmentErrorCode.ENCHANTMENT_INVALID_CONTENT,
+                        "The source revision was not found."));
+        if (!from.getOwnerId().equals(ownerId) || !from.getRulesetId().equals(target.getRulesetId())
+                || from.getState() != RevisionState.PUBLISHED || from.getEffectiveFromPatchVariantId() == null
+                || contexts.variant(from.getEffectiveFromPatchVariantId()).rulesetOrdinal() >= patch
+                        .rulesetOrdinal()) {
+            invalid("The source must be an earlier published snapshot of the same entry and ruleset.");
+        }
+    }
+
+    /** Stores the confirmed change, marks the patch data for review and records the audit entry. */
+    private UUID save(UUID ownerId, CatalogChanges.Record input, EnchantmentRevision target) {
         var actor = actors.require();
         var fact = new EnchantmentPatchChange();
         fact.setId(UUID.randomUUID());
@@ -225,7 +260,7 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         fact.setFromRevisionId(input.fromRevisionId());
         fact.setToRevisionId(target.getId());
         fact.setKinds(List.copyOf(input.kinds()));
-        fact.setTranslations(List.copyOf(copy));
+        fact.setTranslations(List.copyOf(input.translations()));
         fact.setSourceUrl(input.sourceUrl());
         fact.setRecordedAt(clock.instant());
         fact.setRecordedByIssuer(actor.issuer());

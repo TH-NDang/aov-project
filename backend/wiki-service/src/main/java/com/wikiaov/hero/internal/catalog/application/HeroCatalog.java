@@ -71,16 +71,59 @@ public class HeroCatalog {
             throw HeroValidation.badQuery("Invalid hero catalog search or sort.");
         }
         HeroValidation.locale(locale);
-        var facets = new HeroCatalogFacets(
+        var facets = facets(role, position, hasWarnings);
+        if (rulesetId != null) {
+            contexts.requireRuleset(rulesetId);
+        }
+
+        var variants = selectedVariants(seasonId, patchVariantId, rulesetId);
+        boolean filtered = seasonId != null || patchVariantId != null;
+        if (filtered && variants.isEmpty()) {
+            return new PageSlice<>(List.of(), page, size, 0);
+        }
+        var scope = scope(variants, filtered && includeUnchanged);
+        if (filtered && includeUnchanged && scope.snapshotVariants().isEmpty()) {
+            return new PageSlice<>(List.of(), page, size, 0);
+        }
+
+        var identities = catalog.page(new HeroCatalogRepository.Filter(q.trim().toLowerCase(Locale.ROOT), rulesetId,
+                variants.keySet(), scope.ordinals(), filtered && !includeUnchanged, scope.snapshotVariants(), facets),
+                page, size, sort.equals("edited-desc"));
+        if (identities.items().isEmpty()) {
+            return new PageSlice<>(List.of(), page, size, identities.totalElements());
+        }
+
+        var heroIds = identities.items().stream().map(hero -> hero.getId()).toList();
+        var revisions = store.revisions(heroIds).stream()
+                .filter(r -> !filtered || !includeUnchanged || r.state() == RevisionState.PUBLISHED
+                        && scope.snapshotVariants().contains(r.effectiveFromPatchVariantId()))
+                .collect(Collectors.groupingBy(HeroRevisionView::heroId));
+        var changes = gameplayChanges(heroIds, variants, revisions, filtered, locale);
+        var edited = catalog.editedTimes(heroIds);
+        var structure = forms.structure();
+
+        return identities.map(hero -> {
+            var form = structure.form(hero.getId());
+            return new HeroCatalogView(hero.getId(), hero.getCode(), revisions.getOrDefault(hero.getId(), List.of()),
+                    latest(hero.getCreatedAt(), edited.get(hero.getId())),
+                    changes.getOrDefault(hero.getId(), List.of()),
+                    form.map(HeroFormStructure.Form::holderId).orElse(null),
+                    form.map(HeroFormStructure.Form::formKey).orElse(null),
+                    structure.formsOf(hero.getId()).stream().map(HeroFormStructure.Form::heroId).toList());
+        });
+    }
+
+    private static HeroCatalogFacets facets(String role, String position, Boolean hasWarnings) {
+        return new HeroCatalogFacets(
                 choices(role, Arrays.stream(Role.values()).map(Enum::name).collect(Collectors.toSet())).stream()
                         .map(Role::valueOf).collect(Collectors.toSet()),
                 choices(position, POSITION_CODES.keySet()).stream().map(POSITION_CODES::get)
                         .collect(Collectors.toSet()),
                 hasWarnings);
-        if (rulesetId != null) {
-            contexts.requireRuleset(rulesetId);
-        }
+    }
 
+    /** The catalog variants of the season and ruleset, narrowed to the selected patch when there is one. */
+    private Map<UUID, PatchVariantReference> selectedVariants(UUID seasonId, UUID patchVariantId, UUID rulesetId) {
         Map<UUID, PatchVariantReference> variants = contexts.catalogVariants(seasonId).stream()
                 .filter(variant -> rulesetId == null || variant.rulesetId().equals(rulesetId))
                 .collect(Collectors.toMap(PatchVariantReference::id, variant -> variant));
@@ -91,45 +134,45 @@ public class HeroCatalog {
             }
             variants.keySet().removeIf(id -> !id.equals(patchVariantId));
         }
+        return variants;
+    }
 
-        boolean filtered = seasonId != null || patchVariantId != null;
-        if (filtered && variants.isEmpty()) {
-            return new PageSlice<>(List.of(), page, size, 0);
-        }
-        Map<UUID, Long> scopeOrdinals = variants.values().stream().collect(Collectors.toMap(
+    /**
+     * The ruleset ordinal of every variant the list reads, and with {@code carried} the published variants up to the
+     * selected ones, whose snapshots carry forward unchanged heroes.
+     */
+    private Scope scope(Map<UUID, PatchVariantReference> variants, boolean carried) {
+        Map<UUID, Long> ordinals = variants.values().stream().collect(Collectors.toMap(
                 PatchVariantReference::id, PatchVariantReference::rulesetOrdinal));
         Set<UUID> snapshotVariants = new HashSet<>();
-        if (filtered && includeUnchanged) {
+        if (carried) {
             Map<UUID, Long> cutoffs = new HashMap<>();
             variants.values().forEach(v -> cutoffs.merge(v.rulesetId(), v.rulesetOrdinal(), Math::max));
             contexts.catalogVariants(null).stream().filter(v -> v.published()
                     && v.rulesetOrdinal() <= cutoffs.getOrDefault(v.rulesetId(), -1L)).forEach(v -> {
                         snapshotVariants.add(v.id());
-                        scopeOrdinals.put(v.id(), v.rulesetOrdinal());
+                        ordinals.put(v.id(), v.rulesetOrdinal());
                     });
         }
-        if (filtered && includeUnchanged && snapshotVariants.isEmpty()) {
-            return new PageSlice<>(List.of(), page, size, 0);
-        }
+        return new Scope(ordinals, snapshotVariants);
+    }
 
-        var identities = catalog.page(new HeroCatalogRepository.Filter(q.trim().toLowerCase(Locale.ROOT), rulesetId,
-                variants.keySet(), scopeOrdinals, filtered && !includeUnchanged, snapshotVariants, facets), page, size,
-                sort.equals("edited-desc"));
-        if (identities.items().isEmpty()) {
-            return new PageSlice<>(List.of(), page, size, identities.totalElements());
-        }
+    private record Scope(
+            Map<UUID, Long> ordinals,
+            Set<UUID> snapshotVariants
+    ) {
+    }
 
-        var heroIds = identities.items().stream().map(hero -> hero.getId()).toList();
-        var revisions = store.revisions(heroIds).stream()
-                .filter(r -> !filtered || !includeUnchanged || r.state() == RevisionState.PUBLISHED
-                        && snapshotVariants.contains(r.effectiveFromPatchVariantId()))
-                .collect(Collectors.groupingBy(HeroRevisionView::heroId));
+    /** The recorded gameplay changes of each listed hero, with their kinds, assessment and summary in the locale. */
+    private Map<UUID, List<GameplayChange>> gameplayChanges(List<UUID> heroIds,
+            Map<UUID, PatchVariantReference> variants, Map<UUID, List<HeroRevisionView>> revisions, boolean filtered,
+            String locale) {
         var byRevision = revisions.values().stream().flatMap(Collection::stream)
                 .collect(Collectors.toMap(HeroRevisionView::id, revision -> revision));
-
         var changes = variants.isEmpty() ? List.<HeroPatchChangeSet>of() : catalog.changes(heroIds, variants.keySet());
         var selected = selectChanges(changes, variants, byRevision, filtered);
         var changeIds = selected.stream().map(HeroPatchChangeSet::getId).toList();
+
         Map<UUID, EnumSet<Kind>> classifications = new HashMap<>();
         Map<UUID, List<HeroPatchChangeTranslation>> translations = new HashMap<>();
         if (!changeIds.isEmpty()) {
@@ -139,15 +182,15 @@ public class HeroCatalog {
             translations.putAll(catalog.translations(changeIds).stream()
                     .collect(Collectors.groupingBy(HeroPatchChangeTranslation::getChangeSetId)));
         }
-
         var overall = assessments.findAllById(changeIds).stream()
                 .collect(Collectors.toMap(a -> a.getChangeSetId(), a -> a.getKind()));
-        Map<UUID, List<GameplayChange>> metadata = new HashMap<>();
+
+        Map<UUID, List<GameplayChange>> result = new HashMap<>();
         for (var change : selected) {
             var variant = variants.get(change.getPatchVariantId());
             var summary = translations.getOrDefault(change.getId(), List.of()).stream()
                     .min(CatalogLocales.preference(locale, HeroPatchChangeTranslation::getLocale));
-            metadata.computeIfAbsent(change.getHeroId(), ignored -> new ArrayList<>())
+            result.computeIfAbsent(change.getHeroId(), ignored -> new ArrayList<>())
                     .add(new GameplayChange(change.getId(), variant.rulesetId(), variant.seasonId(), variant.id(),
                             change.getFromHeroRevisionId(), change.getToHeroRevisionId(), change.getSourceKind(),
                             List.copyOf(classifications.getOrDefault(change.getId(), EnumSet.noneOf(Kind.class))),
@@ -155,19 +198,7 @@ public class HeroCatalog {
                             summary.map(HeroPatchChangeTranslation::getSummary).orElse(null),
                             summary.map(HeroPatchChangeTranslation::getLocale).orElse(null)));
         }
-
-        var edited = catalog.editedTimes(heroIds);
-        var structure = forms.structure();
-
-        return identities.map(hero -> {
-            var form = structure.form(hero.getId());
-            return new HeroCatalogView(hero.getId(), hero.getCode(), revisions.getOrDefault(hero.getId(), List.of()),
-                    latest(hero.getCreatedAt(), edited.get(hero.getId())),
-                    metadata.getOrDefault(hero.getId(), List.of()),
-                    form.map(HeroFormStructure.Form::holderId).orElse(null),
-                    form.map(HeroFormStructure.Form::formKey).orElse(null),
-                    structure.formsOf(hero.getId()).stream().map(HeroFormStructure.Form::heroId).toList());
-        });
+        return result;
     }
 
     private static List<HeroPatchChangeSet> selectChanges(List<HeroPatchChangeSet> changes,
