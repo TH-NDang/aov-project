@@ -1,0 +1,13 @@
+# Updates the stack to the newest commit of main whose checks passed (infra/scripts/deploy.sh; ADR-021, addendum of
+# 18/11/2026). Install: see "Cập nhật không gián đoạn" in infra/README.md. The path assumes the checkout in /opt.
+[Unit]
+Description=Update the AOV stack to the newest checked commit of main
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /opt/aov-project/infra/scripts/deploy.sh
+# A build here or a slow first start can take long; the running containers serve meanwhile.
+TimeoutStartSec=45min

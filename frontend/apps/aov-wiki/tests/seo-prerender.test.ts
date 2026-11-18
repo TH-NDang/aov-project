@@ -5,7 +5,8 @@ import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { test, type TestContext } from "node:test"
-import { publishSite, runPrerenderJob } from "../scripts/prerender-job.mts"
+import { runPrerenderJob } from "../scripts/prerender-job.mts"
+import { PUBLISHED_BUNDLE, publishSite } from "../scripts/publish-site.mts"
 import { prerender } from "../scripts/prerender.mts"
 import { renderRobots } from "../src/lib/seo/head-tags.ts"
 import {
@@ -353,15 +354,17 @@ const failing: RequestListener = (_request, response) => void response.writeHead
 const noHeroes: RequestListener = (_request, response) =>
   void response.writeHead(200, { "Content-Type": "application/json" }).end(NO_HEROES)
 
-test("the job replaces the whole live site, so an unpublished page and an old bundle do not stay", async (t) => {
+test("the job replaces the whole live site, so an unpublished page and an older bundle do not stay", async (t) => {
   const api = await publicApi(t)
   const distDir = await builtSite(t)
   await mkdir(path.join(distDir, "assets"))
   await writeFile(path.join(distDir, "assets/app-new.js"), "new")
   const siteDir = await liveSite(t, {
     "200.html": "old",
+    "assets/app-live.js": "live",
     "assets/app-old.js": "old",
     "hero/removed/index.html": "old",
+    [PUBLISHED_BUNDLE]: JSON.stringify(["assets/app-live.js"]),
   })
 
   const pages = await runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 })
@@ -373,6 +376,39 @@ test("the job replaces the whole live site, so an unpublished page and an old bu
   assert.equal(await exists(path.join(siteDir, "assets/app-old.js")), false)
   assert.equal(await exists(path.join(siteDir, "hero/removed")), false)
   assert.equal(await exists(path.join(siteDir, "sitemap.xml")), true)
+})
+
+test("the bundle of the replaced release stays one more release, for pages that are already open", async (t) => {
+  const distDir = await builtSite(t)
+  await mkdir(path.join(distDir, "assets"))
+  await writeFile(path.join(distDir, "assets/app-new.js"), "new")
+  const siteDir = await liveSite(t, {
+    "200.html": "live",
+    "assets/app-live.js": "live",
+    [PUBLISHED_BUNDLE]: JSON.stringify(["assets/app-live.js"]),
+  })
+
+  await publishSite(distDir, siteDir)
+
+  assert.equal(await readFile(path.join(siteDir, "assets/app-live.js"), "utf8"), "live")
+  assert.deepEqual(JSON.parse(await readFile(path.join(siteDir, PUBLISHED_BUNDLE), "utf8")), ["assets/app-new.js"])
+
+  const nextDist = await builtSite(t)
+  await publishSite(nextDist, siteDir)
+
+  assert.equal(await exists(path.join(siteDir, "assets/app-live.js")), false)
+  assert.equal(await readFile(path.join(siteDir, "assets/app-new.js"), "utf8"), "new")
+})
+
+test("a site published before the bundle list existed keeps its bundle for one release", async (t) => {
+  const distDir = await builtSite(t)
+  const siteDir = await liveSite(t, { "200.html": "old", "assets/app-old.js": "old" })
+
+  await publishSite(distDir, siteDir)
+  assert.equal(await readFile(path.join(siteDir, "assets/app-old.js"), "utf8"), "old")
+
+  await publishSite(distDir, siteDir)
+  assert.equal(await exists(path.join(siteDir, "assets/app-old.js")), false)
 })
 
 test("a failing API leaves the live site alone and the job reports it", async (t) => {
@@ -466,5 +502,5 @@ test("publishing again touches nothing that did not change and leaves no tempora
   await publishSite(distDir, siteDir)
 
   assert.equal((await stat(path.join(siteDir, "200.html"))).mtimeMs, before.mtimeMs)
-  assert.deepEqual(await readdir(siteDir), ["200.html"])
+  assert.deepEqual((await readdir(siteDir)).sort(), [PUBLISHED_BUNDLE, "200.html"].sort())
 })

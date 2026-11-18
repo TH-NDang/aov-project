@@ -307,6 +307,8 @@ services:
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD:?set in .env}
     mem_limit: ${WIKI_MEM_LIMIT:-1536m}
+    # Spring finishes the requests in flight within 30 s once stopped; deploy.sh stops the old container this way.
+    stop_grace_period: 40s
     depends_on:
       db-backup:
         condition: service_completed_successfully
@@ -330,23 +332,18 @@ services:
       COMMUNITY_ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:?set in .env}
       COMMUNITY_EXCHANGE_RATES_ENABLED: ${COMMUNITY_EXCHANGE_RATES_ENABLED:-true}
     mem_limit: ${COMMUNITY_MEM_LIMIT:-768m}
+    stop_grace_period: 40s
     depends_on:
       db-backup:
         condition: service_completed_successfully
     logging: *logging
 
+  # Caddy only. Its configuration is this repository's proxy/ folder, applied with `caddy reload`; the frontends come from
+  # the volumes of web-publish and wiki-prerender (ADR-021, addendum of 18/11/2026).
   reverse-proxy:
     image: aov/reverse-proxy:${IMAGE_TAG:-local}
-    build: &frontend-build
-      context: ../frontend
-      dockerfile: ../infra/proxy/Dockerfile
-      additional_contexts:
-        proxy: ./proxy
-      args:
-        VITE_AUTH_ISSUER: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
-        VITE_WIKI_URL: ${PUBLIC_ORIGIN:?set in .env}/
-        VITE_STREAM_URL: ${PUBLIC_ORIGIN:?set in .env}/stream
-        VITE_ADMIN_URL: ${PUBLIC_ORIGIN:?set in .env}/admin
+    build:
+      context: ./proxy
     restart: unless-stopped
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
@@ -355,6 +352,9 @@ services:
       - ${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-18443}:443
     volumes:
       - caddy-data:/data
+      # A folder, not the file: Git replaces the file on checkout, and a file mount would keep the old one.
+      - ./proxy:/etc/caddy:ro
+      - web-apps:/srv/apps:ro
       - wiki-site:/srv/wiki:ro
     depends_on:
       wiki-service:
@@ -363,6 +363,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      web-publish:
+        condition: service_completed_successfully
       # Waits for it but starts either way: a failed run leaves the pages online, and "up --wait" reports the failure.
       wiki-prerender:
         condition: service_completed_successfully
@@ -373,12 +375,30 @@ services:
         required: false
     logging: *logging
 
+  # One-shot on every `up` and on each update: puts the Stream and Admin builds of the web image into web-apps. New files
+  # arrive before old ones leave, and the bundle of the replaced release stays one more release.
+  web-publish:
+    image: aov/web:${IMAGE_TAG:-local}
+    build: &web-build
+      context: ../frontend
+      dockerfile: ../infra/web/Dockerfile
+      target: web
+      args:
+        VITE_AUTH_ISSUER: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+        VITE_WIKI_URL: ${PUBLIC_ORIGIN:?set in .env}/
+        VITE_STREAM_URL: ${PUBLIC_ORIGIN:?set in .env}/stream
+        VITE_ADMIN_URL: ${PUBLIC_ORIGIN:?set in .env}/admin
+    command: ["node", "--experimental-strip-types", "--disable-warning=ExperimentalWarning", "scripts/publish-apps.mts"]
+    environment:
+      WEB_APPS_DIR: /site
+    volumes:
+      - web-apps:/site
+    logging: *logging
+
   # One-shot on every `up`, and by hand after publishing: docker compose run --rm wiki-prerender (ADR-022).
   wiki-prerender:
-    image: aov/wiki-prerender:${IMAGE_TAG:-local}
-    build:
-      <<: *frontend-build
-      target: wiki-prerender
+    image: aov/web:${IMAGE_TAG:-local}
+    build: *web-build
     environment:
       VITE_WIKI_URL: ${PUBLIC_ORIGIN:?set in .env}
       WIKI_API_TARGET: http://wiki-service:8080
@@ -393,4 +413,5 @@ services:
 volumes:
   postgres-data:
   caddy-data:
+  web-apps:
   wiki-site:

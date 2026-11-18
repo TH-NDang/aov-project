@@ -1,0 +1,77 @@
+name: images
+# Builds the images of the one-machine stack for every commit of main and pushes them to GHCR, tagged with the commit,
+# so the server pulls them instead of building next to the live site (ADR-021, addendum of 18/11/2026).
+# infra/scripts/deploy.sh deploys a commit only after every check of it, these included, has passed.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+concurrency:
+  group: images-${{ github.sha }}
+  cancel-in-progress: false
+env:
+  # Frontend configuration is compiled in (infra/web/Dockerfile). Set the repository variable for another origin.
+  PUBLIC_ORIGIN: ${{ vars.STACK_PUBLIC_ORIGIN || 'https://athahub.com' }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: wiki-service
+            context: backend/wiki-service
+            file: backend/wiki-service/Dockerfile
+          - image: community-service
+            context: backend/community-service
+            file: backend/community-service/Dockerfile
+          - image: keycloak
+            context: backend/wiki-service/infra/local/keycloak-themes
+            file: infra/keycloak/Dockerfile
+            contexts: keycloak=infra/keycloak
+          - image: reverse-proxy
+            context: infra/proxy
+            file: infra/proxy/Dockerfile
+          - image: web
+            context: frontend
+            file: infra/web/Dockerfile
+            target: web
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: false
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Name the image
+        id: name
+        run: echo "ref=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.image }}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          target: ${{ matrix.target }}
+          build-contexts: ${{ matrix.contexts }}
+          build-args: |
+            VITE_AUTH_ISSUER=${{ env.PUBLIC_ORIGIN }}/idp/realms/wikiaov
+            VITE_WIKI_URL=${{ env.PUBLIC_ORIGIN }}/
+            VITE_STREAM_URL=${{ env.PUBLIC_ORIGIN }}/stream
+            VITE_ADMIN_URL=${{ env.PUBLIC_ORIGIN }}/admin
+          push: true
+          tags: ${{ steps.name.outputs.ref }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+      # The server reloads infra/proxy/Caddyfile from the checkout; a broken one must fail here, not on the server.
+      - name: Validate the Caddyfile with this Caddy
+        if: matrix.image == 'reverse-proxy'
+        run: |
+          docker pull --quiet "${{ steps.name.outputs.ref }}"
+          docker run --rm -e SITE_ADDRESS=:80 -v "$PWD/infra/proxy:/etc/caddy:ro" "${{ steps.name.outputs.ref }}" \
+            caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
