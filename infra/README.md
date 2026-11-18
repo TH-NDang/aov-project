@@ -279,7 +279,9 @@ Hai điều làm việc này khác một lần [khôi phục](#khôi-phục) bì
    Keycloak dev còn chạy, nếu cổng 8080 hoặc 8082 còn trả lời, hoặc nếu database có migration mà checkout này không có, vì
    stack sẽ không khởi động được trên database đó.
 3. Chép thư mục đó vào `infra/backups/db/` trên VPS bằng kênh riêng, ví dụ `scp -r`, rồi xóa bản trên máy dev. Thư mục chứa
-   mật khẩu đã băm, dữ liệu người dùng và secret Google.
+   mật khẩu đã băm, dữ liệu người dùng và secret Google. Muốn khóa nó trên VPS thì để thư mục `750`, hai file `.json` là
+   `640` và hai file `.dump` là `600`, chủ là `root`: `dev-users-import` chạy bằng user `keycloak` (uid 1000, nhóm `root`),
+   nên với `700` hoặc `600` nó không đọc được file tài khoản.
 
 **Trên VPS**, trong `infra/`, sau khi stack đã `up` một lần và realm chưa có người dùng nào (không bật `test-identity`):
 
