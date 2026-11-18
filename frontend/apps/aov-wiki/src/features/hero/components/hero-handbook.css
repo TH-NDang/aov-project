@@ -385,6 +385,14 @@
   min-height: 32px;
   align-items: center;
   color: var(--aov-accent);
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-hero-summary-more::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .wiki-handbook-action {
   font: var(--wiki-type-body);

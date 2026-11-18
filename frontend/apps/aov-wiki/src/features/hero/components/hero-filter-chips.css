@@ -33,6 +33,14 @@
     color 160ms,
     border-color 160ms,
     background 160ms;
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-hero-chip::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .wiki-hero-chip .wiki-hero-glyph {
   width: 16px;

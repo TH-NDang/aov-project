@@ -354,6 +354,13 @@
   font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
   white-space: nowrap;
 }
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-skin-chip::after {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
 /* The chip is 32px high and its touch target 40px. */
 .wiki-skin-chip::before {
   content: "";

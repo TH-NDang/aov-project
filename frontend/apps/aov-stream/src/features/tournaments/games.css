@@ -518,6 +518,14 @@
   color: var(--hub-muted);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.tn-timeline-ticks > button::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .tn-timeline-ticks > button[aria-pressed="true"] {
   background: var(--hub-accent-soft);

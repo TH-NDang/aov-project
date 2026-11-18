@@ -160,6 +160,13 @@
     background 140ms,
     border-color 140ms;
 }
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-warehouse-chip::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
 .wiki-warehouse-chip > svg {
   flex: none;
 }
@@ -196,6 +203,14 @@
   padding: 0 6px;
   color: var(--aov-accent);
   white-space: nowrap;
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-warehouse-clear::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .wiki-warehouse-switch {
   display: inline-flex;

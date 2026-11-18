@@ -1082,6 +1082,14 @@ a.wiki-mode-row:active {
   transition:
     background 0.15s ease,
     border-color 0.15s ease;
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-mode-overview-alive button::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .wiki-mode-overview-alive button:hover {
   border-color: var(--aov-accent);

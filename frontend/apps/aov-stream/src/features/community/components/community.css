@@ -273,6 +273,13 @@
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.cp-follow-chip::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
 .cp-follow-chip:hover:not(:disabled) {
   background: var(--hub-hover);
   color: var(--hub-text);

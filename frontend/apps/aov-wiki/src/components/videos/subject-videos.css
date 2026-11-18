@@ -44,6 +44,14 @@
   background: var(--aov-surface);
   color: var(--aov-text-soft);
   cursor: pointer;
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-videos-filters button::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .wiki-videos-filters button:hover {
   background: var(--aov-raised);

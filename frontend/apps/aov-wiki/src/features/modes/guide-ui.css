@@ -138,6 +138,14 @@
   background: none;
   color: var(--aov-accent);
   cursor: pointer;
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-guide-clear::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .wiki-guide-clear:hover {
   text-decoration: underline;

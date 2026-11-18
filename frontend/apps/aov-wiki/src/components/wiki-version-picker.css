@@ -79,6 +79,14 @@
   align-items: center;
   gap: 4px;
   color: var(--aov-accent);
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-version-reset::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .wiki-version-reset:hover {
   color: var(--aov-accent-strong);
