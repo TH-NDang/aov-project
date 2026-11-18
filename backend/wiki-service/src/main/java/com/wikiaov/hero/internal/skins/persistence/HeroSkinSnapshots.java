@@ -2,6 +2,7 @@ package com.wikiaov.hero.internal.skins.persistence;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
+import com.wikiaov.hero.internal.badges.domain.SkinBadgeKind;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeRepository;
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadge;
 import com.wikiaov.hero.internal.domain.HeroContent.ImageOption;
@@ -92,7 +93,7 @@ public class HeroSkinSnapshots implements HeroSectionSnapshots {
         var badge = new SkinBadge();
         badge.setId(UUID.randomUUID());
         badge.setCode(code);
-        badge.setKind("UNKNOWN");
+        badge.setKind(SkinBadgeKind.UNKNOWN);
         badge.setCreatedAt(at);
         badge.setUpdatedAt(at);
         try {

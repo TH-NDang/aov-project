@@ -13,6 +13,7 @@ import com.wikiaov.hero.internal.application.response.HeroRankingViews.Detail;
 import com.wikiaov.hero.internal.application.response.HeroRankingViews.Summary;
 import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import com.wikiaov.hero.internal.ranking.domain.RankingMetric;
 import com.wikiaov.hero.internal.ranking.persistence.RankingSnapshotHeroRepository;
 import com.wikiaov.hero.internal.ranking.persistence.RankingSnapshotImageRepository;
@@ -24,6 +25,7 @@ import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotRow;
 import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotValueRow;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogCodes;
+import com.wikiaov.platform.EnumNames;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.math.BigDecimal;
@@ -62,7 +64,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class HeroRankings {
     private static final Set<String> BOARDS = Set.of("RATES", "FIGURES");
-    private static final Set<String> ROLES = Set.of("TANK", "WARRIOR", "ASSASSIN", "MAGE", "MARKSMAN", "SUPPORT");
     private static final Pattern CODE = Pattern.compile(CatalogCodes.PATTERN);
     private static final Pattern REGION = Pattern.compile("[A-Z]{2,16}");
     private static final Pattern MODE = Pattern.compile("[A-Z][A-Z0-9_]*");
@@ -400,7 +401,7 @@ public class HeroRankings {
             if (!listed.add(heroIds.get(hero.heroCode()))) {
                 throw invalid("Hero " + hero.heroCode() + " is listed twice.");
             }
-            if (!ROLES.contains(hero.roleOnScreen())) {
+            if (EnumNames.find(Role.class, hero.roleOnScreen()) == null) {
                 throw invalid("Unknown role " + hero.roleOnScreen() + ".");
             }
             if ((hero.ratesPosition() != null && !ratesPositions.add(hero.ratesPosition()))

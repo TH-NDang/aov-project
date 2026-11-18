@@ -1,6 +1,9 @@
 package com.wikiaov.hero.internal.change.persistence.entity;
 
+import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
 import com.wikiaov.platform.AssignedIdentifierEntity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import java.util.UUID;
@@ -14,6 +17,7 @@ public abstract class HeroChangeClassification extends AssignedIdentifierEntity<
     @Id
     private UUID id;
     private UUID changeSetId;
-    private String changeKind;
+    @Enumerated(EnumType.STRING)
+    private Kind changeKind;
     private int sortOrder;
 }

@@ -1,5 +1,6 @@
 package com.wikiaov.hero.internal.gallery.application;
 
+import com.wikiaov.hero.internal.gallery.domain.HeroGalleryKind;
 import com.wikiaov.platform.RevisionState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
@@ -24,7 +25,7 @@ public record HeroGalleryView(
     @Schema(name = "HeroGalleryImage")
     public record Image(
             UUID assetId,
-            String kind,
+            HeroGalleryKind kind,
             List<String> roles,
             @Nullable String partKey,
             @Nullable String partName,

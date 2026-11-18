@@ -15,6 +15,8 @@ import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassificat
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
 import com.wikiaov.hero.internal.domain.HeroChanges;
 import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -41,19 +43,19 @@ class HeroPatchChangeViewsTests {
         stat.setOldValue(new BigDecimal("3500"));
         stat.setNewValue(new BigDecimal("3400"));
         stat.setUnitCode("POINT");
-        stat.setChangeKind("NERF");
+        stat.setChangeKind(HeroChanges.Kind.NERF);
         stat.setSortOrder(1);
         var skill = new SkillChangeClassification();
         skill.setSkillKey("skill-1-1");
         skill.setFieldKey("description");
         skill.setNewValue("New description");
-        skill.setChangeKind("REWORK");
+        skill.setChangeKind(HeroChanges.Kind.REWORK);
         skill.setSortOrder(0);
         var other = new OtherChangeClassification();
         other.setDescription("Other change");
         other.setSortOrder(2);
         var role = new RoleChangeClassification();
-        role.setRoleCode("WARRIOR");
+        role.setRoleCode(Role.WARRIOR);
         role.setAdded(true);
         role.setSortOrder(3);
         var mechanic = new MechanicChangeClassification();
@@ -61,7 +63,7 @@ class HeroPatchChangeViewsTests {
         mechanic.setDescription("Fixed landing");
         mechanic.setSortOrder(4);
         var visual = new VisualChangeClassification();
-        visual.setMediaRole("HEAD");
+        visual.setMediaRole(MediaRole.HEAD);
         visual.setNewAssetId(UUID.randomUUID());
         visual.setSortOrder(5);
 

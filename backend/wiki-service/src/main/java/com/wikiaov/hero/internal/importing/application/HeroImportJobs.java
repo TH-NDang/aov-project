@@ -2,7 +2,6 @@ package com.wikiaov.hero.internal.importing.application;
 
 import com.wikiaov.access.AcceptedCommands;
 import com.wikiaov.access.Actor;
-import com.wikiaov.access.ActorType;
 import com.wikiaov.access.AuditEntry;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
@@ -137,7 +136,7 @@ public class HeroImportJobs {
         }
 
         var input = inputs(job)[pending.index()];
-        var owner = new Actor(job.getOwnerIssuer(), job.getOwnerSubject(), ActorType.valueOf(job.getOwnerType()), null,
+        var owner = new Actor(job.getOwnerIssuer(), job.getOwnerSubject(), job.getOwnerType(), null,
                 Set.of());
 
         accepted.runHeroImport(owner, () -> imports.apply(input));

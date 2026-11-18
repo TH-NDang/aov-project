@@ -2,7 +2,10 @@ package com.wikiaov.hero;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
+import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
 import com.wikiaov.hero.internal.domain.HeroChanges.OverallKind;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import com.wikiaov.patch.PublishedPatch;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
@@ -64,7 +67,7 @@ public record HeroChangeEntry(
     public sealed interface Line permits StatLine, SkillLine, RoleLine, VisualLine, MechanicLine, OtherLine {
         UUID id();
 
-        String changeKind();
+        Kind changeKind();
 
         int sortOrder();
 
@@ -73,7 +76,7 @@ public record HeroChangeEntry(
 
     public record StatLine(
             UUID id,
-            String changeKind,
+            Kind changeKind,
             int sortOrder,
             String type,
             String statKey,
@@ -86,7 +89,7 @@ public record HeroChangeEntry(
 
     public record SkillLine(
             UUID id,
-            String changeKind,
+            Kind changeKind,
             int sortOrder,
             String type,
             String skillKey,
@@ -99,10 +102,10 @@ public record HeroChangeEntry(
 
     public record RoleLine(
             UUID id,
-            String changeKind,
+            Kind changeKind,
             int sortOrder,
             String type,
-            String roleCode,
+            Role roleCode,
             boolean added
     ) implements Line {
         public static final String TYPE = "HERO_ROLE_CHANGE";
@@ -110,10 +113,10 @@ public record HeroChangeEntry(
 
     public record VisualLine(
             UUID id,
-            String changeKind,
+            Kind changeKind,
             int sortOrder,
             String type,
-            String mediaRole,
+            MediaRole mediaRole,
             @Nullable UUID oldAssetId,
             @Nullable UUID newAssetId
     ) implements Line {
@@ -123,7 +126,7 @@ public record HeroChangeEntry(
     /** @param previous what the mechanic did before its change, or {@code null} until an editor records it */
     public record MechanicLine(
             UUID id,
-            String changeKind,
+            Kind changeKind,
             int sortOrder,
             String type,
             String mechanicKey,
@@ -135,7 +138,7 @@ public record HeroChangeEntry(
 
     public record OtherLine(
             UUID id,
-            String changeKind,
+            Kind changeKind,
             int sortOrder,
             String type,
             String description

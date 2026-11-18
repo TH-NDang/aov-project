@@ -1,7 +1,10 @@
 package com.wikiaov.hero.internal.profile.persistence.entity;
 
+import com.wikiaov.hero.internal.domain.HeroContent.Position;
 import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
@@ -25,7 +28,8 @@ public class ProfilePositionRow extends AssignedIdentifierEntity<ProfilePosition
     private UUID profileRevisionId;
 
     @Id
-    private String positionCode;
+    @Enumerated(EnumType.STRING)
+    private Position positionCode;
 
     @Override
     public Key getId() {
@@ -37,6 +41,6 @@ public class ProfilePositionRow extends AssignedIdentifierEntity<ProfilePosition
     @EqualsAndHashCode
     public static class Key implements Serializable {
         public UUID profileRevisionId;
-        public String positionCode;
+        public Position positionCode;
     }
 }

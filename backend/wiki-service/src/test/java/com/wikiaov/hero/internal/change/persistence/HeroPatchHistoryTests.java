@@ -146,11 +146,11 @@ class HeroPatchHistoryTests {
             assertThat(value.getNewValue()).isEqualTo("Updated");
         });
         assertThat(savedFacts.getAllValues().get(2)).isInstanceOfSatisfying(RoleChangeClassification.class, value -> {
-            assertThat(value.getRoleCode()).isEqualTo("WARRIOR");
+            assertThat(value.getRoleCode()).isEqualTo(Role.WARRIOR);
             assertThat(value.isAdded()).isTrue();
         });
         assertThat(savedFacts.getAllValues().get(3)).isInstanceOfSatisfying(VisualChangeClassification.class, value -> {
-            assertThat(value.getMediaRole()).isEqualTo("HEAD");
+            assertThat(value.getMediaRole()).isEqualTo(MediaRole.HEAD);
             assertThat(value.getOldAssetId()).isNull();
             assertThat(value.getNewAssetId()).isEqualTo(asset);
         });

@@ -210,7 +210,7 @@ public class HeroPatchDerivation {
         }
 
         private void role(RoleChangeClassification role, UUID changeSetId, UUID patchVariantId) {
-            var code = Role.valueOf(role.getRoleCode());
+            var code = role.getRoleCode();
             if (role.isAdded() == forward) {
                 roles.put(code, new RoleValue(code, Provenance.DERIVED, changeSetId, patchVariantId));
             } else {

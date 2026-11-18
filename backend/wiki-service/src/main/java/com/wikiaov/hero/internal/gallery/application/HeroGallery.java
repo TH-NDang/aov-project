@@ -10,6 +10,7 @@ import com.wikiaov.hero.internal.catalog.application.HeroQueries;
 import com.wikiaov.hero.internal.gallery.application.HeroGalleryView.Attachment;
 import com.wikiaov.hero.internal.gallery.application.HeroGalleryView.Image;
 import com.wikiaov.hero.internal.gallery.application.HeroGalleryView.Version;
+import com.wikiaov.hero.internal.gallery.domain.HeroGalleryKind;
 import com.wikiaov.hero.internal.gallery.persistence.HeroGalleryImagesRepository;
 import com.wikiaov.hero.internal.gallery.persistence.HeroGalleryItemRepository;
 import com.wikiaov.hero.internal.gallery.persistence.entity.HeroGalleryItem;
@@ -21,6 +22,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.EnumNames;
 import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -46,13 +48,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class HeroGallery {
-    private static final Map<String, Set<MediaSemanticType>> ACCEPTED = Map.of(
-            "HERO_ART", EnumSet.of(MediaSemanticType.HERO_HEAD, MediaSemanticType.HERO_PORTRAIT,
+    private static final Map<HeroGalleryKind, Set<MediaSemanticType>> ACCEPTED = Map.of(
+            HeroGalleryKind.HERO_ART, EnumSet.of(MediaSemanticType.HERO_HEAD, MediaSemanticType.HERO_PORTRAIT,
                     MediaSemanticType.HERO_SPLASH),
-            "SKIN", EnumSet.of(MediaSemanticType.HERO_SKIN_ART),
-            "SKILL", EnumSet.of(MediaSemanticType.HERO_SKILL_ICON),
-            "STICKER", EnumSet.of(MediaSemanticType.CHIBI_STICKER),
-            "OTHER", EnumSet.allOf(MediaSemanticType.class));
+            HeroGalleryKind.SKIN, EnumSet.of(MediaSemanticType.HERO_SKIN_ART),
+            HeroGalleryKind.SKILL, EnumSet.of(MediaSemanticType.HERO_SKILL_ICON),
+            HeroGalleryKind.STICKER, EnumSet.of(MediaSemanticType.CHIBI_STICKER),
+            HeroGalleryKind.OTHER, EnumSet.allOf(MediaSemanticType.class));
 
     private final HeroGalleryItemRepository items;
     private final HeroGalleryImagesRepository images;
@@ -132,7 +134,7 @@ public class HeroGallery {
         if (input == null || input.assetId() == null) {
             throw HeroValidation.invalid("Choose an image to attach.");
         }
-        String kind = kind(input.kind());
+        var kind = kind(input.kind());
         requireAsset(input.assetId(), kind);
         String caption = caption(input.caption());
         String partKey = partKey(input.partKey());
@@ -165,7 +167,7 @@ public class HeroGallery {
 
         audit.record(new AuditEntry(actor, "HERO_GALLERY_ITEM_ATTACHED", CatalogAggregates.HERO, heroId, null, null, 0L,
                 null,
-                Map.of("itemId", item.getId(), "assetId", input.assetId(), "kind", kind)));
+                Map.of("itemId", item.getId(), "assetId", input.assetId(), "kind", kind.name())));
         return item.getId();
     }
 
@@ -178,7 +180,7 @@ public class HeroGallery {
             throw new ApiException(HeroErrorCode.HERO_GALLERY_ITEM_CONFLICT,
                     "The gallery image changed. Reload before saving.");
         }
-        String kind = kind(input.kind());
+        var kind = kind(input.kind());
         requireAsset(item.getAssetId(), kind);
         String caption = caption(input.caption());
         String partKey = partKey(input.partKey());
@@ -221,14 +223,15 @@ public class HeroGallery {
                         "The image is not in this hero's gallery."));
     }
 
-    private static String kind(@Nullable String value) {
-        if (value == null || !ACCEPTED.containsKey(value)) {
+    private static HeroGalleryKind kind(@Nullable String value) {
+        var kind = EnumNames.find(HeroGalleryKind.class, value);
+        if (kind == null) {
             throw HeroValidation.invalid("The gallery kind must be HERO_ART, SKIN, SKILL, STICKER or OTHER.");
         }
-        return value;
+        return kind;
     }
 
-    private void requireAsset(UUID assetId, String kind) {
+    private void requireAsset(UUID assetId, HeroGalleryKind kind) {
         var asset = media.find(assetId)
                 .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_INVALID_MEDIA, "The image does not exist."));
         if (!asset.usable()) {
@@ -305,7 +308,7 @@ public class HeroGallery {
         private final UUID assetId;
         private final Set<String> roles = new LinkedHashSet<>();
         private final Map<UUID, Version> versions = new LinkedHashMap<>();
-        private @Nullable String kind;
+        private @Nullable HeroGalleryKind kind;
         private @Nullable String partKey;
         private boolean current;
         private @Nullable Attachment attachment;
@@ -319,10 +322,10 @@ public class HeroGallery {
             int colon = role.indexOf(':');
             if (kind == null) {
                 kind = role.startsWith("SKIN_")
-                        ? "SKIN"
+                        ? HeroGalleryKind.SKIN
                         : role.startsWith("SKILL_")
-                                ? "SKILL"
-                                : role.equals("GALLERY") ? null : "HERO_ART";
+                                ? HeroGalleryKind.SKILL
+                                : role.equals("GALLERY") ? null : HeroGalleryKind.HERO_ART;
             }
             if (partKey == null && colon > 0) {
                 partKey = role.substring(colon + 1);
@@ -332,7 +335,7 @@ public class HeroGallery {
         private Image build(Map<String, String> partNames) {
             var newestFirst = versions.values().stream()
                     .sorted(Comparator.comparingLong(Version::revisionNo).reversed()).toList();
-            return new Image(assetId, kind == null ? "OTHER" : kind, List.copyOf(roles), partKey,
+            return new Image(assetId, kind == null ? HeroGalleryKind.OTHER : kind, List.copyOf(roles), partKey,
                     partKey == null ? null : partNames.get(partKey), current, newestFirst, attachment);
         }
     }

@@ -1,7 +1,11 @@
 package com.wikiaov.hero.internal.sections.persistence.entity;
 
+import com.wikiaov.hero.internal.domain.HeroContent.Verification;
+import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -21,7 +25,8 @@ public class SourceReferenceRow extends AssignedIdentifierEntity<UUID> {
     @Id
     private UUID id;
 
-    private String ownerType;
+    @Enumerated(EnumType.STRING)
+    private HeroSection ownerType;
 
     private UUID ownerRevisionId;
 
@@ -33,7 +38,8 @@ public class SourceReferenceRow extends AssignedIdentifierEntity<UUID> {
 
     private Instant observedAt;
 
-    private String verificationState;
+    @Enumerated(EnumType.STRING)
+    private Verification verificationState;
 
     private String note;
 

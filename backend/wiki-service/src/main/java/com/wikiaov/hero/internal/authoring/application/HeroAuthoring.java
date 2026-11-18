@@ -473,7 +473,7 @@ public class HeroAuthoring {
         entity.setRevisionNo(no);
         entity.setState(RevisionState.DRAFT);
         entity.setVersion(1);
-        entity.setCause(cause.name());
+        entity.setCause(cause);
         entity.setSourceRevisionId(source);
         entity.setEffectiveFromPatchVariantId(effective);
         entity.setCreatedAt(clock.instant());

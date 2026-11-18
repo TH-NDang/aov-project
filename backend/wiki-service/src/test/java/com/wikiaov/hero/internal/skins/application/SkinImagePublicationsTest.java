@@ -240,7 +240,7 @@ class SkinImagePublicationsTest {
         refs.put(HeroSection.MEDIA_BINDINGS, entity.getMediaBindingRevisionId());
         return new HeroRevisionView(entity.getId(), entity.getHeroId(), entity.getRulesetId(), entity.getRevisionNo(),
                 entity.getState(), entity.getVersion(), entity.getPublicationSequence(), entity.getPublishedAt(),
-                Cause.valueOf(entity.getCause()), entity.getSourceRevisionId(), entity.getEffectiveFromPatchVariantId(),
+                entity.getCause(), entity.getSourceRevisionId(), entity.getEffectiveFromPatchVariantId(),
                 refs);
     }
 

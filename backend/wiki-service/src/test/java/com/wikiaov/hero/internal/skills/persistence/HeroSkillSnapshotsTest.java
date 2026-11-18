@@ -89,8 +89,8 @@ class HeroSkillSnapshotsTest {
         var ids = List.of(id);
         when(sources.find(HeroSection.SKILLS, List.of(id))).thenReturn(Map.of());
         when(snapshots.findBySkillSetRevisionIdIn(ids, Sort.by("displayOrder"))).thenReturn(List.of(
-                new SkillSnapshotRow(id, hero, "passive", "PASSIVE", null, 0, null),
-                new SkillSnapshotRow(id, hero, "skill-1", "ACTIVE", null, 1, null)));
+                new SkillSnapshotRow(id, hero, "passive", SkillKind.PASSIVE, null, 0, null),
+                new SkillSnapshotRow(id, hero, "skill-1", SkillKind.ACTIVE, null, 1, null)));
         when(translations.findBySkillSetRevisionIdIn(ids, Sort.by("locale"))).thenReturn(List.of(
                 new SkillTranslationRow(id, "skill-1", "en-US", "Strike", "Active skill", null),
                 new SkillTranslationRow(id, "passive", "vi-VN", "Nội tại", "Passive skill", null),
@@ -133,8 +133,8 @@ class HeroSkillSnapshotsTest {
         when(sources.find(HeroSection.SKILLS, ids)).thenReturn(Map.of(second, List.of(
                 new Source("Fixture", null, null, Verification.VERIFIED, null))));
         when(snapshots.findBySkillSetRevisionIdIn(ids, Sort.by("displayOrder"))).thenReturn(List.of(
-                new SkillSnapshotRow(first, hero, "same-key", "ACTIVE", null, 0, null),
-                new SkillSnapshotRow(second, hero, "same-key", "ACTIVE", null, 0, null)));
+                new SkillSnapshotRow(first, hero, "same-key", SkillKind.ACTIVE, null, 0, null),
+                new SkillSnapshotRow(second, hero, "same-key", SkillKind.ACTIVE, null, 0, null)));
         when(translations.findBySkillSetRevisionIdIn(ids, Sort.by("locale"))).thenReturn(List.of(
                 new SkillTranslationRow(first, "same-key", "vi-VN", "Trước", "Bản trước", "Tóm tắt trước"),
                 new SkillTranslationRow(second, "same-key", "vi-VN", "Sau", "Bản sau", null)));

@@ -9,6 +9,7 @@ import com.wikiaov.hero.internal.application.SkinBadgeCommands;
 import com.wikiaov.hero.internal.application.response.SkinBadgeRelation;
 import com.wikiaov.hero.internal.application.response.SkinBadgeView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
+import com.wikiaov.hero.internal.badges.domain.SkinBadgeKind;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeRepository;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeTexts;
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadge;
@@ -115,7 +116,7 @@ public class SkinBadges {
             }
         }
         badge.setCode(code);
-        badge.setKind(input.kind());
+        badge.setKind(SkinBadgeKind.valueOf(input.kind()));
         badge.setGroupId(input.groupId());
         badge.setCreatedAt(clock.instant());
         badge.setUpdatedAt(clock.instant());
@@ -139,7 +140,7 @@ public class SkinBadges {
             throw new ApiException(HeroErrorCode.HERO_BADGE_CONFLICT, "The skin badge changed. Reload before saving.");
         }
         validate(input.translations());
-        badge.setKind(input.kind());
+        badge.setKind(SkinBadgeKind.valueOf(input.kind()));
         badge.setVersion(Math.addExact(badge.getVersion(), 1));
         badge.setUpdatedAt(clock.instant());
         var translations = rows(id, input.translations());

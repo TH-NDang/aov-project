@@ -1,5 +1,7 @@
 package com.wikiaov.hero.internal.application.response;
 
+import com.wikiaov.hero.internal.shop.domain.HeroAvailability;
+import com.wikiaov.hero.internal.shop.domain.SkinAcquisitionMethod;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -16,7 +18,7 @@ public record HeroShopView(
         List<SkinAcquisition> skinHistory
 ) {
     public record Price(
-            String availability,
+            HeroAvailability availability,
             Integer goldPrice,
             Integer voucherPrice,
             LocalDate capturedOn,
@@ -27,7 +29,7 @@ public record HeroShopView(
 
     public record SkinAcquisition(
             String skinKey,
-            String method,
+            SkinAcquisitionMethod method,
             Integer voucherPrice,
             String eventName,
             LocalDate capturedOn,

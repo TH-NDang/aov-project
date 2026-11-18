@@ -13,6 +13,7 @@ import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeTransl
 import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
 import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
 import com.wikiaov.hero.internal.domain.HeroContent;
+import com.wikiaov.hero.internal.domain.HeroContent.Position;
 import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
@@ -43,8 +44,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class HeroCatalog {
     /** The catalog's query keeps its published values; a profile stores the code each one stands for. */
-    private static final Map<String, String> POSITION_CODES = Map.of("top", "TOP", "mid", "MID", "rung", "JUNGLE",
-            "rong-ad", "DRAGON", "tro-thu", "SUPPORT");
+    private static final Map<String, Position> POSITION_CODES = Map.of("top", Position.TOP, "mid", Position.MID,
+            "rung", Position.JUNGLE, "rong-ad", Position.DRAGON, "tro-thu", Position.SUPPORT);
 
     private final HeroPatchAssessmentRepository assessments;
     private final HeroCatalogRepository catalog;
@@ -71,7 +72,8 @@ public class HeroCatalog {
         }
         HeroValidation.locale(locale);
         var facets = new HeroCatalogFacets(
-                choices(role, Arrays.stream(Role.values()).map(Enum::name).collect(Collectors.toSet())),
+                choices(role, Arrays.stream(Role.values()).map(Enum::name).collect(Collectors.toSet())).stream()
+                        .map(Role::valueOf).collect(Collectors.toSet()),
                 choices(position, POSITION_CODES.keySet()).stream().map(POSITION_CODES::get)
                         .collect(Collectors.toSet()),
                 hasWarnings);
@@ -133,7 +135,7 @@ public class HeroCatalog {
         if (!changeIds.isEmpty()) {
             catalog.classifications(changeIds).forEach(row -> classifications
                     .computeIfAbsent(row.getChangeSetId(), ignored -> EnumSet.noneOf(Kind.class))
-                    .add(Kind.valueOf(row.getChangeKind())));
+                    .add(row.getChangeKind()));
             translations.putAll(catalog.translations(changeIds).stream()
                     .collect(Collectors.groupingBy(HeroPatchChangeTranslation::getChangeSetId)));
         }

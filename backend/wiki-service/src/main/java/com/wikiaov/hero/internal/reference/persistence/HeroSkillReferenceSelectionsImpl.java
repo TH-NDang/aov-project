@@ -2,6 +2,7 @@ package com.wikiaov.hero.internal.reference.persistence;
 
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
 import com.wikiaov.hero.internal.domain.SkillReferenceSearch;
 import com.wikiaov.hero.internal.media.persistence.entity.MediaBindingRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
@@ -169,7 +170,7 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
 
         var keys = builder.or(builder.like(skill.get("skillKey"), "skill-" + slot + "-%"),
                 builder.equal(skill.get("skillKey"), slot == 0 ? "capture-passive" : "capture-skill-" + slot));
-        return slot == 0 ? builder.or(keys, builder.equal(skill.get("kind"), "PASSIVE")) : keys;
+        return slot == 0 ? builder.or(keys, builder.equal(skill.get("kind"), SkillKind.PASSIVE)) : keys;
     }
 
     private static Expression<String> normalized(CriteriaBuilder builder, Expression<String> text) {

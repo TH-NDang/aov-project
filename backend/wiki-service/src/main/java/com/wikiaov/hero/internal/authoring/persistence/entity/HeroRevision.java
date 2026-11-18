@@ -1,5 +1,6 @@
 package com.wikiaov.hero.internal.authoring.persistence.entity;
 
+import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.platform.AssignedIdentifierEntity;
 import com.wikiaov.platform.RevisionState;
 import jakarta.persistence.Entity;
@@ -35,7 +36,8 @@ public class HeroRevision extends AssignedIdentifierEntity<UUID> {
 
     private Instant publishedAt;
 
-    private String cause;
+    @Enumerated(EnumType.STRING)
+    private Cause cause;
 
     private UUID sourceRevisionId;
 
