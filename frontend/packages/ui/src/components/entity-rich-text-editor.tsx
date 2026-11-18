@@ -1,5 +1,4 @@
 import * as React from "react"
-import { Popover as PopoverPrimitive } from "radix-ui"
 import { EntityReferenceInput, type EntityReferenceInputHandle } from "./entity-reference-input"
 import {
   referenceFormatState,
@@ -7,42 +6,26 @@ import {
   styleReferenceParagraph,
   toggleReferenceFormat,
 } from "../lib/reference-input-formatting"
-import { isParagraphStyle, paragraphStyles, writeExampleTable } from "../lib/rich-text-blocks"
+import { isParagraphStyle, writeExampleTable } from "../lib/rich-text-blocks"
 import { ExampleTableDialog } from "./rich-text-blocks"
-import {
-  entityKindLabels,
-  referenceTranslation,
-  validSkillReference,
-  type EntityReference,
-} from "../lib/entity-rich-text"
+import { entityKindLabels, type EntityReference } from "../lib/entity-rich-text"
 import {
   insertReference,
-  createReferenceSearchIndex,
-  referenceSuggestionAt,
   referenceReplacementRange,
-  searchReferenceChoices,
-  referenceSearchGroup,
-  type EditorSnapshot,
   type TextSelection,
   type EntityReferenceSearch,
-  type ReferenceSearchPage,
 } from "../lib/entity-rich-text-editor"
-import {
-  EntityRichText,
-  EntityReferenceArtwork,
-  skillReferenceContext,
-  type EntityIconResolver,
-} from "./entity-rich-text"
-import { Button } from "./button"
-import { Popover, PopoverContent, PopoverTrigger } from "./popover"
-import { RichTextColorPalette } from "./rich-text-color-palette"
-import { AtSign, ChevronDown, Eraser, Link2Off, Palette, Redo2, Table2, Undo2 } from "lucide-react"
+import { EntityRichText, type EntityIconResolver } from "./entity-rich-text"
+import { RichTextToolbar, type TextFormat } from "./rich-text-editor/rich-text-toolbar"
+import { SelectionFormatBar, useSelectionBar } from "./rich-text-editor/selection-format-bar"
+import { ReferenceOptionRow, ReferenceSuggestions, useCaretAnchor } from "./rich-text-editor/reference-suggestions"
+import { useEditorHistory } from "./rich-text-editor/use-editor-history"
+import { useReferenceSuggestions } from "./rich-text-editor/use-reference-suggestions"
+import { remoteReferenceKinds } from "./rich-text-editor/use-reference-search"
 import { cn } from "@aov/ui/lib/utils"
 
 const empty: EntityReference[] = []
-const kinds = entityKindLabels
 const MemoizedRichText = React.memo(EntityRichText)
-const suggestionBatchSize = 32
 export interface EntityRichTextEditorProps {
   label: string
   value: string
@@ -67,90 +50,16 @@ export interface EntityRichTextEditorProps {
   searchReferences?: EntityReferenceSearch
 }
 
-function useReferenceSearch(
-  searchReferences: EntityReferenceSearch | undefined,
-  query: string,
-  locale: string,
-  open: boolean,
-) {
-  const key = `${locale}\0${query}`
-  const request = React.useRef<AbortController | null>(null)
-  const generation = React.useRef(0)
-  const pending = React.useRef(false)
-  const [result, setResult] = React.useState<ReferenceSearchPage & { key: string; loading: boolean; error: boolean }>({
-    key: "",
-    items: [],
-    page: -1,
-    size: 20,
-    totalElements: 0,
-    loading: false,
-    error: false,
-  })
-  const group = referenceSearchGroup(query).kind
-  const allowed = open && !!searchReferences && (!group || ["skill", "team", "player"].includes(group))
-  const load = React.useCallback(
-    async (page: number, run: number) => {
-      if (!searchReferences || pending.current || run !== generation.current) return
-      const controller = new AbortController()
-      request.current = controller
-      pending.current = true
-      setResult((previous) => ({ ...previous, loading: true, error: false }))
-      try {
-        const response = await searchReferences({ query, locale, page, signal: controller.signal })
-        if (controller.signal.aborted || run !== generation.current) return
-        if (
-          !Array.isArray(response.items) ||
-          response.page !== page ||
-          !Number.isInteger(response.size) ||
-          response.size < 1 ||
-          !Number.isInteger(response.totalElements) ||
-          response.totalElements < 0
-        )
-          throw new Error("Invalid reference search page")
-        setResult((previous) => ({
-          ...response,
-          items: page === 0 ? response.items.slice(0, 100) : [...previous.items, ...response.items.slice(0, 100)],
-          key,
-          loading: false,
-          error: false,
-        }))
-      } catch {
-        if (!controller.signal.aborted && run === generation.current)
-          setResult((previous) => ({ ...previous, loading: false, error: true }))
-      } finally {
-        if (run === generation.current) pending.current = false
-      }
-    },
-    [searchReferences, query, locale, key],
-  )
-  React.useEffect(() => {
-    const run = generation.current + 1
-    generation.current = run
-    request.current?.abort()
-    pending.current = false
-    setResult({ key, items: [], page: -1, size: 20, totalElements: 0, loading: allowed, error: false })
-    const timer = allowed ? setTimeout(() => void load(0, run), 300) : undefined
-    return () => {
-      clearTimeout(timer)
-      request.current?.abort()
-      generation.current++
-      pending.current = false
-    }
-  }, [allowed, key, load])
-  const current = result.key === key && allowed ? result : undefined
-  const hasMore = !!current && current.page >= 0 && (current.page + 1) * current.size < current.totalElements
-  return {
-    items: current?.items ?? empty,
-    loading: current?.loading ?? false,
-    error: current?.error ?? false,
-    hasMore,
-    loadMore: () => {
-      if (hasMore && !current.loading && !current.error) void load(current.page + 1, generation.current)
-    },
-    retry: () => {
-      if (allowed) void load(Math.max(0, result.page + 1), generation.current)
-    },
-  }
+/** A #rgb colour written out as #rrggbb, so the colour field can show it; other values are left out. */
+function fullHex(color: string | undefined) {
+  if (/^#[\da-f]{6}$/i.test(color ?? "")) return color!
+  if (/^#[\da-f]{3}$/i.test(color ?? ""))
+    return `#${color!
+      .slice(1)
+      .split("")
+      .map((part) => part + part)
+      .join("")}`
+  return null
 }
 
 export function EntityRichTextEditor({
@@ -178,107 +87,25 @@ export function EntityRichTextEditor({
   const id = React.useId()
   const area = React.useRef<EntityReferenceInputHandle>(null)
   const popup = React.useRef<HTMLDivElement>(null)
-  const list = React.useRef<HTMLDivElement>(null)
-  const search = React.useRef<HTMLInputElement>(null)
   const editor = React.useRef<HTMLDivElement>(null)
-  const [anchorRect, setAnchorRect] = React.useState<DOMRect | null>(null)
-  const current = React.useRef(value)
-  const selection = React.useRef<TextSelection>({ start: 0, end: 0 })
-  const history = React.useRef<EditorSnapshot[]>([{ value, start: 0, end: 0 }])
-  const position = React.useRef(0)
   const composing = React.useRef(false)
-  const [caret, setCaret] = React.useState<TextSelection>({ start: 0, end: 0 })
-  const [dismissed, setDismissed] = React.useState(false)
-  const [picker, setPicker] = React.useState(false)
-  const [query, setQuery] = React.useState("")
-  const [active, setActive] = React.useState(0)
-  const [visibleSuggestions, setVisibleSuggestions] = React.useState(suggestionBatchSize)
   const [color, setColor] = React.useState("#2563eb")
-  const [notice, setNotice] = React.useState("")
   const [table, setTable] = React.useState<{ rows?: string[][]; range: TextSelection; original: string } | null>(null)
-  const editTable = React.useCallback((rows: string[][], range: TextSelection) => {
-    setTable({ rows, range, original: current.current })
-  }, [])
   const [isComposing, setComposing] = React.useState(false)
-  const [focused, setFocused] = React.useState(false)
-  const [selecting, setSelecting] = React.useState(false)
-  const [barDismissed, setBarDismissed] = React.useState(false)
-  const [barColors, setBarColors] = React.useState(false)
-  const selectionBar = React.useRef<HTMLDivElement>(null)
   const [selectedReferences, setSelectedReferences] = React.useState<EntityReference[]>([])
-  const [previewOpen, setPreviewOpen] = React.useState(false)
-  const deferredPreview = React.useDeferredValue(renderPreview && previewOpen ? value : "")
-  const updateCaret = React.useCallback((next: TextSelection) => {
-    setCaret((previous) => (previous.start === next.start && previous.end === next.end ? previous : next))
-  }, [])
+  // A value changed from outside closes the list; it runs after render, once the suggestions below exist.
+  const history = useEditorHistory({ value, onChange, limit, area, onExternalChange: () => suggestions.dismiss() })
+  const { current, selection, caret, commit } = history
+  const editTable = React.useCallback(
+    (rows: string[][], range: TextSelection) => setTable({ rows, range, original: current.current }),
+    [current],
+  )
   const formatting = React.useMemo(() => referenceFormatState(value, caret), [value, caret])
   React.useEffect(() => {
-    if (/^#[\da-f]{6}$/i.test(formatting.color ?? "")) setColor(formatting.color!)
-    else if (/^#[\da-f]{3}$/i.test(formatting.color ?? "")) {
-      setColor(
-        `#${formatting
-          .color!.slice(1)
-          .split("")
-          .map((part) => part + part)
-          .join("")}`,
-      )
-    }
+    const next = fullHex(formatting.color)
+    if (next) setColor(next)
   }, [formatting.color])
-  const [, refresh] = React.useReducer((n: number) => n + 1, 0)
-  React.useLayoutEffect(() => {
-    if (value !== current.current) {
-      current.current = value
-      history.current = [{ value, start: 0, end: 0 }]
-      position.current = 0
-      selection.current = { start: 0, end: 0 }
-      updateCaret(selection.current)
-      setDismissed(true)
-    }
-  }, [value, updateCaret])
-  const restore = (snapshot: EditorSnapshot) => {
-    current.current = snapshot.value
-    onChange(snapshot.value)
-    selection.current = { start: snapshot.start, end: snapshot.end }
-    updateCaret(selection.current)
-    setDismissed(true)
-    setPicker(false)
-    queueMicrotask(() => {
-      area.current?.focus()
-      area.current?.setSelectionRange(snapshot.start, snapshot.end)
-    })
-    refresh()
-  }
-  const commit = (snapshot: EditorSnapshot, focus = true) => {
-    if (snapshot.value.length > limit && snapshot.value.length > current.current.length) {
-      setNotice(`Nội dung vượt giới hạn ${limit.toLocaleString()} ký tự.`)
-      return false
-    }
-    if (snapshot.value !== history.current[position.current]?.value) {
-      history.current = history.current.slice(0, position.current + 1)
-      history.current.push(snapshot)
-      if (history.current.length > 100) history.current.shift()
-      position.current = history.current.length - 1
-    }
-    current.current = snapshot.value
-    onChange(snapshot.value)
-    selection.current = { start: snapshot.start, end: snapshot.end }
-    updateCaret(selection.current)
-    setNotice("")
-    if (focus)
-      queueMicrotask(() => {
-        area.current?.focus()
-        area.current?.setSelectionRange(snapshot.start, snapshot.end)
-      })
-    refresh()
-    return true
-  }
-  const undo = (redo = false) => {
-    const next = position.current + (redo ? 1 : -1)
-    if (next >= 0 && next < history.current.length) {
-      position.current = next
-      restore(history.current[next]!)
-    }
-  }
+
   const resolvedEntities = React.useMemo(
     () => [
       ...new Map(
@@ -287,117 +114,25 @@ export function EntityRichTextEditor({
     ],
     [selectedReferences, entities],
   )
-  const searchIndex = React.useMemo(
-    () => createReferenceSearchIndex(resolvedEntities, locale, fallbackLocale),
-    [resolvedEntities, locale, fallbackLocale],
-  )
-  const mention = !isComposing && !dismissed && !picker ? referenceSuggestionAt(value, caret, searchIndex) : null
-  const searchQuery = picker ? query : (mention?.query ?? "")
-  const open = (!!mention || picker) && !isComposing && !disabled
-  React.useEffect(() => setVisibleSuggestions(suggestionBatchSize), [open, searchQuery])
-  const remote = useReferenceSearch(searchReferences, searchQuery, locale, open)
-  const options = React.useMemo(() => {
-    if (!open) return []
-    const local = searchReferenceChoices(searchIndex, searchQuery)
-    const group = referenceSearchGroup(searchQuery).kind
-    const choices = new Map(
-      local.map(({ entity, translation }) => [`${entity.kind}:${entity.id}`, { entity, translation }]),
-    )
-    for (const entity of remote.items) {
-      if (
-        !entity ||
-        !Object.hasOwn(kinds, entity.kind) ||
-        !Array.isArray(entity.translations) ||
-        (group && entity.kind !== group) ||
-        (entity.kind === "skill" && !validSkillReference(entity))
-      )
-        continue
-      const translation = referenceTranslation(entity, locale, fallbackLocale)
-      if (translation?.name.trim()) choices.set(`${entity.kind}:${entity.id}`, { entity, translation })
-    }
-    return [...choices.values()]
-  }, [open, searchIndex, locale, fallbackLocale, searchQuery, remote.items])
-  const popupOpen = open && (picker || mention?.explicit || options.length > 0)
-  const renderedSuggestions = Math.min(options.length, Math.max(visibleSuggestions, active + 1))
-  const loadMoreSuggestions = () => {
-    if (renderedSuggestions < options.length) setVisibleSuggestions(renderedSuggestions + suggestionBatchSize)
-    else remote.loadMore()
+  const suggestions = useReferenceSuggestions({
+    value,
+    caret,
+    composing: isComposing,
+    disabled,
+    entities: resolvedEntities,
+    locale,
+    fallbackLocale,
+    searchReferences,
+  })
+  const { mention, options, active } = suggestions
+  const caretAnchor = useCaretAnchor(area, suggestions.open, caret.end, value, resolvedEntities)
+  const undo = (redo = false) => {
+    if (history.undo(redo)) suggestions.close()
   }
-  // The bar waits for the pointer to let go, so it never jumps around under a selection still being dragged.
-  React.useEffect(() => {
-    if (!selecting) return
-    const done = () => setSelecting(false)
-    window.addEventListener("pointerup", done)
-    window.addEventListener("pointercancel", done)
-    return () => {
-      window.removeEventListener("pointerup", done)
-      window.removeEventListener("pointercancel", done)
-    }
-  }, [selecting])
-  React.useEffect(() => {
-    setBarDismissed(false)
-    setBarColors(false)
-  }, [caret.start, caret.end])
-  const selectionAnchor = React.useMemo(
-    () => ({
-      current: {
-        getBoundingClientRect: () => {
-          const root = area.current!.element!
-          const selected = root.ownerDocument.getSelection()
-          const range = selected?.rangeCount ? selected.getRangeAt(0) : undefined
-          const rect =
-            range && root.contains(range.commonAncestorContainer) && typeof range.getBoundingClientRect === "function"
-              ? range.getBoundingClientRect()
-              : undefined
-          return rect?.width ? rect : root.getBoundingClientRect()
-        },
-      },
-    }),
-    [],
-  )
-  const virtualAnchor = React.useMemo(
-    () => ({ current: { getBoundingClientRect: () => anchorRect ?? area.current!.element!.getBoundingClientRect() } }),
-    [anchorRect],
-  )
-  React.useLayoutEffect(() => {
-    if (!open || !area.current?.element) return
-    const input = area.current.element
-    const view = input.ownerDocument.defaultView!
-    const measure = () => {
-      const rect = area.current?.caretRect(caret.end)
-      if (rect) setAnchorRect(rect)
-    }
-    measure()
-    let frame = 0
-    const update = () => {
-      view.cancelAnimationFrame(frame)
-      frame = view.requestAnimationFrame(measure)
-    }
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update)
-    observer?.observe(input)
-    view.addEventListener("resize", update)
-    view.addEventListener("scroll", update, true)
-    view.visualViewport?.addEventListener("resize", update)
-    view.visualViewport?.addEventListener("scroll", update)
-    return () => {
-      view.cancelAnimationFrame(frame)
-      observer?.disconnect()
-      view.removeEventListener("resize", update)
-      view.removeEventListener("scroll", update, true)
-      view.visualViewport?.removeEventListener("resize", update)
-      view.visualViewport?.removeEventListener("scroll", update)
-    }
-  }, [open, value, caret.end, resolvedEntities])
-  React.useLayoutEffect(() => {
-    if (!open) return
-    const container = list.current
-    const selected = container?.children[Math.min(active, options.length - 1)] as HTMLElement | undefined
-    if (!container || !selected) return
-    const bounds = container.getBoundingClientRect()
-    const row = selected.getBoundingClientRect()
-    if (row.bottom > bounds.bottom) container.scrollTop += row.bottom - bounds.bottom
-    else if (row.top < bounds.top) container.scrollTop -= bounds.top - row.top
-  }, [open, active, options.length])
+  const bar = useSelectionBar(area, caret, !!disabled || isComposing || suggestions.picker || !!table)
+  const [previewOpen, setPreviewOpen] = React.useState(false)
+  const deferredPreview = React.useDeferredValue(renderPreview && previewOpen ? value : "")
+
   const choose = (index: number) => {
     const choice = options[index]
     if (!choice) return
@@ -412,73 +147,40 @@ export function EntityRichTextEditor({
         ].slice(-500),
       )
       commit(next)
-      setPicker(false)
-      setDismissed(true)
-    } else setNotice("Chọn văn bản thuần, bên ngoài thẻ tham chiếu để chèn.")
+      suggestions.close()
+    } else history.setNotice("Chọn văn bản thuần, bên ngoài thẻ tham chiếu để chèn.")
   }
-  const format = (kind: "b" | "i" | "muted" | "color" | "noauto" | "plain", withColor = color) => {
+  const format = (kind: TextFormat, withColor = color) => {
     const next = toggleReferenceFormat(current.current, selection.current, kind, withColor)
     if (next) {
       commit(next)
-      setDismissed(true)
-      setPicker(false)
-    } else setNotice("Vùng chọn đang cắt qua thẻ hoặc nằm trong tham chiếu. Hãy chọn lại văn bản.")
+      suggestions.close()
+    } else history.setNotice("Vùng chọn đang cắt qua thẻ hoặc nằm trong tham chiếu. Hãy chọn lại văn bản.")
   }
   const pickColor = (next: string) => {
     setColor(next)
     format("color", next)
   }
-  const selectionBarOpen =
-    focused &&
-    !selecting &&
-    !barDismissed &&
-    !disabled &&
-    !isComposing &&
-    !picker &&
-    !table &&
-    caret.start !== caret.end
-  const listKeys = (event: React.KeyboardEvent) => {
-    if (!popupOpen || composing.current || event.nativeEvent.isComposing) return false
-    if (event.key === "Escape") {
-      event.preventDefault()
-      setPicker(false)
-      setDismissed(true)
-      area.current?.focus()
-      return true
-    }
-    if (!options.length) return false
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault()
-      if (event.key === "ArrowDown" && active >= options.length - 1 && remote.hasMore) {
-        remote.loadMore()
-        return true
-      }
-      setActive((n) => (n + (event.key === "ArrowDown" ? 1 : -1) + options.length) % options.length)
-      return true
-    }
-    if (event.key === "Enter") {
-      event.preventDefault()
-      choose(Math.min(active, options.length - 1))
-      return true
-    }
-    return false
+  const styleParagraph = (style: string) => {
+    if (style !== "normal" && !isParagraphStyle(style)) return
+    if (style === "note" && selectsPartOfLine(current.current, selection.current)) return format("muted")
+    const next = styleReferenceParagraph(current.current, selection.current, style)
+    if (next) commit(next)
   }
+  const listKeys = (event: React.KeyboardEvent) =>
+    suggestions.handleKey(event, { composing: composing.current, choose, refocus: () => area.current?.focus() })
+
   return (
     <div
       ref={editor}
       className={cn("min-w-0 space-y-2", className)}
       data-slot="entity-rich-text-editor"
-      onFocus={() => setFocused(true)}
-      onPointerDown={(event) => {
-        if (area.current?.element?.contains(event.target as Node)) setSelecting(true)
-      }}
+      onFocus={bar.onFocus}
+      onPointerDown={bar.onPointerDown}
       onBlur={(event) => {
+        bar.onBlur(event)
         const target = event.relatedTarget as Node | null
-        if (!event.currentTarget.contains(target) && !selectionBar.current?.contains(target)) setFocused(false)
-        if (!event.currentTarget.contains(target) && !popup.current?.contains(target)) {
-          setPicker(false)
-          setDismissed(true)
-        }
+        if (!event.currentTarget.contains(target) && !popup.current?.contains(target)) suggestions.close()
       }}
     >
       <label
@@ -489,221 +191,29 @@ export function EntityRichTextEditor({
       >
         {label}
       </label>
-      <div
-        role="toolbar"
-        aria-label={`Định dạng ${label}`}
-        className={cn(
-          "flex flex-wrap items-center gap-1 rounded-md border bg-muted/30 p-1",
-          compact && "gap-0.5 rounded-lg",
-        )}
-      >
-        {(allowBlocks || allowTables) && (
-          <div className="flex items-center border-r pr-1">
-            {allowBlocks && (
-              <select
-                aria-label="Loại văn bản"
-                title="Đặt kiểu cho cả đoạn. Bôi đen một phần câu rồi chọn Chú thích thì chữ nhạt đi ngay trong câu, không xuống dòng."
-                className="h-7 rounded bg-transparent px-1 text-xs hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
-                disabled={disabled || isComposing}
-                value={formatting.style}
-                onChange={(event) => {
-                  const style = event.target.value
-                  if (style !== "normal" && !isParagraphStyle(style)) return
-                  if (style === "note" && selectsPartOfLine(current.current, selection.current)) return format("muted")
-                  const next = styleReferenceParagraph(current.current, selection.current, style)
-                  if (next) commit(next)
-                }}
-              >
-                <option value="normal">Đoạn thường</option>
-                {Object.entries(paragraphStyles).map(([key, style]) => (
-                  <option key={key} value={key}>
-                    {style.label}
-                  </option>
-                ))}
-              </select>
-            )}
-            {allowTables && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label="Chèn bảng ví dụ"
-                title="Chèn bảng ví dụ"
-                className="size-7 p-0"
-                disabled={disabled || isComposing}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  const end = selection.current.end
-                  setTable({ range: { start: end, end }, original: current.current })
-                }}
-              >
-                <Table2 aria-hidden className="size-4" />
-              </Button>
-            )}
-          </div>
-        )}
-        <div
-          role="group"
-          aria-label="Định dạng chữ"
-          className={cn("flex shrink-0 items-center gap-1 border-r pr-2", compact && "gap-0.5 pr-1")}
-        >
-          {(
-            [
-              ["b", "Đậm", "B"],
-              ["i", "Nghiêng", "I"],
-            ] as const
-          ).map(([kind, name, text]) => (
-            <Button
-              key={kind}
-              type="button"
-              variant={(kind === "b" ? formatting.bold : formatting.italic) ? "secondary" : "ghost"}
-              size="sm"
-              aria-label={name}
-              title={kind === "b" ? "Đậm (Ctrl+B)" : "Nghiêng (Ctrl+I)"}
-              aria-pressed={kind === "b" ? formatting.bold : formatting.italic}
-              disabled={disabled}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => format(kind)}
-              className={cn(kind === "b" ? "font-bold" : "italic", compact && "size-7 rounded-md p-0")}
-            >
-              {text}
-            </Button>
-          ))}
-        </div>
-        <div
-          role="group"
-          aria-label="Màu chữ"
-          className={cn("flex shrink-0 items-center gap-1 border-r px-1 pr-2", compact && "gap-0.5 pr-1")}
-        >
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            aria-label="Áp dụng màu"
-            title="Tô chữ đang chọn bằng màu này"
-            className={cn("gap-1.5", compact && "size-7 rounded-md p-0")}
-            disabled={disabled}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => format("color")}
-          >
-            <span aria-hidden className="size-3.5 rounded-sm border" style={{ backgroundColor: color }} />
-            {!compact && "Màu"}
-          </Button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                aria-label="Chọn màu chữ"
-                title="Chọn màu theo ý nghĩa trong game"
-                className="size-7 rounded-md p-0"
-                disabled={disabled}
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                <ChevronDown aria-hidden className="size-3.5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="start"
-              className="w-auto p-2"
-              onOpenAutoFocus={(event) => event.preventDefault()}
-              onCloseAutoFocus={(event) => event.preventDefault()}
-            >
-              <RichTextColorPalette text={value} color={color} onPick={pickColor} />
-            </PopoverContent>
-          </Popover>
-          <Button
-            type="button"
-            size="sm"
-            variant={formatting.muted ? "secondary" : "ghost"}
-            aria-label="Chữ nhạt"
-            aria-pressed={formatting.muted}
-            title="Làm chữ đang chọn nhạt đi ngay trong câu, không xuống dòng"
-            className={compact ? "type-label h-7 rounded-md px-1.5" : undefined}
-            disabled={disabled}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => format("muted")}
-          >
-            Nhạt
-          </Button>
-        </div>
-        <div
-          role="group"
-          aria-label="Chèn tham chiếu"
-          className={cn("flex shrink-0 items-center border-r px-1 pr-2", compact && "px-0.5 pr-1")}
-        >
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            aria-label={compact ? "Chèn tham chiếu" : undefined}
-            title="Chèn tham chiếu (@)"
-            className={compact ? "size-7 rounded-md p-0" : undefined}
-            disabled={disabled}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => {
-              setPicker(!picker)
-              setQuery("")
-              setActive(0)
-              setDismissed(true)
-            }}
-          >
-            {compact ? <AtSign aria-hidden className="size-3.5" /> : "@ Tham chiếu"}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={formatting.noauto ? "secondary" : "ghost"}
-            aria-label="Bỏ qua tự nhận diện"
-            aria-pressed={formatting.noauto}
-            title={
-              formatting.noauto
-                ? "Bật lại tự nhận diện cho đoạn đang chọn"
-                : "Bôi đen đoạn cần bỏ qua tự nhận diện tướng, kỹ năng hoặc thuật ngữ"
-            }
-            className={compact ? "type-label h-7 gap-1 rounded-md px-1.5" : undefined}
-            disabled={disabled || isComposing || caret.start === caret.end}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => format("noauto")}
-          >
-            <Link2Off aria-hidden className="size-3.5" />
-            {compact ? "Bỏ qua" : "Bỏ qua tự nhận diện"}
-          </Button>
-        </div>
-        <div
-          role="group"
-          aria-label="Lịch sử chỉnh sửa"
-          className={cn("flex shrink-0 items-center gap-1 px-1", compact && "gap-0.5 px-0.5")}
-        >
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            aria-label="Hoàn tác"
-            title="Hoàn tác (Ctrl+Z)"
-            className={compact ? "size-7 rounded-md p-0" : undefined}
-            disabled={disabled || position.current === 0}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => undo()}
-          >
-            {compact ? <Undo2 aria-hidden className="size-3.5" /> : "↶"}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            aria-label="Làm lại"
-            title="Làm lại (Ctrl+Shift+Z)"
-            className={compact ? "size-7 rounded-md p-0" : undefined}
-            disabled={disabled || position.current >= history.current.length - 1}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => undo(true)}
-          >
-            {compact ? <Redo2 aria-hidden className="size-3.5" /> : "↷"}
-          </Button>
-        </div>
-      </div>
+      <RichTextToolbar
+        label={label}
+        text={value}
+        formatting={formatting}
+        color={color}
+        compact={compact}
+        allowBlocks={allowBlocks}
+        allowTables={allowTables}
+        disabled={disabled}
+        composing={isComposing}
+        hasSelection={caret.start !== caret.end}
+        canUndo={history.canUndo}
+        canRedo={history.canRedo}
+        onStyle={styleParagraph}
+        onInsertTable={() => {
+          const end = selection.current.end
+          setTable({ range: { start: end, end }, original: current.current })
+        }}
+        onFormat={format}
+        onPickColor={pickColor}
+        onToggleReferences={() => suggestions.openPicker(!suggestions.picker)}
+        onUndo={undo}
+      />
       {table && (
         <ExampleTableDialog
           initial={table.rows}
@@ -750,16 +260,11 @@ export function EntityRichTextEditor({
         aria-labelledby={`${id}-label`}
         aria-describedby={`${id}-help`}
         aria-autocomplete="list"
-        aria-controls={popupOpen ? `${id}-options` : undefined}
+        aria-controls={suggestions.visible ? `${id}-options` : undefined}
         aria-activedescendant={
-          popupOpen && options.length ? `${id}-option-${Math.min(active, options.length - 1)}` : undefined
+          suggestions.visible && options.length ? `${id}-option-${Math.min(active, options.length - 1)}` : undefined
         }
-        onSelectionChange={(next) => {
-          selection.current = next
-          updateCaret(next)
-          const snapshot = history.current[position.current]
-          if (snapshot?.value === current.current) Object.assign(snapshot, next)
-        }}
+        onSelectionChange={history.select}
         onHistoryUndo={undo}
         onCompositionStart={() => {
           composing.current = true
@@ -769,21 +274,15 @@ export function EntityRichTextEditor({
           composing.current = false
           setComposing(false)
           const accepted = commit(snapshot, false)
-          setDismissed(false)
-          setActive(0)
+          suggestions.reopen()
           return accepted
         }}
         onChange={(snapshot) => {
           let accepted = true
           if (composing.current) {
-            if (snapshot.value.length > limit && snapshot.value.length > current.current.length) return false
-            current.current = snapshot.value
-            onChange(snapshot.value)
-            selection.current = snapshot
-            updateCaret(snapshot)
+            if (!history.track(snapshot)) return false
           } else accepted = commit(snapshot, false)
-          setDismissed(false)
-          setActive(0)
+          suggestions.reopen()
           return accepted
         }}
         onKeyDown={(e) => {
@@ -806,308 +305,70 @@ export function EntityRichTextEditor({
           ? "Gõ @ để chèn tham chiếu · Bôi đen rồi bấm Bỏ qua để tắt nhận diện một đoạn."
           : "Tên và thuật ngữ đầy đủ được nhận diện tự động. Gõ @ để chèn tham chiếu; bôi đen rồi bấm Bỏ qua để tắt nhận diện một đoạn."}
       </p>
-      <PopoverPrimitive.Root open={selectionBarOpen}>
-        <PopoverPrimitive.Anchor virtualRef={selectionAnchor} />
-        {selectionBarOpen && (
-          <PopoverPrimitive.Portal>
-            <PopoverPrimitive.Content
-              ref={selectionBar}
-              role="toolbar"
-              aria-label="Định dạng chữ đang chọn"
-              side="top"
-              align="center"
-              sideOffset={8}
-              collisionPadding={12}
-              updatePositionStrategy="always"
-              className="z-50 max-w-[calc(100vw-1.5rem)] rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
-              onOpenAutoFocus={(event) => event.preventDefault()}
-              onCloseAutoFocus={(event) => event.preventDefault()}
-              onInteractOutside={(event) => event.preventDefault()}
-              onEscapeKeyDown={() => setBarDismissed(true)}
-            >
-              <div className="flex items-center gap-0.5">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={formatting.bold ? "secondary" : "ghost"}
-                  aria-label="Đậm chữ đang chọn"
-                  aria-pressed={formatting.bold}
-                  title="Đậm (Ctrl+B)"
-                  className="size-7 p-0 font-bold"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => format("b")}
-                >
-                  B
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={formatting.italic ? "secondary" : "ghost"}
-                  aria-label="Nghiêng chữ đang chọn"
-                  aria-pressed={formatting.italic}
-                  title="Nghiêng (Ctrl+I)"
-                  className="size-7 p-0 italic"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => format("i")}
-                >
-                  I
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={formatting.muted ? "secondary" : "ghost"}
-                  aria-label="Làm nhạt chữ đang chọn"
-                  aria-pressed={formatting.muted}
-                  title="Chú thích ngay trong câu, không xuống dòng"
-                  className="h-7 px-1.5 text-xs"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => format("muted")}
-                >
-                  Nhạt
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={barColors ? "secondary" : "ghost"}
-                  aria-label="Màu chữ đang chọn"
-                  aria-expanded={barColors}
-                  title="Chọn màu"
-                  className="size-7 p-0"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => setBarColors(!barColors)}
-                >
-                  <Palette
-                    aria-hidden
-                    className="size-3.5"
-                    style={formatting.color ? { color: formatting.color } : undefined}
-                  />
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  aria-label="Chèn tham chiếu vào chữ đang chọn"
-                  title="Chèn tham chiếu (@)"
-                  className="size-7 p-0"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => {
-                    setPicker(true)
-                    setQuery("")
-                    setActive(0)
-                    setDismissed(true)
-                  }}
-                >
-                  <AtSign aria-hidden className="size-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={formatting.noauto ? "secondary" : "ghost"}
-                  aria-label="Bỏ qua tự nhận diện chữ đang chọn"
-                  aria-pressed={formatting.noauto}
-                  title={formatting.noauto ? "Bật lại tự nhận diện cho đoạn đang chọn" : "Bỏ qua tự nhận diện"}
-                  className="size-7 p-0"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => format("noauto")}
-                >
-                  <Link2Off aria-hidden className="size-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  aria-label="Bỏ định dạng chữ đang chọn"
-                  title="Bỏ đậm, nghiêng, nhạt và màu"
-                  className="size-7 p-0"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => format("plain")}
-                >
-                  <Eraser aria-hidden className="size-3.5" />
-                </Button>
-              </div>
-              {barColors && (
-                <RichTextColorPalette
-                  text={value}
-                  color={formatting.color ?? color}
-                  onPick={pickColor}
-                  className="mt-1 border-t pt-2"
-                />
-              )}
-            </PopoverPrimitive.Content>
-          </PopoverPrimitive.Portal>
+      <SelectionFormatBar
+        ref={bar.ref}
+        open={bar.open}
+        area={area}
+        text={value}
+        formatting={formatting}
+        color={color}
+        colorsOpen={bar.colorsOpen}
+        onColorsOpenChange={bar.setColorsOpen}
+        onDismiss={bar.dismiss}
+        onFormat={format}
+        onPickColor={pickColor}
+        onInsertReference={() => suggestions.openPicker(true)}
+      />
+      <ReferenceSuggestions
+        ref={popup}
+        id={id}
+        label={label}
+        open={suggestions.open}
+        searching={suggestions.picker}
+        visible={suggestions.visible}
+        anchor={caretAnchor}
+        editor={editor}
+        kinds={Object.entries(entityKindLabels).filter(
+          ([kind]) =>
+            (remoteReferenceKinds.includes(kind) && !!searchReferences) ||
+            entities.some((entity) => entity.kind === kind),
         )}
-      </PopoverPrimitive.Root>
-      <PopoverPrimitive.Root
-        open={popupOpen}
+        query={suggestions.query}
+        onQueryChange={suggestions.search}
+        count={options.length}
+        active={active}
+        loading={suggestions.remote.loading}
+        error={suggestions.remote.error}
+        onRetry={suggestions.remote.retry}
         onOpenChange={(next) => {
-          if (!next) {
-            setPicker(false)
-            setDismissed(true)
-          }
+          if (!next) suggestions.close()
+        }}
+        onListKeys={listKeys}
+        onLoadMore={suggestions.loadMore}
+        onClose={() => {
+          suggestions.close()
+          area.current?.focus()
         }}
       >
-        <PopoverPrimitive.Anchor virtualRef={virtualAnchor} />
-        {popupOpen && (
-          <PopoverPrimitive.Portal>
-            <PopoverPrimitive.Content
-              ref={popup}
-              data-slot="entity-reference-suggestions"
-              aria-label={`Chèn tham chiếu ${label}`}
-              align="start"
-              sideOffset={6}
-              collisionPadding={8}
-              onOpenAutoFocus={(event) => {
-                event.preventDefault()
-                if (picker) search.current?.focus()
-              }}
-              onCloseAutoFocus={(event) => event.preventDefault()}
-              onInteractOutside={(event) => {
-                if (editor.current?.contains(event.target as Node)) event.preventDefault()
-              }}
-              className="z-50 flex w-80 max-w-[calc(100vw-1rem)] flex-col gap-2 overflow-hidden rounded-xl border bg-popover p-2 text-popover-foreground shadow-lg outline-none"
-              style={{ maxHeight: "min(24rem, var(--radix-popover-content-available-height))" }}
-            >
-              {picker && (
-                <div role="group" aria-label="Nhóm tham chiếu" className="flex shrink-0 gap-1 overflow-x-auto">
-                  {Object.entries(kinds)
-                    .filter(
-                      ([kind]) =>
-                        (["skill", "team", "player"].includes(kind) && !!searchReferences) ||
-                        entities.some((entity) => entity.kind === kind),
-                    )
-                    .map(([kind, name]) => (
-                      <Button
-                        key={kind}
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          setQuery(name)
-                          setActive(0)
-                        }}
-                      >
-                        {name}
-                      </Button>
-                    ))}
-                </div>
-              )}
-              {picker && (
-                <input
-                  ref={search}
-                  aria-label={`Tìm tham chiếu ${label}`}
-                  className="w-full shrink-0 rounded border bg-background p-2 text-sm"
-                  value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value)
-                    setActive(0)
-                  }}
-                  onKeyDown={listKeys}
-                />
-              )}
-              <p className="shrink-0 px-1 text-xs text-muted-foreground" role="status">
-                {options.length
-                  ? `${options.length} kết quả · ↑↓ chọn · Enter chèn`
-                  : remote.loading
-                    ? "Đang tìm tham chiếu…"
-                    : "Không có tham chiếu phù hợp"}
-              </p>
-              <div
-                role="listbox"
-                ref={list}
-                id={`${id}-options`}
-                aria-label={`Gợi ý tham chiếu ${label}`}
-                className="min-h-0 max-h-64 overflow-y-auto overscroll-contain"
-                aria-busy={remote.loading}
-                onScroll={(event) => {
-                  const element = event.currentTarget
-                  if (element.scrollHeight - element.scrollTop - element.clientHeight < 80) loadMoreSuggestions()
-                }}
-                onWheel={(event) => {
-                  const element = event.currentTarget
-                  if (event.deltaY > 0 && element.scrollHeight - element.scrollTop - element.clientHeight < 80)
-                    loadMoreSuggestions()
-                }}
-              >
-                {options.slice(0, renderedSuggestions).map(({ entity, translation }, n) => {
-                  const skill = skillReferenceContext(entity, locale, fallbackLocale)
-                  return (
-                    <button
-                      key={`${entity.kind}:${entity.id}`}
-                      id={`${id}-option-${n}`}
-                      type="button"
-                      role="option"
-                      aria-posinset={n + 1}
-                      aria-setsize={options.length}
-                      aria-selected={n === Math.min(active, options.length - 1)}
-                      aria-label={
-                        skill
-                          ? `${skill.ownerName} · ${translation.name}${skill.detail ? ` · ${skill.detail}` : ""}`
-                          : undefined
-                      }
-                      className={`flex min-h-11 w-full items-center gap-2 rounded px-2 py-2 text-left text-sm ${n === Math.min(active, options.length - 1) ? "bg-accent text-accent-foreground" : "hover:bg-accent"}`}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => choose(n)}
-                    >
-                      <EntityReferenceArtwork
-                        entity={entity}
-                        resolveIcon={resolveIcon}
-                        className={skill ? "mr-1 size-9" : "size-8 rounded-md"}
-                        defer
-                      />
-                      <span className="min-w-0">
-                        {skill && (
-                          <span className="block text-xs text-muted-foreground">
-                            {skill.ownerName}
-                            {skill.detail ? ` · ${skill.detail}` : ""}
-                          </span>
-                        )}
-                        <span className="block break-words font-medium">{translation.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {kinds[entity.kind]} · {translation.locale}
-                          {translation.locale !== locale ? " (dự phòng)" : ""}
-                        </span>
-                      </span>
-                      <span className="ml-auto text-xs text-muted-foreground" aria-hidden="true">
-                        ↵
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-              {options.length > 0 && remote.loading && (
-                <p role="status" className="px-1 text-xs text-muted-foreground">
-                  Đang tải thêm tham chiếu…
-                </p>
-              )}
-              {remote.error && (
-                <div className="flex items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
-                  <span>Chưa tải được tham chiếu.</span>
-                  <Button type="button" size="sm" variant="ghost" onClick={remote.retry}>
-                    Thử lại
-                  </Button>
-                </div>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="shrink-0"
-                onClick={() => {
-                  setPicker(false)
-                  setDismissed(true)
-                  area.current?.focus()
-                }}
-              >
-                Đóng gợi ý
-              </Button>
-            </PopoverPrimitive.Content>
-          </PopoverPrimitive.Portal>
-        )}
-      </PopoverPrimitive.Root>
-      {notice && (
+        {options.slice(0, suggestions.rendered).map(({ entity, translation }, n) => (
+          <ReferenceOptionRow
+            key={`${entity.kind}:${entity.id}`}
+            id={id}
+            index={n}
+            count={options.length}
+            chosen={n === Math.min(active, options.length - 1)}
+            entity={entity}
+            translation={translation}
+            locale={locale}
+            fallbackLocale={fallbackLocale}
+            resolveIcon={resolveIcon}
+            onChoose={choose}
+          />
+        ))}
+      </ReferenceSuggestions>
+      {history.notice && (
         <p role="status" className="text-xs text-destructive">
-          {notice}
+          {history.notice}
         </p>
       )}
       {renderPreview && (
