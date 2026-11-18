@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import React, { act } from "react"
+import { act } from "react"
 import type { GameContent, Participant } from "@aov/community-contracts"
 import {
   clampSpan,
@@ -13,7 +13,7 @@ import {
 import type { GameView } from "../src/features/esports/model/game-view"
 import { moveMark, observationMarks } from "../src/features/esports/model/observation-marks"
 import type { GameChapter } from "../src/features/esports/model/series-vod"
-import { inDom, renderer } from "./fixtures/dom"
+import { inPage } from "./fixtures/esports-ui"
 
 const lanes = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"] as const
 const player = (lane: Participant["lane"], overrides: Partial<Participant> = {}): Participant => ({
@@ -149,12 +149,6 @@ test("the edges of the ban/pick phase and the loadout marks move only where the 
     max: 4100,
   })
 })
-
-/** Runs one test in its own page; `render` draws into one root, so a later call changes the props of the first tree. */
-async function inPage(run: (document: Document, render: (node: React.ReactNode) => Promise<unknown>) => Promise<void>) {
-  const globals = () => ({ CSS: { escape: (value: string) => value } })
-  await inDom({ url: "http://localhost:5175/tournaments", globals }, ({ document }) => run(document, renderer()))
-}
 
 const seat = (side: "BLUE" | "RED", lane: "MID" | "JUNGLE", name: string) => ({
   key: `${side}:${lane}` as const,
