@@ -37,12 +37,12 @@ export function TeamRecordSheet({
   const [dirty, setDirty] = useState(false)
   const [busy, setBusy] = useState(false)
   const team = useQuery({
-    queryKey: [...tournamentKeys.all, "teams", actorKey, "one", teamId],
+    queryKey: tournamentKeys.one("teams", actorKey, teamId),
     queryFn: ({ signal }) => tournamentApi.read("teams", teamId, signal),
   })
   const players = useQueries({
     queries: playerIds.map((id) => ({
-      queryKey: [...tournamentKeys.all, "players", actorKey, "one", id],
+      queryKey: tournamentKeys.one("players", actorKey, id),
       queryFn: ({ signal }: { signal: AbortSignal }) => tournamentApi.read("players", id, signal),
     })),
   })

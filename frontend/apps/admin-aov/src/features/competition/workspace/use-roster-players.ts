@@ -8,7 +8,7 @@ import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tourna
  */
 export function useRosterPlayers(tournamentId: string, actorKey: string, enabled = true) {
   return useQuery({
-    queryKey: [...tournamentKeys.all, "players", actorKey, "tournament", tournamentId],
+    queryKey: tournamentKeys.inTournament("players", actorKey, tournamentId),
     queryFn: async ({ signal }) => {
       const players = new Map<string, PlayerContent>()
       for (let page = 0; page < 50; page++) {

@@ -104,7 +104,7 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
   const [rosterTeam, setRosterTeam] = useState<string | null>(null)
   const [recordTeam, setRecordTeam] = useState<string | null>(null)
   const team = useQuery({
-    queryKey: [...tournamentKeys.all, "teams", ws.access.actorKey, "one", rosterTeam],
+    queryKey: tournamentKeys.one("teams", ws.access.actorKey, rosterTeam),
     queryFn: ({ signal }) => tournamentApi.read("teams", rosterTeam!, signal),
     enabled: !!rosterTeam,
   })

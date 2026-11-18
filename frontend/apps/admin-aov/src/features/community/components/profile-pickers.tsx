@@ -19,11 +19,11 @@ export function ProfilePicker({
   const [search, setSearch] = useState("")
   const access = useTournamentAccess()
   const query = useQuery({
-    queryKey: [...pageKeys, access.actorKey, "picker", search],
+    queryKey: pageKeys.picker(access.actorKey, search),
     queryFn: () => pageApi.list("", search),
   })
   const selected = useQuery({
-    queryKey: [...pageKeys, access.actorKey, value],
+    queryKey: pageKeys.page(access.actorKey, value),
     queryFn: () => pageApi.read(value!),
     enabled: !!value,
   })

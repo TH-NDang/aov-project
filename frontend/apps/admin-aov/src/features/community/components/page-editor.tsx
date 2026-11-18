@@ -70,7 +70,7 @@ function EditorLoader({ access }: { access: Access }) {
   const [searchParams] = useSearchParams()
   const [section, setSection] = useState({ pageId: "", tab: "overview" })
   const query = useQuery({
-    queryKey: [...pageKeys, access.actorKey, pageId],
+    queryKey: pageKeys.page(access.actorKey, pageId),
     queryFn: () => pageApi.read(pageId),
     refetchOnWindowFocus: false,
   })
@@ -165,7 +165,7 @@ function Editor({
     mutationFn: (publish?: boolean) =>
       publish === undefined ? pageApi.save(entry, content) : pageApi.publish(entry, publish),
     onSuccess: async (_saved, publish) => {
-      await client.invalidateQueries({ queryKey: pageKeys })
+      await client.invalidateQueries({ queryKey: pageKeys.all })
       toast.success(
         publish === undefined ? "Đã lưu hồ sơ." : publish ? "Đã xuất bản hồ sơ." : "Đã ngừng xuất bản hồ sơ.",
       )
@@ -175,7 +175,7 @@ function Editor({
   const remove = useMutation({
     mutationFn: () => pageApi.remove(entry),
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: pageKeys })
+      await client.invalidateQueries({ queryKey: pageKeys.all })
       void navigate(profileDirectoryPath(entry.kind, content.personRoles))
     },
     meta: { silent: true },
@@ -575,12 +575,12 @@ function LiveSection({ entry }: { entry: CommunityProfile }) {
   const [title, setTitle] = useState(entry.live?.title || "")
   const start = useMutation({
     mutationFn: () => pageApi.startLive(entry.id, url, title),
-    onSuccess: () => client.invalidateQueries({ queryKey: pageKeys }),
+    onSuccess: () => client.invalidateQueries({ queryKey: pageKeys.all }),
     meta: { silent: true },
   })
   const end = useMutation({
     mutationFn: () => pageApi.endLive(entry.id),
-    onSuccess: () => client.invalidateQueries({ queryKey: pageKeys }),
+    onSuccess: () => client.invalidateQueries({ queryKey: pageKeys.all }),
     meta: { silent: true },
   })
   const failure = start.error || end.error
@@ -647,13 +647,13 @@ function LiveSection({ entry }: { entry: CommunityProfile }) {
 
 function Representatives({ entry }: { entry: CommunityProfile }) {
   const client = useQueryClient()
-  const members = useQuery({ queryKey: [...pageKeys, entry.id, "members"], queryFn: () => pageApi.members(entry.id) })
+  const members = useQuery({ queryKey: pageKeys.members(entry.id), queryFn: () => pageApi.members(entry.id) })
   const [confirm, setConfirm] = useState<string | null>(null)
   const revoke = useMutation({
     mutationFn: (id: string) => pageApi.revoke(entry.id, id),
     onSuccess: async () => {
       setConfirm(null)
-      await client.invalidateQueries({ queryKey: pageKeys })
+      await client.invalidateQueries({ queryKey: pageKeys.all })
     },
     meta: { silent: true },
   })
@@ -721,7 +721,7 @@ function Representatives({ entry }: { entry: CommunityProfile }) {
  */
 function Handover({ entry }: { entry: CommunityProfile }) {
   const client = useQueryClient()
-  const key = [...pageKeys, entry.id, "handover"]
+  const key = pageKeys.handover(entry.id)
   const status = useQuery({ queryKey: key, queryFn: () => pageApi.handover(entry.id), enabled: entry.published })
   const [link, setLink] = useState("")
   const [copied, setCopied] = useState(false)

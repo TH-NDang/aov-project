@@ -181,7 +181,7 @@ function RegistryForm({
   })
   // Parts do not nest: a tournament that has parts of its own cannot be made a part of another one.
   const ownParts = useQuery({
-    queryKey: [...tournamentKeys.all, "parts", entry?.id],
+    queryKey: tournamentKeys.ownParts(entry?.id),
     queryFn: ({ signal }) => tournamentApi.tournamentParts(entry!.id, signal),
     enabled: kind === "tournaments" && !!entry,
     staleTime: 30_000,

@@ -16,7 +16,13 @@ import {
 import { useSession } from "@/app/auth/auth-gate"
 import { ApiError } from "@/lib/api/errors"
 import { lifecycleErrorUsages, lifecycleUsages } from "../model/record-lifecycle-model"
-import { tournamentApi, tournamentError, tournamentKeys, type RecordKind } from "../api/tournament-api"
+import {
+  exceptDeletionImpact,
+  tournamentApi,
+  tournamentError,
+  tournamentKeys,
+  type RecordKind,
+} from "../api/tournament-api"
 import { toast } from "sonner"
 
 export function RecordUsageList({
@@ -71,7 +77,7 @@ export function RecordLifecycleActions({
   const [error, setError] = useState<unknown>(null)
   const client = useQueryClient()
   const impact = useQuery({
-    queryKey: [...tournamentKeys.all, "deletion-impact", actorKey, kind, entry.id, entry.version],
+    queryKey: tournamentKeys.deletionImpact(actorKey, kind, entry.id, entry.version),
     queryFn: ({ signal }) => tournamentApi.deletionImpact(kind, entry.id, signal),
     enabled: open && !entry.deletedAt,
     staleTime: 0,
@@ -96,7 +102,7 @@ export function RecordLifecycleActions({
       await mutation.mutateAsync()
       await client.invalidateQueries({
         queryKey: tournamentKeys.all,
-        predicate: (query) => query.queryKey[2] !== "deletion-impact",
+        predicate: exceptDeletionImpact,
       })
       setOpen(false)
       toast.success(entry.deletedAt ? "Đã khôi phục." : "Đã xóa.")

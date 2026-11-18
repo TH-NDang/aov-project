@@ -12,7 +12,8 @@ import { CreateProfileSheet } from "../components/create-profile-sheet"
 import { ProfileCountry } from "../components/profile-country"
 import { findProfileCountry } from "../model/profile-country-options"
 import { profileKindIcons, profileRoleIcons } from "../components/profile-icons"
-import { directoryApi, directoryKeys } from "./directory-api"
+import { directoryApi } from "./directory-api"
+import { pageKeys } from "../api/page-api"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { formatNumber } from "@/lib/text"
 
@@ -41,7 +42,7 @@ const sectionIcon = (section: DirectorySection) =>
 function DirectoryNav({ current, actorKey }: { current: DirectorySection; actorKey: string }) {
   const counts = useQueries({
     queries: directorySections.map((section) => ({
-      queryKey: [...directoryKeys, actorKey, "count", section.kind, section.group],
+      queryKey: pageKeys.directory.count(actorKey, section.kind, section.group),
       staleTime: 60_000,
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         directoryApi.profiles(

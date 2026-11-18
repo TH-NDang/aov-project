@@ -35,7 +35,7 @@ export function useGameSaver(entry: DocumentView<GameContent>) {
           const next = change(current.content)
           const saved = await tournamentApi.save("games", current, next)
           latest.current = saved
-          client.setQueriesData<DocumentView<GameContent>[]>({ queryKey: [...tournamentKeys.all, "games"] }, (rows) =>
+          client.setQueriesData<DocumentView<GameContent>[]>({ queryKey: tournamentKeys.kind("games") }, (rows) =>
             rows?.map((row) => (row.id === saved.id ? saved : row)),
           )
           // A service build without timeline or draft support silently drops the unknown field.
@@ -78,7 +78,7 @@ export function useGameSaver(entry: DocumentView<GameContent>) {
       try {
         const published = await tournamentApi.publish(latest.current)
         latest.current = published
-        client.setQueriesData<DocumentView<GameContent>[]>({ queryKey: [...tournamentKeys.all, "games"] }, (rows) =>
+        client.setQueriesData<DocumentView<GameContent>[]>({ queryKey: tournamentKeys.kind("games") }, (rows) =>
           rows?.map((row) => (row.id === published.id ? published : row)),
         )
         setState({ status: "saved", savedAt: new Date() })
@@ -105,7 +105,7 @@ export function useGameSaver(entry: DocumentView<GameContent>) {
       try {
         const withdrawn = await tournamentApi.withdraw(latest.current)
         latest.current = withdrawn
-        client.setQueriesData<DocumentView<GameContent>[]>({ queryKey: [...tournamentKeys.all, "games"] }, (rows) =>
+        client.setQueriesData<DocumentView<GameContent>[]>({ queryKey: tournamentKeys.kind("games") }, (rows) =>
           rows?.map((row) => (row.id === withdrawn.id ? withdrawn : row)),
         )
         setState({ status: "saved", savedAt: new Date() })
@@ -120,7 +120,7 @@ export function useGameSaver(entry: DocumentView<GameContent>) {
   }, [client])
 
   const reload = useCallback(async () => {
-    await client.invalidateQueries({ queryKey: [...tournamentKeys.all, "games"] })
+    await client.invalidateQueries({ queryKey: tournamentKeys.kind("games") })
     setState({ status: "idle" })
   }, [client])
 

@@ -20,27 +20,27 @@ export function RecordTrash({
   const [kind, setKind] = useState(initialKind)
   const [search, setSearch] = useState("")
   const records = useQuery({
-    queryKey: [...tournamentKeys.all, "trash", actorKey, kind],
+    queryKey: tournamentKeys.trash(actorKey, kind),
     queryFn: ({ signal }) => tournamentApi.list(kind, signal, { state: "DELETED" }),
   })
   const needsParents = kind === "roster-memberships" || kind === "series" || kind === "games"
   const teams = useQuery({
-    queryKey: [...tournamentKeys.all, "trash-lookup", actorKey, "teams"],
+    queryKey: tournamentKeys.trashLookup(actorKey, "teams"),
     queryFn: ({ signal }) => tournamentApi.list("teams", signal, { state: "ALL" }),
     enabled: needsParents,
   })
   const players = useQuery({
-    queryKey: [...tournamentKeys.all, "trash-lookup", actorKey, "players"],
+    queryKey: tournamentKeys.trashLookup(actorKey, "players"),
     queryFn: ({ signal }) => tournamentApi.list("players", signal, { state: "ALL" }),
     enabled: kind === "roster-memberships",
   })
   const tournaments = useQuery({
-    queryKey: [...tournamentKeys.all, "trash-lookup", actorKey, "tournaments"],
+    queryKey: tournamentKeys.trashLookup(actorKey, "tournaments"),
     queryFn: ({ signal }) => tournamentApi.list("tournaments", signal, { state: "ALL" }),
     enabled: needsParents,
   })
   const series = useQuery({
-    queryKey: [...tournamentKeys.all, "trash-lookup", actorKey, "series"],
+    queryKey: tournamentKeys.trashLookup(actorKey, "series"),
     queryFn: ({ signal }) => tournamentApi.list("series", signal, { state: "ALL" }),
     enabled: kind === "games",
   })

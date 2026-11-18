@@ -11,10 +11,10 @@ import { ManagementToolbar, managementSelectClassName } from "@/features/tournam
 import { CAREER_STATUSES } from "@/features/tournaments/components/tournament-metadata"
 import { TEAM_REGIONS } from "@/features/tournaments/components/team-region"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
+import { pageKeys } from "../api/page-api"
 import { ProfileCountry } from "../components/profile-country"
 import {
   directoryApi,
-  directoryKeys,
   useDebounced,
   useHeroPortraits,
   useProfilesOf,
@@ -53,7 +53,7 @@ export function PlayerDirectory({ access }: { access: Access }) {
   const sort = (filters.values.sort || "RECENT") as PlayerSort
   const search = useDebounced(q)
   const players = useInfiniteQuery({
-    queryKey: [...directoryKeys, access.actorKey, "players", search, country, lane, status, sort],
+    queryKey: pageKeys.directory.players(access.actorKey, search, { country, lane, status }, sort),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       directoryApi.players({ q: search, country, lane, status, sort, page: pageParam }, signal),

@@ -8,7 +8,8 @@ import { Monogram, TierBadge } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
 import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
-import { directoryApi, directoryKeys, useDebounced, yearRange } from "./directory-api"
+import { directoryApi, useDebounced, yearRange } from "./directory-api"
+import { pageKeys } from "../api/page-api"
 import {
   CountryLabel,
   DirectoryBody,
@@ -30,12 +31,12 @@ function useCompetitionPages(kind: "ORGANIZATION" | "CIRCUIT", access: Access) {
   const sort = (filters.values.sort || "ACTIVE") as CompetitionPageSort
   const search = useDebounced(filters.values.q)
   const pages = useQuery({
-    queryKey: [...directoryKeys, access.actorKey, kind, search, sort === "NAME" ? "NAME" : "ACTIVE"],
+    queryKey: pageKeys.directory.competitionPages(access.actorKey, kind, search, sort === "NAME" ? "NAME" : "ACTIVE"),
     queryFn: ({ signal }) =>
       directoryApi.profiles({ kind, q: search, sort: sort === "NAME" ? "NAME" : "ACTIVE", size: 100 }, signal),
   })
   const stats = useQuery({
-    queryKey: [...directoryKeys, access.actorKey, "competition-page-stats"],
+    queryKey: pageKeys.directory.competitionPageStats(access.actorKey),
     queryFn: ({ signal }) => directoryApi.competitionPages(signal),
     staleTime: 60_000,
   })

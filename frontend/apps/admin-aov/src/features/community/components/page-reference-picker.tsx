@@ -38,12 +38,12 @@ export function PageReferencePicker({
   const [filter, setFilter] = useState<ProfileKind | "">(kind || "")
   const [search, setSearch] = useState("")
   const selected = useQuery({
-    queryKey: [...pageKeys, actorKey, value],
+    queryKey: pageKeys.page(actorKey, value),
     queryFn: () => pageApi.read(value!),
     enabled: !!value,
   })
   const results = useInfiniteQuery({
-    queryKey: [...pageKeys, actorKey, "reference-picker", kind || filter, search],
+    queryKey: pageKeys.referencePicker(actorKey, kind || filter, search),
     initialPageParam: 0,
     queryFn: ({ pageParam }) => pageApi.list(kind || filter, search, pageParam),
     getNextPageParam: nextPageOf,

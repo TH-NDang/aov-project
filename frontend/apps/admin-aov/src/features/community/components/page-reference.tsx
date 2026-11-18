@@ -15,7 +15,7 @@ export function PageReference({ id, label = "Xem hồ sơ" }: { id: string; labe
   const [open, setOpen] = useState(false)
   const access = useTournamentAccess()
   const query = useQuery({
-    queryKey: [...pageKeys, access.canRead ? access.actorKey : "public", id],
+    queryKey: pageKeys.page(access.canRead ? access.actorKey : "public", id),
     queryFn: () => (access.canRead ? pageApi.read(id) : pageApi.readPublic(id)),
     enabled: open && !access.me.isPending,
   })

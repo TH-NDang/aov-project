@@ -14,7 +14,8 @@ import { ManagementToolbar, managementSelectClassName } from "@/features/tournam
 import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { PlatformIcon, platformOf } from "../components/platform-icon"
 import { ProfileRoleIcon } from "../components/profile-icons"
-import { directoryApi, directoryKeys, useDebounced } from "./directory-api"
+import { directoryApi, useDebounced } from "./directory-api"
+import { pageKeys } from "../api/page-api"
 import {
   CountryLabel,
   DirectoryBody,
@@ -60,7 +61,7 @@ function usePersonnel(group: PersonnelGroup, access: Access) {
   const sort = (filters.values.sort || "ACTIVE") as PersonnelSort
   const search = useDebounced(filters.values.q)
   const people = useInfiniteQuery({
-    queryKey: [...directoryKeys, access.actorKey, "people", group, role, search, sort],
+    queryKey: pageKeys.directory.people(access.actorKey, group, role, search, sort),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       directoryApi.profiles({ personRole: role, q: search, sort, page: pageParam }, signal),

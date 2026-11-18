@@ -201,15 +201,13 @@ const rules: Rule[] = [
   {
     name: "query keys come from the feature's keys object",
     hint: "Build the key with the feature's xKeys object (publishingKeys.revisions(id)); reads and invalidations share it.",
-    // The tournament, esports, community and competition screens were being reworked by another change when the
-    // other features moved to key objects; they follow when their data layer is reworked.
-    files: files(source, /\.tsx?$/).filter(
-      (path) => !/[\\/]features[\\/](tournaments|esports|community|competition)[\\/]/.test(path),
-    ),
-    offenders: (text) =>
-      [...text.matchAll(/(?:queryKey:|(?:get|set)QueryData(?:<[^>]*>)?\()\s*\[/g)].map(
-        (match) => `:${text.slice(0, match.index).split("\n").length}`,
-      ),
+    files: files(source, /\.tsx?$/),
+    offenders: (text, path) =>
+      [
+        ...text.matchAll(/(?:queryKey:|(?:get|set)QueryData(?:<[^>]*>)?\()\s*\[/g),
+        // A key spread open and extended is an inline key too; only the keys object in an *-api.ts file extends one.
+        ...(path.endsWith("-api.ts") ? [] : text.matchAll(/\[\.\.\.\w+Keys\b/g)),
+      ].map((match) => `:${text.slice(0, match.index).split("\n").length}`),
   },
   {
     name: "admin tests build their browser with the shared kit",

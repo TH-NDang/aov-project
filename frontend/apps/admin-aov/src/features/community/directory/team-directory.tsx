@@ -8,7 +8,8 @@ import { initials } from "@/features/esports/model/game-view"
 import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
 import { TEAM_REGIONS } from "@/features/tournaments/components/team-region"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
-import { directoryApi, directoryKeys, useDebounced, useProfilesOf, winRate, type TeamSort } from "./directory-api"
+import { directoryApi, useDebounced, useProfilesOf, winRate, type TeamSort } from "./directory-api"
+import { pageKeys } from "../api/page-api"
 import {
   CountryLabel,
   DirectoryBody,
@@ -38,7 +39,7 @@ export function TeamDirectory({ access }: { access: Access }) {
   const sort = (filters.values.sort || "RECENT") as TeamSort
   const search = useDebounced(q)
   const teams = useInfiniteQuery({
-    queryKey: [...directoryKeys, access.actorKey, "teams", search, country, sort],
+    queryKey: pageKeys.directory.teams(access.actorKey, search, country, sort),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => directoryApi.teams({ q: search, country, sort, page: pageParam }, signal),
     getNextPageParam: nextPageOf,

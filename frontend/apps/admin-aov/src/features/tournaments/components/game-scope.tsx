@@ -2,14 +2,8 @@ import { useQuery } from "@tanstack/react-query"
 import type { GameContent } from "@aov/community-contracts"
 import { CalendarDays, GitBranch } from "lucide-react"
 import { GAME_REGIONS } from "../model/tournament-model"
+import { fetchCatalogContext, tournamentKeys } from "../api/tournament-api"
 
-interface ContextOptions {
-  seasons: {
-    id: string
-    name: string
-    patches: { id: string; code: string; title: string; regionalDate?: string | null }[]
-  }[]
-}
 export function GameScope({
   content,
   onChange,
@@ -22,13 +16,8 @@ export function GameScope({
   tournamentRegion?: string
 }) {
   const query = useQuery({
-    queryKey: ["tournament", "wiki-context", content.region, content.locale],
-    queryFn: async ({ signal }) => {
-      const params = new URLSearchParams({ region: content.region, locale: content.locale })
-      const response = await fetch(`/api/wiki/v1/catalog-context?${params}`, { signal, credentials: "omit" })
-      if (!response.ok) throw new Error("Catalog context unavailable")
-      return response.json() as Promise<ContextOptions>
-    },
+    queryKey: tournamentKeys.catalogContext(content.region, content.locale),
+    queryFn: ({ signal }) => fetchCatalogContext(content.region, content.locale, signal),
     staleTime: 60000,
     retry: 1,
   })

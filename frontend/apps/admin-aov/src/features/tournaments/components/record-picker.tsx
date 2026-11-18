@@ -39,7 +39,7 @@ export function RecordPicker({
   const [search, setSearch] = useState("")
   const settled = useDebounced(search)
   const results = useInfiniteQuery({
-    queryKey: [...tournamentKeys.all, "picker", kind, settled, context ?? null],
+    queryKey: tournamentKeys.picker(kind, settled, context),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => tournamentApi.pick(kind, { q: settled, ...context, page: pageParam }, signal),
     getNextPageParam: nextPageOf,
@@ -49,7 +49,7 @@ export function RecordPicker({
   const rows = (results.data?.pages.flatMap((page) => page.items) ?? []).filter((row) => !exclude?.includes(row.id))
   const known = rows.find((row) => row.id === value)
   const selected = useQuery({
-    queryKey: [...tournamentKeys.all, "picker-selected", kind, value],
+    queryKey: tournamentKeys.pickerSelected(kind, value),
     queryFn: ({ signal }) => tournamentApi.read(kind, value!, signal),
     enabled: !!value && !known,
     staleTime: 60_000,

@@ -57,7 +57,7 @@ function Hub({ access }: { access: Access }) {
   const year = params.get("year") ?? ""
   const settled = useDebounced(search)
   const tournaments = useInfiniteQuery({
-    queryKey: [...tournamentKeys.all, "hub", access.actorKey, settled, status, tier, region, year, order],
+    queryKey: tournamentKeys.hub(access.actorKey, settled, { status, tier, region, year }, order),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       tournamentApi.searchTournaments(
@@ -80,19 +80,19 @@ function Hub({ access }: { access: Access }) {
     placeholderData: keepPreviousData,
   })
   const facets = useQuery({
-    queryKey: [...tournamentKeys.all, "hub-facets", access.actorKey],
+    queryKey: tournamentKeys.hubFacets(access.actorKey),
     queryFn: ({ signal }) => tournamentApi.tournamentFacets(signal, "MAIN"),
     staleTime: 30_000,
   })
   const parts = useQuery({
-    queryKey: [...tournamentKeys.all, "parts", access.actorKey, "every"],
+    queryKey: tournamentKeys.parts(access.actorKey, "every"),
     queryFn: ({ signal }) => tournamentApi.tournamentParts(undefined, signal),
     staleTime: 30_000,
   })
   const partsByEvent = useMemo(() => partsByMainEvent(parts.data ?? []), [parts.data])
   const counters = useTournamentStats()
   const plans = useQuery({
-    queryKey: [...competitionKeys, access.actorKey, "summaries"],
+    queryKey: competitionKeys.summaries(access.actorKey),
     queryFn: competitionApi.summaries,
   })
 
