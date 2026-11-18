@@ -98,10 +98,8 @@ const rules: Rule[] = [
   {
     name: "status colours come from the tokens, without hand-written dark variants",
     hint: "Use text-destructive, text-(--aov-warning), bg-(--aov-success-soft) and the like (frontend/docs/DESIGN-TOKENS.md).",
-    // The change colours are a palette the editor picks from; the sign-in card is drawn on its own dark artwork.
-    files: files(source, /\.tsx?$/).filter(
-      (path) => !path.endsWith("change-color-preferences.tsx") && !path.endsWith(join("auth", "auth-gate.tsx")),
-    ),
+    // The change colours are a palette the editor picks from.
+    files: files(source, /\.tsx?$/).filter((path) => !path.endsWith("change-color-preferences.tsx")),
     offenders: (text) =>
       text
         .split("\n")
