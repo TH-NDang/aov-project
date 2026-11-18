@@ -43,6 +43,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class PageProfiles {
     private static final Logger LOG = LoggerFactory.getLogger(PageProfiles.class);
+    /** Most identities an admin directory can be narrowed to. */
+    private static final int MAX_IDENTITY_FILTER = 100;
     private static final List<String> INDIVIDUALS = Kind.names(Kind.INDIVIDUALS);
     private static final List<String> IDENTITIES = Kind.names(Kind.IDENTITIES);
     /** The kinds whose competition activity the tournament module publishes. */
@@ -80,7 +82,7 @@ public class PageProfiles {
             throw PageAccess.forbidden();
         }
         var filter = kind(kind);
-        if (query == null || query.length() > 200) {
+        if (query == null || query.length() > PageRules.MAX_SEARCH) {
             throw PageChecks.invalid("Search is too long.");
         }
         String roles = PageChecks.personRoleFilter(personRole);
@@ -95,13 +97,13 @@ public class PageProfiles {
             throw PageAccess.forbidden();
         }
         var filter = kind(kind);
-        if (query == null || query.length() > 200) {
+        if (query == null || query.length() > PageRules.MAX_SEARCH) {
             throw PageChecks.invalid("Search is too long.");
         }
         if (!Set.of("RECENT", "NAME", "ACTIVITY", "ACTIVE").contains(sort)) {
             throw PageChecks.invalid("Invalid page order.");
         }
-        if (entityIds.size() > 100) {
+        if (entityIds.size() > MAX_IDENTITY_FILTER) {
             throw PageChecks.invalid("Too many identities.");
         }
 

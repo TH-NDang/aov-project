@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class PlayerRegistry {
+    private static final int MAX_SIGNATURE_HEROES = 20;
     private final RegistryArchivePolicy archives;
     private final CompetitionMedia media;
     private final PlayerRepository repository;
@@ -76,17 +77,21 @@ public class PlayerRegistry {
         }
         TournamentErrors.code(content.code());
         TournamentErrors.required(content.nickname(), "nickname");
-        if (content.signatureHeroes().size() > 20
+        if (content.signatureHeroes().size() > MAX_SIGNATURE_HEROES
                 || content.signatureHeroes().stream()
-                        .anyMatch(name -> name == null || name.isBlank() || name.length() > 100)) {
-            throw TournamentErrors.invalid("signatureHeroes allows 20 names of at most 100 characters.");
+                        .anyMatch(
+                                name -> name == null || name.isBlank() || name.length() > ReferenceLabels.MAX_LABEL)) {
+            throw TournamentErrors.invalid("signatureHeroes allows " + MAX_SIGNATURE_HEROES
+                    + " names of at most " + ReferenceLabels.MAX_LABEL + " characters.");
         }
         if (!SourceUrls.valid(content.photoUrl())) {
             throw TournamentErrors
                     .invalid("photoUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");
         }
         if (!ReferenceLabels.validAliases(content.aliases())) {
-            throw TournamentErrors.invalid("Use at most 20 unique player aliases of 1 to 100 characters each.");
+            throw TournamentErrors
+                    .invalid("Use at most " + ReferenceLabels.MAX_ALIASES + " unique player aliases of 1 to "
+                            + ReferenceLabels.MAX_LABEL + " characters each.");
         }
     }
 

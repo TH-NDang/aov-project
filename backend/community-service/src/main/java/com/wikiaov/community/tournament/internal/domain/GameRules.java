@@ -39,6 +39,26 @@ public final class GameRules {
     public static final int MAX_GAME_SECOND = 86_400;
     /** Names of picks and selections. */
     public static final int MAX_NAME = 200;
+    public static final int SIDES = 2;
+    public static final int BANS_PER_SIDE = 4;
+    public static final int PLAYERS_PER_SIDE = 5;
+    public static final int MAX_ASSISTS = PLAYERS_PER_SIDE - 1;
+    public static final int MAX_EVENT_NOTE = 500;
+    public static final int MAX_EVENT_TITLE = 120;
+    /** Arcana: at most ten of one kind and ten of each colour, thirty in a full page. */
+    public static final int MAX_ARCANA_COUNT = 10;
+    public static final int ARCANA_PER_COLOR = 10;
+    public static final int ARCANA_TOTAL = 30;
+    public static final List<String> ARCANA_COLORS = List.of("RED", "PURPLE", "GREEN");
+    /** Enchantments: three of the primary branch, two of the secondary one, tiers 1 to 3. */
+    public static final int MAX_ENCHANTMENTS = 5;
+    public static final int PRIMARY_ENCHANTMENTS = 3;
+    public static final int SECONDARY_ENCHANTMENTS = 2;
+    public static final int MAX_ENCHANTMENT_TIER = 3;
+    public static final int MAX_SECONDARY_TIER = 2;
+    public static final int INVENTORY_SLOTS = 6;
+    public static final int MAX_EQUIPMENT_SNAPSHOTS = 1000;
+    public static final int MAX_EQUIPMENT_EVENTS = 2000;
 
     private GameRules() {
     }
@@ -61,7 +81,7 @@ public final class GameRules {
         if (game.locale() != null && !game.locale().isBlank() && !CatalogLocales.supported(game.locale())) {
             errors.add("locale.unsupported");
         }
-        if (game.sides().size() > 2) {
+        if (game.sides().size() > SIDES) {
             errors.add("sides.maximum");
         }
         if (publication) {
@@ -69,7 +89,7 @@ public final class GameRules {
             require(game.number() != null, "number", errors);
             require(game.region() != null && !game.region().isBlank(), "region", errors);
             require(game.locale() != null && !game.locale().isBlank(), "locale", errors);
-            require(game.sides().size() == 2, "sides.two", errors);
+            require(game.sides().size() == SIDES, "sides.two", errors);
         }
 
         var sides = new HashSet<Side>();
@@ -86,17 +106,17 @@ public final class GameRules {
             if (side.teamId() != null && !teams.add(side.teamId())) {
                 errors.add(path + ".teamId.duplicate");
             }
-            if (side.bans().size() > 4) {
+            if (side.bans().size() > BANS_PER_SIDE) {
                 errors.add(path + ".bans.maximum");
             }
-            if (side.participants().size() > 5) {
+            if (side.participants().size() > PLAYERS_PER_SIDE) {
                 errors.add(path + ".participants.maximum");
             }
             if (publication) {
                 require(side.side() != null, path + ".side", errors);
                 require(side.teamId() != null, path + ".teamId", errors);
-                require(side.bans().size() == 4, path + ".bans.four", errors);
-                require(side.participants().size() == 5, path + ".participants.five", errors);
+                require(side.bans().size() == BANS_PER_SIDE, path + ".bans.four", errors);
+                require(side.participants().size() == PLAYERS_PER_SIDE, path + ".participants.five", errors);
             }
             for (int banIndex = 0; banIndex < side.bans().size(); banIndex++) {
                 var ban = side.bans().get(banIndex);
@@ -202,7 +222,7 @@ public final class GameRules {
             if (turn.side() != null && turn.kind() != null) {
                 var count = counts.computeIfAbsent(turn.side(), ignored -> new int[2]);
                 int kind = turn.kind() == DraftKind.BAN ? 0 : 1;
-                if (++count[kind] > (kind == 0 ? 4 : 5)) {
+                if (++count[kind] > (kind == 0 ? BANS_PER_SIDE : PLAYERS_PER_SIDE)) {
                     errors.add(field + ".maximum");
                 }
             }
@@ -290,7 +310,7 @@ public final class GameRules {
                 }
                 previous = event.atSeconds();
             }
-            if (event.note() != null && event.note().length() > 500) {
+            if (event.note() != null && event.note().length() > MAX_EVENT_NOTE) {
                 errors.add(field + ".note.length");
             }
             if (event.kind() == null) {
@@ -322,7 +342,7 @@ public final class GameRules {
                 ? event.killer().side()
                 : event.victim().side() == null ? null : event.victim().side() == Side.BLUE ? Side.RED : Side.BLUE;
         var assists = new HashSet<Seat>();
-        if (event.assists().size() > 4) {
+        if (event.assists().size() > MAX_ASSISTS) {
             errors.add(path + ".assists.maximum");
         }
         for (int index = 0; index < event.assists().size(); index++) {
@@ -364,7 +384,7 @@ public final class GameRules {
                 || event.objective() != null || event.by() != null) {
             errors.add(path + ".fields.unexpected");
         }
-        if (event.title() == null || event.title().isBlank() || event.title().length() > 120) {
+        if (event.title() == null || event.title().isBlank() || event.title().length() > MAX_EVENT_TITLE) {
             errors.add(path + ".title");
         }
     }
@@ -396,7 +416,7 @@ public final class GameRules {
                 errors.add(field + ".duplicate");
             }
             int count = entry.count() == null ? 0 : entry.count();
-            if (count < 1 || count > 10) {
+            if (count < 1 || count > MAX_ARCANA_COUNT) {
                 errors.add(field + ".count.range");
             }
             total += count;
@@ -408,17 +428,18 @@ public final class GameRules {
                 }
                 color = reference.color();
             }
-            if (color != null && Set.of("RED", "PURPLE", "GREEN").contains(color)) {
+            if (color != null && ARCANA_COLORS.contains(color)) {
                 colors.merge(color, count, Integer::sum);
             } else if (complete || !present(entry.selection())) {
                 errors.add(field + ".color");
             }
         }
-        if (total > 30 || complete && total != 30) {
+        if (total > ARCANA_TOTAL || complete && total != ARCANA_TOTAL) {
             errors.add(path + ".total.thirty");
         }
-        for (var color : List.of("RED", "PURPLE", "GREEN")) {
-            if (colors.getOrDefault(color, 0) > 10 || complete && colors.getOrDefault(color, 0) != 10) {
+        for (var color : ARCANA_COLORS) {
+            if (colors.getOrDefault(color, 0) > ARCANA_PER_COLOR
+                    || complete && colors.getOrDefault(color, 0) != ARCANA_PER_COLOR) {
                 errors.add(path + ".colors." + color + ".ten");
             }
         }
@@ -433,7 +454,7 @@ public final class GameRules {
             return;
         }
         boolean complete = publication && loadout.status() == ObservationStatus.KNOWN;
-        if (loadout.entries().size() > 5) {
+        if (loadout.entries().size() > MAX_ENCHANTMENTS) {
             errors.add(path + ".maximum");
         }
         var primary = new HashMap<Integer, String>();
@@ -460,7 +481,7 @@ public final class GameRules {
                 tier = reference.tier() == null ? 0 : reference.tier();
                 branch = reference.branchCode();
             }
-            if (tier < 1 || tier > 3 || !entry.primary() && tier > 2) {
+            if (tier < 1 || tier > MAX_ENCHANTMENT_TIER || !entry.primary() && tier > MAX_SECONDARY_TIER) {
                 errors.add(field + ".tier.range");
             }
             if (branch == null || branch.isBlank()) {
@@ -477,7 +498,7 @@ public final class GameRules {
                 secondary.add(Map.entry(tier, branch));
             }
         }
-        if (complete && (primary.size() != 3 || secondary.size() != 2)) {
+        if (complete && (primary.size() != PRIMARY_ENCHANTMENTS || secondary.size() != SECONDARY_ENCHANTMENTS)) {
             errors.add(path + ".primaryThree.secondaryTwo");
         }
         if (new HashSet<>(primary.values()).size() > 1) {
@@ -487,7 +508,7 @@ public final class GameRules {
         if (secondary.stream().anyMatch(entry -> entry.getValue().equals(main))) {
             errors.add(path + ".secondary.differentBranch");
         }
-        if (secondary.size() == 2) {
+        if (secondary.size() == SECONDARY_ENCHANTMENTS) {
             var first = secondary.get(0);
             var second = secondary.get(1);
             if (first.getValue().equals(second.getValue())) {
@@ -502,7 +523,8 @@ public final class GameRules {
 
     private static void equipment(Participant participant, String path, boolean publication, Integer duration,
             Catalog catalog, List<String> errors) {
-        if (participant.equipmentSnapshots().size() > 1000 || participant.equipmentEvents().size() > 2000) {
+        if (participant.equipmentSnapshots().size() > MAX_EQUIPMENT_SNAPSHOTS
+                || participant.equipmentEvents().size() > MAX_EQUIPMENT_EVENTS) {
             errors.add(path + ".equipment.maximum");
             return;
         }
@@ -517,7 +539,8 @@ public final class GameRules {
                 }
                 previous = snapshot.atSeconds();
             }
-            if (snapshot.slots().size() > 6 || publication && snapshot.slots().size() != 6) {
+            if (snapshot.slots().size() > INVENTORY_SLOTS
+                    || publication && snapshot.slots().size() != INVENTORY_SLOTS) {
                 errors.add(field + ".slots.six");
             }
             var slots = new HashSet<Integer>();
@@ -585,7 +608,7 @@ public final class GameRules {
     }
 
     private static boolean validSlot(Integer slot) {
-        return slot != null && slot >= 1 && slot <= 6;
+        return slot != null && slot >= 1 && slot <= INVENTORY_SLOTS;
     }
 
     private static void selection(Selection selection, boolean required, String path, List<String> errors,

@@ -22,6 +22,21 @@ public final class CompetitionRules {
     /** Highest seed an entrant or a seeded slot can hold. */
     public static final int MAX_SEED = 64;
     public static final Set<Integer> BEST_OF = Set.of(1, 2, 3, 4, 5, 7, 9);
+    public static final int MAX_LEGS = 4;
+    /** Teams the AOG playoff template seeds. */
+    public static final int AOG_PLAYOFF_TEAMS = 6;
+    /** Most teams a stage sends on, and the highest rank of a playoff seeding. */
+    public static final int MAX_ADVANCE = 64;
+    /** Names of the plan, its organizer, prize pool, venues and matches. */
+    public static final int MAX_NAME = 300;
+    /** Names of stages, cities and slots. */
+    public static final int MAX_LABEL = 200;
+    /** Stage codes of a venue. */
+    public static final int MAX_CODE = 100;
+    public static final int MAX_CURRENCY = 30;
+    /** Links and short notes: a source, a stage patch note, an entrant note. */
+    public static final int MAX_TEXT = 2000;
+    public static final int MAX_NOTES = 20_000;
 
     private CompetitionRules() {
     }
@@ -31,19 +46,19 @@ public final class CompetitionRules {
             throw new IllegalArgumentException("Competition plan is required.");
         }
         ZoneId.of(plan.timezone());
-        text(plan.circuit(), 300);
-        text(plan.organizer(), 300);
-        text(plan.prizePool(), 300);
-        text(plan.currency(), 30);
-        text(plan.sourceUrl(), 2000);
-        text(plan.notes(), 20000);
+        text(plan.circuit(), MAX_NAME);
+        text(plan.organizer(), MAX_NAME);
+        text(plan.prizePool(), MAX_NAME);
+        text(plan.currency(), MAX_CURRENCY);
+        text(plan.sourceUrl(), MAX_TEXT);
+        text(plan.notes(), MAX_NOTES);
         if (plan.venues().size() > MAX_VENUES) {
             throw new IllegalArgumentException("Too many venues.");
         }
         plan.venues().forEach(venue -> {
-            text(venue.name(), 300);
-            text(venue.city(), 200);
-            text(venue.stageCode(), 100);
+            text(venue.name(), MAX_NAME);
+            text(venue.city(), MAX_LABEL);
+            text(venue.stageCode(), MAX_CODE);
         });
         if (plan.entrants().size() > MAX_ENTRANTS || plan.stages().size() > MAX_STAGES
                 || plan.matches().size() > MAX_MATCHES) {
@@ -51,7 +66,7 @@ public final class CompetitionRules {
         }
         var teams = new HashSet<UUID>();
         for (var entrant : plan.entrants()) {
-            text(entrant.note(), 2000);
+            text(entrant.note(), MAX_TEXT);
             if (entrant.teamId() == null || !teams.add(entrant.teamId())) {
                 throw new IllegalArgumentException("Duplicate or missing entrant.");
             }
@@ -64,18 +79,18 @@ public final class CompetitionRules {
             if (stage.code() == null || !stage.code().matches("[A-Z0-9_]{2,60}") || !stages.add(stage.code())) {
                 throw new IllegalArgumentException("Invalid stage code.");
             }
-            if (stage.name() == null || stage.name().isBlank() || stage.name().length() > 200) {
+            if (stage.name() == null || stage.name().isBlank() || stage.name().length() > MAX_LABEL) {
                 throw new IllegalArgumentException("Stage name is required.");
             }
             if (stage.format() == null || !Set.of("ROUND_ROBIN", "DOUBLE_ELIMINATION", "SINGLE_ELIMINATION", "CUSTOM")
                     .contains(stage.format())) {
                 throw new IllegalArgumentException("Unsupported format.");
             }
-            text(stage.sourceUrl(), 2000);
-            text(stage.patchNote(), 2000);
+            text(stage.sourceUrl(), MAX_TEXT);
+            text(stage.patchNote(), MAX_TEXT);
             bestOf(stage.bestOf());
-            if (stage.legs() < 1 || stage.legs() > 4 || stage.winPoints() < 0 || stage.lossPoints() < 0
-                    || stage.advance() < 0 || stage.advance() > 64) {
+            if (stage.legs() < 1 || stage.legs() > MAX_LEGS || stage.winPoints() < 0 || stage.lossPoints() < 0
+                    || stage.advance() < 0 || stage.advance() > MAX_ADVANCE) {
                 throw new IllegalArgumentException("Invalid stage rules.");
             }
             if (!Set.of("HEAD_TO_HEAD", "GAME_DIFF", "GAME_WINS").containsAll(stage.tieBreakers())
@@ -85,14 +100,14 @@ public final class CompetitionRules {
         }
         var seeded = new HashSet<UUID>();
         plan.playoffSeeds().forEach((rank, team) -> {
-            if (rank < 1 || rank > 64 || !teams.contains(team) || !seeded.add(team)) {
+            if (rank < 1 || rank > MAX_ADVANCE || !teams.contains(team) || !seeded.add(team)) {
                 throw new IllegalArgumentException("Invalid playoff seeding.");
             }
         });
         var previous = new HashSet<String>();
         var series = new HashSet<UUID>();
         for (var match : plan.matches()) {
-            text(match.label(), 300);
+            text(match.label(), MAX_NAME);
             if (!MatchTitle.valid(match.title())) {
                 throw new IllegalArgumentException("A match title needs a kind and numbers from 1 to "
                         + MatchTitle.MAX_NUMBER + ".");
@@ -133,7 +148,7 @@ public final class CompetitionRules {
         if (slot == null || slot.type() == null) {
             throw new IllegalArgumentException("Participant slot is required.");
         }
-        text(slot.label(), 200);
+        text(slot.label(), MAX_LABEL);
         boolean valid = switch (slot.type()) {
             case "TEAM" -> slot.teamId() != null && teams.contains(slot.teamId());
             case "SEED" -> slot.seed() != null && slot.seed() > 0 && slot.seed() <= MAX_SEED;

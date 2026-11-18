@@ -21,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class PageNotifications {
+    /** Followers notified per read, so a popular page never loads every follower at once. */
+    private static final int FOLLOWER_BATCH = 100;
     private final PageNotificationRepository notifications;
     private final PageFollowRepository follows;
 
@@ -36,7 +38,7 @@ public class PageNotifications {
         int page = 0;
         Page<PageFollow> batch;
         do {
-            batch = follows.findByPageId(pageId, PageProfiles.paging(page++, 100));
+            batch = follows.findByPageId(pageId, PageProfiles.paging(page++, FOLLOWER_BATCH));
             batch.forEach(row -> save(row.getActor(), pageId, kind, parameters));
         } while (batch.hasNext());
     }

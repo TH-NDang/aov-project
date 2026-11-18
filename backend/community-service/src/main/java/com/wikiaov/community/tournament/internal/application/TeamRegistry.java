@@ -84,11 +84,14 @@ public class TeamRegistry {
     }
 
     private static void validateAliases(Team content) {
-        if (content.shortName() != null && content.shortName().length() > 100) {
-            throw TournamentErrors.invalid("shortName must not exceed 100 characters.");
+        if (content.shortName() != null && content.shortName().length() > ReferenceLabels.MAX_LABEL) {
+            throw TournamentErrors
+                    .invalid("shortName must not exceed " + ReferenceLabels.MAX_LABEL + " characters.");
         }
         if (!ReferenceLabels.validAliases(content.aliases())) {
-            throw TournamentErrors.invalid("Use at most 20 unique team aliases of 1 to 100 characters each.");
+            throw TournamentErrors
+                    .invalid("Use at most " + ReferenceLabels.MAX_ALIASES + " unique team aliases of 1 to "
+                            + ReferenceLabels.MAX_LABEL + " characters each.");
         }
     }
 

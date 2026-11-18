@@ -20,6 +20,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 @Service
 public class EditorReferences {
+    /** Most saved ids one lookup resolves. */
+    private static final int MAX_IDS = 50;
     private final EditorReferenceRepository repository;
     private final JsonMapper json;
 
@@ -60,8 +62,8 @@ public class EditorReferences {
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
     public PageSlice<Entry> search(String query, Kind kind, List<UUID> ids, Pageable page) {
-        if (ids != null && (ids.isEmpty() || ids.size() > 50 || ids.stream().anyMatch(Objects::isNull))) {
-            throw TournamentErrors.invalid("Reference lookup accepts between 1 and 50 UUIDs.");
+        if (ids != null && (ids.isEmpty() || ids.size() > MAX_IDS || ids.stream().anyMatch(Objects::isNull))) {
+            throw TournamentErrors.invalid("Reference lookup accepts between 1 and " + MAX_IDS + " UUIDs.");
         }
 
         String escaped = ReferenceLabels.literalSearch(query);
