@@ -353,7 +353,6 @@ export function HeroCatalog({
         }),
       ]),
     [
-      ruleset,
       overview,
       locale,
       openHero,
@@ -364,7 +363,6 @@ export function HeroCatalog({
       scopeChanges.error,
       entryById,
       reviewed,
-      filter.seasonId,
       filter.variantId,
     ],
   )

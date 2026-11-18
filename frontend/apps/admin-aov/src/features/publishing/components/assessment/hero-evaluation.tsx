@@ -29,6 +29,8 @@ import type { Content, HeroNotes, Revision, Skill, Trait, TraitCode } from "../.
 
 const api = createPublishingApi(backendRequest)
 const NOTE_MAX = 4000
+/** Skills of a hero that has none yet; one array, so the suggestions are not worked out again on every render. */
+const NO_SKILLS: Skill[] = []
 const NOTE_FIELDS = [
   ["strengths", "Điểm mạnh"],
   ["weaknesses", "Điểm yếu"],
@@ -175,7 +177,7 @@ function HeroTraitsSection({
   onNeedsDraft,
 }: HeroEvaluationProps) {
   const [editing, setEditing] = useState(false)
-  const skills = content.SKILLS?.skills ?? []
+  const skills = content.SKILLS?.skills ?? NO_SKILLS
   const saved = cleanTraits(content.SKILLS?.traits ?? [], skills)
   const suggestions = useMemo(() => suggestTraits(skills), [skills])
   const waiting = suggestions.filter((suggestion) => !saved.some((trait) => trait.code === suggestion.code)).length

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react"
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ComponentType } from "react"
 import { useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
@@ -163,8 +163,11 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       confirmLabel: "Rời trang, bỏ thay đổi",
     }),
   )
+  // Read only when the server copy changes: a save that ends the edits must not take the plan and its version back to
+  // the copy loaded before it.
+  const hasEdits = useEffectEvent(() => dirty)
   useEffect(() => {
-    if (!dirty) {
+    if (!hasEdits()) {
       setPlan(entry.content.plan)
       setBaseline(entry.content.plan)
     }

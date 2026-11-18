@@ -96,6 +96,8 @@ const isTyping = (target: EventTarget | null) =>
 const SEEK_SETTLE_MS = 2500
 /** How long a moved marker can be put back with one click. */
 const UNDO_MS = 8000
+/** The catalog's items until it loads; one array, so the lookups built from it are not rebuilt on every render. */
+const NO_ITEMS: Reference[] = []
 /** A marker moved on the timeline: what happened, and how to put it back. */
 type MoveUndo = { id: number; gameId: string; text: string; revert: () => void }
 export type GameStart = { url: string; second: number }
@@ -354,7 +356,7 @@ function MatchViewer({
   const gameAt = focused ? chapterClock(focused, at) : 0
 
   const catalog = useGameCatalog(focusedEntry?.content)
-  const items: Reference[] = catalog.data?.items ?? []
+  const items = catalog.data?.items ?? NO_ITEMS
   const lookups = useMemo(() => itemLookups(items), [items])
   const views = useMemo(
     () => Object.fromEntries(games.map((entry) => [entry.id, buildGameView(entry, teams, players, catalog.data)])),

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useEffectEvent, useState } from "react"
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import {
   arrayMove,
@@ -139,10 +139,12 @@ export function WarehouseOrderPicker({
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
-  // A dialog opened from outside starts from the current order, like one opened by the trigger.
+  // A dialog opened from outside starts from the current order, like one opened by the trigger. Items that arrive while
+  // it is open do not undo the order being arranged.
+  const currentItems = useEffectEvent(() => items)
   useEffect(() => {
     if (!openProp) return
-    setOrdered(items)
+    setOrdered(currentItems())
     setError("")
   }, [openProp])
   const dirty = ordered.some((item, index) => item.id !== items[index]?.id)

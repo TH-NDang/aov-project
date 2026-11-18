@@ -29,6 +29,8 @@ import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
 import { WarehouseTabs } from "./warehouse-tabs"
 
+/** The catalog until it loads; one array, so the lists made from it are not worked out again on every render. */
+const NO_ENTRIES: PublishedWarehouseRecord[] = []
 /** The entry of the catalog that is open, in whichever catalog is on screen. */
 const OPEN_ENTRY =
   ':is(.shop-item-select, .wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-pressed="true"]'
@@ -52,7 +54,7 @@ export default function WarehousePage() {
   const held = useRef<{ element: HTMLElement; top: number } | null>(null)
   const catalog = useQuery(warehouseCatalogQuery(kind, scope))
   const metadata = useQuery(warehouseGroupsQuery(kind, scope.locale))
-  const entries = catalog.data ?? []
+  const entries = catalog.data ?? NO_ENTRIES
   const groups = metadata.data ?? []
   const filtered = useMemo(
     () => entries.filter((entry) => matchesWarehouseSearch(entry, search, scope.locale)),
@@ -65,7 +67,7 @@ export default function WarehousePage() {
   // Rich text and patch notes link entries by id, but the page for sharing and indexing is the one named by code.
   useEffect(() => {
     if (selectedCode && selectedId !== selectedCode)
-      navigate({ pathname: warehousePath(kind, selectedCode), search: window.location.search }, { replace: true })
+      void navigate({ pathname: warehousePath(kind, selectedCode), search: window.location.search }, { replace: true })
   }, [kind, navigate, selectedCode, selectedId])
 
   usePageHead(
@@ -139,7 +141,7 @@ export default function WarehousePage() {
       const home = onBoard ? board : (entry.content.categoryCode ?? positions[0]?.categoryCode)
       if (home) next.set("group", home)
     }
-    navigate(
+    void navigate(
       { pathname: warehousePath(kind, entry.code), search: `?${next}` },
       // Going from one entry to the next should not fill the back button; opening the sheet still can be undone by it.
       { replace: wide || !!selectedId },
@@ -154,7 +156,7 @@ export default function WarehousePage() {
     // An item opened from a link chose the board; the board stays on it once the item closes.
     const next = new URLSearchParams(params)
     if (kind === "items" && itemView.layout === "shop" && itemView.category) next.set("group", itemView.category)
-    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
+    void navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
   }
 
   function setSearch(value: string) {
@@ -176,7 +178,7 @@ export default function WarehousePage() {
       if (value) next.set(key, value)
       else next.delete(key)
     }
-    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
+    void navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
   }
 
   const changed = filtered.filter((entry) => changes.subjects.has(entry.id))

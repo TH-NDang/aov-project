@@ -42,13 +42,13 @@ export function useReferenceSearch(rulesetId = ""): EntityReferenceSearch {
   const owner = useId()
   const session = useSyncExternalStore(subscribeSession, getSession, getSession)
   const skillSearch = useSkillReferenceSearch(rulesetId)
+  // Keyed on who is signed in, not on each copy of the session the store hands out.
+  const issuer = session.actor?.issuer
+  const subject = session.actor?.subject
   return useMemo(() => {
-    if (!session.actor) return async ({ page }) => ({ items: [], page, size: 20, totalElements: 0 })
-    const community = createCommunityReferenceSearch(
-      client,
-      { issuer: session.actor.issuer, subject: session.actor.subject },
-      owner,
-    )
+    if (issuer === undefined || subject === undefined)
+      return async ({ page }) => ({ items: [], page, size: 20, totalElements: 0 })
+    const community = createCommunityReferenceSearch(client, { issuer, subject }, owner)
     const available =
       (search: EntityReferenceSearch): EntityReferenceSearch =>
       async (request) => {
@@ -69,5 +69,5 @@ export function useReferenceSearch(rulesetId = ""): EntityReferenceSearch {
       if (kind && kind !== "skill") return { items: [], page: request.page, size: 20, totalElements: 0 }
       return kind === "skill" ? skillSearch(request) : combined(request)
     }
-  }, [client, owner, skillSearch, session.actor?.issuer, session.actor?.subject])
+  }, [client, owner, skillSearch, issuer, subject])
 }

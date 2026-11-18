@@ -13,7 +13,6 @@ import {
 import {
   UNSAFE_DataRouterStateContext,
   UNSAFE_LocationContext,
-  UNSAFE_RouteContext,
   useLocation,
   useMatches,
   useNavigate,
@@ -42,7 +41,8 @@ interface PageTabsContextValue {
   sessions: PageSession[]
   activePath: string
   transientOutlet: ReactNode
-  closeTab: (path: string) => void
+  /** Waits for the page's close guards, so it settles once the tab is closed or kept. */
+  closeTab: (path: string) => Promise<void>
   moveTab: (path: string, targetPath: string) => void
   registerCloseGuard: (path: string, guard: PageCloseGuard) => () => void
 }
@@ -88,10 +88,8 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
   const location = useLocation()
   const locationContext = useContext(UNSAFE_LocationContext)
   const routerState = useContext(UNSAFE_DataRouterStateContext)
-  const rawOutlet = useOutlet()
-  const matchedOutlet = useContext(UNSAFE_RouteContext).outlet
-  // useOutlet creates a wrapper on every render; cache by the underlying route element.
-  const outlet = useMemo(() => rawOutlet, [matchedOutlet])
+  // useOutlet keeps its wrapper while the underlying route element stays the same, so a session can compare it.
+  const outlet = useOutlet()
   const matches = useMatches() as UIMatch<unknown, RouteHandle | undefined>[]
   const transient = matches.some((match) => match.handle?.pageTab === false)
   const navigate = useNavigate()
@@ -157,14 +155,14 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
     latestRemoveTab.current = removeTab
   })
 
-  const closeTab = async (path: string) => {
+  const closeTab = React.useCallback(async (path: string) => {
     // One at a time, so a guard never asks after an earlier one was refused.
     for (const guard of [...(closeGuards.current.get(path) ?? [])]) {
       if (!(await guard())) return
     }
 
     latestRemoveTab.current(path)
-  }
+  }, [])
 
   const moveTab = (path: string, targetPath: string) => {
     if (path === targetPath) return

@@ -105,16 +105,17 @@ export function BackendItemsPage() {
   const [name, setName] = useState("")
   const [code, setCode] = useState("")
   const pending = edits.size
+  const { badgeKinds } = scope
   const rows = useMemo(
     () =>
       scope.entries.map((base) => {
         const item = {
           ...base,
-          changeKinds: scope.badgeKinds(base),
+          changeKinds: badgeKinds(base),
         }
         return withPendingEdits(item, edits.get(item.id))
       }),
-    [scope.entries, edits, scope.scoped, scope.latest, scope.showAll, scope.baselineIds, scope.reviewed],
+    [scope.entries, edits, badgeKinds],
   )
   const searchMatches = useMemo(
     () => (context.q ? new Set(itemSearchMatches(rows, context.q, context.locale).map((item) => item.id)) : null),
@@ -395,6 +396,23 @@ export function BackendItemsPage() {
     setFocusId(to)
     toast.success("Đã thêm nguyên liệu. Lưu thay đổi để ghi lên máy chủ.")
   }
+  async function switchRuleset(id: string) {
+    if (
+      pending &&
+      !(await confirmDiscard({
+        title: "Chuyển bộ quy tắc?",
+        description: "Các thay đổi chưa lưu sẽ bị bỏ.",
+        confirmLabel: "Bỏ và chuyển",
+      }))
+    )
+      return
+
+    setEdits(new Map())
+    setUndo([])
+    setSelectedId(null)
+    setFocusId(null)
+    context.setRuleset(id)
+  }
   return (
     <Page className="min-h-0 min-w-0 gap-4" data-item-selection-surface>
       <PageHeader
@@ -414,23 +432,7 @@ export function BackendItemsPage() {
             <WarehouseRulesetSelect
               context={{
                 ...context,
-                setRuleset: async (id) => {
-                  if (
-                    pending &&
-                    !(await confirmDiscard({
-                      title: "Chuyển bộ quy tắc?",
-                      description: "Các thay đổi chưa lưu sẽ bị bỏ.",
-                      confirmLabel: "Bỏ và chuyển",
-                    }))
-                  )
-                    return
-
-                  setEdits(new Map())
-                  setUndo([])
-                  setSelectedId(null)
-                  setFocusId(null)
-                  context.setRuleset(id)
-                },
+                setRuleset: (id) => void switchRuleset(id),
               }}
             />
             <ItemShopHelp />

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import type { Catalog, GameContent, ObservationStatus, Participant, Side } from "@aov/community-contracts"
 import { Clock3, EyeOff, Shield, Swords, TriangleAlert, Users, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -130,14 +130,14 @@ export function LoadoutPanel({
   // A mark taken before the game clock starts (draft, loading screen) is kept at 0:00.
   const nowGame = clock?.videoNow != null ? Math.max(0, Math.round(clock.toGame(clock.videoNow) ?? 0)) : null
 
+  // Only a new request moves the panel; the lookup reads the seats of the same game.
+  const findSeat = useEffectEvent((key?: SeatKey) => seatOf(key))
   useEffect(() => {
-    const wanted = seatOf(target?.seat)
+    const wanted = findSeat(target?.seat)
     if (!wanted) return
     scrollTo.current = target?.part ?? null
     setSeat(wanted)
     setTab(target?.part === "equipment" ? "equipment" : "loadout")
-    // Only a new request moves the panel; the lookup reads the seats of the same game.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target])
   useEffect(() => {
     if (!scrollTo.current) return

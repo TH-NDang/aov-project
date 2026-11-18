@@ -11,5 +11,6 @@ export function useChangeEffect(effect: () => void, dependencies: DependencyList
       return
     previous.current = [...dependencies]
     effect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the caller's list is the dependency list, as for useEffect
   }, dependencies)
 }

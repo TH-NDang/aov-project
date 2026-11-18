@@ -3,6 +3,7 @@ import { useCatalogScopePreference } from "../components/catalog/catalog-scope-m
 import { HeroTimeline } from "../components/hero-timeline"
 import {
   useEffect,
+  useEffectEvent,
   useId,
   useLayoutEffect,
   useMemo,
@@ -294,7 +295,7 @@ export function PublishingWorkspace({
       overview.data &&
       (filter.variantId !== requestedFilter.variantId || filter.seasonId !== requestedFilter.seasonId)
     )
-      updateLocation(catalogScopePatch(filter))
+      updateLocation(catalogScopePatch({ seasonId: filter.seasonId, variantId: filter.variantId }))
   }, [
     heroId,
     overview.data,
@@ -436,8 +437,11 @@ export function PublishingWorkspace({
       }).map((blocker) => blocker.message)
     : []
 
+  // The address decides when it changes. A revision chosen on the page is put in the address right after; until it
+  // arrives there, the old address must not take the choice back.
+  const selectedNow = useEffectEvent(() => selectedId)
   useEffect(() => {
-    if (requestedRevision === selectedId) return
+    if (requestedRevision === selectedNow()) return
     setSelectedId(requestedRevision)
     setEditing(false)
     setError("")
@@ -453,15 +457,17 @@ export function PublishingWorkspace({
         updateLocation({ revision: chosen.id })
       }
     }
-  }, [revisions.data, selectedId, requestedRevision])
+  }, [revisions.data, selectedId, requestedRevision, updateLocation])
   useEffect(() => {
     onUnsavedChange?.(busy, busy)
   }, [busy, onUnsavedChange])
   // The content page brings the edited section into view; outside it the editor stands alone and is scrolled to.
+  // Both happen when editing starts, not again when the view changes during it.
+  const standsAlone = useEffectEvent(() => view !== "overview")
   useEffect(() => {
     if (!editing) return
     editorRef.current?.focus({ preventScroll: true })
-    if (view !== "overview") editorRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+    if (standsAlone()) editorRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
   }, [editing])
   useBeforeUnload((event) => {
     if (busy) {
@@ -502,8 +508,9 @@ export function PublishingWorkspace({
   // Opening the hero that holds forms lands on its default form, as the Wiki does. A link to one of its revisions, such
   // as the shared part's own page or a row of the readiness overview, still opens it.
   const defaultForm = defaultFormOf(heroForms.data, heroId)
+  const openDefaultForm = useEffectEvent((formId: string) => switchForm(formId, true))
   useEffect(() => {
-    if (openedWithoutRevision && defaultForm) switchForm(defaultForm, true)
+    if (openedWithoutRevision && defaultForm) openDefaultForm(defaultForm)
   }, [openedWithoutRevision, defaultForm])
   const formHolder = heroForms.data?.formKey ? heroForms.data.holder : null
   const formsOwner = formsOwnerOf(heroForms.data)
@@ -637,12 +644,14 @@ export function PublishingWorkspace({
     ).finally(() => setPublishing(false))
   }
   // A hero without the account's language opens in English before Vietnamese.
-  const profileLocales = read.data?.content.PROFILE?.translations.map((text) => text.locale)
+  const profileTranslations = read.data?.content.PROFILE?.translations
+  const requestedReadLocale = urlParams.get("readLocale")
   useEffect(() => {
-    if (!profileLocales || urlParams.get("readLocale") || profileLocales.includes(location.readLocale)) return
+    const profileLocales = profileTranslations?.map((text) => text.locale)
+    if (!profileLocales || requestedReadLocale || profileLocales.includes(location.readLocale)) return
     const fallback = ["en-US", "vi-VN"].find((code) => profileLocales.includes(code)) ?? profileLocales[0]
     if (fallback) updateLocation({ readLocale: fallback })
-  }, [profileLocales?.join(","), location.readLocale])
+  }, [profileTranslations, requestedReadLocale, location.readLocale, updateLocation])
   // One ruleset holds one draft, so a second one can only fail: offer the one that exists instead.
   const openDraft = revisions.data?.find((row) => row.state === "DRAFT" && row.rulesetId === revision?.rulesetId)
   const startDraftLabel = openDraft ? `Mở bản nháp #${openDraft.revisionNo}` : "Tạo bản nháp"
@@ -676,8 +685,8 @@ export function PublishingWorkspace({
   // A link from the overview of all heroes lands on the part to fix, once the draft is here to open it.
   const fix = urlParams.get("fix")
   const fixReady = !!fix && !!preview && !revisions.isPending && (!writable || localDraft.ready)
-  useEffect(() => {
-    if (!fixReady) return
+  // The link is followed once, when it becomes ready, as the page stands at that moment.
+  const followFix = useEffectEvent(() => {
     updateLocation({ fix: null })
     if (fix === "PATCH") {
       if (canMoveBaseline) openManagement()
@@ -687,6 +696,9 @@ export function PublishingWorkspace({
         setEditing(true)
       } else setReviewTarget({ note: "", section: fix as Section })
     }
+  })
+  useEffect(() => {
+    if (fixReady) followFix()
   }, [fixReady])
 
   // The one action the header offers for this version; the rest stays in its menu.

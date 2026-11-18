@@ -105,6 +105,11 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
     forwarded,
   ) {
     const element = React.useRef<HTMLDivElement>(null)
+    const inside = React.useCallback(() => {
+      const root = element.current
+      const selection = root?.ownerDocument.getSelection()
+      return !!root && !!selection?.rangeCount && root.contains(selection.getRangeAt(0).commonAncestorContainer)
+    }, [])
     const highlightKey = React.useId().replace(/[^a-zA-Z0-9_-]/g, "")
     const recognitionIndex = React.useMemo(
       () => createEntityIndex(entities, locale, fallbackLocale),
@@ -137,7 +142,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
         setDecorations(icons)
       }, 350)
       return () => clearTimeout(timer)
-    }, [value, recognitionIndex, autoRecognize, disabled, highlightKey, recognitionRevision])
+    }, [value, recognitionIndex, autoRecognize, disabled, highlightKey, recognitionRevision, inside])
     React.useEffect(() => () => clearHighlights.current(), [])
     const composing = React.useRef(false)
     const remembered = React.useRef<TextSelection>({ start: 0, end: 0 })
@@ -154,11 +159,6 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
     const disabledRef = React.useRef(disabled)
     disabledRef.current = disabled
     const blocked = React.useCallback(() => disabledRef.current || !!element.current?.closest("fieldset[disabled]"), [])
-    const inside = React.useCallback(() => {
-      const root = element.current
-      const selection = root?.ownerDocument.getSelection()
-      return !!root && !!selection?.rangeCount && root.contains(selection.getRangeAt(0).commonAncestorContainer)
-    }, [])
     const notifySelection = React.useCallback((next: TextSelection) => {
       remembered.current = next
       if (sameSelection(reported.current, next)) return
@@ -318,7 +318,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
     React.useLayoutEffect(() => {
       if (composing.current || !element.current || painted.current === value) return
       paint(value, inside() ? getReferenceInputSelection(element.current) : undefined)
-    }, [value, paint])
+    }, [value, paint, inside])
     React.useEffect(() => {
       const root = element.current
       if (!root) return

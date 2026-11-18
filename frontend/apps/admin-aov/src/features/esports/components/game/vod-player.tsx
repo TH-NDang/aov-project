@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
 import {
   ArrowUpRight,
   Captions,
@@ -288,30 +288,33 @@ export const VodPlayer = forwardRef<
 
   soundOff.current = muted
   /** The viewer asked to play while a first frame was awaited: the video simply keeps running, with its sound. */
-  const releaseHold = (current: YTPlayer) => {
+  const releaseHold = useCallback((current: YTPlayer) => {
     if (!holdFrame.current) return
     holdFrame.current = false
     if (!soundOff.current) current.unMute?.()
-  }
-  const seekTo = (second: number, play = false) => {
-    const target = Math.max(0, second)
-    if (ready.current && player.current) {
-      // YouTube starts a video that was never played as soon as it is sought, and draws nothing if it is paused at
-      // once. A seek that did not ask to play lets it start without sound and stops it on the first frame, so a
-      // marker dragged along the timeline shows the picture there without setting the broadcast running.
-      const state = player.current.getPlayerState()
-      if (play) releaseHold(player.current)
-      else if ((state === -1 || state === 5) && !holdFrame.current) {
-        holdFrame.current = true
-        player.current.mute?.()
+  }, [])
+  const seekTo = useCallback(
+    (second: number, play = false) => {
+      const target = Math.max(0, second)
+      if (ready.current && player.current) {
+        // YouTube starts a video that was never played as soon as it is sought, and draws nothing if it is paused at
+        // once. A seek that did not ask to play lets it start without sound and stops it on the first frame, so a
+        // marker dragged along the timeline shows the picture there without setting the broadcast running.
+        const state = player.current.getPlayerState()
+        if (play) releaseHold(player.current)
+        else if ((state === -1 || state === 5) && !holdFrame.current) {
+          holdFrame.current = true
+          player.current.mute?.()
+        }
+        player.current.seekTo(target, true)
+        if (play) player.current.playVideo()
+      } else {
+        pendingSeek.current = { second: target, play: play || pendingSeek.current?.play === true }
       }
-      player.current.seekTo(target, true)
-      if (play) player.current.playVideo()
-    } else {
-      pendingSeek.current = { second: target, play: play || pendingSeek.current?.play === true }
-    }
-  }
-  const toggle = () => {
+    },
+    [releaseHold],
+  )
+  const toggle = useCallback(() => {
     const current = player.current
     if (!ready.current || !current) {
       pendingSeek.current = { second: pendingSeek.current?.second ?? latestStart.current, play: true }
@@ -320,8 +323,9 @@ export const VodPlayer = forwardRef<
     releaseHold(current)
     if (current.getPlayerState() === PLAYING) current.pauseVideo()
     else current.playVideo()
-  }
+  }, [releaseHold])
 
+  // Both helpers only read refs, so the handle stays the same object.
   useImperativeHandle(
     ref,
     () => ({
@@ -329,8 +333,7 @@ export const VodPlayer = forwardRef<
       toggle,
       currentTime: () => (ready.current && player.current ? player.current.getCurrentTime() : null),
     }),
-    // Both helpers only read refs, so the handle can stay stable.
-    [],
+    [seekTo, toggle],
   )
 
   // While dragging, moves are followed on the whole window and the video frame ignores the pointer, so passing over

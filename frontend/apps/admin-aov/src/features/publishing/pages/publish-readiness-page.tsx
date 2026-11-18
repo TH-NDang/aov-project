@@ -62,17 +62,17 @@ export function PublishReadinessPage() {
   const coverage = useSourceCoverage(patchesFor)
   const captureSets = coverage.status === "ready" ? coverage : null
   const sourceGaps = useMemo(
-    () => (captureSets ? readinessSourceGaps(rows, captureSets.patches, captureSets.heroes, locale) : noGaps),
+    () => (captureSets?.patches ? readinessSourceGaps(rows, captureSets.patches, captureSets.heroes, locale) : noGaps),
     [rows, captureSets?.patches, captureSets?.heroes, locale],
   )
   const captureSummary = useMemo(() => sourceGapSummary(sourceGaps), [sourceGaps])
   const checkedAgainst = useMemo(
-    () => (captureSets ? readinessCapturePatches(rows, captureSets.patches) : []),
+    () => (captureSets?.patches ? readinessCapturePatches(rows, captureSets.patches) : []),
     [rows, captureSets?.patches],
   )
   const byCaptures = filter.captures && !!captureSets
   const matching = useMemo(() => {
-    const filtered = filterReadinessRows(rows, filter)
+    const filtered = filterReadinessRows(rows, { q: filter.q, unpublished: filter.unpublished, draft: filter.draft })
     return byCaptures ? orderByCaptures(filtered, sourceGaps) : filtered
   }, [rows, filter.q, filter.unpublished, filter.draft, byCaptures, sourceGaps])
   const revealed = useRevealedRows(matching, JSON.stringify(filter))

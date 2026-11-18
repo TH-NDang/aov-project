@@ -71,12 +71,15 @@ function DeferredReferenceIcon(props: ReferenceIconProps) {
 function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: ReferenceIconProps) {
   const [resolved, setResolved] = React.useState<string | undefined>(undefined)
   const [failed, setFailed] = React.useState<string | null>(null)
+  // The entity object can be rebuilt on every render; its id, kind and icon decide when the icon is looked up again.
+  const currentEntity = React.useEffectEvent(() => entity)
   React.useEffect(() => {
     setResolved(undefined)
-    if (!resolveIcon || !entity.iconAssetId) return
-    if (resolveIcon.subscribe) return resolveIcon.subscribe(entity, (url) => setResolved(safeEntityIconUrl(url)))
+    const target = currentEntity()
+    if (!resolveIcon || !target.iconAssetId) return
+    if (resolveIcon.subscribe) return resolveIcon.subscribe(target, (url) => setResolved(safeEntityIconUrl(url)))
     let active = true
-    void resolveIcon(entity).then(
+    void resolveIcon(target).then(
       (value) => {
         if (active) setResolved(safeEntityIconUrl(value))
       },

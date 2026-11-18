@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from "react"
 import { useLocation, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
@@ -99,10 +99,13 @@ function useHandbook(hero: HeroDetail) {
     )
   const activeKey = active?.skillKey
   // A shared link can name a video of another skill, which then has to be the skill on screen for the video to open.
+  // Only a newly named video or a new list moves the skill, so a skill picked by hand afterwards stays.
+  const showSkill = useEffectEvent((skillKey: string) => {
+    if (skillKey !== activeKey) selectSkill(skillKey)
+  })
   useEffect(() => {
     for (const [skillKey, list] of videos.bySkill)
-      if (skillKey !== activeKey && list.some((video) => video.id === videoParam.id)) selectSkill(skillKey)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      if (list.some((video) => video.id === videoParam.id)) showSkill(skillKey)
   }, [videoParam.id, videos.bySkill])
   const references = useQuery(wikiReferencesQuery(scope))
   const settings = references.data

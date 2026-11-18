@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview --port 5175 --strictPort",
     "typecheck": "tsc -p tsconfig.json && tsc -p tests/tsconfig.json --noEmit && tsc -p lint/tsconfig.json --noEmit",
-    "lint": "node --experimental-strip-types lint/source-rules.ts",
+    "lint": "node --experimental-strip-types lint/source-rules.ts && eslint src",
     "test": "tsx --tsconfig tests/tsconfig.json --import ./tests/fixtures/css-loader.mjs --test --test-force-exit --test-concurrency=2 \"tests/*.test.ts\" \"tests/*.test.tsx\"",
     "sources:sync": "node --experimental-strip-types server/source-sync.ts",
     "shop-captures:import": "node --experimental-strip-types server/shop-capture-import.ts",

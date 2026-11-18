@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview --port 5174 --strictPort",
     "typecheck": "tsc -p tsconfig.json && tsc -p lint/tsconfig.json",
-    "lint": "node --experimental-strip-types lint/source-rules.ts",
+    "lint": "node --experimental-strip-types lint/source-rules.ts && eslint src",
     "test": "node --experimental-strip-types --test \"tests/*.test.ts\"",
     "test:tournaments": "node --experimental-strip-types --test tests/tournament-model.test.ts tests/match-model.test.ts tests/competition-model.test.ts tests/match-schedule.test.ts",
     "test:account": "node --experimental-strip-types --test tests/account-profile.test.ts",

@@ -29,7 +29,7 @@ export function useHeroVersion(hero: HeroDetail) {
 
   const history = useQuery(heroChangesQuery(scope, hero.id))
   const rows = useMemo(() => (history.data ?? []).filter((row) => row.summary || row.changes?.length), [history.data])
-  const notes = rows.filter((row) => row.patchVariantId === selected?.id)
+  const notes = useMemo(() => rows.filter((row) => row.patchVariantId === selected?.id), [rows, selected?.id])
 
   const line = orderedPatches(patches, seasons)
   const position = (id?: string) => line.findIndex((patch) => patch.id === id)
@@ -42,8 +42,7 @@ export function useHeroVersion(hero: HeroDetail) {
     const keys = new Set<string>()
     for (const row of notes) for (const change of row.changes ?? []) if (change.skillKey) keys.add(change.skillKey)
     return keys
-    // notes is derived from rows and the selected version on every render.
-  }, [rows, selected?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [notes])
 
   return { selected, previous, notes, rows, lastChange, changedSkills, pending: history.isPending }
 }

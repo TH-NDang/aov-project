@@ -168,7 +168,7 @@ function useWikiState() {
         "skill",
       ])
         next.delete(key)
-      navigate({ pathname: warehouseListPath(pathname), search: `?${next}` })
+      void navigate({ pathname: warehouseListPath(pathname), search: `?${next}` })
     },
     [locale, markets.data, navigate, params, pathname],
   )
@@ -196,7 +196,7 @@ function useWikiState() {
         else next.delete("unscoped")
       }
       // An open armory entry may not exist in the new version, so it closes.
-      navigate({ pathname: warehouseListPath(pathname), search: `?${next}` })
+      void navigate({ pathname: warehouseListPath(pathname), search: `?${next}` })
     },
     [navigate, params, pathname],
   )

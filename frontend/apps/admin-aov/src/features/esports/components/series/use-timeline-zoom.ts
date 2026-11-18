@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, type RefObject } from "react"
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, type RefObject } from "react"
 import { clampSpan } from "../../model/broadcast-timeline"
 
 /** Wheel travel, in pixels, that changes the span by a factor of e; one notch of a mouse wheel is about a third. */
@@ -57,12 +57,13 @@ export function useTimelineZoom({
     const rect = bar.getBoundingClientRect()
     const start = rect.left - element.getBoundingClientRect().left + element.scrollLeft
     element.scrollLeft = start + (point.second / duration) * rect.width - point.offset
-  }, [shown, duration])
-  // Keyed on the span, not the scale: the player corrects the video length by a second once it starts, which must
-  // not move the track.
+  }, [shown, duration, viewport, track])
+  // Keyed on the span, not the scale or the playhead: the player corrects the video length by a second once it starts,
+  // and neither that nor the video playing on may move the track.
+  const showPlayhead = useEffectEvent(() => scrollTo(current))
   useEffect(() => {
     if (anchor.current) anchor.current = null
-    else scrollTo(current)
+    else showPlayhead()
   }, [shown])
   // Ctrl + wheel (a pinch on a trackpad arrives the same way) and a two-finger pinch on a touch screen zoom the
   // track. The listeners are attached by hand because they must be able to cancel the browser's own page zoom.
@@ -107,6 +108,6 @@ export function useTimelineZoom({
       element.removeEventListener("touchend", onTouchEnd)
       element.removeEventListener("touchcancel", onTouchEnd)
     }
-  }, [])
+  }, [viewport])
   return pinching
 }

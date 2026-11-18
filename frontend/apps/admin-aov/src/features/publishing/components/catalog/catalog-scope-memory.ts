@@ -34,10 +34,11 @@ export function useCatalogScopePreference(
   const saved = new URLSearchParams(useSavedCatalogScope())
   const patch = data?.variants.find((v) => v.id === requested.variantId)
   const season = data?.seasons.find((s) => s.id === requested.seasonId)
+  // Only the saved fields are read, so a new copy of the same overview saves nothing.
   useEffect(() => {
-    if (!enabled || (requested.variantId ? !patch : !season)) return
+    if (!enabled || (requested.variantId ? !patch?.id : !season?.id)) return
     const next = new URLSearchParams()
-    if (patch) {
+    if (patch?.id) {
       next.set("patch", patch.id)
       next.set("ruleset", patch.rulesetId)
     }

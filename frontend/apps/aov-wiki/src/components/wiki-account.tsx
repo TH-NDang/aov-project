@@ -49,7 +49,7 @@ export function WikiLoginCallback() {
     let active = true
     void completeLogin()
       .then((path) => {
-        if (active) navigate(path, { replace: true })
+        if (active) void navigate(path, { replace: true })
       })
       .catch(() => {
         if (active) setError(true)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useEffectEvent, useState } from "react"
 import { CopyPlus, Pencil, Plus, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
@@ -88,9 +88,11 @@ export function HeroSkillsEditor({
     },
     [onBusyChange],
   )
+  // A newly requested skill is selected; editing the skills afterwards must not take the selection back to it.
+  const indexOfSkill = useEffectEvent((key: string) => value.skills.findIndex((skill) => skill.skillKey === key))
   useEffect(() => {
     if (!initialSkillKey) return
-    const index = value.skills.findIndex((skill) => skill.skillKey === initialSkillKey)
+    const index = indexOfSkill(initialSkillKey)
     if (index >= 0) setSelectedIndex(index)
   }, [initialSkillKey])
   const index = Math.min(selectedIndex, value.skills.length - 1)

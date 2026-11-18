@@ -21,6 +21,8 @@ export const SELECT_CLASS =
   "h-9 w-full rounded-md border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
 export const displayValue = (value: unknown) =>
   value === undefined ? "—" : typeof value === "string" ? value : JSON.stringify(value)
+/** Rows before a file is read; one array, so the columns are not worked out again on every render. */
+const NO_ROWS: StorageRow[] = []
 
 export function ImportDialog({
   table,
@@ -42,7 +44,7 @@ export function ImportDialog({
   const [filename, setFilename] = useState("")
   const [filter, setFilter] = useState("all")
   const [result, setResult] = useState<{ added: number; updated: number; skipped: number } | null>(null)
-  const rows = arrays[arrayName] ?? []
+  const rows = arrays[arrayName] ?? NO_ROWS
   const columns = useMemo(() => [...new Set(rows.flatMap((row) => Object.keys(row)))], [rows])
   const counts = plan
     ? {

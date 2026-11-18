@@ -93,7 +93,7 @@ export function CreateHeroPage() {
                 )
                 await draft.discard()
                 await invalidateHeroCatalogs(cache)
-                navigate(`/hero/${revision.heroId}`, { replace: true })
+                void navigate(`/hero/${revision.heroId}`, { replace: true })
               } catch (cause) {
                 setError(errorMessage(cause))
               } finally {

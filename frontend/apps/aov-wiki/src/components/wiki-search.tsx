@@ -118,7 +118,7 @@ export function WikiSearch({
   function submit(event: FormEvent) {
     event.preventDefault()
     if (!search.trim()) return
-    navigate(destinations[marked]!)
+    void navigate(destinations[marked]!)
     finish()
   }
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {

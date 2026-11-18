@@ -172,7 +172,7 @@ function NotificationBell() {
               onClick={() => {
                 if (!item.read) read.one.mutate(item.id)
                 setOpen(false)
-                navigate(`/pages/${item.pageId}`)
+                void navigate(`/pages/${item.pageId}`)
               }}
             >
               <span>{item.message}</span>
@@ -203,7 +203,7 @@ export function CommunityLoginCallback() {
     let active = true
     void completeLogin()
       .then((path) => {
-        if (active) navigate(path, { replace: true })
+        if (active) void navigate(path, { replace: true })
       })
       .catch(() => {
         if (active) setError(publicAuthError(locale))
