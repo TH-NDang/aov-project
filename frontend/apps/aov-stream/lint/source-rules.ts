@@ -2,9 +2,12 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { dirname, join, relative, resolve, sep } from "node:path"
 import ts from "typescript"
+import { newRestyles, RESTYLE_HINT } from "../../../packages/ui/lint/stylesheet-owners.ts"
+import { knownRestyles } from "./known-restyles.ts"
 
 const app = join(import.meta.dirname, "..")
 const source = join(app, "src")
+const restyles = newRestyles(source, join(app, "../../packages/ui/src"), knownRestyles)
 
 type Rule = { name: string; hint: string; files: string[]; offenders: (text: string, path: string) => string[] }
 
@@ -81,6 +84,18 @@ const rules: Rule[] = [
           ? [` imports ${relative(source, imported)}`]
           : []
       }),
+  },
+  {
+    name: "a stylesheet styles only the classes it owns",
+    hint: RESTYLE_HINT,
+    files: [...restyles.offenders.keys()],
+    offenders: (_, path) => restyles.offenders.get(path) ?? [],
+  },
+  {
+    name: "every known restyle is still there",
+    hint: "Remove the entry from lint/known-restyles.ts: no rule styles that class from that sheet any more.",
+    files: restyles.stale.length > 0 ? [join(import.meta.dirname, "known-restyles.ts")] : [],
+    offenders: () => restyles.stale.map((key) => ` ${key}`),
   },
 ]
 
