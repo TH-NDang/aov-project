@@ -235,6 +235,8 @@
    - Script lấy `origin/main` và chỉ triển khai khi mọi check run GitHub giữ cho commit đó đã xong và đạt (`success`,
      `skipped`, `neutral`). Repo công khai nên đọc API không cần token, VPS không giữ khóa GitHub nào.
    - Commit lỗi được ghi vào `infra/.deploy/rejected` và timer không thử lại; commit mới hơn hoặc chạy tay thì có.
+   - Timer chỉ đi tới: commit của `main` phải nối tiếp commit đang chạy. `main` bị viết lại lịch sử, hoặc máy chủ đang chạy
+     một commit chưa vào `main`, thì timer không làm gì; quay lui là việc chạy tay.
    - `deploy.sh <commit>` triển khai một commit bất kỳ, kể cả để quay lui. `deploy.sh --refresh` chạy lại các bước không gián
      đoạn trên commit đang chạy, dùng sau khi đổi `.env`.
 2. **Image.** Workflow `images.yml` build năm image (`wiki-service`, `community-service`, `keycloak`, `reverse-proxy`, `web`)
