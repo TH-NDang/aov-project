@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -73,17 +74,17 @@ public class SkinBadges {
             throw HeroValidation.invalid("Choose either a badge group or ungrouped badges.");
         }
         groups.require(groupId);
-        var all = badges.findAll(Sort.by("code").and(Sort.by("id")));
-        var translations = translations(all.stream().map(SkinBadge::getId).toList());
         String search = search(q);
-        var matching = all.stream().filter(badge -> groupId == null || groupId.equals(badge.getGroupId()))
-                .filter(badge -> !ungrouped || badge.getGroupId() == null)
-                .filter(badge -> matches(badge, translations.getOrDefault(badge.getId(), List.of()), search))
-                .toList();
+
+        var found = badges.findAll(SkinBadgeRepository.listed(groupId, ungrouped, search),
+                PageRequest.of(page, size, Sort.by("code").and(Sort.by("id"))));
+        var translations = translations(found.getContent().stream().map(SkinBadge::getId).toList());
         var counts = gallery.badgeCounts(rulesetId);
-        return PageSlice.of(matching, page, size)
+
+        return new PageSlice<>(found.getContent().stream()
                 .map(badge -> view(badge, translations.getOrDefault(badge.getId(), List.of()), locale,
-                        counts.getOrDefault(badge.getCode(), 0L)));
+                        counts.getOrDefault(badge.getCode(), 0L)))
+                .toList(), page, size, found.getTotalElements());
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
