@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,6 @@ public class SeasonSchedule {
     private UUID regionId;
     private Instant startsAt;
     private Instant endsAt;
-    private java.time.LocalDate startsOn;
-    private java.time.LocalDate endsOn;
+    private LocalDate startsOn;
+    private LocalDate endsOn;
 }

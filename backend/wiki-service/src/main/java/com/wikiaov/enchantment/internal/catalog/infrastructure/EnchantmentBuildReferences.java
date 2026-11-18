@@ -25,10 +25,12 @@ public class EnchantmentBuildReferences implements BuildReferenceProvider {
     private final EnchantmentIdentityRepository identities;
     private final EnchantmentRevisionRepository revisions;
 
+    @Override
     public BuildReferenceKind kind() {
         return BuildReferenceKind.ENCHANTMENT;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
@@ -38,6 +40,7 @@ public class EnchantmentBuildReferences implements BuildReferenceProvider {
         return result;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();

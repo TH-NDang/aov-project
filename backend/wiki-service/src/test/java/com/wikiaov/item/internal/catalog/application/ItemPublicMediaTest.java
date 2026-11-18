@@ -8,7 +8,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.wikiaov.item.internal.application.response.ItemView;
+import com.wikiaov.item.internal.catalog.persistence.ItemIdentityRepository;
 import com.wikiaov.item.internal.domain.ItemContent;
+import com.wikiaov.item.internal.metadata.persistence.ItemCategoryRepository;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssetState;
 import com.wikiaov.media.MediaAssets;
@@ -22,8 +24,8 @@ import org.junit.jupiter.api.Test;
 class ItemPublicMediaTest {
     private final MediaAssets media = mock(MediaAssets.class);
     private final ItemPublicMedia hydration = new ItemPublicMedia(media,
-            new ItemContentRules(mock(com.wikiaov.item.internal.catalog.persistence.ItemIdentityRepository.class),
-                    media, mock(com.wikiaov.item.internal.metadata.persistence.ItemCategoryRepository.class)));
+            new ItemContentRules(mock(ItemIdentityRepository.class),
+                    media, mock(ItemCategoryRepository.class)));
 
     @Test
     void batchesReturnedRowAssetsAndExcludesUnusableOrUnrelatedMetadata() {

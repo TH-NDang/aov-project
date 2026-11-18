@@ -320,6 +320,7 @@ const revision = (heroId: string, state: Revision["state"], patchVariant = "patc
   version: 1,
   cause: "DATA_BASELINE",
   sections: {} as Revision["sections"],
+  publicationSequence: null,
   publishedAt: null,
   sourceRevisionId: null,
   effectiveFromPatchVariantId: patchVariant,
@@ -343,7 +344,7 @@ const variant = (id: string, patchCode: string) => ({
   rulesetId: "standard",
   rulesetOrdinal: 1,
   seasonId: "s4",
-  status: "PUBLISHED",
+  status: "PUBLISHED" as const,
 })
 
 test("rows are ranked by how useful their captures are, and heroes with nothing to capture drop out", () => {

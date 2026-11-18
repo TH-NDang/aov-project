@@ -169,9 +169,7 @@ public class SkinBadgeGroups {
     private static SkinBadgeGroupView view(SkinBadgeGroup group, List<SkinBadgeGroupTranslation> translations,
             String locale, long count, boolean matchedByGroup) {
         var ordered = translations.stream().sorted(Comparator.comparing(SkinBadgeGroupTranslation::getLocale)).toList();
-        var selected = ordered.stream()
-                .min(Comparator.comparingInt(text -> HeroMediaQueries.localeRank(text.getLocale(), locale)))
-                .orElse(null);
+        var selected = CatalogLocales.pick(ordered, locale, SkinBadgeGroupTranslation::getLocale);
         return new SkinBadgeGroupView(group.getId(), group.getCode(), group.getKind(), group.getVersion(),
                 ordered.stream()
                         .map(text -> new SkinBadgeGroupView.Translation(text.getLocale(), text.getDisplayName()))

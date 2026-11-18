@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.JsonNode;
 
 @Configuration(proxyBeanMethods = false)
 class OpenApiConfiguration {
@@ -83,6 +84,21 @@ class OpenApiConfiguration {
                         .forEach(entry -> ordered.addApiResponse(entry.getKey(), entry.getValue()));
                 operation.setResponses(ordered);
             }));
+        };
+    }
+
+    /**
+     * A {@link JsonNode} is free-form JSON on the wire. Without this the document describes it by the node's own getters
+     * ({@code array}, {@code bigDecimal}, ...), which the API never sends.
+     */
+    @Bean
+    OpenApiCustomizer freeFormJsonNodes() {
+        return api -> {
+            if (api.getComponents() == null || api.getComponents().getSchemas() == null) {
+                return;
+            }
+            api.getComponents().getSchemas().computeIfPresent(JsonNode.class.getName(),
+                    (name, schema) -> new Schema<>().description("Any JSON value; the operation says what it holds."));
         };
     }
 

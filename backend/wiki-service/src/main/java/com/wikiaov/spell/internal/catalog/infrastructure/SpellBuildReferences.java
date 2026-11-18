@@ -26,10 +26,12 @@ public class SpellBuildReferences implements BuildReferenceProvider {
     private final SpellIdentityRepository identities;
     private final SpellRevisionRepository revisions;
 
+    @Override
     public BuildReferenceKind kind() {
         return BuildReferenceKind.SPELL;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
@@ -39,6 +41,7 @@ public class SpellBuildReferences implements BuildReferenceProvider {
         return result;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();

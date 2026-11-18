@@ -25,10 +25,12 @@ public class ArcanaBuildReferences implements BuildReferenceProvider {
     private final ArcanaIdentityRepository identities;
     private final ArcanaRevisionRepository revisions;
 
+    @Override
     public BuildReferenceKind kind() {
         return BuildReferenceKind.ARCANA;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
@@ -38,6 +40,7 @@ public class ArcanaBuildReferences implements BuildReferenceProvider {
         return result;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();

@@ -19,15 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class SpellVideoSubjectProvider implements VideoSubjectProvider {
     private final SpellIdentityRepository spells;
 
+    @Override
     public Set<VideoSubjectKind> kinds() {
         return Set.of(VideoSubjectKind.SPELL);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public boolean exists(VideoSubjectKind kind, UUID id, @Nullable String key) {
         return kind == VideoSubjectKind.SPELL && spells.existsById(id);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<VideoSubject> subjects(String locale) {
         return VideoSubjectName.collapse(VideoSubjectKind.SPELL, spells.videoSubjectNames(), locale, Map.of());

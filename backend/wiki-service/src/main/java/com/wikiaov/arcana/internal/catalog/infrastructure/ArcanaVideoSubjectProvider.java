@@ -19,15 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class ArcanaVideoSubjectProvider implements VideoSubjectProvider {
     private final ArcanaIdentityRepository arcana;
 
+    @Override
     public Set<VideoSubjectKind> kinds() {
         return Set.of(VideoSubjectKind.ARCANA);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public boolean exists(VideoSubjectKind kind, UUID id, @Nullable String key) {
         return kind == VideoSubjectKind.ARCANA && arcana.existsById(id);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<VideoSubject> subjects(String locale) {
         return VideoSubjectName.collapse(VideoSubjectKind.ARCANA, arcana.videoSubjectNames(), locale, Map.of());

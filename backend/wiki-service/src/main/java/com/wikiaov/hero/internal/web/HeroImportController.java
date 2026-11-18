@@ -3,11 +3,14 @@ package com.wikiaov.hero.internal.web;
 import com.wikiaov.hero.internal.application.HeroImportRequest;
 import com.wikiaov.hero.internal.application.response.HeroImportPlan;
 import com.wikiaov.hero.internal.importing.application.HeroImports;
+import com.wikiaov.patch.AuthoringContext;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,15 +42,15 @@ public class HeroImportController implements HeroImportApi {
 
     @Override
     @GetMapping(path = "/relation-fields", version = "1")
-    public java.util.Map<String, List<HeroImports.Field>> relationFields(HttpServletRequest request) {
+    public Map<String, List<HeroImports.Field>> relationFields(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return imports.relationFields();
     }
 
     @Override
     @GetMapping(path = "/contexts", version = "1")
-    public List<com.wikiaov.patch.AuthoringContext> contexts(@RequestParam(required = false) java.util.UUID regionId,
-            @RequestParam java.util.UUID seasonId, HttpServletRequest request) {
+    public List<AuthoringContext> contexts(@RequestParam(required = false) UUID regionId,
+            @RequestParam UUID seasonId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("regionId", "seasonId"));
         return imports.contexts(regionId, seasonId);
     }

@@ -9,6 +9,7 @@ import com.wikiaov.platform.PageLimits;
 import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,19 +50,19 @@ public interface HeroMediaApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     SkinBadgeView create(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkinBadgeCommands.Create body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkinBadgeCommands.Create body);
 
     @Operation(operationId = "heroMediaApi_update", summary = "Update - hero media", description = "Update for hero media. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     SkinBadgeView update(@Parameter(description = "Id identifier.") UUID id,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkinBadgeCommands.Update body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkinBadgeCommands.Update body);
 
     @Operation(operationId = "heroMediaApi_assignGroup", summary = "Assign group - hero media", description = "Assign group for hero media. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     SkinBadgeView assignGroup(@Parameter(description = "Id identifier.") UUID id,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkinBadgeCommands.AssignGroup body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid SkinBadgeCommands.AssignGroup body);
 
     @Operation(operationId = "heroMediaApi_skins", summary = "Skins - hero media", description = "Skins for hero media. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)

@@ -51,7 +51,8 @@ Public Hero list nhận region/locale/page/size/q/role/sort, chỉ sort code,asc
 Hero detail/manifest nhận region/locale. Section resource nhận locale, chỉ trả section đã có published
 composition tham chiếu; nội dung không trả source/actor. Các resource section không resolve current media URL;
 Hero detail/list resolve asset current version để ETag đổi khi media được nâng chất lượng.
-Fallback locale: exact → vi-VN → locale đầu theo thứ tự chữ; response ghi actualLocale/fallbackApplied.
+Fallback locale: exact → en-US → vi-VN → locale đầu theo thứ tự chữ; response ghi actualLocale/fallbackApplied.
+Mọi API đọc bản dịch của wiki-service dùng chung thứ tự này; Admin và Wiki chọn bản dịch phía client cũng theo nó.
 
 Patch APIs nhận region/locale, list và changes nhận page/size; changes hiện chỉ có provider HERO.
 Không có provider domain khác trả INVALID_QUERY_PARAMETER. Patch detail trả metadata của release đã schedule
@@ -545,7 +546,7 @@ Entry = {
 Các trường ảnh dùng `MediaAssetReference`; ảnh thiếu, chưa có phiên bản hoặc không còn dùng được trả
 `null`. Ảnh bậc được chọn từ đúng bản dịch của nhãn, không thay bằng icon của ngôn ngữ khác nếu nhãn
 đã có bản dịch nhưng bản dịch đó thiếu ảnh. Tên tướng, tên trang phục và tên/ảnh nhãn chọn locale được
-yêu cầu, rồi `vi-VN`, sau đó locale đầu tiên theo thứ tự chữ cái. `rarityCode` nối với `SkinBadge.code`;
+yêu cầu, rồi `en-US`, `vi-VN`, sau đó locale đầu tiên theo thứ tự chữ cái. `rarityCode` nối với `SkinBadge.code`;
 không suy ra bậc từ tên trang phục hoặc tên file. Dữ liệu cũ thiếu bản dịch giữ mã làm tên dự phòng.
 
 Backend chỉ lấy skin snapshot thuộc bản tướng `PUBLISHED`, đã công bố tại thời điểm hiện tại và không
@@ -1591,7 +1592,7 @@ Response:
 
 Ảnh theo trạng thái của kỹ năng có vai trò `SKILL_STATE:<skillKey>`, `shown = true`, `partName` là tên kỹ năng.
 
-`shown` cho biết nơi đó có thật sự vẽ ảnh không. `false` nghĩa là chỉ còn lưu mã ảnh: ảnh bổ sung (`images`) chưa được chọn làm ảnh chính, ảnh trong thư viện ảnh kỹ năng (Admin dùng làm icon tạm khi kỹ năng chưa gắn icon, người đọc không thấy), phiên nhập đang chờ, và head trang phục (`SKIN_HEAD:<skinKey>`) khi trang phục đã có chân dung. Head trang phục chỉ tính `shown = true` khi trang phục chưa có chân dung, vì khi đó Wiki vẽ head thay chân dung. Mọi tham chiếu, kể cả `shown = false`, vẫn chặn xóa ảnh và `CURRENT` vẫn chặn deprecate như trước. `ownerName` và `partName` là tên đọc được (ưu tiên vi-VN) của đối tượng và phần bên trong nó như trang phục, kỹ năng; có thể `null`.
+`shown` cho biết nơi đó có thật sự vẽ ảnh không. `false` nghĩa là chỉ còn lưu mã ảnh: ảnh bổ sung (`images`) chưa được chọn làm ảnh chính, ảnh trong thư viện ảnh kỹ năng (Admin dùng làm icon tạm khi kỹ năng chưa gắn icon, người đọc không thấy), phiên nhập đang chờ, và head trang phục (`SKIN_HEAD:<skinKey>`) khi trang phục đã có chân dung. Head trang phục chỉ tính `shown = true` khi trang phục chưa có chân dung, vì khi đó Wiki vẽ head thay chân dung. Mọi tham chiếu, kể cả `shown = false`, vẫn chặn xóa ảnh và `CURRENT` vẫn chặn deprecate như trước. `ownerName` và `partName` là tên đọc được (ưu tiên vi-VN, rồi en-US) của đối tượng và phần bên trong nó như trang phục, kỹ năng; có thể `null`.
 
 ### 35.1. Nơi dùng trên danh sách ảnh
 
@@ -2094,10 +2095,11 @@ Response:
   "items": [],
   "page": 0,
   "size": 20,
-  "totalElements": 0,
-  "totalPages": 0
+  "totalElements": 0
 }
 ```
+
+Response không có `totalPages`: client tự tính số trang `ceil(totalElements / size)` (0 khi không có phần tử).
 
 Không expose trực tiếp Spring `Page` JSON format vì có thể đổi theo framework/version.
 
@@ -2403,7 +2405,7 @@ POST admin/patches/{id}/variants thêm beforeVariantId tùy chọn: chèn trư�
 
 ## Tổng quan phát hành cho admin
 
-- GET `/api/wiki/v1/admin/publication-overview`, quyền `catalog:read`, không nhận query parameter. Trả `asOf`, `markets`, `rulesets`, `assignments`, `seasons`, `variants`, `releases`. Variant có `patchTitle` nullable: tên vi-VN, không có thì tên của locale đầu tiên theo thứ tự chữ cái. Market có currentRulesetId/currentSeasonId/currentReleaseId nullable. Phase mùa: UPCOMING/CURRENT/ENDED; phase release: UPCOMING/CURRENT/PAST/DRAFT/CANCELLED. PAST biểu thị đã đến lịch nhưng không còn current, không phải chứng nhận nguồn ngoài game. Mốc ngày giờ ISO-8601. Contract nằm trong hero-authoring.openapi.json, frontend sinh type từ contract.
+- GET `/api/wiki/v1/admin/publication-overview`, quyền `catalog:read`, không nhận query parameter. Trả `asOf`, `markets`, `rulesets`, `assignments`, `seasons`, `variants`, `releases`. Variant có `patchTitle` nullable: tên vi-VN, không có thì tên en-US, rồi tên của locale đầu tiên theo thứ tự chữ cái. Market có currentRulesetId/currentSeasonId/currentReleaseId nullable. Phase mùa: UPCOMING/CURRENT/ENDED; phase release: UPCOMING/CURRENT/PAST/DRAFT/CANCELLED. PAST biểu thị đã đến lịch nhưng không còn current, không phải chứng nhận nguồn ngoài game. Mốc ngày giờ ISO-8601. Contract nằm trong hero-authoring.openapi.json, frontend sinh type từ contract.
 - GET `/api/wiki/v1/admin/patch-variants/{id}/hero-changes?locale=vi-VN`, quyền `catalog:read`. Trả change set có heroCode, heroId, revision nguồn/đích, summary với actualLocale và danh sách changes. Change set của một dạng có thêm `holderId`, `holderCode`, `formKey` (ADR-024); trang patch công khai nhận cùng các trường. Chỉ trả thay đổi được biên tập, không tự tạo khác biệt từ baseline. Giai đoạn này chỉ có provider Hero.
 
 Frontend dùng TanStack Query cho tổng quan (làm mới 60 giây), danh mục và snapshot tướng, bảng thay đổi theo variant/locale (chỉ tải khi mở). Sau mutation thiết lập mùa/patch hoặc ghi thay đổi, invalidate các cache liên quan. Đổi trang giữ cache theo cơ chế workspace hiện có.
@@ -2560,7 +2562,7 @@ Mỗi dòng thêm `lastEditedAt` (ISO instant hoặc null) và `gameplayChanges`
 Chọn mùa/patch trả tất cả change set trong phạm vi, theo rulesetOrdinal giảm dần; không chọn trả
 change set mới nhất của từng ruleset. Ngày tạo change set không thay thứ tự gameplay. `changeKinds`
 là các loại đã biên tập không trùng trong change set (BUFF, NERF, ADJUSTMENT, REWORK, FIX, OTHER),
-không suy ra từ dấu tăng/giảm của chỉ số. `summary` dự phòng exact locale → vi-VN → locale chữ cái
+không suy ra từ dấu tăng/giảm của chỉ số. `summary` dự phòng exact locale → en-US → vi-VN → locale chữ cái
 đầu tiên, có `actualLocale`; thiếu bản dịch thì hai trường null. `toHeroRevisionId` mở đúng snapshot
 của thay đổi. Lọc theo ruleset chỉ trả tướng có snapshot chưa hủy trong ruleset đó.
 
@@ -2640,7 +2642,7 @@ sách trang phục công khai để vẽ thay khi trang phục thiếu chân dun
 SkinBadgeView gồm `{id,code,kind,version,translations,displayName,iconAssetId,actualLocale,
 fallbackApplied,skinCount}`. Mỗi translation có `{locale,displayName,iconAssetId}`; icon nullable,
 locale không trùng, semantic bắt buộc SKIN_BADGE và asset phải dùng được. Projection chọn exact
-locale → vi-VN → en-US → locale đầu tiên. Tên/icon luôn cùng hàng dịch; không lấy icon dự phòng
+locale → en-US → vi-VN → locale đầu tiên. Tên/icon luôn cùng hàng dịch; không lấy icon dự phòng
 khi hàng dịch đích đã có nhưng thiếu icon. Chưa có bản dịch trả code, icon null, actualLocale null.
 SkinBadgeRelation gồm `{heroId,heroCode,heroName,skinKey,skinName,revisionId,artAssetId}`.
 
@@ -2771,8 +2773,8 @@ không đổi ảnh, nội dung/bản dịch, ghi chú hay patch. Lỗi version/
 Public GET `/items`, `/arcana`, `/spells`, `/enchantments` và `/{id}` chỉ trả snapshot PUBLISHED
 được phân giải theo region/patch hiện hành. Danh sách nhận `region=VN`, `locale=vi-VN`, `page=0`,
 `size=20` (1–100); chi tiết chỉ nhận region và locale. Tham số ngoài danh mục bị từ chối.
-Locale chọn bản dịch riêng và không thay revision; ưu tiên locale yêu cầu, vi-VN, en-US, rồi
-locale đầu tiên. Nháp không bị công khai.
+Locale chọn bản dịch riêng và không thay revision; ưu tiên locale yêu cầu, en-US, vi-VN, rồi
+locale đầu tiên theo thứ tự chữ cái. Nháp không bị công khai.
 
 Trang bị/Phụ trợ nền chưa rõ patch và các correction/translation kế thừa có ordinal dự phòng 0
 trong danh mục hiện hành, gồm cả tham chiếu thuật ngữ `@`. Snapshot có patch đã biết trong
@@ -3010,7 +3012,7 @@ Metadata kỹ năng chỉ dùng khi đọc/hiển thị; không lưu thành entr
 query chỉ nhận `region`, `locale`, `limit`; `limit` từ 1 đến 10. Locale là BCP 47 chuẩn.
 Trả `{region, requestedLocale, asOf, season, currentPatchId, patches}`. `season` gồm
 `{id, code, displayName}`; mỗi patch gồm `{id, code, title, summary, actualLocale, effectiveAt,
-effectiveOn, sourceUrl, isCurrent}`. Chọn bản dịch theo locale yêu cầu, rồi `vi-VN`, rồi thứ tự locale.
+effectiveOn, sourceUrl, isCurrent}`. Chọn bản dịch theo locale yêu cầu, rồi `en-US`, `vi-VN`, rồi thứ tự locale.
 
 Mùa được xác định từ gameplay context đang có hiệu lực của thị trường, ưu tiên mùa gắn trực tiếp
 vào release rồi mùa của variant. Chỉ trả release `SCHEDULED` đã có hiệu lực, patch/variant

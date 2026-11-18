@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -82,7 +83,7 @@ public final class PatchCommands {
             Instant announcedAt,
             @Size(max = 2000) String sourceUrl,
             UUID seasonId,
-            java.time.LocalDate effectiveOn
+            LocalDate effectiveOn
     ) {
     }
 }

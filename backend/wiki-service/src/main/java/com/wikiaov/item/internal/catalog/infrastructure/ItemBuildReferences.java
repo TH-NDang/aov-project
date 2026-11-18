@@ -26,10 +26,12 @@ public class ItemBuildReferences implements BuildReferenceProvider {
     private final ItemIdentityRepository identities;
     private final ItemRevisionRepository revisions;
 
+    @Override
     public BuildReferenceKind kind() {
         return BuildReferenceKind.ITEM;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
@@ -39,6 +41,7 @@ public class ItemBuildReferences implements BuildReferenceProvider {
         return result;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();

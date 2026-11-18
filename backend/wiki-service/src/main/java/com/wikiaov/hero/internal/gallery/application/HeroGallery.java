@@ -53,7 +53,6 @@ public class HeroGallery {
             "SKILL", EnumSet.of(MediaSemanticType.HERO_SKILL_ICON),
             "STICKER", EnumSet.of(MediaSemanticType.CHIBI_STICKER),
             "OTHER", EnumSet.allOf(MediaSemanticType.class));
-    private static final String DISPLAY_LOCALE = CatalogLocales.DEFAULT;
 
     private final HeroGalleryItemRepository items;
     private final HeroGalleryImagesRepository images;
@@ -280,9 +279,7 @@ public class HeroGallery {
         all.addAll(names.skinNames(order.keySet()));
         Comparator<PartName> preference = Comparator
                 .comparing((PartName name) -> -order.getOrDefault(name.getRevisionId(), 0L))
-                .thenComparing(name -> !name.getLocale().equals(locale))
-                .thenComparing(name -> !name.getLocale().equals(DISPLAY_LOCALE))
-                .thenComparing(PartName::getLocale);
+                .thenComparing(CatalogLocales.preference(locale, PartName::getLocale));
 
         Map<String, String> result = new HashMap<>();
         all.stream().sorted(preference).forEach(name -> result.putIfAbsent(name.getPartKey(), name.getName()));

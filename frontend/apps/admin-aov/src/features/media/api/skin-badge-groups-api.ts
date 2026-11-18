@@ -1,29 +1,13 @@
 import type { Request } from "../../publishing/api/publishing-api"
 import type { PageSlice } from "../../publishing/api/types"
 import type { SkinBadgeRecord } from "./character-image-api"
+import type { components } from "../../publishing/generated/hero-api"
 
-export type BadgeGroupKind = "RANK" | "THEME"
-export interface BadgeGroupTranslation {
-  locale: string
-  displayName: string
-}
-export interface BadgeGroup {
-  id: string | null
-  code: string
-  kind: BadgeGroupKind | null
-  version: number
-  translations: BadgeGroupTranslation[]
-  displayName: string | null
-  actualLocale: string | null
-  fallbackApplied: boolean
-  badgeCount: number
-  matchedByGroup: boolean
-}
-export interface BadgeGroupInput {
-  code: string
-  kind: BadgeGroupKind
-  translations: BadgeGroupTranslation[]
-}
+type Schemas = components["schemas"]
+export type BadgeGroupKind = Schemas["SkinBadgeGroupCreate"]["kind"]
+export type BadgeGroupTranslation = Schemas["SkinBadgeGroupTranslation"]
+export type BadgeGroup = Schemas["SkinBadgeGroupView"]
+export type BadgeGroupInput = Schemas["SkinBadgeGroupCreate"]
 export const badgeGroupLabel = (group: BadgeGroup) => group.displayName || (group.id ? group.code : "Chưa phân nhóm")
 export const badgeGroupKindLabels: Record<BadgeGroupKind, string> = { RANK: "Bậc", THEME: "Sự kiện / chủ đề" }
 export const badgeGroupKey = (group: Pick<BadgeGroup, "id">) => group.id ?? "__ungrouped"

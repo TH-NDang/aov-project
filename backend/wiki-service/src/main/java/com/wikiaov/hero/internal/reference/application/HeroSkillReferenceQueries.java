@@ -41,17 +41,20 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
         this.media = media;
     }
 
+    @Override
     public PageSlice<Candidate> admin(UUID rulesetId, String q, UUID heroId, List<String> ids, int page, int size) {
         var result = references.search(rulesetId, Map.of(), null, null, SkillReferenceSearch.parse(q), heroId, ids,
                 page, size);
         return hydrate(result, rulesetId, null, null, page, size);
     }
 
+    @Override
     public PageSlice<Candidate> published(GameplayContext context, Instant at, String locale, String q, UUID heroId,
             List<String> ids, int page, int size) {
         return published(context, at, locale, q, heroId, ids, page, size, true);
     }
 
+    @Override
     public PageSlice<Candidate> published(GameplayContext context, Instant at, String locale, String q, UUID heroId,
             List<String> ids, int page, int size, boolean allowUnscoped) {
         var ordinals = contexts.rulesetVariants(context.rulesetId()).stream()
@@ -123,10 +126,7 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
         if (locale == null) {
             return values;
         }
-        var selected = values.stream().filter(c -> c.locale().equals(locale)).findFirst()
-                .or(() -> values.stream().filter(c -> c.locale().equals(CatalogLocales.DEFAULT)).findFirst())
-                .orElse(values.getFirst());
-        return List.of(selected);
+        return List.of(CatalogLocales.pick(values, locale, Translation::locale));
     }
 
     private static String key(UUID section, String skillKey) {

@@ -13,6 +13,7 @@ import { createMediaIconResolver } from "../../../media/api/media-cache"
 import { referenceCatalogApi, referenceCatalogKeys } from "../../../terminology/reference-api"
 import { createPublishingApi } from "../../api/publishing-api"
 import type { HeroRow } from "../../api/types"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 const api = createPublishingApi(backendRequest)
 interface HeroQuickSwitcherProps {
@@ -187,8 +188,7 @@ function HeroQuickSwitcherPanel({ heroId, locale, rulesetId = "", onSelect }: He
         {heroes.map((hero) => {
           const reference = names.get(hero.id)
           const name =
-            reference?.translations.find((text) => text.locale === locale)?.name ||
-            reference?.translations.find((text) => text.locale === "vi-VN")?.name ||
+            pickTranslation(reference?.translations, locale)?.name ||
             reference?.translations.find((text) => text.name.trim())?.name ||
             hero.code
           const current = hero.id === heroId

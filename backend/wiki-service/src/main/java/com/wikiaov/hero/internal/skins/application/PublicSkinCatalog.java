@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -201,10 +202,8 @@ public class PublicSkinCatalog {
         }
     }
 
-    private static <T> T translation(List<T> values, String locale, Function<T, String> language) {
-        return values.stream().min(Comparator.comparingInt((T value) -> language.apply(value).equals(locale)
-                ? 0
-                : language.apply(value).equals(CatalogLocales.DEFAULT) ? 1 : 2).thenComparing(language)).orElse(null);
+    private static <T> @Nullable T translation(List<T> values, String locale, Function<T, String> language) {
+        return CatalogLocales.pick(values, locale, language);
     }
 
     private static String normalized(String value) {

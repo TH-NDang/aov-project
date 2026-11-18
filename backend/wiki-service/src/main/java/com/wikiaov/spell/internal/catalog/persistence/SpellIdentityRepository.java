@@ -1,6 +1,7 @@
 package com.wikiaov.spell.internal.catalog.persistence;
 
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellIdentity;
+import com.wikiaov.video.VideoSubjectName;
 import jakarta.persistence.LockModeType;
 import java.util.Collection;
 import java.util.List;
@@ -26,5 +27,5 @@ public interface SpellIdentityRepository extends JpaRepository<SpellIdentity, UU
             left join SpellRevision r on r.ownerId = e.id and r.state <> com.wikiaov.platform.RevisionState.DISCARDED
             left join SpellTranslation t on t.revisionId = r.id
             """)
-    java.util.List<com.wikiaov.video.VideoSubjectName> videoSubjectNames();
+    List<VideoSubjectName> videoSubjectNames();
 }

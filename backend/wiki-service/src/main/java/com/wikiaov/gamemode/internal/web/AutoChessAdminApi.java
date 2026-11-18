@@ -11,6 +11,7 @@ import com.wikiaov.platform.PageLimits;
 import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,28 +50,28 @@ public interface AutoChessAdminApi {
             @ApiResponse(responseCode = "201", description = "Resource created.", useReturnTypeSchema = true)
     })
     AdminGuide createDraft(@Parameter(description = "Game mode id.") UUID modeId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid CreateGuideDraft input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid CreateGuideDraft input);
 
     @Operation(operationId = "autoChessAdminApi_update", summary = "Update - auto chess admin", description = "Update for auto chess admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('gamemode:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     AdminGuide update(@Parameter(description = "Game mode id.") UUID modeId,
             @Parameter(description = "Revision id.") UUID revisionId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid UpdateGuide input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid UpdateGuide input);
 
     @Operation(operationId = "autoChessAdminApi_publish", summary = "Publish - auto chess admin", description = "Publish for auto chess admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('gamemode:publish').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     AdminGuide publish(@Parameter(description = "Game mode id.") UUID modeId,
             @Parameter(description = "Revision id.") UUID revisionId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation input);
 
     @Operation(operationId = "autoChessAdminApi_discard", summary = "Discard - auto chess admin", description = "Discard for auto chess admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('gamemode:write').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     AdminGuide discard(@Parameter(description = "Game mode id.") UUID modeId,
             @Parameter(description = "Revision id.") UUID revisionId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Mutation input);
 
     @Operation(operationId = "autoChessAdminApi_communityLineups", summary = "Community lineups - auto chess admin", description = "Community lineups for auto chess admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
@@ -86,5 +87,5 @@ public interface AutoChessAdminApi {
     })
     AdminLineup visibility(@Parameter(description = "Game mode id.") UUID modeId,
             @Parameter(description = "Lineup id.") UUID lineupId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Visibility input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid Visibility input);
 }

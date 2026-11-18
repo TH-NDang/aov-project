@@ -23,6 +23,7 @@ import { createPublishingApi } from "../../api/publishing-api"
 import type { Revision } from "../../api/types"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 const api = createPublishingApi(backendRequest)
 
@@ -278,11 +279,7 @@ export function useHeroEntries(locale: string) {
         .filter((entry) => entry.kind === "hero")
         .map((entry) => ({
           id: entry.heroId ?? entry.id,
-          name:
-            entry.translations.find((text) => text.locale === locale)?.name ??
-            entry.translations.find((text) => text.locale === "vi-VN")?.name ??
-            entry.translations[0]?.name ??
-            entry.id,
+          name: pickTranslation(entry.translations, locale)?.name ?? entry.id,
           iconAssetId: entry.iconAssetId ?? null,
         }))
         .sort((a, b) => a.name.localeCompare(b.name, "vi")),

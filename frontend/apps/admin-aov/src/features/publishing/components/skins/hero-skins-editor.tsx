@@ -10,6 +10,7 @@ import { HeroAsset } from "../hero-asset"
 import { retainImageOptions } from "../../model/assets/image-options"
 import type { Skin, Skins } from "../../api/types"
 import { slugify } from "@/lib/text"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 type SkinText = Skin["translations"][number]
 
@@ -156,7 +157,7 @@ export function HeroSkinsEditor({
       <ul className="grid gap-2">
         {value.skins.map((skin, index) => {
           if (!showAll && index !== focusIndex) return null
-          const text = skin.translations.find((row) => row.locale === locale) ?? skin.translations[0]
+          const text = pickTranslation(skin.translations, locale)
           const name = text?.name.trim() || skin.skinKey || `Trang phục ${index + 1}`
           return (
             <li key={index}>

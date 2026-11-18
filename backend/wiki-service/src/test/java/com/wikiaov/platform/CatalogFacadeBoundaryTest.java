@@ -6,6 +6,8 @@ import com.wikiaov.arcana.internal.catalog.application.ArcanaCatalog;
 import com.wikiaov.enchantment.internal.catalog.application.EnchantmentCatalog;
 import com.wikiaov.item.internal.catalog.application.ItemCatalog;
 import com.wikiaov.spell.internal.catalog.application.SpellCatalog;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.UUID;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -19,7 +21,7 @@ class CatalogFacadeBoundaryTest {
         assertThat(catalog.getAnnotation(Transactional.class)).isNotNull();
         assertThat(catalog.getAnnotation(Transactional.class).readOnly()).isFalse();
         // Catalogs differ in how many timeline options their widest overload takes, so every overload is checked.
-        var lists = java.util.Arrays.stream(catalog.getMethods()).filter(method -> method.getName().equals("list"))
+        var lists = Arrays.stream(catalog.getMethods()).filter(method -> method.getName().equals("list"))
                 .toList();
         assertThat(lists).anyMatch(method -> method.getParameterCount() >= 8
                 && method.getParameterTypes()[5] == UUID.class && method.getParameterTypes()[7] == boolean.class);
@@ -30,9 +32,9 @@ class CatalogFacadeBoundaryTest {
         var published = catalog.getMethod("published", String.class, String.class, int.class, int.class);
         assertThat(published.getAnnotation(Transactional.class).readOnly()).isTrue();
         assertThat(published.getAnnotation(PreAuthorize.class)).isNull();
-        var discard = java.util.Arrays.stream(catalog.getMethods())
+        var discard = Arrays.stream(catalog.getMethods())
                 .filter(method -> method.getName().equals("discard")).findFirst().orElseThrow();
-        String domain = catalog.getSimpleName().replace("Catalog", "").toLowerCase(java.util.Locale.ROOT);
+        String domain = catalog.getSimpleName().replace("Catalog", "").toLowerCase(Locale.ROOT);
         assertThat(discard.getAnnotation(PreAuthorize.class).value()).isEqualTo("hasAuthority('" + domain + ":write')");
     }
 }

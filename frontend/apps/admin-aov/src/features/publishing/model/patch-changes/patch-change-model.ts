@@ -1,13 +1,10 @@
 import { randomId } from "@/lib/random-id"
 import type { ChangeSource, Content, Role } from "../../api/types"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 // Kept local so this model does not import the hero content view, which imports the stat labels from here.
 function localized<T extends { locale: string }>(translations: T[] | undefined, locale: string): T | undefined {
-  return (
-    translations?.find((text) => text.locale === locale) ??
-    translations?.find((text) => text.locale === "vi-VN") ??
-    translations?.[0]
-  )
+  return pickTranslation(translations, locale)
 }
 
 export type ChangeKind = "BUFF" | "NERF" | "ADJUSTMENT" | "REWORK" | "FIX" | "OTHER"

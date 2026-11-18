@@ -77,7 +77,7 @@ class SkinBadgeGroupsIntegrationTest {
         assertThat(english).containsEntry("displayName", "SS rank").containsEntry("actualLocale", "en-US")
                 .containsEntry("fallbackApplied", false);
         var fallback = findGroup(group.get("id"), "th-TH");
-        assertThat(fallback).containsEntry("displayName", "Bậc SS").containsEntry("actualLocale", "vi-VN")
+        assertThat(fallback).containsEntry("displayName", "SS rank").containsEntry("actualLocale", "en-US")
                 .containsEntry("fallbackApplied", true);
         var translations = List.of(text("vi-VN", "Nhóm SS"), text("en-US", "SS rank"));
         var updated = send(put(GROUPS + "/" + group.get("id")),

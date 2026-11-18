@@ -49,6 +49,7 @@ class AvatarUploadService implements AvatarUploads {
         this.clock = clock;
     }
 
+    @Override
     public Ticket begin(String fileName, String contentType, long sizeBytes) {
         Actor actor = human();
         return transaction.execute(status -> {
@@ -62,6 +63,7 @@ class AvatarUploadService implements AvatarUploads {
         });
     }
 
+    @Override
     public Result complete(UUID uploadId) {
         human();
         var result = complete.avatar(uploadId);
@@ -69,6 +71,7 @@ class AvatarUploadService implements AvatarUploads {
                 .orElseThrow(() -> new IllegalStateException("A completed avatar has no preview.")));
     }
 
+    @Override
     @Transactional
     public boolean canBind(UUID assetId) {
         Actor actor = human();
@@ -82,6 +85,7 @@ class AvatarUploadService implements AvatarUploads {
     }
 
     /** Signing is local; the browser reads bytes directly from storage, even when the bucket is private. */
+    @Override
     public Optional<String> previewUrl(UUID assetId) {
         return assets.findById(assetId).filter(asset -> asset.isActive() && asset.hasCurrentVersion()
                 && asset.getSemanticType() == MediaSemanticType.USER_AVATAR)

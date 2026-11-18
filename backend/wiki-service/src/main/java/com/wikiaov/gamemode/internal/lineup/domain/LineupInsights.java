@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Aggregates lineups into the public analysis: how often units and traits appear, weighted by likes. It describes
@@ -99,7 +100,7 @@ public final class LineupInsights {
         traits.forEach((code, usage) -> traitUsage.add(new TraitUsage(code, usage[0], usage[1])));
         traitUsage.sort(Comparator.comparingLong(TraitUsage::activations).reversed().thenComparing(TraitUsage::code));
         var costShare = new ArrayList<CostShare>();
-        Map<Integer, Long> sorted = new java.util.TreeMap<>(costs);
+        Map<Integer, Long> sorted = new TreeMap<>(costs);
         sorted.forEach((cost, count) -> costShare.add(new CostShare(cost, count)));
 
         return new Summary(samples.size(), unitUsage, traitUsage, costShare);

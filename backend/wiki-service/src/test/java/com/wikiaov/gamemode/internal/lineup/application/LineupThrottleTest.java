@@ -7,6 +7,7 @@ import com.wikiaov.MutableClock;
 import com.wikiaov.gamemode.internal.application.GameModeErrorCode;
 import com.wikiaov.platform.ApiException;
 import java.time.Instant;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class LineupThrottleTest {
@@ -19,7 +20,7 @@ class LineupThrottleTest {
         }
 
         assertThatThrownBy(() -> throttle.like("reader-a")).isInstanceOfSatisfying(ApiException.class,
-                error -> org.assertj.core.api.Assertions.assertThat(error.getErrorCode())
+                error -> Assertions.assertThat(error.getErrorCode())
                         .isEqualTo(GameModeErrorCode.GAME_MODE_RATE_LIMITED));
         assertThatCode(() -> throttle.like("reader-b")).doesNotThrowAnyException();
 

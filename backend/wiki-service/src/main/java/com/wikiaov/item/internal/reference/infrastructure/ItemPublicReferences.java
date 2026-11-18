@@ -34,6 +34,7 @@ public class ItemPublicReferences implements PublicReferenceProvider, AdminRefer
         this.clock = clock;
     }
 
+    @Override
     public List<AdminReferenceProvider.Candidate> references(UUID rulesetId, Map<UUID, Long> patchOrdinals) {
         var rows = references.authoring(rulesetId, patchOrdinals).stream()
                 .map(row -> new AdminReferenceProvider.Row(row.id(), row.revisionId(), row.iconAssetId(), row.locale(),
@@ -42,6 +43,7 @@ public class ItemPublicReferences implements PublicReferenceProvider, AdminRefer
         return AdminReferenceProvider.candidates(rows, "item", rulesetId);
     }
 
+    @Override
     public List<PublicReferenceProvider.Candidate> references(String region, String locale) {
         var at = clock.instant();
         var context = contexts.resolve(region, at);
@@ -50,6 +52,7 @@ public class ItemPublicReferences implements PublicReferenceProvider, AdminRefer
         return references(new PublicReferenceProvider.Scope(context, ordinals, at), locale);
     }
 
+    @Override
     public List<PublicReferenceProvider.Candidate> references(PublicReferenceProvider.Scope scope, String locale) {
         var rows = references.published(scope.gameplay(), scope.patchOrdinals(), scope.allowUnscoped());
         var grouped = rows.stream().collect(Collectors.groupingBy(AdminReferenceProvider.Row::id,
@@ -58,10 +61,7 @@ public class ItemPublicReferences implements PublicReferenceProvider, AdminRefer
                 .filter(Objects::nonNull).collect(Collectors.toSet()));
         var output = new ArrayList<PublicReferenceProvider.Candidate>();
         for (var values : grouped.values()) {
-            var copy = values.stream().filter(t -> t.locale().equals(locale)).findFirst()
-                    .or(() -> values.stream().filter(t -> t.locale().equals(CatalogLocales.DEFAULT)).findFirst())
-                    .or(() -> values.stream().filter(t -> t.locale().equals("en-US")).findFirst())
-                    .orElse(values.getFirst());
+            var copy = CatalogLocales.pick(values, locale, AdminReferenceProvider.Row::locale);
             var asset = copy.iconAssetId() == null ? null : assets.get(copy.iconAssetId());
             String icon = asset != null && asset.usable() ? asset.currentVersion().url() : null;
             output.add(new PublicReferenceProvider.Candidate(copy.id(), "item", copy.name(),

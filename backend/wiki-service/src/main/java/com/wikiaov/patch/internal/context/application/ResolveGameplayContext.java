@@ -18,6 +18,7 @@ import com.wikiaov.patch.internal.season.persistence.RankedSeasonRepository;
 import com.wikiaov.platform.ApiException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class ResolveGameplayContext implements GameplayContexts {
         this.rulesets = rulesets;
     }
 
+    @Override
     public GameplayContext resolve(String region, Instant at) {
         regions.findByCodeAndLifecycleState(region, PatchLifecycleState.ACTIVE).orElseThrow(
                 () -> new ApiException(RegionErrorCode.UNSUPPORTED_REGION, "The requested region is unavailable."));
@@ -49,6 +51,7 @@ public class ResolveGameplayContext implements GameplayContexts {
                         "No verified gameplay context is available for this region and time."));
     }
 
+    @Override
     public GameplayContext resolveCatalog(String region, Instant at, UUID seasonId, UUID patchVariantId) {
         var current = resolve(region, at);
         if (seasonId == null && patchVariantId == null) {
@@ -70,6 +73,7 @@ public class ResolveGameplayContext implements GameplayContexts {
                 date == null ? null : date.getEffectiveAt());
     }
 
+    @Override
     public List<GameplayContext> active(Instant at) {
         return regions.findByLifecycleState(PatchLifecycleState.ACTIVE).stream().map(region -> {
             try {
@@ -80,25 +84,29 @@ public class ResolveGameplayContext implements GameplayContexts {
                 }
                 throw exception;
             }
-        }).filter(java.util.Objects::nonNull).toList();
+        }).filter(Objects::nonNull).toList();
     }
 
+    @Override
     public void requireRuleset(UUID rulesetId) {
         if (!rulesets.existsByIdAndLifecycleState(rulesetId, PatchLifecycleState.ACTIVE)) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "The ruleset is unavailable.");
         }
     }
 
+    @Override
     public PatchVariantReference variant(UUID variantId) {
         return variantView(variants.findById(variantId).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant does not exist.")));
     }
 
+    @Override
     public String patchCode(UUID variantId) {
         return variants.patchCode(variantId).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant does not exist."));
     }
 
+    @Override
     public List<PatchVariantReference> catalogVariants(UUID seasonId) {
         if (seasonId != null && !seasons.existsById(seasonId)) {
             throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The season does not exist.");
@@ -107,18 +115,22 @@ public class ResolveGameplayContext implements GameplayContexts {
                 .map(this::variantView).toList();
     }
 
+    @Override
     public List<RulesetReference> rulesets() {
         return rulesets.activeReferences();
     }
 
+    @Override
     public List<PatchVariantReference> rulesetVariants(UUID rulesetId) {
         return variants.referencesByRuleset(rulesetId);
     }
 
+    @Override
     public List<AuthoringContext> authoring(UUID regionId, UUID seasonId) {
         return regionId == null ? contexts.authoringBySeason(seasonId) : contexts.authoringByMarket(regionId, seasonId);
     }
 
+    @Override
     public AuthoringContext authoringContext(UUID contextId) {
         var shared = contexts.sharedAuthoringContext(contextId);
         if (!shared.isEmpty()) {

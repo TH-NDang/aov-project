@@ -29,10 +29,12 @@ public class HeroVideoSubjectProvider implements VideoSubjectProvider {
     private final SkinIdentityRepository skins;
     private final HeroVideoSubjectRepository names;
 
+    @Override
     public Set<VideoSubjectKind> kinds() {
         return Set.of(VideoSubjectKind.HERO, VideoSubjectKind.SKILL, VideoSubjectKind.SKIN);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public boolean exists(VideoSubjectKind kind, UUID id, @Nullable String key) {
         return switch (kind) {
@@ -43,6 +45,7 @@ public class HeroVideoSubjectProvider implements VideoSubjectProvider {
         };
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<VideoSubject> subjects(String locale) {
         Map<UUID, List<String>> legacyCodes = names.legacyCodes().stream()

@@ -190,24 +190,14 @@ public class HeroMediaQueries {
 
     private static ProfileTranslationRow profile(Content content, HeroRevision revision) {
         return content.profiles().getOrDefault(revision.getProfileRevisionId(), List.of()).stream()
-                .min(Comparator
-                        .<ProfileTranslationRow>comparingInt(text -> localeRank(text.getLocale(), content.locale()))
-                        .thenComparing(ProfileTranslationRow::getLocale))
-                .orElse(null);
+                .min(CatalogLocales.preference(content.locale(), ProfileTranslationRow::getLocale)).orElse(null);
     }
 
     private static String skinName(Content content, HeroRevision revision, String key) {
         return content.skinNames().getOrDefault(revision.getSkinsRevisionId(), List.of()).stream()
                 .filter(text -> text.getSkinKey().equals(key))
-                .min(Comparator.<SkinTranslationRow>comparingInt(text -> localeRank(text.getLocale(), content.locale()))
-                        .thenComparing(SkinTranslationRow::getLocale))
+                .min(CatalogLocales.preference(content.locale(), SkinTranslationRow::getLocale))
                 .map(SkinTranslationRow::getName).orElse(key);
-    }
-
-    public static int localeRank(String locale, String requested) {
-        return locale.equals(requested)
-                ? 0
-                : locale.equals(CatalogLocales.DEFAULT) ? 1 : locale.equals("en-US") ? 2 : 3;
     }
 
     public static void bounds(int page, int size) {

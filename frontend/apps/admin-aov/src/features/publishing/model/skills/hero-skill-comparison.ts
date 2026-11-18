@@ -4,6 +4,7 @@ import { compareSkillRanks, type RankComparison } from "@aov/ui/lib/skill-rank-v
 import type { HeroComparison } from "../../api/publishing-api"
 import type { Skill } from "../../api/types"
 import { normalize } from "@/lib/text"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 export interface CuratedHeroChange {
   type: string
@@ -112,12 +113,7 @@ function skillsIn(snapshot: ValueRecord): Skill[] {
 
 function translatedName(skill: Skill | null, locale: string): string {
   const translations = skill?.translations ?? []
-  return (
-    translations.find((item) => item.locale === locale)?.name ||
-    translations.find((item) => item.locale === "vi-VN")?.name ||
-    translations.find((item) => item.name)?.name ||
-    ""
-  )
+  return pickTranslation(translations, locale)?.name || translations.find((item) => item.name)?.name || ""
 }
 
 function descriptionChanges(before: Skill | null, after: Skill | null, locale: string) {

@@ -15,10 +15,12 @@ public enum PatchErrorCode implements ApiErrorCode {
         this.status = status;
     }
 
+    @Override
     public HttpStatus status() {
         return status;
     }
 
+    @Override
     public String title() {
         return "Patch request failed";
     }

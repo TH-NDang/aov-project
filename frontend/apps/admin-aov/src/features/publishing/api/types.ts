@@ -1,4 +1,5 @@
 import { LANE_LABELS } from "@/features/esports/model/labels"
+import type { components } from "../generated/hero-api"
 export const SECTIONS = [
   ["PROFILE", "profile", "Thông tin"],
   ["OVERVIEW_RATINGS", "overview-ratings", "Đánh giá"],
@@ -135,59 +136,18 @@ export interface Content {
   SKINS: Skins | null
   MEDIA_BINDINGS: Bindings | null
 }
-export type Cause =
-  | "DATA_BASELINE"
-  | "GAME_PATCH"
-  | "CONTENT_CORRECTION"
-  | "TRANSLATION"
-  | "IMPORT_CORRECTION"
-  | "VISUAL_UPDATE"
-  | "OTHER"
-export interface Revision {
-  id: string
-  heroId: string
-  rulesetId: string
-  revisionNo: number
-  state: "DRAFT" | "PUBLISHED" | "DISCARDED"
-  version: number
-  cause: Cause
-  sections: Record<Section, string>
-  publishedAt: string | null
-  sourceRevisionId: string | null
-  effectiveFromPatchVariantId: string | null
-}
+type Schemas = components["schemas"]
+export type Cause = Schemas["HeroComparisonRevision"]["cause"]
+/** A hero revision as the API sends it; the contract keys its section ids by any string, they are keyed by section. */
+export type Revision = Omit<Schemas["HeroComparisonRevision"], "sections"> & { sections: Record<Section, string> }
 export interface Preview {
   revision: Revision
   content: Content
 }
-export interface HeroRow {
-  id: string
-  code: string
-  revisions: Revision[]
-  lastEditedAt?: string | null
-  gameplayChanges?: HeroGameplayChange[]
-  /** The hero that holds this one as a form, and the form's key (ADR-024). */
-  holderId?: string | null
-  formKey?: string | null
-  /** The forms this hero holds, in switcher order. */
-  formIds?: string[]
-}
-export type ChangeSource = "SNAPSHOT" | "PATCH_NOTES"
-export interface HeroGameplayChange {
-  id: string
-  rulesetId: string
-  seasonId: string | null
-  patchVariantId: string
-  fromHeroRevisionId: string | null
-  /** Null when the change set was recorded from patch notes without a target snapshot. */
-  toHeroRevisionId: string | null
-  sourceKind?: ChangeSource
-  changeKinds: string[]
-  overallKind?: string | null
-  recordedAt: string
-  summary: string | null
-  actualLocale: string | null
-}
+/** A row of the Admin hero catalog; `holderId`, `formKey` and `formIds` place it among forms (ADR-024). */
+export type HeroRow = Omit<Schemas["HeroCatalogRow"], "revisions"> & { revisions: Revision[] }
+export type HeroGameplayChange = Schemas["HeroCatalogGameplayChange"]
+export type ChangeSource = HeroGameplayChange["sourceKind"]
 export interface PageSlice<T> {
   items: T[]
   page: number

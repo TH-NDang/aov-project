@@ -1,3 +1,5 @@
 /** patch module. Public contracts belong here; implementation belongs in internal. */
-@org.springframework.modulith.ApplicationModule
+@ApplicationModule
 package com.wikiaov.patch;
+
+import org.springframework.modulith.ApplicationModule;

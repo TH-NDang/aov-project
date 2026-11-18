@@ -29,6 +29,7 @@ import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
@@ -103,7 +104,7 @@ class ArcanaCatalogQueriesTest {
         when(context.rulesetId()).thenReturn(rulesetId);
         when(contexts.resolveCatalog(eq("VN"), any(), eq(season), isNull())).thenReturn(context);
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(owner));
-        when(identities.findById(owner.getId())).thenReturn(java.util.Optional.of(owner));
+        when(identities.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId())).thenReturn(List.of(revision));
         when(publicMedia.hydrate(anyList())).thenAnswer(call -> call.getArgument(0));
 

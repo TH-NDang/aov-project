@@ -68,12 +68,10 @@ class PatchPublicationOverview {
         return new Timeline(allReleases, allVariants, variantsById, patchesById, reviewsById, titles());
     }
 
-    /** Admin edits in Vietnamese, the product's language, so its title wins over the other locales. */
+    /** Admin edits in Vietnamese, the product's language, so it reads titles as a reader of that locale would. */
     private Map<UUID, String> titles() {
         return texts.findAll().stream()
-                .sorted(Comparator
-                        .comparing((GamePatchTranslation text) -> !CatalogLocales.DEFAULT.equals(text.getLocale()))
-                        .thenComparing(GamePatchTranslation::getLocale))
+                .sorted(CatalogLocales.preference(CatalogLocales.DEFAULT, GamePatchTranslation::getLocale))
                 .collect(Collectors.toMap(GamePatchTranslation::getPatchId, GamePatchTranslation::getTitle,
                         (first, ignored) -> first));
     }

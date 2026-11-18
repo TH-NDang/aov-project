@@ -11,6 +11,7 @@ import com.wikiaov.media.MediaAssets;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.spell.internal.application.SpellErrorCode;
+import com.wikiaov.spell.internal.catalog.persistence.entity.SpellRevision;
 import com.wikiaov.spell.internal.domain.SpellContent;
 import java.math.BigDecimal;
 import java.util.List;
@@ -84,9 +85,9 @@ class SpellContentRulesTest {
                 .hasMessage("Invalid spell state key.");
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void archivedLegacyBaselineDoesNotRequireObservationPatchButGamePatchDoes() {
-        var revision = new com.wikiaov.spell.internal.catalog.persistence.entity.SpellRevision();
+        var revision = new SpellRevision();
         revision.setCause("DATA_BASELINE");
         var removed = new SpellContent(null, BigDecimal.ONE, null, "ACCOUNT_CREATION", "REMOVED", true, 0,
                 null, null, null, List.of(), List.of(), List.of(), null);

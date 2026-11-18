@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,7 +25,7 @@ public class PatchRelease {
     private UUID regionId;
 
     private Instant effectiveAt;
-    private java.time.LocalDate effectiveOn;
+    private LocalDate effectiveOn;
     private Instant confirmedAt;
 
     private Instant announcedAt;

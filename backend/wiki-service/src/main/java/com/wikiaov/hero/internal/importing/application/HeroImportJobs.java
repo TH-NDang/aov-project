@@ -14,6 +14,7 @@ import com.wikiaov.hero.internal.application.response.HeroImportJobView.Row;
 import com.wikiaov.hero.internal.importing.persistence.HeroImportJobRepository;
 import com.wikiaov.hero.internal.importing.persistence.entity.HeroImportJob;
 import com.wikiaov.platform.ApiException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +54,7 @@ public class HeroImportJobs {
         var actor = actors.require();
 
         String payload = json.writeValueAsString(request.rows());
-        if (payload.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 5 * 1024 * 1024
+        if (payload.getBytes(StandardCharsets.UTF_8).length > 5 * 1024 * 1024
                 || request.rows().stream().map(HeroImportRequest::code).distinct().count() != request.rows().size()) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT,
                     "Import must have unique codes and fit within 5 MB.");

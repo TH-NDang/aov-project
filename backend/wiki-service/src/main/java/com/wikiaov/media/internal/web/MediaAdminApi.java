@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -63,7 +64,7 @@ public interface MediaAdminApi {
     })
     ResponseEntity<MediaAssetDetails> createAsset(
             @Parameter(description = "Supported API version: v1.") String apiVersion,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid CreateAssetRequest request);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid CreateAssetRequest request);
 
     @Operation(operationId = "mediaAdminApi_listAssets", summary = "List assets - media admin", description = "List assets for media admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
@@ -100,7 +101,7 @@ public interface MediaAdminApi {
     })
     ResponseEntity<UploadTicket> requestUpload(@Parameter(description = "Supported API version: v1.") String apiVersion,
             @Parameter(description = "Asset id identifier.") UUID assetId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid UploadRequest request);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid UploadRequest request);
 
     @Operation(operationId = "mediaAdminApi_getUpload", summary = "Get upload - media admin", description = "Get upload for media admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
@@ -118,7 +119,7 @@ public interface MediaAdminApi {
     })
     MediaAssetDetails activateVersion(@Parameter(description = "Asset id identifier.") UUID assetId,
             @Parameter(description = "Version id identifier.") UUID versionId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ExpectedVersionRequest request);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ExpectedVersionRequest request);
 
     @Operation(operationId = "mediaAdminApi_registerImport", summary = "Register import - media admin", description = "Register an existing object-storage object as a media version. Returns 201 for a new version, or 200 when the asset already has these bytes. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
@@ -126,7 +127,7 @@ public interface MediaAdminApi {
     })
     ResponseEntity<MediaVersionResult> registerImport(
             @Parameter(description = "Supported API version: v1.") String apiVersion,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid RegisterImportRequest request);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid RegisterImportRequest request);
 
     @Operation(operationId = "mediaAdminApi_findUsages", summary = "Find usages - media admin", description = "Find usages for media admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
@@ -139,5 +140,5 @@ public interface MediaAdminApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     MediaAssetDetails deprecateAsset(@Parameter(description = "Asset id identifier.") UUID assetId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid DeprecateRequest request);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid DeprecateRequest request);
 }

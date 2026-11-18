@@ -1,51 +1,15 @@
 import { createPublishingApi, type Request } from "../../publishing/api/publishing-api"
 import type { Bindings, ImageOption, MediaRole, PageSlice, Preview, Revision, Skins } from "../../publishing/api/types"
+import type { components } from "../../publishing/generated/hero-api"
 
-export interface CharacterImageEntry {
-  ownerType: "HERO" | "SKIN"
-  skinKey: string | null
-  name: string
-  assetId: string | null
-  label: string | null
-  main: boolean
-  rarityCode: string | null
-}
-export interface CharacterImageGroup {
-  heroId: string
-  code: string
-  name: string
-  actualLocale: string | null
-  revision: Revision
-  entries: CharacterImageEntry[]
-}
-export type BadgeKind = "UNKNOWN" | "RARITY" | "EVENT"
-export interface SkinBadgeTranslation {
-  locale: string
-  displayName: string
-  iconAssetId: string | null
-}
-export interface SkinBadgeRecord {
-  id: string
-  code: string
-  kind: BadgeKind
-  version: number
-  translations: SkinBadgeTranslation[]
-  displayName: string
-  iconAssetId: string | null
-  actualLocale: string | null
-  fallbackApplied: boolean
-  skinCount: number
-  groupId?: string | null
-}
-export interface BadgeSkin {
-  heroId: string
-  heroCode: string
-  heroName: string
-  skinKey: string
-  skinName: string
-  revisionId: string
-  artAssetId: string | null
-}
+type Schemas = components["schemas"]
+export type CharacterImageEntry = Schemas["HeroMediaEntry"]
+export type CharacterImageGroup = Omit<Schemas["HeroMediaGroup"], "revision"> & { revision: Revision }
+export type BadgeKind = Schemas["SkinBadgeView"]["kind"]
+export type SkinBadgeTranslation = Schemas["SkinBadgeTranslation"]
+export type SkinBadgeRecord = Schemas["SkinBadgeView"]
+export type BadgeSkin = Schemas["SkinBadgeRelation"]
+/** One body for both writes: the contract splits it into SkinBadgeCreate and SkinBadgeUpdate. */
 export interface BadgeInput {
   code?: string
   regionCode?: string

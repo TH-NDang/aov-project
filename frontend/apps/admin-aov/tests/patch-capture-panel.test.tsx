@@ -34,6 +34,7 @@ import {
   findHeroCode,
 } from "../src/features/publishing/api/use-patch-captures"
 import { installWindow, waitFor } from "./fixtures/dom"
+import { fixtureHeroRow } from "./fixtures/hero-workspace-data"
 
 /** A patch picture's id is the SHA-256 of its bytes, which is also what its presigned link is asked by. */
 const capture = (id: string, section: CaptureImage["section"], extra: Partial<CaptureImage> = {}): CaptureImage => ({
@@ -329,7 +330,7 @@ test("zooming keeps the pointed spot in place and panning can never leave the pi
 })
 
 test("the hero code comes from the id, trying the name first and walking the catalog only if needed", async () => {
-  const row = (id: string, code: string) => ({ id, code, revisions: [] })
+  const row = (id: string, code: string) => fixtureHeroRow({ id, code, revisions: [] })
   const calls: string[] = []
   const pages = [[row("a", "airi"), row("b", "butterfly")], [row("c", "capheny")]]
   const list = async (page: number, query: { q?: string }) => {

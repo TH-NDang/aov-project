@@ -51,12 +51,11 @@ class CatalogContextsTest {
                 .thenReturn(List.of(current, middle, old));
         var dates = List.of(date(currentVariant, LocalDate.of(2026, 10, 15), now.minusSeconds(60)),
                 date(middleVariant, null, Instant.parse("2026-09-28T18:00:00Z")));
-        var titles = List.of(text(currentPatch, "Mid-season update"), text(currentPatch, "Bản địa"),
-                text(oldPatch, "Observed baseline"));
+        var titles = List.of(text(currentPatch, "vi-VN", "Bản địa"), text(currentPatch, "en-US", "Mid-season update"),
+                text(oldPatch, "vi-VN", "Observed baseline"));
         when(repository.catalogDates(region, List.of(currentVariant, middleVariant, oldVariant), now))
                 .thenReturn(dates);
-        when(translations.preferredTexts(List.of(currentPatch, middlePatch, oldPatch), "en-US"))
-                .thenReturn(titles);
+        when(translations.texts(List.of(currentPatch, middlePatch, oldPatch))).thenReturn(titles);
 
         var result = service.read("VN", "en-US");
 
@@ -137,9 +136,10 @@ class CatalogContextsTest {
         return value;
     }
 
-    private SeasonUpdatesRepository.Text text(UUID id, String title) {
+    private SeasonUpdatesRepository.Text text(UUID id, String locale, String title) {
         var value = mock(SeasonUpdatesRepository.Text.class);
         when(value.getPatchId()).thenReturn(id);
+        when(value.getLocale()).thenReturn(locale);
         when(value.getTitle()).thenReturn(title);
         return value;
     }

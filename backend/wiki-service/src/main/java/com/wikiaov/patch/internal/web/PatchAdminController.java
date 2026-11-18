@@ -12,6 +12,7 @@ import com.wikiaov.patch.internal.application.response.PatchAdminViews;
 import com.wikiaov.patch.internal.authoring.application.PatchAuthoring;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CreatedId;
+import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -39,7 +40,7 @@ public class PatchAdminController implements PatchAdminApi {
 
     @Override
     @GetMapping(path = "/patches", version = "1")
-    public com.wikiaov.platform.PageSlice<PatchAdminViews.Patch> catalog(@RequestParam(defaultValue = "0") int page,
+    public PageSlice<PatchAdminViews.Patch> catalog(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("page", "size"));
         return authoring.catalog(page, size);

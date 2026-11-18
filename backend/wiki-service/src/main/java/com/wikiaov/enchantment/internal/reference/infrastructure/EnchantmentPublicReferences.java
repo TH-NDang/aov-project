@@ -34,11 +34,13 @@ public class EnchantmentPublicReferences implements PublicReferenceProvider, Adm
         this.clock = clock;
     }
 
+    @Override
     public List<AdminReferenceProvider.Candidate> references(UUID rulesetId, Map<UUID, Long> patchOrdinals) {
         return AdminReferenceProvider.candidates(references.authoring(rulesetId, patchOrdinals), "enchantment",
                 rulesetId);
     }
 
+    @Override
     public List<PublicReferenceProvider.Candidate> references(String region, String locale) {
         var at = clock.instant();
         var context = contexts.resolve(region, at);
@@ -47,6 +49,7 @@ public class EnchantmentPublicReferences implements PublicReferenceProvider, Adm
         return references(new PublicReferenceProvider.Scope(context, ordinals, at), locale);
     }
 
+    @Override
     public List<PublicReferenceProvider.Candidate> references(PublicReferenceProvider.Scope scope, String locale) {
         var rows = references.published(scope.gameplay(), scope.patchOrdinals(), scope.allowUnscoped());
         var grouped = rows.stream().collect(Collectors.groupingBy(AdminReferenceProvider.Row::id,
@@ -55,10 +58,7 @@ public class EnchantmentPublicReferences implements PublicReferenceProvider, Adm
                 .filter(Objects::nonNull).collect(Collectors.toSet()));
         var output = new ArrayList<PublicReferenceProvider.Candidate>();
         for (var values : grouped.values()) {
-            var copy = values.stream().filter(t -> t.locale().equals(locale)).findFirst()
-                    .or(() -> values.stream().filter(t -> t.locale().equals(CatalogLocales.DEFAULT)).findFirst())
-                    .or(() -> values.stream().filter(t -> t.locale().equals("en-US")).findFirst())
-                    .orElse(values.getFirst());
+            var copy = CatalogLocales.pick(values, locale, AdminReferenceProvider.Row::locale);
             var asset = copy.iconAssetId() == null ? null : assets.get(copy.iconAssetId());
             String icon = asset != null && asset.usable() ? asset.currentVersion().url() : null;
             output.add(new PublicReferenceProvider.Candidate(copy.id(), "enchantment", copy.name(), copy.description(),

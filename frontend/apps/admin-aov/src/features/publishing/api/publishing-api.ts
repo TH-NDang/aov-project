@@ -18,6 +18,7 @@ import type { UploadTicket } from "../../users/avatar-upload"
 import type { HeroPublishReadiness } from "../model/publish-readiness"
 import type { HeroForms, ReplaceHeroForms } from "../model/hero-forms-model"
 import { isUploadableImage } from "@/lib/image-types"
+import type { components } from "../generated/hero-api"
 export type Request = <T>(path: string, init?: RequestInit) => Promise<T>
 
 const sectionKeys = {
@@ -32,14 +33,9 @@ type WirePreview = {
   revision: Omit<Revision, "sections"> & { sections: Record<string, string> }
   content: Record<string, unknown>
 }
-export interface HeroComparison {
-  status: "AVAILABLE" | "BASELINE_ONLY"
+export type HeroComparison = Omit<components["schemas"]["HeroComparison"], "from" | "to"> & {
   from: Revision | null
   to: Revision
-  before: Record<string, unknown>
-  after: Record<string, unknown>
-  changes: { section: string; path: string; kind: "ADDED" | "REMOVED" | "CHANGED"; before: unknown; after: unknown }[]
-  warnings: string[]
 }
 export interface HeroDraftChangeSet {
   source: Revision | null

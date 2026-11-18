@@ -9,6 +9,8 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -113,7 +115,7 @@ class S3ObjectStorage implements ObjectStorage {
     /** RFC 6266 header with an ASCII fallback, so names with Vietnamese letters survive every browser. */
     static String attachment(String fileName) {
         String ascii = fileName.replaceAll("[^A-Za-z0-9._-]", "_");
-        String encoded = java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8).replace("+",
+        String encoded = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+",
                 "%20");
         return "attachment; filename=\"" + ascii + "\"; filename*=UTF-8''" + encoded;
     }

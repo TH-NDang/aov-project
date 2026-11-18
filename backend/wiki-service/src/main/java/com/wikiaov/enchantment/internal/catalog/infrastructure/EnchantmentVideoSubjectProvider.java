@@ -19,15 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class EnchantmentVideoSubjectProvider implements VideoSubjectProvider {
     private final EnchantmentIdentityRepository enchantments;
 
+    @Override
     public Set<VideoSubjectKind> kinds() {
         return Set.of(VideoSubjectKind.ENCHANTMENT);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public boolean exists(VideoSubjectKind kind, UUID id, @Nullable String key) {
         return kind == VideoSubjectKind.ENCHANTMENT && enchantments.existsById(id);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<VideoSubject> subjects(String locale) {
         return VideoSubjectName.collapse(VideoSubjectKind.ENCHANTMENT, enchantments.videoSubjectNames(), locale,

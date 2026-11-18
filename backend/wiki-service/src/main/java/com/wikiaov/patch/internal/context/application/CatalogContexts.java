@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class CatalogContexts {
     /** The interface languages the Wiki offers, as locale codes; the frontend names each language itself. */
-    private static final List<String> LOCALES = List.of(CatalogLocales.DEFAULT, "en-US");
+    private static final List<String> LOCALES = List.of(CatalogLocales.DEFAULT, CatalogLocales.ENGLISH);
 
     private final GameplayContexts contexts;
     private final GameplayContextRepository repository;
@@ -72,9 +72,9 @@ public class CatalogContexts {
                 dates.putIfAbsent(date.getPatchVariantId(), regionalDate(date, zone));
             }
             var patchIds = patches.stream().map(CatalogPatch::getPatchId).distinct().toList();
-            for (var text : translations.preferredTexts(patchIds, locale)) {
-                titles.putIfAbsent(text.getPatchId(), text.getTitle());
-            }
+            translations.texts(patchIds).stream()
+                    .sorted(CatalogLocales.preference(locale, SeasonUpdatesRepository.Text::getLocale))
+                    .forEach(text -> titles.putIfAbsent(text.getPatchId(), text.getTitle()));
         }
 
         var bySeason = patches.stream().filter(patch -> patch.getSeasonId() != null)

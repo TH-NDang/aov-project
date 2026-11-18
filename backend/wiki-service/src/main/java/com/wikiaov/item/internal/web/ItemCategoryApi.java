@@ -4,6 +4,7 @@ import com.wikiaov.item.internal.application.ItemCategoryCommand;
 import com.wikiaov.item.internal.application.response.ItemCategoryView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,5 +25,5 @@ public interface ItemCategoryApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     ItemCategoryView save(@Parameter(description = "Authorization code returned by the identity provider.") String code,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ItemCategoryCommand input);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ItemCategoryCommand input);
 }

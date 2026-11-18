@@ -4,6 +4,7 @@ import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
 import com.wikiaov.hero.internal.change.application.HeroPatchDerivation;
+import com.wikiaov.hero.internal.domain.HeroChanges;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CreatedId;
@@ -39,7 +40,7 @@ public class HeroChangesController implements HeroChangesApi {
     @PostMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public CreatedId record(@PathVariable UUID id,
-            @RequestBody com.wikiaov.hero.internal.domain.HeroChanges.Record body) {
+            @RequestBody HeroChanges.Record body) {
         return new CreatedId(changes.record(id, body));
     }
 

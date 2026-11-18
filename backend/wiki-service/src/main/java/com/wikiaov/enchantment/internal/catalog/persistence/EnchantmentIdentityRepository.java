@@ -1,6 +1,7 @@
 package com.wikiaov.enchantment.internal.catalog.persistence;
 
 import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentIdentity;
+import com.wikiaov.video.VideoSubjectName;
 import jakarta.persistence.LockModeType;
 import java.util.Collection;
 import java.util.List;
@@ -26,5 +27,5 @@ public interface EnchantmentIdentityRepository extends JpaRepository<Enchantment
             left join EnchantmentRevision r on r.ownerId = e.id and r.state <> com.wikiaov.platform.RevisionState.DISCARDED
             left join EnchantmentTranslation t on t.revisionId = r.id
             """)
-    java.util.List<com.wikiaov.video.VideoSubjectName> videoSubjectNames();
+    List<VideoSubjectName> videoSubjectNames();
 }

@@ -64,7 +64,7 @@ class PublicItemCategoryCatalogTest {
             });
         });
         assertThat(fallback.getFirst().translations()).singleElement()
-                .satisfies(text -> assertThat(text.locale()).isEqualTo("vi-VN"));
+                .satisfies(text -> assertThat(text.locale()).isEqualTo("en-US"));
         verify(translations, times(2)).findByOwnerCodeInOrderByLocale(List.of("sample"));
         verify(media, times(2)).findAll(Set.of(icon, background));
         verifyNoMoreInteractions(translations, media);

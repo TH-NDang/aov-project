@@ -1,6 +1,7 @@
 package com.wikiaov.arcana.internal.catalog.persistence;
 
 import com.wikiaov.arcana.internal.catalog.persistence.entity.ArcanaIdentity;
+import com.wikiaov.video.VideoSubjectName;
 import jakarta.persistence.LockModeType;
 import java.util.Collection;
 import java.util.List;
@@ -26,5 +27,5 @@ public interface ArcanaIdentityRepository extends JpaRepository<ArcanaIdentity, 
             left join ArcanaRevision r on r.ownerId = e.id and r.state <> com.wikiaov.platform.RevisionState.DISCARDED
             left join ArcanaTranslation t on t.revisionId = r.id
             """)
-    java.util.List<com.wikiaov.video.VideoSubjectName> videoSubjectNames();
+    List<VideoSubjectName> videoSubjectNames();
 }

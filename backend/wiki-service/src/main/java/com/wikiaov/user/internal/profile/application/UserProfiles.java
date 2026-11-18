@@ -16,6 +16,7 @@ import com.wikiaov.user.internal.domain.ProfileInput;
 import com.wikiaov.user.internal.profile.application.mapper.UserProfileMapper;
 import com.wikiaov.user.internal.profile.persistence.ProfileRepository;
 import com.wikiaov.user.internal.profile.persistence.entity.Profile;
+import java.sql.SQLException;
 import java.time.Clock;
 import java.util.Map;
 import java.util.Objects;
@@ -108,7 +109,7 @@ public class UserProfiles {
         try {
             return profiles.saveAndFlush(Profile.create(actor.issuer(), actor.subject(), input, clock.instant()));
         } catch (DataIntegrityViolationException exception) {
-            if (exception.getMostSpecificCause() instanceof java.sql.SQLException sql
+            if (exception.getMostSpecificCause() instanceof SQLException sql
                     && "23505".equals(sql.getSQLState())) {
                 throw conflict();
             }

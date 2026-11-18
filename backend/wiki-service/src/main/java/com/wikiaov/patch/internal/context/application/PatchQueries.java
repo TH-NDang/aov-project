@@ -6,10 +6,12 @@ import com.wikiaov.patch.PatchReleaseReference;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchRepository;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchTranslationRepository;
+import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatchTranslation;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
 import com.wikiaov.patch.internal.domain.PatchStatus;
 import com.wikiaov.patch.internal.ruleset.application.Regions;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
 import java.time.Instant;
@@ -18,7 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,7 @@ public class PatchQueries implements PatchCatalog {
         this.clock = clock;
     }
 
+    @Override
     public Map<String, Object> published(UUID id, String region, String locale) {
         validateLocale(locale);
         var release = releases(region).stream().filter(r -> r.patchId().equals(id)).findFirst()
@@ -50,6 +52,7 @@ public class PatchQueries implements PatchCatalog {
         return view(id, region, locale, release.variantId(), release.rulesetId(), release.effectiveAt());
     }
 
+    @Override
     public Map<String, Object> publishedVariant(UUID id, UUID variantId, String region, String locale) {
         validateLocale(locale);
         var context = gameplay.resolveCatalog(region, clock.instant(), null, variantId);
@@ -69,14 +72,15 @@ public class PatchQueries implements PatchCatalog {
         result.put("id", patch.getId());
         result.put("code", patch.getCode());
         result.put("sequence", patch.getSequence());
-        translations.preferred(id, locale, PageRequest.of(0, 1)).stream().findFirst().ifPresent(text -> {
+        var text = CatalogLocales.pick(translations.findByPatchId(id), locale, GamePatchTranslation::getLocale);
+        if (text != null) {
             result.put("locale", text.getLocale());
             result.put("title", text.getTitle());
             result.put("summary", text.getSummary());
             result.put("description", text.getDescription());
             result.put("actualLocale", text.getLocale());
             result.put("fallbackApplied", !locale.equals(text.getLocale()));
-        });
+        }
         result.put("region", region);
         result.put("requestedLocale", locale);
         result.put("variantId", variantId);
@@ -85,6 +89,7 @@ public class PatchQueries implements PatchCatalog {
         return result;
     }
 
+    @Override
     public PageSlice<Map<String, Object>> list(String region, String locale, int page, int size) {
         validateLocale(locale);
         var ids = releases(region).stream().map(PatchReleaseReference::patchId).distinct().toList();
@@ -93,6 +98,7 @@ public class PatchQueries implements PatchCatalog {
                 page, size, ids.size());
     }
 
+    @Override
     public List<PatchReleaseReference> releases(String region) {
         regions.select(region);
         return contexts.publishedReleases(region);

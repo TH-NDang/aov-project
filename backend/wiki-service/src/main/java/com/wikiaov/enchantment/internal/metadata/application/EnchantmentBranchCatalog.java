@@ -21,12 +21,14 @@ import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogCodes;
 import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogText.MetadataTranslation;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -104,21 +106,23 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
         translations.flush();
         audit.record(
                 new AuditEntry(actors.require(), "ENCHANTMENT_METADATA_UPDATED", CatalogAggregates.ENCHANTMENT_METADATA,
-                        UUID.nameUUIDFromBytes(code.getBytes(java.nio.charset.StandardCharsets.UTF_8)), null, before,
+                        UUID.nameUUIDFromBytes(code.getBytes(StandardCharsets.UTF_8)), null, before,
                         row.getVersion(), null, Map.of("code", code)));
         return view(row);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         return findAllUsages().getOrDefault(assetId, List.of());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
         for (var record : records.findAll()) {
-            var owner = UUID.nameUUIDFromBytes(record.getCode().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            var owner = UUID.nameUUIDFromBytes(record.getCode().getBytes(StandardCharsets.UTF_8));
             if (record.getIconAssetId() != null) {
                 usages.computeIfAbsent(record.getIconAssetId(), ignored -> new ArrayList<>()).add(new MediaUsage(
                         "ENCHANTMENT", "ENCHANTMENT_METADATA", owner, null, "ICON", MediaUsageScope.CURRENT)
@@ -146,7 +150,7 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
                 .orElseThrow(() -> new ApiException(EnchantmentErrorCode.ENCHANTMENT_CONFLICT,
                         "The branch list has changed. Reload before reordering."))));
         if (!new HashSet<>(codes).equals(records.findAll().stream().map(EnchantmentBranch::getCode)
-                .collect(java.util.stream.Collectors.toSet()))) {
+                .collect(Collectors.toSet()))) {
             throw new ApiException(EnchantmentErrorCode.ENCHANTMENT_CONFLICT,
                     "The branch list has changed. Reload before reordering.");
         }
@@ -166,7 +170,7 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
             records.saveAndFlush(row);
             audit.record(new AuditEntry(actors.require(), "ENCHANTMENT_BRANCH_REORDERED",
                     CatalogAggregates.ENCHANTMENT_METADATA,
-                    UUID.nameUUIDFromBytes(row.getCode().getBytes(java.nio.charset.StandardCharsets.UTF_8)), null,
+                    UUID.nameUUIDFromBytes(row.getCode().getBytes(StandardCharsets.UTF_8)), null,
                     before, row.getVersion(), null, Map.of("code", row.getCode(), "displayOrder", index)));
         }
         return codes.stream().map(code -> view(locked.get(code))).toList();

@@ -230,9 +230,7 @@ public class SkinBadges {
     private static SkinBadgeView view(SkinBadge badge, List<SkinBadgeTranslation> translations, String locale,
             long count) {
         var ordered = translations.stream().sorted(Comparator.comparing(SkinBadgeTranslation::getLocale)).toList();
-        var selected = ordered.stream()
-                .min(Comparator.comparingInt(text -> HeroMediaQueries.localeRank(text.getLocale(), locale)))
-                .orElse(null);
+        var selected = CatalogLocales.pick(ordered, locale, SkinBadgeTranslation::getLocale);
         return new SkinBadgeView(badge.getId(), badge.getCode(), badge.getKind(), badge.getGroupId(),
                 badge.getVersion(),
                 ordered.stream()

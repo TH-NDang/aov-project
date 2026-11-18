@@ -39,6 +39,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -282,14 +283,14 @@ class HeroMediaWorkspaceIntegrationTest {
                 WHERE media_binding_revision_id=? AND media_role='HEAD' AND image_order=0
                 """)
                 .param(mediaSection).update())
-                .isInstanceOf(org.springframework.dao.DataAccessException.class)
+                .isInstanceOf(DataAccessException.class)
                 .hasStackTraceContaining("Published hero section content is immutable");
         assertThatThrownBy(() -> jdbc.sql("""
                 UPDATE hero.skin_image_option SET label='Tampered'
                 WHERE skin_set_revision_id=? AND skin_key='celestial' AND media_role='HEAD' AND image_order=0
                 """)
                 .param(skinSection).update())
-                .isInstanceOf(org.springframework.dao.DataAccessException.class)
+                .isInstanceOf(DataAccessException.class)
                 .hasStackTraceContaining("Published hero section content is immutable");
         UUID forbiddenCandidate = asset(MediaSemanticType.HERO_SKIN_ART);
         assertThatThrownBy(() -> jdbc.sql("""
@@ -297,14 +298,14 @@ class HeroMediaWorkspaceIntegrationTest {
                 VALUES(?,'celestial','HEAD',2,?,'Forbidden candidate')
                 """)
                 .params(skinSection, forbiddenCandidate).update())
-                .isInstanceOf(org.springframework.dao.DataAccessException.class)
+                .isInstanceOf(DataAccessException.class)
                 .hasStackTraceContaining("Published hero section content is immutable");
         assertThatThrownBy(() -> jdbc.sql("""
                 UPDATE hero.hero_skin_snapshot SET head_asset_id=?
                 WHERE skin_set_revision_id=? AND skin_key='celestial'
                 """)
                 .params(skinAlternate, skinSection).update())
-                .isInstanceOf(org.springframework.dao.DataAccessException.class)
+                .isInstanceOf(DataAccessException.class)
                 .hasStackTraceContaining("Published hero section content is immutable");
 
         var visual = send(post(ROOT + "/admin/heroes/" + published.get("heroId") + "/drafts"),
@@ -484,8 +485,8 @@ class HeroMediaWorkspaceIntegrationTest {
                 .containsEntry("actualLocale", "th-TH").containsEntry("fallbackApplied", false);
         assertThat(rows(thai.get("items")).getFirst().get("iconAssetId")).isNull();
         var fallback = send(get(endpoint).param("locale", "fr-FR"), null, 200);
-        assertThat(rows(fallback.get("items")).getFirst()).containsEntry("displayName", "Celestial")
-                .containsEntry("iconAssetId", vietnameseIcon.toString()).containsEntry("actualLocale", "vi-VN")
+        assertThat(rows(fallback.get("items")).getFirst()).containsEntry("displayName", "Celestial English")
+                .containsEntry("iconAssetId", englishIcon.toString()).containsEntry("actualLocale", "en-US")
                 .containsEntry("fallbackApplied", true);
         var empty = send(post(endpoint), Map.of("code", "unclassified", "kind", "UNKNOWN", "translations", List.of()),
                 201);

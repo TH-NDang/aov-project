@@ -44,6 +44,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 abstract class OpenApiContractChecks {
     private static final String DOCS = "/api/wiki/v1/admin/openapi";
+    /** The hand-written contract Admin generates its hero authoring types from. */
+    private static final String HERO_AUTHORING_CONTRACT = "/contracts/hero-authoring.openapi.json";
     private static final Set<String> HTTP_METHODS = Set.of("get", "post", "put", "patch", "delete", "head", "options");
     @Autowired
     MockMvc mvc;
@@ -119,6 +121,18 @@ abstract class OpenApiContractChecks {
         Files.createDirectories(directory);
         Files.writeString(directory.resolve("wiki-v1.json"),
                 json.writerWithDefaultPrettyPrinter().writeValueAsString(spec));
+    }
+
+    @Test
+    void theHeroAuthoringContractDocumentsEveryFieldAndValueTheApiSends() throws Exception {
+        JsonNode spec = json.readTree(mvc.perform(get(DOCS).with(reader()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        JsonNode contract;
+        try (var input = getClass().getResourceAsStream(HERO_AUTHORING_CONTRACT)) {
+            contract = json.readTree(input);
+        }
+
+        assertThat(ContractDrift.between(contract, spec)).isEmpty();
     }
 
     @Test

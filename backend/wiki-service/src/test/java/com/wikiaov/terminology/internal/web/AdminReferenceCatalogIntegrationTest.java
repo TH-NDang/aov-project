@@ -18,6 +18,7 @@ import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.spell.internal.reference.persistence.SpellReferenceRepository;
 import jakarta.persistence.EntityManagerFactory;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -451,7 +452,7 @@ class AdminReferenceCatalogIntegrationTest {
                         + "updated_at,created_by_issuer,created_by_subject,updated_by_issuer,updated_by_subject)"
                         + " values (?,?,?,?,?,1,?,?,'DATA_BASELINE',?,?,?,?,?,?,?,now(),now(),'test','editor','test','editor')",
                 UUID.randomUUID(), hero, scope, number, state, state.equals("PUBLISHED") ? (long) number : null,
-                state.equals("PUBLISHED") ? java.sql.Timestamp.from(Instant.now().minusSeconds(60)) : null, patch,
+                state.equals("PUBLISHED") ? Timestamp.from(Instant.now().minusSeconds(60)) : null, patch,
                 sections.get(0), sections.get(1), sections.get(2), sections.get(3), sections.get(4), sections.get(5));
     }
 
@@ -483,7 +484,7 @@ class AdminReferenceCatalogIntegrationTest {
             }
             if (number <= 2) {
                 sql.update("update " + domain + "." + domain + "_revision set state='PUBLISHED',publication_sequence=?,"
-                        + "published_at=? where id=?", number, java.sql.Timestamp.from(Instant.now().minusSeconds(60)),
+                        + "published_at=? where id=?", number, Timestamp.from(Instant.now().minusSeconds(60)),
                         revision);
             }
         }

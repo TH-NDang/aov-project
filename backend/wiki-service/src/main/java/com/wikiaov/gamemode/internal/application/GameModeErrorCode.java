@@ -20,10 +20,12 @@ public enum GameModeErrorCode implements ApiErrorCode {
         this.status = status;
     }
 
+    @Override
     public HttpStatus status() {
         return status;
     }
 
+    @Override
     public String title() {
         return "Game mode request failed";
     }

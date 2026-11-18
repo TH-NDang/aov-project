@@ -90,7 +90,6 @@ export interface RankingPage {
   page: number
   size: number
   totalElements: number
-  totalPages: number
 }
 
 export interface ReviewValue {

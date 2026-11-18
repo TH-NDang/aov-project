@@ -7,6 +7,7 @@ import com.wikiaov.user.internal.web.UserController.AvatarRequest;
 import com.wikiaov.user.internal.web.request.ProfileRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +31,7 @@ public interface UserApi {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     UserProfile saveSelf(@Parameter(hidden = true) HttpServletRequest http,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ProfileRequest body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ProfileRequest body);
 
     @Operation(operationId = "userApi_list", summary = "List - user", description = "List for user. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected. Direct authorization checks: hasAuthority('user:read').", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
@@ -51,13 +52,13 @@ public interface UserApi {
     })
     UserProfile save(@Parameter(hidden = true) HttpServletRequest http,
             @Parameter(description = "Id identifier.") UUID id,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ProfileRequest body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid ProfileRequest body);
 
     @Operation(operationId = "userApi_upload", summary = "Upload - user", description = "Upload for user. Requires a valid bearer token; profile ownership and user capabilities are enforced by the application. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     AvatarUploads.Ticket upload(@Parameter(hidden = true) HttpServletRequest http,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid AvatarRequest body);
+            @RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid AvatarRequest body);
 
     @Operation(operationId = "userApi_complete", summary = "Complete - user", description = "Complete for user. Requires a valid bearer token; profile ownership and user capabilities are enforced by the application. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)

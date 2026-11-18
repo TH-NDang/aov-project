@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,10 +67,12 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         this.clock = clock;
     }
 
+    @Override
     public String domain() {
         return "ENCHANTMENT";
     }
 
+    @Override
     public List<Entry> changes(UUID rulesetId, UUID patchVariantId, String locale) {
         contexts.requireRuleset(rulesetId);
         var facts = patchVariantId == null
@@ -85,10 +88,10 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         var byId = new HashMap<UUID, EnchantmentRevision>();
         snapshots.forEach(r -> byId.put(r.getId(), r));
         var names = translations.findByRevisionIdIn(new ArrayList<>(byId.keySet())).stream()
-                .collect(java.util.stream.Collectors.groupingBy(EnchantmentTranslation::getRevisionId));
+                .collect(Collectors.groupingBy(EnchantmentTranslation::getRevisionId));
         var owners = identities.findAllById(snapshots.stream().map(EnchantmentRevision::getOwnerId).distinct().toList())
                 .stream()
-                .collect(java.util.stream.Collectors.toMap(EnchantmentIdentity::getId, i -> i));
+                .collect(Collectors.toMap(EnchantmentIdentity::getId, i -> i));
         var result = new ArrayList<Entry>();
         for (var fact : facts) {
             var r = byId.get(fact.getToRevisionId());

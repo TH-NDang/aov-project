@@ -33,6 +33,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -137,14 +138,14 @@ class ItemCatalogQueries {
         var explicitTargets = patchChanges.findAll().stream()
                 .filter(f -> (rulesetId == null || rulesetId.equals(f.getRulesetId()))
                         && allowed.contains(f.getPatchVariantId()))
-                .map(f -> f.getToRevisionId()).collect(java.util.stream.Collectors.toSet());
+                .map(f -> f.getToRevisionId()).collect(Collectors.toSet());
         return CatalogSnapshots.changedAt(candidates, allowed, explicitTargets);
     }
 
     private Map<UUID, List<ItemTranslation>> translationsFor(Map<UUID, ItemRevision> selected) {
         return translations.findByRevisionIdIn(selected.values().stream().map(ItemRevision::getId).toList())
                 .stream()
-                .collect(java.util.stream.Collectors.groupingBy(ItemTranslation::getRevisionId));
+                .collect(Collectors.groupingBy(ItemTranslation::getRevisionId));
     }
 
     private List<ItemIdentity> matchingOwners(Map<UUID, ItemRevision> selected,
@@ -228,7 +229,7 @@ class ItemCatalogQueries {
                         : current ? MediaUsageScope.CURRENT : MediaUsageScope.HISTORICAL);
     }
 
-    /** The Vietnamese name of each revision, or another language's when it has none. */
+    /** The name of each revision for Admin, which reads Vietnamese, falling back as a reader of that locale would. */
     private Map<UUID, String> usageNames(List<ItemRevision> found) {
         if (found.isEmpty()) {
             return Map.of();
@@ -236,8 +237,8 @@ class ItemCatalogQueries {
 
         Map<UUID, String> names = new HashMap<>();
         translations.findByRevisionIdIn(found.stream().map(ItemRevision::getId).toList()).stream()
-                .sorted(Comparator.comparing(row -> row.getLocale().equals(CatalogLocales.DEFAULT)))
-                .forEach(row -> names.put(row.getRevisionId(), row.getName()));
+                .sorted(CatalogLocales.preference(CatalogLocales.DEFAULT, ItemTranslation::getLocale))
+                .forEach(row -> names.putIfAbsent(row.getRevisionId(), row.getName()));
 
         return names;
     }

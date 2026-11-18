@@ -14,6 +14,7 @@ import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.patch.AuthoringContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -39,7 +40,7 @@ public class HeroImports {
      *
      * @param type how Admin reads the column: {@code text}, {@code number}, {@code json} or {@code image}
      */
-    @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.hero.internal.application.service.HeroImports.Field")
+    @Schema(name = "com.wikiaov.hero.internal.application.service.HeroImports.Field")
     public record Field(
             String key,
             String type

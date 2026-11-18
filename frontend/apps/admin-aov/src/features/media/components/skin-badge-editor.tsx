@@ -217,7 +217,7 @@ export function SkinBadgeEditor({
                   <AssetPicker
                     key={language}
                     semanticType="SKIN_BADGE"
-                    value={translation.iconAssetId}
+                    value={translation.iconAssetId ?? null}
                     onChange={(iconAssetId) => update({ iconAssetId })}
                     onBusyChange={setUploading}
                   />

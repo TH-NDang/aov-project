@@ -31,6 +31,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.mail.health.MailHealthIndicator;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -85,7 +86,7 @@ class AccountSecurityIntegrationTest {
                 .content("{\"language\":\"vi\"}")).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.emailHint").value("r•••r@example.com"));
         var code = ArgumentCaptor.forClass(String.class);
-        verify(mail, org.mockito.Mockito.atLeastOnce()).sendPasswordCode(eq("reader@example.com"), code.capture(),
+        verify(mail, Mockito.atLeastOnce()).sendPasswordCode(eq("reader@example.com"), code.capture(),
                 eq(Duration.ofMinutes(10)), eq(AccountMail.Language.VI));
         return code.getValue();
     }

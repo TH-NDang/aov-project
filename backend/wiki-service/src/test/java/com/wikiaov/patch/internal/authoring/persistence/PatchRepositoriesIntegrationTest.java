@@ -20,6 +20,8 @@ import com.wikiaov.patch.internal.ruleset.persistence.RulesetAssignmentRepositor
 import com.wikiaov.patch.internal.stats.persistence.PatchStatDefaultRepository;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -201,16 +203,14 @@ class PatchRepositoriesIntegrationTest {
     }
 
     @Test
-    void mapsTheDatabaseSequenceAndChoosesTheSameTranslationFallbackOrder() {
+    void mapsTheDatabaseSequenceAndReadsEveryTranslationOfAPatch() {
         assertThat(patches.findById(patch).orElseThrow().getSequence()).isPositive();
         translations.saveAndFlush(new GamePatchTranslation(patch, "en-US", "English", "", null));
         translations.saveAndFlush(new GamePatchTranslation(patch, "vi-VN", "Vietnamese", "", null));
         translations.saveAndFlush(new GamePatchTranslation(patch, "de-DE", "German", "", null));
 
-        assertThat(translations.preferred(patch, "en-US", PageRequest.of(0, 1))).singleElement()
-                .extracting(GamePatchTranslation::getLocale).isEqualTo("en-US");
-        assertThat(translations.preferred(patch, "fr-FR", PageRequest.of(0, 1))).singleElement()
-                .extracting(GamePatchTranslation::getLocale).isEqualTo("vi-VN");
+        assertThat(translations.findByPatchId(patch)).extracting(GamePatchTranslation::getLocale)
+                .containsExactlyInAnyOrder("en-US", "vi-VN", "de-DE");
     }
 
     @Test
@@ -266,16 +266,14 @@ class PatchRepositoriesIntegrationTest {
     }
 
     @Test
-    void seasonUpdatesReadTranslationCandidatesInOneDeterministicBatch() {
+    void seasonUpdatesReadTheTranslationCandidatesOfEveryPatchInOneBatch() {
         write("insert into patch.game_patch_translation(patch_id,locale,title,summary) values(?,'vi-VN','Local','')",
                 patch);
         write("insert into patch.game_patch_translation(patch_id,locale,title,summary) values(?,'en-US','English','')",
                 patch);
 
-        assertThat(seasonUpdates.preferredTexts(java.util.List.of(patch), "en-US"))
-                .extracting(SeasonUpdatesRepository.Text::getLocale).containsExactly("en-US", "vi-VN");
-        assertThat(seasonUpdates.preferredTexts(java.util.List.of(patch), "fr-FR"))
-                .extracting(SeasonUpdatesRepository.Text::getLocale).containsExactly("vi-VN", "en-US");
+        assertThat(seasonUpdates.texts(List.of(patch))).extracting(SeasonUpdatesRepository.Text::getLocale)
+                .containsExactlyInAnyOrder("en-US", "vi-VN");
     }
 
     @Test
@@ -331,14 +329,14 @@ class PatchRepositoriesIntegrationTest {
         var future = createRelease(4, season, now.plusSeconds(60), "SCHEDULED");
         var undated = UUID.randomUUID();
         createPatch(UUID.randomUUID(), undated, 1, season);
-        var day = java.time.LocalDate.of(2026, 1, 2);
+        var day = LocalDate.of(2026, 1, 2);
         write("update patch.patch_release set effective_on=?,confirmed_at=effective_at where id=?", day, release);
         write("""
                 insert into patch.patch_release(id,patch_variant_id,region_id,effective_at,status,created_at,season_id)
                 select ?,?,id,?,'SCHEDULED',?,? from patch.region where code='VN'
                 """, UUID.randomUUID(), variant, Timestamp.from(now), Timestamp.from(start), season);
 
-        assertThat(contexts.catalogDates(region, java.util.List.of(variant, cancelled, future, undated), now))
+        assertThat(contexts.catalogDates(region, List.of(variant, cancelled, future, undated), now))
                 .singleElement().satisfies(value -> {
                     assertThat(value.getPatchVariantId()).isEqualTo(variant);
                     assertThat(value.getEffectiveOn()).isEqualTo(day);
@@ -366,7 +364,7 @@ class PatchRepositoriesIntegrationTest {
         createPatch(UUID.randomUUID(), draft, 3, season);
         createPatch(UUID.randomUUID(), after, 4, season);
         write("update patch.patch_variant set status='DRAFT', published_at=null where id=?", draft);
-        for (var id : java.util.List.of(variant, draft)) {
+        for (var id : List.of(variant, draft)) {
             write("""
                     insert into patch.stat_default(id,variant_id,stat_key,base_value,unit,source_url,version)
                     values (?,?,'CRITICAL_DAMAGE',?,'PERCENT','https://example.com/patch',1)

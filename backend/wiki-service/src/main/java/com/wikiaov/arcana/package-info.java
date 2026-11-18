@@ -1,3 +1,5 @@
 /** arcana module. Public contracts belong here; implementation belongs in internal. */
-@org.springframework.modulith.ApplicationModule
+@ApplicationModule
 package com.wikiaov.arcana;
+
+import org.springframework.modulith.ApplicationModule;

@@ -15,6 +15,7 @@ import {
 } from "./catalog-changes"
 import { errorMessage } from "@/lib/api/errors"
 import type { WarehouseKind } from "@aov/ui/lib/warehouse-content"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 const features = tableFeatures({})
 type Row = Omit<CatalogChange, "kinds"> & { kinds: CatalogBadgeKind[] }
 const helper = createColumnHelper<typeof features, Row>()
@@ -51,10 +52,7 @@ export function WarehousePatchChanges({
           domain: kind,
           ownerId: entry.id,
           code: entry.code,
-          name:
-            entry.content.translations.find((t) => t.locale === locale)?.name ??
-            entry.content.translations[0]?.name ??
-            entry.code,
+          name: pickTranslation(entry.content.translations, locale)?.name ?? entry.code,
           iconAssetId: entry.content.iconAssetId,
           rulesetId,
           patchVariantId: variantId,

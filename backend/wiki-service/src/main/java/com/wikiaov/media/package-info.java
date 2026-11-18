@@ -1,3 +1,5 @@
 /** media module. Public contracts belong here; implementation belongs in internal. */
-@org.springframework.modulith.ApplicationModule
+@ApplicationModule
 package com.wikiaov.media;
+
+import org.springframework.modulith.ApplicationModule;

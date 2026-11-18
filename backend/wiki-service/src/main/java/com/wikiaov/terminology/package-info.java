@@ -1,3 +1,5 @@
 /** Shared terminology and reference presentation settings. */
-@org.springframework.modulith.ApplicationModule
+@ApplicationModule
 package com.wikiaov.terminology;
+
+import org.springframework.modulith.ApplicationModule;

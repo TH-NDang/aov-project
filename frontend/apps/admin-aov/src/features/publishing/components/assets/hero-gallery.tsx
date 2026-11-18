@@ -15,6 +15,7 @@ import { HeroAsset } from "../hero-asset"
 import { usePublicationOverview } from "../../api/publication-overview"
 import { selectSkillTranslation, skillLabel } from "../../model/skills/hero-skills"
 import type { Content } from "../../api/types"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 export type GalleryKind = "HERO_ART" | "SKIN" | "SKILL" | "STICKER" | "OTHER"
 export interface GalleryImage {
@@ -489,10 +490,7 @@ function AttachmentForm({
       : value.kind === "SKIN"
         ? (content.SKINS?.skins ?? []).map((skin) => ({
             key: skin.skinKey,
-            label:
-              skin.translations.find((text) => text.locale === locale)?.name ??
-              skin.translations[0]?.name ??
-              skin.skinKey,
+            label: pickTranslation(skin.translations, locale)?.name ?? skin.skinKey,
           }))
         : []
 

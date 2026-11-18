@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,7 +40,7 @@ public interface AccountSecurityApi {
             @ApiResponse(responseCode = "503", description = "USER_MAIL_UNAVAILABLE or USER_ACCOUNT_PROVIDER_UNAVAILABLE.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
     ResponseEntity<PasswordChallengeView> startPasswordChange(@Parameter(hidden = true) HttpServletRequest http,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Optional JSON with the email language (vi or en).", required = false) @Valid PasswordChangeRequests.Start body);
+            @RequestBody(description = "Optional JSON with the email language (vi or en).", required = false) @Valid PasswordChangeRequests.Start body);
 
     @Operation(operationId = "accountSecurityApi_confirmPasswordChange", summary = "Confirm password change - user", description = "Check the mailed code, then set the new password in the identity provider. The password is never stored or logged. Other sessions are signed out unless signOutOtherSessions is false. Requires a valid bearer token of the account that requested the code. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "403", description = "Service accounts cannot change passwords.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
@@ -52,7 +53,7 @@ public interface AccountSecurityApi {
     })
     PasswordChangeResult confirmPasswordChange(@Parameter(hidden = true) HttpServletRequest http,
             @Parameter(description = "Challenge returned when the code was sent.") UUID challengeId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Code, new password and sign-out choice. Unknown properties are rejected.", required = true) @Valid PasswordChangeRequests.Confirm body);
+            @RequestBody(description = "Code, new password and sign-out choice. Unknown properties are rejected.", required = true) @Valid PasswordChangeRequests.Confirm body);
 
     @Operation(operationId = "accountSecurityApi_sessions", summary = "Sessions - user", description = "Identity-provider sessions of the caller with IP, times, applications and, when available, browser and operating system. The current session comes first. Requires a valid bearer token of a human account. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "403", description = "Service accounts have no sessions to manage.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),

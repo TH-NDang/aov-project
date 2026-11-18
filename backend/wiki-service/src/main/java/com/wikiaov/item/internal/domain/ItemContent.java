@@ -1,5 +1,6 @@
 package com.wikiaov.item.internal.domain;
 
+import com.wikiaov.platform.CatalogText;
 import com.wikiaov.platform.CatalogText.Stat;
 import com.wikiaov.platform.CatalogText.Translation;
 import java.util.BitSet;
@@ -29,12 +30,12 @@ public record ItemContent(
     /** The gameplay fields alone, with numbers in comparable form, to tell a translation from a gameplay change. */
     public ItemContent mechanics() {
         return new ItemContent(iconAssetId, tier, price, categoryCode, shopPositions, recipeStatus, components,
-                com.wikiaov.platform.CatalogText.comparable(stats), List.of(), null);
+                CatalogText.comparable(stats), List.of(), null);
     }
 
     public ItemContent publicCopy(String locale) {
         return new ItemContent(iconAssetId, tier, price, categoryCode, shopPositions, recipeStatus, components, stats,
-                com.wikiaov.platform.CatalogText.select(translations, locale), null);
+                CatalogText.select(translations, locale), null);
     }
 
     public ItemContent withTranslations(List<Translation> copy) {
