@@ -140,7 +140,7 @@
         }
       }
     },
-    "/admin/heroes/import/contexts": {
+    "/api/wiki/v1/admin/heroes/import/contexts": {
       "get": {
         "operationId": "heroImportContexts",
         "parameters": [
@@ -2145,7 +2145,11 @@
             "type": "integer"
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED"
+            ]
           },
           "seasonId": {
             "type": "string",
@@ -2207,7 +2211,12 @@
             "nullable": true
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "SCHEDULED",
+              "CANCELLED"
+            ]
           },
           "phase": {
             "type": "string"
@@ -2552,7 +2561,11 @@
           "revisionNo",
           "state",
           "version",
+          "publicationSequence",
+          "publishedAt",
           "cause",
+          "sourceRevisionId",
+          "effectiveFromPatchVariantId",
           "sections"
         ],
         "properties": {
@@ -2595,7 +2608,16 @@
             "nullable": true
           },
           "cause": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "DATA_BASELINE",
+              "GAME_PATCH",
+              "CONTENT_CORRECTION",
+              "TRANSLATION",
+              "IMPORT_CORRECTION",
+              "VISUAL_UPDATE",
+              "OTHER"
+            ]
           },
           "sourceRevisionId": {
             "type": "string",
@@ -3047,6 +3069,7 @@
           "toHeroRevisionId",
           "sourceKind",
           "changeKinds",
+          "overallKind",
           "recordedAt",
           "summary",
           "actualLocale"
@@ -3101,6 +3124,20 @@
               ]
             }
           },
+          "overallKind": {
+            "type": "string",
+            "enum": [
+              "BUFF",
+              "NERF",
+              "ADJUSTMENT",
+              "REWORK",
+              "FIX",
+              "RELEASE",
+              "OTHER"
+            ],
+            "nullable": true,
+            "description": "The editor's overall assessment of the change set; null until one is recorded."
+          },
           "recordedAt": {
             "type": "string",
             "format": "date-time"
@@ -3122,7 +3159,10 @@
           "code",
           "revisions",
           "lastEditedAt",
-          "gameplayChanges"
+          "gameplayChanges",
+          "holderId",
+          "formKey",
+          "formIds"
         ],
         "properties": {
           "id": {
@@ -3148,6 +3188,25 @@
             "items": {
               "$ref": "#/components/schemas/HeroCatalogGameplayChange"
             }
+          },
+          "holderId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The hero that holds this one as a form; null for a hero that is not a form."
+          },
+          "formKey": {
+            "type": "string",
+            "nullable": true,
+            "description": "The form's key within its holder."
+          },
+          "formIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The forms this hero holds, in switcher order; empty when it holds none."
           }
         }
       },
@@ -3959,7 +4018,15 @@
           "roles": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "TANK",
+                "WARRIOR",
+                "ASSASSIN",
+                "MAGE",
+                "MARKSMAN",
+                "SUPPORT"
+              ]
             }
           }
         }
