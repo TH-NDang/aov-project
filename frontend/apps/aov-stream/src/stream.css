@@ -209,6 +209,13 @@ button:disabled {
   margin: 0 auto;
   padding: 0 var(--hub-gutter);
 }
+/* The logo, then the application switcher. */
+.hub-brand-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
 .hub-brand-link {
   display: flex;
   flex-shrink: 0;

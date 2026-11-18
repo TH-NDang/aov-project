@@ -33,11 +33,6 @@
 .tn-group + .tn-group {
   margin-top: 32px;
 }
-.tn-logo > b {
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-}
 .tn-feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
