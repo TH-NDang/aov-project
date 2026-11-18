@@ -20,7 +20,7 @@ export function FormatStep({ ws }: { ws: Workspace }) {
       "stages",
       plan.stages.map((row) => (row.code === stage?.code ? value : row)),
     )
-  const useTemplate = async () => {
+  const applyTemplate = async () => {
     if (plan.stages.length) {
       const confirmed = await confirmAction({
         title: "Thay các giai đoạn bằng mẫu AOG?",
@@ -67,7 +67,7 @@ export function FormatStep({ ws }: { ws: Workspace }) {
               type="button"
               variant="outline"
               disabled={plan.matches.length > 0}
-              onClick={() => void useTemplate()}
+              onClick={() => void applyTemplate()}
             >
               Dùng mẫu AOG · 9 đội
             </Button>
