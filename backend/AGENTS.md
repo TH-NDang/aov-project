@@ -17,8 +17,7 @@ They apply to both services unless a rule names one.
 - Keep domain rules independent of Spring, JPA, JDBC, HTTP clients and cloud SDKs.
 - The module's `*Api` interface owns the OpenAPI documentation and the parameter constraints. The controller
   implements it and owns the Spring mappings and the request binding (paths and versions as in the repository
-  `AGENTS.md`). Controllers delegate to an application facade and hold no logic. Both services follow this for new
-  controllers; most community-service controllers still map on the interface and move when their module is reworked.
+  `AGENTS.md`). Controllers delegate to an application facade and hold no logic. Every controller of both services follows this.
 - Application facades own authorization and transaction boundaries. Internal collaborators run within the facade's transaction.
 - Group large modules by function before layer: `internal/<capability>/{application,domain,persistence/entity,infrastructure}`.
   Examples are Hero `authoring`, `skills`, `skins`, `importing`; Patch `season`, `ruleset`, `release`; Media `asset`,
