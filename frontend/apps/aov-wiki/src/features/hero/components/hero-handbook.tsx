@@ -217,7 +217,7 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
               aria-pressed={chosen}
               onClick={() => selectSkill(skill.skillKey)}
             >
-              <SkillIcon hero={hero} skill={skill} locale={locale} />
+              <SkillIcon hero={hero} skill={skill} locale={locale} className="wiki-skill-option-icon" />
               <span>
                 <small>{skillLabel(skill, locale)}</small>
                 <strong>{skill.name || text("Chưa rõ tên", "Unnamed ability")}</strong>

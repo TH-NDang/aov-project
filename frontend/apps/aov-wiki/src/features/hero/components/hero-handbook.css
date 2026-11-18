@@ -297,7 +297,7 @@
 .wiki-skill-options button > svg {
   color: var(--aov-accent);
 }
-.wiki-skill-options .wiki-image {
+.wiki-skill-options .wiki-skill-option-icon {
   flex: none;
   width: 48px;
   height: 48px;

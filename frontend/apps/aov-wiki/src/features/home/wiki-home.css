@@ -245,7 +245,6 @@
   border-radius: var(--aov-radius-control);
   background: var(--aov-raised);
 }
-.wiki-home-change-art .wiki-image,
 .wiki-home-change-art img {
   width: 100%;
   height: 100%;
