@@ -235,7 +235,10 @@ Tổng quan:
 
 - Tạo phiếu trả `{challengeId, emailHint, expiresAt, resendAvailableAt}`; `emailHint` đã che (`r•••r@example.com`).
   Mã 6 chữ số, hạn 10 phút, phiếu mới vô hiệu phiếu cũ. Giới hạn 1 phiếu/60 giây, 5 phiếu/giờ mỗi tài khoản.
-- `language` (`vi`/`en`, mặc định `vi`) chỉ chọn ngôn ngữ email. Xác nhận: `code` đúng 6 chữ số, `newPassword` 8–1024 ký tự;
+- `language` (`vi`/`en`, mặc định `vi`) chỉ chọn ngôn ngữ email: giá trị bắt đầu bằng `en` (như `en-US`) chọn mẫu
+  en-US, còn lại hoặc bỏ trống chọn mẫu vi-VN. Wiki và Stream gửi ngôn ngữ giao diện của người đọc; cả email mã và email
+  báo đã đổi mật khẩu dùng ngôn ngữ của request gây ra chúng. Tiêu đề và nội dung lấy từ mẫu theo ngôn ngữ trong
+  `src/main/resources/mail/account/`, không viết trong code. Xác nhận: `code` đúng 6 chữ số, `newPassword` 8–1024 ký tự;
   `signOutOtherSessions` mặc định true khi bỏ trống. `otherSessions` là `SIGNED_OUT`, `KEPT` hoặc `FAILED` (mật khẩu đã đổi
   nhưng chưa đăng xuất hết phiên khác; giao diện nhắc dùng nút đăng xuất thiết bị khác).
   Mật khẩu đi thẳng tới Keycloak, không lưu, không log. Thành công thì phiếu thành `USED`, ghi audit
