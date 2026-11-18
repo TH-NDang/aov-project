@@ -37,6 +37,9 @@ public final class CompetitionRules {
     /** Links and short notes: a source, a stage patch note, an entrant note. */
     public static final int MAX_TEXT = 2000;
     public static final int MAX_NOTES = 20_000;
+    public static final Set<String> FORMATS = Set.of("ROUND_ROBIN", "DOUBLE_ELIMINATION", "SINGLE_ELIMINATION",
+            "CUSTOM");
+    public static final Set<String> TIE_BREAKERS = Set.of("HEAD_TO_HEAD", "GAME_DIFF", "GAME_WINS");
 
     private CompetitionRules() {
     }
@@ -46,6 +49,19 @@ public final class CompetitionRules {
             throw new IllegalArgumentException("Competition plan is required.");
         }
         ZoneId.of(plan.timezone());
+        planText(plan);
+        if (plan.entrants().size() > MAX_ENTRANTS || plan.stages().size() > MAX_STAGES
+                || plan.matches().size() > MAX_MATCHES) {
+            throw new IllegalArgumentException("Competition plan exceeds its limits.");
+        }
+
+        var teams = entrants(plan);
+        var stages = stages(plan);
+        seeds(plan, teams);
+        matches(plan, teams, stages);
+    }
+
+    private static void planText(CompetitionPlan plan) {
         text(plan.circuit(), MAX_NAME);
         text(plan.organizer(), MAX_NAME);
         text(plan.prizePool(), MAX_NAME);
@@ -60,10 +76,10 @@ public final class CompetitionRules {
             text(venue.city(), MAX_LABEL);
             text(venue.stageCode(), MAX_CODE);
         });
-        if (plan.entrants().size() > MAX_ENTRANTS || plan.stages().size() > MAX_STAGES
-                || plan.matches().size() > MAX_MATCHES) {
-            throw new IllegalArgumentException("Competition plan exceeds its limits.");
-        }
+    }
+
+    /** Checks the entrants and returns their teams. */
+    private static Set<UUID> entrants(CompetitionPlan plan) {
         var teams = new HashSet<UUID>();
         for (var entrant : plan.entrants()) {
             text(entrant.note(), MAX_TEXT);
@@ -74,6 +90,11 @@ public final class CompetitionRules {
                 throw new IllegalArgumentException("Invalid seed.");
             }
         }
+        return teams;
+    }
+
+    /** Checks the stages and returns their codes. */
+    private static Set<String> stages(CompetitionPlan plan) {
         var stages = new HashSet<String>();
         for (var stage : plan.stages()) {
             if (stage.code() == null || !stage.code().matches("[A-Z0-9_]{2,60}") || !stages.add(stage.code())) {
@@ -82,8 +103,7 @@ public final class CompetitionRules {
             if (stage.name() == null || stage.name().isBlank() || stage.name().length() > MAX_LABEL) {
                 throw new IllegalArgumentException("Stage name is required.");
             }
-            if (stage.format() == null || !Set.of("ROUND_ROBIN", "DOUBLE_ELIMINATION", "SINGLE_ELIMINATION", "CUSTOM")
-                    .contains(stage.format())) {
+            if (stage.format() == null || !FORMATS.contains(stage.format())) {
                 throw new IllegalArgumentException("Unsupported format.");
             }
             text(stage.sourceUrl(), MAX_TEXT);
@@ -93,17 +113,25 @@ public final class CompetitionRules {
                     || stage.advance() < 0 || stage.advance() > MAX_ADVANCE) {
                 throw new IllegalArgumentException("Invalid stage rules.");
             }
-            if (!Set.of("HEAD_TO_HEAD", "GAME_DIFF", "GAME_WINS").containsAll(stage.tieBreakers())
+            if (!TIE_BREAKERS.containsAll(stage.tieBreakers())
                     || new HashSet<>(stage.tieBreakers()).size() != stage.tieBreakers().size()) {
                 throw new IllegalArgumentException("Invalid tiebreakers.");
             }
         }
+        return stages;
+    }
+
+    private static void seeds(CompetitionPlan plan, Set<UUID> teams) {
         var seeded = new HashSet<UUID>();
         plan.playoffSeeds().forEach((rank, team) -> {
             if (rank < 1 || rank > MAX_ADVANCE || !teams.contains(team) || !seeded.add(team)) {
                 throw new IllegalArgumentException("Invalid playoff seeding.");
             }
         });
+    }
+
+    /** A match belongs to a stage and may only wait for the outcome of a match listed before it. */
+    private static void matches(CompetitionPlan plan, Set<UUID> teams, Set<String> stages) {
         var previous = new HashSet<String>();
         var series = new HashSet<UUID>();
         for (var match : plan.matches()) {

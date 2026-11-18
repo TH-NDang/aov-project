@@ -68,6 +68,36 @@ public final class GameRules {
         if (game == null) {
             return List.of("content");
         }
+        metadata(game, publication, errors);
+
+        var seen = new Seen();
+        for (int sideIndex = 0; sideIndex < game.sides().size(); sideIndex++) {
+            side(game, sideIndex, publication, catalog, seen, errors);
+        }
+        for (var hero : seen.heroes()) {
+            if (seen.bans().contains(hero)) {
+                errors.add("sides.hero.alreadyBanned");
+            }
+        }
+        timeline(game.timeline(), game.durationSeconds(), errors);
+        draft(game, errors);
+        return List.copyOf(errors);
+    }
+
+    /** What the sides of a game must not repeat: a side, a team, a player, a ban or a pick. */
+    private record Seen(
+            Set<Side> sides,
+            Set<UUID> teams,
+            Set<UUID> players,
+            Set<String> bans,
+            Set<String> heroes
+    ) {
+        Seen() {
+            this(new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>());
+        }
+    }
+
+    private static void metadata(Game game, boolean publication, List<String> errors) {
         if (!SourceUrls.valid(game.sourceUrl())) {
             errors.add("sourceUrl.invalid");
         }
@@ -91,81 +121,73 @@ public final class GameRules {
             require(game.locale() != null && !game.locale().isBlank(), "locale", errors);
             require(game.sides().size() == SIDES, "sides.two", errors);
         }
+    }
 
-        var sides = new HashSet<Side>();
-        var teams = new HashSet<UUID>();
-        var players = new HashSet<UUID>();
-        var bans = new HashSet<String>();
-        var heroes = new HashSet<String>();
-        for (int sideIndex = 0; sideIndex < game.sides().size(); sideIndex++) {
-            var side = game.sides().get(sideIndex);
-            String path = "sides[" + sideIndex + "]";
-            if (side.side() != null && !sides.add(side.side())) {
-                errors.add(path + ".side.duplicate");
-            }
-            if (side.teamId() != null && !teams.add(side.teamId())) {
-                errors.add(path + ".teamId.duplicate");
-            }
-            if (side.bans().size() > BANS_PER_SIDE) {
-                errors.add(path + ".bans.maximum");
-            }
-            if (side.participants().size() > PLAYERS_PER_SIDE) {
-                errors.add(path + ".participants.maximum");
-            }
-            if (publication) {
-                require(side.side() != null, path + ".side", errors);
-                require(side.teamId() != null, path + ".teamId", errors);
-                require(side.bans().size() == BANS_PER_SIDE, path + ".bans.four", errors);
-                require(side.participants().size() == PLAYERS_PER_SIDE, path + ".participants.five", errors);
-            }
-            for (int banIndex = 0; banIndex < side.bans().size(); banIndex++) {
-                var ban = side.bans().get(banIndex);
-                String field = path + ".bans[" + banIndex + "]";
-                selection(ban, publication, field, errors, catalog == null ? null : catalog.heroes());
-                if (present(ban) && !bans.add(identity(ban))) {
-                    errors.add(field + ".duplicate");
-                }
-            }
-            var lanes = new HashSet<Lane>();
-            for (int index = 0; index < side.participants().size(); index++) {
-                var participant = side.participants().get(index);
-                String field = path + ".participants[" + index + "]";
-                if (participant.playerId() != null && !players.add(participant.playerId())) {
-                    errors.add(field + ".playerId.duplicate");
-                }
-                if (participant.lane() != null && !lanes.add(participant.lane())) {
-                    errors.add(field + ".lane.duplicate");
-                }
-                if (publication) {
-                    require(participant.playerId() != null, field + ".playerId", errors);
-                    require(participant.lane() != null, field + ".lane", errors);
-                }
-                selection(participant.hero(), publication, field + ".hero", errors,
-                        catalog == null ? null : catalog.heroes());
-                selection(participant.spell(), publication, field + ".spell", errors,
-                        catalog == null ? null : catalog.spells());
-                if (present(participant.hero()) && !heroes.add(identity(participant.hero()))) {
-                    errors.add(field + ".hero.duplicate");
-                }
-                arcana(participant.arcana(), field + ".arcana", publication, catalog, errors);
-                enchantments(participant.enchantments(), field + ".enchantments", publication, catalog, errors);
-                observed(participant.spellObservedAtSeconds(), game.durationSeconds(),
-                        field + ".spellObservedAtSeconds", errors);
-                observed(participant.arcana().observedAtSeconds(), game.durationSeconds(),
-                        field + ".arcana.observedAtSeconds", errors);
-                observed(participant.enchantments().observedAtSeconds(), game.durationSeconds(),
-                        field + ".enchantments.observedAtSeconds", errors);
-                equipment(participant, field, publication, game.durationSeconds(), catalog, errors);
+    private static void side(Game game, int sideIndex, boolean publication, Catalog catalog, Seen seen,
+            List<String> errors) {
+        var side = game.sides().get(sideIndex);
+        String path = "sides[" + sideIndex + "]";
+        if (side.side() != null && !seen.sides().add(side.side())) {
+            errors.add(path + ".side.duplicate");
+        }
+        if (side.teamId() != null && !seen.teams().add(side.teamId())) {
+            errors.add(path + ".teamId.duplicate");
+        }
+        if (side.bans().size() > BANS_PER_SIDE) {
+            errors.add(path + ".bans.maximum");
+        }
+        if (side.participants().size() > PLAYERS_PER_SIDE) {
+            errors.add(path + ".participants.maximum");
+        }
+        if (publication) {
+            require(side.side() != null, path + ".side", errors);
+            require(side.teamId() != null, path + ".teamId", errors);
+            require(side.bans().size() == BANS_PER_SIDE, path + ".bans.four", errors);
+            require(side.participants().size() == PLAYERS_PER_SIDE, path + ".participants.five", errors);
+        }
+
+        for (int banIndex = 0; banIndex < side.bans().size(); banIndex++) {
+            var ban = side.bans().get(banIndex);
+            String field = path + ".bans[" + banIndex + "]";
+            selection(ban, publication, field, errors, catalog == null ? null : catalog.heroes());
+            if (present(ban) && !seen.bans().add(identity(ban))) {
+                errors.add(field + ".duplicate");
             }
         }
-        for (var hero : heroes) {
-            if (bans.contains(hero)) {
-                errors.add("sides.hero.alreadyBanned");
+        var lanes = new HashSet<Lane>();
+        for (int index = 0; index < side.participants().size(); index++) {
+            var participant = side.participants().get(index);
+            String field = path + ".participants[" + index + "]";
+            if (participant.playerId() != null && !seen.players().add(participant.playerId())) {
+                errors.add(field + ".playerId.duplicate");
             }
+            if (participant.lane() != null && !lanes.add(participant.lane())) {
+                errors.add(field + ".lane.duplicate");
+            }
+            participant(participant, field, game.durationSeconds(), publication, catalog, seen, errors);
         }
-        timeline(game.timeline(), game.durationSeconds(), errors);
-        draft(game, errors);
-        return List.copyOf(errors);
+    }
+
+    private static void participant(Participant participant, String field, Integer duration, boolean publication,
+            Catalog catalog, Seen seen, List<String> errors) {
+        if (publication) {
+            require(participant.playerId() != null, field + ".playerId", errors);
+            require(participant.lane() != null, field + ".lane", errors);
+        }
+        selection(participant.hero(), publication, field + ".hero", errors,
+                catalog == null ? null : catalog.heroes());
+        selection(participant.spell(), publication, field + ".spell", errors,
+                catalog == null ? null : catalog.spells());
+        if (present(participant.hero()) && !seen.heroes().add(identity(participant.hero()))) {
+            errors.add(field + ".hero.duplicate");
+        }
+        arcana(participant.arcana(), field + ".arcana", publication, catalog, errors);
+        enchantments(participant.enchantments(), field + ".enchantments", publication, catalog, errors);
+        observed(participant.spellObservedAtSeconds(), duration, field + ".spellObservedAtSeconds", errors);
+        observed(participant.arcana().observedAtSeconds(), duration, field + ".arcana.observedAtSeconds", errors);
+        observed(participant.enchantments().observedAtSeconds(), duration, field + ".enchantments.observedAtSeconds",
+                errors);
+        equipment(participant, field, publication, duration, catalog, errors);
     }
 
     /** Longest video position accepted for draft marks, matching a two-day live stream. */
@@ -177,9 +199,25 @@ public final class GameRules {
             errors.add("draft.maximum");
             return;
         }
+        draftMarks(draft, game.sourceTimestampSeconds(), errors);
+
+        var heroes = new HashSet<String>();
+        var counts = new EnumMap<Side, int[]>(Side.class);
+        int previous = -1;
+        for (int index = 0; index < draft.turns().size(); index++) {
+            previous = turn(draft, index, game.sourceTimestampSeconds(), heroes, counts, previous, errors);
+        }
+        if (draft.turns().isEmpty()) {
+            return;
+        }
+
+        draftedLineups(game, draft, errors);
+    }
+
+    /** The marks of the draft phase on the video: it starts, then locks, both before the game starts. */
+    private static void draftMarks(GameDraft draft, Integer live, List<String> errors) {
         Integer start = draft.startSecond();
         Integer locked = draft.lockedSecond();
-        Integer live = game.sourceTimestampSeconds();
         if (start != null && (start < 0 || start > MAX_VIDEO_SECOND)) {
             errors.add("draft.startSecond.range");
         }
@@ -192,56 +230,59 @@ public final class GameRules {
         if (live != null && locked != null && locked > live) {
             errors.add("draft.lockedSecond.afterGameStart");
         }
+    }
 
-        var heroes = new HashSet<String>();
-        var counts = new EnumMap<Side, int[]>(Side.class);
-        int previous = -1;
-        for (int index = 0; index < draft.turns().size(); index++) {
-            var turn = draft.turns().get(index);
-            String field = "draft.turns[" + index + "]";
-            if (turn.order() == null || turn.order() != index + 1) {
-                errors.add(field + ".order");
+    /** Checks one turn and returns the video second the next turn may not precede. */
+    private static int turn(GameDraft draft, int index, Integer live, Set<String> heroes, Map<Side, int[]> counts,
+            int previous, List<String> errors) {
+        var turn = draft.turns().get(index);
+        String field = "draft.turns[" + index + "]";
+        if (turn.order() == null || turn.order() != index + 1) {
+            errors.add(field + ".order");
+        }
+        if (turn.kind() == null) {
+            errors.add(field + ".kind");
+        }
+        if (turn.side() == null) {
+            errors.add(field + ".side");
+        }
+        if (turn.kind() == DraftKind.PICK && !present(turn.hero())) {
+            errors.add(field + ".hero");
+        }
+        if (present(turn.hero())) {
+            if (turn.hero().name() != null && turn.hero().name().length() > MAX_NAME) {
+                errors.add(field + ".hero.name.length");
             }
-            if (turn.kind() == null) {
-                errors.add(field + ".kind");
-            }
-            if (turn.side() == null) {
-                errors.add(field + ".side");
-            }
-            if (turn.kind() == DraftKind.PICK && !present(turn.hero())) {
-                errors.add(field + ".hero");
-            }
-            if (present(turn.hero())) {
-                if (turn.hero().name() != null && turn.hero().name().length() > MAX_NAME) {
-                    errors.add(field + ".hero.name.length");
-                }
-                if (!heroes.add(identity(turn.hero()))) {
-                    errors.add(field + ".hero.duplicate");
-                }
-            }
-            if (turn.side() != null && turn.kind() != null) {
-                var count = counts.computeIfAbsent(turn.side(), ignored -> new int[2]);
-                int kind = turn.kind() == DraftKind.BAN ? 0 : 1;
-                if (++count[kind] > (kind == 0 ? BANS_PER_SIDE : PLAYERS_PER_SIDE)) {
-                    errors.add(field + ".maximum");
-                }
-            }
-            if (turn.atSecond() != null) {
-                if (start == null || turn.atSecond() < start || locked != null && turn.atSecond() > locked
-                        || live != null && turn.atSecond() > live) {
-                    errors.add(field + ".atSecond.range");
-                } else if (turn.atSecond() < previous) {
-                    errors.add(field + ".atSecond.order");
-                } else {
-                    previous = turn.atSecond();
-                }
+            if (!heroes.add(identity(turn.hero()))) {
+                errors.add(field + ".hero.duplicate");
             }
         }
-        if (draft.turns().isEmpty()) {
-            return;
+        if (turn.side() != null && turn.kind() != null) {
+            var count = counts.computeIfAbsent(turn.side(), ignored -> new int[2]);
+            int kind = turn.kind() == DraftKind.BAN ? 0 : 1;
+            if (++count[kind] > (kind == 0 ? BANS_PER_SIDE : PLAYERS_PER_SIDE)) {
+                errors.add(field + ".maximum");
+            }
         }
 
-        // Final bans and line-ups must come from the recorded turns; teammates may still swap heroes among themselves.
+        if (turn.atSecond() == null) {
+            return previous;
+        }
+        Integer start = draft.startSecond();
+        Integer locked = draft.lockedSecond();
+        if (start == null || turn.atSecond() < start || locked != null && turn.atSecond() > locked
+                || live != null && turn.atSecond() > live) {
+            errors.add(field + ".atSecond.range");
+        } else if (turn.atSecond() < previous) {
+            errors.add(field + ".atSecond.order");
+        } else {
+            return turn.atSecond();
+        }
+        return previous;
+    }
+
+    /** Final bans and line-ups must come from the recorded turns; teammates may still swap heroes among themselves. */
+    private static void draftedLineups(Game game, GameDraft draft, List<String> errors) {
         for (int sideIndex = 0; sideIndex < game.sides().size(); sideIndex++) {
             var side = game.sides().get(sideIndex);
             String path = "sides[" + sideIndex + "]";
@@ -504,6 +545,15 @@ public final class GameRules {
         if (new HashSet<>(primary.values()).size() > 1) {
             errors.add(path + ".primary.sameBranch");
         }
+        secondaryBranch(primary, secondary, path, errors);
+    }
+
+    /**
+     * The secondary enchantments come from another branch than the primary ones: tiers 1 and 2 of one branch, or tier 1
+     * of two branches.
+     */
+    private static void secondaryBranch(Map<Integer, String> primary, List<Map.Entry<Integer, String>> secondary,
+            String path, List<String> errors) {
         String main = primary.values().stream().findFirst().orElse(null);
         if (secondary.stream().anyMatch(entry -> entry.getValue().equals(main))) {
             errors.add(path + ".secondary.differentBranch");
@@ -528,6 +578,12 @@ public final class GameRules {
             errors.add(path + ".equipment.maximum");
             return;
         }
+        equipmentSnapshots(participant, path, publication, duration, catalog, errors);
+        equipmentEvents(participant, path, publication, duration, catalog, errors);
+    }
+
+    private static void equipmentSnapshots(Participant participant, String path, boolean publication,
+            Integer duration, Catalog catalog, List<String> errors) {
         int previous = -1;
         for (int index = 0; index < participant.equipmentSnapshots().size(); index++) {
             var snapshot = participant.equipmentSnapshots().get(index);
@@ -557,7 +613,11 @@ public final class GameRules {
                 }
             }
         }
-        previous = -1;
+    }
+
+    private static void equipmentEvents(Participant participant, String path, boolean publication, Integer duration,
+            Catalog catalog, List<String> errors) {
+        int previous = -1;
         for (int index = 0; index < participant.equipmentEvents().size(); index++) {
             var event = participant.equipmentEvents().get(index);
             String field = path + ".equipmentEvents[" + index + "]";
