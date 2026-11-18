@@ -155,6 +155,24 @@ sửa bài. Tác giả sửa bài cá nhân, người có quyền viết page s�
 tự xuất bản lại. Bản nháp cá nhân không hiển thị cho người khác. Thông báo nội bộ cho bài page mới,
 bình luận, xử lý yêu cầu và thay đổi quyền; không gửi email. Quyền page không cấp quyền quản trị giải.
 
+Nội dung thông báo (18/11/2026): backend không lưu câu chữ của thông báo. Mỗi thông báo lưu `kind` và `parameters`;
+ứng dụng của người đọc viết câu bằng ngôn ngữ người đọc chọn (Stream có tiếng Việt và tiếng Anh) và không đọc câu chữ để
+quyết định hiển thị.
+
+| kind | Khi nào | parameters |
+|---|---|---|
+| PAGE_POST_PUBLISHED | Page đang theo dõi đăng bài với tư cách page | `pageName` |
+| PAGE_LIVE_STARTED | Page đang theo dõi bắt đầu phát trực tiếp | `pageName`, `title` |
+| POST_COMMENTED | Người khác bình luận bài của mình | — |
+| REPORT_RESOLVED | Báo cáo của mình đã được xử lý | — |
+| PAGE_CLAIM_APPROVED, PAGE_CLAIM_REJECTED | Yêu cầu quản lý trang được chấp thuận / không được chấp thuận | — |
+| PAGE_OWNERSHIP_RECEIVED | Nhận quyền OWNER bằng mã bàn giao hoặc được chuyển owner | — |
+| PAGE_MEMBERSHIP_REVOKED | Bị thu hồi quyền quản lý trang | — |
+
+`pageName` là tên công bố của page lúc gửi, không đổi khi page đổi tên sau đó; `title` là tiêu đề buổi phát. Mỗi loại
+có đúng các tham số trong bảng. Thông báo gửi trước V018 không có `kind` và giữ câu đã lưu trong `message`; ứng dụng
+hiển thị câu đó như trước. Loại mà ứng dụng chưa biết thì hiển thị `message` nếu có, nếu không thì một câu chung.
+
 Thích bài viết (02/11/2026): tài khoản đã đăng nhập thích/bỏ thích bài đã đăng của page công khai, mỗi
 tài khoản tối đa một lượt mỗi bài; gửi lại cùng trạng thái không đổi gì. Bài trả số lượt thích; `liked`
 chỉ đúng với người xem đã đăng nhập (danh sách công khai luôn false). Danh sách người thích không công
@@ -429,6 +447,10 @@ một dấu xuống dòng; chỉ `CommunityActor` ghép khóa này. V017 đổi 
 (team, player, tournament, series, game, roster_membership, game_publication, competition_plan, plan_revision) sang dạng đó;
 khóa đã đúng dạng giữ nguyên.
 
+V018 phục vụ "Nội dung thông báo": thêm vào `community.notification` cột `kind` (mã loại) và `parameters` (jsonb, mặc
+định `{}`), bỏ ràng buộc bắt buộc của `message` và thêm ràng buộc mỗi dòng có `kind` hoặc `message`. Dòng cũ giữ
+nguyên `message` và không có `kind`; dòng mới không lưu `message`.
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
@@ -480,7 +502,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | POST /me/pages/{id}/reports | {postId?,commentId?,reason}; không có postId là góp ý hồ sơ |
 | POST /me/pages/{id}/moderate | {postId,commentId?,hidden} |
 | GET /admin/community-reports; POST /admin/community-reports/{id}/resolve | Hàng chờ; {resolution,hide} |
-| GET /me/notifications; POST /me/notifications/{id}/read | Hộp thông báo riêng; đánh dấu đọc |
+| GET /me/notifications; POST /me/notifications/{id}/read | Hộp thông báo riêng, mỗi dòng {id,pageId,kind,parameters,message?,createdAt,read} (xem "Nội dung thông báo"); đánh dấu đọc |
 | GET /me/notifications/unread; POST /me/notifications/read-all | {unread} số chưa đọc / đánh dấu tất cả đã đọc |
 | GET /competitions?teamId=&playerId=&organizerPageId=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức |
 | GET /competitions/{id} | Snapshot giải |
