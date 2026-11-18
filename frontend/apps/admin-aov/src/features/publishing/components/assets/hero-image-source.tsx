@@ -16,6 +16,7 @@ import {
   primarySource,
   sourceGap,
   sourceGapLabels,
+  sourceOrigin,
   visibleSources,
 } from "../../../media/model/media-source-gaps"
 
@@ -83,7 +84,7 @@ export function HeroImageSource({ assetId }: { assetId: string | null | undefine
                   </p>
                 )}
                 <p className="type-meta">
-                  Lấy từ: {source.label.trim() || "Nguồn chưa đặt tên"}
+                  Lấy từ: {sourceOrigin(source) || "Nguồn chưa đặt tên"}
                   {url && (
                     <a
                       href={url}

@@ -28,9 +28,25 @@ export function bulkSourceValidation(source: MediaSourceInput) {
   return null
 }
 
+/**
+ * The fields a source request accepts. A source read from an answer also carries fields the server sends but never
+ * accepts, such as `unverified`, and the server rejects unknown fields, so only these are copied.
+ */
+const REQUEST_FIELDS = [
+  "type",
+  "label",
+  "url",
+  "observedAt",
+  "note",
+  "ownerName",
+  "contactUrl",
+  "ownerPageId",
+  "relatedPageId",
+] as const
+
 const sourceBody = (source: MediaSourceInput) =>
   JSON.stringify({
-    ...source,
+    ...Object.fromEntries(REQUEST_FIELDS.flatMap((key) => (source[key] === undefined ? [] : [[key, source[key]]]))),
     type: source.type ?? "OTHER",
     label: source.label.trim(),
     ownerName: source.ownerName?.trim() || null,

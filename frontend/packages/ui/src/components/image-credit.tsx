@@ -94,7 +94,8 @@ export function ImageCredit({
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    {t("Lấy từ:", "Taken from:")} {source.label}
+                    {t("Lấy từ:", "Taken from:")}{" "}
+                    {source.unverified ? t("Chưa xác minh nguồn", "Source not verified") : source.label}
                   </p>
                   {source.relatedPageId && (pageBaseHref || renderPageReference) && (
                     <p>{reference(source.relatedPageId, t("Xem hồ sơ nội dung liên quan", "See the related page"))}</p>

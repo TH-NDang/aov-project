@@ -1,5 +1,7 @@
 import { AlertCircle } from "lucide-react"
 import type { ImportEntry, ImportField } from "../../model/import/hero-import-types"
+import { importFieldLabel } from "../../model/import/import-labels"
+import { importWarningKey, importWarningText } from "../../model/import/import-warnings"
 import { IMPORT_STATUS, ImportValue } from "./import-review"
 
 /**
@@ -58,9 +60,9 @@ export function ImportEntryCard({
         </p>
       )}
       {entry.plan?.warnings.map((w) => (
-        <p key={w} className="flex gap-2 px-4 py-2 text-xs leading-relaxed text-muted-foreground">
+        <p key={importWarningKey(w)} className="flex gap-2 px-4 py-2 text-xs leading-relaxed text-muted-foreground">
           <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
-          {w}
+          {importWarningText(w)}
         </p>
       ))}
       {!!entry.relatedImages?.length && (
@@ -86,7 +88,7 @@ export function ImportEntryCard({
             <div className="divide-y">
               {changedFields.map((f) => (
                 <div key={f.key} className="grid gap-3 px-4 py-3 text-sm sm:grid-cols-[1fr_2fr_2fr]">
-                  <span className="font-medium">{f.label}</span>
+                  <span className="font-medium">{importFieldLabel(f.key)}</span>
                   <div className="min-w-0">
                     <p className="mb-1 text-xs text-muted-foreground">Trước</p>
                     <div className="max-h-64 overflow-auto rounded-md bg-muted/40 p-2">

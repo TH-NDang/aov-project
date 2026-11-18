@@ -6,6 +6,7 @@ import {
   type RelationField,
   type RelationMapping,
 } from "../../model/import/import-relations"
+import { relationFieldLabel } from "../../model/import/import-labels"
 
 export function RelationMappingFields({
   section,
@@ -57,10 +58,10 @@ export function RelationMappingFields({
             selected && !selected.startsWith("@") && !paths.includes(selected) ? [selected, ...paths] : paths
           return (
             <label key={field.key} className="space-y-1 text-sm">
-              {field.label}
+              {relationFieldLabel(section, field.key)}
               <select
                 className={control}
-                aria-label={`${section}: ${field.label}`}
+                aria-label={`${section}: ${relationFieldLabel(section, field.key)}`}
                 value={selected}
                 onChange={(e) => onChange({ ...value, fields: { ...value.fields, [field.key]: e.target.value } })}
               >

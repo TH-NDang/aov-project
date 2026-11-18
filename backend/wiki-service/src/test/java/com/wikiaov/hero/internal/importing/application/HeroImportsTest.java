@@ -1,5 +1,12 @@
 package com.wikiaov.hero.internal.importing.application;
 
+import static com.wikiaov.hero.internal.application.response.HeroImportWarning.Code.BASELINE_IS_KNOWN_STATE;
+import static com.wikiaov.hero.internal.application.response.HeroImportWarning.Code.MISSING_ROLES;
+import static com.wikiaov.hero.internal.application.response.HeroImportWarning.Code.MISSING_SKILL_DESCRIPTION;
+import static com.wikiaov.hero.internal.application.response.HeroImportWarning.Code.NO_EARLIER_SNAPSHOT;
+import static com.wikiaov.hero.internal.application.response.HeroImportWarning.Code.NO_SNAPSHOT_TO_CORRECT;
+import static com.wikiaov.hero.internal.application.response.HeroImportWarning.Code.SKILL_SOURCE_NEEDS_REVIEW;
+import static com.wikiaov.hero.internal.application.response.HeroImportWarning.Code.STALE_SKILL_SUMMARY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
@@ -19,6 +26,7 @@ import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.HeroImportRequest;
 import com.wikiaov.hero.internal.application.HeroImportRequest.Mode;
 import com.wikiaov.hero.internal.application.HeroImportRequest.Policy;
+import com.wikiaov.hero.internal.application.response.HeroImportWarning;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
@@ -47,6 +55,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.RevisionState;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +65,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.JsonToken;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.exc.MismatchedInputException;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -92,6 +102,16 @@ class HeroImportsTest {
         sections.put(HeroSection.SKILLS, new Skills(List.of(), List.of()));
         sections.put(HeroSection.SKINS, new Skins(List.of(), List.of()));
         sections.put(HeroSection.MEDIA_BINDINGS, new Bindings(Map.of(), List.of()));
+    }
+
+    @Test
+    void importFieldsCarryOnlyTheirKeyAndTypeSoAdminNamesThem() {
+        List<JsonNode> fields = new ArrayList<>();
+        json.valueToTree(imports.fields()).forEach(fields::add);
+        json.valueToTree(imports.relationFields()).forEach(relation -> relation.forEach(fields::add));
+
+        assertThat(fields).hasSizeGreaterThan(20)
+                .allSatisfy(field -> assertThat(field.propertyNames()).containsExactly("key", "type"));
     }
 
     @Test
@@ -178,8 +198,8 @@ class HeroImportsTest {
                 .containsExactly("Mô tả mới", "Mô tả giữ nguyên");
         assertThat(skills).extracting(skill -> skill.translations().getFirst().summary())
                 .containsExactly("Lướt tới và hất tung mục tiêu.", "Tạo lá chắn cho đồng minh.");
-        assertThat(result.warnings()).containsExactly(
-                "Cần xem lại tóm tắt kỹ năng skill-1 (vi-VN): mô tả đã đổi, tóm tắt cũ được giữ nguyên.");
+        assertThat(result.warnings())
+                .containsExactly(HeroImportWarning.skill(STALE_SKILL_SUMMARY, "skill-1", "vi-VN"));
     }
 
     @Test
@@ -208,12 +228,25 @@ class HeroImportsTest {
         assertThat(result.canApply()).isFalse();
         assertThat(result.classification()).isEqualTo("INSUFFICIENT_DATA");
         assertThat(result.warnings()).containsExactly(
-                "Cần bổ sung trước khi xuất bản: vai trò tướng.",
-                "Cần bổ sung trước khi xuất bản: mô tả kỹ năng skill-1 (vi-VN).",
-                "Cần kiểm tra nguồn kỹ năng skill-1: dữ liệu thu thập còn cảnh báo; không tự suy đoán nội dung bị thiếu.",
-                "Chưa có mốc trước patch này để so sánh. Hãy nhập dữ liệu ban đầu; không suy ngược từ tương lai.");
+                HeroImportWarning.of(MISSING_ROLES),
+                HeroImportWarning.skill(MISSING_SKILL_DESCRIPTION, "skill-1", "vi-VN"),
+                HeroImportWarning.skill(SKILL_SOURCE_NEEDS_REVIEW, "skill-1", null),
+                HeroImportWarning.of(NO_EARLIER_SNAPSHOT));
         verify(validation, never()).validate(eq(HeroSection.PROFILE), any());
         verify(validation).validate(eq(HeroSection.SKINS), any());
+    }
+
+    @Test
+    void aCorrectionWithoutSnapshotAndABaselineSayWhatTheirSnapshotsCanProve() {
+        when(authoring.revisions(heroId)).thenReturn(List.of());
+
+        var correction = imports.preview(request(Mode.CORRECTION, Map.of(), Map.of(), null, null));
+        var baseline = imports.preview(request(Mode.BASELINE, Map.of(), Map.of(), null, null));
+
+        assertThat(correction.warnings()).containsExactly(HeroImportWarning.of(MISSING_ROLES),
+                HeroImportWarning.of(NO_SNAPSHOT_TO_CORRECT));
+        assertThat(baseline.warnings()).containsExactly(HeroImportWarning.of(MISSING_ROLES),
+                HeroImportWarning.of(BASELINE_IS_KNOWN_STATE));
     }
 
     @Test

@@ -72,10 +72,9 @@ test("image roots follow actual package paths and survive JSON reselection", () 
 
 const fields: RelationField[] = ["skinKey", "name", "description", "rarityCode"].map((key) => ({
   key,
-  label: key,
   type: "text",
 }))
-fields.push({ key: "artAssetId", label: "Art", type: "image" })
+fields.push({ key: "artAssetId", type: "image" })
 test("only explicitly mapped image columns produce upload targets and unmapped fields survive", () => {
   const source = [{ id: "airi-skin", name: "New name", cover: "assets/new.jpg", portrait: "assets/unused.png" }]
   const previous = [
@@ -122,9 +121,9 @@ test("skill variants get stable keys and explicit icons, missing descriptions re
   ]
   const mapping = defaultRelationMapping(source, "skills")
   mapping.fields.iconAssetId = "variant.icon"
-  const fields = ["skillKey", "kind", "name", "description"].map((key) => ({ key, label: key, type: "text" }))
-  fields.push({ key: "iconAssetId", label: "Icon", type: "image" })
-  fields.push({ key: "displayOrder", label: "Order", type: "number" })
+  const fields = ["skillKey", "kind", "name", "description"].map((key) => ({ key, type: "text" }))
+  fields.push({ key: "iconAssetId", type: "image" })
+  fields.push({ key: "displayOrder", type: "number" })
   const result = mapRelation("skills", source, mapping, [], "vi-VN", fields)
   assert.deepEqual(
     result.rows.map((row) => row.skillKey),
@@ -143,10 +142,10 @@ test("skill variants get stable keys and explicit icons, missing descriptions re
 })
 
 const skillFields: RelationField[] = [
-  ...["skillKey", "kind", "formKey", "name", "description"].map((key) => ({ key, label: key, type: "text" })),
-  { key: "displayOrder", label: "Order", type: "number" },
-  { key: "effects", label: "Effects", type: "json" },
-  { key: "iconAssetId", label: "Icon", type: "image" },
+  ...["skillKey", "kind", "formKey", "name", "description"].map((key) => ({ key, type: "text" })),
+  { key: "displayOrder", type: "number" },
+  { key: "effects", type: "json" },
+  { key: "iconAssetId", type: "image" },
 ]
 
 test("capture mapping keeps source snapshots whole while generic nested JSON paths remain selectable", () => {

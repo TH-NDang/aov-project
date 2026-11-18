@@ -3,7 +3,14 @@ import { CircleAlert, Copyright, ExternalLink, PencilLine } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { PageReference } from "@/features/community/components/page-reference"
 import { creditHttpUrl, type MediaCredit } from "@aov/ui/lib/media-credit"
-import { primarySource, sourceGap, sourceGapHints, sourceGapLabels, visibleSources } from "../model/media-source-gaps"
+import {
+  primarySource,
+  sourceGap,
+  sourceGapHints,
+  sourceGapLabels,
+  sourceOrigin,
+  visibleSources,
+} from "../model/media-source-gaps"
 
 /** Who owns an image and where it came from, shown under the large view of an image. */
 export function ImageCreditPanel({
@@ -19,7 +26,7 @@ export function ImageCreditPanel({
   const shown = visibleSources(sources)
   const gap = sourceGap(sources)
   const main = primarySource(shown)
-  const others = shown.filter((source) => source !== main && source.label.trim())
+  const others = shown.filter((source) => source !== main && sourceOrigin(source))
   const owner = main?.ownerName?.trim()
   const url = creditHttpUrl(main?.url)
   const contact = creditHttpUrl(main?.contactUrl)
@@ -77,7 +84,7 @@ export function ImageCreditPanel({
       {gap !== "none" && <p className="text-xs text-(--aov-warning)">{sourceGapHints[gap]}</p>}
       {(contact || others.length > 0 || assetId) && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-2 text-xs text-muted-foreground">
-          {others.length > 0 && <span>Nguồn khác: {others.map((source) => source.label).join(" · ")}</span>}
+          {others.length > 0 && <span>Nguồn khác: {others.map(sourceOrigin).join(" · ")}</span>}
           {contact && (
             <a href={contact} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
               Liên hệ bên cung cấp

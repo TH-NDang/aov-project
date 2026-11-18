@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
+import com.wikiaov.patch.internal.application.response.CatalogContextView.Language;
 import com.wikiaov.patch.internal.application.response.RegionView;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository.CatalogDate;
@@ -78,6 +79,18 @@ class CatalogContextsTest {
             assertThat(value.regionalDate()).isNull();
             assertThat(value.published()).isTrue();
         });
+    }
+
+    @Test
+    void offersTheSameLocaleCodesWhicheverLanguageTheReaderUses() {
+        stubContext();
+        when(repository.catalogPatches(ruleset, now, 3, null, null, Pageable.unpaged())).thenReturn(List.of());
+
+        var vietnamese = service.read("VN", "vi-VN");
+        var english = service.read("VN", "en-US");
+
+        assertThat(vietnamese.locales()).containsExactly(new Language("vi-VN"), new Language("en-US"));
+        assertThat(english.locales()).isEqualTo(vietnamese.locales());
     }
 
     @Test

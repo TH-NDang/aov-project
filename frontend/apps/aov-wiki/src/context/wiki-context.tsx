@@ -15,10 +15,9 @@ export interface WikiRegion {
   available: boolean
   unavailableReason?: string | null
 }
+/** An interface language of the catalog, as a locale code; the Wiki names languages itself. */
 export interface WikiLanguage {
   code: string
-  name: string
-  nativeName?: string
 }
 export interface WikiPatch {
   id: string

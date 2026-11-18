@@ -1,6 +1,11 @@
 export interface MediaCredit {
   type?: string
   label: string
+  /**
+   * Recorded without evidence of where the image came from. It never counts as a credit, and the interface words it
+   * itself instead of showing `label`, which a placeholder leaves empty. Requests never send it.
+   */
+  unverified?: boolean
   url?: string | null
   ownerName?: string | null
   contactUrl?: string | null
@@ -9,14 +14,12 @@ export interface MediaCredit {
   relatedPageId?: string | null
 }
 
-export interface MediaSourceInput extends MediaCredit {
+export interface MediaSourceInput extends Omit<MediaCredit, "unverified"> {
   note?: string | null
 }
 
 export function needsMediaCredit(sources: MediaCredit[]) {
-  return !sources.some(
-    (source) => source.label.trim() && source.ownerName?.trim() && !source.label.includes("Chưa xác minh"),
-  )
+  return !sources.some((source) => source.label.trim() && source.ownerName?.trim() && !source.unverified)
 }
 
 export function creditHttpUrl(value: string | null | undefined) {

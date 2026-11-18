@@ -2498,7 +2498,8 @@ qua đổi tên file. Ảnh đã xử lý/tái tạo giữ nhãn riêng. Portrai
 người dùng cung cấp, chủ sở hữu/credit Garena / Liên Quân Mobile theo xác nhận của người dùng;
 Figma giữ vai trò nguồn gói file. Năm ảnh phụ trợ từ `phu-tro.zip` cũng là ảnh Liên Quân theo
 xác nhận của người dùng, giữ credit Garena và không tự suy ra ngày chụp.
-Nguồn chưa rõ giữ trạng thái bằng nhãn “Chưa xác minh nguồn”,
+Ảnh không có trong manifest nào (và không đến từ URL) không được ghi nguồn: ảnh mới hiện là chưa có nguồn, phiên
+bản thay ảnh nhận nguồn giữ chỗ chưa xác minh (cờ `unverified`, 02 V074) và giao diện tự ghi chữ cho trạng thái đó;
 không tự tạo URL hoặc ngày thu thập. Ngày chỉ biết đến ngày được giữ trong ghi chú import, không
 chuyển thành thời điểm quan sát chính xác giả định.
 

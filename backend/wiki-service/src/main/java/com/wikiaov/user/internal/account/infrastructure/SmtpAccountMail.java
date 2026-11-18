@@ -2,10 +2,12 @@ package com.wikiaov.user.internal.account.infrastructure;
 
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.user.internal.account.application.port.AccountMail;
+import com.wikiaov.user.internal.account.infrastructure.AccountMailTemplates.Mail;
 import com.wikiaov.user.internal.application.UserErrorCode;
 import jakarta.mail.MessagingException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -20,7 +22,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Sends account security email over SMTP ({@code spring.mail.*}). Any SMTP provider works; locally Mailpit catches
- * messages. Codes and addresses are never logged.
+ * messages. Subjects and bodies come from the per-language templates of {@link AccountMailTemplates}. Codes and
+ * addresses are never logged.
  */
 @Component
 @EnableConfigurationProperties(SmtpAccountMail.Properties.class)
@@ -28,6 +31,7 @@ class SmtpAccountMail implements AccountMail {
     private static final Logger log = LoggerFactory.getLogger(SmtpAccountMail.class);
     private final ObjectProvider<JavaMailSender> sender;
     private final Properties properties;
+    private final AccountMailTemplates templates = new AccountMailTemplates();
 
     SmtpAccountMail(ObjectProvider<JavaMailSender> sender, Properties properties) {
         this.sender = sender;
@@ -53,39 +57,19 @@ class SmtpAccountMail implements AccountMail {
     @Override
     public void sendPasswordCode(String to, String code, Duration lifetime, Language language) {
         long minutes = Math.max(1, lifetime.toMinutes());
-        String product = properties.productName();
-        Message message = language == Language.EN
-                ? new Message("Your " + product + " password change code",
-                        "Your code to change the password of your " + product + " account is:\n\n" + code
-                                + "\n\nIt expires in " + minutes + " minutes. If you did not ask to change your "
-                                + "password, ignore this email and consider signing out other devices in your "
-                                + "account settings.")
-                : new Message("Mã xác nhận đổi mật khẩu " + product,
-                        "Mã xác nhận đổi mật khẩu tài khoản " + product
-                                + " của bạn là:\n\n" + code + "\n\nMã hết hạn sau "
-                                + minutes + " phút. Nếu bạn không yêu cầu đổi "
-                                + "mật khẩu, hãy bỏ qua email này và cân nhắc "
-                                + "đăng xuất các thiết bị khác trong cài "
-                                + "đặt tài khoản.");
-        send(to, message);
+        Mail mail = templates.render(AccountMailTemplates.PASSWORD_CODE, language,
+                Map.of("product", properties.productName(), "code", code, "minutes", Long.toString(minutes)));
+        send(to, mail);
     }
 
     @Override
     public void sendPasswordChanged(String to, Language language) {
-        String product = properties.productName();
-        Message message = language == Language.EN
-                ? new Message("Your " + product + " password was changed",
-                        "The password of your " + product + " account was just changed. If this was not you, "
-                                + "reset your password from the sign-in page and sign out other devices.")
-                : new Message("Mật khẩu " + product + " đã được đổi",
-                        "Mật khẩu tài khoản " + product + " của bạn vừa được "
-                                + "đổi. Nếu không phải bạn, hãy đặt lại "
-                                + "mật khẩu từ trang đăng nhập và đăng xuất "
-                                + "các thiết bị khác.");
-        send(to, message);
+        Mail mail = templates.render(AccountMailTemplates.PASSWORD_CHANGED, language,
+                Map.of("product", properties.productName()));
+        send(to, mail);
     }
 
-    private void send(String to, Message message) {
+    private void send(String to, Mail message) {
         JavaMailSender mail = sender.getIfAvailable();
         if (!configured(mail)) {
             throw unavailable(null);
@@ -112,11 +96,5 @@ class SmtpAccountMail implements AccountMail {
 
     private static ApiException unavailable(Exception cause) {
         return new ApiException(UserErrorCode.USER_MAIL_UNAVAILABLE, "Email could not be sent.", cause);
-    }
-
-    private record Message(
-            String subject,
-            String body
-    ) {
     }
 }

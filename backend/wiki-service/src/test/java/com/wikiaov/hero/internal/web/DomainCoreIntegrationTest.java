@@ -2,6 +2,7 @@ package com.wikiaov.hero.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -1336,8 +1337,9 @@ class DomainCoreIntegrationTest {
                 "values", Map.of("name", "Incomplete", "skills", List.of(skill)));
         var preview = send(post(ROOT + "/admin/heroes/import/preview"), input, 200);
         assertThat(preview.get("canApply")).isEqualTo(true);
-        assertThat((List<String>) preview.get("warnings")).anyMatch(w -> w.contains("skill-1"));
-        assertThat((List<String>) preview.get("warnings")).anyMatch(w -> w.contains("Cần kiểm tra nguồn"));
+        assertThat((List<Map<String, Object>>) preview.get("warnings"))
+                .extracting(warning -> warning.get("code"), warning -> warning.get("skillKey"))
+                .contains(tuple("MISSING_ROLES", null), tuple("SKILL_SOURCE_NEEDS_REVIEW", "skill-1"));
         var result = send(post(ROOT + "/admin/heroes/import/apply"), input, 200);
         assertThat(result.get("heroId")).isNotNull();
         send(post(path(uuid(result, "heroId"), uuid(result, "revisionId")) + "/publish"),

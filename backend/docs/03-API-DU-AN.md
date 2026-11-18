@@ -235,7 +235,10 @@ Tổng quan:
 
 - Tạo phiếu trả `{challengeId, emailHint, expiresAt, resendAvailableAt}`; `emailHint` đã che (`r•••r@example.com`).
   Mã 6 chữ số, hạn 10 phút, phiếu mới vô hiệu phiếu cũ. Giới hạn 1 phiếu/60 giây, 5 phiếu/giờ mỗi tài khoản.
-- `language` (`vi`/`en`, mặc định `vi`) chỉ chọn ngôn ngữ email. Xác nhận: `code` đúng 6 chữ số, `newPassword` 8–1024 ký tự;
+- `language` (`vi`/`en`, mặc định `vi`) chỉ chọn ngôn ngữ email: giá trị bắt đầu bằng `en` (như `en-US`) chọn mẫu
+  en-US, còn lại hoặc bỏ trống chọn mẫu vi-VN. Wiki và Stream gửi ngôn ngữ giao diện của người đọc; cả email mã và email
+  báo đã đổi mật khẩu dùng ngôn ngữ của request gây ra chúng. Tiêu đề và nội dung lấy từ mẫu theo ngôn ngữ trong
+  `src/main/resources/mail/account/`, không viết trong code. Xác nhận: `code` đúng 6 chữ số, `newPassword` 8–1024 ký tự;
   `signOutOtherSessions` mặc định true khi bỏ trống. `otherSessions` là `SIGNED_OUT`, `KEPT` hoặc `FAILED` (mật khẩu đã đổi
   nhưng chưa đăng xuất hết phiên khác; giao diện nhắc dùng nút đăng xuất thiết bị khác).
   Mật khẩu đi thẳng tới Keycloak, không lưu, không log. Thành công thì phiếu thành `USED`, ghi audit
@@ -478,8 +481,10 @@ nên lượt chọn/cấm tiếp tục lưu UUID của dạng.
 
 `GET /api/wiki/v1/catalog-context?region=VN&locale=vi-VN` là API công khai dành cho bộ chọn của wiki.
 Chỉ chấp nhận hai tham số `region`, `locale`; locale UI hiện hỗ trợ `vi-VN`, `en-US`.
-Response gồm `regions` (cùng hợp đồng `/regions`), `locales:[{code,name,nativeName}]`,
+Response gồm `regions` (cùng hợp đồng `/regions`), `locales:[{code}]`,
 `seasons:[{id,code,name,ordinal,current,patches}]` và `current:{rulesetId,seasonId?,patchVariantId}`.
+`locales` chỉ có mã BCP 47, giống nhau với mọi `locale` của người đọc; backend không gửi tên ngôn ngữ, frontend tự
+gọi tên (ví dụ `Intl.DisplayNames`).
 Mỗi patch có `{id,code,title,rulesetId,ordinal,published,regionalDate?,unknownDate}`;
 `id` là UUID patch variant. Chỉ trả patch và variant đã công bố trong ruleset hiện tại của thị trường,
 đã đến thời điểm công bố và không vượt ordinal đang có hiệu lực. Không suy ra ngày phát hành từ
@@ -1355,6 +1360,13 @@ của phiên bản đang dùng; chỉ dùng nguồn cấp asset nếu phiên b�
 ảnh chụp game; nguồn của phiên bản cũ và ảnh chưa hoàn tất upload không làm sai bộ lọc.
 Ảnh đại diện người dùng (`USER_AVATAR`) thuộc về chính người dùng tải lên, không cần ghi nguồn hay chủ
 sở hữu nên không bao giờ nằm trong kết quả `needsCredit=true` (01/11/2026).
+
+Mỗi nguồn trong `provenance` của chi tiết asset, `sources` của danh sách admin và
+`MediaAssetReference.currentVersion.sources` (cùng các API public nhúng nó) có thêm `unverified` (boolean, 18/11/2026).
+`true` là nguồn giữ chỗ hệ thống ghi khi phiên bản mới tải lên không kèm nguồn, hoặc dòng cũ mà V074 nhận ra theo nhãn.
+Client đọc cờ này, không so khớp câu chữ của `label`, và tự ghi chữ cho nguồn chưa xác minh. Nguồn giữ chỗ ghi từ ngày
+này có `label` rỗng; dòng cũ giữ nhãn đã ghi. `SourceRequest` không nhận `unverified`: nguồn người biên tập gửi luôn là
+`false`, nên client không gửi lại nguyên một nguồn đọc từ response khi ghi nguồn mới.
 
 Đọc nhiều asset trong một lần gọi, dùng cho màn hình hiện nhiều ảnh cùng lúc (07/11/2026):
 
@@ -2333,7 +2345,7 @@ Publish một draft có section chưa điền trả `422 HERO_INVALID_CONTENT`, 
 
 ## Bổ sung API import Hero và mùa xếp hạng
 
-- GET `admin/heroes/import/fields`: danh sách trường cố định `{key,label,type}`; quyền hero:write.
+- GET `admin/heroes/import/fields`: danh sách trường cố định `{key,type}`; quyền hero:write. Backend không gửi tên hiển thị: Admin gọi tên trường theo `key` bằng bảng tra của mình, khóa chưa có trong bảng thì hiện chính khóa.
 - POST `admin/heroes/import/preview`: `{code,rulesetId,locale,values,policies,expectedRevisionId?,expectedVersion?}`. policies: FILL_EMPTY/OVERWRITE/SKIP. Trả `{code,heroId,revisionId,version,before,after,changed}`. Không ghi DB.
 - POST `admin/heroes/import/apply`: cùng request, bắt buộc mang revisionId/version đã preview nếu tướng tồn tại; mismatch trả 409. Tướng mới dùng code duy nhất, UUID do backend tạo. Một request một tướng, ghi draft nguyên tử, không tự xuất bản.
 - Trường ban đầu: name/title/summary/lore/roles/skills/skins/head/portrait/splash. Trường ảnh trong file là URL HTTPS, frontend tải qua Media API rồi gửi UUID asset cho backend; không lưu URL ngoài làm binding. Mảng JSON giữ cấu trúc section hiện hành; vai trò hợp lệ bắt buộc khi tạo mới. Trường ngoài danh mục trả 422.
@@ -2350,6 +2362,23 @@ Draft có thể lưu từng binding ảnh; publish vẫn yêu cầu đủ HEAD/P
 Thay thế request import ở mục trước: bắt buộc thêm releaseId và mode (BASELINE, PATCH_UPDATE, CORRECTION). rulesetId vẫn được gửi và đối chiếu server-side. GET admin/heroes/import/contexts?regionId=&seasonId= trả release đã đặt lịch trong mùa, gồm tên mùa/patch, ruleset, variant, thời điểm hiệu lực. Release cũ chưa gắn season_id được ghép theo thị trường và khoảng mùa không chồng lấn; release gắn mùa rõ ràng phải khớp.
 
 Preview thêm classification (NEW_TO_CATALOG, BASELINE, CHANGED, UNCHANGED, INSUFFICIENT_DATA), canApply, sourcePatchVariantId, warnings. NEW_TO_CATALOG chỉ nói chưa có identity trong kho. Thiếu mốc trả canApply=false; apply từ chối 422. Preview không viết DB hoặc tải ảnh. expectedRevisionId/version tham chiếu chính snapshot dùng để so sánh, kiểm tra lại dưới khóa Hero khi apply.
+
+`warnings` là mảng `{code, skillKey, locale}`. Backend không gửi câu chữ: Admin ghi lời cho từng `code`.
+`skillKey` và `locale` là `null` khi cảnh báo không thuộc một kỹ năng hay một bản dịch. Thứ tự: vai trò, rồi từng
+kỹ năng (mô tả và tóm tắt của từng bản dịch, rồi nguồn), cuối cùng là các cảnh báo về mốc.
+
+| `code` | Tham số | Ý nghĩa |
+|---|---|---|
+| `MISSING_ROLES` | — | Tướng chưa có vai trò; cần bổ sung trước khi xuất bản. |
+| `MISSING_SKILL_DESCRIPTION` | `skillKey`, `locale` | Bản dịch kỹ năng chưa có mô tả; cần bổ sung trước khi xuất bản. |
+| `STALE_SKILL_SUMMARY` | `skillKey`, `locale` | Mô tả đã đổi, tóm tắt cũ được giữ nguyên; cần xem lại tóm tắt. |
+| `SKILL_SOURCE_NEEDS_REVIEW` | `skillKey` | Dữ liệu thu thập của kỹ năng còn cờ cảnh báo; không tự suy đoán nội dung bị thiếu. |
+| `NO_SNAPSHOT_TO_CORRECT` | — | CORRECTION nhưng patch này chưa có mốc để sửa; cần nhập dữ liệu ban đầu. |
+| `NO_EARLIER_SNAPSHOT` | — | Chưa có mốc trước patch này để so sánh; nhập dữ liệu ban đầu, không suy ngược từ tương lai. |
+| `BASELINE_IS_KNOWN_STATE` | — | BASELINE ghi trạng thái đã biết tại patch đã chọn, không xác nhận tướng mới ra mắt hay vừa được cập nhật. |
+| `SNAPSHOT_DIFFERENCE_UNPROVEN` | — | PATCH_UPDATE có mốc trước: khác biệt giữa các mốc chưa chứng minh game thay đổi ở patch này; hệ thống không tự tạo changelog. |
+
+Tác vụ import lưu kết quả từng dòng (`code`, `succeeded`, `errorCode`, `detail`), không lưu `warnings`.
 
 POST admin/heroes bắt buộc releaseId, tạo DATA_BASELINE gắn patch tương ứng. Import mốc độc lập cho tướng đã có không sao chép snapshot tương lai. Publish và sửa dữ liệu cũ không tự lan thay đổi vào những snapshot về sau.
 
@@ -2370,7 +2399,7 @@ POST admin/patches/{id}/variants thêm beforeVariantId tùy chọn: chèn trư�
 
 ### Ánh xạ dữ liệu liên quan khi import tướng
 
-`GET /admin/heroes/import/relation-fields` (quyền `hero:write`, cùng quyền nền `catalog:read`) trả các trường được phép của `skills` và `skins`: mã, tên/mô tả bản dịch, thứ tự, loại/dạng/hiệu ứng kỹ năng; bậc/cách sở hữu trang phục; `iconAssetId` hoặc `artAssetId`. Mỗi trường có `key`, `label`, `type`. Endpoint metadata không thêm cột tự do. Payload import vẫn dùng các mảng Skill/Skin của hợp đồng hiện có. Ảnh trong payload gửi tác vụ luôn là UUID asset đã upload hoàn tất, không phải đường dẫn máy người dùng.
+`GET /admin/heroes/import/relation-fields` (quyền `hero:write`, cùng quyền nền `catalog:read`) trả các trường được phép của `skills` và `skins`: mã, tên/mô tả bản dịch, thứ tự, loại/dạng/hiệu ứng kỹ năng; bậc/cách sở hữu trang phục; `iconAssetId` hoặc `artAssetId`. Mỗi trường có `key`, `type`; Admin gọi tên trường theo `key` như danh sách trường tướng. Endpoint metadata không thêm cột tự do. Payload import vẫn dùng các mảng Skill/Skin của hợp đồng hiện có. Ảnh trong payload gửi tác vụ luôn là UUID asset đã upload hoàn tất, không phải đường dẫn máy người dùng.
 
 ## Tổng quan phát hành cho admin
 
@@ -2916,7 +2945,7 @@ Mỗi bản dịch của kỹ năng có trường tùy chọn `summary`: văn b�
   fallback locale (`null` khi bản dịch đó chưa có tóm tắt); không fallback riêng cho từng trường.
 - Import: `values.skills[].translations[].summary` được nhận như các trường khác của bản dịch. Khi kỹ năng nhập vào
   không mang tóm tắt, tóm tắt đang có của cùng `skillKey` và locale được giữ; nếu mô tả của bản dịch đó đổi, `warnings`
-  có thêm dòng "Cần xem lại tóm tắt kỹ năng <skillKey> (<locale>): mô tả đã đổi, tóm tắt cũ được giữ nguyên."
+  có thêm `{code: "STALE_SKILL_SUMMARY", skillKey, locale}` để người biên tập xem lại tóm tắt.
 - `GET /admin/heroes/publish-readiness` và các API tham chiếu kỹ năng không trả `summary`.
 
 

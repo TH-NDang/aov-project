@@ -57,22 +57,22 @@ test("large import plans mount nested diffs and image paths only while their dis
     if (path.endsWith("/relation-fields"))
       return {
         skills: ["skillKey", "kind", "name", "description"]
-          .map((key) => ({ key, label: key, type: "text" }))
+          .map((key) => ({ key, type: "text" }))
           .concat([
-            { key: "iconAssetId", label: "Skill image", type: "image" },
-            { key: "effects", label: "Source snapshot", type: "json" },
+            { key: "iconAssetId", type: "image" },
+            { key: "effects", type: "json" },
           ]),
         skins: [
-          { key: "skinKey", label: "Skin code", type: "text" },
-          { key: "name", label: "Name", type: "text" },
-          { key: "artAssetId", label: "Artwork", type: "image" },
+          { key: "skinKey", type: "text" },
+          { key: "name", type: "text" },
+          { key: "artAssetId", type: "image" },
         ],
       } as T
     if (path.endsWith("/fields"))
       return [
-        { key: "name", label: "Name", type: "text" },
-        { key: "skills", label: "Skills", type: "json" },
-        { key: "skins", label: "Skins", type: "json" },
+        { key: "name", type: "text" },
+        { key: "skills", type: "json" },
+        { key: "skins", type: "json" },
       ] as T
     assert.ok(path.endsWith("/preview"), `Review must not write data: ${path}`)
     const body = JSON.parse(String(init?.body)) as { code: string; values: Record<string, unknown> }
