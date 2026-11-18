@@ -29,6 +29,7 @@ class ArcanaContentRules {
         if (content == null) {
             fail("Content is required.");
         }
+
         CatalogTranslations.firstViolation(content.translations()).ifPresent(violation -> fail(violation.detail()));
         validateIcon(content.iconAssetId());
         if (content.notes() != null && content.notes().length() > 32768) {
@@ -100,6 +101,7 @@ class ArcanaContentRules {
         if (content.stats().isEmpty()) {
             missing.add("stats");
         }
+
         return missing;
     }
 

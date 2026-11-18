@@ -1,7 +1,11 @@
 package com.wikiaov.hero.internal.comparison.application;
 
+import static com.wikiaov.hero.internal.application.response.HeroComparisonWarning.Code.NO_EARLIER_SNAPSHOT;
+import static com.wikiaov.hero.internal.application.response.HeroComparisonWarning.Code.SNAPSHOT_DIFFERENCE_UNPROVEN;
+
 import com.wikiaov.hero.internal.application.response.HeroComparisonView;
 import com.wikiaov.hero.internal.application.response.HeroComparisonView.Difference;
+import com.wikiaov.hero.internal.application.response.HeroComparisonWarning;
 import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
@@ -47,13 +51,14 @@ public class HeroComparisons {
         var after = content(target);
         UUID sourceId = fromRevisionId == null ? target.sourceRevisionId() : fromRevisionId;
         if (sourceId == null) {
-            return new HeroComparisonView("BASELINE_ONLY", null, target, Map.of(), after, List.of(), List.of(
-                    "No earlier snapshot was supplied. This is an observed baseline, not evidence of a gameplay change."));
+            return new HeroComparisonView("BASELINE_ONLY", null, target, Map.of(), after, List.of(),
+                    List.of(new HeroComparisonWarning(NO_EARLIER_SNAPSHOT)));
         }
         var source = store.revision(heroId, sourceId);
         if (!source.rulesetId().equals(target.rulesetId())) {
             throw HeroValidation.invalid("Compare revisions from the same hero and ruleset.");
         }
+
         var before = content(source);
         List<Difference> changes = new ArrayList<>();
         for (var section : HeroSection.values()) {
@@ -61,8 +66,9 @@ public class HeroComparisons {
             Object current = normalized(after.get(section));
             difference(section, "", previous, current, changes);
         }
-        return new HeroComparisonView("AVAILABLE", source, target, before, after, List.copyOf(changes), List.of(
-                "Snapshot differences do not establish which patch caused a change. Review sources before recording a changelog."));
+
+        return new HeroComparisonView("AVAILABLE", source, target, before, after, List.copyOf(changes),
+                List.of(new HeroComparisonWarning(SNAPSHOT_DIFFERENCE_UNPROVEN)));
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
@@ -183,6 +189,7 @@ public class HeroComparisons {
         if (value instanceof Number number) {
             return new BigDecimal(number.toString()).stripTrailingZeros();
         }
+
         return value;
     }
 

@@ -1,15 +1,15 @@
 package com.wikiaov.hero.internal.web;
 
+import com.wikiaov.hero.HeroChangeEntry;
 import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
 import com.wikiaov.hero.internal.domain.HeroChanges;
 import com.wikiaov.platform.CreatedId;
 import com.wikiaov.platform.PageLimits;
+import com.wikiaov.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -19,7 +19,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 
@@ -49,7 +48,7 @@ public interface HeroChangesApi {
     @Operation(operationId = "heroChangesApi_authoringChanges", summary = "Authoring changes - hero changes", description = "Authoring changes for hero changes. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
-    List<Map<String, Object>> authoringChanges(@Parameter(description = "Id identifier.") UUID id,
+    List<HeroChangeEntry> authoringChanges(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(hidden = true) HttpServletRequest request);
 
@@ -61,10 +60,10 @@ public interface HeroChangesApi {
             @Parameter(description = "Optional published revision of this hero and ruleset with a known effective patch.") UUID anchorRevisionId,
             @Parameter(hidden = true) HttpServletRequest request);
 
-    @Operation(operationId = "heroChangesApi_history", summary = "History - hero changes", description = "History for hero changes. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", responses = {
-            @ApiResponse(responseCode = "200", description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE)))
+    @Operation(operationId = "heroChangesApi_history", summary = "History - hero changes", description = "One page of the changes released patches made to a hero in a market, each with its patch. Public read endpoint. Unrecognized query parameters are rejected.", responses = {
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
-    ResponseEntity<?> history(@Parameter(description = "Hero id identifier.") UUID heroId,
+    ResponseEntity<PageSlice<HeroChangeEntry>> history(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(description = "Zero-based page index.") @Min(0) int page,

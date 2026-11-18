@@ -1,5 +1,6 @@
 package com.wikiaov.spell.internal.reference.persistence;
 
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellIdentity;
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellRevision;
@@ -89,8 +90,8 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
 
     private static Predicate publishedObservation(CriteriaBuilder builder, Path<?> revision) {
         var scoped = builder.or(builder.isNotNull(revision.get("effectiveFromPatchVariantId")),
-                builder.equal(revision.get("cause"), "DATA_BASELINE"),
-                builder.and(revision.get("cause").in("CONTENT_CORRECTION", "TRANSLATION_UPDATE"),
+                builder.equal(revision.get("cause"), CatalogCause.DATA_BASELINE),
+                builder.and(revision.get("cause").in(CatalogCause.CONTENT_CORRECTION, CatalogCause.TRANSLATION_UPDATE),
                         builder.isNotNull(revision.get("sourceRevisionId"))));
         var legacy = builder.coalesce(builder.function("jsonb_extract_path_text", String.class,
                 revision.get("gameplay"), builder.literal("legacy")), "false");

@@ -1,7 +1,10 @@
 package com.wikiaov.hero.internal.shop.persistence.entity;
 
+import com.wikiaov.hero.internal.shop.domain.SkinAcquisitionMethod;
 import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
@@ -35,7 +38,8 @@ public class SkinAcquisitionRow extends AssignedIdentifierEntity<SkinAcquisition
     @Id
     private LocalDate capturedOn;
 
-    private String method;
+    @Enumerated(EnumType.STRING)
+    private SkinAcquisitionMethod method;
     private Integer voucherPrice;
     private String eventName;
     private boolean needsReview;

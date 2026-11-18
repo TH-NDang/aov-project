@@ -92,7 +92,7 @@ public class HeroPatchHistory {
 
         value.setId(UUID.randomUUID());
         value.setChangeSetId(changeSetId);
-        value.setChangeKind(change.changeKind().name());
+        value.setChangeKind(change.changeKind());
         value.setSortOrder(order);
 
         changes.save(value);
@@ -213,7 +213,7 @@ public class HeroPatchHistory {
 
     private static RoleChangeClassification role(RoleChange input) {
         var value = new RoleChangeClassification();
-        value.setRoleCode(input.roleCode().name());
+        value.setRoleCode(input.roleCode());
         value.setAdded(input.added());
 
         return value;
@@ -221,7 +221,7 @@ public class HeroPatchHistory {
 
     private static VisualChangeClassification visual(VisualChange input) {
         var value = new VisualChangeClassification();
-        value.setMediaRole(input.mediaRole().name());
+        value.setMediaRole(input.mediaRole());
         value.setOldAssetId(input.oldAssetId());
         value.setNewAssetId(input.newAssetId());
 

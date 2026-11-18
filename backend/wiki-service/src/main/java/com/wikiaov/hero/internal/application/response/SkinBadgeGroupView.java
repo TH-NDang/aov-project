@@ -1,12 +1,13 @@
 package com.wikiaov.hero.internal.application.response;
 
+import com.wikiaov.hero.internal.badges.domain.SkinBadgeGroupKind;
 import java.util.List;
 import java.util.UUID;
 
 public record SkinBadgeGroupView(
         UUID id,
         String code,
-        String kind,
+        SkinBadgeGroupKind kind,
         long version,
         List<Translation> translations,
         String displayName,

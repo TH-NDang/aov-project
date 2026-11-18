@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.change.application;
 import com.wikiaov.access.AuditEntry;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
+import com.wikiaov.hero.HeroChangeEntry;
 import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
@@ -160,14 +161,14 @@ public class HeroPatchChanges implements HeroChangeQueries {
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
-    public List<Map<String, Object>> forAuthoringVariant(UUID variantId, String locale) {
+    public List<HeroChangeEntry> forAuthoringVariant(UUID variantId, String locale) {
         HeroValidation.locale(locale);
         contexts.variant(variantId);
         return withForms(HeroPatchChangeViews.render(history.forVariant(variantId, locale)));
     }
 
     @Override
-    public List<Map<String, Object>> forVariant(UUID variantId, String locale) {
+    public List<HeroChangeEntry> forVariant(UUID variantId, String locale) {
         HeroValidation.locale(locale);
         if (!contexts.variant(variantId).published()) {
             return List.of();
@@ -176,28 +177,28 @@ public class HeroPatchChanges implements HeroChangeQueries {
     }
 
     /** A form's change names the hero that holds it, so readers reach the form on that hero's page (ADR-024). */
-    private List<Map<String, Object>> withForms(List<Map<String, Object>> rows) {
+    private List<HeroChangeEntry> withForms(List<HeroChangeEntry> entries) {
         var structure = forms.structure();
-        for (var row : rows) {
-            structure.form((UUID) row.get("heroId")).ifPresent(form -> {
-                row.put("holderId", form.holderId());
-                row.put("holderCode", store.requireHero(form.holderId()).getCode());
-                row.put("formKey", form.formKey());
-            });
-        }
-        return rows;
+        return entries.stream()
+                .map(entry -> structure.form(entry.heroId())
+                        .map(form -> entry.withHolder(form.holderId(), store.requireHero(form.holderId()).getCode(),
+                                form.formKey()))
+                        .orElse(entry))
+                .toList();
     }
 
-    public PageSlice<Map<String, Object>> forHero(UUID heroId, String region, String locale, int page, int size) {
+    public PageSlice<HeroChangeEntry> forHero(UUID heroId, String region, String locale, int page, int size) {
         HeroValidation.locale(locale);
         var variants = patches.releases(region).stream().filter(r -> !r.effectiveAt().isAfter(clock.instant()))
                 .collect(Collectors.toMap(PatchReleaseReference::variantId, r -> r,
                         (a, b) -> a));
         var all = HeroPatchChangeViews.render(history.forHero(heroId, locale)).stream()
-                .filter(row -> variants.containsKey((UUID) row.get("patchVariantId"))).peek(row -> {
-                    var release = variants.get((UUID) row.get("patchVariantId"));
-                    row.put("patch", patches.published(release.patchId(), region, locale));
-                }).toList();
+                .filter(entry -> variants.containsKey(entry.patchVariantId()))
+                .map(entry -> entry.withPatch(
+                        patches.published(variants.get(entry.patchVariantId()).patchId(), region, locale)))
+                .toList();
+        // Paged in memory: only changes of patches already released in the market count, which the patch module
+        // decides, and one hero has a few dozen change sets.
         return PageSlice.of(all, page, size);
     }
 
@@ -384,12 +385,15 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 && !history.introduces(changeSetId)) {
             throw HeroValidation.invalid("Only the change set that introduced the hero can be assessed as a release.");
         }
+
         var value = history.assessment(changeSetId)
                 .orElseGet(HeroPatchAssessment::new);
         if (value.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT, "The overall assessment has changed.");
         }
+
         var actor = actors.require();
+
         value.setChangeSetId(changeSetId);
         value.setKind(input.kind());
         value.setVersion(value.getVersion() + 1);
@@ -397,9 +401,11 @@ public class HeroPatchChanges implements HeroChangeQueries {
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
         history.saveAssessment(value);
+
         audit.record(new AuditEntry(actor, "HERO_PATCH_ASSESSED", CatalogAggregates.HERO, heroId, null,
                 input.expectedVersion(),
                 value.getVersion(), null, Map.of("changeSetId", changeSetId, "kind", input.kind().name())));
+
         return new HeroAssessmentView(value.getKind(), value.getVersion());
     }
 

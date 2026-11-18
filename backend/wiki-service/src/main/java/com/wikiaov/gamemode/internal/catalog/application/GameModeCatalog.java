@@ -287,6 +287,7 @@ public class GameModeCatalog {
         var newest = new HashMap<UUID, Long>();
         all.stream().filter(r -> r.getState() == RevisionState.PUBLISHED)
                 .forEach(r -> newest.merge(r.getModeId(), r.getRevisionNo(), Math::max));
+
         var usages = new HashMap<UUID, List<MediaUsage>>();
         for (var revision : all) {
             var scope = revision.getState() == RevisionState.DRAFT
@@ -308,6 +309,7 @@ public class GameModeCatalog {
                 }
             }
         }
+
         return usages;
     }
 
@@ -343,7 +345,9 @@ public class GameModeCatalog {
         revision.setCreatedAt(now);
         revision.setCreatedByIssuer(actor.issuer());
         revision.setCreatedBySubject(actor.subject());
+
         revision.touch(actor.issuer(), actor.subject(), now);
+
         return revisions.saveAndFlush(revision);
     }
 

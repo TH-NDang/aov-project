@@ -71,6 +71,7 @@ public class HeroSkillImages {
                 .isEmpty()) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_MEDIA, "Use an active uploaded hero skill icon.");
         }
+
         var existing = images.findByHeroIdAndSourceSlotAndVariantNo(heroId, sourceSlot, variantNo);
         if (existing.isPresent()) {
             var row = existing.get();
@@ -85,6 +86,7 @@ public class HeroSkillImages {
         } else if (input.expectedVersion() != -1) {
             conflict(-1);
         }
+
         var row = existing.orElseGet(() -> {
             var created = new HeroSkillImage();
             created.setId(UUID.randomUUID());
@@ -96,6 +98,7 @@ public class HeroSkillImages {
             return created;
         });
         long before = row.getVersion();
+
         row.setAssetId(input.assetId());
         row.setSkillKey(input.skillKey());
         row.setSourceFilename(input.sourceFilename());
@@ -103,9 +106,11 @@ public class HeroSkillImages {
         row.setVersion(before + 1);
         row.setUpdatedAt(clock.instant());
         images.saveAndFlush(row);
+
         audit.record(new AuditEntry(actors.require(), "HERO_SKILL_IMAGE_SAVED", CatalogAggregates.HERO, heroId, null,
                 existing.isEmpty() ? null : before, row.getVersion(), null,
                 Map.of("imageId", row.getId(), "slot", sourceSlot, "variant", variantNo, "assetId", row.getAssetId())));
+
         return view(row);
     }
 

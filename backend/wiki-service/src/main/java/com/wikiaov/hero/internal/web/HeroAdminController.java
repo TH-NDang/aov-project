@@ -10,6 +10,7 @@ import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.application.response.HeroStatusView;
 import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
+import com.wikiaov.hero.internal.authoring.application.HeroRevisionRead;
 import com.wikiaov.hero.internal.catalog.application.HeroCatalog;
 import com.wikiaov.hero.internal.comparison.application.HeroComparisons;
 import com.wikiaov.hero.internal.domain.HeroSection;
@@ -25,7 +26,6 @@ import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -100,10 +100,10 @@ public class HeroAdminController implements HeroAdminApi {
 
     @Override
     @GetMapping(path = {"/{heroId}/revisions/{revisionId}", "/{heroId}/drafts/{revisionId}"}, version = "1")
-    public Map<String, Object> read(@PathVariable UUID heroId, @PathVariable UUID revisionId,
+    public HeroRevisionRead read(@PathVariable UUID heroId, @PathVariable UUID revisionId,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
-        return Map.of("revision", authoring.read(heroId, revisionId), "content", authoring.preview(heroId, revisionId));
+        return authoring.readWithContent(heroId, revisionId);
     }
 
     @Override

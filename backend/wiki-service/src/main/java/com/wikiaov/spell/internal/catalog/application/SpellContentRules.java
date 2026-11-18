@@ -29,6 +29,7 @@ class SpellContentRules {
         if (content == null) {
             fail("Content is required.");
         }
+
         CatalogTranslations.firstViolation(content.translations()).ifPresent(violation -> fail(violation.detail()));
         validateIcon(content.iconAssetId());
         if (content.notes() != null && content.notes().length() > 32768) {
@@ -40,6 +41,7 @@ class SpellContentRules {
             fail("Invalid spell availability or unlock type.");
         }
         validateStates(content);
+
         content.referenceImages().forEach(owner -> validateIcon(owner.assetId()));
     }
 
@@ -94,6 +96,7 @@ class SpellContentRules {
                 result.add(owner.assetId());
             }
         });
+
         return result;
     }
 
@@ -130,6 +133,7 @@ class SpellContentRules {
         if (content.availability().equals("UNKNOWN")) {
             missing.add("availability");
         }
+
         return missing;
     }
 

@@ -1,7 +1,10 @@
 package com.wikiaov.hero.internal.shop.persistence.entity;
 
+import com.wikiaov.hero.internal.shop.domain.HeroAvailability;
 import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
@@ -32,7 +35,8 @@ public class HeroShopPriceRow extends AssignedIdentifierEntity<HeroShopPriceRow.
     @Id
     private LocalDate capturedOn;
 
-    private String availability;
+    @Enumerated(EnumType.STRING)
+    private HeroAvailability availability;
     private Integer goldPrice;
     private Integer voucherPrice;
     private boolean needsReview;

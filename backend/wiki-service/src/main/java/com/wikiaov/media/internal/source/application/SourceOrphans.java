@@ -54,6 +54,7 @@ public class SourceOrphans {
     public PageSlice<SourceFileViews.Orphan> list(int page, int size) {
         List<SourceObject> orphans = orphans();
 
+        // Paged in memory: an orphan is an object that no source file and no usage names, read from several sources.
         return PageSlice.of(orphans, page, size).map(SourceOrphans::view);
     }
 

@@ -66,6 +66,7 @@ public class RegisterExistingObject {
                     List.of(new ApiFieldError("objectKey", "NOT_ALLOWED",
                             "Must start with imports/ and contain only letters, digits, '.', '_', '-' and '/'.")));
         }
+
         Actor actor = currentActor.require();
         // Fail fast before reading any bytes.
         transaction.executeWithoutResult(status -> assetAccess.requireActiveAsset(command.assetId()));

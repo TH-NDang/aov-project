@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.databind.json.JsonMapper;
 
 @Service
 @Transactional(readOnly = true)
@@ -56,19 +55,17 @@ public class HeroQueries {
     private final HeroSections sections;
     private final GameplayContexts contexts;
     private final MediaAssets media;
-    private final JsonMapper json;
     private final Clock clock;
     private final HeroForms forms;
     private final SkillLibraryIcons libraryIcons;
     private final HeroReadMoments moments;
 
     public HeroQueries(HeroStore store, HeroSections sections, GameplayContexts contexts, MediaAssets media,
-            JsonMapper json, Clock clock, HeroForms forms, SkillLibraryIcons libraryIcons, HeroReadMoments moments) {
+            Clock clock, HeroForms forms, SkillLibraryIcons libraryIcons, HeroReadMoments moments) {
         this.store = store;
         this.sections = sections;
         this.contexts = contexts;
         this.media = media;
-        this.json = json;
         this.clock = clock;
         this.forms = forms;
         this.libraryIcons = libraryIcons;
@@ -207,7 +204,8 @@ public class HeroQueries {
 
         if (!manifest) {
             Map<String, Object> content = new LinkedHashMap<>();
-            rev.sections().forEach((s, id) -> content.put(sectionKey(s), publicContent(s, id, locale)));
+            rev.sections().forEach((s, id) -> content.put(sectionKey(s),
+                    HeroSectionPages.content(s, sections.content(s, id), locale)));
             result.put("content", content);
 
             addHeroMedia(result, rev);
@@ -286,20 +284,8 @@ public class HeroQueries {
      */
     public HeroListView list(String region, String locale, int page, int size, String q, String role,
             String sort, UUID seasonId, UUID patchVariantId, boolean includeUnscoped, boolean playable) {
-        HeroValidation.locale(locale);
-        if (!Set.of("code,asc", "code,desc").contains(sort)) {
-            throw HeroValidation.badQuery("Only code sorting is supported.");
-        }
-        if (q.length() > 120) {
-            throw HeroValidation.badQuery("Search text is too long.");
-        }
-        if (role != null) {
-            try {
-                Role.valueOf(role);
-            } catch (IllegalArgumentException e) {
-                throw HeroValidation.badQuery("Unknown hero role.");
-            }
-        }
+        validateListQuery(locale, sort, q, role);
+
         Instant at = clock.instant();
         var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);
         var ctx = moment.context();
@@ -337,34 +323,61 @@ public class HeroQueries {
                 continue;
             }
 
-            var item = hero.item();
-            item.put("roles", roles);
-            item.put("positions", positions.stream().sorted().toList());
-            List<ListEntry> formEntries = new ArrayList<>();
-            for (var member : members) {
-                var form = structure.form(member.identity().getId())
-                        .orElseThrow(() -> new IllegalStateException("A listed form has no form structure."));
-                var formItem = member.item();
-                formItem.put("formKey", form.formKey());
-                formItem.put("roles", member.roles());
-                formItem.put("positions", member.positions().stream().sorted().toList());
-                formEntries.add(new ListEntry(formItem, member.bindingsId(), List.of()));
-            }
-            if (holder) {
-                item.put("forms", formEntries.stream().map(ListEntry::item).toList());
-            }
-            if (playable) {
-                structure.form(id).ifPresent(form -> item.put("parent",
-                        Map.of("id", form.holderId(), "code", codes.get(form.holderId()), "formKey", form.formKey())));
-            }
-
-            all.add(new ListEntry(item, hero.bindingsId(), formEntries));
+            all.add(listEntry(hero, members, roles, positions, holder, playable, structure, codes));
         }
 
+        // Paged in memory: each hero shows the revision the read moment chooses and carries its forms, so the page is
+        // cut after both; the list is bounded by the heroes of the game.
         var selected = PageSlice.of(all, page, size);
         var items = listMedia(selected.items());
 
         return new HeroListView(listContext(ctx, locale), selected.withItems(items));
+    }
+
+    private static void validateListQuery(String locale, String sort, String q, String role) {
+        HeroValidation.locale(locale);
+        if (!Set.of("code,asc", "code,desc").contains(sort)) {
+            throw HeroValidation.badQuery("Only code sorting is supported.");
+        }
+        if (q.length() > 120) {
+            throw HeroValidation.badQuery("Search text is too long.");
+        }
+        if (role != null) {
+            try {
+                Role.valueOf(role);
+            } catch (IllegalArgumentException e) {
+                throw HeroValidation.badQuery("Unknown hero role.");
+            }
+        }
+    }
+
+    /** One listed hero, as a holder with its forms, or as a playable form naming the hero that holds it. */
+    private static ListEntry listEntry(Published hero, List<Published> members, Set<Role> roles,
+            Set<Position> positions, boolean holder, boolean playable, HeroFormStructure structure,
+            Map<UUID, String> codes) {
+        UUID id = hero.identity().getId();
+        var item = hero.item();
+        item.put("roles", roles);
+        item.put("positions", positions.stream().sorted().toList());
+        List<ListEntry> formEntries = new ArrayList<>();
+        for (var member : members) {
+            var form = structure.form(member.identity().getId())
+                    .orElseThrow(() -> new IllegalStateException("A listed form has no form structure."));
+            var formItem = member.item();
+            formItem.put("formKey", form.formKey());
+            formItem.put("roles", member.roles());
+            formItem.put("positions", member.positions().stream().sorted().toList());
+            formEntries.add(new ListEntry(formItem, member.bindingsId(), List.of()));
+        }
+        if (holder) {
+            item.put("forms", formEntries.stream().map(ListEntry::item).toList());
+        }
+        if (playable) {
+            structure.form(id).ifPresent(form -> item.put("parent",
+                    Map.of("id", form.holderId(), "code", codes.get(form.holderId()), "formKey", form.formKey())));
+        }
+
+        return new ListEntry(item, hero.bindingsId(), formEntries);
     }
 
     private static HeroListView.Context listContext(GameplayContext c, String locale) {
@@ -466,47 +479,6 @@ public class HeroQueries {
     ) {
     }
 
-    public Map<String, Object> section(HeroSection section, UUID id, String locale) {
-        HeroValidation.locale(locale);
-        if (!store.publishedSectionExists(section, id)) {
-            throw new ApiException(HeroErrorCode.HERO_REVISION_NOT_FOUND, "No published section exists with this ID.");
-        }
-        return Map.of("id", id, "content", publicContent(section, id, locale));
-    }
-
-    private Map<String, Object> publicContent(HeroSection section, UUID id, String locale) {
-        Map<String, Object> content = new LinkedHashMap<>(json.convertValue(sections.content(section, id), Map.class));
-        content.remove("sources");
-        if (section == HeroSection.PROFILE) {
-            localize(content, locale);
-        }
-        if (section == HeroSection.SKILLS || section == HeroSection.SKINS) {
-            String key = section == HeroSection.SKILLS ? "skills" : "skins";
-            for (var item : (List<Map<String, Object>>) content.get(key)) {
-                localize(item, locale);
-            }
-        }
-        if (section == HeroSection.SKILLS) {
-            for (var trait : (List<Map<String, Object>>) content.getOrDefault("traits", List.of())) {
-                localizeDetail(trait, locale);
-            }
-        }
-        return content;
-    }
-
-    /** A trait may have no detail line yet; it is still shown, without one. */
-    private void localizeDetail(Map<String, Object> trait, String locale) {
-        var translations = (List<?>) trait.get("translations");
-        if (translations != null && !translations.isEmpty()) {
-            localize(trait, locale);
-            return;
-        }
-        trait.remove("translations");
-        trait.put("detail", null);
-        trait.put("actualLocale", null);
-        trait.put("fallbackApplied", false);
-    }
-
     /** The published revision readers see today of every hero in a market, keyed by hero, in code order. */
     public Map<HeroIdentity, HeroRevisionView> published(String region) {
         Instant at = clock.instant();
@@ -522,17 +494,6 @@ public class HeroQueries {
                     .ifPresent(choice -> result.put(hero, choice.revision()));
         }
         return result;
-    }
-
-    private void localize(Map<String, Object> object, String locale) {
-        var translations = (List<Map<String, Object>>) object.remove("translations");
-        String actual = translationLocale(translations.stream().map(t -> (String) t.get("locale")).toList(), locale);
-        var selected = translations.stream().filter(t -> t.get("locale").equals(actual)).findFirst()
-                .orElseThrow(() -> new IllegalStateException("The selected locale has no translation."));
-        object.putAll(selected);
-        object.remove("locale");
-        object.put("actualLocale", actual);
-        object.put("fallbackApplied", !locale.equals(actual));
     }
 
     private static String translationLocale(List<String> values, String requested) {

@@ -123,6 +123,26 @@ class SkinBadgeGroupsIntegrationTest {
     }
 
     @Test
+    void badgePagesFollowCodeOrderAfterTheGroupAndSearchFilters() throws Exception {
+        var lunar = group("lunar", "THEME", List.of(text("vi-VN", "Tân xuân")));
+        badge("lunar-b", lunar.get("id"), "Mai vàng", UUID.randomUUID());
+        badge("lunar-a", lunar.get("id"), "Hoa đào", UUID.randomUUID());
+        badge("lunar-c", lunar.get("id"), "100%_đỏ", UUID.randomUUID());
+        badge("alone", null, "Hoa sen", UUID.randomUUID());
+
+        var second = send(get(BADGES).param("groupId", lunar.get("id").toString()).param("size", "2")
+                .param("page", "1"), null, 200);
+        assertThat(number(second, "totalElements")).isEqualTo(3);
+        assertThat(rows(second.get("items"))).extracting(row -> row.get("code")).containsExactly("lunar-c");
+        var flowers = send(get(BADGES).param("q", "HOA"), null, 200);
+        assertThat(rows(flowers.get("items"))).extracting(row -> row.get("code")).containsExactly("alone", "lunar-a");
+        var ungrouped = send(get(BADGES).param("ungrouped", "true").param("q", "hoa"), null, 200);
+        assertThat(rows(ungrouped.get("items"))).extracting(row -> row.get("code")).containsExactly("alone");
+        var literal = send(get(BADGES).param("q", "0%_"), null, 200);
+        assertThat(rows(literal.get("items"))).extracting(row -> row.get("code")).containsExactly("lunar-c");
+    }
+
+    @Test
     void movingBadgePreservesEveryTranslationIconAndKindAndOldMetadataUpdatesKeepGroup() throws Exception {
         var first = group("rank-s", "RANK", List.of(text("vi-VN", "S")));
         var target = group("summer", "THEME", List.of(text("vi-VN", "Mùa hè")));

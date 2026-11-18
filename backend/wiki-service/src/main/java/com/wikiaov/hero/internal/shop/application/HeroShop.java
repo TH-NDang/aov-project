@@ -9,6 +9,8 @@ import com.wikiaov.hero.internal.application.HeroShopCommands.SaveSkinAcquisitio
 import com.wikiaov.hero.internal.application.response.HeroShopView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
+import com.wikiaov.hero.internal.shop.domain.HeroAvailability;
+import com.wikiaov.hero.internal.shop.domain.SkinAcquisitionMethod;
 import com.wikiaov.hero.internal.shop.persistence.HeroShopPriceRepository;
 import com.wikiaov.hero.internal.shop.persistence.SkinAcquisitionRepository;
 import com.wikiaov.hero.internal.shop.persistence.entity.HeroShopPriceRow;
@@ -16,12 +18,12 @@ import com.wikiaov.hero.internal.shop.persistence.entity.SkinAcquisitionRow;
 import com.wikiaov.hero.internal.skins.persistence.SkinIdentityRepository;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinIdentityRow;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.EnumNames;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -33,8 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class HeroShop {
-    private static final Set<String> AVAILABILITY = Set.of("ON_SALE", "NOT_OPEN", "COMING_SOON", "UNKNOWN");
-    private static final Set<String> METHODS = Set.of("VOUCHER", "EVENT", "NOT_OPEN", "OTHER", "UNKNOWN");
     private static final String AGGREGATE = "HERO_SHOP";
 
     private final HeroShopPriceRepository prices;
@@ -97,7 +97,8 @@ public class HeroShop {
     @PreAuthorize("hasAuthority('hero:write')")
     @Transactional
     public HeroShopView.Price savePrice(UUID heroId, String region, SavePrice request) {
-        if (!AVAILABILITY.contains(request.availability())) {
+        var availability = EnumNames.find(HeroAvailability.class, request.availability());
+        if (availability == null) {
             throw HeroValidation.invalid("Unknown hero availability.");
         }
         lockHero(heroId);
@@ -106,7 +107,7 @@ public class HeroShop {
         var on = request.capturedOn() == null ? today() : request.capturedOn();
         var row = prices.findById(new HeroShopPriceRow.Key(heroId, region, on))
                 .orElseGet(() -> new HeroShopPriceRow(heroId, region, on));
-        row.setAvailability(request.availability());
+        row.setAvailability(availability);
         row.setGoldPrice(request.goldPrice());
         row.setVoucherPrice(request.voucherPrice());
         row.setNeedsReview(Boolean.TRUE.equals(request.needsReview()));
@@ -136,7 +137,8 @@ public class HeroShop {
     @Transactional
     public HeroShopView.SkinAcquisition saveSkin(UUID heroId, String skinKey, String region,
             SaveSkinAcquisition request) {
-        if (!METHODS.contains(request.method())) {
+        var method = EnumNames.find(SkinAcquisitionMethod.class, request.method());
+        if (method == null) {
             throw HeroValidation.invalid("Unknown skin acquisition method.");
         }
         // A missing hero has no skin either, so the skin check below answers it.
@@ -149,10 +151,10 @@ public class HeroShop {
         var on = request.capturedOn() == null ? today() : request.capturedOn();
         var row = acquisitions.findById(new SkinAcquisitionRow.Key(heroId, skinKey, region, on))
                 .orElseGet(() -> new SkinAcquisitionRow(heroId, skinKey, region, on));
-        row.setMethod(request.method());
+        row.setMethod(method);
         // A price only belongs to a skin the shop actually sells.
-        row.setVoucherPrice("VOUCHER".equals(request.method()) ? request.voucherPrice() : null);
-        row.setEventName("EVENT".equals(request.method()) ? blankToNull(request.eventName()) : null);
+        row.setVoucherPrice(method == SkinAcquisitionMethod.VOUCHER ? request.voucherPrice() : null);
+        row.setEventName(method == SkinAcquisitionMethod.EVENT ? blankToNull(request.eventName()) : null);
         row.setNeedsReview(Boolean.TRUE.equals(request.needsReview()));
         row.setNote(blankToNull(request.note()));
         row.setUpdatedAt(clock.instant());

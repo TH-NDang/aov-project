@@ -114,6 +114,7 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
                     publicRead ? null : icon.id(), publicRead ? url(assets, icon.id()) : null,
                     icon.source(), false, destinations, owner));
         }
+
         return new PageSlice<>(candidates, page, size, result.totalElements());
     }
 
@@ -159,6 +160,7 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
         }
         var matching = library.stream().filter(i -> i.getSkillKey() == null && i.getSourceSlot() == slot
                 && i.getVariantNo() == variant).toList();
+
         return matching.size() == 1 ? new Icon(matching.getFirst().getAssetId(), "LIBRARY") : new Icon(null, null);
     }
 }

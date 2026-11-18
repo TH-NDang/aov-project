@@ -85,6 +85,7 @@ public class PublicReferenceCatalogLoader {
                             ? custom.destinations()
                             : original.destinations()));
         }
+
         return new ReferenceSettingsView(document.version(), new ReferenceSettings(1, config.autoRecognize(),
                 config.fallbackLocale(), List.copyOf(entries.values())));
     }

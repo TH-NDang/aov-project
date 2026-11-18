@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.application.response.HeroListView;
+import com.wikiaov.hero.internal.catalog.application.HeroSectionPages;
 import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -78,80 +79,82 @@ public interface HeroPublicApi {
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 
-    @Operation(operationId = "heroPublicApi_sectionPROFILE", summary = "Section profile - hero public", description = "Section profile for hero public. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
+    @Operation(operationId = "heroPublicApi_sectionPROFILE", summary = "Section profile - hero public", description = "One published hero profile section by revision, without its sources and with each text in the requested locale or its fallback. Public read endpoint. Unrecognized query parameters are rejected. The representation never changes and may be cached for a year.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
             @ApiResponse(responseCode = "200", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HeroSectionPages.ProfilePage.class))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
-    ResponseEntity<?> sectionPROFILE(@Parameter(description = "Id identifier.") UUID id,
+    ResponseEntity<HeroSectionPages.ProfilePage> sectionPROFILE(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 
-    @Operation(operationId = "heroPublicApi_sectionOVERVIEW_RATINGS", summary = "Section overview ratings - hero public", description = "Section overview ratings for hero public. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
+    @Operation(operationId = "heroPublicApi_sectionOVERVIEW_RATINGS", summary = "Section overview ratings - hero public", description = "One published hero overview ratings section by revision, without its sources and with each text in the requested locale or its fallback. Public read endpoint. Unrecognized query parameters are rejected. The representation never changes and may be cached for a year.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
             @ApiResponse(responseCode = "200", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HeroSectionPages.RatingsPage.class))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
-    ResponseEntity<?> sectionOVERVIEW_RATINGS(@Parameter(description = "Id identifier.") UUID id,
+    ResponseEntity<HeroSectionPages.RatingsPage> sectionOVERVIEW_RATINGS(
+            @Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 
-    @Operation(operationId = "heroPublicApi_sectionCOMBAT_STATS", summary = "Section combat stats - hero public", description = "Section combat stats for hero public. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
+    @Operation(operationId = "heroPublicApi_sectionCOMBAT_STATS", summary = "Section combat stats - hero public", description = "One published hero combat stats section by revision, without its sources and with each text in the requested locale or its fallback. Public read endpoint. Unrecognized query parameters are rejected. The representation never changes and may be cached for a year.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
             @ApiResponse(responseCode = "200", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HeroSectionPages.StatsPage.class))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
-    ResponseEntity<?> sectionCOMBAT_STATS(@Parameter(description = "Id identifier.") UUID id,
+    ResponseEntity<HeroSectionPages.StatsPage> sectionCOMBAT_STATS(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 
-    @Operation(operationId = "heroPublicApi_sectionSKILLS", summary = "Section skills - hero public", description = "Section skills for hero public. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
+    @Operation(operationId = "heroPublicApi_sectionSKILLS", summary = "Section skills - hero public", description = "One published hero skills section by revision, without its sources and with each text in the requested locale or its fallback. Public read endpoint. Unrecognized query parameters are rejected. The representation never changes and may be cached for a year.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
             @ApiResponse(responseCode = "200", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HeroSectionPages.SkillsPage.class))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
-    ResponseEntity<?> sectionSKILLS(@Parameter(description = "Id identifier.") UUID id,
+    ResponseEntity<HeroSectionPages.SkillsPage> sectionSKILLS(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 
-    @Operation(operationId = "heroPublicApi_sectionSKINS", summary = "Section skins - hero public", description = "Section skins for hero public. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
+    @Operation(operationId = "heroPublicApi_sectionSKINS", summary = "Section skins - hero public", description = "One published hero skins section by revision, without its sources and with each text in the requested locale or its fallback. Public read endpoint. Unrecognized query parameters are rejected. The representation never changes and may be cached for a year.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
             @ApiResponse(responseCode = "200", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HeroSectionPages.SkinsPage.class))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
-    ResponseEntity<?> sectionSKINS(@Parameter(description = "Id identifier.") UUID id,
+    ResponseEntity<HeroSectionPages.SkinsPage> sectionSKINS(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 
-    @Operation(operationId = "heroPublicApi_sectionMEDIA_BINDINGS", summary = "Section media bindings - hero public", description = "Section media bindings for hero public. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
+    @Operation(operationId = "heroPublicApi_sectionMEDIA_BINDINGS", summary = "Section media bindings - hero public", description = "One published hero media bindings section by revision, without its sources and with each text in the requested locale or its fallback. Public read endpoint. Unrecognized query parameters are rejected. The representation never changes and may be cached for a year.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
             @ApiResponse(responseCode = "200", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HeroSectionPages.BindingsPage.class))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
-    ResponseEntity<?> sectionMEDIA_BINDINGS(@Parameter(description = "Id identifier.") UUID id,
+    ResponseEntity<HeroSectionPages.BindingsPage> sectionMEDIA_BINDINGS(
+            @Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);

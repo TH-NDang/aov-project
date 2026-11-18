@@ -126,6 +126,7 @@ public class AuthController implements AuthApi {
         if (!state.matches("[A-Za-z0-9_-]{43}")) {
             throw new ApiException(AuthErrorCode.AUTH_INVALID_STATE, "Invalid login state.");
         }
+
         var flow = googleFlows.consume(state, cookie(request, "aov_oauth_" + state));
         setCookie(response, "aov_oauth_" + state, "", 0);
         String outcome = "success";
@@ -138,6 +139,7 @@ public class AuthController implements AuthApi {
                 outcome = exception.getErrorCode().name();
             }
         }
+
         return ResponseEntity.status(303).location(URI.create(properties.completionUri()
                 + "#state=" + state + "&status=" + outcome)).build();
     }

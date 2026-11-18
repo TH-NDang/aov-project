@@ -202,6 +202,7 @@ public class AutoChessGuides {
         var newest = new HashMap<UUID, Long>();
         all.stream().filter(r -> r.getState() == RevisionState.PUBLISHED)
                 .forEach(r -> newest.merge(r.getModeId(), r.getRevisionNo(), Math::max));
+
         var usages = new HashMap<UUID, List<MediaUsage>>();
         for (var revision : all) {
             var scope = revision.getState() == RevisionState.DRAFT
@@ -230,6 +231,7 @@ public class AutoChessGuides {
                 add(usages, blessing.iconAssetId(), revision, "BLESSING_ICON", scope, edition, blessing.name());
             }
         }
+
         return usages;
     }
 
@@ -275,7 +277,9 @@ public class AutoChessGuides {
         revision.setCreatedAt(now);
         revision.setCreatedByIssuer(actor.issuer());
         revision.setCreatedBySubject(actor.subject());
+
         revision.touch(actor.issuer(), actor.subject(), now);
+
         return revisions.saveAndFlush(revision);
     }
 

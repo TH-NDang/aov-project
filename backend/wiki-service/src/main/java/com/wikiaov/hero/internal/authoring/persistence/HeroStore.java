@@ -4,7 +4,6 @@ import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
-import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.RevisionState;
@@ -101,7 +100,7 @@ public class HeroStore {
         put(sections, HeroSection.SKINS, r.getSkinsRevisionId());
         put(sections, HeroSection.MEDIA_BINDINGS, r.getMediaBindingRevisionId());
         return new HeroRevisionView(r.getId(), r.getHeroId(), r.getRulesetId(), r.getRevisionNo(), r.getState(),
-                r.getVersion(), r.getPublicationSequence(), r.getPublishedAt(), Cause.valueOf(r.getCause()),
+                r.getVersion(), r.getPublicationSequence(), r.getPublishedAt(), r.getCause(),
                 r.getSourceRevisionId(), r.getEffectiveFromPatchVariantId(), sections);
     }
 

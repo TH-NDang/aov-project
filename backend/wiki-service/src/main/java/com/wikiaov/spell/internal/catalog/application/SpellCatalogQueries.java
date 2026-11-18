@@ -24,6 +24,7 @@ import com.wikiaov.spell.internal.catalog.persistence.entity.SpellRevision;
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellTranslation;
 import com.wikiaov.spell.internal.change.persistence.SpellPatchChangeRepository;
 import com.wikiaov.spell.internal.change.persistence.SpellRemovalRepository;
+import com.wikiaov.spell.internal.change.persistence.entity.SpellPatchChange;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -168,6 +168,8 @@ class SpellCatalogQueries {
 
     private PageSlice<SpellView> requestedPage(List<SpellIdentity> owners, Map<UUID, SpellRevision> selected,
             Map<UUID, List<SpellTranslation>> copies, int page, int size) {
+        // Paged in memory: the snapshot each entry shows comes from the revision selection rules (CatalogSnapshots)
+        // and the search reads translations, so the page is cut after both; a catalog holds a few hundred entries.
         return PageSlice.of(owners, page, size).map(owner -> {
             var revision = selected.get(owner.getId());
             var copy = copies.getOrDefault(revision.getId(), List.of());
@@ -260,13 +262,32 @@ class SpellCatalogQueries {
         var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
                 includeUnscoped);
         var context = scope.gameplay();
-        var rows = identities.findAll(Sort.by("code")).stream()
-                .map(owner -> current(owner.getId(), context)
-                        .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
-                        .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
-                .filter(Objects::nonNull).toList();
-        var slice = PageSlice.of(rows, page, size);
+        var current = currentByOwner(context);
+        var listed = identities.findAll(Sort.by("code")).stream()
+                .filter(owner -> current.containsKey(owner.getId()))
+                .filter(owner -> scope.allowUnscoped()
+                        || current.get(owner.getId()).getEffectiveFromPatchVariantId() != null)
+                .toList();
+
+        // Paged in memory: the revision each entry shows comes from the read rules above, not from one column, and a
+        // catalog holds a few hundred entries. Only the page is turned into views.
+        var slice = PageSlice.of(listed, page, size)
+                .map(owner -> revisionContent.publicView(owner, current.get(owner.getId()), locale));
         return slice.withItems(publicMedia.hydrate(slice.items()));
+    }
+
+    /** The revision readers see of every entry of the context's ruleset, read with one query per table. */
+    private Map<UUID, SpellRevision> currentByOwner(GameplayContext context) {
+        var facts = patchChanges.findByRulesetId(context.rulesetId()).stream()
+                .collect(Collectors.groupingBy(SpellPatchChange::getOwnerId));
+        var histories = revisions.findByRulesetIdAndState(context.rulesetId(), RevisionState.PUBLISHED).stream()
+                .sorted(Comparator.comparingLong(SpellRevision::getRevisionNo).reversed())
+                .collect(Collectors.groupingBy(SpellRevision::getOwnerId));
+
+        Map<UUID, SpellRevision> current = new HashMap<>();
+        histories.forEach((owner, history) -> current(facts.getOrDefault(owner, List.of()), history, context)
+                .ifPresent(revision -> current.put(owner, revision)));
+        return current;
     }
 
     SpellView publishedOne(UUID id, String region, String locale) {
@@ -287,7 +308,16 @@ class SpellCatalogQueries {
     }
 
     Optional<SpellRevision> current(UUID id, GameplayContext context) {
-        var lifecycle = patchChanges.findByOwnerId(id).stream()
+        return current(patchChanges.findByOwnerId(id), revisions.findByOwnerIdOrderByRevisionNoDesc(id), context);
+    }
+
+    /**
+     * The revision readers see of one entry in {@code context}, chosen from its change facts and its revisions newest
+     * first; an entry removed at or before the context has none.
+     */
+    private Optional<SpellRevision> current(List<SpellPatchChange> facts, List<SpellRevision> history,
+            GameplayContext context) {
+        var lifecycle = facts.stream()
                 .filter(f -> f.getRulesetId().equals(context.rulesetId()) && f.getKinds().stream()
                         .anyMatch(k -> k == CatalogChanges.Kind.REMOVED || k == CatalogChanges.Kind.ADDED))
                 .filter(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal() <= context.rulesetOrdinal())
@@ -295,7 +325,7 @@ class SpellCatalogQueries {
         if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED)) {
             return Optional.empty();
         }
-        return revisions.findByOwnerIdOrderByRevisionNoDesc(id).stream()
+        return history.stream()
                 .filter(revision -> revision.getState() == RevisionState.PUBLISHED
                         && (revision.getEffectiveFromPatchVariantId() != null
                                 || CatalogObservation.isUnscopedBaseline(revision.getCause(),
@@ -348,15 +378,20 @@ class SpellCatalogQueries {
         if (!scope.allowUnscoped()) {
             return new PageSlice<>(List.of(), page, size, 0);
         }
-        var rows = identities.findAll(Sort.by("code")).stream()
-                .map(owner -> revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId()).stream()
-                        .filter(revision -> revision.getState() == RevisionState.PUBLISHED
-                                && revision.getRulesetId().equals(context.rulesetId())
-                                && contentRules.archived(revision, revision.getGameplay()))
-                        .max(Comparator.comparingLong(revision -> revision.getPublicationSequence()))
-                        .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
-                .filter(Objects::nonNull).toList();
-        var slice = PageSlice.of(rows, page, size);
+        Map<UUID, SpellRevision> archived = new HashMap<>();
+        revisions.findByRulesetIdAndState(context.rulesetId(), RevisionState.PUBLISHED).stream()
+                .filter(revision -> contentRules.archived(revision, revision.getGameplay()))
+                .sorted(Comparator.comparingLong(SpellRevision::getRevisionNo).reversed())
+                .forEach(revision -> archived.merge(revision.getOwnerId(), revision,
+                        (kept, other) -> other.getPublicationSequence() > kept.getPublicationSequence()
+                                ? other
+                                : kept));
+        var listed = identities.findAll(Sort.by("code")).stream().filter(owner -> archived.containsKey(owner.getId()))
+                .toList();
+
+        // Paged in memory: whether a spell is archived is read from its content, and the archive is small.
+        var slice = PageSlice.of(listed, page, size)
+                .map(owner -> revisionContent.publicView(owner, archived.get(owner.getId()), locale));
         return slice.withItems(publicMedia.hydrate(slice.items()));
     }
 

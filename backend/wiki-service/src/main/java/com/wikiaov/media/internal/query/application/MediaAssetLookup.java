@@ -76,6 +76,7 @@ class MediaAssetLookup implements MediaAssets {
                             : reference(version,
                                     credits.getOrDefault(asset.getId(), List.of()))));
         }
+
         return Map.copyOf(result);
     }
 

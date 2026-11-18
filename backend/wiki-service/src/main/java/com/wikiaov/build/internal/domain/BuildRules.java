@@ -141,6 +141,7 @@ public final class BuildRules {
                 perColor.merge(part.color(), part.quantity(), Integer::sum);
             }
         }
+
         perColor.forEach((color, total) -> {
             if (total > ARCANA_PER_COLOR) {
                 problems.add(color + " arcana add up to " + total + "; the game allows " + ARCANA_PER_COLOR + ".");

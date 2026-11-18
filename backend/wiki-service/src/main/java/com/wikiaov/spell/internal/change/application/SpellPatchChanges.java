@@ -5,14 +5,14 @@ import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
+import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.CatalogChangeProvider;
 import com.wikiaov.platform.CatalogChanges;
 import com.wikiaov.platform.CatalogChanges.Entry;
 import com.wikiaov.platform.CatalogChanges.Kind;
-import com.wikiaov.platform.CatalogChanges.Summary;
-import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText;
 import com.wikiaov.platform.RevisionState;
@@ -31,13 +31,11 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,46 +96,16 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         var owners = identities.findAllById(snapshots.stream().map(SpellRevision::getOwnerId).distinct().toList())
                 .stream()
                 .collect(Collectors.toMap(SpellIdentity::getId, i -> i));
-        var result = new ArrayList<Entry>();
-        for (var fact : facts) {
-            var r = byId.get(fact.getToRevisionId());
-            if (r == null) {
-                continue;
-            }
-            var copy = CatalogText.select(
-                    names.getOrDefault(r.getId(), List.of()).stream().map(SpellTranslation::content).toList(), locale);
-            var summary = CatalogChanges.summary(fact.getTranslations(), locale);
-            var owner = owners.get(r.getOwnerId());
-            result.add(new Entry(fact.getId(), domain(), owner.getId(), owner.getCode(),
-                    copy.isEmpty() ? owner.getCode() : copy.getFirst().name(), r.getIconAssetId(), rulesetId,
-                    fact.getPatchVariantId(), fact.getFromRevisionId(), r.getId(), fact.getKinds(),
-                    summary == null ? null : summary.text(), summary == null ? null : summary.locale(),
-                    fact.getSourceUrl(), true, fact.getRecordedAt()));
-        }
-        var grouped = new HashMap<String, SpellRevision>();
-        for (var r : snapshots) {
-            if (r.getEffectiveFromPatchVariantId() == null
-                    || (patchVariantId != null && !patchVariantId.equals(r.getEffectiveFromPatchVariantId()))
-                    || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.getCause())) {
-                continue;
-            }
-            if (facts.stream().anyMatch(f -> f.getOwnerId().equals(r.getOwnerId())
-                    && f.getPatchVariantId().equals(r.getEffectiveFromPatchVariantId()))) {
-                continue;
-            }
-            String key = r.getOwnerId() + "/" + r.getEffectiveFromPatchVariantId();
-            grouped.merge(key, r, (a, b) -> a.getRevisionNo() > b.getRevisionNo() ? a : b);
-        }
-        for (var r : grouped.values()) {
-            var owner = owners.get(r.getOwnerId());
-            var copy = CatalogText.select(
-                    names.getOrDefault(r.getId(), List.of()).stream().map(SpellTranslation::content).toList(), locale);
-            result.add(new Entry(r.getId(), domain(), owner.getId(), owner.getCode(),
-                    copy.isEmpty() ? owner.getCode() : copy.getFirst().name(), r.getIconAssetId(), rulesetId,
-                    r.getEffectiveFromPatchVariantId(), r.getSourceRevisionId(), r.getId(),
-                    List.of(r.getCause().equals("DATA_BASELINE") ? Kind.DATA_BASELINE : Kind.UPDATED),
-                    null, null, null, false, r.getPublishedAt()));
-        }
+        var result = new ArrayList<Entry>(recordedEntries(facts, byId, names, owners, rulesetId, locale));
+        result.addAll(observedEntries(snapshots, facts, patchVariantId, names, owners, rulesetId, locale));
+        addRemovals(result, patchVariantId, byId, names, owners, rulesetId, locale);
+        result.sort(Comparator.comparing(Entry::code).thenComparing(e -> e.patchVariantId().toString()));
+        return result;
+    }
+
+    /** Adds the recorded removals of archived spells that no other entry of the same spell and patch covers. */
+    private void addRemovals(List<Entry> result, UUID patchVariantId, Map<UUID, SpellRevision> byId,
+            Map<UUID, List<SpellTranslation>> names, Map<UUID, SpellIdentity> owners, UUID rulesetId, String locale) {
         for (var removal : patchVariantId == null
                 ? removals.findAll()
                 : removals.findByPatchVariantIdOrderByRecordedAtDesc(patchVariantId)) {
@@ -159,7 +127,64 @@ public class SpellPatchChanges implements CatalogChangeProvider {
                     removal.getPatchVariantId(), null, target.getId(), List.of(Kind.REMOVED),
                     removal.getNotes(), null, removal.getSourceUrl(), true, removal.getRecordedAt()));
         }
-        result.sort(Comparator.comparing(Entry::code).thenComparing(e -> e.patchVariantId().toString()));
+    }
+
+    /** The changes editors confirmed, each with the name and icon of the snapshot it points at. */
+    private List<Entry> recordedEntries(List<SpellPatchChange> facts, Map<UUID, SpellRevision> byId,
+            Map<UUID, List<SpellTranslation>> names, Map<UUID, SpellIdentity> owners, UUID rulesetId, String locale) {
+        var result = new ArrayList<Entry>();
+        for (var fact : facts) {
+            var r = byId.get(fact.getToRevisionId());
+            if (r == null) {
+                continue;
+            }
+            var copy = CatalogText.select(
+                    names.getOrDefault(r.getId(), List.of()).stream().map(SpellTranslation::content).toList(), locale);
+            var summary = CatalogChanges.summary(fact.getTranslations(), locale);
+            var owner = owners.get(r.getOwnerId());
+            result.add(new Entry(fact.getId(), domain(), owner.getId(), owner.getCode(),
+                    copy.isEmpty() ? owner.getCode() : copy.getFirst().name(), r.getIconAssetId(), rulesetId,
+                    fact.getPatchVariantId(), fact.getFromRevisionId(), r.getId(), fact.getKinds(),
+                    summary == null ? null : summary.text(), summary == null ? null : summary.locale(),
+                    fact.getSourceUrl(), true, fact.getRecordedAt()));
+        }
+        return result;
+    }
+
+    /**
+     * The published baselines and gameplay snapshots of a patch that no confirmed change covers, newest revision per
+     * entry and patch, listed as unconfirmed observations.
+     */
+    private List<Entry> observedEntries(List<SpellRevision> snapshots, List<SpellPatchChange> facts,
+            UUID patchVariantId,
+            Map<UUID, List<SpellTranslation>> names, Map<UUID, SpellIdentity> owners, UUID rulesetId, String locale) {
+        var result = new ArrayList<Entry>();
+        var grouped = new HashMap<String, SpellRevision>();
+        for (var r : snapshots) {
+            if (r.getEffectiveFromPatchVariantId() == null
+                    || (patchVariantId != null && !patchVariantId.equals(r.getEffectiveFromPatchVariantId()))
+                    || !r.getCause().gameplay()) {
+                continue;
+            }
+            if (facts.stream().anyMatch(f -> f.getOwnerId().equals(r.getOwnerId())
+                    && f.getPatchVariantId().equals(r.getEffectiveFromPatchVariantId()))) {
+                continue;
+            }
+            String key = r.getOwnerId() + "/" + r.getEffectiveFromPatchVariantId();
+            grouped.merge(key, r, (a, b) -> a.getRevisionNo() > b.getRevisionNo() ? a : b);
+        }
+
+        for (var r : grouped.values()) {
+            var owner = owners.get(r.getOwnerId());
+            var copy = CatalogText.select(
+                    names.getOrDefault(r.getId(), List.of()).stream().map(SpellTranslation::content).toList(), locale);
+            result.add(new Entry(r.getId(), domain(), owner.getId(), owner.getCode(),
+                    copy.isEmpty() ? owner.getCode() : copy.getFirst().name(), r.getIconAssetId(), rulesetId,
+                    r.getEffectiveFromPatchVariantId(), r.getSourceRevisionId(), r.getId(),
+                    List.of(r.getCause() == CatalogCause.DATA_BASELINE ? Kind.DATA_BASELINE : Kind.UPDATED),
+                    null, null, null, false, r.getPublishedAt()));
+        }
+
         return result;
     }
 
@@ -169,12 +194,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         var owner = identities.lockById(ownerId).orElseThrow(
                 () -> new ApiException(SpellErrorCode.SPELL_NOT_FOUND, "The catalog entry was not found."));
 
-        if (input.patchVariantId() == null || input.toRevisionId() == null || input.kinds() == null
-                || input.kinds().isEmpty()
-                || input.kinds().size() > 4 || input.kinds().stream().anyMatch(Objects::isNull)
-                || new HashSet<>(input.kinds()).size() != input.kinds().size()) {
-            invalid("A patch, published target and unique change kinds are required.");
-        }
+        reject(CatalogChanges.requestProblem(input));
 
         var target = revisions.findById(input.toRevisionId()).filter(r -> r.getOwnerId().equals(ownerId)).orElseThrow(
                 () -> new ApiException(SpellErrorCode.SPELL_INVALID_CONTENT, "The target revision was not found."));
@@ -189,7 +209,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
                 || target.getEffectiveFromPatchVariantId() == null
                         && !(removed && CatalogObservation.isUnscopedBaseline(
                                 target.getCause(), target.getSourceRevisionId(), null))
-                || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(target.getCause())) {
+                || !target.getCause().gameplay()) {
             invalid("Use a published gameplay or baseline snapshot and a published patch in the same ruleset.");
         }
         if (removed) {
@@ -200,49 +220,11 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         } else if (!input.patchVariantId().equals(target.getEffectiveFromPatchVariantId())) {
             invalid("The target snapshot must belong to the selected patch.");
         }
-        if (input.kinds().contains(Kind.DATA_BASELINE) && input.kinds().size() != 1
-                || input.kinds().contains(Kind.ADDED) && input.kinds().size() != 1) {
-            invalid("Baseline and addition must be recorded separately from balance changes.");
-        }
-        if (input.kinds().contains(Kind.DATA_BASELINE) && !target.getCause().equals("DATA_BASELINE")) {
-            invalid("Only baseline snapshots can be classified as baseline.");
-        }
-        if (!removed && !input.kinds().contains(Kind.ADDED) && !input.kinds().contains(Kind.DATA_BASELINE)
-                && (!target.getCause().equals("GAME_PATCH") || input.fromRevisionId() == null)) {
-            invalid("Updates require a gameplay snapshot and a known previous snapshot.");
-        }
+        reject(CatalogChanges.kindsProblem(input, target.getCause(), removed));
 
-        if (input.fromRevisionId() != null) {
-            var from = revisions.findById(input.fromRevisionId()).orElseThrow(
-                    () -> new ApiException(SpellErrorCode.SPELL_INVALID_CONTENT, "The source revision was not found."));
-            if (!from.getOwnerId().equals(ownerId) || !from.getRulesetId().equals(target.getRulesetId())
-                    || SpellObservation.archived(from.getCause(), from.getEffectiveFromPatchVariantId(),
-                            from.getGameplay())
-                    || from.getState() != RevisionState.PUBLISHED
-                    || from.getEffectiveFromPatchVariantId() == null && !CatalogObservation.isUnscopedBaseline(
-                            from.getCause(), from.getSourceRevisionId(), null)
-                    || (GameplayContexts.rulesetOrdinal(contexts, from.getEffectiveFromPatchVariantId())) >= patch
-                            .rulesetOrdinal()) {
-                invalid("The source must be an earlier published snapshot of the same entry and ruleset.");
-            }
-        }
+        requireSource(ownerId, input, target, patch);
 
-        var copy = input.translations() == null ? List.<Summary>of() : input.translations();
-        if (copy.isEmpty() || copy.size() > 50) {
-            invalid("A localized change summary is required.");
-        }
-        var locales = new HashSet<String>();
-        for (var text : copy) {
-            if (text == null || text.locale() == null || !text.locale().matches(CatalogLocales.PATTERN)
-                    || !locales.add(text.locale()) || text.text() == null || text.text().isBlank()
-                    || text.text().length() > 4000) {
-                invalid("Invalid or duplicate summary translations.");
-            }
-        }
-        if (input.sourceUrl() == null || input.sourceUrl().length() > 2048
-                || !input.sourceUrl().matches("https?://[^\\s]+")) {
-            invalid("An HTTP source URL is required for confirmed game changes.");
-        }
+        reject(CatalogChanges.evidenceProblem(input));
 
         if (changes.existsByOwnerIdAndPatchVariantId(ownerId, input.patchVariantId())
                 || removals.existsBySpellIdAndPatchVariantId(ownerId, input.patchVariantId())) {
@@ -250,6 +232,32 @@ public class SpellPatchChanges implements CatalogChangeProvider {
                     "A confirmed change already exists for this entry and patch.");
         }
 
+        return save(ownerId, input, target);
+    }
+
+    /** The previous snapshot a change names is an earlier published snapshot of the same entry and ruleset. */
+    private void requireSource(UUID ownerId, CatalogChanges.Record input, SpellRevision target,
+            PatchVariantReference patch) {
+        if (input.fromRevisionId() == null) {
+            return;
+        }
+
+        var from = revisions.findById(input.fromRevisionId()).orElseThrow(
+                () -> new ApiException(SpellErrorCode.SPELL_INVALID_CONTENT, "The source revision was not found."));
+        if (!from.getOwnerId().equals(ownerId) || !from.getRulesetId().equals(target.getRulesetId())
+                || SpellObservation.archived(from.getCause(), from.getEffectiveFromPatchVariantId(),
+                        from.getGameplay())
+                || from.getState() != RevisionState.PUBLISHED
+                || from.getEffectiveFromPatchVariantId() == null && !CatalogObservation.isUnscopedBaseline(
+                        from.getCause(), from.getSourceRevisionId(), null)
+                || (GameplayContexts.rulesetOrdinal(contexts, from.getEffectiveFromPatchVariantId())) >= patch
+                        .rulesetOrdinal()) {
+            invalid("The source must be an earlier published snapshot of the same entry and ruleset.");
+        }
+    }
+
+    /** Stores the confirmed change, marks the patch data for review and records the audit entry. */
+    private UUID save(UUID ownerId, CatalogChanges.Record input, SpellRevision target) {
         var actor = actors.require();
         var fact = new SpellPatchChange();
         fact.setId(UUID.randomUUID());
@@ -259,7 +267,7 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         fact.setFromRevisionId(input.fromRevisionId());
         fact.setToRevisionId(target.getId());
         fact.setKinds(List.copyOf(input.kinds()));
-        fact.setTranslations(List.copyOf(copy));
+        fact.setTranslations(List.copyOf(input.translations()));
         fact.setSourceUrl(input.sourceUrl());
         fact.setRecordedAt(clock.instant());
         fact.setRecordedByIssuer(actor.issuer());
@@ -271,6 +279,13 @@ public class SpellPatchChanges implements CatalogChangeProvider {
                 null, Map.of("changeSetId", fact.getId())));
 
         return fact.getId();
+    }
+
+    /** Answers a broken shared change rule (ADR-031) with this catalog's invalid-content error. */
+    private void reject(@Nullable String problem) {
+        if (problem != null) {
+            invalid(problem);
+        }
     }
 
     private void invalid(String detail) {

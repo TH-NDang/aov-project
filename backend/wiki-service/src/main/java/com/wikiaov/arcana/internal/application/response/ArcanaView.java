@@ -2,6 +2,7 @@ package com.wikiaov.arcana.internal.application.response;
 
 import com.wikiaov.arcana.internal.domain.ArcanaContent;
 import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.List;
@@ -34,7 +35,7 @@ public record ArcanaView(
             long version,
             Long publicationSequence,
             Instant publishedAt,
-            String cause,
+            CatalogCause cause,
             UUID effectiveFromPatchVariantId,
             UUID sourceRevisionId,
             Instant createdAt,

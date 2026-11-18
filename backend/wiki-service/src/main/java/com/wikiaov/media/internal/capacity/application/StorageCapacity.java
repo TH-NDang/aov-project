@@ -244,6 +244,7 @@ public class StorageCapacity {
             throw new ApiException(MediaErrorCode.STORAGE_ESTIMATE_LIMIT_EXCEEDED,
                     "Estimate at most " + MAX_ESTIMATED_FILES + " files at once.", Map.of("max", MAX_ESTIMATED_FILES));
         }
+
         for (EstimateFile file : files) {
             if (file == null || file.sizeBytes() < 0
                     || file.sha256() != null && !SourceDigest.isSha256(file.sha256())) {

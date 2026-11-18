@@ -5,6 +5,7 @@ import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
 import com.wikiaov.hero.internal.catalog.persistence.HeroCatalogRepository.Filter;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
 import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
+import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfilePositionRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRoleRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
@@ -100,7 +101,8 @@ public final class HeroCatalogSpecifications {
         var targets = changes.subquery(UUID.class);
         var target = targets.from(HeroRevision.class);
         targets.select(target.get("id")).where(cb.equal(target.get("id"), change.get("toHeroRevisionId")),
-                cb.equal(target.get("state"), RevisionState.PUBLISHED), cb.equal(target.get("cause"), "GAME_PATCH"));
+                cb.equal(target.get("state"), RevisionState.PUBLISHED),
+                cb.equal(target.get("cause"), Cause.GAME_PATCH));
         changes.select(change.get("id")).where(cb.equal(change.get("heroId"), hero.get("id")),
                 change.get("patchVariantId").in(filter.variants()),
                 cb.or(cb.equal(change.get("sourceKind"), ChangeSource.PATCH_NOTES), cb.exists(targets)));
@@ -177,6 +179,7 @@ public final class HeroCatalogSpecifications {
             predicates.add(filter.facets().hasWarnings() ? pending : cb.not(pending));
         }
         matching.select(revision.get("id")).where(predicates.toArray(Predicate[]::new));
+
         return cb.exists(matching);
     }
 
@@ -208,7 +211,7 @@ public final class HeroCatalogSpecifications {
                     cb.and(cb.equal(change.get("sourceKind"), ChangeSource.SNAPSHOT),
                             cb.equal(change.get("toHeroRevisionId"), revision.get("id")),
                             cb.equal(revision.get("state"), RevisionState.PUBLISHED),
-                            cb.equal(revision.get("cause"), "GAME_PATCH")),
+                            cb.equal(revision.get("cause"), Cause.GAME_PATCH)),
                     cb.and(cb.equal(change.get("sourceKind"), ChangeSource.PATCH_NOTES),
                             cb.notEqual(revision.get("state"), RevisionState.DISCARDED))));
         } else if (!filter.snapshotVariants().isEmpty()) {

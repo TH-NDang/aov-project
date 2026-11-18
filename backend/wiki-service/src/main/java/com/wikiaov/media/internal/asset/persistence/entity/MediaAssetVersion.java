@@ -111,6 +111,7 @@ public class MediaAssetVersion extends AssignedIdEntity {
         version.createdAt = now;
         version.createdByIssuer = createdBy.issuer();
         version.createdBySubject = createdBy.subject();
+
         return version;
     }
 

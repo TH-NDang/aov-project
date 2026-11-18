@@ -3,7 +3,6 @@ package com.wikiaov.hero.internal.skills.persistence;
 import com.wikiaov.access.Actor;
 import com.wikiaov.hero.internal.domain.HeroContent.Effect;
 import com.wikiaov.hero.internal.domain.HeroContent.Skill;
-import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
 import com.wikiaov.hero.internal.domain.HeroContent.SkillStateIcon;
 import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
 import com.wikiaov.hero.internal.domain.HeroContent.Skills;
@@ -79,7 +78,7 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
             identities.save(new SkillIdentityRow(heroId, skill.skillKey(), at));
         }
         identities.flush();
-        snapshots.saveAndFlush(new SkillSnapshotRow(revisionId, heroId, skill.skillKey(), skill.kind().name(),
+        snapshots.saveAndFlush(new SkillSnapshotRow(revisionId, heroId, skill.skillKey(), skill.kind(),
                 skill.formKey(), skill.displayOrder(), skill.iconAssetId()));
         translations.saveAll(skill.translations().stream().map(t -> new SkillTranslationRow(revisionId,
                 skill.skillKey(), t.locale(), t.name(), t.description(), t.summary())).toList());
@@ -173,7 +172,7 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
             var effectRows = skillEffects.getOrDefault(id, Map.of());
             var iconRows = skillIcons.getOrDefault(id, Map.of());
             result.put(id, new Skills(skills.getOrDefault(id, List.of()).stream().map(skill -> new Skill(
-                    skill.getSkillKey(), SkillKind.valueOf(skill.getKind()), skill.getFormKey(),
+                    skill.getSkillKey(), skill.getKind(), skill.getFormKey(),
                     skill.getDisplayOrder(), skill.getIconAssetId(),
                     skillTexts.getOrDefault(skill.getSkillKey(), List.of()).stream()
                             .map(t -> new SkillTranslation(t.getLocale(), t.getName(), t.getDescription(),

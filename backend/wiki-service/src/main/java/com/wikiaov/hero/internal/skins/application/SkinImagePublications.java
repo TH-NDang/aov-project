@@ -132,7 +132,7 @@ public class SkinImagePublications {
                 .filter(r -> r.rulesetId().equals(source.rulesetId()) && r.publicationSequence() != null)
                 .mapToLong(HeroRevisionView::publicationSequence).max().orElse(0) + 1);
         entity.setPublishedAt(now);
-        entity.setCause(Cause.VISUAL_UPDATE.name());
+        entity.setCause(Cause.VISUAL_UPDATE);
         entity.setSourceRevisionId(source.id());
         entity.setEffectiveFromPatchVariantId(source.effectiveFromPatchVariantId());
         entity.setProfileRevisionId(source.sections().get(HeroSection.PROFILE));
@@ -147,6 +147,7 @@ public class SkinImagePublications {
         entity.setCreatedBySubject(actor.subject());
         entity.setUpdatedByIssuer(actor.issuer());
         entity.setUpdatedBySubject(actor.subject());
+
         return entity;
     }
 

@@ -63,6 +63,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
@@ -1025,6 +1026,113 @@ class DomainCoreIntegrationTest {
                 Map.of("rulesetId", ruleset, "sourceRevisionId", id, "cause", "CONTENT_CORRECTION"), 409);
         mvc.perform(get(ROOT + "/heroes?region=VN&region=TH")).andExpect(status().isBadRequest());
         mvc.perform(get(ROOT + "/heroes?size=101")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void sectionPagesChangeHistoryPatchPagesAndRevisionReadsKeepTheirJsonShape() throws Exception {
+        var draft = create();
+        UUID hero = uuid(draft, "heroId"), original = uuid(draft, "id");
+        draft = complete(hero, original, draft);
+        String p = path(hero, original);
+        draft = send(put(p + "/skins"), Map.of("expectedDraftVersion", number(draft, "version"), "skins",
+                List.of(Map.of("skinKey", "skin-1", "displayOrder", 0, "artAssetId",
+                        assets.get(MediaSemanticType.HERO_SKIN_ART), "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Trang phục 1"))))),
+                200);
+        draft = send(put(p + "/traits"), Map.of("expectedDraftVersion", number(draft, "version"), "traits",
+                List.of(Map.of("code", "DASH", "skillKeys", List.of("skill-1"), "translations",
+                        List.of(Map.of("locale", "vi-VN", "detail", "Lướt tới"))),
+                        Map.of("code", "HARD_CC", "skillKeys", List.of(), "translations", List.of()))),
+                200);
+        send(post(p + "/publish"), Map.of("expectedVersion", number(draft, "version")), 200);
+        var sections = (Map<String, String>) draft.get("sections");
+
+        UUID patch2 = id(send(post(ROOT + "/admin/patches"), Map.of("code", "patch-test-2", "translations",
+                List.of(Map.of("locale", "vi-VN", "title", "Hai", "summary", ""))), 201));
+        UUID v2 = id(send(post(ROOT + "/admin/patches/" + patch2 + "/variants"),
+                Map.of("rulesetId", ruleset, "variantCode", "TEST", "rulesetOrdinal", 2), 201));
+        send(post(ROOT + "/admin/patch-variants/" + v2 + "/publish"), null, 204);
+        var fork = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"), Map.of("rulesetId", ruleset,
+                "sourceRevisionId", original, "cause", "GAME_PATCH", "effectiveFromPatchVariantId", v2), 201);
+        UUID forked = id(fork);
+        fork = send(put(path(hero, forked) + "/combat-stats"), Map.of("expectedDraftVersion", 1, "values",
+                List.of(Map.of("statKey", "HP", "baseValue", 3600, "unit", "POINT"))), 200);
+        send(post(path(hero, forked) + "/publish"), Map.of("expectedVersion", number(fork, "version")), 200);
+        send(post(ROOT + "/admin/patch-variants/" + v2 + "/hero-changes"), Map.of("heroId", hero,
+                "fromHeroRevisionId", original, "toHeroRevisionId", forked, "summaryTranslations",
+                List.of(Map.of("locale", "vi-VN", "summary", "Tăng máu")), "changes",
+                List.of(Map.of("type", "STAT", "statKey", "HP", "oldValue", 3500, "newValue", 3600, "unit", "POINT",
+                        "changeKind", "BUFF"),
+                        Map.of("type", "MECHANIC", "mechanicKey", "passive-shield", "description", "Khiên mới",
+                                "changeKind", "ADJUSTMENT"),
+                        Map.of("type", "OTHER", "description", "Sửa lỗi", "changeKind", "ADJUSTMENT"))),
+                201);
+        release(v2, VN, "2026-10-16T00:00:00Z", 201);
+        clock.set(Instant.parse("2026-10-16T00:00:01Z"));
+
+        assertThat(names(read(ROOT + "/hero-profile-revisions/" + sections.get("profile")))).containsExactly("id",
+                "content");
+        assertThat(names(read(ROOT + "/hero-profile-revisions/" + sections.get("profile")).path("content")))
+                .containsExactly("roles", "positions", "name", "title", "summary", "lore", "strengths",
+                        "weaknesses", "counterTips", "actualLocale", "fallbackApplied");
+        assertThat(read(ROOT + "/hero-profile-revisions/" + sections.get("profile") + "?locale=en-US")
+                .path("content").path("fallbackApplied").asBoolean()).isTrue();
+        assertThat(names(read(ROOT + "/hero-overview-rating-revisions/" + sections.get("overviewRatings"))
+                .path("content"))).containsExactly("scaleCode", "survivability", "attackDamage", "skillEffects",
+                        "difficulty", "derived");
+        assertThat(names(read(ROOT + "/hero-stats-revisions/" + sections.get("combatStats")).path("content")))
+                .containsExactly("values");
+        var skills = read(ROOT + "/hero-skills-revisions/" + sections.get("skills")).path("content");
+        assertThat(names(skills)).containsExactly("skills", "traits");
+        assertThat(names(skills.path("skills").get(0))).containsExactly("skillKey", "kind", "formKey",
+                "displayOrder", "iconAssetId", "effects", "stateIcons", "name", "description", "summary",
+                "actualLocale", "fallbackApplied");
+        assertThat(names(skills.path("traits").get(0))).containsExactly("code", "skillKeys", "detail",
+                "actualLocale", "fallbackApplied");
+        assertThat(skills.path("traits").get(1).path("actualLocale").isNull()).isTrue();
+        assertThat(names(read(ROOT + "/hero-skins-revisions/" + sections.get("skins")).path("content")
+                .path("skins").get(0))).containsExactly("skinKey", "displayOrder", "artAssetId", "rarityCode",
+                        "headAssetId", "portraitAssetId", "images", "name", "description", "acquisitionNote",
+                        "actualLocale", "fallbackApplied");
+        assertThat(names(read(ROOT + "/hero-media-binding-revisions/" + sections.get("mediaBindings"))
+                .path("content"))).containsExactly("bindings", "images");
+
+        var history = read(ROOT + "/heroes/" + hero + "/changes");
+        assertThat(names(history)).containsExactly("items", "page", "size", "totalElements");
+        var entry = history.path("items").get(0);
+        assertThat(names(entry)).containsExactly("id", "overallKind", "assessmentVersion", "heroId", "heroCode",
+                "patchVariantId", "fromHeroRevisionId", "toHeroRevisionId", "sourceKind", "sourceUrl",
+                "introducesHero", "actualLocale", "summary", "changes", "patch");
+        assertThat(entry.path("changes").valueStream().map(DomainCoreIntegrationTest::names)).containsExactly(
+                List.of("id", "changeKind", "sortOrder", "type", "statKey", "oldValue", "newValue", "unitCode"),
+                List.of("id", "changeKind", "sortOrder", "type", "mechanicKey", "description", "previous"),
+                List.of("id", "changeKind", "sortOrder", "type", "description"));
+        var patchFields = List.of("id", "code", "sequence", "locale", "title", "summary", "description",
+                "actualLocale", "fallbackApplied", "region", "requestedLocale", "variantId", "rulesetId",
+                "effectiveAt");
+        assertThat(names(entry.path("patch"))).containsExactlyElementsOf(patchFields);
+        assertThat(names(read(ROOT + "/patches/" + patch2))).containsExactlyElementsOf(patchFields);
+        assertThat(names(read(ROOT + "/patches").path("items").get(0))).containsExactlyElementsOf(patchFields);
+        var patchChanges = read(ROOT + "/patches/" + patch2 + "/changes");
+        assertThat(names(patchChanges)).containsExactly("patch", "variantId", "effectiveAt", "items", "page",
+                "size", "totalElements");
+        assertThat(names(patchChanges.path("items").get(0))).doesNotContain("patch").contains("changes");
+        assertThat(read(ROOT + "/admin/patch-variants/" + v2 + "/hero-changes").get(0).has("patch")).isFalse();
+
+        var revision = read(ROOT + "/admin/heroes/" + hero + "/revisions/" + original);
+        assertThat(names(revision)).containsExactly("revision", "content");
+        assertThat(names(revision.path("content"))).containsExactly("profile", "overviewRatings", "combatStats",
+                "skills", "skins", "mediaBindings");
+        assertThat(revision.path("content").path("profile").has("sources")).isTrue();
+    }
+
+    private JsonNode read(String path) throws Exception {
+        return json.readTree(mvc.perform(get(path).with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+    }
+
+    private static List<String> names(JsonNode node) {
+        return node.propertyStream().map(Map.Entry::getKey).toList();
     }
 
     private Map<String, Object> create() throws Exception {

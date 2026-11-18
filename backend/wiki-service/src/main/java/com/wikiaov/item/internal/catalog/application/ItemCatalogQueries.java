@@ -9,6 +9,7 @@ import com.wikiaov.item.internal.catalog.persistence.entity.ItemIdentity;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemRevision;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemTranslation;
 import com.wikiaov.item.internal.change.persistence.ItemPatchChangeRepository;
+import com.wikiaov.item.internal.change.persistence.entity.ItemPatchChange;
 import com.wikiaov.media.MediaUsage;
 import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.patch.CatalogPatchScope;
@@ -29,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -160,6 +160,8 @@ class ItemCatalogQueries {
 
     private PageSlice<ItemView> requestedPage(List<ItemIdentity> owners, Map<UUID, ItemRevision> selected,
             Map<UUID, List<ItemTranslation>> copies, int page, int size) {
+        // Paged in memory: the snapshot each entry shows comes from the revision selection rules (CatalogSnapshots)
+        // and the search reads translations, so the page is cut after both; a catalog holds a few hundred entries.
         return PageSlice.of(owners, page, size).map(owner -> {
             var revision = selected.get(owner.getId());
             var copy = copies.getOrDefault(revision.getId(), List.of());
@@ -252,13 +254,32 @@ class ItemCatalogQueries {
         var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
                 includeUnscoped);
         var context = scope.gameplay();
-        var rows = identities.findAll(Sort.by("code")).stream()
-                .map(owner -> current(owner.getId(), context)
-                        .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
-                        .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
-                .filter(Objects::nonNull).toList();
-        var slice = PageSlice.of(rows, page, size);
+        var current = currentByOwner(context);
+        var listed = identities.findAll(Sort.by("code")).stream()
+                .filter(owner -> current.containsKey(owner.getId()))
+                .filter(owner -> scope.allowUnscoped()
+                        || current.get(owner.getId()).getEffectiveFromPatchVariantId() != null)
+                .toList();
+
+        // Paged in memory: the revision each entry shows comes from the read rules above, not from one column, and a
+        // catalog holds a few hundred entries. Only the page is turned into views.
+        var slice = PageSlice.of(listed, page, size)
+                .map(owner -> revisionContent.publicView(owner, current.get(owner.getId()), locale));
         return slice.withItems(publicMedia.hydrate(slice.items()));
+    }
+
+    /** The revision readers see of every entry of the context's ruleset, read with one query per table. */
+    private Map<UUID, ItemRevision> currentByOwner(GameplayContext context) {
+        var facts = patchChanges.findByRulesetId(context.rulesetId()).stream()
+                .collect(Collectors.groupingBy(ItemPatchChange::getOwnerId));
+        var histories = revisions.findByRulesetIdAndState(context.rulesetId(), RevisionState.PUBLISHED).stream()
+                .sorted(Comparator.comparingLong(ItemRevision::getRevisionNo).reversed())
+                .collect(Collectors.groupingBy(ItemRevision::getOwnerId));
+
+        Map<UUID, ItemRevision> current = new HashMap<>();
+        histories.forEach((owner, history) -> current(facts.getOrDefault(owner, List.of()), history, context)
+                .ifPresent(revision -> current.put(owner, revision)));
+        return current;
     }
 
     ItemView publishedOne(UUID id, String region, String locale) {
@@ -279,7 +300,16 @@ class ItemCatalogQueries {
     }
 
     Optional<ItemRevision> current(UUID id, GameplayContext context) {
-        var lifecycle = patchChanges.findByOwnerId(id).stream()
+        return current(patchChanges.findByOwnerId(id), revisions.findByOwnerIdOrderByRevisionNoDesc(id), context);
+    }
+
+    /**
+     * The revision readers see of one entry in {@code context}, chosen from its change facts and its revisions newest
+     * first; an entry removed at or before the context has none.
+     */
+    private Optional<ItemRevision> current(List<ItemPatchChange> facts, List<ItemRevision> history,
+            GameplayContext context) {
+        var lifecycle = facts.stream()
                 .filter(f -> f.getRulesetId().equals(context.rulesetId()) && f.getKinds().stream()
                         .anyMatch(k -> k == CatalogChanges.Kind.REMOVED || k == CatalogChanges.Kind.ADDED))
                 .filter(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal() <= context.rulesetOrdinal())
@@ -287,7 +317,7 @@ class ItemCatalogQueries {
         if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED)) {
             return Optional.empty();
         }
-        return revisions.findByOwnerIdOrderByRevisionNoDesc(id).stream()
+        return history.stream()
                 .filter(revision -> revision.getState() == RevisionState.PUBLISHED
                         && (revision.getEffectiveFromPatchVariantId() != null || CatalogObservation.isUnscopedBaseline(
                                 revision.getCause(), revision.getSourceRevisionId(), null))

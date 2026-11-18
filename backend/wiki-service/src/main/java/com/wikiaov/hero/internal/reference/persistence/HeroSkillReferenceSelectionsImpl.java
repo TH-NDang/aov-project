@@ -2,6 +2,7 @@ package com.wikiaov.hero.internal.reference.persistence;
 
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
 import com.wikiaov.hero.internal.domain.SkillReferenceSearch;
 import com.wikiaov.hero.internal.media.persistence.entity.MediaBindingRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
@@ -90,22 +91,7 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
         newerPredicates.add(criteria.published()
                 ? builder.equal(candidate.get("state"), RevisionState.PUBLISHED)
                 : builder.notEqual(candidate.get("state"), RevisionState.DISCARDED));
-        if (criteria.published()) {
-            var rank = ordinal(builder, revision.get("effectiveFromPatchVariantId"), criteria.ordinals());
-            var newerRank = ordinal(builder, candidate.get("effectiveFromPatchVariantId"), criteria.ordinals());
-            predicates.add(builder.lessThanOrEqualTo(revision.get("publishedAt"), criteria.at()));
-            predicates.add(builder.le(rank, criteria.cutoff()));
-            newerPredicates.add(builder.lessThanOrEqualTo(candidate.get("publishedAt"), criteria.at()));
-            newerPredicates.add(builder.le(newerRank, criteria.cutoff()));
-            if (!criteria.allowUnscoped()) {
-                predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
-                newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
-            }
-            newerPredicates.add(builder.or(builder.gt(newerRank, rank), builder.and(builder.equal(newerRank, rank),
-                    builder.gt(candidate.<Long>get("publicationSequence"), revision.get("publicationSequence")))));
-        } else {
-            newerPredicates.add(builder.gt(candidate.<Long>get("revisionNo"), revision.get("revisionNo")));
-        }
+        addScope(builder, revision, candidate, criteria, predicates, newerPredicates);
 
         if (!criteria.ids().isEmpty()) {
             var matches = new ArrayList<Predicate>();
@@ -133,31 +119,62 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
         }
 
         for (String word : criteria.search().words()) {
-            String pattern = "%" + word.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
-            var ownerCopy = query.subquery(String.class);
-            var profile = ownerCopy.from(ProfileTranslationRow.class);
-            ownerCopy.select(profile.get("locale")).where(
-                    builder.equal(profile.get("profileRevisionId"), revision.get("profileRevisionId")),
-                    builder.like(normalized(builder, profile.get("name")), pattern, '!'));
-            var skillCopy = query.subquery(String.class);
-            var translation = skillCopy.from(SkillTranslationRow.class);
-            skillCopy.select(translation.get("locale")).where(
-                    builder.equal(translation.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
-                    builder.equal(translation.get("skillKey"), skill.get("skillKey")),
-                    builder.like(normalized(builder, translation.get("name")), pattern, '!'));
-            // A variant is also found by the name of its form and a skill by the label of one of its state icons.
-            var stateCopy = query.subquery(Integer.class);
-            var state = stateCopy.from(SkillStateIconRow.class);
-            stateCopy.select(state.get("iconOrder")).where(
-                    builder.equal(state.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
-                    builder.equal(state.get("skillKey"), skill.get("skillKey")),
-                    builder.like(normalized(builder, state.get("label")), pattern, '!'));
-            predicates.add(builder.or(builder.like(normalized(builder, hero.get("code")), pattern, '!'),
-                    builder.exists(ownerCopy), builder.exists(skillCopy),
-                    builder.like(normalized(builder, skill.get("formKey")), pattern, '!'), builder.exists(stateCopy)));
+            predicates.add(wordMatch(builder, query, hero, revision, skill, word));
         }
 
         return new Selection(hero, revision, skill, predicates.toArray(Predicate[]::new));
+    }
+
+    /**
+     * Keeps the revisions readers see at the criteria moment (published, in effect, within the patch cutoff) or every
+     * draft and published revision for editors, and makes the newer-revision subquery follow the same scope.
+     */
+    private static void addScope(CriteriaBuilder builder, Root<HeroRevision> revision, Root<HeroRevision> candidate,
+            SkillReferenceCriteria criteria, List<Predicate> predicates, List<Predicate> newerPredicates) {
+        if (criteria.published()) {
+            var rank = ordinal(builder, revision.get("effectiveFromPatchVariantId"), criteria.ordinals());
+            var newerRank = ordinal(builder, candidate.get("effectiveFromPatchVariantId"), criteria.ordinals());
+            predicates.add(builder.lessThanOrEqualTo(revision.get("publishedAt"), criteria.at()));
+            predicates.add(builder.le(rank, criteria.cutoff()));
+            newerPredicates.add(builder.lessThanOrEqualTo(candidate.get("publishedAt"), criteria.at()));
+            newerPredicates.add(builder.le(newerRank, criteria.cutoff()));
+            if (!criteria.allowUnscoped()) {
+                predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
+                newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
+            }
+            newerPredicates.add(builder.or(builder.gt(newerRank, rank), builder.and(builder.equal(newerRank, rank),
+                    builder.gt(candidate.<Long>get("publicationSequence"), revision.get("publicationSequence")))));
+        } else {
+            newerPredicates.add(builder.gt(candidate.<Long>get("revisionNo"), revision.get("revisionNo")));
+        }
+    }
+
+    /** A search word found in the hero code or name, the skill name, the form key or a state icon label. */
+    private static Predicate wordMatch(CriteriaBuilder builder, CriteriaQuery<?> query, Root<HeroIdentity> hero,
+            Root<HeroRevision> revision, Root<SkillSnapshotRow> skill, String word) {
+        String pattern = "%" + word.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        var ownerCopy = query.subquery(String.class);
+        var profile = ownerCopy.from(ProfileTranslationRow.class);
+        ownerCopy.select(profile.get("locale")).where(
+                builder.equal(profile.get("profileRevisionId"), revision.get("profileRevisionId")),
+                builder.like(normalized(builder, profile.get("name")), pattern, '!'));
+        var skillCopy = query.subquery(String.class);
+        var translation = skillCopy.from(SkillTranslationRow.class);
+        skillCopy.select(translation.get("locale")).where(
+                builder.equal(translation.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
+                builder.equal(translation.get("skillKey"), skill.get("skillKey")),
+                builder.like(normalized(builder, translation.get("name")), pattern, '!'));
+        // A variant is also found by the name of its form and a skill by the label of one of its state icons.
+        var stateCopy = query.subquery(Integer.class);
+        var state = stateCopy.from(SkillStateIconRow.class);
+        stateCopy.select(state.get("iconOrder")).where(
+                builder.equal(state.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
+                builder.equal(state.get("skillKey"), skill.get("skillKey")),
+                builder.like(normalized(builder, state.get("label")), pattern, '!'));
+
+        return builder.or(builder.like(normalized(builder, hero.get("code")), pattern, '!'),
+                builder.exists(ownerCopy), builder.exists(skillCopy),
+                builder.like(normalized(builder, skill.get("formKey")), pattern, '!'), builder.exists(stateCopy));
     }
 
     private static Predicate sourceSlot(CriteriaBuilder builder, Root<SkillSnapshotRow> skill,
@@ -169,7 +186,7 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
 
         var keys = builder.or(builder.like(skill.get("skillKey"), "skill-" + slot + "-%"),
                 builder.equal(skill.get("skillKey"), slot == 0 ? "capture-passive" : "capture-skill-" + slot));
-        return slot == 0 ? builder.or(keys, builder.equal(skill.get("kind"), "PASSIVE")) : keys;
+        return slot == 0 ? builder.or(keys, builder.equal(skill.get("kind"), SkillKind.PASSIVE)) : keys;
     }
 
     private static Expression<String> normalized(CriteriaBuilder builder, Expression<String> text) {

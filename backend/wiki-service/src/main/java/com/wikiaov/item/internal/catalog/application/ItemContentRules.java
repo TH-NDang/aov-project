@@ -37,6 +37,7 @@ class ItemContentRules {
             fail("Content is required.");
         }
         validateCategories(content);
+
         CatalogTranslations.firstViolation(content.translations()).ifPresent(violation -> fail(violation.detail()));
         validateIcon(content.iconAssetId());
         if (content.notes() != null && content.notes().length() > 32768) {
@@ -73,6 +74,7 @@ class ItemContentRules {
                 .size()) {
             fail("Duplicate recipe component.");
         }
+
         for (var component : content.components()) {
             if (component.itemId() == null || component.quantity() < 1 || component.quantity() > 100
                     || !identities.existsById(component.itemId())) {
@@ -150,6 +152,7 @@ class ItemContentRules {
         if (content.recipeStatus().equals("UNKNOWN")) {
             missing.add("recipeStatus");
         }
+
         return missing;
     }
 

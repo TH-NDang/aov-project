@@ -1,5 +1,14 @@
 package com.wikiaov.hero.internal.change.application;
 
+import com.wikiaov.hero.HeroChangeEntry;
+import com.wikiaov.hero.HeroChangeEntry.Line;
+import com.wikiaov.hero.HeroChangeEntry.MechanicLine;
+import com.wikiaov.hero.HeroChangeEntry.OtherLine;
+import com.wikiaov.hero.HeroChangeEntry.Previous;
+import com.wikiaov.hero.HeroChangeEntry.RoleLine;
+import com.wikiaov.hero.HeroChangeEntry.SkillLine;
+import com.wikiaov.hero.HeroChangeEntry.StatLine;
+import com.wikiaov.hero.HeroChangeEntry.VisualLine;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory.Entry;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.MechanicChangeClassification;
@@ -10,111 +19,65 @@ import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassifica
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
-/** Preserves the existing history JSON field names while persistence uses typed entities. */
+/** Turns the stored change sets into the history entries the API sends. */
 final class HeroPatchChangeViews {
-    private static final List<String> TYPE_ORDER = List.of("HERO_STAT_CHANGE", "HERO_SKILL_CHANGE", "HERO_ROLE_CHANGE",
-            "HERO_VISUAL_CHANGE", "HERO_MECHANIC_CHANGE", "HERO_OTHER_CHANGE");
+    private static final List<String> TYPE_ORDER = List.of(StatLine.TYPE, SkillLine.TYPE, RoleLine.TYPE,
+            VisualLine.TYPE, MechanicLine.TYPE, OtherLine.TYPE);
 
     private HeroPatchChangeViews() {
     }
 
-    static List<Map<String, Object>> render(List<Entry> entries) {
+    static List<HeroChangeEntry> render(List<Entry> entries) {
         return entries.stream().map(HeroPatchChangeViews::render).toList();
     }
 
-    private static Map<String, Object> render(Entry entry) {
+    private static HeroChangeEntry render(Entry entry) {
         var header = entry.header();
+        var assessment = entry.assessment();
+        var translation = entry.translation();
 
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("id", header.getId());
-        result.put("overallKind", entry.assessment() == null ? null : entry.assessment().getKind().name());
-        result.put("assessmentVersion", entry.assessment() == null ? 0L : entry.assessment().getVersion());
-        result.put("heroId", header.getHeroId());
-        result.put("heroCode", header.getHeroCode());
-        result.put("patchVariantId", header.getPatchVariantId());
-        result.put("fromHeroRevisionId", header.getFromHeroRevisionId());
-        result.put("toHeroRevisionId", header.getToHeroRevisionId());
-        result.put("sourceKind", header.getSourceKind().name());
-        result.put("sourceUrl", header.getSourceUrl());
-        result.put("introducesHero", header.getIntroducesHero());
-
-        if (entry.translation() != null) {
-            result.put("actualLocale", entry.translation().getLocale());
-            result.put("summary", entry.translation().getSummary());
-        }
-
-        var changes = entry.changes().stream().map(change -> change(change, entry.previous()))
-                .sorted(Comparator.<Map<String, Object>>comparingInt(value -> (Integer) value.get("sortOrder"))
-                        .thenComparingInt(value -> TYPE_ORDER.indexOf((String) value.get("type"))))
+        var changes = entry.changes().stream().map(change -> line(change, entry.previous()))
+                .sorted(Comparator.comparingInt(Line::sortOrder)
+                        .thenComparingInt(line -> TYPE_ORDER.indexOf(line.type())))
                 .toList();
-        result.put("changes", changes);
-        return result;
+
+        return new HeroChangeEntry(header.getId(), assessment == null ? null : assessment.getKind(),
+                assessment == null ? 0L : assessment.getVersion(), header.getHeroId(), header.getHeroCode(),
+                header.getPatchVariantId(), header.getFromHeroRevisionId(), header.getToHeroRevisionId(),
+                header.getSourceKind(), header.getSourceUrl(), header.getIntroducesHero(),
+                translation == null ? null : translation.getLocale(),
+                translation == null ? null : translation.getSummary(), changes, null, null, null, null);
     }
 
-    private static Map<String, Object> change(HeroChangeClassification change,
-            Map<UUID, MechanicChangePrevious> previous) {
-        Map<String, Object> value = new LinkedHashMap<>();
-        value.put("id", change.getId());
-        value.put("changeKind", change.getChangeKind());
-        value.put("sortOrder", change.getSortOrder());
+    private static Line line(HeroChangeClassification change, Map<UUID, MechanicChangePrevious> previous) {
+        var id = change.getId();
+        var kind = change.getChangeKind();
+        int order = change.getSortOrder();
 
-        switch (change) {
-            case StatChangeClassification item -> {
-                value.put("type", "HERO_STAT_CHANGE");
-                value.put("statKey", item.getStatKey());
-                value.put("oldValue", item.getOldValue());
-                value.put("newValue", item.getNewValue());
-                value.put("unitCode", item.getUnitCode());
-            }
-            case SkillChangeClassification item -> {
-                value.put("type", "HERO_SKILL_CHANGE");
-                value.put("skillKey", item.getSkillKey());
-                value.put("fieldKey", item.getFieldKey());
-                value.put("oldValue", item.getOldValue());
-                value.put("newValue", item.getNewValue());
-            }
-            case RoleChangeClassification item -> {
-                value.put("type", "HERO_ROLE_CHANGE");
-                value.put("roleCode", item.getRoleCode());
-                value.put("added", item.isAdded());
-            }
-            case VisualChangeClassification item -> {
-                value.put("type", "HERO_VISUAL_CHANGE");
-                value.put("mediaRole", item.getMediaRole());
-                value.put("oldAssetId", item.getOldAssetId());
-                value.put("newAssetId", item.getNewAssetId());
-            }
-            case MechanicChangeClassification item -> {
-                value.put("type", "HERO_MECHANIC_CHANGE");
-                value.put("mechanicKey", item.getMechanicKey());
-                value.put("description", item.getDescription());
-                value.put("previous", item.getId() == null ? null : previous(previous.get(item.getId())));
-            }
-            case OtherChangeClassification item -> {
-                value.put("type", "HERO_OTHER_CHANGE");
-                value.put("description", item.getDescription());
-            }
+        return switch (change) {
+            case StatChangeClassification item -> new StatLine(id, kind, order, StatLine.TYPE, item.getStatKey(),
+                    item.getOldValue(), item.getNewValue(), item.getUnitCode());
+            case SkillChangeClassification item -> new SkillLine(id, kind, order, SkillLine.TYPE, item.getSkillKey(),
+                    item.getFieldKey(), item.getOldValue(), item.getNewValue());
+            case RoleChangeClassification item -> new RoleLine(id, kind, order, RoleLine.TYPE, item.getRoleCode(),
+                    item.isAdded());
+            case VisualChangeClassification item -> new VisualLine(id, kind, order, VisualLine.TYPE,
+                    item.getMediaRole(), item.getOldAssetId(), item.getNewAssetId());
+            case MechanicChangeClassification item -> new MechanicLine(id, kind, order, MechanicLine.TYPE,
+                    item.getMechanicKey(), item.getDescription(), id == null ? null : previous(previous.get(id)));
+            case OtherChangeClassification item -> new OtherLine(id, kind, order, OtherLine.TYPE,
+                    item.getDescription());
             default -> throw new IllegalStateException("Unsupported hero change classification.");
-        }
-
-        return value;
+        };
     }
 
     /** What the mechanic did before its change, with the source it was written from; null until recorded. */
-    private static Map<String, Object> previous(MechanicChangePrevious value) {
-        if (value == null) {
-            return null;
-        }
-
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("description", value.getDescription());
-        result.put("sourceUrl", value.getSourceUrl());
-        result.put("recordedAt", value.getCreatedAt());
-        return result;
+    private static @Nullable Previous previous(@Nullable MechanicChangePrevious value) {
+        return value == null ? null : new Previous(value.getDescription(), value.getSourceUrl(), value.getCreatedAt());
     }
 }

@@ -76,6 +76,7 @@ public class RulesetAdministration {
         if (input.validTo() != null && !input.validTo().isAfter(input.validFrom())) {
             throw invalid("Assignment end must follow its start.");
         }
+
         regions.lockById(regionId).orElseThrow(RulesetAdministration::notFound);
         rulesets.lockById(input.rulesetId()).orElseThrow(RulesetAdministration::notFound);
         UUID id = UUID.randomUUID();
@@ -86,7 +87,9 @@ public class RulesetAdministration {
         entity.setValidFrom(input.validFrom());
         entity.setValidTo(input.validTo());
         persist(() -> assignments.saveAndFlush(entity));
+
         record("REGION_RULESET_ASSIGNED", id);
+
         return id;
     }
 

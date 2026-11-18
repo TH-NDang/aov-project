@@ -54,6 +54,7 @@ public class SkillReferenceCatalog {
             return new PageSlice<>(List.of(), page, input.size(), 0);
         }
         String key = "skills:v1:" + selected + ":" + heroId + ":" + input.key();
+
         return cache.read(ReadModelCache.Area.ADMIN_REFERENCES, key, SkillReferencePageView.class,
                 () -> new SkillReferencePageView(
                         skills.admin(selected, input.q(), heroId, input.ids(), page, input.size())))
@@ -109,6 +110,7 @@ public class SkillReferenceCatalog {
         if (q.length() > 120) {
             throw invalid("Search text must not exceed 120 characters.");
         }
+
         var ids = new TreeSet<String>();
         if (identifiers != null) {
             var values = identifiers.split(",", -1);
@@ -139,6 +141,7 @@ public class SkillReferenceCatalog {
         if ((long) page * size > Integer.MAX_VALUE) {
             throw invalid("The page is beyond the last possible entry.");
         }
+
         return new Input(locale, q, List.copyOf(ids), page, size);
     }
 

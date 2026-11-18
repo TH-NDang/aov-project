@@ -1,6 +1,9 @@
 package com.wikiaov.hero.internal.change.persistence.entity;
 
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.Getter;
@@ -13,7 +16,8 @@ import org.hibernate.annotations.Immutable;
 @Setter
 @Table(schema = "hero", name = "hero_visual_change")
 public class VisualChangeClassification extends HeroChangeClassification {
-    private String mediaRole;
+    @Enumerated(EnumType.STRING)
+    private MediaRole mediaRole;
     private UUID oldAssetId;
     private UUID newAssetId;
 }

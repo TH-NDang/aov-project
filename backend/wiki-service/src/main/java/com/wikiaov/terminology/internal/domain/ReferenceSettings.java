@@ -53,6 +53,7 @@ public record ReferenceSettings(
     public void validate() {
         require(schemaVersion == 1 && locale(fallbackLocale), "Invalid settings schema or fallback locale.");
         require(entities != null && entities.size() <= 2000, "Invalid reference catalog size.");
+
         var keys = new HashSet<String>();
         long characters = 0;
         for (var e : entities) {

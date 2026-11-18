@@ -895,7 +895,12 @@ export interface components {
         before: unknown
         after: unknown
       }[]
-      warnings: string[]
+      /** @description Admin words each code; the server sends no sentence. */
+      warnings: components["schemas"]["HeroComparisonWarning"][]
+    }
+    HeroComparisonWarning: {
+      /** @enum {string} */
+      code: "NO_EARLIER_SNAPSHOT" | "SNAPSHOT_DIFFERENCE_UNPROVEN"
     }
     HeroSource: {
       label: string

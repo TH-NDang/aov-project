@@ -8,6 +8,7 @@ import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
@@ -118,7 +119,8 @@ public class SpellCatalog implements SpellChangeQueries {
         var content = initialContent(input);
         contentRules.validate(content);
 
-        var revision = newDraft(owner, input.rulesetId(), null, "DATA_BASELINE", input.effectiveFromPatchVariantId());
+        var revision = newDraft(owner, input.rulesetId(), null, CatalogCause.DATA_BASELINE,
+                input.effectiveFromPatchVariantId());
         revisionContent.saveContent(revision, content);
         recordAuditEvent("CREATED", owner, revision, null);
 
@@ -132,7 +134,8 @@ public class SpellCatalog implements SpellChangeQueries {
         requireForkSource(source, input);
         UUID effective = resolveForkContext(source, input);
 
-        var revision = newDraft(owner, input.rulesetId(), source.getId(), input.cause(), effective);
+        var revision = newDraft(owner, input.rulesetId(), source.getId(), CatalogCause.ofFork(input.cause()),
+                effective);
         revisionContent.saveContent(revision, revisionContent.content(source));
         recordAuditEvent("DRAFT_CREATED", owner, revision, input.changeNote());
 
@@ -233,10 +236,11 @@ public class SpellCatalog implements SpellChangeQueries {
         if (source.getState() != RevisionState.PUBLISHED || !source.getRulesetId().equals(input.rulesetId())) {
             fail("The source must be published in the selected ruleset.");
         }
-        if (!Set.of("GAME_PATCH", "CONTENT_CORRECTION", "TRANSLATION_UPDATE").contains(input.cause())) {
+        if (CatalogCause.ofFork(input.cause()) == null) {
             fail("Invalid revision cause.");
         }
-        if (contentRules.archived(source, source.getGameplay()) && input.cause().equals("GAME_PATCH")) {
+        if (contentRules.archived(source, source.getGameplay())
+                && CatalogCause.ofFork(input.cause()) == CatalogCause.GAME_PATCH) {
             fail("An archive without a known patch cannot be used as a gameplay baseline. Record removal evidence separately.");
         }
     }
@@ -245,7 +249,7 @@ public class SpellCatalog implements SpellChangeQueries {
         UUID effective = input.effectiveFromPatchVariantId() == null
                 ? source.getEffectiveFromPatchVariantId()
                 : input.effectiveFromPatchVariantId();
-        if (effective == null && input.cause().equals("GAME_PATCH")) {
+        if (effective == null && CatalogCause.ofFork(input.cause()) == CatalogCause.GAME_PATCH) {
             fail("A gameplay change requires a patch context.");
         }
         if (effective == null && !hasUnscopedBaseline(source) && !contentRules.archived(source, source.getGameplay())) {
@@ -255,7 +259,7 @@ public class SpellCatalog implements SpellChangeQueries {
         if (patchOrdinal(source) > patchOrdinal(effective)) {
             fail("A future snapshot cannot reconstruct an earlier patch.");
         }
-        if (!input.cause().equals("GAME_PATCH")
+        if (CatalogCause.ofFork(input.cause()) != CatalogCause.GAME_PATCH
                 && !Objects.equals(effective, source.getEffectiveFromPatchVariantId())) {
             fail("Content corrections retain source gameplay applicability.");
         }
@@ -264,7 +268,7 @@ public class SpellCatalog implements SpellChangeQueries {
     }
 
     private void requireTranslationOnlyChange(SpellRevision revision, SpellContent content) {
-        if (revision.getCause().equals("TRANSLATION_UPDATE")
+        if (revision.getCause() == CatalogCause.TRANSLATION_UPDATE
                 && !revision.getGameplay().mechanics().equals(content.mechanics())) {
             fail("Translation revisions cannot change gameplay fields.");
         }
@@ -278,7 +282,7 @@ public class SpellCatalog implements SpellChangeQueries {
             fail("A patch context cannot be set and cleared together.");
         }
         if (contextChanged || clearContext) {
-            if (!revision.getCause().equals("DATA_BASELINE") || revision.getSourceRevisionId() != null) {
+            if (revision.getCause() != CatalogCause.DATA_BASELINE || revision.getSourceRevisionId() != null) {
                 fail("Only an independent baseline draft can change its observation context.");
             }
             requireObservationContext(revision.getRulesetId(), input.effectiveFromPatchVariantId(), !clearContext);
@@ -304,7 +308,7 @@ public class SpellCatalog implements SpellChangeQueries {
         return revision;
     }
 
-    private SpellRevision newDraft(SpellIdentity owner, UUID ruleset, UUID source, String cause, UUID effective) {
+    private SpellRevision newDraft(SpellIdentity owner, UUID ruleset, UUID source, CatalogCause cause, UUID effective) {
         var history = revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId());
         if (history.stream()
                 .anyMatch(revision -> revision.getRulesetId().equals(ruleset)
@@ -336,7 +340,7 @@ public class SpellCatalog implements SpellChangeQueries {
     private boolean hasUnscopedBaseline(SpellRevision revision) {
         boolean baseline = CatalogObservation.isUnscopedBaseline(revision.getCause(), revision.getSourceRevisionId(),
                 revision.getEffectiveFromPatchVariantId());
-        if (baseline && !revision.getCause().equals("DATA_BASELINE")) {
+        if (baseline && revision.getCause() != CatalogCause.DATA_BASELINE) {
             var source = queries.revision(revision.getOwnerId(), revision.getSourceRevisionId());
             if (source.getState() != RevisionState.PUBLISHED || !source.getRulesetId().equals(revision.getRulesetId())
                     || !CatalogObservation.isUnscopedBaseline(source.getCause(), source.getSourceRevisionId(),
@@ -415,10 +419,15 @@ public class SpellCatalog implements SpellChangeQueries {
                 || patchChanges.existsByOwnerIdAndPatchVariantId(id, input.patchVariantId())) {
             conflict("Removal evidence already exists for this spell and patch.");
         }
+
         var event = newRemovalEvent(id, snapshot, input);
+
         removals.saveAndFlush(event);
+
         dataReviews.markDirty(input.patchVariantId());
+
         recordAuditEvent("REMOVAL_RECORDED", owner, snapshot, input.sourceUrl());
+
         return SpellRemovalView.from(event);
     }
 
@@ -463,7 +472,7 @@ public class SpellCatalog implements SpellChangeQueries {
         revision.setPublishedAt(clock.instant());
         advanceVersion(revision);
         if (revision.getEffectiveFromPatchVariantId() != null
-                && Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause())) {
+                && revision.getCause().gameplay()) {
             dataReviews.markDirty(revision.getEffectiveFromPatchVariantId());
         }
     }

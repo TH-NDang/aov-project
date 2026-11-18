@@ -1,6 +1,7 @@
 package com.wikiaov.arcana.internal.catalog.persistence.entity;
 
 import com.wikiaov.arcana.internal.domain.ArcanaContent;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.RevisionState;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,7 +31,8 @@ public class ArcanaRevision {
     private long version;
     private Long publicationSequence;
     private Instant publishedAt;
-    private String cause;
+    @Enumerated(EnumType.STRING)
+    private CatalogCause cause;
     private UUID effectiveFromPatchVariantId;
     private UUID sourceRevisionId;
     private UUID iconAssetId;

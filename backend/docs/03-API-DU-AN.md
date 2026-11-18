@@ -2511,6 +2511,14 @@ section, các mảng nhận diện dùng mã kỹ năng/trang phục/chỉ số/
 khác số lẻ thập phân không tính là thay đổi; sources không tham gia diff. Snapshot khác ruleset trả 422;
 nguồn/đích không thuộc hero trả 404. Endpoint chỉ đọc, không ghi nhận thay đổi game/changelog.
 
+`warnings` là mảng `{code}`. Backend không gửi câu chữ: Admin ghi lời cho từng `code`. Hai cảnh báo hiện có không cần
+tham số; cảnh báo cần tham số thì thêm trường bên cạnh `code` như cảnh báo của import.
+
+| `code` | Khi nào | Ý nghĩa |
+| --- | --- | --- |
+| `NO_EARLIER_SNAPSHOT` | `BASELINE_ONLY` | Không có snapshot trước để so; dữ liệu là mốc quan sát, không chứng minh game đã thay đổi. |
+| `SNAPSHOT_DIFFERENCE_UNPROVEN` | `AVAILABLE` | Khác biệt giữa hai snapshot không cho biết patch nào gây ra; kiểm tra nguồn trước khi ghi changelog. |
+
 Khi so sánh effects loại SOURCE_SNAPSHOT, chỉ đối chiếu dữ liệu gameplay đã thu thập gồm cooldown,
 energyCost, levelTable và tags. Tên/link ảnh nguồn, cờ rà soát, thuộc tính tướng lặp lại và review_required
 trong bảng không tạo khác biệt kỹ năng. before/after và payload khác biệt vẫn giữ dữ liệu nguồn nguyên

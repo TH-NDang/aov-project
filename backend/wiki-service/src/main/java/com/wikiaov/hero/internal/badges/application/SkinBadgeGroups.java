@@ -7,6 +7,7 @@ import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.SkinBadgeGroupCommands;
 import com.wikiaov.hero.internal.application.response.SkinBadgeGroupView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
+import com.wikiaov.hero.internal.badges.domain.SkinBadgeGroupKind;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeGroupRepository;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeRepository;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeTexts;
@@ -59,6 +60,7 @@ public class SkinBadgeGroups {
     public PageSlice<SkinBadgeGroupView> list(String locale, String q, int page, int size) {
         HeroMediaQueries.bounds(page, size);
         HeroValidation.locale(locale);
+
         String search = SkinBadges.search(q);
         var all = groups.findAll(Sort.by("code").and(Sort.by("id")));
         var translations = repository.groups(
@@ -89,6 +91,9 @@ public class SkinBadgeGroups {
             matching.add(new SkinBadgeGroupView(null, "__ungrouped", null, 0, List.of(), null, null, true,
                     unassigned, false));
         }
+
+        // Paged in memory: the list adds a row for ungrouped badges and counts the matching badges of each group, and
+        // a catalog holds a few dozen groups.
         return PageSlice.of(matching, page, size);
     }
 
@@ -96,10 +101,11 @@ public class SkinBadgeGroups {
     @PreAuthorize("hasAuthority('hero:write')")
     public SkinBadgeGroupView create(SkinBadgeGroupCommands.Create input) {
         validate(input.translations());
+
         var group = new SkinBadgeGroup();
         group.setId(UUID.randomUUID());
         group.setCode(input.code());
-        group.setKind(input.kind());
+        group.setKind(SkinBadgeGroupKind.valueOf(input.kind()));
         group.setCreatedAt(clock.instant());
         group.setUpdatedAt(clock.instant());
         try {
@@ -107,10 +113,13 @@ public class SkinBadgeGroups {
         } catch (DataIntegrityViolationException failure) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_GROUP_CONFLICT, "The badge group code already exists.");
         }
+
         var translations = rows(group.getId(), input.translations());
         repository.replaceBadgeGroupTranslations(group.getId(), translations);
+
         audit.record(AuditEntry.of(actors.require(), "SKIN_BADGE_GROUP_CREATED", CatalogAggregates.SKIN_BADGE_GROUP,
                 group.getId()));
+
         return view(group, translations, CatalogLocales.DEFAULT, 0, false);
     }
 
@@ -123,16 +132,21 @@ public class SkinBadgeGroups {
                     "The badge group changed. Reload before saving.");
         }
         validate(input.translations());
-        group.setKind(input.kind());
+
+        group.setKind(SkinBadgeGroupKind.valueOf(input.kind()));
         group.setVersion(Math.addExact(group.getVersion(), 1));
         group.setUpdatedAt(clock.instant());
+
         var translations = rows(id, input.translations());
         repository.replaceBadgeGroupTranslations(id, translations);
+
         groups.flush();
+
         audit.record(
                 new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_UPDATED", CatalogAggregates.SKIN_BADGE_GROUP, id,
                         null, input.expectedVersion(), group.getVersion(), null, Map.of()));
         long count = badges.findAll().stream().filter(badge -> id.equals(badge.getGroupId())).count();
+
         return view(group, translations, CatalogLocales.DEFAULT, count, false);
     }
 

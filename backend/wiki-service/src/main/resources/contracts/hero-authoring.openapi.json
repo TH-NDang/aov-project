@@ -2785,11 +2785,28 @@
           },
           "warnings": {
             "type": "array",
+            "description": "Admin words each code; the server sends no sentence.",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/HeroComparisonWarning"
             }
           }
         }
+      },
+      "HeroComparisonWarning": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "NO_EARLIER_SNAPSHOT",
+              "SNAPSHOT_DIFFERENCE_UNPROVEN"
+            ]
+          }
+        },
+        "required": [
+          "code"
+        ]
       },
       "HeroSource": {
         "type": "object",

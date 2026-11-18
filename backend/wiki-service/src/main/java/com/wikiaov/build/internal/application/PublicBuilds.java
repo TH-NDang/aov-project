@@ -2,6 +2,7 @@ package com.wikiaov.build.internal.application;
 
 import com.wikiaov.build.BuildReferenceKind;
 import com.wikiaov.build.internal.application.response.BuildViews;
+import com.wikiaov.build.internal.domain.BuildSource;
 import com.wikiaov.build.internal.persistence.BuildRepository;
 import com.wikiaov.build.internal.persistence.CaptureHeroRepository;
 import com.wikiaov.build.internal.persistence.CaptureRepository;
@@ -11,7 +12,7 @@ import com.wikiaov.build.internal.persistence.entity.CaptureRow;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class PublicBuilds {
-    private static final List<String> SOURCE_ORDER = List.of("PRO", "HOT", "SYSTEM");
     private static final Pattern REGION = Pattern.compile("[A-Z]{2,16}");
 
     private final CaptureRepository captures;
@@ -63,12 +63,11 @@ public class PublicBuilds {
             throw new ApiException(BuildErrorCode.BUILD_HERO_NOT_FOUND, "Hero " + heroCode + " was not found.");
         }
 
-        Map<String, CaptureRow> newest = new HashMap<>();
+        Map<BuildSource, CaptureRow> newest = new EnumMap<>(BuildSource.class);
         for (var capture : captures.confirmedWithHero(region, hero.id())) {
             newest.putIfAbsent(capture.getSourceKind(), capture);
         }
-        var chosen = newest.values().stream()
-                .sorted(Comparator.comparingInt(capture -> SOURCE_ORDER.indexOf(capture.getSourceKind()))).toList();
+        var chosen = List.copyOf(newest.values());
         Map<UUID, List<BuildRow>> rows = new HashMap<>();
         for (var capture : chosen) {
             rows.put(capture.getId(), builds

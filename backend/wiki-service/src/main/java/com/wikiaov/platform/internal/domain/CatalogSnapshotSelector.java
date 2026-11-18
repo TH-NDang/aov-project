@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 
 /** Pure selection rules shared by the revision-based catalogs. No persistence or framework dependencies. */
 public final class CatalogSnapshotSelector {
-    private static final Set<String> GAMEPLAY_CAUSES = Set.of("DATA_BASELINE", "GAME_PATCH");
-
     private CatalogSnapshotSelector() {
     }
 
@@ -23,7 +21,7 @@ public final class CatalogSnapshotSelector {
             Set<UUID> explicitTargets) {
         Map<UUID, Set<UUID>> recordedPatches = new HashMap<>();
         for (var candidate : candidates) {
-            if (selectedPatches.contains(candidate.patchVariantId()) && GAMEPLAY_CAUSES.contains(candidate.cause())) {
+            if (selectedPatches.contains(candidate.patchVariantId()) && candidate.cause().gameplay()) {
                 recordedPatches.computeIfAbsent(candidate.ownerId(), ignored -> new HashSet<>())
                         .add(candidate.patchVariantId());
             }

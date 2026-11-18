@@ -1,6 +1,8 @@
 package com.wikiaov.build.internal.persistence;
 
+import com.wikiaov.build.internal.domain.BuildSource;
 import com.wikiaov.build.internal.persistence.entity.CaptureRow;
+import com.wikiaov.platform.EnumNames;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
@@ -27,9 +29,13 @@ public interface CaptureRepository extends JpaRepository<CaptureRow, UUID>, JpaS
             """)
     List<CaptureRow> confirmedWithHero(String region, UUID heroId);
 
+    /** A source that names no game tab matches no capture, as an unknown market does. */
     static Specification<CaptureRow> matching(String region, String source) {
+        var kind = EnumNames.find(BuildSource.class, source);
         return (root, query, builder) -> builder.and(
                 region == null ? builder.conjunction() : builder.equal(root.get("regionCode"), region),
-                source == null ? builder.conjunction() : builder.equal(root.get("sourceKind"), source));
+                source == null
+                        ? builder.conjunction()
+                        : kind == null ? builder.disjunction() : builder.equal(root.get("sourceKind"), kind));
     }
 }

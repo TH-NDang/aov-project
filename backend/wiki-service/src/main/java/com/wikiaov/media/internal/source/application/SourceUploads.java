@@ -110,19 +110,8 @@ public class SourceUploads {
         Actor actor = actors.require();
         String path = SourceErrors.requirePath(rawPath, "path");
         String sha256 = SourceErrors.requireSha256(rawSha256, "sha256");
-        String contentType = SourceContentTypes.normalize(rawContentType)
-                .orElseThrow(() -> new ApiException(MediaErrorCode.SOURCE_FILE_TYPE_NOT_ALLOWED,
-                        "Only images, JSON, CSV, Markdown, plain text and ZIP files can be stored.",
-                        Map.of("contentType", String.valueOf(rawContentType))));
-        long maxBytes = properties.maxUploadSize().toBytes();
-        if (sizeBytes < 0) {
-            throw new ApiException(PlatformErrorCode.INVALID_REQUEST, "The size cannot be negative.",
-                    List.of(new ApiFieldError("sizeBytes", "MIN", "must be at least 0")));
-        }
-        if (sizeBytes > maxBytes) {
-            throw new ApiException(MediaErrorCode.SOURCE_FILE_TOO_LARGE, "The file is larger than allowed.",
-                    Map.of("maxBytes", maxBytes));
-        }
+        String contentType = contentType(rawContentType);
+        requireSize(sizeBytes);
 
         UUID uploadId = UUID.randomUUID();
         SourceFileViews.File stored = transaction.execute(status -> {
@@ -158,6 +147,25 @@ public class SourceUploads {
         return new SourceFileViews.UploadResult(SourceFileViews.UploadStatus.UPLOAD_REQUIRED, null,
                 new SourceFileViews.Ticket(uploadId, put.method(), put.url().toString(), put.headers(),
                         put.expiresAt()));
+    }
+
+    private static String contentType(@Nullable String rawContentType) {
+        return SourceContentTypes.normalize(rawContentType)
+                .orElseThrow(() -> new ApiException(MediaErrorCode.SOURCE_FILE_TYPE_NOT_ALLOWED,
+                        "Only images, JSON, CSV, Markdown, plain text and ZIP files can be stored.",
+                        Map.of("contentType", String.valueOf(rawContentType))));
+    }
+
+    private void requireSize(long sizeBytes) {
+        long maxBytes = properties.maxUploadSize().toBytes();
+        if (sizeBytes < 0) {
+            throw new ApiException(PlatformErrorCode.INVALID_REQUEST, "The size cannot be negative.",
+                    List.of(new ApiFieldError("sizeBytes", "MIN", "must be at least 0")));
+        }
+        if (sizeBytes > maxBytes) {
+            throw new ApiException(MediaErrorCode.SOURCE_FILE_TOO_LARGE, "The file is larger than allowed.",
+                    Map.of("maxBytes", maxBytes));
+        }
     }
 
     @Transactional(readOnly = true)

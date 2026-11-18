@@ -60,6 +60,7 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
         if (!code.matches(CatalogCodes.PATTERN) || code.length() > 120) {
             invalid("Invalid metadata code.");
         }
+
         var found = records.lockByCode(code);
         var row = found.orElseGet(() -> {
             var e = new ItemCategory();
@@ -70,6 +71,7 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
             throw new ApiException(ItemErrorCode.ITEM_CONFLICT, "The metadata record has changed.",
                     Map.of("currentVersion", row.getVersion()));
         }
+
         var locales = new HashSet<String>();
         for (var t : input.translations()) {
             if (t.locale() == null || !t.locale().matches(CatalogLocales.PATTERN) || !locales.add(t.locale())
@@ -82,6 +84,7 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
         asset(input.iconAssetId(), MediaSemanticType.ITEM_ICON);
         asset(input.backgroundAssetId(), MediaSemanticType.OTHER);
         long before = row.getVersion();
+
         row.setVersion(before + 1);
         row.setDisplayOrder(input.displayOrder());
         row.setIconAssetId(input.iconAssetId());
@@ -101,9 +104,11 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
             translations.save(e);
         }
         translations.flush();
+
         audit.record(new AuditEntry(actors.require(), "ITEM_METADATA_UPDATED", CatalogAggregates.ITEM_METADATA,
                 UUID.nameUUIDFromBytes(code.getBytes(StandardCharsets.UTF_8)), null, before,
                 row.getVersion(), null, Map.of("code", code)));
+
         return view(row);
     }
 

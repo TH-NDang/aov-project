@@ -1,7 +1,7 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.catalog.application.HeroQueries;
-import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.hero.internal.catalog.application.HeroSectionPages;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.QueryParameters;
@@ -27,10 +27,12 @@ import tools.jackson.databind.json.JsonMapper;
 @RequestMapping(ApiPaths.ROOT)
 public class HeroPublicController implements HeroPublicApi {
     private final HeroQueries queries;
+    private final HeroSectionPages sectionPages;
     private final JsonMapper json;
 
-    public HeroPublicController(HeroQueries queries, JsonMapper json) {
+    public HeroPublicController(HeroQueries queries, HeroSectionPages sectionPages, JsonMapper json) {
         this.queries = queries;
+        this.sectionPages = sectionPages;
         this.json = json;
     }
 
@@ -78,59 +80,59 @@ public class HeroPublicController implements HeroPublicApi {
 
     @Override
     @GetMapping(path = "/hero-profile-revisions/{id}", version = "1")
-    public ResponseEntity<?> sectionPROFILE(@PathVariable UUID id,
+    public ResponseEntity<HeroSectionPages.ProfilePage> sectionPROFILE(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
-        return cached(queries.section(HeroSection.PROFILE, id, locale), web, true);
+        return cached(sectionPages.profile(id, locale), web, true);
     }
 
     @Override
     @GetMapping(path = "/hero-overview-rating-revisions/{id}", version = "1")
-    public ResponseEntity<?> sectionOVERVIEW_RATINGS(@PathVariable UUID id,
+    public ResponseEntity<HeroSectionPages.RatingsPage> sectionOVERVIEW_RATINGS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request,
             WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
-        return cached(queries.section(HeroSection.OVERVIEW_RATINGS, id, locale), web, true);
+        return cached(sectionPages.ratings(id, locale), web, true);
     }
 
     @Override
     @GetMapping(path = "/hero-stats-revisions/{id}", version = "1")
-    public ResponseEntity<?> sectionCOMBAT_STATS(@PathVariable UUID id,
+    public ResponseEntity<HeroSectionPages.StatsPage> sectionCOMBAT_STATS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
-        return cached(queries.section(HeroSection.COMBAT_STATS, id, locale), web, true);
+        return cached(sectionPages.stats(id, locale), web, true);
     }
 
     @Override
     @GetMapping(path = "/hero-skills-revisions/{id}", version = "1")
-    public ResponseEntity<?> sectionSKILLS(@PathVariable UUID id,
+    public ResponseEntity<HeroSectionPages.SkillsPage> sectionSKILLS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
-        return cached(queries.section(HeroSection.SKILLS, id, locale), web, true);
+        return cached(sectionPages.skills(id, locale), web, true);
     }
 
     @Override
     @GetMapping(path = "/hero-skins-revisions/{id}", version = "1")
-    public ResponseEntity<?> sectionSKINS(@PathVariable UUID id,
+    public ResponseEntity<HeroSectionPages.SkinsPage> sectionSKINS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
-        return cached(queries.section(HeroSection.SKINS, id, locale), web, true);
+        return cached(sectionPages.skins(id, locale), web, true);
     }
 
     @Override
     @GetMapping(path = "/hero-media-binding-revisions/{id}", version = "1")
-    public ResponseEntity<?> sectionMEDIA_BINDINGS(@PathVariable UUID id,
+    public ResponseEntity<HeroSectionPages.BindingsPage> sectionMEDIA_BINDINGS(@PathVariable UUID id,
             @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
-        return cached(queries.section(HeroSection.MEDIA_BINDINGS, id, locale), web, true);
+        return cached(sectionPages.bindings(id, locale), web, true);
     }
 
-    private ResponseEntity<?> cached(Object body, WebRequest request, boolean immutable) {
+    private <T> ResponseEntity<T> cached(T body, WebRequest request, boolean immutable) {
         String tag;
         try {
             tag = "\"" + HexFormat.of()
