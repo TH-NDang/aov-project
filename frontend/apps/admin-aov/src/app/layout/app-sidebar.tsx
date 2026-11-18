@@ -155,7 +155,7 @@ export function AppSidebar() {
                   <TooltipTrigger asChild>
                     <Button
                       size="icon"
-                      className="group/brand relative size-8 shrink-0 rounded-lg bg-[#18181b] text-white shadow-none hover:bg-[#18181b]/90 focus-visible:ring-sidebar-ring"
+                      className="group/brand relative size-8 shrink-0 rounded-lg bg-(--aov-wiki-night) text-white shadow-none hover:bg-(--aov-wiki-night)/90 focus-visible:ring-sidebar-ring"
                       onClick={toggleSidebar}
                       aria-label="Mở menu"
                     >
@@ -170,7 +170,7 @@ export function AppSidebar() {
               <div className="flex items-center gap-1">
                 <SidebarMenuButton size="lg" asChild tooltip="AOV Admin">
                   <Link to="/" onClick={() => isMobile && setOpenMobile(false)}>
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[#18181b]">
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-(--aov-wiki-night)">
                       <AovMark className="size-6" />
                     </div>
                     <AovWordmark product="Admin" className="flex-1 text-base" />

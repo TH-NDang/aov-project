@@ -17,7 +17,7 @@
   min-width: 0;
   min-height: 36px;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: var(--aov-radius-control);
   background: var(--background);
   padding: 7px 9px;
   color: var(--foreground);
@@ -69,7 +69,7 @@
   align-items: center;
   gap: 5px;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: var(--aov-radius-card);
   padding: 3px 6px 3px 3px;
 }
 .tournament-member-body {
@@ -78,7 +78,7 @@
   flex: 1;
   align-items: center;
   gap: 9px;
-  border-radius: 7px;
+  border-radius: var(--aov-radius-control);
   padding: 7px;
   text-align: left;
 }
@@ -107,7 +107,7 @@ button.tournament-member-body:hover {
 }
 .tournament-member-lane {
   flex-shrink: 0;
-  border-radius: 5px;
+  border-radius: var(--aov-radius-control);
   background: var(--muted);
   padding: 4px 6px;
   color: var(--muted-foreground);
@@ -118,7 +118,7 @@ button.tournament-member-body:hover {
   flex-direction: column;
   gap: 12px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--aov-radius-card);
   background: var(--card);
   padding: 14px;
 }
@@ -166,8 +166,8 @@ button.tournament-member-body:hover {
     width: 100%;
     height: calc(100dvh - 50px);
     padding: 19px 15px;
-    border-top-left-radius: 17px;
-    border-top-right-radius: 17px;
+    border-top-left-radius: var(--aov-radius-media);
+    border-top-right-radius: var(--aov-radius-media);
     border-left: 0;
     border-top: 1px solid var(--border);
   }

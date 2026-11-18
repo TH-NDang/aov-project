@@ -14,7 +14,7 @@
 /* A toolbar and its tabular results share a single surface. */
 .admin-panel {
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--aov-radius-card);
   background-color: var(--card);
   color: var(--card-foreground);
 }

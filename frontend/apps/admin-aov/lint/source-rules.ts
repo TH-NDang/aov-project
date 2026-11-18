@@ -96,8 +96,8 @@ const rules: Rule[] = [
         ),
   },
   {
-    name: "status colours come from the tokens, without hand-written dark variants",
-    hint: "Use text-destructive, text-(--aov-warning), bg-(--aov-success-soft) and the like (frontend/docs/DESIGN-TOKENS.md).",
+    name: "colours come from the tokens, not from Tailwind's palette or hand-written dark variants",
+    hint: "Use text-destructive, text-(--aov-warning), bg-(--aov-success-soft) or another token; white and black stay for overlays on pictures (frontend/docs/DESIGN-TOKENS.md).",
     // The change colours are a palette the editor picks from.
     files: files(source, /\.tsx?$/).filter((path) => !path.endsWith("change-color-preferences.tsx")),
     offenders: (text) =>
@@ -106,11 +106,29 @@ const rules: Rule[] = [
         .flatMap((line, index) =>
           [
             ...line.matchAll(
-              /(?<![\w-])(?:dark:)?(?:text|bg|border)-(?:amber|emerald|green|red|yellow|orange|sky)-\d{2,3}(?:\/\d+)?/g,
+              /(?<![\w-])(?:text|bg|border|ring|fill|stroke|from|via|to|outline|decoration|divide|accent|caret|placeholder)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}(?:\/\d+)?/g,
+            ),
+            ...line.matchAll(
+              /(?<![\w-])(?:text|bg|border|ring|fill|stroke|from|via|to|outline|decoration|divide|accent|caret|placeholder)-\[#[\da-fA-F]{3,8}\]/g,
             ),
             ...line.matchAll(/(?<![\w-])dark:(?:text|bg|border)-[a-z]+-\d{2,3}(?:\/\d+)?/g),
           ].map(([match]) => `:${index + 1} ${match}`),
         ),
+  },
+  {
+    name: "admin rounds corners with the radius tokens",
+    hint: "Use var(--aov-radius-control | card | media | pill) in CSS and a rounded-* class in markup, never pixels (frontend/docs/DESIGN-TOKENS.md).",
+    files: files(source, /\.(tsx?|css)$/),
+    offenders: (text, path) =>
+      text.split("\n").flatMap((line, index) => {
+        if (!path.endsWith(".css"))
+          return [
+            ...line.matchAll(/(?<![\w-])rounded(?:-[a-z]{1,2})?-\[(?!inherit\])[^\]]*\]|borderRadius:\s*["'\d]/g),
+          ].map(([match]) => `:${index + 1} ${match}`)
+        const radius = line.match(/border(?:-[a-z]+)*-radius:\s*([^;]+)/)
+        const allowed = (part: string) => /^(0|inherit|var\(--aov-radius-(control|card|media|pill)\))$/.test(part)
+        return radius && !radius[1].trim().split(/\s+/).every(allowed) ? [`:${index + 1} ${radius[0].trim()}`] : []
+      }),
   },
   {
     name: "admin uses only the font weights the font files provide",

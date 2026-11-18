@@ -1041,7 +1041,7 @@ export function ItemsSection({ content, saved, setContent, image, upload }: Sect
     return src ? (
       <img src={src} alt="" className={`${size} shrink-0 object-contain`} />
     ) : (
-      <span className="size-2.5 shrink-0 rotate-45 rounded-[2px]" style={{ background: stoneColor(group) }} />
+      <span className="size-2.5 shrink-0 rotate-45" style={{ background: stoneColor(group) }} />
     )
   }
 

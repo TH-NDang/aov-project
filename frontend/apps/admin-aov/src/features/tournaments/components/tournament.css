@@ -11,7 +11,7 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  border-radius: 7px;
+  border-radius: var(--aov-radius-control);
   color: var(--muted-foreground);
   cursor: pointer;
   font-size: 12px;
@@ -25,7 +25,7 @@
   min-width: 0;
   min-height: 36px;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: var(--aov-radius-control);
   background: var(--background);
   padding: 7px 9px;
   font-size: 12px;
@@ -43,12 +43,12 @@
 }
 .tournament-empty-inline {
   border: 1px dashed var(--border);
-  border-radius: 10px;
+  border-radius: var(--aov-radius-card);
   padding: 24px;
   text-align: center;
 }
 .tournament-error {
-  border-radius: 9px;
+  border-radius: var(--aov-radius-card);
   padding: 12px 14px;
   font-size: 12px;
   line-height: 1.6;
@@ -87,7 +87,7 @@
   width: 18px;
   height: 13px;
   flex-shrink: 0;
-  border-radius: 2px;
+  border-radius: 0;
   object-fit: cover;
 }
 .tournament-region-badge > svg {
@@ -95,7 +95,7 @@
 }
 .tournament-region-code {
   flex-shrink: 0;
-  border-radius: 4px;
+  border-radius: var(--aov-radius-control);
   background: var(--muted);
   padding: 2px 4px;
   color: var(--muted-foreground);
@@ -109,7 +109,7 @@
   flex-shrink: 0;
   place-items: center;
   overflow: hidden;
-  border-radius: 9px;
+  border-radius: var(--aov-radius-card);
   background: var(--muted);
   color: var(--muted-foreground);
   font-size: 12px;
@@ -125,7 +125,7 @@
   padding: 4px;
 }
 .tournament-registry-logo[data-portrait="true"] {
-  border-radius: 50%;
+  border-radius: var(--aov-radius-pill);
 }
 .tournament-registry-logo[data-portrait="true"] > img {
   object-fit: cover;
@@ -245,7 +245,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  border-radius: 10px;
+  border-radius: var(--aov-radius-card);
   background: var(--muted);
   color: var(--muted-foreground);
   font-size: 12px;
@@ -258,7 +258,7 @@
   flex-wrap: wrap;
   align-items: start;
   gap: 12px;
-  border-radius: 10px;
+  border-radius: var(--aov-radius-card);
   background: var(--muted);
   padding: 13px;
 }
@@ -305,7 +305,7 @@
   place-items: center;
   flex-shrink: 0;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: var(--aov-radius-control);
   background: var(--muted);
   color: var(--muted-foreground);
 }
@@ -322,7 +322,7 @@
   align-items: center;
   gap: 7px;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: var(--aov-radius-control);
   padding: 5px 7px;
   text-align: left;
   font-size: 12px;
@@ -348,7 +348,7 @@
   width: 310px;
   max-width: calc(100vw - 24px);
   padding: 0;
-  border-radius: 11px;
+  border-radius: var(--aov-radius-card);
   overflow: hidden;
 }
 .tournament-picker-search {
@@ -376,7 +376,7 @@
   align-items: center;
   gap: 9px;
   padding: 6px;
-  border-radius: 6px;
+  border-radius: var(--aov-radius-control);
   text-align: left;
   font-size: 12px;
   cursor: pointer;
@@ -431,7 +431,7 @@
   width: 30px;
   height: 30px;
   place-items: center;
-  border-radius: 5px;
+  border-radius: var(--aov-radius-control);
   cursor: pointer;
 }
 .tournament-section-title {
@@ -464,7 +464,7 @@
   flex-direction: column;
   gap: 12px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--aov-radius-card);
   padding: 12px;
 }
 .tournament-inventory > header {
@@ -489,7 +489,7 @@
   min-width: 0;
   flex-direction: column;
   gap: 7px;
-  border-radius: 8px;
+  border-radius: var(--aov-radius-control);
   background: var(--muted);
   padding: 9px;
 }
@@ -506,7 +506,7 @@
   align-items: center;
   gap: 7px;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: var(--aov-radius-card);
   padding: 12px;
 }
 .tournament-equipment-event > strong {
@@ -552,8 +552,8 @@
     width: 100%;
     height: calc(100dvh - 50px);
     padding: 19px 15px;
-    border-top-left-radius: 17px;
-    border-top-right-radius: 17px;
+    border-top-left-radius: var(--aov-radius-media);
+    border-top-right-radius: var(--aov-radius-media);
     border-left: 0;
     border-top: 1px solid var(--border);
   }

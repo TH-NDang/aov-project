@@ -182,7 +182,7 @@ export function RegionFlag({ code, withName = true }: { code?: string; withName?
         <img
           src={`/images/flags/${code.toLowerCase()}.svg`}
           alt=""
-          className="h-3 w-[18px] rounded-[2px] object-cover"
+          className="h-3 w-[18px] object-cover"
           loading="lazy"
         />
       ) : (

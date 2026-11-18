@@ -87,7 +87,7 @@ export function FacetedFilter<TData extends RowData, TValue>({
                   <CommandItem key={option.value} value={option.label} onSelect={() => toggle(option.value)}>
                     <div
                       className={cn(
-                        "flex size-4 items-center justify-center rounded-[4px] border",
+                        "flex size-4 items-center justify-center rounded-sm border",
                         isSelected
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-input [&_svg]:invisible",
