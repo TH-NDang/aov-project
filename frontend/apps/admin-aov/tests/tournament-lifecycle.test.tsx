@@ -3,7 +3,18 @@ import { test } from "node:test"
 import { act, type ReactNode } from "react"
 import { MemoryRouter } from "react-router"
 import type { RecordDeletionImpact } from "@aov/community-contracts"
-import { click, flush, renderer, type, withDom, withGlobals } from "./fixtures/dom"
+import {
+  answerConfirm,
+  button,
+  click,
+  confirmDialog,
+  flush,
+  renderer,
+  type,
+  waitFor,
+  withDom,
+  withGlobals,
+} from "./fixtures/dom"
 
 withDom({ url: "http://localhost:5175/tournaments" })
 
@@ -55,7 +66,7 @@ const pressed = async (label: string) =>
 
 const clearImpact: RecordDeletionImpact = { id: "player", version: 7, deletedAt: null, canDelete: true, usages: [] }
 
-test("deletion waits for a reviewed impact, blocks stale or referenced records, then preserves the version", async () => {
+test("deletion asks only once the impact is known, blocks stale or referenced records, then preserves the version", async () => {
   const original = { impact: tournamentApi.deletionImpact, remove: tournamentApi.remove }
   let removed = 0
   let changed = 0
@@ -70,6 +81,13 @@ test("deletion waits for a reviewed impact, blocks stale or referenced records, 
     return { ...entry, version: 8, deletedAt: "2026-10-27T00:00:00Z" }
   }
   const render = routed()
+  const answered = async (impact: RecordDeletionImpact) => {
+    await pressed("Xóa Player")
+    assert.equal(confirmDialog(), null, "the question waits for the check")
+    await act(async () => resolveImpact(impact))
+    return waitFor(confirmDialog, "The question opens once the check answers")
+  }
+  const confirmation = (dialog: HTMLElement) => button("Chuyển vào thùng rác", dialog)!
   try {
     const { RecordLifecycleActions } = await import("../src/features/tournaments/components/record-lifecycle-actions")
     await render(
@@ -82,56 +100,87 @@ test("deletion waits for a reviewed impact, blocks stale or referenced records, 
         }}
       />,
     )
-    await pressed("Xóa Player")
-    const confirmation = () =>
-      [...document.querySelectorAll<HTMLButtonElement>("button")].find(
-        (button) => button.textContent?.replace(/\s+/g, " ").trim() === "Chuyển vào thùng rác",
-      )!
-    assert.equal(confirmation().disabled, true)
+
+    const referenced = await answered({
+      ...clearImpact,
+      canDelete: false,
+      usages: [{ type: "ROSTER_MEMBERSHIP", count: 2, adminPath: "/tournaments?tab=teams&roster=team" }],
+    })
+    assert.equal(confirmation(referenced).disabled, true)
+    assert.ok(referenced.querySelector('a[href="/tournaments?tab=teams&roster=team"]'))
+    assert.match(referenced.textContent ?? "", /Đội hình2/)
+    await answerConfirm("Giữ lại")
+
+    const stale = await answered({ ...clearImpact, version: 8 })
+    assert.equal(confirmation(stale).disabled, true)
+    assert.match(stale.textContent ?? "", /Mục đã thay đổi/)
+    await answerConfirm("Giữ lại")
+
+    const clear = await answered(clearImpact)
+    assert.equal(confirmation(clear).disabled, false)
     assert.equal(removed, 0)
-    await act(async () =>
-      resolveImpact({
-        ...clearImpact,
-        canDelete: false,
-        usages: [{ type: "ROSTER_MEMBERSHIP", count: 2, adminPath: "/tournaments?tab=teams&roster=team" }],
-      }),
-    )
-    await flush()
-    assert.equal(confirmation().disabled, true)
-    assert.ok(document.querySelector('a[href="/tournaments?tab=teams&roster=team"]'))
-    assert.match(document.body.textContent ?? "", /Đội hình2/)
-    await pressed("Giữ lại")
-    await pressed("Xóa Player")
-    await act(async () => resolveImpact({ ...clearImpact, version: 8 }))
-    await flush()
-    assert.equal(confirmation().disabled, true)
-    assert.match(document.body.textContent ?? "", /Mục đã thay đổi/)
-    await pressed("Giữ lại")
-    await pressed("Xóa Player")
-    await act(async () => resolveImpact(clearImpact))
-    await flush()
-    assert.equal(confirmation().disabled, false)
-    await pressed("Chuyển vào thùng rác")
+    await answerConfirm("Chuyển vào thùng rác")
+    await waitFor(() => changed === 1, "The record goes to the trash")
     assert.equal(removed, 1)
-    assert.equal(changed, 1)
-    assert.equal(document.querySelector('[role="alertdialog"]'), null)
+    assert.equal(confirmDialog(), null)
   } finally {
     tournamentApi.deletionImpact = original.impact
     tournamentApi.remove = original.remove
   }
 })
 
-test("a reference added after preview returns actionable links and disables repeated deletion", async () => {
+test("a usage link in the question closes it and opens the record that uses it", async () => {
+  const original = tournamentApi.deletionImpact
+  tournamentApi.deletionImpact = async () => ({
+    ...clearImpact,
+    canDelete: false,
+    usages: [{ type: "ROSTER_MEMBERSHIP", count: 2, adminPath: "/tournaments?tab=teams&roster=team" }],
+  })
+  let navigated = 0
+  try {
+    const { RecordLifecycleActions } = await import("../src/features/tournaments/components/record-lifecycle-actions")
+    const { Route, Routes, useLocation } = await import("react-router")
+    function Opened() {
+      return <p data-opened>{useLocation().search}</p>
+    }
+    await routed()(
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <RecordLifecycleActions
+              kind="players"
+              entry={{ id: "player", version: 7 }}
+              name="Player"
+              onChanged={() => assert.fail("nothing was deleted")}
+              onNavigate={() => navigated++}
+            />
+          }
+        />
+        <Route path="/tournaments" element={<Opened />} />
+      </Routes>,
+    )
+    await pressed("Xóa Player")
+    const dialog = await waitFor(confirmDialog, "The question opens")
+    await click(dialog.querySelector('a[href="/tournaments?tab=teams&roster=team"]'), "usage link")
+
+    await waitFor(() => confirmDialog() === null, "The question closes")
+    assert.equal(document.querySelector("[data-opened]")?.textContent, "?tab=teams&roster=team")
+    assert.equal(navigated, 1)
+  } finally {
+    tournamentApi.deletionImpact = original
+  }
+})
+
+test("a reference added after the question shows its links beside the button and blocks the next try", async () => {
   const original = { impact: tournamentApi.deletionImpact, remove: tournamentApi.remove }
+  const usage = { type: "GAME", count: 1, adminPath: "/tournaments?series=series" }
   let removed = 0
-  tournamentApi.deletionImpact = async () => clearImpact
+  tournamentApi.deletionImpact = async () =>
+    removed ? { ...clearImpact, canDelete: false, usages: [usage] } : clearImpact
   tournamentApi.remove = async () => {
     removed++
-    throw new ApiError({
-      status: 409,
-      code: "TOURNAMENT_RECORD_IN_USE",
-      ...{ usages: [{ type: "GAME", count: 1, adminPath: "/tournaments?series=series" }] },
-    })
+    throw new ApiError({ status: 409, code: "TOURNAMENT_RECORD_IN_USE", ...{ usages: [usage] } })
   }
   const render = routed()
   try {
@@ -145,14 +194,15 @@ test("a reference added after preview returns actionable links and disables repe
       />,
     )
     await pressed("Xóa Player")
-    await pressed("Chuyển vào thùng rác")
-    assert.match(document.body.textContent ?? "", /Chưa thể xóa/)
-    assert.ok(document.querySelector('a[href="/tournaments?series=series"]'))
-    const confirmation = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
-      (button) => button.textContent?.replace(/\s+/g, " ").trim() === "Chuyển vào thùng rác",
-    )!
-    assert.equal(confirmation.disabled, true)
+    await answerConfirm("Chuyển vào thùng rác")
+    const failure = await waitFor(() => document.querySelector<HTMLElement>('[role="alert"]'), "The failure shows")
+    assert.match(failure.textContent ?? "", /Chưa thể xóa/)
+    assert.ok(failure.querySelector('a[href="/tournaments?series=series"]'))
     assert.equal(removed, 1)
+
+    await pressed("Xóa Player")
+    const again = await waitFor(confirmDialog, "Trying again asks again")
+    assert.equal(button("Chuyển vào thùng rác", again)!.disabled, true, "the check now reports the new reference")
   } finally {
     tournamentApi.deletionImpact = original.impact
     tournamentApi.remove = original.remove

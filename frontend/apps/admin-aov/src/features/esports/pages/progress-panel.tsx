@@ -1,15 +1,5 @@
 import { useState } from "react"
 import { CircleCheck, CircleDashed, CircleDot, ChevronRight, Loader2, ShieldCheck } from "lucide-react"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@aov/ui/components/alert-dialog"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { missingFieldLabel } from "@/features/tournaments/model/tournament-model"
@@ -18,8 +8,30 @@ import type { ProgressTarget, RecordingProgress, StepStatus } from "../model/rec
 import { STATE_LABELS } from "../components/game/progress-badge"
 import { RelativeDate } from "../components/relative-date"
 import { formatClock } from "@/lib/clock"
+import { confirmAction } from "@/components/confirm-dialog"
 
 const ICONS: Record<StepStatus, typeof CircleCheck> = { done: CircleCheck, partial: CircleDot, todo: CircleDashed }
+
+/** What confirming will publish: the result, the length and each recorded part, for a last look. */
+function PublishSummary({ progress, game }: { progress: RecordingProgress; game: GameView }) {
+  const winner = game.winner ? game.sides[game.winner].team.name : null
+  return (
+    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+      <dt className="text-muted-foreground">Đội thắng</dt>
+      <dd className="font-medium">{winner ?? "Chưa rõ"}</dd>
+      <dt className="text-muted-foreground">Thời lượng</dt>
+      <dd className="esp-num">{game.durationSeconds != null ? formatClock(game.durationSeconds) : "Chưa rõ"}</dd>
+      {progress.steps
+        .filter((step) => step.id !== "checks" && step.id !== "result")
+        .map((step) => (
+          <div key={step.id} className="contents">
+            <dt className="text-muted-foreground">{step.label}</dt>
+            <dd>{step.detail}</dd>
+          </div>
+        ))}
+    </dl>
+  )
+}
 
 /**
  * Recording checklist of one game. Each line opens the panel that fixes it; confirming publishes the game, which
@@ -40,11 +52,27 @@ export function ProgressPanel({
   onOpen: (target: ProgressTarget) => void
   onConfirm: () => Promise<boolean>
 }) {
-  const [asking, setAsking] = useState(false)
   const [busy, setBusy] = useState(false)
   const complete = progress.done === progress.total
   const canConfirm = canPublish && complete && progress.state !== "confirmed"
-  const winner = game.winner ? game.sides[game.winner].team.name : null
+
+  const confirm = async () => {
+    const accepted = await confirmAction({
+      title: `Xác nhận hoàn tất ván ${game.number}?`,
+      description: "Dữ liệu sẽ được chốt và xuất bản. Rà lại lần cuối trước khi xác nhận.",
+      details: <PublishSummary progress={progress} game={game} />,
+      confirmLabel: "Xác nhận và xuất bản",
+      cancelLabel: "Kiểm tra lại",
+    })
+    if (!accepted) return
+
+    setBusy(true)
+    try {
+      await onConfirm()
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <div className="space-y-4 p-4 text-sm">
@@ -127,7 +155,7 @@ export function ProgressPanel({
       )}
 
       <div className="space-y-1.5 border-t pt-3">
-        <Button className="w-full" disabled={!canConfirm || busy} onClick={() => setAsking(true)}>
+        <Button className="w-full" disabled={!canConfirm || busy} onClick={() => void confirm()}>
           {busy ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
           {progress.state === "changed" ? `Xác nhận lại ván ${game.number}` : `Xác nhận hoàn tất ván ${game.number}`}
         </Button>
@@ -141,43 +169,6 @@ export function ProgressPanel({
                 : "Hoàn thành các mục bắt buộc để xác nhận. Mục “tùy nguồn” có thể để trống nếu video không hiển thị."}
         </p>
       </div>
-
-      <AlertDialog open={asking} onOpenChange={setAsking}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận hoàn tất ván {game.number}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Dữ liệu sẽ được chốt và xuất bản. Rà lại lần cuối trước khi xác nhận.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-            <dt className="text-muted-foreground">Đội thắng</dt>
-            <dd className="font-medium">{winner ?? "Chưa rõ"}</dd>
-            <dt className="text-muted-foreground">Thời lượng</dt>
-            <dd className="esp-num">{game.durationSeconds != null ? formatClock(game.durationSeconds) : "Chưa rõ"}</dd>
-            {progress.steps
-              .filter((step) => step.id !== "checks" && step.id !== "result")
-              .map((step) => (
-                <div key={step.id} className="contents">
-                  <dt className="text-muted-foreground">{step.label}</dt>
-                  <dd>{step.detail}</dd>
-                </div>
-              ))}
-          </dl>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Kiểm tra lại</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                setBusy(true)
-                await onConfirm()
-                setBusy(false)
-              }}
-            >
-              Xác nhận và xuất bản
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

@@ -67,6 +67,30 @@ test("a question shows its details between the text and the buttons", async () =
   }
 })
 
+test("a question its details block answers only with Cancel, also when a link in them leads away", async () => {
+  const { ConfirmDialogHost, cancelConfirm, confirmAction } = await import("../src/components/confirm-dialog")
+  const unmount = await mounted(<ConfirmDialogHost />)
+  let answer: Promise<boolean> | undefined
+  try {
+    await act(async () => {
+      answer = confirmAction({
+        title: "Xóa đội này?",
+        description: "Đội vẫn còn trong đội hình của một giải.",
+        confirmLabel: "Chuyển vào thùng rác",
+        confirmDisabled: true,
+      })
+    })
+    await flush()
+    assert.equal(dialogButton("Chuyển vào thùng rác").disabled, true)
+    await act(async () => cancelConfirm())
+    await flush()
+    assert.equal(await answer, false)
+    assert.equal(dialog(), null)
+  } finally {
+    await unmount()
+  }
+})
+
 test("the shared question is red, opens on Cancel, answers once and returns focus", async () => {
   const { ConfirmDialogHost, confirmAction } = await import("../src/components/confirm-dialog")
   const unmount = await mounted(<ConfirmDialogHost />)
