@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -8,10 +7,10 @@ import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import type { Request } from "../src/features/publishing/api/publishing-api"
 import type { CharacterImageGroup } from "../src/features/media/api/character-image-api"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("full-width hero groups load on scroll, keep every candidate and separate expanding, copying and previewing", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/media" })
+  const dom = createWindow("http://localhost/hero/media")
   const copied: string[] = []
   Object.defineProperty(dom.window.navigator, "clipboard", {
     value: {

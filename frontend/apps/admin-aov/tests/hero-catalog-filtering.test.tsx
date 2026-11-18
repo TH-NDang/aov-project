@@ -1,13 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { catalogOverview, createHeroCatalogFixture } from "./fixtures/hero-catalog-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import type { CatalogFilter } from "../src/features/publishing/components/catalog/catalog-context"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("catalog transport encodes search and keeps every server filter in its cache identity", async () => {
   const { createPublishingApi, heroCatalogKey } = await import("../src/features/publishing/api/publishing-api")
@@ -51,7 +50,7 @@ test("catalog transport encodes search and keeps every server filter in its cach
 })
 
 test("hero catalog uses server changes-only filters, global search, edited sorting and isolated query caches", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
+  const dom = createWindow("http://localhost/publishing")
   const fixture = createHeroCatalogFixture()
   const intersections = intersectionHarness()
   Object.defineProperty(dom.window, "matchMedia", {

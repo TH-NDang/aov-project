@@ -1,14 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("image management loads on scroll, retries without losing rows and filters the whole library after credit corrections", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/image-management", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/image-management")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })

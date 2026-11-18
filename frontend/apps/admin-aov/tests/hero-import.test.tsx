@@ -1,13 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Request } from "../src/features/publishing/api/publishing-api"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("import wizard carries patch context and never selects rows without a known baseline", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
+  const dom = createWindow("http://localhost/publishing")
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { HeroImport } = await import("../src/features/publishing/components/import/hero-import")
@@ -139,21 +138,21 @@ test("import wizard carries patch context and never selects rows without a known
 })
 
 test("folder import uploads only mapped hero, skill and skin images after confirmation", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
+  const dom = createWindow("http://localhost/publishing")
+  const uploads: string[] = []
   let restoreGlobals = () => {}
-  restoreGlobals = installWindow(dom.window)
+  restoreGlobals = installWindow(dom.window, {
+    fetch: async (_url: string, init?: RequestInit) => {
+      uploads.push((init?.body as File).name)
+      return new Response("", { status: 200 })
+    },
+  })
   const { HeroImport } = await import("../src/features/publishing/components/import/hero-import")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
   const activity: { status: string; completed: number; total: number }[] = []
   const calls: { path: string; body: Record<string, unknown> }[] = []
-  const uploads: string[] = []
-  const oldFetch = globalThis.fetch
-  globalThis.fetch = async (_url, init) => {
-    uploads.push((init?.body as File).name)
-    return new Response("", { status: 200 })
-  }
   let asset = 0
   const request: Request = async <T,>(path: string, init?: RequestInit) => {
     if (path.includes("/upload-sessions/")) return { ...JSON.parse(String(init?.body ?? "{}")), version: 0 } as T
@@ -295,7 +294,6 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     assert.equal((values.skills as Record<string, unknown>[])[0].iconAssetId, "asset-2")
     assert.equal((values.skins as Record<string, unknown>[])[0].artAssetId, "asset-3")
   } finally {
-    globalThis.fetch = oldFetch
     await act(async () => root.unmount())
     cache.clear()
     dom.window.close()

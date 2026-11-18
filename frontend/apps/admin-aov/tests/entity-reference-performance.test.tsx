@@ -2,14 +2,13 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { EntityReferenceInputHandle } from "@aov/ui/components/entity-reference-input"
 import { readReferenceInputSnapshot, setReferenceInputSelection } from "@aov/ui/lib/reference-input-dom"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 test("ordinary typing preserves the native range, text nodes, chip content and editor listeners", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+  const dom = createWindow()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")

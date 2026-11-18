@@ -1,14 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import type { AssetDetail, AssetProvenance } from "../src/features/publishing/api/types"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("hero image sources share the image request and retain current provenance, safe links and missing states", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/fixture-hero" })
+  const dom = createWindow("http://localhost/publishing/fixture-hero")
   const fixture = createHeroFixture()
   const requests: string[] = []
   const source = (id: string, overrides: Partial<AssetProvenance> = {}): AssetProvenance => ({

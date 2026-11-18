@@ -1,15 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "fake-indexeddb/auto"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("quick hero navigation keeps drawer/full-page context and cached drafts while rejecting switches during upload", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/hero")
   const fixture = createHeroFixture()
   const secondRevision = { ...fixtureRevision, id: "second-draft", heroId: "second-hero" }
   const secondContent = structuredClone(fixtureContent)

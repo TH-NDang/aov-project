@@ -4,6 +4,7 @@ import { join, relative } from "node:path"
 
 const app = join(import.meta.dirname, "..")
 const source = join(app, "src")
+const tests = join(app, "tests")
 
 type Rule = { name: string; hint: string; files: string[]; offenders: (text: string, path: string) => string[] }
 
@@ -189,6 +190,29 @@ const rules: Rule[] = [
     hint: "crypto.randomUUID is missing on plain-HTTP LAN addresses; use randomId from lib/random-id.",
     files: files(source, /\.tsx?$/).filter((path) => !path.endsWith(join("lib", "random-id.ts"))),
     offenders: (text) => (text.includes("crypto.randomUUID") ? [""] : []),
+  },
+  {
+    name: "admin tests build their browser with the shared kit",
+    hint: "Use createWindow, withDom, inDom or parseHtml from tests/fixtures/dom.tsx instead of new JSDOM(...).",
+    // These tournament, esports and community tests were being reworked by another change when the kit took over;
+    // they move to it with their suite, and leave this list then.
+    files: files(tests, /\.tsx?$/).filter(
+      (path) =>
+        !relative(tests, path).startsWith("fixtures") &&
+        ![
+          "community-references.test.tsx",
+          "competition-recency.test.tsx",
+          "esports-drag.test.tsx",
+          "esports-loadout.test.tsx",
+          "esports-ui.test.tsx",
+          "registry-import-ui.test.tsx",
+          "tournament-lifecycle.test.tsx",
+          "tournament-parts.test.tsx",
+          "tournaments.test.tsx",
+        ].includes(relative(tests, path)),
+    ),
+    offenders: (text) =>
+      text.split("\n").flatMap((line, index) => (line.includes("new JSDOM(") ? [`:${index + 1}`] : [])),
   },
   {
     name: "esports viewer components and models stay free of admin-only modules",

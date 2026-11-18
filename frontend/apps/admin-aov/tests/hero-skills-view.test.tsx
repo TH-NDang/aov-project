@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Skill } from "../src/features/publishing/api/types"
@@ -29,7 +28,7 @@ import {
   type StatDefault,
   type StatSample,
 } from "../src/features/publishing/model/assessment/combat-attributes"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -715,7 +714,7 @@ async function withView(run: (view: Awaited<ReturnType<typeof createView>>) => P
 }
 
 async function createView() {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/view-hero", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/hero/view-hero")
   const fixture = createHeroFixture()
   const requests: string[] = []
   const fetcher: typeof fetch = async (input, init) => {

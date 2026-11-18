@@ -1,10 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 type Contents = typeof import("../src/components/section-contents")
 
@@ -17,7 +16,7 @@ async function withUi(
     click: (element: Element | null) => Promise<void>
   }) => Promise<void>,
 ) {
-  const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true })
+  const dom = createWindow()
   const intersections = intersectionHarness()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window, {

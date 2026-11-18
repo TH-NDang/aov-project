@@ -1,10 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act, Activity } from "react"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 type InfiniteScrollComponent = typeof import("@aov/ui/components/infinite-scroll").InfiniteScroll
 type PagingQuery = React.ComponentProps<InfiniteScrollComponent>["query"]
@@ -22,7 +21,7 @@ async function withUi(
     sentinel: () => HTMLElement
   }) => Promise<void>,
 ) {
-  const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true })
+  const dom = createWindow()
   const intersections = intersectionHarness()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window, {

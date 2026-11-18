@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import {
   getReferenceInputSelection,
@@ -12,7 +11,7 @@ import {
   setReferenceInputSelection,
 } from "@aov/ui/lib/reference-input-dom"
 import type { EntityReferenceInputHandle } from "@aov/ui/components/entity-reference-input"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 const heroId = "00000000-0000-4000-8000-000000000001"
 const token = `<ref=skill:${heroId}.skill-1-2>Phi tiêu</ref>`
@@ -35,7 +34,7 @@ const skill: EntityReference = {
 }
 
 test("reference DOM maps atomic token boundaries without including icon or owner text", () => {
-  const dom = new JSDOM('<div id="root"></div>')
+  const dom = createWindow()
   const root = dom.window.document.getElementById("root")!
   const chip = dom.window.document.createElement("span")
   chip.setAttribute("data-reference-token", token)
@@ -60,7 +59,7 @@ test("reference DOM maps atomic token boundaries without including icon or owner
 })
 
 test("IME changes remain undecorated until commit, overflow rolls back, and disabled fieldsets reject mutations", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+  const dom = createWindow()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
@@ -154,7 +153,7 @@ test("IME changes remain undecorated until commit, overflow rolls back, and disa
 })
 
 test("reference input keeps chips atomic, stable during typing and hydration, and serializes clipboard/newlines safely", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+  const dom = createWindow()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
@@ -275,7 +274,7 @@ test("reference input keeps chips atomic, stable during typing and hydration, an
 })
 
 test("icons beside recognised names are decoration: the source, the caret and the text around them stay as typed", async () => {
-  const dom = new JSDOM('<div id="root"></div>')
+  const dom = createWindow()
   const root = dom.window.document.getElementById("root")!
   const { createEntityIndex } = await import("@aov/ui/lib/entity-rich-text")
   const { decorateReferences, passiveReferenceHighlights, removeDecorations } =

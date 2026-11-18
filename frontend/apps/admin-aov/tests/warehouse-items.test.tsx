@@ -5,6 +5,7 @@ import { act } from "react"
 import type { WarehouseEntry } from "../src/features/warehouse/model/warehouse-types"
 import type { ItemContent } from "@aov/ui/lib/warehouse-content"
 import { withWarehouseUi, fixtureRevision } from "./fixtures/warehouse-ui"
+import { installGlobals } from "./fixtures/dom"
 
 test("item details show verified upgrades and select pictured ingredients only after an explicit choice", async () => {
   await withWarehouseUi(async ({ document, render, click, client }) => {
@@ -353,14 +354,17 @@ test("shop paints wire underlays first and skips unchanged layout measurements d
   await withWarehouseUi(async ({ document, render }) => {
     const { ItemShopGraph } = await import("../src/features/warehouse/components/item-shop-graph")
     const callbacks: (() => void)[] = []
-    globalThis.ResizeObserver = class {
-      constructor(private callback: () => void) {}
-      observe(node: Element) {
-        if (node.hasAttribute("data-item-node") && !callbacks.includes(this.callback)) callbacks.push(this.callback)
-      }
-      unobserve() {}
-      disconnect() {}
-    } as unknown as typeof ResizeObserver
+    // The fixture puts its globals back when the test ends, this observer included.
+    installGlobals({
+      ResizeObserver: class {
+        constructor(private callback: () => void) {}
+        observe(node: Element) {
+          if (node.hasAttribute("data-item-node") && !callbacks.includes(this.callback)) callbacks.push(this.callback)
+        }
+        unobserve() {}
+        disconnect() {}
+      },
+    })
     const items: WarehouseEntry<ItemContent>[] = ["base", "other", "target"].map((id, column) => ({
       id,
       code: id,

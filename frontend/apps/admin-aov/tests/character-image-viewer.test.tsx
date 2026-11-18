@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
@@ -10,7 +9,7 @@ import { characterMediaOwners, ownerMainEntry } from "../src/features/media/mode
 import type { Request } from "../src/features/publishing/api/publishing-api"
 import type { CharacterImageEntry, CharacterImageGroup } from "../src/features/media/api/character-image-api"
 import type { Preview } from "../src/features/publishing/api/types"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 function viewerFixture(): Preview {
   const content = structuredClone(fixtureContent)
@@ -73,7 +72,7 @@ test("secondary media entries expose only explicit primary bindings and keep mis
 })
 
 test("one-preview media viewer preserves clicked alternatives, switches only mains, protects candidates and opens skins in place", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/media" })
+  const dom = createWindow("http://localhost/hero/media")
   let wide = true
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: wide, addEventListener() {}, removeEventListener() {} }),

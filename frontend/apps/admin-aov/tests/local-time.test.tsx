@@ -1,12 +1,11 @@
 import assert from "node:assert/strict"
 import { after, before, beforeEach, test } from "node:test"
-import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import type { Root } from "react-dom/client"
-import { waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, QuietResizeObserver, waitFor } from "./fixtures/dom"
 
-const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+const dom = createWindow()
+let restoreGlobals = () => {}
 const moment = "2026-11-06T18:30:00Z"
 let root: Root
 let chooseTimeZone: (zone: string | null) => Promise<void>
@@ -33,31 +32,11 @@ function fire(target: Element, type: string, init: Record<string, unknown> = {})
 }
 
 before(async () => {
-  const window = dom.window as unknown as Record<string, unknown>
-  Object.assign(globalThis, {
-    React,
-    Event: dom.window.Event,
-    CustomEvent: dom.window.CustomEvent,
-    FocusEvent: dom.window.FocusEvent,
-    StorageEvent: dom.window.StorageEvent,
-    window,
-    document: dom.window.document,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle,
-    localStorage: dom.window.localStorage,
-    IS_REACT_ACT_ENVIRONMENT: true,
-    ResizeObserver: class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    },
+  restoreGlobals = installWindow(dom.window, {
+    ResizeObserver: QuietResizeObserver,
     requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(() => callback(0), 0),
     cancelAnimationFrame: (handle: ReturnType<typeof setTimeout>) => clearTimeout(handle),
   })
-  Object.defineProperty(globalThis, "navigator", { value: dom.window.navigator, configurable: true })
   const { createRoot } = await import("react-dom/client")
   ;({ chooseTimeZone } = await import("@aov/ui/lib/time-zone"))
   ;({ LocalTime } = await import("@aov/ui/components/local-time"))
@@ -72,6 +51,7 @@ beforeEach(async () => {
 after(async () => {
   await act(async () => root.unmount())
   dom.window.close()
+  restoreGlobals()
 })
 
 test("the time shows in the chosen zone, follows a new choice, and keeps its machine-readable value", async () => {

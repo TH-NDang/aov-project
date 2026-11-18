@@ -1,13 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { MediaDeletion } from "../src/features/media/model/media-deletion"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("image deletion requires verified references and confirmation, survives reload and refreshes the library", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/image-management", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/image-management")
   let restoreGlobals = () => {}
   let capabilities = ["catalog:read", "media:write"]
   let competitionCapabilities = ["tournament:read", "tournament:write"]

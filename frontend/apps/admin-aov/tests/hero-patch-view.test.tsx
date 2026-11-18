@@ -1,13 +1,12 @@
 import assert from "node:assert/strict"
 import { registerHooks } from "node:module"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import type { Revision } from "../src/features/publishing/api/types"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("the timeline uses the new published baseline, preserves it across patches and offers automatic selection", async () => {
   // JSDOM verifies interaction and content; stylesheet rendering belongs to browser checks.
@@ -18,7 +17,7 @@ test("the timeline uses the new published baseline, preserves it across patches 
         : next(url, context)
     },
   })
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/fixture-hero" })
+  const dom = createWindow("http://localhost/hero/fixture-hero")
   const fixture = createHeroFixture(false, true)
   const baseline: Revision = {
     ...fixture.revision,

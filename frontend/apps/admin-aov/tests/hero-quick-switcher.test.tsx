@@ -1,11 +1,10 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { HeroRow } from "../src/features/publishing/api/types"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -20,7 +19,7 @@ async function withSwitcher(run: (ui: Awaited<ReturnType<typeof createSwitcher>>
 }
 
 async function createSwitcher() {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/current", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/hero/current")
   const intersections = intersectionHarness()
   const heroes: HeroRow[] = Array.from({ length: 21 }, (_, index) => ({
     id: `hero-${index}`,

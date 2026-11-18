@@ -2,12 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { cleanTraits, suggestTraits, withTraitDetail } from "../src/features/publishing/model/assessment/hero-traits"
 import { draftHeroNotes } from "../src/features/publishing/model/assessment/hero-notes-draft"
 import type { HeroRankingReading } from "../src/features/publishing/api/publishing-api"
 import type { Content, Skill, Trait } from "../src/features/publishing/api/types"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 const skill = (
   skillKey: string,
@@ -173,7 +172,7 @@ test("without a confirmed snapshot the draft uses the traits alone", () => {
 })
 
 async function createView() {
-  const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true, url: "http://localhost/hero/test" })
+  const dom = createWindow("http://localhost/hero/test")
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")

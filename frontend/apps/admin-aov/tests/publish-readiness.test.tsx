@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
+import type { JSDOM } from "jsdom"
 import "fake-indexeddb/auto"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter, useLocation } from "react-router"
@@ -23,7 +23,7 @@ import {
 import type { Revision } from "../src/features/publishing/api/types"
 import { createHeroFixture, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 const standard = "standard"
 const revision = (
@@ -271,7 +271,7 @@ async function withDocument(
   }) => Promise<void>,
 ) {
   answer = fetcher
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/publish-readiness" })
+  const dom = createWindow("http://localhost/hero/publish-readiness")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })

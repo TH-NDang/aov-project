@@ -1,17 +1,16 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import "fake-indexeddb/auto"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { draftKey, draftRepository } from "../src/app/drafts/draft-store"
 import type { PublicationOverview } from "../src/features/publishing/api/publication-overview"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("season forms restore invalid input and saving one market preserves another market's draft", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/game-configuration" })
+  const dom = createWindow("http://localhost/game-configuration")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })

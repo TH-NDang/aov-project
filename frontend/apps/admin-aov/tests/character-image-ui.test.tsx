@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
@@ -8,10 +7,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import type { Request } from "../src/features/publishing/api/publishing-api"
 import type { CharacterImageGroup, SkinBadgeRecord } from "../src/features/media/api/character-image-api"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("backend media groups retain missing main rows, select alternatives with expected version and protect published bindings", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/portraits" })
+  const dom = createWindow("http://localhost/portraits")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })

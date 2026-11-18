@@ -2,9 +2,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { JSDOM } from "jsdom"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, parseHtml, waitFor } from "./fixtures/dom"
 
 const entity: EntityReference = {
   id: "hero-1",
@@ -18,11 +17,11 @@ const entity: EntityReference = {
 async function verifyAllowlistedFormatting() {
   const { EntityRichText } = await import("@aov/ui/components/entity-rich-text")
   const render = (text: string, autoRecognize = true) =>
-    new JSDOM(
+    parseHtml(
       renderToStaticMarkup(
         <EntityRichText text={text} entities={[entity]} locale="vi-VN" context="admin" autoRecognize={autoRecognize} />,
       ),
-    ).window.document
+    )
   const name = entity.translations[0]!.name
   const nested = render(`<b><i><color=#2563eb><ref=hero:hero-1>${name}</ref></color></i></b>`, false)
   assert.equal(nested.querySelectorAll('strong > em > span > [role="button"]').length, 1)
@@ -38,7 +37,7 @@ async function verifyAllowlistedFormatting() {
   assert.equal(automatic.querySelectorAll('strong > [role="button"]').length, 1)
   assert.equal(automatic.querySelectorAll('em > [role="button"]').length, 0)
   assert.equal(automatic.querySelector("em")?.textContent, name)
-  const every = new JSDOM(
+  const every = parseHtml(
     renderToStaticMarkup(
       <EntityRichText
         text={`<b>${name}</b> <i>${name}</i>`}
@@ -48,7 +47,7 @@ async function verifyAllowlistedFormatting() {
         firstOccurrenceOnly={false}
       />,
     ),
-  ).window.document
+  )
   assert.equal(every.querySelectorAll('strong > [role="button"], em > [role="button"]').length, 2)
   const noauto = render(`<noauto><b>${name}</b> <i>${name}</i></noauto>`)
   assert.equal(noauto.querySelectorAll("strong, em").length, 2)
@@ -69,7 +68,7 @@ async function verifyAllowlistedFormatting() {
     icon: "/images/phi-tieu.png",
     translations: [{ locale: "vi-VN", name: "Phi Tiêu", aliases: [], description: "Trang bị" }],
   }
-  const projectile = new JSDOM(
+  const projectile = parseHtml(
     renderToStaticMarkup(
       <EntityRichText
         text={"Airi ném phi tiêu; trang bị <ref=item:phi-tieu>Phi Tiêu</ref>."}
@@ -78,7 +77,7 @@ async function verifyAllowlistedFormatting() {
         context="admin"
       />,
     ),
-  ).window.document
+  )
   assert.equal(projectile.querySelectorAll('[aria-label="Tướng: Airi"]').length, 1)
   assert.equal(projectile.querySelectorAll('[aria-label="Trang bị: Phi Tiêu"]').length, 1)
   assert.equal(projectile.querySelectorAll('img[src="/images/phi-tieu.png"]').length, 1)
@@ -86,7 +85,7 @@ async function verifyAllowlistedFormatting() {
 }
 
 test("entity rich text renders safely and supports focus, keyboard, touch and route contexts", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/" })
+  const dom = createWindow()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window, {
     requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(() => callback(0), 0),
@@ -129,14 +128,11 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
         context="admin"
       />,
     )
-    assert.equal(
-      new JSDOM(manualColor).window.document.querySelector<HTMLElement>('[role="button"]')?.style.color,
-      "rgb(37, 99, 235)",
-    )
+    assert.equal(parseHtml(manualColor).querySelector<HTMLElement>('[role="button"]')?.style.color, "rgb(37, 99, 235)")
     assert.match(markup, /color:#ff0000/)
     assert.match(markup, /alt=""/)
     assert.match(markup, /aria-label="Tướng: Lữ Bố"/)
-    assert.equal(new JSDOM(markup).window.document.querySelector("a a"), null)
+    assert.equal(parseHtml(markup).querySelector("a a"), null)
 
     await mount()
     let trigger = document.querySelector<HTMLElement>('[role="button"]')!
@@ -259,12 +255,12 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
       const result = renderToStaticMarkup(
         <EntityRichText text="Lữ Bố" entities={[{ ...entity, icon }]} locale="vi-VN" context="admin" />,
       )
-      assert.equal(new JSDOM(result).window.document.querySelector("img"), null)
+      assert.equal(parseHtml(result).querySelector("img"), null)
     }
     const disabled = renderToStaticMarkup(
       <EntityRichText text="Lữ Bố" entities={[entity]} locale="vi-VN" context="admin" autoRecognize={false} />,
     )
-    assert.equal(new JSDOM(disabled).window.document.querySelector('[role="button"]'), null)
+    assert.equal(parseHtml(disabled).querySelector('[role="button"]'), null)
     const manual = renderToStaticMarkup(
       <EntityRichText
         text="<ref=hero:hero-1>Tên hiển thị</ref> <ref=hero:missing>Không tồn tại</ref>"
@@ -274,7 +270,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
         autoRecognize={false}
       />,
     )
-    const manualDocument = new JSDOM(manual).window.document
+    const manualDocument = parseHtml(manual)
     assert.equal(manualDocument.querySelectorAll('[role="button"]').length, 1)
     assert.equal(manualDocument.querySelector('[role="button"]')?.textContent, "Tên hiển thị")
     assert.ok(manualDocument.body.textContent?.includes("Không tồn tại"))
@@ -286,7 +282,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
         context="admin"
       />,
     )
-    const malformedDocument = new JSDOM(malformedColor).window.document
+    const malformedDocument = parseHtml(malformedColor)
     assert.equal(malformedDocument.querySelectorAll("img, [style]").length, 0)
   } finally {
     await act(async () => root.unmount())

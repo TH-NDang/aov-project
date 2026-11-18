@@ -3,14 +3,19 @@ import { test } from "node:test"
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { Request } from "../src/features/publishing/api/publishing-api"
+import { withGlobals } from "./fixtures/dom"
 
-const originalChannel = globalThis.BroadcastChannel
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-const { createReferenceCatalogApi, referenceCatalogKeys, invalidateReferenceCatalog } =
-  await import("../src/features/terminology/reference-api")
-const { invalidateHeroCatalogs } = await import("../src/features/publishing/api/publishing-cache")
-const { invalidateWarehouseCatalogs } = await import("../src/features/warehouse/api/warehouse-api")
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: originalChannel })
+const {
+  createReferenceCatalogApi,
+  referenceCatalogKeys,
+  invalidateReferenceCatalog,
+  invalidateHeroCatalogs,
+  invalidateWarehouseCatalogs,
+} = await withGlobals({ BroadcastChannel: undefined }, async () => ({
+  ...(await import("../src/features/terminology/reference-api")),
+  ...(await import("../src/features/publishing/api/publishing-cache")),
+  ...(await import("../src/features/warehouse/api/warehouse-api")),
+}))
 
 const entities: EntityReference[] = [
   {

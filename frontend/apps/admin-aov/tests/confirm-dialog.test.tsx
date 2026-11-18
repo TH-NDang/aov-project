@@ -1,15 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router"
-import { flush, installWindow } from "./fixtures/dom"
+import { createWindow, flush, installWindow } from "./fixtures/dom"
 
-const dom = new JSDOM('<div id="root"></div><button id="origin">Origin</button>', {
-  url: "http://localhost/",
-  pretendToBeVisual: true,
-})
+const dom = createWindow("http://localhost/", '<div id="root"></div><button id="origin">Origin</button>')
 installWindow(dom.window)
 
 const document = dom.window.document

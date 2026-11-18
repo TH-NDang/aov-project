@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import { after, before, beforeEach, test } from "node:test"
-import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import type { Root } from "react-dom/client"
+import { createWindow, installWindow, QuietResizeObserver } from "./fixtures/dom"
 
-const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+const dom = createWindow()
+let restoreGlobals = () => {}
 let root: Root
 let chooseCurrency: (currency: string | null) => Promise<void>
 let LocalMoney: typeof import("@aov/ui/components/local-money").LocalMoney
@@ -46,27 +46,8 @@ function fire(target: Element, type: string, init: Record<string, unknown> = {})
 }
 
 before(async () => {
-  const window = dom.window as unknown as Record<string, unknown>
-  Object.assign(globalThis, {
-    React,
-    Event: dom.window.Event,
-    CustomEvent: dom.window.CustomEvent,
-    FocusEvent: dom.window.FocusEvent,
-    StorageEvent: dom.window.StorageEvent,
-    window,
-    document: dom.window.document,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle,
-    localStorage: dom.window.localStorage,
-    IS_REACT_ACT_ENVIRONMENT: true,
-    ResizeObserver: class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    },
+  restoreGlobals = installWindow(dom.window, {
+    ResizeObserver: QuietResizeObserver,
     requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(() => callback(0), 0),
     cancelAnimationFrame: (handle: ReturnType<typeof setTimeout>) => clearTimeout(handle),
     fetch: async (input: string) => {
@@ -79,7 +60,6 @@ before(async () => {
       return Response.json({ base: "USD", days: days.map((on) => ({ on, rates: dayRates[on] ?? [] })) })
     },
   })
-  Object.defineProperty(globalThis, "navigator", { value: dom.window.navigator, configurable: true })
   const { createRoot } = await import("react-dom/client")
   ;({ chooseCurrency } = await import("@aov/ui/lib/currency"))
   ;({ LocalMoney, LocalPrizeText } = await import("@aov/ui/components/local-money"))
@@ -96,6 +76,7 @@ beforeEach(async () => {
 after(async () => {
   await act(async () => root.unmount())
   dom.window.close()
+  restoreGlobals()
 })
 
 const dollars = (amount: number) => [{ amount, currency: "USD" }]

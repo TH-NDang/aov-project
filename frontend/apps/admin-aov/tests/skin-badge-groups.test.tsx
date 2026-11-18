@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { MemoryRouter, useLocation } from "react-router"
@@ -14,7 +13,7 @@ import {
 } from "../src/features/media/api/skin-badge-groups-api"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 const rank: BadgeGroup = {
   id: "rank-a",
@@ -129,10 +128,7 @@ async function withUi(
     intersect: (label: string) => Promise<void>
   }) => Promise<void>,
 ) {
-  const dom = new JSDOM('<div id="root"></div>', {
-    url: "http://localhost/hero/media?tab=badges",
-    pretendToBeVisual: true,
-  })
+  const dom = createWindow("http://localhost/hero/media?tab=badges")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })

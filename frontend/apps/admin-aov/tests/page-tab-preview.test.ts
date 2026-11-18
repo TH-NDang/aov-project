@@ -1,14 +1,11 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { JSDOM } from "jsdom"
 import { createPageTabPreviewStore } from "../src/app/layout/page-tab-preview-store"
 import { createPreviewFilter, observePageTabPreview } from "../src/app/layout/page-tab-preview"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow, withGlobals } from "./fixtures/dom"
 
 function setupDom() {
-  const dom = new JSDOM('<div id="panel"><div id="scroll"><div id="row"></div></div></div>', {
-    pretendToBeVisual: true,
-  })
+  const dom = createWindow(undefined, '<div id="panel"><div id="scroll"><div id="row"></div></div></div>')
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   return {
@@ -58,14 +55,10 @@ test("capture excludes rows below the page overview even after nested scrolling"
   }
 })
 
-test("capture skips cross-origin images, which cannot be read without CORS", () => {
+test("capture skips cross-origin images, which cannot be read without CORS", async () => {
   const { dom, panel, cleanup } = setupDom()
-  const original = Object.getOwnPropertyDescriptor(globalThis, "location")
-  Object.defineProperty(globalThis, "location", {
-    configurable: true,
-    value: { href: "https://admin.example.test/", origin: "https://admin.example.test" },
-  })
-  try {
+  const location = { href: "https://admin.example.test/", origin: "https://admin.example.test" }
+  await withGlobals({ location }, async () => {
     panel.getBoundingClientRect = () => new dom.window.DOMRect(0, 0, 700, 600)
     const image = dom.window.document.createElement("img")
     panel.append(image)
@@ -75,11 +68,7 @@ test("capture skips cross-origin images, which cannot be read without CORS", () 
     assert.equal(filter(image), false)
     image.src = "https://admin.example.test/local.png"
     assert.equal(filter(image), true)
-  } finally {
-    if (original) Object.defineProperty(globalThis, "location", original)
-    else delete (globalThis as { location?: unknown }).location
-    cleanup()
-  }
+  }).finally(cleanup)
 })
 
 test("closing or switching a tab cancels pending capture and rejects late images", async (t) => {

@@ -11,6 +11,7 @@ import type { Revision } from "../src/features/publishing/api/types"
 import { observedAttributes } from "../src/features/publishing/model/assessment/combat-attributes"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { mediaPath } from "../../../tooling/media-proxy.mts"
+import { withGlobals } from "./fixtures/dom"
 
 test("admin preview maps backend section keys and retains imported head bindings", async () => {
   const profile = { roles: [], translations: [{ locale: "vi-VN", name: "Airi" }], sources: [] }
@@ -207,22 +208,20 @@ test("quality upgrades activate an asset version without changing hero content",
 
 test("image URL download omits credentials and rejects non-image responses", async () => {
   const { imageFromUrl } = await import("../src/features/publishing/model/import/image-url")
-  const original = globalThis.fetch
-  try {
-    globalThis.fetch = async (_url, init) => {
-      assert.equal(init?.credentials, "omit")
-      assert.equal(init?.redirect, "error")
-      assert.equal(init?.referrerPolicy, "no-referrer")
-      return new Response(new Uint8Array([1, 2, 3]), { headers: { "content-type": "image/png" } })
-    }
+  let respond: typeof fetch = async (_url, init) => {
+    assert.equal(init?.credentials, "omit")
+    assert.equal(init?.redirect, "error")
+    assert.equal(init?.referrerPolicy, "no-referrer")
+    return new Response(new Uint8Array([1, 2, 3]), { headers: { "content-type": "image/png" } })
+  }
+  const fetch: typeof globalThis.fetch = (input, init) => respond(input, init)
+  await withGlobals({ fetch }, async () => {
     const file = await imageFromUrl("https://images.example.org/hero.png")
     assert.equal(file.type, "image/png")
     assert.equal(file.size, 3)
     await assert.rejects(imageFromUrl("http://images.example.org/hero.png"), /HTTPS/)
     await assert.rejects(imageFromUrl("https://user:password@images.example.org/hero.png"), /mật khẩu/)
-    globalThis.fetch = async () => new Response("not an image", { headers: { "content-type": "text/html" } })
+    respond = async () => new Response("not an image", { headers: { "content-type": "text/html" } })
     await assert.rejects(imageFromUrl("https://images.example.org/page"), /PNG/)
-  } finally {
-    globalThis.fetch = original
-  }
+  })
 })

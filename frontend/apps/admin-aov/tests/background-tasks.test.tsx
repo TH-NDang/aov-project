@@ -1,13 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
+import type { JSDOM } from "jsdom"
 import { act, useEffect, useState } from "react"
 import { MemoryRouter, useNavigate } from "react-router"
 import { BackgroundTasksProvider, useBackgroundTasks } from "../src/app/background-tasks"
 import { PersistentWorkspace } from "../src/app/layout/persistent-workspace"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { ImportJob } from "../src/features/publishing/components/import/import-jobs"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("server dismissals survive fresh clients and reconcile failures without hiding new or running work", async () => {
   let restoreGlobals = () => {}
@@ -57,7 +57,7 @@ test("server dismissals survive fresh clients and reconcile failures without hid
   }
   let dom: JSDOM
   const openWindow = () => {
-    dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/import" })
+    dom = createWindow("http://localhost/publishing/import")
     Object.defineProperty(dom.window, "matchMedia", {
       value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
     })
@@ -194,7 +194,7 @@ test("server dismissals survive fresh clients and reconcile failures without hid
 })
 
 test("background work survives route exit and returns with progress and result intact", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/import" })
+  const dom = createWindow("http://localhost/publishing/import")
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   let finish!: () => void

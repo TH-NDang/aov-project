@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
@@ -8,10 +7,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixtureContent } from "./fixtures/hero-workspace-data"
 import "fake-indexeddb/auto"
 import { draftRepository } from "../src/app/drafts/draft-store"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor, withGlobals } from "./fixtures/dom"
 
 test("hero reading, section save/cancel/conflict and translation preserve unrelated data", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/fixture-hero" })
+  const dom = createWindow("http://localhost/publishing/fixture-hero")
   const fixture = createHeroFixture()
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
@@ -352,9 +351,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
 })
 
 test("translation progress uses exact locale and source tables preserve conflicting labels", async () => {
-  const originalReact = Object.getOwnPropertyDescriptor(globalThis, "React")
-  Object.defineProperty(globalThis, "React", { configurable: true, writable: true, value: React })
-  try {
+  await withGlobals({ React }, async () => {
     const { translationStatus } = await import("../src/features/publishing/model/hero-translation-model")
     const { heroReviewNotes, SkillSourceDetails } =
       await import("../src/features/publishing/components/import/hero-source-details")
@@ -398,8 +395,5 @@ test("translation progress uses exact locale and source tables preserve conflict
     assert.match(html, /Tiêu hao: 0/)
     assert.match(html, /Cần đối chiếu/)
     assert.deepEqual(heroReviewNotes([skill, skill]), [note])
-  } finally {
-    if (originalReact) Object.defineProperty(globalThis, "React", originalReact)
-    else Reflect.deleteProperty(globalThis, "React")
-  }
+  })
 })

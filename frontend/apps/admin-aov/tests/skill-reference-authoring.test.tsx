@@ -2,19 +2,15 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("admin authors natural skill mentions and restores saved references with their hero and exact skill route", async () => {
-  const dom = new JSDOM('<div id="root"></div>', {
-    url: "http://localhost/terminology?ruleset=fixture-rules",
-    pretendToBeVisual: true,
-  })
+  const dom = createWindow("http://localhost/terminology?ruleset=fixture-rules")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })

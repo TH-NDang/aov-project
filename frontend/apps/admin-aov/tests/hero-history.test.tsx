@@ -1,15 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixturePreviousRevision } from "./fixtures/hero-workspace-data"
 import type { Revision } from "../src/features/publishing/api/types"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("hero history distinguishes baseline from changes and preserves the selected comparison", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/fixture-hero" })
+  const dom = createWindow("http://localhost/hero/fixture-hero")
   const fixture = createHeroFixture(false, true)
   const unexpected: string[] = []
   const fetcher: typeof fetch = async (input, init) => {

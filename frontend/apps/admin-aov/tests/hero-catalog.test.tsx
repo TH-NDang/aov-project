@@ -1,13 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 test("hero catalog keeps every loaded row and exposes the hero code and actions at all widths", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
+  const dom = createWindow("http://localhost/publishing")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })

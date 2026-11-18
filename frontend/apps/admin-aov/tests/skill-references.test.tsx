@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query"
 import {
   createEntityIndex,
@@ -12,7 +11,7 @@ import {
 import type { ReferenceSearchPage } from "@aov/ui/lib/entity-rich-text-editor"
 import type { Request } from "../src/features/publishing/api/publishing-api"
 import type { SkillReferenceScope } from "../src/features/terminology/skill-reference-api"
-import { installWindow, withGlobals } from "./fixtures/dom"
+import { createWindow, installWindow, withGlobals } from "./fixtures/dom"
 
 let currentFetch: typeof fetch = async () => {
   throw new Error("Unexpected network request")
@@ -255,7 +254,7 @@ test("catalog invalidation fences late lookup and search responses before fresh 
 })
 
 test("readers share explicit lookups and resolve only unambiguous owner-qualified skill mentions", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero" })
+  const dom = createWindow("http://localhost/hero")
   const batches: string[][] = []
   const slotRequests: string[] = []
   const owner = entity(id(1)).owner!

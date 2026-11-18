@@ -3,7 +3,6 @@ import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { JSDOM } from "jsdom"
 import {
   createEntityIndex,
   extractSkillReferenceIds,
@@ -21,7 +20,7 @@ import {
 } from "@aov/ui/lib/entity-rich-text-editor"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { referenceInput, fillReferenceInput, referenceInputValue } from "./fixtures/reference-input"
-import { flush, installWindow } from "./fixtures/dom"
+import { createWindow, flush, installWindow, parseHtml } from "./fixtures/dom"
 
 const heroId = "43dec8c3-0197-4459-bbdf-9812fbc12dd6"
 const skill: EntityReference = {
@@ -125,7 +124,7 @@ test("saved skill lookup is bounded, rejects malformed identities and survives a
 })
 
 test("remote skill suggestions debounce, page on inner scroll, retain lazy paired icons and insert the exact variant", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+  const dom = createWindow()
   const observer = intersectionHarness()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window, {
@@ -288,12 +287,11 @@ test("skill rendering pairs the correct owner with the specific skill and keeps 
       context="admin"
     />,
   )
-  const dom = new JSDOM(html)
+  const page = parseHtml(html)
   assert.match(
-    dom.window.document.querySelector('[role="button"]')!.getAttribute("aria-label")!,
+    page.querySelector('[role="button"]')!.getAttribute("aria-label")!,
     /Edras.*Tung hoành.*Chiêu 1.*Biến thể 2/,
   )
-  assert.equal(dom.window.document.querySelectorAll("img").length, 2)
-  assert.equal(dom.window.document.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
-  dom.window.close()
+  assert.equal(page.querySelectorAll("img").length, 2)
+  assert.equal(page.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
 })

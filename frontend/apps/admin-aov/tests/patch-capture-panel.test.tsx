@@ -4,7 +4,6 @@ import { createHash } from "node:crypto"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@aov/ui/components/tooltip"
 import {
@@ -33,7 +32,7 @@ import {
   fetchShopCaptures,
   findHeroCode,
 } from "../src/features/publishing/api/use-patch-captures"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 /** A patch picture's id is the SHA-256 of its bytes, which is also what its presigned link is asked by. */
 const capture = (id: string, section: CaptureImage["section"], extra: Partial<CaptureImage> = {}): CaptureImage => ({
@@ -414,7 +413,7 @@ async function withPanel(run: (ui: Awaited<ReturnType<typeof mount>>) => Promise
 }
 
 async function mount() {
-  const dom = new JSDOM('<!doctype html><div id="root"></div>', { url: "http://localhost/hero/a" })
+  const dom = createWindow("http://localhost/hero/a", '<!doctype html><div id="root"></div>')
   let restoreGlobals = () => {}
   // The panel asks the backend for presigned links; this one signs every picture it is asked about.
   const restoreFetch = setFetch(async (input, init) => {
