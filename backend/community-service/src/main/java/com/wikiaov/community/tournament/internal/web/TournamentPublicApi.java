@@ -29,7 +29,7 @@ public interface TournamentPublicApi {
     PageSlice<PublishedGame> games(@RequestParam(required = false) UUID tournamentId,
             @RequestParam(required = false) UUID seriesId,
             @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
-            @RequestParam(defaultValue = "12") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
+            @RequestParam(defaultValue = "12") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ROOT + "/games/{id}")
@@ -38,12 +38,12 @@ public interface TournamentPublicApi {
     @GetMapping(ApiPaths.ROOT + "/tournaments")
     PageSlice<Summary<Tournament>> tournaments(
             @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
-            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ROOT + "/series")
     PageSlice<Summary<Series>> series(@RequestParam(required = false) UUID tournamentId,
             @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
-            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_REGISTRY_SIZE) int size,
+            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             HttpServletRequest request);
 }

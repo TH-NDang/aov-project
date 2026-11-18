@@ -155,6 +155,15 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aPublicListPageLargerThanOneHundredIsAnInvalidQueryParameter() throws Exception {
+        for (String list : List.of("/games", "/tournaments", "/series")) {
+            mvc.perform(get(PUBLIC + list).param("size", "101")).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
+                    .andExpect(jsonPath("$.errors[0].path").value("size"));
+        }
+    }
+
+    @Test
     void theWholeRegistryPageIsServed() throws Exception {
         mvc.perform(authorized(get(ADMIN + "/teams").param("size", "500"))).andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(500));
