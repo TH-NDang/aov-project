@@ -7,7 +7,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint src"
   },
   "devDependencies": {
     "@aov/typescript-config": "workspace:*"
