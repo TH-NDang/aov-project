@@ -53,6 +53,7 @@ services:
       - keycloak-data:/opt/keycloak/data
       - ./infra/local/keycloak:/opt/keycloak/data/import:ro
       - ./infra/local/keycloak-themes/aov-public:/opt/keycloak/themes/aov-public:ro
+      - ./infra/local/keycloak-themes/aov-admin:/opt/keycloak/themes/aov-admin:ro
   # Catches account security email locally (ADR-028); not part of production.
   mailpit:
     image: axllent/mailpit:v1.32.0

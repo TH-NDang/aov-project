@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;
@@ -77,8 +78,7 @@ class SeasonUpdatesTest {
 
     @Test
     void returnsAnHonestEmptySeasonForUnavailableContextOrMissingSeason() {
-        when(contexts.resolve("VN", now)).thenThrow(new ApiException(PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE,
-                "No verified context."));
+        when(contexts.find("VN", now)).thenReturn(Optional.empty());
 
         var unavailable = service.read("VN", "vi-VN", 4);
 
@@ -107,7 +107,7 @@ class SeasonUpdatesTest {
                 error -> assertThat(error.getErrorCode()).isEqualTo(PatchErrorCode.PATCH_INVALID));
         verifyNoInteractions(contexts, repository);
 
-        when(contexts.resolve(anyString(), any())).thenThrow(
+        when(contexts.find(anyString(), any())).thenThrow(
                 new ApiException(RegionErrorCode.UNSUPPORTED_REGION, "The requested region is unavailable."));
 
         assertThatThrownBy(() -> service.read("UNKNOWN", "vi-VN", 4)).isInstanceOfSatisfying(ApiException.class,
@@ -115,8 +115,8 @@ class SeasonUpdatesTest {
     }
 
     private void stubContext() {
-        doReturn(new GameplayContext(regionId, "VN", rulesetId, "aov-standard", patchId, "2026-10-15", variantId,
-                2, now.minusSeconds(60))).when(contexts).resolve("VN", now);
+        doReturn(Optional.of(new GameplayContext(regionId, "VN", rulesetId, "aov-standard", patchId, "2026-10-15",
+                variantId, 2, now.minusSeconds(60)))).when(contexts).find("VN", now);
     }
 
     private SeasonUpdatesRepository.Text text(String locale, String title) {

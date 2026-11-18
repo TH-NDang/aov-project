@@ -1,2 +1,5 @@
 # Database dumps and media copies; they contain password hashes and all user data.
 /backups/
+
+# State of scripts/deploy.sh on the server: the deployed commit and the last rejected one.
+/.deploy/

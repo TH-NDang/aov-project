@@ -1,9 +1,25 @@
 # Routes by path prefix without rewriting API paths (spec 01, section 3.6; ADR-021).
 # SITE_ADDRESS is ":80" on one machine and the domain on a server, where Caddy obtains the TLS certificate itself.
+# Media bytes never pass here: public images come from the R2 bucket's own domain, and browsers upload and read
+# source files straight from R2 with presigned URLs.
 {
-	# The configuration is baked into the image; a change means a new container, not a live reload.
-	admin off
+	# Compose mounts this folder, and deploy.sh applies a new version with `caddy reload`, which needs the admin API.
+	# It listens inside the container only; no port is published and other containers cannot reach it.
+	admin localhost:2019
 	order rate_limit before basic_auth
+}
+
+# A backend service found by its Compose name. During an update two containers answer to that name, the old one and
+# the new one; a request that cannot reach one of them (it is shutting down) is tried on the other. Argument: name, port.
+(backend) {
+	reverse_proxy {
+		dynamic a {args[0]} {args[1]} {
+			refresh 1s
+		}
+		lb_try_duration 10s
+		lb_try_interval 250ms
+		fail_duration 5s
+	}
 }
 
 # Hashed bundles never change; every other file revalidates. Argument: app base path.
@@ -46,15 +62,13 @@ http://127.0.0.1:2020 {
 	log {
 		output stdout
 		format filter {
-			# Sign-in codes and presigned signatures travel in the query string; keep them out of the logs.
+			# Sign-in codes travel in the query string; keep them out of the logs.
 			fields {
 				request>uri query {
 					delete code
 					delete state
 					delete session_code
 					delete id_token_hint
-					delete X-Amz-Signature
-					delete X-Amz-Credential
 				}
 			}
 			wrap json
@@ -86,11 +100,11 @@ http://127.0.0.1:2020 {
 	}
 
 	handle /api/wiki/* {
-		reverse_proxy wiki-service:8080
+		import backend wiki-service 8080
 	}
 
 	handle /api/community/* {
-		reverse_proxy community-service:8082
+		import backend community-service 8082
 	}
 
 	handle /api/* {
@@ -111,39 +125,6 @@ http://127.0.0.1:2020 {
 		respond 404
 	}
 
-	# Validated, immutable bytes only: GET/HEAD on the exact versioned URL, mapped to assets/ of the bucket.
-	@media {
-		method GET HEAD
-		path_regexp media ^/media/([a-f0-9-]{36})/([a-f0-9-]{36}\.(?:png|jpg|webp))$
-	}
-	handle @media {
-		rewrite * /buckets/{$STORAGE_BUCKET:wiki-media}/assets/{re.media.1}/{re.media.2}
-		reverse_proxy seaweedfs:8888 {
-			header_down -Server
-			header_down -X-Amz-Request-Id
-			header_down -Access-Control-Expose-Headers
-		}
-	}
-
-	handle /media/* {
-		respond 404
-	}
-
-	# Presigned uploads and reads only: the bucket stays closed without a valid signature from wiki-service.
-	# The Host header is part of that signature, and reverse_proxy forwards it unchanged.
-	@presigned {
-		method GET HEAD PUT
-		path /{$STORAGE_BUCKET:wiki-media}/*
-		query X-Amz-Signature=*
-	}
-	handle @presigned {
-		reverse_proxy seaweedfs:8333
-	}
-
-	handle /{$STORAGE_BUCKET:wiki-media}/* {
-		respond 403
-	}
-
 	# Dev-server middleware of the admin app; a static build has none, and the app handles the 404.
 	handle /__* {
 		respond 404
@@ -152,12 +133,13 @@ http://127.0.0.1:2020 {
 	redir /stream /stream/ 308
 	redir /admin /admin/ 308
 
+	# The service web-publish keeps /srv/apps/stream and /srv/apps/admin.
 	handle /stream/* {
-		import spa /srv /stream/
+		import spa /srv/apps /stream/
 	}
 
 	handle /admin/* {
-		import spa /srv /admin/
+		import spa /srv/apps /admin/
 	}
 
 	# The Wiki looks for a page of its own first, because a rewrite would give every address the title and canonical

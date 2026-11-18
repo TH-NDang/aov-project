@@ -168,19 +168,19 @@ Ghi chú:
 
 ```text
                      Người dùng / Biên tập viên (trình duyệt)
-                                     │
-                                     ▼
-                  ┌─────────────────────────────────────┐
-                  │  reverse-proxy (Caddy hoặc Nginx)   │
-                  │  TLS · routing · giới hạn tần suất  │
-                  └─────────────────────────────────────┘
+                                     │                                 │
+                                     ▼                                 │
+                  ┌─────────────────────────────────────┐              │ không qua proxy:
+                  │  reverse-proxy (Caddy hoặc Nginx)   │              │ ảnh img.<domain>/assets/**,
+                  │  TLS · routing · giới hạn tần suất  │              │ upload và tệp nguồn
+                  └─────────────────────────────────────┘              │ bằng presigned URL
         │                  │                      │                    │
-        │ /, /stream/,     │ /api/wiki/**         │ /api/community/**  │ /media/**
+        │ /, /stream/,     │ /api/wiki/**         │ /api/community/**  │
         │ /admin/          │                      │                    │
         ▼                  ▼                      ▼                    ▼
   ┌───────────┐     ┌──────────────┐      ┌───────────────────┐  ┌────────────────┐
   │ frontend  │     │ wiki-service │      │ community-service │  │ Object storage │
-  │ 3 app tĩnh│     │ Spring Boot  │      │ Spring Boot (sau) │  │ S3 storage     │
+  │ 3 app tĩnh│     │ Spring Boot  │      │ Spring Boot (sau) │  │ R2 + CDN ảnh   │
   │ (React)   │     └──────────────┘      └───────────────────┘  └────────────────┘
   └───────────┘            │                      │
                            ▼                      ▼
@@ -192,7 +192,9 @@ Ghi chú:
   Dùng chung: Identity provider (Keycloak) — phát JWT, hai service xác minh qua JWKS.
 ```
 
-- `wiki-service` ghi media vào object storage qua S3 API; trình duyệt chỉ đọc media qua `/media/**`.
+- `wiki-service` ghi media vào object storage qua S3 API. Trình duyệt đọc ảnh công khai qua tên miền của bucket assets
+  (`img.<domain>/assets/**`, CDN Cloudflare), tải lên và đọc tệp nguồn thẳng trên R2 bằng presigned URL; các luồng này
+  không đi qua reverse proxy (ADR-014, ADR-021).
 - `community-service` gọi public API của `wiki-service` khi cần (mục 3.8), không đọc database `wiki`.
 
 ### 3.4 Topology giai đoạn hiện tại — chỉ AOV Wiki
@@ -204,7 +206,9 @@ Trình duyệt
 reverse-proxy ── /             → aov-wiki      (bản build tĩnh)
               ── /admin/       → admin-aov     (bản build tĩnh)
               ── /api/wiki/**  → wiki-service:8080
-              ── /media/**     → object storage (bucket wiki-media, chỉ prefix assets/, chỉ GET)
+
+Trình duyệt ──→ img.<domain>/assets/**  (CDN, bucket assets, chỉ GET)
+            ──→ presigned URL của R2    (PUT vào incoming/, GET sources/; wiki-service ký)
 
 wiki-service  ──→ postgres  (database: wiki)
               ──→ object storage (S3 API, credential có quyền ghi)
@@ -247,9 +251,9 @@ Kỹ năng và trang phục **không** là module riêng: chúng không có ý n
 - Reverse proxy route theo tiền tố, **không rewrite path**. Service tự phục vụ đúng đường dẫn đầy đủ, nên URL trong OpenAPI `servers`, trường `instance` của ProblemDetail và URL thật luôn khớp nhau.
 - Tiền tố riêng tránh đụng tên resource giữa các service (ví dụ `comments` của wiki và của cộng đồng).
 - Frontend và API cùng origin nên production không cần CORS. Mỗi app build với `base` tương ứng (`/`, `/stream/`, `/admin/`). Ở local, mỗi app dùng `server.proxy` của Vite để chuyển `/api` và `/media` sang backend.
-- Media public được phục vụ trực tiếp từ object storage/CDN theo URL có version (`/media/{assetId}/{assetVersionId}.{ext}`). Spring Boot không stream bytes ảnh.
-- Proxy chỉ mở prefix `assets/` của bucket; object đang upload (`incoming/`) không bao giờ public.
-- Khi chạy một origin: Keycloak ở `/idp/` và presigned URL đi qua `/{bucket}/*`, chỉ nhận request có chữ ký; xem [ADR-021](adr/ADR-021-dong-goi-chay-mot-may.md).
+- Media public được phục vụ trực tiếp từ CDN của bucket assets theo URL có version (`https://img.<domain>/assets/{assetId}/{assetVersionId}.{ext}`; tiền tố là `wiki.media.public-base-url`). Spring Boot và reverse proxy không stream bytes ảnh.
+- Chỉ bucket assets có tên miền công khai; bucket chứa `incoming/`, `imports/` và bucket tệp nguồn không bao giờ public (ADR-014, ADR-030).
+- Khi chạy một origin: Keycloak ở `/idp/`; trình duyệt dùng presigned URL thẳng tới endpoint R2, nên bucket riêng tư và bucket tệp nguồn cần CORS cho origin đó; xem [ADR-021](adr/ADR-021-dong-goi-chay-mot-may.md).
 
 ### 3.7 Identity và phân quyền dùng chung
 
@@ -1249,7 +1253,7 @@ assets/{assetId}/{versionId}.{ext}    bytes đã kiểm tra, bất biến
 sources/{sha256}                      tệp nguồn riêng tư (ảnh đối chứng, dữ liệu nhập), bất biến, không public (ADR-030)
 ```
 
-- URL public: `/media/{assetId}/{versionId}.{ext}`; reverse proxy/CDN map `/media/` vào prefix `assets/` (mục 3.4). Prefix cấu hình bằng `wiki.media.public-base-url`.
+- URL public: `{wiki.media.public-base-url}/{assetId}/{versionId}.{ext}`. Với R2, tiền tố là `https://img.<domain>/assets`, custom domain của bucket assets, nên key `assets/...` hiện ra nguyên vẹn (mục 3.4). Mặc định `/media` chỉ dùng khi không có CDN.
 - Khi copy sang `assets/`, backend ghi lại `Content-Type` theo định dạng đã xác minh và `Cache-Control: public, max-age=31536000, immutable`.
 - Object `incoming/` được xóa sau khi upload thành công; object còn sót (upload bỏ dở, bị từ chối) dọn bằng **lifecycle rule của bucket** (ví dụ xóa `incoming/` sau 1 ngày), không viết job riêng.
 

@@ -33,3 +33,38 @@ export function isGoogleCompletion(event: MessageEvent, popup: Window, state: st
     typeof event.data.status === "string"
   )
 }
+
+/** sessionStorage key of a same-page Google sign-in; public/auth/google-complete.js writes the same key. */
+export const GOOGLE_REDIRECT_KEY = "aov-admin-google-redirect"
+
+export type GoogleRedirectOutcome =
+  { kind: "completion"; status: string } | { kind: "keycloak-error"; code: string } | { kind: "abandoned" }
+
+/**
+ * Outcome of a same-page Google sign-in, started when the browser blocked the popup. The completion page adds the
+ * backend status to the saved entry; the Keycloak error page (theme aov-admin) returns with `#google-error=CODE`.
+ * Without a saved entry nothing was started here, so a fragment alone is ignored.
+ */
+export function googleRedirectOutcome(saved: string | null, hash: string): GoogleRedirectOutcome | null {
+  let entry: unknown
+  try {
+    entry = saved ? JSON.parse(saved) : null
+  } catch {
+    return null
+  }
+  if (!entry || typeof entry !== "object" || typeof (entry as { state?: unknown }).state !== "string") return null
+  const status = (entry as { status?: unknown }).status
+  if (typeof status === "string") return { kind: "completion", status }
+  const code = new URLSearchParams(hash.replace(/^#/, "")).get("google-error")
+  return code ? { kind: "keycloak-error", code } : { kind: "abandoned" }
+}
+
+// The Keycloak error page of the popup (theme aov-admin) sends a code instead of showing its own screen.
+export function isGoogleError(event: MessageEvent, popup: Window, keycloakOrigin: string) {
+  return (
+    event.origin === keycloakOrigin &&
+    event.source === popup &&
+    event.data?.type === "aov-google-error" &&
+    typeof event.data.code === "string"
+  )
+}
