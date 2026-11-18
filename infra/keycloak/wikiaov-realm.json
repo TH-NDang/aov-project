@@ -377,7 +377,8 @@
       "webOrigins": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "access.token.lifespan": "300"
+        "access.token.lifespan": "300",
+        "login_theme": "aov-admin"
       },
       "protocolMappers": [
         {

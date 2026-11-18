@@ -4,6 +4,7 @@
 
 FROM quay.io/keycloak/keycloak:26.4.0 AS build
 COPY aov-public /opt/keycloak/themes/aov-public
+COPY aov-admin /opt/keycloak/themes/aov-admin
 ENV KC_DB=postgres \
     KC_HEALTH_ENABLED=true \
     KC_HTTP_RELATIVE_PATH=/idp
