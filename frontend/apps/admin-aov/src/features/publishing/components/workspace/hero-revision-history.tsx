@@ -12,6 +12,7 @@ import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
 import { control } from "../editing/fields"
 import { usePublicationOverview } from "../../api/publication-overview"
 import { comparisonFieldLabels } from "../../model/assessment/hero-comparison"
+import { comparisonWarningText } from "../../model/assessment/comparison-warnings"
 import { buildSkillComparison, type CuratedHeroChange } from "../../model/skills/hero-skill-comparison"
 import { OtherComparisonCard, SkillComparisonCard } from "../assessment/hero-comparison-view"
 import { ChangeColorSettings } from "../patch-changes/change-color-preferences"
@@ -176,13 +177,20 @@ function RevisionHistoryContent({
           <div className="rounded-xl border border-dashed bg-muted/15 p-6">
             <Badge variant="secondary">{CAUSE_NAMES.DATA_BASELINE}</Badge>
             <h4 className="mt-3 font-semibold">Chưa đủ dữ liệu để xác định phần thay đổi</h4>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Bản đầu tiên ghi lại trạng thái tướng tại một thời điểm. Khi bổ sung bản của mùa hoặc patch trước, bạn có
-              thể chọn làm bản đối chiếu.
-            </p>
+            {comparison.data.warnings.map((warning) => (
+              <p key={warning.code} className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                {comparisonWarningText(warning)}
+              </p>
+            ))}
           </div>
         ) : (
           <section className="space-y-4" aria-label="Thay đổi đã gom theo kỹ năng">
+            {comparison.data?.warnings.map((warning) => (
+              <p key={warning.code} className="type-meta flex items-center gap-1.5">
+                <Info className="size-3.5 shrink-0" />
+                {comparisonWarningText(warning)}
+              </p>
+            ))}
             {recorded && (
               <HeroOverallAssessment key={`${recorded.id}-${recorded.assessmentVersion}`} change={recorded} />
             )}

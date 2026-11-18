@@ -94,6 +94,7 @@ test("hero history distinguishes baseline from changes and preserves the selecte
     await waitFor(() => document.body.textContent!.includes("Chưa đủ dữ liệu để xác định phần thay đổi"))
     assert.equal(document.querySelectorAll("article").length, 0)
     assert.equal(document.querySelector('[aria-label="Lọc phần thay đổi"]'), null)
+    assert.match(document.body.textContent!, /Bản đầu tiên ghi lại trạng thái tướng/)
     assert.deepEqual(fixture.comparisonRequests, [{ revisionId: current.id, fromRevisionId: null }])
     assert.deepEqual(
       [...sourceSelect().options].map((option) => option.value),
@@ -105,6 +106,7 @@ test("hero history distinguishes baseline from changes and preserves the selecte
     await choose(sourceSelect(), fixturePreviousRevision.id)
     await waitFor(() => document.querySelectorAll("article").length === 2)
     assert.equal(fixture.comparisonRequests.at(-1)!.fromRevisionId, fixturePreviousRevision.id)
+    assert.match(document.body.textContent!, /Khác biệt giữa hai bản chưa cho biết patch nào gây ra/)
     assert.equal(document.querySelector("del")?.textContent, "280")
     assert.equal(document.querySelector("ins")?.textContent, "300")
     const numeric = [...document.querySelectorAll("article")].find((item) => item.textContent!.includes("+200"))!

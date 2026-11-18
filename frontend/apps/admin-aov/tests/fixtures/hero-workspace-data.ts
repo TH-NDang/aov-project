@@ -307,7 +307,7 @@ export function createHeroFixture(annotations = false, history = false) {
               },
             ]
           : [],
-        warnings: [],
+        warnings: [{ code: fromRevisionId ? "SNAPSHOT_DIFFERENCE_UNPROVEN" : "NO_EARLIER_SNAPSHOT" }],
       })
     }
     if (path.endsWith("/revisions")) return Response.json(history ? [revision, fixturePreviousRevision] : [revision])
