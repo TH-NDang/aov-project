@@ -16,6 +16,7 @@
   white-space: nowrap;
 }
 .wiki-hero-chip {
+  --wiki-hero-glyph-size: 16px;
   display: inline-flex;
   height: 32px;
   flex: none;
@@ -41,10 +42,6 @@
   content: "";
   position: absolute;
   inset: -2px 0;
-}
-.wiki-hero-chip .wiki-hero-glyph {
-  width: 16px;
-  height: 16px;
 }
 @media (hover: hover) {
   .wiki-hero-chip:hover {

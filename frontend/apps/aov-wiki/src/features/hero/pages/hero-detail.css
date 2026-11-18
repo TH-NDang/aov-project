@@ -247,6 +247,8 @@
   margin-top: 10px;
 }
 .wiki-hero-role-strip {
+  --wiki-hero-glyph-size: 17px;
+  --wiki-hero-glyph-color: var(--aov-accent);
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -273,11 +275,6 @@
 }
 .wiki-hero-role-extras > span > svg {
   flex: none;
-  color: var(--aov-accent);
-}
-.wiki-hero-role-strip .wiki-hero-glyph {
-  width: 17px;
-  height: 17px;
   color: var(--aov-accent);
 }
 /* The narrowest phones: tighter chips, so the price and the videos still share a line. */

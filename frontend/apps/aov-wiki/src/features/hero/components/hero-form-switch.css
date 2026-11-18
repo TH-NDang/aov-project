@@ -6,6 +6,8 @@
   margin-top: 10px;
 }
 .wiki-hero-form {
+  --wiki-hero-glyph-size: 18px;
+  --wiki-hero-glyph-color: var(--aov-accent);
   font: var(--wiki-type-meta);
   display: inline-flex;
   min-height: 32px;
@@ -42,11 +44,6 @@
   background: color-mix(in srgb, var(--aov-accent) 12%, var(--aov-surface));
   color: var(--aov-text);
   font-weight: 600;
-}
-.wiki-hero-form .wiki-hero-glyph {
-  width: 18px;
-  height: 18px;
-  color: var(--aov-accent);
 }
 @media (max-width: 899.98px) {
   .wiki-hero-form {

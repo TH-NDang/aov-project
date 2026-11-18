@@ -95,7 +95,7 @@ export function HeroCard({
               {roles.map((role) => (
                 <span key={role.value}>
                   <HeroGlyph name={role.glyph} />
-                  <span>{role.label}</span>
+                  <span className="wiki-hero-card-role-name">{role.label}</span>
                 </span>
               ))}
             </span>
