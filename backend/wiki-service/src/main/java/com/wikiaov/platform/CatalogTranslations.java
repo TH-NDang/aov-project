@@ -50,6 +50,7 @@ public final class CatalogTranslations {
                 return Optional.of(Violation.INVALID_LOCALIZED_CONTENT);
             }
         }
+
         return Optional.empty();
     }
 

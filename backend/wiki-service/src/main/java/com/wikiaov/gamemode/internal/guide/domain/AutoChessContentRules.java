@@ -102,6 +102,7 @@ public final class AutoChessContentRules {
                 missing.add("lineups[" + i + "].units");
             }
         }
+
         return missing;
     }
 
@@ -167,6 +168,7 @@ public final class AutoChessContentRules {
                 checks.text(at + ".tiers[" + t + "].effect", tier.effect(), 1000, true);
             }
         }
+
         return codes;
     }
 
@@ -187,6 +189,7 @@ public final class AutoChessContentRules {
             skill(checks, at, unit);
             stats(checks, at + ".stats", unit.stats());
         }
+
         return codes;
     }
 

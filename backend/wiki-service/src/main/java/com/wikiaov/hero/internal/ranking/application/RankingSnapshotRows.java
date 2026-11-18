@@ -35,6 +35,7 @@ final class RankingSnapshotRows {
         snapshot.setCreatedByIssuer(actor.issuer());
         snapshot.setCreatedBySubject(actor.subject());
         snapshot.setUpdatedAt(now);
+
         return snapshot;
     }
 
@@ -83,6 +84,7 @@ final class RankingSnapshotRows {
         }
         row.setVersion(1);
         row.setUpdatedAt(now);
+
         return row;
     }
 }

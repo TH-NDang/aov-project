@@ -31,6 +31,7 @@ class EnchantmentContentRules {
         if (content.branchCode() != null && !metadata.existsById(content.branchCode())) {
             fail("Unknown enchantment branch.");
         }
+
         CatalogTranslations.firstViolation(content.translations()).ifPresent(violation -> fail(violation.detail()));
         validateIcon(content.iconAssetId());
         if (content.notes() != null && content.notes().length() > 32768) {
@@ -89,6 +90,7 @@ class EnchantmentContentRules {
         if (content.position() == null) {
             missing.add("position");
         }
+
         return missing;
     }
 

@@ -42,9 +42,11 @@ final class HeroImportRevisions {
             throw new ApiException(HeroErrorCode.HERO_IMPORT_SNAPSHOT_EXISTS,
                     "This patch already has a snapshot. Choose correction mode.");
         }
+
         if (input.mode() == Mode.BASELINE) {
             return null;
         }
+
         return latestSnapshotBefore(revisions, target.rulesetOrdinal());
     }
 
@@ -97,6 +99,7 @@ final class HeroImportRevisions {
         if (draft.state() == RevisionState.DRAFT) {
             return draft;
         }
+
         return authoring.fork(plan.heroId(), new HeroCommands.Fork(input.rulesetId(), draft.id(),
                 cause(input.mode()), contexts.authoringContext(input.contextId()).patchVariantId(),
                 "Imported hero fields"));

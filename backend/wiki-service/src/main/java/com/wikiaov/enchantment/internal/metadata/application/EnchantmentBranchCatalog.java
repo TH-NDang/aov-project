@@ -63,6 +63,7 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
         if (!code.matches(CatalogCodes.PATTERN) || code.length() > 120) {
             invalid("Invalid metadata code.");
         }
+
         var found = records.lockByCode(code);
         var row = found.orElseGet(() -> {
             var e = new EnchantmentBranch();
@@ -73,6 +74,7 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
             throw new ApiException(EnchantmentErrorCode.ENCHANTMENT_CONFLICT, "The metadata record has changed.",
                     Map.of("currentVersion", row.getVersion()));
         }
+
         var locales = new HashSet<String>();
         for (var t : input.translations()) {
             if (t.locale() == null || !t.locale().matches(CatalogLocales.PATTERN) || !locales.add(t.locale())
@@ -85,6 +87,7 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
         asset(input.iconAssetId(), MediaSemanticType.ENCHANTMENT_ICON);
         asset(input.backgroundAssetId(), MediaSemanticType.OTHER);
         long before = row.getVersion();
+
         row.setVersion(before + 1);
         row.setDisplayOrder(input.displayOrder());
         row.setIconAssetId(input.iconAssetId());
@@ -104,10 +107,12 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
             translations.save(e);
         }
         translations.flush();
+
         audit.record(
                 new AuditEntry(actors.require(), "ENCHANTMENT_METADATA_UPDATED", CatalogAggregates.ENCHANTMENT_METADATA,
                         UUID.nameUUIDFromBytes(code.getBytes(StandardCharsets.UTF_8)), null, before,
                         row.getVersion(), null, Map.of("code", code)));
+
         return view(row);
     }
 
@@ -145,6 +150,7 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
         if (new HashSet<>(codes).size() != codes.size()) {
             invalid("Duplicate branch codes are not allowed.");
         }
+
         var locked = new HashMap<String, EnchantmentBranch>();
         codes.stream().sorted().forEach(code -> locked.put(code, records.lockByCode(code)
                 .orElseThrow(() -> new ApiException(EnchantmentErrorCode.ENCHANTMENT_CONFLICT,
@@ -154,11 +160,13 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
             throw new ApiException(EnchantmentErrorCode.ENCHANTMENT_CONFLICT,
                     "The branch list has changed. Reload before reordering.");
         }
+
         for (var entry : input.entries()) {
             if (locked.get(entry.code()).getVersion() != entry.expectedVersion()) {
                 throw new ApiException(EnchantmentErrorCode.ENCHANTMENT_CONFLICT, "The branch has changed.");
             }
         }
+
         for (int index = 0; index < codes.size(); index++) {
             var row = locked.get(codes.get(index));
             if (row.getDisplayOrder() == index) {
@@ -173,6 +181,7 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
                     UUID.nameUUIDFromBytes(row.getCode().getBytes(StandardCharsets.UTF_8)), null,
                     before, row.getVersion(), null, Map.of("code", row.getCode(), "displayOrder", index)));
         }
+
         return codes.stream().map(code -> view(locked.get(code))).toList();
     }
 

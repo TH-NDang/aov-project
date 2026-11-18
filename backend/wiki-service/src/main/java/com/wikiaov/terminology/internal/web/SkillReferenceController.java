@@ -55,6 +55,7 @@ public class SkillReferenceController implements SkillReferenceApi {
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "q", "heroId", "ids", "page", "size",
                 "seasonId", "patchVariantId", "includeUnscoped"));
+
         var value = seasonId == null && patchVariantId == null
                 ? catalog.published(region, locale, q, heroId, ids, page, size)
                 : catalog.published(region, locale, q, heroId, ids, page, size, seasonId, patchVariantId,

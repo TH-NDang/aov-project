@@ -60,6 +60,7 @@ class CommunityMediaClient implements CompetitionMediaGuard {
         if (!(auth instanceof JwtAuthenticationToken jwt)) {
             throw unavailable();
         }
+
         try {
             var result = client.method(retire ? HttpMethod.POST : HttpMethod.GET)
                     .uri(base + assetId + (retire ? "/retire" : "/usage"))

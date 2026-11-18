@@ -26,6 +26,7 @@ public final class CatalogPatchScopeResolver {
                         "The patch must belong to the selected season and ruleset.");
             }
         }
+
         var selected = variants.stream()
                 .filter(variant -> (rulesetId == null || rulesetId.equals(variant.rulesetId()))
                         && (patchVariantId == null || patchVariantId.equals(variant.id())))
@@ -36,10 +37,12 @@ public final class CatalogPatchScopeResolver {
         Map<UUID, Long> cutoffs = new HashMap<>();
         variants.stream().filter(variant -> selected.contains(variant.id()))
                 .forEach(variant -> cutoffs.merge(variant.rulesetId(), variant.rulesetOrdinal(), Math::max));
+
         var applicable = contexts.catalogVariants(null).stream()
                 .filter(variant -> variant.published()
                         && variant.rulesetOrdinal() <= cutoffs.getOrDefault(variant.rulesetId(), -1L))
                 .map(PatchVariantReference::id).collect(Collectors.toSet());
+
         return new CatalogPatchScope(selected, applicable);
     }
 }

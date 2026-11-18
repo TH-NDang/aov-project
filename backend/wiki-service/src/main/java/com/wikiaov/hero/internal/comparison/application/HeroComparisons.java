@@ -58,6 +58,7 @@ public class HeroComparisons {
         if (!source.rulesetId().equals(target.rulesetId())) {
             throw HeroValidation.invalid("Compare revisions from the same hero and ruleset.");
         }
+
         var before = content(source);
         List<Difference> changes = new ArrayList<>();
         for (var section : HeroSection.values()) {
@@ -65,6 +66,7 @@ public class HeroComparisons {
             Object current = normalized(after.get(section));
             difference(section, "", previous, current, changes);
         }
+
         return new HeroComparisonView("AVAILABLE", source, target, before, after, List.copyOf(changes),
                 List.of(new HeroComparisonWarning(SNAPSHOT_DIFFERENCE_UNPROVEN)));
     }
@@ -187,6 +189,7 @@ public class HeroComparisons {
         if (value instanceof Number number) {
             return new BigDecimal(number.toString()).stripTrailingZeros();
         }
+
         return value;
     }
 

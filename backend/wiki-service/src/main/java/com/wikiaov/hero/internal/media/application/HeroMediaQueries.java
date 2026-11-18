@@ -55,10 +55,12 @@ public class HeroMediaQueries {
         if (q.trim().length() > 100) {
             throw HeroValidation.invalid("Search must contain at most 100 characters.");
         }
+
         var selected = repository.page(rulesetId, ordinals(rulesetId), q.trim().toLowerCase(Locale.ROOT), page, size);
         var content = content(selected.items(), locale);
         var views = store.revisions(selected.items().stream().map(HeroRevision::getHeroId).distinct().toList()).stream()
                 .collect(Collectors.toMap(HeroRevisionView::id, Function.identity()));
+
         return selected.map(revision -> {
             var hero = content.heroes().get(revision.getHeroId());
             var text = profile(content, revision);
@@ -123,6 +125,7 @@ public class HeroMediaQueries {
     public PageSlice<SkinBadgeRelation> badgeSkins(String code, UUID rulesetId, String locale, int page, int size) {
         bounds(page, size);
         HeroValidation.locale(locale);
+
         var selected = repository.selected(rulesetId, ordinals(rulesetId));
         var content = content(selected, locale);
         List<SkinBadgeRelation> rows = new ArrayList<>();
@@ -138,6 +141,7 @@ public class HeroMediaQueries {
                 }
             }
         }
+
         // Paged in memory: the skins come from the revision each hero shows in the ruleset, so the page is cut after
         // that choice; the list is bounded by the skins that carry one badge.
         return PageSlice.of(rows, page, size);
@@ -172,6 +176,7 @@ public class HeroMediaQueries {
                 .toList();
         var skins = revisions.stream().map(HeroRevision::getSkinsRevisionId).filter(Objects::nonNull).distinct()
                 .toList();
+
         return new Content(repository.heroes(heroIds).stream()
                 .collect(Collectors.toMap(HeroIdentity::getId, Function.identity())),
                 repository.profiles(profiles).stream()

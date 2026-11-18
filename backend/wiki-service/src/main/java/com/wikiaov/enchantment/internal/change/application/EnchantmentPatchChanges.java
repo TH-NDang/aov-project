@@ -143,6 +143,7 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
             String key = r.getOwnerId() + "/" + r.getEffectiveFromPatchVariantId();
             grouped.merge(key, r, (a, b) -> a.getRevisionNo() > b.getRevisionNo() ? a : b);
         }
+
         for (var r : grouped.values()) {
             var owner = owners.get(r.getOwnerId());
             var copy = CatalogText.select(
@@ -154,6 +155,7 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
                     List.of(r.getCause() == CatalogCause.DATA_BASELINE ? Kind.DATA_BASELINE : Kind.UPDATED),
                     null, null, null, false, r.getPublishedAt()));
         }
+
         return result;
     }
 

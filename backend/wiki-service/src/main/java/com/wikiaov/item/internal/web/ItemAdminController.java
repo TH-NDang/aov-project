@@ -60,6 +60,7 @@ public class ItemAdminController implements ItemAdminApi {
             }
             return catalog.drafts(rulesetId, locale, q, page, size);
         }
+
         return catalog.list(rulesetId, locale, q, page, size, seasonId, patchVariantId, includeUnchanged,
                 includeUnscoped);
     }

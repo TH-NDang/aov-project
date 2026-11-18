@@ -419,10 +419,15 @@ public class SpellCatalog implements SpellChangeQueries {
                 || patchChanges.existsByOwnerIdAndPatchVariantId(id, input.patchVariantId())) {
             conflict("Removal evidence already exists for this spell and patch.");
         }
+
         var event = newRemovalEvent(id, snapshot, input);
+
         removals.saveAndFlush(event);
+
         dataReviews.markDirty(input.patchVariantId());
+
         recordAuditEvent("REMOVAL_RECORDED", owner, snapshot, input.sourceUrl());
+
         return SpellRemovalView.from(event);
     }
 

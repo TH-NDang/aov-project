@@ -217,6 +217,7 @@ public class HeroCatalog {
             return ordered;
         }
         Set<String> seen = new HashSet<>();
+
         return ordered.stream().filter(change -> seen.add(change.getHeroId() + ":"
                 + variants.get(change.getPatchVariantId()).rulesetId())).toList();
     }

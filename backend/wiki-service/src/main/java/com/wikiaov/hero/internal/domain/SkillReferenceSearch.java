@@ -49,6 +49,7 @@ public record SkillReferenceSearch(
             }
         }
         value = CATEGORY.matcher(value).replaceAll(" ").replace('@', ' ');
+
         return new SkillReferenceSearch(Arrays.stream(value.strip().split("\\s+")).filter(s -> !s.isEmpty()).toList(),
                 slot, variant);
     }

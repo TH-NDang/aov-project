@@ -179,6 +179,7 @@ public final class HeroCatalogSpecifications {
             predicates.add(filter.facets().hasWarnings() ? pending : cb.not(pending));
         }
         matching.select(revision.get("id")).where(predicates.toArray(Predicate[]::new));
+
         return cb.exists(matching);
     }
 

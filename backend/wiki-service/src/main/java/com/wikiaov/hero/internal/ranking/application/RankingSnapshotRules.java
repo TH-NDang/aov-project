@@ -74,6 +74,7 @@ final class RankingSnapshotRules {
                 throw invalid("Page " + image.pageNo() + " of " + image.board() + " is listed twice.");
             }
         }
+
         return sizes;
     }
 

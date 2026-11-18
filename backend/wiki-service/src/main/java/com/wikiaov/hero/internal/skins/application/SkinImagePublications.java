@@ -147,6 +147,7 @@ public class SkinImagePublications {
         entity.setCreatedBySubject(actor.subject());
         entity.setUpdatedByIssuer(actor.issuer());
         entity.setUpdatedBySubject(actor.subject());
+
         return entity;
     }
 

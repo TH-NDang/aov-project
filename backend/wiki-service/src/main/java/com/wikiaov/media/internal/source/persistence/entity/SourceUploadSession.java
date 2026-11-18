@@ -105,6 +105,7 @@ public class SourceUploadSession extends AssignedIdEntity {
         session.createdAt = now;
         session.createdByIssuer = createdBy.issuer();
         session.createdBySubject = createdBy.subject();
+
         return session;
     }
 

@@ -339,6 +339,7 @@ public class SubjectVideos {
         video.setVersion(1);
         video.setCreatedAt(now);
         video.setUpdatedAt(now);
+
         return video;
     }
 

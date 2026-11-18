@@ -62,6 +62,7 @@ public class SpellAdminController implements SpellAdminApi {
             }
             return catalog.drafts(rulesetId, locale, q, page, size);
         }
+
         return catalog.list(rulesetId, locale, q, page, size, seasonId, patchVariantId, includeUnchanged,
                 includeUnscoped);
     }

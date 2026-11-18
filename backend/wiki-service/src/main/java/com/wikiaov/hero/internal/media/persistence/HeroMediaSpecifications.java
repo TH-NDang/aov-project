@@ -70,6 +70,7 @@ public final class HeroMediaSpecifications {
             predicates.add(cb.or(cb.like(cb.lower(hero.get("code")), pattern(q.replaceAll("\\s+", "-")), '\\'),
                     cb.exists(names), cb.exists(skinNames)));
         }
+
         return predicates.toArray(Predicate[]::new);
     }
 

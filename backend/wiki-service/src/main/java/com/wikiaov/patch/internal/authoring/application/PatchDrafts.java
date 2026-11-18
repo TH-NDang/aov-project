@@ -64,7 +64,9 @@ public class PatchDrafts {
             persist(() -> translations.saveAndFlush(new GamePatchTranslation(id, text.locale(), text.title(),
                     text.summary(), text.description())));
         }
+
         record("PATCH_CREATED", id);
+
         return id;
     }
 
@@ -93,6 +95,7 @@ public class PatchDrafts {
             ordinal = anchor.getRulesetOrdinal();
             variants.makeOrdinalSpace(input.rulesetId(), ordinal);
         }
+
         var entity = new PatchVariant();
         entity.setId(UUID.randomUUID());
         entity.setPatchId(patchId);
@@ -102,7 +105,9 @@ public class PatchDrafts {
         entity.setStatus(PatchVariantStatus.DRAFT);
         entity.setCreatedAt(clock.instant());
         persist(() -> variants.saveAndFlush(entity));
+
         record("PATCH_VARIANT_CREATED", entity.getId());
+
         return entity.getId();
     }
 

@@ -112,6 +112,7 @@ final class HeroImportDraftWriter {
             return;
         }
         draft = authoring.read(draft.heroId(), draft.id());
+
         authoring.update(draft.heroId(), draft.id(), HeroSection.MEDIA_BINDINGS, draft.version(),
                 new Bindings(links, existing == null ? List.of() : existing.sources(),
                         content.imageOptions(plan.after().get("images"))),

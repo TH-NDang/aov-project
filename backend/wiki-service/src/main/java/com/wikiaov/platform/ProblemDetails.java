@@ -23,6 +23,7 @@ public final class ProblemDetails {
     public static ProblemDetail of(ApiErrorCode code, String detail, List<ApiFieldError> errors,
             Map<String, Object> context, HttpServletRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(code.status(), detail);
+
         problem.setTitle(code.title());
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("code", code.name());
@@ -36,6 +37,7 @@ public final class ProblemDetails {
         if (!context.isEmpty()) {
             problem.setProperty("context", context);
         }
+
         return problem;
     }
 }

@@ -385,12 +385,15 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 && !history.introduces(changeSetId)) {
             throw HeroValidation.invalid("Only the change set that introduced the hero can be assessed as a release.");
         }
+
         var value = history.assessment(changeSetId)
                 .orElseGet(HeroPatchAssessment::new);
         if (value.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT, "The overall assessment has changed.");
         }
+
         var actor = actors.require();
+
         value.setChangeSetId(changeSetId);
         value.setKind(input.kind());
         value.setVersion(value.getVersion() + 1);
@@ -398,9 +401,11 @@ public class HeroPatchChanges implements HeroChangeQueries {
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
         history.saveAssessment(value);
+
         audit.record(new AuditEntry(actor, "HERO_PATCH_ASSESSED", CatalogAggregates.HERO, heroId, null,
                 input.expectedVersion(),
                 value.getVersion(), null, Map.of("changeSetId", changeSetId, "kind", input.kind().name())));
+
         return new HeroAssessmentView(value.getKind(), value.getVersion());
     }
 

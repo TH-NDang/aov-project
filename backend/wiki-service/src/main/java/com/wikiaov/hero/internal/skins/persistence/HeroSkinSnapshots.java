@@ -70,6 +70,7 @@ public class HeroSkinSnapshots implements HeroSectionSnapshots {
 
     private void save(UUID heroId, UUID revisionId, Skin skin, Instant at) {
         ensureBadge(skin.rarityCode(), at);
+
         if (identities.findById(new SkinIdentityRow.Key(heroId, skin.skinKey())).isEmpty()) {
             identities.save(new SkinIdentityRow(heroId, skin.skinKey(), at));
         }
@@ -112,6 +113,7 @@ public class HeroSkinSnapshots implements HeroSectionSnapshots {
                 .collect(Collectors.groupingBy(SkinTranslationRow::getSkinKey));
         var options = images.findBySkinSetRevisionIdIn(ids, Sort.by("imageOrder")).stream()
                 .collect(Collectors.groupingBy(SkinImageOption::getSkinKey));
+
         return new Skins(snapshots.findBySkinSetRevisionIdIn(ids, Sort.by("displayOrder")).stream()
                 .map(s -> new Skin(s.getSkinKey(), s.getDisplayOrder(), s.getArtAssetId(), s.getRarityCode(),
                         texts.getOrDefault(s.getSkinKey(), List.of()).stream()

@@ -112,8 +112,10 @@ public class RankedSeasons {
         } catch (DataIntegrityViolationException e) {
             throw conflict();
         }
+
         audit.record(
                 AuditEntry.of(actors.require(), "RANKED_SEASON_CREATED", CatalogAggregates.RANKED_SEASON, s.getId()));
+
         return view(s);
     }
 
@@ -133,8 +135,10 @@ public class RankedSeasons {
             throw calendarError(violation);
         }
         var schedule = writeSchedule(seasonId, input, window);
+
         audit.record(
                 AuditEntry.of(actors.require(), "SEASON_SCHEDULE_CREATED", CatalogAggregates.RANKED_SEASON, seasonId));
+
         return schedule.getId();
     }
 
@@ -179,6 +183,7 @@ public class RankedSeasons {
             created.setId(UUID.randomUUID());
             return created;
         });
+
         s.setSeasonId(seasonId);
         s.setRegionId(input.regionId());
         s.setStartsAt(window.start());
@@ -190,6 +195,7 @@ public class RankedSeasons {
         } catch (DataIntegrityViolationException e) {
             throw conflict();
         }
+
         return s;
     }
 

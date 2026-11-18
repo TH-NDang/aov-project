@@ -61,6 +61,7 @@ public class HeroMediaSnapshots implements HeroSectionSnapshots {
             sources.save(section(), revision.getId(), value.sources());
         }
         revisions.flush();
+
         return revision.getId();
     }
 

@@ -97,8 +97,10 @@ public class SkinBadges {
     public SkinBadgeView create(SkinBadgeCommands.Create input) {
         validate(input.translations());
         groups.require(input.groupId());
+
         var badge = new SkinBadge();
         badge.setId(UUID.randomUUID());
+
         String code = input.code();
         if (code == null) {
             if (input.translations().isEmpty()) {
@@ -116,6 +118,7 @@ public class SkinBadges {
                 throw HeroValidation.invalid(invalid.getMessage());
             }
         }
+
         badge.setCode(code);
         badge.setKind(SkinBadgeKind.valueOf(input.kind()));
         badge.setGroupId(input.groupId());
@@ -126,10 +129,13 @@ public class SkinBadges {
         } catch (DataIntegrityViolationException failure) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_CONFLICT, "The skin badge code already exists.");
         }
+
         var translations = rows(badge.getId(), input.translations());
         repository.replaceBadgeTranslations(badge.getId(), translations);
+
         audit.record(
                 AuditEntry.of(actors.require(), "SKIN_BADGE_CREATED", CatalogAggregates.SKIN_BADGE, badge.getId()));
+
         return view(badge, translations, CatalogLocales.DEFAULT, 0);
     }
 
@@ -141,14 +147,19 @@ public class SkinBadges {
             throw new ApiException(HeroErrorCode.HERO_BADGE_CONFLICT, "The skin badge changed. Reload before saving.");
         }
         validate(input.translations());
+
         badge.setKind(SkinBadgeKind.valueOf(input.kind()));
         badge.setVersion(Math.addExact(badge.getVersion(), 1));
         badge.setUpdatedAt(clock.instant());
+
         var translations = rows(id, input.translations());
         repository.replaceBadgeTranslations(id, translations);
+
         badges.flush();
+
         audit.record(new AuditEntry(actors.require(), "SKIN_BADGE_UPDATED", CatalogAggregates.SKIN_BADGE, id, null,
                 input.expectedVersion(), badge.getVersion(), null, Map.of()));
+
         return view(badge, translations, CatalogLocales.DEFAULT,
                 gallery.badgeCounts(null).getOrDefault(badge.getCode(), 0L));
     }
@@ -161,11 +172,14 @@ public class SkinBadges {
             throw new ApiException(HeroErrorCode.HERO_BADGE_CONFLICT, "The skin badge changed. Reload before saving.");
         }
         groups.require(input.groupId());
+
         UUID previous = badge.getGroupId();
+
         badge.setGroupId(input.groupId());
         badge.setVersion(Math.addExact(badge.getVersion(), 1));
         badge.setUpdatedAt(clock.instant());
         badges.flush();
+
         Map<String, Object> detail = new HashMap<>();
         if (previous != null) {
             detail.put("previousGroupId", previous.toString());
@@ -173,9 +187,11 @@ public class SkinBadges {
         if (input.groupId() != null) {
             detail.put("groupId", input.groupId().toString());
         }
+
         audit.record(
                 new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_ASSIGNED", CatalogAggregates.SKIN_BADGE, id, null,
                         input.expectedVersion(), badge.getVersion(), null, detail));
+
         return view(badge, translations(List.of(id)).getOrDefault(id, List.of()), CatalogLocales.DEFAULT,
                 gallery.badgeCounts(null).getOrDefault(badge.getCode(), 0L));
     }

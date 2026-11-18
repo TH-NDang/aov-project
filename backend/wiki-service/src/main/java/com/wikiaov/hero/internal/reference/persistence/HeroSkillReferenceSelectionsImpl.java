@@ -171,6 +171,7 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
                 builder.equal(state.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
                 builder.equal(state.get("skillKey"), skill.get("skillKey")),
                 builder.like(normalized(builder, state.get("label")), pattern, '!'));
+
         return builder.or(builder.like(normalized(builder, hero.get("code")), pattern, '!'),
                 builder.exists(ownerCopy), builder.exists(skillCopy),
                 builder.like(normalized(builder, skill.get("formKey")), pattern, '!'), builder.exists(stateCopy));

@@ -74,6 +74,7 @@ class SmtpAccountMail implements AccountMail {
         if (!configured(mail)) {
             throw unavailable(null);
         }
+
         try {
             var mime = mail.createMimeMessage();
             var helper = new MimeMessageHelper(mime, false, StandardCharsets.UTF_8.name());

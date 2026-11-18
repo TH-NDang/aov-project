@@ -59,12 +59,15 @@ public class PatchDataReviewService implements PatchDataReviews {
             throw new ApiException(PatchErrorCode.PATCH_INVALID,
                     "Publish the patch variant before completing data review.");
         }
+
         var value = reviews.findById(id).orElseGet(PatchDataReview::new);
         if (value.getVersion() != input.expectedVersion()) {
             throw new ApiException(PatchErrorCode.PATCH_CONFLICT,
                     "The patch data review has changed. Reload before saving.");
         }
+
         var actor = actors.require();
+
         value.setPatchVariantId(id);
         value.setState(PatchDataReviewState.valueOf(input.state()));
         value.setVersion(value.getVersion() + 1);
@@ -73,9 +76,11 @@ public class PatchDataReviewService implements PatchDataReviews {
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
         reviews.saveAndFlush(value);
+
         audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_UPDATED", CatalogAggregates.PATCH, id, null,
                 input.expectedVersion(),
                 value.getVersion(), null, Map.of("state", input.state())));
+
         return new PatchDataReviewView(id, value.getState(), value.getVersion(), value.getCompletedAt());
     }
 
@@ -93,6 +98,7 @@ public class PatchDataReviewService implements PatchDataReviews {
         }
         var actor = actors.require();
         long previous = value.getVersion();
+
         value.setState(PatchDataReviewState.IN_PROGRESS);
         value.setVersion(previous + 1);
         value.setCompletedAt(null);
@@ -100,6 +106,7 @@ public class PatchDataReviewService implements PatchDataReviews {
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
         reviews.saveAndFlush(value);
+
         audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_REOPENED", CatalogAggregates.PATCH, id, null, previous,
                 value.getVersion(), null, Map.of()));
     }
