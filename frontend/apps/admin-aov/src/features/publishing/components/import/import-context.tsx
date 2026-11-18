@@ -6,10 +6,10 @@ import { ContextSetup } from "../setup/context-setup"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { control } from "../editing/fields"
 import type { Region } from "../../api/types"
 import type { components } from "../../generated/hero-api"
 import { publishingKeys } from "../../api/publishing-api"
+import { NativeSelect } from "@/components/native-select"
 
 export type ImportContext = components["schemas"]["AuthoringContext"]
 type Season = components["schemas"]["Season"]
@@ -55,8 +55,8 @@ export function ImportContextPicker({
             <CalendarDays className="size-4 text-muted-foreground" />
             Mùa
           </span>
-          <select
-            className={control}
+          <NativeSelect
+            className="w-full"
             value={seasonId}
             disabled={seasons.isPending}
             onChange={(e) => {
@@ -75,15 +75,15 @@ export function ImportContextPicker({
                 {s.displayName}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <label className="grid gap-2 text-sm">
           <span className="flex items-center gap-2">
             <GitBranch className="size-4 text-muted-foreground" />
             Patch
           </span>
-          <select
-            className={control}
+          <NativeSelect
+            className="w-full"
             value={value?.contextId ?? ""}
             disabled={!seasonId || patches.isPending}
             onChange={(e) => {
@@ -101,7 +101,7 @@ export function ImportContextPicker({
                 {p.patchCode}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         {locale && onLocaleChange && <DataLanguage value={locale} onChange={onLocaleChange} />}
       </fieldset>

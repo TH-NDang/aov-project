@@ -1,4 +1,3 @@
-import { control } from "../editing/fields"
 import {
   relationRows,
   sourcePaths,
@@ -7,6 +6,8 @@ import {
   type RelationMapping,
 } from "../../model/import/import-relations"
 import { relationFieldLabel } from "../../model/import/import-labels"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 export function RelationMappingFields({
   section,
@@ -34,8 +35,7 @@ export function RelationMappingFields({
       {section === "skills" && (
         <label className="block text-sm">
           Mảng biến thể trong mỗi kỹ năng (nếu có)
-          <input
-            className={control}
+          <Input
             value={value.variants}
             placeholder="Ví dụ: variants"
             onChange={(e) => onChange({ ...value, variants: e.target.value })}
@@ -59,8 +59,8 @@ export function RelationMappingFields({
           return (
             <label key={field.key} className="space-y-1 text-sm">
               {relationFieldLabel(section, field.key)}
-              <select
-                className={control}
+              <NativeSelect
+                className="w-full"
                 aria-label={`${section}: ${relationFieldLabel(section, field.key)}`}
                 value={selected}
                 onChange={(e) => onChange({ ...value, fields: { ...value.fields, [field.key]: e.target.value } })}
@@ -76,7 +76,7 @@ export function RelationMappingFields({
                     {path}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
           )
         })}

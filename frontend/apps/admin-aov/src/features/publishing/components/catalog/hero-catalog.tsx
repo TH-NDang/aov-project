@@ -38,6 +38,7 @@ import {
   HeroTranslations,
 } from "./hero-catalog-cells"
 import { HeroQuickView } from "./hero-quick-view"
+import { NativeSelect } from "@/components/native-select"
 
 const helper = createColumnHelper<typeof features, CatalogRow>()
 const defaultFilter: CatalogFilter = { seasonId: "", variantId: "" }
@@ -377,9 +378,9 @@ export function HeroCatalog({
           <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             <ArrowDownWideNarrow aria-hidden className="size-3.5" />
             <span className="sr-only">Sắp xếp</span>
-            <select
+            <NativeSelect
               aria-label="Sắp xếp tướng"
-              className="h-8 max-w-full rounded-lg border border-border/70 bg-background px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-8 max-w-full border-border/70 px-2 text-xs text-foreground md:text-xs"
               value={sort}
               onChange={(event) =>
                 setParams(
@@ -394,7 +395,7 @@ export function HeroCatalog({
             >
               <option value="code">Mã tướng (A–Z)</option>
               <option value="edited-desc">Chỉnh sửa gần nhất</option>
-            </select>
+            </NativeSelect>
           </label>
         </div>
       </div>

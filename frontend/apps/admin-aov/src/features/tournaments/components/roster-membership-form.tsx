@@ -9,6 +9,8 @@ import { LANES } from "../model/tournament-model"
 import { RESULT_VERIFICATIONS } from "./tournament-metadata"
 import { tournamentApi, tournamentError, tournamentKeys } from "../api/tournament-api"
 import { RecordLifecycleActions } from "./record-lifecycle-actions"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 export function RosterMembershipForm({
   entry,
@@ -100,7 +102,7 @@ export function RosterMembershipForm({
         </label>
         <label>
           Vị trí
-          <select
+          <NativeSelect
             aria-label="Vị trí trong đội hình"
             value={content.lane ?? ""}
             onChange={(event) =>
@@ -113,11 +115,11 @@ export function RosterMembershipForm({
                 {lane.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <label>
           Trạng thái
-          <select
+          <NativeSelect
             aria-label="Trạng thái thành viên"
             value={content.status ?? "UNKNOWN"}
             onChange={(event) =>
@@ -129,11 +131,11 @@ export function RosterMembershipForm({
                 {label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <label>
           Số áo
-          <input
+          <Input
             aria-label="Số áo tuyển thủ"
             value={content.jerseyNumber ?? ""}
             maxLength={20}
@@ -142,7 +144,7 @@ export function RosterMembershipForm({
         </label>
         <label>
           Nguồn kiểm chứng
-          <input
+          <Input
             type="url"
             aria-label="Nguồn đội hình"
             value={content.sourceUrl ?? ""}
@@ -154,7 +156,7 @@ export function RosterMembershipForm({
         </label>
         <label>
           Mức kiểm chứng
-          <select
+          <NativeSelect
             aria-label="Mức kiểm chứng đội hình"
             value={content.verification ?? "UNVERIFIED"}
             onChange={(event) =>
@@ -166,14 +168,14 @@ export function RosterMembershipForm({
                 {label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <details className="tournament-roster-extra">
           <summary>Thời gian và ghi chú</summary>
           <div>
             <label>
               Từ ngày
-              <input
+              <Input
                 type="date"
                 value={content.startsOn ?? ""}
                 onChange={(event) => setContent({ ...content, startsOn: event.target.value || null })}
@@ -181,7 +183,7 @@ export function RosterMembershipForm({
             </label>
             <label>
               Đến ngày
-              <input
+              <Input
                 type="date"
                 value={content.endsOn ?? ""}
                 onChange={(event) => setContent({ ...content, endsOn: event.target.value || null })}

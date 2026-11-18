@@ -10,7 +10,7 @@ import {
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import type { Access } from "@/features/esports/pages/esports-shell"
 import { PlayerPhoto } from "@/features/esports/components/primitives"
-import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
+import { ManagementToolbar } from "@/features/tournaments/components/management-list"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { PlatformIcon, platformOf } from "../components/platform-icon"
 import { ProfileRoleIcon } from "../components/profile-icons"
@@ -27,6 +27,7 @@ import {
   type PersonnelGroup,
 } from "./directory-shell"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { NativeSelect } from "@/components/native-select"
 
 const ROLES = Object.keys(personRoleLabels) as PersonRole[]
 const rolesOf = (group: PersonnelGroup) => ROLES.filter((role) => isCoachingRole(role) === (group === "COACHING"))
@@ -40,18 +41,18 @@ type PersonnelSort = keyof typeof SORTS
 
 function SortSelect({ sort, onChange }: { sort: PersonnelSort; onChange: (value: string) => void }) {
   return (
-    <select
+    <NativeSelect
       aria-label="Sắp xếp thành viên"
       value={sort}
       onChange={(event) => onChange(event.target.value)}
-      className={managementSelectClassName}
+      className="max-w-full"
     >
       {Object.entries(SORTS).map(([value, label]) => (
         <option key={value} value={value}>
           {label}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   )
 }
 

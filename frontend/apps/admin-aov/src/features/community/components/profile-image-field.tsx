@@ -13,8 +13,6 @@ import { MediaUploadReferences, type UploadReferences } from "../../media/compon
 type Shape = "logo" | "portrait" | "cover"
 
 /** The same look as the shared text input, for the owner field that needs suggestions. */
-const inputClass =
-  "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 aria-invalid:border-destructive md:text-sm dark:bg-input/30"
 
 const frames: Record<Shape, string> = {
   logo: "size-20 rounded-2xl",
@@ -167,7 +165,6 @@ export function ProfileImageField({
             <span className="type-meta">Chủ sở hữu ảnh (bắt buộc khi tải lên)</span>
             <OwnerNameInput
               ref={ownerInput}
-              className={inputClass}
               value={owner}
               disabled={busy}
               aria-invalid={(!!error && !owner.trim()) || undefined}

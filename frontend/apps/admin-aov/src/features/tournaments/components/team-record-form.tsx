@@ -10,8 +10,7 @@ import { editedRecordContent, initialRegistryValues, registryFormIssue } from ".
 import { RegistryLogoField } from "./registry-logo"
 import { TEAM_REGIONS } from "./team-region"
 import { CAREER_STATUSES } from "./tournament-metadata"
-
-const selectClass = "h-10 w-full rounded-md border bg-background px-3 text-sm"
+import { NativeSelect } from "@/components/native-select"
 
 type RecordKind = "teams" | "players"
 type RecordField = {
@@ -128,8 +127,8 @@ export function TeamRecordForm({
             field.options ? (
               <label key={field.key} className="grid min-w-0 gap-2">
                 <span className="type-label">{field.label}</span>
-                <select
-                  className={selectClass}
+                <NativeSelect
+                  className="w-full"
                   value={values[field.key] ?? ""}
                   onChange={(event) => set(field.key, event.target.value)}
                 >
@@ -139,7 +138,7 @@ export function TeamRecordForm({
                       {option.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </label>
             ) : (
               <Field

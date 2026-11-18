@@ -9,11 +9,11 @@ import { useSession } from "@/app/auth/auth-gate"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import { ImportContextPicker, type ImportContext } from "../components/import/import-context"
-import { control } from "../components/editing/fields"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { DraftStatus } from "@/app/drafts/draft-status"
 import { invalidateHeroCatalogs } from "../api/publishing-cache"
+import { Input } from "@aov/ui/components/input"
 const api = createPublishingApi(backendRequest)
 const createHeroSchema = z.object({
   code: z.string(),
@@ -105,9 +105,9 @@ export function CreateHeroPage() {
             <fieldset disabled={busy || !draft.ready || draft.invalid} className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm">
                 Mã tướng
-                <input
+                <Input
                   {...form.register("code")}
-                  className={control}
+
                   required
                   pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
                   placeholder="airi"
@@ -116,7 +116,7 @@ export function CreateHeroPage() {
               </label>
               <label className="grid content-start gap-2 text-sm">
                 Tên tướng
-                <input {...form.register("name")} className={control} required maxLength={200} placeholder="Airi" />
+                <Input {...form.register("name")} required maxLength={200} placeholder="Airi" />
               </label>
             </fieldset>
             <p className="text-sm text-muted-foreground">

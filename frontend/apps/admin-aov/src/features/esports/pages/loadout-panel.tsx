@@ -19,6 +19,7 @@ import { LANE_LABELS } from "../model/labels"
 import type { LoadoutPart } from "../model/loadout"
 import { seatSide, type SeatKey } from "../model/timeline"
 import { formatClock } from "@/lib/clock"
+import { NativeSelect } from "@/components/native-select"
 
 /** The game clock for the player position, and back to video time for display and seeking. */
 export type LoadoutClock = {
@@ -315,7 +316,7 @@ export function LoadoutPanel({
           {/* Who played this seat is chosen here, from the team's registered players. */}
           <header className="flex flex-wrap items-center gap-2" data-part="player">
             <LaneIcon lane={participant.lane} size={16} className="text-[var(--side)]" />
-            <select
+            <NativeSelect
               aria-label={`Tuyển thủ ${LANE_LABELS[participant.lane].name} của ${view.sides[seat.side].team.name}`}
               value={participant.playerId ?? ""}
               onChange={(event) => updateSeat(seat, (value) => ({ ...value, playerId: event.target.value || null }))}
@@ -333,7 +334,7 @@ export function LoadoutPanel({
                   {rosterOptionLabel(member, participant.lane)}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <span className="text-xs text-muted-foreground">
               {LANE_LABELS[participant.lane].name} · {participant.hero?.name || "chưa có tướng"}
             </span>

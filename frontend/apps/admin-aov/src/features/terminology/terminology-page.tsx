@@ -50,6 +50,7 @@ import { invalidateReferenceCatalog } from "./reference-api"
 import { confirmDiscard } from "@/components/confirm-dialog"
 import { randomId } from "@/lib/random-id"
 import { useSearchParam } from "@/hooks/use-search-param"
+import { NativeSelect } from "@/components/native-select"
 
 const ReferencePreview = memo(EntityRichText)
 
@@ -353,8 +354,7 @@ export function TerminologyPage() {
             </label>
             <label className="grid gap-2 text-sm font-medium">
               Ngôn ngữ dự phòng
-              <select
-                className="h-10 rounded-lg border bg-background px-3"
+              <NativeSelect
                 value={settings.fallbackLocale}
                 onChange={(e) => setDraft({ ...settings, fallbackLocale: e.target.value })}
               >
@@ -363,7 +363,7 @@ export function TerminologyPage() {
                     {languageOptions.find((o) => o.value === code)?.label ?? code}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
               <span className="text-xs font-normal leading-5 text-muted-foreground">
                 Dùng khi một mục chưa có bản dịch ở ngôn ngữ đang xem.
               </span>
@@ -421,7 +421,7 @@ export function TerminologyPage() {
                     {languageOptions.find((option) => option.value === locale)?.label ?? locale}
                   </span>
                   <ChevronDown aria-hidden className="size-3.5 text-muted-foreground" />
-                  <select
+                  <NativeSelect
                     aria-label="Ngôn ngữ danh mục"
                     className="absolute inset-0 size-full cursor-pointer text-base opacity-0"
                     value={locale}
@@ -432,7 +432,7 @@ export function TerminologyPage() {
                         {o.label}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </label>
               </>
             }
@@ -502,8 +502,7 @@ export function TerminologyPage() {
                   <>
                     <label className="grid gap-1.5 text-sm">
                       Ngôn ngữ bản dịch
-                      <select
-                        className="h-10 rounded-lg border bg-background px-3"
+                      <NativeSelect
                         value={locale}
                         onChange={(e) => setLocale(e.target.value)}
                         aria-label="Ngôn ngữ bản dịch"
@@ -518,7 +517,7 @@ export function TerminologyPage() {
                             {languageOptions.find((o) => o.value === code)?.label ?? code} · {code}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     </label>
                     <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Bản dịch hiện có">
                       {entity.translations.map((text) => (

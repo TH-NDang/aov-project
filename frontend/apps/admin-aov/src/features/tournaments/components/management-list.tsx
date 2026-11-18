@@ -7,9 +7,6 @@ import { cn } from "@aov/ui/lib/utils"
 import { SearchField } from "@/components/search-field"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 
-export const managementSelectClassName =
-  "type-body h-9 min-w-0 max-w-full rounded-md border bg-background px-3 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-
 export function ManagementPanel({ children }: { children: ReactNode }) {
   return <section className="@container min-w-0 overflow-hidden admin-panel">{children}</section>
 }

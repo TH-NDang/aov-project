@@ -3,9 +3,10 @@ import { Plus, Trash2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
 import { Button } from "@aov/ui/components/button"
 import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
-import { Field, control } from "../../../publishing/components/editing/fields"
+import { Field } from "../../../publishing/components/editing/fields"
 import { warehouseText } from "@aov/ui/lib/warehouse-content"
 import type { SecondaryKind, SecondaryContent, SecondaryBranch } from "../../model/secondary-content"
+import { NativeSelect } from "@/components/native-select"
 
 export function SecondaryMechanics({
   part,
@@ -65,8 +66,8 @@ export function SecondaryMechanics({
           <div className="grid grid-cols-2 gap-4">
             <label className="grid gap-1.5 text-sm">
               <span>Màu ngọc</span>
-              <select
-                className={control}
+              <NativeSelect
+                className="w-full"
                 value={content.color ?? "RED"}
                 disabled={disabled}
                 onChange={(event) => onChange({ color: event.target.value as SecondaryContent["color"] })}
@@ -74,7 +75,7 @@ export function SecondaryMechanics({
                 <option value="RED">Đỏ</option>
                 <option value="PURPLE">Tím</option>
                 <option value="GREEN">Xanh</option>
-              </select>
+              </NativeSelect>
             </label>
             <TierField value={content.tier ?? 3} disabled={disabled} onChange={(tier) => onChange({ tier })} />
           </div>
@@ -96,8 +97,8 @@ export function SecondaryMechanics({
             />
             <label className="grid gap-1.5 text-sm">
               <span>Khả dụng</span>
-              <select
-                className={control}
+              <NativeSelect
+                className="w-full"
                 value={content.availability ?? "UNKNOWN"}
                 disabled={disabled}
                 onChange={(event) => onChange({ availability: event.target.value as SecondaryContent["availability"] })}
@@ -105,7 +106,7 @@ export function SecondaryMechanics({
                 <option value="AVAILABLE">Đang có</option>
                 <option value="REMOVED">Đã gỡ</option>
                 <option value="UNKNOWN">Chưa xác định</option>
-              </select>
+              </NativeSelect>
             </label>
             <Field
               label="Thứ tự hiển thị"
@@ -204,8 +205,8 @@ export function SecondaryMechanics({
           {!!content.states?.length && (
             <label className="grid gap-1.5 text-sm">
               <span>Trạng thái mặc định</span>
-              <select
-                className={control}
+              <NativeSelect
+                className="w-full"
                 value={content.defaultStateKey ?? ""}
                 disabled={disabled}
                 onChange={(event) => onChange({ defaultStateKey: event.target.value || null })}
@@ -218,7 +219,7 @@ export function SecondaryMechanics({
                       {warehouseText(state.translations, locale)?.name || state.key}
                     </option>
                   ))}
-              </select>
+              </NativeSelect>
             </label>
           )}
         </section>
@@ -239,8 +240,8 @@ export function TierField({
   return (
     <label className="grid gap-1.5 text-sm">
       <span>Cấp</span>
-      <select
-        className={control}
+      <NativeSelect
+        className="w-full"
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
         disabled={disabled}
@@ -250,7 +251,7 @@ export function TierField({
             {["I", "II", "III"][tier - 1]}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   )
 }

@@ -25,10 +25,10 @@ import {
   ManagementLoading,
   ManagementPanel,
   ManagementToolbar,
-  managementSelectClassName,
 } from "@/features/tournaments/components/management-list"
 import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { AccessGate, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
+import { NativeSelect } from "@/components/native-select"
 
 type StatusFilter = "all" | NonNullable<TournamentContent["status"]>
 type TournamentStats = Omit<ContractStats, "tournamentId">
@@ -186,11 +186,11 @@ function Hub({ access }: { access: Access }) {
             placeholder="Tên giải đấu, mã hoặc khu vực…"
             onReset={filtered ? resetFilters : undefined}
           >
-            <select
+            <NativeSelect
               aria-label="Hạng giải"
               value={tier}
               onChange={(event) => setFilter("tier", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Tất cả hạng giải</option>
               {Object.entries(TIER_LABELS).map(([value, label]) => (
@@ -198,12 +198,12 @@ function Hub({ access }: { access: Access }) {
                   {label}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Khu vực giải đấu"
               value={region}
               onChange={(event) => setFilter("region", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Mọi khu vực</option>
               {regions.map((value) => (
@@ -211,12 +211,12 @@ function Hub({ access }: { access: Access }) {
                   {regionName(value)}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Năm giải đấu"
               value={year}
               onChange={(event) => setFilter("year", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Mọi năm</option>
               {years.map((value) => (
@@ -224,19 +224,19 @@ function Hub({ access }: { access: Access }) {
                   {value}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Sắp xếp giải đấu"
               value={order}
               onChange={(event) => setOrder(event.target.value as TournamentSort)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               {Object.entries(SORTS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </ManagementToolbar>
           {visible.length ? (
             <TournamentList

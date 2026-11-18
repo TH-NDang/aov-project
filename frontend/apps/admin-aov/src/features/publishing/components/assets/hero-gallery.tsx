@@ -10,13 +10,14 @@ import type { LightboxImage } from "@/components/image-lightbox"
 import { errorMessage } from "@/lib/api/errors"
 import { useAssetGallery } from "./asset-gallery"
 import { AssetPicker } from "./asset-picker"
-import { control } from "../editing/fields"
 import { HeroAsset } from "../editing/hero-asset"
 import { usePublicationOverview } from "../../api/publication-overview"
 import { selectSkillTranslation, skillLabel } from "../../model/skills/hero-skills"
 import type { Content } from "../../api/types"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 import { publishingKeys } from "../../api/publishing-api"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 export type GalleryKind = "HERO_ART" | "SKIN" | "SKILL" | "STICKER" | "OTHER"
 export interface GalleryImage {
@@ -189,9 +190,9 @@ export function HeroGallery({
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <NativeSelect
             aria-label="Thời điểm"
-            className={cn(control, "h-8 w-auto")}
+            className="h-8"
             value={period}
             onChange={(event) => setPeriod(event.target.value as Period)}
           >
@@ -200,7 +201,7 @@ export function HeroGallery({
                 {label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {canWrite && (
             <Button type="button" size="sm" variant="outline" onClick={() => setAdding(true)}>
               <ImagePlus aria-hidden className="size-4" /> Thêm ảnh
@@ -516,8 +517,8 @@ function AttachmentForm({
     >
       <label className="grid gap-1.5">
         <span className="type-label">Loại</span>
-        <select
-          className={control}
+        <NativeSelect
+          className="w-full"
           value={value.kind}
           disabled={busy || lockedKind}
           onChange={(event) => setValue({ ...value, kind: event.target.value as GalleryKind, partKey: "" })}
@@ -527,13 +528,12 @@ function AttachmentForm({
               {label}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {children?.(value.kind)}
       <label className="grid gap-1.5">
         <span className="type-label">Mô tả ngắn</span>
-        <input
-          className={control}
+        <Input
           maxLength={500}
           placeholder="Ví dụ: Biểu tượng Chiêu 1 trước khi làm lại"
           value={value.caption}
@@ -544,8 +544,8 @@ function AttachmentForm({
       {parts.length > 0 && (
         <label className="grid gap-1.5">
           <span className="type-label">{value.kind === "SKILL" ? "Kỹ năng" : "Trang phục"}</span>
-          <select
-            className={control}
+          <NativeSelect
+            className="w-full"
             value={value.partKey}
             disabled={busy}
             onChange={(event) => setValue({ ...value, partKey: event.target.value })}
@@ -556,13 +556,13 @@ function AttachmentForm({
                 {part.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
       )}
       <label className="grid gap-1.5">
         <span className="type-label">Dùng trước patch</span>
-        <select
-          className={control}
+        <NativeSelect
+          className="w-full"
           value={value.untilPatchVariantId}
           disabled={busy}
           onChange={(event) => setValue({ ...value, untilPatchVariantId: event.target.value })}
@@ -573,7 +573,7 @@ function AttachmentForm({
               {variant.patchTitle || variant.patchCode}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {error && (
         <p role="alert" className="type-body text-destructive">
@@ -663,8 +663,8 @@ function AddToGallery({
                 {UPLOAD_TYPES[kind].length > 1 && (
                   <label className="grid gap-1.5">
                     <span className="type-label">Loại ảnh trong kho</span>
-                    <select
-                      className={control}
+                    <NativeSelect
+                      className="w-full"
                       value={uploadType[kind]}
                       onChange={(event) => {
                         setUploadType({ ...uploadType, [kind]: event.target.value })
@@ -676,7 +676,7 @@ function AddToGallery({
                           {type.label}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                 )}
                 <span className="type-label">Ảnh</span>

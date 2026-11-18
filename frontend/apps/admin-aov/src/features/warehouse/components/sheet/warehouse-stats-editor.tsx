@@ -1,9 +1,9 @@
 import { useId } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { control } from "../../../publishing/components/editing/fields"
 import { type WarehouseEntry } from "../../model/warehouse-types"
 import { warehouseText, type WarehouseContent, type WarehouseStat } from "@aov/ui/lib/warehouse-content"
+import { Input } from "@aov/ui/components/input"
 
 export function WarehouseStatsEditor({
   stats,
@@ -58,24 +58,21 @@ export function WarehouseStatsEditor({
       )}
       {stats.map((stat, index) => (
         <div className={grid} key={index}>
-          <input
-            className={control}
+          <Input
             list={list}
             aria-label={`Mã chỉ số ${index + 1}`}
             placeholder="Chọn hoặc nhập mã"
             value={stat.key}
             onChange={(e) => update(index, { key: e.target.value })}
           />
-          <input
-            className={control}
+          <Input
             type="number"
             step="any"
             aria-label={`Giá trị ${index + 1}`}
             value={stat.value}
             onChange={(e) => update(index, { value: Number(e.target.value) })}
           />
-          <input
-            className={control}
+          <Input
             list={list + "-units"}
             aria-label={`Đơn vị ${index + 1}`}
             value={stat.unit ?? ""}

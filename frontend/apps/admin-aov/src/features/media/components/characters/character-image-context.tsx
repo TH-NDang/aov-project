@@ -5,10 +5,10 @@ import { createPortal } from "react-dom"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { createCharacterImageApi } from "../../api/character-image-api"
-import { control } from "../../../publishing/components/editing/fields"
 import { defaultRulesetId, hasRulesetChoice } from "@/lib/default-ruleset"
 import type { Request } from "../../../publishing/api/publishing-api"
 import { publishingKeys } from "../../../publishing/api/publishing-api"
+import { NativeSelect } from "@/components/native-select"
 
 export function useImageContext(request: Request = backendRequest) {
   const [params, setParams] = useSearchParams()
@@ -78,9 +78,9 @@ export function ImageContextControls({
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {searchSlot === undefined ? search : searchSlot && createPortal(search, searchSlot)}
       {rulesetChoice && (
-        <select
+        <NativeSelect
           aria-label="Bộ quy tắc"
-          className={`${control} h-9 w-auto max-w-52 py-0`}
+          className="max-w-52"
           value={context.rulesetId}
           disabled={context.rulesets.isPending}
           onChange={(event) => context.setRuleset(event.target.value)}
@@ -90,7 +90,7 @@ export function ImageContextControls({
               {rule.code}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       )}
     </div>
   )

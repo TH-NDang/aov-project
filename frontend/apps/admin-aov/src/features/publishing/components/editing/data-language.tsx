@@ -1,6 +1,6 @@
 import { Languages } from "lucide-react"
 import { languageOptions } from "../../../users/profile-preference-picker"
-import { control } from "./fields"
+import { NativeSelect } from "@/components/native-select"
 export function DataLanguage({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
     <label className="grid gap-2 text-sm">
@@ -8,13 +8,13 @@ export function DataLanguage({ value, onChange }: { value: string; onChange: (va
         <Languages className="size-4 text-muted-foreground" />
         Ngôn ngữ dữ liệu
       </span>
-      <select className={control} value={value} onChange={(e) => onChange(e.target.value)}>
+      <NativeSelect className="w-full" value={value} onChange={(e) => onChange(e.target.value)}>
         {languageOptions.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   )
 }

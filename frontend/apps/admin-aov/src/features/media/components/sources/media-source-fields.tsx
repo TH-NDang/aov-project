@@ -3,6 +3,8 @@ import { control } from "../../../publishing/components/editing/fields"
 import { OwnerNameHints, OwnerNameInput } from "../owner-name-field"
 import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
 import { PageReferencePicker } from "@/features/community/components/page-reference-picker"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 export function MediaSourceFields({
   value,
@@ -29,9 +31,9 @@ export function MediaSourceFields({
       <legend className="px-1 text-sm font-medium">Nguồn & chủ sở hữu ảnh</legend>
       <label className="grid gap-1 text-sm">
         Loại nguồn
-        <select
+        <NativeSelect
           form={form}
-          className={control}
+          className="w-full"
           value={value.type ?? "OTHER"}
           onChange={(event) => onChange({ ...value, type: event.target.value })}
         >
@@ -39,14 +41,14 @@ export function MediaSourceFields({
           <option value="GAME_CLIENT">Chụp / trích xuất từ game</option>
           <option value="COMMUNITY">Cộng đồng</option>
           <option value="OTHER">Khác / chưa xác minh</option>
-        </select>
+        </NativeSelect>
       </label>
       <div className="grid gap-1">
         <label className="grid gap-1 text-sm">
           Tên nguồn
-          <input
+          <Input
             form={form}
-            className={control}
+
             required
             maxLength={200}
             value={value.label}
@@ -87,9 +89,9 @@ export function MediaSourceFields({
       </div>
       <label className="grid gap-1 text-sm">
         URL nguồn ảnh
-        <input
+        <Input
           form={form}
-          className={control}
+
           type="url"
           maxLength={2048}
           value={value.url ?? ""}
@@ -125,9 +127,9 @@ export function MediaSourceFields({
       )}
       <label className="grid gap-1 text-sm">
         Trang liên hệ của bên cung cấp (nếu có)
-        <input
+        <Input
           form={form}
-          className={control}
+
           type="url"
           maxLength={2048}
           value={value.contactUrl ?? ""}

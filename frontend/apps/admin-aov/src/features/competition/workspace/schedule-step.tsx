@@ -42,7 +42,7 @@ import {
 } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
 import { PlanBracket } from "./plan-bracket"
-import { selectClass } from "./plan-fields"
+import { NativeSelect } from "@/components/native-select"
 
 const ROW = "grid-cols-[88px_minmax(0,1fr)_72px_minmax(0,1fr)_minmax(0,auto)_20px]"
 
@@ -139,9 +139,9 @@ function LeagueStage({ ws, stage, matches }: { ws: Workspace; stage: Competition
     <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <select
+          <NativeSelect
             aria-label="Lọc theo đội"
-            className={cn(selectClass, "h-9 w-auto min-w-44")}
+            className="min-w-44"
             value={teamId}
             onChange={(event) => setTeamId(event.target.value)}
           >
@@ -151,7 +151,7 @@ function LeagueStage({ ws, stage, matches }: { ws: Workspace; stage: Competition
                 {ws.team(id).name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <div className="flex rounded-md border p-0.5" role="group" aria-label="Cách gom trận">
             {(
               [
@@ -615,8 +615,8 @@ function SeedStrip({ ws, matches }: { ws: Workspace; matches: PlannedMatch[] }) 
           {seeds.map((seed) => (
             <label key={seed} className="grid gap-2">
               <span className="type-label">Hạt giống {seed}</span>
-              <select
-                className={selectClass}
+              <NativeSelect
+                className="w-full"
                 value={ws.plan.playoffSeeds[seed] || ""}
                 onChange={(event) => {
                   const values = { ...ws.plan.playoffSeeds }
@@ -633,7 +633,7 @@ function SeedStrip({ ws, matches }: { ws: Workspace; matches: PlannedMatch[] }) 
                       {ws.team(entry.teamId).name}
                     </option>
                   ))}
-              </select>
+              </NativeSelect>
             </label>
           ))}
         </div>
@@ -678,14 +678,14 @@ function ScheduleSetup({ ws, stage }: { ws: Workspace; stage: CompetitionStage }
           {stage.format === "DOUBLE_ELIMINATION" && (
             <label className="grid gap-2">
               <span className="type-label">Đối thủ do hạt giống 1 chọn</span>
-              <select
-                className={selectClass}
+              <NativeSelect
+                className="w-full"
                 value={opponent}
                 onChange={(event) => setOpponent(Number(event.target.value))}
               >
                 <option value={3}>Hạt giống 3</option>
                 <option value={4}>Hạt giống 4</option>
-              </select>
+              </NativeSelect>
             </label>
           )}
           <Button

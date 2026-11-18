@@ -23,7 +23,6 @@ import { RecordPatchNotesSheet } from "./patch-notes-sheet"
 import { usePublicationOverview } from "../../api/publication-overview"
 import { type Content, type Revision } from "../../api/types"
 import { useHeroLocation } from "../workspace/use-hero-location"
-import { control } from "../editing/fields"
 import { patchViewAnchors, selectedPatchAnchor, patchViewRequest } from "../../model/patch-changes/patch-view-anchor"
 import { formatPatchValue } from "@aov/ui/lib/patch-value"
 import { SkillChangeList } from "../skills/skill-change-list"
@@ -31,6 +30,7 @@ import { compareSkillRanks, rankPartLabel, splitSkillRankValues } from "@aov/ui/
 import { SkillRankValues } from "../skills/skill-rank-table"
 import { formatStatReading } from "../../model/assessment/stat-reading"
 import { publishingKeys } from "../../api/publishing-api"
+import { NativeSelect } from "@/components/native-select"
 
 const provenanceTone: Record<Provenance, string> = {
   OBSERVED: "text-(--aov-success)",
@@ -142,8 +142,8 @@ export function HeroPatchTimeline({
       </summary>
       <label className="mt-2 grid gap-1.5">
         <span className="type-label">Bản dùng để tính</span>
-        <select
-          className={control}
+        <NativeSelect
+          className="w-full"
           value={anchor?.id ?? "auto"}
           onChange={(event) => update({ anchorRevision: event.target.value })}
         >
@@ -153,7 +153,7 @@ export function HeroPatchTimeline({
               {patchCode(item.effectiveFromPatchVariantId)} · Bản {item.revisionNo} · {CAUSE_NAMES[item.cause]}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         <span className="type-meta">
           Mặc định tính từ bản nhập dữ liệu mới nhất đã xuất bản. Bản nháp không được dùng.
         </span>

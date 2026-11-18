@@ -30,6 +30,8 @@ import { SkillChangeList } from "../skills/skill-change-list"
 import { ActionStrip } from "@/components/action-strip"
 import { selectSkillTranslation, skillLabel, skillVariantLabel } from "../../model/skills/hero-skills"
 import { mechanicSkillKey } from "../../model/patch-changes/patch-description-marks"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 const api = createPublishingApi(backendRequest)
 export const compactControl =
@@ -143,7 +145,7 @@ export function PatchChangeEditor({
             <span className="font-medium">Nguồn ghi chú cập nhật</span>
             <span className="relative">
               <Link2 className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input
+              <Input
                 type="url"
                 inputMode="url"
                 className={cn(compactControl, "pl-8")}
@@ -347,7 +349,7 @@ function ChangeRowEditor({
     >
       <div className="flex flex-wrap items-center gap-2">
         {showTarget && (
-          <select
+          <NativeSelect
             aria-label={`${label}: loại`}
             className={cn(compactControl, "w-28 shrink-0")}
             value={row.type}
@@ -360,7 +362,7 @@ function ChangeRowEditor({
                 {ROW_TYPE_LABELS[type]}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         )}
         <ChangeKindSelect
           ariaLabel={`${label}: tính chất`}
@@ -397,7 +399,7 @@ function ChangeRowEditor({
       {row.type === "STAT" && (
         <div className="grid items-center gap-2 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto_minmax(0,1fr)]">
           {stats.length ? (
-            <select
+            <NativeSelect
               aria-label={`${label}: chỉ số`}
               className={compactControl}
               value={row.key}
@@ -412,9 +414,9 @@ function ChangeRowEditor({
                   {option.label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           ) : (
-            <input
+            <Input
               aria-label={`${label}: mã chỉ số`}
               className={compactControl}
               placeholder="Mã chỉ số, ví dụ HP"
@@ -452,7 +454,7 @@ function ChangeRowEditor({
           <div className={cn("grid gap-2", showTarget && "sm:grid-cols-2")}>
             {showTarget &&
               (skills.length ? (
-                <select
+                <NativeSelect
                   aria-label={`${label}: kỹ năng`}
                   className={compactControl}
                   value={row.key}
@@ -464,9 +466,9 @@ function ChangeRowEditor({
                       {option.label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               ) : (
-                <input
+                <Input
                   aria-label={`${label}: mã kỹ năng`}
                   className={compactControl}
                   placeholder="Mã kỹ năng"
@@ -474,7 +476,7 @@ function ChangeRowEditor({
                   onChange={(event) => onChange({ key: event.target.value })}
                 />
               ))}
-            <input
+            <Input
               aria-label={`${label}: trường thay đổi`}
               className={compactControl}
               list={fieldsId}
@@ -508,7 +510,7 @@ function ChangeRowEditor({
       )}
       {row.type === "ROLE" && (
         <div className="flex flex-wrap items-center gap-2">
-          <select
+          <NativeSelect
             aria-label={`${label}: vai trò`}
             className={cn(compactControl, "w-40")}
             value={row.key}
@@ -520,7 +522,7 @@ function ChangeRowEditor({
                 {name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <div className="inline-flex rounded-md border p-0.5" role="group" aria-label={`${label}: thêm hay bỏ`}>
             {(
               [
@@ -546,7 +548,7 @@ function ChangeRowEditor({
       )}
       {row.type === "VISUAL" && (
         <div className="grid gap-2 sm:grid-cols-3">
-          <select
+          <NativeSelect
             aria-label={`${label}: loại ảnh`}
             className={compactControl}
             value={row.key}
@@ -556,7 +558,7 @@ function ChangeRowEditor({
             <option value="HEAD">Ảnh đầu</option>
             <option value="PORTRAIT">Ảnh chân dung</option>
             <option value="SPLASH">Ảnh nền</option>
-          </select>
+          </NativeSelect>
           <ValueInput
             label={`${label}: mã ảnh trước`}
             side="OLD"
@@ -575,7 +577,7 @@ function ChangeRowEditor({
         // In a skill's card the card names the skill; the name field returns with the "change target" button.
         <div className={cn("grid gap-2", showTarget && "sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]")}>
           {showTarget && (
-            <input
+            <Input
               aria-label={`${label}: tên cơ chế`}
               className={compactControl}
               placeholder="Tên cơ chế hoặc chiêu"
@@ -639,7 +641,7 @@ function ValueInput({
   const suffix = unit ? UNIT_LABELS[unit] : ""
   return (
     <span className="relative block">
-      <input
+      <Input
         aria-label={label}
         className={cn(compactControl, suffix && "pr-7")}
         inputMode={numeric ? "decimal" : undefined}

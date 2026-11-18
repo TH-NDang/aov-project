@@ -5,11 +5,12 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { confirmAction } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
-import { Box, control } from "../editing/fields"
+import { Box } from "../editing/fields"
 import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
 import type { ImportContext } from "./import-context"
 import type { Revision } from "../../api/types"
 import type { components } from "../../generated/hero-api"
+import { NativeSelect } from "@/components/native-select"
 
 const api = createPublishingApi(backendRequest)
 
@@ -84,8 +85,8 @@ export function BaselineContextForm({
         </p>
         <label className="grid gap-2 text-sm">
           Patch đúng
-          <select
-            className={control}
+          <NativeSelect
+            className="w-full"
             value={contextId}
             onChange={(event) => setContextId(event.target.value)}
             required
@@ -97,7 +98,7 @@ export function BaselineContextForm({
                 {item.seasonName} / {item.patchCode}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <Button
           variant="outline"

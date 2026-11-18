@@ -1,7 +1,7 @@
 import { Database, GitFork } from "lucide-react"
-import { control } from "../../../publishing/components/editing/fields"
 import { usePublicationOverview } from "../../../publishing/api/publication-overview"
 import type { WarehouseBaselineMode } from "../../model/warehouse-types"
+import { NativeSelect } from "@/components/native-select"
 
 export function WarehousePatchContext({
   rulesetId,
@@ -58,8 +58,8 @@ export function WarehousePatchContext({
   return (
     <label className={inline ? "grid gap-1.5" : "grid gap-1.5 rounded-lg border bg-muted/20 p-3 text-sm"}>
       <span className={inline ? "sr-only" : "font-medium"}>{label}</span>
-      <select
-        className={control}
+      <NativeSelect
+        className="w-full"
         aria-label={label}
         value={value ?? ""}
         disabled={disabled || overview.isPending}
@@ -76,7 +76,7 @@ export function WarehousePatchContext({
             </option>
           )
         })}
-      </select>
+      </NativeSelect>
       {baselineMode && !value && !allowUnknownPatch && (
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-primary" role="status">
           {baselineMode === "inherited" ? <GitFork className="size-3.5" /> : <Database className="size-3.5" />}

@@ -16,8 +16,8 @@ import {
   type RosterStaff,
 } from "../model/profile-roster-model"
 import { RosterRoleIcon } from "./profile-roster-lineup"
+import { NativeSelect } from "@/components/native-select"
 
-const selectClass = "type-body h-10 w-full rounded-md border bg-background px-3"
 const STANDINGS: RosterStanding[] = ["ACTIVE", "SUBSTITUTE", "STAFF", "LEFT"]
 const STAFF = Object.keys(rosterStaffLabels) as RosterStaff[]
 
@@ -84,8 +84,8 @@ export function RosterPositionField({
             value={member.role}
             onChange={(event) => onChange({ ...member, role: event.target.value })}
           />
-          <select
-            className={selectClass}
+          <NativeSelect
+            className="w-full"
             aria-label="Vị trí thi đấu"
             disabled={disabled || member.standing === "STAFF"}
             value={member.lane ?? ""}
@@ -97,7 +97,7 @@ export function RosterPositionField({
                 {rosterLaneLabels[lane]}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       )}
     </div>
@@ -118,8 +118,8 @@ export function RosterStandingFields({
     <>
       <label className="grid gap-2">
         <span className="type-label">Trạng thái</span>
-        <select
-          className={selectClass}
+        <NativeSelect
+          className="w-full"
           disabled={disabled}
           value={member.standing ?? ""}
           onChange={(event) => onChange(chooseStanding(member, (event.target.value || null) as RosterStanding | null))}
@@ -130,7 +130,7 @@ export function RosterStandingFields({
               {rosterStandingLabels[standing]}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       <label className="grid gap-2">
         <span className="type-label">Ghi chú trạng thái</span>

@@ -7,7 +7,7 @@ import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { backendRequest } from "@/app/auth/session"
 import { useIsWide } from "@/hooks/use-media-query"
 import { errorMessage } from "@/lib/api/errors"
-import { Field, control } from "../../../publishing/components/editing/fields"
+import { Field } from "../../../publishing/components/editing/fields"
 import type { Request } from "../../../publishing/api/publishing-api"
 import { languageOptions } from "../../../users/profile-preference-picker"
 import { characterImageKeys, type SkinBadgeRecord } from "../../api/character-image-api"
@@ -23,6 +23,7 @@ import {
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { toast } from "sonner"
 import { confirmDiscard } from "@/components/confirm-dialog"
+import { NativeSelect } from "@/components/native-select"
 
 export function BadgeGroupSelect({
   value,
@@ -50,9 +51,9 @@ export function BadgeGroupSelect({
     <div className="space-y-2">
       <label className="grid gap-1.5 text-sm">
         <span>Nhóm nhãn</span>
-        <select
+        <NativeSelect
           aria-label="Nhóm nhãn"
-          className={control}
+          className="w-full"
           value={value ?? ""}
           disabled={disabled || groups.isPending}
           onChange={(event) => onChange(event.target.value || null)}
@@ -65,7 +66,7 @@ export function BadgeGroupSelect({
               {badgeGroupLabel(group)}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {/* A native select cannot report scrolling, so every group loads while the field is on screen. */}
       <InfiniteScroll query={groups} enabled={!disabled} label="Đang tải thêm nhóm nhãn" />
@@ -186,9 +187,9 @@ export function SkinBadgeGroupEditor({
           />
           <label className="grid gap-1.5 text-sm">
             <span>Loại nhóm</span>
-            <select
+            <NativeSelect
               aria-label="Loại nhóm"
-              className={control}
+              className="w-full"
               value={kind}
               disabled={busy}
               onChange={(event) => {
@@ -201,7 +202,7 @@ export function SkinBadgeGroupEditor({
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           <div className="space-y-3 rounded-xl border p-4">
             <label className="grid gap-1.5 text-sm">
@@ -209,8 +210,8 @@ export function SkinBadgeGroupEditor({
                 <Languages className="size-4" />
                 Ngôn ngữ tên nhóm
               </span>
-              <select
-                className={control}
+              <NativeSelect
+                className="w-full"
                 aria-label="Ngôn ngữ tên nhóm"
                 value={language}
                 disabled={busy}
@@ -222,7 +223,7 @@ export function SkinBadgeGroupEditor({
                     {translations.some((text) => text.locale === value) ? " · Đã có" : " · Chưa có"}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
             {translation ? (
               <Field

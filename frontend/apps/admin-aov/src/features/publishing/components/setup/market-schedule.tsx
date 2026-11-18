@@ -23,8 +23,8 @@ import {
 } from "../../api/publication-overview"
 import { invalidateReferenceCatalog } from "../../../terminology/reference-api"
 import { ScheduleForm } from "./shared-version-setup"
-import { control } from "../editing/fields"
 import { publishingKeys } from "../../api/publishing-api"
+import { NativeSelect } from "@/components/native-select"
 
 export type MarketMode = "season" | "patch"
 
@@ -309,14 +309,14 @@ function MarketVersionEditor({
         <>
           <label className="grid gap-1 type-label">
             Mùa xếp hạng
-            <select className={control} value={seasonId} onChange={(e) => setSeasonId(e.target.value)}>
+            <NativeSelect className="w-full" value={seasonId} onChange={(e) => setSeasonId(e.target.value)}>
               <option value="">Chọn mùa</option>
               {data.seasons.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.displayName}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           {market.available && (
             <p className="type-meta">
@@ -386,7 +386,7 @@ function MarketVersionEditor({
           {variants.length > 6 && (
             <label className="grid gap-1 type-label">
               {scopeSeason ? `Patch trong ${scopeSeason.displayName}` : "Patch cho thị trường"}
-              <select className={control} value={variantId} onChange={(e) => setVariantId(e.target.value)}>
+              <NativeSelect className="w-full" value={variantId} onChange={(e) => setVariantId(e.target.value)}>
                 <option value="">Chọn patch</option>
                 {variants.map((v) => (
                   <option key={v.id} value={v.id}>
@@ -394,7 +394,7 @@ function MarketVersionEditor({
                     {v.status === "DRAFT" ? " · Nháp" : ""}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
           )}
           {!variants.length && (

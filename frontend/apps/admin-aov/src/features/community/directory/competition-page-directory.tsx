@@ -6,7 +6,7 @@ import type { CommunityProfile, CompetitionPageEntry } from "@aov/community-cont
 import { tournamentPath, type Access } from "@/features/esports/pages/esports-shell"
 import { Monogram, TierBadge } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
-import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
+import { ManagementToolbar } from "@/features/tournaments/components/management-list"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { directoryApi, useDebounced, yearRange } from "./directory-api"
 import { pageKeys } from "../api/page-api"
@@ -18,6 +18,7 @@ import {
   directorySections,
   useDirectoryFilters,
 } from "./directory-shell"
+import { NativeSelect } from "@/components/native-select"
 
 const COMPETITION_PAGE_SORTS = { ACTIVE: "Gần đây trước", TOURNAMENTS: "Nhiều giải nhất", NAME: "Tên A–Z" }
 type CompetitionPageSort = keyof typeof COMPETITION_PAGE_SORTS
@@ -98,18 +99,18 @@ function CompetitionPageSortSelect({
   onChange: (value: string) => void
 }) {
   return (
-    <select
+    <NativeSelect
       aria-label={label}
       value={sort}
       onChange={(event) => onChange(event.target.value)}
-      className={managementSelectClassName}
+      className="max-w-full"
     >
       {Object.entries(COMPETITION_PAGE_SORTS).map(([value, name]) => (
         <option key={value} value={value}>
           {name}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   )
 }
 

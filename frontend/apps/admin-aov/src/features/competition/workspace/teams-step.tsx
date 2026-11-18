@@ -15,8 +15,8 @@ import { TeamRosterSheet } from "@/features/tournaments/components/team-roster-s
 import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 import { rosterBoard, rosterOrder } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
-import { selectClass } from "./plan-fields"
 import { useRosterPlayers } from "./use-roster-players"
+import { NativeSelect } from "@/components/native-select"
 
 const ENTRY_STATUS: Record<string, string> = {
   REGISTERED: "Đã đăng ký",
@@ -180,9 +180,9 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
                   <Pencil aria-hidden />
                 </Button>
                 {editing && ws.canEdit ? (
-                  <select
+                  <NativeSelect
                     aria-label={`Trạng thái ${view.name}`}
-                    className={cn(selectClass, "h-9 w-40")}
+                    className="w-40"
                     value={entry.status || "REGISTERED"}
                     onChange={(event) =>
                       setEntrants(
@@ -197,7 +197,7 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
                         {label}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 ) : (
                   <Chip tone={entry.status === "WITHDRAWN" ? "danger" : "neutral"}>
                     {ENTRY_STATUS[entry.status] ?? ENTRY_STATUS.REGISTERED}

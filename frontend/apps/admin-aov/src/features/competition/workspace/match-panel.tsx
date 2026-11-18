@@ -24,8 +24,9 @@ import {
   zonedInputInstant,
   zonedInputTime,
 } from "./model"
-import { BestOfField, SlotEditor, selectClass } from "./plan-fields"
+import { BestOfField, SlotEditor } from "./plan-fields"
 import type { Workspace } from "./parts"
+import { NativeSelect } from "@/components/native-select"
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -303,8 +304,8 @@ function ResultForm({
         <Field label="Nguồn kết quả" type="url" value={source} onChange={(event) => setSource(event.target.value)} />
         <label className="grid gap-2">
           <span className="type-label">Mức xác minh</span>
-          <select
-            className={selectClass}
+          <NativeSelect
+            className="w-full"
             value={verification}
             onChange={(event) => setVerification(event.target.value as ResultVerification)}
           >
@@ -313,7 +314,7 @@ function ResultForm({
                 {label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
       </div>
       {(problem || save.error) && (
@@ -376,8 +377,8 @@ function PlanForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; o
         />
         <label className="grid gap-2">
           <span className="type-label">Giai đoạn</span>
-          <select
-            className={selectClass}
+          <NativeSelect
+            className="w-full"
             value={match.stageCode}
             onChange={(event) => update({ stageCode: event.target.value })}
           >
@@ -386,7 +387,7 @@ function PlanForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; o
                 {stage.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <Field
           label="Vòng đấu"

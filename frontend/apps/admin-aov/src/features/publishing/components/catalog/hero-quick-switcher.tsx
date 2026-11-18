@@ -14,6 +14,7 @@ import { referenceCatalogApi, referenceCatalogKeys } from "../../../terminology/
 import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
 import type { HeroRow } from "../../api/types"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
+import { InputGroupInput } from "@aov/ui/components/input-group"
 
 const api = createPublishingApi(backendRequest)
 interface HeroQuickSwitcherProps {
@@ -135,12 +136,12 @@ function HeroQuickSwitcherPanel({ heroId, locale, rulesetId = "", onSelect }: He
     <>
       <label className="flex shrink-0 items-center gap-2 border-b px-3 py-2.5">
         <Search className="size-4 shrink-0 text-muted-foreground" />
-        <input
+        <InputGroupInput
           ref={input}
           autoFocus
           aria-label="Tìm tướng để chuyển"
           placeholder="Tìm tên hoặc mã tướng…"
-          className="h-8 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          className="h-8 px-0"
           maxLength={100}
           value={search}
           onChange={(event) => {

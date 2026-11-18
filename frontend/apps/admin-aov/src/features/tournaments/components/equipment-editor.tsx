@@ -4,6 +4,8 @@ import { ArrowDownUp, Camera, Clock3, Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { CatalogPicker } from "./catalog-picker"
 import { emptySnapshot, minuteLabel, parseGameTime } from "../model/tournament-model"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 
 const EVENT_LABELS = { BUY: "Mua", SELL: "Bán", UPGRADE: "Ghép / nâng cấp", SWAP: "Đổi ô" } as const
 
@@ -38,7 +40,7 @@ function SnapshotEditor({
         {value.slots.map((slot, index) => (
           <div key={slot.slot} className="tournament-inventory-slot">
             <span>Ô {slot.slot}</span>
-            <select
+            <NativeSelect
               aria-label={`Trạng thái ô ${slot.slot}`}
               value={!slot.known ? "unknown" : slot.item ? "item" : "empty"}
               onChange={(event) =>
@@ -59,7 +61,7 @@ function SnapshotEditor({
               <option value="unknown">Không rõ</option>
               <option value="empty">Trống</option>
               <option value="item">Có trang bị</option>
-            </select>
+            </NativeSelect>
             {slot.known && slot.item && (
               <CatalogPicker
                 compact
@@ -104,7 +106,7 @@ function EventEditor({
   return (
     <div className="tournament-equipment-event">
       <strong>{minuteLabel(value.atSeconds)}</strong>
-      <select
+      <NativeSelect
         aria-label="Loại biến động trang bị"
         value={value.type}
         onChange={(event) => onChange({ ...value, type: event.target.value as EquipmentEvent["type"] })}
@@ -114,7 +116,7 @@ function EventEditor({
             {label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
       <CatalogPicker
         label="Trang bị biến động"
         value={value.item}
@@ -131,7 +133,7 @@ function EventEditor({
       )}
       <label>
         Ô đi
-        <select
+        <NativeSelect
           aria-label="Ô trang bị trước biến động"
           value={value.fromSlot ?? ""}
           onChange={(event) =>
@@ -144,11 +146,11 @@ function EventEditor({
               {slot}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       <label>
         Ô đến
-        <select
+        <NativeSelect
           aria-label="Ô trang bị sau biến động"
           value={value.toSlot ?? ""}
           onChange={(event) =>
@@ -161,9 +163,9 @@ function EventEditor({
               {slot}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
-      <input
+      <Input
         aria-label="Ghi chú biến động trang bị"
         placeholder="Nguồn / ghi chú…"
         value={value.note ?? ""}
@@ -227,7 +229,7 @@ export function EquipmentEditor({
       <div className="tournament-equipment-add">
         <label>
           Thời gian trong ván
-          <input
+          <Input
             value={time}
             onChange={(event) => setTime(event.target.value)}
             aria-label="Thời điểm trang bị trong ván"

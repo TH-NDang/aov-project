@@ -7,7 +7,6 @@ import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { backendRequest } from "@/app/auth/session"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
-import { control } from "../../../publishing/components/editing/fields"
 import type { Request } from "../../../publishing/api/publishing-api"
 import { createCharacterImageApi, characterImageKeys } from "../../api/character-image-api"
 import {
@@ -17,6 +16,7 @@ import {
   createSkinBadgeGroupsApi,
   type BadgeGroup,
 } from "../../api/skin-badge-groups-api"
+import { Input } from "@aov/ui/components/input"
 
 export function SkinBadgePicker({
   value,
@@ -77,11 +77,11 @@ export function SkinBadgePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 max-w-[calc(100vw-2rem)] space-y-2 p-2">
-        <input
+        <Input
           autoFocus
           aria-label="Tìm bậc trang phục"
           placeholder="Tìm nhóm, tên hoặc mã nhãn…"
-          className={control}
+
           value={q}
           onChange={(event) => setQ(event.target.value)}
           maxLength={100}

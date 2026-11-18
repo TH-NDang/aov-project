@@ -40,6 +40,32 @@ function errorsShownTwice(text: string) {
     .map((match) => `:${text.slice(0, match.index).split("\n").length} ${match[1]}`)
 }
 
+/** Each JSX opening tag named `name`, with its line, read up to its closing `>` past braces and strings. */
+function tags(text: string, name: string) {
+  const found: { line: number; tag: string }[] = []
+  for (const match of text.matchAll(new RegExp(`<${name}\\b`, "g"))) {
+    let depth = 0
+    let quote = ""
+    let end = match.index
+    for (; end < text.length; end++) {
+      const char = text[end]
+      if (quote) quote = char === quote ? "" : quote
+      else if (char === '"' || char === "'" || char === "`") quote = char
+      else if (char === "{") depth++
+      else if (char === "}") depth--
+      else if (char === ">" && depth === 0) break
+    }
+    found.push({ line: text.slice(0, match.index).split("\n").length, tag: text.slice(match.index, end + 1) })
+  }
+  return found
+}
+
+// Inputs the shared Input does not draw: files, hidden values, sliders, ticks, colours, a visually hidden proxy, and
+// a title edited in place in its heading role, where the Input would bring its own size and border.
+const rawInput = (tag: string) =>
+  /\stype="(file|hidden|range|checkbox|radio|color)"/.test(tag) ||
+  /\sclassName="(sr-only|type-section-title\b[^"]*)"/.test(tag)
+
 // The admin reads on a 12/14/16/24 scale; see the type-* styles in packages/ui/src/styles/typography.css.
 const minimumPx = 12
 
@@ -129,6 +155,17 @@ const rules: Rule[] = [
         const allowed = (part: string) => /^(0|inherit|var\(--aov-radius-(control|card|media|pill)\))$/.test(part)
         return radius && !radius[1].trim().split(/\s+/).every(allowed) ? [`:${index + 1} ${radius[0].trim()}`] : []
       }),
+  },
+  {
+    name: "admin draws text fields with the shared Input and lists with NativeSelect",
+    hint: "Use Input from @aov/ui/components/input (InputGroupInput inside a group) and NativeSelect from components/native-select; a raw <input> is only for files, hidden values, ranges, checkboxes, radios, colours, an sr-only proxy or a title in its heading role.",
+    files: files(source, /\.tsx$/).filter((path) => !path.endsWith(join("components", "native-select.tsx"))),
+    offenders: (text) => [
+      ...tags(text, "input")
+        .filter(({ tag }) => !rawInput(tag))
+        .map(({ line }) => `:${line} <input>`),
+      ...tags(text, "select").map(({ line }) => `:${line} <select>`),
+    ],
   },
   {
     name: "admin uses only the font weights the font files provide",

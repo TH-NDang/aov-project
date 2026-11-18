@@ -5,7 +5,7 @@ import type { Access } from "@/features/esports/pages/esports-shell"
 import { tournamentPath } from "@/features/esports/pages/esports-shell"
 import { LaneIcon, Monogram } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
-import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
+import { ManagementToolbar } from "@/features/tournaments/components/management-list"
 import { TEAM_REGIONS } from "@/features/tournaments/components/team-region"
 import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { directoryApi, useDebounced, useProfilesOf, winRate, type TeamSort } from "./directory-api"
@@ -22,6 +22,7 @@ import {
 } from "./directory-shell"
 import { LocalMoney } from "@aov/ui/components/local-money"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { NativeSelect } from "@/components/native-select"
 
 const section = directorySections[0]
 const SORTS: Record<TeamSort, string> = {
@@ -70,11 +71,11 @@ export function TeamDirectory({ access }: { access: Access }) {
             placeholder="Tên đội, tên viết tắt hoặc mã…"
             onReset={filters.filtered ? filters.reset : undefined}
           >
-            <select
+            <NativeSelect
               aria-label="Khu vực đội tuyển"
               value={country}
               onChange={(event) => filters.setFilter("country", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Mọi khu vực</option>
               {TEAM_REGIONS.map((region) => (
@@ -82,19 +83,19 @@ export function TeamDirectory({ access }: { access: Access }) {
                   {region.name}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Sắp xếp đội tuyển"
               value={sort}
               onChange={(event) => filters.setFilter("sort", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               {Object.entries(SORTS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </ManagementToolbar>
         }
       >

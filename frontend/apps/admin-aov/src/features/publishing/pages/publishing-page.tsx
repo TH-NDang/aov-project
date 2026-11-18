@@ -115,6 +115,7 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { CAUSE_NAMES } from "@/lib/version-causes"
 import { VersionFacts } from "../components/setup/version-facts"
 import { HeroVersionMenu, REVISION_STATES as STATES } from "../components/workspace/hero-version-menu"
+import { Input } from "@aov/ui/components/input"
 
 const api = createPublishingApi(backendRequest)
 const CAUSES: Record<Cause, string> = CAUSE_NAMES
@@ -984,9 +985,9 @@ export function PublishingWorkspace({
             <div className="mx-auto grid w-full max-w-6xl gap-2 px-4 py-2 @min-[650px]:grid-cols-[minmax(0,1fr)_auto] @min-[650px]:items-center md:px-6">
               <label className="min-w-0">
                 <span className="sr-only">Ghi chú thay đổi</span>
-                <input
+                <Input
                   form={sectionFormId}
-                  className="h-9 w-full rounded-md border bg-background px-3 text-sm disabled:bg-muted/40 disabled:text-muted-foreground"
+                  className="w-full disabled:bg-muted/40 disabled:text-muted-foreground"
                   placeholder="Ghi chú thay đổi (tùy chọn)"
                   value={note}
                   disabled={!sectionDirty}

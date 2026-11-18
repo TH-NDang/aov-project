@@ -6,9 +6,9 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { confirmDiscard } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
-import { control } from "../publishing/components/editing/fields"
 import { SOURCE_CATEGORIES, useSaveCollection, type SourceCategory, type SourceCollection } from "./files-api"
 import { CATEGORY_HINTS, CATEGORY_LABELS } from "./files-format"
+import { NativeSelect } from "@/components/native-select"
 
 const CODE = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
@@ -124,8 +124,8 @@ function CollectionForm({
           </label>
           <label className="grid gap-1.5">
             <span className="type-label">Chức năng</span>
-            <select
-              className={control}
+            <NativeSelect
+              className="w-full"
               value={category}
               onChange={(event) => setCategory(event.target.value as SourceCategory)}
             >
@@ -134,7 +134,7 @@ function CollectionForm({
                   {CATEGORY_LABELS[key]}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <span className="type-meta">{CATEGORY_HINTS[category]}</span>
           </label>
         </>

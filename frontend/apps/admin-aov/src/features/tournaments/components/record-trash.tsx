@@ -7,6 +7,7 @@ import { registrySearchText } from "../model/registry-form-model"
 import { RECORD_KIND_LABELS, recordLabel } from "../model/record-lifecycle-model"
 import { RecordLifecycleActions } from "./record-lifecycle-actions"
 import { tournamentApi, tournamentError, tournamentKeys, type RecordKind } from "../api/tournament-api"
+import { NativeSelect } from "@/components/native-select"
 
 export function RecordTrash({
   initialKind,
@@ -85,7 +86,7 @@ export function RecordTrash({
           <Trash2 size={16} />
           Thùng rác
         </span>
-        <select
+        <NativeSelect
           aria-label="Loại mục trong thùng rác"
           value={kind}
           onChange={(event) => setKind(event.target.value as RecordKind)}
@@ -95,7 +96,7 @@ export function RecordTrash({
               {name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         <SearchField
           className="w-full sm:w-64"
           label="Tìm trong thùng rác"

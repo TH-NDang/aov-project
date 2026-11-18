@@ -24,6 +24,7 @@ import type { Revision } from "../../api/types"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
+import { Input } from "@aov/ui/components/input"
 
 const api = createPublishingApi(backendRequest)
 
@@ -331,7 +332,7 @@ function NoteEntryPicker({
       <label className="relative block">
         <span className="sr-only">Tìm {label}</span>
         <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input
+        <Input
           autoFocus
           className={cn(compactControl, "pl-8")}
           placeholder={`Tìm ${label}…`}

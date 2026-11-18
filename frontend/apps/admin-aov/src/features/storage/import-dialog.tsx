@@ -16,9 +16,8 @@ import {
 } from "./storage-model"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
+import { NativeSelect } from "@/components/native-select"
 
-export const SELECT_CLASS =
-  "h-9 w-full rounded-md border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
 export const displayValue = (value: unknown) =>
   value === undefined ? "—" : typeof value === "string" ? value : JSON.stringify(value)
 /** Rows before a file is read; one array, so the columns are not worked out again on every render. */
@@ -164,22 +163,22 @@ export function ImportDialog({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-2 text-sm">
                     Danh sách trong tệp
-                    <select
-                      className={SELECT_CLASS}
+                    <NativeSelect
+                      className="w-full"
                       value={arrayName}
                       onChange={(event) => chooseArray(event.target.value)}
                     >
                       {Object.keys(arrays).map((name) => (
                         <option key={name}>{name}</option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                   <label className="grid gap-2 text-sm">
                     {table.idColumn
                       ? `Cột ánh xạ với ID “${table.idColumn}”`
                       : "Chọn cột làm ID (duy nhất, không trống)"}
-                    <select
-                      className={SELECT_CLASS}
+                    <NativeSelect
+                      className="w-full"
                       value={sourceId}
                       onChange={(event) => {
                         setSourceId(event.target.value)
@@ -190,7 +189,7 @@ export function ImportDialog({
                       {columns.map((column) => (
                         <option key={column}>{column}</option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -255,9 +254,9 @@ export function ImportDialog({
               luôn được giữ nguyên.
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              <select
+              <NativeSelect
                 aria-label="Lọc kết quả nhập"
-                className={`${SELECT_CLASS} w-auto`}
+
                 value={filter}
                 onChange={(event) => {
                   setFilter(event.target.value)
@@ -267,7 +266,7 @@ export function ImportDialog({
                 <option value="new">Dòng mới</option>
                 <option value="update">Có thay đổi</option>
                 <option value="same">Giống hiện tại</option>
-              </select>
+              </NativeSelect>
               <Button
                 variant="outline"
                 size="sm"

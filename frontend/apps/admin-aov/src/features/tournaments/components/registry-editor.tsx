@@ -25,6 +25,7 @@ import {
   VENUE_MODES,
 } from "./tournament-metadata"
 import { BEST_OF_CHOICES } from "@/features/esports/model/series-rules"
+import { NativeSelect } from "@/components/native-select"
 
 /** The records this editor creates and edits; a team and its players are edited from the workspace Teams step. */
 type EditorKind = "tournaments" | "series"
@@ -235,7 +236,7 @@ function RegistryForm({
             onChange={(id) => setValues((current) => ({ ...current, [field.key]: id }))}
           />
         ) : field.options ? (
-          <select
+          <NativeSelect
             aria-label={field.label}
             value={values[field.key] ?? ""}
             required={field.required}
@@ -250,7 +251,7 @@ function RegistryForm({
             {values[field.key] && !field.options.some((option) => option.id === values[field.key]) && (
               <option value={values[field.key]}>{values[field.key]} · giá trị hiện có</option>
             )}
-          </select>
+          </NativeSelect>
         ) : field.key === "note" ? (
           <textarea
             value={values[field.key] ?? ""}

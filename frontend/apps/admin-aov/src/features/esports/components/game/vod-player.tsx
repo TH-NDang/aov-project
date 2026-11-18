@@ -19,6 +19,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { youtubeWatchUrl } from "../../model/vod"
 import { formatClock } from "@/lib/clock"
 import { usePhoneLayout } from "./floating-panel"
+import { NativeSelect } from "@/components/native-select"
 
 type YTPlayer = {
   seekTo(seconds: number, allowSeekAhead: boolean): void
@@ -556,10 +557,10 @@ export const VodPlayer = forwardRef<
               }
             }}
           />
-          <select
+          <NativeSelect
             value={rate}
             aria-label="Tốc độ phát"
-            className="h-7 shrink-0 rounded-md bg-transparent px-1 text-xs hover:bg-white/15 [&>option]:text-black"
+            className="h-7 shrink-0 border-0 bg-transparent px-1 text-xs shadow-none hover:bg-white/15 md:text-xs dark:bg-transparent [&>option]:text-black"
             onChange={(event) => {
               const next = Number(event.target.value)
               setRate(next)
@@ -571,7 +572,7 @@ export const VodPlayer = forwardRef<
                 {value}×
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <button
             type="button"
             className={cn(control, youtubeControls && "bg-white/20")}

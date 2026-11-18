@@ -29,7 +29,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@aov/ui/components/tab
 import { useIsWide } from "@/hooks/use-media-query"
 import { ContentsSection, SectionContents, useSectionContents } from "@/components/section-contents"
 import { AssetPicker } from "../../../publishing/components/assets/asset-picker"
-import { Field, control } from "../../../publishing/components/editing/fields"
+import { Field } from "../../../publishing/components/editing/fields"
 import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
 import { VersionFacts } from "../../../publishing/components/setup/version-facts"
 import { AdminRichTextPreview } from "../../../terminology/rich-text-field"
@@ -62,6 +62,7 @@ import { SubjectVideosPanel } from "../../../videos/subject-videos-panel"
 import { warehouseBaselineMode, type WarehouseEntry, type WarehouseMetadata } from "../../model/warehouse-types"
 import { warehouseName, warehouseText, type ItemContent } from "@aov/ui/lib/warehouse-content"
 import { confirmDiscard } from "@/components/confirm-dialog"
+import { NativeSelect } from "@/components/native-select"
 
 /** Sections of the item page, in reading order. Viewing and editing share them, so the page never rearranges. */
 const ITEM_SECTIONS = {
@@ -401,8 +402,8 @@ export function ItemEditor({
                           />
                           <label className="grid gap-1.5 text-sm">
                             Cấp trang bị
-                            <select
-                              className={control}
+                            <NativeSelect
+                              className="w-full"
                               value={value.tier ?? ""}
                               onChange={(event) =>
                                 change({ tier: event.target.value ? Number(event.target.value) : null })
@@ -414,7 +415,7 @@ export function ItemEditor({
                                   Cấp {tier}
                                 </option>
                               ))}
-                            </select>
+                            </NativeSelect>
                           </label>
                           <ItemCategorySelect
                             label="Nhóm chính"
@@ -537,8 +538,8 @@ export function ItemEditor({
                             />
                             <label className="type-label grid gap-1">
                               Cột
-                              <select
-                                className={control}
+                              <NativeSelect
+                                className="w-full"
                                 aria-label={`Cột vị trí ${index + 1}`}
                                 value={position.column ?? ""}
                                 onChange={(event) =>
@@ -553,7 +554,7 @@ export function ItemEditor({
                                     Cột {column + 1}
                                   </option>
                                 ))}
-                              </select>
+                              </NativeSelect>
                             </label>
                             <Button
                               type="button"

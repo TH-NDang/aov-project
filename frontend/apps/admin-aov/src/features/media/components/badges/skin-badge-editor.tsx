@@ -7,7 +7,7 @@ import { useIsWide } from "@/hooks/use-media-query"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../../../publishing/components/assets/asset-picker"
-import { Field, control } from "../../../publishing/components/editing/fields"
+import { Field } from "../../../publishing/components/editing/fields"
 import { languageOptions } from "../../../users/profile-preference-picker"
 import type { Request } from "../../../publishing/api/publishing-api"
 import {
@@ -21,6 +21,7 @@ import { BadgeGroupSelect } from "./skin-badge-group-editor"
 import { toast } from "sonner"
 import { confirmDiscard } from "@/components/confirm-dialog"
 import { mediaKeys } from "../../api/media-cache"
+import { NativeSelect } from "@/components/native-select"
 
 export const badgeKindLabels: Record<BadgeKind, string> = {
   UNKNOWN: "Chưa phân loại",
@@ -134,9 +135,9 @@ export function SkinBadgeEditor({
           {!badge && (
             <label className="grid gap-1.5 text-sm">
               <span>Thị trường của ảnh</span>
-              <select
+              <NativeSelect
                 aria-label="Thị trường của ảnh"
-                className={control}
+                className="w-full"
                 value={regionCode}
                 disabled={busy || uploading}
                 onChange={(event) => {
@@ -151,7 +152,7 @@ export function SkinBadgeEditor({
                     {!region.available ? " · Chưa hỗ trợ" : ""}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
           )}
           {!badge && (
@@ -168,8 +169,8 @@ export function SkinBadgeEditor({
           )}
           <label className="grid gap-1.5 text-sm">
             <span>Phân loại</span>
-            <select
-              className={control}
+            <NativeSelect
+              className="w-full"
               value={kind}
               disabled={busy}
               onChange={(event) => {
@@ -182,7 +183,7 @@ export function SkinBadgeEditor({
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           <div className="space-y-3 rounded-xl border p-4">
             <label className="grid gap-1.5 text-sm">
@@ -190,8 +191,8 @@ export function SkinBadgeEditor({
                 <Languages className="size-4" />
                 Ngôn ngữ bản dịch
               </span>
-              <select
-                className={control}
+              <NativeSelect
+                className="w-full"
                 value={language}
                 onChange={(event) => setLanguage(event.target.value)}
                 disabled={busy || uploading}
@@ -202,7 +203,7 @@ export function SkinBadgeEditor({
                     {translations.some((text) => text.locale === value) ? " · Đã có" : " · Chưa có"}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
             {translation ? (
               <>

@@ -14,9 +14,9 @@ import {
 import { HeroLanguageIcon } from "../../../publishing/components/editing/hero-language-picker"
 import { AdminRichTextPreview } from "../../../terminology/rich-text-field"
 import { languageOptions } from "../../../users/profile-preference-picker"
-import { control } from "../../../publishing/components/editing/fields"
 import { joinWrappedLines } from "./warehouse-sheet"
 import type { WarehouseTranslation } from "@aov/ui/lib/warehouse-content"
+import { NativeSelect } from "@/components/native-select"
 
 type Text = WarehouseTranslation
 
@@ -248,8 +248,8 @@ export function WithReference<T extends Localized>({
         <label className="type-meta flex items-center gap-2">
           <Languages aria-hidden className="size-3.5" />
           Tham khảo
-          <select
-            className={`${control} h-7 w-auto py-0`}
+          <NativeSelect
+            className="h-7"
             aria-label="Ngôn ngữ tham khảo"
             value={current.language}
             onChange={(event) => current.setLanguage(event.target.value)}
@@ -259,7 +259,7 @@ export function WithReference<T extends Localized>({
                 {languageName(text.locale)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         {value?.trim() ? (
           <div className="type-body max-h-48 overflow-y-auto whitespace-pre-line">

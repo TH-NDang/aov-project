@@ -1,7 +1,7 @@
-import { control } from "../editing/fields"
 import { CalendarDays, GitCompareArrows, RotateCcw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { type PublicationOverview } from "../../api/publication-overview"
+import { NativeSelect } from "@/components/native-select"
 export interface CatalogFilter {
   seasonId: string
   variantId: string
@@ -37,9 +37,9 @@ export function CatalogContext({
           <CalendarDays className="size-4 text-muted-foreground" />
           {seasonLabel}
         </span>
-        <select
+        <NativeSelect
           aria-label={seasonLabel}
-          className={control}
+          className="w-full"
           value={value.seasonId}
           onChange={(e) => onChange({ seasonId: e.target.value, variantId: "" })}
         >
@@ -49,16 +49,16 @@ export function CatalogContext({
               {s.displayName}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       <label className="grid gap-2 text-sm">
         <span className="flex items-center gap-2">
           <GitCompareArrows className="size-4 text-muted-foreground" />
           {patchLabel}
         </span>
-        <select
+        <NativeSelect
           aria-label={patchLabel}
-          className={control}
+          className="w-full"
           value={value.variantId}
           onChange={(e) => onChange({ ...value, variantId: e.target.value })}
         >
@@ -75,7 +75,7 @@ export function CatalogContext({
                 {v.status === "DRAFT" ? " · Bản nháp" : ""}
               </option>
             ))}
-        </select>
+        </NativeSelect>
       </label>
       <Button
         type="button"

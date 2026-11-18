@@ -3,6 +3,7 @@ import type { GameContent } from "@aov/community-contracts"
 import { CalendarDays, GitBranch } from "lucide-react"
 import { GAME_REGIONS } from "../model/tournament-model"
 import { fetchCatalogContext, tournamentKeys } from "../api/tournament-api"
+import { NativeSelect } from "@/components/native-select"
 
 export function GameScope({
   content,
@@ -28,7 +29,7 @@ export function GameScope({
     <section className="tournament-game-scope" aria-label="Phiên bản gameplay của ván">
       <label>
         <span>Thị trường</span>
-        <select
+        <NativeSelect
           aria-label="Thị trường của ván"
           value={content.region}
           disabled={disabled}
@@ -41,7 +42,7 @@ export function GameScope({
               {region}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {content.region === "GLOBAL" && tournamentRegion && !GAME_REGIONS.includes(tournamentRegion) && (
         <p className="tournament-scope-note">
@@ -54,7 +55,7 @@ export function GameScope({
           <CalendarDays size={13} />
           Mùa
         </span>
-        <select
+        <NativeSelect
           aria-label="Mùa"
           value={content.seasonId ?? ""}
           disabled={disabled || query.isPending}
@@ -67,14 +68,14 @@ export function GameScope({
             </option>
           ))}
           {content.seasonId && !season && <option value={content.seasonId}>Mùa đã liên kết</option>}
-        </select>
+        </NativeSelect>
       </label>
       <label>
         <span>
           <GitBranch size={13} />
           Patch của ván
         </span>
-        <select
+        <NativeSelect
           aria-label="Patch của ván"
           value={content.patchVariantId ?? ""}
           disabled={disabled || query.isPending}
@@ -98,7 +99,7 @@ export function GameScope({
           {content.patchVariantId && !patches.some((patch) => patch.id === content.patchVariantId) && (
             <option value={content.patchVariantId}>Patch đã liên kết</option>
           )}
-        </select>
+        </NativeSelect>
       </label>
       {query.isError && (
         <p className="tournament-scope-note">

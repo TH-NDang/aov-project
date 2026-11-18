@@ -4,6 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { Kbd } from "@aov/ui/components/kbd"
 import { cn } from "@aov/ui/lib/utils"
 import { useHotkeys } from "@/app/hotkeys"
+import { Input } from "@aov/ui/components/input"
 
 type InputProps = Omit<ComponentProps<"input">, "value" | "onChange" | "type" | "children">
 
@@ -69,7 +70,7 @@ export function SearchField({
   const field = (
     <div className="relative w-full min-w-0">
       <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
-      <input
+      <Input
         {...props}
         ref={(node) => {
           own.current = node
@@ -89,7 +90,7 @@ export function SearchField({
             onChange("")
           } else event.currentTarget.blur()
         }}
-        className="peer h-9 w-full rounded-full border bg-background pr-10 pl-10 text-sm transition-colors outline-none placeholder:text-muted-foreground hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 disabled:opacity-50 [&::-webkit-search-cancel-button]:appearance-none"
+        className="peer w-full rounded-full pr-10 pl-10 transition-colors placeholder:text-muted-foreground hover:border-foreground/20 focus-visible:ring-3 disabled:opacity-50 [&::-webkit-search-cancel-button]:appearance-none"
       />
       {value ? (
         <button

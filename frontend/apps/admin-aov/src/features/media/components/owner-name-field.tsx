@@ -3,6 +3,7 @@ import { Copyright } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { useMediaOwners } from "./owners/media-owners"
 import { similarOwner } from "@/features/media/model/media-owner-names"
+import { Input } from "@aov/ui/components/input"
 
 const quickPicks = 3
 
@@ -19,7 +20,7 @@ export function OwnerNameInput({
   const owners = useMediaOwners().data ?? []
   return (
     <>
-      <input
+      <Input
         {...props}
         list={owners.length ? listId : undefined}
         maxLength={200}

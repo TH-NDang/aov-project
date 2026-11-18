@@ -3,13 +3,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { control } from "../editing/fields"
 import type { Region } from "../../api/types"
 import type { components } from "../../generated/hero-api"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { DraftStatus } from "@/app/drafts/draft-status"
 import { publishingKeys } from "../../api/publishing-api"
+import { NativeSelect } from "@/components/native-select"
+import { Input } from "@aov/ui/components/input"
 type Season = components["schemas"]["Season"]
 const seasonDraftSchema = z.object({
   code: z.string(),
@@ -71,8 +72,7 @@ export function SeasonSetup({ onDone }: { onDone?: () => void }) {
       <fieldset disabled={busy || !draft.ready || draft.invalid} className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1 text-sm">
           Mã mùa
-          <input
-            className={control}
+          <Input
             {...form.register("code")}
             placeholder="2026-s4"
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
@@ -82,21 +82,21 @@ export function SeasonSetup({ onDone }: { onDone?: () => void }) {
         </label>
         <label className="grid gap-1 text-sm">
           Tên hiển thị
-          <input {...form.register("displayName")} className={control} placeholder="S4 2026" required maxLength={120} />
+          <Input {...form.register("displayName")} placeholder="S4 2026" required maxLength={120} />
         </label>
         <label className="grid gap-1 text-sm">
           Năm (tùy chọn)
-          <input {...form.register("year")} className={control} type="number" min={2000} max={9999} />
+          <Input {...form.register("year")} type="number" min={2000} max={9999} />
         </label>
         <label className="grid gap-1 text-sm">
           Số mùa (tùy chọn)
-          <input {...form.register("number")} className={control} type="number" min={1} />
+          <Input {...form.register("number")} type="number" min={1} />
         </label>
         <label className="grid gap-1 text-sm sm:col-span-2">
           Vị trí
-          <select
+          <NativeSelect
             {...form.register("beforeSeasonId")}
-            className={control}
+            className="w-full"
             disabled={seasons.isPending || seasons.isError}
           >
             <option value="">{seasons.data?.length ? "Sau tất cả mùa hiện có" : "Mùa đầu tiên"}</option>
@@ -105,7 +105,7 @@ export function SeasonSetup({ onDone }: { onDone?: () => void }) {
                 Chèn trước {s.displayName}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <Button disabled={seasons.isPending || seasons.isError}>Tạo mùa</Button>
       </fieldset>
@@ -129,7 +129,13 @@ export function ReleaseSeasonFields({ regions }: { regions: Region[] }) {
     <>
       <label className="grid gap-1 text-sm">
         Thị trường
-        <select className={control} name="regionId" required value={region} onChange={(e) => setRegion(e.target.value)}>
+        <NativeSelect
+          className="w-full"
+          name="regionId"
+          required
+          value={region}
+          onChange={(e) => setRegion(e.target.value)}
+        >
           <option value="">Chọn thị trường</option>
           {regions
             .filter((r) => r.available)
@@ -138,13 +144,13 @@ export function ReleaseSeasonFields({ regions }: { regions: Region[] }) {
                 {r.displayName}
               </option>
             ))}
-        </select>
+        </NativeSelect>
       </label>
       <label className="grid gap-1 text-sm">
         Mùa xếp hạng (tùy chọn)
-        <select
+        <NativeSelect
           key={region}
-          className={control}
+          className="w-full"
           name="seasonId"
           defaultValue=""
           disabled={!region || seasons.isPending}
@@ -155,7 +161,7 @@ export function ReleaseSeasonFields({ regions }: { regions: Region[] }) {
               {s.displayName}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </label>
       {seasons.error && <p role="alert">{errorMessage(seasons.error)}</p>}
     </>
