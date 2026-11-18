@@ -2333,7 +2333,7 @@ Publish một draft có section chưa điền trả `422 HERO_INVALID_CONTENT`, 
 
 ## Bổ sung API import Hero và mùa xếp hạng
 
-- GET `admin/heroes/import/fields`: danh sách trường cố định `{key,label,type}`; quyền hero:write.
+- GET `admin/heroes/import/fields`: danh sách trường cố định `{key,type}`; quyền hero:write. Backend không gửi tên hiển thị: Admin gọi tên trường theo `key` bằng bảng tra của mình, khóa chưa có trong bảng thì hiện chính khóa.
 - POST `admin/heroes/import/preview`: `{code,rulesetId,locale,values,policies,expectedRevisionId?,expectedVersion?}`. policies: FILL_EMPTY/OVERWRITE/SKIP. Trả `{code,heroId,revisionId,version,before,after,changed}`. Không ghi DB.
 - POST `admin/heroes/import/apply`: cùng request, bắt buộc mang revisionId/version đã preview nếu tướng tồn tại; mismatch trả 409. Tướng mới dùng code duy nhất, UUID do backend tạo. Một request một tướng, ghi draft nguyên tử, không tự xuất bản.
 - Trường ban đầu: name/title/summary/lore/roles/skills/skins/head/portrait/splash. Trường ảnh trong file là URL HTTPS, frontend tải qua Media API rồi gửi UUID asset cho backend; không lưu URL ngoài làm binding. Mảng JSON giữ cấu trúc section hiện hành; vai trò hợp lệ bắt buộc khi tạo mới. Trường ngoài danh mục trả 422.
@@ -2370,7 +2370,7 @@ POST admin/patches/{id}/variants thêm beforeVariantId tùy chọn: chèn trư�
 
 ### Ánh xạ dữ liệu liên quan khi import tướng
 
-`GET /admin/heroes/import/relation-fields` (quyền `hero:write`, cùng quyền nền `catalog:read`) trả các trường được phép của `skills` và `skins`: mã, tên/mô tả bản dịch, thứ tự, loại/dạng/hiệu ứng kỹ năng; bậc/cách sở hữu trang phục; `iconAssetId` hoặc `artAssetId`. Mỗi trường có `key`, `label`, `type`. Endpoint metadata không thêm cột tự do. Payload import vẫn dùng các mảng Skill/Skin của hợp đồng hiện có. Ảnh trong payload gửi tác vụ luôn là UUID asset đã upload hoàn tất, không phải đường dẫn máy người dùng.
+`GET /admin/heroes/import/relation-fields` (quyền `hero:write`, cùng quyền nền `catalog:read`) trả các trường được phép của `skills` và `skins`: mã, tên/mô tả bản dịch, thứ tự, loại/dạng/hiệu ứng kỹ năng; bậc/cách sở hữu trang phục; `iconAssetId` hoặc `artAssetId`. Mỗi trường có `key`, `type`; Admin gọi tên trường theo `key` như danh sách trường tướng. Endpoint metadata không thêm cột tự do. Payload import vẫn dùng các mảng Skill/Skin của hợp đồng hiện có. Ảnh trong payload gửi tác vụ luôn là UUID asset đã upload hoàn tất, không phải đường dẫn máy người dùng.
 
 ## Tổng quan phát hành cho admin
 
