@@ -98,9 +98,9 @@ Thanh điều hướng nằm bên trái. Để đổi lại bên phải, thêm `
 
 ## Trang đăng nhập
 
-Theme Keycloak `aov-public` chạy ngoài ứng dụng React nên mang một bản chép của token: khối `:root` ở đầu
-`infra/local/keycloak-themes/aov-public/login/resources/css/aov-login.css` trong `backend/wiki-service`, nằm giữa hai
-dòng chú thích đánh dấu. `pnpm lint` báo lỗi khi bản chép khác `tokens.css`; sau khi đổi token, chạy
+Hai theme Keycloak `aov-public` và `aov-admin` chạy ngoài ứng dụng React nên mỗi theme mang một bản chép của token:
+khối `:root` ở đầu `aov-public/login/resources/css/aov-login.css` và `aov-admin/login/resources/css/aov-admin.css`
+trong `backend/wiki-service/infra/local/keycloak-themes`, nằm giữa hai dòng chú thích đánh dấu. `pnpm lint` báo lỗi khi bản chép khác `tokens.css`; sau khi đổi token, chạy
 `node --experimental-strip-types lint/login-theme-tokens.ts --write` trong `packages/ui`. Trang đăng nhập luôn tối nên
 nhận giá trị tối của token. Vài màu riêng của trang (chữ sáng của tiêu đề, nền ô nhập, màu báo lỗi và thành công) vẫn
 viết tay vì bộ màu chung chưa có màu tương ứng.

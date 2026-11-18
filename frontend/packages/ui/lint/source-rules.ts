@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join, relative } from "node:path"
 import { knownRestyles } from "./known-restyles.ts"
-import { loginStylesheet, loginTokenOffenders } from "./login-theme-tokens.ts"
+import { loginStylesheets, loginTokenOffenders } from "./login-theme-tokens.ts"
 import { newRestyles, RESTYLE_HINT } from "./stylesheet-owners.ts"
 
 const library = join(import.meta.dirname, "..")
@@ -50,10 +50,10 @@ const rules: Rule[] = [
     offenders: (_, path) => restyles.offenders.get(path) ?? [],
   },
   {
-    name: "the login theme's copy of the tokens matches tokens.css",
+    name: "the Keycloak themes' copies of the tokens match tokens.css",
     hint: "Run node --experimental-strip-types lint/login-theme-tokens.ts --write in packages/ui.",
-    files: [loginStylesheet],
-    offenders: () => loginTokenOffenders(),
+    files: loginStylesheets,
+    offenders: (_, path) => loginTokenOffenders(path),
   },
   {
     name: "every known restyle is still there",
