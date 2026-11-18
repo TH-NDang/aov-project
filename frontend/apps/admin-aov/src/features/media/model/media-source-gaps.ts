@@ -23,14 +23,15 @@ export const sourceGapHints: Record<SourceGap, string> = {
 /** User avatars belong to the user who uploaded them and never need a source or owner (03, needsCredit). */
 export const needsNoCredit = (semanticType?: string | null) => semanticType === "USER_AVATAR"
 
-const unverified = (source: MediaCredit) => source.label.includes("Chưa xác minh")
+const unverified = (source: MediaCredit) => !!source.unverified
+
+/** Where an image came from, as Admin shows it; the server sends no text for an unverified source. */
+export const sourceOrigin = (source: MediaCredit) => (unverified(source) ? "Chưa xác minh nguồn" : source.label.trim())
 
 export function sourceGap(sources: readonly MediaCredit[]): SourceGap {
   if (!needsMediaCredit([...sources])) return "none"
-  const named = sources.filter((source) => source.label.trim())
-  if (!named.length) return "missing-source"
-  if (named.every(unverified)) return "unverified"
-  return "missing-owner"
+  if (sources.some((source) => !unverified(source) && source.label.trim())) return "missing-owner"
+  return sources.some(unverified) ? "unverified" : "missing-source"
 }
 
 /** The verified source that only lacks its owner; adding the owner makes the image credited. */

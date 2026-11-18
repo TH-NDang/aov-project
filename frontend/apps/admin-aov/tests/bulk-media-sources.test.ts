@@ -2,9 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
   addMediaSourcesInBulk,
+  addSourcesPerTarget,
   bulkSourceValidation,
   type MediaSourceTarget,
 } from "../src/features/media/model/bulk-media-sources"
+import type { MediaCredit } from "@aov/ui/lib/media-credit"
 import type { Request } from "../src/features/publishing/api/publishing-api"
 
 const targets = (count: number): MediaSourceTarget[] =>
@@ -137,4 +139,26 @@ test("invalid source metadata is rejected before the first request", async () =>
   }
   assert.equal(calls, 0)
   assert.equal(bulkSourceValidation({ label: "Capture", ownerName: "Garena", url: null }), null)
+})
+
+test("completing the owner of a source read from the list sends only the fields a source request accepts", async () => {
+  const [target] = targets(1)
+  const bodies: Record<string, unknown>[] = []
+  const request: Request = async <T>(_path: string, init?: RequestInit) => {
+    if (init?.method === "POST") bodies.push(JSON.parse(String(init.body)))
+    return { state: "ACTIVE", currentVersionId: target.versionId } as T
+  }
+  const listed: MediaCredit = {
+    type: "GAME_CLIENT",
+    label: "Game capture",
+    unverified: false,
+    url: null,
+    ownerName: null,
+  }
+
+  await addSourcesPerTarget(request, [{ target, source: { ...listed, ownerName: "Garena" } }], () => {})
+
+  assert.deepEqual(bodies, [
+    { type: "GAME_CLIENT", label: "Game capture", url: null, ownerName: "Garena", contactUrl: null },
+  ])
 })

@@ -225,6 +225,8 @@ export interface AssetProvenance {
   versionId: string | null
   type: string
   label: string
+  /** Recorded without evidence of where the image came from; Admin words it instead of its label. */
+  unverified?: boolean
   url: string | null
   observedAt: string | null
   note: string | null

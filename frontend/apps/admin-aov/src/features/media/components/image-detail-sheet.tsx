@@ -49,6 +49,7 @@ import {
   sourceGap,
   sourceGapHints,
   sourceGapLabels,
+  sourceOrigin,
   visibleSources,
 } from "../model/media-source-gaps"
 import { mediaKeys } from "../api/media-cache"
@@ -73,6 +74,8 @@ interface Version {
   createdAt: string
 }
 interface Source extends MediaSourceInput {
+  /** Recorded without evidence of where the image came from; Admin words it instead of its label. */
+  unverified?: boolean
   referenceVersion: number
   id: string
   versionId: string | null
@@ -459,8 +462,8 @@ export function ImageDetailSheet({
                   return (
                     <div key={source.id} className="rounded-xl border px-3 py-1">
                       <div className="divide-y">
-                        <Fact ok={!!source.label.trim() && !source.label.includes("Chưa xác minh")} label="Lấy từ">
-                          {source.label || "—"}
+                        <Fact ok={!!source.label.trim() && !source.unverified} label="Lấy từ">
+                          {sourceOrigin(source) || "—"}
                           {safeUrl(source.url) && (
                             <a
                               href={safeUrl(source.url)}
