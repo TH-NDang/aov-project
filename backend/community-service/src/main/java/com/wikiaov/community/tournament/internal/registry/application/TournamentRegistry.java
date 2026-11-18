@@ -21,10 +21,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+/** Runs inside the transaction of the facade that calls it. */
 @Service
-@Transactional
 public class TournamentRegistry {
     private final RegistryArchivePolicy archives;
     private final CompetitionMedia media;
@@ -36,7 +35,6 @@ public class TournamentRegistry {
         this.repository = repository;
     }
 
-    @Transactional(readOnly = true)
     public PageSlice<View<Tournament>> list(String q, RecordState state, Pageable page) {
         var ordered = PageRequest.of(page.getPageNumber(), page.getPageSize(),
                 Sort.by(Sort.Order.desc("updatedAt"), Sort.Order.asc("id")));
@@ -45,7 +43,6 @@ public class TournamentRegistry {
                 .map(row -> TournamentViews.view(row, row.getContent())));
     }
 
-    @Transactional(readOnly = true)
     public View<Tournament> get(UUID id) {
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         return TournamentViews.view(row, row.getContent());
@@ -124,7 +121,6 @@ public class TournamentRegistry {
         }
     }
 
-    @Transactional(readOnly = true)
     public Impact deletionImpact(UUID id) {
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         return archives.impact(RegistryKind.TOURNAMENT, row);

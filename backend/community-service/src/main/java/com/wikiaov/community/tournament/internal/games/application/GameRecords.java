@@ -41,10 +41,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+/** Runs inside the transaction of the facade that calls it. */
 @Service
-@Transactional
 public class GameRecords {
     private final RegistryArchivePolicy archives;
     private final GameRepository games;
@@ -65,7 +64,6 @@ public class GameRecords {
         this.publications = publications;
     }
 
-    @Transactional(readOnly = true)
     public PageSlice<View<Game>> list(UUID seriesId, UUID tournamentId, RecordState state, Pageable page) {
         var ordered = PageRequest.of(page.getPageNumber(), page.getPageSize(),
                 Sort.by(Sort.Order.desc("updatedAt"), Sort.Order.asc("id")));
@@ -73,7 +71,6 @@ public class GameRecords {
         return PageSlice.from(games.search(seriesId, tournamentId, state.name(), ordered).map(this::view));
     }
 
-    @Transactional(readOnly = true)
     public View<Game> get(UUID id) {
         return view(games.findById(id).orElseThrow(TournamentErrors::missing));
     }
@@ -233,7 +230,6 @@ public class GameRecords {
         return references.stream().filter(reference -> ids.contains(reference.id())).toList();
     }
 
-    @Transactional(readOnly = true)
     public Impact deletionImpact(UUID id) {
         var row = games.findById(id).orElseThrow(TournamentErrors::missing);
         return archives.impact(RegistryKind.GAME, row);

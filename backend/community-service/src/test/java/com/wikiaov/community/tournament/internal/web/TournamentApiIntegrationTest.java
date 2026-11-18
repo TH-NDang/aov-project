@@ -85,6 +85,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
@@ -876,6 +877,24 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aGameIsPublishedWithoutAnOpenTransactionDuringTheWikiCall() throws Exception {
+        var during = new ArrayList<Boolean>();
+        when(catalog.read(anyString(), anyString(), nullable(UUID.class), nullable(UUID.class), anyBoolean()))
+                .thenAnswer(call -> {
+                    during.add(TransactionSynchronizationManager.isActualTransactionActive());
+                    return new Catalog(List.of(), List.of(), List.of(), List.of(), List.of(), new ResolvedContext("VN",
+                            "vi-VN", UUID.randomUUID(), null, null, null, null, null, true, false));
+                });
+        var draft = create("games", fixture().game());
+
+        var published = write(post(ADMIN + "/games/" + draft.get("id") + "/publish"),
+                Map.of("version", version(draft)));
+
+        assertThat(published.get("publishedAt")).isNotNull();
+        assertThat(during).containsExactly(false);
+    }
+
+    @Test
     void publicationHistoryAndPlanRevisionsKeepStoringTheirActionsAsText() throws Exception {
         var fixture = fixture();
         var draft = create("games", fixture.game());
@@ -1089,8 +1108,9 @@ class TournamentApiIntegrationTest {
             assertThat(held.await(5, TimeUnit.SECONDS)).isTrue();
             var writing = executor.submit(() -> {
                 attempting.countDown();
-                return seriesRegistry.create(new Series("race-series-" + UUID.randomUUID(), id(event), "Race", null,
-                        id(team), id(other), 3, null, null, null), "race-test");
+                return new TransactionTemplate(transactions).execute(status -> seriesRegistry.create(new Series(
+                        "race-series-" + UUID.randomUUID(), id(event), "Race", null, id(team), id(other), 3, null,
+                        null, null), "race-test"));
             });
             assertThat(deleting.get(10, TimeUnit.SECONDS).deletedAt()).isNotNull();
             Assertions.assertThatThrownBy(() -> writing.get(10, TimeUnit.SECONDS))

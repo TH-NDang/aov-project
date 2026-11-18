@@ -14,6 +14,7 @@ import com.wikiaov.community.tournament.internal.roster.application.RosterAdmini
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RecordLifecycles {
@@ -35,6 +36,7 @@ public class RecordLifecycles {
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
     public Impact impact(String kind, UUID id) {
         return switch (kind) {
             case "teams" -> teams.deletionImpact(id);
@@ -48,6 +50,7 @@ public class RecordLifecycles {
     }
 
     @PreAuthorize("hasAuthority('tournament:write')")
+    @Transactional
     public State mutate(String kind, UUID id, Long version, Action action) {
         String actor = CommunityActor.editorKey();
         return switch (kind) {

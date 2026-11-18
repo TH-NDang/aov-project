@@ -31,7 +31,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 public class TournamentAdministration {
@@ -42,9 +44,12 @@ public class TournamentAdministration {
     private final GameRecords games;
     private final WikiCatalog catalog;
     private final CompetitionDirectory directory;
+    private final TransactionTemplate reads;
+    private final TransactionTemplate writes;
 
     public TournamentAdministration(TeamRegistry teams, PlayerRegistry players, TournamentRegistry tournaments,
-            SeriesRegistry series, GameRecords games, WikiCatalog catalog, CompetitionDirectory directory) {
+            SeriesRegistry series, GameRecords games, WikiCatalog catalog, CompetitionDirectory directory,
+            PlatformTransactionManager transactions) {
         this.teams = teams;
         this.players = players;
         this.tournaments = tournaments;
@@ -52,6 +57,9 @@ public class TournamentAdministration {
         this.games = games;
         this.catalog = catalog;
         this.directory = directory;
+        this.reads = new TransactionTemplate(transactions);
+        this.reads.setReadOnly(true);
+        this.writes = new TransactionTemplate(transactions);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
@@ -187,6 +195,7 @@ public class TournamentAdministration {
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
     public List<TournamentStats> tournamentStats() {
         return series.stats();
     }
@@ -233,16 +242,21 @@ public class TournamentAdministration {
         return games.update(id, version, content, actor());
     }
 
+    /**
+     * Reads the draft and publishes it in two short transactions, with the wiki references resolved between them, so
+     * no transaction stays open during the wiki call.
+     */
     @PreAuthorize("hasAuthority('tournament:publish')")
     public View<Game> publishGame(UUID id, Long version) {
-        var draft = games.get(id);
+        var draft = reads.execute(status -> games.get(id));
         TournamentErrors.version(draft.version(), version);
         var content = draft.content();
-        // Resolve external wiki references before entering the publication transaction.
+
         var references = catalog.read(content.region() == null ? "VN" : content.region(),
                 content.locale() == null ? "vi-VN" : content.locale(), content.seasonId(), content.patchVariantId(),
                 content.includeUnscoped());
-        return games.publish(id, version, references, actor());
+
+        return writes.execute(status -> games.publish(id, version, references, actor()));
     }
 
     @PreAuthorize("hasAuthority('tournament:publish')")

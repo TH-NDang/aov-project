@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
 public class RosterAdministration {
     private final RegistryArchivePolicy archives;
     private final RosterRepository memberships;
@@ -62,6 +61,7 @@ public class RosterAdministration {
     }
 
     @PreAuthorize("hasAuthority('tournament:write')")
+    @Transactional
     public View<RosterMembership> create(RosterMembership content) {
         archives.lockWrites();
         validate(content);
@@ -71,6 +71,7 @@ public class RosterAdministration {
     }
 
     @PreAuthorize("hasAuthority('tournament:write')")
+    @Transactional
     public View<RosterMembership> update(UUID id, Long version, RosterMembership content) {
         archives.lockWrites();
         validate(content);
@@ -115,6 +116,7 @@ public class RosterAdministration {
     }
 
     @PreAuthorize("hasAuthority('tournament:write')")
+    @Transactional
     public State lifecycle(UUID id, Long version, Action action, String actor) {
         archives.lockWrites();
         var row = memberships.findById(id).orElseThrow(TournamentErrors::missing);

@@ -19,7 +19,6 @@ import tools.jackson.databind.ObjectReader;
 import tools.jackson.databind.json.JsonMapper;
 
 @Service
-@Transactional(readOnly = true)
 public class PublicTournamentQueries {
     private final GameRepository games;
     private final PublishedOverviewRepository overview;
@@ -37,6 +36,7 @@ public class PublicTournamentQueries {
         this.series = json.readerFor(Series.class).without(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
+    @Transactional(readOnly = true)
     public PageSlice<PublishedGame> games(UUID tournamentId, UUID seriesId, Pageable page) {
         return PageSlice
                 .from(games
@@ -45,6 +45,7 @@ public class PublicTournamentQueries {
                         .map(GameRecord::getPublishedSnapshot));
     }
 
+    @Transactional(readOnly = true)
     public PublishedGame game(UUID id) {
         return games.findById(id).map(GameRecord::getPublishedSnapshot).filter(Objects::nonNull)
                 .orElseThrow(TournamentErrors::missing);
@@ -57,12 +58,14 @@ public class PublicTournamentQueries {
     ) {
     }
 
+    @Transactional(readOnly = true)
     public PageSlice<Summary<Tournament>> tournaments(Pageable page) {
         var rows = overview.tournaments(PageRequest.of(page.getPageNumber(), page.getPageSize()));
         return PageSlice.from(rows.map(row -> new Summary<>(row.getId(),
                 tournaments.<Tournament>readValue(row.getContentJson()), row.getGameCount())));
     }
 
+    @Transactional(readOnly = true)
     public PageSlice<Summary<Series>> series(UUID tournamentId, Pageable page) {
         var rows = overview.series(tournamentId == null ? null : tournamentId.toString(),
                 PageRequest.of(page.getPageNumber(), page.getPageSize()));

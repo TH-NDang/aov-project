@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
 class CompetitionIdentityCatalog implements CompetitionIdentities {
     private final TeamRegistry teams;
     private final PlayerRegistry players;
@@ -20,6 +19,7 @@ class CompetitionIdentityCatalog implements CompetitionIdentities {
     }
 
     @Override
+    @Transactional
     public Identity read(Kind kind, UUID id) {
         if (kind == Kind.TEAM) {
             var row = teams.get(id);
@@ -41,6 +41,7 @@ class CompetitionIdentityCatalog implements CompetitionIdentities {
     }
 
     @Override
+    @Transactional
     public Identity create(Kind kind, String code, String name, String country, String imageUrl, String actor) {
         var id = kind == Kind.TEAM
                 ? teams.create(new Team(code, name, null, country, imageUrl), actor).id()
@@ -49,6 +50,7 @@ class CompetitionIdentityCatalog implements CompetitionIdentities {
     }
 
     @Override
+    @Transactional
     public void publish(Kind kind, UUID id, Details details, String actor) {
         if (kind == Kind.TEAM) {
             var row = teams.get(id);

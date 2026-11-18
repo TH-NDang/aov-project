@@ -20,10 +20,9 @@ import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+/** Runs inside the transaction of the facade that calls it. */
 @Service
-@Transactional
 public class PlayerRegistry {
     private static final int MAX_SIGNATURE_HEROES = 20;
     private final RegistryArchivePolicy archives;
@@ -36,14 +35,12 @@ public class PlayerRegistry {
         this.repository = repository;
     }
 
-    @Transactional(readOnly = true)
     public PageSlice<View<Player>> list(String q, RecordState state, Pageable page) {
         var unsorted = PageRequest.of(page.getPageNumber(), page.getPageSize());
         return PageSlice.from(repository.search(ReferenceLabels.literalSearch(q), state.name(), unsorted)
                 .map(row -> TournamentViews.view(row, row.getContent())));
     }
 
-    @Transactional(readOnly = true)
     public View<Player> get(UUID id) {
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         return TournamentViews.view(row, row.getContent());
@@ -97,7 +94,6 @@ public class PlayerRegistry {
         }
     }
 
-    @Transactional(readOnly = true)
     public Impact deletionImpact(UUID id) {
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         return archives.impact(RegistryKind.PLAYER, row);

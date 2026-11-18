@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
 public class CompetitionPlanning {
     public record View(
             UUID id,
@@ -57,8 +56,8 @@ public class CompetitionPlanning {
     ) {
     }
 
-    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
     public PageSlice<Summary> summaries(int page, int size, UUID organizerPageId, UUID circuitPageId) {
         var rows = plans.summaries(organizerPageId == null ? "" : organizerPageId.toString(),
                 circuitPageId == null ? "" : circuitPageId.toString(),
@@ -83,8 +82,8 @@ public class CompetitionPlanning {
         this.archives = archives;
     }
 
-    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
     public View read(UUID id) {
         var row = plans.findById(id).orElse(null);
         return row == null ? new View(id, 0, null, inputs.snapshot(id, CompetitionPlan.empty())) : view(row);
@@ -106,6 +105,7 @@ public class CompetitionPlanning {
     }
 
     @PreAuthorize("hasAuthority('tournament:write') and hasAuthority('tournament:read')")
+    @Transactional
     public View save(UUID id, Long version, CompetitionPlan content) {
         var actor = CommunityActor.require();
         archives.lockWrites();
@@ -147,6 +147,7 @@ public class CompetitionPlanning {
     }
 
     @PreAuthorize("hasAuthority('tournament:write') and hasAuthority('tournament:read')")
+    @Transactional
     public View materialize(UUID id, Long version) {
         var actor = CommunityActor.require();
         archives.lockWrites();
@@ -173,6 +174,7 @@ public class CompetitionPlanning {
     }
 
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
+    @Transactional
     public View publish(UUID id, Long version) {
         var actor = CommunityActor.require();
         archives.lockWrites();
@@ -192,6 +194,7 @@ public class CompetitionPlanning {
 
     /** Takes the plan out of public view; the withdrawal is kept in the plan history. */
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
+    @Transactional
     public View withdraw(UUID id, Long version) {
         var actor = CommunityActor.require();
         archives.lockWrites();

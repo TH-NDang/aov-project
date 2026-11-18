@@ -24,10 +24,9 @@ import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+/** Runs inside the transaction of the facade that calls it. */
 @Service
-@Transactional
 public class SeriesRegistry {
     private final RegistryArchivePolicy archives;
     private final SeriesRepository repository;
@@ -42,7 +41,6 @@ public class SeriesRegistry {
         this.tournaments = tournaments;
     }
 
-    @Transactional(readOnly = true)
     public PageSlice<View<Series>> list(String q, UUID tournamentId, RecordState state, Pageable page) {
         var unsorted = PageRequest.of(page.getPageNumber(), page.getPageSize());
 
@@ -50,7 +48,6 @@ public class SeriesRegistry {
                 unsorted).map(row -> TournamentViews.view(row, row.getContent())));
     }
 
-    @Transactional(readOnly = true)
     public List<TournamentStats> stats() {
         return repository.stats().stream()
                 .map(row -> new TournamentStats(row.getTournamentId(), row.getTeams(), row.getMatches(),
@@ -58,7 +55,6 @@ public class SeriesRegistry {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public View<Series> get(UUID id) {
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         return TournamentViews.view(row, row.getContent());
@@ -133,7 +129,6 @@ public class SeriesRegistry {
         archives.validateParents(content);
     }
 
-    @Transactional(readOnly = true)
     public Impact deletionImpact(UUID id) {
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         return archives.impact(RegistryKind.SERIES, row);
