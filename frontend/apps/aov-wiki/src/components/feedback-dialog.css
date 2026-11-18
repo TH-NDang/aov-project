@@ -111,12 +111,6 @@
   gap: 16px;
 }
 /* Inside a floating surface a field sits one step below it, as a field sits below the page. */
-.wiki-feedback-form .wiki-input {
-  background: var(--aov-surface);
-}
-.wiki-feedback-form .wiki-input:focus {
-  background: var(--aov-sunken);
-}
 .wiki-feedback-original summary {
   font: var(--wiki-type-category);
   color: var(--aov-text-soft);

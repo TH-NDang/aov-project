@@ -2,16 +2,13 @@
 // feature is reworked: the variation moves to the owning sheet behind a modifier that the owning component sets.
 // `pnpm lint` fails on a restyle missing here and on an entry no rule matches any more, so the list only shrinks.
 export const knownRestyles = [
-  "components/feedback-dialog.css .wiki-input",
   "components/skin-preview.css .wiki-edit-heading",
-  "components/skin-preview.css .wiki-image-placeholder",
   "components/videos/skill-videos.css .wiki-video-meta",
   "components/videos/skill-videos.css .wiki-video-title",
   "components/wiki-header.css .public-app-wordmark",
   "components/wiki-header.css .wiki-search",
   "features/account/account.css .pas-section",
   "features/account/account.css .public-account-security",
-  "features/contact/contact.css .wiki-button",
   "features/hero/components/hero-handbook.css .wiki-change-group",
   "features/hero/components/hero-handbook.css .wiki-change-groups",
   "features/hero/components/hero-handbook.css .wiki-change-kind",
@@ -35,7 +32,6 @@ export const knownRestyles = [
   "features/hero/components/hero-skins.css .wiki-skin-badge",
   "features/hero/components/hero-skins.css .wiki-skin-missing",
   "features/hero/components/hero-skins.css .wiki-skin-preview-art",
-  "features/hero/pages/hero-detail.css .wiki-hero-video-button",
   "features/home/wiki-home.css .wiki-image",
   "features/home/wiki-home.css .wiki-search",
   "features/modes/guide-builder.css .wiki-guide-board",

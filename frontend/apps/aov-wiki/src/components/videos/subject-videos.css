@@ -597,6 +597,14 @@
   contain: none;
 }
 
+/* The narrowest phones: as tight as the hero banner's other chips, so the price and the videos still share a line. */
+@media (max-width: 359.98px) {
+  .wiki-hero-video-button {
+    gap: 5px;
+    padding-inline: 7px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wiki-video-thumb img {
     transition: none;

@@ -23,9 +23,6 @@
   filter: drop-shadow(0 1px 3px rgb(0 0 0 / 70%));
   pointer-events: none;
 }
-.wiki-skin-badge .wiki-image-placeholder {
-  opacity: 0;
-}
 .wiki-skin-hero-head {
   width: 16px;
   height: 16px;

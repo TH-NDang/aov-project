@@ -284,8 +284,7 @@
     gap: 6px;
   }
   .wiki-hero-role-strip > span,
-  .wiki-hero-role-extras > span,
-  .wiki-hero-role-extras > .wiki-hero-video-button {
+  .wiki-hero-role-extras > span {
     gap: 5px;
     padding-inline: 7px;
   }

@@ -23,6 +23,7 @@ export function SkinBadgeImage({ badge }: { badge?: SkinBadge }) {
   return (
     <WikiImage
       className="wiki-skin-badge"
+      placeholder={false}
       src={image}
       alt={badge.name}
       title={badge.name}
