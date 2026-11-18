@@ -478,8 +478,10 @@ nên lượt chọn/cấm tiếp tục lưu UUID của dạng.
 
 `GET /api/wiki/v1/catalog-context?region=VN&locale=vi-VN` là API công khai dành cho bộ chọn của wiki.
 Chỉ chấp nhận hai tham số `region`, `locale`; locale UI hiện hỗ trợ `vi-VN`, `en-US`.
-Response gồm `regions` (cùng hợp đồng `/regions`), `locales:[{code,name,nativeName}]`,
+Response gồm `regions` (cùng hợp đồng `/regions`), `locales:[{code}]`,
 `seasons:[{id,code,name,ordinal,current,patches}]` và `current:{rulesetId,seasonId?,patchVariantId}`.
+`locales` chỉ có mã BCP 47, giống nhau với mọi `locale` của người đọc; backend không gửi tên ngôn ngữ, frontend tự
+gọi tên (ví dụ `Intl.DisplayNames`).
 Mỗi patch có `{id,code,title,rulesetId,ordinal,published,regionalDate?,unknownDate}`;
 `id` là UUID patch variant. Chỉ trả patch và variant đã công bố trong ruleset hiện tại của thị trường,
 đã đến thời điểm công bố và không vượt ordinal đang có hiệu lực. Không suy ra ngày phát hành từ
