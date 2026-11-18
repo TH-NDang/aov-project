@@ -2,7 +2,11 @@ package com.wikiaov.video.internal.web;
 
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.video.VideoSubjectKind;
-import com.wikiaov.video.internal.application.SubjectVideos.*;
+import com.wikiaov.video.internal.application.VideoCommands.ImportVideos;
+import com.wikiaov.video.internal.application.VideoCommands.SaveVideo;
+import com.wikiaov.video.internal.application.VideoViews.AdminVideo;
+import com.wikiaov.video.internal.application.VideoViews.ImportResult;
+import com.wikiaov.video.internal.application.VideoViews.SubjectList;
 import com.wikiaov.video.internal.domain.VideoOrigin;
 import com.wikiaov.video.internal.domain.VideoPurpose;
 import com.wikiaov.video.internal.domain.VideoStatus;

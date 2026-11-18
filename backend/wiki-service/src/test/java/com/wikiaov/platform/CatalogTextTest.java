@@ -1,6 +1,6 @@
 package com.wikiaov.platform;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.wikiaov.platform.CatalogText.Stat;
 import java.math.BigDecimal;

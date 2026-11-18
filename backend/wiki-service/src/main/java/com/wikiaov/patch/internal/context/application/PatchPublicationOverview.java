@@ -8,10 +8,15 @@ import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatch;
 import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatchTranslation;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
+import com.wikiaov.patch.internal.domain.PatchDataReviewState;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
+import com.wikiaov.patch.internal.domain.PatchStatus;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.review.persistence.PatchDataReviewRepository;
 import com.wikiaov.patch.internal.review.persistence.entity.PatchDataReview;
+import com.wikiaov.platform.CatalogLocales;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -66,7 +71,8 @@ class PatchPublicationOverview {
     /** Admin edits in Vietnamese, the product's language, so its title wins over the other locales. */
     private Map<UUID, String> titles() {
         return texts.findAll().stream()
-                .sorted(Comparator.comparing((GamePatchTranslation text) -> !"vi-VN".equals(text.getLocale()))
+                .sorted(Comparator
+                        .comparing((GamePatchTranslation text) -> !CatalogLocales.DEFAULT.equals(text.getLocale()))
                         .thenComparing(GamePatchTranslation::getLocale))
                 .collect(Collectors.toMap(GamePatchTranslation::getPatchId, GamePatchTranslation::getTitle,
                         (first, ignored) -> first));
@@ -89,7 +95,8 @@ class PatchPublicationOverview {
                 timeline.patchesById().get(variant.getPatchId()).getCode(),
                 timeline.titlesByPatch().get(variant.getPatchId()), variant.getRulesetId(),
                 variant.getRulesetOrdinal(), variant.getSeasonId(), variant.getStatus(),
-                review == null ? "IN_PROGRESS" : review.getState(), review == null ? 0L : review.getVersion(),
+                review == null ? PatchDataReviewState.IN_PROGRESS : review.getState(),
+                review == null ? 0L : review.getVersion(),
                 review == null ? null : review.getCompletedAt());
     }
 
@@ -105,14 +112,18 @@ class PatchPublicationOverview {
 
     private static String phase(PatchRelease release, PatchVariant variant, GamePatch patch,
             Set<UUID> currentReleaseIds, Instant now) {
-        if (release.getEffectiveOn() != null && "DRAFT".equals(release.getStatus()))
+        if (release.getEffectiveOn() != null && release.getStatus() == PatchReleaseStatus.DRAFT) {
             return "AWAITING_CONFIRMATION";
-        if (!"SCHEDULED".equals(release.getStatus()))
-            return release.getStatus();
-        if (!"PUBLISHED".equals(variant.getStatus()) || !"PUBLISHED".equals(patch.getStatus()))
+        }
+        if (release.getStatus() != PatchReleaseStatus.SCHEDULED) {
+            return release.getStatus().name();
+        }
+        if (variant.getStatus() != PatchVariantStatus.PUBLISHED || patch.getStatus() != PatchStatus.PUBLISHED) {
             return "DRAFT";
-        if (release.getEffectiveAt().isAfter(now))
+        }
+        if (release.getEffectiveAt().isAfter(now)) {
             return "UPCOMING";
+        }
         return currentReleaseIds.contains(release.getId()) ? "CURRENT" : "PAST";
     }
 }

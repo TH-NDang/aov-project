@@ -1,6 +1,5 @@
 package com.wikiaov.patch.internal.ruleset.application;
 
-import com.wikiaov.patch.internal.application.PatchCommands.*;
 import com.wikiaov.patch.internal.application.RegionErrorCode;
 import com.wikiaov.patch.internal.application.response.RegionView;
 import com.wikiaov.patch.internal.ruleset.application.mapper.RegionMapper;

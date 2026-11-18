@@ -25,4 +25,19 @@ public record PageSlice<T>(
     public <R> PageSlice<R> map(Function<? super T, ? extends R> mapper) {
         return new PageSlice<>(items.stream().<R>map(mapper).toList(), page, size, totalElements);
     }
+
+    /** The same page with its items replaced, for items read or hydrated in one batch. */
+    public <R> PageSlice<R> withItems(List<R> replaced) {
+        return new PageSlice<>(replaced, page, size, totalElements);
+    }
+
+    /**
+     * One page of a list already filtered and sorted in memory. The offset is computed in {@code long}, so a page far
+     * past the end is simply empty.
+     */
+    public static <T> PageSlice<T> of(List<T> all, int page, int size) {
+        int from = (int) Math.min((long) page * size, all.size());
+        int to = (int) Math.min((long) from + size, all.size());
+        return new PageSlice<>(all.subList(from, to), page, size, all.size());
+    }
 }

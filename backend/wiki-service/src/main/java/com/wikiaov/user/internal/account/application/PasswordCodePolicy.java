@@ -13,11 +13,14 @@ public record PasswordCodePolicy(
         @DefaultValue("5") int hourlyLimit
 ) {
     public PasswordCodePolicy {
-        if (lifetime.isNegative() || lifetime.isZero() || lifetime.compareTo(Duration.ofHours(1)) > 0)
+        if (lifetime.isNegative() || lifetime.isZero() || lifetime.compareTo(Duration.ofHours(1)) > 0) {
             throw new IllegalArgumentException("Password code lifetime must be between 1 second and 1 hour");
-        if (maxAttempts < 1 || maxAttempts > 5)
+        }
+        if (maxAttempts < 1 || maxAttempts > 5) {
             throw new IllegalArgumentException("Password code attempts must be between 1 and 5");
-        if (resendInterval.isNegative() || hourlyLimit < 1)
+        }
+        if (resendInterval.isNegative() || hourlyLimit < 1) {
             throw new IllegalArgumentException("Invalid password code rate limit");
+        }
     }
 }

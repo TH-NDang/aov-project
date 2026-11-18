@@ -13,7 +13,6 @@ import com.wikiaov.hero.internal.change.persistence.entity.RoleChangeClassificat
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.hero.internal.domain.HeroChanges.Change;
 import com.wikiaov.hero.internal.domain.HeroChanges.MechanicChange;
 import com.wikiaov.hero.internal.domain.HeroChanges.OtherChange;
@@ -22,6 +21,7 @@ import com.wikiaov.hero.internal.domain.HeroChanges.SkillChange;
 import com.wikiaov.hero.internal.domain.HeroChanges.StatChange;
 import com.wikiaov.hero.internal.domain.HeroChanges.Summary;
 import com.wikiaov.hero.internal.domain.HeroChanges.VisualChange;
+import com.wikiaov.platform.CatalogLocales;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -156,8 +156,9 @@ public class HeroPatchHistory {
     }
 
     private List<Entry> entries(List<Header> headers, String locale) {
-        if (headers.isEmpty())
+        if (headers.isEmpty()) {
             return List.of();
+        }
 
         var ids = headers.stream().map(Header::getId).toList();
         var assessmentById = assessments.findAllById(ids).stream()
@@ -174,7 +175,7 @@ public class HeroPatchHistory {
                         .collect(Collectors.toMap(MechanicChangePrevious::getMechanicChangeId, Function.identity()));
 
         var preferred = Comparator.comparing((HeroPatchChangeTranslation t) -> !t.getLocale().equals(locale))
-                .thenComparing(t -> !t.getLocale().equals("vi-VN"))
+                .thenComparing(t -> !t.getLocale().equals(CatalogLocales.DEFAULT))
                 .thenComparing(HeroPatchChangeTranslation::getLocale);
 
         return headers.stream().map(header -> new Entry(header, assessmentById.get(header.getId()),

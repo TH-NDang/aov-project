@@ -18,8 +18,10 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
@@ -93,8 +95,9 @@ public class ArcanaCatalog {
 
     @PreAuthorize("hasAuthority('arcana:write')")
     public ArcanaView create(Create input) {
-        if (identities.findByCode(input.code()).isPresent())
+        if (identities.findByCode(input.code()).isPresent()) {
             conflict("The code is already in use.");
+        }
         requireObservationContext(input.rulesetId(), input.effectiveFromPatchVariantId(), false);
 
         var owner = createIdentity(input.code());
@@ -131,8 +134,9 @@ public class ArcanaCatalog {
         requireTranslationOnlyChange(revision, input.content());
         boolean contextChanged = updateObservationContext(revision, input);
 
-        if (revisionContent.content(revision).equals(input.content()) && !contextChanged)
+        if (revisionContent.content(revision).equals(input.content()) && !contextChanged) {
             return revisionContent.view(owner, revision);
+        }
 
         revisionContent.saveContent(revision, input.content());
         advanceVersion(revision);
@@ -148,9 +152,10 @@ public class ArcanaCatalog {
         requireObservationContext(revision.getRulesetId(), revision.getEffectiveFromPatchVariantId(), true);
         var content = revisionContent.content(revision);
         var missing = contentRules.missing(content);
-        if (!missing.isEmpty())
+        if (!missing.isEmpty()) {
             throw new ApiException(ArcanaErrorCode.ARCANA_INVALID_CONTENT,
                     "Complete the required fields before publication.", Map.of("missingFields", missing));
+        }
         contentRules.validate(content);
 
         publishRevision(revision);
@@ -164,7 +169,7 @@ public class ArcanaCatalog {
         var owner = lockIdentity(id);
         var revision = requireEditableDraft(id, revisionId, input.expectedVersion());
 
-        revision.setState("DISCARDED");
+        revision.setState(RevisionState.DISCARDED);
         advanceVersion(revision);
         recordAuditEvent("DRAFT_DISCARDED", owner, revision, input.changeNote());
 
@@ -209,10 +214,12 @@ public class ArcanaCatalog {
     }
 
     private void requireForkSource(ArcanaRevision source, Fork input) {
-        if (!source.getState().equals("PUBLISHED") || !source.getRulesetId().equals(input.rulesetId()))
+        if (source.getState() != RevisionState.PUBLISHED || !source.getRulesetId().equals(input.rulesetId())) {
             fail("The source must be published in the selected ruleset.");
-        if (!Set.of("GAME_PATCH", "CONTENT_CORRECTION", "TRANSLATION_UPDATE").contains(input.cause()))
+        }
+        if (!Set.of("GAME_PATCH", "CONTENT_CORRECTION", "TRANSLATION_UPDATE").contains(input.cause())) {
             fail("Invalid revision cause.");
+        }
     }
 
     private UUID resolveForkContext(ArcanaRevision source, Fork input) {
@@ -220,26 +227,31 @@ public class ArcanaCatalog {
                 ? source.getEffectiveFromPatchVariantId()
                 : input.effectiveFromPatchVariantId();
         requireObservationContext(input.rulesetId(), effective, false);
-        if (patchOrdinal(source) > patchOrdinal(effective))
+        if (patchOrdinal(source) > patchOrdinal(effective)) {
             fail("A future snapshot cannot reconstruct an earlier patch.");
-        if (!input.cause().equals("GAME_PATCH") && !Objects.equals(effective, source.getEffectiveFromPatchVariantId()))
+        }
+        if (!input.cause().equals("GAME_PATCH")
+                && !Objects.equals(effective, source.getEffectiveFromPatchVariantId())) {
             fail("Content corrections retain source gameplay applicability.");
+        }
 
         return effective;
     }
 
     private void requireTranslationOnlyChange(ArcanaRevision revision, ArcanaContent content) {
         if (revision.getCause().equals("TRANSLATION_UPDATE")
-                && !revision.getGameplay().mechanics().equals(content.mechanics()))
+                && !revision.getGameplay().mechanics().equals(content.mechanics())) {
             fail("Translation revisions cannot change gameplay fields.");
+        }
     }
 
     private boolean updateObservationContext(ArcanaRevision revision, Update input) {
         boolean contextChanged = input.effectiveFromPatchVariantId() != null
                 && !Objects.equals(input.effectiveFromPatchVariantId(), revision.getEffectiveFromPatchVariantId());
         if (contextChanged) {
-            if (!revision.getCause().equals("DATA_BASELINE") || revision.getSourceRevisionId() != null)
+            if (!revision.getCause().equals("DATA_BASELINE") || revision.getSourceRevisionId() != null) {
                 fail("Only an independent baseline draft can change its observation context.");
+            }
             requireObservationContext(revision.getRulesetId(), input.effectiveFromPatchVariantId(), true);
             revision.setEffectiveFromPatchVariantId(input.effectiveFromPatchVariantId());
         }
@@ -253,19 +265,23 @@ public class ArcanaCatalog {
 
     private ArcanaRevision requireEditableDraft(UUID id, UUID revisionId, long expected) {
         var revision = queries.revision(id, revisionId);
-        if (!revision.getState().equals("DRAFT"))
+        if (revision.getState() != RevisionState.DRAFT) {
             conflict("Only drafts can be edited.");
-        if (revision.getVersion() != expected)
+        }
+        if (revision.getVersion() != expected) {
             throw new ApiException(ArcanaErrorCode.ARCANA_CONFLICT, "The draft has changed.",
                     Map.of("currentVersion", revision.getVersion()));
+        }
         return revision;
     }
 
     private ArcanaRevision newDraft(ArcanaIdentity owner, UUID ruleset, UUID source, String cause, UUID effective) {
         var history = revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId());
         if (history.stream()
-                .anyMatch(revision -> revision.getRulesetId().equals(ruleset) && revision.getState().equals("DRAFT")))
+                .anyMatch(revision -> revision.getRulesetId().equals(ruleset)
+                        && revision.getState() == RevisionState.DRAFT)) {
             conflict("A draft already exists for the ruleset.");
+        }
 
         var actor = actors.require();
         var revision = new ArcanaRevision();
@@ -274,7 +290,7 @@ public class ArcanaCatalog {
         revision.setRulesetId(ruleset);
         revision.setRevisionNo(history.stream().filter(v -> v.getRulesetId().equals(ruleset))
                 .mapToLong(ArcanaRevision::getRevisionNo).max().orElse(0) + 1);
-        revision.setState("DRAFT");
+        revision.setState(RevisionState.DRAFT);
         revision.setVersion(1);
         revision.setCause(cause);
         revision.setSourceRevisionId(source);
@@ -291,13 +307,15 @@ public class ArcanaCatalog {
     private void requireObservationContext(UUID ruleset, UUID effective, boolean publication) {
         contexts.requireRuleset(ruleset);
         if (effective == null) {
-            if (publication)
+            if (publication) {
                 fail("A patch observation context is required before publication.");
+            }
             return;
         }
         var variant = contexts.variant(effective);
-        if (!variant.rulesetId().equals(ruleset) || publication && !variant.published())
+        if (!variant.rulesetId().equals(ruleset) || publication && !variant.published()) {
             fail("The patch must belong to the ruleset and be published first.");
+        }
     }
 
     private long patchOrdinal(ArcanaRevision revision) {
@@ -305,7 +323,7 @@ public class ArcanaCatalog {
     }
 
     private long patchOrdinal(UUID id) {
-        return id == null ? 0 : contexts.variant(id).rulesetOrdinal();
+        return GameplayContexts.rulesetOrdinal(contexts, id);
     }
 
     private void advanceVersion(ArcanaRevision revision) {
@@ -317,7 +335,8 @@ public class ArcanaCatalog {
     }
 
     private void recordAuditEvent(String action, ArcanaIdentity owner, ArcanaRevision revision, String note) {
-        audit.record(new AuditEntry(actors.require(), "ARCANA_" + action, "ARCANA", owner.getId(), revision.getId(),
+        audit.record(new AuditEntry(actors.require(), "ARCANA_" + action, CatalogAggregates.ARCANA, owner.getId(),
+                revision.getId(),
                 revision.getVersion() == 1 ? null : revision.getVersion() - 1, revision.getVersion(), note, Map.of()));
     }
 
@@ -346,10 +365,11 @@ public class ArcanaCatalog {
                 .filter(v -> v.getRulesetId().equals(revision.getRulesetId()))
                 .map(ArcanaRevision::getPublicationSequence).filter(Objects::nonNull).mapToLong(Long::longValue).max()
                 .orElse(0) + 1);
-        revision.setState("PUBLISHED");
+        revision.setState(RevisionState.PUBLISHED);
         revision.setPublishedAt(clock.instant());
         advanceVersion(revision);
-        if (Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause()))
+        if (Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause())) {
             dataReviews.markDirty(revision.getEffectiveFromPatchVariantId());
+        }
     }
 }

@@ -15,6 +15,7 @@ import com.wikiaov.media.internal.ingestion.application.MediaIngestion;
 import com.wikiaov.media.internal.ingestion.domain.image.InvalidMediaException;
 import com.wikiaov.media.internal.owner.application.MediaOwners;
 import com.wikiaov.media.internal.provenance.persistence.MediaProvenanceRepository;
+import com.wikiaov.media.internal.provenance.persistence.entity.MediaProvenance;
 import com.wikiaov.media.internal.query.application.MediaAssetViews;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
 import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
@@ -43,6 +44,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class CompleteMediaUpload {
 
     private static final Logger log = LoggerFactory.getLogger(CompleteMediaUpload.class);
+    /** What editors see on a new version until someone records its real source. */
+    private static final String UNVERIFIED_LABEL = "Chưa xác minh nguồn";
 
     private final MediaUploadSessionRepository sessions;
     private final MediaAssetVersionRepository versions;
@@ -103,7 +106,8 @@ public class CompleteMediaUpload {
         Claim claim = claim(uploadId);
         if (claim.completedVersionId() != null) {
             return transaction.execute(status -> {
-                MediaAssetVersion version = versions.findById(claim.completedVersionId()).orElseThrow();
+                MediaAssetVersion version = versions.findById(claim.completedVersionId()).orElseThrow(
+                        () -> new IllegalStateException("A completed upload names a version that does not exist."));
                 return assetViews.result(assetAccess.requireAsset(claim.assetId()), version, false);
             });
         }
@@ -122,11 +126,8 @@ public class CompleteMediaUpload {
                                     clock.instant()));
                         }
                         if (session.getSourceLabel() == null && !duplicate && version.getVersionNo() > 1) {
-                            var source = new SourceInput(
-                                    com.wikiaov.media.internal.domain.model.ProvenanceSourceType.OTHER,
-                                    "Chưa xác minh nguồn", null, null, session.getFileName());
-                            provenance
-                                    .save(source.toProvenance(session.getAssetId(), version.getId(), clock.instant()));
+                            provenance.save(MediaProvenance.unverified(UUID.randomUUID(), session.getAssetId(),
+                                    version.getId(), UNVERIFIED_LABEL, session.getFileName(), clock.instant()));
                         }
                         session.complete(version.getId(), clock.instant());
                     });

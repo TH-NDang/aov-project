@@ -1,10 +1,15 @@
 package com.wikiaov.terminology.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
+import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.arcana.internal.reference.persistence.ArcanaReferenceRepository;
 import com.wikiaov.enchantment.internal.reference.persistence.EnchantmentReferenceRepository;
 import com.wikiaov.hero.internal.reference.persistence.HeroReferenceRepository;
@@ -16,33 +21,38 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.*;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@EnabledIf("databaseAvailable")
+@Import(TestcontainersConfiguration.class)
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@DockerBacked
 class AdminReferenceCatalogIntegrationTest {
-    private static PostgreSQLContainer database;
     private final UUID ruleset = UUID.randomUUID();
     private final UUID otherRuleset = UUID.randomUUID();
     private final UUID firstPatch = UUID.randomUUID();
@@ -50,32 +60,6 @@ class AdminReferenceCatalogIntegrationTest {
     private final UUID hero = UUID.randomUUID();
     private final UUID head = UUID.randomUUID();
     private final Map<UUID, Long> ordinals = Map.of(firstPatch, 1L, secondPatch, 2L);
-
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external != null) {
-            properties.add("spring.datasource.url", () -> external);
-            properties.add("spring.datasource.username", () -> "wiki_test");
-            properties.add("spring.datasource.password", () -> "");
-        } else {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            properties.add("spring.datasource.url", database::getJdbcUrl);
-            properties.add("spring.datasource.username", database::getUsername);
-            properties.add("spring.datasource.password", database::getPassword);
-        }
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
-    }
 
     @Autowired
     MockMvc mvc;
@@ -100,9 +84,10 @@ class AdminReferenceCatalogIntegrationTest {
 
     @BeforeEach
     void fixtures() {
-        for (var id : List.of(ruleset, otherRuleset))
+        for (var id : List.of(ruleset, otherRuleset)) {
             sql.update("insert into patch.gameplay_ruleset values (?,?,?,'ACTIVE',now())", id,
                     "test-" + id, "Reference projection fixture");
+        }
         for (var entry : ordinals.entrySet()) {
             UUID patch = UUID.randomUUID();
             sql.update("insert into patch.game_patch(id,code,status,created_at,created_by_issuer,created_by_subject)"
@@ -178,8 +163,9 @@ class AdminReferenceCatalogIntegrationTest {
 
     @Test
     void projectionQueryCountIsBoundedAsCatalogGrowsAndNeverHydratesEntities() {
-        for (String domain : List.of("item", "arcana", "enchantment", "spell"))
+        for (String domain : List.of("item", "arcana", "enchantment", "spell")) {
             warehouse(domain, 0);
+        }
         var statistics = statistics();
         statistics.clear();
         assertThat(heroes.authoring(ruleset)).extracting(r -> r.name()).containsExactly("Hero draft EN", "Hero draft");
@@ -189,8 +175,9 @@ class AdminReferenceCatalogIntegrationTest {
         assertThat(spells.authoring(ruleset, ordinals)).hasSize(2);
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(5);
         assertThat(statistics.getEntityLoadCount()).isZero();
-        for (int index = 1; index <= 30; index++)
+        for (int index = 1; index <= 30; index++) {
             warehouse("item", index);
+        }
         statistics.clear();
         var rows = items.authoring(ruleset, ordinals);
         assertThat(rows).hasSize(62);
@@ -245,8 +232,9 @@ class AdminReferenceCatalogIntegrationTest {
 
     @Test
     void emptyPatchOrderUsesSequenceTiesWithoutLoadingEntities() {
-        for (String domain : List.of("item", "arcana", "enchantment", "spell"))
+        for (String domain : List.of("item", "arcana", "enchantment", "spell")) {
             warehouse(domain, 0);
+        }
         var statistics = statistics();
         statistics.clear();
         assertThat(items.authoring(ruleset, Map.of())).extracting(r -> r.name())
@@ -450,10 +438,11 @@ class AdminReferenceCatalogIntegrationTest {
                     + " (id,hero_id,state,created_at,created_by_issuer,created_by_subject) values (?,?,'DRAFT',now(),'test','editor')",
                     id, hero);
         }
-        for (String locale : List.of("vi-VN", "en-US"))
+        for (String locale : List.of("vi-VN", "en-US")) {
             sql.update(
                     "insert into hero.hero_profile_translation(profile_revision_id,locale,name,summary) values (?,?,?,?)",
                     sections.getFirst(), locale, name + (locale.equals("en-US") ? " EN" : ""), "Profile summary");
+        }
         sql.update("insert into hero.hero_media_binding values (?,'HEAD',?)", sections.get(5), head);
         sql.update(
                 "insert into hero.hero_revision(id,hero_id,ruleset_id,revision_no,state,version,publication_sequence,"
@@ -486,15 +475,17 @@ class AdminReferenceCatalogIntegrationTest {
                 sql.update("insert into " + domain + "." + domain + "_translation(id,revision_id,locale," + target
                         + "name,description) values (?,?,?," + targetValue + "?,?)", UUID.randomUUID(), revision,
                         locale, name + (locale.equals("en-US") ? " EN" : ""), "D".repeat(5000));
-                if (domain.equals("spell"))
+                if (domain.equals("spell")) {
                     sql.update("insert into spell.spell_translation(id,revision_id,locale,target_key,name,description)"
                             + " values (?,?,?,'state','State must not duplicate spell','State description')",
                             UUID.randomUUID(), revision, locale);
+                }
             }
-            if (number <= 2)
+            if (number <= 2) {
                 sql.update("update " + domain + "." + domain + "_revision set state='PUBLISHED',publication_sequence=?,"
                         + "published_at=? where id=?", number, java.sql.Timestamp.from(Instant.now().minusSeconds(60)),
                         revision);
+            }
         }
         return owner;
     }

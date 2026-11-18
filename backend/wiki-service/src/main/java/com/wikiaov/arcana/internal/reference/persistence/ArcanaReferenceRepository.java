@@ -29,8 +29,9 @@ public interface ArcanaReferenceRepository extends Repository<ArcanaRevision, UU
         for (var fact : findLifecycle(context.rulesetId())) {
             long ordinal = ordinals.getOrDefault(fact.getPatchVariantId(), Long.MAX_VALUE);
             if (ordinal > context.rulesetOrdinal()
-                    || !fact.getKinds().contains(Kind.ADDED) && !fact.getKinds().contains(Kind.REMOVED))
+                    || !fact.getKinds().contains(Kind.ADDED) && !fact.getKinds().contains(Kind.REMOVED)) {
                 continue;
+            }
 
             lifecycle.merge(fact.getOwnerId(), fact,
                     (first, second) -> ordinals.get(first.getPatchVariantId()) >= ordinals

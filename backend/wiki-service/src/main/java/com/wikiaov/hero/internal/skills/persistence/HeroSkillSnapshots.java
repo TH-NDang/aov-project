@@ -1,7 +1,14 @@
 package com.wikiaov.hero.internal.skills.persistence;
 
 import com.wikiaov.access.Actor;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Effect;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillStateIcon;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Trait;
+import com.wikiaov.hero.internal.domain.HeroContent.TraitTranslation;
 import com.wikiaov.hero.internal.domain.HeroEvaluations;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
@@ -17,7 +24,12 @@ import com.wikiaov.hero.internal.skills.persistence.entity.SkillTraitTranslation
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTranslationRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillsRevision;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -62,8 +74,9 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
     }
 
     private void save(UUID heroId, UUID revisionId, Skill skill, Instant at) {
-        if (identities.findById(new SkillIdentityRow.Key(heroId, skill.skillKey())).isEmpty())
+        if (identities.findById(new SkillIdentityRow.Key(heroId, skill.skillKey())).isEmpty()) {
             identities.save(new SkillIdentityRow(heroId, skill.skillKey(), at));
+        }
         identities.flush();
         snapshots.saveAndFlush(new SkillSnapshotRow(revisionId, heroId, skill.skillKey(), skill.kind().name(),
                 skill.formKey(), skill.displayOrder(), skill.iconAssetId()));
@@ -82,29 +95,32 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
 
     /** Traits refer to skills of the same revision, so they are written after every skill row exists. */
     private void saveTraits(UUID revisionId, List<Trait> list) {
-        if (list == null || list.isEmpty())
+        if (list == null || list.isEmpty()) {
             return;
+        }
 
         for (var trait : list) {
-            String code = trait.code().name();
-            traits.saveAndFlush(new SkillTraitRow(revisionId, code));
+            var code = trait.code();
+            traits.saveAndFlush(SkillTraitRow.of(revisionId, code));
             traitSkills.saveAll(trait.skillKeys().stream()
-                    .map(key -> new SkillTraitSkillRow(revisionId, code, key.strip())).toList());
+                    .map(key -> SkillTraitSkillRow.of(revisionId, code, key.strip())).toList());
             traitTexts.saveAll(trait.translations().stream()
-                    .map(text -> new SkillTraitTranslationRow(revisionId, code, text.locale(), text.detail().strip()))
+                    .map(text -> SkillTraitTranslationRow.of(revisionId, code, text.locale(), text.detail().strip()))
                     .toList());
         }
     }
 
     /** The trait codes of many skill sets in three queries, for lists that cover every hero. */
     public Map<UUID, List<Trait>> traits(Collection<UUID> ids) {
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return Map.of();
+        }
 
         var codes = traits.findBySkillSetRevisionIdIn(ids).stream()
                 .collect(Collectors.groupingBy(SkillTraitRow::getSkillSetRevisionId));
-        if (codes.isEmpty())
+        if (codes.isEmpty()) {
             return Map.of();
+        }
         var keys = traitSkills.findBySkillSetRevisionIdIn(ids).stream()
                 .collect(Collectors.groupingBy(row -> row.getSkillSetRevisionId() + "/" + row.getTraitCode()));
         var texts = traitTexts.findBySkillSetRevisionIdIn(ids).stream()
@@ -113,7 +129,7 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
         Map<UUID, List<Trait>> result = new HashMap<>();
         codes.forEach((id, rows) -> result.put(id, HeroEvaluations.normalize(rows.stream().map(row -> {
             String key = id + "/" + row.getTraitCode();
-            return new Trait(TraitCode.valueOf(row.getTraitCode()),
+            return new Trait(row.getTraitCode(),
                     keys.getOrDefault(key, List.of()).stream().map(SkillTraitSkillRow::getSkillKey).toList(),
                     texts.getOrDefault(key, List.of()).stream()
                             .map(text -> new TraitTranslation(text.getLocale(), text.getDetail())).toList());

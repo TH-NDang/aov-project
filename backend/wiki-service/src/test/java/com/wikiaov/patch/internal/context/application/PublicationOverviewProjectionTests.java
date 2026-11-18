@@ -13,6 +13,10 @@ import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatch;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
 import com.wikiaov.patch.internal.context.application.PatchPublicationOverview.Timeline;
 import com.wikiaov.patch.internal.context.application.SeasonPublicationOverview.Calendar;
+import com.wikiaov.patch.internal.domain.PatchDataReviewState;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
+import com.wikiaov.patch.internal.domain.PatchStatus;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.review.persistence.PatchDataReviewRepository;
@@ -67,12 +71,12 @@ class PublicationOverviewProjectionTests {
         var renderer = new PatchPublicationOverview(mock(PatchDataReviewRepository.class),
                 mock(PatchReleaseRepository.class), mock(PatchVariantRepository.class),
                 mock(GamePatchRepository.class), mock(GamePatchTranslationRepository.class));
-        var variant = variant("PUBLISHED");
-        var past = release(variant, "SCHEDULED", now.minusSeconds(1), 1);
-        var current = release(variant, "SCHEDULED", now, 2);
-        var upcoming = release(variant, "SCHEDULED", now.plusSeconds(1), 3);
-        var cancelled = release(variant, "CANCELLED", now, 4);
-        var announcement = release(variant, "DRAFT", null, 5);
+        var variant = variant(PatchVariantStatus.PUBLISHED);
+        var past = release(variant, PatchReleaseStatus.SCHEDULED, now.minusSeconds(1), 1);
+        var current = release(variant, PatchReleaseStatus.SCHEDULED, now, 2);
+        var upcoming = release(variant, PatchReleaseStatus.SCHEDULED, now.plusSeconds(1), 3);
+        var cancelled = release(variant, PatchReleaseStatus.CANCELLED, now, 4);
+        var announcement = release(variant, PatchReleaseStatus.DRAFT, null, 5);
         announcement.setEffectiveOn(LocalDate.of(2026, 10, 15));
         var timeline = timeline(variant, List.of(past, current, upcoming, cancelled, announcement));
 
@@ -83,7 +87,7 @@ class PublicationOverviewProjectionTests {
         assertThat(views.getFirst().effectiveAt()).isNull();
         assertThat(views.getFirst().effectiveOn()).isEqualTo(announcement.getEffectiveOn());
         assertThat(renderer.variants(timeline)).singleElement().satisfies(value -> {
-            assertThat(value.dataReviewState()).isEqualTo("IN_PROGRESS");
+            assertThat(value.dataReviewState()).isEqualTo(PatchDataReviewState.IN_PROGRESS);
             assertThat(value.dataReviewVersion()).isZero();
             assertThat(value.dataReviewedAt()).isNull();
         });
@@ -103,8 +107,8 @@ class PublicationOverviewProjectionTests {
         assignment.setValidTo(now.plusSeconds(10));
         var rules = new MarketPublicationOverview.Rules(List.of(), Set.of(rulesetId), List.of(assignment));
         var exact = schedule(now, now.plusSeconds(10));
-        var variant = variant("PUBLISHED");
-        var release = release(variant, "SCHEDULED", now, 1);
+        var variant = variant(PatchVariantStatus.PUBLISHED);
+        var release = release(variant, PatchReleaseStatus.SCHEDULED, now, 1);
         var recordedSeason = UUID.randomUUID();
         release.setSeasonId(recordedSeason);
         var calendar = new Calendar(List.of(), List.of(exact));
@@ -115,7 +119,7 @@ class PublicationOverviewProjectionTests {
         release.setSeasonId(null);
         assertThat(renderer.current(rules, calendar, timeline, now).getFirst().currentSeasonId())
                 .isEqualTo(variant.getSeasonId());
-        release.setStatus("CANCELLED");
+        release.setStatus(PatchReleaseStatus.CANCELLED);
         assertThat(renderer.current(rules, calendar, timeline, now).getFirst().currentSeasonId()).isEqualTo(seasonId);
         exact.setStartsOn(LocalDate.of(2026, 10, 15));
         assertThat(renderer.current(rules, calendar, timeline, now).getFirst().currentSeasonId()).isNull();
@@ -134,15 +138,15 @@ class PublicationOverviewProjectionTests {
         assignment.setValidFrom(now.minusSeconds(1));
         assignment.setValidTo(now);
         var rules = new MarketPublicationOverview.Rules(List.of(), Set.of(rulesetId), List.of(assignment));
-        var variant = variant("PUBLISHED");
-        var timeline = timeline(variant, List.of(release(variant, "SCHEDULED", now, 1)));
+        var variant = variant(PatchVariantStatus.PUBLISHED);
+        var timeline = timeline(variant, List.of(release(variant, PatchReleaseStatus.SCHEDULED, now, 1)));
         var emptyCalendar = new Calendar(List.of(), List.of());
 
         var expired = renderer.current(rules, emptyCalendar, timeline, now).getFirst();
         assertThat(expired.currentRulesetId()).isNull();
         assertThat(expired.currentReleaseId()).isNull();
         assignment.setValidTo(null);
-        variant.setStatus("DRAFT");
+        variant.setStatus(PatchVariantStatus.DRAFT);
         var draft = renderer.current(rules, emptyCalendar, timeline, now).getFirst();
         assertThat(draft.currentRulesetId()).isEqualTo(rulesetId);
         assertThat(draft.currentReleaseId()).isNull();
@@ -165,7 +169,7 @@ class PublicationOverviewProjectionTests {
         return season;
     }
 
-    private PatchVariant variant(String status) {
+    private PatchVariant variant(PatchVariantStatus status) {
         var variant = new PatchVariant();
         variant.setId(UUID.randomUUID());
         variant.setPatchId(patchId);
@@ -175,7 +179,8 @@ class PublicationOverviewProjectionTests {
         return variant;
     }
 
-    private PatchRelease release(PatchVariant variant, String status, Instant effectiveAt, int createdOrder) {
+    private PatchRelease release(PatchVariant variant, PatchReleaseStatus status, Instant effectiveAt,
+            int createdOrder) {
         var release = new PatchRelease();
         release.setId(UUID.randomUUID());
         release.setPatchVariantId(variant.getId());
@@ -189,7 +194,7 @@ class PublicationOverviewProjectionTests {
     private Timeline timeline(PatchVariant variant, List<PatchRelease> releases) {
         var patch = new GamePatch();
         patch.setId(patchId);
-        patch.setStatus("PUBLISHED");
+        patch.setStatus(PatchStatus.PUBLISHED);
         patch.setCode("fixture");
         return new Timeline(releases, List.of(variant), Map.of(variant.getId(), variant), Map.of(patchId, patch),
                 Map.of(), Map.of(patchId, "Fixture"));

@@ -1,7 +1,8 @@
 package com.wikiaov.item.internal.change.persistence;
 
 import com.wikiaov.item.internal.change.persistence.entity.ItemPatchChange;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ItemPatchChangeRepository extends JpaRepository<ItemPatchChange, UUID> {

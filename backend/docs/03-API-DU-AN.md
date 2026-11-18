@@ -46,7 +46,8 @@ variant/release publish cần patch:publish. Không có API sửa một revision
 Khi không chỉ định sourceRevisionId, fork chọn source theo gameplay applicability rồi publication sequence;
 khi chưa có active context phải truyền source tường minh.
 
-Public Hero list nhận region/locale/page/size/q/role/sort, chỉ sort code,asc hoặc code,desc.
+Public Hero list nhận region/locale/page/size/q/role/sort, chỉ sort code,asc hoặc code,desc. Sort khác, role lạ,
+`q` quá 120 ký tự hay page/size ngoài giới hạn trả 400 INVALID_QUERY_PARAMETER.
 Hero detail/manifest nhận region/locale. Section resource nhận locale, chỉ trả section đã có published
 composition tham chiếu; nội dung không trả source/actor. Các resource section không resolve current media URL;
 Hero detail/list resolve asset current version để ETag đổi khi media được nâng chất lượng.
@@ -514,7 +515,8 @@ Danh mục này dành cho thư viện Trang phục của wiki, không dùng API 
 tải chi tiết từng tướng. `hero` là mã của tướng chứa dạng thì gồm trang phục chung của tướng và trang phục riêng của
 mọi dạng; `heroCode` của mỗi mục vẫn là mã tướng sở hữu trang phục (ADR-024). Tham số được cho phép: `region` (mặc định `VN`), `locale` (mặc định `vi-VN`),
 `q` (tối đa 120 ký tự), `hero` (mã tướng), `rarity` (mã nhãn bậc/chủ đề), `page` (từ 0), `size`
-(1–60, mặc định 24). Tham số lạ bị từ chối. Tìm kiếm không phân biệt dấu và hoa/thường, ghép các từ
+(1–60, mặc định 24). Tham số lạ, `q` quá dài, `page`/`size` ngoài giới hạn hay bộ lọc `hero`/`rarity` rỗng hoặc
+quá dài trả 400 `INVALID_QUERY_PARAMETER`. Tìm kiếm không phân biệt dấu và hoa/thường, ghép các từ
 trong tên/mã tướng và tên/khóa trang phục; các từ tìm kiếm có thể xuất hiện theo thứ tự khác nhau.
 
 Response có cấu trúc:
@@ -1346,7 +1348,7 @@ Query `needsCredit=true` lọc ảnh đã có phiên bản hiện hành nhưng c
 nguồn và chủ sở hữu / credit. Bỏ qua hoặc `false` trả mọi ảnh. Kết hợp được với `semanticType`;
 lọc trước phân trang nên `totalElements` là tổng ảnh khớp trong toàn kho. Ưu tiên nguồn riêng
 của phiên bản đang dùng; chỉ dùng nguồn cấp asset nếu phiên bản chưa có nguồn riêng. Nguồn
-ghi “Chưa xác minh” chưa được tính đầy đủ. Chỉ cần một nguồn đầy đủ, không bắt buộc URL cho
+đánh dấu chưa xác minh (`unverified`, xem 02 V074) chưa được tính đầy đủ, dù nhãn viết gì. Chỉ cần một nguồn đầy đủ, không bắt buộc URL cho
 ảnh chụp game; nguồn của phiên bản cũ và ảnh chưa hoàn tất upload không làm sai bộ lọc.
 Ảnh đại diện người dùng (`USER_AVATAR`) thuộc về chính người dùng tải lên, không cần ghi nguồn hay chủ
 sở hữu nên không bao giờ nằm trong kết quả `needsCredit=true` (01/11/2026).
@@ -1802,7 +1804,8 @@ POST /api/wiki/v1/admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous
 Quyền `patch:write`. Body `{description, sourceUrl}`: `description` là văn bản người biên tập tự viết, không rỗng, tối
 đa 4.000 ký tự; `sourceUrl` là link HTTP(S) của nguồn. Dòng `changeId` phải là dòng MECHANIC thuộc change set
 `changeSetId`. Mỗi dòng nhận tối đa một mô tả; ghi lần hai trả 409 `HERO_PATCH_CHANGE_CONFLICT`, không có API sửa hay
-xóa. Dòng không tồn tại hoặc nội dung sai trả 422 `HERO_INVALID_CONTENT`. Trả 201 `{id}` là `changeId`. Mô tả không
+xóa. Change set hoặc dòng không tồn tại trả 404 `HERO_PATCH_CHANGE_NOT_FOUND`, nội dung sai trả 422
+`HERO_INVALID_CONTENT`. Trả 201 `{id}` là `changeId`. Mô tả không
 đổi `patch-view` và không tạo snapshot ([ADR-016](adr/ADR-016-patch-note-changes.md)).
 
 ### 39c. Thư viện ảnh của tướng
@@ -2082,6 +2085,9 @@ Response:
 ```
 
 Không expose trực tiếp Spring `Page` JSON format vì có thể đổi theo framework/version.
+
+`page` âm hoặc `size` ngoài giới hạn của endpoint trả `400 INVALID_QUERY_PARAMETER` ở mọi danh sách, như tham số
+lạ; không trả mã lỗi nội dung của module.
 
 Cursor pagination có thể thêm cho feeds lớn sau này.
 
@@ -2504,8 +2510,8 @@ baseline độc lập đúng mốc và kiểm chứng nguồn.
 
 `GET /admin/heroes` tiếp tục cần `catalog:read` và giữ `{id,code,revisions}` trong từng dòng. Query:
 `page=0`, `size=20` (1–100), `q` tối đa 100 ký tự sau trim, `seasonId?`, `patchVariantId?`,
-`rulesetId?`, `locale=vi-VN`, `sort=code|edited-desc`. Tham số khác trả 400; sort/locale/phạm vi
-không hợp lệ trả 422. Tìm kiếm không phân biệt hoa thường trên mã và tên snapshot theo từng ruleset,
+`rulesetId?`, `locale=vi-VN`, `sort=code|edited-desc`. Tham số khác, page/size ngoài giới hạn, `q` quá dài hay
+sort khác trả 400 `INVALID_QUERY_PARAMETER`; locale/phạm vi không hợp lệ trả 422. Tìm kiếm không phân biệt hoa thường trên mã và tên snapshot theo từng ruleset,
 trước khi phân trang/count. Khi không lọc mùa/patch, chọn snapshot chưa hủy theo `rulesetOrdinal`
 rồi `revisionNo` giảm dần; bổ sung lịch sử sau này không thay tên ở patch mới hơn. Khi lọc mùa/patch,
 chỉ tìm tên đích của change set mới nhất trong phạm vi đó. Nhận tên của mọi bản dịch đã lưu.
@@ -2535,7 +2541,8 @@ toàn nội dung section hay gọi lịch sử thay đổi riêng cho từng tư
 
 Danh mục tướng hỗ trợ thêm `role` (mã vai trò phân cách dấu phẩy), `position`
 (`top`, `mid`, `rung`, `rong-ad`, `tro-thu`, phân cách dấu phẩy) và `hasWarnings=true|false`.
-Các nhóm kết hợp bằng AND, các lựa chọn trong cùng nhóm kết hợp bằng OR; giá trị vai trò/đường lạ trả 422.
+Các nhóm kết hợp bằng AND, các lựa chọn trong cùng nhóm kết hợp bằng OR; giá trị vai trò/đường lạ trả 400
+`INVALID_QUERY_PARAMETER`.
 Lọc và count trước phân trang, trên cùng snapshot mới nhất được chọn theo ruleset/phạm vi như tìm kiếm tên.
 Vai trò và đường đều lấy từ PROFILE (`top`→`TOP`, `mid`→`MID`, `rung`→`JUNGLE`, `rong-ad`→`DRAGON`, `tro-thu`→`SUPPORT`),
 không suy diễn đường từ vai trò. Dữ liệu `heroClassification.recommendedPositions` trong snapshot nguồn chỉ còn để đối chiếu; V050 đã chuyển sang PROFILE. Cảnh báo đọc `reviewFlags` (dự phòng `review_flags`) và `heroReviewFlags`;
@@ -2804,7 +2811,7 @@ Không cung cấp API kéo đổi/xóa lịch sử đã xác nhận.
 PUT /admin/hero-changes/{changeSetId}/assessment cần patch:write, nhận {kind,expectedVersion}.
 Kind dùng HeroChanges (ADJUSTMENT hiển thị Cân bằng) và thêm `RELEASE` (Ra mắt) chỉ cho change set có
 `introducesHero=true`; change set khác nhận `RELEASE` trả 422. Dòng thay đổi không nhận `RELEASE`. Tạo đầu
-version=0, lưu tăng version, xung đột 409.
+version=0, lưu tăng version, xung đột 409. Change set không tồn tại trả 404 `HERO_PATCH_CHANGE_NOT_FOUND`.
 API hero changes thêm overallKind,assessmentVersion; gameplayChanges của /admin/heroes thêm overallKind nullable,
 giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay sự kiện kỹ năng/chỉ số.
 

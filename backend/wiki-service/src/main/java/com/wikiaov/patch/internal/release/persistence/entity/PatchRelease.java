@@ -1,6 +1,11 @@
 package com.wikiaov.patch.internal.release.persistence.entity;
 
-import jakarta.persistence.*;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
@@ -24,7 +29,8 @@ public class PatchRelease {
 
     private Instant announcedAt;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private PatchReleaseStatus status;
 
     private String sourceUrl;
 

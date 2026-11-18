@@ -5,17 +5,42 @@ import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Position;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Skins;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
 import com.wikiaov.media.MediaAssets;
-import com.wikiaov.patch.*;
-import com.wikiaov.platform.*;
-import java.time.*;
-import java.util.*;
+import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,9 +86,11 @@ public class HeroQueries {
         Map<UUID, Long> ordinals = new HashMap<>();
         Set<UUID> current = new HashSet<>();
 
-        for (var context : contexts.active(at))
-            for (var revisions : byHero.values())
+        for (var context : contexts.active(at)) {
+            for (var revisions : byHero.values()) {
                 select(revisions, context, at, true, ordinals).ifPresent(revision -> current.add(revision.id()));
+            }
+        }
 
         return current;
     }
@@ -71,7 +98,7 @@ public class HeroQueries {
     private Optional<HeroRevisionView> select(List<HeroRevisionView> revisions, GameplayContext context, Instant at,
             boolean allowUnscoped, Map<UUID, Long> ordinals) {
         return revisions.stream()
-                .filter(r -> r.state().equals("PUBLISHED") && r.rulesetId().equals(context.rulesetId())
+                .filter(r -> r.state() == RevisionState.PUBLISHED && r.rulesetId().equals(context.rulesetId())
                         && !r.publishedAt().isAfter(at))
                 .filter(r -> allowUnscoped || r.effectiveFromPatchVariantId() != null)
                 .filter(r -> ordinal(r, ordinals) <= context.rulesetOrdinal())
@@ -108,8 +135,13 @@ public class HeroQueries {
     /** The published revision readers see of one hero at the selected moment (ADR-016). */
     private Optional<HeroReadMoments.Choice<HeroRevisionView>> choose(UUID heroId, HeroReadMoments.Moment moment,
             Instant at) {
-        var revisions = store.revisions(heroId).stream()
-                .filter(r -> r.state().equals("PUBLISHED") && r.rulesetId().equals(moment.context().rulesetId())
+        return choose(heroId, store.revisions(heroId), moment, at);
+    }
+
+    private static Optional<HeroReadMoments.Choice<HeroRevisionView>> choose(UUID heroId,
+            List<HeroRevisionView> all, HeroReadMoments.Moment moment, Instant at) {
+        var revisions = all.stream()
+                .filter(r -> r.state() == RevisionState.PUBLISHED && r.rulesetId().equals(moment.context().rulesetId())
                         && !r.publishedAt().isAfter(at))
                 .toList();
 
@@ -119,9 +151,10 @@ public class HeroQueries {
 
     /** Content observed at a later patch says so, and readers are never shown it as the selected patch's data. */
     private void markLaterObservation(Map<String, Object> entry, HeroReadMoments.Choice<?> choice) {
-        if (choice.laterVariantId() != null)
+        if (choice.laterVariantId() != null) {
             entry.put("laterObservation", Map.of("patchVariantId", choice.laterVariantId(), "patchCode",
                     contexts.patchCode(choice.laterVariantId())));
+        }
     }
 
     /**
@@ -134,7 +167,7 @@ public class HeroQueries {
         var structure = forms.structure();
         if (structure.holdsForms(heroId)) {
             List<Map<String, Object>> entries = new ArrayList<>();
-            for (var form : structure.formsOf(heroId))
+            for (var form : structure.formsOf(heroId)) {
                 choose(form.heroId(), moment, at).ifPresent(formChoice -> {
                     var entry = detail(formChoice.revision(), moment.context(), locale, manifest);
                     markLaterObservation(entry, formChoice);
@@ -145,9 +178,11 @@ public class HeroQueries {
                     entry.put("fallbackApplied", formContext.get("fallbackApplied"));
                     entries.add(entry);
                 });
+            }
             result.put("forms", entries);
         }
-        structure.form(heroId).ifPresent(form -> result.put("parent", parent(form, store.hero(form.holderId()))));
+        structure.form(heroId)
+                .ifPresent(form -> result.put("parent", parent(form, store.requireHero(form.holderId()))));
     }
 
     private static Map<String, Object> parent(HeroFormStructure.Form form, HeroIdentity holder) {
@@ -160,7 +195,7 @@ public class HeroQueries {
         result.put("context", context(ctx, locale));
         result.put("id", rev.heroId());
         result.put("revisionId", rev.id());
-        result.put("code", store.hero(rev.heroId()).getCode());
+        result.put("code", store.requireHero(rev.heroId()).getCode());
         result.put("unscopedBaseline", rev.effectiveFromPatchVariantId() == null);
 
         Map<String, Object> refs = new LinkedHashMap<>();
@@ -205,8 +240,9 @@ public class HeroQueries {
         var library = libraryIcons.forSkills(rev.heroId(), skills.skills());
         skills.skills().forEach(skill -> {
             var iconId = skill.iconAssetId() != null ? skill.iconAssetId() : library.get(skill.skillKey());
-            if (iconId != null)
+            if (iconId != null) {
                 media.find(iconId).filter(a -> a.usable()).ifPresent(a -> skillMedia.put(skill.skillKey(), a));
+            }
             skill.stateIcons().forEach(icon -> media.find(icon.assetId()).filter(a -> a.usable())
                     .ifPresent(a -> skillStateMedia.put(icon.assetId().toString(), a)));
         });
@@ -221,15 +257,18 @@ public class HeroQueries {
         Map<String, Object> skinPortraitMedia = new LinkedHashMap<>();
         var skins = (Skins) sections.content(HeroSection.SKINS, rev.sections().get(HeroSection.SKINS));
         skins.skins().forEach(skin -> {
-            if (skin.artAssetId() != null)
+            if (skin.artAssetId() != null) {
                 media.find(skin.artAssetId()).filter(a -> a.usable())
                         .ifPresent(a -> skinMedia.put(skin.skinKey(), a));
-            if (skin.headAssetId() != null)
+            }
+            if (skin.headAssetId() != null) {
                 media.find(skin.headAssetId()).filter(a -> a.usable())
                         .ifPresent(a -> skinHeadMedia.put(skin.skinKey(), a));
-            if (skin.portraitAssetId() != null)
+            }
+            if (skin.portraitAssetId() != null) {
                 media.find(skin.portraitAssetId()).filter(a -> a.usable())
                         .ifPresent(a -> skinPortraitMedia.put(skin.skinKey(), a));
+            }
         });
 
         result.put("skinMedia", skinMedia);
@@ -245,18 +284,19 @@ public class HeroQueries {
     public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
             String sort, UUID seasonId, UUID patchVariantId, boolean includeUnscoped, boolean playable) {
         HeroValidation.locale(locale);
-        if (page < 0 || size < 1 || size > 100)
-            throw HeroValidation.invalid("Page must be nonnegative and size between 1 and 100.");
-        if (!Set.of("code,asc", "code,desc").contains(sort))
-            throw HeroValidation.invalid("Only code sorting is supported.");
-        if (q.length() > 120)
-            throw HeroValidation.invalid("Search text is too long.");
-        if (role != null)
+        if (!Set.of("code,asc", "code,desc").contains(sort)) {
+            throw HeroValidation.badQuery("Only code sorting is supported.");
+        }
+        if (q.length() > 120) {
+            throw HeroValidation.badQuery("Search text is too long.");
+        }
+        if (role != null) {
             try {
                 Role.valueOf(role);
             } catch (IllegalArgumentException e) {
-                throw HeroValidation.invalid("Unknown hero role.");
+                throw HeroValidation.badQuery("Unknown hero role.");
             }
+        }
         Instant at = clock.instant();
         var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);
         var ctx = moment.context();
@@ -265,55 +305,60 @@ public class HeroQueries {
         var codes = heroes.stream().collect(Collectors.toMap(HeroIdentity::getId, HeroIdentity::getCode));
 
         Map<UUID, Published> published = new LinkedHashMap<>();
-        for (var hero : heroes)
+        for (var hero : heroes) {
             choose(hero.getId(), moment, at).ifPresent(
                     choice -> published.put(hero.getId(), published(hero, choice, locale)));
+        }
 
         List<ListEntry> all = new ArrayList<>();
         for (var hero : published.values()) {
             UUID id = hero.identity().getId();
             boolean holder = structure.holdsForms(id);
-            if (playable ? holder : structure.isForm(id))
+            if (playable ? holder : structure.isForm(id)) {
                 continue;
+            }
 
             var members = holder
                     ? structure.formsOf(id).stream().map(form -> published.get(form.heroId())).filter(Objects::nonNull)
                             .toList()
                     : List.<Published>of();
-            if (holder && members.isEmpty())
+            if (holder && members.isEmpty()) {
                 continue;
+            }
             var roles = holder ? union(members, Published::roles) : hero.roles();
             var positions = holder ? union(members, Published::positions) : hero.positions();
-            if (role != null && roles.stream().noneMatch(r -> r.name().equals(role)))
+            if (role != null && roles.stream().noneMatch(r -> r.name().equals(role))) {
                 continue;
-            if (!q.isBlank() && !hero.matches(q) && members.stream().noneMatch(member -> member.matches(q)))
+            }
+            if (!q.isBlank() && !hero.matches(q) && members.stream().noneMatch(member -> member.matches(q))) {
                 continue;
+            }
 
             var item = hero.item();
             item.put("roles", roles);
             item.put("positions", positions.stream().sorted().toList());
             List<ListEntry> formEntries = new ArrayList<>();
             for (var member : members) {
-                var form = structure.form(member.identity().getId()).orElseThrow();
+                var form = structure.form(member.identity().getId())
+                        .orElseThrow(() -> new IllegalStateException("A listed form has no form structure."));
                 var formItem = member.item();
                 formItem.put("formKey", form.formKey());
                 formItem.put("roles", member.roles());
                 formItem.put("positions", member.positions().stream().sorted().toList());
                 formEntries.add(new ListEntry(formItem, member.bindingsId(), List.of()));
             }
-            if (holder)
+            if (holder) {
                 item.put("forms", formEntries.stream().map(ListEntry::item).toList());
-            if (playable)
+            }
+            if (playable) {
                 structure.form(id).ifPresent(form -> item.put("parent",
                         Map.of("id", form.holderId(), "code", codes.get(form.holderId()), "formKey", form.formKey())));
+            }
 
             all.add(new ListEntry(item, hero.bindingsId(), formEntries));
         }
 
-        long offset = (long) page * size;
-        var selected = offset >= all.size()
-                ? List.<ListEntry>of()
-                : all.subList((int) offset, (int) Math.min(offset + size, all.size()));
+        var selected = PageSlice.of(all, page, size).items();
         var items = listMedia(selected);
 
         return Map.of("context", context(ctx, locale), "items", items, "page", page, "size", size, "totalElements",
@@ -326,7 +371,7 @@ public class HeroQueries {
         String actual = translationLocale(profile.translations().stream().map(ProfileTranslation::locale).toList(),
                 locale);
         var translated = profile.translations().stream().filter(t -> t.locale().equals(actual)).findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new IllegalStateException("The selected profile locale has no translation."));
         var later = choice.laterVariantId() == null
                 ? null
                 : Map.<String, Object>of("patchVariantId", choice.laterVariantId(), "patchCode",
@@ -343,8 +388,9 @@ public class HeroQueries {
 
     /** Reads the head and portrait of every hero and form on the page in one batch. */
     private List<Map<String, Object>> listMedia(List<ListEntry> entries) {
-        if (entries.isEmpty())
+        if (entries.isEmpty()) {
             return List.of();
+        }
 
         var everyEntry = entries.stream().flatMap(entry -> java.util.stream.Stream.concat(
                 java.util.stream.Stream.of(entry), entry.forms().stream())).toList();
@@ -355,8 +401,9 @@ public class HeroQueries {
                     id -> (Bindings) sections.content(HeroSection.MEDIA_BINDINGS, id));
             for (var role : List.of(MediaRole.HEAD, MediaRole.PORTRAIT)) {
                 UUID assetId = value.bindings().get(role);
-                if (assetId != null)
+                if (assetId != null) {
                     assetIds.add(assetId);
+                }
             }
         }
 
@@ -366,8 +413,9 @@ public class HeroQueries {
             for (var role : List.of(MediaRole.HEAD, MediaRole.PORTRAIT)) {
                 UUID assetId = selected.get(role);
                 var asset = assetId == null ? null : assets.get(assetId);
-                if (asset != null && asset.usable())
+                if (asset != null && asset.usable()) {
                     entry.item().put(role.name().toLowerCase(Locale.ROOT), asset);
+                }
             }
         }
         return entries.stream().map(ListEntry::item).toList();
@@ -396,8 +444,9 @@ public class HeroQueries {
             item.put("unscopedBaseline", revision.effectiveFromPatchVariantId() == null);
             item.put("name", name);
             item.put("actualLocale", actualLocale);
-            if (laterObservation != null)
+            if (laterObservation != null) {
                 item.put("laterObservation", laterObservation);
+            }
             return item;
         }
     }
@@ -411,24 +460,29 @@ public class HeroQueries {
 
     public Map<String, Object> section(HeroSection section, UUID id, String locale) {
         HeroValidation.locale(locale);
-        if (!store.publishedSectionExists(section, id))
+        if (!store.publishedSectionExists(section, id)) {
             throw new ApiException(HeroErrorCode.HERO_REVISION_NOT_FOUND, "No published section exists with this ID.");
+        }
         return Map.of("id", id, "content", publicContent(section, id, locale));
     }
 
     private Map<String, Object> publicContent(HeroSection section, UUID id, String locale) {
         Map<String, Object> content = new LinkedHashMap<>(json.convertValue(sections.content(section, id), Map.class));
         content.remove("sources");
-        if (section == HeroSection.PROFILE)
+        if (section == HeroSection.PROFILE) {
             localize(content, locale);
+        }
         if (section == HeroSection.SKILLS || section == HeroSection.SKINS) {
             String key = section == HeroSection.SKILLS ? "skills" : "skins";
-            for (var item : (List<Map<String, Object>>) content.get(key))
+            for (var item : (List<Map<String, Object>>) content.get(key)) {
                 localize(item, locale);
+            }
         }
-        if (section == HeroSection.SKILLS)
-            for (var trait : (List<Map<String, Object>>) content.getOrDefault("traits", List.of()))
+        if (section == HeroSection.SKILLS) {
+            for (var trait : (List<Map<String, Object>>) content.getOrDefault("traits", List.of())) {
                 localizeDetail(trait, locale);
+            }
+        }
         return content;
     }
 
@@ -450,16 +504,23 @@ public class HeroQueries {
         Instant at = clock.instant();
         var moment = moments.resolve(region, at, null, null, false);
 
+        var heroes = store.heroes(false);
+        var revisions = store.revisions(heroes.stream().map(HeroIdentity::getId).toList()).stream()
+                .collect(Collectors.groupingBy(HeroRevisionView::heroId));
+
         Map<HeroIdentity, HeroRevisionView> result = new LinkedHashMap<>();
-        for (var hero : store.heroes(false))
-            choose(hero.getId(), moment, at).ifPresent(choice -> result.put(hero, choice.revision()));
+        for (var hero : heroes) {
+            choose(hero.getId(), revisions.getOrDefault(hero.getId(), List.of()), moment, at)
+                    .ifPresent(choice -> result.put(hero, choice.revision()));
+        }
         return result;
     }
 
     private void localize(Map<String, Object> object, String locale) {
         var translations = (List<Map<String, Object>>) object.remove("translations");
         String actual = translationLocale(translations.stream().map(t -> (String) t.get("locale")).toList(), locale);
-        var selected = translations.stream().filter(t -> t.get("locale").equals(actual)).findFirst().orElseThrow();
+        var selected = translations.stream().filter(t -> t.get("locale").equals(actual)).findFirst()
+                .orElseThrow(() -> new IllegalStateException("The selected locale has no translation."));
         object.putAll(selected);
         object.remove("locale");
         object.put("actualLocale", actual);
@@ -469,8 +530,8 @@ public class HeroQueries {
     private static String translationLocale(List<String> values, String requested) {
         return values.contains(requested)
                 ? requested
-                : values.contains("vi-VN")
-                        ? "vi-VN"
+                : values.contains(CatalogLocales.DEFAULT)
+                        ? CatalogLocales.DEFAULT
                         : values.stream().sorted().findFirst()
                                 .orElseThrow(() -> HeroValidation.invalid("A published section has no translation."));
     }

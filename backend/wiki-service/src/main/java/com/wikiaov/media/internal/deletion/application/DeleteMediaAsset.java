@@ -35,19 +35,22 @@ public class DeleteMediaAsset {
     @Transactional(propagation = Propagation.NEVER)
     public MediaDeletionView execute(UUID assetId, long expectedVersion, String reason) {
         var actor = currentActor.require();
-        if (records.complete(assetId))
+        if (records.complete(assetId)) {
             return records.get(assetId);
+        }
         cache.requireConfigured();
         competition.requireUnused(assetId);
 
         var work = records.prepare(assetId, expectedVersion, reason, actor);
-        if ("COMPLETE".equals(work.state()))
+        if ("COMPLETE".equals(work.state())) {
             return records.get(assetId);
+        }
         try {
             competition.retire(assetId);
             if (!"ORIGIN_DELETED".equals(work.state())) {
-                for (String key : work.keys())
+                for (String key : work.keys()) {
                     storage.delete(key);
+                }
                 records.originDeleted(assetId);
             }
             cache.purge(work.urls());

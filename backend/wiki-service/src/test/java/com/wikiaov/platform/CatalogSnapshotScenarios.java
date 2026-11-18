@@ -37,33 +37,33 @@ public final class CatalogSnapshotScenarios {
     }
 
     static void gameplayChangesIncludeCorrectionsButNotUnrelatedOwners() {
-        var baseline = snapshot(1, OWNER, FIRST_PATCH, 1, "PUBLISHED", "DATA_BASELINE");
-        var correction = snapshot(2, OWNER, FIRST_PATCH, 2, "DRAFT", "CONTENT_CORRECTION");
-        var unrelated = snapshot(3, OTHER_OWNER, FIRST_PATCH, 1, "PUBLISHED", "TRANSLATION_UPDATE");
-        var future = snapshot(4, OWNER, SECOND_PATCH, 3, "PUBLISHED", "GAME_PATCH");
+        var baseline = snapshot(1, OWNER, FIRST_PATCH, 1, RevisionState.PUBLISHED, "DATA_BASELINE");
+        var correction = snapshot(2, OWNER, FIRST_PATCH, 2, RevisionState.DRAFT, "CONTENT_CORRECTION");
+        var unrelated = snapshot(3, OTHER_OWNER, FIRST_PATCH, 1, RevisionState.PUBLISHED, "TRANSLATION_UPDATE");
+        var future = snapshot(4, OWNER, SECOND_PATCH, 3, RevisionState.PUBLISHED, "GAME_PATCH");
         equal(List.of(baseline, correction), CatalogSnapshots.changedAt(
                 List.of(baseline, correction, unrelated, future), patches(FIRST_PATCH), Set.of()));
     }
 
     static void explicitTargetsIncludeLegacyUnplacedSnapshots() {
-        var legacy = snapshot(1, OWNER, null, 1, "PUBLISHED", "DATA_BASELINE");
-        var unrelated = snapshot(2, OTHER_OWNER, FIRST_PATCH, 1, "DRAFT", "CONTENT_CORRECTION");
+        var legacy = snapshot(1, OWNER, null, 1, RevisionState.PUBLISHED, "DATA_BASELINE");
+        var unrelated = snapshot(2, OTHER_OWNER, FIRST_PATCH, 1, RevisionState.DRAFT, "CONTENT_CORRECTION");
         equal(List.of(legacy), CatalogSnapshots.changedAt(List.of(legacy, unrelated),
                 patches(SECOND_PATCH), Set.of(legacy.id())));
         equal(List.of(), CatalogSnapshots.changedAt(List.of(legacy), patches(), Set.of()));
     }
 
     static void carriedForwardExcludesDraftsAndFuturePatches() {
-        var published = snapshot(1, OWNER, FIRST_PATCH, 1, "PUBLISHED", "DATA_BASELINE");
-        var draft = snapshot(2, OWNER, SECOND_PATCH, 2, "DRAFT", "GAME_PATCH");
-        var future = snapshot(3, OWNER, THIRD_PATCH, 3, "PUBLISHED", "GAME_PATCH");
-        var unplaced = snapshot(4, OTHER_OWNER, null, 1, "PUBLISHED", "DATA_BASELINE");
+        var published = snapshot(1, OWNER, FIRST_PATCH, 1, RevisionState.PUBLISHED, "DATA_BASELINE");
+        var draft = snapshot(2, OWNER, SECOND_PATCH, 2, RevisionState.DRAFT, "GAME_PATCH");
+        var future = snapshot(3, OWNER, THIRD_PATCH, 3, RevisionState.PUBLISHED, "GAME_PATCH");
+        var unplaced = snapshot(4, OTHER_OWNER, null, 1, RevisionState.PUBLISHED, "DATA_BASELINE");
         equal(List.of(published), carry(List.of(published, draft, future, unplaced),
                 patches(SECOND_PATCH), patches(FIRST_PATCH, SECOND_PATCH), List.of()));
     }
 
     static void removalsAreVisibleAtTheirPatchButNotLater() {
-        var snapshot = snapshot(1, OWNER, FIRST_PATCH, 1, "PUBLISHED", "DATA_BASELINE");
+        var snapshot = snapshot(1, OWNER, FIRST_PATCH, 1, RevisionState.PUBLISHED, "DATA_BASELINE");
         var removal = new Change(OWNER, SECOND_PATCH, true);
         var history = patches(FIRST_PATCH, SECOND_PATCH, THIRD_PATCH);
         equal(List.of(snapshot), carry(List.of(snapshot), patches(SECOND_PATCH), history, List.of(removal)));
@@ -73,8 +73,8 @@ public final class CatalogSnapshotScenarios {
     }
 
     static void newerSnapshotsAndLaterChangesRestoreVisibility() {
-        var old = snapshot(1, OWNER, FIRST_PATCH, 1, "PUBLISHED", "DATA_BASELINE");
-        var newer = snapshot(2, OWNER, THIRD_PATCH, 2, "PUBLISHED", "GAME_PATCH");
+        var old = snapshot(1, OWNER, FIRST_PATCH, 1, RevisionState.PUBLISHED, "DATA_BASELINE");
+        var newer = snapshot(2, OWNER, THIRD_PATCH, 2, RevisionState.PUBLISHED, "GAME_PATCH");
         var removal = new Change(OWNER, SECOND_PATCH, true);
         var history = patches(FIRST_PATCH, SECOND_PATCH, THIRD_PATCH);
         equal(List.of(newer), carry(List.of(old, newer), patches(THIRD_PATCH), history, List.of(removal)));
@@ -85,12 +85,12 @@ public final class CatalogSnapshotScenarios {
     }
 
     static void snapshotOrderingUsesPatchThenRevisionAndKeepsFirstTie() {
-        var unplaced = snapshot(1, OWNER, null, 99, "DRAFT", "DATA_BASELINE");
-        var older = snapshot(2, OWNER, FIRST_PATCH, 10, "PUBLISHED", "GAME_PATCH");
-        var latest = snapshot(3, OWNER, SECOND_PATCH, 3, "PUBLISHED", "GAME_PATCH");
-        var correction = snapshot(4, OWNER, SECOND_PATCH, 4, "DRAFT", "CONTENT_CORRECTION");
-        var tie = snapshot(5, OWNER, SECOND_PATCH, 4, "PUBLISHED", "TRANSLATION_UPDATE");
-        var other = snapshot(6, OTHER_OWNER, null, 1, "PUBLISHED", "DATA_BASELINE");
+        var unplaced = snapshot(1, OWNER, null, 99, RevisionState.DRAFT, "DATA_BASELINE");
+        var older = snapshot(2, OWNER, FIRST_PATCH, 10, RevisionState.PUBLISHED, "GAME_PATCH");
+        var latest = snapshot(3, OWNER, SECOND_PATCH, 3, RevisionState.PUBLISHED, "GAME_PATCH");
+        var correction = snapshot(4, OWNER, SECOND_PATCH, 4, RevisionState.DRAFT, "CONTENT_CORRECTION");
+        var tie = snapshot(5, OWNER, SECOND_PATCH, 4, RevisionState.PUBLISHED, "TRANSLATION_UPDATE");
+        var other = snapshot(6, OTHER_OWNER, null, 1, RevisionState.PUBLISHED, "DATA_BASELINE");
         equal(Map.of(OWNER, correction.value(), OTHER_OWNER, other.value()),
                 CatalogSnapshots.latestByOwner(List.of(unplaced, older, latest, correction, tie, other),
                         CatalogSnapshotScenarios::ordinal));
@@ -99,14 +99,15 @@ public final class CatalogSnapshotScenarios {
 
     static void latestSelectionCachesOrdinalsWithoutResolvingNull() {
         Map<UUID, Integer> calls = new HashMap<>();
-        var candidates = List.of(snapshot(1, OWNER, null, 1, "DRAFT", "DATA_BASELINE"),
-                snapshot(2, OWNER, FIRST_PATCH, 2, "DRAFT", "GAME_PATCH"),
-                snapshot(3, OWNER, FIRST_PATCH, 3, "DRAFT", "TRANSLATION_UPDATE"),
-                snapshot(4, OTHER_OWNER, FIRST_PATCH, 1, "DRAFT", "GAME_PATCH"),
-                snapshot(5, OTHER_OWNER, FIRST_PATCH, 2, "DRAFT", "CONTENT_CORRECTION"));
+        var candidates = List.of(snapshot(1, OWNER, null, 1, RevisionState.DRAFT, "DATA_BASELINE"),
+                snapshot(2, OWNER, FIRST_PATCH, 2, RevisionState.DRAFT, "GAME_PATCH"),
+                snapshot(3, OWNER, FIRST_PATCH, 3, RevisionState.DRAFT, "TRANSLATION_UPDATE"),
+                snapshot(4, OTHER_OWNER, FIRST_PATCH, 1, RevisionState.DRAFT, "GAME_PATCH"),
+                snapshot(5, OTHER_OWNER, FIRST_PATCH, 2, RevisionState.DRAFT, "CONTENT_CORRECTION"));
         CatalogSnapshots.latestByOwner(candidates, patch -> {
-            if (patch == null)
+            if (patch == null) {
                 throw new AssertionError("Null patch must have ordinal zero without a lookup.");
+            }
             calls.merge(patch, 1, Integer::sum);
             return ordinal(patch);
         });
@@ -123,19 +124,22 @@ public final class CatalogSnapshotScenarios {
             Set<UUID> targets = new HashSet<>();
             List<Change> changes = new ArrayList<>();
             for (int patch = 1; patch <= 5; patch++) {
-                if (random.nextBoolean())
+                if (random.nextBoolean()) {
                     selected.add(id(patch));
-                if (random.nextBoolean())
+                }
+                if (random.nextBoolean()) {
                     applicable.add(id(patch));
+                }
             }
             for (int index = 0; index < 30; index++) {
                 int patch = random.nextInt(6);
                 var candidate = snapshot(index + 1, id(100 + random.nextInt(5)), patch == 0 ? null : id(patch),
-                        random.nextInt(10), random.nextBoolean() ? "PUBLISHED" : "DRAFT",
+                        random.nextInt(10), random.nextBoolean() ? RevisionState.PUBLISHED : RevisionState.DRAFT,
                         causes[random.nextInt(causes.length)]);
                 candidates.add(candidate);
-                if (random.nextBoolean())
+                if (random.nextBoolean()) {
                     targets.add(candidate.id());
+                }
                 changes.add(new Change(id(100 + random.nextInt(5)), id(1 + random.nextInt(5)), random.nextBoolean()));
             }
             var originalCandidates = List.copyOf(candidates);
@@ -152,16 +156,18 @@ public final class CatalogSnapshotScenarios {
     private static List<Snapshot<String>> legacyChanged(List<Snapshot<String>> candidates, Set<UUID> allowed,
             Set<UUID> explicitTargets) {
         var recorded = new HashMap<UUID, Set<UUID>>();
-        for (var r : candidates)
-            if (allowed.contains(r.patchVariantId()) && Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.cause()))
+        for (var r : candidates) {
+            if (allowed.contains(r.patchVariantId()) && Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.cause())) {
                 recorded.computeIfAbsent(r.ownerId(), ignored -> new HashSet<>()).add(r.patchVariantId());
+            }
+        }
         return candidates.stream().filter(r -> explicitTargets.contains(r.id()) || r.patchVariantId() != null
                 && recorded.getOrDefault(r.ownerId(), Set.of()).contains(r.patchVariantId())).toList();
     }
 
     private static List<Snapshot<String>> legacyCarried(List<Snapshot<String>> candidates, Set<UUID> allowed,
             Set<UUID> applicable, List<Change> changes) {
-        candidates = candidates.stream().filter(r -> r.state().equals("PUBLISHED")
+        candidates = candidates.stream().filter(r -> r.state() == RevisionState.PUBLISHED
                 && applicable.contains(r.patchVariantId())).toList();
         var removed = changes.stream().filter(f -> applicable.contains(f.patchVariantId()))
                 .collect(Collectors.toMap(Change::ownerId, f -> f,
@@ -197,7 +203,7 @@ public final class CatalogSnapshotScenarios {
     }
 
     private static Snapshot<String> snapshot(long identifier, UUID owner, UUID patch, long revision,
-            String state, String cause) {
+            RevisionState state, String cause) {
         return new Snapshot<>(id(1000 + identifier), owner, patch, revision, state, cause, "revision-" + identifier);
     }
 
@@ -214,7 +220,8 @@ public final class CatalogSnapshotScenarios {
     }
 
     private static void equal(Object expected, Object actual) {
-        if (!expected.equals(actual))
+        if (!expected.equals(actual)) {
             throw new AssertionError("Expected " + expected + " but got " + actual);
+        }
     }
 }

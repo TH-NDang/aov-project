@@ -1,6 +1,6 @@
 package com.wikiaov.hero.internal.web;
 
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -10,9 +10,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import java.security.*;
-import java.util.*;
-import org.springframework.http.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import java.util.UUID;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.WebRequest;
 
 /** HTTP API documentation contract. Runtime mappings, binding and logic remain on the controller; validation is inherited from this interface. */
@@ -25,14 +26,13 @@ public interface HeroPublicApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<?> list(
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
-            @Parameter(description = "Zero-based page index.") int page,
-            @Parameter(description = "Maximum number of entries in a page.") int size,
+            @Parameter(description = "Zero-based page index.") @Min(0) int page,
+            @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
             @Parameter(description = "Search text.") String q,
             @Parameter(description = "Hero role filter.") String role,
             @Parameter(description = "Sort expression accepted by this endpoint.") String sort,
@@ -49,8 +49,7 @@ public interface HeroPublicApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<?> detail(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
@@ -67,8 +66,7 @@ public interface HeroPublicApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<?> manifest(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
@@ -85,8 +83,7 @@ public interface HeroPublicApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<?> sectionPROFILE(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
@@ -99,8 +96,7 @@ public interface HeroPublicApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<?> sectionOVERVIEW_RATINGS(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
@@ -113,8 +109,7 @@ public interface HeroPublicApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<?> sectionCOMBAT_STATS(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
@@ -127,8 +122,7 @@ public interface HeroPublicApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<?> sectionSKILLS(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
@@ -141,8 +135,7 @@ public interface HeroPublicApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<?> sectionSKINS(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
@@ -155,8 +148,7 @@ public interface HeroPublicApi {
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)
     })
     ResponseEntity<?> sectionMEDIA_BINDINGS(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,

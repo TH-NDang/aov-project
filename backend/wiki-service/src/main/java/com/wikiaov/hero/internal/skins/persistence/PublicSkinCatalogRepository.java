@@ -15,7 +15,7 @@ public interface PublicSkinCatalogRepository extends Repository<HeroRevision, UU
                 r.skinsRevisionId as skinsId,r.mediaBindingRevisionId as bindingsId,
                 r.effectiveFromPatchVariantId as variantId,r.publicationSequence as publicationSequence
             from HeroRevision r join HeroIdentity h on h.id=r.heroId
-            where r.rulesetId=:rulesetId and r.state='PUBLISHED' and r.publishedAt<=:at
+            where r.rulesetId=:rulesetId and r.state=com.wikiaov.platform.RevisionState.PUBLISHED and r.publishedAt<=:at
             order by h.code,r.publicationSequence desc
             """)
     List<Candidate> candidates(UUID rulesetId, Instant at);

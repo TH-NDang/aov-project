@@ -1,10 +1,18 @@
 package com.wikiaov.hero.internal.catalog.application;
 
+import com.wikiaov.hero.internal.application.response.HeroTraitsView;
 import com.wikiaov.hero.internal.domain.HeroContent.TraitCode;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.skills.persistence.HeroSkillSnapshots;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,26 +33,27 @@ public class HeroTraitIndex {
         this.forms = forms;
     }
 
-    public Map<String, Object> read(String region) {
+    public HeroTraitsView read(String region) {
         var structure = forms.structure();
         var published = queries.published(region);
 
         Map<UUID, String> codes = new LinkedHashMap<>();
         Map<UUID, UUID> skillSets = new LinkedHashMap<>();
         published.forEach((hero, revision) -> {
-            if (structure.holdsForms(hero.getId()))
+            if (structure.holdsForms(hero.getId())) {
                 return;
+            }
             codes.put(hero.getId(), hero.getCode());
             skillSets.put(hero.getId(), revision.sections().get(HeroSection.SKILLS));
         });
         var traits = skills.traits(new HashSet<>(skillSets.values()));
 
-        Map<TraitCode, List<Map<String, Object>>> byCode = new EnumMap<>(TraitCode.class);
+        Map<TraitCode, List<HeroTraitsView.Hero>> byCode = new EnumMap<>(TraitCode.class);
         skillSets.forEach((heroId, skillSetId) -> traits.getOrDefault(skillSetId, List.of())
                 .forEach(trait -> byCode.computeIfAbsent(trait.code(), code -> new ArrayList<>())
-                        .add(Map.of("id", heroId, "code", codes.get(heroId)))));
+                        .add(new HeroTraitsView.Hero(heroId, codes.get(heroId)))));
 
-        return Map.of("region", region, "traits", Arrays.stream(TraitCode.values())
-                .map(code -> Map.of("code", code.name(), "heroes", byCode.getOrDefault(code, List.of()))).toList());
+        return new HeroTraitsView(region, Arrays.stream(TraitCode.values())
+                .map(code -> new HeroTraitsView.Trait(code.name(), byCode.getOrDefault(code, List.of()))).toList());
     }
 }

@@ -2,8 +2,12 @@ package com.wikiaov.hero.internal.badges.infrastructure;
 
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeTranslationRepository;
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadgeTranslation;
-import com.wikiaov.media.*;
-import java.util.*;
+import com.wikiaov.media.MediaUsage;
+import com.wikiaov.media.MediaUsageProvider;
+import com.wikiaov.media.MediaUsageScope;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

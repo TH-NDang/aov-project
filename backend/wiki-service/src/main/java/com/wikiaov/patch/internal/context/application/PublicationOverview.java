@@ -1,7 +1,5 @@
 package com.wikiaov.patch.internal.context.application;
 
-import com.wikiaov.patch.internal.application.response.PublicationOverviewView.*;
-
 import com.wikiaov.patch.internal.application.response.PublicationOverviewView.Market;
 import com.wikiaov.patch.internal.application.response.PublicationOverviewView.Snapshot;
 import java.time.Clock;

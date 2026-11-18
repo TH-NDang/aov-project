@@ -6,12 +6,15 @@ import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.internal.application.PatchCommands.Release;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore.VariantSnapshot;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.ruleset.persistence.entity.Region;
 import com.wikiaov.patch.internal.season.application.RankedSeasons;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -38,18 +41,20 @@ public class PatchReleaseWorkflow {
 
     public UUID schedule(UUID variantId, Release input) {
         // Every release writer acquires the region lock before the ruleset lock.
-        if (input.effectiveOn() != null && input.effectiveAt() == null)
+        if (input.effectiveOn() != null && input.effectiveAt() == null) {
             releases.lockRegion(input.regionId());
-        else
+        } else {
             releases.lockActiveRegion(input.regionId());
+        }
         var selectedVariant = releases.lockVariantWithinRuleset(variantId);
         UUID seasonId = resolveReleaseSeason(selectedVariant, input.seasonId());
         requireValidAnnouncement(input, seasonId);
 
         var variant = releases.lockAndReadVariant(variantId);
         requirePublished(variant, "Publish the variant before scheduling a release.");
-        if (input.effectiveAt() != null)
+        if (input.effectiveAt() != null) {
             requireConsistentTimeline(input.regionId(), variant, input.effectiveAt());
+        }
 
         var release = createRelease(variantId, input, seasonId);
         releases.insert(release);
@@ -63,8 +68,9 @@ public class PatchReleaseWorkflow {
         requireAvailableRegion(region);
         var variant = releases.readVariantAfterLockingRuleset(target.variantId());
         var release = releases.lockRelease(releaseId);
-        if (release.getConfirmedAt() != null)
+        if (release.getConfirmedAt() != null) {
             return;
+        }
 
         requireDateOnlyDraft(release);
         var now = clock.instant();
@@ -79,48 +85,58 @@ public class PatchReleaseWorkflow {
 
     private UUID resolveReleaseSeason(PatchVariant variant, UUID requestedSeason) {
         UUID seasonId = variant.getSeasonId() == null ? requestedSeason : variant.getSeasonId();
-        if (requestedSeason != null && !requestedSeason.equals(seasonId))
+        if (requestedSeason != null && !requestedSeason.equals(seasonId)) {
             throw invalid("The release season must match its patch season.");
+        }
         return seasonId;
     }
 
     private void requireValidAnnouncement(Release input, UUID seasonId) {
-        if ((input.effectiveAt() == null) == (input.effectiveOn() == null))
+        if ((input.effectiveAt() == null) == (input.effectiveOn() == null)) {
             throw invalid("Provide either an exact timestamp or a calendar date.");
-        if (input.effectiveAt() != null)
+        }
+        if (input.effectiveAt() != null) {
             seasons.requireRelease(seasonId, input.regionId(), input.effectiveAt());
-        else
+        } else {
             seasons.requireReleaseDate(seasonId, input.regionId(), input.effectiveOn());
-        if (input.sourceUrl() != null && !input.sourceUrl().matches("https?://\\S+"))
+        }
+        if (input.sourceUrl() != null && !input.sourceUrl().matches("https?://\\S+")) {
             throw invalid("Source URL must use HTTP or HTTPS.");
+        }
     }
 
     private void requireConsistentTimeline(UUID regionId, VariantSnapshot variant, Instant effectiveAt) {
-        if (!releases.regionUsesRulesetAt(regionId, variant.rulesetId(), effectiveAt))
+        if (!releases.regionUsesRulesetAt(regionId, variant.rulesetId(), effectiveAt)) {
             throw invalid("The region does not use this ruleset at the release time.");
-        if (releases.contradictsTimeline(regionId, variant, effectiveAt))
+        }
+        if (releases.contradictsTimeline(regionId, variant, effectiveAt)) {
             throw invalid("The release would contradict the region patch timeline.");
+        }
     }
 
     private static void requireAvailableRegion(Region region) {
-        if (!region.isAvailable())
+        if (!region.isAvailable()) {
             throw invalid("The market is unavailable.");
+        }
     }
 
     private static void requireDateOnlyDraft(PatchRelease release) {
-        if (release.getEffectiveOn() == null || !"DRAFT".equals(release.getStatus()))
+        if (release.getEffectiveOn() == null || release.getStatus() != PatchReleaseStatus.DRAFT) {
             throw invalid("Only a date-only release awaiting confirmation can be confirmed.");
+        }
     }
 
     private static void requireAnnouncedDateReached(PatchRelease release, Region region, Instant now) {
         var localToday = now.atZone(ZoneId.of(region.getTimezone())).toLocalDate();
-        if (release.getEffectiveOn().isAfter(localToday))
+        if (release.getEffectiveOn().isAfter(localToday)) {
             throw invalid("A future release cannot be confirmed as applied.");
+        }
     }
 
     private static void requirePublished(VariantSnapshot variant, String detail) {
-        if (!"PUBLISHED".equals(variant.status()))
+        if (variant.status() != PatchVariantStatus.PUBLISHED) {
             throw invalid(detail);
+        }
     }
 
     private PatchRelease createRelease(UUID variantId, Release input, UUID seasonId) {
@@ -131,7 +147,7 @@ public class PatchReleaseWorkflow {
         release.setEffectiveAt(input.effectiveAt());
         release.setAnnouncedAt(input.announcedAt());
         release.setEffectiveOn(input.effectiveOn());
-        release.setStatus(input.effectiveAt() == null ? "DRAFT" : "SCHEDULED");
+        release.setStatus(input.effectiveAt() == null ? PatchReleaseStatus.DRAFT : PatchReleaseStatus.SCHEDULED);
         release.setSourceUrl(input.sourceUrl());
         release.setCreatedAt(clock.instant());
         release.setSeasonId(seasonId);
@@ -141,11 +157,11 @@ public class PatchReleaseWorkflow {
     private static void markApplied(PatchRelease release, Instant now) {
         release.setEffectiveAt(now);
         release.setConfirmedAt(now);
-        release.setStatus("SCHEDULED");
+        release.setStatus(PatchReleaseStatus.SCHEDULED);
     }
 
     private void record(String action, UUID releaseId) {
-        audit.record(AuditEntry.of(actors.require(), action, "PATCH", releaseId));
+        audit.record(AuditEntry.of(actors.require(), action, CatalogAggregates.PATCH, releaseId));
     }
 
     private static ApiException invalid(String detail) {

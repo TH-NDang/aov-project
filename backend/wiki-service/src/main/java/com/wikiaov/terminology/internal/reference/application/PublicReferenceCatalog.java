@@ -47,11 +47,13 @@ public class PublicReferenceCatalog {
 
     private static void validateLocale(String value) {
         try {
-            if (value == null || value.length() > 64)
+            if (value == null || value.length() > 64) {
                 throw new IllformedLocaleException();
+            }
             var locale = new Locale.Builder().setLanguageTag(value).build();
-            if (locale.getLanguage().isEmpty() || !locale.toLanguageTag().equals(value))
+            if (locale.getLanguage().isEmpty() || !locale.toLanguageTag().equals(value)) {
                 throw new IllformedLocaleException();
+            }
         } catch (IllformedLocaleException error) {
             throw new ApiException(ReferenceErrorCode.REFERENCE_INVALID_LOCALE, "Use a canonical BCP 47 locale.");
         }

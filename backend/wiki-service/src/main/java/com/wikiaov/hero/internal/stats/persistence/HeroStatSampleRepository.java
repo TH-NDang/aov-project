@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.stats.persistence;
 
 import com.wikiaov.hero.internal.stats.persistence.entity.StatRow;
+import com.wikiaov.platform.RevisionState;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
@@ -12,11 +13,11 @@ public interface HeroStatSampleRepository extends Repository<StatRow, StatRow.Ke
                 select distinct on (hero_id) hero_id, state, profile_revision_id, combat_stats_revision_id, skills_revision_id
                 from hero.hero_revision
                 where effective_from_patch_variant_id = :variantId and ruleset_id = :rulesetId
-                    and state in ('DRAFT', 'PUBLISHED')
+                    and state in (:draft, :published)
                 order by hero_id, revision_no desc
             )
             select cast(jsonb_build_object(
-                'heroId', r.hero_id, 'draft', r.state = 'DRAFT',
+                'heroId', r.hero_id, 'draft', r.state = :draft,
                 'roles', coalesce((select jsonb_agg(role_code order by role_code) from hero.hero_profile_role
                     where profile_revision_id = r.profile_revision_id), '[]'),
                 'baseStats', coalesce((select jsonb_object_agg(stat_key,
@@ -40,5 +41,10 @@ public interface HeroStatSampleRepository extends Repository<StatRow, StatRow.Ke
             ) capture on true
             order by r.hero_id
             """, nativeQuery = true)
-    List<String> samples(UUID variantId, UUID rulesetId);
+    List<String> samples(UUID variantId, UUID rulesetId, String draft, String published);
+
+    /** Draft and published samples of one variant; the states are bound as parameters of the native query. */
+    default List<String> samples(UUID variantId, UUID rulesetId) {
+        return samples(variantId, rulesetId, RevisionState.DRAFT.name(), RevisionState.PUBLISHED.name());
+    }
 }

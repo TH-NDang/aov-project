@@ -6,12 +6,16 @@ import com.wikiaov.terminology.PublicReferenceProvider;
 import com.wikiaov.terminology.internal.application.response.ReferenceSettingsView;
 import com.wikiaov.terminology.internal.domain.HeroReferenceAliases;
 import com.wikiaov.terminology.internal.domain.ReferenceSettings;
-import com.wikiaov.terminology.internal.domain.ReferenceSettings.*;
+import com.wikiaov.terminology.internal.domain.ReferenceSettings.Destinations;
+import com.wikiaov.terminology.internal.domain.ReferenceSettings.Entry;
+import com.wikiaov.terminology.internal.domain.ReferenceSettings.Translation;
 import com.wikiaov.terminology.internal.settings.application.ReferenceCatalog;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -45,10 +49,12 @@ public class PublicReferenceCatalogLoader {
         var document = settings.readCatalogConfiguration();
         var config = document.settings();
         var entries = new LinkedHashMap<String, Entry>();
-        for (var e : config.entities())
-            if (e.kind().equals("term"))
+        for (var e : config.entities()) {
+            if (e.kind().equals("term")) {
                 entries.put("term:" + e.id(), e);
-        for (var provider : providers)
+            }
+        }
+        for (var provider : providers) {
             for (var candidate : provider.references(scope, locale)) {
                 String id = candidate.id().toString();
                 entries.put(candidate.kind() + ":" + id, new Entry(id, candidate.kind(),
@@ -57,11 +63,13 @@ public class PublicReferenceCatalogLoader {
                         candidate.icon(), candidate.kind().equals("hero") || candidate.kind().equals("term"), null,
                         destination(candidate.kind(), id, region, locale)));
             }
+        }
         for (var custom : config.entities()) {
             String key = custom.kind() + ":" + custom.id();
             var original = entries.get(key);
-            if (original == null || custom.kind().equals("term"))
+            if (original == null || custom.kind().equals("term")) {
                 continue;
+            }
             var copies = new LinkedHashMap<String, Translation>();
             if (original.kind().equals("hero")) {
                 HeroReferenceAliases.overlay(original.translations(), custom.translations())

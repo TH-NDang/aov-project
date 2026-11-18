@@ -9,9 +9,20 @@ import com.wikiaov.hero.internal.profile.persistence.entity.ProfilePositionRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRoleRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillEffectRow;
-import jakarta.persistence.criteria.*;
+import com.wikiaov.platform.RevisionState;
+import jakarta.persistence.criteria.AbstractQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class HeroCatalogSpecifications {
@@ -41,16 +52,21 @@ public final class HeroCatalogSpecifications {
     private static Predicate[] predicates(Filter filter, CriteriaQuery<?> query, Root<HeroIdentity> hero,
             CriteriaBuilder cb) {
         List<Predicate> result = new ArrayList<>();
-        if (filter.rulesetId() != null)
+        if (filter.rulesetId() != null) {
             result.add(hasRevisionInRuleset(filter, query, hero, cb));
-        if (!filter.snapshotVariants().isEmpty())
+        }
+        if (!filter.snapshotVariants().isEmpty()) {
             result.add(hasSnapshotInVariants(filter, query, hero, cb));
-        if (filter.changesOnly())
+        }
+        if (filter.changesOnly()) {
             result.add(hasCuratedChange(filter, query, hero, cb));
-        if (!filter.q().isEmpty())
+        }
+        if (!filter.q().isEmpty()) {
             result.add(matchesSearch(filter, query, hero, cb));
-        if (filter.facets().active())
+        }
+        if (filter.facets().active()) {
             result.add(matchesFacets(filter, query, hero, cb));
+        }
 
         return result.toArray(Predicate[]::new);
     }
@@ -61,7 +77,7 @@ public final class HeroCatalogSpecifications {
         var revision = revisions.from(HeroRevision.class);
         revisions.select(revision.get("id")).where(cb.equal(revision.get("heroId"), hero.get("id")),
                 cb.equal(revision.get("rulesetId"), filter.rulesetId()),
-                cb.notEqual(revision.get("state"), "DISCARDED"));
+                cb.notEqual(revision.get("state"), RevisionState.DISCARDED));
 
         return cb.exists(revisions);
     }
@@ -72,7 +88,7 @@ public final class HeroCatalogSpecifications {
         var revision = available.from(HeroRevision.class);
         available.select(revision.get("id")).where(cb.equal(revision.get("heroId"), hero.get("id")),
                 revision.get("effectiveFromPatchVariantId").in(filter.snapshotVariants()),
-                cb.equal(revision.get("state"), "PUBLISHED"));
+                cb.equal(revision.get("state"), RevisionState.PUBLISHED));
 
         return cb.exists(available);
     }
@@ -84,7 +100,7 @@ public final class HeroCatalogSpecifications {
         var targets = changes.subquery(UUID.class);
         var target = targets.from(HeroRevision.class);
         targets.select(target.get("id")).where(cb.equal(target.get("id"), change.get("toHeroRevisionId")),
-                cb.equal(target.get("state"), "PUBLISHED"), cb.equal(target.get("cause"), "GAME_PATCH"));
+                cb.equal(target.get("state"), RevisionState.PUBLISHED), cb.equal(target.get("cause"), "GAME_PATCH"));
         changes.select(change.get("id")).where(cb.equal(change.get("heroId"), hero.get("id")),
                 change.get("patchVariantId").in(filter.variants()),
                 cb.or(cb.equal(change.get("sourceKind"), ChangeSource.PATCH_NOTES), cb.exists(targets)));
@@ -105,8 +121,9 @@ public final class HeroCatalogSpecifications {
         names.addAll(List.of(cb.equal(revision.get("heroId"), hero.get("id")),
                 cb.equal(translation.get("profileRevisionId"), revision.get("profileRevisionId")),
                 cb.like(cb.lower(translation.get("name")), pattern, '\\'), cb.not(cb.exists(newer))));
-        if (filter.rulesetId() != null)
+        if (filter.rulesetId() != null) {
             names.add(cb.equal(revision.get("rulesetId"), filter.rulesetId()));
+        }
         matching.select(revision.get("id")).where(names.toArray(Predicate[]::new));
 
         return cb.or(cb.like(cb.lower(hero.get("code")), codePattern, '\\'), cb.exists(matching));
@@ -136,8 +153,9 @@ public final class HeroCatalogSpecifications {
         var predicates = searchRevisionPredicates(filter, revision, matching, cb);
         predicates.add(cb.equal(revision.get("heroId"), hero.get("id")));
         predicates.add(cb.not(cb.exists(newerSearchRevision(filter, matching, revision, cb))));
-        if (filter.rulesetId() != null)
+        if (filter.rulesetId() != null) {
             predicates.add(cb.equal(revision.get("rulesetId"), filter.rulesetId()));
+        }
         if (!filter.facets().roles().isEmpty()) {
             var roles = matching.subquery(UUID.class);
             var role = roles.from(ProfileRoleRow.class);
@@ -189,22 +207,23 @@ public final class HeroCatalogSpecifications {
             result.add(cb.or(
                     cb.and(cb.equal(change.get("sourceKind"), ChangeSource.SNAPSHOT),
                             cb.equal(change.get("toHeroRevisionId"), revision.get("id")),
-                            cb.equal(revision.get("state"), "PUBLISHED"),
+                            cb.equal(revision.get("state"), RevisionState.PUBLISHED),
                             cb.equal(revision.get("cause"), "GAME_PATCH")),
                     cb.and(cb.equal(change.get("sourceKind"), ChangeSource.PATCH_NOTES),
-                            cb.notEqual(revision.get("state"), "DISCARDED"))));
+                            cb.notEqual(revision.get("state"), RevisionState.DISCARDED))));
         } else if (!filter.snapshotVariants().isEmpty()) {
             result.add(revision.get("effectiveFromPatchVariantId").in(filter.snapshotVariants()));
-            result.add(cb.equal(revision.get("state"), "PUBLISHED"));
+            result.add(cb.equal(revision.get("state"), RevisionState.PUBLISHED));
         } else {
-            result.add(cb.notEqual(revision.get("state"), "DISCARDED"));
+            result.add(cb.notEqual(revision.get("state"), RevisionState.DISCARDED));
         }
         return result;
     }
 
     private static Expression<Long> ordinal(Filter filter, Root<HeroRevision> revision, CriteriaBuilder cb) {
-        if (filter.ordinals().isEmpty())
+        if (filter.ordinals().isEmpty()) {
             return cb.literal(-1L);
+        }
         var rank = cb.<UUID, Long>selectCase(revision.get("effectiveFromPatchVariantId"));
         filter.ordinals().forEach(rank::when);
         return rank.otherwise(-1L);

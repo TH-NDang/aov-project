@@ -1,6 +1,11 @@
 package com.wikiaov.patch.internal.authoring.persistence.entity;
 
-import jakarta.persistence.*;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
@@ -23,7 +28,8 @@ public class PatchVariant {
 
     private long rulesetOrdinal;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private PatchVariantStatus status;
 
     private Instant publishedAt;
 

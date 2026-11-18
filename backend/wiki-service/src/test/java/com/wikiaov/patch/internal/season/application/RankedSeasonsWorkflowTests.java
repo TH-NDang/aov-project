@@ -3,13 +3,19 @@ package com.wikiaov.patch.internal.season.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
@@ -105,7 +111,7 @@ class RankedSeasonsWorkflowTests {
     void rejectsACalendarThatWouldExcludeAnExistingReleaseBeforeSaving() {
         prepareCalendar();
         var release = new PatchRelease();
-        release.setStatus("PUBLISHED");
+        release.setStatus(PatchReleaseStatus.SCHEDULED);
         release.setEffectiveOn(LocalDate.of(2026, 9, 28));
         when(releases.findBySeasonIdAndRegionId(seasonId, regionId)).thenReturn(List.of(release));
 

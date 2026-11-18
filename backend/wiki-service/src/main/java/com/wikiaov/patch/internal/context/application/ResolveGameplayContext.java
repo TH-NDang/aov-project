@@ -1,11 +1,17 @@
 package com.wikiaov.patch.internal.context.application;
 
-import com.wikiaov.patch.*;
+import com.wikiaov.patch.AuthoringContext;
+import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.patch.RulesetReference;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.application.RegionErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
+import com.wikiaov.patch.internal.domain.PatchLifecycleState;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
 import com.wikiaov.patch.internal.season.persistence.RankedSeasonRepository;
@@ -36,7 +42,7 @@ public class ResolveGameplayContext implements GameplayContexts {
     }
 
     public GameplayContext resolve(String region, Instant at) {
-        regions.findByCodeAndLifecycleState(region, "ACTIVE").orElseThrow(
+        regions.findByCodeAndLifecycleState(region, PatchLifecycleState.ACTIVE).orElseThrow(
                 () -> new ApiException(RegionErrorCode.UNSUPPORTED_REGION, "The requested region is unavailable."));
         return contexts.effective(region, at, PageRequest.of(0, 1)).stream().findFirst()
                 .orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE,
@@ -45,15 +51,17 @@ public class ResolveGameplayContext implements GameplayContexts {
 
     public GameplayContext resolveCatalog(String region, Instant at, UUID seasonId, UUID patchVariantId) {
         var current = resolve(region, at);
-        if (seasonId == null && patchVariantId == null)
+        if (seasonId == null && patchVariantId == null) {
             return current;
+        }
 
         var selected = contexts.catalogPatches(current.rulesetId(), at, current.rulesetOrdinal(), seasonId,
                 patchVariantId, PageRequest.of(0, 1)).stream().findFirst().orElseThrow(
                         () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
                                 "The requested season or patch is unavailable for this catalog."));
-        if (selected.getId().equals(current.patchVariantId()))
+        if (selected.getId().equals(current.patchVariantId())) {
             return current;
+        }
 
         var date = contexts.catalogDates(current.regionId(), List.of(selected.getId()), at).stream().findFirst()
                 .orElse(null);
@@ -63,20 +71,22 @@ public class ResolveGameplayContext implements GameplayContexts {
     }
 
     public List<GameplayContext> active(Instant at) {
-        return regions.findByLifecycleState("ACTIVE").stream().map(region -> {
+        return regions.findByLifecycleState(PatchLifecycleState.ACTIVE).stream().map(region -> {
             try {
                 return resolve(region.getCode(), at);
             } catch (ApiException exception) {
-                if (exception.getErrorCode() == PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE)
+                if (exception.getErrorCode() == PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE) {
                     return null;
+                }
                 throw exception;
             }
         }).filter(java.util.Objects::nonNull).toList();
     }
 
     public void requireRuleset(UUID rulesetId) {
-        if (!rulesets.existsByIdAndLifecycleState(rulesetId, "ACTIVE"))
+        if (!rulesets.existsByIdAndLifecycleState(rulesetId, PatchLifecycleState.ACTIVE)) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "The ruleset is unavailable.");
+        }
     }
 
     public PatchVariantReference variant(UUID variantId) {
@@ -90,8 +100,9 @@ public class ResolveGameplayContext implements GameplayContexts {
     }
 
     public List<PatchVariantReference> catalogVariants(UUID seasonId) {
-        if (seasonId != null && !seasons.existsById(seasonId))
+        if (seasonId != null && !seasons.existsById(seasonId)) {
             throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The season does not exist.");
+        }
         return (seasonId == null ? variants.findAll() : variants.findBySeasonId(seasonId)).stream()
                 .map(this::variantView).toList();
     }
@@ -110,8 +121,9 @@ public class ResolveGameplayContext implements GameplayContexts {
 
     public AuthoringContext authoringContext(UUID contextId) {
         var shared = contexts.sharedAuthoringContext(contextId);
-        if (!shared.isEmpty())
+        if (!shared.isEmpty()) {
             return shared.getFirst();
+        }
         // Keep accepted jobs using legacy release IDs executable after migration.
         return contexts.legacyAuthoringContext(contextId).stream().findFirst()
                 .orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_CONTEXT_UNAVAILABLE,
@@ -120,6 +132,7 @@ public class ResolveGameplayContext implements GameplayContexts {
 
     private PatchVariantReference variantView(PatchVariant variant) {
         return new PatchVariantReference(variant.getId(), variant.getPatchId(), variant.getRulesetId(),
-                variant.getSeasonId(), variant.getRulesetOrdinal(), "PUBLISHED".equals(variant.getStatus()));
+                variant.getSeasonId(), variant.getRulesetOrdinal(),
+                variant.getStatus() == PatchVariantStatus.PUBLISHED);
     }
 }

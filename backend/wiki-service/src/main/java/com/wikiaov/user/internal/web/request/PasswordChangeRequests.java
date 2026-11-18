@@ -1,5 +1,6 @@
 package com.wikiaov.user.internal.web.request;
 
+import com.wikiaov.platform.VerbatimText;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -18,8 +19,8 @@ public final class PasswordChangeRequests {
 
     /** Confirms the mailed code and sets the new password, which is never stored or logged. */
     public record Confirm(
-            @NotNull @Pattern(regexp = "[0-9]{6}") String code,
-            @NotNull @Size(min = 8, max = 1024) String newPassword,
+            @NotNull @Pattern(regexp = "[0-9]{6}") @VerbatimText String code,
+            @NotNull @Size(min = 8, max = 1024) @VerbatimText String newPassword,
             @Nullable Boolean signOutOtherSessions,
             @Nullable @Size(max = 35) String language
     ) {

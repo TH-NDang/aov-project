@@ -29,18 +29,31 @@ public interface SourceObjectRepository extends Repository<SourceObject, String>
     @Query(value = """
             INSERT INTO media.source_object (sha256, object_key, storage_alias, size_bytes, content_type, first_path,
                 state, created_at, created_by_issuer, created_by_subject)
-            VALUES (:sha256, :objectKey, :storageAlias, :sizeBytes, :contentType, :firstPath, 'READY', :createdAt,
+            VALUES (:sha256, :objectKey, :storageAlias, :sizeBytes, :contentType, :firstPath, :state, :createdAt,
                 :issuer, :subject)
             ON CONFLICT (sha256) DO NOTHING
             """, nativeQuery = true)
     int insertIfAbsent(@Param("sha256") String sha256, @Param("objectKey") String objectKey,
             @Param("storageAlias") String storageAlias, @Param("sizeBytes") long sizeBytes,
             @Param("contentType") String contentType, @Param("firstPath") String firstPath,
-            @Param("createdAt") Instant createdAt, @Param("issuer") String issuer, @Param("subject") String subject);
+            @Param("state") String state, @Param("createdAt") Instant createdAt, @Param("issuer") String issuer,
+            @Param("subject") String subject);
+
+    /** Native for ON CONFLICT; new bytes start READY. */
+    default int insertIfAbsent(String sha256, String objectKey, String storageAlias, long sizeBytes,
+            String contentType, String firstPath, Instant createdAt, String issuer, String subject) {
+        return insertIfAbsent(sha256, objectKey, storageAlias, sizeBytes, contentType, firstPath,
+                SourceObject.State.READY.name(), createdAt, issuer, subject);
+    }
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(value = "DELETE FROM media.source_object WHERE sha256 = :sha256 AND state = 'DELETING'", nativeQuery = true)
-    int deleteDeleting(@Param("sha256") String sha256);
+    @Query("delete from SourceObject o where o.sha256 = :sha256 and o.state = :state")
+    int deleteInState(@Param("sha256") String sha256, @Param("state") SourceObject.State state);
+
+    /** Removes the row of bytes already marked for deletion; bytes still READY stay. */
+    default int deleteDeleting(String sha256) {
+        return deleteInState(sha256, SourceObject.State.DELETING);
+    }
 
     /** Bytes that no collection places any more, newest first; usages of other modules are checked by the caller. */
     @Query(value = """

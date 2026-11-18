@@ -1,12 +1,19 @@
 package com.wikiaov.patch.internal.authoring.application;
 
-import com.wikiaov.patch.internal.application.PatchCommands.*;
+import com.wikiaov.patch.internal.application.PatchCommands.Assignment;
+import com.wikiaov.patch.internal.application.PatchCommands.CreateRegion;
+import com.wikiaov.patch.internal.application.PatchCommands.Patch;
+import com.wikiaov.patch.internal.application.PatchCommands.Release;
+import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
+import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
+import com.wikiaov.patch.internal.application.PatchCommands.Title;
+import com.wikiaov.patch.internal.application.PatchCommands.Variant;
+import com.wikiaov.patch.internal.application.response.PatchAdminViews;
 import com.wikiaov.patch.internal.context.application.PatchAdminCatalog;
 import com.wikiaov.patch.internal.release.application.PatchReleaseWorkflow;
 import com.wikiaov.patch.internal.ruleset.application.RulesetAdministration;
 import com.wikiaov.platform.PageSlice;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -81,19 +88,19 @@ public class PatchAuthoring {
 
     @PreAuthorize("hasAuthority('catalog:read')")
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> rulesets() {
+    public List<PatchAdminViews.Ruleset> rulesets() {
         return catalog.rulesets();
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
     @Transactional(readOnly = true)
-    public PageSlice<Map<String, Object>> catalog(int page, int size) {
+    public PageSlice<PatchAdminViews.Patch> catalog(int page, int size) {
         return catalog.catalog(page, size);
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> assignments(UUID regionId) {
+    public List<PatchAdminViews.Assignment> assignments(UUID regionId) {
         return catalog.assignments(regionId);
     }
 }

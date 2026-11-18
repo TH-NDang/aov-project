@@ -19,6 +19,9 @@ import com.wikiaov.media.MediaAssets;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -50,7 +53,7 @@ public class HeroGallery {
             "SKILL", EnumSet.of(MediaSemanticType.HERO_SKILL_ICON),
             "STICKER", EnumSet.of(MediaSemanticType.CHIBI_STICKER),
             "OTHER", EnumSet.allOf(MediaSemanticType.class));
-    private static final String DISPLAY_LOCALE = "vi-VN";
+    private static final String DISPLAY_LOCALE = CatalogLocales.DEFAULT;
 
     private final HeroGalleryItemRepository items;
     private final HeroGalleryImagesRepository images;
@@ -109,10 +112,12 @@ public class HeroGallery {
         for (var item : attached) {
             var image = gallery.computeIfAbsent(item.getAssetId(), Builder::new);
             image.place("GALLERY");
-            if (image.kind == null)
+            if (image.kind == null) {
                 image.kind = item.getKind();
-            if (image.partKey == null)
+            }
+            if (image.partKey == null) {
                 image.partKey = item.getPartKey();
+            }
             image.attachment = new Attachment(item.getId(), item.getCaption(), item.getUntilPatchVariantId(),
                     item.getSortOrder(), item.getVersion());
         }
@@ -125,16 +130,18 @@ public class HeroGallery {
     @PreAuthorize("hasAuthority('hero:write')")
     public UUID attach(UUID heroId, HeroGalleryView.Attach input) {
         store.lockHero(heroId);
-        if (input == null || input.assetId() == null)
+        if (input == null || input.assetId() == null) {
             throw HeroValidation.invalid("Choose an image to attach.");
+        }
         String kind = kind(input.kind());
         requireAsset(input.assetId(), kind);
         String caption = caption(input.caption());
         String partKey = partKey(input.partKey());
         requirePatch(input.untilPatchVariantId());
-        if (items.existsByHeroIdAndAssetId(heroId, input.assetId()))
+        if (items.existsByHeroIdAndAssetId(heroId, input.assetId())) {
             throw new ApiException(HeroErrorCode.HERO_GALLERY_ITEM_CONFLICT,
                     "The image is already in this hero's gallery.");
+        }
 
         var actor = actors.require();
         var item = new HeroGalleryItem();
@@ -157,19 +164,21 @@ public class HeroGallery {
                     "The image is already in this hero's gallery.");
         }
 
-        audit.record(new AuditEntry(actor, "HERO_GALLERY_ITEM_ATTACHED", "HERO", heroId, null, null, 0L, null,
+        audit.record(new AuditEntry(actor, "HERO_GALLERY_ITEM_ATTACHED", CatalogAggregates.HERO, heroId, null, null, 0L,
+                null,
                 Map.of("itemId", item.getId(), "assetId", input.assetId(), "kind", kind)));
         return item.getId();
     }
 
     @Transactional
     @PreAuthorize("hasAuthority('hero:write')")
-    public Map<String, Object> update(UUID heroId, UUID itemId, HeroGalleryView.Update input) {
+    public HeroGalleryView.Saved update(UUID heroId, UUID itemId, HeroGalleryView.Update input) {
         store.lockHero(heroId);
         var item = require(heroId, itemId);
-        if (input == null || item.getVersion() != input.expectedVersion())
+        if (input == null || item.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_GALLERY_ITEM_CONFLICT,
                     "The gallery image changed. Reload before saving.");
+        }
         String kind = kind(input.kind());
         requireAsset(item.getAssetId(), kind);
         String caption = caption(input.caption());
@@ -184,9 +193,9 @@ public class HeroGallery {
         item.setUpdatedAt(clock.instant());
         items.flush();
 
-        audit.record(new AuditEntry(actors.require(), "HERO_GALLERY_ITEM_UPDATED", "HERO", heroId, null,
+        audit.record(new AuditEntry(actors.require(), "HERO_GALLERY_ITEM_UPDATED", CatalogAggregates.HERO, heroId, null,
                 input.expectedVersion(), item.getVersion(), null, Map.of("itemId", itemId)));
-        return Map.of("id", itemId, "version", item.getVersion());
+        return new HeroGalleryView.Saved(itemId, item.getVersion());
     }
 
     /** Takes the image out of the gallery; the image itself stays in media. */
@@ -195,14 +204,15 @@ public class HeroGallery {
     public void remove(UUID heroId, UUID itemId, long expectedVersion) {
         store.lockHero(heroId);
         var item = require(heroId, itemId);
-        if (item.getVersion() != expectedVersion)
+        if (item.getVersion() != expectedVersion) {
             throw new ApiException(HeroErrorCode.HERO_GALLERY_ITEM_CONFLICT,
                     "The gallery image changed. Reload before removing it.");
+        }
 
         items.delete(item);
         items.flush();
 
-        audit.record(new AuditEntry(actors.require(), "HERO_GALLERY_ITEM_REMOVED", "HERO", heroId, null,
+        audit.record(new AuditEntry(actors.require(), "HERO_GALLERY_ITEM_REMOVED", CatalogAggregates.HERO, heroId, null,
                 expectedVersion, null, null, Map.of("itemId", itemId, "assetId", item.getAssetId())));
     }
 
@@ -213,38 +223,44 @@ public class HeroGallery {
     }
 
     private static String kind(@Nullable String value) {
-        if (value == null || !ACCEPTED.containsKey(value))
+        if (value == null || !ACCEPTED.containsKey(value)) {
             throw HeroValidation.invalid("The gallery kind must be HERO_ART, SKIN, SKILL, STICKER or OTHER.");
+        }
         return value;
     }
 
     private void requireAsset(UUID assetId, String kind) {
         var asset = media.find(assetId)
                 .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_INVALID_MEDIA, "The image does not exist."));
-        if (!asset.usable())
+        if (!asset.usable()) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_MEDIA, "The image is not active or has no file yet.");
-        if (!ACCEPTED.get(kind).contains(asset.semanticType()))
+        }
+        if (!ACCEPTED.get(kind).contains(asset.semanticType())) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_MEDIA,
                     "A " + kind + " gallery image cannot be a " + asset.semanticType() + " asset.");
+        }
     }
 
     private static @Nullable String caption(@Nullable String value) {
         String caption = value == null ? "" : value.strip();
-        if (caption.length() > 500)
+        if (caption.length() > 500) {
             throw HeroValidation.invalid("A gallery caption has at most 500 characters.");
+        }
         return caption.isEmpty() ? null : caption;
     }
 
     private static @Nullable String partKey(@Nullable String value) {
         String key = value == null ? "" : value.strip();
-        if (key.length() > 64)
+        if (key.length() > 64) {
             throw HeroValidation.invalid("A part key has at most 64 characters.");
+        }
         return key.isEmpty() ? null : key;
     }
 
     private void requirePatch(@Nullable UUID variantId) {
-        if (variantId == null)
+        if (variantId == null) {
             return;
+        }
         try {
             contexts.variant(variantId);
         } catch (ApiException missing) {
@@ -254,8 +270,9 @@ public class HeroGallery {
 
     /** Names of skills and skins, from the newest version that names them, in the reader's language when it can. */
     private Map<String, String> partNames(List<HeroGalleryImagesRepository.VersionImage> rows, String locale) {
-        if (rows.isEmpty())
+        if (rows.isEmpty()) {
             return Map.of();
+        }
 
         Map<UUID, Long> order = new HashMap<>();
         rows.forEach(row -> order.put(row.getRevisionId(), row.getRevisionNo()));
@@ -278,10 +295,12 @@ public class HeroGallery {
             .thenComparingInt(image -> image.attachment() == null ? 0 : image.attachment().sortOrder());
 
     private static int rank(Image image) {
-        if (image.current())
+        if (image.current()) {
             return 0;
-        if (image.versions().stream().anyMatch(version -> version.state().equals("DRAFT")))
+        }
+        if (image.versions().stream().anyMatch(version -> version.state() == RevisionState.DRAFT)) {
             return 1;
+        }
         return image.versions().isEmpty() ? 3 : 2;
     }
 
@@ -301,14 +320,16 @@ public class HeroGallery {
         private void place(String role) {
             roles.add(role);
             int colon = role.indexOf(':');
-            if (kind == null)
+            if (kind == null) {
                 kind = role.startsWith("SKIN_")
                         ? "SKIN"
                         : role.startsWith("SKILL_")
                                 ? "SKILL"
                                 : role.equals("GALLERY") ? null : "HERO_ART";
-            if (partKey == null && colon > 0)
+            }
+            if (partKey == null && colon > 0) {
                 partKey = role.substring(colon + 1);
+            }
         }
 
         private Image build(Map<String, String> partNames) {

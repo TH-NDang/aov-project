@@ -4,6 +4,7 @@ import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
 import com.wikiaov.gamemode.internal.domain.GameModeContent;
 import com.wikiaov.gamemode.internal.guide.domain.AutoChessContentRules;
+import com.wikiaov.platform.CatalogCodes;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -16,7 +17,7 @@ public final class GameModeCommands {
     }
 
     public record CreateMode(
-            @NotBlank @Size(max = 120) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String code,
+            @NotBlank @Size(max = 120) @Pattern(regexp = CatalogCodes.PATTERN) String code,
             @NotBlank @Size(max = 120) String name,
             @NotBlank @Pattern(regexp = "PVP|ENTERTAINMENT") String group,
             GameModeContent content

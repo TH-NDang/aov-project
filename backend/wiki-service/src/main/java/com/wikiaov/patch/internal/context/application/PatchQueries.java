@@ -1,15 +1,23 @@
 package com.wikiaov.patch.internal.context.application;
 
-import com.wikiaov.patch.*;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchCatalog;
+import com.wikiaov.patch.PatchReleaseReference;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchRepository;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchTranslationRepository;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
+import com.wikiaov.patch.internal.domain.PatchStatus;
 import com.wikiaov.patch.internal.ruleset.application.Regions;
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,16 +53,17 @@ public class PatchQueries implements PatchCatalog {
     public Map<String, Object> publishedVariant(UUID id, UUID variantId, String region, String locale) {
         validateLocale(locale);
         var context = gameplay.resolveCatalog(region, clock.instant(), null, variantId);
-        if (!context.patchId().equals(id))
+        if (!context.patchId().equals(id)) {
             throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
                     "The requested variant does not belong to this patch.");
+        }
 
         return view(id, region, locale, context.patchVariantId(), context.rulesetId(), context.effectiveAt());
     }
 
     private Map<String, Object> view(UUID id, String region, String locale, UUID variantId, UUID rulesetId,
             Instant effectiveAt) {
-        var patch = patches.findByIdAndStatus(id, "PUBLISHED").orElseThrow(
+        var patch = patches.findByIdAndStatus(id, PatchStatus.PUBLISHED).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "Patch resource does not exist."));
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", patch.getId());
@@ -78,8 +87,6 @@ public class PatchQueries implements PatchCatalog {
 
     public PageSlice<Map<String, Object>> list(String region, String locale, int page, int size) {
         validateLocale(locale);
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PatchErrorCode.PATCH_INVALID, "Invalid page bounds.");
         var ids = releases(region).stream().map(PatchReleaseReference::patchId).distinct().toList();
         long offset = (long) page * size;
         return new PageSlice<>(ids.stream().skip(offset).limit(size).map(id -> published(id, region, locale)).toList(),
@@ -93,8 +100,9 @@ public class PatchQueries implements PatchCatalog {
 
     private static void validateLocale(String value) {
         try {
-            if (!new Locale.Builder().setLanguageTag(value).build().toLanguageTag().equals(value))
+            if (!new Locale.Builder().setLanguageTag(value).build().toLanguageTag().equals(value)) {
                 throw new IllegalArgumentException();
+            }
         } catch (IllegalArgumentException exception) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "Use a canonical BCP 47 locale.");
         }

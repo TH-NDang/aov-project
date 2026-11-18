@@ -24,6 +24,7 @@ class MediaContactAdminController implements MediaContactAdminApi {
         this.contacts = contacts;
     }
 
+    @Override
     @GetMapping(version = "1")
     public PageSlice<MediaContactView> list(HttpServletRequest http, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -31,6 +32,7 @@ class MediaContactAdminController implements MediaContactAdminApi {
         return contacts.list(page, size);
     }
 
+    @Override
     @PostMapping(path = "/{id}/resolve", version = "1")
     public MediaContactView resolve(@PathVariable UUID id) {
         return contacts.resolve(id);

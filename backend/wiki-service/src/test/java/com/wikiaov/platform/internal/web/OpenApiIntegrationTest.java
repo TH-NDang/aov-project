@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.platform.CatalogChangeProvider;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
+@DockerBacked
 class OpenApiIntegrationTest extends OpenApiContractChecks {
     @Autowired
     List<CatalogChangeProvider> changeProviders;
@@ -32,11 +34,6 @@ class OpenApiIntegrationTest extends OpenApiContractChecks {
         assertThat(domainValues(spec, "/api/wiki/v1/admin/catalog-changes"))
                 .containsExactlyInAnyOrderElementsOf(
                         changeProviders.stream().map(CatalogChangeProvider::domain).toList());
-    }
-
-    @Override
-    int expectedHandlerCount() {
-        return 284;
     }
 
     @Override

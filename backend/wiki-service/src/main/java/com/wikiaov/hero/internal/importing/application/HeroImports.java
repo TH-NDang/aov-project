@@ -9,13 +9,15 @@ import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroContent.Profile;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.patch.AuthoringContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,6 +81,16 @@ public class HeroImports {
         this.drafts = new HeroImportDraftWriter(authoring, revisions, content, json);
     }
 
+    /** The hero fields an import file may fill. */
+    public List<Field> fields() {
+        return FIELDS;
+    }
+
+    /** The fields of each repeated relation (skills, skins) an import file may fill. */
+    public Map<String, List<Field>> relationFields() {
+        return RELATION_FIELDS;
+    }
+
     @Transactional(readOnly = true)
     public HeroImportPlan preview(HeroImportRequest input) {
         try {
@@ -105,8 +117,9 @@ public class HeroImports {
         var original = content.serializedFields(before);
 
         boolean missing = revision == null && input.mode() != Mode.BASELINE;
-        if (!missing)
+        if (!missing) {
             content.validate(input.locale(), normalized, (Profile) sections.get(HeroSection.PROFILE));
+        }
 
         boolean changed = !original.equals(normalized);
 
@@ -121,26 +134,31 @@ public class HeroImports {
     private AuthoringContext requireMatchingContext(HeroImportRequest input) {
         contexts.requireRuleset(input.rulesetId());
         var target = contexts.authoringContext(input.contextId());
-        if (!target.rulesetId().equals(input.rulesetId()))
+        if (!target.rulesetId().equals(input.rulesetId())) {
             throw new ApiException(HeroErrorCode.HERO_IMPORT_CONTEXT_CONFLICT,
                     "The selected release belongs to a different ruleset.");
+        }
         return target;
     }
 
     private void requireSupportedFields(HeroImportRequest input) {
         HeroValidation.locale(input.locale());
         var keys = FIELDS.stream().map(Field::key).toList();
-        if (!keys.containsAll(input.values().keySet()) || !keys.containsAll(input.policies().keySet()))
+        if (!keys.containsAll(input.values().keySet()) || !keys.containsAll(input.policies().keySet())) {
             throw HeroValidation.invalid("Unknown import field.");
+        }
     }
 
     private static String classification(Mode mode, boolean newHero, HeroRevisionView revision, boolean changed) {
-        if (revision == null && mode != Mode.BASELINE)
+        if (revision == null && mode != Mode.BASELINE) {
             return "INSUFFICIENT_DATA";
-        if (newHero)
+        }
+        if (newHero) {
             return "NEW_TO_CATALOG";
-        if (mode == Mode.BASELINE && revision == null)
+        }
+        if (mode == Mode.BASELINE && revision == null) {
             return "BASELINE";
+        }
         return changed ? "CHANGED" : "UNCHANGED";
     }
 
@@ -154,8 +172,9 @@ public class HeroImports {
         lockExistingHero(input.code());
         var plan = preview(input);
         requireApplicableCurrentPreview(input, plan);
-        if (!plan.changed())
+        if (!plan.changed()) {
             return plan;
+        }
 
         drafts.apply(input, plan);
 
@@ -167,12 +186,14 @@ public class HeroImports {
     }
 
     private void requireApplicableCurrentPreview(HeroImportRequest input, HeroImportPlan plan) {
-        if (!plan.canApply())
+        if (!plan.canApply()) {
             throw new ApiException(HeroErrorCode.HERO_IMPORT_MISSING_BASELINE,
                     "No known snapshot is available for this import mode.");
+        }
         if (!Objects.equals(plan.revisionId(), input.expectedRevisionId())
-                || !Objects.equals(plan.version(), input.expectedVersion()))
+                || !Objects.equals(plan.version(), input.expectedVersion())) {
             throw new ApiException(HeroErrorCode.HERO_REVISION_VERSION_CONFLICT,
                     "The import preview is stale. Preview the row again.");
+        }
     }
 }

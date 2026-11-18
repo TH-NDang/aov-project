@@ -1,7 +1,11 @@
 package com.wikiaov.terminology.internal.reference.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
@@ -13,7 +17,11 @@ import com.wikiaov.terminology.SkillReferenceProvider;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 

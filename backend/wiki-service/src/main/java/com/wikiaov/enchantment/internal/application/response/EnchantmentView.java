@@ -2,8 +2,11 @@ package com.wikiaov.enchantment.internal.application.response;
 
 import com.wikiaov.enchantment.internal.domain.EnchantmentContent;
 import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record EnchantmentView(
         UUID id,
@@ -28,7 +31,7 @@ public record EnchantmentView(
             String code,
             UUID rulesetId,
             long revisionNo,
-            String state,
+            RevisionState state,
             long version,
             Long publicationSequence,
             Instant publishedAt,

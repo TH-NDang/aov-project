@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.web;
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
 import com.wikiaov.hero.internal.skins.application.PublicSkinCatalog;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
@@ -23,9 +24,11 @@ public class PublicSkinCatalogController implements PublicSkinCatalogApi {
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
     public ResponseEntity<PublicSkinCatalogView> list(@RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) String hero, @RequestParam(required = false) String rarity,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,

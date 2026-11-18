@@ -2,7 +2,10 @@ package com.wikiaov.terminology.internal.domain;
 
 import com.wikiaov.terminology.internal.domain.ReferenceSettings.Translation;
 import java.text.Normalizer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 
 /** Supplemental hero aliases never replace canonical localized names or descriptions. */
 public final class HeroReferenceAliases {
@@ -11,13 +14,15 @@ public final class HeroReferenceAliases {
 
     public static List<String> merge(List<String> canonical, List<String> supplemental) {
         var unique = new LinkedHashMap<String, String>();
-        for (var source : List.of(canonical, supplemental))
+        for (var source : List.of(canonical, supplemental)) {
             for (var alias : source) {
                 var value = alias.strip();
-                if (!value.isEmpty())
+                if (!value.isEmpty()) {
                     unique.putIfAbsent(Normalizer.normalize(value, Normalizer.Form.NFC).toLowerCase(Locale.ROOT),
                             value);
+                }
             }
+        }
         return List.copyOf(unique.values());
     }
 

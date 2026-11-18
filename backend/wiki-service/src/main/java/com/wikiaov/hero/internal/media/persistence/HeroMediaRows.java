@@ -8,8 +8,9 @@ import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRo
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinImageOption;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinSnapshotRow;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinTranslationRow;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 

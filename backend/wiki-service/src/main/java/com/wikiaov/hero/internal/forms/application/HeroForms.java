@@ -21,8 +21,18 @@ import com.wikiaov.hero.internal.forms.persistence.entity.HeroFormMembership;
 import com.wikiaov.hero.internal.profile.persistence.HeroProfileSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,8 +71,9 @@ public class HeroForms {
     /** The hero codes a filter by {@code code} covers: the code itself and, for a hero that holds forms, every form. */
     public Set<String> codesFor(String code) {
         var members = store.findByCode(code).map(hero -> structure().formsOf(hero.getId())).orElse(List.of());
-        if (members.isEmpty())
+        if (members.isEmpty()) {
             return Set.of(code);
+        }
 
         Set<String> codes = new HashSet<>();
         codes.add(code);
@@ -77,13 +88,14 @@ public class HeroForms {
         UUID holderId = structure.holdsForms(heroId)
                 ? heroId
                 : structure.form(heroId).map(Form::holderId).orElse(null);
-        if (holderId == null)
+        if (holderId == null) {
             return new HeroFormsView(heroId, hero.getCode(), null, null, List.of());
+        }
 
         var members = structure.formsOf(holderId);
         var ids = Stream.concat(Stream.of(holderId), members.stream().map(Form::heroId)).toList();
         var codes = store.heroes(ids).stream().collect(Collectors.toMap(HeroIdentity::getId, HeroIdentity::getCode));
-        var revisions = store.revisions(ids).stream().filter(revision -> !revision.state().equals("DISCARDED"))
+        var revisions = store.revisions(ids).stream().filter(revision -> revision.state() != RevisionState.DISCARDED)
                 .collect(Collectors.groupingBy(HeroRevisionView::heroId));
         var newestProfiles = profiles.contents(revisions.values().stream()
                 .map(rows -> rows.getFirst().sections().get(HeroSection.PROFILE)).filter(Objects::nonNull).toList());
@@ -96,8 +108,8 @@ public class HeroForms {
             return new HeroFormsView.Form(form.heroId(), codes.get(form.heroId()), form.formKey(),
                     form.displayOrder(), names(profile.apply(form.heroId())),
                     profile.apply(form.heroId()).map(Profile::roles).orElse(Set.of()),
-                    rows.stream().anyMatch(row -> row.state().equals("PUBLISHED")),
-                    rows.stream().anyMatch(row -> row.state().equals("DRAFT")));
+                    rows.stream().anyMatch(row -> row.state() == RevisionState.PUBLISHED),
+                    rows.stream().anyMatch(row -> row.state() == RevisionState.DRAFT));
         }).toList();
 
         return new HeroFormsView(heroId, hero.getCode(), holder,
@@ -110,16 +122,19 @@ public class HeroForms {
         store.lockHero(holderId);
         var holder = store.requireHero(holderId);
         var structure = structure();
-        if (structure.isForm(holderId))
+        if (structure.isForm(holderId)) {
             throw HeroValidation.invalid("A form cannot hold forms.");
+        }
         var current = structure.formsOf(holderId).stream().map(Form::heroId).toList();
-        if (!current.equals(input.expectedForms()))
+        if (!current.equals(input.expectedForms())) {
             throw new ApiException(HeroErrorCode.HERO_FORMS_CONFLICT, "The hero's forms have changed.",
                     Map.of("currentForms", current));
+        }
 
         validateEntries(holder, input, structure);
-        if (!input.forms().isEmpty())
+        if (!input.forms().isEmpty()) {
             requireNoGameplay(holderId);
+        }
 
         var previous = forms.findByParentHeroIdOrderByDisplayOrderAsc(holderId).stream()
                 .collect(Collectors.toMap(HeroFormMembership::getHeroId, Function.identity()));
@@ -145,7 +160,7 @@ public class HeroForms {
             throw new ApiException(HeroErrorCode.HERO_FORMS_CONFLICT, "Another change to these forms was saved.");
         }
 
-        audit.record(new AuditEntry(actor, "HERO_FORMS_UPDATED", "HERO", holderId, null, null, null,
+        audit.record(new AuditEntry(actor, "HERO_FORMS_UPDATED", CatalogAggregates.HERO, holderId, null, null, null,
                 input.changeNote(), Map.of("before", current, "after",
                         input.forms().stream().map(entry -> entry.formKey() + ":" + entry.heroId()).toList())));
 
@@ -155,34 +170,41 @@ public class HeroForms {
     private void validateEntries(HeroIdentity holder, ReplaceForms input, HeroFormStructure structure) {
         var ids = input.forms().stream().map(entry -> entry.heroId()).toList();
         if (new HashSet<>(ids).size() != ids.size()
-                || input.forms().stream().map(entry -> entry.formKey()).distinct().count() != ids.size())
+                || input.forms().stream().map(entry -> entry.formKey()).distinct().count() != ids.size()) {
             throw HeroValidation.invalid("Each form appears once and has its own key.");
+        }
 
         var codes = store.heroes(ids).stream().collect(Collectors.toMap(HeroIdentity::getId, HeroIdentity::getCode));
         for (var entry : input.forms()) {
-            if (!codes.containsKey(entry.heroId()))
+            if (!codes.containsKey(entry.heroId())) {
                 throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "A form hero does not exist.",
                         Map.of("heroId", entry.heroId()));
-            if (entry.heroId().equals(holder.getId()) || structure.holdsForms(entry.heroId()))
+            }
+            if (entry.heroId().equals(holder.getId()) || structure.holdsForms(entry.heroId())) {
                 throw HeroValidation.invalid("A hero that holds forms cannot be a form.");
+            }
             var owner = structure.form(entry.heroId()).map(Form::holderId);
-            if (owner.isPresent() && !owner.get().equals(holder.getId()))
+            if (owner.isPresent() && !owner.get().equals(holder.getId())) {
                 throw HeroValidation.invalid("The hero is already a form of another hero.");
-            if (!codes.get(entry.heroId()).equals(holder.getCode() + "-" + entry.formKey()))
+            }
+            if (!codes.get(entry.heroId()).equals(holder.getCode() + "-" + entry.formKey())) {
                 throw HeroValidation.invalid("A form's code must be the hero code followed by the form key.");
+            }
         }
     }
 
     private void requireNoGameplay(UUID holderId) {
         for (var revision : store.revisions(holderId)) {
-            if (revision.state().equals("DISCARDED"))
+            if (revision.state() == RevisionState.DISCARDED) {
                 continue;
+            }
             for (var section : GAMEPLAY) {
                 UUID id = revision.sections().get(section);
-                if (id != null && HeroFormGameplay.present(sections.content(section, id)))
+                if (id != null && HeroFormGameplay.present(sections.content(section, id))) {
                     throw new ApiException(HeroErrorCode.HERO_FORM_PARENT_GAMEPLAY,
                             "Move roles, positions, ratings, stats and skills to the forms before adding forms.",
                             Map.of("revisionId", revision.id(), "section", section.name()));
+                }
             }
         }
     }

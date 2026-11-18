@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.source.application;
 
 import com.wikiaov.media.SourceFileUsage;
+import com.wikiaov.media.internal.domain.model.UploadState;
 import com.wikiaov.media.internal.source.domain.SourceCategory;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -97,7 +98,7 @@ public final class SourceFileViews {
             UUID uploadId,
             UUID collectionId,
             String path,
-            String state,
+            UploadState state,
             @Nullable String errorCode,
             Instant expiresAt,
             @Nullable UUID fileId

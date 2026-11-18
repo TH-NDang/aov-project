@@ -1,8 +1,18 @@
 package com.wikiaov.hero.internal.importing.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.hero.internal.alias.persistence.IdentifierAliases;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
@@ -14,13 +24,35 @@ import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.Cause;
+import com.wikiaov.hero.internal.domain.HeroContent.Effect;
+import com.wikiaov.hero.internal.domain.HeroContent.ImageOption;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Skin;
+import com.wikiaov.hero.internal.domain.HeroContent.SkinTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skins;
+import com.wikiaov.hero.internal.domain.HeroContent.Stat;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.patch.AuthoringContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.JsonToken;
@@ -50,7 +82,8 @@ class HeroImportsTest {
         when(heroes.findByCode("airi")).thenReturn(Optional.of(hero));
         when(contexts.authoringContext(contextId)).thenReturn(new AuthoringContext(contextId, null, "VN", null,
                 null, rulesetId, patchId, "2026-10", 10L, null));
-        when(authoring.revisions(heroId)).thenReturn(List.of(revision("DRAFT", Cause.IMPORT_CORRECTION, patchId)));
+        when(authoring.revisions(heroId))
+                .thenReturn(List.of(revision(RevisionState.DRAFT, Cause.IMPORT_CORRECTION, patchId)));
         when(authoring.preview(heroId, revisionId)).thenReturn(sections);
         when(aliases.skins(any(), any())).thenAnswer(call -> call.getArgument(1));
         sections.put(HeroSection.PROFILE, new Profile(
@@ -246,7 +279,8 @@ class HeroImportsTest {
 
     @Test
     void anExistingSnapshotRequiresCorrectionRatherThanBaselineImport() {
-        when(authoring.revisions(heroId)).thenReturn(List.of(revision("PUBLISHED", Cause.DATA_BASELINE, patchId)));
+        when(authoring.revisions(heroId))
+                .thenReturn(List.of(revision(RevisionState.PUBLISHED, Cause.DATA_BASELINE, patchId)));
         assertError(() -> imports.preview(request(Mode.BASELINE, Map.of(), Map.of(), null, null)),
                 HeroErrorCode.HERO_IMPORT_SNAPSHOT_EXISTS,
                 "This patch already has a snapshot. Choose correction mode.");
@@ -256,7 +290,7 @@ class HeroImportsTest {
     @Test
     void anUnrelatedDraftIsRejectedBeforeReadingItsSections() {
         when(authoring.revisions(heroId))
-                .thenReturn(List.of(revision("DRAFT", Cause.IMPORT_CORRECTION, UUID.randomUUID())));
+                .thenReturn(List.of(revision(RevisionState.DRAFT, Cause.IMPORT_CORRECTION, UUID.randomUUID())));
         assertError(() -> imports.preview(request(Mode.CORRECTION, Map.of(), Map.of(), revisionId, 7L)),
                 HeroErrorCode.HERO_IMPORT_DRAFT_CONFLICT,
                 "Another draft exists. Finish or discard it before changing patch or import mode.");
@@ -269,7 +303,7 @@ class HeroImportsTest {
                 expectedId, expectedVersion);
     }
 
-    private HeroRevisionView revision(String state, Cause cause, UUID patch) {
+    private HeroRevisionView revision(RevisionState state, Cause cause, UUID patch) {
         return new HeroRevisionView(revisionId, heroId, rulesetId, 1L, state, 7L, 1L, null, cause, null, patch,
                 Map.of());
     }

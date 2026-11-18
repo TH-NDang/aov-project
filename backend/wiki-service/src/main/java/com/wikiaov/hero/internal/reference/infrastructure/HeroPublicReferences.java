@@ -3,10 +3,16 @@ package com.wikiaov.hero.internal.reference.infrastructure;
 import com.wikiaov.hero.internal.reference.persistence.HeroReferenceRepository;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.terminology.AdminReferenceProvider;
 import com.wikiaov.terminology.PublicReferenceProvider;
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +54,7 @@ public class HeroPublicReferences implements PublicReferenceProvider, AdminRefer
         var output = new ArrayList<PublicReferenceProvider.Candidate>();
         for (var values : grouped.values()) {
             var copy = values.stream().filter(t -> t.locale().equals(locale)).findFirst()
-                    .or(() -> values.stream().filter(t -> t.locale().equals("vi-VN")).findFirst())
+                    .or(() -> values.stream().filter(t -> t.locale().equals(CatalogLocales.DEFAULT)).findFirst())
                     .orElse(values.getFirst());
             var asset = copy.iconAssetId() == null ? null : assets.get(copy.iconAssetId());
             String icon = asset != null && asset.usable() ? asset.currentVersion().url() : null;

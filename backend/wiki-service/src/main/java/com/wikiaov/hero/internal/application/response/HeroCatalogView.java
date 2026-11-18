@@ -1,8 +1,8 @@
 package com.wikiaov.hero.internal.application.response;
 
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
-
+import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
 import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
+import com.wikiaov.hero.internal.domain.HeroChanges.OverallKind;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

@@ -2,8 +2,11 @@ package com.wikiaov.arcana.internal.application.response;
 
 import com.wikiaov.arcana.internal.domain.ArcanaContent;
 import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record ArcanaView(
         UUID id,
@@ -27,7 +30,7 @@ public record ArcanaView(
             String code,
             UUID rulesetId,
             long revisionNo,
-            String state,
+            RevisionState state,
             long version,
             Long publicationSequence,
             Instant publishedAt,

@@ -1,71 +1,72 @@
 package com.wikiaov.hero.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.MutableClock;
-import com.wikiaov.media.*;
+import com.wikiaov.TestcontainersConfiguration;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.media.MediaUsageProvider;
+import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.patch.GameplayContexts;
-import java.time.*;
-import java.util.*;
-import java.util.concurrent.*;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.*;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.*;
-import org.springframework.test.web.servlet.request.*;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(DomainCoreIntegrationTest.Beans.class)
-@EnabledIf("databaseAvailable")
+@Import({TestcontainersConfiguration.class, DomainCoreIntegrationTest.Beans.class})
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@DockerBacked
 class DomainCoreIntegrationTest {
     private static final String ROOT = "/api/wiki/v1";
     private static final UUID VN = UUID.fromString("5d5dcd5e-15b9-4d43-884d-111111111111");
     private static final UUID TH = UUID.fromString("5d5dcd5e-15b9-4d43-884d-222222222222");
-    private static PostgreSQLContainer database;
-
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry props) {
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external != null) {
-            props.add("spring.datasource.url", () -> external);
-            props.add("spring.datasource.username", () -> "wiki_test");
-            props.add("spring.datasource.password", () -> "");
-        } else {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            props.add("spring.datasource.url", database::getJdbcUrl);
-            props.add("spring.datasource.username", database::getUsername);
-            props.add("spring.datasource.password", database::getPassword);
-        }
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
-    }
 
     @TestConfiguration
     static class Beans {
@@ -199,7 +200,7 @@ class DomainCoreIntegrationTest {
         var draft = create();
         send(post(path(uuid(draft, "heroId"), id(draft)) + "/publish"),
                 Map.of("expectedVersion", 1), 422);
-        send(get(ROOT + "/admin/patches?size=101"), null, 422);
+        send(get(ROOT + "/admin/patches?size=101"), null, 400);
     }
 
     @Test
@@ -318,7 +319,7 @@ class DomainCoreIntegrationTest {
 
         assertThat(jdbc.sql("SELECT summary FROM hero.hero_skill_translation ORDER BY summary NULLS LAST")
                 .query(String.class).list()).containsExactly("Lướt tới và hất tung mục tiêu.", null, null);
-        for (var malformed : List.of(" ", "Lướt tới.\nHất tung mục tiêu."))
+        for (var malformed : List.of(" ", "Lướt tới.\nHất tung mục tiêu.")) {
             assertThatThrownBy(() -> jdbc.sql("""
                     INSERT INTO hero.hero_skill_translation (skill_set_revision_id, skill_key, locale, name,
                         description, summary)
@@ -326,6 +327,7 @@ class DomainCoreIntegrationTest {
                     """).param(UUID.randomUUID()).param(malformed).update())
                     .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
                     .hasMessageContaining("hero_skill_translation_summary_check");
+        }
     }
 
     private Map<String, Object> summaryBody(Number version, String summary) {
@@ -406,10 +408,11 @@ class DomainCoreIntegrationTest {
         send(post(path(hero, draftId) + "/publish"), Map.of("expectedVersion", number(draft, "version")), 200);
         UUID sticker = UUID.randomUUID(), oldIcon = UUID.randomUUID();
         for (var image : Map.of(sticker, MediaSemanticType.CHIBI_STICKER, oldIcon, MediaSemanticType.HERO_SKILL_ICON)
-                .entrySet())
+                .entrySet()) {
             when(media.find(image.getKey())).thenReturn(Optional.of(new MediaAssetReference(image.getKey(),
                     image.getValue(), MediaAssetState.ACTIVE, new MediaAssetReference.CurrentVersion(UUID.randomUUID(),
                             "image/webp", 128, 128, "/media/" + image.getKey() + "/v1.webp"))));
+        }
         String gallery = ROOT + "/admin/heroes/" + hero + "/gallery";
 
         // The published version's images come from the version itself.
@@ -627,9 +630,9 @@ class DomainCoreIntegrationTest {
         send(post(previousPath), Map.of("description", "  ", "sourceUrl", "https://example.org/old"), 422);
         send(post(previousPath), Map.of("description", "x".repeat(4001), "sourceUrl", "https://example.org/old"), 422);
         send(post(ROOT + "/admin/hero-changes/" + newerChange + "/mechanics/" + stat.get("id") + "/previous"),
-                Map.of("description", "Not a mechanic", "sourceUrl", "https://example.org/old"), 422);
+                Map.of("description", "Not a mechanic", "sourceUrl", "https://example.org/old"), 404);
         send(post(ROOT + "/admin/hero-changes/" + olderChange + "/mechanics/" + mechanic.get("id") + "/previous"),
-                Map.of("description", "Another change set", "sourceUrl", "https://example.org/old"), 422);
+                Map.of("description", "Another change set", "sourceUrl", "https://example.org/old"), 404);
         assertThat(send(post(previousPath),
                 Map.of("description", " Earlier behaviour ", "sourceUrl", "https://example.org/old?oldid=1"), 201))
                 .containsEntry("id", mechanic.get("id"));
@@ -671,8 +674,8 @@ class DomainCoreIntegrationTest {
                 .isEqualTo(0);
         assertThat(send(get(ROOT + "/admin/heroes?page=1&size=1"), null, 200).get("totalElements")).isEqualTo(2);
         send(get(ROOT + "/admin/heroes?seasonId=" + season + "&patchVariantId=" + variant), null, 422);
-        send(get(ROOT + "/admin/heroes?sort=unknown"), null, 422);
-        send(get(ROOT + "/admin/heroes?q=" + "a".repeat(101)), null, 422);
+        send(get(ROOT + "/admin/heroes?sort=unknown"), null, 400);
+        send(get(ROOT + "/admin/heroes?q=" + "a".repeat(101)), null, 400);
         send(get(ROOT + "/admin/heroes?unknown=1"), null, 400);
 
         clock.set(Instant.parse("2026-10-15T07:00:00Z"));
@@ -971,7 +974,7 @@ class DomainCoreIntegrationTest {
         var start = new CountDownLatch(1);
         try {
             List<Future<Integer>> results = new ArrayList<>();
-            for (String name : List.of("Editor A", "Editor B"))
+            for (String name : List.of("Editor A", "Editor B")) {
                 results.add(executor.submit(() -> {
                     start.await();
                     String payload = json.writeValueAsString(Map.of("expectedDraftVersion", 1, "translations",
@@ -984,6 +987,7 @@ class DomainCoreIntegrationTest {
                                     .contentType(MediaType.APPLICATION_JSON).content(payload))
                             .andReturn().getResponse().getStatus();
                 }));
+            }
             start.countDown();
             assertThat(List.of(results.get(0).get(10, TimeUnit.SECONDS), results.get(1).get(10, TimeUnit.SECONDS)))
                     .containsExactlyInAnyOrder(200, 409);
@@ -1012,7 +1016,7 @@ class DomainCoreIntegrationTest {
         send(post(ROOT + "/admin/heroes/" + hero + "/drafts"),
                 Map.of("rulesetId", ruleset, "sourceRevisionId", id, "cause", "CONTENT_CORRECTION"), 409);
         mvc.perform(get(ROOT + "/heroes?region=VN&region=TH")).andExpect(status().isBadRequest());
-        mvc.perform(get(ROOT + "/heroes?size=101")).andExpect(status().isUnprocessableEntity());
+        mvc.perform(get(ROOT + "/heroes?size=101")).andExpect(status().isBadRequest());
     }
 
     private Map<String, Object> create() throws Exception {
@@ -1170,9 +1174,10 @@ class DomainCoreIntegrationTest {
             assertThat(publishReadiness()).hasSize(1);
             long one = statistics.getPrepareStatementCount();
 
-            for (String code : List.of("airi", "butterfly", "capheny"))
+            for (String code : List.of("airi", "butterfly", "capheny")) {
                 send(post(ROOT + "/admin/heroes"), Map.of("code", code, "initialLocale", "vi-VN", "name", code,
                         "rulesetId", ruleset, "releaseId", releaseId(variant)), 201);
+            }
             statistics.clear();
             assertThat(publishReadiness()).hasSize(4);
 
@@ -1245,8 +1250,8 @@ class DomainCoreIntegrationTest {
         assertThat((List<?>) send(get(filtered + "&page=1"), null, 200).get("items")).isEmpty();
         assertThat(send(get(ROOT + "/admin/heroes?position=mid"), null, 200).get("totalElements")).isEqualTo(0);
         assertThat(send(get(ROOT + "/admin/heroes?role=MAGE"), null, 200).get("totalElements")).isEqualTo(0);
-        send(get(ROOT + "/admin/heroes?role=UNKNOWN"), null, 422);
-        send(get(ROOT + "/admin/heroes?position=unknown"), null, 422);
+        send(get(ROOT + "/admin/heroes?role=UNKNOWN"), null, 400);
+        send(get(ROOT + "/admin/heroes?position=unknown"), null, 400);
 
         draft = send(post(path(hero, revisionId) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
         var newer = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"), Map.of("sourceRevisionId", revisionId,
@@ -1510,8 +1515,9 @@ class DomainCoreIntegrationTest {
     }
 
     private void seedImportSeason() throws Exception {
-        if (jdbc.sql("SELECT count(*) FROM patch.ranked_season").query(Long.class).single() > 0)
+        if (jdbc.sql("SELECT count(*) FROM patch.ranked_season").query(Long.class).single() > 0) {
             return;
+        }
         var season = send(post(ROOT + "/admin/seasons"), Map.of("code", "test-season", "displayName", "S1 2026"), 201);
         send(post(ROOT + "/admin/seasons/" + season.get("id") + "/schedules"), Map.of("regionId", VN,
                 "startsAt", "2026-01-01T00:00:00Z", "endsAt", "2027-01-01T00:00:00Z"), 201);
@@ -1611,8 +1617,9 @@ class DomainCoreIntegrationTest {
         Map<String, Object> body = new HashMap<>();
         body.put("rulesetId", ruleset);
         body.put("validFrom", from);
-        if (to != null)
+        if (to != null) {
             body.put("validTo", to);
+        }
         send(post(ROOT + "/admin/regions/" + region + "/ruleset-assignments"), body, status);
     }
 
@@ -1783,8 +1790,9 @@ class DomainCoreIntegrationTest {
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write"),
                 new SimpleGrantedAuthority("hero:publish"), new SimpleGrantedAuthority("patch:write"),
                 new SimpleGrantedAuthority("patch:publish"), new SimpleGrantedAuthority("region:admin")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

@@ -1,16 +1,25 @@
 package com.wikiaov.hero.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.Actor;
+import com.wikiaov.access.ActorType;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.importing.application.HeroImportJobs;
 import com.wikiaov.hero.internal.importing.persistence.HeroImportJobRepository;
 import com.wikiaov.hero.internal.importing.persistence.entity.HeroImportJob;
 import com.wikiaov.platform.ApiException;
 import java.lang.reflect.Proxy;
-import java.util.*;
-import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
 class HeroImportNotificationTest {
@@ -38,7 +47,9 @@ class HeroImportNotificationTest {
             return actor;
         }
     };
-    private final HeroImportJobs jobs = new HeroImportJobs(repository, actors, null, null, new JsonMapper());
+    private final List<AuditEntry> audited = new ArrayList<>();
+    private final HeroImportJobs jobs = new HeroImportJobs(repository, actors, null, null, audited::add,
+            new JsonMapper());
 
     @BeforeEach
     void setup() {
@@ -58,6 +69,14 @@ class HeroImportNotificationTest {
         assertThat(jobs.dismissNotification(job.getId()).notificationDismissed()).isTrue();
         assertThat(jobs.get(job.getId()).results()).hasSize(1);
         assertThat(writes).isEqualTo(2);
+    }
+
+    @Test
+    void onlyTheFirstDismissalIsAudited() {
+        jobs.dismissNotification(job.getId());
+        jobs.dismissNotification(job.getId());
+
+        assertThat(audited).extracting(AuditEntry::action).containsExactly("HERO_IMPORT_NOTIFICATION_DISMISSED");
     }
 
     @Test

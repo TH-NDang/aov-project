@@ -1,7 +1,10 @@
 package com.wikiaov.patch.internal.season.application;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
 import com.wikiaov.patch.internal.season.domain.SeasonCalendarRules;
@@ -13,10 +16,19 @@ import com.wikiaov.patch.internal.season.persistence.SeasonScheduleRepository;
 import com.wikiaov.patch.internal.season.persistence.entity.RankedSeason;
 import com.wikiaov.patch.internal.season.persistence.entity.SeasonSchedule;
 import com.wikiaov.platform.ApiException;
-import jakarta.validation.constraints.*;
+import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogCodes;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -46,7 +58,7 @@ public class RankedSeasons {
 
     @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.patch.internal.application.service.RankedSeasons.Input")
     public record Input(
-            @NotBlank @Size(max = 64) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String code,
+            @NotBlank @Size(max = 64) @Pattern(regexp = CatalogCodes.PATTERN) String code,
             @NotBlank @Size(max = 120) String displayName,
             @Min(2000) @Max(9999) Integer seasonYear,
             @Positive Integer seasonNumber,
@@ -98,7 +110,8 @@ public class RankedSeasons {
         } catch (DataIntegrityViolationException e) {
             throw conflict();
         }
-        audit.record(AuditEntry.of(actors.require(), "RANKED_SEASON_CREATED", "RANKED_SEASON", s.getId()));
+        audit.record(
+                AuditEntry.of(actors.require(), "RANKED_SEASON_CREATED", CatalogAggregates.RANKED_SEASON, s.getId()));
         return view(s);
     }
 
@@ -118,15 +131,17 @@ public class RankedSeasons {
             throw calendarError(violation);
         }
         var schedule = writeSchedule(seasonId, input, window);
-        audit.record(AuditEntry.of(actors.require(), "SEASON_SCHEDULE_CREATED", "RANKED_SEASON", seasonId));
+        audit.record(
+                AuditEntry.of(actors.require(), "SEASON_SCHEDULE_CREATED", CatalogAggregates.RANKED_SEASON, seasonId));
         return schedule.getId();
     }
 
     private long reserveOrdinal(UUID beforeSeasonId) {
         var ordered = seasons.findAllByOrderByOrdinalDesc();
         long appendOrdinal = ordered.isEmpty() ? 1 : Math.addExact(ordered.getFirst().getOrdinal(), 1);
-        if (beforeSeasonId == null)
+        if (beforeSeasonId == null) {
             return appendOrdinal;
+        }
         long ordinal = require(beforeSeasonId).getOrdinal();
         for (var existing : ordered) {
             if (existing.getOrdinal() >= ordinal) {
@@ -139,8 +154,9 @@ public class RankedSeasons {
 
     private void requireCompatibleSchedules(RankedSeason season, UUID regionId, Window window) {
         for (var existing : schedules.findAll()) {
-            if (!existing.getRegionId().equals(regionId) || existing.getSeasonId().equals(season.getId()))
+            if (!existing.getRegionId().equals(regionId) || existing.getSeasonId().equals(season.getId())) {
                 continue;
+            }
             long order = require(existing.getSeasonId()).getOrdinal();
             window.requireSeasonOrder(season.getOrdinal(), order, existing.getStartsAt(), existing.getEndsAt());
         }
@@ -148,8 +164,9 @@ public class RankedSeasons {
 
     private void requireIncludesReleases(UUID seasonId, UUID regionId, Window window, ZoneId zone) {
         for (var release : releases.findBySeasonIdAndRegionId(seasonId, regionId)) {
-            if ("CANCELLED".equals(release.getStatus()))
+            if (release.getStatus() == PatchReleaseStatus.CANCELLED) {
                 continue;
+            }
             window.requireIncludesRelease(release.getEffectiveAt(), release.getEffectiveOn(), zone);
         }
     }
@@ -180,29 +197,35 @@ public class RankedSeasons {
     }
 
     public void requireRelease(UUID seasonId, UUID regionId, Instant time) {
-        if (seasonId == null)
+        if (seasonId == null) {
             return;
+        }
         var schedule = schedules.findBySeasonIdAndRegionId(seasonId, regionId)
                 .orElse(null);
-        if (schedule == null)
+        if (schedule == null) {
             return;
+        }
         if (time.isBefore(schedule.getStartsAt())
-                || (schedule.getEndsAt() != null && !time.isBefore(schedule.getEndsAt())))
+                || (schedule.getEndsAt() != null && !time.isBefore(schedule.getEndsAt()))) {
             throw invalid("The release must be within the market season schedule.");
+        }
     }
 
     public void requireReleaseDate(UUID seasonId, UUID regionId, java.time.LocalDate date) {
-        if (seasonId == null)
+        if (seasonId == null) {
             return;
+        }
         var schedule = schedules.findBySeasonIdAndRegionId(seasonId, regionId)
                 .orElse(null);
-        if (schedule == null)
+        if (schedule == null) {
             return;
+        }
         var region = regions.findById(regionId).orElse(null);
         var zone = java.time.ZoneId.of(region.getTimezone());
         if ((schedule.getEndsAt() != null && !date.atStartOfDay(zone).toInstant().isBefore(schedule.getEndsAt()))
-                || !date.plusDays(1).atStartOfDay(zone).toInstant().isAfter(schedule.getStartsAt()))
+                || !date.plusDays(1).atStartOfDay(zone).toInstant().isAfter(schedule.getStartsAt())) {
             throw invalid("The release date must overlap its market season.");
+        }
     }
 
     private View view(RankedSeason s) {

@@ -1,6 +1,7 @@
 package com.wikiaov.patch.internal.ruleset.persistence;
 
 import com.wikiaov.patch.RulesetReference;
+import com.wikiaov.patch.internal.domain.PatchLifecycleState;
 import com.wikiaov.patch.internal.ruleset.persistence.entity.GameplayRuleset;
 import jakarta.persistence.LockModeType;
 import java.util.List;
@@ -12,12 +13,12 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface GameplayRulesetRepository extends JpaRepository<GameplayRuleset, UUID> {
     @Query("select new com.wikiaov.patch.RulesetReference(r.id,r.code) from GameplayRuleset r "
-            + "where r.lifecycleState='ACTIVE' order by r.code,r.id")
+            + "where r.lifecycleState=com.wikiaov.patch.internal.domain.PatchLifecycleState.ACTIVE order by r.code,r.id")
     List<RulesetReference> activeReferences();
 
     List<GameplayRuleset> findAllByOrderByCodeAsc();
 
-    boolean existsByIdAndLifecycleState(UUID id, String lifecycleState);
+    boolean existsByIdAndLifecycleState(UUID id, PatchLifecycleState lifecycleState);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select e from GameplayRuleset e where e.id = :id")

@@ -27,10 +27,12 @@ public class HeroBuildReferences implements BuildReferenceProvider {
         Map<String, BuildReference> result = new HashMap<>();
         heroes.findByCodeIn(codes)
                 .forEach(hero -> result.put(hero.getCode(), BuildReference.of(hero.getId(), hero.getCode())));
-        for (String code : codes)
-            if (!result.containsKey(code))
+        for (String code : codes) {
+            if (!result.containsKey(code)) {
                 heroes.findByCode(code)
                         .ifPresent(hero -> result.put(code, BuildReference.of(hero.getId(), hero.getCode())));
+            }
+        }
         return result;
     }
 

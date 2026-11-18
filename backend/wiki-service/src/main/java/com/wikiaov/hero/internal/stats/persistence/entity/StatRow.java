@@ -1,11 +1,17 @@
 package com.wikiaov.hero.internal.stats.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-
-import jakarta.persistence.*;
+import com.wikiaov.platform.AssignedIdentifierEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.util.UUID;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter

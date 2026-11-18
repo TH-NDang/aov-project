@@ -7,6 +7,7 @@ import com.wikiaov.enchantment.internal.catalog.persistence.EnchantmentIdentityR
 import com.wikiaov.enchantment.internal.catalog.persistence.EnchantmentRevisionRepository;
 import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentIdentity;
 import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentRevision;
+import com.wikiaov.platform.RevisionState;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -31,25 +32,30 @@ public class EnchantmentBuildReferences implements BuildReferenceProvider {
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findByCodeIn(codes)))
+        for (var identity : published(identities.findByCodeIn(codes))) {
             result.put(identity.identity().getCode(), identity.reference());
+        }
         return result;
     }
 
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findAllById(ids)))
+        for (var identity : published(identities.findAllById(ids))) {
             result.put(identity.identity().getId(), identity.reference());
+        }
         return result;
     }
 
     /** The given identities that have a published revision, each with its latest one. */
     private List<Published> published(List<EnchantmentIdentity> found) {
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return List.of();
+        }
         Map<UUID, EnchantmentRevision> latest = revisions
-                .findByOwnerIdInAndState(found.stream().map(EnchantmentIdentity::getId).toList(), "PUBLISHED").stream()
+                .findByOwnerIdInAndState(found.stream().map(EnchantmentIdentity::getId).toList(),
+                        RevisionState.PUBLISHED)
+                .stream()
                 .collect(Collectors.toMap(EnchantmentRevision::getOwnerId, revision -> revision,
                         (a, b) -> sequence(a) >= sequence(b) ? a : b));
         return found.stream().filter(identity -> latest.containsKey(identity.getId()))

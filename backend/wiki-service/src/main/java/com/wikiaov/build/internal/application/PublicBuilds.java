@@ -10,7 +10,15 @@ import com.wikiaov.build.internal.persistence.entity.CaptureHeroRow;
 import com.wikiaov.build.internal.persistence.entity.CaptureRow;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -44,29 +52,35 @@ public class PublicBuilds {
 
     @Transactional(readOnly = true)
     public BuildViews.HeroBuilds heroBuilds(String heroCode, String region) {
-        if (heroCode == null || heroCode.isBlank())
+        if (heroCode == null || heroCode.isBlank()) {
             throw new ApiException(BuildErrorCode.BUILD_INVALID, "A hero code is required.");
-        if (region == null || !REGION.matcher(region).matches())
+        }
+        if (region == null || !REGION.matcher(region).matches()) {
             throw new ApiException(BuildErrorCode.BUILD_INVALID, "Unknown market.");
+        }
         var hero = references.byCodes(BuildReferenceKind.HERO, List.of(heroCode)).get(heroCode);
-        if (hero == null)
+        if (hero == null) {
             throw new ApiException(BuildErrorCode.BUILD_HERO_NOT_FOUND, "Hero " + heroCode + " was not found.");
+        }
 
         Map<String, CaptureRow> newest = new HashMap<>();
-        for (var capture : captures.confirmedWithHero(region, hero.id()))
+        for (var capture : captures.confirmedWithHero(region, hero.id())) {
             newest.putIfAbsent(capture.getSourceKind(), capture);
+        }
         var chosen = newest.values().stream()
                 .sorted(Comparator.comparingInt(capture -> SOURCE_ORDER.indexOf(capture.getSourceKind()))).toList();
         Map<UUID, List<BuildRow>> rows = new HashMap<>();
-        for (var capture : chosen)
+        for (var capture : chosen) {
             rows.put(capture.getId(), builds
                     .findByCaptureIdAndHeroIdAndNeedsReviewFalseOrderByListPositionAsc(capture.getId(), hero.id()));
+        }
 
         var loaded = readModel.load(rows.values().stream().flatMap(List::stream).toList());
         var pageUse = usage(rows.values().stream().flatMap(List::stream).map(BuildRow::getArcanaPageId)
                 .filter(Objects::nonNull).collect(Collectors.toSet()));
         var sources = chosen.stream().map(capture -> {
-            var heroRow = heroes.findById(new CaptureHeroRow.Key(capture.getId(), hero.id())).orElseThrow();
+            var heroRow = heroes.findById(new CaptureHeroRow.Key(capture.getId(), hero.id()))
+                    .orElseThrow(() -> new IllegalStateException("A chosen capture has no row for its hero."));
             return new BuildViews.Source(capture.getId(), capture.getSourceKind(), capture.getSourceLabel(),
                     capture.getCapturedAt(), capture.getSourceTimeZone(),
                     capture.getPatchVariantId() == null ? null : contexts.patchCode(capture.getPatchVariantId()),
@@ -86,8 +100,9 @@ public class PublicBuilds {
     private static List<BuildViews.PublicBuild> merge(List<BuildRow> rows, BuildReadModel.Loaded loaded,
             Map<UUID, BuildViews.Usage> pageUse) {
         Map<String, List<BuildRow>> groups = new LinkedHashMap<>();
-        for (var row : rows)
+        for (var row : rows) {
             groups.computeIfAbsent(row.getContentKey(), key -> new ArrayList<>()).add(row);
+        }
         return groups.values().stream().map(group -> {
             var first = group.getFirst();
             return new BuildViews.PublicBuild(first.getContentKey(),

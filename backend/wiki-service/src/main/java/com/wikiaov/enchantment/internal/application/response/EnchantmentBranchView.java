@@ -1,7 +1,8 @@
 package com.wikiaov.enchantment.internal.application.response;
 
 import com.wikiaov.platform.CatalogText.MetadataTranslation;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 public record EnchantmentBranchView(
         String code,

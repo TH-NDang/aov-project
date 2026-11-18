@@ -2,7 +2,6 @@ package com.wikiaov.hero.internal.reference.application;
 
 import com.wikiaov.hero.internal.domain.SkillReferenceSearch;
 import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceRepository;
-import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceRepository.*;
 import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceRepository.Copy;
 import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceRepository.Row;
 import com.wikiaov.hero.internal.skills.persistence.HeroSkillImageRepository;
@@ -11,10 +10,16 @@ import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.terminology.SkillReferenceProvider;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -59,8 +64,9 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
     private PageSlice<Candidate> hydrate(HeroSkillReferenceRepository.Result result, UUID rulesetId, String region,
             String locale, int page, int size) {
         var rows = result.items();
-        if (rows.isEmpty())
+        if (rows.isEmpty()) {
             return new PageSlice<>(List.of(), page, size, result.totalElements());
+        }
         boolean publicRead = region != null;
         var skillCopies = references.skills(rows).stream()
                 .collect(Collectors.groupingBy(c -> key(c.sectionId(), c.skillKey())));
@@ -74,10 +80,12 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
         for (var row : rows) {
             var icon = icon(row, library.getOrDefault(row.heroId(), List.of()));
             icons.put(key(row.skillSetRevisionId(), row.skillKey()), icon);
-            if (icon.id() != null)
+            if (icon.id() != null) {
                 assetIds.add(icon.id());
-            if (row.headAssetId() != null)
+            }
+            if (row.headAssetId() != null) {
                 assetIds.add(row.headAssetId());
+            }
         }
         var assets = publicRead ? media.findAll(assetIds) : Map.<UUID, MediaAssetReference>of();
         var candidates = new ArrayList<Candidate>();
@@ -109,12 +117,14 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
     private static List<Translation> translations(List<Copy> copies, String fallback, String locale) {
         var values = copies.stream().map(c -> new Translation(c.locale(), c.name(), List.of(), c.description()))
                 .toList();
-        if (values.isEmpty())
-            return List.of(new Translation(locale == null ? "vi-VN" : locale, fallback, List.of(), ""));
-        if (locale == null)
+        if (values.isEmpty()) {
+            return List.of(new Translation(locale == null ? CatalogLocales.DEFAULT : locale, fallback, List.of(), ""));
+        }
+        if (locale == null) {
             return values;
+        }
         var selected = values.stream().filter(c -> c.locale().equals(locale)).findFirst()
-                .or(() -> values.stream().filter(c -> c.locale().equals("vi-VN")).findFirst())
+                .or(() -> values.stream().filter(c -> c.locale().equals(CatalogLocales.DEFAULT)).findFirst())
                 .orElse(values.getFirst());
         return List.of(selected);
     }
@@ -135,15 +145,18 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
     }
 
     private static Icon icon(Row row, List<HeroSkillImage> library) {
-        if (row.iconAssetId() != null)
+        if (row.iconAssetId() != null) {
             return new Icon(row.iconAssetId(), "REVISION");
+        }
         var exact = library.stream().filter(i -> row.skillKey().equals(i.getSkillKey())).toList();
-        if (!exact.isEmpty())
+        if (!exact.isEmpty()) {
             return exact.size() == 1 ? new Icon(exact.getFirst().getAssetId(), "LIBRARY") : new Icon(null, null);
+        }
         Integer slot = SkillReferenceSearch.sourceSlot(row.skillKey());
         Integer variant = SkillReferenceSearch.variantNo(row.skillKey());
-        if (slot == null || variant == null)
+        if (slot == null || variant == null) {
             return new Icon(null, null);
+        }
         var matching = library.stream().filter(i -> i.getSkillKey() == null && i.getSourceSlot() == slot
                 && i.getVariantNo() == variant).toList();
         return matching.size() == 1 ? new Icon(matching.getFirst().getAssetId(), "LIBRARY") : new Icon(null, null);

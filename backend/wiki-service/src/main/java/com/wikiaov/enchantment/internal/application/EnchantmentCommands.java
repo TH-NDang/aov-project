@@ -1,7 +1,12 @@
 package com.wikiaov.enchantment.internal.application;
 
 import com.wikiaov.enchantment.internal.domain.EnchantmentContent;
-import jakarta.validation.constraints.*;
+import com.wikiaov.platform.CatalogCodes;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 public final class EnchantmentCommands {
@@ -9,7 +14,7 @@ public final class EnchantmentCommands {
     }
 
     public record Create(
-            @NotBlank @Size(max = 120) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String code,
+            @NotBlank @Size(max = 120) @Pattern(regexp = CatalogCodes.PATTERN) String code,
             @NotNull UUID rulesetId,
             UUID effectiveFromPatchVariantId,
             @NotBlank @Size(max = 16) String initialLocale,

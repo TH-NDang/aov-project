@@ -3,6 +3,7 @@ package com.wikiaov.patch.internal.release.persistence;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
@@ -41,7 +42,7 @@ public class PatchReleaseStore {
     public record VariantSnapshot(
             UUID rulesetId,
             long ordinal,
-            String status
+            PatchVariantStatus status
     ) {
     }
 

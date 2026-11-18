@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.wikiaov.DockerBacked;
 import com.wikiaov.MutableClock;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
@@ -62,7 +63,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * The admin media API end to end: real PostgreSQL, real S3-compatible storage, real presigned uploads.
@@ -73,7 +73,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class,
         MediaAdminApiIntegrationTest.TestBeans.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class MediaAdminApiIntegrationTest {
 
     private static final String BASE = "/api/wiki/v1/admin/media";
@@ -101,6 +101,21 @@ class MediaAdminApiIntegrationTest {
 
     @MockitoBean
     CompetitionMediaReferences competitionReferences;
+
+    @Test
+    void anEditorSourceWhoseLabelSoundsUnverifiedStillCreditsTheImage() throws Exception {
+        String id = createAsset("PATCH_ART");
+        String version = JsonPath.read(uploadVersion(id, TestImages.png(29, 29), "image/png"), "$.versionId");
+        mvc.perform(post(BASE + "/assets/" + id + "/versions/" + version + "/sources").with(editor())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"type\":\"COMMUNITY\",\"label\":\"Chưa xác minh tác giả gốc\",\"ownerName\":\"Fan\"}"))
+                .andExpect(status().isOk());
+
+        String page = mvc.perform(get(BASE + "/assets?needsCredit=true&semanticType=PATCH_ART&size=100").with(reader()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        assertThat(JsonPath.<List<String>>read(page, "$.items[*].id")).doesNotContain(id);
+    }
 
     @Test
     void deletionRemovesAllVersionsAndResumesAfterCacheFailure() throws Exception {
@@ -475,8 +490,9 @@ class MediaAdminApiIntegrationTest {
                 .andExpect(jsonPath(usageOf(competition) + ".state").value(hasItem("NONE")))
                 .andExpect(jsonPath(usageOf(competition) + ".competition").value(hasItem(nullValue())));
 
-        for (var id : List.of(shown, draftOnly, historyOnly, storedOnly))
+        for (var id : List.of(shown, draftOnly, historyOnly, storedOnly)) {
             usages.byAsset.remove(id);
+        }
     }
 
     @Test
@@ -1024,8 +1040,9 @@ class MediaAdminApiIntegrationTest {
                                 "patch:publish")
                         .map(SimpleGrantedAuthority::new).toArray(SimpleGrantedAuthority[]::new)));
         var mapper = tools.jackson.databind.json.JsonMapper.builder().build();
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body));
+        }
         String result = mvc.perform(request).andExpect(status().is(expected)).andReturn().getResponse()
                 .getContentAsString();
         return result.isEmpty() ? Map.of() : mapper.readValue(result, Map.class);

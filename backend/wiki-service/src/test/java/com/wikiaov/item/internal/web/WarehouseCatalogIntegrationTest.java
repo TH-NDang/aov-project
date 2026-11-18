@@ -1,69 +1,62 @@
 package com.wikiaov.item.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.wikiaov.media.*;
-import com.wikiaov.patch.*;
+import com.wikiaov.DockerBacked;
+import com.wikiaov.TestcontainersConfiguration;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.media.MediaUsageProvider;
+import com.wikiaov.media.MediaUsageScope;
+import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchVariantReference;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.*;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@EnabledIf("databaseAvailable")
+@Import(TestcontainersConfiguration.class)
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@DockerBacked
 class WarehouseCatalogIntegrationTest {
     private static final String ROOT = "/api/wiki/v1/admin";
     private static final UUID RULESET = UUID.randomUUID();
     private static final UUID PATCH = UUID.randomUUID();
     private static final UUID VARIANT = UUID.randomUUID();
-    private static PostgreSQLContainer database;
-
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external != null) {
-            properties.add("spring.datasource.url", () -> external);
-            properties.add("spring.datasource.username", () -> "wiki_test");
-            properties.add("spring.datasource.password", () -> "");
-        } else {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            properties.add("spring.datasource.url", database::getJdbcUrl);
-            properties.add("spring.datasource.username", database::getUsername);
-            properties.add("spring.datasource.password", database::getPassword);
-        }
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
-    }
 
     @Autowired
     MockMvc mvc;
@@ -81,8 +74,9 @@ class WarehouseCatalogIntegrationTest {
 
     @BeforeEach
     void setup() {
-        for (String module : List.of("item", "arcana", "spell", "enchantment"))
+        for (String module : List.of("item", "arcana", "spell", "enchantment")) {
             jdbc.sql("TRUNCATE " + module + "." + module + " CASCADE").update();
+        }
         jdbc.sql("TRUNCATE item.item_category CASCADE").update();
         jdbc.sql("TRUNCATE enchantment.enchantment_branch CASCADE").update();
         jdbc.sql(
@@ -425,8 +419,9 @@ class WarehouseCatalogIntegrationTest {
             assertThat(revision.get("effectiveFromPatchVariantId")).isNull();
             var publicView = send(get("/api/wiki/v1/" + path + "/" + created.get("id")), null, 200);
             assertThat(map(publicView.get("revision")).get("id")).isEqualTo(revision.get("id"));
-            if (path.equals("spells"))
+            if (path.equals("spells")) {
                 assertThat(map(publicView.get("revision")).get("archived")).isEqualTo(false);
+            }
 
             String forks = ROOT + "/" + path + "/" + created.get("id") + "/drafts";
             send(post(forks), Map.of("rulesetId", RULESET, "sourceRevisionId", revision.get("id"),
@@ -842,8 +837,9 @@ class WarehouseCatalogIntegrationTest {
         body.put("effectiveFromPatchVariantId", VARIANT);
         body.put("initialLocale", "vi-VN");
         body.put("name", "Mục thử nghiệm");
-        if (content != null)
+        if (content != null) {
             body.put("content", content);
+        }
         return send(post(ROOT + "/" + path), body, 201);
     }
 
@@ -867,8 +863,9 @@ class WarehouseCatalogIntegrationTest {
                 "spell:write", "spell:publish", "enchantment:write", "enchantment:publish", "patch:write");
         request.with(jwt().jwt(token -> token.issuer("https://test.example/issuer").subject("editor"))
                 .authorities(grants.stream().map(SimpleGrantedAuthority::new).toArray(SimpleGrantedAuthority[]::new)));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         String response = mvc.perform(request).andExpect(status().is(expected)).andReturn().getResponse()
                 .getContentAsString();
         return response.isEmpty() ? Map.of() : json.readValue(response, Map.class);

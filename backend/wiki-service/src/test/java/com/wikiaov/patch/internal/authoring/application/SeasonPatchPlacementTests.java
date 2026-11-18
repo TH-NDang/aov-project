@@ -3,9 +3,12 @@ package com.wikiaov.patch.internal.authoring.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.wikiaov.patch.internal.application.PatchCommands.*;
 import com.wikiaov.patch.internal.application.PatchCommands.Patch;
 import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
 import com.wikiaov.patch.internal.application.PatchErrorCode;

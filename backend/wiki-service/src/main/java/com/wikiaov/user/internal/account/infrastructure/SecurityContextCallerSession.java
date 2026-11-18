@@ -23,8 +23,9 @@ class SecurityContextCallerSession implements CallerSession {
     }
 
     private static Jwt jwt() {
-        if (SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken token)
+        if (SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken token) {
             return token.getToken();
+        }
         throw new AuthenticationCredentialsNotFoundException("A bearer token is required.");
     }
 }

@@ -1,6 +1,5 @@
 package com.wikiaov.patch.internal.authoring.application;
 
-import com.wikiaov.patch.internal.application.PatchCommands.*;
 import com.wikiaov.patch.internal.application.PatchCommands.SeasonPatch;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
@@ -44,9 +43,10 @@ class SeasonPatchPlacement {
 
     private UUID requireAnchorInSameSeason(SeasonPatch input) {
         var anchor = variants.lockById(input.beforeVariantId()).orElseThrow(SeasonPatchPlacement::notFound);
-        if (!input.rulesetId().equals(anchor.getRulesetId()) || !input.seasonId().equals(anchor.getSeasonId()))
+        if (!input.rulesetId().equals(anchor.getRulesetId()) || !input.seasonId().equals(anchor.getSeasonId())) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID,
                     "Choose an insertion anchor in the same season and ruleset.");
+        }
         return input.beforeVariantId();
     }
 

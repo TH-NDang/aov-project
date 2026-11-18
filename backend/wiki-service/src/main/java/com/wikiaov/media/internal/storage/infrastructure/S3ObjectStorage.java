@@ -4,7 +4,6 @@ import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
 import com.wikiaov.media.internal.storage.application.port.PresignedRequest;
 import com.wikiaov.media.internal.storage.application.port.StoredObject;
-
 import com.wikiaov.platform.ApiException;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -88,8 +87,9 @@ class S3ObjectStorage implements ObjectStorage {
         try {
             call("delete", key, () -> s3.deleteObject(request -> request.bucket(properties.bucketFor(key)).key(key)));
         } catch (ApiException exception) {
-            if (exception.getErrorCode() != MediaErrorCode.MEDIA_OBJECT_NOT_FOUND)
+            if (exception.getErrorCode() != MediaErrorCode.MEDIA_OBJECT_NOT_FOUND) {
                 throw exception;
+            }
         }
     }
 

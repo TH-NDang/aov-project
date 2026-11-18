@@ -4,9 +4,23 @@ import com.wikiaov.hero.internal.application.HeroImportRequest;
 import com.wikiaov.hero.internal.application.response.HeroImportPlan;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.Ratings;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Skin;
+import com.wikiaov.hero.internal.domain.HeroContent.Skins;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
 import com.wikiaov.hero.internal.domain.HeroSection;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Applies changed sections in order, carrying the current draft version between writes. */
@@ -37,8 +51,9 @@ final class HeroImportDraftWriter {
     private HeroRevisionView updateProfile(String locale, HeroImportPlan plan, HeroRevisionView draft,
             Profile existing) {
         var next = content.profile(locale, plan.after(), existing);
-        if (Objects.equals(existing, next))
+        if (Objects.equals(existing, next)) {
             return draft;
+        }
         return authoring.update(draft.heroId(), draft.id(), HeroSection.PROFILE, draft.version(), next,
                 "Imported hero fields");
     }
@@ -60,8 +75,9 @@ final class HeroImportDraftWriter {
 
     private HeroRevisionView updateSkills(HeroImportPlan plan, HeroRevisionView draft,
             Map<HeroSection, Object> sections) {
-        if (!changed(plan, "skills"))
+        if (!changed(plan, "skills")) {
             return draft;
+        }
         var existing = (Skills) sections.get(HeroSection.SKILLS);
         var skills = Arrays.asList(json.convertValue(plan.after().get("skills"), Skill[].class));
         return authoring.update(draft.heroId(), draft.id(), HeroSection.SKILLS, draft.version(),
@@ -70,8 +86,9 @@ final class HeroImportDraftWriter {
 
     private HeroRevisionView updateSkins(HeroImportPlan plan, HeroRevisionView draft,
             Map<HeroSection, Object> sections) {
-        if (!changed(plan, "skins"))
+        if (!changed(plan, "skins")) {
             return draft;
+        }
         var existing = (Skins) sections.get(HeroSection.SKINS);
         var skins = Arrays.asList(json.convertValue(plan.after().get("skins"), Skin[].class));
         return authoring.update(draft.heroId(), draft.id(), HeroSection.SKINS, draft.version(),
@@ -80,8 +97,9 @@ final class HeroImportDraftWriter {
 
     private void updateImages(HeroImportPlan plan, HeroRevisionView draft, Bindings existing) {
         Map<MediaRole, UUID> links = new EnumMap<>(MediaRole.class);
-        if (existing != null)
+        if (existing != null) {
             links.putAll(existing.bindings());
+        }
         boolean mediaChanged = changed(plan, "images");
         for (var role : MediaRole.values()) {
             String key = role.name().toLowerCase(Locale.ROOT);
@@ -90,8 +108,9 @@ final class HeroImportDraftWriter {
                 mediaChanged = true;
             }
         }
-        if (!mediaChanged)
+        if (!mediaChanged) {
             return;
+        }
         draft = authoring.read(draft.heroId(), draft.id());
         authoring.update(draft.heroId(), draft.id(), HeroSection.MEDIA_BINDINGS, draft.version(),
                 new Bindings(links, existing == null ? List.of() : existing.sources(),

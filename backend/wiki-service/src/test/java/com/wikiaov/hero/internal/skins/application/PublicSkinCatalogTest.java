@@ -1,19 +1,42 @@
 package com.wikiaov.hero.internal.skins.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.anySet;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.hero.internal.catalog.application.HeroReadMoments;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository;
-import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.*;
-import com.wikiaov.media.*;
-import com.wikiaov.patch.*;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.BadgeText;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.Candidate;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.Head;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.ProfileText;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.Skin;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.SkinText;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
-import java.time.*;
-import java.util.*;
+import com.wikiaov.platform.PlatformErrorCode;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -208,11 +231,10 @@ class PublicSkinCatalogTest {
     }
 
     @Test
-    void validatesBoundsBeforeReadingPersistenceOrMedia() {
-        assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "", null, null, -1, 24)).isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "", null, null, 0, 61)).isInstanceOf(ApiException.class);
+    void validatesSearchAndFiltersBeforeReadingPersistenceOrMedia() {
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "x".repeat(121), null, null, 0, 24))
-                .isInstanceOf(ApiException.class);
+                .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getErrorCode())
+                        .isEqualTo(PlatformErrorCode.INVALID_QUERY_PARAMETER));
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "", " ", null, 0, 24)).isInstanceOf(ApiException.class);
 
         verifyNoInteractions(repository, media, contexts);

@@ -1,11 +1,12 @@
 package com.wikiaov.patch.internal.application.response;
 
+import com.wikiaov.patch.internal.domain.PatchDataReviewState;
 import java.time.Instant;
 import java.util.UUID;
 
 public record PatchDataReviewView(
         UUID variantId,
-        String state,
+        PatchDataReviewState state,
         long version,
         Instant completedAt
 ) {

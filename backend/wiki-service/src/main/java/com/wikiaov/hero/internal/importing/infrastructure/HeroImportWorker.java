@@ -1,13 +1,13 @@
 package com.wikiaov.hero.internal.importing.infrastructure;
 
 import com.wikiaov.hero.internal.importing.application.HeroImportJobs;
-import com.wikiaov.hero.internal.importing.application.HeroImportJobs.*;
 import com.wikiaov.platform.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.*;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @Configuration
 @EnableScheduling

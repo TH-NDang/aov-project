@@ -1,5 +1,6 @@
 package com.wikiaov.hero.internal.gallery.application;
 
+import com.wikiaov.platform.RevisionState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.UUID;
@@ -37,9 +38,16 @@ public record HeroGalleryView(
     public record Version(
             UUID revisionId,
             long revisionNo,
-            String state,
+            RevisionState state,
             boolean current,
             @Nullable UUID patchVariantId
+    ) {
+    }
+
+    @Schema(name = "HeroGallerySaved")
+    public record Saved(
+            UUID id,
+            long version
     ) {
     }
 

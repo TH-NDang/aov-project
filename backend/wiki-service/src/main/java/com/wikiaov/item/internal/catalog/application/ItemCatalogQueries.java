@@ -17,10 +17,11 @@ import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogChanges;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogSnapshots;
 import com.wikiaov.platform.PageSlice;
-import com.wikiaov.platform.PlatformErrorCode;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -79,9 +80,9 @@ class ItemCatalogQueries {
 
     PageSlice<ItemView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean includeUnscoped, boolean draftsOnly) {
-        requirePageBounds(page, size);
-        if (rulesetId != null)
+        if (rulesetId != null) {
             contexts.requireRuleset(rulesetId);
+        }
         String needle = q.strip().toLowerCase(Locale.ROOT);
         var candidates = activeSnapshots(rulesetId, draftsOnly);
         var scoped = snapshotsInScope(candidates, rulesetId, seasonId, patchVariantId, includeUnchanged,
@@ -92,15 +93,10 @@ class ItemCatalogQueries {
         return requestedPage(owners, selected, copies, page, size);
     }
 
-    private void requirePageBounds(int page, int size) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
-    }
-
     private List<CatalogSnapshots.Snapshot<ItemRevision>> activeSnapshots(UUID rulesetId, boolean draftsOnly) {
         var records = draftsOnly
-                ? revisions.findByRulesetIdAndState(rulesetId, "DRAFT")
-                : revisions.findByStateNot("DISCARDED");
+                ? revisions.findByRulesetIdAndState(rulesetId, RevisionState.DRAFT)
+                : revisions.findByStateNot(RevisionState.DISCARDED);
         return records.stream()
                 .filter(revision -> rulesetId == null || revision.getRulesetId().equals(rulesetId))
                 .map(revision -> new CatalogSnapshots.Snapshot<>(revision.getId(), revision.getOwnerId(),
@@ -112,11 +108,13 @@ class ItemCatalogQueries {
     private List<CatalogSnapshots.Snapshot<ItemRevision>> snapshotsInScope(
             List<CatalogSnapshots.Snapshot<ItemRevision>> candidates, UUID rulesetId,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean includeUnscoped) {
-        if (seasonId == null && patchVariantId == null)
+        if (seasonId == null && patchVariantId == null) {
             return candidates;
+        }
         var scope = CatalogPatchScope.resolve(contexts, rulesetId, seasonId, patchVariantId, includeUnchanged);
-        if (includeUnchanged)
+        if (includeUnchanged) {
             return carriedForwardSnapshots(candidates, scope, includeUnscoped);
+        }
         return changedSnapshots(candidates, rulesetId, scope.selectedPatchIds());
     }
 
@@ -161,21 +159,20 @@ class ItemCatalogQueries {
 
     private PageSlice<ItemView> requestedPage(List<ItemIdentity> owners, Map<UUID, ItemRevision> selected,
             Map<UUID, List<ItemTranslation>> copies, int page, int size) {
-        int start = (int) Math.min((long) page * size, owners.size());
-        var pageRows = owners.subList(start, Math.min(start + size, owners.size())).stream().map(owner -> {
+        return PageSlice.of(owners, page, size).map(owner -> {
             var revision = selected.get(owner.getId());
             var copy = copies.getOrDefault(revision.getId(), List.of());
             var c = revisionContent.hydrate(revision, copy);
             return new ItemView(owner.getId(), owner.getCode(), revisionContent.revisionView(owner, revision), c,
                     contentRules.readiness(revision, c));
-        }).toList();
-        return new PageSlice<>(pageRows, page, size, owners.size());
+        });
     }
 
     ItemView latest(UUID id, UUID rulesetId) {
         var found = latest(identity(id), rulesetId);
-        if (found == null)
+        if (found == null) {
             throw new ApiException(ItemErrorCode.ITEM_NOT_FOUND, "No snapshot is available.");
+        }
         return found;
     }
 
@@ -192,7 +189,7 @@ class ItemCatalogQueries {
     List<MediaUsage> usages(UUID assetId) {
         var active = contexts.active(clock.instant());
         var found = revisions.findAll().stream()
-                .filter(revision -> !revision.getState().equals("DISCARDED")
+                .filter(revision -> revision.getState() != RevisionState.DISCARDED
                         && contentRules.assets(revision.getGameplay()).contains(assetId))
                 .toList();
         var names = usageNames(found);
@@ -206,11 +203,12 @@ class ItemCatalogQueries {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
 
         for (var revision : revisions.findAll()) {
-            var assets = revision.getState().equals("DISCARDED")
+            var assets = revision.getState() == RevisionState.DISCARDED
                     ? List.<UUID>of()
                     : contentRules.assets(revision.getGameplay());
-            if (assets.isEmpty())
+            if (assets.isEmpty()) {
                 continue;
+            }
             var usage = usage(revision, active);
             assets.forEach(asset -> usages.computeIfAbsent(asset, ignored -> new ArrayList<>()).add(usage));
         }
@@ -219,25 +217,26 @@ class ItemCatalogQueries {
     }
 
     private MediaUsage usage(ItemRevision revision, List<GameplayContext> active) {
-        boolean current = revision.getState().equals("PUBLISHED")
+        boolean current = revision.getState() == RevisionState.PUBLISHED
                 && active.stream().filter(c -> c.rulesetId().equals(revision.getRulesetId()))
                         .anyMatch(c -> current(revision.getOwnerId(), c).map(v -> v.getId().equals(revision.getId()))
                                 .orElse(false));
 
         return new MediaUsage("ITEM", "ITEM", revision.getOwnerId(), revision.getId(), "ICON",
-                revision.getState().equals("DRAFT")
+                revision.getState() == RevisionState.DRAFT
                         ? MediaUsageScope.DRAFT
                         : current ? MediaUsageScope.CURRENT : MediaUsageScope.HISTORICAL);
     }
 
     /** The Vietnamese name of each revision, or another language's when it has none. */
     private Map<UUID, String> usageNames(List<ItemRevision> found) {
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return Map.of();
+        }
 
         Map<UUID, String> names = new HashMap<>();
         translations.findByRevisionIdIn(found.stream().map(ItemRevision::getId).toList()).stream()
-                .sorted(Comparator.comparing(row -> row.getLocale().equals("vi-VN")))
+                .sorted(Comparator.comparing(row -> row.getLocale().equals(CatalogLocales.DEFAULT)))
                 .forEach(row -> names.put(row.getRevisionId(), row.getName()));
 
         return names;
@@ -249,8 +248,6 @@ class ItemCatalogQueries {
 
     PageSlice<ItemView> published(String region, String locale, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
         var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
                 includeUnscoped);
         var context = scope.gameplay();
@@ -259,9 +256,8 @@ class ItemCatalogQueries {
                         .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
                         .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
                 .filter(Objects::nonNull).toList();
-        int start = (int) Math.min((long) page * size, rows.size());
-        return new PageSlice<>(publicMedia.hydrate(rows.subList(start, Math.min(start + size, rows.size()))), page,
-                size, rows.size());
+        var slice = PageSlice.of(rows, page, size);
+        return slice.withItems(publicMedia.hydrate(slice.items()));
     }
 
     ItemView publishedOne(UUID id, String region, String locale) {
@@ -287,10 +283,11 @@ class ItemCatalogQueries {
                         .anyMatch(k -> k == CatalogChanges.Kind.REMOVED || k == CatalogChanges.Kind.ADDED))
                 .filter(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal() <= context.rulesetOrdinal())
                 .max(Comparator.comparingLong(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal()));
-        if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED))
+        if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED)) {
             return Optional.empty();
+        }
         return revisions.findByOwnerIdOrderByRevisionNoDesc(id).stream()
-                .filter(revision -> revision.getState().equals("PUBLISHED")
+                .filter(revision -> revision.getState() == RevisionState.PUBLISHED
                         && (revision.getEffectiveFromPatchVariantId() != null || CatalogObservation.isUnscopedBaseline(
                                 revision.getCause(), revision.getSourceRevisionId(), null))
                         && revision.getRulesetId().equals(context.rulesetId())
@@ -303,7 +300,7 @@ class ItemCatalogQueries {
 
     ItemView latest(ItemIdentity owner, UUID rulesetId) {
         return revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId()).stream()
-                .filter(revision -> !revision.getState().equals("DISCARDED")
+                .filter(revision -> revision.getState() != RevisionState.DISCARDED
                         && (rulesetId == null || revision.getRulesetId().equals(rulesetId)))
                 .max(Comparator.<ItemRevision>comparingLong(this::patchOrdinal)
                         .thenComparingLong(ItemRevision::getRevisionNo))
@@ -325,6 +322,6 @@ class ItemCatalogQueries {
     }
 
     long patchOrdinal(UUID id) {
-        return id == null ? 0 : contexts.variant(id).rulesetOrdinal();
+        return GameplayContexts.rulesetOrdinal(contexts, id);
     }
 }

@@ -9,16 +9,29 @@ import com.wikiaov.hero.internal.catalog.domain.HeroCatalogFacets;
 import com.wikiaov.hero.internal.catalog.persistence.HeroCatalogRepository;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeTranslation;
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
+import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
 import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
 import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -50,32 +63,35 @@ public class HeroCatalog {
     public PageSlice<HeroCatalogView> list(int page, int size, String q, UUID seasonId, UUID patchVariantId,
             UUID rulesetId, String locale, String sort, boolean includeUnchanged, String role, String position,
             Boolean hasWarnings) {
-        if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE)
-            throw HeroValidation.invalid("Invalid page bounds.");
-        if (q.trim().length() > 100 || !Set.of("code", "edited-desc").contains(sort))
-            throw HeroValidation.invalid("Invalid hero catalog search or sort.");
+        HeroValidation.requireReachableOffset(page, size);
+        if (q.trim().length() > 100 || !Set.of("code", "edited-desc").contains(sort)) {
+            throw HeroValidation.badQuery("Invalid hero catalog search or sort.");
+        }
         HeroValidation.locale(locale);
         var facets = new HeroCatalogFacets(
                 choices(role, Arrays.stream(Role.values()).map(Enum::name).collect(Collectors.toSet())),
                 choices(position, POSITION_CODES.keySet()).stream().map(POSITION_CODES::get)
                         .collect(Collectors.toSet()),
                 hasWarnings);
-        if (rulesetId != null)
+        if (rulesetId != null) {
             contexts.requireRuleset(rulesetId);
+        }
 
         Map<UUID, PatchVariantReference> variants = contexts.catalogVariants(seasonId).stream()
                 .filter(variant -> rulesetId == null || variant.rulesetId().equals(rulesetId))
                 .collect(Collectors.toMap(PatchVariantReference::id, variant -> variant));
         if (patchVariantId != null) {
             contexts.variant(patchVariantId);
-            if (!variants.containsKey(patchVariantId))
+            if (!variants.containsKey(patchVariantId)) {
                 throw HeroValidation.invalid("The selected patch does not belong to the selected season and ruleset.");
+            }
             variants.keySet().removeIf(id -> !id.equals(patchVariantId));
         }
 
         boolean filtered = seasonId != null || patchVariantId != null;
-        if (filtered && variants.isEmpty())
+        if (filtered && variants.isEmpty()) {
             return new PageSlice<>(List.of(), page, size, 0);
+        }
         Map<UUID, Long> scopeOrdinals = variants.values().stream().collect(Collectors.toMap(
                 PatchVariantReference::id, PatchVariantReference::rulesetOrdinal));
         Set<UUID> snapshotVariants = new HashSet<>();
@@ -88,18 +104,20 @@ public class HeroCatalog {
                         scopeOrdinals.put(v.id(), v.rulesetOrdinal());
                     });
         }
-        if (filtered && includeUnchanged && snapshotVariants.isEmpty())
+        if (filtered && includeUnchanged && snapshotVariants.isEmpty()) {
             return new PageSlice<>(List.of(), page, size, 0);
+        }
 
         var identities = catalog.page(new HeroCatalogRepository.Filter(q.trim().toLowerCase(Locale.ROOT), rulesetId,
                 variants.keySet(), scopeOrdinals, filtered && !includeUnchanged, snapshotVariants, facets), page, size,
                 sort.equals("edited-desc"));
-        if (identities.items().isEmpty())
+        if (identities.items().isEmpty()) {
             return new PageSlice<>(List.of(), page, size, identities.totalElements());
+        }
 
         var heroIds = identities.items().stream().map(hero -> hero.getId()).toList();
         var revisions = store.revisions(heroIds).stream()
-                .filter(r -> !filtered || !includeUnchanged || r.state().equals("PUBLISHED")
+                .filter(r -> !filtered || !includeUnchanged || r.state() == RevisionState.PUBLISHED
                         && snapshotVariants.contains(r.effectiveFromPatchVariantId()))
                 .collect(Collectors.groupingBy(HeroRevisionView::heroId));
         var byRevision = revisions.values().stream().flatMap(Collection::stream)
@@ -126,7 +144,7 @@ public class HeroCatalog {
             var summary = translations.getOrDefault(change.getId(), List.of()).stream()
                     .min(Comparator.<HeroPatchChangeTranslation>comparingInt(t -> t.getLocale().equals(locale)
                             ? 0
-                            : t.getLocale().equals("vi-VN") ? 1 : 2)
+                            : t.getLocale().equals(CatalogLocales.DEFAULT) ? 1 : 2)
                             .thenComparing(HeroPatchChangeTranslation::getLocale));
             metadata.computeIfAbsent(change.getHeroId(), ignored -> new ArrayList<>())
                     .add(new GameplayChange(change.getId(), variant.rulesetId(), variant.seasonId(), variant.id(),
@@ -154,16 +172,18 @@ public class HeroCatalog {
     private static List<HeroPatchChangeSet> selectChanges(List<HeroPatchChangeSet> changes,
             Map<UUID, PatchVariantReference> variants, Map<UUID, HeroRevisionView> revisions, boolean filtered) {
         var ordered = changes.stream().filter(change -> {
-            if (change.getSourceKind() == ChangeSource.PATCH_NOTES)
+            if (change.getSourceKind() == ChangeSource.PATCH_NOTES) {
                 return true;
+            }
             var revision = revisions.get(change.getToHeroRevisionId());
-            return revision != null && revision.state().equals("PUBLISHED")
+            return revision != null && revision.state() == RevisionState.PUBLISHED
                     && revision.cause() == com.wikiaov.hero.internal.domain.HeroContent.Cause.GAME_PATCH;
         }).sorted(Comparator
                 .<HeroPatchChangeSet>comparingLong(change -> variants.get(change.getPatchVariantId()).rulesetOrdinal())
                 .reversed().thenComparing(HeroPatchChangeSet::getId)).toList();
-        if (filtered)
+        if (filtered) {
             return ordered;
+        }
         Set<String> seen = new HashSet<>();
         return ordered.stream().filter(change -> seen.add(change.getHeroId() + ":"
                 + variants.get(change.getPatchVariantId()).rulesetId())).toList();
@@ -174,11 +194,13 @@ public class HeroCatalog {
     }
 
     private static Set<String> choices(String value, Set<String> allowed) {
-        if (value == null || value.isBlank())
+        if (value == null || value.isBlank()) {
             return Set.of();
+        }
         var selected = Arrays.stream(value.split(",", -1)).map(String::trim).collect(Collectors.toSet());
-        if (!allowed.containsAll(selected))
-            throw HeroValidation.invalid("Invalid hero catalog role or position.");
+        if (!allowed.containsAll(selected)) {
+            throw HeroValidation.badQuery("Invalid hero catalog role or position.");
+        }
         return Set.copyOf(selected);
     }
 }

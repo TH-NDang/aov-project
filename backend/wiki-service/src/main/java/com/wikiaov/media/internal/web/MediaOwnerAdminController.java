@@ -29,6 +29,7 @@ class MediaOwnerAdminController implements MediaOwnerAdminApi {
         this.owners = owners;
     }
 
+    @Override
     @GetMapping(version = "1")
     public PageSlice<MediaOwnerView> list(HttpServletRequest http, @RequestParam(required = false) @Nullable String q,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
@@ -36,11 +37,13 @@ class MediaOwnerAdminController implements MediaOwnerAdminApi {
         return owners.list(q, page, size);
     }
 
+    @Override
     @PutMapping(path = "/{id}", version = "1")
     public MediaOwnerView update(@PathVariable UUID id, @RequestBody UpdateOwnerRequest request) {
         return owners.update(id, request.name(), request.contactUrl(), request.expectedVersion());
     }
 
+    @Override
     @PostMapping(path = "/{id}/merge", version = "1")
     public MediaOwnerView merge(@PathVariable UUID id, @RequestBody MergeOwnerRequest request) {
         return owners.merge(id, request.targetId(), request.expectedVersion());

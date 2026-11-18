@@ -9,8 +9,9 @@ public final class EmailHint {
 
     public static String mask(String email) {
         int at = email.lastIndexOf('@');
-        if (at <= 0 || at == email.length() - 1)
+        if (at <= 0 || at == email.length() - 1) {
             return DOTS;
+        }
         String local = email.substring(0, at);
         String domain = email.substring(at + 1);
         String visible = local.length() <= 2

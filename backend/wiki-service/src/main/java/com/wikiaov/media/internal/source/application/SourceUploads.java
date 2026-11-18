@@ -7,9 +7,11 @@ import com.wikiaov.access.CurrentActor;
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.MediaProperties;
 import com.wikiaov.media.internal.domain.model.MediaObjectKeys;
+import com.wikiaov.media.internal.domain.model.UploadState;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
 import com.wikiaov.media.internal.source.domain.SourceContentTypes;
 import com.wikiaov.media.internal.source.domain.SourceDigest;
+import com.wikiaov.media.internal.source.domain.SourceRejection;
 import com.wikiaov.media.internal.source.persistence.SourceFileRepository;
 import com.wikiaov.media.internal.source.persistence.SourceObjectRepository;
 import com.wikiaov.media.internal.source.persistence.SourceUploadSessionRepository;
@@ -93,8 +95,18 @@ public class SourceUploads {
     }
 
     @PreAuthorize(MediaWritePolicy.CAN_WRITE_MEDIA)
-    public SourceFileViews.UploadResult request(UUID collectionId, @Nullable String rawPath, @Nullable String rawSha256,
-            long sizeBytes, @Nullable String rawContentType, @Nullable Replace replace) {
+    public SourceFileViews.UploadResult request(UUID collectionId, SourceCommands.UploadCommand command) {
+        @Nullable
+        String rawPath = command.path();
+        @Nullable
+        String rawSha256 = command.sha256();
+        long sizeBytes = command.sizeBytes();
+        @Nullable
+        String rawContentType = command.contentType();
+        @Nullable
+        Replace replace = command.replace() == null
+                ? null
+                : new Replace(command.replace().fileId(), command.replace().expectedVersion());
         Actor actor = actors.require();
         String path = SourceErrors.requirePath(rawPath, "path");
         String sha256 = SourceErrors.requireSha256(rawSha256, "sha256");
@@ -117,7 +129,8 @@ public class SourceUploads {
             collections.require(collectionId);
             Optional<SourceFile> existing = files.findByCollectionIdAndPath(collectionId, path);
             if (existing.isPresent() && existing.get().getSha256().equals(sha256)) {
-                return SourceFiles.view(existing.get(), objects.findById(sha256).orElseThrow());
+                return SourceFiles.view(existing.get(),
+                        objects.findById(sha256).orElseThrow(SourceUploads::missingObject));
             }
             checkReplace(existing, replace);
 
@@ -151,7 +164,7 @@ public class SourceUploads {
     public SourceFileViews.Upload status(UUID uploadId) {
         SourceUploadSession session = sessions.findById(uploadId)
                 .orElseThrow(() -> SourceErrors.uploadNotFound(uploadId));
-        String state = session.isPastDeadline(clock.instant()) ? "EXPIRED" : session.getState().name();
+        UploadState state = session.isPastDeadline(clock.instant()) ? UploadState.EXPIRED : session.getState();
         return new SourceFileViews.Upload(session.getId(), session.getCollectionId(), session.getPath(), state,
                 session.getErrorCode(), session.getExpiresAt(), session.getFileId());
     }
@@ -166,7 +179,8 @@ public class SourceUploads {
                 SourceFile file = files.findById(claim.completedFileId())
                         .orElseThrow(() -> SourceErrors.fileNotFound(claim.completedFileId()));
                 return new SourceFileViews.Completed(
-                        SourceFiles.view(file, objects.findById(file.getSha256()).orElseThrow()));
+                        SourceFiles.view(file,
+                                objects.findById(file.getSha256()).orElseThrow(SourceUploads::missingObject)));
             });
         }
 
@@ -176,7 +190,7 @@ public class SourceUploads {
             file = placeVerified(claim, actor);
         } catch (Rejection rejection) {
             reject(claim, rejection.reason, actor);
-            throw SourceErrors.uploadRejected(rejection.reason);
+            throw SourceErrors.uploadRejected(rejection.reason.name());
         } catch (RuntimeException ex) {
             reopen(uploadId);
             throw ex;
@@ -290,7 +304,7 @@ public class SourceUploads {
             throw SourceErrors.notUploaded();
         }
         if (stat.get().sizeBytes() != claim.sizeBytes()) {
-            throw new Rejection("SIZE_MISMATCH");
+            throw new Rejection(SourceRejection.SIZE_MISMATCH);
         }
 
         SourceDigest digest;
@@ -303,13 +317,13 @@ public class SourceUploads {
         }
 
         if (digest.sizeBytes() != claim.sizeBytes()) {
-            throw new Rejection("SIZE_MISMATCH");
+            throw new Rejection(SourceRejection.SIZE_MISMATCH);
         }
         if (!digest.sha256().equals(claim.sha256())) {
-            throw new Rejection("SHA256_MISMATCH");
+            throw new Rejection(SourceRejection.SHA256_MISMATCH);
         }
         if (!SourceContentTypes.matchesSignature(claim.contentType(), digest.head())) {
-            throw new Rejection("TYPE_MISMATCH");
+            throw new Rejection(SourceRejection.TYPE_MISMATCH);
         }
     }
 
@@ -327,7 +341,7 @@ public class SourceUploads {
             objects.insertIfAbsent(claim.sha256(), MediaObjectKeys.source(claim.sha256()),
                     MediaObjectKeys.STORAGE_ALIAS, claim.sizeBytes(), claim.contentType(), claim.path(),
                     clock.instant(), actor.issuer(), actor.subject());
-            return finish(claim, objects.lockById(claim.sha256()).orElseThrow(), actor);
+            return finish(claim, objects.lockById(claim.sha256()).orElseThrow(SourceUploads::missingObject), actor);
         });
     }
 
@@ -357,13 +371,13 @@ public class SourceUploads {
         return SourceFiles.view(file, object);
     }
 
-    private void reject(Claim claim, String reason, Actor actor) {
+    private void reject(Claim claim, SourceRejection reason, Actor actor) {
         transaction.executeWithoutResult(status -> sessions.findById(claim.uploadId()).ifPresent(session -> {
-            session.reject(reason, clock.instant());
+            session.reject(reason.name(), clock.instant());
             sessions.save(session);
             audit.record(new AuditEntry(actor, "SOURCE_UPLOAD_REJECTED", UPLOAD_AGGREGATE, claim.uploadId(), null,
                     null, null, null, MediaWritePolicy.metadata("collectionId", claim.collectionId().toString(),
-                            "path", claim.path(), "reason", reason)));
+                            "path", claim.path(), "reason", reason.name())));
         }));
         deleteIncomingQuietly(claim.objectKey());
     }
@@ -384,13 +398,18 @@ public class SourceUploads {
         }
     }
 
+    /** Every stored source file and finished upload names a stored object; a missing one is a broken invariant. */
+    private static IllegalStateException missingObject() {
+        return new IllegalStateException("A source file names an object that does not exist.");
+    }
+
     /** Bytes that do not match the declaration; the upload is refused for good. */
     private static final class Rejection extends RuntimeException {
 
-        private final String reason;
+        private final SourceRejection reason;
 
-        Rejection(String reason) {
-            super(reason, null, false, false);
+        Rejection(SourceRejection reason) {
+            super(reason.name(), null, false, false);
             this.reason = reason;
         }
     }

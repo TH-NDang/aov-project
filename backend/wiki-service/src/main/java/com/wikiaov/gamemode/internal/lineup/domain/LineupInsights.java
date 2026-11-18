@@ -66,24 +66,29 @@ public final class LineupInsights {
         for (var sample : samples) {
             var codes = new LinkedHashSet<String>();
             for (var unit : sample.units()) {
-                if (!unitCost.containsKey(unit.unitCode()) || !codes.add(unit.unitCode()))
+                if (!unitCost.containsKey(unit.unitCode()) || !codes.add(unit.unitCode())) {
                     continue;
+                }
                 var usage = appearances.computeIfAbsent(unit.unitCode(), key -> new long[3]);
                 usage[0]++;
                 usage[1] += 1 + sample.likes();
-                if (unit.carry())
+                if (unit.carry()) {
                     usage[2]++;
+                }
                 Integer cost = unitCost.get(unit.unitCode());
-                if (cost != null)
+                if (cost != null) {
                     costs.merge(cost, 1L, Long::sum);
+                }
             }
             for (var count : TraitActivation.count(guide, List.copyOf(codes), sample.emblems())) {
-                if (count.reachedTier() < 0)
+                if (count.reachedTier() < 0) {
                     continue;
+                }
                 var usage = traits.computeIfAbsent(count.traitCode(), key -> new long[2]);
                 usage[0]++;
-                if (count.reachedTier() == tierCount.get(count.traitCode()) - 1)
+                if (count.reachedTier() == tierCount.get(count.traitCode()) - 1) {
                     usage[1]++;
+                }
             }
         }
 

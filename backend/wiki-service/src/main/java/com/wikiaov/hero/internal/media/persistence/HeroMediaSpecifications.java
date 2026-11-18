@@ -4,9 +4,17 @@ import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinTranslationRow;
-
-import jakarta.persistence.criteria.*;
-import java.util.*;
+import com.wikiaov.platform.RevisionState;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 
 public final class HeroMediaSpecifications {
@@ -19,8 +27,9 @@ public final class HeroMediaSpecifications {
             if (query.getResultType() != Long.class) {
                 List<Order> ordering = new ArrayList<>(
                         List.of(cb.asc(hero.get("code")), cb.asc(revision.get("rulesetId"))));
-                if (page)
+                if (page) {
                     ordering.add(cb.asc(revision.get("id")));
+                }
                 query.orderBy(ordering);
             }
             return cb.and(selected(query, revision, hero, cb, ruleset, ordinals, q));
@@ -31,16 +40,17 @@ public final class HeroMediaSpecifications {
             CriteriaBuilder cb, UUID ruleset, Map<UUID, Long> ordinals, String q) {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(hero.get("id"), revision.get("heroId")));
-        predicates.add(cb.notEqual(revision.get("state"), "DISCARDED"));
-        if (ruleset != null)
+        predicates.add(cb.notEqual(revision.get("state"), RevisionState.DISCARDED));
+        if (ruleset != null) {
             predicates.add(cb.equal(revision.get("rulesetId"), ruleset));
+        }
         var newer = query.subquery(UUID.class);
         var other = newer.from(HeroRevision.class);
         var rank = ordinal(revision, ordinals, cb);
         var otherRank = ordinal(other, ordinals, cb);
         newer.select(other.get("id")).where(cb.equal(other.get("heroId"), revision.get("heroId")),
                 cb.equal(other.get("rulesetId"), revision.get("rulesetId")),
-                cb.notEqual(other.get("state"), "DISCARDED"),
+                cb.notEqual(other.get("state"), RevisionState.DISCARDED),
                 cb.or(cb.greaterThan(otherRank, rank), cb.and(cb.equal(otherRank, rank),
                         cb.greaterThan(other.<Long>get("revisionNo"), revision.get("revisionNo")))));
         predicates.add(cb.not(cb.exists(newer)));
@@ -64,8 +74,9 @@ public final class HeroMediaSpecifications {
     }
 
     private static Expression<Long> ordinal(Root<HeroRevision> revision, Map<UUID, Long> ordinals, CriteriaBuilder cb) {
-        if (ordinals.isEmpty())
+        if (ordinals.isEmpty()) {
             return cb.literal(-1L);
+        }
         var result = cb.<UUID, Long>selectCase(revision.get("effectiveFromPatchVariantId"));
         ordinals.forEach(result::when);
         return result.otherwise(-1L);

@@ -1,8 +1,12 @@
 package com.wikiaov.enchantment.internal.application;
 
 import com.wikiaov.platform.CatalogText.MetadataTranslation;
-import jakarta.validation.constraints.*;
-import java.util.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+import java.util.List;
+import java.util.UUID;
 
 public record EnchantmentBranchCommand(
         @NotNull @PositiveOrZero Long expectedVersion,

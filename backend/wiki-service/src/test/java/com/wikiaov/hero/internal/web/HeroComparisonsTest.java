@@ -1,17 +1,38 @@
 package com.wikiaov.hero.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.comparison.application.HeroComparisons;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.Cause;
+import com.wikiaov.hero.internal.domain.HeroContent.Effect;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Source;
+import com.wikiaov.hero.internal.domain.HeroContent.Stat;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
+import com.wikiaov.hero.internal.domain.HeroContent.Verification;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -193,9 +214,10 @@ class HeroComparisonsTest {
 
     private HeroRevisionView revision(UUID id, UUID source, UUID revisionRuleset, HeroSection... revisionSections) {
         Map<HeroSection, UUID> contentIds = new EnumMap<>(HeroSection.class);
-        for (var section : revisionSections)
+        for (var section : revisionSections) {
             contentIds.put(section, UUID.randomUUID());
-        var revision = new HeroRevisionView(id, hero, revisionRuleset, 1, "DRAFT", 1, null, null,
+        }
+        var revision = new HeroRevisionView(id, hero, revisionRuleset, 1, RevisionState.DRAFT, 1, null, null,
                 source == null ? Cause.DATA_BASELINE : Cause.GAME_PATCH, source, UUID.randomUUID(),
                 contentIds);
         when(store.revision(hero, id)).thenReturn(revision);

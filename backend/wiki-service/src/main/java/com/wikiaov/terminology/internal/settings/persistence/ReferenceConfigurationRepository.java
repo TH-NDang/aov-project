@@ -2,8 +2,11 @@ package com.wikiaov.terminology.internal.settings.persistence;
 
 import com.wikiaov.terminology.internal.settings.persistence.entity.ReferenceConfiguration;
 import jakarta.persistence.LockModeType;
-import java.util.*;
-import org.springframework.data.jpa.repository.*;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 
 public interface ReferenceConfigurationRepository extends JpaRepository<ReferenceConfiguration, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)

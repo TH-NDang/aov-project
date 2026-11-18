@@ -3,6 +3,7 @@ package com.wikiaov.access.internal.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
@@ -21,13 +22,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Runs the real Flyway migrations against PostgreSQL. Requires Docker. */
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class JdbcAuditLogIntegrationTest {
 
     private static final Actor EDITOR = new Actor("http://localhost:8081/realms/wikiaov", "user-1",

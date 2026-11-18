@@ -3,6 +3,7 @@ package com.wikiaov.patch.internal.web;
 import com.wikiaov.patch.internal.application.response.CatalogContextView;
 import com.wikiaov.patch.internal.context.application.CatalogContexts;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
@@ -22,9 +23,10 @@ public class CatalogContextController implements CatalogContextApi {
         this.contexts = contexts;
     }
 
+    @Override
     @GetMapping(version = "1")
     public ResponseEntity<CatalogContextView> read(@RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
                 .body(contexts.read(region, locale));

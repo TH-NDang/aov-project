@@ -1,20 +1,42 @@
 package com.wikiaov.video.internal.application;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.Actor;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.Capabilities;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PageSlice;
-import com.wikiaov.video.VideoSubject;
 import com.wikiaov.video.VideoSubjectKind;
 import com.wikiaov.video.VideoSubjectProvider;
-import com.wikiaov.video.internal.domain.*;
+import com.wikiaov.video.internal.application.VideoCommands.AdminFilter;
+import com.wikiaov.video.internal.application.VideoCommands.ImportVideo;
+import com.wikiaov.video.internal.application.VideoCommands.ImportVideos;
+import com.wikiaov.video.internal.application.VideoCommands.SaveVideo;
+import com.wikiaov.video.internal.application.VideoViews.AdminVideo;
+import com.wikiaov.video.internal.application.VideoViews.ImportRejection;
+import com.wikiaov.video.internal.application.VideoViews.ImportResult;
+import com.wikiaov.video.internal.application.VideoViews.PublicVideo;
+import com.wikiaov.video.internal.application.VideoViews.PublicVideoList;
+import com.wikiaov.video.internal.application.VideoViews.SubjectList;
+import com.wikiaov.video.internal.domain.VideoLink;
+import com.wikiaov.video.internal.domain.VideoOrigin;
+import com.wikiaov.video.internal.domain.VideoStatus;
 import com.wikiaov.video.internal.persistence.SubjectVideoRepository;
 import com.wikiaov.video.internal.persistence.SubjectVideoSpecifications;
 import com.wikiaov.video.internal.persistence.entity.SubjectVideo;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Limit;
@@ -62,132 +84,18 @@ public class SubjectVideos {
         this.clock = clock;
     }
 
-    public record PublicVideo(
-            UUID id,
-            VideoSubjectKind subjectKind,
-            UUID subjectId,
-            @Nullable String subjectKey,
-            VideoPurpose purpose,
-            String title,
-            @Nullable String note,
-            String url,
-            VideoProvider provider,
-            @Nullable String providerVideoId,
-            int startSeconds,
-            @Nullable Integer durationSeconds,
-            @Nullable String channelName,
-            @Nullable LocalDate publishedOn,
-            @Nullable UUID patchVariantId
-    ) {
-    }
-
-    public record PublicVideoList(
-            List<PublicVideo> items
-    ) {
-    }
-
-    public record AdminVideo(
-            UUID id,
-            VideoSubjectKind subjectKind,
-            UUID subjectId,
-            @Nullable String subjectKey,
-            VideoPurpose purpose,
-            String title,
-            @Nullable String note,
-            String url,
-            VideoProvider provider,
-            @Nullable String providerVideoId,
-            int startSeconds,
-            @Nullable Integer durationSeconds,
-            @Nullable String channelName,
-            @Nullable LocalDate publishedOn,
-            @Nullable UUID patchVariantId,
-            int displayOrder,
-            VideoStatus status,
-            VideoOrigin origin,
-            long version,
-            Instant createdAt,
-            Instant updatedAt
-    ) {
-    }
-
-    public record AdminFilter(
-            @Nullable VideoSubjectKind subjectKind,
-            @Nullable UUID subjectId,
-            @Nullable String subjectKey,
-            @Nullable VideoStatus status,
-            @Nullable VideoPurpose purpose,
-            @Nullable VideoOrigin origin,
-            @Nullable String q
-    ) {
-    }
-
-    public record SaveVideo(
-            VideoSubjectKind subjectKind,
-            UUID subjectId,
-            @Nullable String subjectKey,
-            VideoPurpose purpose,
-            String title,
-            @Nullable String note,
-            String url,
-            @Nullable Integer startSeconds,
-            @Nullable Integer durationSeconds,
-            @Nullable String channelName,
-            @Nullable LocalDate publishedOn,
-            @Nullable UUID patchVariantId,
-            @Nullable Integer displayOrder,
-            VideoStatus status,
-            @Nullable Long expectedVersion
-    ) {
-    }
-
-    public record ImportVideo(
-            VideoSubjectKind subjectKind,
-            UUID subjectId,
-            @Nullable String subjectKey,
-            VideoPurpose purpose,
-            String title,
-            String url,
-            @Nullable Integer durationSeconds,
-            @Nullable LocalDate publishedOn,
-            @Nullable Integer displayOrder,
-            VideoStatus status
-    ) {
-    }
-
-    public record ImportVideos(
-            List<ImportVideo> items
-    ) {
-    }
-
-    public record ImportRejection(
-            int index,
-            String reason
-    ) {
-    }
-
-    public record ImportResult(
-            int created,
-            int skipped,
-            List<ImportRejection> rejected
-    ) {
-    }
-
-    public record SubjectList(
-            List<VideoSubject> items
-    ) {
-    }
-
     /**
      * A hero's page shows its own videos and those of its skills and skins, so the hero kind covers all three. The skill
      * and skin kinds narrow to one subject when a key is given.
      */
     @Transactional(readOnly = true)
     public PublicVideoList published(VideoSubjectKind kind, UUID subjectId, @Nullable String subjectKey) {
-        if (kind == null || subjectId == null)
+        if (kind == null || subjectId == null) {
             throw invalid("Provide the subject kind and id.");
-        if (subjectKey != null && !kind.requiresKey())
+        }
+        if (subjectKey != null && !kind.requiresKey()) {
             throw invalid("Only skills and skins take a subject key.");
+        }
 
         List<SubjectVideo> rows = subjectKey == null
                 ? videos.findBySubjectIdAndStatusAndSubjectKindInOrderByDisplayOrderAscPublishedOnDescIdAsc(subjectId,
@@ -236,8 +144,9 @@ public class SubjectVideos {
         requirePatch(input.patchVariantId());
 
         if (videos.existsBySubjectKindAndSubjectIdAndSubjectKeyAndUrlAndStartSeconds(input.subjectKind(),
-                input.subjectId(), input.subjectKey(), link.url(), start))
+                input.subjectId(), input.subjectKey(), link.url(), start)) {
             throw duplicate();
+        }
 
         var video = new SubjectVideo();
         video.setId(UUID.randomUUID());
@@ -259,14 +168,16 @@ public class SubjectVideos {
     public AdminVideo update(UUID id, SaveVideo input) {
         Actor actor = actors.require();
         requireInput(input);
-        if (input.expectedVersion() == null)
+        if (input.expectedVersion() == null) {
             throw invalid("Provide the version you are changing.");
+        }
 
         SubjectVideo video = videos.findById(id).orElseThrow(SubjectVideos::notFound);
         requireCapabilities(actor, video.getSubjectKind(), video.getStatus());
         requireCapabilities(actor, input.subjectKind(), input.status());
-        if (video.getVersion() != input.expectedVersion())
+        if (video.getVersion() != input.expectedVersion()) {
             throw new ApiException(VideoErrorCode.VIDEO_CONFLICT, "The video has changed. Reload before saving.");
+        }
         requireSubject(input.subjectKind(), input.subjectId(), input.subjectKey());
         VideoLink link = link(input.url());
         int start = start(input.startSeconds(), link);
@@ -277,13 +188,15 @@ public class SubjectVideos {
                 && Objects.equals(video.getSubjectKey(), input.subjectKey()) && video.getUrl().equals(link.url())
                 && video.getStartSeconds() == start;
         if (!sameTarget && videos.existsBySubjectKindAndSubjectIdAndSubjectKeyAndUrlAndStartSeconds(input.subjectKind(),
-                input.subjectId(), input.subjectKey(), link.url(), start))
+                input.subjectId(), input.subjectKey(), link.url(), start)) {
             throw duplicate();
+        }
 
         long before = video.getVersion();
         apply(video, input, link, start);
-        if (input.displayOrder() != null)
+        if (input.displayOrder() != null) {
             video.setDisplayOrder(input.displayOrder());
+        }
         video.setVersion(before + 1);
         videos.saveAndFlush(video);
 
@@ -297,8 +210,9 @@ public class SubjectVideos {
         Actor actor = actors.require();
         SubjectVideo video = videos.findById(id).orElseThrow(SubjectVideos::notFound);
         requireCapabilities(actor, video.getSubjectKind(), video.getStatus());
-        if (video.getVersion() != expectedVersion)
+        if (video.getVersion() != expectedVersion) {
             throw new ApiException(VideoErrorCode.VIDEO_CONFLICT, "The video has changed. Reload before deleting.");
+        }
 
         videos.delete(video);
 
@@ -312,13 +226,16 @@ public class SubjectVideos {
      */
     public ImportResult importVideos(ImportVideos input) {
         Actor actor = actors.require();
-        if (input == null || input.items() == null || input.items().isEmpty() || input.items().size() > IMPORT_LIMIT)
+        if (input == null || input.items() == null || input.items().isEmpty() || input.items().size() > IMPORT_LIMIT) {
             throw invalid("Provide between 1 and " + IMPORT_LIMIT + " videos.");
-        if (input.items().stream().anyMatch(Objects::isNull))
+        }
+        if (input.items().stream().anyMatch(Objects::isNull)) {
             throw invalid("Every imported row must be present.");
+        }
         for (ImportVideo row : input.items()) {
-            if (row.subjectKind() == null || row.status() == null)
+            if (row.subjectKind() == null || row.status() == null) {
                 throw invalid("Every imported row needs a subject kind and a status.");
+            }
             requireCapabilities(actor, row.subjectKind(), row.status());
         }
 
@@ -344,8 +261,9 @@ public class SubjectVideos {
             ImportVideo row = input.items().get(index);
             String problem = importProblem(row, subjects);
             VideoLink link = problem == null ? VideoLink.parse(row.url()).orElse(null) : null;
-            if (problem == null && link == null)
+            if (problem == null && link == null) {
                 problem = "The link is not an http or https address.";
+            }
             if (problem != null) {
                 rejected.add(new ImportRejection(index, problem));
                 continue;
@@ -364,22 +282,27 @@ public class SubjectVideos {
         }
         videos.flush();
 
-        if (created > 0)
+        if (created > 0) {
             audit.record(new AuditEntry(actor, "VIDEOS_IMPORTED", "VIDEO", IMPORT_AUDIT_ID, null, null, null, null,
                     Map.of("created", created, "skipped", skipped, "rejected", rejected.size())));
+        }
 
         return new ImportResult(created, skipped, rejected);
     }
 
     private String importProblem(ImportVideo row, Map<String, Boolean> subjects) {
-        if (row.subjectId() == null || row.purpose() == null)
+        if (row.subjectId() == null || row.purpose() == null) {
             return "The subject id and purpose are required.";
-        if (row.title() == null || row.title().isBlank() || row.title().strip().length() > TITLE_LIMIT)
+        }
+        if (row.title() == null || row.title().isBlank() || row.title().strip().length() > TITLE_LIMIT) {
             return "The title is required and limited to " + TITLE_LIMIT + " characters.";
-        if (row.durationSeconds() != null && row.durationSeconds() <= 0)
+        }
+        if (row.durationSeconds() != null && row.durationSeconds() <= 0) {
             return "The duration must be positive.";
-        if (row.subjectKind().requiresKey() != (row.subjectKey() != null && !row.subjectKey().isBlank()))
+        }
+        if (row.subjectKind().requiresKey() != (row.subjectKey() != null && !row.subjectKey().isBlank())) {
             return "Only skills and skins take a subject key.";
+        }
 
         boolean exists = subjects.computeIfAbsent(subjectIdentity(row.subjectKind(), row.subjectId(), row.subjectKey()),
                 ignored -> subjectExists(row.subjectKind(), row.subjectId(), row.subjectKey()));
@@ -430,22 +353,30 @@ public class SubjectVideos {
 
     private static void requireInput(SaveVideo input) {
         if (input == null || input.subjectKind() == null || input.subjectId() == null || input.purpose() == null
-                || input.status() == null)
+                || input.status() == null) {
             throw invalid("Provide the subject, purpose and status.");
-        if (input.subjectKind().requiresKey() != (input.subjectKey() != null && !input.subjectKey().isBlank()))
+        }
+        if (input.subjectKind().requiresKey() != (input.subjectKey() != null && !input.subjectKey().isBlank())) {
             throw invalid("Skills and skins need a subject key; other subjects do not take one.");
-        if (input.subjectKey() != null && input.subjectKey().length() > KEY_LIMIT)
+        }
+        if (input.subjectKey() != null && input.subjectKey().length() > KEY_LIMIT) {
             throw invalid("The subject key is limited to " + KEY_LIMIT + " characters.");
-        if (input.title() == null || input.title().isBlank() || input.title().strip().length() > TITLE_LIMIT)
+        }
+        if (input.title() == null || input.title().isBlank() || input.title().strip().length() > TITLE_LIMIT) {
             throw invalid("The title is required and limited to " + TITLE_LIMIT + " characters.");
-        if (input.note() != null && input.note().strip().length() > NOTE_LIMIT)
+        }
+        if (input.note() != null && input.note().strip().length() > NOTE_LIMIT) {
             throw invalid("The note is limited to " + NOTE_LIMIT + " characters.");
-        if (input.channelName() != null && input.channelName().strip().length() > CHANNEL_LIMIT)
+        }
+        if (input.channelName() != null && input.channelName().strip().length() > CHANNEL_LIMIT) {
             throw invalid("The channel name is limited to " + CHANNEL_LIMIT + " characters.");
-        if (input.startSeconds() != null && input.startSeconds() < 0)
+        }
+        if (input.startSeconds() != null && input.startSeconds() < 0) {
             throw invalid("The start point cannot be negative.");
-        if (input.durationSeconds() != null && input.durationSeconds() <= 0)
+        }
+        if (input.durationSeconds() != null && input.durationSeconds() <= 0) {
             throw invalid("The duration must be positive.");
+        }
     }
 
     private static void requireCapabilities(Actor actor, VideoSubjectKind kind, VideoStatus status) {
@@ -456,17 +387,20 @@ public class SubjectVideos {
             case ARCANA -> Capabilities.ARCANA_WRITE;
             case SPELL -> Capabilities.SPELL_WRITE;
         };
-        if (!actor.has(write))
+        if (!actor.has(write)) {
             throw new AccessDeniedException("Editing these videos requires " + write + ".");
+        }
 
         String publish = write.replace(":write", ":publish");
-        if (status == VideoStatus.PUBLISHED && !actor.has(publish))
+        if (status == VideoStatus.PUBLISHED && !actor.has(publish)) {
             throw new AccessDeniedException("Publishing these videos requires " + publish + ".");
+        }
     }
 
     private void requireSubject(VideoSubjectKind kind, UUID id, @Nullable String key) {
-        if (!subjectExists(kind, id, key))
+        if (!subjectExists(kind, id, key)) {
             throw new ApiException(VideoErrorCode.VIDEO_SUBJECT_NOT_FOUND, "The video's subject does not exist.");
+        }
     }
 
     private boolean subjectExists(VideoSubjectKind kind, UUID id, @Nullable String key) {
@@ -475,8 +409,9 @@ public class SubjectVideos {
     }
 
     private void requirePatch(@Nullable UUID variantId) {
-        if (variantId != null)
+        if (variantId != null) {
             contexts.variant(variantId);
+        }
     }
 
     private static VideoLink link(String url) {
@@ -504,8 +439,9 @@ public class SubjectVideos {
         var metadata = new HashMap<String, Object>();
         metadata.put("subjectKind", video.getSubjectKind().name());
         metadata.put("subjectId", video.getSubjectId().toString());
-        if (video.getSubjectKey() != null)
+        if (video.getSubjectKey() != null) {
             metadata.put("subjectKey", video.getSubjectKey());
+        }
         metadata.put("url", video.getUrl());
         metadata.put("status", video.getStatus().name());
         return metadata;

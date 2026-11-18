@@ -1,9 +1,12 @@
 package com.wikiaov.spell.internal.application.response;
 
 import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.domain.SpellContent;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record SpellView(
         UUID id,
@@ -27,7 +30,7 @@ public record SpellView(
             String code,
             UUID rulesetId,
             long revisionNo,
-            String state,
+            RevisionState state,
             long version,
             Long publicationSequence,
             Instant publishedAt,

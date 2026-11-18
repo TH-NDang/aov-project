@@ -1,8 +1,9 @@
 package com.wikiaov.spell.internal.domain;
 
-import com.wikiaov.platform.CatalogText.*;
+import com.wikiaov.platform.CatalogText.Translation;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 public record SpellContent(
         UUID iconAssetId,

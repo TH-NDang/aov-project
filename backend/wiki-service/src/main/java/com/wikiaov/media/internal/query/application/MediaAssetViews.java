@@ -1,6 +1,5 @@
 package com.wikiaov.media.internal.query.application;
 
-import com.wikiaov.media.internal.application.response.*;
 import com.wikiaov.media.internal.application.response.MediaAssetDetails;
 import com.wikiaov.media.internal.application.response.MediaVersionDetails;
 import com.wikiaov.media.internal.application.response.MediaVersionResult;

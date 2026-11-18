@@ -1,6 +1,7 @@
 package com.wikiaov.gamemode.internal.guide.persistence;
 
 import com.wikiaov.gamemode.internal.guide.persistence.entity.AutoChessRevision;
+import com.wikiaov.platform.RevisionState;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -11,18 +12,18 @@ import org.springframework.data.jpa.repository.Query;
 public interface AutoChessRevisionRepository extends JpaRepository<AutoChessRevision, UUID> {
     Optional<AutoChessRevision> findByIdAndModeId(UUID id, UUID modeId);
 
-    Optional<AutoChessRevision> findByModeIdAndState(UUID modeId, String state);
+    Optional<AutoChessRevision> findByModeIdAndState(UUID modeId, RevisionState state);
 
-    Optional<AutoChessRevision> findFirstByModeIdAndStateOrderByRevisionNoDesc(UUID modeId, String state);
+    Optional<AutoChessRevision> findFirstByModeIdAndStateOrderByRevisionNoDesc(UUID modeId, RevisionState state);
 
     List<AutoChessRevision> findByModeIdOrderByRevisionNoDesc(UUID modeId);
 
-    List<AutoChessRevision> findByStateNot(String state);
+    List<AutoChessRevision> findByStateNot(RevisionState state);
 
     @Query("select coalesce(max(r.revisionNo), 0) from AutoChessRevision r where r.modeId = :modeId")
     long maxRevisionNo(UUID modeId);
 
     /** Modes that have a published guide, out of the given ones. */
-    @Query("select distinct r.modeId from AutoChessRevision r where r.state = 'PUBLISHED' and r.modeId in :modeIds")
+    @Query("select distinct r.modeId from AutoChessRevision r where r.state = com.wikiaov.platform.RevisionState.PUBLISHED and r.modeId in :modeIds")
     List<UUID> publishedModeIds(Collection<UUID> modeIds);
 }

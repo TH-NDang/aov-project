@@ -5,7 +5,9 @@ import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/publication-overview")
@@ -16,6 +18,7 @@ public class PublicationOverviewController implements PublicationOverviewApi {
         this.overview = overview;
     }
 
+    @Override
     @GetMapping(version = "1")
     public com.wikiaov.patch.internal.application.response.PublicationOverviewView.Snapshot read(
             HttpServletRequest request) {

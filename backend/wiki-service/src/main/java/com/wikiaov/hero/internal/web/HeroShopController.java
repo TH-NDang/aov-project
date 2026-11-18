@@ -12,7 +12,15 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/heroes/{heroId}/shop")
@@ -23,6 +31,7 @@ public class HeroShopController implements HeroShopApi {
         this.shop = shop;
     }
 
+    @Override
     @GetMapping(version = "1")
     public HeroShopView read(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             HttpServletRequest request) {
@@ -30,12 +39,14 @@ public class HeroShopController implements HeroShopApi {
         return shop.admin(heroId, region);
     }
 
+    @Override
     @PutMapping(version = "1")
     public HeroShopView.Price savePrice(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestBody SavePrice body) {
         return shop.savePrice(heroId, region, body);
     }
 
+    @Override
     @DeleteMapping(path = "/prices/{capturedOn}", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePrice(@PathVariable UUID heroId,
@@ -44,6 +55,7 @@ public class HeroShopController implements HeroShopApi {
         shop.deletePrice(heroId, region, capturedOn);
     }
 
+    @Override
     @DeleteMapping(path = "/skins/{skinKey}/{capturedOn}", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSkin(@PathVariable UUID heroId, @PathVariable String skinKey,
@@ -52,6 +64,7 @@ public class HeroShopController implements HeroShopApi {
         shop.deleteSkin(heroId, skinKey, region, capturedOn);
     }
 
+    @Override
     @PutMapping(path = "/skins/{skinKey}", version = "1")
     public HeroShopView.SkinAcquisition saveSkin(@PathVariable UUID heroId, @PathVariable String skinKey,
             @RequestParam(defaultValue = "VN") String region, @RequestBody SaveSkinAcquisition body) {

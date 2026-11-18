@@ -1,5 +1,8 @@
 package com.wikiaov.hero.internal.shop.application;
 
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.HeroShopCommands.SavePrice;
 import com.wikiaov.hero.internal.application.HeroShopCommands.SaveSkinAcquisition;
@@ -17,6 +20,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,19 +35,25 @@ import org.springframework.transaction.annotation.Transactional;
 public class HeroShop {
     private static final Set<String> AVAILABILITY = Set.of("ON_SALE", "NOT_OPEN", "COMING_SOON", "UNKNOWN");
     private static final Set<String> METHODS = Set.of("VOUCHER", "EVENT", "NOT_OPEN", "OTHER", "UNKNOWN");
+    private static final String AGGREGATE = "HERO_SHOP";
 
     private final HeroShopPriceRepository prices;
     private final SkinAcquisitionRepository acquisitions;
     private final SkinIdentityRepository skins;
     private final HeroIdentityRepository heroes;
+    private final CurrentActor actors;
+    private final AuditLog audit;
     private final Clock clock;
 
     public HeroShop(HeroShopPriceRepository prices, SkinAcquisitionRepository acquisitions,
-            SkinIdentityRepository skins, HeroIdentityRepository heroes, Clock clock) {
+            SkinIdentityRepository skins, HeroIdentityRepository heroes, CurrentActor actors, AuditLog audit,
+            Clock clock) {
         this.prices = prices;
         this.acquisitions = acquisitions;
         this.skins = skins;
         this.heroes = heroes;
+        this.actors = actors;
+        this.audit = audit;
         this.clock = clock;
     }
 
@@ -87,9 +97,10 @@ public class HeroShop {
     @PreAuthorize("hasAuthority('hero:write')")
     @Transactional
     public HeroShopView.Price savePrice(UUID heroId, String region, SavePrice request) {
-        if (!AVAILABILITY.contains(request.availability()))
+        if (!AVAILABILITY.contains(request.availability())) {
             throw HeroValidation.invalid("Unknown hero availability.");
-        requireHero(heroId);
+        }
+        lockHero(heroId);
         requireRegion(region);
 
         var on = request.capturedOn() == null ? today() : request.capturedOn();
@@ -101,28 +112,38 @@ public class HeroShop {
         row.setNeedsReview(Boolean.TRUE.equals(request.needsReview()));
         row.setNote(blankToNull(request.note()));
         row.setUpdatedAt(clock.instant());
+        var saved = prices.save(row);
 
-        return adminPrice(prices.save(row));
+        record("HERO_SHOP_PRICE_SAVED", heroId, Map.of("region", region, "capturedOn", on.toString()));
+        return adminPrice(saved);
     }
 
     @PreAuthorize("hasAuthority('hero:write')")
     @Transactional
     public void deletePrice(UUID heroId, String region, LocalDate on) {
+        // A missing hero has no step either, so the step check below answers it.
+        heroes.lockById(heroId);
         var key = new HeroShopPriceRow.Key(heroId, region, on);
-        if (!prices.existsById(key))
+        if (!prices.existsById(key)) {
             throw new ApiException(HeroErrorCode.HERO_SHOP_ENTRY_NOT_FOUND, "This price step was not found.");
+        }
 
         prices.deleteById(key);
+        record("HERO_SHOP_PRICE_DELETED", heroId, Map.of("region", region, "capturedOn", on.toString()));
     }
 
     @PreAuthorize("hasAuthority('hero:write')")
     @Transactional
     public HeroShopView.SkinAcquisition saveSkin(UUID heroId, String skinKey, String region,
             SaveSkinAcquisition request) {
-        if (!METHODS.contains(request.method()))
+        if (!METHODS.contains(request.method())) {
             throw HeroValidation.invalid("Unknown skin acquisition method.");
-        if (!skins.existsById(new SkinIdentityRow.Key(heroId, skinKey)))
+        }
+        // A missing hero has no skin either, so the skin check below answers it.
+        heroes.lockById(heroId);
+        if (!skins.existsById(new SkinIdentityRow.Key(heroId, skinKey))) {
             throw new ApiException(HeroErrorCode.HERO_SKIN_NOT_FOUND, "Skin was not found.");
+        }
         requireRegion(region);
 
         var on = request.capturedOn() == null ? today() : request.capturedOn();
@@ -135,18 +156,26 @@ public class HeroShop {
         row.setNeedsReview(Boolean.TRUE.equals(request.needsReview()));
         row.setNote(blankToNull(request.note()));
         row.setUpdatedAt(clock.instant());
+        var saved = acquisitions.save(row);
 
-        return adminSkin(acquisitions.save(row));
+        record("HERO_SKIN_ACQUISITION_SAVED", heroId,
+                Map.of("skinKey", skinKey, "region", region, "capturedOn", on.toString()));
+        return adminSkin(saved);
     }
 
     @PreAuthorize("hasAuthority('hero:write')")
     @Transactional
     public void deleteSkin(UUID heroId, String skinKey, String region, LocalDate on) {
+        // A missing hero has no step either, so the step check below answers it.
+        heroes.lockById(heroId);
         var key = new SkinAcquisitionRow.Key(heroId, skinKey, region, on);
-        if (!acquisitions.existsById(key))
+        if (!acquisitions.existsById(key)) {
             throw new ApiException(HeroErrorCode.HERO_SHOP_ENTRY_NOT_FOUND, "This acquisition step was not found.");
+        }
 
         acquisitions.deleteById(key);
+        record("HERO_SKIN_ACQUISITION_DELETED", heroId,
+                Map.of("skinKey", skinKey, "region", region, "capturedOn", on.toString()));
     }
 
     /** Rows arrive newest first within each skin, so the first one on or before the day is what held then. */
@@ -162,8 +191,20 @@ public class HeroShop {
     }
 
     private void requireHero(UUID heroId) {
-        if (!heroes.existsById(heroId))
+        if (!heroes.existsById(heroId)) {
             throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "Hero was not found.");
+        }
+    }
+
+    /** Shop steps have no version of their own: writers of one hero wait for each other on the hero row. */
+    private void lockHero(UUID heroId) {
+        if (heroes.lockById(heroId).isEmpty()) {
+            throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "Hero was not found.");
+        }
+    }
+
+    private void record(String action, UUID heroId, Map<String, Object> metadata) {
+        audit.record(new AuditEntry(actors.require(), action, AGGREGATE, heroId, null, null, null, null, metadata));
     }
 
     private HeroShopView.Price adminPrice(HeroShopPriceRow row) {
@@ -177,8 +218,9 @@ public class HeroShop {
     }
 
     private static void requireRegion(String value) {
-        if (value == null || !value.matches("[A-Z]{2,16}"))
+        if (value == null || !value.matches("[A-Z]{2,16}")) {
             throw HeroValidation.invalid("Unknown market.");
+        }
     }
 
     private static String blankToNull(String value) {

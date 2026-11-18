@@ -21,8 +21,7 @@ import org.springframework.http.ResponseEntity;
 public interface AuthApi {
 
     @Operation(operationId = "authApi_config", summary = "Config - auth", description = "Return googleEnabled, indicating whether Google login and its provider secret are configured. No credentials are exposed. Unknown query parameters are rejected.", responses = {
-            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true)
     })
     Map<String, Boolean> config(@Parameter(hidden = true) HttpServletRequest request);
 
@@ -30,8 +29,7 @@ public interface AuthApi {
             @Parameter(name = "Origin", in = ParameterIn.HEADER, required = true, schema = @Schema(type = "string"), description = "Must exactly match the configured admin origin."),
             @Parameter(name = "X-AOV-Auth", in = ParameterIn.HEADER, required = true, schema = @Schema(allowableValues = {
                     "1"}), description = "Mandatory non-simple CSRF defense header.")}, responses = {
-                            @ApiResponse(responseCode = "200", headers = @Header(name = "Set-Cookie", description = "HttpOnly session or flow-binding cookie update; refresh tokens are not returned in JSON.", schema = @Schema(type = "string")), description = "Successful operation.", useReturnTypeSchema = true),
-                            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                            @ApiResponse(responseCode = "200", headers = @Header(name = "Set-Cookie", description = "HttpOnly session or flow-binding cookie update; refresh tokens are not returned in JSON.", schema = @Schema(type = "string")), description = "Successful operation.", useReturnTypeSchema = true)
                     })
     AuthTokenResponse login(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "JSON request. Field validation and unknown-property rejection follow the existing request type.", required = true) @Valid LoginRequest body,
@@ -43,8 +41,7 @@ public interface AuthApi {
             @Parameter(name = "X-AOV-Auth", in = ParameterIn.HEADER, required = true, schema = @Schema(allowableValues = {
                     "1"}), description = "Mandatory non-simple CSRF defense header."),
             @Parameter(name = "aov_admin_refresh", in = ParameterIn.COOKIE, required = true, schema = @Schema(type = "string"), description = "HttpOnly refresh cookie set by login or refresh.")}, responses = {
-                    @ApiResponse(responseCode = "200", headers = @Header(name = "Set-Cookie", description = "HttpOnly session or flow-binding cookie update; refresh tokens are not returned in JSON.", schema = @Schema(type = "string")), description = "Successful operation.", useReturnTypeSchema = true),
-                    @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @ApiResponse(responseCode = "200", headers = @Header(name = "Set-Cookie", description = "HttpOnly session or flow-binding cookie update; refresh tokens are not returned in JSON.", schema = @Schema(type = "string")), description = "Successful operation.", useReturnTypeSchema = true)
             })
     AuthTokenResponse refresh(@Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) HttpServletResponse response);
@@ -54,8 +51,7 @@ public interface AuthApi {
             @Parameter(name = "X-AOV-Auth", in = ParameterIn.HEADER, required = true, schema = @Schema(allowableValues = {
                     "1"}), description = "Mandatory non-simple CSRF defense header."),
             @Parameter(name = "aov_admin_refresh", in = ParameterIn.COOKIE, required = false, schema = @Schema(type = "string"), description = "HttpOnly refresh cookie set by login or refresh.")}, responses = {
-                    @ApiResponse(responseCode = "204", headers = @Header(name = "Set-Cookie", description = "HttpOnly session or flow-binding cookie update; refresh tokens are not returned in JSON.", schema = @Schema(type = "string")), description = "Successful operation; no response body.", content = @Content),
-                    @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                    @ApiResponse(responseCode = "204", headers = @Header(name = "Set-Cookie", description = "HttpOnly session or flow-binding cookie update; refresh tokens are not returned in JSON.", schema = @Schema(type = "string")), description = "Successful operation; no response body.", content = @Content)
             })
     ResponseEntity<Void> logout(@Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) HttpServletResponse response);
@@ -64,15 +60,13 @@ public interface AuthApi {
             @Parameter(name = "Origin", in = ParameterIn.HEADER, required = true, schema = @Schema(type = "string"), description = "Must exactly match the configured admin origin."),
             @Parameter(name = "X-AOV-Auth", in = ParameterIn.HEADER, required = true, schema = @Schema(allowableValues = {
                     "1"}), description = "Mandatory non-simple CSRF defense header.")}, responses = {
-                            @ApiResponse(responseCode = "200", headers = @Header(name = "Set-Cookie", description = "HttpOnly session or flow-binding cookie update; refresh tokens are not returned in JSON.", schema = @Schema(type = "string")), description = "Successful operation.", useReturnTypeSchema = true),
-                            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+                            @ApiResponse(responseCode = "200", headers = @Header(name = "Set-Cookie", description = "HttpOnly session or flow-binding cookie update; refresh tokens are not returned in JSON.", schema = @Schema(type = "string")), description = "Successful operation.", useReturnTypeSchema = true)
                     })
     Map<String, String> google(@Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) HttpServletResponse response);
 
     @Operation(operationId = "authApi_callback", summary = "Callback - auth", description = "Consume the single-use OAuth state and its aov_oauth_{state} cookie. Exchange the code, or record cancellation/provider failure, then redirect with state/status in the fragment. The flow cookie is cleared. Only state, code, error, error_description, session_state and iss query keys are accepted.", responses = {
-            @ApiResponse(responseCode = "303", headers = @Header(name = "Location", description = "Configured login completion URI with state/status fragment.", schema = @Schema(type = "string", format = "uri")), description = "Redirect to the configured login completion URI.", content = @Content),
-            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "303", headers = @Header(name = "Location", description = "Configured login completion URI with state/status fragment.", schema = @Schema(type = "string", format = "uri")), description = "Redirect to the configured login completion URI.", content = @Content)
     })
     ResponseEntity<Void> callback(
             @Parameter(description = "One-time OAuth state, bound to the initiating browser cookie.") String state,

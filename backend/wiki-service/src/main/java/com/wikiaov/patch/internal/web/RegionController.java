@@ -21,12 +21,14 @@ public class RegionController implements RegionApi {
         this.regions = regions;
     }
 
+    @Override
     @GetMapping(version = "1")
     public List<RegionView> list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return regions.list();
     }
 
+    @Override
     @GetMapping(path = "/{code}", version = "1")
     public RegionView select(@PathVariable String code, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());

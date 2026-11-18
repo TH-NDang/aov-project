@@ -1,7 +1,11 @@
 package com.wikiaov.item.internal.catalog.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.wikiaov.item.internal.application.ItemErrorCode;
 import com.wikiaov.item.internal.catalog.persistence.ItemIdentityRepository;

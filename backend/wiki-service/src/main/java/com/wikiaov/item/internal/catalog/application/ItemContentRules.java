@@ -8,6 +8,7 @@ import com.wikiaov.item.internal.metadata.persistence.ItemCategoryRepository;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogCodes;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText.Stat;
 import com.wikiaov.platform.CatalogTranslations;
@@ -32,69 +33,85 @@ class ItemContentRules {
     }
 
     void validate(ItemContent content) {
-        if (content == null)
+        if (content == null) {
             fail("Content is required.");
+        }
         validateCategories(content);
         CatalogTranslations.firstViolation(content.translations()).ifPresent(violation -> fail(violation.detail()));
         validateIcon(content.iconAssetId());
-        if (content.notes() != null && content.notes().length() > 32768)
+        if (content.notes() != null && content.notes().length() > 32768) {
             fail("Notes exceed the maximum length.");
+        }
         if (content.tier() != null && (content.tier() < 1 || content.tier() > 3)
-                || content.price() != null && content.price() < 0)
+                || content.price() != null && content.price() < 0) {
             fail("Invalid tier or price.");
+        }
         validateRecipe(content);
         validateShopPositions(content);
         validateStats(content.stats());
     }
 
     private void validateCategories(ItemContent content) {
-        if (content.categoryCode() != null && !metadata.existsById(content.categoryCode()))
+        if (content.categoryCode() != null && !metadata.existsById(content.categoryCode())) {
             fail("Unknown item category.");
-        for (var position : content.shopPositions())
-            if (position.categoryCode() == null || !metadata.existsById(position.categoryCode()))
+        }
+        for (var position : content.shopPositions()) {
+            if (position.categoryCode() == null || !metadata.existsById(position.categoryCode())) {
                 fail("Unknown shop category.");
+            }
+        }
     }
 
     private void validateRecipe(ItemContent content) {
-        if (!Set.of("UNKNOWN", "NONE", "VERIFIED").contains(content.recipeStatus()))
+        if (!Set.of("UNKNOWN", "NONE", "VERIFIED").contains(content.recipeStatus())) {
             fail("Unknown recipe status.");
-        if (!content.recipeStatus().equals("VERIFIED") && !content.components().isEmpty())
+        }
+        if (!content.recipeStatus().equals("VERIFIED") && !content.components().isEmpty()) {
             fail("Only verified recipes may have confirmed components.");
+        }
         if (content.components().stream().map(ItemContent.Component::itemId).distinct().count() != content.components()
-                .size())
+                .size()) {
             fail("Duplicate recipe component.");
+        }
         for (var component : content.components()) {
             if (component.itemId() == null || component.quantity() < 1 || component.quantity() > 100
-                    || !identities.existsById(component.itemId()))
+                    || !identities.existsById(component.itemId())) {
                 fail("Invalid recipe component.");
+            }
         }
     }
 
     private void validateShopPositions(ItemContent content) {
-        for (var p : content.shopPositions())
-            if (p.categoryCode() == null || p.row() != null && p.row() < 0 || p.column() != null && p.column() < 0)
+        for (var p : content.shopPositions()) {
+            if (p.categoryCode() == null || p.row() != null && p.row() < 0 || p.column() != null && p.column() < 0) {
                 fail("Invalid shop position.");
+            }
+        }
     }
 
     private void validateStats(List<Stat> stats) {
         var keys = new HashSet<String>();
-        for (var stat : stats)
-            if (stat.key() == null || !stat.key().matches("[a-z0-9]+(?:-[a-z0-9]+)*") || stat.value() == null
-                    || !keys.add(stat.key()))
+        for (var stat : stats) {
+            if (stat.key() == null || !stat.key().matches(CatalogCodes.PATTERN) || stat.value() == null
+                    || !keys.add(stat.key())) {
                 fail("Invalid or duplicate numeric stat.");
+            }
+        }
     }
 
     private void validateIcon(UUID id) {
         if (id != null
                 && media.find(id).filter(asset -> asset.usable() && asset.semanticType() == MediaSemanticType.ITEM_ICON)
-                        .isEmpty())
+                        .isEmpty()) {
             fail("The icon must be an active uploaded item icon.");
+        }
     }
 
     List<UUID> assets(ItemContent content) {
         var result = new ArrayList<UUID>();
-        if (content.iconAssetId() != null)
+        if (content.iconAssetId() != null) {
             result.add(content.iconAssetId());
+        }
 
         return result;
     }
@@ -102,28 +119,37 @@ class ItemContentRules {
     List<String> readiness(ItemRevision revision, ItemContent content) {
         var result = new ArrayList<>(missing(content));
         if (revision.getEffectiveFromPatchVariantId() == null && !CatalogObservation.isUnscopedBaseline(
-                revision.getCause(), revision.getSourceRevisionId(), revision.getEffectiveFromPatchVariantId()))
+                revision.getCause(), revision.getSourceRevisionId(), revision.getEffectiveFromPatchVariantId())) {
             result.add("effectiveFromPatchVariantId");
+        }
         return result;
     }
 
     List<String> missing(ItemContent content) {
         var missing = new ArrayList<String>();
-        if (content.iconAssetId() == null)
+        if (content.iconAssetId() == null) {
             missing.add("iconAssetId");
-        if (content.translations().isEmpty())
+        }
+        if (content.translations().isEmpty()) {
             missing.add("translations");
-        for (var translation : content.translations())
-            if (translation.description() == null || translation.description().isBlank())
+        }
+        for (var translation : content.translations()) {
+            if (translation.description() == null || translation.description().isBlank()) {
                 missing.add("translations." + translation.locale() + ".description");
-        if (content.tier() == null)
+            }
+        }
+        if (content.tier() == null) {
             missing.add("tier");
-        if (content.price() == null)
+        }
+        if (content.price() == null) {
             missing.add("price");
-        if (content.categoryCode() == null)
+        }
+        if (content.categoryCode() == null) {
             missing.add("categoryCode");
-        if (content.recipeStatus().equals("UNKNOWN"))
+        }
+        if (content.recipeStatus().equals("UNKNOWN")) {
             missing.add("recipeStatus");
+        }
         return missing;
     }
 

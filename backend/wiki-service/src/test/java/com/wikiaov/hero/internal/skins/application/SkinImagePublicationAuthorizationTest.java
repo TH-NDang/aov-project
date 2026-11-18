@@ -1,7 +1,8 @@
 package com.wikiaov.hero.internal.skins.application;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;

@@ -1,12 +1,27 @@
 package com.wikiaov.hero.internal.skills.persistence;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Effect;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillStateIcon;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Source;
+import com.wikiaov.hero.internal.domain.HeroContent.Trait;
+import com.wikiaov.hero.internal.domain.HeroContent.TraitCode;
+import com.wikiaov.hero.internal.domain.HeroContent.TraitTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Verification;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
@@ -18,7 +33,11 @@ import com.wikiaov.hero.internal.skills.persistence.entity.SkillTraitSkillRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTraitTranslationRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTranslationRow;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Sort;
@@ -43,14 +62,14 @@ class HeroSkillSnapshotsTest {
         var second = UUID.randomUUID();
         var ids = List.of(first, second);
         when(traits.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
-                new SkillTraitRow(first, "HARD_CC"), new SkillTraitRow(first, "TRUE_DAMAGE"),
-                new SkillTraitRow(second, "DASH")));
+                SkillTraitRow.of(first, TraitCode.HARD_CC), SkillTraitRow.of(first, TraitCode.TRUE_DAMAGE),
+                SkillTraitRow.of(second, TraitCode.DASH)));
         when(traitSkills.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
-                new SkillTraitSkillRow(first, "HARD_CC", "skill-2"),
-                new SkillTraitSkillRow(first, "HARD_CC", "skill-1"),
-                new SkillTraitSkillRow(second, "DASH", "skill-1")));
+                SkillTraitSkillRow.of(first, TraitCode.HARD_CC, "skill-2"),
+                SkillTraitSkillRow.of(first, TraitCode.HARD_CC, "skill-1"),
+                SkillTraitSkillRow.of(second, TraitCode.DASH, "skill-1")));
         when(traitTexts.findBySkillSetRevisionIdIn(ids)).thenReturn(List.of(
-                new SkillTraitTranslationRow(first, "HARD_CC", "vi-VN", "Hào hoa (choáng 0.75 giây)")));
+                SkillTraitTranslationRow.of(first, TraitCode.HARD_CC, "vi-VN", "Hào hoa (choáng 0.75 giây)")));
 
         var result = store.traits(ids);
 

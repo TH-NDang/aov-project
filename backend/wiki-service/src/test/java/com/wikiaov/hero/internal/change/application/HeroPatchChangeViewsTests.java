@@ -1,7 +1,8 @@
 package com.wikiaov.hero.internal.change.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.hero.internal.change.persistence.HeroPatchChangeSetRepository.Header;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory.Entry;
@@ -12,7 +13,7 @@ import com.wikiaov.hero.internal.change.persistence.entity.RoleChangeClassificat
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
+import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;

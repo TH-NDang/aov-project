@@ -59,7 +59,7 @@ class SpellRevisionContent {
             row.setVariantLabels(translation.variantLabels());
             translations.save(row);
         }
-        for (var state : content.states())
+        for (var state : content.states()) {
             for (var translation : state.translations()) {
                 var row = new SpellTranslation();
                 row.setId(UUID.randomUUID());
@@ -74,6 +74,7 @@ class SpellRevisionContent {
                 row.setVariantLabels(translation.variantLabels());
                 translations.save(row);
             }
+        }
         translations.flush();
     }
 

@@ -1,6 +1,6 @@
 package com.wikiaov.hero.internal.change.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
+import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

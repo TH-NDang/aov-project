@@ -3,7 +3,12 @@ package com.wikiaov.query.internal.application;
 import com.wikiaov.platform.CatalogChangeProvider;
 import com.wikiaov.platform.CatalogChanges.Entry;
 import com.wikiaov.platform.CatalogChanges.Kind;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public final class PublishedCatalogChanges {
     private PublishedCatalogChanges() {
@@ -21,8 +26,9 @@ public final class PublishedCatalogChanges {
         }
 
         for (var entry : provider.changes(ruleset, variant, locale)) {
-            if (!variant.equals(entry.patchVariantId()) || entry.kinds().contains(Kind.DATA_BASELINE))
+            if (!variant.equals(entry.patchVariantId()) || entry.kinds().contains(Kind.DATA_BASELINE)) {
                 continue;
+            }
             var row = removed.get(entry.ownerId());
             if (row == null || !entry.kinds().equals(List.of(Kind.REMOVED))) {
                 row = summary(entry);
@@ -32,8 +38,9 @@ public final class PublishedCatalogChanges {
                 row.put("summary", entry.summary());
                 row.put("actualLocale", entry.actualLocale());
             }
-            if (entry.sourceUrl() != null)
+            if (entry.sourceUrl() != null) {
                 row.putIfAbsent("sourceUrl", entry.sourceUrl());
+            }
         }
         return result;
     }

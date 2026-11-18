@@ -1,7 +1,9 @@
 package com.wikiaov.hero.internal.domain;
 
 import java.text.Normalizer;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /** Source slots are explicit identifiers, never inferred from array positions or translated names. */
@@ -28,8 +30,9 @@ public record SkillReferenceSearch(
         String value = normalize(q);
         Integer slot = null, variant = null;
         var numbered = SLOT.matcher(value);
-        if (!numbered.find())
+        if (!numbered.find()) {
             numbered = SHORT_SLOT.matcher(value);
+        }
         if (numbered.find(0)) {
             slot = Integer.valueOf(numbered.group(1));
             variant = numbered.group(2) == null ? null : Integer.valueOf(numbered.group(2));
@@ -57,10 +60,12 @@ public record SkillReferenceSearch(
 
     public static Integer sourceSlot(String skillKey) {
         var source = SOURCE_KEY.matcher(skillKey);
-        if (source.matches())
+        if (source.matches()) {
             return number(source.group(1));
-        if (skillKey.equals("capture-passive"))
+        }
+        if (skillKey.equals("capture-passive")) {
             return 0;
+        }
         var capture = CAPTURE_KEY.matcher(skillKey);
         return capture.matches() ? number(capture.group(1)) : null;
     }

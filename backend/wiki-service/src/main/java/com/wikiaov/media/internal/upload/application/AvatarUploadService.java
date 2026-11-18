@@ -13,6 +13,7 @@ import com.wikiaov.media.internal.asset.persistence.entity.MediaAsset;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
 import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.time.Duration;
@@ -53,7 +54,7 @@ class AvatarUploadService implements AvatarUploads {
         return transaction.execute(status -> {
             MediaAsset asset = assets.save(MediaAsset.create(UUID.randomUUID(), MediaSemanticType.USER_AVATAR,
                     MediaWritePolicy.ref(actor), clock.instant()));
-            audit.record(AuditEntry.of(actor, "MEDIA_AVATAR_CREATED", "MEDIA_ASSET", asset.getId()));
+            audit.record(AuditEntry.of(actor, "MEDIA_AVATAR_CREATED", CatalogAggregates.MEDIA_ASSET, asset.getId()));
             var ticket = request
                     .avatar(new RequestMediaUpload.Command(asset.getId(), fileName, contentType, sizeBytes));
             return new Ticket(ticket.uploadId(), ticket.assetId(), ticket.method(), ticket.uploadUrl(),
@@ -64,7 +65,8 @@ class AvatarUploadService implements AvatarUploads {
     public Result complete(UUID uploadId) {
         human();
         var result = complete.avatar(uploadId);
-        return new Result(result.assetId(), previewUrl(result.assetId()).orElseThrow());
+        return new Result(result.assetId(), previewUrl(result.assetId())
+                .orElseThrow(() -> new IllegalStateException("A completed avatar has no preview.")));
     }
 
     @Transactional
@@ -90,8 +92,9 @@ class AvatarUploadService implements AvatarUploads {
 
     private Actor human() {
         Actor actor = actors.require();
-        if (actor.type() != ActorType.HUMAN)
+        if (actor.type() != ActorType.HUMAN) {
             throw new ApiException(PlatformErrorCode.FORBIDDEN, "A human account is required.");
+        }
         return actor;
     }
 }

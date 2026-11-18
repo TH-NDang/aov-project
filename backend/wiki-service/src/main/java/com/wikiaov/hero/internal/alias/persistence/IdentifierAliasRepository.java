@@ -2,8 +2,9 @@ package com.wikiaov.hero.internal.alias.persistence;
 
 import com.wikiaov.hero.internal.alias.persistence.entity.ImageFileAlias;
 import com.wikiaov.hero.internal.alias.persistence.entity.SkinKeyAlias;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 

@@ -1,8 +1,11 @@
 package com.wikiaov.spell.internal.catalog.infrastructure;
 
-import com.wikiaov.media.*;
+import com.wikiaov.media.MediaUsage;
+import com.wikiaov.media.MediaUsageProvider;
 import com.wikiaov.spell.internal.catalog.application.SpellCatalog;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

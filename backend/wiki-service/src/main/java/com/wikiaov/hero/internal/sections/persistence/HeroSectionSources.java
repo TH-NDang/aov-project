@@ -1,10 +1,13 @@
 package com.wikiaov.hero.internal.sections.persistence;
 
-import com.wikiaov.hero.internal.domain.HeroContent.*;
-
+import com.wikiaov.hero.internal.domain.HeroContent.Source;
+import com.wikiaov.hero.internal.domain.HeroContent.Verification;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.entity.SourceReferenceRow;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

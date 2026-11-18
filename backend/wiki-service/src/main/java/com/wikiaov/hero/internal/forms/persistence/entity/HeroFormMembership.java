@@ -1,7 +1,9 @@
 package com.wikiaov.hero.internal.forms.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-import jakarta.persistence.*;
+import com.wikiaov.platform.AssignedIdentifierEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;

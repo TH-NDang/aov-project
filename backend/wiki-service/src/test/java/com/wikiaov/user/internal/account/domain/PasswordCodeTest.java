@@ -11,8 +11,9 @@ class PasswordCodeTest {
     @Test
     void generatesSixDigitCodesAndMatchesOnlyTheSameChallenge() {
         var random = new SecureRandom();
-        for (int index = 0; index < 200; index++)
+        for (int index = 0; index < 200; index++) {
             assertThat(PasswordCode.generate(random)).matches("[0-9]{6}");
+        }
 
         UUID challenge = UUID.randomUUID();
         byte[] stored = PasswordCode.hash(challenge, "012345");

@@ -61,7 +61,8 @@ public class SourceFiles {
     @Transactional(readOnly = true)
     public SourceFileViews.FileDetails details(UUID fileId) {
         SourceFile file = require(fileId);
-        SourceObject object = objects.findById(file.getSha256()).orElseThrow();
+        SourceObject object = objects.findById(file.getSha256())
+                .orElseThrow(() -> new IllegalStateException("A source file names an object that does not exist."));
         var collection = collections.require(file.getCollectionId());
 
         var otherPlaces = files.findOtherPlaces(file.getSha256(), file.getId(), PageRequest.of(0, OTHER_PLACES))

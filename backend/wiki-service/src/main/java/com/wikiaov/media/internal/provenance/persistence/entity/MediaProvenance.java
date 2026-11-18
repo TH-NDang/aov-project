@@ -50,6 +50,10 @@ public class MediaProvenance extends AssignedIdEntity {
     @Column(name = "note", updatable = false)
     private @Nullable String note;
 
+    /** Recorded without any evidence of where the image came from; it never counts as a credit (V074). */
+    @Column(name = "unverified", nullable = false, updatable = false)
+    private boolean unverified;
+
     /** Copy of the owner's display name; owner renames and merges rewrite it (ADR-017). */
     @Column(name = "owner_name", length = 200, updatable = false)
     private @Nullable String ownerName;
@@ -98,6 +102,18 @@ public class MediaProvenance extends AssignedIdEntity {
         provenance.ownerPageId = ownerPageId;
         provenance.relatedPageId = relatedPageId;
         provenance.createdAt = now;
+        return provenance;
+    }
+
+    /**
+     * The placeholder written when a new version arrives without a source: it shows {@code label} to editors and keeps
+     * the image in the list of images that need a credit.
+     */
+    public static MediaProvenance unverified(UUID id, UUID assetId, UUID assetVersionId, String label,
+            @Nullable String note, Instant now) {
+        MediaProvenance provenance = record(id, assetId, assetVersionId, ProvenanceSourceType.OTHER, label, null, null,
+                note, null, null, null, null, null, now);
+        provenance.unverified = true;
         return provenance;
     }
 }

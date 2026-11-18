@@ -1,17 +1,34 @@
 package com.wikiaov.hero.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.MutableClock;
-import com.wikiaov.media.*;
+import com.wikiaov.TestcontainersConfiguration;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
 import java.time.Instant;
-import java.util.*;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -19,12 +36,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.*;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -34,40 +51,14 @@ import tools.jackson.databind.json.JsonMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(DomainCoreIntegrationTest.Beans.class)
-@EnabledIf("databaseAvailable")
+@Import({TestcontainersConfiguration.class, DomainCoreIntegrationTest.Beans.class})
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@DockerBacked
 @SuppressWarnings("unchecked")
 class HeroEvaluationIntegrationTest {
     private static final String ROOT = "/api/wiki/v1";
     private static final UUID VN = UUID.fromString("5d5dcd5e-15b9-4d43-884d-111111111111");
     private static final String PAGE = "c".repeat(64);
-    private static PostgreSQLContainer database;
-
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry props) {
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external != null) {
-            props.add("spring.datasource.url", () -> external);
-            props.add("spring.datasource.username", () -> "wiki_test");
-            props.add("spring.datasource.password", () -> "");
-        } else {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            props.add("spring.datasource.url", database::getJdbcUrl);
-            props.add("spring.datasource.username", database::getUsername);
-            props.add("spring.datasource.password", database::getPassword);
-        }
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
-    }
 
     @Autowired
     MockMvc mvc;
@@ -99,8 +90,9 @@ class HeroEvaluationIntegrationTest {
         }
         when(media.findAll(any())).thenAnswer(call -> {
             Map<UUID, MediaAssetReference> found = new HashMap<>();
-            for (UUID id : (Collection<UUID>) call.getArgument(0))
+            for (UUID id : (Collection<UUID>) call.getArgument(0)) {
                 media.find(id).ifPresent(asset -> found.put(id, asset));
+            }
             return found;
         });
 
@@ -330,11 +322,12 @@ class HeroEvaluationIntegrationTest {
 
     private Map<String, Object> skills(long version, List<String> keys) {
         List<Map<String, Object>> list = new ArrayList<>();
-        for (int n = 0; n < keys.size(); n++)
+        for (int n = 0; n < keys.size(); n++) {
             list.add(Map.of("skillKey", keys.get(n), "kind", "ACTIVE", "displayOrder", n + 1, "iconAssetId",
                     assets.get(MediaSemanticType.HERO_SKILL_ICON), "translations",
                     List.of(Map.of("locale", "vi-VN", "name", "Chiêu " + (n + 1), "description", "Mô tả")),
                     "effects", List.of()));
+        }
         return Map.of("expectedDraftVersion", version, "skills", list);
     }
 
@@ -368,8 +361,9 @@ class HeroEvaluationIntegrationTest {
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write"),
                 new SimpleGrantedAuthority("hero:publish"), new SimpleGrantedAuthority("patch:write"),
                 new SimpleGrantedAuthority("patch:publish"), new SimpleGrantedAuthority("region:admin")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

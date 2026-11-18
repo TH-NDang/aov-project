@@ -1,22 +1,47 @@
 package com.wikiaov.hero.internal.catalog.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.Cause;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
-import com.wikiaov.media.*;
-import com.wikiaov.patch.*;
-import java.time.*;
-import java.util.*;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.platform.RevisionState;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
@@ -39,6 +64,23 @@ class HeroQueriesTest {
     void resolvePublishedContext() {
         when(contexts.resolve("VN", at)).thenReturn(context);
         when(forms.structure()).thenReturn(new HeroFormStructure(List.of()));
+    }
+
+    @Test
+    void thePublishedHeroesOfAMarketAreReadWithOneRevisionQuery() {
+        var airi = hero("airi", Map.of());
+        var baldum = hero("baldum", Map.of());
+        var ids = List.of(airi.identity().getId(), baldum.identity().getId());
+        when(store.heroes(false)).thenReturn(List.of(airi.identity(), baldum.identity()));
+        var revisions = ids.stream().flatMap(id -> store.revisions(id).stream()).toList();
+        when(store.revisions(ids)).thenReturn(revisions);
+        clearInvocations(store);
+
+        var published = queries.published("VN");
+
+        assertThat(published.keySet()).containsExactly(airi.identity(), baldum.identity());
+        verify(store).revisions(ids);
+        verify(store, never()).revisions(any(UUID.class));
     }
 
     @Test
@@ -169,7 +211,7 @@ class HeroQueriesTest {
     private void observeAt(CatalogHero hero, UUID variantId) {
         var revision = store.revisions(hero.identity().getId()).getFirst();
         when(store.revisions(hero.identity().getId())).thenReturn(List.of(new HeroRevisionView(revision.id(),
-                revision.heroId(), revision.rulesetId(), 1, "PUBLISHED", 1, 1L, at.minusSeconds(60),
+                revision.heroId(), revision.rulesetId(), 1, RevisionState.PUBLISHED, 1, 1L, at.minusSeconds(60),
                 Cause.DATA_BASELINE, null, variantId, revision.sections())));
     }
 
@@ -184,7 +226,7 @@ class HeroQueriesTest {
         UUID profileId = UUID.randomUUID();
         UUID bindingsId = UUID.randomUUID();
         var revision = new HeroRevisionView(UUID.randomUUID(), identity.getId(), context.rulesetId(), 1,
-                "PUBLISHED", 1, 1L, at.minusSeconds(60), Cause.DATA_BASELINE, null, null,
+                RevisionState.PUBLISHED, 1, 1L, at.minusSeconds(60), Cause.DATA_BASELINE, null, null,
                 Map.of(HeroSection.PROFILE, profileId, HeroSection.MEDIA_BINDINGS, bindingsId));
         when(store.revisions(identity.getId())).thenReturn(List.of(revision));
         when(sections.content(HeroSection.PROFILE, profileId)).thenReturn(new Profile(

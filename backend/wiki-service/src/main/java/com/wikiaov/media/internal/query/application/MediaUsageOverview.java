@@ -62,21 +62,22 @@ public class MediaUsageOverview {
 
         var matching = queries.ids(semanticType, needsCredit).stream()
                 .filter(id -> index.summary(id).state() == filter).toList();
-        int from = (int) Math.min((long) page * size, matching.size());
-        var rows = queries.summaries(matching.subList(from, Math.min(from + size, matching.size())));
+        var slice = PageSlice.of(matching, page, size);
+        var rows = queries.summaries(slice.items());
 
-        return new PageSlice<>(rows.stream().map(row -> row.withUsage(index.summary(row.id()))).toList(), page, size,
-                matching.size());
+        return slice.withItems(rows.stream().map(row -> row.withUsage(index.summary(row.id()))).toList());
     }
 
     public MediaUsageTotals totals(@Nullable MediaSemanticType semanticType, boolean needsCredit) {
         var index = index();
         Map<MediaUsageState, Long> states = new EnumMap<>(MediaUsageState.class);
-        for (var state : MediaUsageState.values())
+        for (var state : MediaUsageState.values()) {
             states.put(state, 0L);
+        }
 
-        for (var id : queries.ids(semanticType, needsCredit))
+        for (var id : queries.ids(semanticType, needsCredit)) {
             states.merge(index.summary(id).state(), 1L, Long::sum);
+        }
 
         return new MediaUsageTotals(states, index.competition() != null);
     }
@@ -88,8 +89,9 @@ public class MediaUsageOverview {
     /** Waiting requests share one reading instead of each asking every module again. */
     private synchronized Map<UUID, List<MediaUsage>> usages() {
         var now = clock.instant();
-        if (now.isBefore(reportExpires))
+        if (now.isBefore(reportExpires)) {
             return report;
+        }
 
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
         providers.orderedStream().forEach(provider -> provider.findAllUsages().forEach(
@@ -108,8 +110,9 @@ public class MediaUsageOverview {
         /** A place keeps its strongest use, so a skin art shown now and kept in old revisions counts once, as shown. */
         MediaUsageSummary summary(UUID asset) {
             Map<String, MediaUsageState> places = new HashMap<>();
-            for (var usage : usages.getOrDefault(asset, List.of()))
+            for (var usage : usages.getOrDefault(asset, List.of())) {
                 places.merge(place(usage), state(usage), (left, right) -> left.compareTo(right) <= 0 ? left : right);
+            }
 
             var counts = places.values().stream()
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
@@ -125,8 +128,9 @@ public class MediaUsageOverview {
         }
 
         private static MediaUsageState state(MediaUsage usage) {
-            if (!usage.shown())
+            if (!usage.shown()) {
                 return MediaUsageState.STORED_ONLY;
+            }
 
             return switch (usage.scope()) {
                 case CURRENT -> MediaUsageState.SHOWN;

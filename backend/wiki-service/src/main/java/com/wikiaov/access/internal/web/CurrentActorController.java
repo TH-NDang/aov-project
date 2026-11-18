@@ -17,6 +17,7 @@ public class CurrentActorController implements CurrentActorApi {
         this.currentActor = currentActor;
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/me", version = "1")
     public Actor me(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
