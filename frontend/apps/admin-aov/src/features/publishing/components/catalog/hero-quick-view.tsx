@@ -12,7 +12,7 @@ import { confirmDiscard } from "@/components/confirm-dialog"
 import { api } from "./hero-catalog-cells"
 
 const HeroWorkspace = lazy(() =>
-  import("../../pages/publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
+  import("../workspace/publishing-workspace").then((module) => ({ default: module.PublishingWorkspace })),
 )
 
 export function HeroQuickView({

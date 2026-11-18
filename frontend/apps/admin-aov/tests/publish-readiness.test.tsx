@@ -437,7 +437,8 @@ for (const canWrite of [true, false])
       return fixture.fetcher(input, init)
     }
     await withDocument(fetcher, intersectionHarness().Observer, async ({ document, show, waitFor, search }) => {
-      const { PublishingWorkspace } = await import("../src/features/publishing/pages/publishing-page")
+      const { PublishingWorkspace } =
+        await import("../src/features/publishing/components/workspace/publishing-workspace")
       const editor = () => document.querySelector('[role="region"][aria-label="Chỉnh sửa nội dung"]')
       await show(
         <PublishingWorkspace heroId="fixture-hero" onUnsavedChange={() => undefined} />,

@@ -25,7 +25,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { PublishingWorkspace } = await import("../src/features/publishing/pages/publishing-page")
+  const { PublishingWorkspace } = await import("../src/features/publishing/components/workspace/publishing-workspace")
   const { updateTranslation } = await import("../src/features/publishing/components/editing/translation-editor")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
