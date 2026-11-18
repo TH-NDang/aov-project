@@ -3,7 +3,7 @@ package com.wikiaov.hero.internal.web;
 import com.wikiaov.hero.internal.application.response.HeroRankingViews;
 import com.wikiaov.hero.internal.application.response.HeroTraitsView;
 import com.wikiaov.hero.internal.catalog.application.HeroTraitIndex;
-import com.wikiaov.hero.internal.ranking.application.HeroRankings;
+import com.wikiaov.hero.internal.ranking.application.PublishedHeroRankings;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiPaths.ROOT)
 public class HeroEvaluationPublicController implements HeroEvaluationPublicApi {
-    private final HeroRankings rankings;
+    private final PublishedHeroRankings rankings;
     private final HeroTraitIndex traits;
 
-    public HeroEvaluationPublicController(HeroRankings rankings, HeroTraitIndex traits) {
+    public HeroEvaluationPublicController(PublishedHeroRankings rankings, HeroTraitIndex traits) {
         this.rankings = rankings;
         this.traits = traits;
     }

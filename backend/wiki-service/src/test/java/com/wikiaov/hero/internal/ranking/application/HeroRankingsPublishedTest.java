@@ -5,20 +5,16 @@ import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.wikiaov.access.AuditLog;
-import com.wikiaov.access.CurrentActor;
 import com.wikiaov.hero.internal.application.response.HeroRankingViews.Figure;
 import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.ranking.domain.RankingMetric;
 import com.wikiaov.hero.internal.ranking.persistence.RankingSnapshotHeroRepository;
-import com.wikiaov.hero.internal.ranking.persistence.RankingSnapshotImageRepository;
 import com.wikiaov.hero.internal.ranking.persistence.RankingSnapshotRepository;
 import com.wikiaov.hero.internal.ranking.persistence.RankingSnapshotValueRepository;
 import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotRow;
 import com.wikiaov.hero.internal.ranking.persistence.entity.RankingSnapshotValueRow;
 import java.math.BigDecimal;
-import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -34,8 +30,7 @@ class HeroRankingsPublishedTest {
     private final RankingSnapshotValueRepository values = mock(RankingSnapshotValueRepository.class);
     private final RankingSnapshotHeroRepository entries = mock(RankingSnapshotHeroRepository.class);
     private final HeroIdentityRepository heroes = mock(HeroIdentityRepository.class);
-    private final HeroRankings rankings = new HeroRankings(snapshots, mock(RankingSnapshotImageRepository.class),
-            entries, values, heroes, mock(CurrentActor.class), mock(AuditLog.class), Clock.systemUTC());
+    private final PublishedHeroRankings rankings = new PublishedHeroRankings(snapshots, entries, values, heroes);
     private final RankingSnapshotRow snapshot = new RankingSnapshotRow();
 
     HeroRankingsPublishedTest() {
