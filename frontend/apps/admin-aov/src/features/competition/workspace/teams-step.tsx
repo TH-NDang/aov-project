@@ -10,9 +10,10 @@ import { LaneIcon, PlayerPhoto, TeamLogo } from "@/features/esports/components/p
 import { useRecords } from "@/features/esports/data/use-esports-data"
 import { LANE_LABELS } from "@/features/esports/model/labels"
 import { RecordPicker } from "@/features/tournaments/components/record-picker"
+import { TeamRecordSheet } from "@/features/tournaments/components/team-record-sheet"
 import { TeamRosterSheet } from "@/features/tournaments/components/team-roster-sheet"
 import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
-import { rosterBoard } from "./model"
+import { rosterBoard, rosterOrder } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
 import { selectClass } from "./plan-fields"
 import { useRosterPlayers } from "./use-roster-players"
@@ -101,6 +102,7 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
   const [editing, setEditing] = useState(false)
   const [missingOnly, setMissingOnly] = useState(false)
   const [rosterTeam, setRosterTeam] = useState<string | null>(null)
+  const [recordTeam, setRecordTeam] = useState<string | null>(null)
   const team = useQuery({
     queryKey: [...tournamentKeys.all, "teams", ws.access.actorKey, "one", rosterTeam],
     queryFn: ({ signal }) => tournamentApi.read("teams", rosterTeam!, signal),
@@ -167,6 +169,16 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
                 <span className="type-meta w-4 text-right">{ws.plan.entrants.indexOf(entry) + 1}</span>
                 <TeamLogo team={view} size={32} />
                 <span className="type-body min-w-0 truncate">{view.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Sửa hồ sơ đội ${view.name} và tuyển thủ`}
+                  title={`Sửa hồ sơ đội ${view.name} và tuyển thủ`}
+                  onClick={() => setRecordTeam(entry.teamId)}
+                >
+                  <Pencil aria-hidden />
+                </Button>
                 {editing && ws.canEdit ? (
                   <select
                     aria-label={`Trạng thái ${view.name}`}
@@ -275,6 +287,15 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
       <Link className="type-body underline" to="/players">
         Quản lý hồ sơ tuyển thủ
       </Link>
+      {recordTeam && (
+        <TeamRecordSheet
+          teamId={recordTeam}
+          playerIds={rosterOrder(rostersOf(recordTeam)).map((row) => row.playerId)}
+          actorKey={ws.access.actorKey}
+          canWrite={ws.access.canWrite}
+          onClose={() => setRecordTeam(null)}
+        />
+      )}
       {rosterTeam && team.data && (
         <TeamRosterSheet
           team={team.data}

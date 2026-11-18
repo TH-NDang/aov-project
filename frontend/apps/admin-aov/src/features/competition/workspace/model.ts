@@ -690,6 +690,18 @@ const ROSTER_LANES = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"] as const
  * One team's roster the way a reader scans it: the five positions in map order, then the bench, then who left.
  * A position can hold nobody or more than one starter, and a starter may have no position recorded yet.
  */
+/** A team's roster lines in the order its row draws them: starters by lane, then the bench, who left and the rest. */
+export function rosterOrder(rows: RosterMembershipContent[]) {
+  const board = rosterBoard(rows)
+  return [
+    ...board.lanes.flatMap((cell) => cell.players),
+    ...board.unplaced,
+    ...board.bench,
+    ...board.left,
+    ...board.unknown,
+  ]
+}
+
 export function rosterBoard(rows: RosterMembershipContent[]) {
   const of = (status: string) => rows.filter((row) => (row.status ?? "UNKNOWN") === status)
   const starters = of("ACTIVE")

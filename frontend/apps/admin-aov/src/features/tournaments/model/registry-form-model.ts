@@ -98,6 +98,20 @@ export function registryContent(kind: RegistryKind, values: Record<string, strin
   return content as Content
 }
 
+/**
+ * A record's content after an edit of some of its fields: those fields take the form's values, a field the editor
+ * cleared goes, and every field the form does not show stays as it was.
+ */
+export function editedRecordContent<T extends Content>(
+  kind: RegistryKind,
+  entry: DocumentView<T>,
+  values: Record<string, string>,
+  keys: string[],
+): T {
+  const kept = Object.fromEntries(Object.entries(entry.content).filter(([key]) => !keys.includes(key)))
+  return { ...kept, ...registryContent(kind, values, keys) } as T
+}
+
 export function registryFormIssue(kind: RegistryKind, values: Record<string, string>): string | null {
   for (const key of ["sourceUrl", "logoUrl", "photoUrl", "result.sourceUrl"]) {
     if (values[key]?.trim() && !/^https?:\/\//i.test(values[key].trim()))
