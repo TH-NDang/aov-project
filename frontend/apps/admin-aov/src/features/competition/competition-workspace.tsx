@@ -14,7 +14,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react"
-import type { CompetitionPlan, CompetitionView, DocumentView, TeamContent } from "@aov/community-contracts"
+import type { CompetitionPlan, CompetitionView, TeamContent } from "@aov/community-contracts"
 import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
@@ -470,19 +470,12 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         )}
       </div>
       {editing && tournament.data && (
-        <RegistryEditor
-          open
-          kind="tournaments"
-          entry={tournament.data}
-          teams={Object.entries(teams).map(([id, content]) => documentOf(id, content))}
-          onClose={() => setEditing(false)}
-        />
+        <RegistryEditor open kind="tournaments" entry={tournament.data} onClose={() => setEditing(false)} />
       )}
       {addingPart && (
         <RegistryEditor
           open
           kind="tournaments"
-          teams={[]}
           defaults={partDefaults(entry.id, info)}
           onClose={() => setAddingPart(false)}
         />
@@ -501,14 +494,4 @@ const partDefaults = (mainEventId: string, main: CompetitionView["content"]["tou
   ...(main.year ? { year: String(main.year) } : {}),
   ...(main.tier ? { tier: main.tier } : {}),
   ...(main.logoUrl ? { logoUrl: main.logoUrl } : {}),
-})
-
-/** The tournament editor only lists team names, so the snapshot's teams stand in for full records. */
-const documentOf = (id: string, content: TeamContent): DocumentView<TeamContent> => ({
-  id,
-  version: 0,
-  createdAt: "",
-  updatedAt: "",
-  content,
-  missingFields: [],
 })

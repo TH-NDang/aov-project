@@ -779,10 +779,11 @@ tìm tên/mã để khôi phục. Cần khôi phục các mục cha trước th�
 Ván đã từng xuất bản giữ lịch sử và chỉ có thể gỡ công khai, không được xóa. Mỗi thao tác dùng đúng phiên
 bản đã kiểm tra; thay đổi đồng thời yêu cầu tải lại thay vì ghi đè.
 
-Phân hạng, loại giải, hình thức, trạng thái và kết quả là thông tin bổ sung. Không tự xác định trạng thái
-hoặc đội vô địch theo ngày. Kết quả cần tên vô địch/á quân và link nguồn; tỷ số nhập đủ hai vế hoặc để trống.
-Mức kiểm chứng tách nguồn chính, nguồn phụ đã đối chiếu, bản lưu, báo chí và chưa xác minh; không tự coi
-phân hạng hoặc kết quả từ nguồn phụ là thông tin chính thức.
+Phân hạng, loại giải, hình thức và trạng thái là thông tin bổ sung. Không tự xác định trạng thái hoặc đội vô
+địch theo ngày. Đội vô địch, á quân và tỷ số trận cuối ghi ở bước Chung cuộc (`placements`); form giải không còn
+nhóm "Kết quả". Kết quả mà lần nhập dữ liệu cũ đã ghi (`result`) được giữ nguyên khi lưu giải, vì Stream vẫn đọc
+nó khi bảng chung cuộc chưa có đúng một đội hạng nhất. Mức kiểm chứng tách nguồn chính, nguồn phụ đã đối chiếu,
+bản lưu, báo chí và chưa xác minh; không tự coi phân hạng hoặc kết quả từ nguồn phụ là thông tin chính thức.
 Trận BO có thể ghi kết quả cuối cùng kèm nguồn ngay cả khi chưa thu thập từng ván; không tự tạo ván từ
 tỷ số. Kết quả hoàn tất cần một đội đạt số ván thắng của thể thức, đội còn lại ít hơn.
 

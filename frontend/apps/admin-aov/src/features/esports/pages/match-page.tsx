@@ -278,7 +278,6 @@ function MatchView({ access }: { access: Access }) {
           entry={record as DocumentView<SeriesContent>}
           open
           onClose={() => setEditing(false)}
-          teams={view.teams}
           tournamentId={tournamentId}
         />
       )}
