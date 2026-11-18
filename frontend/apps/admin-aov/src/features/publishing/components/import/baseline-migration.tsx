@@ -5,7 +5,7 @@ import { CalendarCog } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { confirmAction } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
-import { createPublishingApi, type Request } from "../../api/publishing-api"
+import { createPublishingApi, type Request, publishingKeys } from "../../api/publishing-api"
 import type { HeroRow, Revision } from "../../api/types"
 import type { ImportContext } from "./import-context"
 
@@ -27,7 +27,7 @@ export function BaselineMigration({
   const api = createPublishingApi(request)
   const cache = useQueryClient()
   const candidates = useQuery({
-    queryKey: ["baseline-migration", context.contextId],
+    queryKey: publishingKeys.baselineMigration(context.contextId),
     enabled: open,
     queryFn: async () => {
       const heroes: HeroRow[] = []
@@ -77,15 +77,15 @@ export function BaselineMigration({
             "POST",
             { expectedVersion: revision.version, contextId: context.contextId },
           )
-          cache.removeQueries({ queryKey: ["publishing-preview", hero.id, moved.id] })
+          cache.removeQueries({ queryKey: publishingKeys.preview(hero.id, moved.id) })
           completed++
         } catch (failure) {
           failures.push(`${hero.code}: ${errorMessage(failure)}`)
         }
       }
       await invalidateHeroCatalogs(cache)
-      await cache.invalidateQueries({ queryKey: ["baseline-migration"] })
-      await cache.invalidateQueries({ queryKey: ["publishing-revisions"] })
+      await cache.invalidateQueries({ queryKey: publishingKeys.allBaselineMigrations })
+      await cache.invalidateQueries({ queryKey: publishingKeys.allRevisions })
       setProgress(
         `Đã chuyển ${completed}/${rows.length} bản nháp. Kiểm tra lại bản xem trước của lần nhập để dùng phiên bản mới.`,
       )

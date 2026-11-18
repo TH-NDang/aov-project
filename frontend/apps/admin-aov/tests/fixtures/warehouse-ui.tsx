@@ -5,11 +5,10 @@
 import assert from "node:assert/strict"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { WarehouseRevision } from "../../src/features/warehouse/model/warehouse-types"
-import { flush, installWindow, waitFor } from "./dom"
+import { createWindow, flush, installWindow, waitFor } from "./dom"
 
 let activeRequests: string[] = []
 let removalEvents: Record<string, unknown>[] = []
@@ -39,7 +38,7 @@ export async function withWarehouseUi(
   }) => Promise<void>,
   capabilities = ["spell:write", "spell:publish", "media:write"],
 ) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/spells", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/spells")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })

@@ -4,6 +4,7 @@ import { join, relative } from "node:path"
 
 const app = join(import.meta.dirname, "..")
 const source = join(app, "src")
+const tests = join(app, "tests")
 
 type Rule = { name: string; hint: string; files: string[]; offenders: (text: string, path: string) => string[] }
 
@@ -97,10 +98,8 @@ const rules: Rule[] = [
   {
     name: "status colours come from the tokens, without hand-written dark variants",
     hint: "Use text-destructive, text-(--aov-warning), bg-(--aov-success-soft) and the like (frontend/docs/DESIGN-TOKENS.md).",
-    // The change colours are a palette the editor picks from; the sign-in card is drawn on its own dark artwork.
-    files: files(source, /\.tsx?$/).filter(
-      (path) => !path.endsWith("change-color-preferences.tsx") && !path.endsWith(join("auth", "auth-gate.tsx")),
-    ),
+    // The change colours are a palette the editor picks from.
+    files: files(source, /\.tsx?$/).filter((path) => !path.endsWith("change-color-preferences.tsx")),
     offenders: (text) =>
       text
         .split("\n")
@@ -189,6 +188,51 @@ const rules: Rule[] = [
     hint: "crypto.randomUUID is missing on plain-HTTP LAN addresses; use randomId from lib/random-id.",
     files: files(source, /\.tsx?$/).filter((path) => !path.endsWith(join("lib", "random-id.ts"))),
     offenders: (text) => (text.includes("crypto.randomUUID") ? [""] : []),
+  },
+  {
+    name: "shared code in src/lib imports no feature",
+    hint: "Code two features use lives in src/lib or src/components; move what it needs there too (frontend/AGENTS.md).",
+    files: files(join(source, "lib"), /\.tsx?$/),
+    offenders: (text) =>
+      text
+        .split("\n")
+        .flatMap((line, index) => (/from "(@\/features\/|(\.\.\/)+features\/)/.test(line) ? [`:${index + 1}`] : [])),
+  },
+  {
+    name: "query keys come from the feature's keys object",
+    hint: "Build the key with the feature's xKeys object (publishingKeys.revisions(id)); reads and invalidations share it.",
+    // The tournament, esports, community and competition screens were being reworked by another change when the
+    // other features moved to key objects; they follow when their data layer is reworked.
+    files: files(source, /\.tsx?$/).filter(
+      (path) => !/[\\/]features[\\/](tournaments|esports|community|competition)[\\/]/.test(path),
+    ),
+    offenders: (text) =>
+      [...text.matchAll(/(?:queryKey:|(?:get|set)QueryData(?:<[^>]*>)?\()\s*\[/g)].map(
+        (match) => `:${text.slice(0, match.index).split("\n").length}`,
+      ),
+  },
+  {
+    name: "admin tests build their browser with the shared kit",
+    hint: "Use createWindow, withDom, inDom or parseHtml from tests/fixtures/dom.tsx instead of new JSDOM(...).",
+    // These tournament, esports and community tests were being reworked by another change when the kit took over;
+    // they move to it with their suite, and leave this list then.
+    files: files(tests, /\.tsx?$/).filter(
+      (path) =>
+        !relative(tests, path).startsWith("fixtures") &&
+        ![
+          "community-references.test.tsx",
+          "competition-recency.test.tsx",
+          "esports-drag.test.tsx",
+          "esports-loadout.test.tsx",
+          "esports-ui.test.tsx",
+          "registry-import-ui.test.tsx",
+          "tournament-lifecycle.test.tsx",
+          "tournament-parts.test.tsx",
+          "tournaments.test.tsx",
+        ].includes(relative(tests, path)),
+    ),
+    offenders: (text) =>
+      text.split("\n").flatMap((line, index) => (line.includes("new JSDOM(") ? [`:${index + 1}`] : [])),
   },
   {
     name: "esports viewer components and models stay free of admin-only modules",

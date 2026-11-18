@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import {
   fillReferenceInput,
@@ -10,10 +9,10 @@ import {
   referenceInputValue,
   selectReferenceInput,
 } from "./fixtures/reference-input"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 async function editorHarness(initial: string, catalog: EntityReference[] = []) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+  const dom = createWindow()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")

@@ -1,6 +1,6 @@
 import { catalogScopePatch, resolveCatalogScope } from "../model/catalog/catalog-scope"
 import { useCatalogScopePreference } from "../components/catalog/catalog-scope-memory"
-import { HeroTimeline } from "../components/hero-timeline"
+import { HeroTimeline } from "../components/workspace/hero-timeline"
 import {
   useEffect,
   useEffectEvent,
@@ -32,25 +32,25 @@ import { useSession } from "@/app/auth/auth-gate"
 import { replacingPageTab, usePageCloseGuard } from "@/app/layout/page-tabs"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 
-import { createPublishingApi, heroPreviewKey } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import { invalidateHeroCatalogs } from "../api/publishing-cache"
 import { BaselineContextForm } from "../components/import/baseline-context-form"
-import { DraftPencil, type NewDraft } from "../../warehouse/components/warehouse-sheet"
-import { HeroContent } from "../components/hero-content"
-import { HeroAsset } from "@/features/publishing/components/hero-asset"
-import { HeroScrollIdentity } from "../components/hero-scroll-identity"
+import { DraftPencil, type NewDraft } from "../../warehouse/components/sheet/warehouse-sheet"
+import { HeroContent } from "../components/workspace/hero-content"
+import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
+import { HeroScrollIdentity } from "../components/workspace/hero-scroll-identity"
 import { HeroQuickSwitcher } from "../components/catalog/hero-quick-switcher"
-import { HeroFormSwitcher, HeroFormsDialog, useHeroForms } from "../components/hero-forms"
+import { HeroFormSwitcher, HeroFormsDialog, useHeroForms } from "../components/editing/hero-forms"
 import { defaultFormOf, formsOwnerOf } from "../model/hero-forms-model"
-import { HeroSharedPart } from "../components/hero-shared-part"
+import { HeroSharedPart } from "../components/editing/hero-shared-part"
 import { selectCatalogRevisions } from "../model/catalog/catalog-data"
 import { HeroCatalog } from "../components/catalog/hero-catalog"
-import { HeroRevisionHistory } from "../components/hero-revision-history"
+import { HeroRevisionHistory } from "../components/workspace/hero-revision-history"
 import { HeroPatchTimeline } from "../components/patch-changes/hero-patch-view"
 
-import { HeroLanguagePicker } from "../components/hero-language-picker"
+import { HeroLanguagePicker } from "../components/editing/hero-language-picker"
 import { cn } from "@aov/ui/lib/utils"
-import { HeroReviewNotice } from "../components/hero-review-notice"
+import { HeroReviewNotice } from "../components/workspace/hero-review-notice"
 import { reviewTab, type HeroReviewItem } from "../model/import/hero-source-review"
 import {
   missingTranslationFields,
@@ -59,15 +59,15 @@ import {
   type TranslationField,
   type TranslationTarget,
 } from "../model/hero-translation-model"
-import { TranslationEditor } from "../components/translation-editor"
+import { TranslationEditor } from "../components/editing/translation-editor"
 import { type TranslatableSection } from "@/features/publishing/model/hero-translation-model"
-import { Box } from "../components/fields"
+import { Box } from "../components/editing/fields"
 import { languageOptions } from "../../users/profile-preference-picker"
 import { PatchChangeForm } from "../components/patch-changes/patch-change-form"
-import { SectionEditor, emptySection } from "../components/section-editor"
+import { SectionEditor, emptySection } from "../components/editing/section-editor"
 import { statPatchContext } from "../model/assessment/combat-attributes"
 import { useStatDefaults } from "../components/setup/patch-stat-defaults"
-import { replaceProfilePart, type ProfileEditorPart } from "../components/hero-profile-editor"
+import { replaceProfilePart, type ProfileEditorPart } from "../components/editing/hero-profile-editor"
 
 import { type CatalogFilter } from "../components/catalog/catalog-context"
 import { usePublicationOverview, useContentLocale } from "../api/publication-overview"
@@ -90,14 +90,14 @@ import {
   type HeroContentTab,
   type HeroWorkspaceView,
 } from "../model/hero-location"
-import { useHeroLocation } from "../components/use-hero-location"
-import { HeroNavigationGuard } from "../components/hero-navigation-guard"
+import { useHeroLocation } from "../components/workspace/use-hero-location"
+import { HeroNavigationGuard } from "../components/workspace/hero-navigation-guard"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatusControl } from "@/app/drafts/draft-status"
 import { HeroDraftChanges, savedHeroSections } from "../components/patch-changes/hero-draft-changes"
-import { PublishButton } from "../components/publish-button"
+import { PublishButton } from "../components/workspace/publish-button"
 import { ReferenceRulesetProvider } from "../../terminology/catalog"
-import { HeroWorkspaceTabs } from "../components/hero-workspace-tabs"
+import { HeroWorkspaceTabs } from "../components/workspace/hero-workspace-tabs"
 import { captureFocus, type CaptureTarget } from "../model/captures/patch-capture-model"
 import { PatchCapturePanel, PatchCaptureToggle } from "../components/captures/patch-capture-panel"
 import { PatchCaptureProvider, usePatchCaptureWorkspace, type PatchCaptureWorkspace } from "../api/use-patch-captures"
@@ -112,9 +112,9 @@ import {
 } from "../model/hero-working-copy"
 import { toast } from "sonner"
 import { confirmAction } from "@/components/confirm-dialog"
-import { CAUSE_NAMES } from "../model/setup/version-causes"
+import { CAUSE_NAMES } from "@/lib/version-causes"
 import { VersionFacts } from "../components/setup/version-facts"
-import { HeroVersionMenu, REVISION_STATES as STATES } from "../components/hero-version-menu"
+import { HeroVersionMenu, REVISION_STATES as STATES } from "../components/workspace/hero-version-menu"
 
 const api = createPublishingApi(backendRequest)
 const CAUSES: Record<Cause, string> = CAUSE_NAMES
@@ -187,7 +187,7 @@ export function PublishingPage({ translationMode = false }: { translationMode?: 
   const { heroId = "" } = useParams()
   // Shares the workspace's revisions query; the backend rejects a hero code in the id slot, e.g. /hero/airi.
   const revisions = useQuery({
-    queryKey: ["publishing-revisions", heroId],
+    queryKey: publishingKeys.revisions(heroId),
     queryFn: () => api.revisions(heroId),
     enabled: !!heroId,
   })
@@ -203,7 +203,7 @@ export function PublishingPage({ translationMode = false }: { translationMode?: 
 function HeroCodeRedirect({ code }: { code: string }) {
   const location = useLocation()
   const lookup = useQuery({
-    queryKey: ["publishing-hero-code", code.toLowerCase()],
+    queryKey: publishingKeys.heroByCode(code.toLowerCase()),
     queryFn: ({ signal }) => api.heroes(0, { q: code }, signal),
   })
   const match = lookup.data?.items.find((row) => row.code.toLowerCase() === code.toLowerCase())
@@ -312,15 +312,15 @@ export function PublishingWorkspace({
     updateLocation({ section: value, translationKey: null, translationField: null })
   const setContentLocale = (value: string) => updateLocation({ readLocale: value })
   const setTargetLocale = (value: string) => updateLocation({ target: value })
-  const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: api.rulesets })
-  const regions = useQuery({ queryKey: ["publishing-regions"], queryFn: api.regions })
+  const rulesets = useQuery({ queryKey: publishingKeys.rulesets, queryFn: api.rulesets })
+  const regions = useQuery({ queryKey: publishingKeys.regions, queryFn: api.regions })
   const revisions = useQuery({
-    queryKey: ["publishing-revisions", heroId],
+    queryKey: publishingKeys.revisions(heroId),
     queryFn: () => api.revisions(heroId),
     enabled: !!heroId,
   })
   const read = useQuery({
-    queryKey: heroPreviewKey(heroId, selectedId),
+    queryKey: publishingKeys.preview(heroId, selectedId),
     queryFn: () => api.read(heroId, selectedId),
     enabled: !!heroId && !!selectedId,
     staleTime: Infinity,
@@ -359,7 +359,7 @@ export function PublishingWorkspace({
   const statDefaults = useStatDefaults(statPatch?.id)
   const writable = canWrite && revision?.state === "DRAFT"
   const savedChanges = useQuery({
-    queryKey: ["hero-draft-changes", heroId, revision?.id, revision?.version],
+    queryKey: publishingKeys.draftChange(heroId, revision?.id, revision?.version),
     queryFn: () => api.draftChanges(heroId, revision!.id),
     enabled: !!writable,
     retry: false,
@@ -544,7 +544,7 @@ export function PublishingWorkspace({
       await action()
       toast.success(success)
       await invalidateHeroCatalogs(queryClient)
-      await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
+      await queryClient.invalidateQueries({ queryKey: publishingKeys.comparisons(heroId) })
       await revisions.refetch()
     } catch (failure) {
       onFailure(errorMessage(failure))
@@ -554,7 +554,7 @@ export function PublishingWorkspace({
   }
   async function openRevision(next: Revision) {
     const data = await api.read(next.heroId, next.id)
-    queryClient.setQueryData(["publishing-preview", next.heroId, next.id], data)
+    queryClient.setQueryData(publishingKeys.preview(next.heroId, next.id), data)
     setSelectedId(next.id)
     updateLocation({ revision: next.id, compare: null, changes: null })
     setEditing(false)
@@ -905,7 +905,7 @@ export function PublishingWorkspace({
                 const value = sectionValue ?? emptySection(section, editorLocale)
                 const next = await api.save(revision, section, value, note)
                 const saved = await api.read(heroId, revision.id)
-                queryClient.setQueryData(["publishing-preview", heroId, revision.id], saved)
+                queryClient.setQueryData(publishingKeys.preview(heroId, revision.id), saved)
                 const notes = { ...localDraft.value.notes }
                 delete notes[noteKey]
                 const content = {
@@ -1329,7 +1329,7 @@ export function PublishingWorkspace({
                           onMove={async (next) => {
                             await openRevision(next)
                             await invalidateHeroCatalogs(queryClient)
-                            await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
+                            await queryClient.invalidateQueries({ queryKey: publishingKeys.comparisons(heroId) })
                             await revisions.refetch()
                             toast.success("Đã đổi patch, giữ nguyên nội dung và ảnh.")
                           }}

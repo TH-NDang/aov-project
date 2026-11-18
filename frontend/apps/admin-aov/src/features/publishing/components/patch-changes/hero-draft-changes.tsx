@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { sameDraftValue } from "@/app/drafts/draft-store"
 import { AdminEntityText } from "../../../terminology/catalog"
 import { comparisonFieldLabels, comparisonImages, comparisonValue } from "../../model/assessment/hero-comparison"
-import { HeroAsset } from "../hero-asset"
+import { HeroAsset } from "../editing/hero-asset"
 import { comparableSection, sameHeroSection, type HeroWorkingCopy } from "../../model/hero-working-copy"
 import type { HeroDraftChangeSet } from "../../api/publishing-api"
 import { SKILL_FIELD_LABELS, skillFieldLabel } from "../../model/skills/skill-field-labels"

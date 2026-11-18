@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 import { useQueries, useQueryClient } from "@tanstack/react-query"
-import { linksBySha256 } from "./files-api"
+import { fileKeys, linksBySha256 } from "./files-api"
 
 /** Links live 10 minutes (ADR-030 section 6); an older one is asked again before an image needs it. */
 export const SOURCE_LINK_FRESH_MS = 8 * 60_000
@@ -52,8 +52,6 @@ export function loadSourceLink(sha256: string): Promise<SourceImageLink | null> 
   })
 }
 
-export const sourceLinkKey = (sha256: string) => ["source-link", sha256] as const
-
 export interface SourceUrls {
   /** The picture's presigned link; undefined while it loads, when its bytes are not stored, or after a failure. */
   url: (sha256: string | null | undefined) => string | undefined
@@ -69,7 +67,7 @@ export function useSourceUrls(sha256s: readonly (string | null | undefined)[]): 
   const unique = [...new Set(sha256s.filter((value): value is string => !!value && SHA256.test(value)))]
   const results = useQueries({
     queries: unique.map((sha256) => ({
-      queryKey: sourceLinkKey(sha256),
+      queryKey: fileKeys.link(sha256),
       queryFn: () => loadSourceLink(sha256),
       staleTime: SOURCE_LINK_FRESH_MS,
       gcTime: SOURCE_LINK_FRESH_MS,
@@ -81,9 +79,9 @@ export function useSourceUrls(sha256s: readonly (string | null | undefined)[]): 
   const retry = useCallback(
     (sha256: string | null | undefined) => {
       if (!sha256) return false
-      const query = client.getQueryState(sourceLinkKey(sha256))
+      const query = client.getQueryState(fileKeys.link(sha256))
       if (!query || Date.now() - query.dataUpdatedAt < RETRY_AFTER_MS) return false
-      void client.invalidateQueries({ queryKey: sourceLinkKey(sha256) })
+      void client.invalidateQueries({ queryKey: fileKeys.link(sha256) })
       return true
     },
     [client],

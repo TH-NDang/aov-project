@@ -2,16 +2,15 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Skill, Skills } from "../src/features/publishing/api/types"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("focused skill editing preserves forms, effects and translations while adding unique skills and selecting media", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/fixture-hero", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/hero/fixture-hero")
   const fixture = createHeroFixture()
   const requests: string[] = []
   let finishUpload: ((response: Response) => void) | undefined
@@ -59,7 +58,7 @@ test("focused skill editing preserves forms, effects and translations while addi
   })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { SectionEditor } = await import("../src/features/publishing/components/section-editor")
+  const { SectionEditor } = await import("../src/features/publishing/components/editing/section-editor")
   const { nextSkillKey } = await import("../src/features/publishing/components/skills/hero-skills-editor")
   const skill = (skillKey: string, formKey: string | null, displayOrder: number): Skill => ({
     skillKey,

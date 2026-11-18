@@ -60,7 +60,20 @@ export function SourceFileSheet({
     }
     const accepted = await confirmAction({
       title: "Thay tệp này?",
-      description: `${details.path}: ${formatStorage(details.sizeBytes)} → ${picked.name}, ${formatStorage(picked.size)}. Đường dẫn trỏ sang dữ liệu tệp mới; dữ liệu tệp cũ còn lại cho tới khi được dọn như dữ liệu tệp mồ côi.`,
+      description:
+        "Đường dẫn trỏ sang dữ liệu tệp mới; dữ liệu tệp cũ còn lại cho tới khi được dọn như dữ liệu tệp mồ côi.",
+      details: (
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1">
+          <dt className="type-label">Đang dùng</dt>
+          <dd>
+            {details.path} · {formatStorage(details.sizeBytes)}
+          </dd>
+          <dt className="type-label">Thay bằng</dt>
+          <dd>
+            {picked.name} · {formatStorage(picked.size)}
+          </dd>
+        </dl>
+      ),
       confirmLabel: "Thay tệp",
     })
     if (!accepted) return

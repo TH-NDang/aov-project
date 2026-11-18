@@ -1,25 +1,24 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 test("hero catalog keeps every loaded row and exposes the hero code and actions at all widths", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
+  const dom = createWindow("http://localhost/publishing")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { HeroCatalog } = await import("../src/features/publishing/components/catalog/hero-catalog")
-  const { heroCatalogKey } = await import("../src/features/publishing/api/publishing-api")
+  const { publishingKeys } = await import("../src/features/publishing/api/publishing-api")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: 0 } } })
   const items = Array.from({ length: 25 }, (_, i) => ({ id: `database-id-${i}`, code: `hero-${i}`, revisions: [] }))
-  cache.setQueryData(heroCatalogKey({ locale: "vi-VN" }), {
+  cache.setQueryData(publishingKeys.heroCatalog({ locale: "vi-VN" }), {
     pages: [
       { items: items.slice(0, 20), page: 0, size: 20, totalElements: 25 },
       { items: items.slice(20), page: 1, size: 20, totalElements: 25 },

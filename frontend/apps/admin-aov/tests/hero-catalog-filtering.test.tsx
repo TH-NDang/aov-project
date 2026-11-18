@@ -1,16 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { catalogOverview, createHeroCatalogFixture } from "./fixtures/hero-catalog-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import type { CatalogFilter } from "../src/features/publishing/components/catalog/catalog-context"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("catalog transport encodes search and keeps every server filter in its cache identity", async () => {
-  const { createPublishingApi, heroCatalogKey } = await import("../src/features/publishing/api/publishing-api")
+  const { createPublishingApi, publishingKeys } = await import("../src/features/publishing/api/publishing-api")
   let requested = ""
   const api = createPublishingApi(async <T,>(path: string) => {
     requested = path
@@ -31,7 +30,7 @@ test("catalog transport encodes search and keeps every server filter in its cach
   const params = new URL(requested, "http://localhost").searchParams
   assert.equal(params.get("page"), "2")
   for (const [key, value] of Object.entries(query)) assert.equal(params.get(key), value)
-  const original = heroCatalogKey(query)
+  const original = publishingKeys.heroCatalog(query)
   for (const variant of [
     { ...query, q: "Airi" },
     { ...query, seasonId: "season-old" },
@@ -43,15 +42,22 @@ test("catalog transport encodes search and keeps every server filter in its cach
     { ...query, position: "mid" },
     { ...query, hasWarnings: "" },
   ])
-    assert.notDeepEqual(heroCatalogKey(variant), original)
+    assert.notDeepEqual(publishingKeys.heroCatalog(variant), original)
   assert.deepEqual(
-    heroCatalogKey({}),
-    heroCatalogKey({ q: "", seasonId: "", patchVariantId: "", rulesetId: "", locale: "vi-VN", sort: "code" }),
+    publishingKeys.heroCatalog({}),
+    publishingKeys.heroCatalog({
+      q: "",
+      seasonId: "",
+      patchVariantId: "",
+      rulesetId: "",
+      locale: "vi-VN",
+      sort: "code",
+    }),
   )
 })
 
 test("hero catalog uses server changes-only filters, global search, edited sorting and isolated query caches", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
+  const dom = createWindow("http://localhost/publishing")
   const fixture = createHeroCatalogFixture()
   const intersections = intersectionHarness()
   Object.defineProperty(dom.window, "matchMedia", {
@@ -65,7 +71,7 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { HeroCatalog } = await import("../src/features/publishing/components/catalog/hero-catalog")
   const { CatalogViewMode } = await import("../src/features/publishing/components/catalog/catalog-view-mode")
-  const { heroCatalogKey } = await import("../src/features/publishing/api/publishing-api")
+  const { publishingKeys } = await import("../src/features/publishing/api/publishing-api")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: Infinity } },
@@ -229,10 +235,8 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
       () => search().value === "Voyage" && codes().length === 1 && codes()[0] === "zz-search-target",
       "Returning to a cached search restores its own rows",
     )
-    await act(async () => {
-      releaseSlow!()
-      await new Promise((resolve) => setTimeout(resolve, 30))
-    })
+    await act(async () => releaseSlow!())
+    await flush()
     releaseSlow = undefined
     assert.deepEqual(
       codes(),
@@ -301,7 +305,7 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
       { locale: "en-US", rulesetId: "alternate", sort: "edited-desc" as const },
     ])
       assert.ok(
-        cache.getQueryData(heroCatalogKey(query)),
+        cache.getQueryData(publishingKeys.heroCatalog(query)),
         `Expected independent cache entry for ${JSON.stringify(query)}`,
       )
     await act(async () =>

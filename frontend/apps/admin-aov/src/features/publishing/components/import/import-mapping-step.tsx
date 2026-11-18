@@ -9,7 +9,7 @@ import {
 import type { ImportField, ImportPolicy } from "../../model/import/hero-import-types"
 import { importFieldLabel } from "../../model/import/import-labels"
 import { RelationMappingFields } from "./relation-mapping"
-import { control } from "../fields"
+import { control } from "../editing/fields"
 
 function sampleValue(value: unknown): string {
   if (value == null || value === "") return "Trống"

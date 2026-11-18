@@ -1,15 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router"
-import { flush, installWindow } from "./fixtures/dom"
+import { createWindow, flush, installWindow } from "./fixtures/dom"
 
-const dom = new JSDOM('<div id="root"></div><button id="origin">Origin</button>', {
-  url: "http://localhost/",
-  pretendToBeVisual: true,
-})
+const dom = createWindow("http://localhost/", '<div id="root"></div><button id="origin">Origin</button>')
 installWindow(dom.window)
 
 const document = dom.window.document
@@ -39,6 +35,37 @@ async function click(element: HTMLElement) {
   await act(async () => element.click())
   await flush()
 }
+
+test("a question shows its details between the text and the buttons", async () => {
+  const { ConfirmDialogHost, confirmAction } = await import("../src/components/confirm-dialog")
+  const unmount = await mounted(<ConfirmDialogHost />)
+  let answer: Promise<boolean> | undefined
+  try {
+    await act(async () => {
+      answer = confirmAction({
+        title: "Thay tệp này?",
+        description: "Dữ liệu tệp cũ còn lại.",
+        details: (
+          <dl>
+            <dt>Đang dùng</dt>
+            <dd>a.png</dd>
+          </dl>
+        ),
+        confirmLabel: "Thay tệp",
+      })
+    })
+    await flush()
+    const list = dialog()!.querySelector("dl")!
+    assert.equal(list.textContent, "Đang dùnga.png")
+    const description = dialog()!.querySelector("p")!
+    assert.ok(description.compareDocumentPosition(list) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING)
+    assert.ok(list.compareDocumentPosition(dialogButton("Thay tệp")) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING)
+    await click(dialogButton("Hủy"))
+    assert.equal(await answer, false)
+  } finally {
+    await unmount()
+  }
+})
 
 test("the shared question is red, opens on Cancel, answers once and returns focus", async () => {
   const { ConfirmDialogHost, confirmAction } = await import("../src/components/confirm-dialog")
@@ -169,7 +196,7 @@ test("closing a tab waits for the answer and keeps the tab when refused", async 
 
 test("browser Back waits for the answer while edits are unsaved", async () => {
   const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
-  const { HeroNavigationGuard } = await import("../src/features/publishing/components/hero-navigation-guard")
+  const { HeroNavigationGuard } = await import("../src/features/publishing/components/workspace/hero-navigation-guard")
   const router = createMemoryRouter(
     [
       {

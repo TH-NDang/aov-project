@@ -30,7 +30,7 @@ import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../../publishing/components/assets/asset-picker"
-import { control } from "../../publishing/components/fields"
+import { control } from "../../publishing/components/editing/fields"
 import { FileTabs } from "../../files/file-tabs"
 import type { Asset, PageSlice } from "../../publishing/api/types"
 import {
@@ -39,7 +39,7 @@ import {
   LibrarySource,
   LibraryStateBadge,
   LibraryUsage,
-} from "../components/image-library-presentation"
+} from "../components/library/image-library-presentation"
 import {
   usageStateHints,
   usageStateLabels,
@@ -48,12 +48,12 @@ import {
   type MediaUsageSummary,
   type MediaUsageTotals,
 } from "../model/media-usage"
-import { MediaBulkSourceEditor } from "../components/media-bulk-source-editor"
+import { MediaBulkSourceEditor } from "../components/sources/media-bulk-source-editor"
 import { IMAGE_TYPE_LABELS } from "@/lib/image-types"
-import { ImageDetailSheet, imageStates } from "../components/image-detail-sheet"
+import { ImageDetailSheet, imageStates } from "../components/library/image-detail-sheet"
 import { creditSummary, needsNoCredit, ownerCandidate, sourceGap, sourceGapLabels } from "../model/media-source-gaps"
-import { MediaOwnerBulkEditor, type OwnerTarget } from "../components/media-owner-bulk-editor"
-import { MediaOwnersSheet } from "../components/media-owners-sheet"
+import { MediaOwnerBulkEditor, type OwnerTarget } from "../components/owners/media-owner-bulk-editor"
+import { MediaOwnersSheet } from "../components/owners/media-owners-sheet"
 import type { MediaSourceTarget } from "../model/bulk-media-sources"
 import { Link, useSearchParams } from "react-router"
 import { formatNumber } from "@/lib/text"

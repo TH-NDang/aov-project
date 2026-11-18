@@ -2,11 +2,10 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 test("overflowing tabs reveal the selection and adjacent content without scrolling the page", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+  const dom = createWindow()
   const document = dom.window.document
   const values = ["terms", "references", "preview", "settings"]
   let width = 300

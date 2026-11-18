@@ -12,8 +12,6 @@ export interface MediaDeletion {
   completedAt: string | null
 }
 
-export const deletionKey = (assetId: string) => ["media-deletion", assetId] as const
-
 export async function readMediaDeletion(assetId: string, signal?: AbortSignal): Promise<MediaDeletion | null> {
   try {
     const result = await backendRequest<MediaDeletion>(`/admin/media/assets/${assetId}/deletion`, { signal })

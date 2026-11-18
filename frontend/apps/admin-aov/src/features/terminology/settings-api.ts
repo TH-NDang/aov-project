@@ -24,8 +24,9 @@ export function createReferenceSettingsApi(request = backendRequest) {
   }
 }
 export const loadSettings = () => createReferenceSettingsApi().load()
+export const referenceSettingsKeys = { all: ["rich-text-settings"] as const }
 export const referenceSettingsQuery = {
-  queryKey: ["rich-text-settings"],
+  queryKey: referenceSettingsKeys.all,
   queryFn: loadSettings,
   retry: false,
   staleTime: 60000,

@@ -10,6 +10,7 @@ import {
 } from "@aov/ui/lib/item-graph"
 import { warehouseBaselineMode, type WarehouseEntry } from "../src/features/warehouse/model/warehouse-types"
 import { type ItemContent, type SpellContent } from "@aov/ui/lib/warehouse-content"
+import { withGlobals } from "./fixtures/dom"
 
 function item(
   id: string,
@@ -148,10 +149,10 @@ test("same-column and backwards recipes keep the output and input ports attached
   }
 })
 test("backend warehouse adapter loads all pages and preserves optimistic version and translation isolation", async () => {
-  const broadcast = globalThis.BroadcastChannel
-  Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, value: undefined })
-  const { createWarehouseApi } = await import("../src/features/warehouse/api/warehouse-api")
-  Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, value: broadcast })
+  const { createWarehouseApi } = await withGlobals(
+    { BroadcastChannel: undefined },
+    () => import("../src/features/warehouse/api/warehouse-api"),
+  )
   const calls: { path: string; init?: RequestInit }[] = []
   const entry = item("sword")
   const api = createWarehouseApi(async <T>(path: string, init?: RequestInit): Promise<T> => {

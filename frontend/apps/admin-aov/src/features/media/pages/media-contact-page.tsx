@@ -6,10 +6,11 @@ import { Button } from "@aov/ui/components/button"
 import { Page, PageHeader } from "@/components/page-header"
 import { backendRequest, getSession } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { ContactImage } from "../components/contact-image"
+import { ContactImage } from "../components/library/contact-image"
 import type { PageSlice } from "../../publishing/api/types"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { mediaKeys } from "../api/media-cache"
 
 interface Contact {
   id: string
@@ -28,7 +29,7 @@ export function MediaContactPage() {
   const client = useQueryClient()
   const allowed = getSession().actor?.capabilities.includes("media:write")
   const requests = useInfiniteQuery({
-    queryKey: ["media-contact-requests"],
+    queryKey: mediaKeys.contactRequests,
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       backendRequest<PageSlice<Contact>>(`/admin/media/contact-requests?page=${pageParam}&size=20`),
@@ -41,7 +42,7 @@ export function MediaContactPage() {
     setError("")
     try {
       await backendRequest(`/admin/media/contact-requests/${id}/resolve`, { method: "POST" })
-      await client.invalidateQueries({ queryKey: ["media-contact-requests"] })
+      await client.invalidateQueries({ queryKey: mediaKeys.contactRequests })
     } catch (error) {
       setError(errorMessage(error))
     } finally {

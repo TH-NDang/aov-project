@@ -2,12 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 test("the try-out tab writes in the shared description box without a second pane", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/terminology", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/terminology")
   const document = dom.window.document
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window, {

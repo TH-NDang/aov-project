@@ -2,7 +2,7 @@ import { HeroCatalog } from "../catalog/hero-catalog"
 import { Tabs, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
 import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
 import { ActionStrip } from "@/components/action-strip"
-import { WarehousePatchChanges } from "../../../warehouse/components/warehouse-patch-changes"
+import { WarehousePatchChanges } from "../../../warehouse/components/history/warehouse-patch-changes"
 import { HeroOverallAssessment, InlineAssessment } from "../assessment/hero-overall-assessment"
 import { createContext, useContext, useMemo, useState } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
@@ -17,10 +17,14 @@ import { useIsWide } from "@/hooks/use-media-query"
 import { errorMessage } from "@/lib/api/errors"
 import { MarketBadge } from "../setup/market-badge"
 import { AovNavIcon } from "@/app/aov-nav-icon"
-import { HeroAsset } from "@/features/publishing/components/hero-asset"
-import { changeDomain, isGameplayChange, type CatalogChange } from "../../../warehouse/components/catalog-changes"
+import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
+import {
+  changeDomain,
+  isGameplayChange,
+  type CatalogChange,
+} from "../../../warehouse/components/history/catalog-changes"
 import { phaseLabels, type PublicationOverview } from "../../api/publication-overview"
-import { dateLabel } from "@/features/publishing/model/setup/schedule-date"
+import { dateLabel } from "@/lib/schedule-date"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
 import { HeroChangeSummary } from "./hero-change-badges"
 import {
@@ -33,7 +37,8 @@ import {
 } from "./patch-notes-sheet"
 import { PatchAdditionalNotes } from "../setup/patch-additional-notes"
 import { selectCatalogRevisions } from "../../model/catalog/catalog-data"
-import { createPublishingApi, heroPreviewKey } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
+import { warehouseKeys } from "../../../warehouse/api/warehouse-api"
 
 type ChangeSet = RecordedChangeSet
 const warehouseDomains = ["items", "enchantments", "arcana", "spells"] as const
@@ -46,7 +51,7 @@ const changeDomains = [
 ] as const
 function heroChangesOptions(variantId: string, locale: string) {
   return {
-    queryKey: ["patch-changes", variantId, locale],
+    queryKey: publishingKeys.patchChanges(variantId, locale),
     queryFn: ({ signal }: { signal: AbortSignal }) =>
       backendRequest<ChangeSet[]>(
         `/admin/patch-variants/${variantId}/hero-changes?locale=${encodeURIComponent(locale)}`,
@@ -201,7 +206,7 @@ function HeroPatchChangesTable({
   const heroById = useMemo(() => new Map(heroes.map((hero) => [hero.id, hero])), [heroes])
   const detail = query.data?.find((row) => row.id === selected?.id) ?? selected
   const detailRevisions = useQuery({
-    queryKey: ["publishing-revisions", detail?.heroId ?? ""],
+    queryKey: publishingKeys.revisions(detail?.heroId ?? ""),
     queryFn: () => api.revisions(detail!.heroId),
     enabled: !!detail && !detail.toHeroRevisionId,
     staleTime: 30000,
@@ -210,7 +215,7 @@ function HeroPatchChangesTable({
     detail?.toHeroRevisionId ??
     selectCatalogRevisions(detailRevisions.data ?? [], overview, { seasonId: "", variantId })[0]?.id
   const detailReference = useQuery({
-    queryKey: heroPreviewKey(detail?.heroId ?? "", detailRevisionId ?? ""),
+    queryKey: publishingKeys.preview(detail?.heroId ?? "", detailRevisionId ?? ""),
     queryFn: () => api.read(detail!.heroId, detailRevisionId!),
     enabled: !!detail && !!detailRevisionId,
     staleTime: 60000,
@@ -343,7 +348,7 @@ export function PatchChangesTable({
   const heroes = useQuery(heroChangesOptions(variantId, locale))
   const warehouses = useQueries({
     queries: warehouseDomains.map((kind) => ({
-      queryKey: ["warehouse", "changes", kind, rulesetId, locale],
+      queryKey: warehouseKeys.changes(kind, rulesetId, locale),
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         backendRequest<CatalogChange[]>(
           `/admin/catalog-changes?${new URLSearchParams({ domain: changeDomain[kind], rulesetId, locale })}`,

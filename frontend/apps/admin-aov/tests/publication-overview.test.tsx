@@ -1,14 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import { flush, installWindow } from "./fixtures/dom"
+import { createWindow, flush, installWindow } from "./fixtures/dom"
 
 test("publication overview shows flags and hero heads, and only tabs with changes in the selected patch", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/game-configuration" })
+  const dom = createWindow("http://localhost/game-configuration")
   const fixture = createHeroFixture()
   const recorded: unknown[] = []
   const fetcher: typeof fetch = async (input, init) => {

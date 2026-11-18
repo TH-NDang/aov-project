@@ -5,7 +5,7 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { confirmAction } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
-import { control } from "../fields"
+import { control } from "../editing/fields"
 import { ChangeKindBadge } from "./hero-change-badges"
 import { cn } from "@aov/ui/lib/utils"
 import { AdminEntityText } from "../../../terminology/catalog"
@@ -18,6 +18,7 @@ import { SkillChangeList } from "../skills/skill-change-list"
 import { compareSkillRanks, splitSkillRanks } from "@aov/ui/lib/skill-rank-values"
 import { SkillRankComparison, SkillRankPartsComparison } from "../skills/skill-rank-table"
 import { ROLES, type ChangeSource, type Content, type Role, type Skill } from "../../api/types"
+import { publishingKeys } from "../../api/publishing-api"
 
 export interface RecordedChange {
   id: string
@@ -336,7 +337,7 @@ function MechanicChangeText({
         method: "POST",
         body: JSON.stringify(value),
       })
-      await queryClient.invalidateQueries({ queryKey: ["patch-changes"] })
+      await queryClient.invalidateQueries({ queryKey: publishingKeys.allPatchChanges })
       setWriting(false)
     } catch (failure) {
       setError(errorMessage(failure))

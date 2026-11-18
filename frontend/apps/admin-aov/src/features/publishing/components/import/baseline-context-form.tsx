@@ -5,8 +5,8 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { confirmAction } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
-import { Box, control } from "../fields"
-import { createPublishingApi } from "../../api/publishing-api"
+import { Box, control } from "../editing/fields"
+import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
 import type { ImportContext } from "./import-context"
 import type { Revision } from "../../api/types"
 import type { components } from "../../generated/hero-api"
@@ -37,7 +37,7 @@ export function BaselineContextForm({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const contexts = useQuery({
-    queryKey: ["baseline-contexts"],
+    queryKey: publishingKeys.baselineContexts,
     queryFn: () => loadBaselineContexts((path) => backendRequest(path)),
   })
   const available = contexts.data?.filter((context) => context.rulesetId === revision.rulesetId) ?? []

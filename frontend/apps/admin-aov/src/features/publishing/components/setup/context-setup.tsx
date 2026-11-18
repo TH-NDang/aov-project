@@ -6,11 +6,11 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
-import { createPublishingApi } from "../../api/publishing-api"
-import { assignSharedRuleset, defaultRulesetId } from "../../model/setup/default-ruleset"
+import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
+import { assignSharedRuleset, defaultRulesetId } from "@/lib/default-ruleset"
 import { SeasonSetup } from "./season-setup"
-import { DataLanguage } from "../data-language"
-import { control } from "../fields"
+import { DataLanguage } from "../editing/data-language"
+import { control } from "../editing/fields"
 import type { Region } from "../../api/types"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
@@ -35,12 +35,12 @@ export function ContextSetup({
 }) {
   const wide = useIsWide()
   const cache = useQueryClient()
-  const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: api.rulesets, enabled: kind === "patch" })
+  const rulesets = useQuery({ queryKey: publishingKeys.rulesets, queryFn: api.rulesets, enabled: kind === "patch" })
   const close = () => {
-    void cache.invalidateQueries({ queryKey: ["authoring-seasons"] })
-    void cache.invalidateQueries({ queryKey: ["authoring-contexts"] })
-    void cache.invalidateQueries({ queryKey: ["publishing-regions"] })
-    void cache.invalidateQueries({ queryKey: ["publication-overview"] })
+    void cache.invalidateQueries({ queryKey: publishingKeys.allAuthoringSeasons })
+    void cache.invalidateQueries({ queryKey: publishingKeys.allAuthoringContexts })
+    void cache.invalidateQueries({ queryKey: publishingKeys.regions })
+    void cache.invalidateQueries({ queryKey: publishingKeys.overview })
     onClose()
   }
   return (

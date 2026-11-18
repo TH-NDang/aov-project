@@ -1,10 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { RecordedChange } from "../src/features/publishing/components/patch-changes/patch-change-lines"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 const rework = (previous: unknown): RecordedChange => ({
   id: "mechanic-1",
@@ -16,7 +15,7 @@ const rework = (previous: unknown): RecordedChange => ({
 })
 
 test("a mechanic change reads before and after with its source, and records the earlier text only where allowed", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost" })
+  const dom = createWindow("http://localhost")
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { ChangeLines } = await import("../src/features/publishing/components/patch-changes/patch-change-lines")

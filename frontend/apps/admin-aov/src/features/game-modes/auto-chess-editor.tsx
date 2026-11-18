@@ -427,7 +427,7 @@ export function CommunityModeration({
     },
     onSuccess: () => {
       setError("")
-      void client.invalidateQueries({ queryKey: ["admin-game-modes", "community", modeId] })
+      void client.invalidateQueries({ queryKey: gameModeKeys.communities(modeId) })
     },
     onError: (cause) => setError(errorMessage(cause)),
     meta: { silent: true },

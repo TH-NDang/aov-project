@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { JSDOM } from "jsdom"
 import { fixtureContent } from "./fixtures/hero-workspace-data"
 import { changedRows } from "../src/features/publishing/components/patch-changes/hero-draft-changes"
 import { comparisonPathLabels } from "../src/features/publishing/model/assessment/hero-comparison"
@@ -23,11 +22,12 @@ import {
   singleParagraph,
   summaryValue,
 } from "../src/features/publishing/components/skills/skill-summary-field"
-import { updateTranslation } from "../src/features/publishing/components/translation-editor"
+import { updateTranslation } from "../src/features/publishing/components/editing/translation-editor"
 import type { Revision, Skill, Skills } from "../src/features/publishing/api/types"
+import { installGlobals, parseHtml } from "./fixtures/dom"
 
 // Source files compile with the classic JSX runtime in tests, as in the other rendering tests.
-Object.defineProperty(globalThis, "React", { configurable: true, writable: true, value: React })
+installGlobals({ React })
 
 const summary = "Lướt tới, hất tung mục tiêu và gây sát thương vật lý."
 const skill = (text: string | null | undefined, description = "Mô tả đầy đủ của game."): Skill => ({
@@ -52,7 +52,7 @@ test("a summary is one paragraph and an emptied one is stored as none", () => {
 
 test("the summary box counts against the length the writing rule asks for and stops at the server's limit", () => {
   const render = (value: string) =>
-    new JSDOM(renderToStaticMarkup(<SkillSummaryField value={value} onChange={() => {}} />)).window.document
+    parseHtml(renderToStaticMarkup(<SkillSummaryField value={value} onChange={() => {}} />))
   const short = render(summary)
   const box = short.querySelector("textarea")!
   assert.equal(box.getAttribute("maxlength"), String(SKILL_SUMMARY_LIMIT))
@@ -62,7 +62,7 @@ test("the summary box counts against the length the writing rule asks for and st
 
   const long = render("a".repeat(201))
   assert.equal(long.querySelector("[id$='-count']")?.textContent, "Nên rút gọn · 201/200")
-  const text = new JSDOM(renderToStaticMarkup(<SkillSummaryText text={summary} />)).window.document
+  const text = parseHtml(renderToStaticMarkup(<SkillSummaryText text={summary} />))
   assert.match(text.body.textContent ?? "", /^Tóm tắt/)
   assert.ok(text.body.textContent?.includes(summary))
 })

@@ -10,7 +10,7 @@ import {
   type CaptureImage,
   type CaptureTarget,
 } from "../model/captures/patch-capture-model"
-import { createPublishingApi, type HeroCatalogQuery } from "./publishing-api"
+import { createPublishingApi, type HeroCatalogQuery, publishingKeys } from "./publishing-api"
 import type { HeroRow, PageSlice, Skill } from "./types"
 
 const api = createPublishingApi(backendRequest)
@@ -142,28 +142,28 @@ export function usePatchCaptureWorkspace({
   const [chosenPatch, setChosenPatch] = useState<string>()
   const capturePatch = chosenPatch ?? patchCode
   const code = useQuery({
-    queryKey: ["patch-capture-hero-code", heroId],
+    queryKey: publishingKeys.captureHeroCode(heroId),
     queryFn: () => findHeroCode(heroId, heroName, (page, query) => api.heroes(page, query)),
     enabled: !!heroId && ready,
     staleTime: Infinity,
     retry: false,
   })
   const captures = useQuery({
-    queryKey: ["patch-captures", capturePatch ?? "none", code.data],
+    queryKey: publishingKeys.captures(capturePatch ?? "none", code.data),
     queryFn: () => fetchHeroCaptures(capturePatch, code.data!),
     enabled: !!code.data,
     staleTime: Infinity,
     retry: false,
   })
   const shop = useQuery({
-    queryKey: ["shop-captures", code.data],
+    queryKey: publishingKeys.shopCaptures(code.data),
     queryFn: () => fetchShopCaptures(code.data!),
     enabled: !!code.data,
     staleTime: Infinity,
     retry: false,
   })
   const sets = useQuery({
-    queryKey: ["patch-capture-sets"],
+    queryKey: publishingKeys.captureSets,
     queryFn: fetchCaptureSets,
     enabled: captures.data?.status === "no-patch",
     staleTime: Infinity,

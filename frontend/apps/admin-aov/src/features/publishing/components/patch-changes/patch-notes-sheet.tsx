@@ -9,17 +9,17 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { toast } from "sonner"
-import { WarehouseChangeHistory } from "../../../warehouse/components/warehouse-change-history"
-import { changeDomain, useCatalogChanges } from "../../../warehouse/components/catalog-changes"
+import { WarehouseChangeHistory } from "../../../warehouse/components/history/warehouse-change-history"
+import { changeDomain, useCatalogChanges } from "../../../warehouse/components/history/catalog-changes"
 import { useWarehouseCatalog } from "../../../warehouse/api/warehouse-api"
 import { warehouseName, type WarehouseKind } from "@aov/ui/lib/warehouse-content"
 import { PatchAdditionalEditor } from "../setup/patch-additional-notes"
 import { useIsWide } from "@/hooks/use-media-query"
 import { errorMessage } from "@/lib/api/errors"
 import { useReferenceCatalog } from "../../../terminology/catalog"
-import { HeroAsset } from "../hero-asset"
+import { HeroAsset } from "../editing/hero-asset"
 import { PatchChangeEditor, compactControl } from "./patch-change-editor"
-import { createPublishingApi } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
 import type { Revision } from "../../api/types"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
@@ -36,14 +36,14 @@ export function latestPublished(revisions: Revision[] | undefined, rulesetId: st
 
 export function useHeroReference(heroId: string, rulesetId: string) {
   const revisions = useQuery({
-    queryKey: ["publishing-revisions", heroId],
+    queryKey: publishingKeys.revisions(heroId),
     queryFn: () => api.revisions(heroId),
     enabled: !!heroId,
     staleTime: 30000,
   })
   const anchor = latestPublished(revisions.data, rulesetId)
   const preview = useQuery({
-    queryKey: ["publishing-preview", heroId, anchor?.id ?? ""],
+    queryKey: publishingKeys.preview(heroId, anchor?.id ?? ""),
     queryFn: () => api.read(heroId, anchor!.id),
     enabled: !!anchor,
     staleTime: 60000,

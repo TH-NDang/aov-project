@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
-import { HeroAsset } from "../hero-asset"
+import { HeroAsset } from "../editing/hero-asset"
 import { skillSlot, skillVariant } from "../../model/skills/hero-skills"
 import type { Skill } from "../../api/types"
+import { publishingKeys } from "../../api/publishing-api"
 
 export interface SkillImage {
   id: string
@@ -19,7 +20,7 @@ export interface SkillImage {
 
 export function useHeroSkillImages(heroId?: string) {
   return useQuery({
-    queryKey: ["hero-skill-images", heroId],
+    queryKey: publishingKeys.skillImages(heroId),
     queryFn: async ({ signal }) =>
       (await backendRequest<{ items: SkillImage[] }>(`/admin/heroes/${heroId}/skill-images`, { signal })).items,
     enabled: !!heroId,

@@ -1,15 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
+import type { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import type { Root } from "react-dom/client"
 import type { CatalogFilter } from "../src/features/publishing/components/catalog/catalog-context"
 import type { PublicationOverview } from "../src/features/publishing/api/publication-overview"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/publishing")
   Object.defineProperty(dom.window, "matchMedia", {
     configurable: true,
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),

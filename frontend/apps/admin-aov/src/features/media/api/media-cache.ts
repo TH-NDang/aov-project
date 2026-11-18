@@ -16,6 +16,13 @@ export const mediaKeys = {
   assetView: (id: string | null | undefined, view: MediaAssetView) => ["media", "asset", id ?? null, view] as const,
   lists: ["media", "list"] as const,
   list: (...parts: unknown[]) => ["media", "list", ...parts] as const,
+  deletion: (id: string) => ["media-deletion", id] as const,
+  deletionReferences: (id: string) => ["media-deletion-references", id] as const,
+  competitionUsage: (id: string | null) => ["media-asset-competition-usage", id] as const,
+  managedUsages: (id: string | null) => ["managed-image-usages", id] as const,
+  contactRequests: ["media-contact-requests"] as const,
+  gameRegions: ["game-regions"] as const,
+  owners: ["media-owners"] as const,
 }
 
 const isMediaList = (queryKey: readonly unknown[]) => queryKey[0] === "media" && queryKey[1] === "list"

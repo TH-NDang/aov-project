@@ -29,7 +29,7 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useCollapseScrollAnchor } from "@/hooks/use-collapse-scroll-anchor"
 import { errorMessage } from "@/lib/api/errors"
-import { HeroAsset } from "@/features/publishing/components/hero-asset"
+import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
 import { useContentLocale } from "../../publishing/api/publication-overview"
 import type { Request } from "../../publishing/api/publishing-api"
 import {
@@ -38,9 +38,9 @@ import {
   type BadgeSkin,
   type SkinBadgeRecord,
 } from "../api/character-image-api"
-import { ImageContextControls, useImageContext } from "../components/character-image-context"
-import { SkinBadgeEditor, badgeKindLabels } from "../components/skin-badge-editor"
-import { SkinBadgeGroupAssignment, SkinBadgeGroupEditor } from "../components/skin-badge-group-editor"
+import { ImageContextControls, useImageContext } from "../components/characters/character-image-context"
+import { SkinBadgeEditor, badgeKindLabels } from "../components/badges/skin-badge-editor"
+import { SkinBadgeGroupAssignment, SkinBadgeGroupEditor } from "../components/badges/skin-badge-group-editor"
 import {
   badgeGroupKey,
   badgeGroupKeys,
@@ -49,8 +49,8 @@ import {
   createSkinBadgeGroupsApi,
   type BadgeGroup,
 } from "../api/skin-badge-groups-api"
-import { SkinMediaDetail } from "../components/skin-media-detail"
-import { SkinBadgeArtwork } from "../components/skin-badge-artwork"
+import { SkinMediaDetail } from "../components/characters/skin-media-detail"
+import { SkinBadgeArtwork } from "../components/badges/skin-badge-artwork"
 
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, SkinBadgeRecord>()

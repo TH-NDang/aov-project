@@ -1,15 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import type { UserProfile } from "../src/features/users/user-api"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("users load on scroll, retain rows after errors and restart server search without pagination controls", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/users" })
+  const dom = createWindow("http://localhost/users")
   const intersections = intersectionHarness()
   const profiles: UserProfile[] = Array.from({ length: 45 }, (_, index) => ({
     id: `user-${index}`,

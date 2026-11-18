@@ -10,7 +10,7 @@ import { heroContentAssetQuery } from "../../model/assets/hero-content-asset"
 import { sourceHttpUrl } from "../../model/import/hero-source-review"
 import type { AssetDetail } from "../../api/types"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
-import { ImageDetailSheet } from "../../../media/components/image-detail-sheet"
+import { ImageDetailSheet } from "../../../media/components/library/image-detail-sheet"
 import {
   ownerCandidate,
   primarySource,

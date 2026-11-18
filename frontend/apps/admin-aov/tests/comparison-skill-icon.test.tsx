@@ -3,11 +3,10 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { SkillImage } from "../src/features/publishing/components/skills/skill-artwork"
 import type { Skill } from "../src/features/publishing/api/types"
-import { installWindow, waitFor, withGlobals } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor, withGlobals } from "./fixtures/dom"
 
 const skill = (
   key = "skill-1-1",
@@ -59,7 +58,7 @@ test("a skill without an icon in either version takes its library picture by the
 })
 
 test("comparison skill icons share one library request, keep bound images and show honest missing icons", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/hero" })
+  const dom = createWindow("http://localhost/publishing/hero")
   Object.defineProperty(dom.window, "matchMedia", {
     configurable: true,
     value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),

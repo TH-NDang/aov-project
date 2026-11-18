@@ -1,12 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
+import type { JSDOM } from "jsdom"
 import { act } from "react"
 import type { Root } from "react-dom/client"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/publishing")
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window, {
     ResizeObserver: class {

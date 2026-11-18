@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import {
   insertReference,
   mentionAt,
@@ -23,7 +22,7 @@ import {
   referenceInputValue,
   referenceInputSelection,
 } from "./fixtures/reference-input"
-import { flush, installWindow } from "./fixtures/dom"
+import { createWindow, flush, installGlobals, installWindow } from "./fixtures/dom"
 
 const entities: EntityReference[] = [
   {
@@ -76,7 +75,8 @@ test("ordinary names remain passive and only an at sign opens suggestions", () =
 })
 
 test("passive input recognition preserves text, formatting and caret without creating reference tokens", () => {
-  const dom = new JSDOM(
+  const dom = createWindow(
+    undefined,
     '<div contenteditable="true">Lữ Bố gây sát thương phép. flo. <span data-format-open="<noauto>">Lữ Bố</span> <span data-reference-token="token">Lữ Bố</span></div>',
   )
   const root = dom.window.document.querySelector<HTMLElement>("div")!
@@ -172,7 +172,7 @@ test("editor serialization preserves source, Unicode, selection boundaries and s
 })
 
 test("editor mention keyboard, IME, selection, paste, undo/redo and reopening retain exact text", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+  const dom = createWindow()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
@@ -307,16 +307,9 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     let intersections!: IntersectionObserverCallback
     let observerCount = 0
     let observerRoot: Element | Document | null | undefined
-    const previousObserver = Object.getOwnPropertyDescriptor(globalThis, "IntersectionObserver")
     const restoreBase = restoreGlobals
-    restoreGlobals = () => {
-      if (previousObserver) Object.defineProperty(globalThis, "IntersectionObserver", previousObserver)
-      else Reflect.deleteProperty(globalThis, "IntersectionObserver")
-      restoreBase()
-    }
-    Object.defineProperty(globalThis, "IntersectionObserver", {
-      configurable: true,
-      value: class {
+    const restoreObserver = installGlobals({
+      IntersectionObserver: class {
         constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
           intersections = callback
           observerRoot = options?.root
@@ -333,6 +326,10 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
         }
       },
     })
+    restoreGlobals = () => {
+      restoreObserver()
+      restoreBase()
+    }
     const iconRequests: string[] = []
     const withIcons = catalog.map((entry) => ({ ...entry, iconAssetId: entry.id }))
     await act(async () =>

@@ -1,15 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act, useEffect } from "react"
 import { createMemoryRouter, Navigate, RouterProvider, useNavigate } from "react-router"
 import { HotkeysProvider } from "../src/app/hotkeys"
 import { PageTabPanels, PageTabsProvider, replacingPageTab, usePageTabs } from "../src/app/layout/page-tabs"
 import type { RouteHandle } from "../src/app/layout/site-header"
-import { flush, installWindow } from "./fixtures/dom"
+import { createWindow, flush, installWindow } from "./fixtures/dom"
 
 test("redirect-only routes execute without opening ghost tabs or remounting existing page sessions", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/heroes/airi?tab=skins" })
+  const dom = createWindow("http://localhost/heroes/airi?tab=skins")
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const observedTabs: string[][] = []
@@ -100,7 +99,7 @@ test("redirect-only routes execute without opening ghost tabs or remounting exis
 })
 
 test("a redirect that replaces its page takes over that page's tab in place", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/other" })
+  const dom = createWindow("http://localhost/other")
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   function Tabs() {

@@ -2,19 +2,15 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
-test("admin authors natural skill mentions and restores saved references with their hero and exact skill route", async () => {
-  const dom = new JSDOM('<div id="root"></div>', {
-    url: "http://localhost/terminology?ruleset=fixture-rules",
-    pretendToBeVisual: true,
-  })
+test("admin authors natural skill mentions and restores saved references with their hero and exact skill route", async (t) => {
+  const dom = createWindow("http://localhost/terminology?ruleset=fixture-rules")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
@@ -154,14 +150,23 @@ test("admin authors natural skill mentions and restores saved references with th
   }
   try {
     await verifySession()
-    await act(async () => root.render(wrap(<Authoring />)))
-    await waitFor(
-      () => requests.some((url) => url.pathname.endsWith("/admin/reference-catalog")),
+    // The field recognises names 350 ms after its text or catalog changes, and searches 300 ms after a mention is
+    // typed. The clock moves past both at once; each turn of the event loop lets answered requests render.
+    t.mock.timers.enable({ apis: ["setTimeout"] })
+    try {
+      await act(async () => root.render(wrap(<Authoring />)))
+      for (let turn = 0; turn < 4; turn++)
+        await act(async () => {
+          t.mock.timers.tick(350)
+          await new Promise((resolve) => setImmediate(resolve))
+        })
+    } finally {
+      t.mock.timers.reset()
+    }
+    assert.ok(
+      requests.some((url) => url.pathname.endsWith("/admin/reference-catalog")),
       "Compact catalog loads independently of skill references",
     )
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 350))
-    })
     assert.equal(requests.filter((url) => url.pathname.endsWith("/admin/reference-skills")).length, 0)
     const area = referenceInput(document)
     await act(async () => fillReferenceInput(area, "@airi chiêu 1"))

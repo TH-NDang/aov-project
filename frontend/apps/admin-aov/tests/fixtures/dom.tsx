@@ -75,11 +75,10 @@ function browserBasics(window: DOMWindow): Record<string, unknown> {
 }
 
 /**
- * Installs `window` as the global browser with the basics every page has, plus `extra` (observers, fetch, overrides).
- * Returns the function that puts the previous globals back. Tests that build their own window use it directly.
+ * Installs `values` as globals and returns the function that puts the previous ones back, for a global a test swaps
+ * while its window stays, such as an observer or `fetch`.
  */
-export function installWindow(window: DOMWindow, extra: Record<string, unknown> = {}): () => void {
-  const values = { ...browserBasics(window), ...extra }
+export function installGlobals(values: Record<string, unknown>): () => void {
   const originals = new Map<string, PropertyDescriptor | undefined>()
   for (const [key, value] of Object.entries(values)) {
     originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
@@ -94,28 +93,32 @@ export function installWindow(window: DOMWindow, extra: Record<string, unknown> 
 }
 
 /**
- * Runs `load` with `values` installed as globals and puts the previous ones back afterwards, for modules that read a
- * global while they load, such as the session that opens a BroadcastChannel.
+ * Installs `window` as the global browser with the basics every page has, plus `extra` (observers, fetch, overrides).
+ * Returns the function that puts the previous globals back. Tests that build their own window use it directly.
  */
-export async function withGlobals<T>(values: Record<string, unknown>, load: () => Promise<T>): Promise<T> {
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+export function installWindow(window: DOMWindow, extra: Record<string, unknown> = {}): () => void {
+  return installGlobals({ ...browserBasics(window), ...extra })
+}
+
+/**
+ * Runs `run` with `values` installed as globals and puts the previous ones back afterwards, for modules that read a
+ * global while they load, such as the session that opens a BroadcastChannel, or a test that swaps one for its length.
+ */
+export async function withGlobals<T>(values: Record<string, unknown>, run: () => Promise<T>): Promise<T> {
+  const restore = installGlobals(values)
   try {
-    return await load()
+    return await run()
   } finally {
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restore()
   }
 }
 
 /** A jsdom window at `url`, the way every Admin test builds one. */
 export const createWindow = (url = "http://localhost/", html = '<div id="root"></div>') =>
   new JSDOM(html, { url, pretendToBeVisual: true })
+
+/** The document of static markup, such as what `renderToStaticMarkup` returns; nothing is installed as a global. */
+export const parseHtml = (markup: string) => new JSDOM(markup).window.document
 
 /** Installs a window as the global browser now; `close` puts the previous globals back. */
 export function openDom({ url, html, globals }: DomOptions = {}): Dom {
@@ -237,18 +240,26 @@ export async function render(node: ReactNode, { client = testQueryClient(), wrap
 }
 
 const tick = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
+// Tests without a page (a query client, a fake service) wait outside act, which React expects only with a window.
+const inPage = () => (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT === true
 
-/** Lets resolved requests and the renders they cause finish; it waits for no condition and no fixed time. */
+/**
+ * Lets resolved requests and the renders they cause finish; it waits for no condition and no fixed time. Without a
+ * page it lets a query client deliver what its requests answered.
+ */
 export async function flush(rounds = 3) {
-  for (let round = 0; round < rounds; round++) await act(tick)
+  for (let round = 0; round < rounds; round++) await (inPage() ? act(tick) : tick())
 }
 
 export type WaitOptions = { timeout?: number; message?: string }
 
+const pause = () => new Promise<void>((resolve) => setTimeout(resolve, 5))
+
 /**
  * Waits until `condition` returns something other than false, null or undefined, and returns it; a string second
  * argument is the failure message. A condition that
- * throws counts as not met yet; when time runs out the last error, or `message`, fails the test.
+ * throws counts as not met yet; when time runs out the last error, or `message`, fails the test. It works with or
+ * without a page, so unit tests of caches and services wait with it too.
  */
 export async function waitFor<T>(
   condition: () => T | false | null | undefined,
@@ -266,10 +277,11 @@ export async function waitFor<T>(
       failure = error
     }
     if (Date.now() > deadline) break
-    await act(() => new Promise<void>((resolve) => setTimeout(resolve, 5)))
+    await (inPage() ? act(pause) : pause())
   }
   if (failure instanceof Error && !message) throw failure
-  assert.fail(message ?? `Condition was not met within ${timeout} ms. Page text: ${document.body.textContent ?? ""}`)
+  const page = globalThis.document ? ` Page text: ${globalThis.document.body.textContent ?? ""}` : ""
+  assert.fail(message ?? `Condition was not met within ${timeout} ms.${page}`)
 }
 
 /** Clicks an element inside act, failing with `what` when it is missing. */

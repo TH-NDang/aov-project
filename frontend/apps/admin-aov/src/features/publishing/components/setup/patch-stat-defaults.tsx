@@ -4,14 +4,15 @@ import { Button } from "@aov/ui/components/button"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { Field, control } from "../fields"
+import { Field, control } from "../editing/fields"
 import { STAT_LABELS, statLabel } from "../../model/patch-changes/patch-change-model"
 import { formatStat, statUnit, type StatDefault } from "../../model/assessment/combat-attributes"
-import { overviewKey, type Variant } from "../../api/publication-overview"
+import type { Variant } from "../../api/publication-overview"
+import { publishingKeys } from "../../api/publishing-api"
 
 export function useStatDefaults(id?: string) {
   return useQuery({
-    queryKey: ["patch-stat-defaults", id],
+    queryKey: publishingKeys.patchStatDefaults(id),
     enabled: !!id,
     queryFn: () => backendRequest<StatDefault[]>(`/admin/patch-variants/${id}/stat-defaults`),
   })
@@ -45,8 +46,8 @@ export function PatchStatDefaults({ variant }: { variant: Variant }) {
     onSuccess: async () => {
       setEdit(null)
       await Promise.all([
-        cache.invalidateQueries({ queryKey: ["patch-stat-defaults"] }),
-        cache.invalidateQueries({ queryKey: overviewKey }),
+        cache.invalidateQueries({ queryKey: publishingKeys.allPatchStatDefaults }),
+        cache.invalidateQueries({ queryKey: publishingKeys.overview }),
       ])
     },
     onError: () => {

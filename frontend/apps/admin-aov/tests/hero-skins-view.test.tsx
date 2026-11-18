@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@aov/ui/components/tooltip"
@@ -9,7 +8,7 @@ import type { CaptureGroup, CaptureImage } from "../src/features/publishing/mode
 import type { HeroShop, SkinAcquisition } from "../src/features/publishing/api/publishing-api"
 import type { Skin } from "../src/features/publishing/api/types"
 import type { PatchCaptureWorkspace } from "../src/features/publishing/api/use-patch-captures"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -64,7 +63,7 @@ async function view(
     url?: string
   } = {},
 ) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/hero-1", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/hero/hero-1")
   const requests: string[] = []
   const saves: { path: string; body: Record<string, unknown> }[] = []
   let shop: HeroShop = {

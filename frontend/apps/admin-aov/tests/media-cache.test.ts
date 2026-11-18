@@ -8,6 +8,7 @@ import {
 } from "../src/features/media/api/media-cache"
 import type { AssetDetail } from "../src/features/publishing/api/types"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
+import { waitFor } from "./fixtures/dom"
 
 const entity: EntityReference = {
   id: "hero",
@@ -24,7 +25,6 @@ const asset = (version: number): AssetDetail => ({
   currentUrl: `/media/v${version}.webp`,
   provenance: [],
 })
-const settle = () => new Promise((resolve) => setTimeout(resolve, 10))
 
 test("batch credits refresh a shared list once and invalidate every affected detail", async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -36,7 +36,7 @@ test("batch credits refresh a shared list once and invalidate every affected det
   const stop = observer.subscribe(() => {})
   try {
     for (const id of ["first", "second", "unrelated"]) client.setQueryData(["media", "asset", id, "managed"], asset(1))
-    await settle()
+    await waitFor(() => observer.getCurrentResult().isSuccess)
     assert.equal(reads, 1)
     await invalidateMediaAssets(client, ["first", "second", "first"])
     assert.equal(reads, 2)
@@ -93,13 +93,13 @@ test("mounted reference icons share a metadata request and receive new version U
   const stopFirst = resolver.subscribe!(entity, (url) => first.push(url))
   const stopSecond = resolver.subscribe!(entity, (url) => second.push(url))
   try {
-    await settle()
+    await waitFor(() => first.at(-1) === "/media/v1.webp" && second.at(-1) === "/media/v1.webp")
     assert.equal(reads, 1)
     assert.equal(first.at(-1), "/media/v1.webp")
     assert.equal(second.at(-1), "/media/v1.webp")
     version = 2
     await invalidateMediaAsset(client, "head")
-    await settle()
+    await waitFor(() => first.at(-1) === "/media/v2.webp" && second.at(-1) === "/media/v2.webp")
     assert.equal(reads, 2)
     assert.equal(first.at(-1), "/media/v2.webp")
     assert.equal(second.at(-1), "/media/v2.webp")
@@ -123,7 +123,7 @@ test("an old in-flight metadata response cannot replace a refreshed version", as
   try {
     await invalidateMediaAsset(client, "head")
     finishOld(asset(1))
-    await settle()
+    await waitFor(() => client.isFetching() === 0 && urls.length > 0)
     assert.equal(client.getQueryData<AssetDetail>(["media", "asset", "head", "detail"])?.currentUrl, "/media/v2.webp")
     assert.equal(urls.at(-1), "/media/v2.webp")
   } finally {

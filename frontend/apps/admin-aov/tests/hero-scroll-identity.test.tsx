@@ -2,12 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 async function createView(observe = true) {
-  const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true, url: "http://localhost/hero/test" })
+  const dom = createWindow("http://localhost/hero/test")
   const observers: FakeObserver[] = []
   class FakeObserver {
     disconnected = false
@@ -50,7 +49,7 @@ async function createView(observe = true) {
     IntersectionObserver: observe ? FakeObserver : undefined,
   })
   const { createRoot } = await import("react-dom/client")
-  const { HeroScrollIdentity } = await import("../src/features/publishing/components/hero-scroll-identity")
+  const { HeroScrollIdentity } = await import("../src/features/publishing/components/workspace/hero-scroll-identity")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   client.setQueryData(["media", "asset", "head-asset", "content"], {
     id: "head-asset",

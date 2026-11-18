@@ -18,18 +18,19 @@ import {
   type Provenance,
 } from "../../model/patch-changes/patch-change-model"
 import { skillFieldLabel } from "@/features/publishing/model/skills/skill-field-labels"
-import { CAUSE_NAMES } from "../../model/setup/version-causes"
+import { CAUSE_NAMES } from "@/lib/version-causes"
 import { RecordPatchNotesSheet } from "./patch-notes-sheet"
 import { usePublicationOverview } from "../../api/publication-overview"
 import { type Content, type Revision } from "../../api/types"
-import { useHeroLocation } from "../use-hero-location"
-import { control } from "../fields"
+import { useHeroLocation } from "../workspace/use-hero-location"
+import { control } from "../editing/fields"
 import { patchViewAnchors, selectedPatchAnchor, patchViewRequest } from "../../model/patch-changes/patch-view-anchor"
 import { formatPatchValue } from "@aov/ui/lib/patch-value"
 import { SkillChangeList } from "../skills/skill-change-list"
 import { compareSkillRanks, rankPartLabel, splitSkillRankValues } from "@aov/ui/lib/skill-rank-values"
 import { SkillRankValues } from "../skills/skill-rank-table"
 import { formatStatReading } from "../../model/assessment/stat-reading"
+import { publishingKeys } from "../../api/publishing-api"
 
 const provenanceTone: Record<Provenance, string> = {
   OBSERVED: "text-(--aov-success)",
@@ -106,7 +107,7 @@ export function HeroPatchTimeline({
     staleTime: 30000,
   })
   const changes = useQuery({
-    queryKey: ["patch-changes", variant?.id, locale],
+    queryKey: publishingKeys.patchChanges(variant?.id, locale),
     queryFn: () =>
       backendRequest<RecordedChangeSet[]>(
         `/admin/patch-variants/${variant!.id}/hero-changes?locale=${encodeURIComponent(locale)}`,

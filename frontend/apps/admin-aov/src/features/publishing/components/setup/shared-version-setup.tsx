@@ -1,4 +1,4 @@
-import { scheduleDate, parseScheduleDate, scheduleDateText } from "../../model/setup/schedule-date"
+import { scheduleDate, parseScheduleDate, scheduleDateText } from "@/lib/schedule-date"
 import { useState } from "react"
 import { toast } from "sonner"
 import { CalendarDays, Clock, Plus } from "lucide-react"
@@ -12,14 +12,15 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { errorMessage } from "@/lib/api/errors"
-import { control } from "../fields"
-import { defaultRulesetId, hasRulesetChoice } from "../../model/setup/default-ruleset"
-import { DataLanguage } from "../data-language"
+import { control } from "../editing/fields"
+import { defaultRulesetId, hasRulesetChoice } from "@/lib/default-ruleset"
+import { DataLanguage } from "../editing/data-language"
 import { usePublicationOverview, type PublicationOverview, type Variant } from "../../api/publication-overview"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatus } from "@/app/drafts/draft-status"
+import { publishingKeys } from "../../api/publishing-api"
 
 const patchDraftSchema = z.object({
   seasonId: z.string(),
@@ -101,8 +102,7 @@ export function SharedPatchSetup({
             }),
           })
           await draft.discard()
-          await cache.invalidateQueries({ queryKey: ["publication-overview"] })
-          await cache.invalidateQueries({ queryKey: ["publishing-patches"] })
+          await cache.invalidateQueries({ queryKey: publishingKeys.overview })
           onDone()
         } catch (cause) {
           setError(errorMessage(cause))
@@ -211,7 +211,7 @@ export function PatchReleaseForm({ variant, data }: { variant: Variant; data: Pu
             setError("")
             try {
               await backendRequest(`/admin/patch-variants/${variant.id}/publish`, { method: "POST" })
-              await cache.invalidateQueries({ queryKey: ["publication-overview"] })
+              await cache.invalidateQueries({ queryKey: publishingKeys.overview })
             } catch (cause) {
               setError(errorMessage(cause))
             } finally {
@@ -335,8 +335,8 @@ export function ScheduleForm({
             },
             { regionId: "", dates: { ...dates, ...savedDates }, sources: { ...sources, ...savedSources } },
           )
-          await cache.invalidateQueries({ queryKey: ["publication-overview"] })
-          await cache.invalidateQueries({ queryKey: ["authoring-contexts"] })
+          await cache.invalidateQueries({ queryKey: publishingKeys.overview })
+          await cache.invalidateQueries({ queryKey: publishingKeys.allAuthoringContexts })
           setOpen(false)
           toast.success(patch ? "Đã lưu lịch phát hành patch." : "Đã lưu lịch mùa.")
         } catch (cause) {

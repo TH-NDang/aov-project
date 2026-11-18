@@ -11,7 +11,7 @@ import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { Page, PageHeader } from "@/components/page-header"
 import { SearchField } from "@/components/search-field"
 import { errorMessage } from "@/lib/api/errors"
-import { HeroQuickView } from "../components/catalog/hero-catalog"
+import { HeroQuickView } from "../components/catalog/hero-quick-view"
 import {
   closeHeroLocation,
   heroFixLocation,
@@ -30,7 +30,7 @@ import {
   type ReadinessRow,
 } from "../model/publish-readiness"
 import type { PublishBlocker } from "../model/publish-rules"
-import { createPublishingApi, publishReadinessKey } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import {
   orderByCaptures,
   readinessCapturePatches,
@@ -51,7 +51,10 @@ export function PublishReadinessPage() {
   const [params, setParams] = useSearchParams()
   const locale = useContentLocale()
   const overview = usePublicationOverview()
-  const heroes = useQuery({ queryKey: publishReadinessKey, queryFn: ({ signal }) => api.publishReadiness(signal) })
+  const heroes = useQuery({
+    queryKey: publishingKeys.publishReadiness,
+    queryFn: ({ signal }) => api.publishReadiness(signal),
+  })
   const rows = useMemo(
     () => (heroes.data && overview.data ? readinessRows(heroes.data, overview.data, locale) : noRows),
     [heroes.data, overview.data, locale],

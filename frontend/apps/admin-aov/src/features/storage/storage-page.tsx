@@ -15,7 +15,7 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { ImportDialog, SELECT_CLASS, displayValue } from "./import-dialog"
 import { StorageDataTable } from "./storage-data-table"
-import { storageApi } from "./storage-api"
+import { storageApi, storageKeys } from "./storage-api"
 import { rowId, validColumn, validateTable, type StorageRow, type StorageTable } from "./storage-model"
 
 type Editor = { kind: "create" | "rename" | "column" | "row"; column?: string; row?: StorageRow }
@@ -23,9 +23,9 @@ type Editor = { kind: "create" | "rename" | "column" | "row"; column?: string; r
 export function StoragePage() {
   const client = useQueryClient()
   const [selected, setSelected] = useSearchParam("table")
-  const tables = useQuery({ queryKey: ["storage"], queryFn: storageApi.list })
+  const tables = useQuery({ queryKey: storageKeys.tables, queryFn: storageApi.list })
   const query = useQuery({
-    queryKey: ["storage", selected],
+    queryKey: storageKeys.table(selected),
     queryFn: () => storageApi.get(selected),
     enabled: Boolean(selected),
   })
@@ -40,8 +40,8 @@ export function StoragePage() {
   const mutation = useMutation({
     mutationFn: storageApi.save,
     onSuccess: (saved) => {
-      client.setQueryData(["storage", saved.id], saved)
-      void client.invalidateQueries({ queryKey: ["storage"], exact: true })
+      client.setQueryData(storageKeys.table(saved.id), saved)
+      void client.invalidateQueries({ queryKey: storageKeys.tables, exact: true })
     },
     meta: { silent: true },
   })
@@ -131,7 +131,7 @@ export function StoragePage() {
       if (editor.kind === "create") {
         setCreating(true)
         const created = await storageApi.create(text.trim())
-        await client.invalidateQueries({ queryKey: ["storage"], exact: true })
+        await client.invalidateQueries({ queryKey: storageKeys.tables, exact: true })
         setSelected(created.id)
       } else if (table) {
         let next = table

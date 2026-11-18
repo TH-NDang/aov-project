@@ -1,6 +1,5 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { JSDOM } from "jsdom"
 import { act, useState } from "react"
 import { createMemoryRouter, RouterProvider, useParams, useSearchParams } from "react-router"
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
@@ -9,7 +8,7 @@ import { useChangeEffect } from "../src/hooks/use-change-effect"
 import { useTable } from "@tanstack/react-table"
 import { dataTableFeatures } from "../src/components/data-table/table-features"
 import { HotkeysProvider, useHotkeys } from "../src/app/hotkeys"
-import { flush, installWindow } from "./fixtures/dom"
+import { createWindow, flush, installWindow } from "./fixtures/dom"
 
 const tableRows = [
   { id: "1", name: "A" },
@@ -19,7 +18,7 @@ const tableRows = [
 const tableColumns = [{ accessorKey: "name" }]
 
 test("tab sessions preserve drafts, filters, route params, DOM, scroll and query data until closed", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/" })
+  const dom = createWindow()
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")

@@ -1,4 +1,4 @@
-import type { MediaOwner } from "../components/media-owners"
+import type { MediaOwner } from "../components/owners/media-owners"
 import { normalize } from "@/lib/text"
 
 /** Whitespace collapsed and lower case: the backend treats names equal under this as one owner. */

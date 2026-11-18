@@ -8,7 +8,7 @@ import { Page } from "@/components/page-header"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useCollapseScrollAnchor } from "@/hooks/use-collapse-scroll-anchor"
 import { errorMessage } from "@/lib/api/errors"
-import { CharacterMediaImage } from "../components/character-media-image"
+import { CharacterMediaImage } from "../components/characters/character-media-image"
 import { useContentLocale } from "../../publishing/api/publication-overview"
 import type { MediaRole } from "../../publishing/api/types"
 import type { Request } from "../../publishing/api/publishing-api"
@@ -18,10 +18,10 @@ import {
   type CharacterImageEntry,
   type CharacterImageGroup,
 } from "../api/character-image-api"
-import { ImageContextControls, useImageContext } from "../components/character-image-context"
-import { CharacterImageDetail, imageRoleLabels } from "../components/character-image-detail"
-import { SkinBadgeLabel } from "../components/skin-badge-label"
-import { MediaCode } from "../components/media-code"
+import { ImageContextControls, useImageContext } from "../components/characters/character-image-context"
+import { CharacterImageDetail, imageRoleLabels } from "../components/characters/character-image-detail"
+import { SkinBadgeLabel } from "../components/badges/skin-badge-label"
+import { MediaCode } from "../components/library/media-code"
 
 const features = tableFeatures({})
 interface ImageGroupRow {

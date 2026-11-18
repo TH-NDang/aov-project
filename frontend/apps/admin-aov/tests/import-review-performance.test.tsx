@@ -1,13 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Request } from "../src/features/publishing/api/publishing-api"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("large import plans mount nested diffs and image paths only while their disclosure is open", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/import" })
+  const dom = createWindow("http://localhost/publishing/import")
   let restoreGlobals = () => {}
   restoreGlobals = installWindow(dom.window, {
     fetch: async () => {

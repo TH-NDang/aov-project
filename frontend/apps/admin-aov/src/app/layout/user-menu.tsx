@@ -29,7 +29,7 @@ export function UserMenu() {
   const { actor } = useSession()
   const navigate = useNavigate()
   const profile = useQuery({
-    queryKey: [...userKeys.self, actor?.issuer, actor?.subject],
+    queryKey: userKeys.selfOf(actor?.issuer, actor?.subject),
     queryFn: ({ signal }) => selfProfile(signal),
     enabled: !!actor,
     refetchInterval: 600000,

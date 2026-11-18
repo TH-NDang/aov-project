@@ -36,7 +36,7 @@ import { Textarea } from "@aov/ui/components/textarea"
 import { useBeforeUnload, useSearchParams } from "react-router"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { useReferenceCatalog } from "./catalog"
-import { saveSettings, loadLegacySettings } from "./settings-api"
+import { saveSettings, loadLegacySettings, referenceSettingsKeys } from "./settings-api"
 import { ReferenceCatalogTable } from "./reference-catalog-table"
 import { ReferencePreviewWorkspace } from "./reference-preview-workspace"
 import { AdminDescriptionField } from "./rich-text-field"
@@ -199,7 +199,7 @@ export function TerminologyPage() {
     try {
       const valid = validateRichTextSettings(value)
       const document = await saveSettings(valid, catalog.settings.data!.version)
-      client.setQueryData(["rich-text-settings"], document)
+      client.setQueryData(referenceSettingsKeys.all, document)
       setDraft(null)
       await invalidateReferenceCatalog(client)
       setMessage("Đã lưu. Admin và wiki dùng chung thiết lập này.")

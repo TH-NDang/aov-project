@@ -11,7 +11,7 @@ import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { errorMessage } from "@/lib/api/errors"
 import { createMediaIconResolver } from "../../../media/api/media-cache"
 import { referenceCatalogApi, referenceCatalogKeys } from "../../../terminology/reference-api"
-import { createPublishingApi } from "../../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../../api/publishing-api"
 import type { HeroRow } from "../../api/types"
 import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
@@ -78,15 +78,7 @@ function HeroQuickSwitcherPanel({ heroId, locale, rulesetId = "", onSelect }: He
     return () => clearTimeout(timer)
   }, [search])
   const catalog = useInfiniteQuery({
-    queryKey: [
-      "publishing-heroes",
-      "quick-switch",
-      session.actor?.issuer,
-      session.actor?.subject,
-      rulesetId,
-      locale,
-      query,
-    ],
+    queryKey: publishingKeys.quickSwitch(session.actor?.issuer, session.actor?.subject, rulesetId, locale, query),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       api.heroes(pageParam, { q: query, locale, rulesetId, includeUnchanged: "true", sort: "code" }, signal),

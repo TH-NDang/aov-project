@@ -1,8 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { JSDOM } from "jsdom"
-import { installWindow } from "./fixtures/dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 async function withView(
   reducedMotion: boolean,
@@ -15,7 +14,7 @@ async function withView(
     pending: () => number
   }) => Promise<void>,
 ) {
-  const dom = new JSDOM('<section data-slot="sheet-content"><div id="root"></div></section>')
+  const dom = createWindow(undefined, '<section data-slot="sheet-content"><div id="root"></div></section>')
   const timers = new Map<number, () => void>()
   let sequence = 0
   dom.window.matchMedia = () => ({ matches: reducedMotion }) as MediaQueryList

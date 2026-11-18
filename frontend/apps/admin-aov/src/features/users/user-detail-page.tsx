@@ -33,7 +33,7 @@ export function UserDetailPage() {
   const [reloadError, setReloadError] = useState("")
   const [reloading, setReloading] = useState(false)
   const query = useQuery({
-    queryKey: [...userKeys.all, "detail", actor?.issuer, actor?.subject, userId],
+    queryKey: userKeys.detail(actor?.issuer, actor?.subject, userId),
     queryFn: ({ signal }) => getProfile(userId, signal),
     enabled: canRead && validId,
     retry: false,

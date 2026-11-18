@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -8,7 +7,7 @@ import { HotkeysProvider } from "../src/app/hotkeys"
 import { PageTabPanels, PageTabsProvider, usePageTabs } from "../src/app/layout/page-tabs"
 import { mediaTabLocation, readMediaTab } from "../src/features/media/model/media-location"
 import type { Request } from "../src/features/publishing/api/publishing-api"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("media tab locations preserve filters and keep portrait as the canonical default", () => {
   const filters = new URLSearchParams("ruleset=rule&q=airi&tab=cover")
@@ -21,7 +20,7 @@ test("media tab locations preserve filters and keep portrait as the canonical de
 })
 
 test("media query tabs restore back/forward state and legacy links never create separate page sessions", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/media/head?ruleset=rule&q=airi" })
+  const dom = createWindow("http://localhost/media/head?ruleset=rule&q=airi")
   let restoreGlobals = () => {}
   const requests: string[] = []
   const request: Request = async <T,>(path: string) => {

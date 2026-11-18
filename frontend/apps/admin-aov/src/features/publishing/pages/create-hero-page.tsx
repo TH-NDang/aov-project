@@ -7,9 +7,9 @@ import { Page, PageHeader } from "@/components/page-header"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { errorMessage } from "@/lib/api/errors"
-import { createPublishingApi } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import { ImportContextPicker, type ImportContext } from "../components/import/import-context"
-import { control } from "../components/fields"
+import { control } from "../components/editing/fields"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { DraftStatus } from "@/app/drafts/draft-status"
@@ -41,7 +41,7 @@ export function CreateHeroPage() {
   const locale = form.watch("locale")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
-  const regions = useQuery({ queryKey: ["publishing-regions"], queryFn: api.regions })
+  const regions = useQuery({ queryKey: publishingKeys.regions, queryFn: api.regions })
   const canWrite = useSession().actor?.capabilities.includes("hero:write")
   return (
     <Page>

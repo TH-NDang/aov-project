@@ -2,7 +2,7 @@ import { useId } from "react"
 import { AlignLeft } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { AdminEntityText } from "../../../terminology/catalog"
-import { control } from "../fields"
+import { control } from "../editing/fields"
 
 /** What the server accepts. */
 export const SKILL_SUMMARY_LIMIT = 300

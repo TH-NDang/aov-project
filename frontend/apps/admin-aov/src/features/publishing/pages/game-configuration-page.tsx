@@ -28,8 +28,8 @@ import { Page, PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { createPublishingApi } from "../api/publishing-api"
-import { assignSharedRuleset, DEFAULT_RULESET_CODE } from "../model/setup/default-ruleset"
+import { createPublishingApi, publishingKeys } from "../api/publishing-api"
+import { assignSharedRuleset, DEFAULT_RULESET_CODE } from "@/lib/default-ruleset"
 import { invalidateReferenceCatalog } from "../../terminology/reference-api"
 import { SeasonSetup } from "../components/setup/season-setup"
 import { CreateRegion } from "../components/setup/context-setup"
@@ -102,7 +102,7 @@ export function GameConfigurationPage() {
         (data?.markets ?? []).map((market) => market.id),
       )
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["publishing-rulesets"] }),
+        queryClient.invalidateQueries({ queryKey: publishingKeys.rulesets }),
         overview.refetch(),
         invalidateReferenceCatalog(queryClient),
       ])
@@ -180,9 +180,8 @@ export function GameConfigurationPage() {
                     setSetup(null)
                     await Promise.all([
                       overview.refetch(),
-                      queryClient.invalidateQueries({ queryKey: ["publishing-regions"] }),
-                      queryClient.invalidateQueries({ queryKey: ["regions"] }),
-                      queryClient.invalidateQueries({ queryKey: ["authoring-contexts"] }),
+                      queryClient.invalidateQueries({ queryKey: publishingKeys.regions }),
+                      queryClient.invalidateQueries({ queryKey: publishingKeys.allAuthoringContexts }),
                     ])
                     setMarketEditor({ id, mode: "season" })
                   }}

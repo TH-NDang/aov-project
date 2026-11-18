@@ -16,7 +16,7 @@ export function ProfilePage() {
   const { actor } = useSession()
   const [revision, setRevision] = useState(0)
   const query = useQuery({
-    queryKey: [...userKeys.self, actor?.issuer, actor?.subject],
+    queryKey: userKeys.selfOf(actor?.issuer, actor?.subject),
     queryFn: ({ signal }) => selfProfile(signal),
     refetchInterval: 600000,
   })
@@ -60,7 +60,7 @@ export function UsersPage() {
     return () => window.clearTimeout(timer)
   }, [search, term])
   const query = useInfiniteQuery({
-    queryKey: [...userKeys.all, "infinite-list", actor?.issuer, actor?.subject, term],
+    queryKey: userKeys.list(actor?.issuer, actor?.subject, term),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) => listProfiles(term, pageParam, signal),
     getNextPageParam: nextPageOf,

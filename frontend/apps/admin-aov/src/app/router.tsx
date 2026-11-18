@@ -174,14 +174,15 @@ const routes: RouteObject[] = [
             path: "enchantments",
             handle: title("Phù hiệu"),
             lazy: async () => ({
-              Component: (await import("@/features/warehouse/components/secondary-pages")).BackendEnchantmentsPage,
+              Component: (await import("@/features/warehouse/components/secondary/secondary-pages"))
+                .BackendEnchantmentsPage,
             }),
           },
           {
             path: "arcana",
             handle: title("Bảng ngọc"),
             lazy: async () => ({
-              Component: (await import("@/features/warehouse/components/secondary-pages")).BackendArcanaPage,
+              Component: (await import("@/features/warehouse/components/secondary/secondary-pages")).BackendArcanaPage,
             }),
           },
           {
@@ -207,7 +208,7 @@ const routes: RouteObject[] = [
             path: "spells",
             handle: title("Phụ trợ"),
             lazy: async () => ({
-              Component: (await import("@/features/warehouse/components/secondary-pages")).BackendSpellsPage,
+              Component: (await import("@/features/warehouse/components/secondary/secondary-pages")).BackendSpellsPage,
             }),
           },
           { path: "hero/media", handle: title("Không gian ảnh"), element: <MediaWorkspace /> },

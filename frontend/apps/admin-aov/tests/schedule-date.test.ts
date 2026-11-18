@@ -1,12 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { chooseDateFormat, currentTimeZone, DATE_TIME_FORMAT, formatInZone } from "@aov/ui/lib/time-zone"
-import {
-  dateLabel,
-  scheduleDate,
-  parseScheduleDate,
-  scheduleDateText,
-} from "../src/features/publishing/model/setup/schedule-date"
+import { dateLabel, scheduleDate, parseScheduleDate, scheduleDateText } from "../src/lib/schedule-date"
 
 test("typed dates round-trip without accepting impossible calendar dates", () => {
   assert.equal(scheduleDateText(parseScheduleDate("1/2/2026")), "01/02/2026")

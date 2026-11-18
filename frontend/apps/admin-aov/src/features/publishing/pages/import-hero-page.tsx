@@ -10,7 +10,7 @@ import { useBackgroundTasks } from "@/app/background-tasks"
 import { errorMessage } from "@/lib/api/errors"
 import { ImportContextPicker, type ImportContext } from "../components/import/import-context"
 import { HeroImport, type ImportActivity } from "../components/import/hero-import"
-import { createPublishingApi } from "../api/publishing-api"
+import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import { ImportJobHistory } from "../components/import/import-jobs"
 import { ImportUploadRecovery } from "../components/import/import-upload-recovery"
 const api = createPublishingApi(backendRequest)
@@ -21,7 +21,7 @@ export function ImportHeroWorkspace() {
   const [recovering, setRecovering] = useState(false)
   const { updateTask } = useBackgroundTasks()
   const canWrite = useSession().actor?.capabilities.includes("hero:write")
-  const regions = useQuery({ queryKey: ["publishing-regions"], queryFn: api.regions, enabled: canWrite })
+  const regions = useQuery({ queryKey: publishingKeys.regions, queryFn: api.regions, enabled: canWrite })
   const onActivityChange = useCallback(
     (activity: ImportActivity) => {
       if (activity.status === "idle") return

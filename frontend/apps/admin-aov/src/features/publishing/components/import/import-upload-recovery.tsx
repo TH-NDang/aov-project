@@ -8,6 +8,7 @@ import { indexImportFiles, normalizeImportPath } from "../../model/import/import
 import { resumeUploadSession, uploadSessionsPath, type UploadSession } from "./import-upload-session"
 import { useBackgroundTasks } from "@/app/background-tasks"
 import { confirmAction } from "@/components/confirm-dialog"
+import { publishingKeys } from "../../api/publishing-api"
 
 export function ImportUploadRecovery({
   disabled,
@@ -18,7 +19,7 @@ export function ImportUploadRecovery({
 }) {
   const cache = useQueryClient()
   const sessions = useQuery({
-    queryKey: ["hero-upload-sessions"],
+    queryKey: publishingKeys.uploadSessions,
     queryFn: () => backendRequest<UploadSession[]>(uploadSessionsPath),
     enabled: !disabled,
   })
@@ -96,7 +97,7 @@ export function ImportUploadRecovery({
         total: 1,
         description: "Đã gửi đến máy chủ",
       })
-      await cache.invalidateQueries({ queryKey: ["hero-import-jobs"] })
+      await cache.invalidateQueries({ queryKey: publishingKeys.allImportJobs })
     } catch (cause) {
       setError(errorMessage(cause))
       updateTask({
@@ -110,7 +111,7 @@ export function ImportUploadRecovery({
       })
     } finally {
       setBusy(false)
-      await cache.invalidateQueries({ queryKey: ["hero-upload-sessions"] })
+      await cache.invalidateQueries({ queryKey: publishingKeys.uploadSessions })
     }
   }
   async function discard(session: UploadSession) {
@@ -131,7 +132,7 @@ export function ImportUploadRecovery({
         setActive(null)
         setFiles(new Map())
       }
-      await cache.invalidateQueries({ queryKey: ["hero-upload-sessions"] })
+      await cache.invalidateQueries({ queryKey: publishingKeys.uploadSessions })
     } catch (cause) {
       setError(errorMessage(cause))
     } finally {

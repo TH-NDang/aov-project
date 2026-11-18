@@ -1,4 +1,4 @@
-import { control } from "../fields"
+import { control } from "../editing/fields"
 import {
   relationRows,
   sourcePaths,

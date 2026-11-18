@@ -1,16 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixturePreviousRevision } from "./fixtures/hero-workspace-data"
 import type { HeroComparison } from "../src/features/publishing/api/publishing-api"
 import type { Revision, Skill } from "../src/features/publishing/api/types"
-import { installWindow, waitFor } from "./fixtures/dom"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 test("history deduplicates real patch skill facts and uses gameplay categories only for their exact revision pair", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/fixture-hero" })
+  const dom = createWindow("http://localhost/publishing/fixture-hero")
   const fixture = createHeroFixture()
   const previous: Revision = { ...fixturePreviousRevision, id: "fixture-before-patch" }
   const unrelated: Revision = { ...previous, id: "fixture-unrelated", revisionNo: 2 }
@@ -134,7 +133,7 @@ test("history deduplicates real patch skill facts and uses gameplay categories o
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroRevisionHistory } = await import("../src/features/publishing/components/hero-revision-history")
+  const { HeroRevisionHistory } = await import("../src/features/publishing/components/workspace/hero-revision-history")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })

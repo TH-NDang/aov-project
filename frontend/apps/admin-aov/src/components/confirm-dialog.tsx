@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { create } from "zustand"
 import {
   AlertDialog,
@@ -13,6 +14,8 @@ import {
 export interface ConfirmOptions {
   title: string
   description: string
+  /** A list or summary the answer depends on, such as what is replaced by what; it sits between the text and buttons. */
+  details?: ReactNode
   confirmLabel: string
   cancelLabel?: string
 }
@@ -91,6 +94,7 @@ export function ConfirmDialogHost() {
           <AlertDialogTitle>{request?.title}</AlertDialogTitle>
           <AlertDialogDescription>{request?.description}</AlertDialogDescription>
         </AlertDialogHeader>
+        {request?.details && <div className="type-body min-w-0 break-words">{request.details}</div>}
         <AlertDialogFooter>
           <AlertDialogCancel>{request?.cancelLabel ?? "Hủy"}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" onClick={() => answer(true)}>
