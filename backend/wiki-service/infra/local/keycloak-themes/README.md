@@ -35,6 +35,21 @@ chính xác theo tên miền triển khai. Dùng HTTPS. Không đặt theme này
 Frontend dùng `VITE_AUTH_ISSUER`, `VITE_AUTH_CLIENT_ID` tương ứng trước khi build. Không có client
 secret trong frontend. Token chỉ nằm trong bộ nhớ, giao dịch PKCE tạm trong sessionStorage.
 
+## Theme `aov-admin`
+
+Client `admin-aov-backend` dùng theme `aov-admin` (`login_theme=aov-admin`). Admin chỉ mở Keycloak trong popup đăng
+nhập Google, nên theme này chỉ thay trang lỗi (`error.ftl`), các trang khác kế thừa theme `keycloak`. Khi có lỗi, trang
+gửi một mã (`REJECTED`, `ACCOUNT_DISABLED`, `EXPIRED`, `UNKNOWN`) về cửa sổ Admin rồi tự đóng; Admin chỉ nhận mã từ đúng
+popup của nó ở origin của Keycloak và hiện câu tiếng Việt trong hộp đăng nhập. Mở trang không qua popup thì nó chỉ ghi
+hãy quay lại trang quản trị.
+
+Realm import mới đã có thuộc tính này. Với realm đã tồn tại, đặt nó một lần bằng tài khoản quản trị master, ví dụ trong
+container Keycloak:
+
+```bash
+kcadm.sh update clients/<id của admin-aov-backend> -r wikiaov -s attributes.login_theme=aov-admin
+```
+
 Ảnh mascot được sao chép từ asset frontend; khi đổi logo cần cập nhật bản trong `resources/img` của theme.
 Sau khi sửa theme trên môi trường bật cache, triển khai lại/restart Keycloak theo quy trình vận hành.
 Khi nâng Keycloak cần kiểm tra lại template kế thừa, script password visibility, đăng ký và MFA.
