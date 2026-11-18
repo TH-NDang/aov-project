@@ -234,7 +234,7 @@ export function TeamRoster({ roster }: { roster: ProfileMember[] }) {
                 const lane = member.lane
                 const dates = member.startsOn || member.endsOn ? dayRange(member.startsOn, member.endsOn) : ""
                 const detail = [note, dates].filter(Boolean).join(" · ")
-                const role = memberWords(member, text).role
+                const { role, captain } = memberWords(member, text)
                 return (
                   <li key={index} data-bench={bench || undefined}>
                     <span className="tn-lane">
@@ -246,6 +246,11 @@ export function TeamRoster({ roster }: { roster: ProfileMember[] }) {
                     </span>
                     <span>
                       {member.pageId ? <Link to={`/pages/${member.pageId}`}>{member.name}</Link> : member.name}
+                      {captain && (
+                        <abbr className="pf-captain" title={captain} aria-label={captain}>
+                          C
+                        </abbr>
+                      )}
                       {detail && <small>{detail}</small>}
                     </span>
                     <small title={member.role}>{role}</small>

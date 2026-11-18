@@ -127,7 +127,7 @@ class PageApiIntegrationTest {
         content.put("name", "Coded team");
         content.put("roster", List.of(
                 Map.of("name", "Jungler", "role", "Đi rừng · Đội trưởng", "status", "Chính thức · AOG 2026",
-                        "lane", "JUNGLE", "standing", "ACTIVE"),
+                        "lane", "JUNGLE", "standing", "ACTIVE", "captain", true),
                 Map.of("name", "Coach", "role", "Huấn luyện viên", "standing", "STAFF"),
                 Map.of("name", "Trialist", "role", "Đường giữa", "status", "Thử việc")));
 
@@ -138,7 +138,9 @@ class PageApiIntegrationTest {
         assertThat(roster.get(0).path("lane").asText()).isEqualTo("JUNGLE");
         assertThat(roster.get(0).path("standing").asText()).isEqualTo("ACTIVE");
         assertThat(roster.get(0).path("role").asText()).isEqualTo("Đi rừng · Đội trưởng");
+        assertThat(roster.get(0).path("captain").asBoolean()).isTrue();
         assertThat(roster.get(1).path("standing").asText()).isEqualTo("STAFF");
+        assertThat(roster.get(1).path("captain").asBoolean()).isFalse();
         assertThat(roster.get(2).path("lane").isNull()).isTrue();
         assertThat(roster.get(2).path("standing").isNull()).isTrue();
     }

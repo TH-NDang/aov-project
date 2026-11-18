@@ -29,7 +29,11 @@ test("a roster names its lanes like the match screens do", async () => {
 test("a member's lane comes from its code, not from the words of its role", () => {
   assert.equal(rosterPosition(member({ role: "Đi rừng", lane: "MID" })).lane, "MID")
   assert.equal(rosterPosition(member({ role: "Đi rừng" })).lane, undefined)
-  assert.equal(rosterPosition(member({ role: "Đường giữa · Đội trưởng", lane: "MID" })).captain, true)
+})
+
+test("the captain's crown comes from the captain flag, not from the words of the role", () => {
+  assert.equal(rosterPosition(member({ role: "Đường giữa", captain: true })).captain, true)
+  assert.equal(rosterPosition(member({ role: "Đường giữa · Đội trưởng", lane: "MID" })).captain, false)
 })
 
 test("a staff member is an analyst only when its linked profile is one and no coach", () => {
@@ -71,7 +75,7 @@ test("sorted cards preserve source indexes for edits and retain duplicate lanes 
   assert.deepEqual(members, before)
 })
 
-test("picking a lane writes its code and Admin's words for it and keeps a captain's mark", () => {
+test("picking a lane writes its code and Admin's words for it and keeps the role's notes", () => {
   const picked = choosePosition(member({ role: "Đi rừng · Đội trưởng", lane: "JUNGLE", standing: "ACTIVE" }), "MID")
 
   assert.deepEqual([picked.lane, picked.role, picked.standing], ["MID", "Đường giữa · Đội trưởng", "ACTIVE"])
