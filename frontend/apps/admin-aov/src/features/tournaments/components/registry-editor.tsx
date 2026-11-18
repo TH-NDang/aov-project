@@ -1,11 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react"
-import type {
-  DocumentView,
-  PlayerContent,
-  SeriesContent,
-  TeamContent,
-  TournamentContent,
-} from "@aov/community-contracts"
+import type { DocumentView, SeriesContent, TournamentContent } from "@aov/community-contracts"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
 import { Button } from "@aov/ui/components/button"
@@ -19,12 +13,11 @@ import { RecordLifecycleActions } from "./record-lifecycle-actions"
 import { recordLabel } from "../model/record-lifecycle-model"
 import {
   initialRegistryValues,
+  keptTournamentFields,
   registryContent,
   registryFormIssue,
-  type RegistryKind,
 } from "../model/registry-form-model"
 import {
-  CAREER_STATUSES,
   COMPETITION_TYPES,
   RESULT_VERIFICATIONS,
   TOURNAMENT_STATUSES,
@@ -32,12 +25,11 @@ import {
   VENUE_MODES,
 } from "./tournament-metadata"
 import { BEST_OF_CHOICES } from "@/features/esports/model/series-rules"
-import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
 
-type Content = TeamContent | PlayerContent | TournamentContent | SeriesContent
-export const REGISTRY_LABELS: Record<RegistryKind, string> = {
-  teams: "đội tuyển",
-  players: "tuyển thủ",
+/** The records this editor creates and edits; a team and its players are edited from the workspace Teams step. */
+type EditorKind = "tournaments" | "series"
+type Content = TournamentContent | SeriesContent
+const REGISTRY_LABELS: Record<EditorKind, string> = {
   tournaments: "giải đấu",
   series: "trận đấu",
 }
@@ -53,38 +45,8 @@ type Field = {
   group?: "extra" | "result"
 }
 
-function registryFields(kind: RegistryKind): Field[] {
+function registryFields(kind: EditorKind): Field[] {
   const common = [{ key: "code", label: "Mã", required: true, placeholder: "Ví dụ: aog-2026-s4" }]
-  if (kind === "teams")
-    return [
-      ...common,
-      { key: "name", label: "Tên đội", required: true },
-      { key: "shortName", label: "Tên viết tắt" },
-      { key: "aliases", label: "Tên khác", placeholder: "Flash Wolves, tên viết khác" },
-      { key: "country", label: "Quốc gia / khu vực", options: TEAM_REGIONS },
-      { key: "logoUrl", label: "Đường dẫn logo", type: "url" },
-    ]
-  if (kind === "players")
-    return [
-      ...common,
-      { key: "nickname", label: "Tên thi đấu", required: true },
-      { key: "fullName", label: "Họ tên" },
-      { key: "aliases", label: "Tên khác", placeholder: "Tên thi đấu cũ, cách viết khác" },
-      { key: "country", label: "Quốc gia / khu vực", options: TEAM_REGIONS },
-      { key: "photoUrl", label: "Đường dẫn ảnh", type: "url" },
-      { key: "birthDate", label: "Ngày sinh", type: "date" },
-      {
-        key: "lane",
-        label: "Vị trí thường đánh",
-        options: LANE_ORDER.map((lane) => ({ id: lane, name: LANE_LABELS[lane].name })),
-      },
-      {
-        key: "careerStatus",
-        label: "Trạng thái thi đấu",
-        options: Object.entries(CAREER_STATUSES).map(([id, name]) => ({ id, name })),
-      },
-      { key: "signatureHeroes", label: "Tướng tủ", placeholder: "Capheny, Violet, Elsu" },
-    ]
   if (kind === "tournaments")
     return [
       ...common,
@@ -127,18 +89,6 @@ function registryFields(kind: RegistryKind): Field[] {
         options: Object.entries(TOURNAMENT_STATUSES).map(([id, name]) => ({ id, name })),
       },
       { key: "note", label: "Ghi chú", group: "extra" },
-      { key: "result.winnerName", label: "Đội vô địch", group: "result" },
-      { key: "result.runnerUpName", label: "Á quân", group: "result" },
-      { key: "result.winnerScore", label: "Tỷ số vô địch", type: "number", group: "result" },
-      { key: "result.runnerUpScore", label: "Tỷ số á quân", type: "number", group: "result" },
-      { key: "result.sourceUrl", label: "Nguồn kết quả", type: "url", group: "result" },
-      {
-        key: "result.verification",
-        label: "Mức kiểm chứng",
-        group: "result",
-        options: Object.entries(RESULT_VERIFICATIONS).map(([id, name]) => ({ id, name })),
-      },
-      { key: "result.verifiedOn", label: "Ngày đối chiếu", type: "date", group: "result" },
     ]
   return [
     ...common,
@@ -195,15 +145,13 @@ function registryFields(kind: RegistryKind): Field[] {
 function RegistryForm({
   kind,
   entry,
-  teams,
   tournamentId,
   defaults,
   onSaved,
   onBusyChange,
 }: {
-  kind: RegistryKind
+  kind: EditorKind
   entry?: DocumentView<Content>
-  teams: DocumentView<TeamContent>[]
   tournamentId?: string
   defaults?: Record<string, string>
   onSaved: () => void
@@ -221,18 +169,11 @@ function RegistryForm({
         kind,
         values,
         registryFields(kind).map((field) => field.key),
-      )
-      // The form only knows its own fields; what other screens edit stays on the record.
-      const kept = entry && kind === "tournaments" ? (entry.content as TournamentContent) : null
-      const content = kept
-        ? ({
-            ...fields,
-            localCurrency: kept.localCurrency,
-            placements: kept.placements,
-            awards: kept.awards,
-            links: kept.links,
-          } as Content)
-        : fields
+      ) as Content
+      const content =
+        entry && kind === "tournaments"
+          ? keptTournamentFields(fields as TournamentContent, entry.content as TournamentContent)
+          : fields
       if (entry) await tournamentApi.save(kind, entry, content)
       else await tournamentApi.create(kind, content)
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
@@ -319,17 +260,12 @@ function RegistryForm({
         ) : (
           <Input
             type={field.type ?? "text"}
-            list={
-              ["result.winnerName", "result.runnerUpName"].includes(field.key)
-                ? "tournament-result-team-names"
-                : undefined
-            }
             min={field.key.endsWith("Score") ? 0 : undefined}
             max={field.key.endsWith("Score") ? 99 : undefined}
             value={values[field.key] ?? ""}
             required={field.required}
             placeholder={field.placeholder}
-            maxLength={field.key === "code" ? 100 : field.key === "aliases" ? 2000 : field.type === "url" ? 2048 : 200}
+            maxLength={field.key === "code" ? 100 : field.type === "url" ? 2048 : 200}
             pattern={field.key === "code" ? "[a-z0-9]+(?:-[a-z0-9]+)*" : undefined}
             title={field.key === "code" ? "Dùng chữ thường không dấu, số và dấu gạch nối." : undefined}
             onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))}
@@ -341,18 +277,16 @@ function RegistryForm({
   return (
     <form className="tournament-registry-form" onSubmit={submit}>
       <fieldset disabled={busy}>
-        {kind !== "series" && (
+        {kind === "tournaments" && (
           <RegistryLogoField
             kind={kind}
-            value={(kind === "players" ? values.photoUrl : values.logoUrl) ?? ""}
-            name={(kind === "players" ? values.nickname : values.name) ?? ""}
-            onChange={(url) =>
-              setValues((current) => ({ ...current, [kind === "players" ? "photoUrl" : "logoUrl"]: url }))
-            }
+            value={values.logoUrl ?? ""}
+            name={values.name ?? ""}
+            onChange={(url) => setValues((current) => ({ ...current, logoUrl: url }))}
             onBusyChange={setUploading}
           />
         )}
-        {fields.filter((field) => !["logoUrl", "photoUrl"].includes(field.key) && !field.group).map(renderField)}
+        {fields.filter((field) => field.key !== "logoUrl" && !field.group).map(renderField)}
         {(kind === "tournaments" || kind === "series") && (
           <>
             {kind === "tournaments" && (
@@ -364,33 +298,30 @@ function RegistryForm({
                 <div>{fields.filter((field) => field.group === "extra").map(renderField)}</div>
               </details>
             )}
-            <details
-              className="tournament-registry-extra"
-              open={!!(entry?.content as TournamentContent | undefined)?.result}
-            >
-              <summary>
-                <ClipboardCheck size={14} />
-                Kết quả và kiểm chứng
-              </summary>
-              <div>{fields.filter((field) => field.group === "result").map(renderField)}</div>
-              <datalist id="tournament-result-team-names">
-                {teams.map((team) => (
-                  <option key={team.id} value={team.content.name} />
-                ))}
-              </datalist>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  setValues((current) =>
-                    Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith("result."))),
-                  )
-                }
+            {kind === "series" && (
+              <details
+                className="tournament-registry-extra"
+                open={!!(entry?.content as SeriesContent | undefined)?.result}
               >
-                Xóa kết quả
-              </Button>
-            </details>
+                <summary>
+                  <ClipboardCheck size={14} />
+                  Kết quả và kiểm chứng
+                </summary>
+                <div>{fields.filter((field) => field.group === "result").map(renderField)}</div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setValues((current) =>
+                      Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith("result."))),
+                    )
+                  }
+                >
+                  Xóa kết quả
+                </Button>
+              </details>
+            )}
           </>
         )}
       </fieldset>
@@ -425,15 +356,13 @@ export function RegistryEditor({
   entry,
   open,
   onClose,
-  teams,
   tournamentId,
   defaults,
 }: {
-  kind: RegistryKind
+  kind: EditorKind
   entry?: DocumentView<Content>
   open: boolean
   onClose: () => void
-  teams: DocumentView<TeamContent>[]
   tournamentId?: string
   /** Values a new record starts from; ignored when an existing record is edited. */
   defaults?: Record<string, string>
@@ -455,7 +384,7 @@ export function RegistryEditor({
         </SheetDescription>
         <RegistryForm
           key={`${kind}-${entry?.id ?? "new"}-${entry?.version ?? 0}`}
-          {...{ kind, entry, teams, tournamentId, defaults }}
+          {...{ kind, entry, tournamentId, defaults }}
           onSaved={onClose}
           onBusyChange={setBusy}
         />

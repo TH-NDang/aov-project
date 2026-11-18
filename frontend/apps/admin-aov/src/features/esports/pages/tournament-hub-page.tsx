@@ -12,7 +12,7 @@ import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
 import { RegistryImportSheet } from "@/features/tournaments/components/registry-import"
-import { useRecords, useTournamentStats } from "../data/use-esports-data"
+import { useTournamentStats } from "../data/use-esports-data"
 import type { TournamentStats as ContractStats } from "@aov/community-contracts"
 import { TournamentList } from "@/features/tournaments/components/tournament-list"
 import { regionsNamedBy } from "@/features/tournaments/model/record-reason"
@@ -91,8 +91,6 @@ function Hub({ access }: { access: Access }) {
   })
   const partsByEvent = useMemo(() => partsByMainEvent(parts.data ?? []), [parts.data])
   const counters = useTournamentStats()
-  // Only the create form needs the team list; it is too long to load for every visit to this page.
-  const teams = useRecords("teams", creating)
   const plans = useQuery({
     queryKey: [...competitionKeys, access.actorKey, "summaries"],
     queryFn: competitionApi.summaries,
@@ -270,9 +268,7 @@ function Hub({ access }: { access: Access }) {
         </ManagementPanel>
       )}
 
-      {creating && (
-        <RegistryEditor kind="tournaments" open onClose={() => setCreating(false)} teams={teams.data ?? []} />
-      )}
+      {creating && <RegistryEditor kind="tournaments" open onClose={() => setCreating(false)} />}
       {importing && <RegistryImportSheet key={access.actorKey} onClose={() => setImporting(false)} />}
     </EsportsPage>
   )

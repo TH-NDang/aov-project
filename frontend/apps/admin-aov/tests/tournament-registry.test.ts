@@ -3,6 +3,7 @@ import { test } from "node:test"
 import type { DocumentView, SeriesContent, TournamentContent } from "@aov/community-contracts"
 import {
   initialRegistryValues,
+  keptTournamentFields,
   parseTeamAliases,
   registryContent,
   registryFormIssue,
@@ -76,79 +77,67 @@ test("team aliases trim and deduplicate without replacing the canonical name or 
   )
 })
 
-test("tournament result and research metadata round-trip without inferring a status or a result", () => {
-  const content: TournamentContent = {
-    code: "event",
-    name: "Regional Event",
-    region: "TH",
-    logoUrl: "https://img.example/asset/version.png",
-    tier: "A",
-    competitionType: "LEAGUE",
-    venueMode: "OFFLINE",
-    status: "FINISHED",
-    sourceUrl: "https://primary.example/event",
-    result: {
-      winnerName: "Winner",
-      runnerUpName: "Runner",
-      winnerScore: 4,
-      runnerUpScore: 0,
-      sourceUrl: "https://secondary.example/result",
-      verification: "SECONDARY_CAPTURE",
-      verifiedOn: "2026-10-27",
-    },
-  }
+const event: TournamentContent = {
+  code: "event",
+  name: "Regional Event",
+  region: "TH",
+  logoUrl: "https://img.example/asset/version.png",
+  tier: "A",
+  competitionType: "LEAGUE",
+  venueMode: "OFFLINE",
+  status: "FINISHED",
+  sourceUrl: "https://primary.example/event",
+}
+
+test("research metadata round-trips without inferring a status", () => {
   const entry: DocumentView<TournamentContent> = {
     id: "event",
     version: 1,
     createdAt: "",
     updatedAt: "",
     missingFields: [],
-    content,
+    content: event,
   }
   const values = initialRegistryValues(entry, "tournaments")
-  assert.equal(values["result.runnerUpScore"], "0")
-  assert.equal(values["result.verification"], "SECONDARY_CAPTURE")
-  const keys = Object.keys(content).filter((key) => key !== "result")
-  assert.deepEqual(registryContent("tournaments", values, keys), content)
-  assert.equal(registryFormIssue("tournaments", values), null)
 
-  const unconfirmed = registryContent(
-    "tournaments",
-    {
-      code: "unknown",
-      name: "Unknown Result",
-      region: "VN",
-      startsOn: "2026-01-01",
-      endsOn: "2026-01-30",
-      "result.verification": "UNVERIFIED",
-    },
-    ["code", "name", "region", "startsOn", "endsOn"],
-  ) as TournamentContent
-  assert.equal(unconfirmed.status, undefined)
-  assert.equal(unconfirmed.result, undefined)
+  assert.deepEqual(registryContent("tournaments", values, Object.keys(event)), event)
+  assert.equal(registryFormIssue("tournaments", values), null)
+  assert.equal(
+    (
+      registryContent("tournaments", { code: "unknown", name: "Unknown", region: "VN" }, [
+        "code",
+        "name",
+        "region",
+      ]) as TournamentContent
+    ).status,
+    undefined,
+  )
 })
 
-test("optional results require sourced distinct teams and a complete valid score pair", () => {
-  const values = {
-    "result.winnerName": "Winner",
-    "result.runnerUpName": "Runner",
-    "result.sourceUrl": "https://source.example/final",
-    "result.verification": "SECONDARY_PRESS_ONLY",
+test("the tournament form writes no result, and saving keeps the one an import stored with the final table", () => {
+  const stored: TournamentContent = {
+    ...event,
+    result: {
+      winnerName: "Winner",
+      runnerUpName: "Runner",
+      sourceUrl: "https://secondary.example/result",
+      verification: "SECONDARY_CAPTURE",
+    },
+    placements: [{ place: "1", teamName: "Winner" }],
   }
-  assert.equal(registryFormIssue("tournaments", values), null)
-  assert.match(registryFormIssue("tournaments", { ...values, "result.sourceUrl": "" }) ?? "", /link nguồn/)
-  assert.match(registryFormIssue("tournaments", { ...values, "result.runnerUpName": "Winner" }) ?? "", /khác nhau/)
-  assert.match(registryFormIssue("tournaments", { ...values, "result.winnerScore": "4" }) ?? "", /hai vế/)
-  assert.match(
-    registryFormIssue("tournaments", { ...values, "result.winnerScore": "3", "result.runnerUpScore": "4" }) ?? "",
-    /lớn hơn/,
-  )
-  assert.match(
-    registryFormIssue("tournaments", { ...values, "result.winnerScore": "4.5", "result.runnerUpScore": "3" }) ?? "",
-    /số nguyên/,
-  )
-  assert.match(
-    registryFormIssue("tournaments", { ...values, "result.sourceUrl": "javascript:alert(1)" }) ?? "",
-    /https/,
-  )
+  const values = {
+    ...initialRegistryValues(undefined, "tournaments"),
+    ...{ code: "event", name: "Renamed", region: "TH" },
+  }
+  const fields = registryContent("tournaments", values, ["code", "name", "region"]) as TournamentContent
+
+  assert.equal(fields.result, undefined)
+  assert.deepEqual(keptTournamentFields(fields, stored), {
+    ...fields,
+    result: stored.result,
+    placements: stored.placements,
+    localCurrency: undefined,
+    awards: undefined,
+    links: undefined,
+  })
 })

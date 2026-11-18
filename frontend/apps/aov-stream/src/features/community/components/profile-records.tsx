@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router"
-import type { CompetitionView, Lane, ProfileAchievement, ProfileHistory, ProfileMember } from "@aov/community-contracts"
+import type { CompetitionView, ProfileAchievement, ProfileHistory, ProfileMember } from "@aov/community-contracts"
 import { achievementRank, type AchievementRank } from "@aov/community-contracts/achievements"
 import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
 import { StreamIcon } from "../../../components/stream-icon"
@@ -8,6 +8,7 @@ import { useStreamLocale } from "../../../components/stream-locale"
 import { LANE_NAMES } from "../../../lib/tournament-model"
 import { dayRange, formatDay } from "../../../components/community-ui"
 import { achievementMark } from "../model/achievement-mark"
+import { memberWords, rosterGroups, STANDING_NAMES } from "../model/team-roster-model"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 
 const fold = (value: string) => foldSearchText(value).trim()
@@ -209,39 +210,10 @@ export function HistoryRows({ items, links }: { items: ProfileHistory[]; links?:
 
 // ---------- Roster ----------
 
-const laneWords: [Lane, RegExp][] = [
-  ["TOP", /tà thần|caesar/i],
-  ["JUNGLE", /rừng/i],
-  ["MID", /giữa/i],
-  ["DRAGON", /rồng/i],
-  ["SUPPORT", /trợ thủ|hỗ trợ/i],
-]
-
-/** The lane a written role speaks of, for its icon; coaches and analysts have none. */
-const laneOfRole = (role: string) => laneWords.find(([, words]) => words.test(role))?.[0] ?? null
-
-/**
- * A team's members grouped by their standing in the squad. A status reads "standing · note · season"; when every
- * member carries the same season it is returned once instead of on each row. Members without a standing go under
- * `unnamed`.
- */
-function rosterGroups(roster: ProfileMember[], unnamed: string) {
-  const parts = roster.map((member) => (member.status || "").split(" · ").filter(Boolean))
-  const last = parts[0]?.at(-1)
-  const season = last && parts.every((entry) => entry.length > 1 && entry.at(-1) === last) ? last : null
-  const groups = new Map<string, { member: ProfileMember; note: string }[]>()
-  roster.forEach((member, index) => {
-    const [standing = unnamed, ...rest] = parts[index]!
-    const note = (season ? rest.slice(0, -1) : rest).join(" · ")
-    groups.set(standing, [...(groups.get(standing) || []), { member, note }])
-  })
-  return { season, groups: [...groups] }
-}
-
 /** The squad in the cards of a competition's team list: lane icon, member, role. */
 export function TeamRoster({ roster }: { roster: ProfileMember[] }) {
   const { text } = useStreamLocale()
-  const { season, groups } = rosterGroups(roster, text("Thành viên", "Members"))
+  const { season, groups } = rosterGroups(roster)
   const sources = [...new Set(roster.map((member) => member.sourceUrl).filter(Boolean))] as string[]
   return (
     <section className="pf-roster" aria-labelledby="profile-roster">
@@ -251,18 +223,20 @@ export function TeamRoster({ roster }: { roster: ProfileMember[] }) {
         </h2>
       </div>
       <div className="tn-team-grid">
-        {groups.map(([standing, members]) => (
-          <section className="tn-team-card" key={standing}>
+        {groups.map(({ standing, rows }) => (
+          <section className="tn-team-card" key={standing ?? "members"}>
             <h3>
-              {standing} <small>{members.length}</small>
+              {standing ? text(...STANDING_NAMES[standing]) : text("Thành viên", "Members")}{" "}
+              <small>{rows.length}</small>
             </h3>
             <ul>
-              {members.map(({ member, note }, index) => {
-                const lane = laneOfRole(member.role)
+              {rows.map(({ member, note, bench }, index) => {
+                const lane = member.lane
                 const dates = member.startsOn || member.endsOn ? dayRange(member.startsOn, member.endsOn) : ""
                 const detail = [note, dates].filter(Boolean).join(" · ")
+                const role = memberWords(member, text).role
                 return (
-                  <li key={index} data-bench={/dự bị|rời/i.test(standing) || undefined}>
+                  <li key={index} data-bench={bench || undefined}>
                     <span className="tn-lane">
                       {lane ? (
                         <HeroLaneIcon lane={lane} size={18} label={text(LANE_NAMES[lane][0], LANE_NAMES[lane][1])} />
@@ -274,7 +248,7 @@ export function TeamRoster({ roster }: { roster: ProfileMember[] }) {
                       {member.pageId ? <Link to={`/pages/${member.pageId}`}>{member.name}</Link> : member.name}
                       {detail && <small>{detail}</small>}
                     </span>
-                    <small>{member.role}</small>
+                    <small title={member.role}>{role}</small>
                   </li>
                 )
               })}

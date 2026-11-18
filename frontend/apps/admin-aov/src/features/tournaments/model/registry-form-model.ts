@@ -4,7 +4,6 @@ import type {
   SeriesContent,
   TeamContent,
   TournamentContent,
-  TournamentResult,
 } from "@aov/community-contracts"
 import { normalize } from "@/lib/text"
 
@@ -74,17 +73,7 @@ export function registryContent(kind: RegistryKind, values: Record<string, strin
               ? new Date(value).toISOString()
               : value
   }
-  if (kind === "tournaments") {
-    const resultKeys = ["winnerName", "runnerUpName", "winnerScore", "runnerUpScore", "sourceUrl", "verifiedOn"]
-    if (resultKeys.some((key) => values[`result.${key}`]?.trim())) {
-      const result: Record<string, unknown> = { verification: values["result.verification"] || "UNVERIFIED" }
-      for (const key of resultKeys) {
-        const value = values[`result.${key}`]?.trim()
-        if (value) result[key] = key.endsWith("Score") ? Number(value) : value
-      }
-      content.result = result as TournamentResult
-    }
-  } else if (kind === "series") {
+  if (kind === "series") {
     const resultKeys = ["scoreA", "scoreB", "sourceUrl", "verifiedOn"]
     if (resultKeys.some((key) => values[`result.${key}`]?.trim())) {
       const result: Record<string, unknown> = { verification: values["result.verification"] || "UNVERIFIED" }
@@ -96,6 +85,36 @@ export function registryContent(kind: RegistryKind, values: Record<string, strin
     }
   }
   return content as Content
+}
+
+/**
+ * A tournament saved from its editor: the form's fields, with what other screens edit kept from the stored record (the
+ * final table, awards, links and local currency), and a result an import recorded before the Final step kept the
+ * final table, which Stream still reads when the table names no single champion.
+ */
+export function keptTournamentFields(fields: TournamentContent, stored: TournamentContent): TournamentContent {
+  return {
+    ...fields,
+    result: stored.result,
+    localCurrency: stored.localCurrency,
+    placements: stored.placements,
+    awards: stored.awards,
+    links: stored.links,
+  }
+}
+
+/**
+ * A record's content after an edit of some of its fields: those fields take the form's values, a field the editor
+ * cleared goes, and every field the form does not show stays as it was.
+ */
+export function editedRecordContent<T extends Content>(
+  kind: RegistryKind,
+  entry: DocumentView<T>,
+  values: Record<string, string>,
+  keys: string[],
+): T {
+  const kept = Object.fromEntries(Object.entries(entry.content).filter(([key]) => !keys.includes(key)))
+  return { ...kept, ...registryContent(kind, values, keys) } as T
 }
 
 export function registryFormIssue(kind: RegistryKind, values: Record<string, string>): string | null {
@@ -128,21 +147,5 @@ export function registryFormIssue(kind: RegistryKind, values: Record<string, str
       return `Kết quả hoàn tất cần một đội thắng ${winningScore} ván và đội còn lại ít hơn.`
     return null
   }
-  if (kind !== "tournaments") return null
-  const result = (registryContent(kind, values, []) as TournamentContent).result
-  if (!result) return null
-  if (!result.winnerName || !result.runnerUpName || !result.sourceUrl)
-    return "Kết quả cần đội vô địch, á quân và link nguồn kiểm chứng."
-  if (result.winnerName.toLocaleLowerCase() === result.runnerUpName.toLocaleLowerCase())
-    return "Đội vô địch và á quân phải khác nhau."
-  const hasWinnerScore = result.winnerScore != null
-  const hasRunnerScore = result.runnerUpScore != null
-  if (hasWinnerScore !== hasRunnerScore) return "Nhập đủ hai vế tỷ số hoặc để trống cả hai."
-  if (
-    hasWinnerScore &&
-    [result.winnerScore, result.runnerUpScore].some((score) => !Number.isInteger(score) || score! < 0 || score! > 99)
-  )
-    return "Tỷ số phải là số nguyên từ 0 đến 99."
-  if (hasWinnerScore && result.winnerScore! <= result.runnerUpScore!) return "Tỷ số đội vô địch phải lớn hơn á quân."
   return null
 }

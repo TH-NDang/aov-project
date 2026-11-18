@@ -1,3 +1,5 @@
+import type { Lane } from "./index"
+
 export type ProfileKind = "ORGANIZATION" | "TEAM" | "PLAYER" | "PERSON" | "CIRCUIT"
 export const personRoleLabels = {
   COACH: "Huấn luyện viên",
@@ -39,11 +41,19 @@ export type ProfileAchievement = {
   tournamentId?: string | null
   sourceUrl?: string | null
 }
+/** Where a member stands in a team: the starting lineup, the bench, the staff, or gone. */
+export type RosterStanding = "ACTIVE" | "SUBSTITUTE" | "STAFF" | "LEFT"
+/**
+ * A member of a team's roster. Readers group and mark members by `lane` and `standing`; `role` and `status` are the
+ * wording shown as written. A staff member has no lane. See spec 04, roster codes.
+ */
 export type ProfileMember = {
   pageId?: string | null
   name: string
   role: string
   status?: string | null
+  lane?: Lane | null
+  standing?: RosterStanding | null
   startsOn?: string | null
   endsOn?: string | null
   sourceUrl?: string | null

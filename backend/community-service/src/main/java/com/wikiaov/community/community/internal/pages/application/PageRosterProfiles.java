@@ -39,7 +39,8 @@ public class PageRosterProfiles {
                 ? member
                 : new PageContent.Member(member.pageId(), people.get(member.pageId()).getContent().name(),
                         member.role(),
-                        member.status(), member.startsOn(), member.endsOn(), member.sourceUrl()))
+                        member.status(), member.startsOn(), member.endsOn(), member.sourceUrl(), member.lane(),
+                        member.standing()))
                 .toList();
         return new PageContent(content.name(), content.shortName(), content.country(), content.biography(),
                 content.avatarUrl(), content.coverUrl(), content.links(), content.sources(), content.history(),

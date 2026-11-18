@@ -143,6 +143,9 @@ public final class PageRules {
             text(item.status(), MAX_LABEL, false);
             url(item.sourceUrl());
             dates(item.startsOn(), item.endsOn());
+            if (item.standing() == PageContent.Standing.STAFF && item.lane() != null) {
+                throw invalid("A staff member plays no lane.");
+            }
         });
     }
 
