@@ -29,6 +29,8 @@ import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
 import { WarehouseTabs } from "./warehouse-tabs"
 
+/** The catalog until it loads; one array, so the lists made from it are not worked out again on every render. */
+const NO_ENTRIES: PublishedWarehouseRecord[] = []
 /** The entry of the catalog that is open, in whichever catalog is on screen. */
 const OPEN_ENTRY =
   ':is(.shop-item-select, .wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-pressed="true"]'
@@ -52,7 +54,7 @@ export default function WarehousePage() {
   const held = useRef<{ element: HTMLElement; top: number } | null>(null)
   const catalog = useQuery(warehouseCatalogQuery(kind, scope))
   const metadata = useQuery(warehouseGroupsQuery(kind, scope.locale))
-  const entries = catalog.data ?? []
+  const entries = catalog.data ?? NO_ENTRIES
   const groups = metadata.data ?? []
   const filtered = useMemo(
     () => entries.filter((entry) => matchesWarehouseSearch(entry, search, scope.locale)),

@@ -24,6 +24,8 @@ const FILTERS: { key: Filter; label: string; english: string }[] = [
 ]
 
 const GROUPS = ["PVP", "ENTERTAINMENT"] as const
+/** The modes until they load; one array, so the filtered list is not worked out again on every render. */
+const NO_MODES: ModeCard[] = []
 
 /** The schedule is what the game's lobby showed when it was recorded, so the page says so once. */
 const SCHEDULE_NOTE: [string, string] = [
@@ -39,7 +41,7 @@ export function ModesPage() {
   const filter = (FILTERS.find((item) => item.key === readParam(params, MODE_PARAMS.filter))?.key ?? "all") as Filter
   const search = readParam(params, MODE_PARAMS.search) ?? ""
   const modes = useQuery(modeCardsQuery())
-  const all = modes.data?.items ?? []
+  const all = modes.data?.items ?? NO_MODES
 
   const visible = useMemo(() => {
     const needle = foldSearchText(search.trim())
