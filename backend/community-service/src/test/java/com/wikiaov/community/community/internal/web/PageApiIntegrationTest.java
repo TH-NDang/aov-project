@@ -421,6 +421,13 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void theFeedOfAManagedPageKeepsItsListLimit() throws Exception {
+        mvc.perform(as(get(ROOT + "/me/pages/" + UUID.randomUUID() + "/feed").param("size", "101"), "fan", false))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
+                .andExpect(jsonPath("$.errors[0].path").value("size"));
+    }
+
+    @Test
     void anUnknownQueryParameterOfAPublicPageReadIsAnInvalidQueryParameter() throws Exception {
         mvc.perform(get(ROOT + "/pages?unexpected=true")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
