@@ -108,8 +108,8 @@ class ItemCatalogQueriesTest {
         when(context.rulesetId()).thenReturn(rulesetId);
         when(contexts.resolve(eq("VN"), any())).thenReturn(context);
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(first, second));
-        when(revisions.findByOwnerIdOrderByRevisionNoDesc(first.getId())).thenReturn(List.of(firstRevision));
-        when(revisions.findByOwnerIdOrderByRevisionNoDesc(second.getId())).thenReturn(List.of(secondRevision));
+        when(revisions.findByRulesetIdAndState(rulesetId, RevisionState.PUBLISHED))
+                .thenReturn(List.of(firstRevision, secondRevision));
         var firstView = new ItemView(first.getId(), "alpha", null, null, List.of());
         var secondView = new ItemView(second.getId(), "beta", null, null, List.of());
         when(content.publicView(first, firstRevision, "vi-VN")).thenReturn(firstView);
@@ -122,6 +122,8 @@ class ItemCatalogQueriesTest {
         assertThat(result.items()).containsExactly(secondView);
         verify(publicMedia).hydrate(List.of(secondView));
         verifyNoMoreInteractions(publicMedia);
+        verify(content, never()).publicView(first, firstRevision, "vi-VN");
+        verify(revisions, never()).findByOwnerIdOrderByRevisionNoDesc(any());
     }
 
     @Test
@@ -136,6 +138,7 @@ class ItemCatalogQueriesTest {
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(owner));
         when(identities.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId())).thenReturn(List.of(revision));
+        when(revisions.findByRulesetIdAndState(rulesetId, RevisionState.PUBLISHED)).thenReturn(List.of(revision));
         when(publicMedia.hydrate(anyList())).thenAnswer(call -> call.getArgument(0));
 
         var hidden = queries.published("VN", "vi-VN", 0, 20, season, null, false);

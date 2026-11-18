@@ -81,6 +81,7 @@ public class PatchQueries implements PatchCatalog {
     public PageSlice<PublishedPatch> list(String region, String locale, int page, int size) {
         validateLocale(locale);
         var ids = releases(region).stream().map(PatchReleaseReference::patchId).distinct().toList();
+        // Paged in memory: the patches come from the market's release schedule, and a market has a few dozen.
         long offset = (long) page * size;
         return new PageSlice<>(ids.stream().skip(offset).limit(size).map(id -> published(id, region, locale)).toList(),
                 page, size, ids.size());

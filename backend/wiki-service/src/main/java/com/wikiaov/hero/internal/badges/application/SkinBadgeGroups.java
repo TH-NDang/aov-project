@@ -90,6 +90,8 @@ public class SkinBadgeGroups {
             matching.add(new SkinBadgeGroupView(null, "__ungrouped", null, 0, List.of(), null, null, true,
                     unassigned, false));
         }
+        // Paged in memory: the list adds a row for ungrouped badges and counts the matching badges of each group, and
+        // a catalog holds a few dozen groups.
         return PageSlice.of(matching, page, size);
     }
 

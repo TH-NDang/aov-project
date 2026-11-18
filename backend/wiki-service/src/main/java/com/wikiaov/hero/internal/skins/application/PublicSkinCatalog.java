@@ -92,6 +92,8 @@ public class PublicSkinCatalog {
                         .thenComparing(row -> row.skin().getSkinKey()))
                 .toList();
 
+        // Paged in memory: each hero's skins come from the revision the read moment chooses and the search reads
+        // localized names, so the page is cut after both; only the page is hydrated.
         var slice = PageSlice.of(matching, page, size).items();
         var items = hydrate(slice);
         return new PublicSkinCatalogView(new PageSlice<>(items, page, size, matching.size()), heroes, rarities);

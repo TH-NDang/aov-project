@@ -197,6 +197,8 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 .map(entry -> entry.withPatch(
                         patches.published(variants.get(entry.patchVariantId()).patchId(), region, locale)))
                 .toList();
+        // Paged in memory: only changes of patches already released in the market count, which the patch module
+        // decides, and one hero has a few dozen change sets.
         return PageSlice.of(all, page, size);
     }
 

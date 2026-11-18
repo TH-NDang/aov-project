@@ -58,6 +58,7 @@ public class PatchPages {
         UUID variant = patch.variantId();
         List<?> all = changes(domain, provider, patch, variant, locale);
 
+        // Paged in memory: the items are composed from the hero changes, the spell removals and the domain's provider.
         var slice = PageSlice.of(all, page, size);
         return new PatchChangesPage(patch, variant, patch.effectiveAt(), slice.items(), page, size,
                 slice.totalElements());

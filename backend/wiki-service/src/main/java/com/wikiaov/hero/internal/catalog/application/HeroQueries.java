@@ -359,6 +359,8 @@ public class HeroQueries {
             all.add(new ListEntry(item, hero.bindingsId(), formEntries));
         }
 
+        // Paged in memory: each hero shows the revision the read moment chooses and carries its forms, so the page is
+        // cut after both; the list is bounded by the heroes of the game.
         var selected = PageSlice.of(all, page, size);
         var items = listMedia(selected.items());
 

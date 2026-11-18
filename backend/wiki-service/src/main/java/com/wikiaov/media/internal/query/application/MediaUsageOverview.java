@@ -62,6 +62,8 @@ public class MediaUsageOverview {
 
         var matching = queries.ids(semanticType, needsCredit).stream()
                 .filter(id -> index.summary(id).state() == filter).toList();
+        // Paged in memory: the usage state comes from every module's MediaUsageProvider, not from a column; only the
+        // page reads its summaries.
         var slice = PageSlice.of(matching, page, size);
         var rows = queries.summaries(slice.items());
 

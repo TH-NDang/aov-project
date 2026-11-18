@@ -107,6 +107,7 @@ class EnchantmentCatalogQueriesTest {
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(owner));
         when(identities.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId())).thenReturn(List.of(revision));
+        when(revisions.findByRulesetIdAndState(rulesetId, RevisionState.PUBLISHED)).thenReturn(List.of(revision));
         when(publicMedia.hydrate(anyList())).thenAnswer(call -> call.getArgument(0));
 
         var hidden = queries.published("VN", "vi-VN", 0, 20, season, null, false);

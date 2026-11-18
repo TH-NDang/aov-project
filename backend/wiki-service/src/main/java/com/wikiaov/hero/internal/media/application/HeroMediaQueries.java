@@ -138,6 +138,8 @@ public class HeroMediaQueries {
                 }
             }
         }
+        // Paged in memory: the skins come from the revision each hero shows in the ruleset, so the page is cut after
+        // that choice; the list is bounded by the skins that carry one badge.
         return PageSlice.of(rows, page, size);
     }
 
