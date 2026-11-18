@@ -395,6 +395,23 @@ export function BackendItemsPage() {
     setFocusId(to)
     toast.success("Đã thêm nguyên liệu. Lưu thay đổi để ghi lên máy chủ.")
   }
+  async function switchRuleset(id: string) {
+    if (
+      pending &&
+      !(await confirmDiscard({
+        title: "Chuyển bộ quy tắc?",
+        description: "Các thay đổi chưa lưu sẽ bị bỏ.",
+        confirmLabel: "Bỏ và chuyển",
+      }))
+    )
+      return
+
+    setEdits(new Map())
+    setUndo([])
+    setSelectedId(null)
+    setFocusId(null)
+    context.setRuleset(id)
+  }
   return (
     <Page className="min-h-0 min-w-0 gap-4" data-item-selection-surface>
       <PageHeader
@@ -414,23 +431,7 @@ export function BackendItemsPage() {
             <WarehouseRulesetSelect
               context={{
                 ...context,
-                setRuleset: async (id) => {
-                  if (
-                    pending &&
-                    !(await confirmDiscard({
-                      title: "Chuyển bộ quy tắc?",
-                      description: "Các thay đổi chưa lưu sẽ bị bỏ.",
-                      confirmLabel: "Bỏ và chuyển",
-                    }))
-                  )
-                    return
-
-                  setEdits(new Map())
-                  setUndo([])
-                  setSelectedId(null)
-                  setFocusId(null)
-                  context.setRuleset(id)
-                },
+                setRuleset: (id) => void switchRuleset(id),
               }}
             />
             <ItemShopHelp />

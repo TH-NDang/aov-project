@@ -83,7 +83,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                   <CommandItem
                     key={`${item.to}:${item.title}`}
                     value={`trang ${item.title} ${item.description}`}
-                    onSelect={() => run(() => navigate(item.to))}
+                    onSelect={() => run(() => void navigate(item.to))}
                   >
                     <NavIcon item={item} />
                     <span>{item.title}</span>
@@ -96,7 +96,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                 {canReadCatalog && (
                   <CommandItem
                     value={`tim tuong ${search}`}
-                    onSelect={() => run(() => navigate(`/hero?q=${encodeURIComponent(search.trim())}`))}
+                    onSelect={() => run(() => void navigate(`/hero?q=${encodeURIComponent(search.trim())}`))}
                   >
                     <Search />
                     Tìm tướng “{search.trim()}”
@@ -104,7 +104,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                 )}
                 <CommandItem
                   value={`tim portrait ${search}`}
-                  onSelect={() => run(() => navigate(`/hero/media?q=${encodeURIComponent(search.trim())}`))}
+                  onSelect={() => run(() => void navigate(`/hero/media?q=${encodeURIComponent(search.trim())}`))}
                 >
                   <Search />
                   Tìm portrait “{search.trim()}”
@@ -118,7 +118,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                   <CommandItem
                     key={item.id}
                     value={`trang bi ${warehouseName(item, locale)} ${item.code}`}
-                    onSelect={() => run(() => navigate(`/items?item=${item.id}`))}
+                    onSelect={() => run(() => void navigate(`/items?item=${item.id}`))}
                   >
                     <HeroAsset id={item.content.iconAssetId} alt="" className="size-6 shrink-0 rounded-sm" />
                     <span>{warehouseName(item, locale)}</span>
@@ -137,7 +137,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                   <CommandItem
                     key={item.id}
                     value={`phu hieu ${warehouseName(item, locale)} ${item.code}`}
-                    onSelect={() => run(() => navigate(`/enchantments?item=${item.id}`))}
+                    onSelect={() => run(() => void navigate(`/enchantments?item=${item.id}`))}
                   >
                     <HeroAsset id={item.content.iconAssetId} alt="" className="size-6 shrink-0 rounded-sm" />
                     <span>{warehouseName(item, locale)}</span>

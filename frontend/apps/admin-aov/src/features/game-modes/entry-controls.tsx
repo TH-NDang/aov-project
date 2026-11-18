@@ -20,8 +20,8 @@ import { usePublicHeroes } from "@/lib/public-heroes"
 export interface MenuAction {
   label: string
   icon?: ReactNode
-  /** Not needed when the action only opens its choices. */
-  onSelect?: () => void
+  /** Not needed when the action only opens its choices. May ask first, and then settles once answered. */
+  onSelect?: () => void | Promise<void>
   disabled?: boolean
   destructive?: boolean
   /** Draws a line above the action, to set apart the ones that remove something. */

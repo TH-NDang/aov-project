@@ -42,7 +42,8 @@ interface PageTabsContextValue {
   sessions: PageSession[]
   activePath: string
   transientOutlet: ReactNode
-  closeTab: (path: string) => void
+  /** Waits for the page's close guards, so it settles once the tab is closed or kept. */
+  closeTab: (path: string) => Promise<void>
   moveTab: (path: string, targetPath: string) => void
   registerCloseGuard: (path: string, guard: PageCloseGuard) => () => void
 }

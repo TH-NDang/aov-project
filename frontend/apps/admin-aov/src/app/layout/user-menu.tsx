@@ -69,7 +69,7 @@ export function UserMenu() {
           >
             <DropdownMenuItem
               onSelect={() => {
-                navigate("/profile")
+                void navigate("/profile")
                 if (isMobile) setOpenMobile(false)
               }}
             >
@@ -78,7 +78,7 @@ export function UserMenu() {
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => {
-                navigate("/settings")
+                void navigate("/settings")
                 if (isMobile) setOpenMobile(false)
               }}
             >
