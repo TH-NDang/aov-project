@@ -2,7 +2,6 @@ package com.wikiaov.community.tournament.internal.planning.application;
 
 import com.wikiaov.community.platform.CommunityActor;
 import com.wikiaov.community.platform.PageSlice;
-import com.wikiaov.community.tournament.internal.application.SeriesRegistry;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
@@ -16,6 +15,7 @@ import com.wikiaov.community.tournament.internal.planning.persistence.Competitio
 import com.wikiaov.community.tournament.internal.planning.persistence.CompetitionPlanRepository;
 import com.wikiaov.community.tournament.internal.planning.persistence.PlanRevision;
 import com.wikiaov.community.tournament.internal.planning.persistence.PlanRevisionRepository;
+import com.wikiaov.community.tournament.internal.registry.application.SeriesRegistry;
 import java.time.DateTimeException;
 import java.time.Instant;
 import java.util.ArrayList;

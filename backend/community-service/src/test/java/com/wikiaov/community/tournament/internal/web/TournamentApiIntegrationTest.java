@@ -20,11 +20,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.wikiaov.community.platform.ApiException;
 import com.wikiaov.community.testsupport.CommunityApplicationTest;
-import com.wikiaov.community.tournament.internal.application.SeriesRegistry;
-import com.wikiaov.community.tournament.internal.application.TeamRegistry;
-import com.wikiaov.community.tournament.internal.application.WikiCatalog;
 import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
+import com.wikiaov.community.tournament.internal.catalog.application.WikiCatalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
@@ -61,6 +59,8 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tourna
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.VenueMode;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Verification;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.VodPause;
+import com.wikiaov.community.tournament.internal.registry.application.SeriesRegistry;
+import com.wikiaov.community.tournament.internal.registry.application.TeamRegistry;
 import java.math.BigDecimal;
 import java.sql.DriverManager;
 import java.time.LocalDate;

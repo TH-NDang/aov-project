@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 
 import com.wikiaov.community.platform.ApiException;
 import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryListings;
-import com.wikiaov.community.tournament.internal.persistence.PlayerRepository;
-import com.wikiaov.community.tournament.internal.persistence.TeamRepository;
-import com.wikiaov.community.tournament.internal.persistence.TournamentRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.PlayerRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.TeamRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.TournamentRepository;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;

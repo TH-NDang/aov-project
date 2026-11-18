@@ -3,7 +3,7 @@ package com.wikiaov.community.tournament.internal.application;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.wikiaov.community.platform.PageSlice;
-import com.wikiaov.community.tournament.internal.persistence.VersionedRecord;
+import com.wikiaov.community.tournament.internal.archive.persistence.VersionedRecord;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;

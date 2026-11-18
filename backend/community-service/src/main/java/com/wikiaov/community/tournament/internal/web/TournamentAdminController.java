@@ -3,7 +3,6 @@ package com.wikiaov.community.tournament.internal.web;
 import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.platform.PageSlice;
 import com.wikiaov.community.platform.QueryParameters;
-import com.wikiaov.community.tournament.internal.application.TournamentAdministration;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Create;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.TournamentStats;
@@ -25,6 +24,7 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.registry.application.TournamentAdministration;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;

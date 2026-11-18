@@ -13,7 +13,7 @@ import com.wikiaov.community.tournament.internal.archive.domain.RegistryDependen
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
 import com.wikiaov.community.tournament.internal.archive.persistence.RegistryUsages;
 import com.wikiaov.community.tournament.internal.archive.persistence.RegistryWriteGuard;
-import com.wikiaov.community.tournament.internal.persistence.VersionedRecord;
+import com.wikiaov.community.tournament.internal.archive.persistence.VersionedRecord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
