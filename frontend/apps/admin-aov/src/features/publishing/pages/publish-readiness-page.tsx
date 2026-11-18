@@ -11,7 +11,7 @@ import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { Page, PageHeader } from "@/components/page-header"
 import { SearchField } from "@/components/search-field"
 import { errorMessage } from "@/lib/api/errors"
-import { HeroQuickView } from "../components/catalog/hero-catalog"
+import { HeroQuickView } from "../components/catalog/hero-quick-view"
 import {
   closeHeroLocation,
   heroFixLocation,
