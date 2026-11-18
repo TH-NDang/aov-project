@@ -403,45 +403,48 @@ Response conceptual:
     "ruleset": { "code": "AOV-GLOBAL" },
     "patch": { "code": "patch-1-62" }
   },
-  "items": [
-    {
-      "id": "...",
-      "code": "nakroth",
-      "name": "Nakroth",
-      "roles": ["ASSASSIN"],
-      "positions": ["DRAGON"],
-      "head": {
-        "assetId": "...",
-        "semanticType": "HERO_HEAD",
-        "state": "ACTIVE",
-        "currentVersion": {
-          "versionId": "...",
-          "mimeType": "image/png",
-          "width": 120,
-          "height": 120,
-          "url": "https://..."
-        }
-      },
-      "portrait": {
-        "assetId": "...",
-        "semanticType": "HERO_PORTRAIT",
-        "state": "ACTIVE",
-        "currentVersion": {
-          "versionId": "...",
-          "mimeType": "image/png",
-          "width": 278,
-          "height": 436,
-          "url": "https://..."
+  "page": {
+    "items": [
+      {
+        "id": "...",
+        "code": "nakroth",
+        "name": "Nakroth",
+        "roles": ["ASSASSIN"],
+        "positions": ["DRAGON"],
+        "head": {
+          "assetId": "...",
+          "semanticType": "HERO_HEAD",
+          "state": "ACTIVE",
+          "currentVersion": {
+            "versionId": "...",
+            "mimeType": "image/png",
+            "width": 120,
+            "height": 120,
+            "url": "https://..."
+          }
+        },
+        "portrait": {
+          "assetId": "...",
+          "semanticType": "HERO_PORTRAIT",
+          "state": "ACTIVE",
+          "currentVersion": {
+            "versionId": "...",
+            "mimeType": "image/png",
+            "width": 278,
+            "height": 436,
+            "url": "https://..."
+          }
         }
       }
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 120,
-  "totalPages": 6
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 120
+  }
 }
 ```
+
+`page` là `PageSlice` (mục 46), như `page` của `/skins`; client tính số trang từ `totalElements/size`.
 
 Không trả toàn bộ skills/skins trong list.
 `head` và `portrait` là các trường tùy chọn theo binding của bản tướng được chọn, cùng cấu trúc
