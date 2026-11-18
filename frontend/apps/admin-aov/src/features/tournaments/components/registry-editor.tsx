@@ -1,11 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react"
-import type {
-  DocumentView,
-  PlayerContent,
-  SeriesContent,
-  TeamContent,
-  TournamentContent,
-} from "@aov/community-contracts"
+import type { DocumentView, SeriesContent, TeamContent, TournamentContent } from "@aov/community-contracts"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
 import { Button } from "@aov/ui/components/button"
@@ -17,14 +11,8 @@ import { RegistryLogoField } from "./registry-logo"
 import { TEAM_REGIONS } from "./team-region"
 import { RecordLifecycleActions } from "./record-lifecycle-actions"
 import { recordLabel } from "../model/record-lifecycle-model"
+import { initialRegistryValues, registryContent, registryFormIssue } from "../model/registry-form-model"
 import {
-  initialRegistryValues,
-  registryContent,
-  registryFormIssue,
-  type RegistryKind,
-} from "../model/registry-form-model"
-import {
-  CAREER_STATUSES,
   COMPETITION_TYPES,
   RESULT_VERIFICATIONS,
   TOURNAMENT_STATUSES,
@@ -32,12 +20,11 @@ import {
   VENUE_MODES,
 } from "./tournament-metadata"
 import { BEST_OF_CHOICES } from "@/features/esports/model/series-rules"
-import { LANE_LABELS, LANE_ORDER } from "@/features/esports/model/labels"
 
-type Content = TeamContent | PlayerContent | TournamentContent | SeriesContent
-export const REGISTRY_LABELS: Record<RegistryKind, string> = {
-  teams: "đội tuyển",
-  players: "tuyển thủ",
+/** The records this editor creates and edits; a team and its players are edited from the workspace Teams step. */
+type EditorKind = "tournaments" | "series"
+type Content = TournamentContent | SeriesContent
+const REGISTRY_LABELS: Record<EditorKind, string> = {
   tournaments: "giải đấu",
   series: "trận đấu",
 }
@@ -53,38 +40,8 @@ type Field = {
   group?: "extra" | "result"
 }
 
-function registryFields(kind: RegistryKind): Field[] {
+function registryFields(kind: EditorKind): Field[] {
   const common = [{ key: "code", label: "Mã", required: true, placeholder: "Ví dụ: aog-2026-s4" }]
-  if (kind === "teams")
-    return [
-      ...common,
-      { key: "name", label: "Tên đội", required: true },
-      { key: "shortName", label: "Tên viết tắt" },
-      { key: "aliases", label: "Tên khác", placeholder: "Flash Wolves, tên viết khác" },
-      { key: "country", label: "Quốc gia / khu vực", options: TEAM_REGIONS },
-      { key: "logoUrl", label: "Đường dẫn logo", type: "url" },
-    ]
-  if (kind === "players")
-    return [
-      ...common,
-      { key: "nickname", label: "Tên thi đấu", required: true },
-      { key: "fullName", label: "Họ tên" },
-      { key: "aliases", label: "Tên khác", placeholder: "Tên thi đấu cũ, cách viết khác" },
-      { key: "country", label: "Quốc gia / khu vực", options: TEAM_REGIONS },
-      { key: "photoUrl", label: "Đường dẫn ảnh", type: "url" },
-      { key: "birthDate", label: "Ngày sinh", type: "date" },
-      {
-        key: "lane",
-        label: "Vị trí thường đánh",
-        options: LANE_ORDER.map((lane) => ({ id: lane, name: LANE_LABELS[lane].name })),
-      },
-      {
-        key: "careerStatus",
-        label: "Trạng thái thi đấu",
-        options: Object.entries(CAREER_STATUSES).map(([id, name]) => ({ id, name })),
-      },
-      { key: "signatureHeroes", label: "Tướng tủ", placeholder: "Capheny, Violet, Elsu" },
-    ]
   if (kind === "tournaments")
     return [
       ...common,
@@ -201,7 +158,7 @@ function RegistryForm({
   onSaved,
   onBusyChange,
 }: {
-  kind: RegistryKind
+  kind: EditorKind
   entry?: DocumentView<Content>
   teams: DocumentView<TeamContent>[]
   tournamentId?: string
@@ -221,7 +178,7 @@ function RegistryForm({
         kind,
         values,
         registryFields(kind).map((field) => field.key),
-      )
+      ) as Content
       // The form only knows its own fields; what other screens edit stays on the record.
       const kept = entry && kind === "tournaments" ? (entry.content as TournamentContent) : null
       const content = kept
@@ -329,7 +286,7 @@ function RegistryForm({
             value={values[field.key] ?? ""}
             required={field.required}
             placeholder={field.placeholder}
-            maxLength={field.key === "code" ? 100 : field.key === "aliases" ? 2000 : field.type === "url" ? 2048 : 200}
+            maxLength={field.key === "code" ? 100 : field.type === "url" ? 2048 : 200}
             pattern={field.key === "code" ? "[a-z0-9]+(?:-[a-z0-9]+)*" : undefined}
             title={field.key === "code" ? "Dùng chữ thường không dấu, số và dấu gạch nối." : undefined}
             onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))}
@@ -341,18 +298,16 @@ function RegistryForm({
   return (
     <form className="tournament-registry-form" onSubmit={submit}>
       <fieldset disabled={busy}>
-        {kind !== "series" && (
+        {kind === "tournaments" && (
           <RegistryLogoField
             kind={kind}
-            value={(kind === "players" ? values.photoUrl : values.logoUrl) ?? ""}
-            name={(kind === "players" ? values.nickname : values.name) ?? ""}
-            onChange={(url) =>
-              setValues((current) => ({ ...current, [kind === "players" ? "photoUrl" : "logoUrl"]: url }))
-            }
+            value={values.logoUrl ?? ""}
+            name={values.name ?? ""}
+            onChange={(url) => setValues((current) => ({ ...current, logoUrl: url }))}
             onBusyChange={setUploading}
           />
         )}
-        {fields.filter((field) => !["logoUrl", "photoUrl"].includes(field.key) && !field.group).map(renderField)}
+        {fields.filter((field) => field.key !== "logoUrl" && !field.group).map(renderField)}
         {(kind === "tournaments" || kind === "series") && (
           <>
             {kind === "tournaments" && (
@@ -429,7 +384,7 @@ export function RegistryEditor({
   tournamentId,
   defaults,
 }: {
-  kind: RegistryKind
+  kind: EditorKind
   entry?: DocumentView<Content>
   open: boolean
   onClose: () => void
