@@ -24,14 +24,16 @@ import { NAV_ICONS } from "@/app/aov-nav-icon"
 import { formatNumber } from "@/lib/text"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
-import { createPublishingApi } from "../publishing/publishing-api"
-import type { PageSlice } from "../publishing/types"
-import { dateLabel, useContentLocale, usePublicationOverview } from "../publishing/publication-overview"
-import { defaultRulesetId } from "../publishing/default-ruleset"
+import { createPublishingApi } from "../publishing/api/publishing-api"
+import type { PageSlice } from "../publishing/api/types"
+import { useContentLocale, usePublicationOverview } from "../publishing/api/publication-overview"
+import { dateLabel } from "@/features/publishing/model/setup/schedule-date"
+import { defaultRulesetId } from "../publishing/model/setup/default-ruleset"
 import { Button } from "@aov/ui/components/button"
-import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/warehouse-api"
-import { warehouseText } from "../warehouse/warehouse-types"
+import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/api/warehouse-api"
+import { warehouseText } from "@aov/ui/lib/warehouse-content"
 import { cn } from "@aov/ui/lib/utils"
+import { mediaKeys } from "@/features/media/api/media-cache"
 
 const publishing = createPublishingApi(backendRequest)
 
@@ -71,7 +73,7 @@ export function DashboardPage() {
     staleTime: 30000,
   })
   const images = useQuery({
-    queryKey: ["managed-images", "dashboard"],
+    queryKey: mediaKeys.list("dashboard"),
     queryFn: () => backendRequest<PageSlice<unknown>>("/admin/media/assets?page=0&size=1"),
     enabled: canReadHeroes,
     staleTime: 30000,
@@ -150,7 +152,7 @@ export function DashboardPage() {
             value: images.data?.totalElements,
             hint: "Trong thư viện ảnh",
             icon: NAV_ICONS.imageLibrary,
-            to: "/image-management",
+            to: "/files",
           },
           {
             label: "Bậc trang phục",
@@ -433,19 +435,17 @@ function CurrentPatchCard({ locale }: { locale: string }) {
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <dt className="text-xs text-muted-foreground">Tướng có thay đổi</dt>
-                <dd className="text-lg font-semibold tabular-nums">
+                <dd className="text-base font-semibold tabular-nums">
                   {changes.data ? formatNumber(changes.data.length) : "…"}
                 </dd>
               </div>
               <div className="border-l pl-3">
                 <dt className="text-xs text-muted-foreground">Ghi từ ghi chú cập nhật</dt>
-                <dd className="text-lg font-semibold tabular-nums">{changes.data ? formatNumber(fromNotes) : "…"}</dd>
+                <dd className="text-base font-semibold tabular-nums">{changes.data ? formatNumber(fromNotes) : "…"}</dd>
               </div>
             </dl>
             {pending > 0 && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                {pending} lịch phát hành đang chờ xác nhận áp dụng.
-              </p>
+              <p className="text-xs text-(--aov-warning)">{pending} lịch phát hành đang chờ xác nhận áp dụng.</p>
             )}
             <Button asChild variant="outline" size="sm">
               <Link to={`/game-configuration?season=${variant.seasonId ?? ""}&patch=${variant.id}`}>

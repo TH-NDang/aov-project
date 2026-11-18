@@ -9,9 +9,9 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { LaneIcon, PlayerPhoto, TeamLogo } from "@/features/esports/components/primitives"
 import { useRecords } from "@/features/esports/data/use-esports-data"
 import { LANE_LABELS } from "@/features/esports/model/labels"
-import { RecordPicker } from "@/features/tournaments/record-picker"
-import { TeamRosterSheet } from "@/features/tournaments/team-roster-sheet"
-import { tournamentApi, tournamentKeys } from "@/features/tournaments/tournament-api"
+import { RecordPicker } from "@/features/tournaments/components/record-picker"
+import { TeamRosterSheet } from "@/features/tournaments/components/team-roster-sheet"
+import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 import { rosterBoard } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
 import { selectClass } from "./plan-fields"
@@ -46,7 +46,7 @@ function Starter({ lane, rows, names }: { lane: Lane; rows: RosterMembershipCont
           <div key={row.playerId} className="flex min-w-0 items-center gap-2" title={row.note ?? undefined}>
             <PlayerPhoto name={nickname} url={names.players?.get(row.playerId)?.photoUrl} size={32} />
             <span className="min-w-0">
-              <span className="type-body block truncate font-semibold">{nickname}</span>
+              <span className="type-body block truncate">{nickname}</span>
               <span className="type-meta flex items-center gap-1">
                 <LaneIcon lane={lane} size={14} className="shrink-0" />
                 <span className="truncate">{LANE_LABELS[lane].short}</span>
@@ -166,7 +166,7 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <span className="type-meta w-4 text-right">{ws.plan.entrants.indexOf(entry) + 1}</span>
                 <TeamLogo team={view} size={32} />
-                <span className="type-body min-w-0 truncate font-semibold">{view.name}</span>
+                <span className="type-body min-w-0 truncate">{view.name}</span>
                 {editing && ws.canEdit ? (
                   <select
                     aria-label={`Trạng thái ${view.name}`}

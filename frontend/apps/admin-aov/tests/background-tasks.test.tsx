@@ -1,16 +1,16 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act, useEffect, useState } from "react"
 import { MemoryRouter, useNavigate } from "react-router"
 import { BackgroundTasksProvider, useBackgroundTasks } from "../src/app/background-tasks"
 import { PersistentWorkspace } from "../src/app/layout/persistent-workspace"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { ImportJob } from "../src/features/publishing/import-jobs"
+import type { ImportJob } from "../src/features/publishing/components/import/import-jobs"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("server dismissals survive fresh clients and reconcile failures without hiding new or running work", async () => {
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   let actor = { issuer: "test-issuer", subject: "editor", capabilities: ["hero:write"] }
   const job: ImportJob = {
     id: "completed-job",
@@ -55,29 +55,14 @@ test("server dismissals survive fresh clients and reconcile failures without hid
     }
     throw new Error(`Unexpected test request: ${path}`)
   }
-  const setGlobal = (key: string, value: unknown) => {
-    if (!originals.has(key)) originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
   let dom: JSDOM
   const openWindow = () => {
     dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/import" })
     Object.defineProperty(dom.window, "matchMedia", {
       value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
     })
-    for (const [key, value] of Object.entries({
-      React,
-      window: dom.window,
-      document: dom.window.document,
-      navigator: dom.window.navigator,
-      HTMLElement: dom.window.HTMLElement,
-      localStorage: dom.window.localStorage,
-      sessionStorage: dom.window.sessionStorage,
-      BroadcastChannel: undefined,
-      fetch: fetcher,
-      IS_REACT_ACT_ENVIRONMENT: true,
-    }))
-      setGlobal(key, value)
+    restoreGlobals()
+    restoreGlobals = installWindow(dom.window, { fetch: fetcher })
   }
   openWindow()
   const { verifySession, logout } = await import("../src/app/auth/session")
@@ -106,14 +91,7 @@ test("server dismissals survive fresh clients and reconcile failures without hid
     )
   const count = () => dom!.window.document.querySelectorAll('li > a[href="/hero/import"]').length
   const button = () => dom!.window.document.querySelector<HTMLButtonElement>("li > button[aria-label]")
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 100 && !condition(); attempt++) {
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    }
-    assert.ok(condition(), "Expected UI state was not reached")
-  }
+
   const refresh = async () =>
     act(async () => {
       await cache.refetchQueries({ queryKey: ["hero-import-jobs"] })
@@ -211,27 +189,14 @@ test("server dismissals survive fresh clients and reconcile failures without hid
     await logout()
     cache.clear()
     dom!.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 
 test("background work survives route exit and returns with progress and result intact", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/import" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   let finish!: () => void
   const pending = new Promise<void>((resolve) => {
     finish = resolve
@@ -327,9 +292,6 @@ test("background work survives route exit and returns with progress and result i
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

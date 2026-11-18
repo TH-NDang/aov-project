@@ -1,4 +1,4 @@
-import { Crosshair, Flag, Gem, ShoppingBag, Sparkles, Swords, type LucideIcon } from "lucide-react"
+import { Flag, ShoppingBag, Sparkles, Swords, type LucideIcon } from "lucide-react"
 import type { GameSeat, GameView } from "../../model/game-view"
 import { ITEM_ACTION_LABELS, OBJECTIVE_LABELS, type SeatKey, type TimelineEvent } from "../../model/timeline"
 
@@ -8,8 +8,6 @@ export const KIND_ICONS: Record<TimelineEvent["kind"], LucideIcon> = {
   ITEM: ShoppingBag,
   NOTE: Sparkles,
 }
-export const OBJECTIVE_ICON: LucideIcon = Gem
-export const FALLBACK_ICON: LucideIcon = Crosshair
 
 export function seatLookup(game: GameView) {
   const seats = new Map<SeatKey, GameSeat>(

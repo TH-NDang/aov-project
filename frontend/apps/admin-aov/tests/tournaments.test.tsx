@@ -12,7 +12,8 @@ import {
   minuteLabel,
   parseGameTime,
   selectionName,
-} from "../src/features/tournaments/tournament-model"
+} from "../src/features/tournaments/model/tournament-model"
+import { flush, installWindow } from "./fixtures/dom"
 
 const series: SeriesContent = {
   code: "final",
@@ -72,7 +73,7 @@ test("ID-only references resolve visible and accessible labels from their loaded
   assert.equal(selectionName({ id: "hero" }, heroes), "Errol")
   assert.equal(selectionName({ name: "Recorded hero" }, heroes), "Recorded hero")
   await withUi(async ({ render, document }) => {
-    const { CatalogPicker } = await import("../src/features/tournaments/catalog-picker")
+    const { CatalogPicker } = await import("../src/features/tournaments/components/catalog-picker")
     await render(<CatalogPicker value={{ id: "hero" }} options={heroes} label="Cấm 1" onChange={() => {}} />)
     const trigger = document.querySelector<HTMLButtonElement>(".tournament-catalog-trigger")
     assert.equal(trigger?.getAttribute("aria-label"), "Cấm 1: Errol")
@@ -116,11 +117,8 @@ async function withUi(
     IntersectionObserver: intersections.Observer,
     IS_REACT_ACT_ENVIRONMENT: true,
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, values)
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document
@@ -150,16 +148,13 @@ async function withUi(
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 
 test("equipment editor saves a six-slot observation without fabricating purchases or treating unknown as empty", async () => {
   await withUi(async ({ render, click, change, document }) => {
-    const { EquipmentEditor } = await import("../src/features/tournaments/equipment-editor")
+    const { EquipmentEditor } = await import("../src/features/tournaments/components/equipment-editor")
     let latest = emptyParticipant("TOP")
     function Host() {
       const [value, setValue] = useState(latest)
@@ -196,7 +191,7 @@ test("changing one game's season keeps its already observed picks and leaves oth
     })
   try {
     await withUi(async ({ render, change }) => {
-      const { GameScope } = await import("../src/features/tournaments/game-scope")
+      const { GameScope } = await import("../src/features/tournaments/components/game-scope")
       const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
       let latest = initialGame("series", series, 1)
       latest.sides[0].participants[0].hero = { id: "hero", name: "Airi" }
@@ -219,9 +214,7 @@ test("changing one game's season keeps its already observed picks and leaves oth
           <Host />
         </QueryClientProvider>,
       )
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 20))
-      })
+      await flush()
       await change("select:nth-of-type(1)", "VN")
       await change('select[aria-label="Mùa"]', "s3")
       assert.equal(latest.seasonId, "s3")
@@ -235,211 +228,9 @@ test("changing one game's season keeps its already observed picks and leaves oth
   }
 })
 
-test("team regions filter independently from name search", async () => {
-  await withUi(async ({ render, document, change }) => {
-    const { TeamRegistry } = await import("../src/features/tournaments/team-registry")
-    const entry = <T,>(id: string, content: T) => ({
-      id,
-      content,
-      version: 0,
-      createdAt: "2026-10-26T00:00:00Z",
-      updatedAt: "2026-10-26T00:00:00Z",
-      missingFields: [],
-    })
-    const teams = [
-      entry("team-vn", { code: "team-vn", name: "Vietnam Team", country: "VN" }),
-      entry("team-th", { code: "team-th", name: "Thailand Team", country: "TH" }),
-    ]
-    let region = ""
-    function Host() {
-      const [country, setCountry] = useState("")
-      return (
-        <TeamRegistry
-          teams={teams}
-          country={country}
-          search=""
-          canWrite={false}
-          onCountryChange={(country) => {
-            region = country
-            setCountry(country)
-          }}
-          onSearchChange={() => {}}
-          onEdit={() => assert.fail("Read-only must not edit")}
-        />
-      )
-    }
-    await render(<Host />)
-    assert.equal(document.querySelectorAll("tbody tr").length, 2)
-    await change('[aria-label="Lọc khu vực đội tuyển"]', "TH")
-    assert.equal(region, "TH")
-    assert.equal(document.querySelectorAll("tbody tr").length, 1)
-    assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Thailand Team/)
-    assert.equal(document.querySelectorAll('[aria-label^="Sửa đội"]').length, 0)
-  })
-})
-
-test("team identities open the editor through alias search while roster actions remain separate", async () => {
-  await withUi(async ({ render, document }) => {
-    const { TeamRegistry } = await import("../src/features/tournaments/team-registry")
-    let edited = ""
-    let roster = ""
-    await render(
-      <TeamRegistry
-        teams={[
-          {
-            id: "fw",
-            version: 0,
-            createdAt: "",
-            updatedAt: "",
-            missingFields: [],
-            content: {
-              code: "wanin-flashwolves",
-              name: "WANIN FlashWolves",
-              shortName: "FW",
-              aliases: ["Flash Wolves"],
-              country: "TW/HK/MO",
-            },
-          },
-        ]}
-        country=""
-        search="flash wolves"
-        canWrite
-        onCountryChange={() => {}}
-        onSearchChange={() => {}}
-        onEdit={(entry) => {
-          edited = entry.id
-        }}
-        onRoster={(entry) => {
-          roster = entry.id
-        }}
-      />,
-    )
-    const card = document.querySelector<HTMLButtonElement>('[aria-label="Sửa đội WANIN FlashWolves"]')
-    assert.ok(card)
-    assert.equal(card.tagName, "BUTTON")
-    assert.equal(card.querySelector("button"), null)
-    assert.match(card.title, /Flash Wolves/)
-    assert.match(card.textContent ?? "", /FW/)
-    await act(async () => card.click())
-    assert.equal(edited, "fw")
-    edited = ""
-    await act(async () =>
-      document.querySelector<HTMLButtonElement>('[aria-label="Đội hình WANIN FlashWolves"]')!.click(),
-    )
-    assert.equal(roster, "fw")
-    assert.equal(edited, "")
-  })
-})
-
-test("player identities support alias search, optional photos and country badges without inferring a current team", async () => {
-  await withUi(async ({ render, document }) => {
-    const { PlayerRegistry } = await import("../src/features/tournaments/player-registry")
-    let edited = ""
-    await render(
-      <PlayerRegistry
-        players={[
-          {
-            id: "player",
-            version: 0,
-            createdAt: "",
-            updatedAt: "",
-            missingFields: [],
-            content: {
-              code: "pro",
-              nickname: "Pro",
-              fullName: "Đặng Văn A",
-              aliases: ["Pro Old"],
-              country: "VN",
-              photoUrl: "https://img.example/player/version.png",
-            },
-          },
-        ]}
-        search="pro old"
-        country=""
-        canWrite
-        onSearchChange={() => {}}
-        onCountryChange={() => {}}
-        onEdit={(entry) => {
-          edited = entry.id
-        }}
-      />,
-    )
-    const card = document.querySelector<HTMLButtonElement>('[aria-label="Sửa tuyển thủ Pro"]')
-    assert.ok(card)
-    assert.equal(
-      card.querySelector('[aria-label="Ảnh Pro"] img')?.getAttribute("src"),
-      "https://img.example/player/version.png",
-    )
-    assert.match(card.textContent ?? "", /Việt Nam/)
-    assert.match(card.textContent ?? "", /Đặng Văn A/)
-    assert.equal(card.querySelector("button"), null)
-    await act(async () => card.click())
-    assert.equal(edited, "player")
-  })
-})
-
-test("registry rows load on scroll and start over for sorting and filters, and empty searches can be cleared without editing", async () => {
-  await withUi(async ({ render, document, change, click, intersections }) => {
-    const { PlayerRegistry } = await import("../src/features/tournaments/player-registry")
-    const players = Array.from({ length: 31 }, (_, index) => ({
-      id: `player-${index}`,
-      version: 0,
-      createdAt: "",
-      updatedAt: "",
-      missingFields: [],
-      content: {
-        code: `player-${index}`,
-        nickname: `Player ${String(index).padStart(2, "0")}`,
-        country: index === 30 ? "TH" : "VN",
-        aliases: index === 30 ? ["Tuyển thủ cuối"] : [],
-      },
-    }))
-    function Host({ search }: { search: string }) {
-      const [country, setCountry] = useState("")
-      const [cleared, setCleared] = useState(false)
-      return (
-        <PlayerRegistry
-          players={players}
-          search={cleared ? "" : search}
-          country={country}
-          canWrite={false}
-          onCountryChange={setCountry}
-          onSearchChange={() => setCleared(true)}
-          onEdit={() => assert.fail("Read-only must not edit")}
-        />
-      )
-    }
-    const scrollToEnd = () =>
-      act(async () => intersections.intersect(document.querySelector('[aria-label="Đang tải thêm tuyển thủ"]')!))
-    await render(<Host search="" />)
-    assert.equal(document.querySelectorAll("tbody tr").length, 25)
-    assert.match(document.body.textContent ?? "", /25 trong 31 tuyển thủ/)
-    await scrollToEnd()
-    assert.equal(document.querySelectorAll("tbody tr").length, 31)
-    assert.match(document.body.textContent ?? "", /31 tuyển thủ/)
-    assert.equal(document.querySelector('[aria-label="Đang tải thêm tuyển thủ"]'), null)
-
-    await change('[aria-label="Sắp xếp tuyển thủ"]', "desc")
-    assert.equal(document.querySelectorAll("tbody tr").length, 25)
-    assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Player 30/)
-    await scrollToEnd()
-    assert.equal(document.querySelectorAll("tbody tr").length, 31)
-    await render(<Host search="tuyen thu cuoi" />)
-    assert.equal(document.querySelectorAll("tbody tr").length, 1)
-    assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Player 30/)
-
-    await change('[aria-label="Lọc quốc gia tuyển thủ"]', "VN")
-    assert.equal(document.querySelectorAll("tbody tr").length, 0)
-    assert.match(document.body.textContent ?? "", /Không tìm thấy tuyển thủ/)
-    await click("Xóa bộ lọc")
-    assert.equal(document.querySelectorAll("tbody tr").length, 25)
-    assert.equal(document.querySelectorAll('[aria-label^="Sửa tuyển thủ"]').length, 0)
-  })
-})
-
 test("tournament list opens the selected record and displays recorded match counts", async () => {
   await withUi(async ({ render, document }) => {
-    const { TournamentList } = await import("../src/features/tournaments/tournament-list")
+    const { TournamentList } = await import("../src/features/tournaments/components/tournament-list")
     let opened = ""
     await render(
       <TournamentList

@@ -7,13 +7,14 @@ import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { PageHeader } from "@/components/page-header"
 import { EsportsPage, LoadError, type Access } from "@/features/esports/pages/esports-shell"
-import { ManagementEmpty, ManagementLoading, ManagementPanel } from "@/features/tournaments/management-list"
-import { CreateProfileSheet } from "../create-profile-sheet"
-import { ProfileCountry } from "../profile-country"
-import { findProfileCountry } from "../profile-country-options"
-import { profileKindIcons, profileRoleIcons } from "../profile-icons"
+import { ManagementEmpty, ManagementLoading, ManagementPanel } from "@/features/tournaments/components/management-list"
+import { CreateProfileSheet } from "../components/create-profile-sheet"
+import { ProfileCountry } from "../components/profile-country"
+import { findProfileCountry } from "../model/profile-country-options"
+import { profileKindIcons, profileRoleIcons } from "../components/profile-icons"
 import { directoryApi, directoryKeys } from "./directory-api"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { formatNumber } from "@/lib/text"
 
 export type PersonnelGroup = "COACHING" | "BROADCAST"
 
@@ -70,7 +71,7 @@ function DirectoryNav({ current, actorKey }: { current: DirectorySection; actorK
           >
             <Icon aria-hidden="true" className="hidden size-5 shrink-0 @5xl/directory-nav:block" />
             {section.label}
-            {total !== undefined && <span className="type-meta tabular-nums">{total.toLocaleString("vi-VN")}</span>}
+            {total !== undefined && <span className="type-meta tabular-nums">{formatNumber(total)}</span>}
           </Link>
         )
       })}
@@ -152,7 +153,7 @@ export function DirectoryFooter({
     <>
       <InfiniteScroll query={query} label={`Đang tải thêm ${noun}`} />
       <p className="type-meta border-t px-3 py-3 tabular-nums @3xl:px-4" role="status">
-        {total.toLocaleString("vi-VN")} {noun}
+        {formatNumber(total)} {noun}
       </p>
     </>
   )

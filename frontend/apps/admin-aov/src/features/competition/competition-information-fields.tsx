@@ -4,10 +4,10 @@ import type { CompetitionPlan } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import { LocalPrizeText } from "@aov/ui/components/local-money"
 import { Textarea } from "@aov/ui/components/textarea"
-import { Field, Section } from "@/features/community/profile-form-primitives"
+import { Field, Section } from "@/features/community/components/profile-form-primitives"
 import { CompetitionChoiceField } from "./competition-choice-field"
 import { CompetitionEditSheet } from "./competition-edit-sheet"
-import { PageReferencePicker } from "@/features/community/page-reference-picker"
+import { PageReferencePicker } from "@/features/community/components/page-reference-picker"
 import {
   circuitOptions,
   cityOptions,

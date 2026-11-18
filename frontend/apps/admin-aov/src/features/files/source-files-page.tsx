@@ -30,13 +30,13 @@ import { MasterDetail } from "@/components/master-detail"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { Page, PageHeader } from "@/components/page-header"
 import { SearchField } from "@/components/search-field"
-import { control } from "../publishing/fields"
+import { control } from "../publishing/components/fields"
 import { CollectionFormSheet } from "./collection-form-sheet"
 import { FileTabs } from "./file-tabs"
 import {
-  deleteCollection,
   refreshSourceFiles,
   SOURCE_CATEGORIES,
+  useDeleteCollection,
   useSourceCollection,
   useSourceCollections,
   useSourceFiles,
@@ -49,6 +49,7 @@ import { CATEGORY_HINTS, CATEGORY_LABELS, fileKind, formatCount, formatStorage }
 import { OrphansSheet } from "./orphans-sheet"
 import { SourceFileSheet } from "./source-file-sheet"
 import { SourceUploadDialog } from "./source-upload-dialog"
+import { ErrorState, LoadingState } from "@/components/query-state"
 
 export const CATEGORY_ICONS: Record<SourceCategory, typeof Archive> = {
   HERO_CAPTURE: ScanFace,
@@ -289,8 +290,8 @@ function CollectionDetail({
   onOpenFile: (id: string) => void
   onDeleted: () => void
 }) {
-  const client = useQueryClient()
   const collection = useSourceCollection(collectionId)
+  const deletion = useDeleteCollection()
   const [query, setQuery] = useState("")
   const [uploading, setUploading] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -302,16 +303,13 @@ function CollectionDetail({
 
   if (collection.isLoadingError)
     return (
-      <p role="alert" className="p-4 type-body text-destructive">
-        Không đọc được bộ tệp này; có thể bộ đã bị xóa.
-      </p>
+      <ErrorState
+        className="p-4"
+        message="Không đọc được bộ tệp này; có thể bộ đã bị xóa."
+        onRetry={() => void collection.refetch()}
+      />
     )
-  if (!collection.data)
-    return (
-      <p role="status" className="p-4 type-meta">
-        Đang tải bộ tệp…
-      </p>
-    )
+  if (!collection.data) return <LoadingState className="p-4">Đang tải bộ tệp…</LoadingState>
   const current = collection.data
   const Icon = CATEGORY_ICONS[current.category]
 
@@ -322,9 +320,7 @@ function CollectionDetail({
       confirmLabel: "Xóa bộ",
     })
     if (!accepted) return
-    await deleteCollection(current)
-    await refreshSourceFiles(client)
-    onDeleted()
+    deletion.mutate(current, { onSuccess: onDeleted })
   }
 
   return (
@@ -351,9 +347,9 @@ function CollectionDetail({
                 Sửa thông tin
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => void remove()}>
+              <DropdownMenuItem disabled={deletion.isPending} onSelect={() => void remove()}>
                 <Trash2 />
-                Xóa bộ
+                {deletion.isPending ? "Đang xóa…" : "Xóa bộ"}
               </DropdownMenuItem>
             </PageActionsMenu>
           )}

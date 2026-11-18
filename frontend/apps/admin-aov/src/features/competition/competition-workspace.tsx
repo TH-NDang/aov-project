@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react"
-import { useParams, useSearchParams, useBlocker } from "react-router"
+import { useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   CalendarDays,
@@ -20,7 +20,8 @@ import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { communityRequest } from "@/app/auth/session"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
-import { pageApi, pageKeys, publicSite } from "@/features/community/page-api"
+import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
+import { pageApi, pageKeys, publicSite } from "@/features/community/api/page-api"
 import { StatusPill, TierBadge } from "@/features/esports/components/primitives"
 import { useRosters, useTournamentGames, useTournamentSeries } from "@/features/esports/data/use-esports-data"
 import {
@@ -31,10 +32,10 @@ import {
   tournamentPath,
   type Access,
 } from "@/features/esports/pages/esports-shell"
-import { RegistryEditor } from "@/features/tournaments/registry-editor"
-import { tournamentApi, tournamentKeys } from "@/features/tournaments/tournament-api"
-import { tournamentDates } from "@/features/tournaments/tournament-metadata"
-import { partLabel, type EventFamily } from "@/features/tournaments/tournament-parts"
+import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
+import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { tournamentDates } from "@/features/tournaments/components/tournament-metadata"
+import { partLabel, type EventFamily } from "@/features/tournaments/model/tournament-parts"
 import { competitionApi, competitionKeys } from "./competition-api"
 import { EventPartTabs } from "./workspace/event-parts"
 import { FinalStep } from "./workspace/final-step"
@@ -155,8 +156,12 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     enabled: !!entry.publishedAt,
   })
 
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) => dirty && currentLocation.pathname !== nextLocation.pathname,
+  useLeaveGuard(leavingPage(dirty), () =>
+    confirmDiscard({
+      title: "Rời trang?",
+      description: "Bạn đang có thay đổi chưa lưu.",
+      confirmLabel: "Rời trang, bỏ thay đổi",
+    }),
   )
   useEffect(() => {
     if (!dirty) {
@@ -198,6 +203,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       client.setQueryData([...competitionKeys, access.actorKey, entry.id], value)
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
     },
+    meta: { silent: true },
   })
   const change = useCallback(<K extends keyof CompetitionPlan>(key: K, value: CompetitionPlan[K]) => {
     setPlan((old) => ({ ...old, [key]: value }))
@@ -418,9 +424,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0">
-                <span
-                  className={cn("type-body block font-semibold whitespace-nowrap", !active && "text-muted-foreground")}
-                >
+                <span className={cn("type-body block whitespace-nowrap", !active && "text-muted-foreground")}>
                   {STEP_LABELS[id]}
                 </span>
                 <span className="type-meta flex items-center gap-1 whitespace-nowrap">
@@ -436,17 +440,6 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         })}
       </nav>
       {mutate.error && <LoadError error={mutate.error} onRetry={() => mutate.reset()} />}
-      {blocker.state === "blocked" && (
-        <div role="alertdialog" aria-label="Thay đổi chưa lưu" className="rounded-xl border bg-card p-5">
-          <p className="mb-3">Bạn đang có thay đổi chưa lưu.</p>
-          <Button variant="outline" onClick={() => blocker.reset()}>
-            Ở lại chỉnh sửa
-          </Button>{" "}
-          <Button variant="destructive" onClick={() => blocker.proceed()}>
-            Rời trang, bỏ thay đổi
-          </Button>
-        </div>
-      )}
       <div className="min-w-0">
         {step === "overview" && (
           <OverviewStep

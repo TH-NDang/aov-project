@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 import { useQueries, useQueryClient } from "@tanstack/react-query"
-import { backendRequest } from "@/app/auth/session"
+import { linksBySha256 } from "./files-api"
 
 /** Links live 10 minutes (ADR-030 section 6); an older one is asked again before an image needs it. */
 export const SOURCE_LINK_FRESH_MS = 8 * 60_000
@@ -33,11 +33,8 @@ async function flush() {
     const chunk = new Set(unique.slice(start, start + BATCH))
     const callers = batch.filter((entry) => chunk.has(entry.sha256))
     try {
-      const response = await backendRequest<{ items: SourceImageLink[]; missing: string[] }>(
-        "/admin/source-files/links",
-        { method: "POST", body: JSON.stringify({ sha256: [...chunk] }) },
-      )
-      const found = new Map(response.items.map((link) => [link.sha256, link]))
+      const response = await linksBySha256([...chunk])
+      const found = new Map<string, SourceImageLink>(response.items.map((link) => [link.sha256, link]))
       for (const entry of callers) entry.resolve(found.get(entry.sha256) ?? null)
     } catch (error) {
       for (const entry of callers) entry.reject(error)

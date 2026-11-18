@@ -1,8 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
-import { createMediaIconResolver, invalidateMediaAsset, invalidateMediaAssets } from "../src/features/media/media-cache"
-import type { AssetDetail } from "../src/features/publishing/types"
+import {
+  createMediaIconResolver,
+  invalidateMediaAsset,
+  invalidateMediaAssets,
+} from "../src/features/media/api/media-cache"
+import type { AssetDetail } from "../src/features/publishing/api/types"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 
 const entity: EntityReference = {
@@ -26,19 +30,19 @@ test("batch credits refresh a shared list once and invalidate every affected det
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   let reads = 0
   const observer = new QueryObserver(client, {
-    queryKey: ["managed-images", "infinite", "", true],
+    queryKey: ["media", "list", "library", "", true],
     queryFn: async () => ++reads,
   })
   const stop = observer.subscribe(() => {})
   try {
-    for (const id of ["first", "second", "unrelated"]) client.setQueryData(["managed-image", id], asset(1))
+    for (const id of ["first", "second", "unrelated"]) client.setQueryData(["media", "asset", id, "managed"], asset(1))
     await settle()
     assert.equal(reads, 1)
     await invalidateMediaAssets(client, ["first", "second", "first"])
     assert.equal(reads, 2)
-    assert.equal(client.getQueryState(["managed-image", "first"])?.isInvalidated, true)
-    assert.equal(client.getQueryState(["managed-image", "second"])?.isInvalidated, true)
-    assert.equal(client.getQueryState(["managed-image", "unrelated"])?.isInvalidated, false)
+    assert.equal(client.getQueryState(["media", "asset", "first", "managed"])?.isInvalidated, true)
+    assert.equal(client.getQueryState(["media", "asset", "second", "managed"])?.isInvalidated, true)
+    assert.equal(client.getQueryState(["media", "asset", "unrelated", "managed"])?.isInvalidated, false)
   } finally {
     stop()
     client.clear()
@@ -48,16 +52,16 @@ test("batch credits refresh a shared list once and invalidate every affected det
 test("media version changes invalidate all matching details and lists without fetching unused assets", async () => {
   const client = new QueryClient()
   const matching = [
-    ["publishing-asset", "head"],
-    ["hero-content-asset", "head"],
-    ["managed-image", "head"],
-    ["profile-draft-avatar", "head"],
-    ["publishing-assets", "HERO_HEAD", 0],
-    ["managed-images", "", 0],
+    ["media", "asset", "head", "detail"],
+    ["media", "asset", "head", "content"],
+    ["media", "asset", "head", "managed"],
+    ["media", "asset", "head", "avatar"],
+    ["media", "list", "picker", "HERO_HEAD", 0],
+    ["media", "list", "library", "", 0],
   ]
   const unrelated = [
-    ["publishing-asset", "other"],
-    ["hero-content-asset", "other"],
+    ["media", "asset", "other", "detail"],
+    ["media", "asset", "other", "content"],
     ["publishing-preview", "hero", "revision"],
   ]
   try {
@@ -120,7 +124,7 @@ test("an old in-flight metadata response cannot replace a refreshed version", as
     await invalidateMediaAsset(client, "head")
     finishOld(asset(1))
     await settle()
-    assert.equal(client.getQueryData<AssetDetail>(["publishing-asset", "head"])?.currentUrl, "/media/v2.webp")
+    assert.equal(client.getQueryData<AssetDetail>(["media", "asset", "head", "detail"])?.currentUrl, "/media/v2.webp")
     assert.equal(urls.at(-1), "/media/v2.webp")
   } finally {
     stop()

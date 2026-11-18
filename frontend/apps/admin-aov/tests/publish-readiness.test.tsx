@@ -13,16 +13,17 @@ import {
   readinessRows,
   readinessSummary,
   type HeroPublishReadiness,
-} from "../src/features/publishing/publish-readiness"
+} from "../src/features/publishing/model/publish-readiness"
 import {
   closeHeroLocation,
   heroFixLocation,
   heroSourceLocation,
   readHeroLocation,
-} from "../src/features/publishing/hero-location"
-import type { Revision } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/hero-location"
+import type { Revision } from "../src/features/publishing/api/types"
 import { createHeroFixture, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 const standard = "standard"
 const revision = (
@@ -274,29 +275,11 @@ async function withDocument(
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    DocumentFragment: dom.window.DocumentFragment,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: routedFetch,
-    BroadcastChannel: undefined,
     IntersectionObserver: observer,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const reactRoot = createRoot(dom.window.document.getElementById("root")!)
@@ -324,11 +307,7 @@ async function withDocument(
           ),
         ),
       waitFor: async (condition, message) => {
-        for (let attempt = 0; attempt < 500 && !condition(); attempt++)
-          await act(async () => {
-            await new Promise((resolve) => setTimeout(resolve, 10))
-          })
-        assert.ok(condition(), message)
+        await waitFor(condition, { message, timeout: 5000 })
       },
       click: (element) => act(async () => element.click()),
       search: () => search,
@@ -337,10 +316,7 @@ async function withDocument(
     await act(async () => reactRoot.unmount())
     await logout()
     cache.clear()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
+    restoreGlobals()
     dom.window.close()
   }
 }
@@ -387,7 +363,7 @@ test("the overview page loads once, keeps filters in the address, reveals rows o
     return Response.json({ code: "NOT_FOUND", detail: "Not in this test" }, { status: 404 })
   }
   await withDocument(fetcher, intersections.Observer, async ({ document, show, waitFor, click, search }) => {
-    const { PublishReadinessPage } = await import("../src/features/publishing/publish-readiness-page")
+    const { PublishReadinessPage } = await import("../src/features/publishing/pages/publish-readiness-page")
     const rendered = () =>
       [...document.querySelectorAll('tbody button[aria-label^="Xem tướng "]')].map((button) =>
         button.getAttribute("aria-label")!.replace("Xem tướng ", ""),
@@ -460,7 +436,7 @@ for (const canWrite of [true, false])
       return fixture.fetcher(input, init)
     }
     await withDocument(fetcher, intersectionHarness().Observer, async ({ document, show, waitFor, search }) => {
-      const { PublishingWorkspace } = await import("../src/features/publishing/publishing-page")
+      const { PublishingWorkspace } = await import("../src/features/publishing/pages/publishing-page")
       const editor = () => document.querySelector('[role="region"][aria-label="Chỉnh sửa nội dung"]')
       await show(
         <PublishingWorkspace heroId="fixture-hero" onUnsavedChange={() => undefined} />,
@@ -486,7 +462,7 @@ for (const canWrite of [true, false])
 
 test("source images still to capture show per hero, rank the list, open the skill and follow new captures", async () => {
   const { SOURCE_COVERAGE_REFRESH_MS, sourceCoverageKey } =
-    await import("../src/features/publishing/use-source-coverage")
+    await import("../src/features/publishing/api/use-source-coverage")
   const statsMissing = (code: string) =>
     hero(code, code[0]!.toUpperCase() + code.slice(1), {
       revisions: [revision(code, `${code}-1`, "DRAFT")],
@@ -617,7 +593,7 @@ test("source images still to capture show per hero, rank the list, open the skil
     fetcher,
     intersectionHarness().Observer,
     async ({ document, cache, show, waitFor, click, search }) => {
-      const { PublishReadinessPage } = await import("../src/features/publishing/publish-readiness-page")
+      const { PublishReadinessPage } = await import("../src/features/publishing/pages/publish-readiness-page")
       const rendered = () =>
         [...document.querySelectorAll('tbody button[aria-label^="Xem tướng "]')].map((button) =>
           button.getAttribute("aria-label")!.replace("Xem tướng ", ""),

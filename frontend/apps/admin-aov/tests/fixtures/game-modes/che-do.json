@@ -1,0 +1,35 @@
+{
+  "note": "A small copy of the shape of the lobby manifest of the sanh-che-do source collection.",
+  "modes": [
+    {
+      "code": "co-lien-quan",
+      "name": "Cờ Liên Quân",
+      "group": "ENTERTAINMENT",
+      "order": 1,
+      "summary": "Xếp quân cờ, ghép Phe/Nghề và đấu với bảy người khác.",
+      "playersLabel": "8 người",
+      "duration": { "minMinutes": 20, "maxMinutes": 30 },
+      "availability": { "status": "ALWAYS_OPEN", "gameLabel": "Thường trực", "startsOn": null, "endsOn": null },
+      "art": "goc-da-che-uid/sanh-co-lien-quan.png",
+      "artSource": {
+        "label": "Sảnh chế độ trong game",
+        "observedAt": "2026-11-08T15:03:00Z",
+        "note": "Cắt từ goc-da-che-uid/sanh-co-lien-quan.png, ảnh chụp sảnh ngày 08/11/2026."
+      },
+      "guideKind": "AUTO_CHESS",
+      "rules": [{ "title": "Luật chơi", "body": "Mỗi vòng mua quân và xếp đội hình." }],
+      "sources": [{ "label": "Ảnh chụp sảnh", "observedOn": "2026-11-08" }]
+    },
+    {
+      "code": "dau-moc",
+      "name": "Đấu mộc",
+      "group": "PVP",
+      "order": 2,
+      "availability": { "status": "LIMITED", "gameLabel": "Mở hữu hạn 14 giờ", "startsOn": null, "endsOn": null },
+      "art": null,
+      "guideKind": "NONE",
+      "rules": [],
+      "sources": []
+    }
+  ]
+}

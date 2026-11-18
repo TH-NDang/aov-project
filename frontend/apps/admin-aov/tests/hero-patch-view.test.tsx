@@ -2,12 +2,12 @@ import assert from "node:assert/strict"
 import { registerHooks } from "node:module"
 import { test } from "node:test"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import type { Revision } from "../src/features/publishing/types"
+import type { Revision } from "../src/features/publishing/api/types"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("the timeline uses the new published baseline, preserves it across patches and offers automatic selection", async () => {
   // JSDOM verifies interaction and content; stylesheet rendering belongs to browser checks.
@@ -119,23 +119,10 @@ test("the timeline uses the new published baseline, preserves it across patches 
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLFormElement: dom.window.HTMLFormElement,
-    DocumentFragment: dom.window.DocumentFragment,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: Infinity } },
   })
@@ -149,16 +136,10 @@ test("the timeline uses the new published baseline, preserves it across patches 
     ],
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroPatchTimeline } = await import("../src/features/publishing/hero-patch-view")
+  const { HeroPatchTimeline } = await import("../src/features/publishing/components/patch-changes/hero-patch-view")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 150 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
-      })
-    assert.ok(condition(), dom.window.document.body.textContent ?? "Missing timeline state")
-  }
+
   try {
     await verifySession()
     await act(async () =>
@@ -216,7 +197,8 @@ test("the timeline uses the new published baseline, preserves it across patches 
     await waitFor(() => dom.window.document.body.textContent!.includes("8 seconds from old anchor"))
     assert.equal(requests.at(-1)!.searchParams.has("anchorRevisionId"), false)
 
-    const { PatchChangeEditor } = await import("../src/features/publishing/patch-change-editor")
+    const { PatchChangeEditor } =
+      await import("../src/features/publishing/components/patch-changes/patch-change-editor")
     await act(async () =>
       root.render(
         <QueryClientProvider client={client}>
@@ -252,10 +234,7 @@ test("the timeline uses the new published baseline, preserves it across patches 
     client.clear()
     logout()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
     loader.deregister()
   }
 })

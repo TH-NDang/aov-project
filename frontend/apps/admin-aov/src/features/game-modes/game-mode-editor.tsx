@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
 import { ArrowDown, ArrowLeft, ArrowUp, Copy, ListPlus, Plus, Trash2, Upload } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
@@ -14,6 +15,15 @@ import { AVAILABILITY_LABEL, missingLabel } from "./game-mode-import"
 import { confirmAction } from "@/components/confirm-dialog"
 import { HeroCodePicker, RowMenu } from "./entry-controls"
 import { RulesEditor } from "./rules-editor"
+
+/** Discarding a draft drops every change saved in it, so it asks first. */
+export const confirmDraftDiscard = () =>
+  confirmAction({
+    title: "Bỏ bản nháp này?",
+    description: "Mọi thay đổi đã lưu trong bản nháp sẽ mất. Bản đang xuất bản trên Wiki giữ nguyên.",
+    confirmLabel: "Bỏ nháp",
+    cancelLabel: "Giữ bản nháp",
+  })
 
 export const field = "grid gap-1"
 export const selectClass = "h-9 rounded-md border bg-transparent px-3 type-body"
@@ -72,6 +82,7 @@ export function GameModeEditorPage() {
         ],
       ),
     onError: (error) => setMessage(errorMessage(error)),
+    meta: { silent: true },
   })
 
   if (!mode.data || !content) return <Page>{mode.isError ? errorMessage(mode.error) : "Đang tải…"}</Page>
@@ -103,7 +114,9 @@ export function GameModeEditorPage() {
               <Button
                 variant="outline"
                 disabled={!canWrite || action.isPending}
-                onClick={() => action.mutate("discard")}
+                onClick={async () => {
+                  if (await confirmDraftDiscard()) action.mutate("discard")
+                }}
               >
                 Bỏ nháp
               </Button>
@@ -367,7 +380,7 @@ export function GameModeEditorPage() {
             <ul className="type-meta grid gap-1">
               {history.data?.map((revision) => (
                 <li key={revision.id}>
-                  #{revision.revisionNo} · {revision.state} · {new Date(revision.updatedAt).toLocaleString("vi-VN")}
+                  #{revision.revisionNo} · {revision.state} · <LocalTime value={revision.updatedAt} />
                   {revision.changeNote && ` · ${revision.changeNote}`}
                 </li>
               ))}

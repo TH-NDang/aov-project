@@ -5,8 +5,8 @@ import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
 import { confirmAction } from "@/components/confirm-dialog"
-import { GameScope } from "@/features/tournaments/game-scope"
-import { RecordLifecycleActions } from "@/features/tournaments/record-lifecycle-actions"
+import { GameScope } from "@/features/tournaments/components/game-scope"
+import { RecordLifecycleActions } from "@/features/tournaments/components/record-lifecycle-actions"
 import { RelativeDate } from "../components/relative-date"
 
 /** What this panel edits: how the game's catalog is read, where it sits in the match, and a note. */

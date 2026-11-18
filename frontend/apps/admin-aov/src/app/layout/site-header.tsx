@@ -20,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tool
 import { CommandMenu } from "./command-menu"
 import { usePageTabs } from "./page-tabs"
 import { PageTabOverlay, SortablePageTab } from "./sortable-page-tab"
-import { catalogTabTarget, useSavedCatalogScope } from "@/features/publishing/catalog-scope-memory"
+import { catalogTabTarget, useSavedCatalogScope } from "@/features/publishing/components/catalog/catalog-scope-memory"
 import { useHotkeys } from "../hotkeys"
 
 export interface RouteHandle {

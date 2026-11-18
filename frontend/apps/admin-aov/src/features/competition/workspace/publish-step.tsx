@@ -1,7 +1,7 @@
 import { Check, ChevronRight, CircleAlert, Clock3, ExternalLink, Send } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { LocalTime } from "@aov/ui/components/local-time"
-import { publicSite } from "@/features/community/page-api"
+import { publicSite } from "@/features/community/api/page-api"
 import { STEP_LABELS, type PendingChange, type RecordingTotals, type WorkspaceCheck } from "./model"
 import { Chip, Panel, Progress, type Workspace } from "./parts"
 

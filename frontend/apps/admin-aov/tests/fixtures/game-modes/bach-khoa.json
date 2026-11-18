@@ -1,0 +1,136 @@
+{
+  "note": "A small copy of the shape of the transcribed auto-chess encyclopedia; names and figures are made up.",
+  "edition": "2026-11-08",
+  "observedOn": "2026-11-08",
+  "summary": null,
+  "rules": [],
+  "traits": [
+    {
+      "code": "ma-thuat",
+      "kind": "FACTION",
+      "name": "Ma thuật",
+      "icon": "du-lieu/icon/phe-ma-thuat.png",
+      "tiers": [
+        { "count": 2, "effect": "+10 Công phép" },
+        { "count": 4, "effect": "+30 Công phép" }
+      ]
+    },
+    {
+      "code": "chien-binh",
+      "kind": "CLASS",
+      "name": "Chiến binh",
+      "icon": "du-lieu/icon/nghe-chien-binh.png",
+      "tiers": [{ "count": 3, "effect": "+100 Máu tối đa" }]
+    }
+  ],
+  "units": [
+    {
+      "code": "edras",
+      "name": "Edras",
+      "cost": 1,
+      "traitCodes": ["ma-thuat"],
+      "portrait": "du-lieu/quan/edras.png",
+      "skill": {
+        "name": "Lưỡi gió",
+        "description": null,
+        "icon": "du-lieu/chieu/edras.png",
+        "values": []
+      },
+      "complete": true
+    },
+    {
+      "code": "ignis",
+      "name": "Ignis",
+      "cost": 3,
+      "traitCodes": [],
+      "portrait": "du-lieu/quan/ignis.png",
+      "skill": null,
+      "complete": false
+    },
+    {
+      "code": "violet",
+      "name": "Violet",
+      "cost": 2,
+      "traitCodes": ["chien-binh", "ma-thuat"],
+      "portrait": "du-lieu/quan/violet.png",
+      "skill": null,
+      "complete": true
+    }
+  ],
+  "itemGroups": [{ "code": "vu-khi", "name": "Vũ khí", "slotCount": 3 }],
+  "items": [
+    {
+      "code": "kiem",
+      "name": "Kiếm",
+      "effect": "+10 Công vật lý",
+      "groupCode": "vu-khi",
+      "icon": "du-lieu/do/kiem.png"
+    },
+    { "code": "khien", "name": "Khiên", "effect": null, "groupCode": "vu-khi", "icon": null }
+  ],
+  "blessings": [
+    {
+      "code": "phuc-vang",
+      "tier": "NORMAL",
+      "name": "Phúc vàng",
+      "description": "+2 vàng mỗi vòng.",
+      "icon": "du-lieu/chuc-phuc/phuc-vang.png"
+    }
+  ],
+  "quests": [{ "code": "nhiem-vu-1", "task": "Thắng 3 vòng liên tiếp", "reward": "1 chúc phúc" }],
+  "lineups": [
+    {
+      "code": "ma-thuat-4",
+      "name": "Ma thuật 4",
+      "units": [
+        { "unitCode": "edras", "carry": true, "itemCodes": ["kiem"] },
+        { "unitCode": "violet", "carry": false, "itemCodes": [] }
+      ],
+      "emblems": [],
+      "blessingCodes": ["phuc-vang"]
+    }
+  ],
+  "sources": [{ "label": "Bách khoa trong game", "observedOn": "2026-11-08" }],
+  "imageSources": {
+    "du-lieu/icon/phe-ma-thuat.png": {
+      "label": "Bách khoa Cờ Liên Quân trong game",
+      "observedAt": "2026-11-08T15:03:00Z",
+      "note": "Cắt từ co-v2.zip: icon/phe-ma-thuat.png"
+    },
+    "du-lieu/icon/nghe-chien-binh.png": {
+      "label": "Bách khoa Cờ Liên Quân trong game",
+      "observedAt": "2026-11-08T15:03:00Z",
+      "note": "Cắt từ co-v2.zip: icon/nghe-chien-binh.png"
+    },
+    "du-lieu/quan/edras.png": {
+      "label": "Bách khoa Cờ Liên Quân trong game",
+      "observedAt": "2026-11-08T15:03:00Z",
+      "note": "Cắt từ co-v2.zip: quan/edras.png"
+    },
+    "du-lieu/chieu/edras.png": {
+      "label": "Bách khoa Cờ Liên Quân trong game",
+      "observedAt": "2026-11-08T15:03:00Z",
+      "note": "Cắt từ co-v2.zip: chieu/edras.png"
+    },
+    "du-lieu/quan/ignis.png": {
+      "label": "Bách khoa Cờ Liên Quân trong game",
+      "observedAt": "2026-11-08T15:03:00Z",
+      "note": "Cắt từ co-v2.zip: quan/ignis.png"
+    },
+    "du-lieu/quan/violet.png": {
+      "label": "Bách khoa Cờ Liên Quân trong game",
+      "observedAt": "2026-11-08T15:03:00Z",
+      "note": "Cắt từ co-v2.zip: quan/violet.png"
+    },
+    "du-lieu/do/kiem.png": {
+      "label": "Bách khoa Cờ Liên Quân trong game",
+      "observedAt": "2026-11-08T15:03:00Z",
+      "note": "Cắt từ co-v2.zip: do/kiem.png"
+    },
+    "du-lieu/chuc-phuc/phuc-vang.png": {
+      "label": "Bách khoa Cờ Liên Quân trong game",
+      "observedAt": "2026-11-08T15:03:00Z",
+      "note": "Cắt từ co-v2.zip: chuc-phuc/phuc-vang.png"
+    }
+  }
+}

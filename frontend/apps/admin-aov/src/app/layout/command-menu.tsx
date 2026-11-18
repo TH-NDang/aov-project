@@ -17,13 +17,14 @@ import { MEDIA_NAV, NAV_ITEMS } from "@/app/nav"
 import { NavIcon } from "@/app/nav-icon"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
-import { defaultRulesetId } from "@/features/publishing/default-ruleset"
-import { HeroAsset } from "@/features/publishing/hero-asset"
-import { useContentLocale } from "@/features/publishing/publication-overview"
-import { createPublishingApi } from "@/features/publishing/publishing-api"
-import { useWarehouseCatalog } from "@/features/warehouse/warehouse-api"
-import { warehouseName } from "@/features/warehouse/warehouse-types"
-import { commandFilter, formatNumber } from "@/lib/text"
+import { defaultRulesetId } from "@/features/publishing/model/setup/default-ruleset"
+import { HeroAsset } from "@/features/publishing/components/hero-asset"
+import { useContentLocale } from "@/features/publishing/api/publication-overview"
+import { createPublishingApi } from "@/features/publishing/api/publishing-api"
+import { useWarehouseCatalog } from "@/features/warehouse/api/warehouse-api"
+import { warehouseName } from "@aov/ui/lib/warehouse-content"
+import { commandFilter } from "@/lib/text"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 const publishing = createPublishingApi(backendRequest)
 
@@ -123,7 +124,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                     <span>{warehouseName(item, locale)}</span>
                     {item.content.price !== null && (
                       <span className="ml-auto text-xs text-muted-foreground">
-                        {formatNumber(item.content.price)} vàng
+                        {formatGameNumber(item.content.price)} vàng
                       </span>
                     )}
                   </CommandItem>

@@ -5,18 +5,12 @@ import type {
   PlannedMatch,
   TeamContent,
 } from "@aov/community-contracts"
-import { Field } from "@/features/community/profile-fields"
+import { Field } from "@/features/community/components/profile-form-primitives"
 import { CompetitionChoiceField } from "../competition-choice-field"
 import { bestOfOptions, stageNameOptions } from "../competition-field-options"
 import { FORMAT_NAMES } from "./model"
 
 export const selectClass = "h-10 w-full rounded-md border bg-background px-3 text-sm"
-
-export function localInputTime(value?: string | null) {
-  if (!value) return ""
-  const date = new Date(value)
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
-}
 
 export function BestOfField({
   label,

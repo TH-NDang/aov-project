@@ -1,12 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { QueryClient } from "@tanstack/react-query"
-import { invalidateHeroCatalogs } from "../src/features/publishing/publishing-cache"
+import { invalidateHeroCatalogs } from "../src/features/publishing/api/publishing-cache"
 import {
   characterImageKeys,
   createCharacterImageApi,
   imageSectionChange,
-} from "../src/features/media/character-image-api"
+} from "../src/features/media/api/character-image-api"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 
 test("hero mutations invalidate every cached media role and badge locale without unrelated queries", async () => {

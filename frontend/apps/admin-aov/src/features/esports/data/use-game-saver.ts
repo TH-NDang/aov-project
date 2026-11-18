@@ -6,8 +6,8 @@ import {
   tournamentError,
   tournamentIssueFields,
   tournamentKeys,
-} from "@/features/tournaments/tournament-api"
-import { missingFieldLabel } from "@/features/tournaments/tournament-model"
+} from "@/features/tournaments/api/tournament-api"
+import { missingFieldLabel } from "@/features/tournaments/model/tournament-model"
 
 export type SaveState = { status: "idle" | "saving" | "saved" | "error"; error?: string; savedAt?: Date }
 

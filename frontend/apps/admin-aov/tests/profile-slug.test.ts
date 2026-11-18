@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { profileSlug } from "../src/features/community/profile-slug"
+import { profileSlug } from "../src/features/community/model/profile-slug"
 
 test("Vietnamese and Latin names become readable page codes", () => {
   assert.equal(profileSlug("Garena Liên Quân Mobile"), "garena-lien-quan-mobile")

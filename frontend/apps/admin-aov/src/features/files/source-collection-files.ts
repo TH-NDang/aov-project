@@ -1,14 +1,10 @@
-import { backendRequest } from "@/app/auth/session"
-import type { PageSlice } from "../publishing/types"
-import type { SourceCollection } from "./files-api"
+import { linksByPath, listCollections, type SourceCollection } from "./files-api"
 
 const BATCH = 200
 
 /** The collection with exactly this code, or null. */
 export async function findSourceCollection(code: string): Promise<SourceCollection | null> {
-  const page = await backendRequest<PageSlice<SourceCollection>>(
-    `/admin/source-collections?q=${encodeURIComponent(code)}&size=100`,
-  )
+  const page = await listCollections(new URLSearchParams({ q: code, size: "100" }))
   return page.items.find((item) => item.code === code) ?? null
 }
 
@@ -17,10 +13,7 @@ export async function sourceFileLinks(collectionId: string, paths: readonly stri
   const links = new Map<string, string>()
   const unique = [...new Set(paths)]
   for (let start = 0; start < unique.length; start += BATCH) {
-    const response = await backendRequest<{ items: { path: string; url: string }[] }>(
-      `/admin/source-collections/${collectionId}/links`,
-      { method: "POST", body: JSON.stringify({ paths: unique.slice(start, start + BATCH) }) },
-    )
+    const response = await linksByPath(collectionId, unique.slice(start, start + BATCH))
     for (const item of response.items) links.set(item.path, item.url)
   }
   return links

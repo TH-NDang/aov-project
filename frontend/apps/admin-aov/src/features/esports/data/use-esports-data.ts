@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import type { GameContent } from "@aov/community-contracts"
 import { useSession } from "@/app/auth/auth-gate"
-import { tournamentApi, tournamentKeys } from "@/features/tournaments/tournament-api"
+import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 
 /** Cache keys stay under the shared tournament prefix so registry editors refresh these views after saving. */
 function useActorKey() {

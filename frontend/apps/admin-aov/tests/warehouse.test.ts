@@ -7,13 +7,9 @@ import {
   relatedItemEdges,
   selectedItemEdges,
   routeItemWire,
-} from "../src/features/warehouse/item-graph"
-import {
-  warehouseBaselineMode,
-  type ItemContent,
-  type SpellContent,
-  type WarehouseEntry,
-} from "../src/features/warehouse/warehouse-types"
+} from "@aov/ui/lib/item-graph"
+import { warehouseBaselineMode, type WarehouseEntry } from "../src/features/warehouse/model/warehouse-types"
+import { type ItemContent, type SpellContent } from "@aov/ui/lib/warehouse-content"
 
 function item(
   id: string,
@@ -154,7 +150,7 @@ test("same-column and backwards recipes keep the output and input ports attached
 test("backend warehouse adapter loads all pages and preserves optimistic version and translation isolation", async () => {
   const broadcast = globalThis.BroadcastChannel
   Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, value: undefined })
-  const { createWarehouseApi } = await import("../src/features/warehouse/warehouse-api")
+  const { createWarehouseApi } = await import("../src/features/warehouse/api/warehouse-api")
   Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, value: broadcast })
   const calls: { path: string; init?: RequestInit }[] = []
   const entry = item("sword")
@@ -205,7 +201,7 @@ test("unscoped baselines remain distinct from gameplay changes and inherit only 
 })
 
 test("clearing a baseline patch is explicit and never changes a derived revision context", async () => {
-  const { createWarehouseApi } = await import("../src/features/warehouse/warehouse-api")
+  const { createWarehouseApi } = await import("../src/features/warehouse/api/warehouse-api")
   const payloads: Record<string, unknown>[] = []
   const entry = item("sword")
   entry.revision.effectiveFromPatchVariantId = "observed-patch"
@@ -245,7 +241,7 @@ test("clearing a baseline patch is explicit and never changes a derived revision
 })
 
 test("shop positioning preserves legacy columns, physical gaps, variants and other placements", async () => {
-  const { shopColumns, shopRowPeers } = await import("../src/features/warehouse/item-shop-position")
+  const { shopColumns, shopRowPeers } = await import("../src/features/warehouse/model/item-shop-position")
   const edited = item("edited")
   edited.content.shopPositions = [
     { categoryCode: "attack", row: 4, column: 1, variant: "support" },

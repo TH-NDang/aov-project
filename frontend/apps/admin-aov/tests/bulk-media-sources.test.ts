@@ -4,8 +4,8 @@ import {
   addMediaSourcesInBulk,
   bulkSourceValidation,
   type MediaSourceTarget,
-} from "../src/features/media/bulk-media-sources"
-import type { Request } from "../src/features/publishing/publishing-api"
+} from "../src/features/media/model/bulk-media-sources"
+import type { Request } from "../src/features/publishing/api/publishing-api"
 
 const targets = (count: number): MediaSourceTarget[] =>
   Array.from({ length: count }, (_, index) => ({

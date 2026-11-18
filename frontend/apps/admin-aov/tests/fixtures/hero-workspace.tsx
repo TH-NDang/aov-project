@@ -48,7 +48,7 @@ if (fixtureOptions.has("review")) {
 window.fetch = fixture.fetcher
 const { verifySession } = await import("../../src/app/auth/session")
 await verifySession()
-const { PublishingPage } = await import("../../src/features/publishing/publishing-page")
+const { PublishingPage } = await import("../../src/features/publishing/pages/publishing-page")
 const { TerminologyPage } = await import("../../src/features/terminology/terminology-page")
 const { ConfirmDialogHost } = await import("../../src/components/confirm-dialog")
 createRoot(document.getElementById("root")!).render(

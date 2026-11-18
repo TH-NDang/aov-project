@@ -1,12 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixturePreviousRevision } from "./fixtures/hero-workspace-data"
-import type { Revision } from "../src/features/publishing/types"
+import type { Revision } from "../src/features/publishing/api/types"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("hero history distinguishes baseline from changes and preserves the selected comparison", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/fixture-hero" })
@@ -25,23 +25,14 @@ test("hero history distinguishes baseline from changes and preserves the selecte
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroRevisionHistory } = await import("../src/features/publishing/hero-revision-history")
-  const { DescriptionComparison } = await import("../src/features/publishing/hero-comparison-view")
+  const { HeroRevisionHistory } = await import("../src/features/publishing/components/hero-revision-history")
+  const { DescriptionComparison } =
+    await import("../src/features/publishing/components/assessment/hero-comparison-view")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -68,13 +59,7 @@ test("hero history distinguishes baseline from changes and preserves the selecte
         </MemoryRouter>,
       ),
     )
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 150 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), "Expected hero comparison state was not reached")
-  }
+
   const choose = async (select: HTMLSelectElement, value: string) =>
     act(async () => {
       select.value = value
@@ -124,8 +109,8 @@ test("hero history distinguishes baseline from changes and preserves the selecte
     assert.equal(document.querySelector("del")?.textContent, "280")
     assert.equal(document.querySelector("ins")?.textContent, "300")
     const numeric = [...document.querySelectorAll("article")].find((item) => item.textContent!.includes("+200"))!
-    assert.match(numeric.textContent!, /3\.300/)
-    assert.match(numeric.textContent!, /3\.500/)
+    assert.match(numeric.textContent!, /3300/, "Health reads as the game writes it")
+    assert.match(numeric.textContent!, /3500/)
     assert.ok(![...document.querySelectorAll("article h4")].some((item) => item.textContent!.includes("Thông tin")))
     const filter = document.querySelector<HTMLSelectElement>('[aria-label="Lọc phần thay đổi"]')!
     assert.deepEqual(
@@ -175,9 +160,6 @@ test("hero history distinguishes baseline from changes and preserves the selecte
     await logout()
     client.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

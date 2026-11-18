@@ -153,6 +153,3 @@ export function buildGameView(
     snapshots,
   }
 }
-
-/** Seats in display order: blue lanes then red lanes. */
-export const allSeats = (view: GameView) => [...view.sides.BLUE.seats, ...view.sides.RED.seats]

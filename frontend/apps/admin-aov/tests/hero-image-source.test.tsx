@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import type { AssetDetail, AssetProvenance } from "../src/features/publishing/types"
+import type { AssetDetail, AssetProvenance } from "../src/features/publishing/api/types"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("hero image sources share the image request and retain current provenance, safe links and missing states", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/fixture-hero" })
@@ -42,7 +42,7 @@ test("hero image sources share the image request and retain current provenance, 
       }),
     ],
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   const fetcher: typeof fetch = async (input, init) => {
     const path = new URL(String(input), "http://localhost").pathname
     if (path.includes("/admin/media/assets/")) {
@@ -53,22 +53,13 @@ test("hero image sources share the image request and retain current provenance, 
     }
     return fixture.fetcher(input, init)
   }
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroImageSource, currentImageSources } = await import("../src/features/publishing/hero-image-source")
-  const { HeroAsset } = await import("../src/features/publishing/hero-content")
+  const { HeroImageSource, currentImageSources } =
+    await import("../src/features/publishing/components/assets/hero-image-source")
+  const { HeroAsset } = await import("../src/features/publishing/components/hero-asset")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -82,13 +73,7 @@ test("hero image sources share the image request and retain current provenance, 
         </QueryClientProvider>,
       ),
     )
-  const waitFor = async (condition: () => boolean) => {
-    for (let count = 0; count < 100 && !condition(); count++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), "Expected image source state was not reached")
-  }
+
   try {
     assert.deepEqual(
       currentImageSources(asset as AssetDetail).map((item) => item.id),
@@ -122,9 +107,6 @@ test("hero image sources share the image request and retain current provenance, 
     await logout()
     client.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

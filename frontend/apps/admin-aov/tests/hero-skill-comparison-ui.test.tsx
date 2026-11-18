@@ -1,13 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixturePreviousRevision } from "./fixtures/hero-workspace-data"
-import type { HeroComparison } from "../src/features/publishing/publishing-api"
-import type { Revision, Skill } from "../src/features/publishing/types"
+import type { HeroComparison } from "../src/features/publishing/api/publishing-api"
+import type { Revision, Skill } from "../src/features/publishing/api/types"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("history deduplicates real patch skill facts and uses gameplay categories only for their exact revision pair", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/fixture-hero" })
@@ -129,33 +129,17 @@ test("history deduplicates real patch skill facts and uses gameplay categories o
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroRevisionHistory } = await import("../src/features/publishing/hero-revision-history")
+  const { HeroRevisionHistory } = await import("../src/features/publishing/components/hero-revision-history")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const document = dom.window.document
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 150 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), "Expected grouped skill comparison state was not reached")
-  }
+
   const card = () => document.querySelector<HTMLElement>('article[data-skill-key="skill-1-1"]')!
   try {
     await verifySession()
@@ -248,9 +232,6 @@ test("history deduplicates real patch skill facts and uses gameplay categories o
     await logout()
     client.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

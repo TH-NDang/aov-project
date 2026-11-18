@@ -2,11 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "fake-indexeddb/auto"
 import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("quick hero navigation keeps drawer/full-page context and cached drafts while rejecting switches during upload", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero", pretendToBeVisual: true })
@@ -87,34 +87,13 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
   dom.window.HTMLElement.prototype.scrollIntoView = () => {}
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    DocumentFragment: dom.window.DocumentFragment,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { draftRepository } = await import("../src/app/drafts/draft-store")
-  const { PublishingPage } = await import("../src/features/publishing/publishing-page")
+  const { PublishingPage } = await import("../src/features/publishing/pages/publishing-page")
   const { createRoot } = await import("react-dom/client")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const router = createMemoryRouter(
@@ -130,16 +109,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
   )
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 250 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(
-      condition(),
-      `Expected quick navigation state was not reached: ${document.body.textContent?.slice(-1200)}`,
-    )
-  }
+
   const visibleButton = (label: string) =>
     [...document.querySelectorAll<HTMLButtonElement>("button")].find(
       (button) => button.getAttribute("aria-label") === label && !button.closest('[aria-hidden="true"]'),
@@ -214,7 +184,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     assert.equal(router.state.location.pathname + router.state.location.search, firstUrl)
     assert.equal(new URLSearchParams(router.state.location.search).get("skill"), "passive")
     // The drawer has no full-page link any more; the same address opens the full page directly.
-    const { heroPageLocation } = await import("../src/features/publishing/hero-location")
+    const { heroPageLocation } = await import("../src/features/publishing/model/hero-location")
     await act(async () => {
       await router.navigate(heroPageLocation("fixture-hero", new URLSearchParams(router.state.location.search)))
     })
@@ -271,9 +241,6 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     router.dispose()
     await logout()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

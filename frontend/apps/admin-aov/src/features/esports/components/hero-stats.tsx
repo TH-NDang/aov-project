@@ -3,7 +3,7 @@ import { Clock3, Shield, Swords } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import type { IconRef } from "../model/game-view"
 import { rate, type GameStats, type HeroStat } from "../model/statistics"
-import { formatClock } from "../model/vod"
+import { formatClock } from "@/lib/clock"
 import { HeroIcon } from "./primitives"
 
 type SortKey = "presence" | "picks" | "bans" | "winrate"
@@ -41,7 +41,7 @@ export function HeroStatistics({ stats, icon }: { stats: GameStats; icon: (key: 
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <card.icon size={13} /> {card.label}
             </p>
-            <p className="text-lg font-semibold">{card.value}</p>
+            <p className="text-base font-semibold">{card.value}</p>
           </div>
         ))}
       </div>

@@ -1,3 +1,5 @@
+import { isUploadableImage } from "@/lib/image-types"
+
 export interface UploadTicket {
   uploadId: string
   assetId: string
@@ -20,8 +22,7 @@ export async function uploadAvatar(
   progress: (step: string) => void,
   fetcher: typeof fetch = fetch,
 ): Promise<AvatarResult> {
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size === 0 || file.size > 25 * 1024 * 1024)
-    throw new Error("Chọn ảnh PNG, JPEG hoặc WebP có dung lượng từ 1 byte đến 25 MB.")
+  if (!isUploadableImage(file)) throw new Error("Chọn ảnh PNG, JPEG hoặc WebP có dung lượng từ 1 byte đến 25 MB.")
   progress("Đang chuẩn bị tải ảnh…")
   const ticket = await request<UploadTicket>("/users/me/avatar-uploads", {
     method: "POST",

@@ -20,7 +20,7 @@ import {
   patchHeroLocation,
   readHeroLocation,
   switchHeroLocation,
-} from "../src/features/publishing/hero-location.ts"
+} from "../src/features/publishing/model/hero-location.ts"
 
 test("opening and closing a hero retain list filters without mutating the current URL", () => {
   const original = new URLSearchParams(

@@ -5,8 +5,8 @@ import { Button } from "@aov/ui/components/button"
 import { confirmAction } from "@/components/confirm-dialog"
 import { TeamLogo } from "@/features/esports/components/primitives"
 import { TournamentFinalTable } from "@/features/esports/components/tournament-final-table"
-import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/tournament-api"
-import { FinalTableEditButton } from "@/features/tournaments/tournament-final-table-editor"
+import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { FinalTableEditButton } from "@/features/tournaments/components/tournament-final-table-editor"
 import { CompetitionStatistics } from "../competition-statistics"
 import { suggestedPlacements } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
@@ -30,12 +30,13 @@ export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
             teamName: line.teamName,
             prizeUsd: kept?.prizeUsd ?? null,
             prizeLocal: kept?.prizeLocal ?? null,
-            lastOpponent: kept?.lastOpponent ?? null,
-            lastScore: kept?.lastScore ?? null,
+            // The bracket knows the last match of each team; a line it cannot read keeps what was typed.
+            lastOpponent: line.lastOpponent ?? kept?.lastOpponent ?? null,
+            lastScore: line.lastScore ?? kept?.lastScore ?? null,
           }
         }),
       }),
-    meta: { successMessage: "Đã điền thứ hạng theo nhánh đấu." },
+    meta: { silent: true, successMessage: "Đã điền thứ hạng theo nhánh đấu." },
     onSuccess: () => client.invalidateQueries({ queryKey: tournamentKeys.all }),
   })
   const fill = async () => {
@@ -91,12 +92,12 @@ export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
                   key={index}
                   className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-3 border-b px-4 py-2 last:border-b-0"
                 >
-                  <span className="type-body font-bold tabular-nums">{line.place}</span>
+                  <span className="type-body tabular-nums">{line.place}</span>
                   <span className="min-w-0">
                     {line.teamId ? (
                       <span className="flex items-center gap-2.5">
                         <TeamLogo team={ws.team(line.teamId)} size={24} />
-                        <span className="type-body truncate font-semibold">{line.teamName}</span>
+                        <span className="type-body truncate">{line.teamName}</span>
                       </span>
                     ) : (
                       <Chip tone="warn">Chưa xác định</Chip>

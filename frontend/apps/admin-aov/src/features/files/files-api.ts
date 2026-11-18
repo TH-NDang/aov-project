@@ -1,7 +1,7 @@
-import { useInfiniteQuery, useQuery, type QueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { backendRequest } from "@/app/auth/session"
-import type { PageSlice } from "../publishing/types"
+import type { PageSlice } from "../publishing/api/types"
 
 /** Functions a collection of private source files serves (ADR-030); the order is the browsing order. */
 export const SOURCE_CATEGORIES = [
@@ -146,6 +146,66 @@ export const fileKeys = {
   links: (sha256s: readonly string[]) => ["source-links", ...sha256s] as const,
 }
 
+/** What asking to store a file answers: bytes already in R2 are placed at once, others need a presigned PUT. */
+export type UploadResult =
+  | { status: "STORED"; file: SourceFile; upload: null }
+  | {
+      status: "UPLOAD_REQUIRED"
+      file: null
+      upload: {
+        uploadId: string
+        method: string
+        uploadUrl: string
+        headers: Record<string, string>
+        expiresAt: string
+      }
+    }
+
+// Every endpoint of private source files (ADR-030). Helpers elsewhere in the feature batch or combine these calls.
+
+export function listCollections(params: URLSearchParams, signal?: AbortSignal) {
+  return backendRequest<PageSlice<SourceCollection>>(`/admin/source-collections?${params}`, { signal })
+}
+
+/** Presigned GET links by SHA-256, at most 200 per request. */
+export function linksBySha256(sha256s: readonly string[], signal?: AbortSignal) {
+  return backendRequest<{ items: SourceLink[]; missing: string[] }>("/admin/source-files/links", {
+    method: "POST",
+    body: JSON.stringify({ sha256: sha256s }),
+    signal,
+  })
+}
+
+/** Presigned GET links by path inside one collection, at most 200 per request. */
+export function linksByPath(collectionId: string, paths: readonly string[]) {
+  return backendRequest<{ items: { path: string; sha256: string; url: string }[] }>(
+    `/admin/source-collections/${collectionId}/links`,
+    { method: "POST", body: JSON.stringify({ paths }) },
+  )
+}
+
+export function requestUpload(
+  collectionId: string,
+  body: {
+    path: string
+    sha256: string
+    sizeBytes: number
+    contentType: string
+    replace?: { fileId: string; expectedVersion: number }
+  },
+  signal?: AbortSignal,
+) {
+  return backendRequest<UploadResult>(`/admin/source-collections/${collectionId}/uploads`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    signal,
+  })
+}
+
+export function completeUpload(uploadId: string, signal?: AbortSignal) {
+  return backendRequest<{ file: SourceFile }>(`/admin/source-uploads/${uploadId}/complete`, { method: "POST", signal })
+}
+
 const PAGE = 50
 
 export function useStorageSummary() {
@@ -164,7 +224,7 @@ export function useSourceCollections(category: SourceCategory | null, query: str
       const params = new URLSearchParams({ page: String(pageParam), size: String(PAGE) })
       if (category) params.set("category", category)
       if (query.trim()) params.set("q", query.trim())
-      return backendRequest<PageSlice<SourceCollection>>(`/admin/source-collections?${params}`, { signal })
+      return listCollections(params, signal)
     },
     getNextPageParam: nextPageOf,
   })
@@ -226,11 +286,7 @@ export function useSourceLinks(sha256s: readonly string[]) {
     queryFn: async ({ signal }) => {
       const links: Record<string, SourceLink> = {}
       for (let start = 0; start < unique.length; start += 200) {
-        const response = await backendRequest<{ items: SourceLink[]; missing: string[] }>("/admin/source-files/links", {
-          method: "POST",
-          body: JSON.stringify({ sha256: unique.slice(start, start + 200) }),
-          signal,
-        })
+        const response = await linksBySha256(unique.slice(start, start + 200), signal)
         for (const link of response.items) links[link.sha256] = link
       }
       return links
@@ -295,6 +351,40 @@ export async function estimateUpload(target: "MEDIA" | "SOURCES", files: { sha25
     body: JSON.stringify({ target, files }),
   })
 }
+
+// Writes. Each goes through a mutation: a failure is shown once, by the shared toast, or inline where the mutation
+// is silent because the form shows it next to the field.
+
+function useFilesMutation<T, R>(write: (input: T) => Promise<R>, meta?: { silent?: boolean }) {
+  const client = useQueryClient()
+  return useMutation({ mutationFn: write, onSettled: () => refreshSourceFiles(client), meta })
+}
+
+export const useDeleteCollection = () => useFilesMutation(deleteCollection)
+
+export const useDeleteSourceFile = () => useFilesMutation(deleteSourceFile)
+
+/** The sheet lists every orphan and says inline which one could not be removed. */
+export const useDeleteOrphan = () => useFilesMutation(deleteOrphan, { silent: true })
+
+/** The collection form shows its error next to the fields. */
+export const useSaveCollection = (collection: SourceCollection | null) =>
+  useFilesMutation(
+    (input: {
+      code: string
+      category: SourceCategory
+      label: string
+      note: string | null
+      capturedOn: string | null
+    }) =>
+      collection
+        ? updateCollection(collection, { label: input.label, note: input.note, capturedOn: input.capturedOn })
+        : createCollection(input),
+    { silent: true },
+  )
+
+/** Opening a file asks for a short-lived link first; a failure reaches the shared toast. */
+export const useDownloadLink = () => useMutation({ mutationFn: downloadLink })
 
 /** After any change the lists, the open collection and the storage figures read again. */
 export async function refreshSourceFiles(client: QueryClient) {

@@ -11,6 +11,7 @@ import { errorMessage } from "@/lib/api/errors"
 import { fetchSourceFile, openSourceCollection } from "../files/source-collection-files"
 import { gameModeApi, gameModeKeys, uploadModeImage, type AdminSummary, type ModeGroup } from "./game-mode-api"
 import { importedImageSource, modeContentFromManifest, MODES_SOURCE, type ModeManifestEntry } from "./game-mode-import"
+import { normalize } from "@/lib/text"
 
 const GROUP_LABEL: Record<ModeGroup, string> = { PVP: "PVP", ENTERTAINMENT: "Giải trí" }
 
@@ -24,14 +25,6 @@ const FILTERS: { key: Filter; label: string; test: (mode: AdminSummary) => boole
   { key: "no-art", label: "Thiếu ảnh", test: (mode) => !mode.art },
 ]
 
-/** Accents and case do not hide a mode from a search. */
-const fold = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-
 /** Every game mode with its draft and publication state; new modes start here. */
 export function GameModesPage() {
   const actor = useSession().actor
@@ -44,9 +37,9 @@ export function GameModesPage() {
   const [search, setSearch] = useState("")
   const visible = useMemo(() => {
     const test = FILTERS.find((item) => item.key === filter)!.test
-    const needle = fold(search.trim())
+    const needle = normalize(search.trim())
     return (modes.data ?? []).filter(
-      (mode) => test(mode) && (!needle || fold(`${mode.name} ${mode.code}`).includes(needle)),
+      (mode) => test(mode) && (!needle || normalize(`${mode.name} ${mode.code}`).includes(needle)),
     )
   }, [modes.data, filter, search])
 
@@ -148,8 +141,8 @@ function modeState(mode: AdminSummary): { label: string; tone: "live" | "draft" 
 }
 
 const TONE_CLASS = {
-  live: "bg-emerald-500/15 text-emerald-300",
-  draft: "bg-amber-500/15 text-amber-200",
+  live: "bg-(--aov-success-soft) text-(--aov-success)",
+  draft: "bg-(--aov-warning-soft) text-(--aov-warning)",
   none: "bg-muted text-muted-foreground",
 } as const
 
@@ -164,14 +157,14 @@ function ModeRow({ mode }: { mode: AdminSummary }) {
         {mode.art ? (
           <img src={mode.art.url} alt="" className="size-full object-cover" loading="lazy" />
         ) : (
-          <span className="type-meta flex flex-col items-center gap-1 text-amber-200">
+          <span className="type-meta flex flex-col items-center gap-1 text-(--aov-warning)">
             <ImageIcon className="size-5" aria-hidden="true" />
             Thiếu ảnh
           </span>
         )}
       </span>
       <span className="grid min-w-0 gap-1">
-        <strong className="type-body truncate font-semibold">{mode.name}</strong>
+        <strong className="type-body truncate">{mode.name}</strong>
         <span className="type-meta truncate">
           {mode.code}
           {mode.order != null && ` · thứ tự ${mode.order}`}
@@ -203,6 +196,7 @@ function CreateModeDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
       setCode("")
       setName("")
     },
+    meta: { silent: true },
   })
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -320,6 +314,7 @@ function ImportModesDialog({
       }
     },
     onSettled: () => void client.invalidateQueries({ queryKey: gameModeKeys.all }),
+    meta: { silent: true },
   })
   return (
     <Dialog open={open} onOpenChange={(next) => !run.isPending && onOpenChange(next)}>

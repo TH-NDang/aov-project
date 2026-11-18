@@ -1,7 +1,19 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { ProfileMember } from "@aov/community-contracts"
-import { groupRoster, rosterGroup, rosterPosition } from "../src/features/community/profile-roster-model"
+import { groupRoster, rosterGroup, rosterPosition } from "../src/features/community/model/profile-roster-model"
+
+test("a roster names its lanes like the match screens do", async () => {
+  const { rosterLaneLabels } = await import("../src/features/community/model/profile-roster-model")
+  const { LANE_LABELS } = await import("../src/features/esports/model/labels")
+  const { LANES } = await import("../src/features/tournaments/model/tournament-model")
+
+  assert.equal(rosterLaneLabels.SUPPORT, LANE_LABELS.SUPPORT.name)
+  assert.deepEqual(
+    LANES.map((lane) => lane.name),
+    ["Đường Caesar", "Đi rừng", "Đường giữa", "Đường Rồng", "Trợ thủ"],
+  )
+})
 
 test("imported lane labels and captain annotations resolve without changing their stored text", () => {
   const cases = [

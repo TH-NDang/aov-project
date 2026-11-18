@@ -31,7 +31,7 @@ import type { LoadoutPart } from "../model/loadout"
 import { ProgressPanel } from "./progress-panel"
 import { chapterVideo, type GameChapter } from "../model/series-vod"
 import { videoToGame } from "../model/vod"
-import { readTimeline, upsertEvent, withPlayback, writeTimeline } from "../model/timeline-io"
+import { eventRemoval, readTimeline, upsertEvent, withPlayback, writeTimeline } from "../model/timeline-io"
 import {
   clusterEvents,
   eventSeats,
@@ -118,6 +118,7 @@ export function FocusedGame({
   actions,
   tournamentRegion,
   onEnableEditing,
+  onUndoable,
   children,
 }: {
   entry: DocumentView<GameContent>
@@ -150,6 +151,8 @@ export function FocusedGame({
   /** Market of the tournament, to say so when a game is still recorded under another one. */
   tournamentRegion?: string
   onEnableEditing: () => void
+  /** Offers to undo a quick change: the match screen records without asking, so every removal can be taken back. */
+  onUndoable?: (text: string, revert: () => void) => void
   children: (parts: FocusedGameParts) => ReactNode
 }) {
   const { save, publish, withdraw, state: saveState, reload } = useGameSaver(entry)
@@ -210,13 +213,11 @@ export function FocusedGame({
     onActive(event.id)
     void save((content) => writeTimeline(content, upsertEvent(readTimeline(content), event)))
   }
-  const deleteEvent = (event: TimelineEvent) =>
-    void save((content) =>
-      writeTimeline(
-        content,
-        readTimeline(content).filter((candidate) => candidate.id !== event.id),
-      ),
-    )
+  const deleteEvent = (event: TimelineEvent) => {
+    const removal = eventRemoval(event)
+    void save(removal.apply)
+    onUndoable?.(removal.text, () => void save(removal.revert))
+  }
   const openCluster = (cluster: EventCluster) => onDetail({ gameId: entry.id, ids: cluster.events.map((e) => e.id) })
   const detailCluster: EventCluster | null = useMemo(() => {
     if (!detail || detail.gameId !== entry.id) return null

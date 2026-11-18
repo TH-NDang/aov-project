@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture, fixtureContent } from "./fixtures/hero-workspace-data"
 import "fake-indexeddb/auto"
 import { draftRepository } from "../src/app/drafts/draft-store"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 test("hero reading, section save/cancel/conflict and translation preserve unrelated data", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/fixture-hero" })
@@ -20,30 +21,13 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     conflict && init?.method === "PUT"
       ? Response.json({ code: "HERO_REVISION_VERSION_CONFLICT", detail: "Version conflict" }, { status: 409 })
       : fixture.fetcher(input, init)
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { PublishingWorkspace } = await import("../src/features/publishing/publishing-page")
-  const { updateTranslation } = await import("../src/features/publishing/translation-editor")
+  const { PublishingWorkspace } = await import("../src/features/publishing/pages/publishing-page")
+  const { updateTranslation } = await import("../src/features/publishing/components/translation-editor")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -68,13 +52,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
         </MemoryRouter>,
       ),
     )
-  const waitFor = async (condition: () => boolean) => {
-    for (let i = 0; i < 150 && !condition(); i++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), "Expected workspace state was not reached")
-  }
+
   const button = (label: string) =>
     [...document.querySelectorAll<HTMLButtonElement>("button")].find((node) => node.textContent?.includes(label))!
   const input = (label: string) => {
@@ -344,7 +322,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     ) as typeof fixtureContent.SKILLS
     assert.deepEqual(skills!.skills[0].translations[0], fixtureContent.SKILLS!.skills[0].translations[0])
     assert.equal(skills!.skills[0].iconAssetId, fixtureContent.SKILLS!.skills[0].iconAssetId)
-    const { HeroCatalog } = await import("../src/features/publishing/hero-catalog")
+    const { HeroCatalog } = await import("../src/features/publishing/components/catalog/hero-catalog")
     await act(async () =>
       root.render(
         <MemoryRouter>
@@ -369,10 +347,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await logout()
     cache.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 
@@ -380,8 +355,9 @@ test("translation progress uses exact locale and source tables preserve conflict
   const originalReact = Object.getOwnPropertyDescriptor(globalThis, "React")
   Object.defineProperty(globalThis, "React", { configurable: true, writable: true, value: React })
   try {
-    const { translationStatus } = await import("../src/features/publishing/hero-translation-model")
-    const { heroReviewNotes, SkillSourceDetails } = await import("../src/features/publishing/hero-source-details")
+    const { translationStatus } = await import("../src/features/publishing/model/hero-translation-model")
+    const { heroReviewNotes, SkillSourceDetails } =
+      await import("../src/features/publishing/components/import/hero-source-details")
     const { renderToStaticMarkup } = await import("react-dom/server")
     assert.deepEqual(translationStatus(fixtureContent, "vi-VN"), {
       completed: 3,

@@ -12,12 +12,12 @@ import {
 } from "@aov/ui/components/alert-dialog"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
-import { missingFieldLabel } from "@/features/tournaments/tournament-model"
+import { missingFieldLabel } from "@/features/tournaments/model/tournament-model"
 import type { GameView } from "../model/game-view"
 import type { ProgressTarget, RecordingProgress, StepStatus } from "../model/recording-progress"
 import { STATE_LABELS } from "../components/game/progress-badge"
 import { RelativeDate } from "../components/relative-date"
-import { formatClock } from "../model/vod"
+import { formatClock } from "@/lib/clock"
 
 const ICONS: Record<StepStatus, typeof CircleCheck> = { done: CircleCheck, partial: CircleDot, todo: CircleDashed }
 

@@ -21,6 +21,8 @@ import {
   stepFromParam,
   suggestedPlacements,
   workspaceChecks,
+  zonedInputInstant,
+  zonedInputTime,
 } from "../src/features/competition/workspace/model"
 
 const team = (id: string): CompetitionSlot => ({ type: "TEAM", teamId: id })
@@ -294,6 +296,38 @@ test("final places follow the bracket and wait for matches that are not played",
   )
 })
 
+test("the champion line carries the grand final score, so the podium can show it", async () => {
+  const { tournamentPodium } = await import("@aov/ui/lib/tournament-podium")
+  const finished = played.map((entry) =>
+    entry.key === "LF" ? row("LF", "sgp", "bme", 4, 1) : entry.key === "GF" ? row("GF", "fpl", "sgp", 2, 4) : entry,
+  )
+
+  const lines = suggestedPlacements(plan(playoffs), finished, [], teams)
+
+  assert.deepEqual(
+    lines.slice(0, 3).map((line) => [line.place, line.lastOpponent, line.lastScore]),
+    [
+      ["1", "FPL", "4–2"],
+      ["2", "SGP", "2–4"],
+      ["3", "SGP", "1–4"],
+    ],
+  )
+  const podium = tournamentPodium({
+    placements: lines.map((line) => ({
+      place: line.place,
+      teamId: line.teamId,
+      teamName: line.teamName,
+      lastOpponent: line.lastOpponent,
+      lastScore: line.lastScore,
+    })),
+  })
+  assert.deepEqual(podium, {
+    winner: { teamId: "sgp", name: "SGP" },
+    runnerUp: { teamId: "fpl", name: "FPL" },
+    score: "4–2",
+  })
+})
+
 test("only required checks block publishing, and final places wait until the last match", () => {
   const checks = workspaceChecks({
     plan: plan(playoffs),
@@ -337,4 +371,18 @@ test("a roster reads as five positions, then the bench, then who left", () => {
     [board.unplaced, board.bench, board.left, board.unknown].map((rows) => rows.map((row) => row.playerId)),
     [["trial"], ["bench"], ["mid-old"], ["unsure"]],
   )
+})
+
+test("a match time is typed on the wall clock of the tournament, whatever the zone of the machine", () => {
+  assert.equal(zonedInputInstant("2026-11-20T19:30", "Asia/Ho_Chi_Minh"), "2026-11-20T12:30:00.000Z")
+  assert.equal(zonedInputTime("2026-11-20T12:30:00.000Z", "Asia/Ho_Chi_Minh"), "2026-11-20T19:30")
+  assert.equal(zonedInputTime("2026-11-20T12:30:00.000Z", "Europe/Berlin"), "2026-11-20T13:30")
+  assert.equal(zonedInputInstant("", "Asia/Ho_Chi_Minh"), null)
+  assert.equal(zonedInputTime(null, "Asia/Ho_Chi_Minh"), "")
+})
+
+test("a match time next to a clock change keeps the offset of its own day", () => {
+  // New York leaves summer time on 1 November 2026: 09:00 that morning is UTC-5, the evening before UTC-4.
+  assert.equal(zonedInputInstant("2026-11-01T09:00", "America/New_York"), "2026-11-01T14:00:00.000Z")
+  assert.equal(zonedInputInstant("2026-10-31T21:00", "America/New_York"), "2026-11-01T01:00:00.000Z")
 })

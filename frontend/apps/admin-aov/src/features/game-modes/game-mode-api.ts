@@ -1,6 +1,7 @@
 import { backendRequest } from "@/app/auth/session"
 import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
-import { uploadHeroImage, type Request } from "../publishing/publishing-api"
+import { uploadHeroImage, type Request } from "../publishing/api/publishing-api"
+import type { PageSlice } from "../publishing/api/types"
 
 export type ModeGroup = "PVP" | "ENTERTAINMENT"
 export type AvailabilityStatus = "ALWAYS_OPEN" | "LIMITED" | "SPECIAL" | "CLOSED" | "LOCKED" | "UNKNOWN"
@@ -235,10 +236,7 @@ export function createGameModeApi(request: Request = backendRequest) {
     community: (id: string, status: string | null, page: number, signal?: AbortSignal) => {
       const params = new URLSearchParams({ page: String(page), size: "30" })
       if (status) params.set("status", status)
-      return request<{ items: AdminLineup[]; totalElements: number }>(
-        `${base}/${id}/auto-chess/community-lineups?${params}`,
-        { signal },
-      )
+      return request<PageSlice<AdminLineup>>(`${base}/${id}/auto-chess/community-lineups?${params}`, { signal })
     },
     visibility: (id: string, lineupId: string, expectedVersion: number, hidden: boolean, reason?: string) =>
       send<AdminLineup>(`${base}/${id}/auto-chess/community-lineups/${lineupId}/visibility`, "POST", {

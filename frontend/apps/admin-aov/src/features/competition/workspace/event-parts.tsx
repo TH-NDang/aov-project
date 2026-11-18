@@ -6,8 +6,8 @@ import { cn } from "@aov/ui/lib/utils"
 import { useTournamentStats } from "@/features/esports/data/use-esports-data"
 import { FORMAT_LABELS, dateRange } from "@/features/esports/model/labels"
 import { tournamentPath } from "@/features/esports/pages/esports-shell"
-import { PART_PHASE_NAMES, PartPhaseDot } from "@/features/tournaments/part-phase-dot"
-import { partLabel, partPhase, type EventFamily } from "@/features/tournaments/tournament-parts"
+import { PART_PHASE_NAMES, PartPhaseDot } from "@/features/tournaments/components/part-phase-dot"
+import { partLabel, partPhase, type EventFamily } from "@/features/tournaments/model/tournament-parts"
 import { Chip, Panel } from "./parts"
 
 const partTitle = (part: TournamentPart) =>

@@ -1,3 +1,4 @@
+import type { ObjectiveKind } from "@aov/community-contracts"
 import { useId, useState, type ReactNode } from "react"
 import type { Reference, Side } from "@aov/community-contracts"
 import { Clock3, Save, X } from "lucide-react"
@@ -15,13 +16,12 @@ import {
   otherSide,
   seatSide,
   type ItemAction,
-  type ObjectiveKind,
   type SeatKey,
   type TimelineEvent,
   type TimelineKind,
 } from "../../model/timeline"
 import { nameKey } from "../../model/name-key"
-import { formatClock, parseClock } from "../../model/vod"
+import { formatClock, parseClock } from "@/lib/clock"
 import { HeroIcon, ItemSlot, LaneIcon, TimeTag, VIDEO_MARK, VideoMark } from "../primitives"
 import { KIND_ICONS } from "./event-text"
 

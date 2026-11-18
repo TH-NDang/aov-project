@@ -6,8 +6,8 @@ import type { CommunityProfile, CompetitionPageEntry } from "@aov/community-cont
 import { tournamentPath, type Access } from "@/features/esports/pages/esports-shell"
 import { Monogram, TierBadge } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
-import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
-import { activityLabel } from "@/features/tournaments/record-reason"
+import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
+import { activityLabel } from "@/features/tournaments/model/record-reason"
 import { directoryApi, directoryKeys, useDebounced, yearRange } from "./directory-api"
 import {
   CountryLabel,

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
 import { ArrowLeft, Download } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { Input } from "@aov/ui/components/input"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { Textarea } from "@aov/ui/components/textarea"
 import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
@@ -18,7 +20,7 @@ import {
   TraitsSection,
   UnitsSection,
 } from "./auto-chess-sections"
-import { field, Section } from "./game-mode-editor"
+import { confirmDraftDiscard, field, Section } from "./game-mode-editor"
 import { ModeArtCard } from "./mode-art-card"
 import { RulesEditor } from "./rules-editor"
 import {
@@ -40,6 +42,7 @@ import {
   retry,
   type GuideManifest,
 } from "./game-mode-import"
+import { EmptyState, ErrorState, LoadingState } from "@/components/query-state"
 
 const TABS = [
   ["general", "Chung"],
@@ -119,6 +122,7 @@ export function AutoChessEditorPage() {
         ],
       ),
     onError: (error) => setMessage(errorMessage(error)),
+    meta: { silent: true },
   })
 
   const missing = guide.isError && guide.error instanceof ApiError && guide.error.status === 404
@@ -167,7 +171,9 @@ export function AutoChessEditorPage() {
               <Button
                 variant="outline"
                 disabled={!canWrite || action.isPending}
-                onClick={() => action.mutate("discard")}
+                onClick={async () => {
+                  if (await confirmDraftDiscard()) action.mutate("discard")
+                }}
               >
                 Bỏ nháp
               </Button>
@@ -340,6 +346,7 @@ function StartGuide({
       )
     },
     onSuccess: onCreated,
+    meta: { silent: true },
   })
   return (
     <Section title="Chưa có cẩm nang">
@@ -392,7 +399,7 @@ function JsonEditor({ content, onApply }: { content: GuideContent; onApply: (con
   )
 }
 
-function CommunityModeration({
+export function CommunityModeration({
   modeId,
   canPublish,
   content,
@@ -403,10 +410,13 @@ function CommunityModeration({
 }) {
   const client = useQueryClient()
   const [status, setStatus] = useState<string | null>(null)
-  const list = useQuery({
+  const list = useInfiniteQuery({
     queryKey: gameModeKeys.community(modeId, status ?? "ALL"),
-    queryFn: ({ signal }) => gameModeApi.community(modeId, status, 0, signal),
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => gameModeApi.community(modeId, status, pageParam, signal),
+    getNextPageParam: nextPageOf,
   })
+  const lineups = list.data?.pages.flatMap((page) => page.items) ?? []
   const [error, setError] = useState("")
   const [reasons, setReasons] = useState<Record<string, string>>({})
   const toggle = useMutation({
@@ -420,6 +430,7 @@ function CommunityModeration({
       void client.invalidateQueries({ queryKey: ["admin-game-modes", "community", modeId] })
     },
     onError: (cause) => setError(errorMessage(cause)),
+    meta: { silent: true },
   })
   const names = new Map(content.units.map((unit) => [unit.code, unit.name]))
   return (
@@ -438,51 +449,54 @@ function CommunityModeration({
       </div>
       {error && <p className="type-body text-destructive">{error}</p>}
       {list.isPending ? (
-        <p className="type-body">Đang tải…</p>
-      ) : list.isError ? (
-        <p className="type-body text-destructive">{errorMessage(list.error)}</p>
-      ) : list.data.items.length === 0 ? (
-        <p className="type-body text-muted-foreground">Chưa có đội hình cộng đồng.</p>
+        <LoadingState />
+      ) : list.isLoadingError ? (
+        <ErrorState error={list.error} onRetry={() => void list.refetch()} />
+      ) : lineups.length === 0 ? (
+        <EmptyState>Chưa có đội hình cộng đồng.</EmptyState>
       ) : (
-        <ul className="grid gap-2">
-          {list.data.items.map((lineup) => (
-            <li key={lineup.id} className="grid gap-1 rounded-md border p-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <strong className="type-body">{lineup.name}</strong>
-                <Badge variant={lineup.status === "VISIBLE" ? "secondary" : "destructive"}>
-                  {lineup.status === "VISIBLE" ? "Đang hiện" : "Đã ẩn"}
-                </Badge>
-                <span className="type-meta">
-                  ♥ {lineup.likes} · người đăng {lineup.authorSubject.slice(0, 8)}…
-                </span>
-                {lineup.status === "VISIBLE" && (
-                  <Input
-                    className="ml-auto max-w-60"
-                    placeholder="Lý do ẩn"
-                    aria-label={`Lý do ẩn ${lineup.name}`}
-                    value={reasons[lineup.id] ?? ""}
-                    onChange={(e) => setReasons({ ...reasons, [lineup.id]: e.target.value })}
-                  />
-                )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!canPublish || toggle.isPending}
-                  onClick={() =>
-                    toggle.mutate({ id: lineup.id, version: lineup.version, hidden: lineup.status === "VISIBLE" })
-                  }
-                >
-                  {lineup.status === "VISIBLE" ? "Ẩn" : "Hiện lại"}
-                </Button>
-              </div>
-              <p className="type-meta">
-                {lineup.units.map((unit) => names.get(unit.unitCode) ?? unit.unitCode).join(", ")}
-              </p>
-              {lineup.note && <p className="type-body">{lineup.note}</p>}
-              {lineup.hiddenReason && <p className="type-meta">Lý do ẩn: {lineup.hiddenReason}</p>}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="grid gap-2">
+            {lineups.map((lineup) => (
+              <li key={lineup.id} className="grid gap-1 rounded-md border p-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <strong className="type-body">{lineup.name}</strong>
+                  <Badge variant={lineup.status === "VISIBLE" ? "secondary" : "destructive"}>
+                    {lineup.status === "VISIBLE" ? "Đang hiện" : "Đã ẩn"}
+                  </Badge>
+                  <span className="type-meta">
+                    ♥ {lineup.likes} · người đăng {lineup.authorSubject.slice(0, 8)}…
+                  </span>
+                  {lineup.status === "VISIBLE" && (
+                    <Input
+                      className="ml-auto max-w-60"
+                      placeholder="Lý do ẩn"
+                      aria-label={`Lý do ẩn ${lineup.name}`}
+                      value={reasons[lineup.id] ?? ""}
+                      onChange={(e) => setReasons({ ...reasons, [lineup.id]: e.target.value })}
+                    />
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!canPublish || toggle.isPending}
+                    onClick={() =>
+                      toggle.mutate({ id: lineup.id, version: lineup.version, hidden: lineup.status === "VISIBLE" })
+                    }
+                  >
+                    {lineup.status === "VISIBLE" ? "Ẩn" : "Hiện lại"}
+                  </Button>
+                </div>
+                <p className="type-meta">
+                  {lineup.units.map((unit) => names.get(unit.unitCode) ?? unit.unitCode).join(", ")}
+                </p>
+                {lineup.note && <p className="type-body">{lineup.note}</p>}
+                {lineup.hiddenReason && <p className="type-meta">Lý do ẩn: {lineup.hiddenReason}</p>}
+              </li>
+            ))}
+          </ul>
+          <InfiniteScroll query={list} label="Đang tải thêm đội hình…" />
+        </>
       )}
     </Section>
   )

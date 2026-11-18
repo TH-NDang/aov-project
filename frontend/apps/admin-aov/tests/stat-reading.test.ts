@@ -1,13 +1,17 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { combatAttributeRows } from "../src/features/publishing/combat-attributes"
-import { comparisonValue, joinStatReadings } from "../src/features/publishing/hero-comparison"
+import {
+  ATTRIBUTE_SOURCE_LABELS,
+  combatAttributeRows,
+} from "../src/features/publishing/model/assessment/combat-attributes"
+import { STAT_STANDING_LABELS, statDistribution } from "../src/features/publishing/model/assessment/hero-stat-analysis"
+import { comparisonValue, joinStatReadings } from "../src/features/publishing/model/assessment/hero-comparison"
 import {
   formatStatReading,
   hasStatPercent,
   parseStatReading,
   statReadingChange,
-} from "../src/features/publishing/stat-reading"
+} from "../src/features/publishing/model/assessment/stat-reading"
 
 const readings = (input: string) => {
   const parsed = parseStatReading(input)
@@ -79,12 +83,36 @@ test("the hero's own value shows the percent next to the number and in the readi
   assert.equal(row("HP").value, "3720")
 })
 
+test("a stat row says where its value comes from with a code and labels it from the table", () => {
+  const rows = combatAttributeRows(
+    {
+      values: [{ statKey: "HP", baseValue: 3720, percentValue: null, growthPerLevel: null, unit: "HP" }],
+      sources: [],
+    },
+    undefined,
+    [{ statKey: "ARMOR", baseValue: 150, unit: "POINT" } as Parameters<typeof combatAttributeRows>[2][number]],
+  )
+  const row = (key: string) => rows.find((item) => item.key === key)!
+
+  assert.equal(row("HP").kind, "OWN")
+  assert.equal(row("ARMOR").kind, "PATCH_DEFAULT")
+  assert.equal(ATTRIBUTE_SOURCE_LABELS[row("ARMOR").kind], "Mặc định của patch")
+})
+
+test("a value at the top of its group stands high, and the label comes from the table", () => {
+  const spread = statDistribution(900, [100, 200, 300, 400, 500, 900])
+
+  assert.equal(spread.standing, "HIGH")
+  assert.equal(spread.label, STAT_STANDING_LABELS.HIGH)
+  assert.equal(statDistribution(100, [100, 200]).standing, "FEW_SAMPLES")
+})
+
 test("a whole stat row in a comparison reads as one value", () => {
   const armor = { statKey: "ARMOR", baseValue: 150, percentValue: 20, growthPerLevel: null, unit: "POINT" }
   assert.match(comparisonValue(armor), /Giá trị ghi nhận: 150 \| 20%/)
   assert.doesNotMatch(comparisonValue(armor), /Phần trăm/)
   const health = { statKey: "HP", baseValue: 3500, percentValue: null, growthPerLevel: null, unit: "POINT" }
-  assert.match(comparisonValue(health), /Giá trị ghi nhận: 3\.500/)
+  assert.match(comparisonValue(health), /Giá trị ghi nhận: 3500/)
   assert.doesNotMatch(comparisonValue(health), /Phần trăm/)
 })
 
@@ -136,7 +164,7 @@ test("rows without a percent keep their plain number change and its difference",
 })
 
 test("the draft changes sheet lists a stat with a percent as one reading and other stats as plain numbers", async () => {
-  const { changedRows } = await import("../src/features/publishing/hero-draft-changes")
+  const { changedRows } = await import("../src/features/publishing/components/patch-changes/hero-draft-changes")
   const row = (statKey: string, baseValue: number, percentValue: number | null) => ({
     statKey,
     baseValue,

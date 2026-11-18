@@ -5,7 +5,7 @@ import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
-import { control } from "../publishing/fields"
+import { control } from "../publishing/components/fields"
 import { estimateUpload, refreshSourceFiles, type SourceCollection, type StorageEstimate } from "./files-api"
 import { formatCount, formatShare, formatStorage, LEVEL_COLORS, LEVEL_LABELS } from "./files-format"
 import {

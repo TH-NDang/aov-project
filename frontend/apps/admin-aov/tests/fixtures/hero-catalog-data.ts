@@ -1,5 +1,5 @@
-import type { HeroGameplayChange, HeroRow, PageSlice, Revision } from "../../src/features/publishing/types"
-import type { PublicationOverview } from "../../src/features/publishing/publication-overview"
+import type { HeroGameplayChange, HeroRow, PageSlice, Revision } from "../../src/features/publishing/api/types"
+import type { PublicationOverview } from "../../src/features/publishing/api/publication-overview"
 import { fixtureContent } from "./hero-workspace-data"
 
 export const catalogOverview: PublicationOverview = {

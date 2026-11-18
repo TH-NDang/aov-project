@@ -22,7 +22,7 @@ import {
 } from "react-router"
 import type { RouteHandle } from "./site-header"
 import { useHotkeys } from "../hotkeys"
-import { catalogTabTarget, useSavedCatalogScope } from "@/features/publishing/catalog-scope-memory"
+import { catalogTabTarget, useSavedCatalogScope } from "@/features/publishing/components/catalog/catalog-scope-memory"
 import { createPageTabPreviewStore } from "./page-tab-preview-store"
 import { PageTabPreviewContext, usePageTabCapture } from "./page-tab-preview"
 

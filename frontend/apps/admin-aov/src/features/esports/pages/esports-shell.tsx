@@ -4,9 +4,9 @@ import { ChevronRight, RefreshCw, Trophy } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { Page } from "@/components/page-header"
-import { tournamentError } from "@/features/tournaments/tournament-api"
+import { tournamentError } from "@/features/tournaments/api/tournament-api"
 import { useTournamentAccess } from "../data/use-esports-data"
-import "@/features/tournaments/tournament-styles"
+import "@/features/tournaments/model/tournament-styles"
 import "../esports.css"
 
 export type Access = ReturnType<typeof useTournamentAccess>
@@ -30,7 +30,7 @@ export function AccessGate({ children }: { children: (access: Access) => ReactNo
       <EsportsPage>
         <div className="flex flex-col items-center gap-3 rounded-2xl border px-6 py-14 text-center" role="alert">
           <Trophy size={32} className="text-muted-foreground" />
-          <h1 className="text-lg font-semibold">
+          <h1 className="type-section-title">
             {access.me.isError ? "Chưa mở được dữ liệu giải đấu" : "Bạn chưa có quyền xem giải đấu"}
           </h1>
           <p className="max-w-md text-sm text-muted-foreground">
@@ -82,5 +82,3 @@ export function LoadError({ error, onRetry }: { error: unknown; onRetry: () => v
 
 export const tournamentPath = (tournamentId: string) => `/tournaments/${tournamentId}`
 export const matchPath = (tournamentId: string, seriesId: string) => `/tournaments/${tournamentId}/matches/${seriesId}`
-export const gamePath = (tournamentId: string, seriesId: string, gameId: string) =>
-  `${matchPath(tournamentId, seriesId)}/games/${gameId}`

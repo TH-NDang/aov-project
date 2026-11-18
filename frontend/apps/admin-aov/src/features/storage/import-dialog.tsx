@@ -14,7 +14,7 @@ import {
   type StorageRow,
   type StorageTable,
 } from "./storage-model"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 export const SELECT_CLASS =
@@ -136,7 +136,7 @@ export function ImportDialog({
         {result ? (
           <div className="space-y-4">
             <p className="flex items-center gap-2 font-medium">
-              <Check className="size-5 text-green-600" />
+              <Check className="size-5 text-(--aov-success)" />
               Đã nhập xong
             </p>
             <p>

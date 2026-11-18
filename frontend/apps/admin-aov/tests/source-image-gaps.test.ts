@@ -1,8 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { HeroSourceCoverage, SkillSource } from "../server/patch-capture-manifest"
-import { readinessRows, type Draft, type HeroPublishReadiness } from "../src/features/publishing/publish-readiness"
-import type { PublishBlocker } from "../src/features/publishing/publish-rules"
+import {
+  readinessRows,
+  type Draft,
+  type HeroPublishReadiness,
+} from "../src/features/publishing/model/publish-readiness"
+import type { PublishBlocker } from "../src/features/publishing/model/publish-rules"
 import {
   captureSetFor,
   orderByCaptures,
@@ -12,8 +16,8 @@ import {
   sourceGaps,
   sourceGapSummary,
   statList,
-} from "../src/features/publishing/source-image-gaps"
-import type { Revision } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/captures/source-image-gaps"
+import type { Revision } from "../src/features/publishing/api/types"
 
 /** What the attributes screen shows for a hero whose numbers were all readable. */
 const readable = {

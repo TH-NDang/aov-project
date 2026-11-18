@@ -5,12 +5,12 @@ import {
   parseRegistryImport,
   type ImportContent,
   type ImportKind,
-} from "../src/features/tournaments/registry-import-model"
+} from "../src/features/tournaments/model/registry-import-model"
 
 const channelDescriptor = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
 Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
 const { prepareRegistryImport, runRegistryImport, RegistryImportFailure } =
-  await import("../src/features/tournaments/registry-import-runner")
+  await import("../src/features/tournaments/model/registry-import-runner")
 if (channelDescriptor) Object.defineProperty(globalThis, "BroadcastChannel", channelDescriptor)
 type Api = NonNullable<Parameters<typeof prepareRegistryImport>[1]>
 type Row = DocumentView<ImportContent>

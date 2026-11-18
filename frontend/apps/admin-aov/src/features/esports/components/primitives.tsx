@@ -270,20 +270,6 @@ export function ResultTag({ won, className }: { won: boolean; className?: string
   )
 }
 
-export function ScorePill({ score, win, size = "md" }: { score?: number; win?: boolean; size?: "md" | "lg" }) {
-  return (
-    <span
-      className={cn(
-        "esp-num inline-grid place-items-center rounded-md font-bold",
-        size === "lg" ? "h-12 min-w-12 px-2 text-3xl" : "h-7 min-w-7 px-1.5 text-sm",
-        score === undefined ? "bg-muted text-muted-foreground" : win ? "esp-win-score" : "bg-muted text-foreground",
-      )}
-    >
-      {score ?? "–"}
-    </span>
-  )
-}
-
 /** Lane glyph in the current text color. */
 export function LaneIcon({ lane, size = 16, className }: { lane: Lane; size?: number; className?: string }) {
   return <HeroLaneIcon lane={lane} size={size} label={LANE_LABELS[lane].name} className={className} />
@@ -295,7 +281,7 @@ export { VIDEO_MARK }
 /** The red video mark used beside broadcast positions. */
 export function VideoMark({ className }: { className?: string }) {
   return (
-    <span aria-hidden="true" className={cn("text-red-500", className)}>
+    <span aria-hidden="true" className={cn("text-destructive", className)}>
       {VIDEO_MARK}
     </span>
   )
@@ -330,7 +316,7 @@ export function TimeTag({
       title={TIME_TAGS[kind].label}
       aria-label={`${TIME_TAGS[kind].label} ${seconds == null ? "chưa rõ" : text}`}
     >
-      <span aria-hidden="true" className={kind === "video" ? "text-[0.8em] text-red-500" : "text-[0.85em]"}>
+      <span aria-hidden="true" className={kind === "video" ? "text-[0.8em] text-destructive" : "text-[0.85em]"}>
         {TIME_TAGS[kind].mark}
       </span>
       {seconds == null ? "--:--" : text}

@@ -21,7 +21,7 @@ export function ProgressBadge({ progress, className }: { progress: RecordingProg
         className,
         state === "confirmed" && "bg-[var(--esp-live)]/15 text-[var(--esp-live)]",
         state === "ready" && "bg-[var(--esp-gold-soft)] text-[var(--esp-gold-text)]",
-        state === "changed" && "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+        state === "changed" && "bg-(--aov-warning-soft) text-(--aov-warning)",
         state === "recording" && "bg-muted text-muted-foreground",
       )}
     >

@@ -18,7 +18,8 @@ import { RESULT_LABELS, heroRows, nextHeroToReview, openBuilds, sameAs, type Her
 import { BuildCard } from "./build-card"
 import { useBuildReferences } from "./build-references"
 import { ImportDialog } from "./import-dialog"
-import { useBuildCapture, useBuildCaptures, useCaptureActions, useHeroHeads } from "./use-builds"
+import { useBuildCapture, useBuildCaptures, useCaptureActions } from "./use-builds"
+import { headsByCode, usePublicHeroes } from "@/lib/public-heroes"
 
 const captureLabel = (capture: CaptureSummary) => (
   <>
@@ -66,7 +67,7 @@ export function BuildsPage() {
   const selectedId = params.get("capture") ?? list[0]?.id ?? null
   const selected = list.find((capture) => capture.id === selectedId) ?? null
   const detail = useBuildCapture(selectedId)
-  const heads = useHeroHeads()
+  const heads = usePublicHeroes(headsByCode)
   const references = useBuildReferences()
   const actions = useCaptureActions()
 

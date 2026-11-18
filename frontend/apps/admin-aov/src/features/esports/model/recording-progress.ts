@@ -1,7 +1,8 @@
 import type { DocumentView, GameContent, Loadout, Participant, Selection } from "@aov/community-contracts"
 import { DRAFT_ORDER, readDraft } from "./draft"
 import { readTimeline } from "./timeline-io"
-import { VIDEO_MARK, formatClock, youtubeVideoId } from "./vod"
+import { VIDEO_MARK, youtubeVideoId } from "./vod"
+import { formatClock } from "@/lib/clock"
 
 export type StepStatus = "done" | "partial" | "todo"
 /** Where an admin fixes a step: one of the match page's panels, or the full game data page. */

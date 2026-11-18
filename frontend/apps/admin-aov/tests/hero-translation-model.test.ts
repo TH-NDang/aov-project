@@ -7,7 +7,7 @@ import {
   translatedText,
   translationStatus,
   translationStatusLabel,
-} from "../src/features/publishing/hero-translation-model"
+} from "../src/features/publishing/model/hero-translation-model"
 
 test("translation coverage requires all populated source fields and ignores fields without a source", () => {
   const content = structuredClone(fixtureContent)

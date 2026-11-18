@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("admin authors natural skill mentions and restores saved references with their hero and exact skill route", async () => {
   const dom = new JSDOM('<div id="root"></div>', {
@@ -102,33 +103,10 @@ test("admin authors natural skill mentions and restores saved references with th
       })
     return fixture.fetcher(input, init)
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    Element: dom.window.Element,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
-    MutationObserver: dom.window.MutationObserver,
-    DocumentFragment: dom.window.DocumentFragment,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    Event: dom.window.Event,
-    CustomEvent: dom.window.CustomEvent,
-    MouseEvent: dom.window.MouseEvent,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { AdminDescriptionField, AdminRichTextPreview } = await import("../src/features/terminology/rich-text-field")
@@ -158,13 +136,7 @@ test("admin authors natural skill mentions and restores saved references with th
       </MemoryRouter>
     </QueryClientProvider>
   )
-  const waitFor = async (condition: () => boolean, message: string) => {
-    for (let attempt = 0; attempt < 150 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 20))
-      })
-    assert.ok(condition(), message)
-  }
+
   const mentions = () => [
     ...(document.querySelector('[data-testid="live-preview"]') ?? container).querySelectorAll<HTMLButtonElement>(
       '[role="button"][aria-label^="Kỹ năng: Airi ·"]',
@@ -292,11 +264,8 @@ test("admin authors natural skill mentions and restores saved references with th
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await new Promise((resolve) => setTimeout(resolve, 30))
+    await flush()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

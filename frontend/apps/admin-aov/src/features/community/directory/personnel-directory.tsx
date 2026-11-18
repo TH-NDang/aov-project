@@ -7,13 +7,13 @@ import {
   type PersonRole,
   type PersonRoleFilter,
 } from "@aov/community-contracts"
-import { FilterTab, FilterTabs } from "@/components/filter-tabs"
+import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import type { Access } from "@/features/esports/pages/esports-shell"
 import { PlayerPhoto } from "@/features/esports/components/primitives"
-import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
-import { activityLabel } from "@/features/tournaments/record-reason"
-import { PlatformIcon, platformOf } from "../platform-icon"
-import { ProfileRoleIcon } from "../profile-icons"
+import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/components/management-list"
+import { activityLabel } from "@/features/tournaments/model/record-reason"
+import { PlatformIcon, platformOf } from "../components/platform-icon"
+import { ProfileRoleIcon } from "../components/profile-icons"
 import { directoryApi, directoryKeys, useDebounced } from "./directory-api"
 import {
   CountryLabel,

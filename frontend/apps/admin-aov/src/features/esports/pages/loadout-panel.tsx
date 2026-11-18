@@ -4,7 +4,7 @@ import { Clock3, EyeOff, Shield, Swords, TriangleAlert, Users, X } from "lucide-
 import { Button } from "@aov/ui/components/button"
 import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
-import { EquipmentEditor } from "@/features/tournaments/equipment-editor"
+import { EquipmentEditor } from "@/features/tournaments/components/equipment-editor"
 import { LoadoutEditor, type ObservedAtControl } from "./loadout-editor"
 import { HeroIcon, LaneIcon, TimeTag, VIDEO_MARK } from "../components/primitives"
 import {
@@ -18,7 +18,7 @@ import type { GameView, IconRef } from "../model/game-view"
 import { LANE_LABELS } from "../model/labels"
 import type { LoadoutPart } from "../model/loadout"
 import { seatSide, type SeatKey } from "../model/timeline"
-import { formatClock } from "../model/vod"
+import { formatClock } from "@/lib/clock"
 
 /** The game clock for the player position, and back to video time for display and seeking. */
 export type LoadoutClock = {
@@ -218,7 +218,7 @@ export function LoadoutPanel({
                     {value?.playerId ? (
                       <span className="max-w-20 truncate">{entry.playerName}</span>
                     ) : (
-                      <span className="text-amber-600 dark:text-amber-400">Chưa ghi</span>
+                      <span className="text-(--aov-warning)">Chưa ghi</span>
                     )}
                     <SeatDots participant={value} />
                   </button>
@@ -321,7 +321,7 @@ export function LoadoutPanel({
               onChange={(event) => updateSeat(seat, (value) => ({ ...value, playerId: event.target.value || null }))}
               className={cn(
                 "h-8 max-w-full min-w-44 rounded-md border bg-background px-2 text-sm font-semibold",
-                !participant.playerId && "border-dashed border-amber-500 text-amber-600 dark:text-amber-400",
+                !participant.playerId && "border-dashed border-(--aov-warning) text-(--aov-warning)",
               )}
             >
               <option value="">Chưa ghi tuyển thủ</option>

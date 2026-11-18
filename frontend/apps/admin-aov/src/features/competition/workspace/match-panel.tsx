@@ -6,14 +6,15 @@ import { CalendarClock, ExternalLink, Pencil, PlayCircle, Swords, Trash2 } from 
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { LocalTime } from "@aov/ui/components/local-time"
+import { timeZoneLabel } from "@aov/ui/lib/time-zone"
 import { confirmAction } from "@/components/confirm-dialog"
-import { Field } from "@/features/community/profile-fields"
+import { Field } from "@/features/community/components/profile-form-primitives"
 import { youtubeVideoId } from "@/features/esports/model/vod"
 import { matchPath } from "@/features/esports/pages/esports-shell"
-import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/tournament-api"
-import { RESULT_VERIFICATIONS } from "@/features/tournaments/tournament-metadata"
-import { hasScore, hostOf, isWebLink, resultProblem, slotText } from "./model"
-import { BestOfField, SlotEditor, localInputTime, selectClass } from "./plan-fields"
+import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { RESULT_VERIFICATIONS } from "@/features/tournaments/components/tournament-metadata"
+import { hasScore, hostOf, isWebLink, resultProblem, slotText, zonedInputInstant, zonedInputTime } from "./model"
+import { BestOfField, SlotEditor, selectClass } from "./plan-fields"
 import type { Workspace } from "./parts"
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
@@ -135,7 +136,7 @@ function VideoForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; 
   const [problem, setProblem] = useState("")
   const save = useMutation({
     mutationFn: () => tournamentApi.save("series", record, { ...record.content, sourceUrl: url.trim() || undefined }),
-    meta: { successMessage: "Đã lưu link video." },
+    meta: { silent: true, successMessage: "Đã lưu link video." },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
       onDone()
@@ -224,7 +225,7 @@ function ResultForm({
               verifiedOn: current?.verifiedOn ?? null,
             },
       }),
-    meta: { successMessage: "Đã lưu tỷ số." },
+    meta: { silent: true, successMessage: "Đã lưu tỷ số." },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
       onDone()
@@ -404,12 +405,10 @@ function PlanForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; o
           onChange={(b) => update({ b })}
         />
         <Field
-          label={`Giờ đấu (${Intl.DateTimeFormat().resolvedOptions().timeZone})`}
+          label={`Giờ đấu (${timeZoneLabel(ws.plan.timezone)})`}
           type="datetime-local"
-          value={localInputTime(match.scheduledAt)}
-          onChange={(event) =>
-            update({ scheduledAt: event.target.value ? new Date(event.target.value).toISOString() : null })
-          }
+          value={zonedInputTime(match.scheduledAt, ws.plan.timezone)}
+          onChange={(event) => update({ scheduledAt: zonedInputInstant(event.target.value, ws.plan.timezone) })}
         />
       </div>
       <div className="flex flex-wrap items-center gap-2">

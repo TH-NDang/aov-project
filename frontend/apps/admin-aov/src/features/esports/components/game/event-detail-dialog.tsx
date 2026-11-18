@@ -3,7 +3,7 @@ import { Check, Link2, Pencil, Play, Trash2, Youtube } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/dialog"
 import type { GameView } from "../../model/game-view"
 import type { EventCluster, TimelineEvent } from "../../model/timeline"
-import { formatClock } from "../../model/vod"
+import { formatClock } from "@/lib/clock"
 import { VIDEO_MARK } from "../primitives"
 import { ClusterCard, clusterTitle, type ItemLookups } from "./cluster-card"
 
@@ -69,7 +69,7 @@ export function EventDetailDialog({
               </button>
               {youtube && (
                 <a className={action} href={youtube} target="_blank" rel="noreferrer">
-                  <Youtube size={13} className="text-red-500" /> Mở trên YouTube
+                  <Youtube size={13} className="text-destructive" /> Mở trên YouTube
                 </a>
               )}
               <button

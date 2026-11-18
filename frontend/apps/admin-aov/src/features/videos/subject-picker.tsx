@@ -4,7 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@aov/ui/components/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { cn } from "@aov/ui/lib/utils"
-import { KIND_LABELS, subjectId, type VideoSubject, type VideoSubjectKind } from "./video-model"
+import { KIND_LABELS, subjectId, subjectMatches, type VideoSubject, type VideoSubjectKind } from "./video-model"
 
 const KIND_ORDER: VideoSubjectKind[] = ["HERO", "SKILL", "SKIN", "ITEM", "ENCHANTMENT", "ARCANA", "SPELL"]
 /** Rendering the whole catalog at once makes the list sluggish, and nobody scrolls past this many rows. */
@@ -40,21 +40,7 @@ export function SubjectPicker({
     [subjects],
   )
   const groups = useMemo(() => {
-    const words = search
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .split(/\s+/)
-      .filter(Boolean)
-    const matches = (subject: VideoSubject) => {
-      if (!words.length) return true
-      const text = `${rowLabel(subject, heroNames, true)} ${subject.code} ${subject.aliases.join(" ")}`
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/\p{Diacritic}/gu, "")
-      return words.every((word) => text.includes(word))
-    }
+    const matches = (subject: VideoSubject) => subjectMatches(search, subject, rowLabel(subject, heroNames, true))
     return KIND_ORDER.map((kind) => ({
       kind,
       rows: subjects.filter((subject) => subject.kind === kind && matches(subject)),

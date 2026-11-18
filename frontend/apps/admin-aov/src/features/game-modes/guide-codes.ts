@@ -1,13 +1,5 @@
 import type { GuideContent } from "./game-mode-api"
-
-/** Accents and case do not hide an entry from a search. */
-export const fold = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase()
-
-/** A code from a name: accents dropped, lower case, words joined by dashes. */
-export const slugify = (text: string) =>
-  fold(text)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+import { slugify } from "@/lib/text"
 
 /**
  * Codes that no longer follow their entry's name: every code of the saved draft, which the public guide and its links

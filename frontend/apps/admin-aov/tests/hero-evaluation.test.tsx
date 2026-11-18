@@ -3,10 +3,11 @@ import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
-import { cleanTraits, suggestTraits, withTraitDetail } from "../src/features/publishing/hero-traits"
-import { draftHeroNotes } from "../src/features/publishing/hero-notes-draft"
-import type { HeroRankingReading } from "../src/features/publishing/publishing-api"
-import type { Content, Skill, Trait } from "../src/features/publishing/types"
+import { cleanTraits, suggestTraits, withTraitDetail } from "../src/features/publishing/model/assessment/hero-traits"
+import { draftHeroNotes } from "../src/features/publishing/model/assessment/hero-notes-draft"
+import type { HeroRankingReading } from "../src/features/publishing/api/publishing-api"
+import type { Content, Skill, Trait } from "../src/features/publishing/api/types"
+import { installWindow } from "./fixtures/dom"
 
 const skill = (
   skillKey: string,
@@ -173,25 +174,11 @@ test("without a confirmed snapshot the draft uses the traits alone", () => {
 
 async function createView() {
   const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true, url: "http://localhost/hero/test" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { QueryClient, QueryClientProvider } = await import("@tanstack/react-query")
-  const { HeroEvaluation } = await import("../src/features/publishing/hero-evaluation")
+  const { HeroEvaluation } = await import("../src/features/publishing/components/assessment/hero-evaluation")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const root = createRoot(dom.window.document.getElementById("root")!)
   return {
@@ -203,10 +190,7 @@ async function createView() {
     close: async () => {
       await act(async () => root.unmount())
       client.clear()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else delete (globalThis as Record<string, unknown>)[key]
-      }
+      restoreGlobals()
       dom.window.close()
     },
   }

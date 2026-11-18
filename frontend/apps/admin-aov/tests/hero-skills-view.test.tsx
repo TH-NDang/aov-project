@@ -5,8 +5,8 @@ import { act } from "react"
 import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { Skill } from "../src/features/publishing/types"
-import type { SkillImage } from "../src/features/publishing/skill-artwork"
+import type { Skill } from "../src/features/publishing/api/types"
+import type { SkillImage } from "../src/features/publishing/components/skills/skill-artwork"
 import {
   selectSkillTranslation,
   skillLabel,
@@ -14,7 +14,7 @@ import {
   skillVariant,
   skillVariantLabel,
   groupHeroSkills,
-} from "../src/features/publishing/hero-skills"
+} from "../src/features/publishing/model/skills/hero-skills"
 import { createHeroFixture, fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import {
   createEntityIndex,
@@ -23,15 +23,21 @@ import {
   type EntityReference,
   type RichTextNode,
 } from "@aov/ui/lib/entity-rich-text"
-import { analyzeStat, statDistribution } from "../src/features/publishing/hero-stat-analysis"
-import { combatAttributeRows, type StatDefault, type StatSample } from "../src/features/publishing/combat-attributes"
+import { analyzeStat, statDistribution } from "../src/features/publishing/model/assessment/hero-stat-analysis"
+import {
+  combatAttributeRows,
+  type StatDefault,
+  type StatSample,
+} from "../src/features/publishing/model/assessment/combat-attributes"
+import { installWindow, waitFor } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
 
 test("hero descriptions resolve named and implicit skill slots in the viewed revision only", async () => {
   await withView(async () => {
-    const { revisionSkillReferences } = await import("../src/features/publishing/revision-skill-references")
+    const { revisionSkillReferences } =
+      await import("../src/features/publishing/model/skills/revision-skill-references")
     const revision = { ...fixtureRevision, heroId: "d3eedc27-7cfd-4f08-8f80-32df46a55719" }
     const content = structuredClone(fixtureContent)
     content.PROFILE!.translations[0].name = "Dolia"
@@ -70,7 +76,8 @@ test("hero descriptions resolve named and implicit skill slots in the viewed rev
 
 test("bracketed names link the matching revision skill and keep adjacent slot labels in a single reference", async () => {
   await withView(async () => {
-    const { revisionSkillReferences } = await import("../src/features/publishing/revision-skill-references")
+    const { revisionSkillReferences } =
+      await import("../src/features/publishing/model/skills/revision-skill-references")
     const revision = { ...fixtureRevision, heroId: "d3eedc27-7cfd-4f08-8f80-32df46a55719" }
     const content = structuredClone(fixtureContent)
     const namedSkill = (key: string, name: string): Skill => ({
@@ -191,7 +198,8 @@ test("stat comparisons keep recorded source, patch, level, resource type and arm
 
 test("hero analysis opens on demand and excludes the selected hero from both role groups", async () => {
   await withView(async ({ document, render, click, client, waitFor }) => {
-    const { HeroCombatAttributes } = await import("../src/features/publishing/hero-combat-attributes")
+    const { HeroCombatAttributes } =
+      await import("../src/features/publishing/components/assessment/hero-combat-attributes")
     const sample = (heroId: string, roles: string[]): StatSample => ({
       heroId,
       roles,
@@ -233,7 +241,8 @@ test("hero analysis opens on demand and excludes the selected hero from both rol
 
 test("combat attributes keep observed crit damage, patch defaults and explicit overrides distinct", async () => {
   await withView(async ({ document, render }) => {
-    const { HeroCombatAttributes } = await import("../src/features/publishing/hero-combat-attributes")
+    const { HeroCombatAttributes } =
+      await import("../src/features/publishing/components/assessment/hero-combat-attributes")
     const skills = structuredClone(fixtureContent.SKILLS!)
     const values = {
       criticalChancePercent: 0,
@@ -299,7 +308,8 @@ test("combat attributes keep observed crit damage, patch defaults and explicit o
 
 test("attack summary follows roles and active skill scaling while full details keep both stats", async () => {
   await withView(async ({ document, render, click }) => {
-    const { HeroCombatAttributes } = await import("../src/features/publishing/hero-combat-attributes")
+    const { HeroCombatAttributes } =
+      await import("../src/features/publishing/components/assessment/hero-combat-attributes")
     const skills = structuredClone(fixtureContent.SKILLS!)
     const skill = skills.skills[0]
     skill.kind = "ACTIVE"
@@ -339,7 +349,7 @@ test("attack summary follows roles and active skill scaling while full details k
 
 test("armor is typed the way the game shows it and a malformed value cannot be saved", async () => {
   await withView(async ({ document, render, dom }) => {
-    const { HeroStatsEditor } = await import("../src/features/publishing/hero-stats-editor")
+    const { HeroStatsEditor } = await import("../src/features/publishing/components/hero-stats-editor")
     let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
       values: [
         { statKey: "ARMOR", baseValue: null, growthPerLevel: null, unit: "POINT" },
@@ -397,7 +407,7 @@ test("armor is typed the way the game shows it and a malformed value cannot be s
 
 test("a stat without a percent in the game drops one when the row switches to it", async () => {
   await withView(async ({ document, render, dom }) => {
-    const { HeroStatsEditor } = await import("../src/features/publishing/hero-stats-editor")
+    const { HeroStatsEditor } = await import("../src/features/publishing/components/hero-stats-editor")
     let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
       values: [{ statKey: "ARMOR", baseValue: 150, percentValue: 20, growthPerLevel: null, unit: "POINT" }],
       sources: [],
@@ -425,7 +435,7 @@ test("a stat without a percent in the game drops one when the row switches to it
 
 test("a hero can override a shared stat and switch back without storing a copy", async () => {
   await withView(async ({ document, render, click }) => {
-    const { HeroStatsEditor } = await import("../src/features/publishing/hero-stats-editor")
+    const { HeroStatsEditor } = await import("../src/features/publishing/components/hero-stats-editor")
     const rule: StatDefault = {
       statKey: "CRITICAL_DAMAGE",
       baseValue: 200,
@@ -463,7 +473,7 @@ test("a hero can override a shared stat and switch back without storing a copy",
 
 test("hero overview shows the hero's positions and five-point ratings without changing stored content", async () => {
   await withView(async ({ document, render, click }) => {
-    const { HeroContent } = await import("../src/features/publishing/hero-content")
+    const { HeroContent } = await import("../src/features/publishing/components/hero-content")
     const content = structuredClone(fixtureContent)
     content.PROFILE!.translations[0].summary = "Giới thiệu dài cần giữ đầy đủ khi người xem mở rộng. ".repeat(10)
     Object.assign(content.OVERVIEW_RATINGS!, { survivability: null })
@@ -476,7 +486,7 @@ test("hero overview shows the hero's positions and five-point ratings without ch
     )
     const role = document.querySelector('[aria-label="Vai trò: Sát thủ"]')!
     assert.match(role.querySelector("img")!.getAttribute("src")!, /images\/hero\/vai-tro\/sat-thu.png$/)
-    const position = document.querySelector('[aria-label="Vị trí đi: Rừng"]')!
+    const position = document.querySelector('[aria-label="Vị trí đi: Đi rừng"]')!
     assert.equal(position.querySelector("img"), null)
     assert.equal(position.querySelector("svg")!.getAttribute("fill"), "currentColor")
     assert.equal(position.querySelector("svg")!.getAttribute("aria-hidden"), "true")
@@ -514,7 +524,7 @@ test("hero overview shows the hero's positions and five-point ratings without ch
 
 test("five-point rating edits preserve stored scale, fractional values, zero and missing input", async () => {
   await withView(async ({ dom, document, render }) => {
-    const { SectionEditor } = await import("../src/features/publishing/section-editor")
+    const { SectionEditor } = await import("../src/features/publishing/components/section-editor")
     let value = structuredClone(fixtureContent.OVERVIEW_RATINGS!)
     const mount = () =>
       render(
@@ -553,7 +563,7 @@ test("five-point rating edits preserve stored scale, fractional values, zero and
 
 test("stat choices and calendar inputs preserve unknown data, zero and missing values", async () => {
   await withView(async ({ dom, document, render, click }) => {
-    const { SectionEditor } = await import("../src/features/publishing/section-editor")
+    const { SectionEditor } = await import("../src/features/publishing/components/section-editor")
     let value = structuredClone(fixtureContent.COMBAT_STATS!)
     value.values.push({ statKey: "CUSTOM_STAT", baseValue: 17, growthPerLevel: null, unit: "custom-unit" })
     value.sources = [
@@ -730,33 +740,14 @@ async function createView() {
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: dispatchFetch,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroSkillsView } = await import("../src/features/publishing/hero-skills-view")
-  const { SkillArtwork, skillImageMatch } = await import("../src/features/publishing/skill-artwork")
+  const { HeroSkillsView } = await import("../src/features/publishing/components/skills/hero-skills-view")
+  const { SkillArtwork, skillImageMatch } = await import("../src/features/publishing/components/skills/skill-artwork")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   client.setQueryData(["hero-skill-images", "view-hero"], [])
@@ -773,21 +764,14 @@ async function createView() {
       act(async () => root.render(<QueryClientProvider client={client}>{node}</QueryClientProvider>)),
     click: async (node: HTMLElement) => act(async () => node.click()),
     waitFor: async (condition: () => boolean) => {
-      for (let attempt = 0; attempt < 100 && !condition(); attempt++)
-        await act(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 5))
-        })
-      assert.ok(condition(), "Expected skill view state was not reached")
+      await waitFor(condition, "Expected skill view state was not reached")
     },
     close: async () => {
       await act(async () => root.unmount())
       client.clear()
       await logout()
       dom.window.close()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else Reflect.deleteProperty(globalThis, key)
-      }
+      restoreGlobals()
     },
   }
 }

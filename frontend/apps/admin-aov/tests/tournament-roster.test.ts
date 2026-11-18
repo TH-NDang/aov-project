@@ -1,7 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { initialRosterMembership, rosterFormIssue } from "../src/features/tournaments/roster-model"
-import { registryContent, registryFormIssue, registrySearchText } from "../src/features/tournaments/registry-form-model"
+import { initialRosterMembership, rosterFormIssue } from "../src/features/tournaments/model/roster-model"
+import {
+  registryContent,
+  registryFormIssue,
+  registrySearchText,
+} from "../src/features/tournaments/model/registry-form-model"
 import type { PlayerContent } from "@aov/community-contracts"
 
 test("roster membership belongs to one event and team without inventing a lane or active status", () => {

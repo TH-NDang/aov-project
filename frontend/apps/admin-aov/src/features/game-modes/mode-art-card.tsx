@@ -39,6 +39,7 @@ export function ModeArtCard({ modeId, canWrite }: { modeId: string; canWrite: bo
       void client.invalidateQueries({ queryKey: gameModeKeys.list })
     },
     onError: () => setPreview(undefined),
+    meta: { silent: true },
   })
 
   const data = mode.data
@@ -52,7 +53,7 @@ export function ModeArtCard({ modeId, canWrite }: { modeId: string; canWrite: bo
         {src ? (
           <img src={src} alt={`Ảnh chế độ ${data?.content.name ?? ""}`} className="size-full object-cover" />
         ) : (
-          <span className="type-meta flex size-full flex-col items-center justify-center gap-1 text-amber-200">
+          <span className="type-meta flex size-full flex-col items-center justify-center gap-1 text-(--aov-warning)">
             <ImageIcon className="size-6" aria-hidden="true" />
             Chế độ chưa có ảnh
           </span>
@@ -97,7 +98,7 @@ export function ModeArtCard({ modeId, canWrite }: { modeId: string; canWrite: bo
             Sửa thông tin chế độ
           </Link>
         </div>
-        {change.isSuccess && <p className="type-meta text-emerald-300">Đã lưu ảnh mới vào bản nháp của chế độ.</p>}
+        {change.isSuccess && <p className="type-meta text-(--aov-success)">Đã lưu ảnh mới vào bản nháp của chế độ.</p>}
         {change.isError && <p className="type-meta text-destructive">{errorMessage(change.error)}</p>}
       </div>
     </section>

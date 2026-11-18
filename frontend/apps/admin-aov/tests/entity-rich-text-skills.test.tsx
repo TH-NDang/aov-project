@@ -21,6 +21,7 @@ import {
 } from "@aov/ui/lib/entity-rich-text-editor"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { referenceInput, fillReferenceInput, referenceInputValue } from "./fixtures/reference-input"
+import { flush, installWindow } from "./fixtures/dom"
 
 const heroId = "43dec8c3-0197-4459-bbdf-9812fbc12dd6"
 const skill: EntityReference = {
@@ -126,34 +127,15 @@ test("saved skill lookup is bounded, rejects malformed identities and survives a
 test("remote skill suggestions debounce, page on inner scroll, retain lazy paired icons and insert the exact variant", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
   const observer = intersectionHarness()
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    Event: dom.window.Event,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     IntersectionObserver: observer.Observer,
     ResizeObserver: class {
       observe() {}
       unobserve() {}
       disconnect() {}
     },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { EntityRichTextEditor } = await import("@aov/ui/components/entity-rich-text-editor")
   const { EntityRichText } = await import("@aov/ui/components/entity-rich-text")
@@ -289,15 +271,10 @@ test("remote skill suggestions debounce, page on inner scroll, retain lazy paire
     assert.equal(document.querySelector("a")?.getAttribute("href"), resolveEntityRoute(skill, "admin"))
     assert.equal(document.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
   } finally {
-    await act(async () => {
-      root.unmount()
-      await new Promise((resolve) => setTimeout(resolve, 30))
-    })
+    await act(async () => root.unmount())
+    await flush()
     dom.window.close()
-    for (const [key, value] of originals) {
-      if (value) Object.defineProperty(globalThis, key, value)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 

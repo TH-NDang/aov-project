@@ -5,10 +5,10 @@ import {
   uploadHeroImage,
   upgradeHeroImage,
   type Request,
-} from "../src/features/publishing/publishing-api"
-import { contentBlockers, publicationPatchIssue } from "../src/features/publishing/publish-rules"
-import type { Revision } from "../src/features/publishing/types"
-import { observedAttributes } from "../src/features/publishing/combat-attributes"
+} from "../src/features/publishing/api/publishing-api"
+import { contentBlockers, publicationPatchIssue } from "../src/features/publishing/model/publish-rules"
+import type { Revision } from "../src/features/publishing/api/types"
+import { observedAttributes } from "../src/features/publishing/model/assessment/combat-attributes"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { mediaPath } from "../../../tooling/media-proxy.mts"
 
@@ -206,7 +206,7 @@ test("quality upgrades activate an asset version without changing hero content",
 })
 
 test("image URL download omits credentials and rejects non-image responses", async () => {
-  const { imageFromUrl } = await import("../src/features/publishing/image-url")
+  const { imageFromUrl } = await import("../src/features/publishing/model/import/image-url")
   const original = globalThis.fetch
   try {
     globalThis.fetch = async (_url, init) => {

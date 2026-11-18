@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { HeroRow } from "../src/features/publishing/types"
+import type { HeroRow } from "../src/features/publishing/api/types"
 import { intersectionHarness } from "./fixtures/intersection-observer"
+import { flush, installWindow, waitFor } from "./fixtures/dom"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
@@ -83,38 +83,19 @@ async function createSwitcher() {
     }
     throw new Error(`Unexpected fixture request: ${path}`)
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     IntersectionObserver: intersections.Observer,
     ResizeObserver: class {
       observe() {}
       unobserve() {}
       disconnect() {}
     },
-    BroadcastChannel: undefined,
     fetch: dispatchFetch,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroQuickSwitcher } = await import("../src/features/publishing/hero-quick-switcher")
+  const { HeroQuickSwitcher } = await import("../src/features/publishing/components/catalog/hero-quick-switcher")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const selected: HeroRow[] = []
@@ -138,13 +119,7 @@ async function createSwitcher() {
   const input = () => document.querySelector<HTMLInputElement>('[aria-label="Tìm tướng để chuyển"]')!
   const rows = () => [...document.querySelectorAll<HTMLButtonElement>("[data-hero-option]")]
   const click = (element: HTMLElement) => act(async () => element.click())
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 150 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
-      })
-    assert.ok(condition(), "Expected quick hero switcher state was not reached")
-  }
+
   return {
     dom,
     document,
@@ -173,14 +148,9 @@ async function createSwitcher() {
       await act(async () => root.unmount())
       client.clear()
       await logout()
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 30))
-      })
+      await flush()
       dom.window.close()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else Reflect.deleteProperty(globalThis, key)
-      }
+      restoreGlobals()
     },
   }
 }

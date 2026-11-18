@@ -1,5 +1,5 @@
 import { backendRequest } from "@/app/auth/session"
-import type { Request } from "../publishing/publishing-api"
+import type { Request } from "../publishing/api/publishing-api"
 import type { ImportVideo } from "./crawl-import"
 import type {
   AdminVideo,

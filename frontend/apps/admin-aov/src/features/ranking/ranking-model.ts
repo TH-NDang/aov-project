@@ -1,4 +1,6 @@
 import type { RankingDetail, RankingHero, RankingMetric, RankingRole, RankingValue } from "./ranking-api"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
+import { formatNumber, normalize, readerLocale } from "@/lib/text"
 
 export type MetricKind = "TIER" | "PERCENT" | "AMOUNT" | "HERO"
 
@@ -79,18 +81,13 @@ export const ROLE_LABELS: Record<RankingRole, string> = {
 }
 export const ROLE_ORDER = Object.keys(ROLE_LABELS) as RankingRole[]
 
-const decimals = new Intl.NumberFormat("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-
-/** The value as the game prints it: `49,42%`, `130.189,10`, `T0`. */
-export function formatValue(value: RankingValue | undefined): string {
+/** A statistic in the reader's locale with two decimals, such as `49,42%` in Vietnamese; a tier as read: `T0`. */
+export function formatValue(value: RankingValue | undefined, locale = readerLocale()): string {
   if (!value) return "—"
   if (value.tier) return value.tier
   if (value.number == null) return "—"
-  return METRICS[value.metric].kind === "PERCENT" ? `${decimals.format(value.number)}%` : decimals.format(value.number)
-}
-
-export function formatNumber(metric: RankingMetric, number: number): string {
-  return METRICS[metric].kind === "PERCENT" ? `${decimals.format(number)}%` : decimals.format(number)
+  const number = formatNumber(value.number, { minimumFractionDigits: 2, maximumFractionDigits: 2 }, locale)
+  return METRICS[value.metric].kind === "PERCENT" ? `${number}%` : number
 }
 
 /** Lower is stronger: T0 is the top tier. Unknown tiers sort last. */
@@ -138,20 +135,14 @@ export function tierChange(row: RankingRow): number | null {
   return now && then ? tierRank(then) - tierRank(now) : null
 }
 
-export function formatChange(metric: RankingMetric, delta: number): string {
+export function formatChange(metric: RankingMetric, delta: number, locale = readerLocale()): string {
   const sign = delta > 0 ? "+" : delta < 0 ? "−" : "±"
-  return `${sign}${decimals.format(Math.abs(delta))}${METRICS[metric].kind === "PERCENT" ? " điểm" : ""}`
+  const number = formatNumber(Math.abs(delta), { minimumFractionDigits: 2, maximumFractionDigits: 2 }, locale)
+  return `${sign}${number}${METRICS[metric].kind === "PERCENT" ? " điểm" : ""}`
 }
 
 export function fold(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .replace(/[’‘`]/g, "'")
-    .toLowerCase()
-    .trim()
+  return normalize(text.replace(/[’‘`]/g, "'"))
 }
 
 export type SortKey = "POSITION" | RankingMetric
@@ -218,11 +209,11 @@ export function roleCounts(rows: RankingRow[]): Record<RankingRole | "ALL", numb
   return counts
 }
 
-/** The text an editor types for a value, in the game's own format. */
+/** The text an editor corrects for a value: a plain number with a decimal dot, which parseNumber reads back. */
 export function editText(value: RankingValue): string {
   if (value.tier) return value.tier
   if (value.number == null) return ""
-  return decimals.format(value.number)
+  return formatGameNumber(value.number, 2)
 }
 
 /** Reads `130.189,10`, `49,42%` or `49.42` back into a number; null when the text is not a number. */

@@ -8,16 +8,16 @@ import { Plus, Trash2, Upload } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
-import { FilterTab, FilterTabs } from "@/components/filter-tabs"
+import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
-import { RegistryEditor } from "@/features/tournaments/registry-editor"
-import { RegistryImportSheet } from "@/features/tournaments/registry-import"
+import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
+import { RegistryImportSheet } from "@/features/tournaments/components/registry-import"
 import { useRecords, useTournamentStats } from "../data/use-esports-data"
-import type { TournamentStats } from "../components/tournament-cards"
-import { TournamentList } from "@/features/tournaments/tournament-list"
-import { regionsNamedBy } from "@/features/tournaments/record-reason"
-import { partsByMainEvent } from "@/features/tournaments/tournament-parts"
-import { tournamentApi, tournamentKeys, type TournamentSort } from "@/features/tournaments/tournament-api"
+import type { TournamentStats as ContractStats } from "@aov/community-contracts"
+import { TournamentList } from "@/features/tournaments/components/tournament-list"
+import { regionsNamedBy } from "@/features/tournaments/model/record-reason"
+import { partsByMainEvent } from "@/features/tournaments/model/tournament-parts"
+import { tournamentApi, tournamentKeys, type TournamentSort } from "@/features/tournaments/api/tournament-api"
 import { useDebounced } from "@/features/community/directory/directory-api"
 import {
   ManagementEmpty,
@@ -26,11 +26,13 @@ import {
   ManagementPanel,
   ManagementToolbar,
   managementSelectClassName,
-} from "@/features/tournaments/management-list"
+} from "@/features/tournaments/components/management-list"
 import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { AccessGate, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
 
 type StatusFilter = "all" | NonNullable<TournamentContent["status"]>
+type TournamentStats = Omit<ContractStats, "tournamentId">
+
 const STATUS_FILTERS: StatusFilter[] = ["all", "ONGOING", "UPCOMING", "FINISHED", "ANNOUNCED", "UNKNOWN"]
 const SORTS: Record<TournamentSort, string> = {
   RECENT: "Gần đây trước",
