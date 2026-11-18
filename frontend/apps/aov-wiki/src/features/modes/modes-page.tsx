@@ -10,6 +10,7 @@ import { modeCardsQuery, type ModeCard } from "./mode-api"
 import { ModeCards, ModeCardsSkeleton, modeMetaText } from "./mode-cards"
 import { AvailabilityState, GROUP_NAMES, hasSchedule, isOpen, ModeArt, ModeHeading } from "./mode-ui"
 import { foldSearchText } from "@aov/ui/lib/search-text"
+import { modesLead, scheduleNote } from "./mode-lead"
 import "./modes.css"
 import "./mode-pages.css"
 
@@ -26,12 +27,6 @@ const FILTERS: { key: Filter; label: string; english: string }[] = [
 const GROUPS = ["PVP", "ENTERTAINMENT"] as const
 /** The modes until they load; one array, so the filtered list is not worked out again on every render. */
 const NO_MODES: ModeCard[] = []
-
-/** The schedule is what the game's lobby showed when it was recorded, so the page says so once. */
-const SCHEDULE_NOTE: [string, string] = [
-  "Lịch mở ghi theo sảnh chọn chế độ, có thể đã đổi.",
-  "Schedules are as the mode lobby showed them and may have changed.",
-]
 
 /** Every published game mode: a guide first, then the game's groups, as a grid on wide screens and a list on phones. */
 export function ModesPage() {
@@ -71,11 +66,13 @@ export function ModesPage() {
     const chip = chosen.getBoundingClientRect()
     row.scrollLeft += chip.left - box.left - (box.width - chip.width) / 2
   }, [filter])
-  const counts = [
-    text(`${all.length} chế độ`, `${all.length} ${all.length === 1 ? "mode" : "modes"}`),
-    text(`${openCount} đang mở`, `${openCount} open`),
-    ...(unknownCount ? [text(`${unknownCount} chưa rõ lịch mở`, `${unknownCount} with schedule unknown`)] : []),
-  ].join(", ")
+  const counts = !all.length
+    ? ""
+    : [
+        text(`${all.length} chế độ`, `${all.length} ${all.length === 1 ? "mode" : "modes"}`),
+        text(`${openCount} đang mở`, `${openCount} open`),
+        ...(unknownCount ? [text(`${unknownCount} chưa rõ lịch mở`, `${unknownCount} with schedule unknown`)] : []),
+      ].join(", ")
 
   function update(changes: Partial<Record<"search" | "filter", string | null>>) {
     setParams(
@@ -92,10 +89,7 @@ export function ModesPage() {
   return (
     <div className="wiki-mode-page wiki-mode-index">
       <div className="wiki-mode-index-head">
-        <CatalogHeading
-          title={text("Chế độ chơi", "Game modes")}
-          lead={all.length ? `${counts}. ${text(...SCHEDULE_NOTE)}` : SCHEDULE_NOTE}
-        />
+        <CatalogHeading title={text("Chế độ chơi", "Game modes")} lead={modesLead(text, counts)} />
         <div className="wiki-mode-filter-bar" role="group" aria-label={text("Lọc chế độ", "Filter modes")}>
           <div className="wiki-mode-find">
             <label>
@@ -191,7 +185,7 @@ export function ModesPage() {
             <p className="wiki-mode-footnote">
               {unknownShown > 0 &&
                 text(`${unknownShown} chế độ chưa rõ lịch mở. `, `${unknownShown} modes have no known schedule. `)}
-              {text(...SCHEDULE_NOTE)}
+              {scheduleNote(text)}
             </p>
           )}
         </>
