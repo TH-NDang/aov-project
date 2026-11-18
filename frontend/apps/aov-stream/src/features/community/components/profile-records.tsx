@@ -1,11 +1,13 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router"
 import type { CompetitionView, Lane, ProfileAchievement, ProfileHistory, ProfileMember } from "@aov/community-contracts"
+import { achievementRank, type AchievementRank } from "@aov/community-contracts/achievements"
 import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
 import { LANE_NAMES } from "../../../lib/tournament-model"
 import { dayRange, formatDay } from "../../../components/community-ui"
+import { achievementMark } from "../model/achievement-mark"
 import { foldSearchText } from "@aov/ui/lib/search-text"
 
 const fold = (value: string) => foldSearchText(value).trim()
@@ -60,6 +62,8 @@ export type AchievementGroup = {
   competitionId?: string
   date?: string | null
   placements: string[]
+  /** The rank of every result in the group, stored or read from its wording. */
+  ranks: AchievementRank[]
   sourceUrl?: string | null
 }
 
@@ -77,9 +81,11 @@ export function achievementGroups(items: ProfileAchievement[], links: Competitio
       competitionId: links.name(item.tournamentId) ? item.tournamentId! : undefined,
       date: item.date,
       placements: [],
+      ranks: [],
       sourceUrl: item.sourceUrl,
     }
     if (!group.placements.includes(item.placement)) group.placements.push(item.placement)
+    group.ranks.push(achievementRank(item))
     if ((item.date || "") > (group.date || "")) group.date = item.date
     groups.set(key, group)
   }
@@ -90,25 +96,16 @@ export function achievementGroups(items: ProfileAchievement[], links: Competitio
 export const achievementCount = (groups: AchievementGroup[]) =>
   groups.reduce((sum, group) => sum + group.placements.length, 0)
 
-/** A final standing reads as a number in the row's mark; anything else is an award. */
-function placementRank(placement: string) {
-  const text = placement.trim().toLowerCase()
-  if (text === "vô địch") return 1
-  if (text === "á quân") return 2
-  const rank = /^hạng\s*(\d+)(?:\s*[-–]\s*(\d+))?$/.exec(text)
-  return rank ? { from: Number(rank[1]), to: rank[2] ? Number(rank[2]) : null } : null
-}
-
-function PlacementMark({ placements }: { placements: string[] }) {
-  const ranks = placements.map(placementRank).filter((rank) => rank != null)
-  const best = ranks.sort((a, b) => (typeof a === "number" ? a : a.from) - (typeof b === "number" ? b : b.from))[0]
-  if (best === 1)
+/** The row's mark: a cup for the title, the best place as a number, or the sign of an award. */
+function PlacementMark({ ranks }: { ranks: AchievementRank[] }) {
+  const mark = achievementMark(ranks)
+  if (mark.kind === "champion")
     return (
       <span className="pf-row-mark" data-mark="champion">
         <StreamIcon name="trophy" size={15} />
       </span>
     )
-  if (best == null)
+  if (mark.kind === "award")
     return (
       <span className="pf-row-mark" data-mark="award">
         <StreamIcon name="spark" size={14} />
@@ -116,7 +113,7 @@ function PlacementMark({ placements }: { placements: string[] }) {
     )
   return (
     <span className="pf-row-mark" aria-hidden="true">
-      {typeof best === "number" ? best : best.to ? `${best.from}–${best.to}` : best.from}
+      {mark.text}
     </span>
   )
 }
@@ -127,7 +124,7 @@ export function AchievementRows({ groups }: { groups: AchievementGroup[] }) {
     <ol className="pf-rows" data-marked="">
       {groups.map((group) => (
         <li key={group.key}>
-          <PlacementMark placements={group.placements} />
+          <PlacementMark ranks={group.ranks} />
           <div className="pf-row-text">
             <strong>
               {group.competitionId ? (
