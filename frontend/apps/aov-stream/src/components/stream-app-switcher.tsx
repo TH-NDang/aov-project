@@ -19,8 +19,8 @@ export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
 
   if (mobile)
     return (
-      <span className="public-app-theme" data-product="stream">
-        <PublicAppWordmark product="Stream" />
+      <span className="public-app-theme stream-brand-wordmark" data-product="stream">
+        <PublicAppWordmark product="Stream" size="small" />
       </span>
     )
 

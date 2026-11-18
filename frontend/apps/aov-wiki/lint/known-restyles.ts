@@ -5,7 +5,6 @@ export const knownRestyles = [
   "components/skin-preview.css .wiki-edit-heading",
   "components/videos/skill-videos.css .wiki-video-meta",
   "components/videos/skill-videos.css .wiki-video-title",
-  "components/wiki-header.css .public-app-wordmark",
   "components/wiki-header.css .wiki-search",
   "features/account/account.css .pas-section",
   "features/account/account.css .public-account-security",

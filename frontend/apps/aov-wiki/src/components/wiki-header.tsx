@@ -92,7 +92,7 @@ function SectionSelector() {
         data-product="wiki"
         aria-label={`${t("Chọn ứng dụng", "Choose application")} — ${current.label}`}
       >
-        <PublicAppWordmark product="Wiki" />
+        <PublicAppWordmark product="Wiki" className="wiki-header-wordmark" />
         <span className="public-app-chevron">
           <Icon name="chevron" />
         </span>
@@ -300,7 +300,7 @@ function WikiHeaderCompact({
       ) : (
         <a className="wiki-compact-brand" href={href("/")} aria-label={`${SITE_NAME} — ${t("Trang chủ", "Home")}`}>
           <img src={WIKI_LOGO_URL} alt="" width={28} height={28} fetchPriority="high" />
-          <PublicAppWordmark product="Wiki" className="wiki-mobile-wordmark" />
+          <PublicAppWordmark product="Wiki" size="small" />
         </a>
       )}
       {pageTitle ? (

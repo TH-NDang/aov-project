@@ -53,6 +53,9 @@
   white-space: nowrap;
   font-style: normal;
 }
+.public-app-wordmark[data-size="small"] {
+  font-size: 18px;
+}
 .public-app-wordmark-prefix {
   position: relative;
   display: inline-block;

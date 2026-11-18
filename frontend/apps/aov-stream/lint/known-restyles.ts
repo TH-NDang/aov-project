@@ -2,8 +2,6 @@
 // feature is reworked: the variation moves to the owning sheet behind a modifier that the owning component sets.
 // `pnpm lint` fails on a restyle missing here and on an entry no rule matches any more, so the list only shrinks.
 export const knownRestyles = [
-  "components/stream-app-switcher.css .public-app-trigger",
-  "components/stream-app-switcher.css .public-app-wordmark",
   "features/community/components/community-directory.css .cp-avatar",
   "features/community/components/community-directory.css .cp-follow-chip",
   "features/community/components/community-directory.css .hub-menu-item",
