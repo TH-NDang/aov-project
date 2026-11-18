@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.catalog.application;
 
 import com.wikiaov.hero.internal.application.HeroErrorCode;
+import com.wikiaov.hero.internal.application.response.HeroListView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
@@ -281,7 +282,7 @@ public class HeroQueries {
      * published forms. With {@code playable}, lists what players pick instead: heroes without forms and every form,
      * each form naming its holder; heroes that hold forms are left out.
      */
-    public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
+    public HeroListView list(String region, String locale, int page, int size, String q, String role,
             String sort, UUID seasonId, UUID patchVariantId, boolean includeUnscoped, boolean playable) {
         HeroValidation.locale(locale);
         if (!Set.of("code,asc", "code,desc").contains(sort)) {
@@ -358,11 +359,16 @@ public class HeroQueries {
             all.add(new ListEntry(item, hero.bindingsId(), formEntries));
         }
 
-        var selected = PageSlice.of(all, page, size).items();
-        var items = listMedia(selected);
+        var selected = PageSlice.of(all, page, size);
+        var items = listMedia(selected.items());
 
-        return Map.of("context", context(ctx, locale), "items", items, "page", page, "size", size, "totalElements",
-                all.size(), "totalPages", all.isEmpty() ? 0 : (all.size() + size - 1) / size);
+        return new HeroListView(listContext(ctx, locale), selected.withItems(items));
+    }
+
+    private static HeroListView.Context listContext(GameplayContext c, String locale) {
+        return new HeroListView.Context(c.regionCode(), locale,
+                new HeroListView.Reference(c.rulesetId(), c.rulesetCode()),
+                new HeroListView.Reference(c.patchId(), c.patchCode()), c.patchVariantId(), c.effectiveAt());
     }
 
     private Published published(HeroIdentity hero, HeroReadMoments.Choice<HeroRevisionView> choice, String locale) {

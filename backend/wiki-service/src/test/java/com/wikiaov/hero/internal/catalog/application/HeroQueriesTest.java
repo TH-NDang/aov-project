@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.wikiaov.hero.internal.application.response.HeroListView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
@@ -107,7 +108,10 @@ class HeroQueriesTest {
                 .containsEntry("head", head)
                 .containsEntry("portrait", portrait)
                 .doesNotContainKey("splash"));
-        assertThat(result).containsEntry("totalElements", 3).containsEntry("totalPages", 3);
+        assertThat(result.page().totalElements()).isEqualTo(3);
+        assertThat(result.page().totalPages()).isEqualTo(3);
+        assertThat(result.context().region()).isEqualTo("VN");
+        assertThat(result.context().requestedLocale()).isEqualTo("en-US");
         verify(sections).content(HeroSection.MEDIA_BINDINGS, selected.bindingsId());
         verify(sections, never()).content(HeroSection.MEDIA_BINDINGS, first.bindingsId());
         verify(sections, never()).content(HeroSection.MEDIA_BINDINGS, last.bindingsId());
@@ -152,7 +156,8 @@ class HeroQueriesTest {
         var result = queries.list("VN", "vi-VN", 1, 20, "", null, "code,asc", null, null, false, false);
 
         assertThat(items(result)).isEmpty();
-        assertThat(result).containsEntry("totalElements", 1).containsEntry("totalPages", 1);
+        assertThat(result.page().totalElements()).isEqualTo(1);
+        assertThat(result.page().totalPages()).isEqualTo(1);
         verify(sections, never()).content(HeroSection.MEDIA_BINDINGS, hero.bindingsId());
         verifyNoInteractions(media);
     }
@@ -242,8 +247,8 @@ class HeroQueriesTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static List<Map<String, Object>> items(Map<String, Object> result) {
-        return (List<Map<String, Object>>) result.get("items");
+    private static List<Map<String, Object>> items(HeroListView result) {
+        return result.page().items();
     }
 
     private record CatalogHero(

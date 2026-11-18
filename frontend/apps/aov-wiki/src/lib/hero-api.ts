@@ -82,8 +82,7 @@ interface HeroContext {
 
 interface HeroPage {
   context: HeroContext
-  items: HeroListItem[]
-  totalElements: number
+  page: { items: HeroListItem[]; totalElements: number }
 }
 
 export interface PublicSkill {
@@ -161,7 +160,7 @@ export const heroCatalogQuery = (scope: WikiCatalogScope) =>
         "/heroes",
         wikiCatalogParameters(scope),
         signal,
-        { size: 100, items: (page) => page.items, total: (page) => page.totalElements },
+        { size: 100, items: (list) => list.page.items, total: (list) => list.page.totalElements },
       )
       return { context: first.context, items }
     },

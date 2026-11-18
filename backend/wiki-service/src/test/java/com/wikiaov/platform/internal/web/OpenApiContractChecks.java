@@ -231,10 +231,11 @@ abstract class OpenApiContractChecks {
                 .path("get").path("responses").path("200"));
         assertThat(revisions.path("type").asText()).isEqualTo("array");
         assertThat(resolve(spec, revisions.path("items")).path("properties").has("heroId")).isTrue();
-        JsonNode dynamic = contentSchema(spec.path("paths").path("/api/wiki/v1/heroes")
-                .path("get").path("responses").path("200"));
-        assertThat(dynamic.path("type").asText()).isEqualTo("object");
-        assertThat(dynamic.path("additionalProperties").asBoolean()).isTrue();
+        JsonNode heroes = resolve(spec, contentSchema(spec.path("paths").path("/api/wiki/v1/heroes")
+                .path("get").path("responses").path("200")));
+        assertThat(heroes.path("properties").has("context")).isTrue();
+        assertThat(resolve(spec, heroes.path("properties").path("page")).path("properties").has("totalElements"))
+                .isTrue();
         JsonNode media = resolve(spec, contentSchema(spec.path("paths").path("/api/wiki/v1/admin/media/assets")
                 .path("post").path("requestBody")));
         assertThat(media.path("required").toString()).contains("semanticType");

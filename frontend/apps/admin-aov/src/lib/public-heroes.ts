@@ -8,11 +8,13 @@ export interface PublicHero {
   head?: string
 }
 
-type HeroPage = {
-  items: { code: string; name: string; head?: { currentVersion?: { url?: string } | null } | null }[]
-  page: number
-  size: number
-  totalElements: number
+type HeroList = {
+  page: {
+    items: { code: string; name: string; head?: { currentVersion?: { url?: string } | null } | null }[]
+    page: number
+    size: number
+    totalElements: number
+  }
 }
 
 export const publicHeroKeys = { all: ["public-heroes"] as const }
@@ -23,7 +25,7 @@ const PAGE_SIZE = 100
 export async function loadPublicHeroes(signal?: AbortSignal): Promise<PublicHero[]> {
   const heroes: PublicHero[] = []
   for (let page = 0; ; page++) {
-    const slice = await backendRequest<HeroPage>(`/heroes?page=${page}&size=${PAGE_SIZE}`, { signal })
+    const { page: slice } = await backendRequest<HeroList>(`/heroes?page=${page}&size=${PAGE_SIZE}`, { signal })
     heroes.push(
       ...slice.items.map((hero) => ({ code: hero.code, name: hero.name, head: hero.head?.currentVersion?.url })),
     )

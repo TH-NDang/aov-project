@@ -1,5 +1,6 @@
 package com.wikiaov.hero.internal.web;
 
+import com.wikiaov.hero.internal.application.response.HeroListView;
 import com.wikiaov.platform.PageLimits;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,10 +21,10 @@ import org.springframework.web.context.request.WebRequest;
 @Tag(name = "hero public")
 public interface HeroPublicApi {
 
-    @Operation(operationId = "heroPublicApi_list", summary = "List - hero public", description = "List for hero public. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
+    @Operation(operationId = "heroPublicApi_list", summary = "List - hero public", description = "List for hero public. Public read endpoint. Unrecognized query parameters are rejected. Returns the gameplay context the list was read in and one page of heroes; item properties depend on the hero's forms and content.", parameters = @Parameter(name = "If-None-Match", in = ParameterIn.HEADER, schema = @Schema(type = "string"), description = "Previously returned ETag; a matching representation returns 304 without a body."), responses = {
             @ApiResponse(responseCode = "200", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
-                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+                    @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Successful operation.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HeroListView.class))),
             @ApiResponse(responseCode = "304", headers = {
                     @Header(name = "ETag", description = "Representation entity tag.", schema = @Schema(type = "string")),
                     @Header(name = "Cache-Control", description = "Cache policy for this representation.", schema = @Schema(type = "string"))}, description = "Representation not modified; no response body.", content = @Content)

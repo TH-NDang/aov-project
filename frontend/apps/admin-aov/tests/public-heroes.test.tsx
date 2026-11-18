@@ -15,7 +15,10 @@ const backend = fakeBackend(sessionRoutes(), (request) => {
   if (request.pathname !== "/heroes") return undefined
   const page = Number(request.url.searchParams.get("page"))
   const size = Number(request.url.searchParams.get("size"))
-  return json({ items: heroes.slice(page * size, (page + 1) * size), page, size, totalElements: total })
+  return json({
+    context: { region: "VN", requestedLocale: "vi-VN" },
+    page: { items: heroes.slice(page * size, (page + 1) * size), page, size, totalElements: total },
+  })
 })
 withDom({ globals: () => ({ fetch: backend.fetch }) })
 

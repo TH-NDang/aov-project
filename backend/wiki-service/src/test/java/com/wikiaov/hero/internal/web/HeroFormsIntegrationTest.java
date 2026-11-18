@@ -261,7 +261,7 @@ class HeroFormsIntegrationTest {
     }
 
     private static List<Map<String, Object>> skinItems(Map<String, Object> catalog) {
-        return items((Map<String, Object>) catalog.get("page"));
+        return items(catalog);
     }
 
     /** The hero that will hold the forms: names and images only, published once it holds its forms. */
@@ -361,8 +361,9 @@ class HeroFormsIntegrationTest {
                 : json.readValue(response.getContentAsString(), Map.class);
     }
 
-    private static List<Map<String, Object>> items(Map<String, Object> page) {
-        return (List<Map<String, Object>>) page.get("items");
+    /** The rows of a list answer that keeps its page under {@code page}, as GET /heroes and GET /skins do. */
+    private static List<Map<String, Object>> items(Map<String, Object> list) {
+        return (List<Map<String, Object>>) ((Map<String, Object>) list.get("page")).get("items");
     }
 
     private static UUID id(Map<String, Object> row) {

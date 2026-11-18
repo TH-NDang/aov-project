@@ -68,13 +68,18 @@ function apiReader(apiBase: string, retryDelayMs: number) {
 
 type Reader = ReturnType<typeof apiReader>
 
-async function readPages<T>(read: Reader, apiPath: string) {
+type Slice<T> = { items: T[]; totalElements: number }
+
+/** Every row of a list; `sliceOf` finds the page in an answer that carries more than the page (GET /heroes). */
+async function readPages<T>(read: Reader, apiPath: string, sliceOf = (body: unknown) => body as Slice<T>) {
   const items: T[] = []
   for (let page = 0; ; page++) {
-    const slice = await read<{ items: T[]; totalElements: number }>(apiPath, {
-      page: String(page),
-      size: String(PAGE_SIZE),
-    })
+    const slice = sliceOf(
+      await read<unknown>(apiPath, {
+        page: String(page),
+        size: String(PAGE_SIZE),
+      }),
+    )
     items.push(...slice.items)
     if (!slice.items.length || items.length >= slice.totalElements) return items
   }
@@ -113,7 +118,7 @@ interface HeroDetailResponse {
 }
 
 async function readHeroes(read: Reader) {
-  const rows = await readPages<HeroListRow>(read, "/heroes")
+  const rows = await readPages<HeroListRow>(read, "/heroes", (body) => (body as { page: Slice<HeroListRow> }).page)
   const heroes = await mapLimit(rows, DETAIL_CONCURRENCY, async (row): Promise<PublishedHero | null> => {
     try {
       const detail = await read<HeroDetailResponse>(`/heroes/${encodeURIComponent(row.id)}`)

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.hero.internal.application.response.HeroListView;
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
 import com.wikiaov.hero.internal.catalog.application.HeroQueries;
 import com.wikiaov.hero.internal.skins.application.PublicSkinCatalog;
@@ -66,7 +67,7 @@ class ScopedCatalogControllerTest {
         var season = UUID.randomUUID();
         var patch = UUID.randomUUID();
         when(heroes.list("VN", "en-US", 0, 20, "", null, "code,asc", season, patch, false, false))
-                .thenReturn(Map.of("items", List.of()));
+                .thenReturn(new HeroListView(null, new PageSlice<>(List.of(), 0, 20, 0)));
         when(heroes.detail(hero, "VN", "en-US", false, season, patch, false))
                 .thenReturn(Map.of("id", hero));
         when(heroes.detail(hero, "VN", "en-US", true, season, patch, false))
