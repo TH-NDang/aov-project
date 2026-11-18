@@ -26,7 +26,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { PublishingWorkspace } = await import("../src/features/publishing/pages/publishing-page")
-  const { updateTranslation } = await import("../src/features/publishing/components/translation-editor")
+  const { updateTranslation } = await import("../src/features/publishing/components/editing/translation-editor")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })

@@ -9,7 +9,7 @@ import { flush } from "./fixtures/dom"
 
 test("arcana keeps tier III visible, collapses lower tiers and reveals filtered results with circular icons", async () => {
   await withWarehouseUi(async ({ document, client, render }) => {
-    const { ArcanaCollection } = await import("../src/features/warehouse/components/arcana-cards")
+    const { ArcanaCollection } = await import("../src/features/warehouse/components/arcana/arcana-cards")
     client.setQueryData(["media", "asset", "arcana-icon", "content"], { currentUrl: "/arcana.webp" })
     const records: WarehouseEntry<ArcanaContent>[] = [1, 2, 3].map((tier) => ({
       id: `tier-${tier}`,
@@ -59,7 +59,7 @@ test("arcana keeps tier III visible, collapses lower tiers and reveals filtered 
 
 test("arcana groups colors consistently and shortens only matching name prefixes without losing stats", async () => {
   await withWarehouseUi(async ({ document, render }) => {
-    const { ArcanaCollection } = await import("../src/features/warehouse/components/arcana-cards")
+    const { ArcanaCollection } = await import("../src/features/warehouse/components/arcana/arcana-cards")
     const definitions: [ArcanaContent["color"], string][] = [
       ["GREEN", "Xanh III Giáp"],
       ["PURPLE", "Ngọc hỗ trợ"],
@@ -113,7 +113,7 @@ test("arcana groups colors consistently and shortens only matching name prefixes
 
 test("arcana separates combat groups within each color and tier without duplicating hybrid or utility cards", async () => {
   await withWarehouseUi(async ({ document, render }) => {
-    const { ArcanaCollection } = await import("../src/features/warehouse/components/arcana-cards")
+    const { ArcanaCollection } = await import("../src/features/warehouse/components/arcana/arcana-cards")
     const definitions: [string, ArcanaContent["color"], number, string[]][] = [
       ["physical-defense", "RED", 3, ["physical-attack", "armor"]],
       ["magic-speed", "RED", 3, ["magicAttack", "attackSpeed"]],
@@ -169,7 +169,7 @@ test("arcana separates combat groups within each color and tier without duplicat
 
 test("arcana filters follow the loaded patch and distinguish missing changes from filtered results", async () => {
   await withWarehouseUi(async ({ document, client, render, click }) => {
-    const { BackendArcanaPage } = await import("../src/features/warehouse/components/secondary-pages")
+    const { BackendArcanaPage } = await import("../src/features/warehouse/components/secondary/secondary-pages")
     const { warehouseKeys } = await import("../src/features/warehouse/api/warehouse-api")
     const definitions: [string, ArcanaContent["color"], number, string][] = [
       ["red-magic", "RED", 3, "magicAttack"],
@@ -306,7 +306,7 @@ test("arcana filters follow the loaded patch and distinguish missing changes fro
 
 test("arcana uses terminology colors and live overrides without adding hover or nested button controls", async () => {
   await withWarehouseUi(async ({ document, client, render }) => {
-    const { ArcanaCollection } = await import("../src/features/warehouse/components/arcana-cards")
+    const { ArcanaCollection } = await import("../src/features/warehouse/components/arcana/arcana-cards")
     const { createArcanaStatColors } = await import("@aov/ui/lib/arcana-stat-colors")
     const { defaultSettings } = await import("../src/features/terminology/settings-api")
     const colors = createArcanaStatColors(defaultSettings.entities)

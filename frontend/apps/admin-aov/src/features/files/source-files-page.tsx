@@ -30,7 +30,7 @@ import { MasterDetail } from "@/components/master-detail"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { Page, PageHeader } from "@/components/page-header"
 import { SearchField } from "@/components/search-field"
-import { control } from "../publishing/components/fields"
+import { control } from "../publishing/components/editing/fields"
 import { CollectionFormSheet } from "./collection-form-sheet"
 import { FileTabs } from "./file-tabs"
 import {

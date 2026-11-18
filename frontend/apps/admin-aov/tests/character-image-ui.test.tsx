@@ -149,7 +149,7 @@ test("backend media groups retain missing main rows, select alternatives with ex
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { CharacterImagesPage } = await import("../src/features/media/pages/character-images-page")
   const { BadgesPage } = await import("../src/features/media/pages/badges-page")
-  const { SkinBadgeEditor } = await import("../src/features/media/components/skin-badge-editor")
+  const { SkinBadgeEditor } = await import("../src/features/media/components/badges/skin-badge-editor")
   const { createRoot } = await import("react-dom/client")
   const { TooltipProvider } = await import("@aov/ui/components/tooltip")
   const root = createRoot(dom.window.document.getElementById("root")!)

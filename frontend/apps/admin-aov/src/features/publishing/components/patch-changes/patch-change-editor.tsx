@@ -24,7 +24,7 @@ import {
   type ChangeRowType,
 } from "../../model/patch-changes/patch-change-model"
 import { ROLES, type ChangeSource, type Content } from "../../api/types"
-import { HeroAsset } from "../hero-asset"
+import { HeroAsset } from "../editing/hero-asset"
 import { skillImageMatch, useHeroSkillImages } from "../skills/skill-artwork"
 import { SkillChangeList } from "../skills/skill-change-list"
 import { ActionStrip } from "@/components/action-strip"

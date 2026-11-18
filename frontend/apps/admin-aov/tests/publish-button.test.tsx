@@ -6,7 +6,7 @@ import { createWindow, installWindow } from "./fixtures/dom"
 
 async function withButton(
   props: Partial<
-    React.ComponentProps<typeof import("../src/features/publishing/components/publish-button").PublishButton>
+    React.ComponentProps<typeof import("../src/features/publishing/components/workspace/publish-button").PublishButton>
   >,
   run: (ui: {
     document: Document
@@ -25,7 +25,7 @@ async function withButton(
   // Radix and React Router decide how to behave when first imported, so they must see the DOM above.
   const { createRoot } = await import("react-dom/client")
   const { MemoryRouter } = await import("react-router")
-  const { PublishButton } = await import("../src/features/publishing/components/publish-button")
+  const { PublishButton } = await import("../src/features/publishing/components/workspace/publish-button")
   const calls: string[] = []
   const root = createRoot(dom.window.document.getElementById("root")!)
   const render = (next: typeof props) =>

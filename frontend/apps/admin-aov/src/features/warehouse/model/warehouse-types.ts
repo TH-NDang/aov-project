@@ -23,7 +23,7 @@ export interface WarehouseEntry<C extends WarehouseContent = WarehouseContent> {
   revision: WarehouseRevision
   content: C
   issues?: string[]
-  changeKinds?: import("../components/catalog-changes").CatalogBadgeKind[]
+  changeKinds?: import("../components/history/catalog-changes").CatalogBadgeKind[]
   missingFields?: string[]
 }
 

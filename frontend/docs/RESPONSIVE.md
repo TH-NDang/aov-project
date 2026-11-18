@@ -101,7 +101,7 @@ Trang tướng trong Admin có hai tab quản lý: **Nội dung** và **Lịch s
 - **Sửa tại chỗ.** Bút mở trình sửa thay chỗ nội dung của đúng phần đó, tiêu đề hiện nhãn "Đang sửa"; sửa phần Tổng quan thì trình sửa chiếm cả thẻ Tổng quan. Trong lúc sửa, bút ở các phần khác bị khóa cho tới khi lưu hoặc hủy. Phiên bản đã xuất bản không có bút ở từng phần: bút ở đầu trang tạo bản nháp trước.
 - Mở trình sửa thì `tab` trong URL ghi phần đang sửa (`?tab=skills`, `?tab=media`…; Tổng quan thì bỏ `tab`), để đóng trình sửa thì trang mở lại ở phần đó. Liên kết cũ vẫn dùng được: `?view=skills` mở trang Nội dung ở phần Kỹ năng, `?view=patch` và `?view=versions` mở tab Lịch sử.
 
-Component: `HeroContent` trong `apps/admin-aov/src/features/publishing/components/hero-content.tsx`. Thứ tự các phần và id của từng phần (`hero-content-<phần>`) nằm trong `hero-content-tabs.tsx`; hai tab quản lý nằm trong `hero-workspace-tabs.tsx`.
+Component: `HeroContent` trong `apps/admin-aov/src/features/publishing/components/workspace/hero-content.tsx`. Thứ tự các phần và id của từng phần (`hero-content-<phần>`) nằm trong `hero-content-tabs.tsx`; hai tab quản lý nằm trong `hero-workspace-tabs.tsx`.
 
 Component dùng chung cho ngăn chi tiết: `SectionContents`, `ContentsSection` và `useSectionContents` trong `apps/admin-aov/src/components/section-contents.tsx`. Trang khai báo chiều cao các thanh dính phía trên bằng `--contents-offset` (px) trên `SectionContents`. Thanh dính cần `[overflow-anchor:none]` để trình duyệt không lấy nó làm mốc giữ vị trí cuộn.
 

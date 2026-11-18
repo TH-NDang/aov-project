@@ -364,8 +364,8 @@ test("theme editor preserves translations, creation chooses a group and moving u
   }
   await withUi(async ({ client, render, waitFor, click, button, input, select, document }) => {
     const { SkinBadgeGroupEditor, SkinBadgeGroupAssignment } =
-      await import("../src/features/media/components/skin-badge-group-editor")
-    const { SkinBadgeEditor } = await import("../src/features/media/components/skin-badge-editor")
+      await import("../src/features/media/components/badges/skin-badge-group-editor")
+    const { SkinBadgeEditor } = await import("../src/features/media/components/badges/skin-badge-editor")
     let closed = 0
     await render(
       <SkinBadgeGroupEditor
@@ -459,7 +459,7 @@ test("grouped picker keeps selected-code cache and chooses a badge from an expan
     throw new Error(`Unexpected request: ${path}`)
   }
   await withUi(async ({ client, document, render, waitFor, click }) => {
-    const { SkinBadgePicker } = await import("../src/features/media/components/skin-badge-picker")
+    const { SkinBadgePicker } = await import("../src/features/media/components/badges/skin-badge-picker")
     let chosen: string | null = null
     await render(
       <SkinBadgePicker
@@ -493,7 +493,7 @@ test("badge labels distinguish pending metadata from an unnamed source label", a
     return page([{ ...badge, code: "pending", displayName: "Bậc S" }]) as T
   }
   await withUi(async ({ document, render, waitFor }) => {
-    const { SkinBadgeLabel } = await import("../src/features/media/components/skin-badge-label")
+    const { SkinBadgeLabel } = await import("../src/features/media/components/badges/skin-badge-label")
     try {
       await render(<SkinBadgeLabel code="pending" locale="vi-VN" request={request} />)
       await waitFor(() => !!finish)
@@ -593,7 +593,7 @@ test("badge artwork previews the exact locale image in place, closes with Escape
     await waitFor(() => !!document.querySelector('[role="dialog"]'))
     await click(document.querySelector('[role="dialog"] [data-slot="dialog-close"]'))
     await waitFor(() => !document.querySelector('[role="dialog"]'))
-    const { SkinBadgeLabel } = await import("../src/features/media/components/skin-badge-label")
+    const { SkinBadgeLabel } = await import("../src/features/media/components/badges/skin-badge-label")
     await render(<SkinBadgeLabel code="limited" locale="en-US" request={request} />)
     await waitFor(() => !!document.querySelector('button[aria-label="Xem lớn Biểu tượng nhãn Limited · en-US"]'))
     const compactTrigger = document.querySelector('button[aria-label="Xem lớn Biểu tượng nhãn Limited · en-US"]')!

@@ -4,7 +4,7 @@ import { Badge } from "@aov/ui/components/badge"
 import { AdminEntityText } from "../../../terminology/catalog"
 import { ChangeKindBadges } from "../patch-changes/hero-change-badges"
 import { ComparisonSkillIcon } from "../skills/comparison-skill-icon"
-import { HeroAsset } from "../hero-asset"
+import { HeroAsset } from "../editing/hero-asset"
 import { SkillRankComparison } from "../skills/skill-rank-table"
 import {
   comparisonImages,

@@ -2,7 +2,7 @@ import { HeroCatalog } from "../catalog/hero-catalog"
 import { Tabs, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
 import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
 import { ActionStrip } from "@/components/action-strip"
-import { WarehousePatchChanges } from "../../../warehouse/components/warehouse-patch-changes"
+import { WarehousePatchChanges } from "../../../warehouse/components/history/warehouse-patch-changes"
 import { HeroOverallAssessment, InlineAssessment } from "../assessment/hero-overall-assessment"
 import { createContext, useContext, useMemo, useState } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
@@ -17,8 +17,12 @@ import { useIsWide } from "@/hooks/use-media-query"
 import { errorMessage } from "@/lib/api/errors"
 import { MarketBadge } from "../setup/market-badge"
 import { AovNavIcon } from "@/app/aov-nav-icon"
-import { HeroAsset } from "@/features/publishing/components/hero-asset"
-import { changeDomain, isGameplayChange, type CatalogChange } from "../../../warehouse/components/catalog-changes"
+import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
+import {
+  changeDomain,
+  isGameplayChange,
+  type CatalogChange,
+} from "../../../warehouse/components/history/catalog-changes"
 import { phaseLabels, type PublicationOverview } from "../../api/publication-overview"
 import { dateLabel } from "@/lib/schedule-date"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"

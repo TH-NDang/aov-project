@@ -7,7 +7,7 @@ import { withView } from "./fixtures/hero-skills-view"
 
 test("armor is typed the way the game shows it and a malformed value cannot be saved", async () => {
   await withView(async ({ document, render, dom }) => {
-    const { HeroStatsEditor } = await import("../src/features/publishing/components/hero-stats-editor")
+    const { HeroStatsEditor } = await import("../src/features/publishing/components/editing/hero-stats-editor")
     let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
       values: [
         { statKey: "ARMOR", baseValue: null, growthPerLevel: null, unit: "POINT" },
@@ -65,7 +65,7 @@ test("armor is typed the way the game shows it and a malformed value cannot be s
 
 test("a stat without a percent in the game drops one when the row switches to it", async () => {
   await withView(async ({ document, render, dom }) => {
-    const { HeroStatsEditor } = await import("../src/features/publishing/components/hero-stats-editor")
+    const { HeroStatsEditor } = await import("../src/features/publishing/components/editing/hero-stats-editor")
     let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
       values: [{ statKey: "ARMOR", baseValue: 150, percentValue: 20, growthPerLevel: null, unit: "POINT" }],
       sources: [],
@@ -93,7 +93,7 @@ test("a stat without a percent in the game drops one when the row switches to it
 
 test("a hero can override a shared stat and switch back without storing a copy", async () => {
   await withView(async ({ document, render, click }) => {
-    const { HeroStatsEditor } = await import("../src/features/publishing/components/hero-stats-editor")
+    const { HeroStatsEditor } = await import("../src/features/publishing/components/editing/hero-stats-editor")
     const rule: StatDefault = {
       statKey: "CRITICAL_DAMAGE",
       baseValue: 200,
@@ -131,7 +131,7 @@ test("a hero can override a shared stat and switch back without storing a copy",
 
 test("stat choices and calendar inputs preserve unknown data, zero and missing values", async () => {
   await withView(async ({ dom, document, render, click }) => {
-    const { SectionEditor } = await import("../src/features/publishing/components/section-editor")
+    const { SectionEditor } = await import("../src/features/publishing/components/editing/section-editor")
     let value = structuredClone(fixtureContent.COMBAT_STATS!)
     value.values.push({ statKey: "CUSTOM_STAT", baseValue: 17, growthPerLevel: null, unit: "custom-unit" })
     value.sources = [

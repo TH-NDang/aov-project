@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage, isApiError } from "@/lib/api/errors"
-import { control } from "../fields"
+import { control } from "../editing/fields"
 import { publishingKeys } from "../../api/publishing-api"
 
 type Note = { body: string; version: number }

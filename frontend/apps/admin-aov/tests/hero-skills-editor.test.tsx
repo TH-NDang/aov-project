@@ -58,7 +58,7 @@ test("focused skill editing preserves forms, effects and translations while addi
   })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { SectionEditor } = await import("../src/features/publishing/components/section-editor")
+  const { SectionEditor } = await import("../src/features/publishing/components/editing/section-editor")
   const { nextSkillKey } = await import("../src/features/publishing/components/skills/hero-skills-editor")
   const skill = (skillKey: string, formKey: string | null, displayOrder: number): Skill => ({
     skillKey,

@@ -152,7 +152,7 @@ test("compact references use real identities, all translations and lazy media in
 test("enchantment scope controls clear dependent patches and show both matching branches without hero-specific copy", async () => {
   await withWarehouseUi(async ({ document, render, click }) => {
     const { CatalogContext } = await import("../src/features/publishing/components/catalog/catalog-context")
-    const { EnchantmentBranches } = await import("../src/features/warehouse/components/enchantment-branches")
+    const { EnchantmentBranches } = await import("../src/features/warehouse/components/secondary/enchantment-branches")
     const data = {
       seasons: [
         { id: "s3", displayName: "S3 2026" },

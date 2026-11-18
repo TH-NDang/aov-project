@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
-import { HeroAsset } from "../hero-asset"
+import { HeroAsset } from "../editing/hero-asset"
 import { skillSlot, skillVariant } from "../../model/skills/hero-skills"
 import type { Skill } from "../../api/types"
 import { publishingKeys } from "../../api/publishing-api"

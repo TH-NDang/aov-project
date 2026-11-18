@@ -1,6 +1,6 @@
 import { catalogScopePatch, resolveCatalogScope } from "../model/catalog/catalog-scope"
 import { useCatalogScopePreference } from "../components/catalog/catalog-scope-memory"
-import { HeroTimeline } from "../components/hero-timeline"
+import { HeroTimeline } from "../components/workspace/hero-timeline"
 import {
   useEffect,
   useEffectEvent,
@@ -35,22 +35,22 @@ import { errorMessage, isApiError } from "@/lib/api/errors"
 import { createPublishingApi, publishingKeys } from "../api/publishing-api"
 import { invalidateHeroCatalogs } from "../api/publishing-cache"
 import { BaselineContextForm } from "../components/import/baseline-context-form"
-import { DraftPencil, type NewDraft } from "../../warehouse/components/warehouse-sheet"
-import { HeroContent } from "../components/hero-content"
-import { HeroAsset } from "@/features/publishing/components/hero-asset"
-import { HeroScrollIdentity } from "../components/hero-scroll-identity"
+import { DraftPencil, type NewDraft } from "../../warehouse/components/sheet/warehouse-sheet"
+import { HeroContent } from "../components/workspace/hero-content"
+import { HeroAsset } from "@/features/publishing/components/editing/hero-asset"
+import { HeroScrollIdentity } from "../components/workspace/hero-scroll-identity"
 import { HeroQuickSwitcher } from "../components/catalog/hero-quick-switcher"
-import { HeroFormSwitcher, HeroFormsDialog, useHeroForms } from "../components/hero-forms"
+import { HeroFormSwitcher, HeroFormsDialog, useHeroForms } from "../components/editing/hero-forms"
 import { defaultFormOf, formsOwnerOf } from "../model/hero-forms-model"
-import { HeroSharedPart } from "../components/hero-shared-part"
+import { HeroSharedPart } from "../components/editing/hero-shared-part"
 import { selectCatalogRevisions } from "../model/catalog/catalog-data"
 import { HeroCatalog } from "../components/catalog/hero-catalog"
-import { HeroRevisionHistory } from "../components/hero-revision-history"
+import { HeroRevisionHistory } from "../components/workspace/hero-revision-history"
 import { HeroPatchTimeline } from "../components/patch-changes/hero-patch-view"
 
-import { HeroLanguagePicker } from "../components/hero-language-picker"
+import { HeroLanguagePicker } from "../components/editing/hero-language-picker"
 import { cn } from "@aov/ui/lib/utils"
-import { HeroReviewNotice } from "../components/hero-review-notice"
+import { HeroReviewNotice } from "../components/workspace/hero-review-notice"
 import { reviewTab, type HeroReviewItem } from "../model/import/hero-source-review"
 import {
   missingTranslationFields,
@@ -59,15 +59,15 @@ import {
   type TranslationField,
   type TranslationTarget,
 } from "../model/hero-translation-model"
-import { TranslationEditor } from "../components/translation-editor"
+import { TranslationEditor } from "../components/editing/translation-editor"
 import { type TranslatableSection } from "@/features/publishing/model/hero-translation-model"
-import { Box } from "../components/fields"
+import { Box } from "../components/editing/fields"
 import { languageOptions } from "../../users/profile-preference-picker"
 import { PatchChangeForm } from "../components/patch-changes/patch-change-form"
-import { SectionEditor, emptySection } from "../components/section-editor"
+import { SectionEditor, emptySection } from "../components/editing/section-editor"
 import { statPatchContext } from "../model/assessment/combat-attributes"
 import { useStatDefaults } from "../components/setup/patch-stat-defaults"
-import { replaceProfilePart, type ProfileEditorPart } from "../components/hero-profile-editor"
+import { replaceProfilePart, type ProfileEditorPart } from "../components/editing/hero-profile-editor"
 
 import { type CatalogFilter } from "../components/catalog/catalog-context"
 import { usePublicationOverview, useContentLocale } from "../api/publication-overview"
@@ -90,14 +90,14 @@ import {
   type HeroContentTab,
   type HeroWorkspaceView,
 } from "../model/hero-location"
-import { useHeroLocation } from "../components/use-hero-location"
-import { HeroNavigationGuard } from "../components/hero-navigation-guard"
+import { useHeroLocation } from "../components/workspace/use-hero-location"
+import { HeroNavigationGuard } from "../components/workspace/hero-navigation-guard"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatusControl } from "@/app/drafts/draft-status"
 import { HeroDraftChanges, savedHeroSections } from "../components/patch-changes/hero-draft-changes"
-import { PublishButton } from "../components/publish-button"
+import { PublishButton } from "../components/workspace/publish-button"
 import { ReferenceRulesetProvider } from "../../terminology/catalog"
-import { HeroWorkspaceTabs } from "../components/hero-workspace-tabs"
+import { HeroWorkspaceTabs } from "../components/workspace/hero-workspace-tabs"
 import { captureFocus, type CaptureTarget } from "../model/captures/patch-capture-model"
 import { PatchCapturePanel, PatchCaptureToggle } from "../components/captures/patch-capture-panel"
 import { PatchCaptureProvider, usePatchCaptureWorkspace, type PatchCaptureWorkspace } from "../api/use-patch-captures"
@@ -114,7 +114,7 @@ import { toast } from "sonner"
 import { confirmAction } from "@/components/confirm-dialog"
 import { CAUSE_NAMES } from "@/lib/version-causes"
 import { VersionFacts } from "../components/setup/version-facts"
-import { HeroVersionMenu, REVISION_STATES as STATES } from "../components/hero-version-menu"
+import { HeroVersionMenu, REVISION_STATES as STATES } from "../components/workspace/hero-version-menu"
 
 const api = createPublishingApi(backendRequest)
 const CAUSES: Record<Cause, string> = CAUSE_NAMES

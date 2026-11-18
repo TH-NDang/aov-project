@@ -29,7 +29,7 @@ test("hero history distinguishes baseline from changes and preserves the selecte
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroRevisionHistory } = await import("../src/features/publishing/components/hero-revision-history")
+  const { HeroRevisionHistory } = await import("../src/features/publishing/components/workspace/hero-revision-history")
   const { DescriptionComparison } =
     await import("../src/features/publishing/components/assessment/hero-comparison-view")
   const { createRoot } = await import("react-dom/client")

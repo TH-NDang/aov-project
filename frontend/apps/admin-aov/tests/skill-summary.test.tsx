@@ -22,7 +22,7 @@ import {
   singleParagraph,
   summaryValue,
 } from "../src/features/publishing/components/skills/skill-summary-field"
-import { updateTranslation } from "../src/features/publishing/components/translation-editor"
+import { updateTranslation } from "../src/features/publishing/components/editing/translation-editor"
 import type { Revision, Skill, Skills } from "../src/features/publishing/api/types"
 import { installGlobals, parseHtml } from "./fixtures/dom"
 

@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react"
 import { Settings2, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { EditorToolSheet } from "../editor-tool-sheet"
-import { Field, control } from "../fields"
+import { EditorToolSheet } from "../editing/editor-tool-sheet"
+import { Field, control } from "../editing/fields"
 import { selectSkillTranslation, skillLabel, skillSlot } from "../../model/skills/hero-skills"
 import type { Skill } from "../../api/types"
 

@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { cn } from "@aov/ui/lib/utils"
-import { HeroAsset } from "../hero-asset"
+import { HeroAsset } from "../editing/hero-asset"
 import { skillSlot } from "../../model/skills/hero-skills"
 import type { SkillImage } from "./skill-artwork"
 import { MAX_STATE_ICONS, stateIconsOf } from "./skill-state-icons"

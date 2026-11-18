@@ -133,7 +133,7 @@ test("history deduplicates real patch skill facts and uses gameplay categories o
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroRevisionHistory } = await import("../src/features/publishing/components/hero-revision-history")
+  const { HeroRevisionHistory } = await import("../src/features/publishing/components/workspace/hero-revision-history")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })

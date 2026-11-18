@@ -58,7 +58,7 @@ test("image deletion requires verified references and confirmation, survives rel
     fetch: fetcher,
   })
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { ImageDeleteAction } = await import("../src/features/media/components/image-delete-action")
+  const { ImageDeleteAction } = await import("../src/features/media/components/library/image-delete-action")
   const { createRoot } = await import("react-dom/client")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const root = createRoot(dom.window.document.getElementById("root")!)

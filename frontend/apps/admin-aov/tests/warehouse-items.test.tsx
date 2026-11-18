@@ -10,7 +10,7 @@ import { flush, installGlobals } from "./fixtures/dom"
 test("item details show verified upgrades and select pictured ingredients only after an explicit choice", async () => {
   await withWarehouseUi(async ({ document, render, click, client }) => {
     document.defaultView!.HTMLElement.prototype.scrollIntoView = () => {}
-    const { ItemEditor } = await import("../src/features/warehouse/components/item-editor")
+    const { ItemEditor } = await import("../src/features/warehouse/components/items/item-editor")
     const make = (id: string, name: string, ingredients: string[] = []): WarehouseEntry<ItemContent> => ({
       id,
       code: id,
@@ -104,7 +104,7 @@ test("item details show verified upgrades and select pictured ingredients only a
 
 test("item cards separate recipe selection from opening details and hide ports on outer columns", async () => {
   await withWarehouseUi(async ({ document, render }) => {
-    const { ItemShopGraph } = await import("../src/features/warehouse/components/item-shop-graph")
+    const { ItemShopGraph } = await import("../src/features/warehouse/components/items/item-shop-graph")
     const { Page } = await import("../src/components/page-header")
     const items: WarehouseEntry<ItemContent>[] = ["base", "middle", "final"].map((id, column) => ({
       id,
@@ -286,7 +286,7 @@ test("item cards separate recipe selection from opening details and hide ports o
 
 test("item row picker keeps cancellation local, supports physical row selection and blocks undefined columns", async () => {
   await withWarehouseUi(async ({ document, render, click }) => {
-    const { ItemRowPicker } = await import("../src/features/warehouse/components/item-row-picker")
+    const { ItemRowPicker } = await import("../src/features/warehouse/components/items/item-row-picker")
     const entry: WarehouseEntry<ItemContent> = {
       id: "edited",
       code: "edited",
@@ -352,7 +352,7 @@ test("item row picker keeps cancellation local, supports physical row selection 
 
 test("shop paints wire underlays first and skips unchanged layout measurements during scrolling", async () => {
   await withWarehouseUi(async ({ document, render }) => {
-    const { ItemShopGraph } = await import("../src/features/warehouse/components/item-shop-graph")
+    const { ItemShopGraph } = await import("../src/features/warehouse/components/items/item-shop-graph")
     const callbacks: (() => void)[] = []
     // The fixture puts its globals back when the test ends, this observer included.
     installGlobals({
@@ -451,7 +451,7 @@ test("shop paints wire underlays first and skips unchanged layout measurements d
 
 test("connector drag previews its wire, snaps near compatible targets, and cancels without creating a recipe", async () => {
   await withWarehouseUi(async ({ document, render }) => {
-    const { ItemShopGraph } = await import("../src/features/warehouse/components/item-shop-graph")
+    const { ItemShopGraph } = await import("../src/features/warehouse/components/items/item-shop-graph")
     const items: WarehouseEntry<ItemContent>[] = ["base", "target"].map((id, column) => ({
       id,
       code: id,
@@ -552,7 +552,7 @@ test("connector drag previews its wire, snaps near compatible targets, and cance
 
 test("shop separates terminal column two items and renders external attributes beneath their real columns", async () => {
   await withWarehouseUi(async ({ document, render }) => {
-    const { ItemShopGraph } = await import("../src/features/warehouse/components/item-shop-graph")
+    const { ItemShopGraph } = await import("../src/features/warehouse/components/items/item-shop-graph")
     const make = (
       id: string,
       name: string,

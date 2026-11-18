@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
 import { createMemoryRouter, RouterProvider } from "react-router"
-import { useHeroLocation } from "../src/features/publishing/components/use-hero-location"
+import { useHeroLocation } from "../src/features/publishing/components/workspace/use-hero-location"
 import { createWindow, installWindow } from "./fixtures/dom"
 
 test("warning navigation keeps both tab and skill updates made in the same event", async () => {

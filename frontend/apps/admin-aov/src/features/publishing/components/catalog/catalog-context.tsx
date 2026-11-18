@@ -1,4 +1,4 @@
-import { control } from "../fields"
+import { control } from "../editing/fields"
 import { CalendarDays, GitCompareArrows, RotateCcw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { type PublicationOverview } from "../../api/publication-overview"

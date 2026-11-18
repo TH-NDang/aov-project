@@ -49,7 +49,7 @@ async function createView(observe = true) {
     IntersectionObserver: observe ? FakeObserver : undefined,
   })
   const { createRoot } = await import("react-dom/client")
-  const { HeroScrollIdentity } = await import("../src/features/publishing/components/hero-scroll-identity")
+  const { HeroScrollIdentity } = await import("../src/features/publishing/components/workspace/hero-scroll-identity")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   client.setQueryData(["media", "asset", "head-asset", "content"], {
     id: "head-asset",

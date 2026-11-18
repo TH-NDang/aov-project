@@ -23,7 +23,7 @@ import {
 } from "../../api/publication-overview"
 import { invalidateReferenceCatalog } from "../../../terminology/reference-api"
 import { ScheduleForm } from "./shared-version-setup"
-import { control } from "../fields"
+import { control } from "../editing/fields"
 import { publishingKeys } from "../../api/publishing-api"
 
 export type MarketMode = "season" | "patch"

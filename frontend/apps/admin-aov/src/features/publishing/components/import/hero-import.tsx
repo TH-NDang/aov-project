@@ -17,7 +17,7 @@ import {
 } from "../../model/import/import-relations"
 import { type Request, publishingKeys } from "../../api/publishing-api"
 import { createUploadSession, resumeUploadSession, type UploadSession } from "./import-upload-session"
-import { control } from "../fields"
+import { control } from "../editing/fields"
 import {
   Upload,
   FolderOpen,

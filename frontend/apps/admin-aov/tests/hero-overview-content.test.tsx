@@ -7,7 +7,7 @@ import { withView } from "./fixtures/hero-skills-view"
 
 test("hero overview shows the hero's positions and five-point ratings without changing stored content", async () => {
   await withView(async ({ document, render, click }) => {
-    const { HeroContent } = await import("../src/features/publishing/components/hero-content")
+    const { HeroContent } = await import("../src/features/publishing/components/workspace/hero-content")
     const content = structuredClone(fixtureContent)
     content.PROFILE!.translations[0].summary = "Giới thiệu dài cần giữ đầy đủ khi người xem mở rộng. ".repeat(10)
     Object.assign(content.OVERVIEW_RATINGS!, { survivability: null })
@@ -58,7 +58,7 @@ test("hero overview shows the hero's positions and five-point ratings without ch
 
 test("five-point rating edits preserve stored scale, fractional values, zero and missing input", async () => {
   await withView(async ({ dom, document, render }) => {
-    const { SectionEditor } = await import("../src/features/publishing/components/section-editor")
+    const { SectionEditor } = await import("../src/features/publishing/components/editing/section-editor")
     let value = structuredClone(fixtureContent.OVERVIEW_RATINGS!)
     const mount = () =>
       render(

@@ -9,11 +9,11 @@ import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { cn } from "@aov/ui/lib/utils"
 import type { LightboxImage } from "@/components/image-lightbox"
 import { AdminEntityText } from "../../../terminology/catalog"
-import { ImageCreditPanel } from "../../../media/components/image-credit-panel"
-import { MediaCode } from "../../../media/components/media-code"
+import { ImageCreditPanel } from "../../../media/components/library/image-credit-panel"
+import { MediaCode } from "../../../media/components/library/media-code"
 import { visibleSources } from "../../../media/model/media-source-gaps"
-import { useSkinBadge } from "../../../media/components/skin-badge-label"
-import { HeroAsset } from "../hero-asset"
+import { useSkinBadge } from "../../../media/components/badges/skin-badge-label"
+import { HeroAsset } from "../editing/hero-asset"
 import { heroContentAssetQuery } from "../../model/assets/hero-content-asset"
 import { patchHeroLocation } from "../../model/hero-location"
 import {
@@ -28,7 +28,7 @@ import {
   type SkinWorkFilter,
 } from "./hero-shop"
 import { translatedText, sectionTextFields, type TranslationTarget } from "../../model/hero-translation-model"
-import { HeroTranslationNotice } from "../hero-translation-notice"
+import { HeroTranslationNotice } from "../workspace/hero-translation-notice"
 import { ImageCreditSummary } from "../assets/image-credit-summary"
 import {
   captureGroupKeys,
