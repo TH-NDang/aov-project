@@ -122,6 +122,40 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void rosterEntriesKeepTheirLaneAndStandingBesideTheirWording() throws Exception {
+        var content = new HashMap<String, Object>();
+        content.put("name", "Coded team");
+        content.put("roster", List.of(
+                Map.of("name", "Jungler", "role", "Đi rừng · Đội trưởng", "status", "Chính thức · AOG 2026",
+                        "lane", "JUNGLE", "standing", "ACTIVE"),
+                Map.of("name", "Coach", "role", "Huấn luyện viên", "standing", "STAFF"),
+                Map.of("name", "Trialist", "role", "Đường giữa", "status", "Thử việc")));
+
+        var roster = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "TEAM", "code", "coded-" + UUID.randomUUID(), "content", content)).path("content")
+                .path("roster");
+
+        assertThat(roster.get(0).path("lane").asText()).isEqualTo("JUNGLE");
+        assertThat(roster.get(0).path("standing").asText()).isEqualTo("ACTIVE");
+        assertThat(roster.get(0).path("role").asText()).isEqualTo("Đi rừng · Đội trưởng");
+        assertThat(roster.get(1).path("standing").asText()).isEqualTo("STAFF");
+        assertThat(roster.get(2).path("lane").isNull()).isTrue();
+        assertThat(roster.get(2).path("standing").isNull()).isTrue();
+    }
+
+    @Test
+    void aStaffMemberWhoPlaysALaneIsRejected() throws Exception {
+        var content = Map.of("name", "Confused team", "roster", List.of(
+                Map.of("name", "Coach", "role", "Huấn luyện viên", "lane", "MID", "standing", "STAFF")));
+
+        mvc.perform(as(post(ROOT + "/admin/pages"), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(
+                        Map.of("kind", "TEAM", "code", "confused-" + UUID.randomUUID(), "content", content))))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("PAGE_INVALID_CONTENT"));
+    }
+
+    @Test
     void linkedDraftPeopleCannotBeDeletedAndRostersRejectNonPersonProfiles() throws Exception {
         var person = send(post(ROOT + "/admin/pages"), "editor", true,
                 Map.of("kind", "PERSON", "code", "coach-" + UUID.randomUUID(), "content",

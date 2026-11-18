@@ -43,6 +43,23 @@ public record PageContent(
         MODERATOR
     }
 
+    /** The lane a roster member plays, with the same codes as a tournament roster. */
+    public enum Lane {
+        TOP,
+        JUNGLE,
+        MID,
+        DRAGON,
+        SUPPORT
+    }
+
+    /** Where a member stands in a team: the starting lineup, the bench, the staff, or gone. */
+    public enum Standing {
+        ACTIVE,
+        SUBSTITUTE,
+        LEFT,
+        STAFF
+    }
+
     /** {@code official} marks the channel as run by the page's own organization; absent in older content. */
     public record Link(
             String label,
@@ -86,6 +103,11 @@ public record PageContent(
     ) {
     }
 
+    /**
+     * A member of a team's roster. {@code lane} and {@code standing} are what readers group and mark members by;
+     * {@code role} and {@code status} stay the wording shown as written, such as a lane with a captain's mark or a
+     * standing with its season.
+     */
     public record Member(
             UUID pageId,
             String name,
@@ -93,7 +115,9 @@ public record PageContent(
             String status,
             LocalDate startsOn,
             LocalDate endsOn,
-            String sourceUrl
+            String sourceUrl,
+            @Nullable Lane lane,
+            @Nullable Standing standing
     ) {
     }
 
