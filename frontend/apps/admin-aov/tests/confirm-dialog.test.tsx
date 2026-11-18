@@ -36,6 +36,37 @@ async function click(element: HTMLElement) {
   await flush()
 }
 
+test("a question shows its details between the text and the buttons", async () => {
+  const { ConfirmDialogHost, confirmAction } = await import("../src/components/confirm-dialog")
+  const unmount = await mounted(<ConfirmDialogHost />)
+  let answer: Promise<boolean> | undefined
+  try {
+    await act(async () => {
+      answer = confirmAction({
+        title: "Thay tệp này?",
+        description: "Dữ liệu tệp cũ còn lại.",
+        details: (
+          <dl>
+            <dt>Đang dùng</dt>
+            <dd>a.png</dd>
+          </dl>
+        ),
+        confirmLabel: "Thay tệp",
+      })
+    })
+    await flush()
+    const list = dialog()!.querySelector("dl")!
+    assert.equal(list.textContent, "Đang dùnga.png")
+    const description = dialog()!.querySelector("p")!
+    assert.ok(description.compareDocumentPosition(list) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING)
+    assert.ok(list.compareDocumentPosition(dialogButton("Thay tệp")) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING)
+    await click(dialogButton("Hủy"))
+    assert.equal(await answer, false)
+  } finally {
+    await unmount()
+  }
+})
+
 test("the shared question is red, opens on Cancel, answers once and returns focus", async () => {
   const { ConfirmDialogHost, confirmAction } = await import("../src/components/confirm-dialog")
   const unmount = await mounted(<ConfirmDialogHost />)
