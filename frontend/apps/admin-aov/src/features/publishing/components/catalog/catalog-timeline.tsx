@@ -10,7 +10,7 @@ import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@aov/ui/lib/utils"
 import type { CatalogFilter } from "./catalog-context"
 import { type PublicationOverview, type Variant } from "../../api/publication-overview"
-import { dateLabel } from "@/features/publishing/model/setup/schedule-date"
+import { dateLabel } from "@/lib/schedule-date"
 
 export interface TimelineCount {
   changes: number

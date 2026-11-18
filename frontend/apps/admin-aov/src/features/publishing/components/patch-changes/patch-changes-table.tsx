@@ -20,7 +20,7 @@ import { AovNavIcon } from "@/app/aov-nav-icon"
 import { HeroAsset } from "@/features/publishing/components/hero-asset"
 import { changeDomain, isGameplayChange, type CatalogChange } from "../../../warehouse/components/catalog-changes"
 import { phaseLabels, type PublicationOverview } from "../../api/publication-overview"
-import { dateLabel } from "@/features/publishing/model/setup/schedule-date"
+import { dateLabel } from "@/lib/schedule-date"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
 import { HeroChangeSummary } from "./hero-change-badges"
 import {

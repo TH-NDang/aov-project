@@ -1,6 +1,6 @@
 import { MarketBadge } from "./market-badge"
 import { marketReleaseLabel, phaseLabels, type PublicationOverview } from "../../api/publication-overview"
-import { dateLabel } from "@/features/publishing/model/setup/schedule-date"
+import { dateLabel } from "@/lib/schedule-date"
 
 type Scope = { seasonId: string; variantId?: never } | { variantId: string; seasonId?: never }
 

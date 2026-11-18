@@ -190,6 +190,15 @@ const rules: Rule[] = [
     offenders: (text) => (text.includes("crypto.randomUUID") ? [""] : []),
   },
   {
+    name: "shared code in src/lib imports no feature",
+    hint: "Code two features use lives in src/lib or src/components; move what it needs there too (frontend/AGENTS.md).",
+    files: files(join(source, "lib"), /\.tsx?$/),
+    offenders: (text) =>
+      text
+        .split("\n")
+        .flatMap((line, index) => (/from "(@\/features\/|(\.\.\/)+features\/)/.test(line) ? [`:${index + 1}`] : [])),
+  },
+  {
     name: "query keys come from the feature's keys object",
     hint: "Build the key with the feature's xKeys object (publishingKeys.revisions(id)); reads and invalidations share it.",
     // The tournament, esports, community and competition screens were being reworked by another change when the

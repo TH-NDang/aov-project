@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import { foldEntitySearch, referenceTranslation, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
-import { defaultRulesetId } from "@/features/publishing/model/setup/default-ruleset"
+import { defaultRulesetId } from "@/lib/default-ruleset"
 import { useContentLocale } from "@/features/publishing/api/publication-overview"
 import { createPublishingApi, publishingKeys } from "@/features/publishing/api/publishing-api"
 import { useReferenceCatalog } from "@/features/terminology/catalog"

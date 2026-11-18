@@ -39,7 +39,7 @@ import {
 } from "../../model/catalog/catalog-data"
 import type { CatalogFilter } from "./catalog-context"
 import { type PublicationOverview } from "../../api/publication-overview"
-import { dateLabel } from "@/features/publishing/model/setup/schedule-date"
+import { dateLabel } from "@/lib/schedule-date"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { formatInZone } from "@aov/ui/lib/time-zone"
 import { ChangeKindBadges, HeroChangeSummary } from "../patch-changes/hero-change-badges"

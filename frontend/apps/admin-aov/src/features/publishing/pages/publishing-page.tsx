@@ -112,7 +112,7 @@ import {
 } from "../model/hero-working-copy"
 import { toast } from "sonner"
 import { confirmAction } from "@/components/confirm-dialog"
-import { CAUSE_NAMES } from "../model/setup/version-causes"
+import { CAUSE_NAMES } from "@/lib/version-causes"
 import { VersionFacts } from "../components/setup/version-facts"
 import { HeroVersionMenu, REVISION_STATES as STATES } from "../components/hero-version-menu"
 

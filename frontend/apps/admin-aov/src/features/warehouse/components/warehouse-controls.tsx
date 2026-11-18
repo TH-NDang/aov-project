@@ -1,7 +1,7 @@
 import { useImageContext } from "../../media/components/character-image-context"
 import { useContentLocale } from "../../publishing/api/publication-overview"
 import { control } from "../../publishing/components/fields"
-import { hasRulesetChoice } from "../../publishing/model/setup/default-ruleset"
+import { hasRulesetChoice } from "@/lib/default-ruleset"
 import {
   DropdownMenuItem,
   DropdownMenu,

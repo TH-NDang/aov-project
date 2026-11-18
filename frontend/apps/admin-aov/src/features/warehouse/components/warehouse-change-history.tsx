@@ -17,7 +17,7 @@ import {
   type CatalogChangeKind,
 } from "./catalog-changes"
 import { ChangeKindSelect } from "../../publishing/components/patch-changes/change-kind-select"
-import { CAUSE_NAMES } from "../../publishing/model/setup/version-causes"
+import { CAUSE_NAMES } from "@/lib/version-causes"
 import { warehouseApi, invalidateWarehouseCatalogs, warehouseKeys } from "../api/warehouse-api"
 import { warehouseBaselineMode, type WarehouseRevision } from "../model/warehouse-types"
 import { type WarehouseKind } from "@aov/ui/lib/warehouse-content"

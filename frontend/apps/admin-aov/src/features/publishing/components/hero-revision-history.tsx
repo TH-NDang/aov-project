@@ -18,7 +18,7 @@ import { ChangeColorSettings } from "./patch-changes/change-color-preferences"
 import type { Content, Revision } from "../api/types"
 import { useHeroLocation } from "./use-hero-location"
 import { heroLocationId } from "../model/hero-location"
-import { CAUSE_NAMES } from "../model/setup/version-causes"
+import { CAUSE_NAMES } from "@/lib/version-causes"
 
 const api = createPublishingApi(backendRequest)
 const causeNames: Record<string, string> = CAUSE_NAMES

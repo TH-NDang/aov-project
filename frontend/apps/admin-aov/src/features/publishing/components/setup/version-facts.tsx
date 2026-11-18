@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { VERSION_CAUSES, type VersionCause } from "../../model/setup/version-causes"
+import { VERSION_CAUSES, type VersionCause } from "@/lib/version-causes"
 
 /**
  * The version on screen as three labelled facts instead of one line joined by dots: which version it is, why it was

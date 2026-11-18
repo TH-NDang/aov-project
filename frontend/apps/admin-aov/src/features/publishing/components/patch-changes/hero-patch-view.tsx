@@ -18,7 +18,7 @@ import {
   type Provenance,
 } from "../../model/patch-changes/patch-change-model"
 import { skillFieldLabel } from "@/features/publishing/model/skills/skill-field-labels"
-import { CAUSE_NAMES } from "../../model/setup/version-causes"
+import { CAUSE_NAMES } from "@/lib/version-causes"
 import { RecordPatchNotesSheet } from "./patch-notes-sheet"
 import { usePublicationOverview } from "../../api/publication-overview"
 import { type Content, type Revision } from "../../api/types"
