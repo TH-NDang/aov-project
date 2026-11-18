@@ -288,6 +288,12 @@ viên hoặc phân tích đội tuyển ghi `standing` STAFF và bỏ `lane`; ch
 Trạng thái chọn theo mã, kèm ô ghi chú tự do cho `status`. Stream nhóm đội hình theo `standing` (chính thức, dự bị,
 ban huấn luyện, đã rời đội; dòng chưa có mã ở nhóm "Thành viên"), hiện icon và tên vị trí theo `lane`.
 
+Đội trưởng (18/11/2026): thành viên có thêm `captain` (true/false, thiếu là false). Admin bật tắt bằng ô "Đội trưởng"
+trong bảng thành viên và vẽ vương miện theo `captain`; Stream ghi "Đội trưởng"/"Captain" theo ngôn ngữ người đọc cạnh
+tên. Không ứng dụng nào tìm chữ trong `role` để biết ai là đội trưởng nữa; chữ cũ trong `role` vẫn giữ nguyên. Với
+thành viên có `lane`, Stream hiện tên vị trí theo mã và dấu đội trưởng, không hiện phần ghi chú sau vị trí trong `role`
+(chữ đầy đủ vẫn xem được khi rê chuột).
+
 ## Dữ liệu giải lịch sử (06/11/2026)
 
 Giải đã kết thúc được nhập từ nguồn ngoài (Liquipedia, kho phân tích YouTube) nên mô hình nhận thêm những gì
@@ -524,6 +530,10 @@ hình chính"/"Chính thức"/"Active" thì ACTIVE. Khi chữ không nói gì: `
 PLAYER liên kết đại diện; `standing` (chỉ khi `status` để trống) lấy theo dòng đội hình giải gần nhất của tuyển thủ đó
 với chính đội này (ACTIVE, SUBSTITUTE, INACTIVE thành LEFT). Chữ khác ("Cho mượn", "Thử việc", vai trò tự ghi) không
 được đoán; `role` và `status` giữ nguyên.
+
+V021 phục vụ "Đội trưởng", chạy một lần trên bản nháp và bản công bố của mọi page TEAM: thành viên có `role` chứa
+"Đội trưởng" hoặc "Captain" như một từ riêng (đầu chữ, sau dấu cách, "·" hoặc "|", không phân biệt hoa thường và dấu)
+được ghi `captain: true`; `role` giữ nguyên, thành viên khác không đổi.
 
 ## API
 
