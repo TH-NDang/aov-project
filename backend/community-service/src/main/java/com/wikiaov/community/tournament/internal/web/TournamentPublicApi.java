@@ -1,49 +1,39 @@
 package com.wikiaov.community.tournament.internal.web;
 
-import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.platform.PageLimits;
 import com.wikiaov.community.platform.PageSlice;
-import com.wikiaov.community.tournament.internal.application.PublicTournamentQueries.Summary;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.games.application.PublicTournamentQueries.Summary;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.UUID;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
-@RequestMapping(version = "1")
+@Tag(name = "tournaments")
 public interface TournamentPublicApi {
-    @GetMapping(ApiPaths.ROOT + "/catalog")
-    Catalog catalog(@RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(required = false) UUID seasonId,
-            @RequestParam(required = false) UUID patchVariantId,
-            @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request);
+    @Operation(operationId = "tournamentPublicApi_catalog", summary = "Read the game catalog")
+    Catalog catalog(String region, String locale, UUID seasonId, UUID patchVariantId, boolean includeUnscoped,
+            @Parameter(hidden = true) HttpServletRequest request);
 
-    @GetMapping(ApiPaths.ROOT + "/games")
-    PageSlice<PublishedGame> games(@RequestParam(required = false) UUID tournamentId,
-            @RequestParam(required = false) UUID seriesId,
-            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
-            @RequestParam(defaultValue = "12") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
-            HttpServletRequest request);
+    @Operation(operationId = "tournamentPublicApi_games", summary = "List published games")
+    PageSlice<PublishedGame> games(UUID tournamentId, UUID seriesId,
+            @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size,
+            @Parameter(hidden = true) HttpServletRequest request);
 
-    @GetMapping(ApiPaths.ROOT + "/games/{id}")
-    PublishedGame game(@PathVariable UUID id, HttpServletRequest request);
+    @Operation(operationId = "tournamentPublicApi_game", summary = "Read a published game")
+    PublishedGame game(UUID id, @Parameter(hidden = true) HttpServletRequest request);
 
-    @GetMapping(ApiPaths.ROOT + "/tournaments")
-    PageSlice<Summary<Tournament>> tournaments(
-            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
-            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
-            HttpServletRequest request);
+    @Operation(operationId = "tournamentPublicApi_tournaments", summary = "List tournaments with published games")
+    PageSlice<Summary<Tournament>> tournaments(@Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @Min(1) @Max(PageLimits.MAX_SIZE) int size, @Parameter(hidden = true) HttpServletRequest request);
 
-    @GetMapping(ApiPaths.ROOT + "/series")
-    PageSlice<Summary<Series>> series(@RequestParam(required = false) UUID tournamentId,
-            @RequestParam(defaultValue = "0") @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
-            @RequestParam(defaultValue = "24") @Min(1) @Max(PageLimits.MAX_SIZE) int size,
-            HttpServletRequest request);
+    @Operation(operationId = "tournamentPublicApi_series", summary = "List series with published games")
+    PageSlice<Summary<Series>> series(UUID tournamentId, @Min(0) @Max(PageLimits.MAX_REGISTRY_PAGE) int page,
+            @Min(1) @Max(PageLimits.MAX_SIZE) int size, @Parameter(hidden = true) HttpServletRequest request);
 }

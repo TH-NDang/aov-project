@@ -1,5 +1,6 @@
 package com.wikiaov.community.community.internal.pages.application;
 
+import com.wikiaov.community.community.internal.domain.PageContent.Kind;
 import com.wikiaov.community.community.internal.pages.persistence.PageRepository;
 import com.wikiaov.community.tournament.CompetitionOrganizations;
 import java.util.UUID;
@@ -16,7 +17,7 @@ public class OrganizationDirectory implements CompetitionOrganizations {
     @Override
     public Organization read(UUID pageId, boolean published) {
         var row = pages.findById(pageId)
-                .filter(page -> "ORGANIZATION".equals(page.getKind()))
+                .filter(page -> page.getKind() == Kind.ORGANIZATION)
                 .orElseThrow(() -> new IllegalArgumentException("Select an existing organization page."));
         var content = published ? row.getPublishedContent() : row.getContent();
         if (content == null) {

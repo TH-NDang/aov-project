@@ -1,6 +1,7 @@
 package com.wikiaov.community.community.internal.pages.application;
 
 import com.wikiaov.community.community.internal.application.PageErrorCode;
+import com.wikiaov.community.community.internal.domain.PageAuditAction;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.membership.persistence.PageMember;
 import com.wikiaov.community.community.internal.membership.persistence.PageMemberRepository;
@@ -59,7 +60,7 @@ public class PageAccess {
     }
 
     public static boolean community(PageRecord page) {
-        return !"CIRCUIT".equals(page.getKind());
+        return page.getKind().community();
     }
 
     public static void requireCommunity(PageRecord page) {
@@ -75,7 +76,7 @@ public class PageAccess {
         }
     }
 
-    public void audit(UUID id, CommunityActor actor, String action) {
+    public void audit(UUID id, CommunityActor actor, PageAuditAction action) {
         var event = new PageAudit();
         event.setPageId(id);
         event.setActor(actor.key());

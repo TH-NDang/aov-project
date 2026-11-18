@@ -18,7 +18,7 @@ public final class PageViews {
             UUID id,
             Long version,
             String code,
-            String kind,
+            PageContent.Kind kind,
             UUID entityId,
             PageContent content,
             boolean published,
@@ -29,7 +29,7 @@ public final class PageViews {
             @JsonInclude(JsonInclude.Include.NON_NULL) LocalDate lastActiveOn,
             @JsonInclude(JsonInclude.Include.NON_NULL) Boolean related
     ) {
-        public Profile(UUID id, Long version, String code, String kind, UUID entityId, PageContent content,
+        public Profile(UUID id, Long version, String code, PageContent.Kind kind, UUID entityId, PageContent content,
                 boolean published, boolean represented, long followers, Instant updatedAt, Live live) {
             this(id, version, code, kind, entityId, content, published, represented, followers, updatedAt, live, null,
                     null);
@@ -112,7 +112,7 @@ public final class PageViews {
     public record PageCard(
             UUID id,
             String code,
-            String kind,
+            PageContent.Kind kind,
             String name,
             String avatarUrl,
             boolean represented

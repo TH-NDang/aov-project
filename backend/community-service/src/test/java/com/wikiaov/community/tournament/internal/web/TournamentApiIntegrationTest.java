@@ -20,11 +20,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.wikiaov.community.platform.ApiException;
 import com.wikiaov.community.testsupport.CommunityApplicationTest;
-import com.wikiaov.community.tournament.internal.application.SeriesRegistry;
-import com.wikiaov.community.tournament.internal.application.TeamRegistry;
-import com.wikiaov.community.tournament.internal.application.WikiCatalog;
 import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
+import com.wikiaov.community.tournament.internal.catalog.application.WikiCatalog;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
@@ -61,6 +59,8 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tourna
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.VenueMode;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Verification;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.VodPause;
+import com.wikiaov.community.tournament.internal.registry.application.SeriesRegistry;
+import com.wikiaov.community.tournament.internal.registry.application.TeamRegistry;
 import java.math.BigDecimal;
 import java.sql.DriverManager;
 import java.time.LocalDate;
@@ -85,6 +85,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
@@ -876,6 +877,72 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aGameIsPublishedWithoutAnOpenTransactionDuringTheWikiCall() throws Exception {
+        var during = new ArrayList<Boolean>();
+        when(catalog.read(anyString(), anyString(), nullable(UUID.class), nullable(UUID.class), anyBoolean()))
+                .thenAnswer(call -> {
+                    during.add(TransactionSynchronizationManager.isActualTransactionActive());
+                    return new Catalog(List.of(), List.of(), List.of(), List.of(), List.of(), new ResolvedContext("VN",
+                            "vi-VN", UUID.randomUUID(), null, null, null, null, null, true, false));
+                });
+        var draft = create("games", fixture().game());
+
+        var published = write(post(ADMIN + "/games/" + draft.get("id") + "/publish"),
+                Map.of("version", version(draft)));
+
+        assertThat(published.get("publishedAt")).isNotNull();
+        assertThat(during).containsExactly(false);
+    }
+
+    @Test
+    void publicationHistoryAndPlanRevisionsKeepStoringTheirActionsAsText() throws Exception {
+        var fixture = fixture();
+        var draft = create("games", fixture.game());
+        String path = ADMIN + "/games/" + draft.get("id");
+        var published = write(post(path + "/publish"), Map.of("version", version(draft)));
+        write(post(path + "/withdraw"), Map.of("version", version(published)));
+        write(put(ADMIN + "/competitions/" + fixture.tournamentId()), Map.of("version", 0, "content", Map.of()));
+
+        assertThat(
+                storedActions("SELECT action FROM tournament.game_publication WHERE game_id = ? ORDER BY published_at",
+                        UUID.fromString(draft.get("id").toString())))
+                .containsExactly("PUBLICATION", "WITHDRAWAL");
+        assertThat(storedActions("SELECT action FROM tournament.plan_revision WHERE tournament_id = ?",
+                fixture.tournamentId())).containsExactly("SAVE");
+    }
+
+    @Test
+    void anEntrantStatusOutsideTheKnownOnesIsRefusedWithItsPath() throws Exception {
+        var team = id(create("teams", new Team("entrant-" + UUID.randomUUID(), "Entrant team", null, null, null)));
+        var tournament = id(create("tournaments",
+                new Tournament("entrants-" + UUID.randomUUID(), "Entrants", "VN", 2026, null, null, null, null)));
+        String plan = ADMIN + "/competitions/" + tournament;
+
+        mvc.perform(authorized(put(plan)).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", 0, "content",
+                        Map.of("entrants", List.of(Map.of("teamId", team.toString(), "status", "RETIRED")))))))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.errors[0].path").value("content.entrants[0].status"));
+        var saved = write(put(plan), Map.of("version", 0, "content",
+                Map.of("entrants", List.of(Map.of("teamId", team.toString(), "status", "WITHDRAWN")))));
+        assertThat(json.valueToTree(saved).at("/content/plan/entrants/0/status").asText()).isEqualTo("WITHDRAWN");
+    }
+
+    private List<String> storedActions(String sql, UUID id) throws Exception {
+        try (var connection = DriverManager.getConnection(database.getJdbcUrl(), database.getUsername(),
+                database.getPassword()); var statement = connection.prepareStatement(sql)) {
+            statement.setObject(1, id);
+            var actions = new ArrayList<String>();
+            try (var rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    actions.add(rows.getString(1));
+                }
+            }
+            return actions;
+        }
+    }
+
+    @Test
     void aTournamentsOwnDraftPlanGoesToTheTrashWithItWhilePublishedPlanHistoryKeepsProtectingIt() throws Exception {
         var fixture = fixture();
         String tournament = ADMIN + "/tournaments/" + fixture.tournamentId();
@@ -1041,8 +1108,9 @@ class TournamentApiIntegrationTest {
             assertThat(held.await(5, TimeUnit.SECONDS)).isTrue();
             var writing = executor.submit(() -> {
                 attempting.countDown();
-                return seriesRegistry.create(new Series("race-series-" + UUID.randomUUID(), id(event), "Race", null,
-                        id(team), id(other), 3, null, null, null), "race-test");
+                return new TransactionTemplate(transactions).execute(status -> seriesRegistry.create(new Series(
+                        "race-series-" + UUID.randomUUID(), id(event), "Race", null, id(team), id(other), 3, null,
+                        null, null), "race-test"));
             });
             assertThat(deleting.get(10, TimeUnit.SECONDS).deletedAt()).isNotNull();
             Assertions.assertThatThrownBy(() -> writing.get(10, TimeUnit.SECONDS))

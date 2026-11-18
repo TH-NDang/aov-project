@@ -13,7 +13,7 @@ import com.wikiaov.community.tournament.internal.archive.domain.RegistryDependen
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
 import com.wikiaov.community.tournament.internal.archive.persistence.RegistryUsages;
 import com.wikiaov.community.tournament.internal.archive.persistence.RegistryWriteGuard;
-import com.wikiaov.community.tournament.internal.persistence.VersionedRecord;
+import com.wikiaov.community.tournament.internal.archive.persistence.VersionedRecord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +43,7 @@ public class RegistryArchivePolicy {
                         .map(usage -> usage(DependentKind.valueOf(usage.type()), usage.count(), kind,
                                 row.getId()))
                         .toList());
-        long extra = additional.stream().mapToLong(provider -> provider.identityReferences(kind.name(), row.getId()))
+        long extra = additional.stream().mapToLong(provider -> provider.identityReferences(kind.subject(), row.getId()))
                 .sum();
         if (extra > 0) {
             references.add(usage(DependentKind.COMPETITION_PAGE, extra, kind, row.getId()));

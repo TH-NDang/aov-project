@@ -10,10 +10,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.wikiaov.community.platform.ApiException;
-import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository;
-import com.wikiaov.community.tournament.internal.persistence.PlayerRepository;
-import com.wikiaov.community.tournament.internal.persistence.TeamRepository;
-import com.wikiaov.community.tournament.internal.persistence.TournamentRepository;
+import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryListings;
+import com.wikiaov.community.tournament.internal.registry.persistence.PlayerRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.TeamRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.TournamentRepository;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
@@ -21,7 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 class CompetitionDirectoryTest {
-    private final DirectoryRepository directory = mock(DirectoryRepository.class);
+    private final DirectoryListings directory = mock(DirectoryListings.class);
     private final CompetitionDirectory directories = new CompetitionDirectory(directory, mock(TeamRepository.class),
             mock(PlayerRepository.class), mock(TournamentRepository.class));
 
@@ -30,8 +30,7 @@ class CompetitionDirectoryTest {
         when(directory.rankedTournaments(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(),
                 anyString(), eq(true), anyString(), anyString(), any(Pageable.class))).thenReturn(Page.empty());
 
-        directories.rankedTournaments("", "", "", "", "", null, "RECENT", TournamentLevel.MAIN, null, null,
-                PageRequest.of(0, 10));
+        directories.rankedTournaments(filter("RECENT", TournamentLevel.MAIN), PageRequest.of(0, 10));
 
         verify(directory).rankedTournaments(anyString(), anyString(), anyString(), anyString(), anyString(),
                 anyString(), anyString(), eq(true), anyString(), anyString(), any(Pageable.class));
@@ -48,9 +47,13 @@ class CompetitionDirectoryTest {
 
     @Test
     void anUnsupportedOrderIsAnInvalidQueryParameter() {
-        var error = catchThrowableOfType(ApiException.class, () -> directories.rankedTournaments("", "", "", "", "",
-                null, "LOUDEST", TournamentLevel.ALL, null, null, PageRequest.of(0, 10)));
+        var error = catchThrowableOfType(ApiException.class, () -> directories
+                .rankedTournaments(filter("LOUDEST", TournamentLevel.ALL), PageRequest.of(0, 10)));
 
         assertThat(error.getErrorCode().name()).isEqualTo("INVALID_QUERY_PARAMETER");
+    }
+
+    private static TournamentFilter filter(String sort, TournamentLevel level) {
+        return new TournamentFilter("", "", "", "", "", null, sort, level, null, null);
     }
 }

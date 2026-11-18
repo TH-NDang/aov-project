@@ -1,22 +1,19 @@
 package com.wikiaov.community.tournament.internal.web;
 
-import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia.References;
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia.Usage;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
-@RequestMapping(version = "1")
+@Tag(name = "competition media")
 public interface CompetitionMediaApi {
-    @GetMapping(ApiPaths.ADMIN + "/media-assets/{assetId}/usage")
-    Usage usage(@PathVariable UUID assetId);
+    @Operation(operationId = "competitionMediaApi_usage", summary = "Read the usage of an image")
+    Usage usage(UUID assetId);
 
-    @GetMapping(ApiPaths.ADMIN + "/media-assets/references")
+    @Operation(operationId = "competitionMediaApi_references", summary = "Count the records naming each image")
     References references();
 
-    @PostMapping(ApiPaths.ADMIN + "/media-assets/{assetId}/retire")
-    Usage retire(@PathVariable UUID assetId);
+    @Operation(operationId = "competitionMediaApi_retire", summary = "Retire an unused image")
+    Usage retire(UUID assetId);
 }

@@ -7,6 +7,7 @@ import com.wikiaov.community.community.internal.application.PageViews.Liking;
 import com.wikiaov.community.community.internal.application.PageViews.Post;
 import com.wikiaov.community.community.internal.application.PageViews.Report;
 import com.wikiaov.community.community.internal.domain.NotificationKind;
+import com.wikiaov.community.community.internal.domain.PageAuditAction;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.domain.PostContent;
@@ -91,7 +92,7 @@ public class PageCommunity {
         var filter = PageChecks.postKindFilter(kind);
         var pattern = PageChecks.searchPattern(query);
         return feedView(
-                posts.published(PostStatus.PUBLISHED.name(), null, filter, pattern, PageProfiles.paging(page, size)),
+                posts.published(null, filter, pattern, PageProfiles.paging(page, size)),
                 null);
     }
 
@@ -100,7 +101,7 @@ public class PageCommunity {
         var actor = CommunityActor.require();
         var filter = PageChecks.postKindFilter(kind);
         return feedView(
-                posts.published(PostStatus.PUBLISHED.name(), following ? actor.key() : null, filter, null,
+                posts.published(following ? actor.key() : null, filter, null,
                         PageProfiles.paging(page, size)),
                 actor);
     }
@@ -148,7 +149,7 @@ public class PageCommunity {
         }
         row.setUpdatedAt(Instant.now());
         posts.saveAndFlush(row);
-        access.audit(pageId, actor, "PAGE_POST_SAVED");
+        access.audit(pageId, actor, PageAuditAction.PAGE_POST_SAVED);
         if (newlyPublished && asPage) {
             notifications.followers(pageId, NotificationKind.PAGE_POST_PUBLISHED,
                     Map.of(NotificationKind.PAGE_NAME, profile.getPublishedContent().name()));
@@ -187,7 +188,7 @@ public class PageCommunity {
         if (!post.getActor().equals(actor.key())) {
             notifications.send(post.getActor(), post.getPageId(), NotificationKind.POST_COMMENTED);
         }
-        access.audit(post.getPageId(), actor, "PAGE_COMMENT_ADDED");
+        access.audit(post.getPageId(), actor, PageAuditAction.PAGE_COMMENT_ADDED);
         return new Comment(row.getId(), postId, row.getAuthorName(), asPage, body, row.getCreatedAt(), true);
     }
 
@@ -233,7 +234,7 @@ public class PageCommunity {
         }
         post.setPinnedAt(pinned ? Instant.now() : null);
         posts.saveAndFlush(post);
-        access.audit(pageId, actor, pinned ? "PAGE_POST_PINNED" : "PAGE_POST_UNPINNED");
+        access.audit(pageId, actor, pinned ? PageAuditAction.PAGE_POST_PINNED : PageAuditAction.PAGE_POST_UNPINNED);
 
         return postView(post, actor, likes.countByPostId(postId), likes.existsByPostIdAndActor(postId, actor.key()),
                 comments.countByPostIdAndHiddenFalse(postId));
@@ -314,7 +315,8 @@ public class PageCommunity {
                 post.setPinnedAt(null);
             }
         }
-        access.audit(pageId, actor, hidden ? "PAGE_CONTENT_HIDDEN" : "PAGE_CONTENT_RESTORED");
+        access.audit(pageId, actor,
+                hidden ? PageAuditAction.PAGE_CONTENT_HIDDEN : PageAuditAction.PAGE_CONTENT_RESTORED);
     }
 
     @PreAuthorize("hasAuthority('tournament:publish') and hasAuthority('tournament:read')")
@@ -327,7 +329,7 @@ public class PageCommunity {
         }
         row.setResolved(true);
         row.setResolution(resolution);
-        access.audit(row.getPageId(), CommunityActor.require(), "PAGE_REPORT_RESOLVED");
+        access.audit(row.getPageId(), CommunityActor.require(), PageAuditAction.PAGE_REPORT_RESOLVED);
         notifications.send(row.getActor(), row.getPageId(), NotificationKind.REPORT_RESOLVED);
     }
 

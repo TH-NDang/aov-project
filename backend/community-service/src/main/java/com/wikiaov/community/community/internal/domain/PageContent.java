@@ -1,7 +1,10 @@
 package com.wikiaov.community.community.internal.domain;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -34,7 +37,35 @@ public record PageContent(
         CIRCUIT,
         TEAM,
         PLAYER,
-        PERSON
+        PERSON;
+
+        /** The kinds that stand for one person: the only pages with personnel roles or a place in a team roster. */
+        public static final Set<Kind> INDIVIDUALS = Set.of(PLAYER, PERSON);
+        /** The kinds that stand for a competition identity of the tournament module. */
+        public static final Set<Kind> IDENTITIES = Set.of(TEAM, PLAYER);
+
+        public boolean individual() {
+            return INDIVIDUALS.contains(this);
+        }
+
+        public boolean identity() {
+            return IDENTITIES.contains(this);
+        }
+
+        /** A circuit is an editorial page: it has no representatives, posts or followers. */
+        public boolean community() {
+            return this != CIRCUIT;
+        }
+
+        /** The kind with this name; null for any other text. */
+        public static @Nullable Kind named(@Nullable String name) {
+            return Arrays.stream(values()).filter(kind -> kind.name().equals(name)).findFirst().orElse(null);
+        }
+
+        /** The names native SQL binds for a set of kinds. */
+        public static List<String> names(Collection<Kind> kinds) {
+            return kinds.stream().map(Kind::name).sorted().toList();
+        }
     }
 
     public enum Role {

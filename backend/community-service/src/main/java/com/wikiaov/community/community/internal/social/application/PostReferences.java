@@ -2,6 +2,7 @@ package com.wikiaov.community.community.internal.social.application;
 
 import com.wikiaov.community.community.internal.social.persistence.CommunityPostRepository;
 import com.wikiaov.community.tournament.CompetitionReferences;
+import com.wikiaov.community.tournament.CompetitionReferences.Subject;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ public class PostReferences implements CompetitionReferences {
     }
 
     @Override
-    public long identityReferences(String kind, UUID id) {
+    public long identityReferences(Subject subject, UUID id) {
         return 0;
     }
 

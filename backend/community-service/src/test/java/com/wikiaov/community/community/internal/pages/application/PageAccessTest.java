@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.wikiaov.community.community.internal.application.PageErrorCode;
+import com.wikiaov.community.community.internal.domain.PageContent.Kind;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.membership.persistence.PageMember;
 import com.wikiaov.community.community.internal.membership.persistence.PageMemberRepository;
@@ -30,7 +31,7 @@ class PageAccessTest {
 
     @Test
     void aMemberHoldingOneOfTheRolesPasses() {
-        page("TEAM");
+        page(Kind.TEAM);
         member(Role.EDITOR);
 
         assertThatCode(() -> access.require(PAGE, EDITOR, Role.OWNER, Role.EDITOR)).doesNotThrowAnyException();
@@ -38,7 +39,7 @@ class PageAccessTest {
 
     @Test
     void aMemberWithAnotherRoleIsRefused() {
-        page("TEAM");
+        page(Kind.TEAM);
         member(Role.EDITOR);
 
         var error = catchThrowableOfType(ApiException.class, () -> access.require(PAGE, EDITOR, Role.OWNER));
@@ -48,13 +49,13 @@ class PageAccessTest {
 
     @Test
     void nobodyHasARoleOnACircuitPage() {
-        page("CIRCUIT");
+        page(Kind.CIRCUIT);
         member(Role.OWNER);
 
         assertThat(access.role(PAGE, EDITOR)).isEmpty();
     }
 
-    private void page(String kind) {
+    private void page(Kind kind) {
         var row = new PageRecord();
         row.setId(PAGE);
         row.setKind(kind);

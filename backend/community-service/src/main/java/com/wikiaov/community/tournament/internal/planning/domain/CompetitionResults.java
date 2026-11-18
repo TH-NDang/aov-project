@@ -1,6 +1,7 @@
 package com.wikiaov.community.tournament.internal.planning.domain;
 
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Entry;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Slot;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Stage;
 import java.util.ArrayList;
@@ -100,7 +101,7 @@ public final class CompetitionResults {
         var matches = plan.matches().stream().filter(match -> match.stageCode().equals(stage.code()))
                 .map(match -> index.get(match.key())).toList();
         var stats = new LinkedHashMap<UUID, int[]>();
-        plan.entrants().stream().filter(entry -> !"WITHDRAWN".equals(entry.status()))
+        plan.entrants().stream().filter(Entry::plays)
                 .forEach(entry -> stats.put(entry.teamId(), new int[5]));
         for (var match : matches) {
             if (!match.consistent() || match.scoreA() == null || !stats.containsKey(match.teamAId())

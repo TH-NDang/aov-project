@@ -369,9 +369,61 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void pagesAreFilteredAndFoundByTheExactNameOfTheirKind() throws Exception {
+        String marker = "kind" + UUID.randomUUID().toString().substring(0, 8);
+        var team = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "TEAM", "code", marker + "-team", "content", Map.of("name", marker + " Team")));
+        send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "ORGANIZATION", "code", marker + "-host", "content", Map.of("name", marker + " Host")));
+
+        var teams = send(get(ROOT + "/admin/pages").param("q", marker).param("kind", "TEAM"), "editor", true, null);
+        assertThat(teams.path("totalElements").asInt()).isEqualTo(1);
+        assertThat(teams.path("items").get(0).path("kind").asText()).isEqualTo("TEAM");
+        mvc.perform(as(get(ROOT + "/admin/pages").param("kind", "team"), "editor", true))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("PAGE_INVALID_CONTENT"));
+        mvc.perform(get(ROOT + "/pages/by-entity/SQUAD/" + team.path("entityId").asText()))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("PAGE_NOT_FOUND"));
+    }
+
+    @Test
+    void aDraftWithAFollowerIsKeptWhenItsDeletionIsAsked() throws Exception {
+        var draft = send(post(ROOT + "/admin/pages"), "editor", true, Map.of("kind", "ORGANIZATION", "code",
+                "followed-" + UUID.randomUUID(), "content", Map.of("name", "Followed draft")));
+        jdbc.update("INSERT INTO community.follow (id, page_id, actor) VALUES (?, ?, ?)", UUID.randomUUID(),
+                UUID.fromString(draft.path("id").asText()), "early-fan");
+
+        mvc.perform(as(post(ROOT + "/admin/pages/" + draft.path("id").asText() + "/delete"), "editor", true)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"version\":" + draft.path("version").asLong() + "}"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("PAGE_CONFLICT"))
+                .andExpect(jsonPath("$.detail").value("The page has representatives, requests or community activity."));
+    }
+
+    @Test
+    void theAuditTrailKeepsStoringItsActionsAsText() throws Exception {
+        String code = "audited-" + UUID.randomUUID();
+        var created = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "ORGANIZATION", "code", code, "content", Map.of("name", "Audited")));
+        send(put(ROOT + "/admin/pages/" + created.path("id").asText()), "editor", true,
+                Map.of("version", created.path("version").asLong(), "content", Map.of("name", "Audited again")));
+
+        assertThat(jdbc.queryForList("SELECT action FROM community.page_audit WHERE page_id = ? ORDER BY occurred_at",
+                String.class, UUID.fromString(created.path("id").asText())))
+                .containsExactly("PAGE_CREATED", "PAGE_DRAFT_UPDATED");
+    }
+
+    @Test
     void aPageLargerThanTheListLimitIsAnInvalidQueryParameter() throws Exception {
         mvc.perform(get(ROOT + "/pages").param("size", "101")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
+                .andExpect(jsonPath("$.errors[0].path").value("size"));
+    }
+
+    @Test
+    void theFeedOfAManagedPageKeepsItsListLimit() throws Exception {
+        mvc.perform(as(get(ROOT + "/me/pages/" + UUID.randomUUID() + "/feed").param("size", "101"), "fan", false))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
                 .andExpect(jsonPath("$.errors[0].path").value("size"));
     }
 

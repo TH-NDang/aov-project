@@ -4,6 +4,7 @@ import com.wikiaov.community.currency.internal.application.ExchangeRates;
 import com.wikiaov.community.currency.internal.application.ExchangeRates.Rates;
 import com.wikiaov.community.platform.ApiException;
 import com.wikiaov.community.platform.ApiFieldError;
+import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.platform.PlatformErrorCode;
 import com.wikiaov.community.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.Set;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -25,7 +28,8 @@ class ExchangeRateController implements ExchangeRateApi {
     }
 
     @Override
-    public ResponseEntity<Rates> rates(List<String> on, HttpServletRequest request) {
+    @GetMapping(path = ApiPaths.ROOT + "/exchange-rates", version = "1")
+    public ResponseEntity<Rates> rates(@RequestParam(required = false) List<String> on, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of(), Set.of("on"));
 
         var days = on == null ? List.<LocalDate>of() : on.stream().map(ExchangeRateController::day).toList();

@@ -6,6 +6,8 @@ import java.util.Locale;
 import java.util.Set;
 
 public final class SourceUrls {
+    public static final int MAX_LENGTH = 2048;
+
     private SourceUrls() {
     }
 
@@ -13,7 +15,7 @@ public final class SourceUrls {
         if (value == null || value.isBlank()) {
             return true;
         }
-        if (value.length() > 2048 || !value.equals(value.trim())
+        if (value.length() > MAX_LENGTH || !value.equals(value.trim())
                 || value.chars().anyMatch(character -> character <= 32 || character == 127 || character == '\\')) {
             return false;
         }

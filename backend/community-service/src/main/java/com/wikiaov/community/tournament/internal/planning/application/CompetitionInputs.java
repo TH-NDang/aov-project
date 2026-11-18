@@ -9,13 +9,13 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Roster
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
-import com.wikiaov.community.tournament.internal.persistence.PlayerRepository;
-import com.wikiaov.community.tournament.internal.persistence.SeriesRepository;
-import com.wikiaov.community.tournament.internal.persistence.TeamRepository;
-import com.wikiaov.community.tournament.internal.persistence.TournamentRepository;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionResults;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionSnapshot;
+import com.wikiaov.community.tournament.internal.registry.persistence.PlayerRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.SeriesRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.TeamRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.TournamentRepository;
 import com.wikiaov.community.tournament.internal.roster.persistence.RosterRepository;
 import java.util.Collection;
 import java.util.LinkedHashMap;

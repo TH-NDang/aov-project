@@ -27,6 +27,14 @@ public final class PageRules {
     public static final int MAX_LINKS = 20;
     /** The lowest final place an achievement records. */
     public static final int MAX_PLACE = 999;
+    /** Longest search text of a page list. */
+    public static final int MAX_SEARCH = 200;
+    public static final int MAX_SOURCES = 100;
+    public static final int MAX_HISTORY = 300;
+    public static final int MAX_ACHIEVEMENTS = 300;
+    public static final int MAX_ROSTER = 100;
+    public static final int MAX_HISTORY_TITLE = 500;
+    public static final int MAX_ACHIEVEMENT_TITLE = 300;
 
     private static final Set<String> POST_KINDS = Set.of("TEXT", "NEWS", "VIDEO");
 
@@ -116,8 +124,8 @@ public final class PageRules {
         text(content.country(), MAX_LABEL, false);
         presentation(new PageContent.Presentation(content.biography(), content.avatarUrl(), content.coverUrl(),
                 content.links()));
-        if (content.sources().size() > 100 || content.history().size() > 300 || content.achievements().size() > 300
-                || content.roster().size() > 100) {
+        if (content.sources().size() > MAX_SOURCES || content.history().size() > MAX_HISTORY
+                || content.achievements().size() > MAX_ACHIEVEMENTS || content.roster().size() > MAX_ROSTER) {
             throw invalid("Too many profile entries.");
         }
         content.sources().forEach(source -> {
@@ -126,13 +134,13 @@ public final class PageRules {
             url(source.url());
         });
         content.history().forEach(item -> {
-            text(item.title(), 500, true);
+            text(item.title(), MAX_HISTORY_TITLE, true);
             text(item.role(), MAX_LABEL, false);
             url(item.sourceUrl());
             dates(item.startsOn(), item.endsOn());
         });
         content.achievements().forEach(item -> {
-            text(item.title(), 300, true);
+            text(item.title(), MAX_ACHIEVEMENT_TITLE, true);
             text(item.placement(), MAX_LABEL, true);
             url(item.sourceUrl());
             rank(item);

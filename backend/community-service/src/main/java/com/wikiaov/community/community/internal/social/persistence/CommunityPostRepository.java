@@ -4,6 +4,7 @@ import com.wikiaov.community.community.internal.domain.PostStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,9 +27,11 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, UU
 
     Optional<CommunityPost> findByPageIdAndPinnedAtIsNotNull(UUID pageId);
 
+    /** Native: looks for the image path in the text of the jsonb image list. */
     @Query(value = "select count(*) from community.post where cast(image_urls as text) like concat('%/', :id, '/%')", nativeQuery = true)
     long countMedia(String id);
 
+    /** Native: finds image paths in the jsonb image lists with a PostgreSQL regular expression. */
     @Query(value = """
         SELECT pairs.asset FROM (
         SELECT DISTINCT found.owner, lower(m[2]) AS asset FROM (
@@ -42,26 +45,19 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, UU
     Page<CommunityPost> findByPageIdOrderByCreatedAtDesc(UUID pageId, Pageable pageable);
 
     /**
-     * Published posts of published pages, newest first. {@code follower} limits them to that account's follows,
-     * {@code kind} to one post kind and {@code pattern} (an escaped ILIKE pattern) to matching titles or text.
+     * Published posts of published pages, newest first; circuits have none. {@code follower} limits them to that
+     * account's follows, {@code kind} to one post kind and {@code pattern} (an escaped ILIKE pattern) to matching
+     * titles or text.
      */
-    @Query(value = """
-            SELECT p.* FROM community.post p JOIN community.page g ON g.id = p.page_id
-            WHERE p.status = :status AND g.published_content IS NOT NULL AND g.kind <> 'CIRCUIT'
-              AND (CAST(:follower AS varchar) IS NULL OR EXISTS (
-                SELECT 1 FROM community.follow f WHERE f.page_id = p.page_id AND f.actor = :follower))
-              AND (CAST(:kind AS varchar) IS NULL OR p.kind = :kind)
-              AND (CAST(:pattern AS varchar) IS NULL OR p.body ILIKE :pattern ESCAPE '\\'
-                OR p.title ILIKE :pattern ESCAPE '\\')
-            ORDER BY p.created_at DESC, p.id
-            """, countQuery = """
-            SELECT count(*) FROM community.post p JOIN community.page g ON g.id = p.page_id
-            WHERE p.status = :status AND g.published_content IS NOT NULL AND g.kind <> 'CIRCUIT'
-              AND (CAST(:follower AS varchar) IS NULL OR EXISTS (
-                SELECT 1 FROM community.follow f WHERE f.page_id = p.page_id AND f.actor = :follower))
-              AND (CAST(:kind AS varchar) IS NULL OR p.kind = :kind)
-              AND (CAST(:pattern AS varchar) IS NULL OR p.body ILIKE :pattern ESCAPE '\\'
-                OR p.title ILIKE :pattern ESCAPE '\\')
-            """, nativeQuery = true)
-    Page<CommunityPost> published(String status, String follower, String kind, String pattern, Pageable pageable);
+    @Query("""
+            select p from CommunityPost p join PageRecord g on g.id = p.pageId
+            where p.status = PUBLISHED and g.publishedContent is not null and g.kind <> CIRCUIT
+              and (:follower is null or exists (
+                select 1 from PageFollow f where f.pageId = p.pageId and f.actor = :follower))
+              and (:kind is null or p.kind = :kind)
+              and (:pattern is null or p.body ilike :pattern escape '\\' or p.title ilike :pattern escape '\\')
+            order by p.createdAt desc, p.id
+            """)
+    Page<CommunityPost> published(@Nullable String follower, @Nullable String kind, @Nullable String pattern,
+            Pageable pageable);
 }

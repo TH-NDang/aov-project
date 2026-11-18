@@ -10,7 +10,10 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface PostLikeRepository extends JpaRepository<PostLike, UUID> {
 
-    /** Adds the like unless the account already liked the post, so concurrent repeats need no page lock. */
+    /**
+     * Adds the like unless the account already liked the post, so concurrent repeats need no page lock. Native for
+     * ON CONFLICT.
+     */
     @Modifying(flushAutomatically = true)
     @Query(value = """
             INSERT INTO community.post_like (id, post_id, actor, created_at)

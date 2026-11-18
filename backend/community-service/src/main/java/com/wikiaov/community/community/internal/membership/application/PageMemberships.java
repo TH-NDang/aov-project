@@ -6,6 +6,7 @@ import com.wikiaov.community.community.internal.application.PageViews.Handover;
 import com.wikiaov.community.community.internal.application.PageViews.Member;
 import com.wikiaov.community.community.internal.domain.ClaimStatus;
 import com.wikiaov.community.community.internal.domain.NotificationKind;
+import com.wikiaov.community.community.internal.domain.PageAuditAction;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PageRules;
@@ -68,7 +69,7 @@ public class PageMemberships {
         row.setStatus(ClaimStatus.PENDING);
         row.setCreatedAt(Instant.now());
         claims.saveAndFlush(row);
-        access.audit(pageId, actor, "PAGE_CLAIM_REQUESTED");
+        access.audit(pageId, actor, PageAuditAction.PAGE_CLAIM_REQUESTED);
         return view(row);
     }
 
@@ -110,7 +111,8 @@ public class PageMemberships {
         row.setResolution(resolution);
         row.setReviewedBy(actor.key());
         claims.flush();
-        access.audit(row.getPageId(), actor, approve ? "PAGE_CLAIM_APPROVED" : "PAGE_CLAIM_REJECTED");
+        access.audit(row.getPageId(), actor,
+                approve ? PageAuditAction.PAGE_CLAIM_APPROVED : PageAuditAction.PAGE_CLAIM_REJECTED);
         notifications.send(row.getActor(), row.getPageId(),
                 approve ? NotificationKind.PAGE_CLAIM_APPROVED : NotificationKind.PAGE_CLAIM_REJECTED);
         return view(row);
@@ -137,7 +139,7 @@ public class PageMemberships {
         }
 
         var issued = issue(pageId, role);
-        access.audit(pageId, actor, "PAGE_MEMBER_INVITED");
+        access.audit(pageId, actor, PageAuditAction.PAGE_MEMBER_INVITED);
         return issued;
     }
 
@@ -171,7 +173,7 @@ public class PageMemberships {
 
         expireHandovers(pageId);
         var issued = issue(pageId, Role.OWNER);
-        access.audit(pageId, actor, "PAGE_HANDOVER_ISSUED");
+        access.audit(pageId, actor, PageAuditAction.PAGE_HANDOVER_ISSUED);
         return Map.of("token", issued.get("token"), "expiresAt", issued.get("expiresAt"));
     }
 
@@ -181,7 +183,7 @@ public class PageMemberships {
         access.lock(pageId);
 
         if (expireHandovers(pageId) > 0) {
-            access.audit(pageId, actor, "PAGE_HANDOVER_CANCELLED");
+            access.audit(pageId, actor, PageAuditAction.PAGE_HANDOVER_CANCELLED);
         }
     }
 
@@ -208,7 +210,8 @@ public class PageMemberships {
 
         add(row.getPageId(), actor.key(), actor.name(), row.getRole());
         row.setAcceptedAt(Instant.now());
-        access.audit(row.getPageId(), actor, handover ? "PAGE_HANDOVER_ACCEPTED" : "PAGE_INVITATION_ACCEPTED");
+        access.audit(row.getPageId(), actor,
+                handover ? PageAuditAction.PAGE_HANDOVER_ACCEPTED : PageAuditAction.PAGE_INVITATION_ACCEPTED);
         if (handover) {
             notifications.send(actor.key(), row.getPageId(), NotificationKind.PAGE_OWNERSHIP_RECEIVED);
         }
@@ -234,7 +237,7 @@ public class PageMemberships {
             invitations.findByPageIdAndAcceptedAtIsNull(pageId)
                     .forEach(invitation -> invitation.setExpiresAt(Instant.now()));
         }
-        access.audit(pageId, actor, "PAGE_MEMBERSHIP_REVOKED");
+        access.audit(pageId, actor, PageAuditAction.PAGE_MEMBERSHIP_REVOKED);
         notifications.send(member.getActor(), pageId, NotificationKind.PAGE_MEMBERSHIP_REVOKED);
     }
 
@@ -252,7 +255,7 @@ public class PageMemberships {
         target.setRole(Role.OWNER);
         invitations.findByPageIdAndAcceptedAtIsNull(pageId)
                 .forEach(invitation -> invitation.setExpiresAt(Instant.now()));
-        access.audit(pageId, actor, "PAGE_OWNERSHIP_TRANSFERRED");
+        access.audit(pageId, actor, PageAuditAction.PAGE_OWNERSHIP_TRANSFERRED);
         notifications.send(target.getActor(), pageId, NotificationKind.PAGE_OWNERSHIP_RECEIVED);
     }
 

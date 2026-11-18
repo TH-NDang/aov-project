@@ -11,7 +11,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface ExchangeRateRepository extends Repository<ExchangeRateRecord, ExchangeRateRecord.Key> {
-    /** Rows are a JSON array, so a year of rates is one statement. A later fetch of a day corrects the earlier one. */
+    /**
+     * Rows are a JSON array, so a year of rates is one statement. A later fetch of a day corrects the earlier one.
+     * Native for jsonb_to_recordset and ON CONFLICT.
+     */
     @Transactional
     @Modifying
     @Query(value = """
@@ -33,7 +36,10 @@ public interface ExchangeRateRepository extends Repository<ExchangeRateRecord, E
         """)
     List<LatestDay> latestDays();
 
-    /** For each day and currency, the newest rate published on or before that day. Days and currencies are JSON arrays. */
+    /**
+     * For each day and currency, the newest rate published on or before that day. Days and currencies are JSON arrays.
+     * Native for the lateral join over jsonb arrays.
+     */
     @Query(value = """
         SELECT d.day AS day, r.currency AS currency, CAST(r.rate_date AS text) AS rateDate,
                r.units_per_usd AS unitsPerUsd
