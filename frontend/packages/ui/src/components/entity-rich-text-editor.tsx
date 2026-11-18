@@ -124,7 +124,8 @@ function useReferenceSearch(
     [searchReferences, query, locale, key],
   )
   React.useEffect(() => {
-    const run = ++generation.current
+    const run = generation.current + 1
+    generation.current = run
     request.current?.abort()
     pending.current = false
     setResult({ key, items: [], page: -1, size: 20, totalElements: 0, loading: allowed, error: false })
@@ -210,7 +211,7 @@ export function EntityRichTextEditor({
   const updateCaret = React.useCallback((next: TextSelection) => {
     setCaret((previous) => (previous.start === next.start && previous.end === next.end ? previous : next))
   }, [])
-  const formatting = React.useMemo(() => referenceFormatState(value, caret), [value, caret.start, caret.end])
+  const formatting = React.useMemo(() => referenceFormatState(value, caret), [value, caret])
   React.useEffect(() => {
     if (/^#[\da-f]{6}$/i.test(formatting.color ?? "")) setColor(formatting.color!)
     else if (/^#[\da-f]{3}$/i.test(formatting.color ?? "")) {
@@ -233,7 +234,7 @@ export function EntityRichTextEditor({
       updateCaret(selection.current)
       setDismissed(true)
     }
-  }, [value])
+  }, [value, updateCaret])
   const restore = (snapshot: EditorSnapshot) => {
     current.current = snapshot.value
     onChange(snapshot.value)

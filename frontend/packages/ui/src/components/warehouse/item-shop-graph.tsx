@@ -3,7 +3,7 @@ import { itemShopLayout, itemShopRowTracks, itemShopSections } from "@aov/ui/lib
 import { ItemShopRegionHelp } from "./item-shop-region-help"
 import { ItemPrice } from "./item-price"
 import { cardChangeKinds, WarehouseBadges as CatalogChangeBadges } from "./warehouse-view"
-import { Fragment, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { Fragment, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import {
   DndContext,
@@ -458,6 +458,28 @@ export function ItemShopGraph({
   const lastTrack = rowTracks.at(-1)!
   const edges = useMemo(() => selectedItemEdges(itemEdges(items), selectedId), [items, selectedId])
   const related = new Set(edges.flatMap((edge) => [edge.from, edge.to]))
+  // Both only touch refs, so the effects below that end a drag can list them without running again.
+  const clearConnection = useCallback(() => {
+    const session = pointer.current
+    pointer.current = null
+    cancelAnimationFrame(previewFrame.current)
+    previewFrame.current = 0
+    previewTime.current = 0
+    preview.current?.setAttribute("visibility", "hidden")
+    preview.current?.removeAttribute("data-connection-preview")
+    session?.element.removeAttribute("data-connection-source")
+    session?.targets.forEach((target) => {
+      target.element.removeAttribute("data-connection-compatible")
+      target.element.removeAttribute("data-connection-target")
+    })
+    if (session?.element.hasPointerCapture?.(session.pointerId))
+      session.element.releasePointerCapture(session.pointerId)
+    return session
+  }, [])
+  const cancelConnection = useCallback(() => {
+    const session = clearConnection()
+    if (session) suppressClick.current = Date.now() + 300
+  }, [clearConnection])
   useLayoutEffect(() => {
     const element = canvas.current
     if (!element) return
@@ -525,7 +547,7 @@ export function ItemShopGraph({
       cancelAnimationFrame(frame)
       cancelConnection()
     }
-  }, [placements, external, edges, byId, locale, more])
+  }, [placements, external, edges, byId, locale, more, cancelConnection])
   useEffect(() => {
     function escape(event: KeyboardEvent) {
       if (event.key !== "Escape" || !pointer.current) return
@@ -542,7 +564,7 @@ export function ItemShopGraph({
       window.removeEventListener("blur", blur)
       cancelConnection()
     }
-  }, [])
+  }, [cancelConnection])
   useEffect(() => {
     const viewport = scrollArea.current
     if (!viewport) return
@@ -591,7 +613,7 @@ export function ItemShopGraph({
       document.removeEventListener("scroll", cancel, true)
       document.removeEventListener("click", dismiss, true)
     }
-  }, [onFocus])
+  }, [onFocus, cancelConnection])
   function nearestPort(session: ConnectionPointer, x: number, y: number) {
     let closest: PortTarget | null = null
     let distance = Infinity
@@ -670,27 +692,6 @@ export function ItemShopGraph({
   }
   function queueConnection() {
     if (!previewFrame.current) previewFrame.current = requestAnimationFrame(drawConnection)
-  }
-  function clearConnection() {
-    const session = pointer.current
-    pointer.current = null
-    cancelAnimationFrame(previewFrame.current)
-    previewFrame.current = 0
-    previewTime.current = 0
-    preview.current?.setAttribute("visibility", "hidden")
-    preview.current?.removeAttribute("data-connection-preview")
-    session?.element.removeAttribute("data-connection-source")
-    session?.targets.forEach((target) => {
-      target.element.removeAttribute("data-connection-compatible")
-      target.element.removeAttribute("data-connection-target")
-    })
-    if (session?.element.hasPointerCapture?.(session.pointerId))
-      session.element.releasePointerCapture(session.pointerId)
-    return session
-  }
-  function cancelConnection() {
-    const session = clearConnection()
-    if (session) suppressClick.current = Date.now() + 300
   }
   function connect(a: Port, b: Port) {
     setArmed(null)
