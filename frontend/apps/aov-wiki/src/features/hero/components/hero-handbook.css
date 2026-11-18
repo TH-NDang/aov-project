@@ -680,7 +680,7 @@ section.wiki-version-changes,
 .wiki-handbook .wiki-version-changes-head h2 {
   margin: 0;
 }
-.wiki-version-changes-head > .wiki-change-kind {
+.wiki-version-changes-head > .wiki-version-changes-kind {
   align-self: center;
   margin-left: auto;
 }
@@ -698,14 +698,6 @@ section.wiki-version-changes,
 .wiki-version-summary {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
-}
-/* Inside the band a thin rule parts one ability from the next, where the same list on the page uses space alone. */
-.wiki-version-changes .wiki-change-groups {
-  gap: 14px;
-}
-.wiki-version-changes .wiki-change-group + .wiki-change-group {
-  border-top: 1px solid var(--aov-line);
-  padding-top: 14px;
 }
 .wiki-version-links {
   font: var(--wiki-type-meta);
