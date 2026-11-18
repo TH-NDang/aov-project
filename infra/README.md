@@ -279,7 +279,8 @@ bash infra/scripts/deploy.sh <commit>
 bash infra/scripts/deploy.sh --refresh
 ```
 
-- Không tham số: commit mới nhất của `main`, chỉ khi mọi check của commit đó trên GitHub đã xong và đạt.
+- Không tham số: commit mới nhất của `main`, chỉ khi mọi check của commit đó trên GitHub đã xong và đạt, và commit đó nối tiếp
+  commit đang chạy. Timer chỉ đi tới: `main` bị viết lại lịch sử hoặc lùi về thì nó không làm gì.
 - `<commit>`: đúng commit đó, kể cả khi check chưa đạt; dùng để quay lui về commit trước.
 - `--refresh`: chạy lại các bước không gián đoạn trên commit đang chạy, dùng sau khi đổi `.env` cho backend. Đổi giá trị của
   Keycloak, PostgreSQL hay Caddy trong `.env` thì vẫn dùng `docker compose up -d --wait`.

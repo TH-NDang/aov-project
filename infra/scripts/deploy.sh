@@ -50,6 +50,14 @@ fi
 if $automatic && [ "$(cat "$state/rejected" 2>/dev/null)" = "$target" ]; then
     exit 0
 fi
+# The timer only moves forward. A main that does not build on the running commit (rewritten history, or a server ahead
+# of main) is left for a run by hand.
+if $automatic && ! git -C "$repo" merge-base --is-ancestor "$deployed" "$target" 2>/dev/null; then
+    log "main is at $short, which does not follow the running ${deployed:0:8}; the timer leaves it. Deploy it by hand if" \
+        "that is intended."
+    echo "$target" >"$state/rejected"
+    exit 0
+fi
 
 # passed, pending or failed, from the check runs GitHub keeps for the commit. Every commit of main has at least the
 # images workflow, so no run at all means the checks have not started yet.
