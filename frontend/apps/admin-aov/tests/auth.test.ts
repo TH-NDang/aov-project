@@ -1,7 +1,12 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { createAuthenticatedClient } from "../src/lib/api/authenticated-client.ts"
-import { createAuthRequest, isGoogleCompletion, isGoogleError } from "../src/app/auth/auth-api.ts"
+import {
+  createAuthRequest,
+  googleRedirectOutcome,
+  isGoogleCompletion,
+  isGoogleError,
+} from "../src/app/auth/auth-api.ts"
 
 test("password login goes only to backend and includes the CSRF header", async () => {
   const request = createAuthRequest(async (url, init) => {
@@ -70,6 +75,23 @@ test("a Google sign-in error is accepted only from the popup at the Keycloak ori
     isGoogleError({ ...valid, data: { type: "aov-google-error" } } as MessageEvent, popup, keycloakOrigin),
     false,
   )
+})
+
+test("a same-page Google sign-in reports the status the completion page saved", () => {
+  const saved = JSON.stringify({ state: "current", returnTo: "/admin/", status: "FORBIDDEN" })
+  assert.deepEqual(googleRedirectOutcome(saved, ""), { kind: "completion", status: "FORBIDDEN" })
+})
+
+test("a same-page Google sign-in reports the code the Keycloak error page returned with", () => {
+  const saved = JSON.stringify({ state: "current", returnTo: "/admin/" })
+  assert.deepEqual(googleRedirectOutcome(saved, "#google-error=EXPIRED"), { kind: "keycloak-error", code: "EXPIRED" })
+  assert.deepEqual(googleRedirectOutcome(saved, ""), { kind: "abandoned" })
+})
+
+test("a Google error fragment is ignored when this tab started no same-page sign-in", () => {
+  assert.equal(googleRedirectOutcome(null, "#google-error=REJECTED"), null)
+  assert.equal(googleRedirectOutcome("not json", "#google-error=REJECTED"), null)
+  assert.equal(googleRedirectOutcome(JSON.stringify({ returnTo: "/admin/" }), "#google-error=REJECTED"), null)
 })
 
 test("refreshes credentials before sending a same-origin API request", async () => {
