@@ -18,8 +18,15 @@ before(signIn)
 
 const { MemoryRouter } = await import("react-router")
 
-const sections = await import("../src/features/game-modes/auto-chess-sections")
-type SectionProps = import("../src/features/game-modes/auto-chess-sections").SectionProps
+const sections = {
+  ...(await import("../src/features/game-modes/auto-chess/units-section")),
+  ...(await import("../src/features/game-modes/auto-chess/traits-section")),
+  ...(await import("../src/features/game-modes/auto-chess/items-section")),
+  ...(await import("../src/features/game-modes/auto-chess/blessings-section")),
+  ...(await import("../src/features/game-modes/auto-chess/quests-section")),
+  ...(await import("../src/features/game-modes/auto-chess/lineups-section")),
+}
+type SectionProps = import("../src/features/game-modes/auto-chess/guide-model").SectionProps
 const { guideContentFromManifest } = await import("../src/features/game-modes/game-mode-import")
 
 // The small encyclopedia sample: 2 traits, 3 units, 1 item group with 2 items, 1 blessing, 1 quest, 1 lineup.
