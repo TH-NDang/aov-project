@@ -1,5 +1,6 @@
 package com.wikiaov.community.community.internal.pages.persistence;
 
+import com.wikiaov.community.community.internal.domain.PageAuditAction;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,7 +12,7 @@ public interface PageAuditRepository extends JpaRepository<PageAudit, UUID> {
 
     Page<PageAudit> findByPageIdOrderByOccurredAtDesc(UUID pageId, Pageable pageable);
 
-    boolean existsByPageIdAndAction(UUID pageId, String action);
+    boolean existsByPageIdAndAction(UUID pageId, PageAuditAction action);
 
     @Modifying(flushAutomatically = true)
     @Query("delete from PageAudit audit where audit.pageId = :pageId")

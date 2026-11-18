@@ -4,6 +4,7 @@ import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.application.PageViews.Live;
 import com.wikiaov.community.community.internal.application.PageViews.Profile;
 import com.wikiaov.community.community.internal.domain.NotificationKind;
+import com.wikiaov.community.community.internal.domain.PageAuditAction;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
 import com.wikiaov.community.community.internal.domain.PageRules;
@@ -99,7 +100,8 @@ public class PageBroadcasts {
         row.setUrl(url.strip());
         row.setTitle(title.strip());
         lives.saveAndFlush(row);
-        access.audit(page.getId(), actor, starting ? "PAGE_LIVE_STARTED" : "PAGE_LIVE_UPDATED");
+        access.audit(page.getId(), actor,
+                starting ? PageAuditAction.PAGE_LIVE_STARTED : PageAuditAction.PAGE_LIVE_UPDATED);
         if (starting) {
             notifications.followers(page.getId(), NotificationKind.PAGE_LIVE_STARTED, Map.of(NotificationKind.PAGE_NAME,
                     page.getPublishedContent().name(), NotificationKind.TITLE, row.getTitle()));
@@ -115,6 +117,6 @@ public class PageBroadcasts {
 
         lives.deleteById(pageId);
         lives.flush();
-        access.audit(pageId, actor, "PAGE_LIVE_ENDED");
+        access.audit(pageId, actor, PageAuditAction.PAGE_LIVE_ENDED);
     }
 }

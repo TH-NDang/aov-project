@@ -5,6 +5,7 @@ import com.wikiaov.community.community.internal.application.PageViews.Live;
 import com.wikiaov.community.community.internal.application.PageViews.PageCard;
 import com.wikiaov.community.community.internal.application.PageViews.Profile;
 import com.wikiaov.community.community.internal.application.PageViews.TeamAffiliation;
+import com.wikiaov.community.community.internal.domain.PageAuditAction;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.community.internal.domain.PageContent.Kind;
 import com.wikiaov.community.community.internal.domain.PageContent.Role;
@@ -222,7 +223,7 @@ public class PageProfiles {
         row.setContent(content);
         row.setUpdatedAt(Instant.now());
         pages.saveAndFlush(row);
-        access.audit(row.getId(), actor, "PAGE_CREATED");
+        access.audit(row.getId(), actor, PageAuditAction.PAGE_CREATED);
         return view(row, true);
     }
 
@@ -238,7 +239,7 @@ public class PageProfiles {
         row.setContent(content);
         row.setUpdatedAt(Instant.now());
         pages.flush();
-        access.audit(id, CommunityActor.require(), "PAGE_DRAFT_UPDATED");
+        access.audit(id, CommunityActor.require(), PageAuditAction.PAGE_DRAFT_UPDATED);
         return view(row, true);
     }
 
@@ -261,7 +262,7 @@ public class PageProfiles {
         row.setPublishedAt(Instant.now());
         row.setUpdatedAt(Instant.now());
         pages.flush();
-        access.audit(id, CommunityActor.require(), "PAGE_PUBLISHED");
+        access.audit(id, CommunityActor.require(), PageAuditAction.PAGE_PUBLISHED);
         return view(row, true);
     }
 
@@ -276,7 +277,7 @@ public class PageProfiles {
         row.setPublishedAt(null);
         row.setUpdatedAt(Instant.now());
         pages.flush();
-        access.audit(id, CommunityActor.require(), "PAGE_WITHDRAWN");
+        access.audit(id, CommunityActor.require(), PageAuditAction.PAGE_WITHDRAWN);
         return view(row, true);
     }
 
@@ -290,7 +291,7 @@ public class PageProfiles {
         var row = access.lock(id);
         PageAccess.version(row.getVersion(), version);
 
-        if (row.getPublishedContent() != null || audits.existsByPageIdAndAction(id, "PAGE_PUBLISHED")) {
+        if (row.getPublishedContent() != null || audits.existsByPageIdAndAction(id, PageAuditAction.PAGE_PUBLISHED)) {
             throw PageAccess.conflict("A page that was published keeps its history. Withdraw it instead.");
         }
         if (pages.countActivity(id) > 0) {
@@ -322,7 +323,7 @@ public class PageProfiles {
         row.setPresentation(content);
         row.setUpdatedAt(Instant.now());
         pages.flush();
-        access.audit(id, actor, "PAGE_PRESENTATION_UPDATED");
+        access.audit(id, actor, PageAuditAction.PAGE_PRESENTATION_UPDATED);
         return view(row, false);
     }
 

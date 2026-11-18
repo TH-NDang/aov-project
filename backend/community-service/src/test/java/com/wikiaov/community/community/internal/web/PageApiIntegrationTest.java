@@ -387,6 +387,19 @@ class PageApiIntegrationTest {
     }
 
     @Test
+    void theAuditTrailKeepsStoringItsActionsAsText() throws Exception {
+        String code = "audited-" + UUID.randomUUID();
+        var created = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "ORGANIZATION", "code", code, "content", Map.of("name", "Audited")));
+        send(put(ROOT + "/admin/pages/" + created.path("id").asText()), "editor", true,
+                Map.of("version", created.path("version").asLong(), "content", Map.of("name", "Audited again")));
+
+        assertThat(jdbc.queryForList("SELECT action FROM community.page_audit WHERE page_id = ? ORDER BY occurred_at",
+                String.class, UUID.fromString(created.path("id").asText())))
+                .containsExactly("PAGE_CREATED", "PAGE_DRAFT_UPDATED");
+    }
+
+    @Test
     void aPageLargerThanTheListLimitIsAnInvalidQueryParameter() throws Exception {
         mvc.perform(get(ROOT + "/pages").param("size", "101")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
