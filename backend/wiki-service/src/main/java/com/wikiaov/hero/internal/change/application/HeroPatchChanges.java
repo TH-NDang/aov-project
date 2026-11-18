@@ -166,6 +166,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
         return withForms(HeroPatchChangeViews.render(history.forVariant(variantId, locale)));
     }
 
+    @Override
     public List<Map<String, Object>> forVariant(UUID variantId, String locale) {
         HeroValidation.locale(locale);
         if (!contexts.variant(variantId).published()) {

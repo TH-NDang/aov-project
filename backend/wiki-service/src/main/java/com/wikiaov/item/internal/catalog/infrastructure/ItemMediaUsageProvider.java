@@ -17,11 +17,13 @@ public class ItemMediaUsageProvider implements MediaUsageProvider {
         this.catalog = catalog;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID id) {
         return catalog.usages(id);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         return catalog.allUsages();

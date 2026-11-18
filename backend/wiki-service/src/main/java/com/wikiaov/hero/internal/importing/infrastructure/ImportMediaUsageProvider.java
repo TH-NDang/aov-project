@@ -34,6 +34,7 @@ public class ImportMediaUsageProvider implements MediaUsageProvider {
         this.uploads = uploads;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         var usages = new ArrayList<MediaUsage>();
@@ -51,6 +52,7 @@ public class ImportMediaUsageProvider implements MediaUsageProvider {
         return usages;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();

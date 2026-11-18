@@ -20,11 +20,13 @@ public class HeroSkillImageUsages implements MediaUsageProvider {
         this.images = images;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         return images.findByAssetId(assetId).stream().map(HeroSkillImageUsages::usage).toList();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         return images.findAll().stream().collect(Collectors.groupingBy(HeroSkillImage::getAssetId,

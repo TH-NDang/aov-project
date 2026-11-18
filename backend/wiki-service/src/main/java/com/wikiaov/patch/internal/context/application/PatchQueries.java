@@ -43,6 +43,7 @@ public class PatchQueries implements PatchCatalog {
         this.clock = clock;
     }
 
+    @Override
     public Map<String, Object> published(UUID id, String region, String locale) {
         validateLocale(locale);
         var release = releases(region).stream().filter(r -> r.patchId().equals(id)).findFirst()
@@ -51,6 +52,7 @@ public class PatchQueries implements PatchCatalog {
         return view(id, region, locale, release.variantId(), release.rulesetId(), release.effectiveAt());
     }
 
+    @Override
     public Map<String, Object> publishedVariant(UUID id, UUID variantId, String region, String locale) {
         validateLocale(locale);
         var context = gameplay.resolveCatalog(region, clock.instant(), null, variantId);
@@ -87,6 +89,7 @@ public class PatchQueries implements PatchCatalog {
         return result;
     }
 
+    @Override
     public PageSlice<Map<String, Object>> list(String region, String locale, int page, int size) {
         validateLocale(locale);
         var ids = releases(region).stream().map(PatchReleaseReference::patchId).distinct().toList();
@@ -95,6 +98,7 @@ public class PatchQueries implements PatchCatalog {
                 page, size, ids.size());
     }
 
+    @Override
     public List<PatchReleaseReference> releases(String region) {
         regions.select(region);
         return contexts.publishedReleases(region);

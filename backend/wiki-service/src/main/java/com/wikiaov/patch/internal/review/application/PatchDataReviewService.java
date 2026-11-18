@@ -79,6 +79,7 @@ public class PatchDataReviewService implements PatchDataReviews {
         return new PatchDataReviewView(id, value.getState(), value.getVersion(), value.getCompletedAt());
     }
 
+    @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void markDirty(UUID id) {
         if (id == null) {

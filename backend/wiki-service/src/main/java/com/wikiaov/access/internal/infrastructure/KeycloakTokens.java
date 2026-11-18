@@ -49,6 +49,7 @@ class KeycloakTokens implements IdentityTokens {
         this.client = RestClient.builder().requestFactory(factory).build();
     }
 
+    @Override
     public Tokens password(String username, String password, @Nullable String otp) {
         var form = form("password");
         form.add("username", username);
@@ -60,12 +61,14 @@ class KeycloakTokens implements IdentityTokens {
         return exchange(form, AuthErrorCode.AUTH_INVALID_CREDENTIALS);
     }
 
+    @Override
     public Tokens refresh(String refreshToken) {
         var form = form("refresh_token");
         form.add("refresh_token", refreshToken);
         return exchange(form, AuthErrorCode.AUTH_SESSION_EXPIRED);
     }
 
+    @Override
     public Tokens code(String code, String verifier, String redirectUri) {
         var form = form("authorization_code");
         form.add("code", code);
@@ -74,6 +77,7 @@ class KeycloakTokens implements IdentityTokens {
         return exchange(form, AuthErrorCode.AUTH_INVALID_STATE);
     }
 
+    @Override
     public void revoke(String refreshToken) {
         var form = form(null);
         form.add("token", refreshToken);
@@ -86,6 +90,7 @@ class KeycloakTokens implements IdentityTokens {
         }
     }
 
+    @Override
     public String authorizationUrl(String state, String challenge, String redirectUri) {
         return UriComponentsBuilder.fromUriString(issuer + "/protocol/openid-connect/auth")
                 .queryParam("client_id", properties.clientId()).queryParam("redirect_uri", redirectUri)

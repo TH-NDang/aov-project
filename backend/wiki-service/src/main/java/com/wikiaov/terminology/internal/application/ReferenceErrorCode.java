@@ -14,10 +14,12 @@ public enum ReferenceErrorCode implements ApiErrorCode {
         this.status = status;
     }
 
+    @Override
     public HttpStatus status() {
         return status;
     }
 
+    @Override
     public String title() {
         return "Reference settings request failed";
     }

@@ -73,10 +73,12 @@ public class SpellPatchChanges implements CatalogChangeProvider {
         this.clock = clock;
     }
 
+    @Override
     public String domain() {
         return "SPELL";
     }
 
+    @Override
     public List<Entry> changes(UUID rulesetId, UUID patchVariantId, String locale) {
         contexts.requireRuleset(rulesetId);
         var facts = patchVariantId == null

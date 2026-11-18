@@ -20,11 +20,13 @@ public class SkinBadgeMediaUsageProvider implements MediaUsageProvider {
         this.repository = repository;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         return repository.findByIconAssetId(assetId).stream().map(SkinBadgeMediaUsageProvider::usage).toList();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         return repository.findAll().stream().filter(text -> text.getIconAssetId() != null)

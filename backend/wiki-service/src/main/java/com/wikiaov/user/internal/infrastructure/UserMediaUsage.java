@@ -19,10 +19,12 @@ class UserMediaUsage implements MediaUsageProvider {
         this.profiles = profiles;
     }
 
+    @Override
     public List<MediaUsage> findUsages(UUID assetId) {
         return profiles.avatarOwners(assetId).stream().map(UserMediaUsage::usage).toList();
     }
 
+    @Override
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
         for (var avatar : profiles.avatars()) {

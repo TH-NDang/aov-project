@@ -111,11 +111,13 @@ public class EnchantmentBranchCatalog implements MediaUsageProvider {
         return view(row);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         return findAllUsages().getOrDefault(assetId, List.of());
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();

@@ -24,6 +24,7 @@ public class GameModeMediaUsageProvider implements MediaUsageProvider {
         this.guides = guides;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         var usages = new ArrayList<>(catalog.usages(assetId));
@@ -31,6 +32,7 @@ public class GameModeMediaUsageProvider implements MediaUsageProvider {
         return usages;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         var usages = new HashMap<UUID, List<MediaUsage>>();

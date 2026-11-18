@@ -68,10 +68,12 @@ public class ItemPatchChanges implements CatalogChangeProvider {
         this.clock = clock;
     }
 
+    @Override
     public String domain() {
         return "ITEM";
     }
 
+    @Override
     public List<Entry> changes(UUID rulesetId, UUID patchVariantId, String locale) {
         contexts.requireRuleset(rulesetId);
         var facts = patchVariantId == null

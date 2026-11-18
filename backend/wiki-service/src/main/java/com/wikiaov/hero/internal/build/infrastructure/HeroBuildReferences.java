@@ -18,10 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class HeroBuildReferences implements BuildReferenceProvider {
     private final HeroIdentityRepository heroes;
 
+    @Override
     public BuildReferenceKind kind() {
         return BuildReferenceKind.HERO;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
@@ -36,6 +38,7 @@ public class HeroBuildReferences implements BuildReferenceProvider {
         return result;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();

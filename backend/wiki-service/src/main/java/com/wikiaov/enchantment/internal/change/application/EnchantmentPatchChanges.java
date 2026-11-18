@@ -67,10 +67,12 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         this.clock = clock;
     }
 
+    @Override
     public String domain() {
         return "ENCHANTMENT";
     }
 
+    @Override
     public List<Entry> changes(UUID rulesetId, UUID patchVariantId, String locale) {
         contexts.requireRuleset(rulesetId);
         var facts = patchVariantId == null

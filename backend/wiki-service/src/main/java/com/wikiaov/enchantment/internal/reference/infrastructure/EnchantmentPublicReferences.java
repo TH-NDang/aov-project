@@ -34,11 +34,13 @@ public class EnchantmentPublicReferences implements PublicReferenceProvider, Adm
         this.clock = clock;
     }
 
+    @Override
     public List<AdminReferenceProvider.Candidate> references(UUID rulesetId, Map<UUID, Long> patchOrdinals) {
         return AdminReferenceProvider.candidates(references.authoring(rulesetId, patchOrdinals), "enchantment",
                 rulesetId);
     }
 
+    @Override
     public List<PublicReferenceProvider.Candidate> references(String region, String locale) {
         var at = clock.instant();
         var context = contexts.resolve(region, at);
@@ -47,6 +49,7 @@ public class EnchantmentPublicReferences implements PublicReferenceProvider, Adm
         return references(new PublicReferenceProvider.Scope(context, ordinals, at), locale);
     }
 
+    @Override
     public List<PublicReferenceProvider.Candidate> references(PublicReferenceProvider.Scope scope, String locale) {
         var rows = references.published(scope.gameplay(), scope.patchOrdinals(), scope.allowUnscoped());
         var grouped = rows.stream().collect(Collectors.groupingBy(AdminReferenceProvider.Row::id,

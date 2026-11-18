@@ -41,17 +41,20 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
         this.media = media;
     }
 
+    @Override
     public PageSlice<Candidate> admin(UUID rulesetId, String q, UUID heroId, List<String> ids, int page, int size) {
         var result = references.search(rulesetId, Map.of(), null, null, SkillReferenceSearch.parse(q), heroId, ids,
                 page, size);
         return hydrate(result, rulesetId, null, null, page, size);
     }
 
+    @Override
     public PageSlice<Candidate> published(GameplayContext context, Instant at, String locale, String q, UUID heroId,
             List<String> ids, int page, int size) {
         return published(context, at, locale, q, heroId, ids, page, size, true);
     }
 
+    @Override
     public PageSlice<Candidate> published(GameplayContext context, Instant at, String locale, String q, UUID heroId,
             List<String> ids, int page, int size, boolean allowUnscoped) {
         var ordinals = contexts.rulesetVariants(context.rulesetId()).stream()

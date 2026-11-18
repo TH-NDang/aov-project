@@ -21,11 +21,13 @@ public class HeroGalleryMediaUsageProvider implements MediaUsageProvider {
         this.items = items;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         return items.findByAssetId(assetId).stream().map(HeroGalleryMediaUsageProvider::usage).toList();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         return items.findAll().stream().collect(Collectors.groupingBy(HeroGalleryItem::getAssetId,

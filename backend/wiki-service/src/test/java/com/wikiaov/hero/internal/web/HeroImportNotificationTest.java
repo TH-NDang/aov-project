@@ -39,10 +39,12 @@ class HeroImportNotificationTest {
                 default -> throw new AssertionError("Unexpected repository operation: " + method.getName());
             });
     private final CurrentActor actors = new CurrentActor() {
+        @Override
         public Optional<Actor> find() {
             return Optional.of(actor);
         }
 
+        @Override
         public Actor require() {
             return actor;
         }

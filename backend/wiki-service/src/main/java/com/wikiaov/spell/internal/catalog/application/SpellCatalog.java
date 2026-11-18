@@ -428,6 +428,7 @@ public class SpellCatalog implements SpellChangeQueries {
         return queries.authoringRemovals(variantId, locale);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> forVariant(UUID variantId, String locale) {
         return queries.forVariant(variantId, locale);
