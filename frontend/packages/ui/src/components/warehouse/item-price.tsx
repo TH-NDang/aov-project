@@ -31,7 +31,7 @@ export function ItemPrice({
   if (number == null) return null
   return (
     <span className="inline-flex items-center gap-1 whitespace-nowrap">
-      <Coins aria-hidden="true" className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+      <Coins aria-hidden="true" className="size-3.5 shrink-0 text-(--aov-game-gold)" />
       <span className="item-price-text">{label}</span>
     </span>
   )

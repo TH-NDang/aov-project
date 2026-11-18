@@ -14,6 +14,8 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 - Màu trạng thái (`--aov-success`, `--aov-danger`, `--aov-warning`, `--aov-info`, `--aov-live`) chỉ mang ý nghĩa trạng
   thái, không dùng để trang trí: xanh lá là tăng sức mạnh hoặc thắng, đỏ là giảm sức mạnh hoặc thua, xanh dương là điều
   chỉnh, cam là làm lại, `--aov-live` là đang phát trực tiếp.
+- Giá bằng vàng trong game và đồng vàng đứng cạnh giá dùng `--aov-game-gold`, màu hổ phách của đồng vàng trong game,
+  không dùng màu nhấn.
 - Các cặp chữ/nền chính đạt tỉ lệ tương phản AA (từ 4.5:1) ở cả hai chế độ, kể cả chữ mờ (`--aov-muted`). Chữ mờ chỉ
   đặt trên nền trang hoặc nền thẻ, không đặt trên nền đã tô màu. Khi đổi màu phải kiểm tra lại.
 - Màu cố định chỉ còn ở phần phủ lên ảnh: lớp tối dưới chữ và nút nằm trên ảnh tướng, chữ trên ảnh bìa. Ảnh là nội dung
