@@ -58,8 +58,9 @@ docker compose down -v
 
 ## Thứ tự khi khởi động
 
-`preflight` → `postgres` → `db-backup` → `keycloak`, `wiki-service`, `community-service` → `reverse-proxy`. `redis` chạy trước
-`wiki-service`; tài khoản thử được tạo sau `keycloak`.
+`preflight` → `postgres` → `db-backup` → `keycloak`, `wiki-service`, `community-service` → `web-publish`, `wiki-prerender` →
+`reverse-proxy`. `redis` chạy trước `wiki-service`; tài khoản thử được tạo sau `keycloak`. `web-publish` đưa bản build của Stream
+và Admin vào volume `web-apps`, `wiki-prerender` đưa Wiki vào `wiki-site`; Caddy phục vụ hai volume đó.
 
 - **`preflight`** kiểm tra cấu hình R2 trên mọi origin: thiếu biến, còn giá trị mẫu, endpoint không phải HTTPS,
   `MEDIA_PUBLIC_BASE_URL` không kết thúc bằng `/assets`, bucket ảnh công khai trùng bucket riêng tư hoặc bucket tệp nguồn,
@@ -243,6 +244,63 @@ Kiểm tra sau khi chạy: địa chỉ của một tướng phải trả về �
 
 ```bash
 curl -s http://localhost:18080/hero/airi | grep -i "<title>"
+```
+
+## Cập nhật không gián đoạn
+
+Trên máy chủ, `scripts/deploy.sh` đưa stack lên một commit mới mà site không dừng (ADR-021, bổ sung 18/11/2026):
+
+- **Backend** (`wiki-service`, `community-service`): container mới chạy bên cạnh container cũ. Chỉ khi container mới healthy và trả
+  lời được API, container cũ mới dừng sau khi trả nốt request đang chạy. Container mới hỏng thì bị xóa, bản cũ vẫn chạy.
+- **Frontend**: `web-publish` và `wiki-prerender` chép file mới vào volume trước, xóa file cũ sau; bundle của bản trước được giữ
+  thêm một lần để tab đang mở không lỗi. Caddy không phải khởi động lại.
+- **Caddyfile**: áp bằng `caddy reload`. Container Caddy chỉ thay khi `proxy/Dockerfile` đổi (dừng vài giây).
+- **Keycloak**: chỉ khởi động lại khi `keycloak/` hoặc theme đổi. Khoảng một phút không đăng nhập mới được; phiên đang có được giữ.
+- Trước khi container backend mới chạy migration, `db-backup` dump database như với `up`.
+
+Migration phải để bản cũ vẫn chạy được, vì hai bản cùng chạy một lúc trên schema mới. Xóa hay đổi tên cột, bảng thì làm qua hai lần
+phát hành: thêm cái mới trước, bỏ cái cũ ở lần sau.
+
+Image lấy từ GHCR (`ghcr.io/th-ndang/aov-project/<image>:<commit>`, workflow `images.yml` build cho mỗi commit của `main`). Không
+tải được thì script build ngay trên máy, trong lúc container cũ vẫn phục vụ. Muốn máy chủ tải được mà không cần đăng nhập, đặt năm
+package của repo trên GitHub ở chế độ Public (Package settings → Change visibility).
+
+Chạy tay, trong thư mục checkout trên máy chủ:
+
+```bash
+bash infra/scripts/deploy.sh
+```
+
+```bash
+bash infra/scripts/deploy.sh <commit>
+```
+
+```bash
+bash infra/scripts/deploy.sh --refresh
+```
+
+- Không tham số: commit mới nhất của `main`, chỉ khi mọi check của commit đó trên GitHub đã xong và đạt.
+- `<commit>`: đúng commit đó, kể cả khi check chưa đạt; dùng để quay lui về commit trước.
+- `--refresh`: chạy lại các bước không gián đoạn trên commit đang chạy, dùng sau khi đổi `.env` cho backend. Đổi giá trị của
+  Keycloak, PostgreSQL hay Caddy trong `.env` thì vẫn dùng `docker compose up -d --wait`.
+
+Commit đang chạy nằm trong `infra/.deploy/deployed`. Commit lỗi được ghi vào `infra/.deploy/rejected` và không được thử lại tự
+động; commit mới hơn hoặc chạy tay thì có.
+
+Tự động mỗi năm phút bằng systemd, sau khi checkout nằm ở `/opt/aov-project`:
+
+```bash
+sudo cp /opt/aov-project/infra/systemd/aov-deploy.service /opt/aov-project/infra/systemd/aov-deploy.timer /etc/systemd/system/
+```
+
+```bash
+sudo systemctl daemon-reload && sudo systemctl enable --now aov-deploy.timer
+```
+
+Xem các lần chạy:
+
+```bash
+journalctl -u aov-deploy.service -n 100
 ```
 
 ## Chuyển dữ liệu dev lên

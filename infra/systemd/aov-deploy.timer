@@ -1,0 +1,11 @@
+# Looks for a new commit of main every five minutes. A run that is still busy is not started twice.
+[Unit]
+Description=Check main for a commit to deploy every five minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+RandomizedDelaySec=30s
+
+[Install]
+WantedBy=timers.target
