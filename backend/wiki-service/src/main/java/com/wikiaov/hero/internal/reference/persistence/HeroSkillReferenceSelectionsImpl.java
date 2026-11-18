@@ -91,22 +91,7 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
         newerPredicates.add(criteria.published()
                 ? builder.equal(candidate.get("state"), RevisionState.PUBLISHED)
                 : builder.notEqual(candidate.get("state"), RevisionState.DISCARDED));
-        if (criteria.published()) {
-            var rank = ordinal(builder, revision.get("effectiveFromPatchVariantId"), criteria.ordinals());
-            var newerRank = ordinal(builder, candidate.get("effectiveFromPatchVariantId"), criteria.ordinals());
-            predicates.add(builder.lessThanOrEqualTo(revision.get("publishedAt"), criteria.at()));
-            predicates.add(builder.le(rank, criteria.cutoff()));
-            newerPredicates.add(builder.lessThanOrEqualTo(candidate.get("publishedAt"), criteria.at()));
-            newerPredicates.add(builder.le(newerRank, criteria.cutoff()));
-            if (!criteria.allowUnscoped()) {
-                predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
-                newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
-            }
-            newerPredicates.add(builder.or(builder.gt(newerRank, rank), builder.and(builder.equal(newerRank, rank),
-                    builder.gt(candidate.<Long>get("publicationSequence"), revision.get("publicationSequence")))));
-        } else {
-            newerPredicates.add(builder.gt(candidate.<Long>get("revisionNo"), revision.get("revisionNo")));
-        }
+        addScope(builder, revision, candidate, criteria, predicates, newerPredicates);
 
         if (!criteria.ids().isEmpty()) {
             var matches = new ArrayList<Predicate>();
@@ -138,6 +123,30 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
         }
 
         return new Selection(hero, revision, skill, predicates.toArray(Predicate[]::new));
+    }
+
+    /**
+     * Keeps the revisions readers see at the criteria moment (published, in effect, within the patch cutoff) or every
+     * draft and published revision for editors, and makes the newer-revision subquery follow the same scope.
+     */
+    private static void addScope(CriteriaBuilder builder, Root<HeroRevision> revision, Root<HeroRevision> candidate,
+            SkillReferenceCriteria criteria, List<Predicate> predicates, List<Predicate> newerPredicates) {
+        if (criteria.published()) {
+            var rank = ordinal(builder, revision.get("effectiveFromPatchVariantId"), criteria.ordinals());
+            var newerRank = ordinal(builder, candidate.get("effectiveFromPatchVariantId"), criteria.ordinals());
+            predicates.add(builder.lessThanOrEqualTo(revision.get("publishedAt"), criteria.at()));
+            predicates.add(builder.le(rank, criteria.cutoff()));
+            newerPredicates.add(builder.lessThanOrEqualTo(candidate.get("publishedAt"), criteria.at()));
+            newerPredicates.add(builder.le(newerRank, criteria.cutoff()));
+            if (!criteria.allowUnscoped()) {
+                predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
+                newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
+            }
+            newerPredicates.add(builder.or(builder.gt(newerRank, rank), builder.and(builder.equal(newerRank, rank),
+                    builder.gt(candidate.<Long>get("publicationSequence"), revision.get("publicationSequence")))));
+        } else {
+            newerPredicates.add(builder.gt(candidate.<Long>get("revisionNo"), revision.get("revisionNo")));
+        }
     }
 
     /** A search word found in the hero code or name, the skill name, the form key or a state icon label. */
