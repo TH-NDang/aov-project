@@ -3,7 +3,7 @@
   display: grid;
   gap: 10px;
 }
-.hub-feed-body > .lv-row {
+.cp-feed-body > .lv-row {
   margin-bottom: var(--hub-space-5);
 }
 /* One broadcast takes the whole row; several share it. */

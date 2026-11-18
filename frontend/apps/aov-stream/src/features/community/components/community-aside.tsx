@@ -32,7 +32,7 @@ function GuestCard() {
         <img src={owlMark} alt="" width={32} height={32} />
         <h2 id="join-title">{text("Tham gia cộng đồng", "Join the community")}</h2>
       </div>
-      <p className="hub-card-text">
+      <p className="hub-card-text" data-flush="">
         {text(
           "Ai cũng đọc được bài viết. Đăng nhập để theo dõi trang, nhận thông báo, thích và bình luận.",
           "Anyone can read posts. Sign in to follow pages, get notifications, like and comment.",
@@ -94,7 +94,7 @@ function FollowSuggestions() {
   const pages = useSuggestions(5)
   const follow = useFollowPage()
   return (
-    <section className="hub-card hub-card-padded hub-follow-suggestions" aria-labelledby="side-suggestions">
+    <section className="hub-card hub-card-padded cp-follow-suggestions" aria-labelledby="side-suggestions">
       <div className="hub-card-heading">
         <h2 id="side-suggestions" className="hub-card-title">
           {text("Gợi ý theo dõi", "Who to follow")}

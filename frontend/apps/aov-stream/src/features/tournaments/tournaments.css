@@ -8,6 +8,10 @@
   gap: 8px 16px;
   margin-bottom: 12px;
 }
+/* In a section that spaces its parts with a gap, the heading keeps no margin of its own. */
+.tn-heading[data-flush] {
+  margin-bottom: 0;
+}
 .tn-heading h2 {
   display: flex;
   flex-wrap: wrap;

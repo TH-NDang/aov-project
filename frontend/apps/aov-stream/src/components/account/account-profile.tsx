@@ -62,7 +62,7 @@ export function AccountProfile() {
     )
   return (
     <section className="cp-section account-profile" aria-labelledby="account-profile-title">
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="account-profile-title">{text("Hồ sơ dùng chung", "Shared profile")}</h2>
       </div>
       {profile.isError ? (
@@ -190,7 +190,7 @@ function ProfileEditor({
 
   return (
     <form className="cp-section account-profile" aria-labelledby="account-profile-title" onSubmit={save}>
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="account-profile-title">{text("Hồ sơ dùng chung", "Shared profile")}</h2>
       </div>
       <p className="cp-section-lead">

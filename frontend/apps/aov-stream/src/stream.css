@@ -585,6 +585,10 @@ button:disabled {
   font-size: 13px;
   line-height: 20px;
 }
+/* In a card that spaces its parts with a gap, the text keeps no margin of its own. */
+.hub-card-text[data-flush] {
+  margin: 0;
+}
 
 /* ---------- Small shared marks ---------- */
 .hub-kicker {
@@ -655,6 +659,10 @@ button:disabled {
 }
 .hub-pills::-webkit-scrollbar {
   display: none;
+}
+/* A row that sits on a rule keeps a little room above and below for the chips' focus ring. */
+.hub-pills[data-padded] {
+  padding-block: 2px;
 }
 .hub-pills > button {
   display: inline-flex;
@@ -878,9 +886,6 @@ button:disabled {
 }
 .hub-popover-header strong {
   font-size: 16px;
-}
-.hub-popover-header .cp-text-button {
-  font-size: 12px;
 }
 /* On phones the list opens as a bottom sheet that already carries the title: the rows run to the sheet's edges. */
 .hub-notifications.public-bottom-drawer {

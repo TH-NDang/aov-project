@@ -147,7 +147,12 @@ function NotificationBell() {
       >
         <div className="hub-popover-header">
           <strong>{text("Thông báo", "Notifications")}</strong>
-          <button className="cp-text-button" disabled={!count || read.all.isPending} onClick={() => read.all.mutate()}>
+          <button
+            className="cp-text-button"
+            data-size="small"
+            disabled={!count || read.all.isPending}
+            onClick={() => read.all.mutate()}
+          >
             {text("Đánh dấu đã đọc tất cả", "Mark all as read")}
           </button>
         </div>

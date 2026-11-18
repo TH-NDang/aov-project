@@ -202,6 +202,9 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.cp-text-button[data-size="small"] {
+  font-size: 12px;
+}
 .cp-more {
   border-color: transparent;
 }
@@ -890,9 +893,6 @@
   font-weight: 700;
   line-height: 22px;
 }
-.cp-join > .hub-card-text {
-  margin: 0;
-}
 .cp-join-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -937,9 +937,6 @@
   gap: 16px;
   min-width: 0;
   max-width: 760px;
-}
-.cp-section > .tn-heading {
-  margin-bottom: 0;
 }
 .cp-section fieldset {
   display: grid;
@@ -1317,10 +1314,9 @@
 .cp-featured {
   display: grid;
   gap: 16px;
-  justify-items: start;
 }
-.cp-featured > .cp-grid {
-  width: 100%;
+.cp-featured > .cp-button {
+  justify-self: start;
 }
 .cp-featured-intro h2 {
   margin: 0 0 4px;
@@ -1335,18 +1331,15 @@
 }
 
 /* ---------- Home feed: the filters, then the posts, straight on the page ---------- */
-.hub-feed-header {
+.cp-feed-header {
   padding: 8px 0;
   border-bottom: 1px solid var(--hub-border);
 }
-.hub-feed-header .hub-pills {
-  padding-block: 2px;
-}
-.hub-feed-body {
+.cp-feed-body {
   padding-top: var(--hub-panel-padding);
 }
 /* An empty feed already lists the pages to follow in the main column. */
-.hub-content-split:has(.cp-featured) .hub-follow-suggestions {
+.hub-content-split:has(.cp-featured) .cp-follow-suggestions {
   display: none;
 }
 
