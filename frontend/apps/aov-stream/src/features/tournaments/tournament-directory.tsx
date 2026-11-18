@@ -75,7 +75,7 @@ export function TournamentDirectory() {
           <StreamIcon name="back" size={16} />
           {text("Giải đấu", "Tournaments")}
         </Link>
-        <header className="tn-page-head">
+        <header className="tn-page-head" data-lead="kept">
           <div>
             <h1>{text("Tra cứu ván đấu", "Game lookup")}</h1>
             <p>
@@ -94,7 +94,7 @@ export function TournamentDirectory() {
           </div>
         </header>
         <div className="tn-games-bar">
-          <label className="stream-search">
+          <label className="stream-search tn-games-search">
             <StreamIcon name="search" size={16} />
             <input
               aria-label={text("Tìm ván đấu theo đội hoặc vòng đấu", "Search games by team or round")}
@@ -110,6 +110,7 @@ export function TournamentDirectory() {
               onChange={(value) => filter("tournament", value)}
               all={text("Mọi giải đấu", "All tournaments")}
               options={competitions.map((entry) => [entry.id, `${entry.content.name} (${entry.gameCount})`])}
+              className="tn-games-select"
             />
           )}
         </div>

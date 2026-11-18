@@ -8,7 +8,7 @@
   align-items: center;
   gap: 8px;
 }
-.competition-filters .stream-search {
+.competition-filters .competition-search {
   flex: 999 1 210px;
   width: auto;
   min-width: 0;
@@ -140,7 +140,7 @@
   text-transform: uppercase;
 }
 /* Room for the halo of the live dot, so it stays inside the column. */
-.tn-day-title > .tn-live {
+.tn-day-title > .tn-day-live {
   margin-left: 3px;
 }
 .tn-fixtures {
@@ -497,20 +497,6 @@
   overflow: hidden;
   border-radius: var(--hub-radius-sm);
   background: var(--hub-surface);
-}
-.tn-game-list > .tn-game {
-  border-radius: 0;
-  background: none;
-}
-.tn-game-list > .tn-game + .tn-game {
-  border-top: 1px solid var(--hub-border);
-}
-.tn-game-list > .tn-game:hover,
-.tn-game-list > .tn-game:focus-visible {
-  background: var(--hub-hover);
-}
-.tn-game-list > .tn-game:focus-visible {
-  outline-offset: -2px;
 }
 .tn-game-list > .tn-game-skeleton {
   display: block;

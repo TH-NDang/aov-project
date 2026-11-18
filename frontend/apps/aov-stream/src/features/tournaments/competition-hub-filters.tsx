@@ -174,7 +174,7 @@ export function DirectoryFilters({
   )
   return (
     <div className="competition-filters">
-      <label className="stream-search">
+      <label className="stream-search competition-search">
         <StreamIcon name="search" size={16} />
         <input
           aria-label={scheduled ? "Tìm trận đấu theo đội hoặc giải" : text("Tìm giải đấu", "Search tournaments")}

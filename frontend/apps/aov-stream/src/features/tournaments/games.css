@@ -74,6 +74,21 @@
 .tn-game:hover {
   background: var(--hub-hover);
 }
+/* The games of one match lie in one list: rows without a box of their own, a rule between them. */
+.tn-game[data-layout="row"] {
+  border-radius: 0;
+  background: none;
+}
+.tn-game[data-layout="row"] + .tn-game[data-layout="row"] {
+  border-top: 1px solid var(--hub-border);
+}
+.tn-game[data-layout="row"]:hover,
+.tn-game[data-layout="row"]:focus-visible {
+  background: var(--hub-hover);
+}
+.tn-game[data-layout="row"]:focus-visible {
+  outline-offset: -2px;
+}
 /* The title and the length share the first line: the title leaves room at its end for the length. */
 .tn-game-title {
   display: flex;
@@ -162,12 +177,12 @@
   align-items: center;
   gap: 8px;
 }
-.tn-games-bar > .stream-search {
+.tn-games-bar > .tn-games-search {
   max-width: 480px;
   flex: 1 1 240px;
   margin: 0;
 }
-.tn-games-bar > .competition-select {
+.tn-games-bar > .tn-games-select {
   min-width: 0;
   flex: 0 1 auto;
 }
@@ -640,11 +655,7 @@
   .tn-game {
     padding: 12px;
   }
-  .tn-games .tn-page-head p {
-    display: block;
-    font-size: 13px;
-  }
-  .tn-games-bar > .stream-search {
+  .tn-games-bar > .tn-games-search {
     max-width: none;
   }
   .tn-draft-board {

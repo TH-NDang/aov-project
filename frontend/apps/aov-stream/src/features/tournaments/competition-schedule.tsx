@@ -59,23 +59,28 @@ export function ScheduleScopePills({
   )
 }
 
-/** A filter with an "all" choice first. */
+/** A filter with an "all" choice first. `className` places it in the bar that holds it. */
 export function FilterSelect({
   label,
   value,
   onChange,
   all,
   options,
+  className,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   all: string
   options: string[][]
+  className?: string
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger aria-label={label} className="competition-select">
+      <SelectTrigger
+        aria-label={label}
+        className={className ? `competition-select ${className}` : "competition-select"}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent drawerTitle={label}>
@@ -109,7 +114,7 @@ function DayTitle({ group, part, timeZone, now }: { group: ScheduleGroup; part: 
   if (group.key === "live")
     return (
       <h3 className="tn-day-title">
-        <span className="tn-live">{text("Đang diễn ra", "Ongoing")}</span>
+        <span className="tn-live tn-day-live">{text("Đang diễn ra", "Ongoing")}</span>
       </h3>
     )
   if (group.at == null)

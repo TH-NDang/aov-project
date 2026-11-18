@@ -21,10 +21,6 @@
   color: var(--hub-muted);
   font-size: 14px;
 }
-.competition-hub > .competition-filters {
-  padding: 0;
-  border: 0;
-}
 .competition-hub > .competition-hub-results {
   padding: 0;
 }
@@ -646,6 +642,11 @@
   }
   .tn-page-head p {
     display: none;
+  }
+  /* A head that says how to use the page keeps its sentence, a size smaller. */
+  .tn-page-head[data-lead="kept"] p {
+    display: block;
+    font-size: 13px;
   }
   .tn-feature {
     grid-template-columns: 88px minmax(0, 1fr);

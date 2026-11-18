@@ -3,10 +3,10 @@
   gap: 32px;
 }
 /* The page head stands a little closer to the first section than the sections do to each other. */
-.ex-page > .tn-page-head {
+.ex-page > .ex-page-head {
   margin-bottom: -8px;
 }
-.ex-page > .cp-back {
+.ex-page > .ex-back {
   margin-bottom: -20px;
 }
 
