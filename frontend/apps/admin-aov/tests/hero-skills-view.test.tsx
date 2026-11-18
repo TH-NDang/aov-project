@@ -669,6 +669,8 @@ test("skill labels use stable source slots and translations fall back without in
   const value = skill("skill-3-2")
   value.translations.push({ locale: "en-US", name: "English skill", description: "English description" })
   assert.equal(selectSkillTranslation(value, "en-US")?.description, "English description")
+  assert.equal(selectSkillTranslation(value, "th-TH")?.locale, "en-US")
+  value.translations.pop()
   assert.equal(selectSkillTranslation(value, "th-TH")?.locale, "vi-VN")
   assert.equal(skillSlot(value), 3)
   assert.equal(skillVariant(value), 2)

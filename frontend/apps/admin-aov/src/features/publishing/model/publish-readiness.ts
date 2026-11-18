@@ -9,6 +9,7 @@ import {
 } from "./publish-rules"
 import type { Revision } from "../api/types"
 import { normalize } from "@/lib/text"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 export type HeroPublishReadiness = Omit<components["schemas"]["HeroPublishReadiness"], "revisions"> & {
   revisions: Revision[]
@@ -45,12 +46,7 @@ const draftContent = (draft: Draft): PublishContent => ({
   MEDIA_BINDINGS: draft.mediaBindings,
 })
 
-const localName = (hero: HeroPublishReadiness, locale: string) =>
-  (
-    hero.names.find((text) => text.locale === locale) ??
-    hero.names.find((text) => text.locale === "vi-VN") ??
-    hero.names[0]
-  )?.name ?? hero.code
+const localName = (hero: HeroPublishReadiness, locale: string) => pickTranslation(hero.names, locale)?.name ?? hero.code
 
 /** One row for each ruleset a hero has data in, judged with the same rules as the header publish button. */
 export function readinessRows(

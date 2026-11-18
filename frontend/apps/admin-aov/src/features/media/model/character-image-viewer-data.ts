@@ -1,5 +1,6 @@
 import type { Bindings, MediaRole, Preview, Skin } from "../../publishing/api/types"
 import type { CharacterImageEntry } from "../api/character-image-api"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 export const imageRoles: MediaRole[] = ["HEAD", "PORTRAIT", "SPLASH"]
 /** Skins no longer have a head to manage; one stored earlier stays in the data and is reported as image usage. */
@@ -14,8 +15,7 @@ export interface CharacterMediaOwner {
   images: NonNullable<Bindings["images"]>
 }
 const translatedName = (values: { locale: string; name: string }[] | undefined, locale: string) =>
-  (values?.find((value) => value.locale === locale) ?? values?.find((value) => value.locale === "vi-VN") ?? values?.[0])
-    ?.name
+  pickTranslation(values, locale)?.name
 
 /** Secondary navigation contains primary bindings only; candidates stay in their owner's image list. */
 export function characterMediaOwners(preview: Preview, locale: string, heroName: string): CharacterMediaOwner[] {

@@ -1,13 +1,10 @@
 import { skillSlot } from "@aov/ui/lib/skill-rank-values"
 import { groupSkillKit } from "@aov/ui/lib/skill-kit"
 import type { Skill } from "../../api/types"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 export function selectSkillTranslation(skill: Skill, locale: string) {
-  return (
-    skill.translations.find((text) => text.locale === locale) ??
-    skill.translations.find((text) => text.locale === "vi-VN") ??
-    skill.translations[0]
-  )
+  return pickTranslation(skill.translations, locale)
 }
 
 export { skillSlot }

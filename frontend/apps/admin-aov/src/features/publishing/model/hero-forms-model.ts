@@ -1,6 +1,7 @@
 import type { components } from "../generated/hero-api"
 import { retainImageOptions } from "./assets/image-options"
 import type { Bindings, MediaRole, Profile, Revision, Role } from "../api/types"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 export type HeroForms = components["schemas"]["HeroForms"]
 export type HeroForm = components["schemas"]["HeroForm"]
@@ -14,8 +15,7 @@ export interface HeroFormChoice {
   form?: HeroForm
 }
 
-const nameIn = (names: { locale: string; name: string }[], locale: string) =>
-  (names.find((text) => text.locale === locale) ?? names.find((text) => text.locale === "vi-VN") ?? names[0])?.name
+const nameIn = (names: { locale: string; name: string }[], locale: string) => pickTranslation(names, locale)?.name
 
 /**
  * The switcher shows each form by its first role, as the game does with class icons. The part the forms share is not

@@ -21,6 +21,7 @@ import { visibleSkins } from "../model/skins/hero-skins"
 import { heroContentSectionId, heroContentTabs } from "./hero-content-tabs"
 import { HeroEvaluation } from "./assessment/hero-evaluation"
 import type { Revision } from "../api/types"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 /** An editor open on the page: it takes the place of the section it changes, the rest of the page stays readable. */
 export interface HeroSectionEditing {
@@ -43,11 +44,7 @@ function EditingStatus({ part }: { part?: string }) {
 }
 
 export function localized<T extends { locale: string }>(translations: T[] | undefined, locale: string): T | undefined {
-  return (
-    translations?.find((text) => text.locale === locale) ??
-    translations?.find((text) => text.locale === "vi-VN") ??
-    translations?.[0]
-  )
+  return pickTranslation(translations, locale)
 }
 
 function Text({ children }: { children?: ReactNode }) {

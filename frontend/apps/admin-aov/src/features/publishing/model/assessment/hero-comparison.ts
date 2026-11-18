@@ -3,6 +3,7 @@ import { statReadingChange, type StatNumbers } from "./stat-reading"
 import { POSITIONS } from "../../api/types"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 export type DiffSegment = { type: "same" | "removed" | "added"; text: string }
 
@@ -231,8 +232,13 @@ export function comparisonPathLabels(
     if (index > 0 && ["skills", "skins"].includes(parts[index - 1])) {
       const keyField = parts[index - 1] === "skills" ? "skillKey" : "skinKey"
       const row = rows.find((item) => item[keyField] === key)
-      const translations = Array.isArray(row?.translations) ? row.translations.filter(record) : []
-      const translation = translations.find((item) => item.locale === locale) ?? translations[0]
+      const translations = Array.isArray(row?.translations)
+        ? row.translations.filter(
+            (item): item is Record<string, unknown> & { locale: string } =>
+              record(item) && typeof item.locale === "string",
+          )
+        : []
+      const translation = pickTranslation(translations, locale)
       if (typeof translation?.name === "string" && translation.name.trim()) label = translation.name
     }
     if (labels.at(-1) !== label) labels.push(label)

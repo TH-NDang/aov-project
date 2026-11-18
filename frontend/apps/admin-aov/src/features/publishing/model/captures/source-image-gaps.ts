@@ -4,6 +4,7 @@ import type { components } from "../../generated/hero-api"
 import { statLabel } from "../patch-changes/patch-change-model"
 import type { ReadinessRow } from "../publish-readiness"
 import type { PublishBlocker, PublishBlockerKey } from "../publish-rules"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 
 type Draft = components["schemas"]["HeroPublishDraft"]
 
@@ -94,10 +95,7 @@ type DraftSkill = NonNullable<Draft["skills"]>["skills"][number]
 type SkillReason = Exclude<SourceGapReason, "PARTLY_HIDDEN">
 
 function skillName(skill: DraftSkill, locale: string) {
-  const text =
-    skill.translations.find((item) => item.locale === locale) ??
-    skill.translations.find((item) => item.locale === "vi-VN") ??
-    skill.translations[0]
+  const text = pickTranslation(skill.translations, locale)
   return text?.name.trim() || null
 }
 

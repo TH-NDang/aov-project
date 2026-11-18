@@ -56,6 +56,7 @@ import { useHeroScopeChanges } from "../../api/use-hero-scope-changes"
 import { HeroCatalogFilters, heroCatalogFacets } from "./hero-catalog-filters"
 import { confirmDiscard } from "@/components/confirm-dialog"
 import { mediaKeys } from "@/features/media/api/media-cache"
+import { pickTranslation } from "@aov/ui/lib/translation-fallback"
 const HeroWorkspace = lazy(() =>
   import("../../pages/publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
 )
@@ -819,10 +820,7 @@ function HeroHead({ hero, fallbackAssetId }: { hero: CatalogRow; fallbackAssetId
 function HeroText({ hero, locale, fallbackName }: { hero: CatalogRow; locale: string; fallbackName?: string }) {
   const query = useHeroPreview(hero)
   const translations = query.data?.content.PROFILE?.translations
-  const text =
-    translations?.find((t) => t.locale === locale) ??
-    translations?.find((t) => t.locale === "vi-VN") ??
-    translations?.[0]
+  const text = pickTranslation(translations, locale)
   if (!hero.selectedRevision) return <span className="type-body">{fallbackName ?? hero.code}</span>
   if (query.error)
     return (
