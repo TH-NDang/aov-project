@@ -106,12 +106,12 @@ public class MediaProvenance extends AssignedIdEntity {
     }
 
     /**
-     * The placeholder written when a new version arrives without a source: it shows {@code label} to editors and keeps
-     * the image in the list of images that need a credit.
+     * The placeholder written when a new version arrives without a source: it keeps the image in the list of images
+     * that need a credit. Its label is empty because nothing is known; clients word the unverified state themselves.
      */
-    public static MediaProvenance unverified(UUID id, UUID assetId, UUID assetVersionId, String label,
-            @Nullable String note, Instant now) {
-        MediaProvenance provenance = record(id, assetId, assetVersionId, ProvenanceSourceType.OTHER, label, null, null,
+    public static MediaProvenance unverified(UUID id, UUID assetId, UUID assetVersionId, @Nullable String note,
+            Instant now) {
+        MediaProvenance provenance = record(id, assetId, assetVersionId, ProvenanceSourceType.OTHER, "", null, null,
                 note, null, null, null, null, null, now);
         provenance.unverified = true;
         return provenance;

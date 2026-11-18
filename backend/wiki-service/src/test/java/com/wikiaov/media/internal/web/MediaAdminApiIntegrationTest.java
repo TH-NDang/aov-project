@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
@@ -115,6 +116,33 @@ class MediaAdminApiIntegrationTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
 
         assertThat(JsonPath.<List<String>>read(page, "$.items[*].id")).doesNotContain(id);
+    }
+
+    @Test
+    void aNewVersionWithoutASourceIsAnsweredAsAnUnverifiedPlaceholderWithoutText() throws Exception {
+        String id = createAsset("PATCH_ART");
+        String first = JsonPath.read(uploadVersion(id, TestImages.png(31, 31), "image/png"), "$.versionId");
+        mvc.perform(post(BASE + "/assets/" + id + "/versions/" + first + "/sources").with(editor())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"type\":\"GAME_CLIENT\",\"label\":\"Game capture\",\"ownerName\":\"Garena\"}"))
+                .andExpect(status().isOk());
+        String second = JsonPath.read(uploadVersion(id, TestImages.png(32, 32), "image/png"), "$.versionId");
+
+        mvc.perform(get(BASE + "/assets/" + id).with(reader())).andExpect(status().isOk())
+                .andExpect(
+                        jsonPath("$.provenance[?(@.versionId == '%s')].unverified".formatted(first), contains(false)))
+                .andExpect(
+                        jsonPath("$.provenance[?(@.versionId == '%s')].unverified".formatted(second), contains(true)))
+                .andExpect(jsonPath("$.provenance[?(@.versionId == '%s')].label".formatted(second), contains("")));
+        activate(id, second, assetVersion(id)).andExpect(status().isOk());
+
+        assertThat(mediaAssets.find(UUID.fromString(id)).orElseThrow().currentVersion().sources()).singleElement()
+                .satisfies(credit -> {
+                    assertThat(credit.unverified()).isTrue();
+                    assertThat(credit.label()).isEmpty();
+                });
+        mvc.perform(get(BASE + "/assets").param("semanticType", "PATCH_ART").param("size", "100").with(reader()))
+                .andExpect(jsonPath("$.items[?(@.id == '%s')].sources[*].unverified".formatted(id), contains(true)));
     }
 
     @Test

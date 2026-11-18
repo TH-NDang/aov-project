@@ -57,7 +57,7 @@ public class MediaAssetViews {
                 .toList();
         List<ProvenanceDetails> provenanceDetails = assetProvenance.stream()
                 .map(record -> new ProvenanceDetails(record.getId(), record.getAssetVersionId(),
-                        record.getSourceType(), record.getSourceLabel(), record.getSourceUrl(),
+                        record.getSourceType(), record.getSourceLabel(), record.isUnverified(), record.getSourceUrl(),
                         record.getObservedAt(), record.getNote(), record.getOwnerName(), record.getContactUrl(),
                         record.getOwnerId(), record.getOwnerPageId(), record.getRelatedPageId(),
                         record.getReferenceVersion()))

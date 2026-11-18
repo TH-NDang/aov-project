@@ -44,8 +44,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class CompleteMediaUpload {
 
     private static final Logger log = LoggerFactory.getLogger(CompleteMediaUpload.class);
-    /** What editors see on a new version until someone records its real source. */
-    private static final String UNVERIFIED_LABEL = "Chưa xác minh nguồn";
 
     private final MediaUploadSessionRepository sessions;
     private final MediaAssetVersionRepository versions;
@@ -127,7 +125,7 @@ public class CompleteMediaUpload {
                         }
                         if (session.getSourceLabel() == null && !duplicate && version.getVersionNo() > 1) {
                             provenance.save(MediaProvenance.unverified(UUID.randomUUID(), session.getAssetId(),
-                                    version.getId(), UNVERIFIED_LABEL, session.getFileName(), clock.instant()));
+                                    version.getId(), session.getFileName(), clock.instant()));
                         }
                         session.complete(version.getId(), clock.instant());
                     });
