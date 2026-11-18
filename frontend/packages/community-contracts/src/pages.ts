@@ -44,7 +44,7 @@ export type ProfileAchievement = {
 /** Where a member stands in a team: the starting lineup, the bench, the staff, or gone. */
 export type RosterStanding = "ACTIVE" | "SUBSTITUTE" | "STAFF" | "LEFT"
 /**
- * A member of a team's roster. Readers group and mark members by `lane` and `standing`; `role` and `status` are the
+ * A member of a team's roster. Readers group and mark members by `lane`, `standing` and `captain`; `role` and `status` are the
  * wording shown as written. A staff member has no lane. See spec 04, roster codes.
  */
 export type ProfileMember = {
@@ -54,6 +54,8 @@ export type ProfileMember = {
   status?: string | null
   lane?: Lane | null
   standing?: RosterStanding | null
+  /** The team's captain; absent means no. */
+  captain?: boolean | null
   startsOn?: string | null
   endsOn?: string | null
   sourceUrl?: string | null
