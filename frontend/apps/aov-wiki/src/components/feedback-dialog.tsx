@@ -307,7 +307,7 @@ function Feedback({
   )
   if (onCloseInline)
     return (
-      <section aria-label={title} className="wiki-warehouse-suggestion">
+      <section aria-label={title} className="wiki-feedback-inline">
         <p className="wiki-feedback-note">{reviewNote}</p>
         {content}
       </section>

@@ -1,9 +1,11 @@
 /* Shared parts of the compact layout of the public apps. The width is the one in `use-page-layout.ts`. */
+/* A page sets --public-tab-bar-top to stick the bar under its header and --public-tab-bar-margin to bleed it. */
 .public-tab-bar {
   position: sticky;
   z-index: 20;
   top: var(--public-tab-bar-top, 0);
   display: flex;
+  margin: var(--public-tab-bar-margin, 0);
   overflow-x: auto;
   border-bottom: 1px solid var(--aov-line);
   background: var(--aov-bg);

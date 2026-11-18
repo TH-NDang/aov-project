@@ -64,6 +64,19 @@
 .wiki-feedback-dialog.public-bottom-drawer {
   --public-bottom-body-padding: 0 16px max(16px, env(safe-area-inset-bottom));
 }
+/* Inline, in the armory's detail panel, the form takes the place of the entry's text; its buttons stay in reach while
+   the panel scrolls. */
+.wiki-feedback-inline {
+  margin-top: 16px;
+  border-top: 1px solid var(--aov-line);
+  padding-top: 12px;
+}
+.wiki-feedback-inline .wiki-feedback-actions {
+  position: sticky;
+  bottom: -20px;
+  padding-block: 8px;
+  background: var(--aov-surface);
+}
 .wiki-feedback-heading,
 .wiki-feedback-actions {
   display: flex;
