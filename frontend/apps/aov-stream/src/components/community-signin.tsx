@@ -74,37 +74,40 @@ export function SignInDialog() {
   return (
     <Dialog open={current !== null} onOpenChange={(value) => !value && show(null)}>
       <DialogContent className="cp-signin-dialog" showCloseButton={false}>
-        <button
-          type="button"
-          className="hub-icon-button cp-dialog-close"
-          aria-label={text("Đóng", "Close")}
-          onClick={() => show(null)}
-        >
-          <StreamIcon name="close" size={16} />
-        </button>
-        <img className="cp-dialog-mark" src={owlMark} alt="" width={40} height={40} />
-        <DialogTitle className="cp-dialog-title">{text("Đăng nhập để tiếp tục", "Sign in to continue")}</DialogTitle>
-        <DialogDescription className="cp-dialog-text">{current}</DialogDescription>
-        <SignInBenefits />
-        <div className="cp-dialog-actions">
-          <button type="button" className="cp-button cp-primary" onClick={() => openSignIn(false, setError)}>
-            {text("Đăng nhập", "Sign in")}
+        {/* One column for the dialog and for the drawer phones open instead. */}
+        <div className="cp-signin-dialog-body">
+          <button
+            type="button"
+            className="hub-icon-button cp-dialog-close"
+            aria-label={text("Đóng", "Close")}
+            onClick={() => show(null)}
+          >
+            <StreamIcon name="close" size={16} />
           </button>
-          <button type="button" className="cp-button" onClick={() => openSignIn(true, setError)}>
-            {text("Tạo tài khoản", "Create account")}
-          </button>
-        </div>
-        {error && (
-          <p className="cp-field-error" role="alert">
-            {error}
-          </p>
-        )}
-        <p className="cp-signin-note">
-          {text(
-            "Đăng nhập qua trang tài khoản AOV; AOV Stream không lưu mật khẩu.",
-            "Sign in through the AOV account page; AOV Stream does not store passwords.",
+          <img className="cp-dialog-mark" src={owlMark} alt="" width={40} height={40} />
+          <DialogTitle className="cp-dialog-title">{text("Đăng nhập để tiếp tục", "Sign in to continue")}</DialogTitle>
+          <DialogDescription className="cp-dialog-text">{current}</DialogDescription>
+          <SignInBenefits />
+          <div className="cp-dialog-actions">
+            <button type="button" className="cp-button cp-primary" onClick={() => openSignIn(false, setError)}>
+              {text("Đăng nhập", "Sign in")}
+            </button>
+            <button type="button" className="cp-button" onClick={() => openSignIn(true, setError)}>
+              {text("Tạo tài khoản", "Create account")}
+            </button>
+          </div>
+          {error && (
+            <p className="cp-field-error" role="alert">
+              {error}
+            </p>
           )}
-        </p>
+          <p className="cp-signin-note">
+            {text(
+              "Đăng nhập qua trang tài khoản AOV; AOV Stream không lưu mật khẩu.",
+              "Sign in through the AOV account page; AOV Stream does not store passwords.",
+            )}
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -20,7 +20,6 @@ export const knownRestyles = [
   "features/community/components/community-profile.css .hub-kicker",
   "features/community/components/community-profile.css .hub-menu-item",
   "features/community/components/community-profile.css .hub-pills",
-  "features/community/components/community-profile.css .public-bottom-body",
   "features/community/components/community-profile.css .tn-facts",
   "features/community/components/community-profile.css .tn-heading",
   "features/community/components/community-profile.css .tn-match-grid",
@@ -30,7 +29,6 @@ export const knownRestyles = [
   "features/community/components/community.css .cp-grid",
   "features/community/components/community.css .hub-card-text",
   "features/community/components/community.css .hub-pills",
-  "features/community/components/community.css .public-bottom-body",
   "features/community/components/community.css .tn-heading",
   "features/community/pages/community-explore.css .cp-back",
   "features/community/pages/community-explore.css .hub-skeleton",
@@ -64,5 +62,4 @@ export const knownRestyles = [
   "features/tournaments/tournaments.css .hub-status",
   "features/tournaments/tournaments.css .stream-image",
   "stream.css .cp-text-button",
-  "stream.css .public-bottom-body",
 ]

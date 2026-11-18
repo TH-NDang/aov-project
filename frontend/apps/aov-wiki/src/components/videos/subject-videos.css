@@ -571,11 +571,9 @@
   }
 }
 .wiki-video-theater.public-bottom-drawer[data-vaul-drawer] {
+  --public-bottom-body-padding: 0 0 env(safe-area-inset-bottom);
+  --public-bottom-body-surface: var(--aov-surface);
   height: calc(100dvh - 40px);
-}
-.wiki-video-theater.public-bottom-drawer > .public-bottom-body {
-  padding: 0 0 env(safe-area-inset-bottom);
-  background: var(--aov-surface);
 }
 .wiki-video-theater.public-bottom-drawer .wiki-video-theater-bar {
   min-height: 40px;

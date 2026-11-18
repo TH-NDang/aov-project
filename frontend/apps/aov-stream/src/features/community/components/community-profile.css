@@ -662,8 +662,8 @@
   color: var(--hub-text);
   box-shadow: var(--hub-shadow-lg);
 }
-.cp-profile-dialog.public-bottom-drawer > .public-bottom-body {
-  padding: 0 0 env(safe-area-inset-bottom);
+.cp-profile-dialog.public-bottom-drawer {
+  --public-bottom-body-padding: 0 0 env(safe-area-inset-bottom);
 }
 .cp-profile-dialog-heading {
   display: flex;

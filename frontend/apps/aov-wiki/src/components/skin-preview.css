@@ -106,9 +106,7 @@
   --drawer-muted: var(--aov-muted);
   --drawer-line: var(--aov-line);
   --drawer-accent: var(--aov-accent);
-}
-.wiki-skin-preview.public-bottom-drawer > .public-bottom-body {
-  padding: 0 0 env(safe-area-inset-bottom);
+  --public-bottom-body-padding: 0 0 env(safe-area-inset-bottom);
 }
 /* On the picture until the viewer is wide enough to give the button a place beside the name. */
 .wiki-skin-preview-close {

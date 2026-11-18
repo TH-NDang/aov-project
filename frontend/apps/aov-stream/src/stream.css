@@ -883,9 +883,8 @@ button:disabled {
   font-size: 12px;
 }
 /* On phones the list opens as a bottom sheet that already carries the title: the rows run to the sheet's edges. */
-.hub-notifications.public-bottom-drawer > .public-bottom-body {
-  padding-inline: 0;
-  padding-top: 0;
+.hub-notifications.public-bottom-drawer {
+  --public-bottom-body-padding: 0 0 max(16px, env(safe-area-inset-bottom));
 }
 .hub-notifications.public-bottom-drawer .hub-popover-header {
   justify-content: flex-start;

@@ -2,14 +2,11 @@
 // feature is reworked: the variation moves to the owning sheet behind a modifier that the owning component sets.
 // `pnpm lint` fails on a restyle missing here and on an entry no rule matches any more, so the list only shrinks.
 export const knownRestyles = [
-  "components/feedback-dialog.css .public-bottom-body",
   "components/feedback-dialog.css .wiki-input",
-  "components/skin-preview.css .public-bottom-body",
   "components/skin-preview.css .wiki-edit-heading",
   "components/skin-preview.css .wiki-image-placeholder",
   "components/videos/skill-videos.css .wiki-video-meta",
   "components/videos/skill-videos.css .wiki-video-title",
-  "components/videos/subject-videos.css .public-bottom-body",
   "components/wiki-header.css .public-app-wordmark",
   "components/wiki-header.css .wiki-search",
   "features/account/account.css .pas-section",

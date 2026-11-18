@@ -61,8 +61,8 @@
   color: var(--aov-text);
   box-shadow: var(--aov-shadow-lg);
 }
-.wiki-feedback-dialog.public-bottom-drawer > .public-bottom-body {
-  padding: 0 16px max(16px, env(safe-area-inset-bottom));
+.wiki-feedback-dialog.public-bottom-drawer {
+  --public-bottom-body-padding: 0 16px max(16px, env(safe-area-inset-bottom));
 }
 .wiki-feedback-heading,
 .wiki-feedback-actions {
