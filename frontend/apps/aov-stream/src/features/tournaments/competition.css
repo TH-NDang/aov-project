@@ -62,7 +62,7 @@
   min-width: 0;
   flex: 0 1 auto;
 }
-.tn-schedule-bar > .public-filter-button {
+.tn-schedule-bar > .tn-schedule-filter {
   margin-left: auto;
 }
 .tn-schedule-bar > .competition-filter-group {

@@ -4,18 +4,6 @@
   gap: 8px;
   margin-bottom: 16px;
 }
-/* A chip's count reads as part of its label, in the chip's own colour. */
-.pg-filters .hub-pills > button > small {
-  min-width: 0;
-  padding: 0;
-  background: none;
-  color: var(--hub-muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.pg-filters .hub-pills > [aria-pressed="true"] > small {
-  color: inherit;
-}
 .pg-filters .hub-pills > .pg-chip-skeleton {
   width: 104px;
   height: 32px;

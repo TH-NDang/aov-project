@@ -5,7 +5,6 @@ export const knownRestyles = [
   "features/community/components/community-directory.css .cp-avatar",
   "features/community/components/community-directory.css .cp-follow-chip",
   "features/community/components/community-directory.css .hub-menu-item",
-  "features/community/components/community-directory.css .hub-pills",
   "features/community/components/community-live.css .cp-avatar",
   "features/community/components/community-live.css .cp-initial",
   "features/community/components/community-profile.css .cp-avatar",
@@ -19,5 +18,4 @@ export const knownRestyles = [
   "features/tournaments/competition-pages.css .hub-kicker",
   "features/tournaments/competition.css .hub-banner-stats",
   "features/tournaments/competition.css .hub-kicker",
-  "features/tournaments/competition.css .public-filter-button",
 ]

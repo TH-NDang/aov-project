@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react"
 import { SlidersHorizontal } from "lucide-react"
+import { cn } from "@aov/ui/lib/utils"
 import { PublicDrawer, PublicDrawerContent } from "./public-overlay"
 
 /**
@@ -13,10 +14,13 @@ export function PublicFilterSheet({
   resetLabel,
   onReset,
   resultLabel,
+  triggerClassName,
   children,
 }: {
   title: string
   triggerLabel: string
+  /** Places the button in the bar that holds it. */
+  triggerClassName?: string
   /** How many filters are on. */
   count: number
   resetLabel: string
@@ -29,7 +33,7 @@ export function PublicFilterSheet({
     <>
       <button
         type="button"
-        className="public-filter-button"
+        className={cn("public-filter-button", triggerClassName)}
         aria-haspopup="dialog"
         aria-expanded={open}
         data-active={count > 0 || undefined}

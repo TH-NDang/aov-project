@@ -295,7 +295,14 @@ function RegionChips({
   const rest = regions.filter((entry) => !top.includes(entry))
   const other = rest.find((entry) => entry.key === value)
   return (
-    <div ref={row} className="hub-pills" role="group" aria-label={text("Khu vực", "Region")} data-regions="">
+    <div
+      ref={row}
+      className="hub-pills"
+      role="group"
+      aria-label={text("Khu vực", "Region")}
+      data-regions=""
+      data-counts="plain"
+    >
       <button type="button" aria-pressed={!value} onClick={() => onChange("")}>
         {text("Mọi khu vực", "All regions")}
       </button>

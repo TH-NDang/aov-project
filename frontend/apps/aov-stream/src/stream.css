@@ -726,6 +726,18 @@ button:disabled {
   background: color-mix(in srgb, var(--hub-on-accent) 18%, transparent);
   color: inherit;
 }
+/* A row whose counts read as part of each chip's label: no badge, the chip's own colour once chosen. */
+.hub-pills[data-counts="plain"] > button > small {
+  min-width: 0;
+  padding: 0;
+  background: none;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.hub-pills[data-counts="plain"] > [aria-pressed="true"] > small {
+  color: inherit;
+}
 
 /* ---------- Empty, loading and error states: the owl, a sentence, the next step ---------- */
 .hub-state {

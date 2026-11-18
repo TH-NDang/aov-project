@@ -348,6 +348,7 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
               <PublicFilterSheet
                 title={text("Lọc trận đấu", "Filter matches")}
                 triggerLabel={text("Lọc", "Filter")}
+                triggerClassName="tn-schedule-filter"
                 count={active}
                 resetLabel={text("Xóa lọc", "Clear filters")}
                 onReset={clear}
