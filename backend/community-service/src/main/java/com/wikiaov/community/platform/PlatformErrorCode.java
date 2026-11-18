@@ -14,11 +14,8 @@ public enum PlatformErrorCode implements ApiErrorCode {
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed"),
     NOT_ACCEPTABLE(HttpStatus.NOT_ACCEPTABLE, "Not acceptable"),
     VERSION_CONFLICT(HttpStatus.CONFLICT, "Version conflict"),
-    /**
-     * A unique constraint refused the row. The name predates this enum and is kept because Admin and Stream branch
-     * on it for pages as well as tournament records.
-     */
-    TOURNAMENT_DUPLICATE_CODE(HttpStatus.CONFLICT, "Duplicate record"),
+    /** A unique constraint refused the row, in any module: a code, a slug or a linked profile is already taken. */
+    DUPLICATE_RECORD(HttpStatus.CONFLICT, "Duplicate record"),
     PAYLOAD_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "Payload too large"),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported media type"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error");

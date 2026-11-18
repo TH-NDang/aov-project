@@ -83,7 +83,7 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
         if (!uniqueViolation(ex)) {
             return handleUnexpected(ex, request);
         }
-        return render(PlatformErrorCode.TOURNAMENT_DUPLICATE_CODE,
+        return render(PlatformErrorCode.DUPLICATE_RECORD,
                 "A record already reserves this identity, including records in the trash. Restore or edit the existing record.",
                 List.of(), new HttpHeaders(), request);
     }

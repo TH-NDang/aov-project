@@ -272,7 +272,7 @@ function ProfileRequestForm({ pageId, kind }: { pageId: string; kind: "suggestio
       )}
       {request.isError && (
         <p className="cp-error" role="alert">
-          {request.error instanceof ApiError && request.error.code === "TOURNAMENT_DUPLICATE_CODE"
+          {request.error instanceof ApiError && request.error.code === "DUPLICATE_RECORD"
             ? ui(
                 "Bạn đã gửi yêu cầu này hoặc đã có quyền quản lý trang.",
                 "You have already sent this request, or you already manage this page.",

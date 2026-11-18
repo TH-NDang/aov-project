@@ -42,12 +42,12 @@ test("a reader's own request carries the token and skips the browser cache", asy
 })
 
 test("a failure keeps its status and problem code so a screen can choose its words", async () => {
-  const { request } = client(() => Response.json({ code: "TOURNAMENT_DUPLICATE_CODE" }, { status: 409 }))
+  const { request } = client(() => Response.json({ code: "DUPLICATE_RECORD" }, { status: 409 }))
   await assert.rejects(request("/me/pages/p1/claims", { body: {} }), (error: unknown) => {
     assert.ok(error instanceof ApiError)
     assert.equal(error.status, 409)
-    assert.equal(error.code, "TOURNAMENT_DUPLICATE_CODE")
-    assert.equal(error.message, "409 TOURNAMENT_DUPLICATE_CODE")
+    assert.equal(error.code, "DUPLICATE_RECORD")
+    assert.equal(error.message, "409 DUPLICATE_RECORD")
     return true
   })
 })

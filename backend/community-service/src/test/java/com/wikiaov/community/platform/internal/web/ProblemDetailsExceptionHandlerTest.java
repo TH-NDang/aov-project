@@ -53,7 +53,7 @@ class ProblemDetailsExceptionHandlerTest {
     @Test
     void aUniqueViolationIsAnsweredAsADuplicate() throws Exception {
         mvc.perform(get("/unique-violation")).andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("TOURNAMENT_DUPLICATE_CODE"));
+                .andExpect(jsonPath("$.code").value("DUPLICATE_RECORD"));
     }
 
     @Test

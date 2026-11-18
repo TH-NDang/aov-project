@@ -158,7 +158,7 @@ export function tournamentError(error: unknown) {
     if (error.code === "TOURNAMENT_RECORD_IN_USE") return "Chưa thể xóa: mục này còn được dữ liệu khác sử dụng."
     if (error.code === "TOURNAMENT_RESTORE_BLOCKED") return "Chưa thể khôi phục: cần khôi phục dữ liệu liên quan trước."
     if (error.code === "TOURNAMENT_RECORD_DELETED") return "Mục đang ở thùng rác. Khôi phục trước khi chỉnh sửa."
-    if (error.code === "TOURNAMENT_DUPLICATE_CODE")
+    if (error.code === "DUPLICATE_RECORD")
       return "Mã đã được dùng hoặc số ván đã tồn tại trong trận này. Chọn mã / số khác."
     if (error.status === 409) return "Dữ liệu đã thay đổi. Hãy tải bản mới trước khi lưu lại."
     if (error.status === 422 || error.status === 400)
