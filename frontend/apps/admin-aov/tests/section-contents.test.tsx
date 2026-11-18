@@ -4,6 +4,7 @@ import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { intersectionHarness } from "./fixtures/intersection-observer"
+import { waitFor } from "./fixtures/wait-for"
 
 type Contents = typeof import("../src/components/section-contents")
 
@@ -157,6 +158,8 @@ test("a contents page opens on the requested section, loads lazy parts on demand
     picked.length = 0
     await click(drawer.querySelector('nav button[aria-controls="part-b"]'))
     assert.equal(document.querySelector('[role="dialog"]'), null, "Picking a section closes the drawer")
+    // The drawer hands the pick over from Radix's close autofocus, which fires on a timer after the drawer unmounts.
+    await waitFor(() => picked.length > 0, "The pick is reported once the drawer has closed")
     assert.deepEqual(picked, ["part-b"], "The jump waits for the drawer to close, then reports the pick")
     assert.match(document.body.textContent!, /Danh sách kỹ năng/)
   })
