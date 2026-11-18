@@ -98,7 +98,8 @@ Không chặn `/api/`, vì Google cần gọi API để render trang.
   mới thay **toàn bộ** nội dung volume bằng `dist` đó. Làm theo thứ tự này thì API lỗi không chạm vào volume, site tiếp tục
   chạy bản cũ cho tới khi job thành công. Chỉ chép đè thì trang vừa gỡ xuất bản vẫn còn trong volume.
 - File mới được chép trước, file cũ xóa sau, và mỗi file thay bằng thao tác đổi tên, nên trong lúc thay, trang nào người đọc nhận được
-  cũng còn đủ bundle nó trỏ tới.
+  cũng còn đủ bundle nó trỏ tới. *Từ 18/11/2026, bundle của bản đang chạy được giữ thêm một lần phát hành cho tab đang mở, và Stream,
+  Admin cũng được đưa ra theo cách này: xem ADR-021, bổ sung 18/11/2026.*
 - Hệ thống mới chưa xuất bản tướng nào, hoặc chưa có patch nên API trả `PATCH_CONTEXT_UNAVAILABLE`: job vẫn đưa bundle hiện tại ra và
   thoát thành công để `up --wait` qua. Site đã có trang tướng mà API trả về như vậy thì bị coi là lỗi, trang cũ được giữ.
 

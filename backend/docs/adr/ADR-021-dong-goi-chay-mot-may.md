@@ -1,6 +1,7 @@
 # ADR-021 — Đóng gói toàn hệ thống trên một máy và các đường dẫn proxy bổ sung
 
-**Trạng thái:** Chấp nhận, cùng [bổ sung 17/11/2026](#bổ-sung-17112026-object-storage-là-cloudflare-r2) được người dùng duyệt cùng ngày
+**Trạng thái:** Chấp nhận, cùng [bổ sung 17/11/2026](#bổ-sung-17112026-object-storage-là-cloudflare-r2) và
+[bổ sung 18/11/2026](#bổ-sung-18112026-cập-nhật-không-gián-đoạn), mỗi bổ sung được người dùng duyệt cùng ngày
 **Ngày:** 2026-11-07
 **Phạm vi:** `infra/`, `wiki-service`, `community-service`, `aov-stream`
 
@@ -213,3 +214,88 @@
     đầu dừng vì Windows PowerShell coi dòng tiến trình của docker là lỗi, đã sửa); provider `google` được thêm (client ID
     trùng với dev, secret có), liên kết `google` của tài khoản hiện ra.
   - Chưa thử: chạy trên VPS, `pwsh` trên Ubuntu, đăng nhập Google thật.
+
+## Bổ sung 18/11/2026: cập nhật không gián đoạn
+
+### Bối cảnh
+
+- Stack chạy thật trên VPS từ 18/11/2026. Mỗi lần cập nhật, image được build ngay trên VPS (3–5 phút, giành CPU với site), rồi
+  `up` tạo lại container: API mất 1–2 phút, Keycloak khoảng 1 phút, proxy vài giây.
+- Stream và Admin nằm trong image Caddy, cấu hình Caddy cũng đóng sẵn trong image (`admin off`), nên sửa một dòng giao diện
+  hay một route cũng phải thay container proxy.
+- Job prerender của Wiki đã thay site trong volume theo thứ tự file mới trước, file cũ sau (ADR-022), nhưng xóa bundle cũ
+  ngay. Tab đang mở mà tải thêm một chunk sau đó sẽ lỗi.
+- Người dùng yêu cầu ngày 18/11/2026: khi `main` có commit mới thì VPS tự lấy về; bản mới chỉ nhận traffic khi đã ổn định, bản
+  cũ chạy tới lúc đó rồi mới tắt.
+
+### Quyết định
+
+1. **Kích hoạt.** Trên VPS, systemd timer `aov-deploy.timer` (`infra/systemd/`) chạy `infra/scripts/deploy.sh` năm phút một
+   lần.
+   - Script lấy `origin/main` và chỉ triển khai khi mọi check run GitHub giữ cho commit đó đã xong và đạt (`success`,
+     `skipped`, `neutral`). Repo công khai nên đọc API không cần token, VPS không giữ khóa GitHub nào.
+   - Commit lỗi được ghi vào `infra/.deploy/rejected` và timer không thử lại; commit mới hơn hoặc chạy tay thì có.
+   - `deploy.sh <commit>` triển khai một commit bất kỳ, kể cả để quay lui. `deploy.sh --refresh` chạy lại các bước không gián
+     đoạn trên commit đang chạy, dùng sau khi đổi `.env`.
+2. **Image.** Workflow `images.yml` build năm image (`wiki-service`, `community-service`, `keycloak`, `reverse-proxy`, `web`)
+   cho mỗi commit của `main` và đẩy lên GHCR với tag là SHA.
+   - VPS tải image về rồi gắn lại tên `aov/<image>:local` mà Compose dùng, nên `docker compose` gõ tay vẫn chạy đúng bản đang
+     chạy.
+   - Không tải được (package còn private, workflow chưa xong) thì build ngay trên VPS, trong lúc container cũ vẫn phục vụ.
+3. **Backend: chạy song song rồi mới đổi.** Với `wiki-service` và `community-service`:
+   - script nhân đôi số container (`up --no-recreate --scale`); container cũ giữ image cũ;
+   - container mới phải healthy và trả lời được một API công khai thì container cũ mới dừng. `stop_grace_period: 40s` để
+     Spring trả nốt các request đang chạy;
+   - container mới hỏng thì bị xóa, container cũ không bị đụng tới.
+
+   Caddy tìm backend theo tên service bằng DNS của Docker (`dynamic a`, làm mới mỗi giây), nên thấy cả container cũ lẫn mới.
+   Request không kết nối được tới một container (container đó đang tắt) được thử ở container kia, trong tối đa 10 giây.
+4. **Frontend ra khỏi image Caddy.** Image `web` chứa bản build của ba app và chạy hai job một lần:
+   - `web-publish` đưa Stream và Admin vào volume `web-apps`;
+   - `wiki-prerender` đưa Wiki vào `wiki-site` như trước.
+
+   Cả hai dùng chung `publishSite`: file mới trước, file cũ sau, mỗi file thay bằng đổi tên. Bundle của bản đang chạy được
+   giữ thêm một lần phát hành (danh sách trong `.published-bundle.json`), bundle cũ hơn mới bị xóa, nên tab đang mở vẫn tải được
+   chunk của nó. Đây là chỗ duy nhất đổi quy tắc "thay toàn bộ nội dung volume" của ADR-022.
+5. **Caddy.**
+   - Image chỉ còn Caddy và module rate limit. Compose mount thư mục `infra/proxy` vào `/etc/caddy`: mount thư mục chứ không
+     mount file, vì git thay file khi checkout, mà mount một file thì vẫn giữ file cũ.
+   - Caddyfile mới được kiểm tra (`caddy validate`) rồi áp bằng `caddy reload`, không tạo lại container. Admin API của Caddy
+     nghe ở `localhost:2019` trong container và không mở cổng nào. CI cũng kiểm tra Caddyfile bằng đúng image đó.
+   - Container proxy chỉ được thay khi `infra/proxy/Dockerfile` đổi. Khi đó request dừng vài giây.
+6. **Keycloak không chạy song song**, vì chỉ có một instance với cache cục bộ và cổng quản trị cố định. Nó chỉ được tạo lại
+   khi file của nó đổi (`infra/keycloak/` và các theme). Keycloak 26 lưu phiên đăng nhập trong database nên không ai bị đăng
+   xuất; chỉ có khoảng một phút không đăng nhập mới được.
+7. **Migration phải để bản cũ chạy được.** Trong lúc chuyển, hai bản cùng chạy trên schema mới.
+   - Được: thêm bảng, thêm cột cho phép null hoặc có giá trị mặc định.
+   - Phải tách làm hai lần phát hành (thêm trước, bỏ sau khi bản cũ không còn chạy): xóa hoặc đổi tên cột, bảng; thêm ràng
+     buộc mà code cũ có thể vi phạm.
+
+   `db-backup` chạy trước khi container mới khởi động, như với `up`.
+8. **Thứ tự:** lấy image, `preflight`, `db-backup`, `community-service`, `wiki-service`, `web-publish`, `wiki-prerender`,
+   Caddy, Keycloak, rồi các service khác khi `compose.yaml` đổi. Backend đi trước để trang mới không gọi API chưa có. Cuối
+   cùng script gọi các địa chỉ công khai qua Caddy ngay trên máy đó.
+
+### Phương án đã cân nhắc
+
+| Phương án | Lý do không chọn |
+|---|---|
+| Blue/green: hai bộ service tên riêng, đổi upstream trong Caddyfile | Gấp đôi khai báo trong `compose.yaml` và sửa Caddyfile mỗi lần; nhân đôi container tạm thời cho cùng kết quả với một khai báo |
+| Plugin `docker rollout` | Thêm phụ thuộc ngoài cho việc vài dòng shell làm được; không lo Keycloak, frontend, backup |
+| GitHub Actions SSH vào VPS để triển khai | VPS phải mở SSH cho GitHub, repo công khai phải giữ khóa SSH; timer tự kéo về không cần khóa nào |
+| Watchtower tự cập nhật image | Không chờ healthy trước khi tắt bản cũ, không có thứ tự backend trước frontend, không backup trước migration |
+| Kubernetes hoặc Docker Swarm | Quá nặng cho một máy 8 GB; AGENTS.md cấm thêm Kubernetes khi chưa có ADR riêng |
+| Hai Keycloak chạy song song | Cần cluster cache Infinispan; một phút không đăng nhập mới, chỉ khi Keycloak đổi, là chấp nhận được |
+
+### Hệ quả
+
+- Merge vào `main` là phát hành: commit nào CI xanh cũng lên VPS trong vòng vài phút sau khi image build xong.
+- Đổi `.env` vẫn làm tay: `deploy.sh --refresh` cho backend, frontend và Caddyfile; `docker compose up -d --wait` cho phần
+  còn lại.
+- Package GHCR phải công khai (hoặc VPS đăng nhập GHCR) thì VPS mới tải được image; chưa được thì VPS build như trước.
+- Trong lúc chuyển, máy dùng thêm bộ nhớ của một container backend (tối đa 1,5 GB).
+- Hai job định kỳ có thể chạy cùng lúc ở hai bản: job nhập tướng khóa từng dòng bằng `FOR UPDATE SKIP LOCKED`, job tỷ giá chạy
+  hai lần thì vô hại.
+- Image `web` trên GHCR chỉ dành cho một origin (biến repo `STACK_PUBLIC_ORIGIN`, mặc định `https://athahub.com`), vì frontend
+  biên dịch sẵn địa chỉ.
+- Lần đầu chuyển sang cách này, container proxy được thay một lần.
