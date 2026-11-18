@@ -213,8 +213,14 @@ if $proxy_image; then
     log "reverse-proxy: new Caddy image; requests pause for a few seconds while the container is replaced."
     docker compose up --detach --no-deps --wait reverse-proxy
 elif $caddyfile; then
-    docker compose exec -T reverse-proxy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
-    docker compose exec -T reverse-proxy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+    # Caddy logs every step; show them only when something went wrong. A rejected file leaves the old one running.
+    for step in validate reload; do
+        if ! output=$(docker compose exec -T reverse-proxy caddy "$step" --config /etc/caddy/Caddyfile \
+            --adapter caddyfile 2>&1); then
+            printf '%s\n' "$output"
+            fail "reverse-proxy: caddy $step refused the Caddyfile"
+        fi
+    done
     log "reverse-proxy: configuration reloaded"
 fi
 
