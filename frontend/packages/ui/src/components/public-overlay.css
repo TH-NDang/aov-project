@@ -99,8 +99,7 @@
   display: grid;
   gap: 4px;
 }
-.public-bottom-body > h2:first-child,
-.public-bottom-menu > .public-app-menu-title {
+.public-bottom-body > h2:first-child {
   display: none;
 }
 .public-bottom-menu .public-bottom-menu-item {

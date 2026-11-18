@@ -3,6 +3,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTitle,
   DropdownMenuTrigger,
 } from "@aov/ui/components/public-overlay"
 import owlMark from "../assets/stream-owl.svg"
@@ -50,7 +51,9 @@ export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
         className="public-app-theme public-app-menu"
         drawerTitle={text("Chọn ứng dụng", "Choose application")}
       >
-        <div className="public-app-menu-title">{text("Chọn ứng dụng", "Choose application")}</div>
+        <DropdownMenuTitle className="public-app-menu-title">
+          {text("Chọn ứng dụng", "Choose application")}
+        </DropdownMenuTitle>
         <DropdownMenuItem asChild className="public-app-option" data-product="wiki">
           <a href={wikiUrl}>
             <PublicAppOptionBody

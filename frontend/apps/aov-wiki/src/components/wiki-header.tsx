@@ -7,6 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTitle,
   DropdownMenuTrigger,
 } from "@aov/ui/components/public-overlay"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
@@ -104,7 +105,9 @@ function SectionSelector() {
         drawerTitle={t("Chọn ứng dụng", "Choose application")}
         data-appearance="wiki"
       >
-        <div className="public-app-menu-title">{t("Chọn ứng dụng", "Choose application")}</div>
+        <DropdownMenuTitle className="public-app-menu-title">
+          {t("Chọn ứng dụng", "Choose application")}
+        </DropdownMenuTitle>
         {SECTIONS.map((s) => {
           const selected = s.id === CURRENT_SECTION
           return (

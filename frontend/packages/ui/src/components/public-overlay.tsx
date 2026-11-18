@@ -221,6 +221,12 @@ export function DropdownMenuContent({
   )
 }
 
+/** A title at the top of a menu. A drawer already shows its `drawerTitle` in its heading, so it leaves this out. */
+export function DropdownMenuTitle(props: ComponentProps<"div">) {
+  const { mobile } = useContext(OverlayContext)
+  return mobile ? null : <div {...props} />
+}
+
 export function DropdownMenuItem({
   asChild,
   onSelect,
