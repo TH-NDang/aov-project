@@ -25,6 +25,8 @@ public final class PageRules {
     public static final int MAX_BIOGRAPHY = 10000;
     public static final int MAX_POST_IMAGES = 4;
     public static final int MAX_LINKS = 20;
+    /** The lowest final place an achievement records. */
+    public static final int MAX_PLACE = 999;
 
     private static final Set<String> POST_KINDS = Set.of("TEXT", "NEWS", "VIDEO");
 
@@ -133,6 +135,7 @@ public final class PageRules {
             text(item.title(), 300, true);
             text(item.placement(), MAX_LABEL, true);
             url(item.sourceUrl());
+            rank(item);
         });
         content.roster().forEach(item -> {
             text(item.name(), MAX_NAME, true);
@@ -141,6 +144,20 @@ public final class PageRules {
             url(item.sourceUrl());
             dates(item.startsOn(), item.endsOn());
         });
+    }
+
+    /** A place counts from 1; a shared standing ends after it starts; an individual award has no place. */
+    private static void rank(PageContent.Achievement item) {
+        if (item.place() != null && (item.place() < 1 || item.place() > MAX_PLACE)) {
+            throw invalid("An achievement place is between 1 and " + MAX_PLACE + ".");
+        }
+        if (item.placeTo() != null
+                && (item.place() == null || item.placeTo() <= item.place() || item.placeTo() > MAX_PLACE)) {
+            throw invalid("A shared standing needs a place before its last place.");
+        }
+        if (Boolean.TRUE.equals(item.award()) && item.place() != null) {
+            throw invalid("An individual award has no place.");
+        }
     }
 
     public static void presentation(PageContent.Presentation value) {

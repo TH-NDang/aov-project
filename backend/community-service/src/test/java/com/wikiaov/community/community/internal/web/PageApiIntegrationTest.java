@@ -662,6 +662,52 @@ class PageApiIntegrationTest {
         assertThat(owned.get(0).path("parameters").isEmpty()).isTrue();
     }
 
+    @Test
+    void achievementsPublishTheirRankBesideTheirWording() throws Exception {
+        var content = new HashMap<String, Object>();
+        content.put("name", "Ranked team");
+        content.put("sources", List.of(Map.of("label", "Source", "url", "https://example.com")));
+        content.put("achievements", List.of(
+                Map.of("title", "Winter 2026", "placement", "Champion", "place", 1),
+                Map.of("title", "Summer 2026", "placement", "Hạng 5-8", "place", 5, "placeTo", 8),
+                Map.of("title", "Winter 2026", "placement", "MVP", "award", true),
+                Map.of("title", "Spring 2026", "placement", "Á quân")));
+        var team = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "TEAM", "code", "ranked-" + UUID.randomUUID(), "content", content));
+        String id = team.path("id").asText();
+        send(post(ROOT + "/admin/pages/" + id + "/publish"), "editor", true,
+                Map.of("version", team.path("version").asLong()));
+
+        var achievements = send(get(ROOT + "/pages/" + id), "reader", false, null).path("content")
+                .path("achievements");
+        assertThat(achievements.get(0).path("place").asInt()).isEqualTo(1);
+        assertThat(achievements.get(0).path("placement").asText()).isEqualTo("Champion");
+        assertThat(achievements.get(1).path("place").asInt()).isEqualTo(5);
+        assertThat(achievements.get(1).path("placeTo").asInt()).isEqualTo(8);
+        assertThat(achievements.get(2).path("award").asBoolean()).isTrue();
+        assertThat(achievements.get(2).path("place").isNull()).isTrue();
+        assertThat(achievements.get(3).path("place").isNull()).isTrue();
+        assertThat(achievements.get(3).path("award").isNull()).isTrue();
+    }
+
+    @Test
+    void achievementRanksThatCannotHappenAreRejected() throws Exception {
+        var impossible = List.<Map<String, Object>>of(
+                Map.of("title", "Cup", "placement", "Zeroth", "place", 0),
+                Map.of("title", "Cup", "placement", "Hạng 5", "place", 5, "placeTo", 5),
+                Map.of("title", "Cup", "placement", "Hạng 5-8", "placeTo", 8),
+                Map.of("title", "Cup", "placement", "MVP", "place", 1, "award", true));
+
+        for (var achievement : impossible) {
+            var content = Map.of("name", "Impossible team", "achievements", List.of(achievement));
+            mvc.perform(as(post(ROOT + "/admin/pages"), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(
+                            Map.of("kind", "TEAM", "code", "impossible-" + UUID.randomUUID(), "content", content))))
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.code").value("PAGE_INVALID_CONTENT"));
+        }
+    }
+
     /** A published organization whose owner received the page through a handover code. */
     private String ownedOrganization(String name, String owner) throws Exception {
         String id = publishedOrganization(name);
