@@ -1760,7 +1760,7 @@
           "warnings": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/HeroImportWarning"
             }
           }
         },
@@ -1775,6 +1775,38 @@
           "classification",
           "canApply",
           "warnings"
+        ]
+      },
+      "HeroImportWarning": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "MISSING_ROLES",
+              "MISSING_SKILL_DESCRIPTION",
+              "STALE_SKILL_SUMMARY",
+              "SKILL_SOURCE_NEEDS_REVIEW",
+              "NO_SNAPSHOT_TO_CORRECT",
+              "NO_EARLIER_SNAPSHOT",
+              "BASELINE_IS_KNOWN_STATE",
+              "SNAPSHOT_DIFFERENCE_UNPROVEN"
+            ]
+          },
+          "skillKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "code",
+          "skillKey",
+          "locale"
         ]
       },
       "Season": {
