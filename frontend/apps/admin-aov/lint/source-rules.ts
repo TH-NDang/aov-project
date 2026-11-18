@@ -223,7 +223,6 @@ const rules: Rule[] = [
           "community-references.test.tsx",
           "competition-recency.test.tsx",
           "esports-drag.test.tsx",
-          "esports-loadout.test.tsx",
           "esports-ui.test.tsx",
           "registry-import-ui.test.tsx",
           "tournament-lifecycle.test.tsx",
