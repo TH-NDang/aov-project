@@ -6,6 +6,15 @@
   padding: 20px var(--aov-gutter) 48px;
   margin: auto;
 }
+@media (min-width: 1180px) {
+  /*
+   * The section list takes a column beside the page: wide enough that its longest one-line entry stays on one line
+   * when it is the chosen, bolder one.
+   */
+  .wiki-handbook {
+    grid-template-columns: minmax(0, 1fr) 176px;
+  }
+}
 .wiki-handbook-main {
   display: grid;
   min-width: 0;
@@ -402,6 +411,17 @@
   white-space: nowrap;
   color: var(--aov-accent);
   margin-top: 18px;
+}
+/* The lore videos button reads as a link. */
+button.wiki-handbook-action {
+  padding: 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+button.wiki-handbook-action svg:first-child {
+  fill: currentColor;
 }
 .wiki-rank-scroll {
   max-width: 100%;
@@ -920,4 +940,27 @@ details.wiki-version-changes {
 .wiki-skill-options [data-slot="skill-variant-dots"] {
   justify-content: flex-start;
   margin-top: 0.25rem;
+}
+
+/* The rating bars grow in one after another; the chosen ability's text fades in. */
+@media (prefers-reduced-motion: no-preference) {
+  .wiki-hero-rating-track > span > span {
+    transform-origin: left;
+    animation: public-grow-x 520ms ease-out both;
+  }
+  .wiki-hero-rating-track > span:nth-child(2) > span {
+    animation-delay: 70ms;
+  }
+  .wiki-hero-rating-track > span:nth-child(3) > span {
+    animation-delay: 140ms;
+  }
+  .wiki-hero-rating-track > span:nth-child(4) > span {
+    animation-delay: 210ms;
+  }
+  .wiki-hero-rating-track > span:nth-child(5) > span {
+    animation-delay: 280ms;
+  }
+  .wiki-skill-read .wiki-skill-prose {
+    animation: public-fade 240ms ease-out both;
+  }
 }

@@ -299,6 +299,12 @@ a.tn-match:focus-visible {
   height: 100%;
   object-fit: contain;
 }
+/* Without a logo, the monogram over the colour drawn from the name. */
+.tn-logo > b {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
 
 @media (max-width: 899.98px) {
   .tn-heading h2 {

@@ -1,10 +1,24 @@
+/* The kind of a change: its drawn mark and its name in the colour of its meaning. */
 .wiki-change-kind {
+  --kind-color: var(--aov-info);
   font: var(--wiki-type-meta);
   display: inline-flex;
   flex: none;
   align-items: center;
   color: var(--kind-color);
   white-space: nowrap;
+}
+.wiki-change-kind[data-kind="BUFF"] {
+  --kind-color: var(--aov-success);
+}
+.wiki-change-kind:is([data-kind="NERF"], [data-kind="REMOVED"]) {
+  --kind-color: var(--aov-danger);
+}
+.wiki-change-kind[data-kind="REWORK"] {
+  --kind-color: var(--aov-warning);
+}
+.wiki-change-kind:is([data-kind="ADDED"], [data-kind="RELEASE"]) {
+  --kind-color: var(--aov-accent);
 }
 /* ---------- The changes of one hero: abilities apart by spacing, each field with its before and after ---------- */
 .wiki-change-groups {

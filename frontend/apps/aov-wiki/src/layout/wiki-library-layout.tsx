@@ -39,10 +39,11 @@ export function WikiLibraryLayout() {
   return (
     <div className="wiki-library-shell">
       {/* On the compact layout the armory's parts are tabs below the header, which names the whole armory. */}
-      {/* A mode's page opens on its cover, so on phones the header starts clear over it and darkens on scroll. */}
+      {/* On phones a mode's page keeps the buttons drawn for artwork, on a bar that is solid from the first pixel. */}
       {/* One mode or one update names itself in its own h1; the header then only says which section it belongs to. */}
       <WikiHeader
         variant={layout === "compact" && isModeDetail ? "hero" : "library"}
+        solid={Boolean(isModeDetail)}
         pageTitle={layout === "compact" && isWarehouse ? t("Kho trang bị", "Armory") : pageTitle}
         pageTitleIsHeading={!isModeDetail && !isPatchDetail}
         section={active}

@@ -1,12 +1,9 @@
-.wiki-guide-entry,
+/* Quests: the number, the task, then the reward at the row's end, ruled like the guide's other entries. */
 .wiki-guide-quest {
+  --entry-pad: 12px;
   min-width: 0;
   padding-block: var(--entry-pad, 14px);
   border-top: 1px solid var(--aov-line);
-}
-/* Quests: the number, the task, then the reward at the row's end. */
-.wiki-guide-quest {
-  --entry-pad: 12px;
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) auto;
   gap: 12px;

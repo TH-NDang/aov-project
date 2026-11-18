@@ -608,8 +608,7 @@
 .wiki-warehouse-detail .item-price-text {
   color: inherit;
 }
-.wiki-warehouse-detail-price svg,
-.wiki-item-row-price svg {
+.wiki-warehouse-detail-price svg {
   color: currentColor;
 }
 /* Sections follow one another with a thin rule between them; nothing inside the panel is boxed again. */

@@ -78,6 +78,9 @@
   --aov-stream-ink: #1c2a3b;
   --aov-stream-ink-soft: #353654;
 
+  /* In-game gold: a price in gold and its coin, in the coin's amber rather than the brand accent. */
+  --aov-game-gold: light-dark(oklch(66.6% 0.179 58.318), oklch(82.8% 0.189 84.429));
+
   /* Status colors carry meaning only; they are not decoration. */
   --aov-success: light-dark(#12804f, #4cc38a);
   --aov-success-soft: light-dark(#e3f6ec, rgb(76 195 138 / 14%));

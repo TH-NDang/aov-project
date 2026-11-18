@@ -18,6 +18,14 @@
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
 }
+/* In the dialog the trait is the dialog's whole body, so it neither sticks nor scrolls nor draws a card. */
+.wiki-mode-dialog .wiki-guide-trait-detail {
+  position: static;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  background: none;
+}
 .wiki-guide-trait-detail-head {
   display: flex;
   gap: 14px;

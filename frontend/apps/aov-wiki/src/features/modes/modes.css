@@ -58,6 +58,14 @@
   color: var(--aov-muted);
   font-variant-numeric: tabular-nums;
 }
+/* A group's heading while it loads: a bar where the name will be, over the same rule. */
+.wiki-mode-heading[data-skeleton]::before {
+  content: "";
+  width: 120px;
+  height: 24px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
 .wiki-mode-meta {
   font: var(--wiki-type-meta);
   display: flex;
@@ -138,10 +146,7 @@
   background: var(--mode-chip-hover, var(--aov-raised));
   color: var(--aov-text);
 }
-:is(.wiki-mode-feature, .wiki-guide-lineup-card) {
-  --mode-chip-bg: var(--aov-raised);
-  --mode-chip-hover: var(--aov-wiki-panel-high);
-}
+/* A card under its chips sets --mode-chip-bg and --mode-chip-hover to the steps above its own. */
 /* The chosen chip: a gold outline over a faint gold tint. */
 .wiki-mode-chip[aria-pressed="true"],
 .wiki-mode-chip[aria-current="page"],
@@ -167,48 +172,7 @@
   color: inherit;
 }
 
-/*
- * Guide tabs: one row under the mode's name that stays under the header, whose height is --wiki-header-height, and
- * scrolls sideways when it is narrow. Sticky parts of the guide sit right under this row (--guide-tabs-height).
- */
-.wiki-guide-tabs {
-  position: sticky;
-  top: var(--wiki-header-height);
-  z-index: 5;
-  display: flex;
-  gap: 28px;
-  overflow-x: auto;
-  background: color-mix(in srgb, var(--aov-bg) 92%, transparent);
-  box-shadow: inset 0 -1px 0 var(--aov-line);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  scrollbar-width: none;
-}
-.wiki-guide-tabs::-webkit-scrollbar {
-  display: none;
-}
-.wiki-guide-tab {
-  font: var(--wiki-type-category);
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  min-height: 45px;
-  border-bottom: 2px solid transparent;
-  color: var(--aov-text-soft);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.wiki-guide-tab:hover {
-  color: var(--aov-text);
-}
-.wiki-guide-tab[aria-current="page"] {
-  border-bottom-color: var(--aov-accent);
-  color: var(--aov-accent);
-}
-.wiki-guide-tab:focus-visible {
-  outline-offset: -2px;
-}
-/* Sticky parts of the guide sit right under the tab row. */
+/* Sticky parts of the guide sit right under the guide's tab row (mode-pages.css). */
 :root {
   --guide-tabs-height: 45px;
 }
@@ -360,12 +324,6 @@ html:has(.wiki-mode-dialog[open]) {
   .wiki-mode-chip {
     min-height: 36px;
   }
-  /* The tabs run to the screen's edges, so the row scrolls under them; the first label keeps the page's gutter. */
-  .wiki-guide-tabs {
-    gap: 22px;
-    margin-inline: calc(-1 * var(--wiki-gutter));
-    padding-inline: var(--wiki-gutter);
-  }
   /* Phones: a sheet rising from the bottom, its bar a handle to drag it away. */
   .wiki-mode-dialog {
     inset: auto 0 0 0;
@@ -440,8 +398,9 @@ html:has(.wiki-mode-dialog[open]) {
 .wiki-mode-fab:is(:hover, :focus-visible) {
   filter: brightness(1.08);
 }
-body:has(.wiki-mode-fab-wrap) .wiki-site-footer {
-  padding-bottom: 88px;
+/* The footer leaves this much room under its last line for the button (wiki-footer.css). */
+body:has(.wiki-mode-fab-wrap) {
+  --wiki-floating-button-space: 88px;
 }
 @media (max-width: 899.98px) {
   .wiki-mode-fab-wrap {

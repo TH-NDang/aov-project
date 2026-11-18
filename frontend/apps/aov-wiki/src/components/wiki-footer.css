@@ -1,7 +1,11 @@
-/* One quiet band under every page; its text and its rule line up with the page column. */
+/*
+ * One quiet band under every page; its text and its rule line up with the page column. A page with a floating button
+ * sets --wiki-floating-button-space on the body, and the band leaves that much room under its last line.
+ */
 .wiki-site-footer {
   margin-top: auto;
   border-top: 1px solid var(--header-line);
+  padding-bottom: var(--wiki-floating-button-space, 0);
   background: var(--aov-wiki-bar);
 }
 .wiki-footer-main,

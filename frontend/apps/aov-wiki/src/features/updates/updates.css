@@ -543,21 +543,20 @@
   gap: 2px 10px;
   color: var(--aov-muted);
 }
-/* ---------- The kind of a change: its drawn mark and its name in the colour of its meaning ---------- */
-.wiki-change-kind,
+/* ---------- The kinds of an update: coloured like the kind of a change (change-list.css) ---------- */
 .wiki-updates-kind {
   --kind-color: var(--aov-info);
 }
-:is(.wiki-change-kind, .wiki-updates-kind)[data-kind="BUFF"] {
+.wiki-updates-kind[data-kind="BUFF"] {
   --kind-color: var(--aov-success);
 }
-:is(.wiki-change-kind, .wiki-updates-kind):is([data-kind="NERF"], [data-kind="REMOVED"]) {
+.wiki-updates-kind:is([data-kind="NERF"], [data-kind="REMOVED"]) {
   --kind-color: var(--aov-danger);
 }
-:is(.wiki-change-kind, .wiki-updates-kind)[data-kind="REWORK"] {
+.wiki-updates-kind[data-kind="REWORK"] {
   --kind-color: var(--aov-warning);
 }
-:is(.wiki-change-kind, .wiki-updates-kind):is([data-kind="ADDED"], [data-kind="RELEASE"]) {
+.wiki-updates-kind:is([data-kind="ADDED"], [data-kind="RELEASE"]) {
   --kind-color: var(--aov-accent);
 }
 /* Wide screens have room to set the fields of an ability under its name, past its picture. */
@@ -616,5 +615,17 @@
   }
   .wiki-patch-hero-body {
     padding-left: 0;
+  }
+}
+
+/* Updates and their subjects come up as they scroll into view, in browsers that can drive an animation from scrolling. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .wiki-updates-season li,
+    .wiki-patch-subject {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 26%;
+    }
   }
 }

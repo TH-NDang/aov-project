@@ -248,6 +248,8 @@ interface WikiHeaderProps {
   backTo?: string
   /** The section to mark in the navigation. */
   section?: WikiSectionKey
+  /** Fills the compact bar from the first pixel, for a page with no artwork under it. */
+  solid?: boolean
 }
 
 /** One row: the way back, where you are, then search, the contents and the sheet with everything else. */
@@ -257,6 +259,7 @@ function WikiHeaderCompact({
   pageTitleIsHeading = true,
   backTo,
   section,
+  solid = false,
 }: WikiHeaderProps) {
   const { href, locale } = useWikiContext()
   const t = useWikiText()
@@ -282,7 +285,7 @@ function WikiHeaderCompact({
       </header>
     )
   return (
-    <header ref={headerRef} className="wiki-compact-header" data-variant={variant}>
+    <header ref={headerRef} className="wiki-compact-header" data-variant={variant} data-solid={solid || undefined}>
       {backTo ? (
         <Link className="wiki-compact-button" to={href(backTo)} aria-label={wikiText(locale, "Quay lại", "Back")}>
           <WikiIcon name="chevronLeft" size={22} />

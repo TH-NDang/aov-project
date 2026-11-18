@@ -336,6 +336,13 @@ a.wiki-guide-trait-tag:hover {
   padding-top: 16px;
   border-top: 1px solid var(--aov-line);
 }
+.wiki-guide-detail-block h3 {
+  font: var(--wiki-type-entry);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--aov-text);
+}
 /*
  * Between the wide and the compact layout a price row holds half as many units, and the switch at the end of a
  * toolbar keeps its icons only; its names stay for screen readers.
@@ -425,13 +432,6 @@ a.wiki-guide-trait-tag:hover {
   cursor: default;
   opacity: 0.45;
 }
-.wiki-mode-dialog .wiki-guide-trait-detail {
-  position: static;
-  max-height: none;
-  padding: 0;
-  overflow: visible;
-  background: none;
-}
 /* Below the widest layout a trait's name sits under its icon, so long names keep two lines at most. */
 @media (max-width: 1179.98px) {
   .wiki-guide-trait-index-item {
@@ -478,6 +478,9 @@ a.wiki-guide-trait-tag:hover {
   border-top: 0;
 }
 .wiki-guide-entry {
+  min-width: 0;
+  padding-block: var(--entry-pad, 14px);
+  border-top: 1px solid var(--aov-line);
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
   gap: 14px;
@@ -574,23 +577,6 @@ a.wiki-guide-trait-tag:hover {
 .wiki-guide-state p {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
-}
-/* The drawer's filters stay at its top while the units scroll under them. */
-.wiki-guide-unit-picker > .wiki-guide-filter-stack {
-  position: sticky;
-  top: -18px;
-  z-index: 2;
-  margin-top: -18px;
-  padding-block: 18px 10px;
-  border-bottom: 1px solid var(--aov-line);
-  background: var(--aov-popover);
-}
-@media (max-width: 899.98px) {
-  .wiki-guide-unit-picker > .wiki-guide-filter-stack {
-    top: -14px;
-    margin-top: -14px;
-    padding-top: 14px;
-  }
 }
 /*
  * Between the compact and the widest layout the main column is narrow: the side column gives up some width, and the

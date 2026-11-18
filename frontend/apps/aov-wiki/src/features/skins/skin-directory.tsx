@@ -1,70 +1,31 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react"
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { useSearchParams } from "react-router"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
-import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
-import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
-import { usePageLayout, type PageLayout } from "@aov/ui/hooks/use-page-layout"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useRevealedCount } from "@aov/ui/hooks/use-revealed-rows"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useWikiContext, useWikiText, wikiText } from "../../context/wiki-context"
 import { normalizedHeroSearch } from "../../lib/hero-classifications"
 import { skinCatalogQuery, type SkinEntry } from "../../lib/skin-api"
-import { HeroSkinGroup, SkinCard } from "./skin-cards"
 import { SkinCollectionHeading } from "./skin-collection-heading"
 import { useSkinColumns } from "./skin-columns"
-import { FilterArt, FilterSelect, SkinSearch, type FilterKind, type FilterOption } from "./skin-filters"
-import { groupSkins, orderTierOptions, type HeroSort, type SkinSort } from "../../lib/skin-groups"
-import { SkinIcon } from "../../components/skin-icon"
-import { SkinGridSkeleton } from "./skin-loading"
-import { SkinPreview, skinId } from "../../components/skin-preview"
+import { groupSkins, orderTierOptions } from "../../lib/skin-groups"
+import { SkinPreview } from "../../components/skin-preview"
+import { SkinResults } from "./skin-results"
+import { SkinFilterStatus, SkinToolbar } from "./skin-toolbar"
+import { useSkinFilters } from "./use-skin-filters"
 import "./skin-directory.css"
-
-type FilterKey = "q" | "hero" | "rarity" | "heroSort" | "skinSort"
 
 /** How many heroes join the page each time the reader nears its end. */
 const GROUP_STEP = 8
-
-/**
- * Marks a pinned bar once the page has scrolled under it, so the bar gets a backing only while it covers content.
- * The marker is an empty element placed right before the bar.
- */
-function usePinnedBar(layout: PageLayout) {
-  const bar = useRef<HTMLElement>(null)
-  const marker = useRef<HTMLSpanElement>(null)
-  useEffect(() => {
-    const element = bar.current
-    const start = marker.current
-    if (!element || !start) return
-    if (typeof IntersectionObserver === "undefined") {
-      element.setAttribute("data-stuck", "")
-      return
-    }
-    const top = parseFloat(getComputedStyle(element).top) || 0
-    const observer = new IntersectionObserver(
-      ([entry]) =>
-        element.toggleAttribute("data-stuck", !entry.isIntersecting && entry.boundingClientRect.top <= top + 1),
-      { rootMargin: `${-(top + 1)}px 0px 0px 0px` },
-    )
-    observer.observe(start)
-    return () => observer.disconnect()
-  }, [layout])
-  return { bar, marker }
-}
 
 export function SkinDirectory() {
   const scope = useWikiContext()
   const text = useWikiText()
   const layout = usePageLayout()
   const columns = useSkinColumns()
-  const pinned = usePinnedBar(layout)
-  const [parameters, setParameters] = useSearchParams()
-  const search = (parameters.get("q") || "").slice(0, 120)
-  const hero = parameters.get("hero") || ""
-  const rarity = parameters.get("rarity") || ""
-  const heroOrder = parameters.get("heroSort")
-  const heroSort: HeroSort = heroOrder === "fewest" || heroOrder === "name" ? heroOrder : "most"
-  const skinSort: SkinSort = parameters.get("skinSort") === "name" ? "name" : "tier"
+  const filters = useSkinFilters()
+  const { search, hero, rarity, heroSort, skinSort, hasFilters } = filters
   const query = useQuery(skinCatalogQuery(scope))
   const [selected, setSelected] = useState<SkinEntry | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -112,8 +73,6 @@ export function SkinDirectory() {
     document.querySelector<HTMLElement>(target)?.focus({ preventScroll: true })
   })
 
-  const activeFilters = (hero ? 1 : 0) + (rarity ? 1 : 0)
-  const hasFilters = !!search || activeFilters > 0
   const count = (value: number) => value.toLocaleString(scope.locale)
   const summary = query.isPending
     ? text("Đang tải trang phục…", "Loading skins…")
@@ -125,19 +84,6 @@ export function SkinDirectory() {
             `${count(skins.length)} skins of ${count(groups.length)} heroes`,
           )
         : `${count(skins.length)} ${text("trang phục", skins.length === 1 ? "skin" : "skins")}`
-
-  function updateFilter(key: FilterKey, value: string) {
-    const next = new URLSearchParams(parameters)
-    if (value) next.set(key, value)
-    else next.delete(key)
-    setParameters(next, { replace: key === "q" })
-  }
-
-  function clearFilters(keys: FilterKey[] = ["q", "hero", "rarity"]) {
-    const next = new URLSearchParams(parameters)
-    for (const key of keys) next.delete(key)
-    setParameters(next)
-  }
 
   /**
    * A control that removes itself by being pressed hands the focus to the filters, which stay. Never to the search
@@ -174,129 +120,7 @@ export function SkinDirectory() {
     }
   }
 
-  const heroSorts = [
-    ["most", text("Nhiều trang phục nhất", "Most skins")],
-    ["fewest", text("Ít trang phục nhất", "Fewest skins")],
-    ["name", text("Tên tướng A–Z", "Hero name A–Z")],
-  ] as const
-  const skinSorts = [
-    ["tier", text("Bậc cao nhất trước", "Highest tier first")],
-    ["name", text("Tên trang phục A–Z", "Skin name A–Z")],
-  ] as const
-  const heroSortLabel = text("Thứ tự tướng", "Hero order")
-  const skinSortLabel = text("Trang phục của mỗi tướng", "Each hero's skins")
-
-  const searchField = <SkinSearch value={search} onChange={(value) => updateFilter("q", value)} />
-  const heroLabel = text("Tướng", "Hero")
-  const tierLabel = text("Bậc", "Tier")
-  const heroFilter = (named: boolean) => (
-    <FilterSelect
-      label={heroLabel}
-      allLabel={text("Tất cả tướng", "All heroes")}
-      named={named}
-      kind="hero"
-      value={hero}
-      options={query.data?.heroes ?? []}
-      onChange={(value) => updateFilter("hero", value)}
-    />
-  )
-  const tierFilter = (named: boolean) => (
-    <FilterSelect
-      label={tierLabel}
-      allLabel={text("Tất cả bậc", "All tiers")}
-      named={named}
-      kind="badge"
-      value={rarity}
-      options={rarities}
-      onChange={(value) => updateFilter("rarity", value)}
-    />
-  )
-  const chips: { key: FilterKey; kind: FilterKind; option?: FilterOption; value: string }[] = []
-  if (hero) {
-    const option = query.data?.heroes.find((entry) => entry.code === hero)
-    chips.push({ key: "hero", kind: "hero", option, value: hero })
-  }
-  if (rarity) {
-    const option = rarities.find((entry) => entry.code === rarity)
-    chips.push({ key: "rarity", kind: "badge", option, value: rarity })
-  }
-
-  let content: ReactNode
-  if (query.isPending) content = <SkinGridSkeleton />
-  else if (query.isError && !query.data)
-    content = (
-      <div className="wiki-skin-state" role="status">
-        <h2>{text("Chưa tải được trang phục", "Skins could not be loaded")}</h2>
-        <p>{text("Vui lòng kiểm tra kết nối và thử lại.", "Check your connection and try again.")}</p>
-        <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
-          {wikiText(scope.locale, "Thử lại", "Retry")}
-        </button>
-      </div>
-    )
-  else if (!groups.length)
-    content = (
-      <div className="wiki-skin-state" role="status">
-        <h2>
-          {hasFilters
-            ? text("Không tìm thấy trang phục phù hợp", "No matching skins")
-            : text("Chưa có trang phục tại mốc này", "No skins for this scope")}
-        </h2>
-        <p>
-          {hasFilters
-            ? text("Thử tên khác hoặc bỏ bớt điều kiện lọc.", "Try another name or fewer filters.")
-            : text("Các trang phục đã công bố sẽ xuất hiện tại đây.", "Published skins will appear here.")}
-        </p>
-        {hasFilters && (
-          <button
-            type="button"
-            onClick={() => {
-              focusFilters()
-              clearFilters()
-            }}
-          >
-            {text("Xóa bộ lọc", "Clear filters")}
-          </button>
-        )}
-      </div>
-    )
-  else if (mixed)
-    content = (
-      <section className="wiki-skin-grid" aria-label={text("Trang phục phù hợp", "Matching skins")}>
-        {skins.slice(0, reveal.count).map((skin) => (
-          <SkinCard key={skinId(skin)} skin={skin} showHero onOpen={open} />
-        ))}
-      </section>
-    )
-  else
-    content = (
-      <div className="wiki-skin-groups">
-        {groups.slice(0, reveal.count).map((group) => {
-          const heroId = group[0].heroId
-          const rowId = CSS.escape(`skin-row-${heroId}`)
-          return (
-            <HeroSkinGroup
-              key={`${heroId}:${skinSort}`}
-              skins={group}
-              layout={layout}
-              columns={columns}
-              whole={groups.length === 1}
-              counted={groups.length > 1 || (layout === "compact" && !hasFilters)}
-              expanded={expanded.has(heroId)}
-              onExpand={() => {
-                focusNext.current = `[data-skin-card="${CSS.escape(skinId(group[columns - 1]))}"]`
-                setFolded(heroId, false)
-              }}
-              onCollapse={() => {
-                focusNext.current = `#${rowId} > .wiki-skin-more`
-                setFolded(heroId, true)
-              }}
-              onOpen={open}
-            />
-          )
-        })}
-      </div>
-    )
-
+  const heroes = query.data?.heroes ?? []
   return (
     <div
       className="wiki-skin-directory"
@@ -315,167 +139,23 @@ export function SkinDirectory() {
           </div>
         }
       />
-      <span ref={pinned.marker} className="wiki-skin-toolbar-marker" aria-hidden="true" />
-      {layout === "compact" ? (
-        <section
-          ref={pinned.bar}
-          className="wiki-skin-toolbar wiki-skin-toolbar-compact"
-          aria-label={text("Bộ lọc trang phục", "Skin filters")}
-        >
-          {searchField}
-          <PublicFilterSheet
-            title={text("Lọc và sắp xếp", "Filter and sort")}
-            triggerLabel={text("Lọc", "Filter")}
-            count={activeFilters}
-            resetLabel={text("Xóa lọc", "Clear")}
-            onReset={() => clearFilters(["hero", "rarity"])}
-            resultLabel={text(
-              `Xem ${count(skins.length)} trang phục`,
-              `Show ${count(skins.length)} ${skins.length === 1 ? "skin" : "skins"}`,
-            )}
-          >
-            <div className="wiki-skin-sheet">
-              <div className="wiki-skin-sheet-field">
-                <span>{heroLabel}</span>
-                {heroFilter(true)}
-              </div>
-              <div className="wiki-skin-sheet-field">
-                <span>{tierLabel}</span>
-                {tierFilter(true)}
-              </div>
-              <div className="wiki-skin-sheet-field" role="group" aria-labelledby="skin-sheet-hero-sort">
-                <span id="skin-sheet-hero-sort">{heroSortLabel}</span>
-                <div className="wiki-skin-sheet-choices" data-count={heroSorts.length}>
-                  {heroSorts.map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-pressed={heroSort === value}
-                      onClick={() => updateFilter("heroSort", value === "most" ? "" : value)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="wiki-skin-sheet-field" role="group" aria-labelledby="skin-sheet-skin-sort">
-                <span id="skin-sheet-skin-sort">{skinSortLabel}</span>
-                <div className="wiki-skin-sheet-choices" data-count={skinSorts.length}>
-                  {skinSorts.map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      aria-pressed={skinSort === value}
-                      onClick={() => updateFilter("skinSort", value === "tier" ? "" : value)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </PublicFilterSheet>
-        </section>
-      ) : (
-        <section ref={pinned.bar} className="wiki-skin-toolbar" aria-label={text("Bộ lọc trang phục", "Skin filters")}>
-          {searchField}
-          {heroFilter(false)}
-          {tierFilter(false)}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="wiki-skin-sort"
-                data-active={heroSort !== "most" || skinSort !== "tier" || undefined}
-                aria-label={text("Sắp xếp trang phục", "Sort skins")}
-              >
-                <SkinIcon name="sort" size={16} />
-                {text("Sắp xếp", "Sort")}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="start"
-              drawerTitle={text("Sắp xếp trang phục", "Sort skins")}
-              className="wiki-skin-sort-menu"
-            >
-              <div role="radiogroup" aria-labelledby="skin-sort-heroes">
-                <p id="skin-sort-heroes">{heroSortLabel}</p>
-                {heroSorts.map(([value, label]) => (
-                  <label key={value}>
-                    <input
-                      type="radio"
-                      name="hero-sort"
-                      checked={heroSort === value}
-                      onChange={() => updateFilter("heroSort", value === "most" ? "" : value)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-              <div role="radiogroup" aria-labelledby="skin-sort-skins">
-                <p id="skin-sort-skins">{skinSortLabel}</p>
-                {skinSorts.map(([value, label]) => (
-                  <label key={value}>
-                    <input
-                      type="radio"
-                      name="skin-sort"
-                      checked={skinSort === value}
-                      onChange={() => updateFilter("skinSort", value === "tier" ? "" : value)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-          {activeFilters + (search ? 1 : 0) > 1 && (
-            <button
-              type="button"
-              className="wiki-skin-clear"
-              onClick={() => {
-                focusFilters()
-                clearFilters()
-              }}
-            >
-              <SkinIcon name="close" size={14} />
-              {text("Xóa lọc", "Clear filters")}
-            </button>
-          )}
-        </section>
-      )}
+      <SkinToolbar
+        layout={layout}
+        filters={filters}
+        heroes={heroes}
+        rarities={rarities}
+        skinCount={skins.length}
+        onFiltersCleared={focusFilters}
+      />
       {layout === "compact" && (
-        <div className="wiki-skin-status">
-          {/* What the sheet's filters are set to and how much they leave; the whole library needs no count here. */}
-          {hasFilters && !!query.data && (
-            <div className="wiki-skin-result">
-              {chips.map((chip) => {
-                const name = chip.option?.name ?? chip.value
-                return (
-                  <button
-                    key={chip.key}
-                    type="button"
-                    className="wiki-skin-chip"
-                    aria-label={`${text("Bỏ lọc", "Clear the filter")}: ${name}`}
-                    onClick={() => {
-                      focusFilters()
-                      updateFilter(chip.key, "")
-                    }}
-                  >
-                    <FilterArt kind={chip.kind} image={chip.option?.image} />
-                    <span>{name}</span>
-                    <SkinIcon name="close" size={14} />
-                  </button>
-                )
-              })}
-              <span role="status" aria-live="polite">
-                {summary}
-              </span>
-            </div>
-          )}
-          <div className="wiki-skin-version">
-            <WikiVersionPicker />
-          </div>
-        </div>
+        <SkinFilterStatus
+          filters={filters}
+          heroes={heroes}
+          rarities={rarities}
+          summary={summary}
+          ready={!!query.data}
+          onFiltersCleared={focusFilters}
+        />
       )}
 
       {query.isError && !!query.data && (
@@ -486,7 +166,27 @@ export function SkinDirectory() {
           </button>
         </div>
       )}
-      {content}
+      <SkinResults
+        state={query.isPending ? "loading" : query.isError && !query.data ? "error" : "ready"}
+        groups={groups}
+        skins={skins}
+        mixed={mixed}
+        revealed={reveal.count}
+        layout={layout}
+        columns={columns}
+        skinSort={skinSort}
+        hasFilters={hasFilters}
+        expanded={expanded}
+        focusNext={focusNext}
+        retrying={query.isFetching}
+        onRetry={() => void query.refetch()}
+        onClearFilters={() => {
+          focusFilters()
+          filters.clear()
+        }}
+        onFold={setFolded}
+        onOpen={open}
+      />
       {!query.isPending && groups.length > 0 && (
         <InfiniteScroll query={loader} label={text("Đang tải thêm trang phục…", "Loading more skins…")} />
       )}

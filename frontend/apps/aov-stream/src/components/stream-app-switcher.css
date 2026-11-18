@@ -1,9 +1,3 @@
-.hub-brand-group {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 4px;
-}
 @media (max-width: 899.98px) {
   .hub-brand-group .public-app-wordmark {
     font-size: 18px;
