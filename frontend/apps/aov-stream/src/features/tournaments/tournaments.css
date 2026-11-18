@@ -202,17 +202,6 @@ a.tn-match:focus-visible {
   font-size: 12px;
   font-weight: 600;
 }
-/* A state among them is a fact like the others, unless it is on now: deepened so white text reads in both themes. */
-.hub-banner-stats > .hub-status {
-  background: rgb(255 255 255 / 14%);
-  color: #fff;
-}
-.hub-banner-stats > .hub-status[data-status="ONGOING"] {
-  background: color-mix(in srgb, var(--hub-success) 72%, black);
-}
-.hub-banner-stats > .hub-status[data-status="LIVE"] {
-  background: color-mix(in srgb, var(--hub-red) 76%, black);
-}
 
 /* ---------- Home: the row of matches above the feed ---------- */
 .tn-strip {

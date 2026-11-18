@@ -121,7 +121,7 @@ export function PublicCompetitionPage() {
             </span>
             <h1>{tournament.name}</h1>
             <div className="hub-banner-stats">
-              <StatusBadge status={status} />
+              <StatusBadge status={status} tone="banner" />
               <span>
                 <StreamIcon name="calendar" size={14} />
                 {dayRange(tournament.startsOn, tournament.endsOn)}

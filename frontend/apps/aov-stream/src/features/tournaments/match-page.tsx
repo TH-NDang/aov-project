@@ -142,12 +142,14 @@ export function MatchPage() {
           <>
             <MatchHead tint={head.tint} kicker={head.kicker} teams={head.teams}>
               {status ? (
-                <span className="hub-status" data-status={status}>
+                <span className="hub-status" data-status={status} data-tone="banner">
                   {text(matchStateLabels[status][0], matchStateLabels[status][1])}
                 </span>
               ) : (
                 head.teams.some((team) => team.won) && (
-                  <span className="hub-status">{text(...matchStateLabels.FINISHED)}</span>
+                  <span className="hub-status" data-tone="banner">
+                    {text(...matchStateLabels.FINISHED)}
+                  </span>
                 )
               )}
               {scheduledAt && (

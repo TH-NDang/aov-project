@@ -28,7 +28,6 @@ export const knownRestyles = [
   "features/tournaments/competition-pages.css .competition-filters",
   "features/tournaments/competition-pages.css .hub-banner-stats",
   "features/tournaments/competition-pages.css .hub-kicker",
-  "features/tournaments/competition-pages.css .hub-status",
   "features/tournaments/competition-pages.css .tn-logo",
   "features/tournaments/competition-pages.css .tn-match",
   "features/tournaments/competition.css .hub-banner-stats",
@@ -45,5 +44,4 @@ export const knownRestyles = [
   "features/tournaments/games.css .stream-search",
   "features/tournaments/games.css .tn-page-head",
   "features/tournaments/tournaments.css .hub-skeleton",
-  "features/tournaments/tournaments.css .hub-status",
 ]

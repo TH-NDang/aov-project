@@ -639,6 +639,23 @@ button:disabled {
   background: var(--aov-warning-soft);
   color: var(--aov-warning);
 }
+/* On a banner's art a state is a fact like the others, unless it is on now: deepened so white text reads in both themes. */
+.hub-status[data-tone="banner"] {
+  background: rgb(255 255 255 / 14%);
+  color: #fff;
+}
+.hub-status[data-tone="banner"][data-status="ONGOING"] {
+  background: color-mix(in srgb, var(--hub-success) 72%, black);
+}
+.hub-status[data-tone="banner"][data-status="LIVE"] {
+  background: color-mix(in srgb, var(--hub-red) 76%, black);
+}
+/* In a card's first line, beside the circuit's name. */
+.hub-status[data-size="small"] {
+  height: 22px;
+  flex: none;
+  padding: 0 8px;
+}
 .hub-skeleton-rows,
 .hub-skeleton {
   border-radius: var(--hub-radius-sm);

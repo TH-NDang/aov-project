@@ -86,11 +86,6 @@
   align-items: center;
   gap: 8px;
 }
-.tn-feature-line > .hub-status {
-  height: 22px;
-  flex: none;
-  padding: 0 8px;
-}
 .tn-feature-line > .hub-kicker {
   min-width: 0;
   overflow: hidden;
