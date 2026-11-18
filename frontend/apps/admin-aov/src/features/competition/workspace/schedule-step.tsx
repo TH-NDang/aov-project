@@ -28,9 +28,11 @@ import { competitionApi } from "../competition-api"
 import { MatchPanel } from "./match-panel"
 import {
   defaultGroupMode,
+  extraMatch,
   groupMatches,
   hasScore,
   isLeagueStage,
+  matchLabel,
   restingTeams,
   seedsFromStandings,
   slotText,
@@ -235,7 +237,7 @@ function BracketStage({ ws, stage, matches }: { ws: Workspace; stage: Competitio
       </Panel>
       {view === "bracket" && chosen && (
         <Panel
-          title={chosen.label || chosen.key}
+          title={matchLabel(chosen)}
           meta={`${sideName(ws, chosen, "a")} gặp ${sideName(ws, chosen, "b")} · BO${chosen.bestOf}`}
           action={<ScoreChip ws={ws} match={chosen} />}
           className="border-primary/60"
@@ -689,20 +691,7 @@ function ScheduleSetup({ ws, stage }: { ws: Workspace; stage: CompetitionStage }
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
-              ws.change("matches", [
-                ...ws.plan.matches,
-                {
-                  key: `M_${randomId().slice(0, 8)}`,
-                  stageCode: stage.code,
-                  round: 1,
-                  label: "Trận bổ sung",
-                  bestOf: stage.bestOf,
-                  a: { type: "TBD", label: "Đội A" },
-                  b: { type: "TBD", label: "Đội B" },
-                },
-              ])
-            }
+            onClick={() => ws.change("matches", [...ws.plan.matches, extraMatch(stage, `M_${randomId().slice(0, 8)}`)])}
           >
             <Plus aria-hidden /> Thêm trận thủ công
           </Button>
@@ -726,7 +715,8 @@ function ScheduleSetup({ ws, stage }: { ws: Workspace; stage: CompetitionStage }
             <div className="max-h-64 space-y-1 overflow-auto">
               {preview.map((match) => (
                 <p className="type-body" key={match.key}>
-                  {match.label} · {slotText(match.a, ws.plan, ws.teams)} – {slotText(match.b, ws.plan, ws.teams)} · BO
+                  {matchLabel(match)} · {slotText(match.a, ws.plan, ws.teams)} – {slotText(match.b, ws.plan, ws.teams)}{" "}
+                  · BO
                   {match.bestOf}
                 </p>
               ))}

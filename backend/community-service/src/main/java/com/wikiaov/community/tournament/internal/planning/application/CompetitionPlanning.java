@@ -113,11 +113,12 @@ public class CompetitionPlanning {
             var value = current.content();
             if (!Objects.equals(value.scheduledAt(), match.scheduledAt())
                     || !Objects.equals(value.name(), match.label())
+                    || !Objects.equals(value.title(), match.title())
                     || !Objects.equals(value.stage(), match.stageCode())) {
                 series.update(current.id(), current.version(),
                         new Series(value.code(), id, match.label(), match.stageCode(), value.teamAId(), value.teamBId(),
                                 value.bestOf(), match.scheduledAt(), value.sourceUrl(), value.note(), value.result(),
-                                value.repeatPicksAllowed()),
+                                value.repeatPicksAllowed(), match.title()),
                         actor.key());
             }
         }
@@ -149,7 +150,7 @@ public class CompetitionPlanning {
             if (match.seriesId() == null && resolved.teamAId() != null && resolved.teamBId() != null) {
                 var created = series.create(new Series("match-" + UUID.randomUUID(), id, match.label(),
                         match.stageCode(), resolved.teamAId(), resolved.teamBId(), match.bestOf(), match.scheduledAt(),
-                        row.getContent().sourceUrl(), "", null), actor.key());
+                        row.getContent().sourceUrl(), "", null, false, match.title()), actor.key());
                 match = match.linked(created.id());
             }
             matches.add(match);

@@ -24,9 +24,17 @@ export type ProfileHistory = {
   role?: string | null
   sourceUrl?: string | null
 }
+/**
+ * A result of a team or player. `placement` is the wording, shown as written; the rank is stored beside it: `place` is
+ * the final place (1 is the title), `placeTo` the last place of a shared standing (8 for "5-8"), and `award` marks an
+ * individual award, which has no place. Older records have none of the three; `achievementRank` then reads the wording.
+ */
 export type ProfileAchievement = {
   title: string
   placement: string
+  place?: number | null
+  placeTo?: number | null
+  award?: boolean | null
   date?: string | null
   tournamentId?: string | null
   sourceUrl?: string | null
@@ -146,7 +154,29 @@ export type CommunityComment = {
   createdAt: string
   own: boolean
 }
-export type CommunityNotification = { id: string; pageId: string; message: string; createdAt: string; read: boolean }
+/** What a notification tells its reader; the app words it in the reader's language. See spec 04, notifications. */
+export type NotificationKind =
+  | "PAGE_POST_PUBLISHED"
+  | "PAGE_LIVE_STARTED"
+  | "POST_COMMENTED"
+  | "REPORT_RESOLVED"
+  | "PAGE_CLAIM_APPROVED"
+  | "PAGE_CLAIM_REJECTED"
+  | "PAGE_OWNERSHIP_RECEIVED"
+  | "PAGE_MEMBERSHIP_REVOKED"
+/**
+ * An inbox line. `kind` and its `parameters` (`pageName`, plus `title` for a broadcast) say what happened; a line sent
+ * before kinds existed has no kind and keeps the sentence it was stored with in `message`.
+ */
+export type CommunityNotification = {
+  id: string
+  pageId: string
+  kind?: NotificationKind | null
+  parameters?: Record<string, string>
+  message?: string | null
+  createdAt: string
+  read: boolean
+}
 export type CommunityReport = {
   id: string
   pageId: string

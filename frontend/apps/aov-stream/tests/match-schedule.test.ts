@@ -230,6 +230,22 @@ test("an open slot says how it will be filled, by the round of the match that fe
   ])
 })
 
+test("an open slot fed by a titled match names that match in the reader's language", () => {
+  const list = entries([
+    planned("upper-final", { label: null, title: { kind: "UPPER_FINAL" } }),
+    planned("grand-final", {
+      label: null,
+      title: { kind: "GRAND_FINAL" },
+      a: { type: "WINNER", matchKey: "upper-final" },
+    }),
+  ])
+  const final = list.find((entry) => entry.match.key === "grand-final")!
+
+  assert.equal(matchSides(final, "en-US")[0].name, "Winner of Upper bracket final")
+  assert.equal(matchSides(final, "vi-VN")[0].name, "Thắng Chung kết nhánh thắng")
+  assert.equal(matchRound(final, "en-US"), "Grand final")
+})
+
 test("a match is named by its round, or by its stage when the label only repeats the pairing", () => {
   const [labelled, plain, stray] = entries([
     planned("a", { label: "Playoffs · Chung kết tổng" }),

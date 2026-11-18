@@ -3,6 +3,7 @@ package com.wikiaov.community.community.internal.domain;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public record PageContent(
         String name,
@@ -67,12 +68,21 @@ public record PageContent(
     ) {
     }
 
+    /**
+     * A result of a team or player. {@code placement} is the wording shown as written; the rank is stored apart from it:
+     * {@code place} is the final place (1 is the title) and {@code placeTo} the last place of a shared standing (5 to 8
+     * for "5-8"), while {@code award} marks an individual award, which has no place. Records written before ranks have
+     * none of the three, and readers then read the wording.
+     */
     public record Achievement(
             String title,
             String placement,
             LocalDate date,
             UUID tournamentId,
-            String sourceUrl
+            String sourceUrl,
+            @Nullable Integer place,
+            @Nullable Integer placeTo,
+            @Nullable Boolean award
     ) {
     }
 

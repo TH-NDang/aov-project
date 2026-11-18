@@ -71,6 +71,36 @@ Bước "Công bố" tách mục bắt buộc (nguồn kiểm chứng, ít nhấ
 nếu có liên kết) khỏi mục nên bổ sung (đội hình, lịch, giờ đấu, kết quả khớp suất, kết quả đủ, thứ hạng chung
 cuộc). Mục nên bổ sung không chặn công bố.
 
+### Tên trận theo mã (18/11/2026)
+
+Người dùng chọn cách này ngày 18/11/2026 để tên trận do lịch tự động sinh ra hiển thị đúng ngôn ngữ người đọc. Trận
+trong kế hoạch và loạt trận có thêm `title` {kind, leg, round, number}: mã cho biết trận là gì trong giai đoạn, kèm các
+số cần thiết. Ứng dụng đọc (Admin, Stream) viết tên từ `title` bằng ngôn ngữ người đọc, không đọc chữ để quyết định
+hiển thị. `label` của trận và `name` của loạt trận là tên biên tập viên tự đặt, không bắt buộc; khi có thì hiển thị thay
+cho `title`. Đổi tên không bỏ `title`, xóa tên thì trận lại hiển thị theo `title`.
+
+| kind | Số | Tiếng Việt | Tiếng Anh |
+|---|---|---|---|
+| ROUND_ROBIN | `leg`, `round` | Lượt 1 · Vòng 2 | Leg 1 · Round 2 |
+| UPPER_SEMIFINAL | `number` | Bán kết nhánh thắng 1 | Upper bracket semifinal 1 |
+| UPPER_FINAL | — | Chung kết nhánh thắng | Upper bracket final |
+| LOWER_ROUND | `round`, `number` | Vòng 1 nhánh thua · 2 | Lower bracket round 1 · 2 |
+| LOWER_SEMIFINAL | — | Bán kết nhánh thua | Lower bracket semifinal |
+| LOWER_FINAL | — | Chung kết nhánh thua | Lower bracket final |
+| GRAND_FINAL | — | Chung kết tổng | Grand final |
+| EXTRA | — | Trận bổ sung | Additional match |
+
+- Lịch tạo tự động (vòng tròn, mẫu playoffs AOG) chỉ có `title`, không có `label`. Trận Admin thêm thủ công có `title`
+  EXTRA.
+- `title` phải có `kind`; `leg`, `round`, `number` nếu có thì từ 1 đến 99. Sai trả 400 `TOURNAMENT_INVALID_CONTENT`, ở
+  kế hoạch lẫn ở loạt trận.
+- Lưu kế hoạch đồng bộ `label` sang `name` và `title` sang `title` của loạt trận đã liên kết; materialize tạo loạt trận
+  có cả hai.
+- Suất TBD không còn bắt buộc nhãn. Suất chưa có nhãn được ứng dụng viết là "Chưa xác định" / "TBD"; Admin không ghi
+  sẵn "Đội A", "Đội B" nữa.
+- Snapshot công bố, lịch sử kế hoạch và snapshot ván đã chụp trước đây không có `title`; ứng dụng hiển thị tên đã lưu
+  trong đó cho tới lần công bố sau.
+
 ## Page và quyền đại diện
 
 ### Tham chiếu hồ sơ (03/11/2026)
@@ -130,6 +160,18 @@ không có trường này được coi là không chính thức. History/roster 
 UUID mùa giải. Bản nháp riêng bản xuất bản; công bố cần ít nhất một nguồn. Đại diện có lớp trình bày
 riêng (giới thiệu, ảnh, liên kết), không được sửa thành tích, lịch sử, đội hình hay kết quả biên tập.
 
+Thứ hạng của thành tích (18/11/2026): `placement` là chữ hiển thị đúng như biên tập viên viết ("Vô địch", "Champion",
+"MVP"). Thứ hạng lưu riêng bằng số, cùng cách ghi hạng với `placements` của giải: `place` là hạng chung cuộc (1 là vô
+địch, 2 là á quân), `placeTo` là hạng cuối của một hạng đồng hạng ("5-8" là `place` 5, `placeTo` 8); `award: true` đánh
+dấu giải thưởng cá nhân (MVP, tuyển thủ xuất sắc), không có hạng. `place` từ 1 đến 999; `placeTo` chỉ có khi có `place`,
+lớn hơn `place` và tối đa 999; giải thưởng cá nhân không có `place`. Sai trả 422 PAGE_INVALID_CONTENT.
+
+Stream chọn dấu của mỗi giải (cúp cho vô địch, số hạng, dấu giải thưởng) theo hạng tốt nhất đã lưu. Thành tích cũ chưa có
+thứ hạng được đọc từ chữ bằng một hàm dùng chung của `@aov/community-contracts`, hiểu cả tiếng Việt và tiếng Anh ("Vô
+địch", "Champion", "1st", "Á quân", "Runner-up", "Hạng 3", "3rd", "Hạng 5-8", "5th–8th", "Top 8" là hạng 5–8); chữ
+không đọc được coi là giải thưởng như trước. Admin chọn thứ hạng trong form thành tích. Người đại diện không sửa thành
+tích nên Stream không có ô nhập.
+
 Nội dung giao diện phân theo loại hồ sơ: ORGANIZATION có giới thiệu, lịch sử hoạt động và giải đấu tổ chức;
 TEAM có đội hình/ban huấn luyện, lịch sử và thành tích; PLAYER có sự nghiệp và thành tích. Tổ chức không
 hiển thị hoặc cho nhập đội hình/thành tích thi đấu; dữ liệu cũ vẫn giữ nguyên khi lưu các mục khác.
@@ -154,6 +196,24 @@ Người thường viết bằng danh tính cá nhân, theo dõi, bình luận, 
 sửa bài. Tác giả sửa bài cá nhân, người có quyền viết page sửa bài page. Bài đã kiểm duyệt không được
 tự xuất bản lại. Bản nháp cá nhân không hiển thị cho người khác. Thông báo nội bộ cho bài page mới,
 bình luận, xử lý yêu cầu và thay đổi quyền; không gửi email. Quyền page không cấp quyền quản trị giải.
+
+Nội dung thông báo (18/11/2026): backend không lưu câu chữ của thông báo. Mỗi thông báo lưu `kind` và `parameters`;
+ứng dụng của người đọc viết câu bằng ngôn ngữ người đọc chọn (Stream có tiếng Việt và tiếng Anh) và không đọc câu chữ để
+quyết định hiển thị.
+
+| kind | Khi nào | parameters |
+|---|---|---|
+| PAGE_POST_PUBLISHED | Page đang theo dõi đăng bài với tư cách page | `pageName` |
+| PAGE_LIVE_STARTED | Page đang theo dõi bắt đầu phát trực tiếp | `pageName`, `title` |
+| POST_COMMENTED | Người khác bình luận bài của mình | — |
+| REPORT_RESOLVED | Báo cáo của mình đã được xử lý | — |
+| PAGE_CLAIM_APPROVED, PAGE_CLAIM_REJECTED | Yêu cầu quản lý trang được chấp thuận / không được chấp thuận | — |
+| PAGE_OWNERSHIP_RECEIVED | Nhận quyền OWNER bằng mã bàn giao hoặc được chuyển owner | — |
+| PAGE_MEMBERSHIP_REVOKED | Bị thu hồi quyền quản lý trang | — |
+
+`pageName` là tên công bố của page lúc gửi, không đổi khi page đổi tên sau đó; `title` là tiêu đề buổi phát. Mỗi loại
+có đúng các tham số trong bảng. Thông báo gửi trước V018 không có `kind` và giữ câu đã lưu trong `message`; ứng dụng
+hiển thị câu đó như trước. Loại mà ứng dụng chưa biết thì hiển thị `message` nếu có, nếu không thì một câu chung.
 
 Thích bài viết (02/11/2026): tài khoản đã đăng nhập thích/bỏ thích bài đã đăng của page công khai, mỗi
 tài khoản tối đa một lượt mỗi bài; gửi lại cùng trạng thái không đổi gì. Bài trả số lượt thích; `liked`
@@ -429,6 +489,17 @@ một dấu xuống dòng; chỉ `CommunityActor` ghép khóa này. V017 đổi 
 (team, player, tournament, series, game, roster_membership, game_publication, competition_plan, plan_revision) sang dạng đó;
 khóa đã đúng dạng giữ nguyên.
 
+V018 phục vụ "Nội dung thông báo": thêm vào `community.notification` cột `kind` (mã loại) và `parameters` (jsonb, mặc
+định `{}`), bỏ ràng buộc bắt buộc của `message` và thêm ràng buộc mỗi dòng có `kind` hoặc `message`. Dòng cũ giữ
+nguyên `message` và không có `kind`; dòng mới không lưu `message`.
+
+V019 phục vụ "Tên trận theo mã", chạy một lần trên dữ liệu đã lưu. Trong bản nháp kế hoạch (`competition_plan.content`),
+nhãn trận trùng đúng một mẫu đã sinh ("Lượt N · Vòng M", "Bán kết nhánh thắng N", "Vòng N nhánh thua · M", "Chung kết
+nhánh thắng", "Bán kết nhánh thua", "Chung kết nhánh thua", "Chung kết tổng", "Trận bổ sung") đổi thành `title` và bỏ
+`label`; nhãn "Đội A", "Đội B" của suất TBD bị bỏ. Loạt trận có `content.name` trùng các mẫu đó cũng đổi thành `title`,
+cột `name` theo đó để trống. Nhãn khác, lịch sử kế hoạch (`plan_revision`), snapshot công bố của giải và snapshot ván
+giữ nguyên.
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
@@ -480,7 +551,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | POST /me/pages/{id}/reports | {postId?,commentId?,reason}; không có postId là góp ý hồ sơ |
 | POST /me/pages/{id}/moderate | {postId,commentId?,hidden} |
 | GET /admin/community-reports; POST /admin/community-reports/{id}/resolve | Hàng chờ; {resolution,hide} |
-| GET /me/notifications; POST /me/notifications/{id}/read | Hộp thông báo riêng; đánh dấu đọc |
+| GET /me/notifications; POST /me/notifications/{id}/read | Hộp thông báo riêng, mỗi dòng {id,pageId,kind,parameters,message?,createdAt,read} (xem "Nội dung thông báo"); đánh dấu đọc |
 | GET /me/notifications/unread; POST /me/notifications/read-all | {unread} số chưa đọc / đánh dấu tất cả đã đọc |
 | GET /competitions?teamId=&playerId=&organizerPageId=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức |
 | GET /competitions/{id} | Snapshot giải |

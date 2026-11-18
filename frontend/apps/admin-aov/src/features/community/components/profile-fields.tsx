@@ -1,10 +1,16 @@
 import { BookOpenText, History, Info, Plus, Trophy } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Textarea } from "@aov/ui/components/textarea"
-import { isIndividualProfile, type ProfileContent, type ProfileKind } from "@aov/community-contracts"
+import {
+  isIndividualProfile,
+  type ProfileAchievement,
+  type ProfileContent,
+  type ProfileKind,
+} from "@aov/community-contracts"
 import { ProfilePicker, TournamentPicker } from "./profile-pickers"
 import { ProfileCountryPicker } from "./profile-country-picker"
 import { ProfilePersonRoles } from "./profile-person-roles"
+import { ProfileAchievementRank } from "./profile-achievement-rank"
 
 import { Field, Section, CompactEntry } from "./profile-form-primitives"
 import { ProfileRoster } from "./profile-roster"
@@ -174,6 +180,11 @@ export function ProfileFields({
                 "achievements",
                 content.achievements.map((row, i) => (i === index ? { ...row, [key]: value || null } : row)),
               )
+            const rank = (value: Pick<ProfileAchievement, "place" | "placeTo" | "award">) =>
+              set(
+                "achievements",
+                content.achievements.map((row, i) => (i === index ? { ...row, ...value } : row)),
+              )
             return (
               <CompactEntry
                 key={index}
@@ -198,6 +209,7 @@ export function ProfileFields({
                     value={item.placement}
                     onChange={(e) => update("placement", e.target.value)}
                   />
+                  <ProfileAchievementRank value={item} onChange={rank} />
                   <TournamentPicker
                     value={item.tournamentId}
                     context={tournamentContext}

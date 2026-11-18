@@ -119,6 +119,13 @@ test("a match stops counting as on now three hours after its start", () => {
   assert.equal(matchStrip(entries(match), NOW - 1).length, 1)
 })
 
+test("a match without a name reads its title in the reader's language", () => {
+  const match = planned("m", { label: null, title: { kind: "ROUND_ROBIN", leg: 2, round: 4 } })
+
+  assert.equal(matchRoundLabel(match, { name: "Vòng bảng" }, "vi-VN"), "Lượt 2 · Vòng 4")
+  assert.equal(matchRoundLabel(match, { name: "Vòng bảng" }, "en-US"), "Leg 2 · Round 4")
+})
+
 test("a round label drops the pairing and the stage name that the row already shows", () => {
   const label = (text: string, stage?: string) =>
     matchRoundLabel(planned("m", { label: text }), stage ? { name: stage } : null)

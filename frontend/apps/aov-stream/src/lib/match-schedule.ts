@@ -121,6 +121,7 @@ function slotName(entry: CompetitionMatch, slot: CompetitionSlot, english: boole
       (matchRoundLabel(
         source,
         stages.find((stage) => stage.code === source.stageCode),
+        english ? "en-US" : "vi-VN",
       ) ??
         source.label)
     const outcome = slot.type === "WINNER" ? (english ? "Winner of" : "Thắng") : english ? "Loser of" : "Thua"
@@ -156,10 +157,10 @@ export function matchSides(entry: CompetitionMatch, locale = "vi-VN"): [MatchSid
   return [side("a"), side("b")]
 }
 
-/** What a match says about its round: the label worth showing, or the name of its stage. */
-export function matchRound(entry: CompetitionMatch) {
+/** What a match says about its round, in `locale`: the label worth showing, or the name of its stage. */
+export function matchRound(entry: CompetitionMatch, locale = "vi-VN") {
   const stage = entry.competition.content.plan.stages.find((item) => item.code === entry.match.stageCode)
-  return matchRoundLabel(entry.match, stage) ?? stage?.name ?? null
+  return matchRoundLabel(entry.match, stage, locale) ?? stage?.name ?? null
 }
 
 /** Everything a reader may type to find a match: both teams, the competition and who runs it. */

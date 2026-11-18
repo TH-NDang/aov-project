@@ -55,6 +55,7 @@ import { VodPlayer, type VodPlayerHandle } from "../components/game/vod-player"
 import { BroadcastTimeline, type TimelineRow } from "../components/series/broadcast-timeline"
 import { broadcastChapters, type RetimeTarget } from "../model/broadcast-timeline"
 import { seriesWinner } from "../model/competition"
+import { seriesLabel } from "../model/series-label"
 import { buildGameView, referenceIndex, type GameView, type TeamView } from "../model/game-view"
 import { stageInfo } from "../model/labels"
 import { RelativeDate } from "../components/relative-date"
@@ -211,7 +212,7 @@ function MatchView({ access }: { access: Access }) {
         items={[
           { label: "Giải đấu", to: "/tournaments" },
           { label: view.tournament.content.name, to: tournamentPath(tournamentId) },
-          { label: record.content.name || stageInfo(record.content.stage).label },
+          { label: seriesLabel(record.content) || stageInfo(record.content.stage).label },
         ]}
       />
       <MatchHeader content={record.content} team={view.team}>
@@ -676,7 +677,7 @@ function MatchViewer({
       ref={player}
       videoId={videoId}
       startAt={at}
-      title={series.content.name || "Video trận đấu"}
+      title={seriesLabel(series.content) || "Video trận đấu"}
       onTime={onVideoTime}
       onDuration={setVideoDuration}
       onPlayingChange={setPlaying}

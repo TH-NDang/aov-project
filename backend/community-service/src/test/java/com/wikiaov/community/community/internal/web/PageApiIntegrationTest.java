@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.community.testsupport.ApiCalls;
 import com.wikiaov.community.testsupport.CommunityApplicationTest;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 @CommunityApplicationTest
 class PageApiIntegrationTest {
@@ -33,6 +36,8 @@ class PageApiIntegrationTest {
     MockMvc mvc;
     @Autowired
     JsonMapper json;
+    @Autowired
+    JdbcTemplate jdbc;
     @MockitoBean
     JwtDecoder decoder;
     static final String ROOT = "/api/community/v1";
@@ -624,6 +629,86 @@ class PageApiIntegrationTest {
         mvc.perform(as(get(ROOT + "/me/notifications"), fan, false)).andExpect(jsonPath("$.totalElements").value(2));
     }
 
+    @Test
+    void notificationsCarryAKindAndItsParametersWhileOlderSentencesStayReadable() throws Exception {
+        String owner = "kind-owner-" + UUID.randomUUID();
+        String fan = "kind-fan-" + UUID.randomUUID();
+        String name = "Kinds " + UUID.randomUUID();
+        String id = ownedOrganization(name, owner);
+        send(post(ROOT + "/me/pages/" + id + "/follow"), fan, false, Map.of("following", true));
+        jdbc.update("""
+                INSERT INTO community.notification(id, actor, page_id, message, created_at)
+                VALUES (?, ?, ?, 'Bài viết của bạn có bình luận mới.', now() - interval '1 day')
+                """, UUID.randomUUID(), ApiCalls.ISSUER + "\n" + fan, UUID.fromString(id));
+
+        var news = send(post(ROOT + "/me/pages/" + id + "/posts"), owner, false,
+                Map.of("body", "Official news", "asPage", true, "publish", true));
+        send(put(ROOT + "/me/pages/" + id + "/live"), owner, false,
+                Map.of("url", "https://www.youtube.com/live/abc", "title", "Week 3"));
+        send(post(ROOT + "/me/posts/" + news.path("id").asText() + "/comments"), fan, false,
+                Map.of("body", "Hello", "asPage", false));
+
+        var heard = send(get(ROOT + "/me/notifications"), fan, false, null).path("items");
+        assertThat(heard).extracting(item -> item.path("kind").isNull() ? null : item.path("kind").asText())
+                .containsExactly("PAGE_LIVE_STARTED", "PAGE_POST_PUBLISHED", null);
+        assertThat(heard.get(0).path("parameters").path("pageName").asText()).isEqualTo(name);
+        assertThat(heard.get(0).path("parameters").path("title").asText()).isEqualTo("Week 3");
+        assertThat(heard.get(0).has("message")).isFalse();
+        assertThat(heard.get(1).path("parameters").path("pageName").asText()).isEqualTo(name);
+        assertThat(heard.get(2).path("message").asText()).isEqualTo("Bài viết của bạn có bình luận mới.");
+        assertThat(heard.get(2).path("parameters").isEmpty()).isTrue();
+        var owned = send(get(ROOT + "/me/notifications"), owner, false, null).path("items");
+        assertThat(owned).extracting(item -> item.path("kind").asText())
+                .containsExactly("POST_COMMENTED", "PAGE_OWNERSHIP_RECEIVED");
+        assertThat(owned.get(0).path("parameters").isEmpty()).isTrue();
+    }
+
+    @Test
+    void achievementsPublishTheirRankBesideTheirWording() throws Exception {
+        var content = new HashMap<String, Object>();
+        content.put("name", "Ranked team");
+        content.put("sources", List.of(Map.of("label", "Source", "url", "https://example.com")));
+        content.put("achievements", List.of(
+                Map.of("title", "Winter 2026", "placement", "Champion", "place", 1),
+                Map.of("title", "Summer 2026", "placement", "Hạng 5-8", "place", 5, "placeTo", 8),
+                Map.of("title", "Winter 2026", "placement", "MVP", "award", true),
+                Map.of("title", "Spring 2026", "placement", "Á quân")));
+        var team = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "TEAM", "code", "ranked-" + UUID.randomUUID(), "content", content));
+        String id = team.path("id").asText();
+        send(post(ROOT + "/admin/pages/" + id + "/publish"), "editor", true,
+                Map.of("version", team.path("version").asLong()));
+
+        var achievements = send(get(ROOT + "/pages/" + id), "reader", false, null).path("content")
+                .path("achievements");
+        assertThat(achievements.get(0).path("place").asInt()).isEqualTo(1);
+        assertThat(achievements.get(0).path("placement").asText()).isEqualTo("Champion");
+        assertThat(achievements.get(1).path("place").asInt()).isEqualTo(5);
+        assertThat(achievements.get(1).path("placeTo").asInt()).isEqualTo(8);
+        assertThat(achievements.get(2).path("award").asBoolean()).isTrue();
+        assertThat(achievements.get(2).path("place").isNull()).isTrue();
+        assertThat(achievements.get(3).path("place").isNull()).isTrue();
+        assertThat(achievements.get(3).path("award").isNull()).isTrue();
+    }
+
+    @Test
+    void achievementRanksThatCannotHappenAreRejected() throws Exception {
+        var impossible = List.<Map<String, Object>>of(
+                Map.of("title", "Cup", "placement", "Zeroth", "place", 0),
+                Map.of("title", "Cup", "placement", "Hạng 5", "place", 5, "placeTo", 5),
+                Map.of("title", "Cup", "placement", "Hạng 5-8", "placeTo", 8),
+                Map.of("title", "Cup", "placement", "MVP", "place", 1, "award", true));
+
+        for (var achievement : impossible) {
+            var content = Map.of("name", "Impossible team", "achievements", List.of(achievement));
+            mvc.perform(as(post(ROOT + "/admin/pages"), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(
+                            Map.of("kind", "TEAM", "code", "impossible-" + UUID.randomUUID(), "content", content))))
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.code").value("PAGE_INVALID_CONTENT"));
+        }
+    }
+
     /** A published organization whose owner received the page through a handover code. */
     private String ownedOrganization(String name, String owner) throws Exception {
         String id = publishedOrganization(name);
@@ -777,6 +862,77 @@ class PageApiIntegrationTest {
         send(post(ROOT + "/admin/competitions/" + id + "/withdraw"), "publisher", true,
                 Map.of("version", again.path("version").asLong()));
         mvc.perform(get(ROOT + "/competitions/" + id)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void generatedMatchesCarryTheirTitleIntoTheirSeriesAndKeepItWhenRenamed() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String a = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "titled-a-" + suffix, "name", "First"))).path("id").asText();
+        String b = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "titled-b-" + suffix, "name", "Second"))).path("id").asText();
+        String id = send(post(ROOT + "/admin/tournaments"), "editor", true,
+                Map.of("content", Map.of("code", "titled-" + suffix, "name", "Titled season", "region", "VN")))
+                .path("id").asText();
+        var content = new HashMap<String, Object>();
+        content.put("sourceUrl", "https://example.com/rules");
+        content.put("entrants", List.of(Map.of("teamId", a), Map.of("teamId", b)));
+        content.put("stages", List.of(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN", "bestOf", 3,
+                "legs", 1, "winPoints", 1, "lossPoints", 0, "advance", 1)));
+
+        var preview = send(post(ROOT + "/admin/competitions/preview"), "editor", true,
+                Map.of("content", content, "stageCode", "GROUP", "opponent", 3));
+        assertThat(preview.get(0).path("label").isNull()).isTrue();
+        assertThat(preview.get(0).path("title").path("kind").asText()).isEqualTo("ROUND_ROBIN");
+        assertThat(preview.get(0).path("title").path("leg").asInt()).isEqualTo(1);
+        assertThat(preview.get(0).path("title").path("round").asInt()).isEqualTo(1);
+        content.put("matches", preview);
+        var saved = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", 0, "content", content));
+        var materialized = send(post(ROOT + "/admin/competitions/" + id + "/materialize"), "editor", true,
+                Map.of("version", saved.path("version").asLong()));
+        var match = materialized.path("content").path("plan").path("matches").get(0);
+        String seriesId = match.path("seriesId").asText();
+        var created = send(get(ROOT + "/admin/series/" + seriesId), "editor", true, null).path("content");
+        assertThat(created.path("name").isNull()).isTrue();
+        assertThat(created.path("title").path("kind").asText()).isEqualTo("ROUND_ROBIN");
+
+        ((ObjectNode) match).put("label", "Opening match");
+        content.put("matches", List.of(match));
+        send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", materialized.path("version").asLong(), "content", content));
+        var named = send(get(ROOT + "/admin/series/" + seriesId), "editor", true, null).path("content");
+        assertThat(named.path("name").asText()).isEqualTo("Opening match");
+        assertThat(named.path("title").path("kind").asText()).isEqualTo("ROUND_ROBIN");
+    }
+
+    @Test
+    void matchTitlesWithoutAKindOrWithNumbersOutOfRangeAreRejected() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        String a = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "untitled-a-" + suffix, "name", "First"))).path("id").asText();
+        String b = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "untitled-b-" + suffix, "name", "Second"))).path("id").asText();
+        String id = send(post(ROOT + "/admin/tournaments"), "editor", true,
+                Map.of("content", Map.of("code", "untitled-" + suffix, "name", "Untitled season", "region", "VN")))
+                .path("id").asText();
+
+        for (var title : List.<Map<String, Object>>of(Map.of("round", 1), Map.of("kind", "LOWER_ROUND", "round", 0),
+                Map.of("kind", "ROUND_ROBIN", "leg", 1, "round", 100))) {
+            var content = new HashMap<String, Object>();
+            content.put("sourceUrl", "https://example.com/rules");
+            content.put("entrants", List.of(Map.of("teamId", a), Map.of("teamId", b)));
+            content.put("stages", List.of(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN",
+                    "bestOf", 3, "legs", 1, "winPoints", 1, "lossPoints", 0, "advance", 1)));
+            content.put("matches", List.of(Map.of("key", "M1", "stageCode", "GROUP", "round", 1, "bestOf", 3,
+                    "a", Map.of("type", "TEAM", "teamId", a), "b", Map.of("type", "TEAM", "teamId", b),
+                    "title", title)));
+            mvc.perform(as(put(ROOT + "/admin/competitions/" + id), "editor", true)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(Map.of("version", 0, "content", content))))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("TOURNAMENT_INVALID_CONTENT"));
+        }
     }
 
     @Test

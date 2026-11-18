@@ -14,7 +14,7 @@ import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /** The match a game belongs to in a few words: both teams and, where the match has one, its round. */
 function matchName(game: PublishedGame, locale: string) {
-  const round = seriesRound(game.series.name)
+  const round = seriesRound(game.series, locale)
   const teams = seriesTeams(game, locale)
     .map((team) => team.shortName)
     .join(" vs ")
@@ -42,7 +42,7 @@ export function TournamentDirectory() {
       foldSearchText(
         [
           game.tournament.name,
-          game.series.name,
+          seriesRound(game.series, languageTag),
           ...Object.values(game.teams).flatMap((team) => [team.name, team.shortName]),
         ]
           .filter(Boolean)

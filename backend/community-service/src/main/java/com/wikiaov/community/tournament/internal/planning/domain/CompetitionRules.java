@@ -1,5 +1,7 @@
 package com.wikiaov.community.tournament.internal.planning.domain;
 
+import com.wikiaov.community.tournament.internal.domain.MatchTitle;
+import com.wikiaov.community.tournament.internal.domain.MatchTitle.Kind;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Entry;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Match;
 import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Slot;
@@ -96,6 +98,10 @@ public final class CompetitionRules {
         var series = new HashSet<UUID>();
         for (var match : plan.matches()) {
             text(match.label(), 300);
+            if (!MatchTitle.valid(match.title())) {
+                throw new IllegalArgumentException("A match title needs a kind and numbers from 1 to "
+                        + MatchTitle.MAX_NUMBER + ".");
+            }
             if (match.key() == null || !match.key().matches("[A-Za-z0-9_-]{1,80}") || previous.contains(match.key())) {
                 throw new IllegalArgumentException("Duplicate or invalid match key.");
             }
@@ -105,7 +111,8 @@ public final class CompetitionRules {
             bestOf(match.bestOf());
             slot(match.a(), teams, previous);
             slot(match.b(), teams, previous);
-            if (Objects.equals(match.a(), match.b())) {
+            // Two open slots are still two sides; any other slot may not face itself.
+            if (!"TBD".equals(match.a().type()) && Objects.equals(match.a(), match.b())) {
                 throw new IllegalArgumentException("A match needs different participant slots.");
             }
             if (match.seriesId() != null && !series.add(match.seriesId())) {
@@ -136,7 +143,8 @@ public final class CompetitionRules {
             case "TEAM" -> slot.teamId() != null && teams.contains(slot.teamId());
             case "SEED" -> slot.seed() != null && slot.seed() > 0 && slot.seed() <= MAX_SEED;
             case "WINNER", "LOSER" -> previous.contains(slot.matchKey());
-            case "TBD" -> slot.label() != null && !slot.label().isBlank();
+            // An open slot may carry the editor's description; without one, readers word it as undecided.
+            case "TBD" -> true;
             default -> false;
         };
         if (!valid) {
@@ -169,9 +177,9 @@ public final class CompetitionRules {
                         right = swap;
                     }
                     int day = leg * rounds + round + 1;
-                    matches.add(new Match(stage.code() + "_" + day + "_" + (pair + 1), stage.code(), day,
-                            "Lượt " + (leg + 1) + " · Vòng " + (round + 1), stage.bestOf(), null, Slot.team(left),
-                            Slot.team(right), null));
+                    matches.add(new Match(stage.code() + "_" + day + "_" + (pair + 1), stage.code(), day, null,
+                            stage.bestOf(), null, Slot.team(left), Slot.team(right), null,
+                            MatchTitle.roundRobin(leg + 1, round + 1)));
                 }
                 rotation.add(1, rotation.removeLast());
             }
@@ -185,24 +193,27 @@ public final class CompetitionRules {
         }
         String prefix = stage.code() + "_";
         return List.of(
-                bracket(prefix + "US1", stage, 1, "Bán kết nhánh thắng 1", Slot.seed(1), Slot.seed(chosenOpponent)),
-                bracket(prefix + "US2", stage, 1, "Bán kết nhánh thắng 2", Slot.seed(2),
+                bracket(prefix + "US1", stage, 1, MatchTitle.numbered(Kind.UPPER_SEMIFINAL, null, 1), Slot.seed(1),
+                        Slot.seed(chosenOpponent)),
+                bracket(prefix + "US2", stage, 1, MatchTitle.numbered(Kind.UPPER_SEMIFINAL, null, 2), Slot.seed(2),
                         Slot.seed(chosenOpponent == 3 ? 4 : 3)),
-                bracket(prefix + "LQ1", stage, 2, "Vòng 1 nhánh thua · 1", Slot.seed(5),
+                bracket(prefix + "LQ1", stage, 2, MatchTitle.numbered(Kind.LOWER_ROUND, 1, 1), Slot.seed(5),
                         Slot.outcome(prefix + "US1", false)),
-                bracket(prefix + "LQ2", stage, 2, "Vòng 1 nhánh thua · 2", Slot.seed(6),
+                bracket(prefix + "LQ2", stage, 2, MatchTitle.numbered(Kind.LOWER_ROUND, 1, 2), Slot.seed(6),
                         Slot.outcome(prefix + "US2", false)),
-                bracket(prefix + "UF", stage, 2, "Chung kết nhánh thắng", Slot.outcome(prefix + "US1", true),
+                bracket(prefix + "UF", stage, 2, MatchTitle.of(Kind.UPPER_FINAL), Slot.outcome(prefix + "US1", true),
                         Slot.outcome(prefix + "US2", true)),
-                bracket(prefix + "LS", stage, 3, "Bán kết nhánh thua", Slot.outcome(prefix + "LQ1", true),
+                bracket(prefix + "LS", stage, 3, MatchTitle.of(Kind.LOWER_SEMIFINAL),
+                        Slot.outcome(prefix + "LQ1", true),
                         Slot.outcome(prefix + "LQ2", true)),
-                bracket(prefix + "LF", stage, 4, "Chung kết nhánh thua", Slot.outcome(prefix + "UF", false),
+                bracket(prefix + "LF", stage, 4, MatchTitle.of(Kind.LOWER_FINAL), Slot.outcome(prefix + "UF", false),
                         Slot.outcome(prefix + "LS", true)),
-                bracket(prefix + "GF", stage, 5, "Chung kết tổng", Slot.outcome(prefix + "UF", true),
+                bracket(prefix + "GF", stage, 5, MatchTitle.of(Kind.GRAND_FINAL), Slot.outcome(prefix + "UF", true),
                         Slot.outcome(prefix + "LF", true)));
     }
 
-    private static Match bracket(String key, Stage stage, int round, String label, Slot a, Slot b) {
-        return new Match(key, stage.code(), round, label, stage.bestOf(), null, a, b, null);
+    /** A generated match carries a title and no name, so each reader words it in its own language. */
+    private static Match bracket(String key, Stage stage, int round, MatchTitle title, Slot a, Slot b) {
+        return new Match(key, stage.code(), round, null, stage.bestOf(), null, a, b, null, title);
     }
 }

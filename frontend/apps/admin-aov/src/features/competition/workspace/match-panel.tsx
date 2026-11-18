@@ -13,7 +13,17 @@ import { youtubeVideoId } from "@/features/esports/model/vod"
 import { matchPath } from "@/features/esports/pages/esports-shell"
 import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 import { RESULT_VERIFICATIONS } from "@/features/tournaments/components/tournament-metadata"
-import { hasScore, hostOf, isWebLink, resultProblem, slotText, zonedInputInstant, zonedInputTime } from "./model"
+import {
+  hasScore,
+  hostOf,
+  isWebLink,
+  matchLabel,
+  matchTitleLabel,
+  resultProblem,
+  slotText,
+  zonedInputInstant,
+  zonedInputTime,
+} from "./model"
 import { BestOfField, SlotEditor, selectClass } from "./plan-fields"
 import type { Workspace } from "./parts"
 
@@ -346,7 +356,7 @@ function PlanForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; o
   const remove = async () => {
     const confirmed = await confirmAction({
       title: "Bỏ trận nháp này?",
-      description: `${match.label || match.key} chưa có loạt trận thật nên sẽ bị gỡ khỏi lịch khi bạn lưu bản nháp.`,
+      description: `${matchLabel(match)} chưa có loạt trận thật nên sẽ bị gỡ khỏi lịch khi bạn lưu bản nháp.`,
       confirmLabel: "Bỏ trận",
     })
     if (!confirmed) return
@@ -358,7 +368,12 @@ function PlanForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; o
   return (
     <div className="space-y-4 bg-muted/40 px-4 py-4">
       <div className="grid gap-4 md:grid-cols-3">
-        <Field label="Tên trận" value={match.label} onChange={(event) => update({ label: event.target.value })} />
+        <Field
+          label="Tên trận"
+          value={match.label ?? ""}
+          placeholder={matchTitleLabel(match) ?? undefined}
+          onChange={(event) => update({ label: event.target.value || null })}
+        />
         <label className="grid gap-2">
           <span className="type-label">Giai đoạn</span>
           <select

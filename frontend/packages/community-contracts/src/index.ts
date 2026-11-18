@@ -1,5 +1,8 @@
+import type { MatchTitle } from "./match-titles"
+
 export * from "./pages"
 export * from "./competition"
+export * from "./match-titles"
 export type Selection = { id?: string | null; name?: string | null }
 /** `PARTIAL`: the source showed part of a loadout, so entries may be incomplete or lack an exact name. */
 export type ObservationStatus = "UNKNOWN" | "NOT_SHOWN" | "PARTIAL" | "KNOWN"
@@ -174,10 +177,12 @@ export type TournamentPart = {
   startsOn?: string | null
   endsOn?: string | null
 }
+/** `name` is a name an editor typed; a series made from a generated match carries its `title` instead. */
 export type SeriesContent = {
   code: string
   tournamentId: string
-  name?: string
+  name?: string | null
+  title?: MatchTitle | null
   stage?: string
   teamAId: string
   teamBId: string

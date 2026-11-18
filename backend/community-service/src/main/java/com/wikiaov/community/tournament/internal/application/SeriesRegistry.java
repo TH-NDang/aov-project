@@ -9,6 +9,7 @@ import com.wikiaov.community.tournament.internal.archive.application.RecordLifec
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
+import com.wikiaov.community.tournament.internal.domain.MatchTitle;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.persistence.SeriesRecord;
@@ -98,6 +99,9 @@ public class SeriesRegistry {
         if (content.teamAId() == null || content.teamBId() == null || content.teamAId().equals(content.teamBId())
                 || !teams.existsById(content.teamAId()) || !teams.existsById(content.teamBId())) {
             throw TournamentErrors.invalid("Choose two different existing teams.");
+        }
+        if (!MatchTitle.valid(content.title())) {
+            throw TournamentErrors.invalid("title needs a kind and numbers from 1 to " + MatchTitle.MAX_NUMBER + ".");
         }
         if (content.bestOf() == null || !Set.of(1, 2, 3, 4, 5, 7, 9).contains(content.bestOf())) {
             throw TournamentErrors.invalid("bestOf must be 1, 2, 3, 4, 5, 7 or 9.");

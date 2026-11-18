@@ -1,11 +1,14 @@
 package com.wikiaov.community.community.internal.application;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.wikiaov.community.community.internal.domain.NotificationKind;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class PageViews {
     private PageViews() {
@@ -144,10 +147,16 @@ public final class PageViews {
     ) {
     }
 
+    /**
+     * An inbox line. The reader's app words {@code kind} with {@code parameters}; a line sent before kinds existed has
+     * no kind and carries its stored {@code message} instead.
+     */
     public record Notification(
             UUID id,
             UUID pageId,
-            String message,
+            @Nullable NotificationKind kind,
+            Map<String, String> parameters,
+            @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable String message,
             Instant createdAt,
             boolean read
     ) {
