@@ -213,23 +213,8 @@ const rules: Rule[] = [
   },
   {
     name: "admin tests build their browser with the shared kit",
-    hint: "Use createWindow, withDom, inDom or parseHtml from tests/fixtures/dom.tsx instead of new JSDOM(...).",
-    // These tournament, esports and community tests were being reworked by another change when the kit took over;
-    // they move to it with their suite, and leave this list then.
-    files: files(tests, /\.tsx?$/).filter(
-      (path) =>
-        !relative(tests, path).startsWith("fixtures") &&
-        ![
-          "community-references.test.tsx",
-          "competition-recency.test.tsx",
-          "esports-drag.test.tsx",
-          "esports-ui.test.tsx",
-          "registry-import-ui.test.tsx",
-          "tournament-lifecycle.test.tsx",
-          "tournament-parts.test.tsx",
-          "tournaments.test.tsx",
-        ].includes(relative(tests, path)),
-    ),
+    hint: "Use createWindow, withDom, inDom, parseHtml or parseSvg from tests/fixtures/dom.tsx instead of new JSDOM(...).",
+    files: files(tests, /\.tsx?$/).filter((path) => !relative(tests, path).startsWith("fixtures")),
     offenders: (text) =>
       text.split("\n").flatMap((line, index) => (line.includes("new JSDOM(") ? [`:${index + 1}`] : [])),
   },

@@ -1,10 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import React, { act } from "react"
-import { JSDOM } from "jsdom"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { act } from "react"
 import type { DocumentView, TeamContent } from "@aov/community-contracts"
-import { installWindow, waitFor, withGlobals } from "./fixtures/dom"
+import { inDom, QuietResizeObserver, render, waitFor, withGlobals } from "./fixtures/dom"
 
 const [{ activityLabel, recordReason, regionsNamedBy, tournamentTiming }, { createTournamentApi, tournamentApi }] =
   await withGlobals({ BroadcastChannel: undefined }, () =>
@@ -87,45 +85,9 @@ test("lists ask the server for its order and walking a whole list does not pay f
   assert.equal(seen[4].searchParams.has("alsoRegions"), false)
 })
 
-async function withDom(run: (document: Document, window: JSDOM["window"]) => Promise<void>) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost:5175/tournaments", pretendToBeVisual: true })
-  const values = {
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    Event: dom.window.Event,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLButtonElement: dom.window.HTMLButtonElement,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    MouseEvent: dom.window.MouseEvent,
-    getComputedStyle: dom.window.getComputedStyle,
-    requestAnimationFrame: dom.window.requestAnimationFrame,
-    cancelAnimationFrame: dom.window.cancelAnimationFrame,
-    ResizeObserver: class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  }
-  let restoreGlobals = () => {}
-  restoreGlobals = installWindow(dom.window, values)
-  try {
-    await run(dom.window.document, dom.window)
-  } finally {
-    restoreGlobals()
-    dom.window.close()
-  }
-}
-
 test("the picker shows the server's rows with their reasons, leaves out what is taken and passes its context on", async () => {
-  await withDom(async (document, window) => {
+  const page = { url: "http://localhost:5175/tournaments", globals: () => ({ ResizeObserver: QuietResizeObserver }) }
+  await inDom(page, async ({ document, window }) => {
     const asked: unknown[] = []
     const pick = tournamentApi.pick
     tournamentApi.pick = (async (_kind: string, filters: unknown) => {
@@ -149,27 +111,20 @@ test("the picker shows the server's rows with their reasons, leaves out what is 
     const chosen: string[] = []
     // Radix decides at import time whether a document exists, so this comes after the DOM above.
     const { RecordPicker } = await import("../src/features/tournaments/components/record-picker")
-    const { createRoot } = await import("react-dom/client")
-    const root = createRoot(document.getElementById("root")!)
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     try {
-      await act(async () =>
-        root.render(
-          <QueryClientProvider client={client}>
-            <RecordPicker
-              kind="teams"
-              value=""
-              label="Thêm đội"
-              context={{ tournamentId: "event" }}
-              exclude={["taken"]}
-              onChange={(id) => chosen.push(id)}
-            />
-          </QueryClientProvider>,
-        ),
+      const view = await render(
+        <RecordPicker
+          kind="teams"
+          value=""
+          label="Thêm đội"
+          context={{ tournamentId: "event" }}
+          exclude={["taken"]}
+          onChange={(id) => chosen.push(id)}
+        />,
       )
       assert.equal(asked.length, 0, "nothing loads until the picker is opened")
 
-      const trigger = document.querySelector("button")!
+      const trigger = view.container.querySelector("button")!
       await act(async () => {
         trigger.dispatchEvent(new window.MouseEvent("click", { bubbles: true }))
       })
@@ -187,8 +142,6 @@ test("the picker shows the server's rows with their reasons, leaves out what is 
       await act(async () => buttons[0].dispatchEvent(new window.MouseEvent("click", { bubbles: true })))
       assert.deepEqual(chosen, ["ours"])
     } finally {
-      await act(async () => root.unmount())
-      client.clear()
       tournamentApi.pick = pick
     }
   })

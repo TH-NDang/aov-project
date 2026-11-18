@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { readFileSync } from "node:fs"
-import { JSDOM } from "jsdom"
 import { renderToStaticMarkup } from "react-dom/server"
 import { EntityRichText, EntityReferenceIcon } from "@aov/ui/components/entity-rich-text"
 import {
@@ -15,7 +14,7 @@ import {
 } from "@aov/ui/lib/entity-rich-text"
 import { countryReferences, countryReferenceFlag } from "@aov/ui/lib/country-references"
 import { referenceInputParts } from "@aov/ui/lib/reference-input-dom"
-import { withGlobals } from "./fixtures/dom"
+import { parseSvg, withGlobals } from "./fixtures/dom"
 
 const [
   { combineReferenceSearches, createCommunityReferenceApi, communityReferenceKeys, extractCommunityReferenceIds },
@@ -83,8 +82,7 @@ test("every supported country has a bundled flag and added regional SVGs contain
     assert.ok(countryReferenceFlag(country.id), country.id)
   for (const code of ["HK", "MO", "SG", "MY", "PH"]) {
     const svg = readFileSync(new URL(countryReferenceFlag(code)!), "utf8")
-    const dom = new JSDOM(svg, { contentType: "image/svg+xml" })
-    const root = dom.window.document.documentElement
+    const root = parseSvg(svg).documentElement
     assert.equal(root.localName, "svg")
     assert.equal(root.namespaceURI, "http://www.w3.org/2000/svg")
     assert.ok(root.getAttribute("viewBox"))
@@ -95,7 +93,6 @@ test("every supported country has a bundled flag and added regional SVGs contain
         if (attribute.localName === "href") assert.ok(attribute.value.startsWith("#"))
         assert.ok(!/url\(\s*["']?(?:https?:|\/\/|data:)/i.test(attribute.value))
       }
-    dom.window.close()
   }
 })
 

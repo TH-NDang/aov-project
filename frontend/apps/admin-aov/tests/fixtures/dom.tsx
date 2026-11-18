@@ -120,6 +120,9 @@ export const createWindow = (url = "http://localhost/", html = '<div id="root"><
 /** The document of static markup, such as what `renderToStaticMarkup` returns; nothing is installed as a global. */
 export const parseHtml = (markup: string) => new JSDOM(markup).window.document
 
+/** The document of an SVG file, read as XML the way a browser reads an image; nothing is installed as a global. */
+export const parseSvg = (markup: string) => new JSDOM(markup, { contentType: "image/svg+xml" }).window.document
+
 /** Installs a window as the global browser now; `close` puts the previous globals back. */
 export function openDom({ url, html, globals }: DomOptions = {}): Dom {
   const dom = createWindow(url, html)
@@ -237,6 +240,22 @@ export async function render(node: ReactNode, { client = testQueryClient(), wrap
     unmount,
   }
   return rendered
+}
+
+/**
+ * A `render` for a test that changes the props of one screen step by step: the first call mounts the tree, later calls
+ * draw the new tree in the same root and let it settle.
+ */
+export function renderer(options: RenderOptions = {}) {
+  let view: Rendered | undefined
+  return async (node: ReactNode) => {
+    if (!view) view = await render(node, options)
+    else {
+      await view.rerender(node)
+      await flush()
+    }
+    return view
+  }
 }
 
 const tick = () => new Promise<void>((resolve) => setTimeout(resolve, 0))

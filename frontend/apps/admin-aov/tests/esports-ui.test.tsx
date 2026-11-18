@@ -1,43 +1,20 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import React, { act } from "react"
-import { JSDOM } from "jsdom"
+import type { DOMWindow } from "jsdom"
 import type { GameContent } from "@aov/community-contracts"
 import type { GameView } from "../src/features/esports/model/game-view"
 import type { TimelineEvent } from "../src/features/esports/model/timeline"
 import type { VodPlayerHandle } from "../src/features/esports/components/game/vod-player"
-import { flush, installWindow, waitFor } from "./fixtures/dom"
+import { flush, inDom, QuietResizeObserver, renderer, waitFor } from "./fixtures/dom"
 
-async function withDom(
-  run: (document: Document, render: (node: React.ReactNode) => Promise<void>) => Promise<void>,
-  extra: (window: JSDOM["window"]) => Record<string, unknown> = () => ({}),
+/** Runs one test in its own page; `render` draws into one root, so a later call changes the props of the first tree. */
+async function inPage(
+  run: (document: Document, render: (node: React.ReactNode) => Promise<unknown>) => Promise<void>,
+  extra: (window: DOMWindow) => Record<string, unknown> = () => ({}),
 ) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost:5175/tournaments" })
-  const values = {
-    ...extra(dom.window),
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    CSS: { escape: (value: string) => value },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  }
-  let restoreGlobals = () => {}
-  restoreGlobals = installWindow(dom.window, values)
-  const { createRoot } = await import("react-dom/client")
-  const root = createRoot(dom.window.document.getElementById("root")!)
-  try {
-    await run(dom.window.document, async (node) => {
-      await act(async () => root.render(node))
-    })
-  } finally {
-    await act(async () => root.unmount())
-    restoreGlobals()
-    dom.window.close()
-  }
+  const globals = (window: DOMWindow) => ({ CSS: { escape: (value: string) => value }, ...extra(window) })
+  await inDom({ url: "http://localhost:5175/tournaments", globals }, ({ document }) => run(document, renderer()))
 }
 
 const team = (id: string, name: string) => ({ id, name, shortName: name.slice(0, 3).toUpperCase() })
@@ -100,7 +77,7 @@ const chapter = (start: number, end: number) => ({
 const onAxis = (list: TimelineEvent[]) => list.map((event) => ({ ...event, id: `g1|${event.id}` }))
 
 test("the timeline places markers by side, describes them for screen readers and seeks on selection", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
     const selected: string[] = []
     await render(
@@ -137,7 +114,7 @@ test("the timeline places markers by side, describes them for screen readers and
 })
 
 test("a timeline cluster seeks to its displayed start even when a later kill represents it", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
     const selected: number[] = []
     await render(
@@ -235,7 +212,7 @@ function mockYouTube() {
 }
 
 test("video seeks wait for readiness and apply the latest requested second without starting playback", async () => {
-  await withDom(async (_document, render) => {
+  await inPage(async (_document, render) => {
     const { VodPlayer } = await import("../src/features/esports/components/game/vod-player")
     const instances = mockYouTube()
     const ref = React.createRef<VodPlayerHandle>()
@@ -289,7 +266,7 @@ test("video seeks wait for readiness and apply the latest requested second witho
 })
 
 test("seeking while the video starts keeps the latest time and the pending play request", async () => {
-  await withDom(async (_document, render) => {
+  await inPage(async (_document, render) => {
     const { VodPlayer } = await import("../src/features/esports/components/game/vod-player")
     const instances = mockYouTube()
     const ref = React.createRef<VodPlayerHandle>()
@@ -314,7 +291,7 @@ test("seeking while the video starts keeps the latest time and the pending play 
 })
 
 test("the full video timeline exposes its actual duration and seeks chapters in video seconds", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
     const seeks: number[] = []
     await render(
@@ -362,7 +339,7 @@ test("the full video timeline exposes its actual duration and seeks chapters in 
 })
 
 test("the player reports duration and floats without replacing or seeking the active video", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const previous = globalThis.IntersectionObserver
     let visibility: IntersectionObserverCallback
     let disconnected = false
@@ -433,7 +410,7 @@ test("the player reports duration and floats without replacing or seeking the ac
 })
 
 test("the scoreboard shows score, KDA and items as of the playhead", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { Scoreboard } = await import("../src/features/esports/components/game/scoreboard")
     await render(
       <Scoreboard game={game} events={events} at={200} focusSeat={null} onFocusSeat={() => {}} itemIcon={() => null} />,
@@ -455,7 +432,7 @@ test("the scoreboard shows score, KDA and items as of the playhead", async () =>
 })
 
 test("the event feed hides edit controls in read-only mode", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { EventFeed } = await import("../src/features/esports/components/game/event-feed")
     const props = {
       game,
@@ -486,7 +463,7 @@ test("the event feed hides edit controls in read-only mode", async () => {
 })
 
 test("every moment says which clock it shows: in-game timer and broadcast position", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { EventFeed } = await import("../src/features/esports/components/game/event-feed")
     await render(
       <EventFeed
@@ -519,20 +496,11 @@ test("every moment says which clock it shows: in-game timer and broadcast positi
   })
 })
 
-/** What radix popovers need from the browser beyond the basic DOM. */
-const popoverGlobals = (window: JSDOM["window"]) => ({
-  MutationObserver: window.MutationObserver,
-  CustomEvent: window.CustomEvent,
-  Event: window.Event,
-  HTMLInputElement: window.HTMLInputElement,
-  getComputedStyle: window.getComputedStyle.bind(window),
+/** What radix popovers need from the browser beyond the basic DOM: frames that a flush lets through, and a quiet observer. */
+const popoverGlobals = () => ({
   requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(() => callback(0), 0),
   cancelAnimationFrame: clearTimeout,
-  ResizeObserver: class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  },
+  ResizeObserver: QuietResizeObserver,
 })
 const settle = () => flush()
 function type(input: HTMLInputElement, value: string) {
@@ -544,7 +512,7 @@ const button = (document: Document, text: string) =>
   [...document.querySelectorAll("button")].find((entry) => entry.textContent?.includes(text))!
 
 test("hero cards are the wiki reference card: wiki description and entry link, or a plain card when unknown", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { Scoreboard } = await import("../src/features/esports/components/game/scoreboard")
     const { ReferenceSourceProvider } = await import("../src/features/esports/components/game/entity-ref")
     const entities = [
@@ -590,7 +558,7 @@ test("hero cards are the wiki reference card: wiki description and entry link, o
 })
 
 test("recording a moment takes the broadcast position and stores the game clock", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { EventComposer } = await import("../src/features/esports/components/game/event-composer")
     const { gameToVideo, videoToGame } = await import("../src/features/esports/model/vod")
     const sync = { url: "", startSecond: 1800, pauses: [{ atSeconds: 300, durationSeconds: 60 }] }
@@ -635,7 +603,7 @@ test("recording a moment takes the broadcast position and stores the game clock"
 })
 
 test("pauses and the end of a game are entered as broadcast positions", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { VodSyncPanel } = await import("../src/features/esports/components/game/vod-sync-panel")
     const changes: unknown[] = []
     const teams = { BLUE: game.sides.BLUE.team, RED: game.sides.RED.team }
@@ -663,7 +631,7 @@ test("pauses and the end of a game are entered as broadcast positions", async ()
 })
 
 test("a game is closed in the video panel: its end and its winner are saved together, only when changed", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { VodSyncPanel } = await import("../src/features/esports/components/game/vod-sync-panel")
     const changes: unknown[] = []
     const teams = { BLUE: game.sides.BLUE.team, RED: game.sides.RED.team }
@@ -722,7 +690,7 @@ test("a game is closed in the video panel: its end and its winner are saved toge
 })
 
 test("ban/pick turns are recorded per team in order and only suggest heroes the rules still allow", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { DraftEditor } = await import("../src/features/esports/components/game/draft-editor")
     const lanes = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"] as const
     const empty = { id: null, name: null }
@@ -828,110 +796,104 @@ test("ban/pick turns are recorded per team in order and only suggest heroes the 
 })
 
 test("the player uses its own controls below the video instead of YouTube's", async () => {
-  await withDom(
-    async (document, render) => {
-      const { VodPlayer } = await import("../src/features/esports/components/game/vod-player")
-      const instances = mockYouTube()
-      await render(
-        <VodPlayer videoId="R5rCsGqDJIg" startAt={95} title="Game" onTime={() => {}} onPlayingChange={() => {}} />,
+  await inPage(async (document, render) => {
+    const { VodPlayer } = await import("../src/features/esports/components/game/vod-player")
+    const instances = mockYouTube()
+    await render(
+      <VodPlayer videoId="R5rCsGqDJIg" startAt={95} title="Game" onTime={() => {}} onPlayingChange={() => {}} />,
+    )
+    const player = instances[0]
+    assert.equal(player.vars.controls, 0, "YouTube's control bar is hidden")
+    await act(async () => player.events.onReady({ target: player }))
+
+    const bar = document.querySelector('[aria-label="Điều khiển video"]')!
+    assert.equal(bar.closest('[title="Game"]'), null, "controls sit beside the video frame, never over it")
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Phát"]')!.click())
+    assert.equal(player.plays, 1)
+
+    const seek = document.querySelector<HTMLInputElement>('[aria-label="Vị trí video"]')!
+    assert.equal(seek.max, "20144", "the seek bar spans the real video")
+    type(seek, "600")
+    assert.deepEqual(player.seeks, [], "dragging the bar does not seek on every step")
+    await act(async () => seek.dispatchEvent(new document.defaultView!.Event("pointerup", { bubbles: true })))
+    assert.deepEqual(player.seeks, [600])
+
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Tới 10 giây"]')!.click())
+    assert.deepEqual(player.seeks, [600, 105], "skips from the shown position")
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Tắt tiếng"]')!.click())
+    assert.equal(player.muted, true)
+    const speed = document.querySelector<HTMLSelectElement>('[aria-label="Tốc độ phát"]')!
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(document.defaultView!.HTMLSelectElement.prototype, "value")!.set!.call(
+        speed,
+        "1.5",
       )
-      const player = instances[0]
-      assert.equal(player.vars.controls, 0, "YouTube's control bar is hidden")
-      await act(async () => player.events.onReady({ target: player }))
-
-      const bar = document.querySelector('[aria-label="Điều khiển video"]')!
-      assert.equal(bar.closest('[title="Game"]'), null, "controls sit beside the video frame, never over it")
-      await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Phát"]')!.click())
-      assert.equal(player.plays, 1)
-
-      const seek = document.querySelector<HTMLInputElement>('[aria-label="Vị trí video"]')!
-      assert.equal(seek.max, "20144", "the seek bar spans the real video")
-      type(seek, "600")
-      assert.deepEqual(player.seeks, [], "dragging the bar does not seek on every step")
-      await act(async () => seek.dispatchEvent(new document.defaultView!.Event("pointerup", { bubbles: true })))
-      assert.deepEqual(player.seeks, [600])
-
-      await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Tới 10 giây"]')!.click())
-      assert.deepEqual(player.seeks, [600, 105], "skips from the shown position")
-      await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Tắt tiếng"]')!.click())
-      assert.equal(player.muted, true)
-      const speed = document.querySelector<HTMLSelectElement>('[aria-label="Tốc độ phát"]')!
-      await act(async () => {
-        Object.getOwnPropertyDescriptor(document.defaultView!.HTMLSelectElement.prototype, "value")!.set!.call(
-          speed,
-          "1.5",
-        )
-        speed.dispatchEvent(new document.defaultView!.Event("change", { bubbles: true }))
-      })
-      assert.deepEqual(player.rates, [1.5])
-    },
-    (window) => ({ HTMLSelectElement: window.HTMLSelectElement, Event: window.Event }),
-  )
+      speed.dispatchEvent(new document.defaultView!.Event("change", { bubbles: true }))
+    })
+    assert.deepEqual(player.rates, [1.5])
+  })
 })
 
 test("the floating player can be dragged anywhere in the window and keeps its place", async () => {
-  await withDom(
-    async (document, render) => {
-      const previous = globalThis.IntersectionObserver
-      let visibility: IntersectionObserverCallback
-      globalThis.IntersectionObserver = class {
-        constructor(callback: IntersectionObserverCallback) {
-          visibility = callback
-        }
-        observe() {}
-        disconnect() {}
-      } as unknown as typeof IntersectionObserver
-      try {
-        const window = document.defaultView!
-        window.localStorage.removeItem("esports:mini-player-position")
-        const { VodPlayer } = await import("../src/features/esports/components/game/vod-player")
-        mockYouTube()
-        await render(
-          <VodPlayer videoId="R5rCsGqDJIg" startAt={95} title="Game" onTime={() => {}} onPlayingChange={() => {}} />,
-        )
-        await act(async () =>
-          visibility!(
-            [{ isIntersecting: false, boundingClientRect: { bottom: -1 } } as IntersectionObserverEntry],
-            {} as IntersectionObserver,
-          ),
-        )
-        const floating = document.querySelector<HTMLElement>("[data-floating]")!
-        const handle = floating.querySelector<HTMLElement>('[role="toolbar"]')!
-        const pointer = (type: string, x: number, y: number) =>
-          act(async () => {
-            handle.dispatchEvent(new window.MouseEvent(type, { bubbles: true, clientX: x, clientY: y }))
-          })
-        await pointer("pointerdown", 10, 10)
-        await pointer("pointermove", 300, 200)
-        await pointer("pointerup", 300, 200)
-        assert.equal(floating.style.left, "290px")
-        assert.equal(floating.style.top, "190px")
-        assert.deepEqual(JSON.parse(window.localStorage.getItem("esports:mini-player-position")!), { x: 290, y: 190 })
-
-        await act(async () =>
-          handle.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true })),
-        )
-        assert.equal(floating.style.left, "290px", "plain arrows stay video shortcuts")
-        await act(async () =>
-          handle.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft", altKey: true, bubbles: true })),
-        )
-        assert.equal(floating.style.left, "266px", "Alt + arrows move it")
-        await pointer("pointerdown", 0, 0)
-        await pointer("pointermove", -500, 5000)
-        await pointer("pointerup", -500, 5000)
-        assert.equal(floating.style.left, "8px", "it never leaves the window")
-        assert.equal(floating.style.top, `${window.innerHeight - 8}px`)
-      } finally {
-        if (previous) globalThis.IntersectionObserver = previous
-        else Reflect.deleteProperty(globalThis, "IntersectionObserver")
+  await inPage(async (document, render) => {
+    const previous = globalThis.IntersectionObserver
+    let visibility: IntersectionObserverCallback
+    globalThis.IntersectionObserver = class {
+      constructor(callback: IntersectionObserverCallback) {
+        visibility = callback
       }
-    },
-    (window) => ({ localStorage: window.localStorage }),
-  )
+      observe() {}
+      disconnect() {}
+    } as unknown as typeof IntersectionObserver
+    try {
+      const window = document.defaultView!
+      window.localStorage.removeItem("esports:mini-player-position")
+      const { VodPlayer } = await import("../src/features/esports/components/game/vod-player")
+      mockYouTube()
+      await render(
+        <VodPlayer videoId="R5rCsGqDJIg" startAt={95} title="Game" onTime={() => {}} onPlayingChange={() => {}} />,
+      )
+      await act(async () =>
+        visibility!(
+          [{ isIntersecting: false, boundingClientRect: { bottom: -1 } } as IntersectionObserverEntry],
+          {} as IntersectionObserver,
+        ),
+      )
+      const floating = document.querySelector<HTMLElement>("[data-floating]")!
+      const handle = floating.querySelector<HTMLElement>('[role="toolbar"]')!
+      const pointer = (type: string, x: number, y: number) =>
+        act(async () => {
+          handle.dispatchEvent(new window.MouseEvent(type, { bubbles: true, clientX: x, clientY: y }))
+        })
+      await pointer("pointerdown", 10, 10)
+      await pointer("pointermove", 300, 200)
+      await pointer("pointerup", 300, 200)
+      assert.equal(floating.style.left, "290px")
+      assert.equal(floating.style.top, "190px")
+      assert.deepEqual(JSON.parse(window.localStorage.getItem("esports:mini-player-position")!), { x: 290, y: 190 })
+
+      await act(async () =>
+        handle.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true })),
+      )
+      assert.equal(floating.style.left, "290px", "plain arrows stay video shortcuts")
+      await act(async () =>
+        handle.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft", altKey: true, bubbles: true })),
+      )
+      assert.equal(floating.style.left, "266px", "Alt + arrows move it")
+      await pointer("pointerdown", 0, 0)
+      await pointer("pointermove", -500, 5000)
+      await pointer("pointerup", -500, 5000)
+      assert.equal(floating.style.left, "8px", "it never leaves the window")
+      assert.equal(floating.style.top, `${window.innerHeight - 8}px`)
+    } finally {
+      if (previous) globalThis.IntersectionObserver = previous
+      else Reflect.deleteProperty(globalThis, "IntersectionObserver")
+    }
+  })
 })
 
 test("the progress panel opens the step to fix and confirms only after a summary", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { ProgressPanel } = await import("../src/features/esports/pages/progress-panel")
     const opened: string[] = []
     let confirmed = 0
@@ -986,7 +948,7 @@ test("the progress panel opens the step to fix and confirms only after a summary
 })
 
 test("the loadout panel marks a whole team at the broadcast moment and keeps unknown loadouts apart", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { LoadoutPanel } = await import("../src/features/esports/pages/loadout-panel")
     const lanes = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"] as const
     const empty = { id: null, name: null }
@@ -1058,7 +1020,7 @@ test("the loadout panel marks a whole team at the broadcast moment and keeps unk
 })
 
 test("the schedule strip shows each game's progress, games nobody recorded and opens the right game", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { MatchRecordingStrip } = await import("../src/features/esports/components/match-recording-strip")
     const progress = (state: "recording" | "confirmed", done: number) => ({
       steps: [],
@@ -1099,7 +1061,7 @@ test("the schedule strip shows each game's progress, games nobody recorded and o
 })
 
 test("clicking into the video hands keyboard focus back so page shortcuts keep working", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { VodPlayer } = await import("../src/features/esports/components/game/vod-player")
     mockYouTube()
     await render(
@@ -1118,7 +1080,7 @@ test("clicking into the video hands keyboard focus back so page shortcuts keep w
 })
 
 test("the timeline names its rows and only an editor who is recording can record or move on the bar", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
     const created: [string, number | undefined][] = []
     const moved: [string, number][] = []
@@ -1220,7 +1182,7 @@ test("the timeline names its rows and only an editor who is recording can record
 })
 
 test("the captions button brings back YouTube's own controls, where captions are switched, and hides them again", async () => {
-  await withDom(async (document, render) => {
+  await inPage(async (document, render) => {
     const { VodPlayer } = await import("../src/features/esports/components/game/vod-player")
     const instances = mockYouTube()
     await render(
