@@ -191,6 +191,10 @@
 .wiki-video-meta:empty {
   display: none;
 }
+/* Muted text is too faint on the tint of the entry being played. */
+.wiki-video-meta[data-tone="tint"] {
+  color: var(--aov-text-soft);
+}
 .wiki-video-patch {
   color: var(--aov-accent);
 }
@@ -571,11 +575,9 @@
   }
 }
 .wiki-video-theater.public-bottom-drawer[data-vaul-drawer] {
+  --public-bottom-body-padding: 0 0 env(safe-area-inset-bottom);
+  --public-bottom-body-surface: var(--aov-surface);
   height: calc(100dvh - 40px);
-}
-.wiki-video-theater.public-bottom-drawer > .public-bottom-body {
-  padding: 0 0 env(safe-area-inset-bottom);
-  background: var(--aov-surface);
 }
 .wiki-video-theater.public-bottom-drawer .wiki-video-theater-bar {
   min-height: 40px;
@@ -597,6 +599,14 @@
   border-top: 1px solid var(--aov-line);
   border-left: 0;
   contain: none;
+}
+
+/* The narrowest phones: as tight as the hero banner's other chips, so the price and the videos still share a line. */
+@media (max-width: 359.98px) {
+  .wiki-hero-video-button {
+    gap: 5px;
+    padding-inline: 7px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

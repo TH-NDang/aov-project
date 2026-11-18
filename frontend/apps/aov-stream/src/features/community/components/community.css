@@ -32,6 +32,11 @@
 .cp-back:hover {
   color: var(--hub-text);
 }
+/* At the head of a column that spaces its parts with a gap, the link keeps no margin and only its own width. */
+.cp-back[data-flush] {
+  align-self: flex-start;
+  margin: 0;
+}
 .cp-meta,
 .cp-muted {
   color: var(--hub-muted);
@@ -144,6 +149,10 @@
   align-items: center;
   gap: 8px;
 }
+/* Text buttons have no box of their own, so a row that holds them keeps them further apart. */
+.cp-actions[data-spacing="loose"] {
+  gap: 4px 16px;
+}
 .cp-button {
   display: inline-flex;
   align-items: center;
@@ -202,6 +211,9 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.cp-text-button[data-size="small"] {
+  font-size: 12px;
+}
 .cp-more {
   border-color: transparent;
 }
@@ -212,6 +224,13 @@
   background: var(--hub-danger-soft);
   color: var(--hub-danger);
   font-size: 14px;
+}
+/* An error box that holds a sentence and an action spaces the two. */
+.cp-error p {
+  margin: 0 0 10px;
+}
+.cp-error p:last-child {
+  margin: 0;
 }
 .cp-success {
   display: inline-flex;
@@ -890,9 +909,6 @@
   font-weight: 700;
   line-height: 22px;
 }
-.cp-join > .hub-card-text {
-  margin: 0;
-}
 .cp-join-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -937,9 +953,6 @@
   gap: 16px;
   min-width: 0;
   max-width: 760px;
-}
-.cp-section > .tn-heading {
-  margin-bottom: 0;
 }
 .cp-section fieldset {
   display: grid;
@@ -1262,19 +1275,19 @@
 }
 .cp-signin-dialog {
   max-width: min(420px, calc(100% - 32px));
-  justify-items: start;
-  gap: 12px;
   padding: 24px;
   border: 1px solid var(--hub-border);
   border-radius: var(--hub-radius);
   background: var(--hub-surface);
   color: var(--hub-text);
 }
-.cp-signin-dialog.public-bottom-drawer > .public-bottom-body {
+.cp-signin-dialog.public-bottom-drawer {
+  --public-bottom-body-padding: 12px 16px max(16px, env(safe-area-inset-bottom));
+}
+.cp-signin-dialog-body {
   display: grid;
   justify-items: start;
   gap: 12px;
-  padding-top: 12px;
 }
 .cp-dialog-close {
   position: absolute;
@@ -1317,10 +1330,9 @@
 .cp-featured {
   display: grid;
   gap: 16px;
-  justify-items: start;
 }
-.cp-featured > .cp-grid {
-  width: 100%;
+.cp-featured > .cp-button {
+  justify-self: start;
 }
 .cp-featured-intro h2 {
   margin: 0 0 4px;
@@ -1335,18 +1347,15 @@
 }
 
 /* ---------- Home feed: the filters, then the posts, straight on the page ---------- */
-.hub-feed-header {
+.cp-feed-header {
   padding: 8px 0;
   border-bottom: 1px solid var(--hub-border);
 }
-.hub-feed-header .hub-pills {
-  padding-block: 2px;
-}
-.hub-feed-body {
+.cp-feed-body {
   padding-top: var(--hub-panel-padding);
 }
 /* An empty feed already lists the pages to follow in the main column. */
-.hub-content-split:has(.cp-featured) .hub-follow-suggestions {
+.hub-content-split:has(.cp-featured) .cp-follow-suggestions {
   display: none;
 }
 

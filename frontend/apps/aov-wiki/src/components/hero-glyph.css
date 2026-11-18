@@ -1,9 +1,13 @@
+/*
+ * Its surroundings size the mark with --wiki-hero-glyph-size, may tint it with --wiki-hero-glyph-color instead of the
+ * text colour, and may leave it out with --wiki-hero-glyph-display.
+ */
 .wiki-hero-glyph {
-  display: inline-block;
-  width: 25px;
-  height: 25px;
+  display: var(--wiki-hero-glyph-display, inline-block);
+  width: var(--wiki-hero-glyph-size, 25px);
+  height: var(--wiki-hero-glyph-size, 25px);
   flex-shrink: 0;
-  background: currentColor;
+  background: var(--wiki-hero-glyph-color, currentColor);
   mask-position: center;
   mask-repeat: no-repeat;
   mask-size: contain;

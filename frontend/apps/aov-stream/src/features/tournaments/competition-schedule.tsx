@@ -39,17 +39,23 @@ export function scheduleDayLabel(day: string, locale: string) {
   return day === "unscheduled" ? "các trận chờ xếp lịch" : `ngày ${formatCalendarDate(day, undefined, locale)}`
 }
 
-/** The quick switch between everything, what is ahead and what was played. */
+/** The quick switch between everything, what is ahead and what was played. `className` places it in its bar. */
 export function ScheduleScopePills({
   value,
   onChange,
+  className,
 }: {
   value: ScheduleScope
   onChange: (scope: ScheduleScope) => void
+  className?: string
 }) {
   const { text } = useStreamLocale()
   return (
-    <div className="hub-pills" role="group" aria-label={text("Trạng thái trận đấu", "Match status")}>
+    <div
+      className={className ? `hub-pills ${className}` : "hub-pills"}
+      role="group"
+      aria-label={text("Trạng thái trận đấu", "Match status")}
+    >
       {SCOPES.map(([key, label]) => (
         <button type="button" key={key} aria-pressed={value === key} onClick={() => onChange(key)}>
           {text(...label)}
@@ -59,23 +65,28 @@ export function ScheduleScopePills({
   )
 }
 
-/** A filter with an "all" choice first. */
+/** A filter with an "all" choice first. `className` places it in the bar that holds it. */
 export function FilterSelect({
   label,
   value,
   onChange,
   all,
   options,
+  className,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   all: string
   options: string[][]
+  className?: string
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger aria-label={label} className="competition-select">
+      <SelectTrigger
+        aria-label={label}
+        className={className ? `competition-select ${className}` : "competition-select"}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent drawerTitle={label}>
@@ -109,7 +120,7 @@ function DayTitle({ group, part, timeZone, now }: { group: ScheduleGroup; part: 
   if (group.key === "live")
     return (
       <h3 className="tn-day-title">
-        <span className="tn-live">{text("Đang diễn ra", "Ongoing")}</span>
+        <span className="tn-live tn-day-live">{text("Đang diễn ra", "Ongoing")}</span>
       </h3>
     )
   if (group.at == null)
@@ -196,7 +207,7 @@ export function ScheduleList({
         ([part, total, shown]) =>
           shown.length > 0 && (
             <section className="tn-schedule-part" key={part} aria-labelledby={`schedule-${part}`}>
-              <div className="tn-heading">
+              <div className="tn-heading tn-schedule-heading">
                 <h2 id={`schedule-${part}`}>
                   {text(...PART_TITLES[part])}{" "}
                   <small>
@@ -325,12 +336,19 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
     <div className="tn-schedule-view">
       {(switchable || selectCount > 0) && (
         <div className="tn-schedule-bar">
-          {switchable && <ScheduleScopePills value={scope} onChange={(value) => update("scope", value)} />}
+          {switchable && (
+            <ScheduleScopePills
+              value={scope}
+              onChange={(value) => update("scope", value)}
+              className="tn-schedule-scope"
+            />
+          )}
           {selectCount > 0 &&
             (folded ? (
               <PublicFilterSheet
                 title={text("Lọc trận đấu", "Filter matches")}
                 triggerLabel={text("Lọc", "Filter")}
+                triggerClassName="tn-schedule-filter"
                 count={active}
                 resetLabel={text("Xóa lọc", "Clear filters")}
                 onReset={clear}

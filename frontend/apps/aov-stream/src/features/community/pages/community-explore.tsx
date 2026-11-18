@@ -51,7 +51,7 @@ function Browse() {
   const { text } = useStreamLocale()
   return (
     <>
-      <header className="tn-page-head">
+      <header className="tn-page-head ex-page-head">
         <div>
           <h1>{text("Khám phá", "Explore")}</h1>
           <p>
@@ -194,7 +194,7 @@ function SearchResults({ query }: { query: string }) {
   const preview = layout === "compact" ? { pages: 4, competitions: 3 } : { pages: GROUP_SIZE, competitions: 6 }
   return (
     <>
-      <header className="tn-page-head">
+      <header className="tn-page-head ex-page-head">
         <div>
           <h1>{text(`Kết quả cho “${query}”`, `Results for “${query}”`)}</h1>
           {!searching && summary.length > 0 && <p>{summary.join(" · ")}</p>}
@@ -323,7 +323,7 @@ function SearchResults({ query }: { query: string }) {
           role="status"
           aria-label={text(`Đang tìm “${query}”`, `Searching for “${query}”`)}
         >
-          <span className="hub-skeleton" />
+          <span className="hub-skeleton ex-heading-skeleton" />
           <div className="cp-grid">
             {Array.from({ length: 4 }, (_, index) => (
               <div className="hub-skeleton cp-card-skeleton" key={index} />
@@ -350,11 +350,11 @@ function KindResults({ query, kind }: { query: string; kind: ProfileKind }) {
   const back = `/explore?${new URLSearchParams({ q: query })}`
   return (
     <>
-      <Link className="cp-back" to={back}>
+      <Link className="cp-back ex-back" to={back}>
         <StreamIcon name="back" size={16} />
         {text("Tất cả kết quả", "All results")}
       </Link>
-      <header className="tn-page-head">
+      <header className="tn-page-head ex-page-head">
         <div>
           <h1>{text(`Kết quả cho “${query}”`, `Results for “${query}”`)}</h1>
         </div>

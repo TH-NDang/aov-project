@@ -209,10 +209,10 @@
   margin-top: 20px;
 }
 /* The overview needs no title of its own beside the hero's name; the row keeps the report button. */
-.wiki-hero-stage-info .wiki-edit-heading {
+.wiki-hero-stage-info .wiki-hero-overview-heading {
   margin-bottom: 4px;
 }
-.wiki-hero-stage-info .wiki-edit-heading h2 {
+.wiki-hero-stage-info .wiki-hero-overview-heading h2 {
   margin: 0;
   color: var(--aov-muted);
   font: 600 0.75rem/1rem var(--wiki-font-reading);
@@ -297,7 +297,7 @@
 .wiki-skill-options button > svg {
   color: var(--aov-accent);
 }
-.wiki-skill-options .wiki-image {
+.wiki-skill-options .wiki-skill-option-icon {
   flex: none;
   width: 48px;
   height: 48px;
@@ -554,9 +554,8 @@ button.wiki-handbook-action svg:first-child {
   padding: 12px var(--aov-gutter) 0;
   margin: auto;
 }
-.wiki-hero-scope .wiki-version-picker {
+.wiki-hero-scope .wiki-hero-version-picker {
   max-width: 100%;
-  margin: 0;
 }
 .wiki-hero-scope-note {
   font: var(--wiki-type-meta);
@@ -681,7 +680,7 @@ section.wiki-version-changes,
 .wiki-handbook .wiki-version-changes-head h2 {
   margin: 0;
 }
-.wiki-version-changes-head > .wiki-change-kind {
+.wiki-version-changes-head > .wiki-version-changes-kind {
   align-self: center;
   margin-left: auto;
 }
@@ -699,14 +698,6 @@ section.wiki-version-changes,
 .wiki-version-summary {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
-}
-/* Inside the band a thin rule parts one ability from the next, where the same list on the page uses space alone. */
-.wiki-version-changes .wiki-change-groups {
-  gap: 14px;
-}
-.wiki-version-changes .wiki-change-group + .wiki-change-group {
-  border-top: 1px solid var(--aov-line);
-  padding-top: 14px;
 }
 .wiki-version-links {
   font: var(--wiki-type-meta);

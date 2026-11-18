@@ -69,10 +69,6 @@
   border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
   background: color-mix(in srgb, var(--aov-accent) 12%, var(--aov-raised));
 }
-/* Muted text is too faint on the tint of the entry being played. */
-.wiki-skill-video-list li > button[aria-pressed="true"] .wiki-video-meta {
-  color: var(--aov-text-soft);
-}
 .wiki-skill-videos :is(button, a):focus-visible {
   outline: 2px solid var(--aov-accent);
   outline-offset: 2px;
@@ -81,12 +77,6 @@
   display: grid;
   min-width: 0;
   gap: 2px;
-}
-.wiki-skill-video-text .wiki-video-title {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 .wiki-skill-video-none {
   font: var(--wiki-type-meta);

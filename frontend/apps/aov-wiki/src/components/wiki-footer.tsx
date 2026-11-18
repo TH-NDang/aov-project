@@ -32,7 +32,7 @@ export function WikiFooter() {
         <nav className="wiki-footer-links" aria-label={text("Hỗ trợ", "Support")}>
           <ul>
             <li>
-              <FeedbackDialog showLabel />
+              <FeedbackDialog variant="link" />
             </li>
             <li>
               <Link to={href("/contact")}>

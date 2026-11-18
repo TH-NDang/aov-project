@@ -145,7 +145,7 @@ function FollowedPages() {
   const items = follows.data?.items ?? []
   return (
     <section className="cp-section" aria-labelledby="account-follows">
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="account-follows">
           {text("Trang đang theo dõi", "Pages you follow")}{" "}
           {!!items.length && <small>{items.length.toLocaleString(languageTag)}</small>}
@@ -218,7 +218,7 @@ function NotificationInbox() {
   const count = unread.data?.unread ?? 0
   return (
     <section className="cp-section" aria-labelledby="account-notifications">
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="account-notifications">{text("Thông báo", "Notifications")}</h2>
         {count > 0 && (
           <button type="button" disabled={read.all.isPending} onClick={() => read.all.mutate()}>
@@ -295,7 +295,7 @@ function ManagedPages() {
   return (
     <div className="cp-section-pair">
       <section className="cp-section" aria-labelledby="account-managed">
-        <div className="tn-heading">
+        <div className="tn-heading" data-flush="">
           <h2 id="account-managed">{text("Trang bạn quản lý", "Pages you manage")}</h2>
         </div>
         {managed.isPending && (
@@ -335,7 +335,7 @@ function ManagedPages() {
           ))}
       </section>
       <section className="cp-section" aria-labelledby="account-claims">
-        <div className="tn-heading">
+        <div className="tn-heading" data-flush="">
           <h2 id="account-claims">{text("Yêu cầu đại diện", "Representation requests")}</h2>
         </div>
         {claims.isPending && (
@@ -526,7 +526,7 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
       {tab === "presentation" && <PresentationForm profile={profile} viewer={viewer} />}
       {tab === "posts" && (
         <section className="cp-section" aria-labelledby="manage-posts">
-          <div className="tn-heading">
+          <div className="tn-heading" data-flush="">
             <h2 id="manage-posts">{text("Bài viết của trang", "The page's posts")}</h2>
           </div>
           <CommunityFeed
@@ -581,7 +581,7 @@ function PresentationForm({ profile, viewer }: { profile: CommunityProfile; view
         save.mutate()
       }}
     >
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="manage-presentation">{text("Giới thiệu trang", "Page introduction")}</h2>
       </div>
       <p className="cp-section-lead">
@@ -750,7 +750,7 @@ function Members({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
       .catch(() => setCopied(false))
   return (
     <section className="cp-section" aria-labelledby="manage-members">
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="manage-members">
           {text("Người quản lý", "Managers")} {!!members.data?.length && <small>{members.data.length}</small>}
         </h2>

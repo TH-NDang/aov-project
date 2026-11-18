@@ -23,6 +23,7 @@ export function SkinBadgeImage({ badge }: { badge?: SkinBadge }) {
   return (
     <WikiImage
       className="wiki-skin-badge"
+      placeholder={false}
       src={image}
       alt={badge.name}
       title={badge.name}
@@ -326,7 +327,7 @@ export function SkinPreview({
               </div>
             )}
             <div className="wiki-skin-preview-info">
-              <div className="wiki-edit-heading">
+              <div className="wiki-edit-heading wiki-skin-preview-heading">
                 <DialogTitle>{skin.name}</DialogTitle>
                 <FeedbackDialog
                   target={`${skin.heroName} · ${skin.name}`}

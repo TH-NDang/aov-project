@@ -199,6 +199,7 @@ export function HeroVersionChanges({
             changes={officialChanges}
             hero={hero}
             overallKind={overall}
+            layout="ruled"
             skillAction={(key, skill) =>
               skill && (
                 <button
@@ -264,7 +265,7 @@ export function HeroVersionChanges({
               <PatchName patch={selected} />
             </h2>
             {compared}
-            {overall && <ChangeKind kind={overall} />}
+            {overall && <ChangeKind kind={overall} className="wiki-version-changes-kind" />}
           </div>
           {body}
         </section>

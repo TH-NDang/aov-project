@@ -41,7 +41,7 @@ function OtherMatches({ entry }: { entry: CompetitionMatch }) {
   if (!ahead.length && !played.length) return null
   return (
     <section className="tn-schedule-part" aria-labelledby="match-others">
-      <div className="tn-heading">
+      <div className="tn-heading tn-schedule-heading">
         <h2 id="match-others">
           {text("Trận khác của hai đội", "Other matches of the two teams")}{" "}
           <small>{text("trong giải này", "in this tournament")}</small>
@@ -104,6 +104,7 @@ export function MatchPage() {
       <div className="tn-match-page">
         <Link
           className="cp-back"
+          data-flush=""
           to={tournamentId ? `/competitions/${tournamentId}?tab=matches` : "/competitions?tab=schedule"}
         >
           <StreamIcon name="back" size={16} />
@@ -141,12 +142,14 @@ export function MatchPage() {
           <>
             <MatchHead tint={head.tint} kicker={head.kicker} teams={head.teams}>
               {status ? (
-                <span className="hub-status" data-status={status}>
+                <span className="hub-status" data-status={status} data-tone="banner">
                   {text(matchStateLabels[status][0], matchStateLabels[status][1])}
                 </span>
               ) : (
                 head.teams.some((team) => team.won) && (
-                  <span className="hub-status">{text(...matchStateLabels.FINISHED)}</span>
+                  <span className="hub-status" data-tone="banner">
+                    {text(...matchStateLabels.FINISHED)}
+                  </span>
                 )
               )}
               {scheduledAt && (
@@ -167,7 +170,7 @@ export function MatchPage() {
               />
             )}
             <section className="tn-match-games" aria-labelledby="match-games">
-              <div className="tn-heading">
+              <div className="tn-heading" data-flush="">
                 <h2 id="match-games">
                   {text("Các ván đấu", "Games")}{" "}
                   {list.length > 0 && (
@@ -184,7 +187,7 @@ export function MatchPage() {
                   aria-label={text("Đang tải các ván của trận", "Loading the games of this match")}
                 >
                   {Array.from({ length: 3 }, (_, index) => (
-                    <span key={index} className="hub-skeleton" />
+                    <span key={index} className="hub-skeleton tn-game-skeleton" />
                   ))}
                 </div>
               ) : games.isError && !games.data ? (

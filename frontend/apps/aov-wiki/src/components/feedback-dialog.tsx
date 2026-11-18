@@ -20,7 +20,8 @@ interface FeedbackProps {
   target?: string
   identity?: string
   revision?: string
-  showLabel?: boolean
+  /** `link` draws the trigger as one more link of a list of links, with its name: the footer's. */
+  variant?: "icon" | "link"
   fields?: { label: string; value: string; multiline?: boolean }[]
   onCloseInline?: () => void
 }
@@ -65,7 +66,7 @@ function Feedback({
   target,
   identity,
   revision,
-  showLabel,
+  variant = "icon",
   fields = [],
   onCloseInline,
   path,
@@ -306,7 +307,7 @@ function Feedback({
   )
   if (onCloseInline)
     return (
-      <section aria-label={title} className="wiki-warehouse-suggestion">
+      <section aria-label={title} className="wiki-feedback-inline">
         <p className="wiki-feedback-note">{reviewNote}</p>
         {content}
       </section>
@@ -325,12 +326,13 @@ function Feedback({
       <DialogTrigger asChild>
         <button
           type="button"
-          className={showLabel ? "wiki-feedback-trigger with-label" : "wiki-feedback-trigger"}
+          className="wiki-feedback-trigger"
+          data-variant={variant}
           title={target ? `${title} · ${target}` : title}
           aria-label={target ? `${title} · ${target}` : title}
         >
           <WikiIcon name="feedback" size={17} />
-          {showLabel && title}
+          {variant === "link" && title}
         </button>
       </DialogTrigger>
       <DialogContent className="wiki-feedback-dialog" showCloseButton={false}>

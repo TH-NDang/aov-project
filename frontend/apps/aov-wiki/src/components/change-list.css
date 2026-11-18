@@ -29,6 +29,14 @@
 .wiki-change-group {
   min-width: 0;
 }
+/* Inside a band a thin rule parts one ability from the next, where the same list on a page uses space alone. */
+.wiki-change-groups[data-layout="ruled"] {
+  gap: 14px;
+}
+.wiki-change-groups[data-layout="ruled"] > .wiki-change-group + .wiki-change-group {
+  border-top: 1px solid var(--aov-line);
+  padding-top: 14px;
+}
 .wiki-change-group-head {
   display: flex;
   align-items: center;

@@ -16,11 +16,20 @@ const monogram = (name: string) =>
     .map((word) => word[0]!.toUpperCase())
     .join("")
 
-export function StatusBadge({ status }: { status: CompetitionStatus | null }) {
+/** A competition's state. `banner` draws it on a banner's art, `small` in a card's first line. */
+export function StatusBadge({
+  status,
+  tone,
+  size,
+}: {
+  status: CompetitionStatus | null
+  tone?: "banner"
+  size?: "small"
+}) {
   // The status names are read in the reader's language, so the badge follows a change of language.
   useStreamLocale()
   return status ? (
-    <span className="hub-status" data-status={status}>
+    <span className="hub-status" data-status={status} data-tone={tone} data-size={size}>
       {competitionStatusLabels()[status]}
     </span>
   ) : null
@@ -74,7 +83,7 @@ export function CompetitionCard({ entry, within }: { entry: CompetitionView; wit
   const won = champion(tournament, teams)
   return (
     <Link className="tn-card" to={`/competitions/${entry.id}`} data-status={status ?? undefined}>
-      <CompetitionLogo name={tournament.name} url={tournament.logoUrl} />
+      <CompetitionLogo name={tournament.name} url={tournament.logoUrl} className="tn-card-logo" />
       <span className="tn-card-body">
         <strong title={tournament.name}>{seasonName(tournament.name, within)}</strong>
         <span className="tn-card-meta">
@@ -112,7 +121,7 @@ export function CompetitionFeature({ entry }: { entry: CompetitionView }) {
       </span>
       <span className="tn-feature-body">
         <span className="tn-feature-line">
-          <StatusBadge status={competitionStatus({ tournament, plan })} />
+          <StatusBadge status={competitionStatus({ tournament, plan })} size="small" />
           <span className="hub-kicker">
             {[plan.circuit, tournament.region].filter(Boolean).join(" · ") || text("Giải đấu", "Tournament")}
           </span>

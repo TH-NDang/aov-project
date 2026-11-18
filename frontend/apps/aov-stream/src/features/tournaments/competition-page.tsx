@@ -121,7 +121,7 @@ export function PublicCompetitionPage() {
             </span>
             <h1>{tournament.name}</h1>
             <div className="hub-banner-stats">
-              <StatusBadge status={status} />
+              <StatusBadge status={status} tone="banner" />
               <span>
                 <StreamIcon name="calendar" size={14} />
                 {dayRange(tournament.startsOn, tournament.endsOn)}
@@ -475,7 +475,7 @@ function Bracket({ stage, matches }: { stage: CompetitionStage; matches: Competi
                     <h3 className="tn-bracket-title">{text(...LANE_TITLES[lane.key as "upper"])}</h3>
                   )}
                   {list.map((match) => (
-                    <MatchCard key={match.key} entry={byKey.get(match.key)!} brief />
+                    <MatchCard key={match.key} entry={byKey.get(match.key)!} brief final={lane.key === "final"} />
                   ))}
                 </div>
               </Fragment>

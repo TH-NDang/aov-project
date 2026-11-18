@@ -6,6 +6,7 @@
   container: hero-card / inline-size;
 }
 .wiki-hero-card {
+  --wiki-hero-glyph-size: 16px;
   position: relative;
   display: flex;
   min-width: 0;
@@ -67,6 +68,7 @@
   font: var(--wiki-type-entry);
 }
 .wiki-hero-card-roles {
+  --wiki-hero-glyph-display: none;
   display: block;
   grid-area: 2 / 1 / auto / -1;
   overflow: hidden;
@@ -83,17 +85,27 @@
   color: var(--aov-muted);
   font: var(--wiki-type-meta);
 }
-.wiki-hero-card .wiki-hero-glyph {
-  width: 16px;
-  height: 16px;
+/* A card while the list loads (HeroCardSkeleton): the same box and lines, with bars where the words will be. */
+.wiki-hero-card[data-skeleton] {
+  pointer-events: none;
 }
-.wiki-hero-card-roles .wiki-hero-glyph {
-  display: none;
+.wiki-hero-card[data-skeleton] :is(.wiki-hero-card-name, .wiki-hero-card-roles)::before {
+  content: "";
+  display: inline-block;
+  width: 64%;
+  height: 0.7em;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  vertical-align: middle;
+}
+.wiki-hero-card[data-skeleton] .wiki-hero-card-roles::before {
+  width: 44%;
 }
 
 /* A card too narrow for the roles in words centres the name and draws roles and lanes as one line of marks. */
 @container hero-card (max-width: 127.98px) {
   .wiki-hero-card-body {
+    --wiki-hero-glyph-size: 14px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -107,6 +119,7 @@
     font: var(--wiki-type-category);
   }
   .wiki-hero-card-roles {
+    --wiki-hero-glyph-display: inline-block;
     display: inline-flex;
     gap: 3px;
     overflow: visible;
@@ -115,12 +128,9 @@
   .wiki-hero-card-roles > span {
     display: inline-flex;
   }
-  .wiki-hero-card-roles > span > span,
+  .wiki-hero-card-role-name,
   .wiki-hero-card-roles > span + span::before {
     display: none;
-  }
-  .wiki-hero-card-roles .wiki-hero-glyph {
-    display: inline-block;
   }
   .wiki-hero-card-lanes {
     height: auto;
@@ -131,9 +141,15 @@
   .wiki-hero-card-note {
     flex: 0 0 100%;
   }
-  .wiki-hero-card .wiki-hero-glyph {
-    width: 14px;
-    height: 14px;
+  /* A loading card holds its line of marks as tall as one mark. */
+  .wiki-hero-card[data-skeleton] .wiki-hero-card-roles {
+    width: 44%;
+    min-height: 14px;
+    align-items: center;
+  }
+  .wiki-hero-card[data-skeleton] .wiki-hero-card-roles::before {
+    width: 100%;
+    height: 8px;
   }
 }
 

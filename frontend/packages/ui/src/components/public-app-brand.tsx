@@ -34,9 +34,18 @@ function StreamWordmarkArt() {
   )
 }
 
-export function PublicAppWordmark({ product, className }: { product: "Wiki" | "Stream"; className?: string }) {
+/** The app's name as its logo; `small` is the size of a phone's top bar. */
+export function PublicAppWordmark({
+  product,
+  size,
+  className,
+}: {
+  product: "Wiki" | "Stream"
+  size?: "small"
+  className?: string
+}) {
   return (
-    <span className={cn("public-app-wordmark", className)} data-product={product.toLowerCase()}>
+    <span className={cn("public-app-wordmark", className)} data-product={product.toLowerCase()} data-size={size}>
       {product === "Stream" ? (
         <>
           <span className="sr-only">AOV Stream</span>

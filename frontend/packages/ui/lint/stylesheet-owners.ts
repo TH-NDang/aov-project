@@ -2,9 +2,10 @@
 // sheets, with the shared library's sheets as owners too.
 //
 // A class belongs to the sheet that declares it in a selector of one compound, such as `.wiki-footer-main` or
-// `.wiki-footer-main[data-open]:hover`; a class two sheets declare belongs to neither. A class no sheet declares that way
-// belongs to the library's sheets that name it, or else to every sheet that names it, so a modifier only ever written
-// in context (`.wiki-feedback-trigger.with-label`) is not caught.
+// `.wiki-footer-main[data-open]:hover`; a class two sheets declare belongs to neither. A modifier class that is only
+// written beside another class belongs to the sheets that declare it that way in a selector of one compound
+// (`.wiki-feedback-trigger.with-label`). A class no sheet declares at all belongs to the library's sheets that name it,
+// or else to every sheet that names it.
 // A rule styles the classes of its subject, the last compound of its selector that names a class:
 // `.wiki-hero-card .wiki-hero-glyph` styles the glyph, `.cp-tabs button::after` styles the tabs. Classes inside
 // `:has()` and `:not()` only choose where the rule applies.
@@ -119,6 +120,7 @@ export function foreignRules(checked: Sheet[], owners: Sheet[], root: string): F
   const all = [...checked, ...owners].flatMap((sheet) => selectors(sheet, name(sheet)))
 
   const declared = new Map<string, Set<string>>()
+  const modifiers = new Map<string, Set<string>>()
   const named = new Map<string, Set<string>>()
   const add = (map: Map<string, Set<string>>, key: string, sheet: string) =>
     map.set(key, (map.get(key) ?? new Set()).add(sheet))
@@ -128,12 +130,14 @@ export function foreignRules(checked: Sheet[], owners: Sheet[], root: string): F
     const only = selector.compounds.length === 1 ? selector.compounds[0]! : null
     const base = only ? (classes(only, true).length > 0 ? classes(only, true) : classes(only)) : []
     if (base.length === 1) add(declared, base[0]!, selector.sheet)
+    // `.wiki-feedback-trigger.with-label` declares the modifier beside the class it modifies.
+    else for (const owned of base) add(modifiers, owned, selector.sheet)
   }
   const own = new Set(checked.map(name))
   // A class only named in context belongs to the shared library when the library names it: its components set it.
   const lent = (owned: string) => [...named.get(owned)!].filter((sheet) => !own.has(sheet))
   const owner = (owned: string) => {
-    const declarers = declared.get(owned)
+    const declarers = declared.get(owned) ?? modifiers.get(owned)
     if (declarers) return [...declarers]
     return lent(owned).length > 0 ? lent(owned) : [...named.get(owned)!]
   }

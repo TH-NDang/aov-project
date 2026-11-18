@@ -21,10 +21,6 @@
   color: var(--hub-muted);
   font-size: 14px;
 }
-.competition-hub > .competition-filters {
-  padding: 0;
-  border: 0;
-}
 .competition-hub > .competition-hub-results {
   padding: 0;
 }
@@ -86,11 +82,6 @@
   align-items: center;
   gap: 8px;
 }
-.tn-feature-line > .hub-status {
-  height: 22px;
-  flex: none;
-  padding: 0 8px;
-}
 .tn-feature-line > .hub-kicker {
   min-width: 0;
   overflow: hidden;
@@ -132,7 +123,7 @@
 .tn-card:hover {
   background: var(--hub-hover);
 }
-.tn-card > .tn-logo {
+.tn-card > .tn-card-logo {
   width: 48px;
   height: 48px;
   border-radius: var(--hub-radius-sm);
@@ -265,6 +256,9 @@
   text-transform: uppercase;
 }
 .tn-champion-team {
+  --stream-image-size: 36px;
+  --stream-image-radius: var(--aov-radius-control);
+  --stream-image-plate: rgb(255 255 255 / 10%);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -272,12 +266,6 @@
   font-size: 18px;
   font-weight: 700;
   line-height: 24px;
-}
-.tn-champion-team > .stream-image {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--aov-radius-control);
-  background: rgb(255 255 255 / 10%);
 }
 .tn-overview {
   display: grid;
@@ -372,16 +360,12 @@
   white-space: normal;
 }
 .tn-team {
+  --stream-image-size: 28px;
+  --stream-image-radius: var(--aov-radius-control);
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 10px;
-}
-.tn-team > .stream-image {
-  width: 28px;
-  height: 28px;
-  flex: none;
-  border-radius: var(--aov-radius-control);
 }
 .tn-team a:hover,
 .tn-team-card a:hover,
@@ -447,9 +431,6 @@
   grid-row: 1 / span 2;
   align-self: center;
 }
-.tn-bracket-round[data-lane="final"] > .tn-match {
-  border-color: var(--hub-accent-border);
-}
 .tn-bracket-round[data-lane="final"] > .tn-bracket-title {
   color: var(--hub-accent-strong);
 }
@@ -473,6 +454,8 @@
   background: var(--hub-surface);
 }
 .tn-team-card > h2 {
+  --stream-image-size: 40px;
+  --stream-image-radius: var(--hub-radius-sm);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -481,11 +464,6 @@
   font-size: 16px;
   font-weight: 700;
   line-height: 22px;
-}
-.tn-team-card > h2 > .stream-image {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--hub-radius-sm);
 }
 .tn-team-card ul {
   margin: 0;
@@ -555,6 +533,15 @@
   color: var(--hub-text);
   font-size: 14px;
   overflow-wrap: anywhere;
+}
+/* A page's about card: each value sits in a line with its mark, and the card ends without a rule under the last. */
+.tn-facts[data-variant="about"] > div:last-child {
+  border-bottom: 0;
+}
+.tn-facts[data-variant="about"] dd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .tn-links {
   display: flex;
@@ -661,6 +648,11 @@
   }
   .tn-page-head p {
     display: none;
+  }
+  /* A head that says how to use the page keeps its sentence, a size smaller. */
+  .tn-page-head[data-lead="kept"] p {
+    display: block;
+    font-size: 13px;
   }
   .tn-feature {
     grid-template-columns: 88px minmax(0, 1fr);

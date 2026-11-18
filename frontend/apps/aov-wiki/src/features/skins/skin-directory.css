@@ -189,7 +189,8 @@
   width: 42px;
   object-fit: contain;
 }
-.wiki-skin-filter-art > .wiki-image {
+/* The picture takes the fit its kind sets above. */
+.wiki-skin-filter-art > .wiki-skin-filter-image {
   object-fit: inherit;
 }
 .wiki-skin-filter-name {

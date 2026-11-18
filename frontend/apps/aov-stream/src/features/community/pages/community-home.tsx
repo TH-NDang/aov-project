@@ -67,8 +67,8 @@ export function CommunityHome() {
       <title>{text("Bảng tin — AOV Stream", "Feed — AOV Stream")}</title>
       <div className="cp-container">
         <section>
-          <div className="hub-feed-header">
-            <div className="hub-pills" role="group" aria-label={text("Lọc bảng tin", "Filter the feed")}>
+          <div className="cp-feed-header">
+            <div className="hub-pills" data-padded="" role="group" aria-label={text("Lọc bảng tin", "Filter the feed")}>
               {filters.map((filter) => (
                 <button
                   key={filter.value}
@@ -92,7 +92,7 @@ export function CommunityHome() {
               ))}
             </div>
           </div>
-          <div className="hub-feed-body">
+          <div className="cp-feed-body">
             {tab === "latest" && <LiveRow />}
             <CrossFeed key={tab} following={tab === "following"} kind={tabKinds[tab]} />
           </div>

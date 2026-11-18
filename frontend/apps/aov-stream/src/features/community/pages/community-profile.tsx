@@ -417,7 +417,7 @@ function ProfileHome({
             <h2 id="profile-posts">{text("Bài viết", "Posts")}</h2>
           </div>
           {hasVideos && (
-            <div className="hub-pills" role="group" aria-label={text("Loại bài viết", "Post type")}>
+            <div className="hub-pills pf-post-kinds" role="group" aria-label={text("Loại bài viết", "Post type")}>
               <button type="button" aria-pressed={!onlyVideo} onClick={() => setOnlyVideo(false)}>
                 {text("Tất cả", "All")}
               </button>

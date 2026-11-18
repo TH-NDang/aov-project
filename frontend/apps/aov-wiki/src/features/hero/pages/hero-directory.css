@@ -185,6 +185,7 @@
   gap: 8px;
 }
 .wiki-hero-sheet-choice {
+  --wiki-hero-glyph-size: 20px;
   display: inline-flex;
   min-width: 0;
   min-height: 44px;
@@ -206,10 +207,6 @@
   .wiki-hero-sheet-choice:last-child:nth-child(odd) {
     grid-column: 1 / -1;
   }
-}
-.wiki-hero-sheet-choice .wiki-hero-glyph {
-  width: 20px;
-  height: 20px;
 }
 .wiki-hero-sheet-choice[aria-pressed="true"] {
   border-color: var(--aov-accent);

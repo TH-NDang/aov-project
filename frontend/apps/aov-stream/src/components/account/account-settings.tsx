@@ -28,7 +28,7 @@ export function AccountSettings() {
 
   return (
     <section className="cp-section account-settings" aria-labelledby="account-settings-title">
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="account-settings-title">{text("Cài đặt", "Settings")}</h2>
       </div>
       <p className="cp-section-lead">

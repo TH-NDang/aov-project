@@ -19,7 +19,7 @@ export function HomeMatches() {
       <div className="tn-strip" role="status" aria-label={text("Đang tải trận đấu", "Loading matches")}>
         <div className="tn-strip-row">
           {Array.from({ length: 4 }, (_, index) => (
-            <span key={index} className="tn-match hub-skeleton" />
+            <span key={index} className="tn-match hub-skeleton tn-strip-skeleton" />
           ))}
         </div>
       </div>

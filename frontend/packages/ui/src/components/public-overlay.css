@@ -85,10 +85,15 @@
   background: var(--drawer-line);
   color: var(--drawer-text);
 }
+/*
+ * A drawer whose content runs to its edges sets --public-bottom-body-padding on itself, and one that paints the area
+ * under its content sets --public-bottom-body-surface.
+ */
 .public-bottom-body {
   position: relative;
   min-height: 0;
-  padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  padding: var(--public-bottom-body-padding, 16px 16px max(16px, env(safe-area-inset-bottom)));
+  background: var(--public-bottom-body-surface, none);
   overflow-y: auto;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
@@ -99,8 +104,7 @@
   display: grid;
   gap: 4px;
 }
-.public-bottom-body > h2:first-child,
-.public-bottom-menu > .public-app-menu-title {
+.public-bottom-body > h2:first-child {
   display: none;
 }
 .public-bottom-menu .public-bottom-menu-item {

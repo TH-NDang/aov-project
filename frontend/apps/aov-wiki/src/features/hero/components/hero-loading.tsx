@@ -22,7 +22,7 @@ const SKELETON_CARDS = 30
 export function HeroCardSkeleton() {
   return (
     <div className="wiki-hero-card-cell" aria-hidden="true">
-      <div className="wiki-hero-card wiki-hero-card-skeleton">
+      <div className="wiki-hero-card" data-skeleton="">
         <span className="wiki-hero-card-portrait wiki-skeleton" />
         <span className="wiki-hero-card-body">
           <span className="wiki-hero-card-name" />

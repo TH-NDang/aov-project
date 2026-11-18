@@ -264,9 +264,6 @@
   min-width: 0;
   gap: 16px;
 }
-.pf-page .tn-heading h2 > a:hover {
-  color: var(--hub-accent-strong);
-}
 .pf-bio {
   max-width: 72ch;
   margin: 0;
@@ -286,7 +283,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
 }
-.pf-intro > .tn-more {
+.pf-intro > .pf-intro-more {
   margin-top: 4px;
 }
 /* What a page does not record, said once. */
@@ -309,7 +306,7 @@
   line-height: 18px;
 }
 /* The choice between all posts and videos, above the posts. */
-.pf-posts > .hub-pills {
+.pf-posts > .pf-post-kinds {
   margin-bottom: 16px;
 }
 
@@ -572,15 +569,7 @@
 .pf-about .pf-bio {
   margin-bottom: 8px;
 }
-.pf-about > .tn-facts > div:last-child {
-  border-bottom: 0;
-}
-.pf-about > .tn-facts dd {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.pf-about > .cp-meta {
+.pf-about > .pf-about-note {
   margin: 8px 0 0;
 }
 .pf-links {
@@ -662,8 +651,8 @@
   color: var(--hub-text);
   box-shadow: var(--hub-shadow-lg);
 }
-.cp-profile-dialog.public-bottom-drawer > .public-bottom-body {
-  padding: 0 0 env(safe-area-inset-bottom);
+.cp-profile-dialog.public-bottom-drawer {
+  --public-bottom-body-padding: 0 0 env(safe-area-inset-bottom);
 }
 .cp-profile-dialog-heading {
   display: flex;

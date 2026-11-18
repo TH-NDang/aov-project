@@ -75,7 +75,7 @@ export function SkillVideos({
                 <VideoThumbnail video={video} compact />
                 <span className="wiki-skill-video-text">
                   <span className="wiki-video-title">{video.title}</span>
-                  <span className="wiki-video-meta">
+                  <span className="wiki-video-meta" data-tone={active ? "tint" : undefined}>
                     <span>{active ? text("Đang phát", "Playing") : purposeLabel(video.purpose, locale)}</span>
                     {video.durationSeconds && <span>{formatDuration(video.durationSeconds)}</span>}
                   </span>

@@ -62,7 +62,7 @@ export function AccountProfile() {
     )
   return (
     <section className="cp-section account-profile" aria-labelledby="account-profile-title">
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="account-profile-title">{text("Hồ sơ dùng chung", "Shared profile")}</h2>
       </div>
       {profile.isError ? (
@@ -190,7 +190,7 @@ function ProfileEditor({
 
   return (
     <form className="cp-section account-profile" aria-labelledby="account-profile-title" onSubmit={save}>
-      <div className="tn-heading">
+      <div className="tn-heading" data-flush="">
         <h2 id="account-profile-title">{text("Hồ sơ dùng chung", "Shared profile")}</h2>
       </div>
       <p className="cp-section-lead">
@@ -203,7 +203,7 @@ function ProfileEditor({
         <AccountAvatar url={avatarUrl} name={draft.displayName || session.name} large />
         <div>
           <span className="account-field-label">{text("Ảnh đại diện", "Avatar")}</span>
-          <div className="cp-actions">
+          <div className="cp-actions" data-spacing="loose">
             <label className="cp-button account-file" aria-disabled={locked || undefined}>
               {draft.avatarAssetId ? text("Đổi ảnh", "Change image") : text("Chọn ảnh", "Choose image")}
               <input
@@ -237,7 +237,7 @@ function ProfileEditor({
               </button>
             )}
           </div>
-          <p className="cp-meta">
+          <p className="cp-meta account-avatar-note">
             {draft.avatarAssetId !== base.avatarAssetId
               ? text(
                   "Ảnh đại diện có thay đổi chưa lưu. Bấm Lưu thay đổi để áp dụng.",

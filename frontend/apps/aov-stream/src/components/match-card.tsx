@@ -42,10 +42,13 @@ export function MatchCard({
   entry,
   context = false,
   brief = false,
+  final = false,
 }: {
   entry: CompetitionMatch
   context?: boolean
   brief?: boolean
+  /** The final of a bracket, drawn in the accent's outline. */
+  final?: boolean
 }) {
   const { languageTag } = useStreamLocale()
   const { competition, match } = entry
@@ -56,6 +59,7 @@ export function MatchCard({
       className="tn-match"
       to={competitionMatchHref(competition.id, match.key)}
       data-live={matchUnderway(entry) || undefined}
+      data-final={final || undefined}
     >
       {context ? (
         <span className="tn-match-meta" data-context="">

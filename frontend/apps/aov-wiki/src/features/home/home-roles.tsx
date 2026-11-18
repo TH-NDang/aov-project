@@ -22,7 +22,7 @@ export function HomeRoles() {
           return (
             <li key={role.value}>
               <Link to={href(`/hero?role=${role.value}`)}>
-                <HeroGlyph name={role.glyph} />
+                <HeroGlyph name={role.glyph} className="wiki-home-role-mark" />
                 <strong>{role.label}</strong>
                 {count > 0 && <small>{count}</small>}
               </Link>

@@ -16,6 +16,7 @@
   white-space: nowrap;
 }
 .wiki-hero-chip {
+  --wiki-hero-glyph-size: 16px;
   display: inline-flex;
   height: 32px;
   flex: none;
@@ -42,10 +43,6 @@
   position: absolute;
   inset: -2px 0;
 }
-.wiki-hero-chip .wiki-hero-glyph {
-  width: 16px;
-  height: 16px;
-}
 @media (hover: hover) {
   .wiki-hero-chip:hover {
     background: var(--aov-raised);
@@ -57,4 +54,13 @@
   border-color: var(--aov-accent);
   background: var(--aov-accent-soft);
   color: var(--aov-accent-strong);
+}
+/* The quick switch's rows clip what leaves them, so the focus ring is drawn inside the chip. */
+.wiki-hero-chips[data-layout="sheet"] .wiki-hero-chip:focus-visible {
+  outline-offset: -2px;
+}
+@media (max-width: 899.98px) {
+  .wiki-hero-chips[data-layout="sheet"] .wiki-hero-chip {
+    height: 36px;
+  }
 }

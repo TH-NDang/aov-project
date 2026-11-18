@@ -1,14 +1,6 @@
-@media (max-width: 899.98px) {
-  .hub-brand-group .public-app-wordmark {
-    font-size: 18px;
-  }
-  .hub-brand-group .public-app-trigger {
-    gap: 6px;
-    padding-inline: 4px;
-  }
-}
+/* The narrowest phones have no room for the name beside the logo. */
 @media (max-width: 359.98px) {
-  .hub-brand-group .public-app-wordmark {
+  .hub-brand-group .stream-brand-wordmark {
     display: none;
   }
 }

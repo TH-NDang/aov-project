@@ -7,6 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTitle,
   DropdownMenuTrigger,
 } from "@aov/ui/components/public-overlay"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
@@ -91,7 +92,7 @@ function SectionSelector() {
         data-product="wiki"
         aria-label={`${t("Chọn ứng dụng", "Choose application")} — ${current.label}`}
       >
-        <PublicAppWordmark product="Wiki" />
+        <PublicAppWordmark product="Wiki" className="wiki-header-wordmark" />
         <span className="public-app-chevron">
           <Icon name="chevron" />
         </span>
@@ -104,7 +105,9 @@ function SectionSelector() {
         drawerTitle={t("Chọn ứng dụng", "Choose application")}
         data-appearance="wiki"
       >
-        <div className="public-app-menu-title">{t("Chọn ứng dụng", "Choose application")}</div>
+        <DropdownMenuTitle className="public-app-menu-title">
+          {t("Chọn ứng dụng", "Choose application")}
+        </DropdownMenuTitle>
         {SECTIONS.map((s) => {
           const selected = s.id === CURRENT_SECTION
           return (
@@ -297,7 +300,7 @@ function WikiHeaderCompact({
       ) : (
         <a className="wiki-compact-brand" href={href("/")} aria-label={`${SITE_NAME} — ${t("Trang chủ", "Home")}`}>
           <img src={WIKI_LOGO_URL} alt="" width={28} height={28} fetchPriority="high" />
-          <PublicAppWordmark product="Wiki" className="wiki-mobile-wordmark" />
+          <PublicAppWordmark product="Wiki" size="small" />
         </a>
       )}
       {pageTitle ? (

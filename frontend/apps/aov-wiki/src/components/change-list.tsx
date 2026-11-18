@@ -11,10 +11,10 @@ import "./change-list.css"
 /** A before and an after this short together read as "a → b" on one line; longer ones take a line each. */
 const INLINE_PAIR = 28
 
-export function ChangeKind({ kind }: { kind?: string | null }) {
+export function ChangeKind({ kind, className }: { kind?: string | null; className?: string }) {
   if (!kind) return null
   return (
-    <span className="wiki-change-kind" data-kind={kind}>
+    <span className={className ? `wiki-change-kind ${className}` : "wiki-change-kind"} data-kind={kind}>
       <ChangeKindLabel kind={kind} />
     </span>
   )
@@ -308,6 +308,7 @@ export function ChangeList({
   hero,
   skillAction,
   overallKind,
+  layout,
 }: {
   changes: HeroChangeItem[]
   /** Supplies skill names and artwork; without it, skills fall back to their slot. */
@@ -316,6 +317,8 @@ export function ChangeList({
   skillAction?: (skillKey: string, skill?: PublicSkill) => ReactNode
   /** The kind already shown for the whole set. When every change is of that kind, none repeats it. */
   overallKind?: string | null
+  /** `ruled` parts one ability from the next with a thin rule, inside a band of its own. */
+  layout?: "ruled"
 }) {
   const { locale } = useWikiContext()
   if (!changes.length) return null
@@ -330,7 +333,7 @@ export function ChangeList({
   const marked = !overallKind || changes.some((change) => change.changeKind !== overallKind)
 
   return (
-    <ul className="wiki-change-groups">
+    <ul className="wiki-change-groups" data-layout={layout}>
       {ordered.map(([key, rows]) => {
         const skill = skills.find((candidate) => candidate.skillKey === key)
         const title = [changeSkillLabel(key, locale), skill?.name].filter(Boolean).join(" · ")

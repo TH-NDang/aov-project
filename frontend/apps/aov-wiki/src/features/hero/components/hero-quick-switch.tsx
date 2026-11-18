@@ -109,6 +109,7 @@ function HeroPicker({
             options={positionOptions}
             selected={position ? [position] : []}
             onToggle={(value) => setPosition((current) => (current === value ? null : value))}
+            layout="sheet"
           />
         </div>
         <div className="wiki-hero-switch-filters" ref={roleScroll.ref} {...roleScroll.handlers}>
@@ -117,6 +118,7 @@ function HeroPicker({
             options={roleOptions}
             selected={role ? [role] : []}
             onToggle={(value) => setRole((current) => (current === value ? null : value))}
+            layout="sheet"
           />
         </div>
       </div>

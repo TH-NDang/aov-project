@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router"
-import { PublicAccountMenu, PublicAccountSettings, PublicAccountSummary } from "@aov/ui/components/public-account-menu"
+import {
+  PublicAccountLinks,
+  PublicAccountMenu,
+  PublicAccountSettings,
+  PublicAccountSummary,
+} from "@aov/ui/components/public-account-menu"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useAccountCurrency } from "@aov/ui/lib/currency"
@@ -80,7 +85,7 @@ export function CommunitySessionButton() {
           }
         >
           <PublicAccountSummary {...accountProps} />
-          {links && <div className="public-account-links">{links}</div>}
+          {links && <PublicAccountLinks layout="sheet">{links}</PublicAccountLinks>}
           <div className="public-preferences-label">{text("Chọn ứng dụng", "Choose application")}</div>
           <nav className="public-preferences-apps" aria-label={text("Chọn ứng dụng", "Choose application")}>
             <a className="public-preferences-app" href={WIKI_URL}>
@@ -101,7 +106,7 @@ export function CommunitySessionButton() {
             </Link>
           </nav>
           <div className="public-preferences-label">{text("Cài đặt", "Settings")}</div>
-          <PublicAccountSettings {...accountProps} />
+          <PublicAccountSettings {...accountProps} layout="sheet" />
         </PublicPreferencesDrawer>
       ) : (
         <PublicAccountMenu {...accountProps}>{links}</PublicAccountMenu>
@@ -142,7 +147,12 @@ function NotificationBell() {
       >
         <div className="hub-popover-header">
           <strong>{text("Thông báo", "Notifications")}</strong>
-          <button className="cp-text-button" disabled={!count || read.all.isPending} onClick={() => read.all.mutate()}>
+          <button
+            className="cp-text-button"
+            data-size="small"
+            disabled={!count || read.all.isPending}
+            onClick={() => read.all.mutate()}
+          >
             {text("Đánh dấu đã đọc tất cả", "Mark all as read")}
           </button>
         </div>

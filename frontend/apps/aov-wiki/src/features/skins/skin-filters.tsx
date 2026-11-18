@@ -17,7 +17,7 @@ export function FilterArt({ kind, image }: { kind: FilterKind; image?: string })
   return (
     <span className={`wiki-skin-filter-art wiki-skin-filter-art-${kind}`} aria-hidden="true">
       {image && image !== failed ? (
-        <WikiImage src={image} alt="" onError={() => setFailed(image)} />
+        <WikiImage className="wiki-skin-filter-image" src={image} alt="" onError={() => setFailed(image)} />
       ) : (
         <SkinIcon name={filterIcon(kind)} size={16} />
       )}

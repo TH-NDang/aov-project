@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { cn } from "@aov/ui/lib/utils"
 import { LocalTime } from "@aov/ui/components/local-time"
 import {
   DropdownMenu,
@@ -19,7 +20,14 @@ function VersionName({ patch, locale }: { patch: WikiPatch; locale: string }) {
  * Says which game version the page shows. Where other versions changed what the page lists, the value opens a menu of
  * them; `changedVariants` names those versions.
  */
-export function WikiVersionPicker({ changedVariants }: { changedVariants?: ReadonlySet<string> }) {
+export function WikiVersionPicker({
+  changedVariants,
+  className,
+}: {
+  changedVariants?: ReadonlySet<string>
+  /** Places the picker in the row that holds it. */
+  className?: string
+}) {
   const { locale, options, optionsPending, seasonId, patchVariantId, setScope } = useWikiContext()
   const root = useRef<HTMLDivElement>(null)
   const [align, setAlign] = useState<"start" | "end">("start")
@@ -39,7 +47,7 @@ export function WikiVersionPicker({ changedVariants }: { changedVariants?: Reado
 
   if (optionsPending)
     return (
-      <div className="wiki-version-picker" aria-busy="true">
+      <div className={cn("wiki-version-picker", className)} aria-busy="true">
         {label}
         <span className="wiki-version-loading" aria-hidden="true" />
       </div>
@@ -69,7 +77,7 @@ export function WikiVersionPicker({ changedVariants }: { changedVariants?: Reado
   return (
     <div
       ref={root}
-      className="wiki-version-picker"
+      className={cn("wiki-version-picker", className)}
       role="group"
       aria-label={text("Phiên bản dữ liệu", "Data version")}
       data-historical={historical || undefined}
