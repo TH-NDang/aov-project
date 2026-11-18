@@ -579,7 +579,21 @@ export interface components {
       canApply: boolean
       /** Format: uuid */
       sourcePatchVariantId?: string | null
-      warnings: string[]
+      warnings: components["schemas"]["HeroImportWarning"][]
+    }
+    HeroImportWarning: {
+      /** @enum {string} */
+      code:
+        | "MISSING_ROLES"
+        | "MISSING_SKILL_DESCRIPTION"
+        | "STALE_SKILL_SUMMARY"
+        | "SKILL_SOURCE_NEEDS_REVIEW"
+        | "NO_SNAPSHOT_TO_CORRECT"
+        | "NO_EARLIER_SNAPSHOT"
+        | "BASELINE_IS_KNOWN_STATE"
+        | "SNAPSHOT_DIFFERENCE_UNPROVEN"
+      skillKey: string | null
+      locale: string | null
     }
     Season: {
       /** Format: uuid */

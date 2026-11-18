@@ -42,7 +42,7 @@ test("import wizard carries patch context and never selects rows without a known
       classification: known ? "CHANGED" : "INSUFFICIENT_DATA",
       canApply: known,
       sourcePatchVariantId: known ? "previous" : null,
-      warnings: known ? [] : ["Chưa có mốc trước để so sánh."],
+      warnings: known ? [] : [{ code: "NO_EARLIER_SNAPSHOT", skillKey: null, locale: null }],
     } as T
   }
   const click = async (text: string) => {
@@ -108,6 +108,7 @@ test("import wizard carries patch context and never selects rows without a known
     })
     await click("Kiểm tra 2")
     assert.match(dom.window.document.body.textContent!, /Thiếu mốc so sánh/)
+    assert.match(dom.window.document.body.textContent!, /Chưa có mốc trước patch này để so sánh/)
     assert.match(dom.window.document.body.textContent!, /Lưu 1 bản nháp/)
     assert.equal(dom.window.document.querySelector("script"), null)
     assert.ok(calls.every((c) => c.body.contextId === "release" && c.body.mode === "PATCH_UPDATE"))
