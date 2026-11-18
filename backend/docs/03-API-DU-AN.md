@@ -2095,10 +2095,11 @@ Response:
   "items": [],
   "page": 0,
   "size": 20,
-  "totalElements": 0,
-  "totalPages": 0
+  "totalElements": 0
 }
 ```
+
+Response không có `totalPages`: client tự tính số trang `ceil(totalElements / size)` (0 khi không có phần tử).
 
 Không expose trực tiếp Spring `Page` JSON format vì có thể đổi theo framework/version.
 
