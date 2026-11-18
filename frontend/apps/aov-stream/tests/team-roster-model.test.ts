@@ -66,9 +66,22 @@ test("a coded member's role and standing read in the reader's language with thei
   })
   const english = (_vi: string, en: string) => en
 
-  assert.deepEqual(memberWords(jungler, english), { role: "Jungle · Đội trưởng", standing: "Substitute · AOG 2026" })
+  assert.deepEqual(memberWords(jungler, english), { role: "Jungle", standing: "Substitute · AOG 2026", captain: "" })
   assert.deepEqual(memberWords(member("Coach", { role: "HLV trưởng", status: "Thử việc" }), english), {
     role: "HLV trưởng",
     standing: "Thử việc",
+    captain: "",
   })
+})
+
+test("a captain is marked from the flag in the reader's language, never from the role's words", () => {
+  const english = (_vi: string, en: string) => en
+  const vietnamese = (vi: string) => vi
+
+  assert.equal(
+    memberWords(member("Jungler", { lane: "JUNGLE", role: "Đi rừng", captain: true }), english).captain,
+    "Captain",
+  )
+  assert.equal(memberWords(member("Jungler", { captain: true }), vietnamese).captain, "Đội trưởng")
+  assert.equal(memberWords(member("Mid", { role: "Đường giữa · Đội trưởng" }), english).captain, "")
 })

@@ -380,6 +380,21 @@
 .pf-roster .tn-team-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
+/* The captain's mark beside a member's name; its full word is the title and the accessible name. */
+.pf-roster .pf-captain {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  place-items: center;
+  border-radius: var(--aov-radius-pill);
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  vertical-align: middle;
+}
 @container profile-main (min-width: 700px) {
   .pf-roster .tn-team-grid:has(> :nth-child(4)) {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -45,17 +45,19 @@ export function rosterGroups(roster: ProfileMember[]): { season: string | null; 
   return { season, groups }
 }
 
+/** The captain's mark in Vietnamese and in English. */
+export const CAPTAIN_WORDS = ["Đội trưởng", "Captain"] as const
+
 /**
- * A member's role and standing in the reader's words: a code's wording replaces the first part of the role or the
- * status it leads, and the notes after it stay as written.
+ * A member's role, standing and captaincy in the reader's words. A coded lane is the role, worded by its code; the
+ * standing's code words the first part of the status and the notes after it stay as written; `captain` is empty for a
+ * member who is not one.
  */
 export function memberWords(member: ProfileMember, text: (vi: string, en: string) => string) {
-  const role = member.lane
-    ? [text(LANE_NAMES[member.lane][0], LANE_NAMES[member.lane][1]), ...member.role.split(" · ").slice(1)].join(" · ")
-    : member.role
+  const role = member.lane ? text(LANE_NAMES[member.lane][0], LANE_NAMES[member.lane][1]) : member.role
   const notes = (member.status || "").split(" · ").filter(Boolean)
   const standing = member.standing
     ? [text(...STANDING_WORDS[member.standing]), ...notes.slice(1)].join(" · ")
     : notes.join(" · ")
-  return { role, standing }
+  return { role, standing, captain: member.captain ? text(...CAPTAIN_WORDS) : "" }
 }
