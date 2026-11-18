@@ -2,8 +2,6 @@
 // feature is reworked: the variation moves to the owning sheet behind a modifier that the owning component sets.
 // `pnpm lint` fails on a restyle missing here and on an entry no rule matches any more, so the list only shrinks.
 export const knownRestyles = [
-  "components/videos/skill-videos.css .wiki-video-meta",
-  "components/videos/skill-videos.css .wiki-video-title",
   "components/wiki-header.css .wiki-search",
   "features/account/account.css .pas-section",
   "features/account/account.css .public-account-security",

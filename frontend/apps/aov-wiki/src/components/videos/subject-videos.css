@@ -191,6 +191,10 @@
 .wiki-video-meta:empty {
   display: none;
 }
+/* Muted text is too faint on the tint of the entry being played. */
+.wiki-video-meta[data-tone="tint"] {
+  color: var(--aov-text-soft);
+}
 .wiki-video-patch {
   color: var(--aov-accent);
 }
