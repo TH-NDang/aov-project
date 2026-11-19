@@ -1,4 +1,10 @@
-import type { ArcanaAllocation, EnchantmentAllocation, ObservationStatus, Reference } from "@aov/community-contracts"
+import type {
+  ArcanaAllocation,
+  EnchantmentAllocation,
+  Loadout,
+  ObservationStatus,
+  Reference,
+} from "@aov/community-contracts"
 
 export type ArcanaColor = "RED" | "PURPLE" | "GREEN"
 
@@ -161,3 +167,56 @@ export function pickEnchantment(
     .find((entry) => secondaryPair(entry, pick))
   return [...primaryOf(others), ...(partner ? [partner] : []), pick]
 }
+
+/** The arcana with these entries and the status they justify; the same loadout when the entries did not change. */
+export const withArcana = (
+  loadout: Loadout<ArcanaAllocation>,
+  entries: ArcanaAllocation[],
+): Loadout<ArcanaAllocation> =>
+  entries === loadout.entries ? loadout : { ...loadout, entries, status: arcanaStatus(entries, loadout.status) }
+
+/** The emblems with these entries and the status they justify; the same loadout when the entries did not change. */
+export const withEnchantments = (
+  loadout: Loadout<EnchantmentAllocation>,
+  entries: EnchantmentAllocation[],
+): Loadout<EnchantmentAllocation> =>
+  entries === loadout.entries ? loadout : { ...loadout, entries, status: enchantmentStatus(entries, loadout.status) }
+
+/**
+ * Where an entry sits now; entries are matched by what they are because positions shift between edits. Older data
+ * holds rows without a name, which only their other fields tell apart, so an identical row is looked for first.
+ */
+function indexOfEntry<T extends { selection: { id?: string | null; name?: string | null } }>(
+  entries: T[],
+  target: T,
+  same: (a: T, b: T) => boolean,
+) {
+  const named = (entry: T) =>
+    (entry.selection.id ?? null) === (target.selection.id ?? null) &&
+    (entry.selection.name ?? null) === (target.selection.name ?? null)
+  const exact = entries.findIndex((entry) => named(entry) && JSON.stringify(entry) === JSON.stringify(target))
+  return exact >= 0 ? exact : entries.findIndex((entry) => named(entry) && same(entry, target))
+}
+
+const without = <T>(entries: T[], index: number) =>
+  index < 0 ? entries : entries.filter((_, position) => position !== index)
+
+const sameColor = (a: ArcanaAllocation, b: ArcanaAllocation) => a.color === b.color
+
+/** One stone more or fewer of a kind recorded on the page, found by what it is. */
+export const stepRecordedStone = (loadout: Loadout<ArcanaAllocation>, entry: ArcanaAllocation, delta: number) =>
+  withArcana(loadout, stepArcana(loadout.entries, indexOfEntry(loadout.entries, entry, sameColor), delta))
+
+/** The page without a kind of stone recorded on it, found by what it is. */
+export const removeRecordedStone = (loadout: Loadout<ArcanaAllocation>, entry: ArcanaAllocation) =>
+  withArcana(loadout, without(loadout.entries, indexOfEntry(loadout.entries, entry, sameColor)))
+
+/** The emblems without one recorded pick, found by what it is and the slot it fills. */
+export const removeRecordedEnchantment = (loadout: Loadout<EnchantmentAllocation>, entry: EnchantmentAllocation) =>
+  withEnchantments(
+    loadout,
+    without(
+      loadout.entries,
+      indexOfEntry(loadout.entries, entry, (a, b) => a.primary === b.primary && a.tier === b.tier),
+    ),
+  )

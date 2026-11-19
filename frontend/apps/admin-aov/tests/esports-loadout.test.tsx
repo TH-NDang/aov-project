@@ -1,7 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import React, { act, useState } from "react"
-import type { Catalog, GameContent, Participant, Reference } from "@aov/community-contracts"
+import type {
+  ArcanaAllocation,
+  Catalog,
+  EnchantmentAllocation,
+  GameContent,
+  Loadout,
+  Participant,
+  Reference,
+} from "@aov/community-contracts"
 import type { GameSeat, GameView } from "../src/features/esports/model/game-view"
 import {
   arcanaColorLocked,
@@ -11,8 +19,12 @@ import {
   enchantmentStatus,
   pickArcana,
   pickEnchantment,
+  removeRecordedEnchantment,
+  removeRecordedStone,
   replacedMainPicks,
   stepArcana,
+  stepRecordedStone,
+  withArcana,
 } from "../src/features/esports/model/loadout"
 import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 import { latency } from "./fixtures/latency"
@@ -148,6 +160,50 @@ test("emblem picks stay a set the service accepts while it is built", () => {
   )
   assert.equal(enchantmentStatus(switched, "KNOWN"), "PARTIAL")
   assert.deepEqual(enchantmentBranches(catalog.enchantments), ["thap-quang-minh", "vuc-hon-mang", "rung-nguyen-sinh"])
+})
+
+test("a recorded stone is found by what it is, so the stone clicked is the one that changes", () => {
+  const page: Loadout<ArcanaAllocation> = {
+    status: "PARTIAL",
+    entries: [
+      { selection: {}, color: "GREEN", count: 2 },
+      { selection: {}, color: "GREEN", count: 3 },
+      { selection: { id: "r-ad", name: stones.attack.name }, color: "RED", count: 10 },
+    ],
+  }
+  assert.deepEqual(
+    removeRecordedStone(page, page.entries[1]!).entries.map((entry) => entry.count),
+    [2, 10],
+    "the second of two rows without a name goes",
+  )
+  const stepped = stepRecordedStone(page, page.entries[0]!, 1)
+  assert.deepEqual(
+    stepped.entries.map((entry) => entry.count),
+    [3, 3, 10],
+  )
+  assert.equal(stepped.status, "PARTIAL")
+  assert.equal(stepRecordedStone(page, page.entries[2]!, -10).entries.length, 2, "a stone stepped to nothing leaves")
+})
+
+test("an edit that changes no entry keeps the very same loadout", () => {
+  const page: Loadout<ArcanaAllocation> = { status: "UNKNOWN", entries: [] }
+  assert.equal(withArcana(page, page.entries), page)
+  assert.equal(removeRecordedStone(page, { selection: { id: "missing" }, color: "RED", count: 1 }), page)
+})
+
+test("removing an emblem takes the pick of its slot and the status follows", () => {
+  const set = [emblems.light1, emblems.light2, emblems.light3].reduce(
+    (entries, emblem) => pickEnchantment(entries, emblem, true),
+    [] as EnchantmentAllocation[],
+  )
+  const whole = [emblems.abyss1, emblems.abyss2].reduce(
+    (entries, emblem) => pickEnchantment(entries, emblem, false),
+    set,
+  )
+  const loadout: Loadout<EnchantmentAllocation> = { status: "KNOWN", entries: whole }
+  const removed = removeRecordedEnchantment(loadout, whole[3]!)
+  assert.deepEqual(ids(removed.entries), ["light-1", "light-2", "light-3", "abyss-2"])
+  assert.equal(removed.status, "PARTIAL")
 })
 
 async function withDom(
