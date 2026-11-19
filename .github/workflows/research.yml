@@ -40,3 +40,6 @@ jobs:
       - name: Warehouse importer
         working-directory: research/warehouse
         run: python -m unittest discover --pattern "test_*.py"
+      - name: Community link backfill
+        working-directory: research/community-links
+        run: python -m unittest discover --pattern "test_*.py"
