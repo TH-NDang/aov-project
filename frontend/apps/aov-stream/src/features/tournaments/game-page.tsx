@@ -6,6 +6,9 @@ import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
 import { useStreamLocale } from "../../components/stream-locale"
+import { EntityPageLink } from "../../components/public-competitions"
+import { mvpOf } from "../../lib/crew-model"
+import { MvpFact } from "./competition-people"
 import { GameLoadouts } from "./game-loadouts"
 import { MatchHead, MatchTabs, seriesHeadOf } from "./match-components"
 import { orderedMatchGames } from "../../lib/match-model"
@@ -36,7 +39,7 @@ function Draft({ game, side }: { game: PublishedGame; side: GameSide }) {
       <header className="tn-draft-head">
         <StreamImage src={team?.logoUrl} name={team?.shortName || name} />
         <div>
-          <h2>{name}</h2>
+          <h2>{team ? <EntityPageLink kind="TEAM" id={side.teamId} name={name} /> : name}</h2>
           <span className="tn-side">
             {side.side === "BLUE" ? text("Phe xanh", "Blue side") : text("Phe đỏ", "Red side")}
           </span>
@@ -50,7 +53,8 @@ function Draft({ game, side }: { game: PublishedGame; side: GameSide }) {
       </header>
       <div className="tn-draft-picks">
         {orderedParticipants(side.participants).map((participant) => {
-          const player = game.players[participant.playerId || ""]?.nickname
+          const playerId = participant.playerId
+          const player = playerId ? game.players[playerId]?.nickname : undefined
           return (
             <figure className="tn-pick" key={participant.lane}>
               <span className="tn-pick-art">
@@ -72,7 +76,11 @@ function Draft({ game, side }: { game: PublishedGame; side: GameSide }) {
               </span>
               <figcaption>
                 <strong>{referenceName(game.catalog, "heroes", participant.hero, text(...UNKNOWN_REFERENCE))}</strong>
-                {player && <span>{player}</span>}
+                {playerId && player && (
+                  <span>
+                    <EntityPageLink kind="PLAYER" id={playerId} name={player} />
+                  </span>
+                )}
               </figcaption>
             </figure>
           )
@@ -111,6 +119,7 @@ function PublishedGameView({
   const { number, durationSeconds, seriesId, sourceUrl, note } = game.content
   const scope = game.resolvedContext
   const head = seriesHeadOf(game, languageTag)
+  const mvp = mvpOf(game.content.mvpPlayerId, game.players)
   const tabs = siblings.length ? siblings : [game]
   // The patch the game was played on, named by its date where its code is one (the season in front of it carries the
   // year), with its title on hover. The season gives way first where the head is narrow.
@@ -164,6 +173,7 @@ function PublishedGameView({
             <StreamIcon name="clock" size={14} />
             {durationSeconds ? clock(durationSeconds) : text("Chưa rõ thời lượng", "Unknown duration")}
           </span>
+          {mvp && <MvpFact label={text("MVP ván", "Game MVP")} player={mvp} />}
         </MatchHead>
         <MatchTabs
           games={tabs.map((item) => ({ id: item.id, number: item.content.number }))}

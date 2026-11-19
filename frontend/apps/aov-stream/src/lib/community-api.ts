@@ -29,6 +29,11 @@ export const communityApi = {
     communityRequest<CommunityProfile>(`/pages/by-entity/${kind}/${entityId}`),
   pageTeams: (pageId: string) => communityRequest<TeamAffiliation[]>(`/pages/${pageId}/teams`),
   pages: (query: Query) => communityRequest<PageSlice<CommunityProfile>>(list("/pages", query)),
+  /** The published teams an organization owns. */
+  organizationTeams: (organizationId: string, page: number, size: number) =>
+    communityRequest<PageSlice<CommunityProfile>>(
+      list("/pages", { kind: "TEAM", organizationId, page: String(page), size: String(size) }),
+    ),
   livePages: (size: number) => communityRequest<PageSlice<CommunityProfile>>(list("/live", { size: String(size) })),
   posts: (query: Query) => communityRequest<PageSlice<FeedPost>>(list("/posts", query)),
   feed: (query: Query) => communityRequest<PageSlice<FeedPost>>(list("/me/feed", query)),

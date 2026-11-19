@@ -2,6 +2,7 @@ import { useState } from "react"
 import type { Participant, PublishedGame } from "@aov/community-contracts"
 import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
+import { EntityPageLink } from "../../components/public-competitions"
 import { ReferenceArt } from "./reference-art"
 import {
   clock,
@@ -265,12 +266,16 @@ export function GameLoadouts({ game }: { game: PublishedGame }) {
           {recorded.map(({ side, participant }) => {
             const team = game.teams[side.teamId]
             const hero = referenceName(game.catalog, "heroes", participant.hero, text(...UNKNOWN_REFERENCE))
+            const playerId = participant.playerId
+            const nickname = playerId ? game.players[playerId]?.nickname : undefined
             return (
               <div className="tn-loadout" data-side={side.side} key={`${side.side}:${participant.lane}`}>
                 <span className="tn-loadout-who">
                   <ReferenceArt catalog={game.catalog} kind="heroes" selection={participant.hero} />
                   <span>
-                    <strong>{game.players[participant.playerId || ""]?.nickname || hero}</strong>
+                    <strong>
+                      {playerId && nickname ? <EntityPageLink kind="PLAYER" id={playerId} name={nickname} /> : hero}
+                    </strong>
                     <span className="tn-side">
                       {[
                         team?.shortName || team?.name,

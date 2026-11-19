@@ -234,6 +234,12 @@
   line-height: 22px;
   overflow-wrap: anywhere;
 }
+/* Teams and players with a published page open it from their name. */
+.tn-draft-head a:hover,
+.tn-pick figcaption a:hover,
+.tn-loadout-who a:hover {
+  color: var(--hub-accent-strong);
+}
 .tn-side {
   display: inline-flex;
   align-items: center;

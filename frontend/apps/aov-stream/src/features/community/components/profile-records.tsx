@@ -1,10 +1,14 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router"
+import { useQuery } from "@tanstack/react-query"
 import type { CompetitionView, ProfileAchievement, ProfileHistory, ProfileMember } from "@aov/community-contracts"
 import { achievementRank, type AchievementRank } from "@aov/community-contracts/achievements"
 import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { StreamIcon } from "../../../components/stream-icon"
 import { useStreamLocale } from "../../../components/stream-locale"
+import { competitionQuery } from "../../../lib/tournament-api"
 import { LANE_NAMES } from "../../../lib/tournament-model"
 import { dayRange, formatDay } from "../../../components/community-ui"
 import { achievementMark } from "../model/achievement-mark"
@@ -172,39 +176,76 @@ export function distinctHistory(items: ProfileHistory[]) {
 }
 
 /**
- * Career steps and milestones as rows. A step names a competition, which opens it when it is published here, and
- * often a team after " · ", which opens the page the step relates to.
+ * A step's competition, read by its id, opens it once the read shows it is published; until then, or when it is not,
+ * the words open `fallback` or nothing. The read is the one the competition's own page makes, so opening it is quick.
+ */
+function PublishedCompetitionLink({
+  id,
+  fallback,
+  children,
+}: {
+  id: string
+  fallback: string | null
+  children: ReactNode
+}) {
+  const competition = useQuery({ ...competitionQuery(id), retry: false, retryOnMount: false })
+  const to = competition.data ? `/competitions/${id}` : fallback
+  return to ? <Link to={to}>{children}</Link> : <>{children}</>
+}
+
+/** History rows shown at first and added each time the reader reaches the end of the list. */
+const HISTORY_STEP = 20
+
+/**
+ * Career steps and milestones as rows, revealed as the reader scrolls. A step names a competition, which opens it when
+ * it is published here, and often a team after " · ", which opens the page the step relates to. A step that records
+ * its competition's id is matched by that id only; one that does not is matched by name or dates.
  */
 export function HistoryRows({ items, links }: { items: ProfileHistory[]; links?: CompetitionLinks }) {
+  const { text } = useStreamLocale()
+  const revealed = useRevealedRows(items, String(items.length), HISTORY_STEP)
   return (
-    <ol className="pf-rows">
-      {items.map((item, index) => {
-        const [event = item.title, ...rest] = item.title.split(" · ")
-        const party = rest.join(" · ")
-        const related = item.relatedPageId ? `/pages/${item.relatedPageId}` : null
-        const competition = links?.find(event, item.startsOn, item.endsOn)
-        const linked = (to: string | null | undefined, text: ReactNode) => (to ? <Link to={to}>{text}</Link> : text)
-        const dates = item.startsOn || item.endsOn ? dayRange(item.startsOn, item.endsOn) : null
-        return (
-          <li key={index}>
-            <div className="pf-row-text">
-              <strong>
-                {linked(competition ? `/competitions/${competition}` : !party && !item.role ? related : null, event)}
-                {party && (
-                  <>
-                    <i> · </i>
-                    {linked(related, party)}
-                  </>
-                )}
-              </strong>
-              {item.role && <span>{party ? item.role : linked(related, item.role)}</span>}
-            </div>
-            {dates && <span className="pf-row-date">{dates}</span>}
-            {item.sourceUrl && <SourceLink url={item.sourceUrl} />}
-          </li>
-        )
-      })}
-    </ol>
+    <>
+      <ol className="pf-rows">
+        {revealed.rows.map((item, index) => {
+          const [event = item.title, ...rest] = item.title.split(" · ")
+          const party = rest.join(" · ")
+          const related = item.relatedPageId ? `/pages/${item.relatedPageId}` : null
+          // A competition among the page's own published ones needs no read of its own.
+          const known = item.tournamentId && links?.name(item.tournamentId) ? item.tournamentId : undefined
+          const competition = item.tournamentId ? known : links?.find(event, item.startsOn, item.endsOn)
+          const eventFallback = !party && !item.role ? related : null
+          const linked = (to: string | null | undefined, words: ReactNode) =>
+            to ? <Link to={to}>{words}</Link> : words
+          const dates = item.startsOn || item.endsOn ? dayRange(item.startsOn, item.endsOn) : null
+          return (
+            <li key={index}>
+              <div className="pf-row-text">
+                <strong>
+                  {item.tournamentId && !known ? (
+                    <PublishedCompetitionLink id={item.tournamentId} fallback={eventFallback}>
+                      {event}
+                    </PublishedCompetitionLink>
+                  ) : (
+                    linked(competition ? `/competitions/${competition}` : eventFallback, event)
+                  )}
+                  {party && (
+                    <>
+                      <i> · </i>
+                      {linked(related, party)}
+                    </>
+                  )}
+                </strong>
+                {item.role && <span>{party ? item.role : linked(related, item.role)}</span>}
+              </div>
+              {dates && <span className="pf-row-date">{dates}</span>}
+              {item.sourceUrl && <SourceLink url={item.sourceUrl} />}
+            </li>
+          )
+        })}
+      </ol>
+      <InfiniteScroll query={revealed.loader} label={text("Đang hiện thêm mốc", "Showing more milestones")} />
+    </>
   )
 }
 

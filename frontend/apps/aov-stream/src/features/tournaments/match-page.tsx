@@ -6,6 +6,7 @@ import { StreamIcon } from "../../components/stream-icon"
 import { useStreamLocale } from "../../components/stream-locale"
 import { ScheduleDays } from "./competition-schedule"
 import { GameCard } from "./game-card"
+import { MatchCrew, MvpFact } from "./competition-people"
 import { MatchHead, MatchTabs, matchHeadOf, matchStateLabels, matchStatus, seriesHeadOf } from "./match-components"
 import {
   competitionMatches,
@@ -16,6 +17,7 @@ import {
   type CompetitionMatch,
 } from "../../lib/match-model"
 import { matchSides, scheduleParts } from "../../lib/match-schedule"
+import { mvpOf } from "../../lib/crew-model"
 import { competitionQuery, matchGamesQuery } from "../../lib/tournament-api"
 import { plainNote } from "../../lib/tournament-model"
 
@@ -95,6 +97,8 @@ export function MatchPage() {
   const source = series?.sourceUrl || entry?.competition.content.plan.sourceUrl
   const scheduledAt = entry ? entry.match.scheduledAt : first?.series.scheduledAt
   const list = linkedSeriesId ? orderedMatchGames(games.data || [], linkedSeriesId) : []
+  // The competition names the MVP of each match; a match opened without it finds the player among its games.
+  const mvp = mvpOf(series?.mvpPlayerId, entry?.competition.content.players, ...list.map((game) => game.players))
   const overview = entry
     ? competitionMatchHref(entry.competition.id, entry.match.key)
     : `/matches/${encodeURIComponent(linkedSeriesId || "")}`
@@ -162,6 +166,7 @@ export function MatchPage() {
                   />
                 </span>
               )}
+              {mvp && <MvpFact label={text("MVP trận", "Match MVP")} player={mvp} />}
             </MatchHead>
             {list.length > 0 && (
               <MatchTabs
@@ -217,6 +222,7 @@ export function MatchPage() {
                 </footer>
               )}
             </section>
+            {entry && <MatchCrew crew={series?.broadcast} people={entry.competition.content.people} />}
             {entry && <OtherMatches entry={entry} />}
           </>
         )}

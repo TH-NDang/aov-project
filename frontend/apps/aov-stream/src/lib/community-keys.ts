@@ -12,6 +12,7 @@ export const communityKeys = {
   publicPage: (idOrCode: string) => ["public-page", idOrCode] as const,
   pageDirectory: (kind: string | null | undefined) => ["public-pages", kind] as const,
   pageTeams: (pageId: string) => ["public-page-teams", pageId] as const,
+  organizationTeams: (organizationId: string, size: number) => ["organization-teams", organizationId, size] as const,
   entityPage: (kind: string, entityId: string) => ["entity-page", kind, entityId] as const,
   relatedPages: (kind: string) => ["related-pages", kind] as const,
   channels: ["page-channels"] as const,

@@ -31,7 +31,9 @@ import {
   VENUE_MODE_NAMES,
 } from "../../lib/competition-model"
 import { CompetitionSchedule } from "./competition-schedule"
+import { CompetitionCrew, TeamStaff } from "./competition-people"
 import { MatchCard } from "../../components/match-card"
+import { awardTeam } from "../../lib/crew-model"
 import { competitionMatches, type CompetitionMatch } from "../../lib/match-model"
 import { competitionQuery } from "../../lib/tournament-api"
 import { LANE_NAMES } from "../../lib/tournament-model"
@@ -305,6 +307,7 @@ function Overview({
         <Facts view={view} />
         <Format view={view} />
         <Awards view={view} />
+        <CompetitionCrew view={view} />
       </aside>
     </div>
   )
@@ -491,7 +494,7 @@ function Bracket({ stage, matches }: { stage: CompetitionStage; matches: Competi
 
 function Teams({ view }: { view: CompetitionView }) {
   const { text } = useStreamLocale()
-  const { plan, teams, players, rosters } = view.content
+  const { tournament, plan, teams, players, rosters, people } = view.content
   if (!plan.entrants.length)
     return (
       <div className="hub-state">
@@ -567,6 +570,7 @@ function Teams({ view }: { view: CompetitionView }) {
                   ))}
                 </ul>
               )}
+              <TeamStaff staff={tournament.staff} teamId={entrant.teamId} people={people} />
             </section>
           )
         })}
@@ -706,7 +710,7 @@ function Format({ view }: { view: CompetitionView }) {
 /** Awards grouped by title, since a weekly award names several players. The first few show; the rest unfold. */
 function Awards({ view }: { view: CompetitionView }) {
   const { text, languageTag } = useStreamLocale()
-  const { tournament } = view.content
+  const { tournament, teams } = view.content
   const [open, setOpen] = useState(false)
   const groups = new Map<string, TournamentAward[]>()
   for (const award of tournament.awards ?? []) groups.set(award.title, [...(groups.get(award.title) ?? []), award])
@@ -720,29 +724,34 @@ function Awards({ view }: { view: CompetitionView }) {
         {shown.map(([title, awards]) => (
           <div key={title}>
             <dt>{title}</dt>
-            {awards.map((award, index) => (
-              <dd key={index}>
-                <strong>
-                  {award.playerId ? (
-                    <EntityPageLink kind="PLAYER" id={award.playerId} name={award.recipientName} />
-                  ) : (
-                    award.recipientName
+            {awards.map((award, index) => {
+              const team = awardTeam(award, teams)
+              return (
+                <dd key={index}>
+                  <strong>
+                    {award.playerId ? (
+                      <EntityPageLink kind="PLAYER" id={award.playerId} name={award.recipientName} />
+                    ) : (
+                      award.recipientName
+                    )}
+                  </strong>
+                  {team && (
+                    <span>{team.id ? <EntityPageLink kind="TEAM" id={team.id} name={team.name} /> : team.name}</span>
                   )}
-                </strong>
-                {award.teamName && <span>{award.teamName}</span>}
-                {(award.prizeUsd != null || award.prizeLocal != null) && (
-                  <LocalMoney
-                    amounts={[
-                      { amount: award.prizeUsd, currency: "USD" },
-                      { amount: award.prizeLocal, currency: tournament.localCurrency },
-                    ]}
-                    on={tournament.endsOn ?? tournament.startsOn}
-                    locale={languageTag}
-                    compact
-                  />
-                )}
-              </dd>
-            ))}
+                  {(award.prizeUsd != null || award.prizeLocal != null) && (
+                    <LocalMoney
+                      amounts={[
+                        { amount: award.prizeUsd, currency: "USD" },
+                        { amount: award.prizeLocal, currency: tournament.localCurrency },
+                      ]}
+                      on={tournament.endsOn ?? tournament.startsOn}
+                      locale={languageTag}
+                      compact
+                    />
+                  )}
+                </dd>
+              )
+            })}
           </div>
         ))}
       </dl>

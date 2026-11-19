@@ -47,6 +47,13 @@ import {
 } from "../components/profile-records"
 import { ProfileSocials } from "../components/profile-socials"
 import { ProfileTeams } from "../components/profile-teams"
+import {
+  OrganizationTeams,
+  OrganizationTeamsPreview,
+  organizationTeamsQuery,
+  TeamOrganization,
+  type OrganizationTeamsQuery,
+} from "../components/profile-organization"
 import { CompetitionList, ProfileCompetitionSummary } from "../../../components/public-competitions"
 import "../components/community.css"
 import "../components/community-profile.css"
@@ -92,10 +99,13 @@ export function CommunityProfilePage() {
   )
 }
 
-type ProfileTab = "home" | "history" | "competitions" | "achievements" | "overview"
+type ProfileTab = "home" | "history" | "competitions" | "teams" | "achievements" | "overview"
 
 /** Rows of a record the overview shows in full; a longer record gets a tab of its own. */
 const PREVIEW = 3
+
+/** Team cards an organization's overview shows, two to a row on a wide layout; more get a tab of their own. */
+const teamPreview = (layout: PageLayout) => (layout === "compact" ? 4 : 6)
 
 /**
  * The overview first, then only the sections that hold more than the overview already shows. The introduction and
@@ -105,7 +115,7 @@ const PREVIEW = 3
 function profileTabs(
   profile: CommunityProfile,
   layout: PageLayout,
-  records: { history: number; achievements: number; competitions: number | undefined },
+  records: { history: number; achievements: number; competitions: number | undefined; teams: number | undefined },
 ): [ProfileTab, string][] {
   const individual = isIndividualProfile(profile.kind)
   const tabs: [ProfileTab, string][] = [["home", streamText("Tổng quan", "Overview")]]
@@ -116,6 +126,8 @@ function profileTabs(
       "competitions",
       profile.kind === "ORGANIZATION" ? streamText("Giải đấu", "Tournaments") : streamText("Thi đấu", "Competitions"),
     ])
+  if (profile.kind === "ORGANIZATION" && (records.teams ?? 0) > teamPreview(layout))
+    tabs.push(["teams", streamText("Đội tuyển", "Teams")])
   if (profile.kind !== "ORGANIZATION" && records.achievements > PREVIEW)
     tabs.push(["achievements", streamText("Thành tích", "Achievements")])
   if (!individual && records.history > 0) tabs.push(["history", streamText("Lịch sử", "History")])
@@ -148,11 +160,14 @@ function Profile({ profile }: { profile: CommunityProfile }) {
   const history = distinctHistory(content.history)
   const individual = isIndividualProfile(profile.kind)
   const organization = profile.kind === "ORGANIZATION"
+  const ownedTeams = useInfiniteQuery({ ...organizationTeamsQuery(profile.id), enabled: organization })
+  const teamCount = ownedTeams.data?.pages[0]?.totalElements
 
   const tabs = profileTabs(profile, layout, {
     history: history.length,
     achievements: achievements.length,
     competitions: competitionCount,
+    teams: teamCount,
   })
   const requested = params.get("tab")
   const tab = tabs.find(([key]) => key === requested)?.[0] ?? "home"
@@ -194,6 +209,12 @@ function Profile({ profile }: { profile: CommunityProfile }) {
             `${competitionCount.toLocaleString(languageTag)} giải đã tham gia`,
             `${competitionCount.toLocaleString(languageTag)} ${competitionCount === 1 ? "tournament" : "tournaments"} played`,
           )),
+    organization &&
+      !!teamCount &&
+      text(
+        `${teamCount.toLocaleString(languageTag)} đội tuyển`,
+        `${teamCount.toLocaleString(languageTag)} ${teamCount === 1 ? "team" : "teams"}`,
+      ),
     achievements.length > 0 &&
       text(
         `${achievementTotal.toLocaleString(languageTag)} thành tích`,
@@ -218,7 +239,14 @@ function Profile({ profile }: { profile: CommunityProfile }) {
       <ProfileHead
         profile={profile}
         kicker={region ? `${kind} · ${region}` : kind}
-        lines={individual && <ProfileTeams pageId={profile.id} />}
+        lines={
+          individual ? (
+            <ProfileTeams pageId={profile.id} />
+          ) : (
+            profile.kind === "TEAM" &&
+            content.organizationId && <TeamOrganization organizationId={content.organizationId} />
+          )
+        }
         facts={facts}
         channels={layout === "compact" && <ProfileSocials links={content.links} />}
         actions={
@@ -276,11 +304,13 @@ function Profile({ profile }: { profile: CommunityProfile }) {
               achievements={achievements}
               history={history}
               links={links}
+              ownedTeams={ownedTeams}
               role={viewer.data?.role || ""}
               authenticated={authenticated}
               open={openTab}
             />
           )}
+          {tab === "teams" && <OrganizationTeams query={ownedTeams} />}
           {tab === "history" && (
             <section aria-label={individual ? text("Sự nghiệp", "Career") : text("Lịch sử", "History")}>
               <HistoryRows items={history} links={links} />
@@ -314,6 +344,7 @@ function ProfileHome({
   achievements,
   history,
   links,
+  ownedTeams,
   role,
   authenticated,
   open,
@@ -325,6 +356,8 @@ function ProfileHome({
   achievements: AchievementGroup[]
   history: ProfileHistory[]
   links: CompetitionLinks
+  /** The teams an organization owns; an empty read for other pages. */
+  ownedTeams: OrganizationTeamsQuery
   role: PageRole | ""
   authenticated: boolean
   open: (tab: ProfileTab) => void
@@ -333,8 +366,9 @@ function ProfileHome({
   const content = profile.content!
   const individual = isIndividualProfile(profile.kind)
   const organization = profile.kind === "ORGANIZATION"
+  const layout = usePageLayout()
   // Competition cards take a row each on a compact layout, so fewer of them stand before the posts.
-  const organized = views.slice(0, usePageLayout() === "compact" ? 3 : 6)
+  const organized = views.slice(0, layout === "compact" ? 3 : 6)
   const [onlyVideo, setOnlyVideo] = useState(false)
   const posts = useQuery({
     queryKey: communityKeys.pagePostCount(profile.id),
@@ -362,6 +396,9 @@ function ProfileHome({
       {profile.live && <LiveBlock live={profile.live} name={content.name} />}
       <ProfileMatches profile={profile} views={views} pending={competitionsPending} more={() => open("competitions")} />
       {profile.kind === "TEAM" && content.roster.length > 0 && <TeamRoster roster={content.roster} />}
+      {organization && (
+        <OrganizationTeamsPreview query={ownedTeams} count={teamPreview(layout)} more={() => open("teams")} />
+      )}
       {organization && views.length > 0 && (
         <section aria-labelledby="profile-organized">
           <div className="tn-heading">
