@@ -36,7 +36,8 @@ import {
   captureSha256,
   type CaptureImage,
 } from "../../model/captures/patch-capture-model"
-import { CaptureCardThumbnail, PatchCaptureLink } from "../captures/patch-capture-panel"
+import { CaptureCardThumbnail } from "../captures/capture-thumbnails"
+import { PatchCaptureLink } from "../captures/patch-capture-buttons"
 import type { SkinAcquisition } from "@/lib/api/publishing-api"
 import type { Skin } from "@/lib/hero-types"
 import { usePatchCaptureContext } from "../../api/use-patch-captures"

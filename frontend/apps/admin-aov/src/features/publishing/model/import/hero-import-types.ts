@@ -16,3 +16,11 @@ export interface ImportEntry {
   selected: boolean
   result?: string
 }
+
+/** What the import is doing, for the page's background task. */
+export interface ImportActivity {
+  status: "idle" | "running" | "review" | "completed" | "error"
+  description: string
+  completed: number
+  total: number
+}
