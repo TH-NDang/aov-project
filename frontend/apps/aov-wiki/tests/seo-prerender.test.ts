@@ -415,8 +415,45 @@ test("a site published before the bundle list existed keeps its bundle for one r
   await publishSite(distDir, siteDir)
   assert.equal(await readFile(path.join(siteDir, "assets/app-old.js"), "utf8"), "old")
 
-  await publishSite(distDir, siteDir)
+  const nextDist = await builtSite(t)
+  await mkdir(path.join(nextDist, "assets"))
+  await writeFile(path.join(nextDist, "assets/app-next.js"), "next")
+  await publishSite(nextDist, siteDir)
   assert.equal(await exists(path.join(siteDir, "assets/app-old.js")), false)
+})
+
+test("publishing the live release again keeps the bundle of the release before, for tabs still open on it", async (t) => {
+  const distDir = await builtSite(t)
+  await mkdir(path.join(distDir, "assets"))
+  await writeFile(path.join(distDir, "assets/app-live.js"), "live")
+  const siteDir = await liveSite(t, {
+    "200.html": "live",
+    "assets/app-live.js": "live",
+    "assets/app-before.js": "before",
+    [PUBLISHED_BUNDLE]: JSON.stringify(["assets/app-live.js"]),
+  })
+
+  await publishSite(distDir, siteDir)
+
+  assert.equal(await readFile(path.join(siteDir, "assets/app-before.js"), "utf8"), "before")
+  assert.deepEqual(JSON.parse(await readFile(path.join(siteDir, PUBLISHED_BUNDLE), "utf8")), ["assets/app-live.js"])
+})
+
+test("the next release removes the bundle that publishing the same release again had kept", async (t) => {
+  const distDir = await builtSite(t)
+  await mkdir(path.join(distDir, "assets"))
+  await writeFile(path.join(distDir, "assets/app-new.js"), "new")
+  const siteDir = await liveSite(t, {
+    "200.html": "live",
+    "assets/app-live.js": "live",
+    "assets/app-before.js": "before",
+    [PUBLISHED_BUNDLE]: JSON.stringify(["assets/app-live.js"]),
+  })
+
+  await publishSite(distDir, siteDir)
+
+  assert.equal(await exists(path.join(siteDir, "assets/app-before.js")), false)
+  assert.equal(await readFile(path.join(siteDir, "assets/app-live.js"), "utf8"), "live")
 })
 
 test("a failing API on the release already live leaves the site alone and the job reports it", async (t) => {

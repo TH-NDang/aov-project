@@ -1,0 +1,13 @@
+# Daily dump of the databases, then a copy of the new R2 objects (infra/scripts/scheduled.sh; ADR-021, addendum of
+# 19/11/2026). Install: see "Việc chạy theo lịch" in infra/README.md. The path assumes the checkout in /opt.
+[Unit]
+Description=Back up the AOV databases and the R2 objects
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /opt/aov-project/infra/scripts/scheduled.sh backup
+# The first copy downloads every object of the three buckets.
+TimeoutStartSec=6h

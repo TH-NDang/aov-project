@@ -1,0 +1,11 @@
+# Every fifteen minutes. A run that is still busy is not started twice.
+[Unit]
+Description=Prerender the Wiki every fifteen minutes
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=15min
+RandomizedDelaySec=1min
+
+[Install]
+WantedBy=timers.target

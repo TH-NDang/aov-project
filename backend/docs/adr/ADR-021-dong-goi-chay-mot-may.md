@@ -1,7 +1,8 @@
 # ADR-021 — Đóng gói toàn hệ thống trên một máy và các đường dẫn proxy bổ sung
 
-**Trạng thái:** Chấp nhận, cùng [bổ sung 17/11/2026](#bổ-sung-17112026-object-storage-là-cloudflare-r2) và
-[bổ sung 18/11/2026](#bổ-sung-18112026-cập-nhật-không-gián-đoạn), mỗi bổ sung được người dùng duyệt cùng ngày
+**Trạng thái:** Chấp nhận, cùng [bổ sung 17/11/2026](#bổ-sung-17112026-object-storage-là-cloudflare-r2),
+[bổ sung 18/11/2026](#bổ-sung-18112026-cập-nhật-không-gián-đoạn) và
+[bổ sung 19/11/2026](#bổ-sung-19112026-việc-chạy-theo-lịch), mỗi bổ sung được người dùng duyệt cùng ngày
 **Ngày:** 2026-11-07
 **Phạm vi:** `infra/`, `wiki-service`, `community-service`, `aov-stream`
 
@@ -258,7 +259,8 @@
 
    Cả hai dùng chung `publishSite`: file mới trước, file cũ sau, mỗi file thay bằng đổi tên. Bundle của bản đang chạy được
    giữ thêm một lần phát hành (danh sách trong `.published-bundle.json`), bundle cũ hơn mới bị xóa, nên tab đang mở vẫn tải được
-   chunk của nó. Đây là chỗ duy nhất đổi quy tắc "thay toàn bộ nội dung volume" của ADR-022.
+   chunk của nó. Đây là chỗ duy nhất đổi quy tắc "thay toàn bộ nội dung volume" của ADR-022. *Từ 19/11/2026, đưa lại cùng
+   bản cũng không xóa bundle đó, xem bổ sung 19/11/2026.*
 5. **Caddy.**
    - Image chỉ còn Caddy và module rate limit. Compose mount thư mục `infra/proxy` vào `/etc/caddy`: mount thư mục chứ không
      mount file, vì git thay file khi checkout, mà mount một file thì vẫn giữ file cũ.
@@ -316,3 +318,73 @@
     nào. Container Caddy và Keycloak không bị khởi động lại.
 - Chưa thử: tải image từ GHCR (chưa có commit nào của `main` có workflow `images.yml`), timer tự triển khai một commit của `main`,
   một commit có migration thật trong lúc hai bản cùng chạy, và đổi Keycloak.
+
+## Bổ sung 19/11/2026: việc chạy theo lịch
+
+### Bối cảnh
+
+- `wiki-prerender` chỉ chạy khi một lần cập nhật đổi frontend hoặc `wiki-service`. Nội dung xuất bản trong Admin giữa hai lần
+  cập nhật không có trang riêng và không có dòng trong `sitemap.xml`: địa chỉ của nó rơi về `200.html` có `noindex`, bản xem
+  trước liên kết (Facebook, Zalo, Discord) hiện tiêu đề trang chủ. ADR-022 để tần suất làm mới cho người vận hành.
+- `db-backup` chỉ chạy trước những lần cập nhật đổi backend. Ngày không cập nhật thì không có bản dump nào; `infra/README.md`
+  mới gợi ý một dòng cron, VPS chưa đặt. `media-backup` chưa chạy lần nào trên VPS.
+- `publishSite` chạy lại trên cùng bản (cùng bundle) thì xóa bundle của bản trước, vì danh sách `.published-bundle.json` lúc đó
+  đã là bundle hiện tại. Quyết định 4 của bổ sung 18/11/2026 hứa giữ bundle đó thêm một lần phát hành. Tới nay việc này chỉ xảy
+  ra khi một lần cập nhật chỉ đổi `wiki-service`; có lịch chạy lại thì nó xảy ra sau mỗi lần phát hành.
+- Người dùng yêu cầu ngày 19/11/2026 làm nốt những phần triển khai còn thiếu.
+
+### Quyết định
+
+1. **Hai timer systemd mới** trong `infra/systemd/`, cùng gọi `infra/scripts/scheduled.sh`:
+   - `aov-wiki-pages.timer`, 15 phút một lần: `scheduled.sh pages` chạy `wiki-prerender` trên bản đang chạy. Lỗi thì site giữ
+     trang cũ, như ADR-022 quy định cho cùng bản.
+   - `aov-backup.timer`, mỗi ngày lúc 03:00 giờ Việt Nam: `scheduled.sh backup` chạy `db-backup` với nhãn `daily` (giữ
+     `BACKUP_KEEP` bản mới nhất, riêng với nhãn `auto`), rồi `media-backup`. Database đi trước, để mọi object mà bản dump nhắc
+     tới đều có trong bản chép ngay sau đó. `Persistent=true`: máy tắt lúc 03:00 thì việc chạy khi máy bật lại.
+2. **Chung khóa với `deploy.sh`** (`infra/.deploy/lock`), nên không việc nào chạy giữa một lần cập nhật:
+   - `pages` gặp khóa đang bị giữ thì bỏ lượt đó, vì lần cập nhật tự chạy prerender.
+   - `backup` chờ khóa tối đa một giờ rồi mới dump, để không dump trong lúc Flyway đang migrate. Khóa được nhả trước
+     `media-backup`, vì việc chép R2 không đụng tới stack và lần đầu có thể kéo dài.
+   - `deploy.sh` gặp khóa đang bị giữ thì như trước, bỏ lượt và thử lại sau năm phút.
+3. **`pages` chỉ chạy khi checkout nằm đúng ở commit đang chạy** (`infra/.deploy/deployed`). Một lần cập nhật dừng giữa chừng
+   có thể đã gắn tên `aov/web:local` cho image của commit mới. Job của image đó sẽ coi đây là bản mới và đưa bundle mới ra
+   trước backend mới (ADR-022, bổ sung 19/11/2026), nên script dừng với mã lỗi và chờ một lần cập nhật thành công.
+4. **`publishSite` giữ bundle của bản trước khi đưa lại cùng bản.** Bản build trùng bundle đang phục vụ thì mọi file bundle đang
+   có trên site được giữ (bundle hiện tại cùng bundle của bản trước). Lần phát hành bản khác kế tiếp mới xóa bundle cũ hơn, như
+   quyết định 4 của bổ sung 18/11/2026.
+5. Kết quả xem bằng `journalctl -u aov-wiki-pages.service` và `journalctl -u aov-backup.service`; lỗi hiện trong
+   `systemctl --failed`. Chưa có cảnh báo gửi đi đâu: việc theo dõi vẫn để mở như mục "Còn lại cho máy chủ thật" của
+   `infra/README.md`. Backup vẫn nằm cùng máy; sao lưu ra ngoài máy cũng vẫn để mở.
+
+### Phương án đã cân nhắc
+
+| Phương án | Lý do không chọn |
+|---|---|
+| Backend gọi prerender ngay khi xuất bản | Container backend phải ra được host hoặc Docker socket, và nhiều module xuất bản (tướng, bản cập nhật, kho trang bị, thuật ngữ) đều phải gọi; trễ tối đa 15 phút là chấp nhận được |
+| Cron | VPS đã dùng systemd timer cho deploy; timer ghi log vào journal, có `Persistent`, không chạy chồng một lượt đang chạy |
+| Service thường trực lặp prerender | Trái với job một lần của ADR-022, và giữ thêm một container chạy suốt |
+| Chỉ prerender khi nội dung đổi | Cần API mới cho dấu thời gian xuất bản; một lần chạy chỉ mất vài giây và `publishSite` bỏ qua file không đổi |
+| Backup ngay trong `deploy.sh` mỗi ngày | Trộn hai việc khác nhịp; ngày không có commit mới thì `deploy.sh` không làm gì |
+
+### Hệ quả
+
+- Nội dung vừa xuất bản có trang riêng và nằm trong `sitemap.xml` sau tối đa khoảng 15 phút, không cần lần cập nhật nào.
+- Mỗi ngày có một bản dump dù không cập nhật; `backups/db/` giữ tới `BACKUP_KEEP` bản `daily` và `BACKUP_KEEP` bản `auto`.
+- Lần `media-backup` đầu tiên tải toàn bộ object R2 về đĩa VPS (khoảng 4,4 GB theo ADR-030); các lần sau chỉ tải object mới.
+- Cài hai timer là việc làm tay một lần trên VPS, như `aov-deploy.timer`; `deploy.sh` không cài unit. Đổi file unit trong repo
+  thì phải chép lại.
+- Sau một lần cập nhật dừng giữa chừng, `aov-wiki-pages.service` báo lỗi mỗi 15 phút cho tới khi một lần cập nhật thành công.
+
+### Kiểm chứng (19/11/2026)
+
+- `tests/seo-prerender.test.ts` của Wiki: đưa lại cùng bản giữ bundle của bản trước và danh sách vẫn là bundle hiện tại; lần
+  phát hành bản khác kế tiếp xóa bundle đó. Test đầu thất bại với mã cũ.
+- shellcheck không báo gì với `scheduled.sh` và `deploy.sh`. `systemd-analyze verify` trên VPS nhận bốn file unit; lịch
+  `03:00:00 Asia/Ho_Chi_Minh` rơi vào 20:00 UTC.
+- Trên VPS, `scheduled.sh` chạy trong một checkout tạm với `docker` giả (stack thật không bị đụng tới):
+  - `pages` gọi `docker compose run --rm --no-deps wiki-prerender` khi đang giữ khóa;
+  - đang có lần cập nhật giữ khóa thì `pages` thoát mã 0 mà không gọi gì;
+  - checkout khác commit trong `deployed` thì `pages` thoát mã 1 mà không gọi gì;
+  - `backup` dump với nhãn `daily` khi đang giữ khóa, rồi chép R2 khi khóa đã nhả;
+  - `backup` chờ lần cập nhật giữ khóa xong rồi mới chạy.
+- Chưa thử: cài hai timer và để chúng chạy thật trên VPS, lần `media-backup` đầu tiên với R2 thật.

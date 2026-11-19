@@ -90,7 +90,8 @@ Không chặn `/api/`, vì Google cần gọi API để render trang.
   thư mục mà proxy phục vụ.
 - Làm mới: chạy `pnpm prerender` như một **job một lần** theo lịch hoặc sau khi xuất bản, ghi vào thư mục mà máy chủ tĩnh
   đang phục vụ. Đây không phải service thường trực. Tần suất do người vận hành quyết định; nội dung mới trễ tối đa bằng
-  một chu kỳ, trong thời gian đó người dùng vẫn đọc được qua app.
+  một chu kỳ, trong thời gian đó người dùng vẫn đọc được qua app. *Trên VPS, từ 19/11/2026: 15 phút một lần, xem ADR-021,
+  bổ sung 19/11/2026.*
 - Trong Docker Compose, việc này do service một lần `wiki-prerender` làm (`scripts/prerender-job.mts`), chạy mỗi lần `up` sau khi
   `wiki-service` healthy và chạy tay bằng `docker compose run --rm wiki-prerender`. Xem `infra/README.md`.
 - Dùng chung thư mục qua named volume: Docker chỉ chép nội dung image vào volume khi tạo volume lần đầu, nên sau khi build
