@@ -1,0 +1,8 @@
+# Mails the owner the log of a failed run of %i (infra/scripts/alert.sh; ADR-021, addendum of 19/11/2026 on alerts).
+# The other units name it in OnFailure=. Install: see "Cảnh báo qua email" in infra/README.md.
+[Unit]
+Description=Mail the owner that %i failed
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /opt/aov-project/infra/scripts/alert.sh failed %i

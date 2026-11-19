@@ -4,6 +4,8 @@
 Description=Prerender the Wiki again so that newly published content gets its pages
 After=docker.service
 Requires=docker.service
+# Mails the owner the log of a failed run (aov-alert@.service).
+OnFailure=aov-alert@%n.service
 
 [Service]
 Type=oneshot

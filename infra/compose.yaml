@@ -170,6 +170,27 @@ services:
       - ./backups:/backups
       - ./scripts:/scripts:ro
 
+  # Run by scheduled.sh backup after the nightly dump: copies new dumps to the offsite bucket, never deleting one.
+  db-offsite:
+    image: rclone/rclone:1.71
+    profiles: [ops]
+    entrypoint: ["/bin/sh", "/scripts/offsite.sh"]
+    environment:
+      RCLONE_CONFIG_OFFSITE_TYPE: s3
+      RCLONE_CONFIG_OFFSITE_PROVIDER: Cloudflare
+      RCLONE_CONFIG_OFFSITE_ENDPOINT: ${STORAGE_ENDPOINT:-}
+      RCLONE_CONFIG_OFFSITE_REGION: ${STORAGE_REGION:-auto}
+      # A token of its own, with Object Read & Write on the offsite bucket only.
+      RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID: ${OFFSITE_ACCESS_KEY:-}
+      RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY: ${OFFSITE_SECRET_KEY:-}
+      RCLONE_CONFIG_OFFSITE_FORCE_PATH_STYLE: ${STORAGE_PATH_STYLE:-true}
+      RCLONE_CONFIG_OFFSITE_NO_CHECK_BUCKET: "true"
+      OFFSITE_BUCKET: ${OFFSITE_BUCKET:-}
+    volumes:
+      - ./backups/db:/backups/db:ro
+      - ./scripts:/scripts:ro
+    logging: *logging
+
   # Run by hand: docker compose run --rm media-restore. Puts back the objects missing from R2.
   media-restore:
     <<: *storage-tool
@@ -248,6 +269,32 @@ services:
     volumes:
       - ./keycloak/import-dev-users.sh:/scripts/import-dev-users.sh:ro
       - ./backups/db:/backups/db:ro
+    healthcheck:
+      disable: true
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    logging: *logging
+
+  # Run by hand after changing MAIL_*: docker compose run --rm keycloak-mail. Gives the realm that SMTP relay and turns
+  # on "Forgot password"; the realm file is only read when the realm is first created.
+  keycloak-mail:
+    image: aov/keycloak:${IMAGE_TAG:-local}
+    build: *keycloak-build
+    profiles: [ops]
+    entrypoint: ["/bin/bash", "/scripts/configure-mail.sh"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?set in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in .env}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+      MAIL_FROM: ${MAIL_FROM:-}
+    volumes:
+      - ./keycloak/configure-mail.sh:/scripts/configure-mail.sh:ro
     healthcheck:
       disable: true
     depends_on:

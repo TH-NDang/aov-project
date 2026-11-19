@@ -1,0 +1,12 @@
+# Checks the site, the services, the disk and the backups, and mails the owner when that changes
+# (infra/scripts/scheduled.sh; ADR-021, addendum of 19/11/2026 on alerts). It mails by itself, so no OnFailure= here.
+# Install: see "Cảnh báo qua email" in infra/README.md. The path assumes the checkout in /opt.
+[Unit]
+Description=Check that the AOV stack answers
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /opt/aov-project/infra/scripts/scheduled.sh watch
+TimeoutStartSec=5min

@@ -5,6 +5,8 @@ Description=Update the AOV stack to the newest checked commit of main
 Wants=network-online.target
 After=network-online.target docker.service
 Requires=docker.service
+# Mails the owner the log of a failed run (aov-alert@.service).
+OnFailure=aov-alert@%n.service
 
 [Service]
 Type=oneshot
