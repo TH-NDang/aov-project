@@ -7,10 +7,10 @@ import com.wikiaov.community.tournament.internal.catalog.application.port.WikiCa
 import com.wikiaov.community.tournament.internal.catalog.application.port.WikiCatalogSource.Patch;
 import com.wikiaov.community.tournament.internal.catalog.application.port.WikiCatalogSource.ReferenceScope;
 import com.wikiaov.community.tournament.internal.catalog.application.port.WikiCatalogSource.Season;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Reference;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.ResolvedContext;
 import com.wikiaov.community.tournament.internal.domain.CatalogLocales;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Reference;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.ResolvedContext;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;

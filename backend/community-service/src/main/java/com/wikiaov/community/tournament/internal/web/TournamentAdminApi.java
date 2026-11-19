@@ -15,11 +15,11 @@ import com.wikiaov.community.tournament.internal.directory.application.Directory
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentFacets;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.TournamentPart;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Game;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Player;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

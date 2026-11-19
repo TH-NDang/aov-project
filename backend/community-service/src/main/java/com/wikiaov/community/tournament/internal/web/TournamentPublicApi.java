@@ -2,8 +2,8 @@ package com.wikiaov.community.tournament.internal.web;
 
 import com.wikiaov.community.platform.PageLimits;
 import com.wikiaov.community.platform.PageSlice;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.GameContent.PublishedGame;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.games.application.PublicTournamentQueries.Summary;

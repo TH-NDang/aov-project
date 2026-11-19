@@ -1,7 +1,7 @@
 package com.wikiaov.community.tournament.internal.archive.domain;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Game;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterMembership;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import java.util.ArrayList;

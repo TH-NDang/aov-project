@@ -7,7 +7,7 @@ import com.wikiaov.community.tournament.internal.application.TournamentViews.Cre
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Update;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterMembership;
 import com.wikiaov.community.tournament.internal.roster.application.RosterAdministration;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;

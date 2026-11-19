@@ -9,13 +9,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.wikiaov.community.testsupport.CommunityApplicationTest;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Player;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterStatus;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CompetitionType;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.SeriesResult;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;

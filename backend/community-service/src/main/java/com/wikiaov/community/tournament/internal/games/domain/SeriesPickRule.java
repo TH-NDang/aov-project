@@ -1,9 +1,9 @@
 package com.wikiaov.community.tournament.internal.games.domain;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
+import com.wikiaov.community.tournament.internal.domain.GameContent.DraftKind;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Game;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Selection;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Side;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collection;

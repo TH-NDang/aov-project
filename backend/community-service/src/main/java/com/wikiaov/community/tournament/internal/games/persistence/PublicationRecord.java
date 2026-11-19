@@ -1,6 +1,6 @@
 package com.wikiaov.community.tournament.internal.games.persistence;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.PublishedGame;
+import com.wikiaov.community.tournament.internal.domain.GameContent.PublishedGame;
 import com.wikiaov.community.tournament.internal.games.domain.PublicationAction;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

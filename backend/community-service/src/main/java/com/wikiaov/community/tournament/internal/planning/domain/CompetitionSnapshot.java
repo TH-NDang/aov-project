@@ -2,10 +2,10 @@ package com.wikiaov.community.tournament.internal.planning.domain;
 
 import com.wikiaov.community.tournament.CompetitionCircuits;
 import com.wikiaov.community.tournament.CompetitionOrganizations;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Player;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import java.util.List;
 import java.util.Map;
