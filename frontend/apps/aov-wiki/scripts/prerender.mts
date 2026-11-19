@@ -8,7 +8,8 @@ import type { HeroRole } from "../src/lib/hero-classifications.ts"
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { parseSiteUrl, renderRobots } from "../src/lib/seo/head-tags.ts"
+import { renderRobots } from "../src/lib/seo/head-tags.ts"
+import { parseSiteUrl } from "../src/lib/seo/site-url.ts"
 import {
   buildStaticPages,
   renderSitemap,

@@ -5,19 +5,6 @@ export interface HeadTag {
   attrs: Record<string, string>
 }
 
-/** Accepts only an http(s) origin, because every canonical and preview URL is built by appending a root path to it. */
-export function parseSiteUrl(value: string | null | undefined) {
-  const raw = value?.trim()
-  if (!raw) return null
-  try {
-    const url = new URL(raw)
-    const isOrigin = url.pathname === "/" && !url.search && !url.hash && !url.username && !url.password
-    return isOrigin && (url.protocol === "https:" || url.protocol === "http:") ? url.origin : null
-  } catch {
-    return null
-  }
-}
-
 /**
  * The Wiki is served at the root of the origin, so this file also speaks for the apps beside it: Admin and the
  * identity provider stay out, while Stream stays open. /api/ and /media/ stay open too: Google renders pages with

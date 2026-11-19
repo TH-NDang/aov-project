@@ -30,7 +30,29 @@ function target(from: string, specifier: string) {
   return ["", ".ts", ".tsx"].map((ext) => base + ext).find((path) => existsSync(path) && statSync(path).isFile())
 }
 
+/** The packages a script loads through its static imports and the app files they reach, with the file naming each. */
+function packagesLoaded(path: string, seen = new Set<string>()): string[] {
+  if (seen.has(path)) return []
+  seen.add(path)
+  const imports = /^(?:import|export)\s+(?!type\s)[\w*{}\s,$]+?\s+from\s+"([^"]+)"|^import\s+"([^"]+)"/gm
+  return [...readFileSync(path, "utf8").matchAll(imports)].flatMap(([, named, bare]) => {
+    const specifier = (named ?? bare)!
+    if (specifier.startsWith("node:")) return []
+    if (!specifier.startsWith(".")) return [` loads ${specifier} through ${relative(app, path)}`]
+    const imported = resolve(dirname(path), specifier)
+    return existsSync(imported) ? packagesLoaded(imported, seen) : []
+  })
+}
+
 const rules: Rule[] = [
+  {
+    name: "the prerender job loads no package before its renderer",
+    hint:
+      "A package missing from the web image would stop the job before it can put a new release out (ADR-022, " +
+      "addendum of 19/11/2026). Use it from scripts/prerender.mts, which the job loads on demand.",
+    files: [join(app, "scripts/prerender-job.mts")],
+    offenders: (_, path) => packagesLoaded(path),
+  },
   {
     name: "interface text in markup has an English counterpart",
     hint: 'Write the words as text("…", "…") from useWikiText, with the English beside the Vietnamese.',
