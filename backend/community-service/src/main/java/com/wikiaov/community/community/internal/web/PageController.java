@@ -60,9 +60,10 @@ public class PageController implements PageApi {
     @GetMapping(path = ApiPaths.ROOT + "/pages", version = "1")
     public PageSlice<Profile> pages(@RequestParam(required = false) String kind,
             @RequestParam(defaultValue = "") String q, @RequestParam(required = false) String personRole,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size) {
-        QueryParameters.requireOnly(request, Set.of("kind", "q", "personRole", "page", "size"));
-        return profiles.list(kind, q, personRole, page, size, false);
+            @RequestParam(required = false) UUID organizationId, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "24") int size) {
+        QueryParameters.requireOnly(request, Set.of("kind", "q", "personRole", "organizationId", "page", "size"));
+        return profiles.list(kind, q, personRole, organizationId, page, size, false);
     }
 
     @Override
@@ -85,11 +86,14 @@ public class PageController implements PageApi {
             @RequestParam(defaultValue = "") String q, @RequestParam(required = false) String personRole,
             @RequestParam(defaultValue = "") String country, @RequestParam(defaultValue = "") List<UUID> entityIds,
             @RequestParam(defaultValue = "RECENT") String sort, @RequestParam(required = false) UUID relatedPageId,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size) {
+            @RequestParam(required = false) UUID organizationId, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "24") int size) {
         QueryParameters.requireOnly(request,
-                Set.of("kind", "q", "personRole", "country", "sort", "relatedPageId", "page", "size"),
+                Set.of("kind", "q", "personRole", "country", "sort", "relatedPageId", "organizationId", "page",
+                        "size"),
                 Set.of("entityIds"));
-        var filter = new PageProfiles.DirectoryFilter(kind, q, personRole, country, entityIds, sort, relatedPageId);
+        var filter = new PageProfiles.DirectoryFilter(kind, q, personRole, country, entityIds, sort, relatedPageId,
+                organizationId);
         return profiles.adminDirectory(filter, page, size);
     }
 

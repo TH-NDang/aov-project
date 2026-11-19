@@ -26,15 +26,28 @@ public class RegistryUsages {
         SELECT 'SERIES',COUNT(*) FROM tournament.series
          WHERE deleted_at IS NULL AND ((:kind='TEAM' AND (content->>'teamAId'=CAST(:id AS text)
              OR content->>'teamBId'=CAST(:id AS text)))
-             OR (:kind='TOURNAMENT' AND content->>'tournamentId'=CAST(:id AS text)))
+             OR (:kind='TOURNAMENT' AND content->>'tournamentId'=CAST(:id AS text))
+             OR (:kind='PLAYER' AND content->>'mvpPlayerId'=CAST(:id AS text)))
         UNION ALL
         SELECT 'TOURNAMENT_PART',COUNT(*) FROM tournament.tournament
          WHERE deleted_at IS NULL AND :kind='TOURNAMENT' AND parent_id=:id
+        UNION ALL
+        SELECT 'TOURNAMENT_RESULT',COUNT(*) FROM tournament.tournament
+         WHERE deleted_at IS NULL AND ((:kind='TEAM' AND (
+                 jsonb_path_exists(content,'$.placements[*] ? (@.teamId == $id)',jsonb_build_object('id',CAST(:id AS text)))
+                 OR jsonb_path_exists(content,'$.awards[*] ? (@.teamId == $id)',jsonb_build_object('id',CAST(:id AS text)))))
+             OR (:kind='PLAYER'
+                 AND jsonb_path_exists(content,'$.awards[*] ? (@.playerId == $id)',jsonb_build_object('id',CAST(:id AS text)))))
+        UNION ALL
+        SELECT 'TOURNAMENT_STAFF',COUNT(*) FROM tournament.tournament
+         WHERE deleted_at IS NULL AND :kind='TEAM'
+           AND jsonb_path_exists(content,'$.staff[*] ? (@.teamId == $id)',jsonb_build_object('id',CAST(:id AS text)))
         UNION ALL
         SELECT 'GAME',COUNT(*) FROM tournament.game game
          WHERE game.deleted_at IS NULL AND ((:kind='SERIES' AND game.series_id=:id)
              OR (:kind='TEAM' AND EXISTS(SELECT 1 FROM jsonb_array_elements(game.content->'sides') side
                  WHERE side->>'teamId'=CAST(:id AS text)))
+             OR (:kind='PLAYER' AND game.content->>'mvpPlayerId'=CAST(:id AS text))
              OR (:kind='PLAYER' AND EXISTS(SELECT 1 FROM jsonb_array_elements(game.content->'sides') side,
                  jsonb_array_elements(side->'participants') participant WHERE participant->>'playerId'=CAST(:id AS text))))
         UNION ALL
@@ -62,6 +75,15 @@ public class RegistryUsages {
             ELSE 0 END
         """;
 
+    /** Trashed records count too: restoring one must find the profile pages it names. */
+    private static final String CREW_PAGES = """
+        SELECT (SELECT COUNT(*) FROM tournament.tournament
+                 WHERE jsonb_path_exists(content,'$.broadcast[*] ? (@.pageId == $id)',jsonb_build_object('id',CAST(:id AS text)))
+                    OR jsonb_path_exists(content,'$.staff[*] ? (@.pageId == $id)',jsonb_build_object('id',CAST(:id AS text))))
+             + (SELECT COUNT(*) FROM tournament.series
+                 WHERE jsonb_path_exists(content,'$.broadcast[*] ? (@.pageId == $id)',jsonb_build_object('id',CAST(:id AS text))))
+        """;
+
     private final EntityManager entities;
 
     public RegistryUsages(EntityManager entities) {
@@ -73,6 +95,12 @@ public class RegistryUsages {
                 .setParameter("id", id).getResultList();
         return rows.stream().map(row -> new CountRow(row.get("type", String.class),
                 row.get("count", Number.class).longValue())).toList();
+    }
+
+    /** Tournaments and series that name the profile page in their broadcast or staff. */
+    public long crewReferences(UUID pageId) {
+        return ((Number) entities.createNativeQuery(CREW_PAGES).setParameter("id", pageId).getSingleResult())
+                .longValue();
     }
 
     public long activeParents(String kind, UUID id) {

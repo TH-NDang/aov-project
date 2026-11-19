@@ -21,8 +21,17 @@ public record PageContent(
         List<Achievement> achievements,
         List<Member> roster,
         List<String> personRoles,
-        UUID channelOrganizationId
+        UUID channelOrganizationId,
+        @Nullable UUID organizationId
 ) {
+    public PageContent(String name, String shortName, String country, String biography, String avatarUrl,
+            String coverUrl, List<Link> links, List<Source> sources, List<History> history,
+            List<Achievement> achievements, List<Member> roster, List<String> personRoles,
+            UUID channelOrganizationId) {
+        this(name, shortName, country, biography, avatarUrl, coverUrl, links, sources, history, achievements, roster,
+                personRoles, channelOrganizationId, null);
+    }
+
     public PageContent {
         links = links == null ? List.of() : List.copyOf(links);
         sources = sources == null ? List.of() : List.copyOf(sources);
@@ -106,14 +115,20 @@ public record PageContent(
     ) {
     }
 
+    /** A milestone; {@code tournamentId} names the tournament it happened at, when the app records it. */
     public record History(
             LocalDate startsOn,
             LocalDate endsOn,
             String title,
             UUID relatedPageId,
             String role,
-            String sourceUrl
+            String sourceUrl,
+            @Nullable UUID tournamentId
     ) {
+        public History(LocalDate startsOn, LocalDate endsOn, String title, UUID relatedPageId, String role,
+                String sourceUrl) {
+            this(startsOn, endsOn, title, relatedPageId, role, sourceUrl, null);
+        }
     }
 
     /**
@@ -170,6 +185,6 @@ public record PageContent(
         }
         return new PageContent(name, shortName, country, presentation.biography(), presentation.avatarUrl(),
                 presentation.coverUrl(), presentation.links(), sources, history, achievements, roster, personRoles,
-                channelOrganizationId);
+                channelOrganizationId, organizationId);
     }
 }

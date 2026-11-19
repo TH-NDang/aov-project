@@ -11,6 +11,7 @@ import com.wikiaov.community.tournament.internal.archive.application.RecordLifec
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
+import com.wikiaov.community.tournament.internal.domain.CrewRules;
 import com.wikiaov.community.tournament.internal.domain.MatchTitle;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
@@ -32,13 +33,15 @@ public class SeriesRegistry {
     private final SeriesRepository repository;
     private final TeamRepository teams;
     private final TournamentRepository tournaments;
+    private final CrewProfiles crew;
 
     public SeriesRegistry(SeriesRepository repository, TeamRepository teams, TournamentRepository tournaments,
-            RegistryArchivePolicy archives) {
+            RegistryArchivePolicy archives, CrewProfiles crew) {
         this.archives = archives;
         this.repository = repository;
         this.teams = teams;
         this.tournaments = tournaments;
+        this.crew = crew;
     }
 
     public PageSlice<View<Series>> list(String q, UUID tournamentId, RecordState state, Pageable page) {
@@ -125,7 +128,12 @@ public class SeriesRegistry {
                 throw TournamentErrors.invalid("Series result requires an absolute HTTP or HTTPS source URL.");
             }
         }
+        var crewErrors = CrewRules.crew(content.broadcast(), CrewRules.MAX_SERIES_CREW, "broadcast");
+        if (!crewErrors.isEmpty()) {
+            throw TournamentErrors.invalid(String.join(" ", crewErrors));
+        }
 
+        crew.requireIndividuals(CrewRules.pageIds(content));
         archives.validateParents(content);
     }
 

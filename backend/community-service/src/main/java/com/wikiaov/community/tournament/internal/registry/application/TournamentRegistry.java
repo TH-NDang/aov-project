@@ -10,6 +10,7 @@ import com.wikiaov.community.tournament.internal.archive.application.RecordLifec
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
+import com.wikiaov.community.tournament.internal.domain.CrewRules;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia;
@@ -28,11 +29,14 @@ public class TournamentRegistry {
     private final RegistryArchivePolicy archives;
     private final CompetitionMedia media;
     private final TournamentRepository repository;
+    private final CrewProfiles crew;
 
-    public TournamentRegistry(TournamentRepository repository, RegistryArchivePolicy archives, CompetitionMedia media) {
+    public TournamentRegistry(TournamentRepository repository, RegistryArchivePolicy archives, CompetitionMedia media,
+            CrewProfiles crew) {
         this.archives = archives;
         this.media = media;
         this.repository = repository;
+        this.crew = crew;
     }
 
     public PageSlice<View<Tournament>> list(String q, RecordState state, Pageable page) {
@@ -52,6 +56,7 @@ public class TournamentRegistry {
         archives.lockWrites();
         validate(content);
         validateMainEvent(null, content);
+        archives.validateParents(content);
         media.requireAvailable(content.logoUrl());
 
         var row = repository.saveAndFlush(new TournamentRecord(UUID.randomUUID(), content, actor));
@@ -67,6 +72,7 @@ public class TournamentRegistry {
         RegistryArchivePolicy.requireActive(row);
         TournamentErrors.version(row.getVersion(), version);
         validateMainEvent(id, content);
+        archives.validateParents(content);
 
         row.setContent(content, actor);
         repository.flush();
@@ -95,6 +101,7 @@ public class TournamentRegistry {
         if (!violations.isEmpty()) {
             throw TournamentErrors.invalid(String.join(" ", violations));
         }
+        crew.requireIndividuals(CrewRules.pageIds(content));
     }
 
     /**

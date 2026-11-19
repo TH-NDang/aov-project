@@ -54,7 +54,8 @@ public class PageProfiles {
             String country,
             List<UUID> entityIds,
             String sort,
-            @Nullable UUID relatedPageId
+            @Nullable UUID relatedPageId,
+            @Nullable UUID organizationId
     ) {
     }
 
@@ -75,11 +76,13 @@ public class PageProfiles {
     private final List<CompetitionReferences> references;
     private final PageRosterProfiles rosters;
     private final PageLiveRepository lives;
+    private final PageLinks links;
 
     public PageProfiles(PageRepository pages, PageAccess access, PageMemberRepository members,
             PageFollowRepository follows, CompetitionIdentities identities,
             CompetitionAssets assets, PageAuditRepository audits,
-            List<CompetitionReferences> references, PageRosterProfiles rosters, PageLiveRepository lives) {
+            List<CompetitionReferences> references, PageRosterProfiles rosters, PageLiveRepository lives,
+            PageLinks links) {
         this.pages = pages;
         this.access = access;
         this.members = members;
@@ -90,10 +93,12 @@ public class PageProfiles {
         this.references = references;
         this.rosters = rosters;
         this.lives = lives;
+        this.links = links;
     }
 
     @Transactional(readOnly = true)
-    public PageSlice<Profile> list(String kind, String query, String personRole, int page, int size, boolean admin) {
+    public PageSlice<Profile> list(String kind, String query, String personRole, @Nullable UUID organizationId,
+            int page, int size, boolean admin) {
         if (admin && !CommunityActor.require().capabilities().contains("tournament:read")) {
             throw PageAccess.forbidden();
         }
@@ -102,8 +107,13 @@ public class PageProfiles {
             throw PageChecks.invalid("Search is too long.");
         }
         String roles = PageChecks.personRoleFilter(personRole);
-        return PageSlice.from(pages.search(name(filter), INDIVIDUALS, query, roles, !admin, paging(page, size))
-                .map(row -> view(row, admin)));
+        return PageSlice.from(pages.search(name(filter), INDIVIDUALS, query, roles, owner(organizationId), !admin,
+                paging(page, size)).map(row -> view(row, admin)));
+    }
+
+    /** The owning organization a list keeps to, as native SQL binds it; empty keeps every page. */
+    private static String owner(@Nullable UUID organizationId) {
+        return organizationId == null ? "" : organizationId.toString();
     }
 
     @Transactional(readOnly = true)
@@ -128,8 +138,8 @@ public class PageProfiles {
 
         var identities = filter.entityIds().stream().map(UUID::toString).collect(Collectors.joining(","));
         var rows = pages.adminDirectory(name(kind), INDIVIDUALS, filter.query(),
-                PageChecks.personRoleFilter(filter.personRole()), filter.country(), identities, filter.sort(),
-                paging(page, size));
+                PageChecks.personRoleFilter(filter.personRole()), filter.country(), identities,
+                owner(filter.organizationId()), filter.sort(), paging(page, size));
         return PageSlice.from(rows.map(row -> view(row, true)));
     }
 
@@ -138,7 +148,7 @@ public class PageProfiles {
         var kinds = kind != null ? Set.of(kind) : roles.isEmpty() ? ACTIVE_KINDS : Set.of(Kind.PLAYER);
         var related = filter.relatedPageId() == null ? "" : filter.relatedPageId().toString();
         var ranked = pages.byActivity(name(kind), String.join(",", Kind.names(kinds)), IDENTITIES, INDIVIDUALS,
-                filter.query(), roles, filter.country(), related, paging(page, size));
+                filter.query(), roles, filter.country(), related, owner(filter.organizationId()), paging(page, size));
         var rows = pages.findAllById(ranked.map(PageRepository.ActiveRow::getId).toList()).stream()
                 .collect(Collectors.toMap(PageRecord::getId, Function.identity()));
 
@@ -223,6 +233,7 @@ public class PageProfiles {
         }
         PageChecks.personRoles(kind, content);
         validateChannelOrganization(kind, content, false);
+        links.validate(kind, content);
         content = rosters.resolve(kind, content);
         if (kind.identity()) {
             var identity = entityId == null
@@ -253,6 +264,7 @@ public class PageProfiles {
         PageAccess.version(row.getVersion(), version);
         PageChecks.personRoles(row.getKind(), content);
         validateChannelOrganization(row.getKind(), content, false);
+        links.validate(row.getKind(), content);
         content = rosters.resolve(row.getKind(), content);
         row.setContent(content);
         row.setUpdatedAt(Instant.now());
@@ -270,6 +282,7 @@ public class PageProfiles {
             throw PageChecks.invalid("Add at least one source before publication.");
         }
         validateChannelOrganization(row.getKind(), row.getContent(), true);
+        links.validatePublication(row.getKind(), row.getContent());
 
         if (row.getEntityId() != null) {
             var content = row.getContent();
@@ -321,6 +334,9 @@ public class PageProfiles {
         }
         if (pages.countChannelReferences(Kind.CIRCUIT.name(), id.toString()) > 0) {
             throw PageAccess.conflict("A circuit references this organization's channels.");
+        }
+        if (pages.countOwnerReferences(Kind.TEAM.name(), id.toString()) > 0) {
+            throw PageAccess.conflict("A team names this organization as its owner.");
         }
         if (references.stream().mapToLong(reference -> reference.identityReferences(Subject.PAGE, id)).sum() > 0) {
             throw PageAccess.conflict("A competition uses this page.");

@@ -1,7 +1,7 @@
 package com.wikiaov.community.tournament.internal.registry.domain;
 
+import com.wikiaov.community.tournament.internal.domain.CrewRules;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
-
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentResult;
 import java.math.BigDecimal;
@@ -32,6 +32,8 @@ public final class TournamentMetadataRules {
         }
 
         validateFinalTable(content, errors);
+        errors.addAll(CrewRules.crew(content.broadcast(), CrewRules.MAX_TOURNAMENT_CREW, "broadcast"));
+        errors.addAll(CrewRules.staff(content.staff()));
 
         return List.copyOf(errors);
     }

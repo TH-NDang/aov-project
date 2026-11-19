@@ -134,7 +134,7 @@ public interface PageApi {
     }
 
     @Operation(operationId = "pageApi_pages", summary = "List published pages")
-    PageSlice<Profile> pages(String kind, String q, String personRole, @Min(0) int page,
+    PageSlice<Profile> pages(String kind, String q, String personRole, UUID organizationId, @Min(0) int page,
             @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @Operation(operationId = "pageApi_page", summary = "Read a published page")
@@ -145,7 +145,8 @@ public interface PageApi {
 
     @Operation(operationId = "pageApi_adminPages", summary = "List pages for editors")
     PageSlice<Profile> adminPages(String kind, String q, String personRole, String country, List<UUID> entityIds,
-            String sort, UUID relatedPageId, @Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
+            String sort, UUID relatedPageId, UUID organizationId, @Min(0) int page,
+            @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     @Operation(operationId = "pageApi_byEntity", summary = "Read the published page of a team or player")
     Profile byEntity(String kind, UUID id);

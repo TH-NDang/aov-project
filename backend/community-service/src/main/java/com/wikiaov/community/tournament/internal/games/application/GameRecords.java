@@ -124,6 +124,11 @@ public class GameRecords {
                 }
             }
         }
+        if (content.mvpPlayerId() != null && !playerCopies.containsKey(content.mvpPlayerId())) {
+            players.findById(content.mvpPlayerId()).ifPresentOrElse(
+                    player -> playerCopies.put(player.getId(), player.getContent()),
+                    () -> missing.add("mvpPlayerId.notFound"));
+        }
         if (match != null && !new HashSet<>(teamCopies.keySet())
                 .equals(Set.of(match.getContent().teamAId(), match.getContent().teamBId()))) {
             missing.add("sides.teams.matchSeries");
@@ -137,7 +142,7 @@ public class GameRecords {
         var frozen = new Game(content.seriesId(), content.number(), content.region(), content.locale(),
                 resolved.seasonId(), resolved.patchVariantId(), content.startedAt(), content.durationSeconds(),
                 content.winner(), content.sourceUrl(), content.sourceTimestampSeconds(), content.note(),
-                content.sides(), content.includeUnscoped(), content.timeline(), content.draft());
+                content.sides(), content.includeUnscoped(), content.timeline(), content.draft(), content.mvpPlayerId());
         var snapshot = new PublishedGame(id, Instant.now(), frozen, Map.copyOf(teamCopies), Map.copyOf(playerCopies),
                 usedCatalog(content, catalog), match.getContent(), tournament.getContent(), resolved);
         row.publish(snapshot, actor);
