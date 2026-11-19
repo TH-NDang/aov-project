@@ -15,22 +15,28 @@ import org.springframework.data.jpa.repository.Query;
 
 /**
  * Pages and the lists that read their documents. Native SQL binds page kinds as their names: {@code kind} is one kind
- * or null for every kind, {@code individuals} the kinds that may carry personnel roles.
+ * or null for every kind, {@code individuals} the kinds that may carry personnel roles. The page of a team or player in
+ * the trash is in the trash with it: lists and pickers leave it out through the {@code tournament.trashed_identity}
+ * view, the second and last part of the tournament schema this module reads besides {@code page_activity}.
  */
 public interface PageRepository extends JpaRepository<PageRecord, UUID> {
 
     /** Native: matches the name and personnel roles inside the jsonb documents. */
     @Query(value = """
-        SELECT * FROM community.page
+        SELECT * FROM community.page p
         WHERE (:kind IS NULL OR kind = :kind) AND (:published = false OR published_content IS NOT NULL)
+          AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                          WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
           AND (:roles = '' OR (kind IN (:individuals) AND jsonb_exists_any(
             (CASE WHEN :published THEN published_content ELSE content END)->'personRoles', string_to_array(:roles, ','))))
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR
             lower((CASE WHEN :published THEN published_content ELSE content END)->>'name') LIKE lower(concat('%', :query, '%')))
         ORDER BY updated_at DESC, id
         """, countQuery = """
-        SELECT count(*) FROM community.page
+        SELECT count(*) FROM community.page p
         WHERE (:kind IS NULL OR kind = :kind) AND (:published = false OR published_content IS NOT NULL)
+          AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                          WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
           AND (:roles = '' OR (kind IN (:individuals) AND jsonb_exists_any(
             (CASE WHEN :published THEN published_content ELSE content END)->'personRoles', string_to_array(:roles, ','))))
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR
@@ -44,8 +50,10 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
      * filters and orders by fields of the jsonb draft.
      */
     @Query(value = """
-        SELECT * FROM community.page
+        SELECT * FROM community.page p
         WHERE (:kind IS NULL OR kind = :kind)
+          AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                          WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
           AND (:roles = '' OR (kind IN (:individuals) AND jsonb_exists_any(content->'personRoles', string_to_array(:roles, ','))))
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR lower(content->>'name') LIKE lower(concat('%', :query, '%')))
           AND (:country = '' OR content->>'country' = :country)
@@ -54,8 +62,10 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
                  CASE WHEN :sort = 'ACTIVITY' THEN jsonb_array_length(coalesce(content->'history', '[]')) END DESC,
                  updated_at DESC, id
         """, countQuery = """
-        SELECT count(*) FROM community.page
+        SELECT count(*) FROM community.page p
         WHERE (:kind IS NULL OR kind = :kind)
+          AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                          WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
           AND (:roles = '' OR (kind IN (:individuals) AND jsonb_exists_any(content->'personRoles', string_to_array(:roles, ','))))
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR lower(content->>'name') LIKE lower(concat('%', :query, '%')))
           AND (:country = '' OR content->>'country' = :country)
@@ -82,6 +92,8 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
           ON a.kind = p.kind AND a.kind = ANY(string_to_array(:kinds, ','))
          AND a.key_id = CASE WHEN p.kind IN (:identities) THEN p.entity_id ELSE p.id END
         WHERE (:kind IS NULL OR p.kind = :kind)
+          AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                          WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
           AND (:roles = '' OR (p.kind IN (:individuals) AND jsonb_exists_any(p.content->'personRoles', string_to_array(:roles, ','))))
           AND strpos(p.search_names, tournament.search_key(:query)) > 0
           AND (:country = '' OR p.content->>'country' = :country)
@@ -95,6 +107,8 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
         """, countQuery = """
         SELECT count(*) FROM community.page p
         WHERE (:kind IS NULL OR p.kind = :kind)
+          AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                          WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
           AND (:roles = '' OR (p.kind IN (:individuals) AND jsonb_exists_any(p.content->'personRoles', string_to_array(:roles, ','))))
           AND strpos(p.search_names, tournament.search_key(:query)) > 0
           AND (:country = '' OR p.content->>'country' = :country)
@@ -115,21 +129,39 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
 
     /** Native: looks for the member inside the jsonb roster. */
     @Query(value = """
-        SELECT * FROM community.page
+        SELECT * FROM community.page p
         WHERE kind = :team AND (:published = false OR published_content IS NOT NULL)
+          AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                          WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
           AND (CASE WHEN :published THEN published_content ELSE content END)->'roster'
             @> jsonb_build_array(jsonb_build_object('pageId', CAST(:memberId AS text)))
         ORDER BY updated_at DESC, id
         """, nativeQuery = true)
     List<PageRecord> teamsForMember(String team, String memberId, boolean published);
 
-    /** Native: looks for the member inside the jsonb rosters. */
+    /**
+     * Every team roster that names the member, teams in the trash included: a page is deleted for good, so a team that
+     * can still be restored keeps it. Native: looks for the member inside the jsonb rosters.
+     */
     @Query(value = """
         SELECT count(*) FROM community.page WHERE kind = :team AND (
           content->'roster' @> jsonb_build_array(jsonb_build_object('pageId', CAST(:memberId AS text))) OR
           published_content->'roster' @> jsonb_build_array(jsonb_build_object('pageId', CAST(:memberId AS text))))
         """, nativeQuery = true)
     long countRosterReferences(String team, String memberId);
+
+    /**
+     * The rosters of teams that are not in the trash that name the member; a team in the trash no longer keeps its
+     * members out of it. Native: looks for the member inside the jsonb rosters.
+     */
+    @Query(value = """
+        SELECT count(*) FROM community.page p WHERE p.kind = :team
+          AND NOT EXISTS (SELECT 1 FROM tournament.trashed_identity trashed
+                          WHERE trashed.kind = p.kind AND trashed.id = p.entity_id)
+          AND (p.content->'roster' @> jsonb_build_array(jsonb_build_object('pageId', CAST(:memberId AS text))) OR
+            p.published_content->'roster' @> jsonb_build_array(jsonb_build_object('pageId', CAST(:memberId AS text))))
+        """, nativeQuery = true)
+    long countActiveRosterReferences(String team, String memberId);
 
     /** Native: reads the channel organization inside the jsonb documents. */
     @Query(value = """
@@ -165,8 +197,6 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
     Page<PageRecord> suggestedFor(String actor, Pageable pageable);
 
     Optional<PageRecord> findByKindAndEntityId(Kind kind, UUID entityId);
-
-    long countByKindAndEntityId(Kind kind, UUID entityId);
 
     /** Native: looks for the image path in the text of the jsonb documents. */
     @Query(value = "select count(*) from community.page where cast(content as text) like concat('%/', :id, '/%') or cast(published_content as text) like concat('%/', :id, '/%') or cast(presentation as text) like concat('%/', :id, '/%')", nativeQuery = true)
