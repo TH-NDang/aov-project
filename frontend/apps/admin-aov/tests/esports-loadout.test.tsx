@@ -747,3 +747,133 @@ test("while recording, an empty seat asks for its player and a button beside the
     assert.deepEqual(opened, ["BLUE:JUNGLE player", "BLUE:TOP equipment"])
   })
 })
+
+/** Mounts the editor of one participant with the app's confirm dialog; `state.latest` holds every edit made. */
+async function editLoadout(
+  render: (node: React.ReactNode) => Promise<void>,
+  start: Participant,
+  observedAt?: (
+    value: number | null | undefined,
+    onChange: (second: number | null) => void,
+    label: string,
+  ) => React.ReactNode,
+) {
+  const { LoadoutEditor } = await import("../src/features/esports/pages/loadout-editor")
+  const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
+  const state = { latest: start }
+  function Host() {
+    const [value, setValue] = useState(state.latest)
+    return (
+      <>
+        <LoadoutEditor
+          participant={value}
+          catalog={catalog}
+          observedAt={observedAt}
+          onChange={(change) => {
+            state.latest = change(state.latest)
+            setValue(state.latest)
+          }}
+        />
+        <ConfirmDialogHost />
+      </>
+    )
+  }
+  await render(<Host />)
+  return state
+}
+
+test("a loadout note is saved when its field is left, and only when it changed", async () => {
+  await withDom(async ({ document, render }) => {
+    const state = await editLoadout(render, participant("MID"))
+    const window = document.defaultView!
+    const note = document.querySelector<HTMLTextAreaElement>('[aria-label="Ghi chú bảng ngọc"]')!
+    const leave = () => act(async () => void note.dispatchEvent(new window.FocusEvent("focusout", { bubbles: true })))
+    await leave()
+    assert.equal(state.latest.arcana.note, undefined, "leaving an untouched note saves nothing")
+
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value")!.set!.call(
+        note,
+        "  Thiếu ngọc xanh  ",
+      )
+      note.dispatchEvent(new window.Event("input", { bubbles: true }))
+    })
+    assert.equal(state.latest.arcana.note, undefined, "typing alone saves nothing")
+    await leave()
+    assert.equal(state.latest.arcana.note, "Thiếu ngọc xanh")
+    assert.equal(state.latest.enchantments.note, undefined, "each part keeps its own note")
+  })
+})
+
+test("a stone recorded without a colour is listed apart and can be removed", async () => {
+  await withDom(async ({ document, render, click }) => {
+    const state = await editLoadout(
+      render,
+      participant("MID", {
+        arcana: { status: "PARTIAL", entries: [{ selection: { name: "Ngọc ghi tay" }, count: 4 }] },
+      }),
+    )
+    assert.match(
+      document.querySelector('[aria-label="Ngọc chưa rõ màu"]')!.textContent ?? "",
+      /Ngọc ghi tay ×4 · chưa rõ màu/,
+    )
+    await click('[aria-label="Bỏ Ngọc ghi tay"]')
+    assert.deepEqual(state.latest.arcana.entries, [])
+    assert.equal(document.querySelector('[aria-label="Ngọc chưa rõ màu"]'), null)
+  })
+})
+
+test("emblems marked as not shown ask first and drop the recorded picks", async () => {
+  await withDom(async ({ document, render }) => {
+    const state = await editLoadout(
+      render,
+      participant("MID", {
+        enchantments: {
+          status: "PARTIAL",
+          entries: [{ selection: { id: "light-1", name: "Sung mãn" }, primary: true, tier: 1 }],
+        },
+      }),
+    )
+    const toggle = () =>
+      document.querySelector<HTMLButtonElement>('[data-part="enchantments"] button[aria-pressed][title]')!
+    await act(async () => toggle().click())
+    await waitFor(() => document.querySelector('[role="alertdialog"]'), "the not-shown question opens")
+    assert.match(document.querySelector('[role="alertdialog"]')!.textContent ?? "", /1 phù hiệu đã ghi/)
+    await act(async () => confirmButton(document, "Bỏ và đánh dấu")!.click())
+    await waitFor(() => state.latest.enchantments.status === "NOT_SHOWN", "the emblems are recorded as not shown")
+    assert.deepEqual(state.latest.enchantments.entries, [])
+    assert.match(document.querySelector('[data-part="enchantments"]')!.textContent ?? "", /không xem đây là chưa dùng/)
+
+    await act(async () => toggle().click())
+    assert.equal(state.latest.enchantments.status, "UNKNOWN", "unmarking needs no question")
+  })
+})
+
+test("each part records when the source showed it through the control the screen provides", async () => {
+  await withDom(async ({ document, render, click }) => {
+    const state = await editLoadout(render, participant("MID"), (value, onChange, label) => (
+      <button type="button" aria-label={`Mốc ${label}`} onClick={() => onChange(42)}>
+        {value ?? "chưa có"}
+      </button>
+    ))
+    await click('[aria-label="Mốc phù hiệu"]')
+    assert.equal(state.latest.enchantments.observedAtSeconds, 42)
+    assert.equal(state.latest.arcana.observedAtSeconds, undefined)
+    await click('[aria-label="Mốc bảng ngọc"]')
+    assert.equal(state.latest.arcana.observedAtSeconds, 42)
+    assert.equal(document.querySelector('[aria-label="Mốc bảng ngọc"]')!.textContent, "42")
+  })
+})
+
+test("where the three arcana columns do not fit, the colour tabs show one colour at a time", async () => {
+  await withDom(async ({ document, render, click }) => {
+    await editLoadout(render, participant("MID"))
+    const column = (color: string) =>
+      document.querySelector<HTMLElement>(`[data-part="arcana"] div[data-arcana="${color}"]`)!.className
+    assert.doesNotMatch(column("RED"), /(^| )hidden( |$)/, "red is shown first")
+    assert.match(column("GREEN"), /(^| )hidden( |$)/)
+    await click('[aria-label="Màu ngọc"] button[data-arcana="GREEN"]')
+    assert.match(column("RED"), /(^| )hidden( |$)/)
+    assert.doesNotMatch(column("GREEN"), /(^| )hidden( |$)/)
+  })
+})
