@@ -1,7 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { inPage, game, lookups, events, chapter, onAxis } from "./fixtures/esports-ui"
+import { VIDEO_MARK } from "../src/features/esports/model/vod"
+import { waitFor } from "./fixtures/dom"
+import { inPage, game, lookups, events, chapter, onAxis, popoverGlobals } from "./fixtures/esports-ui"
 
 test("the timeline places markers by side, describes them for screen readers and seeks on selection", async () => {
   await inPage(async (document, render) => {
@@ -221,4 +223,132 @@ test("the timeline names its rows and only an editor who is recording can record
     assert.equal(document.querySelector<HTMLButtonElement>('[data-add="BLUE"]')!.disabled, true)
     assert.match(document.querySelector("[data-timeline-hint]")!.textContent ?? "", /vào trận rồi mới ghi/)
   })
+})
+
+test("the track names each game and its turns, follows the pointer and seeks from the overview", async () => {
+  await inPage(async (document, render) => {
+    const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
+    const window = document.defaultView!
+    const seeks: number[] = []
+    const drafted = {
+      ...chapter(100, 1000),
+      from: 0,
+      draft: {
+        start: 0,
+        locked: 80,
+        turns: [
+          { order: 1, kind: "BAN" as const, side: "BLUE" as const, hero: { id: "aoi", name: "Aoi" }, atSecond: 20 },
+          { order: 2, kind: "PICK" as const, side: "RED" as const, hero: { name: "Murad" }, atSecond: 40 },
+        ],
+      },
+    }
+    await render(
+      <BroadcastTimeline
+        duration={1200}
+        current={400}
+        chapters={[drafted]}
+        events={[]}
+        views={{ g1: game }}
+        chapterTitle={() => "AZU thắng"}
+        focusedGameId="g1"
+        activeId={null}
+        isDimmed={() => false}
+        lookups={lookups}
+        onSeek={(second) => seeks.push(second)}
+        onSelect={() => {}}
+        onOpen={() => {}}
+      />,
+    )
+    assert.equal(document.querySelector(".esp-bt-band-label")?.textContent, "Ván 1⏱ 15:00AZU thắng")
+    const turns = [...document.querySelectorAll<HTMLButtonElement>(".esp-bt-turn")]
+    assert.deepEqual(
+      turns.map((turn) => turn.getAttribute("aria-label")),
+      ["Ván 1 · lượt 1 · cấm · Azure · Aoi · 0:20", "Ván 1 · lượt 2 · chọn · Crimson · Murad · 0:40"],
+    )
+    assert.ok(turns[0]!.querySelector(".esp-bt-turn-ban"), "a ban carries its mark")
+    assert.equal(turns[1]!.querySelector(".esp-bt-turn-ban"), null)
+    assert.equal(document.querySelector(".esp-bt-playhead")?.textContent, "V1 ⏱ 5:00")
+
+    const track = document.querySelector<HTMLElement>('[role="slider"]')!
+    track.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1200, height: 158 }) as DOMRect
+    await act(async () => track.dispatchEvent(new window.MouseEvent("pointermove", { bubbles: true, clientX: 600 })))
+    assert.equal(document.querySelector(".esp-bt-scrub")?.textContent, `${VIDEO_MARK} 10:00 · V1 ⏱ 8:20`)
+    await act(async () =>
+      track.dispatchEvent(new window.MouseEvent("pointerout", { bubbles: true, relatedTarget: document.body })),
+    )
+    assert.equal(document.querySelectorAll(".esp-bt-scrub").length, 0, "the pointer label leaves with the pointer")
+
+    const overview = document.querySelector<HTMLElement>(".esp-bt-overview")!
+    overview.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 20 }) as DOMRect
+    await act(async () => overview.dispatchEvent(new window.MouseEvent("pointerdown", { bubbles: true, clientX: 150 })))
+    assert.deepEqual(seeks, [300], "a quarter of the overview is a quarter of the video")
+  })
+})
+
+test("the span follows the focused game until another is picked, and fitting the game brings it back", async () => {
+  await inPage(async (document, render) => {
+    const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
+    await render(
+      <BroadcastTimeline
+        duration={20000}
+        current={1000}
+        chapters={[chapter(600, 1500)]}
+        events={[]}
+        views={{ g1: game }}
+        chapterTitle={() => ""}
+        focusedGameId="g1"
+        activeId={null}
+        isDimmed={() => false}
+        lookups={lookups}
+        onSeek={() => {}}
+        onSelect={() => {}}
+        onOpen={() => {}}
+      />,
+    )
+    const range = () => document.querySelector('[aria-label="Phạm vi đang xem"]')?.textContent
+    const named = (label: string) =>
+      [...document.querySelectorAll<HTMLButtonElement>("button")].find((entry) => entry.textContent?.trim() === label)!
+    assert.equal(range(), "20 phút", "a fifteen-minute game opens on twenty minutes")
+    await act(async () => named("Toàn video").click())
+    assert.equal(range(), "Cả video")
+    await act(async () => named("Vừa ván 1").click())
+    assert.equal(range(), "20 phút")
+  })
+})
+
+test("a marker's card opens on hover, goes to the moment and opens its details", async () => {
+  await inPage(async (document, render) => {
+    const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
+    const window = document.defaultView!
+    const selected: string[] = []
+    const opened: string[][] = []
+    await render(
+      <BroadcastTimeline
+        duration={900}
+        current={0}
+        chapters={[chapter(0, 900)]}
+        events={onAxis(events)}
+        views={{ g1: game }}
+        chapterTitle={() => ""}
+        focusedGameId="g1"
+        activeId={null}
+        isDimmed={() => false}
+        lookups={lookups}
+        onSeek={() => {}}
+        onSelect={(event) => selected.push(event.id)}
+        onOpen={(cluster) => opened.push(cluster.events.map((event) => event.id))}
+      />,
+    )
+    const kill = document.querySelector<HTMLButtonElement>('[data-marker][data-kind="KILL"]')!
+    await act(async () =>
+      kill.dispatchEvent(new window.MouseEvent("pointerover", { bubbles: true, relatedTarget: document.body })),
+    )
+    const inCard = (label: string) =>
+      [...document.querySelectorAll<HTMLButtonElement>("button")].find((entry) => entry.textContent?.includes(label))
+    await waitFor(() => inCard("Tới mốc này"), "the card of the kill opens")
+    await act(async () => inCard("Tới mốc này")!.click())
+    await act(async () => inCard("Xem chi tiết")!.click())
+    assert.deepEqual(selected, ["g1|k1"])
+    assert.deepEqual(opened, [["g1|k1"]])
+  }, popoverGlobals)
 })
