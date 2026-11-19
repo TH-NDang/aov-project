@@ -17,8 +17,9 @@ import { setSession, signedIn, signIns } from "./fixtures/stream-auth.ts"
 import { claim, managers, notification, page, slice, viewer } from "./fixtures/community-data.ts"
 
 withDom()
-const { CommunityAccount, CommunityInvitation, CommunityPageManager } =
-  await import("../src/features/community/pages/community-account.tsx")
+const { CommunityAccount } = await import("../src/features/community/pages/community-account-page.tsx")
+const { CommunityPageManager } = await import("../src/features/community/pages/community-manage-page.tsx")
+const { CommunityInvitation } = await import("../src/features/community/pages/community-invitation-page.tsx")
 
 const saigon = page("page-saigon", "Saigon Phantom")
 
