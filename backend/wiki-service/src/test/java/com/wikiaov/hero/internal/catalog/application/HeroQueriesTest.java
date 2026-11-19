@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.catalog.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.eq;
@@ -35,6 +36,8 @@ import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.PlatformErrorCode;
 import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.time.Instant;
@@ -56,9 +59,12 @@ class HeroQueriesTest {
             "aov-standard", UUID.randomUUID(), "2026-10-15", UUID.randomUUID(), 2, at);
     private final HeroForms forms = mock(HeroForms.class);
     private final HeroPatchHistory history = mock(HeroPatchHistory.class);
-    private final HeroQueries queries = new HeroQueries(store, sections, contexts, media,
-            Clock.fixed(at, ZoneOffset.UTC), forms, mock(SkillLibraryIcons.class),
-            new HeroReadMoments(contexts, history));
+    private final Clock clock = Clock.fixed(at, ZoneOffset.UTC);
+    private final HeroReadMoments moments = new HeroReadMoments(contexts, history);
+    private final HeroReaderSelection selection = new HeroReaderSelection(store, contexts);
+    private final HeroQueries queries = new HeroQueries(store, contexts, clock, moments, selection,
+            new HeroDetails(store, sections, media, forms, mock(SkillLibraryIcons.class), selection),
+            new HeroListing(store, sections, media, forms, moments, clock, selection));
 
     @BeforeEach
     void resolvePublishedContext() {
@@ -210,6 +216,30 @@ class HeroQueriesTest {
         observeAt(hero, scheduled);
 
         assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", null, null, false, false))).isEmpty();
+    }
+
+    @Test
+    void theListSortsByCodeOnly() {
+        assertThatThrownBy(() -> queries.list("VN", "vi-VN", 0, 20, "", null, "name,asc", null, null, false, false))
+                .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getErrorCode())
+                        .isEqualTo(PlatformErrorCode.INVALID_QUERY_PARAMETER))
+                .hasMessage("Only code sorting is supported.");
+    }
+
+    @Test
+    void theListSearchHoldsAtMostOneHundredTwentyCharacters() {
+        assertThatThrownBy(() -> queries.list("VN", "vi-VN", 0, 20, "a".repeat(121), null, "code,asc", null, null,
+                false, false)).isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getErrorCode())
+                        .isEqualTo(PlatformErrorCode.INVALID_QUERY_PARAMETER))
+                .hasMessage("Search text is too long.");
+    }
+
+    @Test
+    void theListFiltersByAKnownRoleOnly() {
+        assertThatThrownBy(() -> queries.list("VN", "vi-VN", 0, 20, "", "HEALER", "code,asc", null, null, false,
+                false)).isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getErrorCode())
+                        .isEqualTo(PlatformErrorCode.INVALID_QUERY_PARAMETER))
+                .hasMessage("Unknown hero role.");
     }
 
     private void observeAt(CatalogHero hero, UUID variantId) {
