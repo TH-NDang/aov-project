@@ -125,9 +125,7 @@ public class CompetitionPlanning {
                     || !Objects.equals(value.title(), match.title())
                     || !Objects.equals(value.stage(), match.stageCode())) {
                 series.update(current.id(), current.version(),
-                        new Series(value.code(), id, match.label(), match.stageCode(), value.teamAId(), value.teamBId(),
-                                value.bestOf(), match.scheduledAt(), value.sourceUrl(), value.note(), value.result(),
-                                value.repeatPicksAllowed(), match.title()),
+                        value.planned(match.label(), match.stageCode(), match.scheduledAt(), match.title()),
                         actor.key());
             }
         }

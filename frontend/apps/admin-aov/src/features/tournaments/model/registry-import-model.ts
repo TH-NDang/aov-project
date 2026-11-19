@@ -108,6 +108,7 @@ const ITEM_FIELDS: Record<string, readonly string[]> = {
     "title",
     "playerId",
     "recipientName",
+    "teamId",
     "teamName",
     "prizeUsd",
     "prizeLocal",

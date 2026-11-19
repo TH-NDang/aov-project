@@ -101,6 +101,20 @@ test("series game lists request every page under the chosen series only", async 
   assert.ok(seen[1].includes("page=1"))
 })
 
+test("the links to review are read one kind and one page at a time, with the counts of every kind apart", async () => {
+  const seen: string[] = []
+  const api = createTournamentApi(async (path) => {
+    seen.push(path)
+    return (path.includes("facets") ? [] : { items: [], totalElements: 0, page: 2, size: 50 }) as never
+  })
+  await api.linkReview("SERIES_BROADCAST", 2)
+  await api.linkReviewFacets()
+  const url = new URL(seen[0], "http://localhost")
+  assert.equal(url.pathname, "/admin/link-review")
+  assert.deepEqual(Object.fromEntries(url.searchParams), { kind: "SERIES_BROADCAST", page: "2", size: "50" })
+  assert.equal(seen[1], "/admin/link-review/facets")
+})
+
 test("roster list requests intersect the selected tournament, team and player without a global membership claim", async () => {
   const api = createTournamentApi(async (path) => {
     const url = new URL(path, "http://localhost")

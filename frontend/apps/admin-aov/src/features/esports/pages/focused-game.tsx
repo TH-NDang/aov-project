@@ -115,6 +115,7 @@ export function FocusedGame({
   onVideoUrl,
   shareLink,
   actions,
+  tournamentId,
   tournamentRegion,
   onEnableEditing,
   onUndoable,
@@ -147,6 +148,8 @@ export function FocusedGame({
   onVideoUrl: (url: string) => void
   shareLink: (videoSecond: number) => string
   actions?: MutableRefObject<GameActions | null>
+  /** The tournament of the match, whose players an MVP search lists first. */
+  tournamentId?: string
   /** Market of the tournament, to say so when a game is still recorded under another one. */
   tournamentRegion?: string
   onEnableEditing: () => void
@@ -361,6 +364,9 @@ export function FocusedGame({
             <GameInfoPanel
               key={entry.version}
               entry={entry}
+              view={view}
+              roster={roster}
+              tournamentId={tournamentId}
               tournamentRegion={tournamentRegion}
               canPublish={canPublish}
               onSave={(change) => void save((content) => ({ ...content, ...change }))}

@@ -89,8 +89,9 @@ export function registryContent(kind: RegistryKind, values: Record<string, strin
 
 /**
  * A tournament saved from its editor: the form's fields, with what other screens edit kept from the stored record (the
- * final table, awards, links and local currency), and a result an import recorded before the Final step kept the
- * final table, which Stream still reads when the table names no single champion.
+ * final table, awards, links and local currency, the broadcast crew and the team staff), and a result an import
+ * recorded before the Final step kept the final table, which Stream still reads when the table names no single
+ * champion.
  */
 export function keptTournamentFields(fields: TournamentContent, stored: TournamentContent): TournamentContent {
   return {
@@ -100,6 +101,21 @@ export function keptTournamentFields(fields: TournamentContent, stored: Tourname
     placements: stored.placements,
     awards: stored.awards,
     links: stored.links,
+    broadcast: stored.broadcast,
+    staff: stored.staff,
+  }
+}
+
+/**
+ * A match saved from its editor: the form's fields, with what the form does not show kept from the stored record (the
+ * title its plan gave it, its MVP and the people of its own broadcast).
+ */
+export function keptSeriesFields(fields: SeriesContent, stored: SeriesContent): SeriesContent {
+  return {
+    ...fields,
+    title: stored.title,
+    mvpPlayerId: stored.mvpPlayerId,
+    broadcast: stored.broadcast,
   }
 }
 

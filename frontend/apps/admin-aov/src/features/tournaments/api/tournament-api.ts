@@ -2,6 +2,9 @@ import type {
   Catalog,
   DocumentView,
   GameContent,
+  LinkMention,
+  LinkMentionCount,
+  LinkMentionKind,
   PageSlice,
   PlayerContent,
   RosterMembershipContent,
@@ -74,6 +77,9 @@ export const tournamentKeys = {
   picker: (kind: RankedKind, search: string, context?: PickerContext) =>
     [...all, "picker", kind, search, context ?? null] as const,
   pickerSelected: (kind: RankedKind, id: string | null | undefined) => [...all, "picker-selected", kind, id] as const,
+  /** Text that names someone no link names yet, one kind per tab; read again after every tournament write. */
+  linkReview: (actorKey: string, kind: LinkMentionKind) => [...all, "link-review", actorKey, kind] as const,
+  linkReviewFacets: (actorKey: string) => [...all, "link-review-facets", actorKey] as const,
   trash: (actorKey: string, kind: RecordKind) => [...all, "trash", actorKey, kind] as const,
   /** Rows of every state that name the parents of what sits in the trash. */
   trashLookup: (actorKey: string, kind: RecordKind) => [...all, "trash-lookup", actorKey, kind] as const,
@@ -209,6 +215,11 @@ export function createTournamentApi(request: Request = communityRequest) {
       send<DocumentView<GameContent>>(`/admin/games/${entry.id}/publish`, "POST", { version: entry.version }),
     withdraw: (entry: DocumentView<GameContent>) =>
       send<DocumentView<GameContent>>(`/admin/games/${entry.id}/withdraw`, "POST", { version: entry.version }),
+    /** One page of the text still waiting for a link, of one kind, in the order the server keeps. */
+    linkReview: (kind: LinkMentionKind, page = 0, signal?: AbortSignal) =>
+      request<PageSlice<LinkMention>>(withQuery("/admin/link-review", { kind, page, size: 50 }), { signal }),
+    /** How many rows each kind has, those with none included. */
+    linkReviewFacets: (signal?: AbortSignal) => request<LinkMentionCount[]>("/admin/link-review/facets", { signal }),
     catalog: (
       scope: Pick<GameContent, "region" | "locale" | "seasonId" | "patchVariantId" | "includeUnscoped">,
       signal?: AbortSignal,
@@ -236,7 +247,8 @@ export function tournamentError(error: unknown) {
     if (error.status === 403) return "Tài khoản chưa có quyền quản lý giải đấu. Hãy kiểm tra quyền trong Keycloak."
     if (error.code === "TOURNAMENT_RECORD_IN_USE") return "Chưa thể xóa: mục này còn được dữ liệu khác sử dụng."
     if (error.code === "TOURNAMENT_RESTORE_BLOCKED") return "Chưa thể khôi phục: cần khôi phục dữ liệu liên quan trước."
-    if (error.code === "TOURNAMENT_RECORD_DELETED") return "Mục đang ở thùng rác. Khôi phục trước khi chỉnh sửa."
+    if (error.code === "TOURNAMENT_RECORD_DELETED")
+      return "Mục này, hoặc đội hay tuyển thủ được liên kết, đang ở thùng rác. Khôi phục hoặc chọn lại trước khi lưu."
     if (error.code === "DUPLICATE_RECORD")
       return "Mã đã được dùng hoặc số ván đã tồn tại trong trận này. Chọn mã / số khác."
     if (error.status === 409) return "Dữ liệu đã thay đổi. Hãy tải bản mới trước khi lưu lại."

@@ -51,6 +51,7 @@ trong `target/openapi/`, không được xem là một đặc tả thủ công c
 | [029](adr/ADR-029-danh-gia-tuong.md) | Đánh giá tướng: số liệu đấu hạng đã xác nhận, 22 đặc điểm có hay không lưu trong phần kỹ năng do biên tập viên xác nhận, nhận định do người viết trong hồ sơ; không tự tính điểm |
 | [030](adr/ADR-030-tep-nguon-va-dung-luong-r2.md) | Tệp nguồn riêng tư trên R2 (ảnh đối chứng, dữ liệu nhập), theo dõi dung lượng so với gói miễn phí, bỏ `resources/` khỏi git |
 | [031](adr/ADR-031-ma-dung-chung-cua-bon-kho.md) | Mã thuần giống hệt ở bốn module kho (giới hạn trang, cắt trang, thứ tự patch) vào `platform` hoặc contract của `patch`; luồng nghiệp vụ giữ riêng (bổ sung ADR-013) |
+| [032](adr/ADR-032-lien-ket-ban-ghi-thi-dau.md) | Liên kết giữa các bản ghi thi đấu: ê-kíp phát sóng, ban huấn luyện, MVP, đội của giải thưởng, giải của mốc lịch sử, tổ chức chủ quản; kiểm tra id khi lưu, chặn xóa, điền ngược bằng script có duyệt |
 
 ADR mới cần nêu bối cảnh, quyết định, đánh đổi và cách kiểm chứng. Không dùng ADR để tuyên bố
 đã hoàn thành một tính năng hoặc một lượt kiểm thử chưa thực hiện.

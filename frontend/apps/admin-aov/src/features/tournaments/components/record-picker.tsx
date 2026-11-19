@@ -17,6 +17,7 @@ export function RecordPicker({
   kind,
   value,
   label,
+  placeholder = label,
   onChange,
   context,
   exclude,
@@ -27,6 +28,8 @@ export function RecordPicker({
   kind: RecordKind
   value: string | null | undefined
   label: string
+  /** What the button says while nothing is picked; the label by default. */
+  placeholder?: string
   onChange: (id: string, name: string) => void
   context?: PickerContext
   /** Rows the caller already has, such as the teams already entered in the tournament. */
@@ -55,7 +58,7 @@ export function RecordPicker({
     staleTime: 60_000,
   })
   const entry = known ?? selected.data
-  const name = entry ? recordName(kind, entry.content) : value ? "Đang tải…" : label
+  const name = entry ? recordName(kind, entry.content) : value ? "Đang tải…" : placeholder
   const iconUrl = entry ? recordIcon(kind, entry.content) : undefined
   const choose = (id: string, chosen: string) => {
     onChange(id, chosen)

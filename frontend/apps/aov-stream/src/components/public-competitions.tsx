@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { Link } from "react-router"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import type { CommunityProfile, CompetitionView } from "@aov/community-contracts"
@@ -83,15 +83,28 @@ export function CompetitionList({ profile, title }: { profile: CommunityProfile;
   )
 }
 
-/** A team's or a player's name, linked to its page once that page is published. */
-export function EntityPageLink({ kind, id, name }: { kind: "TEAM" | "PLAYER"; id: string; name: string }) {
+/**
+ * A team's or a player's name, linked to its page once that page is published. `children` replace the plain name
+ * where the name is drawn in more than one form.
+ */
+export function EntityPageLink({
+  kind,
+  id,
+  name,
+  children,
+}: {
+  kind: "TEAM" | "PLAYER"
+  id: string
+  name: string
+  children?: ReactNode
+}) {
   const page = useQuery({
     queryKey: communityKeys.entityPage(kind, id),
     queryFn: () => communityApi.pageByEntity(kind, id),
     retry: false,
     staleTime: 60000,
   })
-  return page.data ? <Link to={`/pages/${page.data.code}`}>{name}</Link> : <span>{name}</span>
+  return page.data ? <Link to={`/pages/${page.data.code}`}>{children ?? name}</Link> : <span>{children ?? name}</span>
 }
 
 /** The registry teams a page plays as in one competition: the team itself, or the squads that registered a player. */

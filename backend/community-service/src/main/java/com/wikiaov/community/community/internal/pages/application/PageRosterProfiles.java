@@ -43,6 +43,7 @@ public class PageRosterProfiles {
                 .toList();
         return new PageContent(content.name(), content.shortName(), content.country(), content.biography(),
                 content.avatarUrl(), content.coverUrl(), content.links(), content.sources(), content.history(),
-                content.achievements(), roster, content.personRoles(), content.channelOrganizationId());
+                content.achievements(), roster, content.personRoles(), content.channelOrganizationId(),
+                content.organizationId());
     }
 }

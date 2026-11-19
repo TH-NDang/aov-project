@@ -553,10 +553,24 @@ export function pendingChanges(draft: CompetitionSnapshot, published: Competitio
   )
     changes.push({ kind: "format", text: "Thể thức hoặc hạt giống đã đổi" })
 
-  const { placements: draftPlaces, awards: draftAwards, ...draftInfo } = draft.tournament
-  const { placements: liveplaces, awards: liveAwards, ...liveInfo } = published.tournament
+  const {
+    placements: draftPlaces,
+    awards: draftAwards,
+    broadcast: draftCrew,
+    staff: draftStaff,
+    ...draftInfo
+  } = draft.tournament
+  const {
+    placements: liveplaces,
+    awards: liveAwards,
+    broadcast: liveCrew,
+    staff: liveStaff,
+    ...liveInfo
+  } = published.tournament
   if (stable([draftPlaces, draftAwards]) !== stable([liveplaces, liveAwards]))
     changes.push({ kind: "final", text: "Thứ hạng chung cuộc hoặc giải thưởng đã đổi" })
+  if (stable([draftCrew ?? [], draftStaff ?? []]) !== stable([liveCrew ?? [], liveStaff ?? []]))
+    changes.push({ kind: "info", text: "Ê-kíp phát sóng hoặc ban huấn luyện đã đổi" })
   const about = (plan: CompetitionPlan) => [
     plan.circuitPageId,
     plan.organizerPageId,

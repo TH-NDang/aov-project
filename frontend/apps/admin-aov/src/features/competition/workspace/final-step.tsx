@@ -59,14 +59,11 @@ export function FinalStep({ ws, tournament }: { ws: Workspace; tournament?: Docu
             <TournamentFinalTable
               content={tournament.content}
               team={(id) => ws.team(id)}
-              action={
-                ws.canEdit && (
-                  <FinalTableEditButton
-                    tournament={tournament}
-                    teamNames={plan.entrants.map((row) => ({ id: row.teamId, name: ws.team(row.teamId).name }))}
-                  />
-                )
-              }
+              player={(id) => {
+                const known = entry.content.players[id]
+                return known && { name: known.nickname, photoUrl: known.photoUrl }
+              }}
+              action={ws.canEdit && <FinalTableEditButton tournament={tournament} />}
             />
           ) : (
             <p className="type-meta">Đang tải kết quả chung cuộc…</p>

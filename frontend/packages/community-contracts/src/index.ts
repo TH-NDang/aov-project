@@ -1,4 +1,5 @@
 import type { MatchTitle } from "./match-titles"
+import type { PersonRole } from "./pages"
 
 export * from "./pages"
 export * from "./competition"
@@ -132,14 +133,26 @@ export type TournamentPlacement = {
   lastOpponent?: string | null
   lastScore?: string | null
 }
+/** `playerId` and `teamId` link the registered player and team; the names stay readable either way. */
 export type TournamentAward = {
   title: string
   playerId?: string | null
   recipientName: string
+  teamId?: string | null
   teamName?: string | null
   prizeUsd?: number | null
   prizeLocal?: number | null
 }
+/** What a person did on the broadcast of a tournament or a match (spec 04, ADR-032). */
+export type BroadcastRole = Extract<PersonRole, "HOST" | "CASTER" | "INTERVIEWER" | "GUEST_ANALYST">
+export const broadcastRoles: BroadcastRole[] = ["HOST", "CASTER", "INTERVIEWER", "GUEST_ANALYST"]
+/** What a person did for a team at one tournament. */
+export type StaffRole = Extract<PersonRole, "COACH" | "TEAM_ANALYST">
+export const staffRoles: StaffRole[] = ["COACH", "TEAM_ANALYST"]
+/** A person of the broadcast, named by their PERSON or PLAYER profile page. */
+export type CrewMember = { pageId: string; role: BroadcastRole }
+/** A member of a team's staff at one tournament; `title` is the wording shown as written, such as an assistant coach's title. */
+export type StaffMember = { teamId: string; pageId: string; role: StaffRole; title?: string | null }
 export type TournamentLink = { label: string; url: string }
 export type TournamentStats = { tournamentId: string; teams: number; matches: number; played: number }
 export type TournamentContent = {
@@ -163,6 +176,10 @@ export type TournamentContent = {
   links?: TournamentLink[]
   /** The main event this tournament is a part of: its qualifier, wildcard, weekly stop or show match. */
   parentTournamentId?: string | null
+  /** The broadcast crew of the whole tournament. */
+  broadcast?: CrewMember[]
+  /** The staff of each team at this tournament. */
+  staff?: StaffMember[]
 }
 /** A part of a main event as a tab or a list line shows it; opening the part reads its full record. */
 export type TournamentPart = {
@@ -193,6 +210,9 @@ export type SeriesContent = {
   result?: SeriesResult | null
   /** The match was played without the rule against re-picking a hero in later games. */
   repeatPicksAllowed?: boolean
+  /** The people who worked this match's broadcast, besides the tournament's crew. */
+  broadcast?: CrewMember[]
+  mvpPlayerId?: string | null
 }
 export type SeriesResult = {
   scoreA: number
@@ -283,6 +303,7 @@ export type GameContent = {
   /** Kill, objective and note moments plus broadcast pauses; equipment changes stay on participants. */
   timeline?: GameTimeline
   draft?: GameDraft
+  mvpPlayerId?: string | null
 }
 export type DocumentView<T> = {
   id: string
@@ -316,6 +337,23 @@ export type RecordDeletionImpact = {
 }
 export type RecordLifecycleState = { id: string; version: number; deletedAt: string | null }
 export type PageSlice<T> = { items: T[]; totalElements: number; page: number; size: number }
+/** A place where text names someone that no link names yet; see spec 04, links to review. */
+export type LinkMentionKind = "GAME_MVP" | "SERIES_MVP" | "SERIES_BROADCAST" | "AWARD_PLAYER" | "AWARD_TEAM"
+/**
+ * `recordId` is the game, series or tournament to open; `label` is the match ("Team A vs Team B") or the award title;
+ * `text` is the name as the text writes it.
+ */
+export type LinkMention = {
+  kind: LinkMentionKind
+  recordId: string
+  tournamentId: string
+  tournamentName: string
+  seriesId?: string | null
+  gameNumber?: number | null
+  label?: string | null
+  text: string
+}
+export type LinkMentionCount = { kind: LinkMentionKind; count: number }
 export type Reference = {
   id: string
   code: string

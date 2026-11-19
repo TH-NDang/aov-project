@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react"
-import { useNavigate } from "react-router"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router"
 import { useMutation } from "@tanstack/react-query"
 import type { CompetitionStage, DocumentView, GameContent, PlannedMatch } from "@aov/community-contracts"
 import {
@@ -23,9 +23,11 @@ import { MatchRecordingStrip } from "@/features/esports/components/match-recordi
 import { TeamLogo } from "@/features/esports/components/primitives"
 import { matchRecording } from "@/features/esports/model/match-recording"
 import { youtubeVideoId } from "@/features/esports/model/vod"
+import { seriesLabel } from "@/features/esports/model/series-label"
 import { matchPath } from "@/features/esports/pages/esports-shell"
 import { competitionApi } from "../competition-api"
 import { MatchPanel } from "./match-panel"
+import { MatchPeople } from "./match-people"
 import {
   defaultGroupMode,
   extraMatch,
@@ -46,13 +48,21 @@ import { NativeSelect } from "@/components/native-select"
 
 const ROW = "grid-cols-[88px_minmax(0,1fr)_72px_minmax(0,1fr)_minmax(0,auto)_20px]"
 
+/**
+ * The schedule by stage. `?match=` names a series to open, as the links to review do: its stage and its line open, or,
+ * for a series the schedule does not hold, a panel of its own above the stages.
+ */
 export function ScheduleStep({ ws }: { ws: Workspace }) {
   const { plan } = ws
+  const [params] = useSearchParams()
+  const focusSeries = params.get("match")
+  const focus = focusSeries ? plan.matches.find((match) => match.seriesId === focusSeries) : undefined
+  const outside = focusSeries && !focus ? ws.series.find((row) => row.id === focusSeries) : undefined
   const firstOpen = plan.stages.find((stage) => {
     const progress = stageProgress(stage.code, plan, ws.resolved)
     return progress.scored < progress.total
   })
-  const [stageCode, setStageCode] = useState(firstOpen?.code ?? plan.stages.at(-1)?.code ?? "")
+  const [stageCode, setStageCode] = useState(focus?.stageCode ?? firstOpen?.code ?? plan.stages.at(-1)?.code ?? "")
   const stage = plan.stages.find((entry) => entry.code === stageCode) ?? plan.stages[0]
   const [setup, setSetup] = useState(false)
 
@@ -106,11 +116,18 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
           </Button>
         )}
       </div>
+      {outside && (
+        <Panel title={seriesLabel(outside.content) || "Trận ngoài lịch"} meta="Không có trong lịch của giải">
+          <div className="p-4">
+            <MatchPeople ws={ws} record={outside} />
+          </div>
+        </Panel>
+      )}
       {showSetup && ws.canEdit && <ScheduleSetup ws={ws} stage={stage} />}
       {isLeagueStage(stage) ? (
-        <LeagueStage key={stage.code} ws={ws} stage={stage} matches={matches} />
+        <LeagueStage key={stage.code} ws={ws} stage={stage} matches={matches} focus={focus?.key} />
       ) : (
-        <BracketStage key={stage.code} ws={ws} stage={stage} matches={matches} />
+        <BracketStage key={stage.code} ws={ws} stage={stage} matches={matches} focus={focus?.key} />
       )}
     </div>
   )
@@ -125,7 +142,15 @@ function useGamesBySeries(games?: DocumentView<GameContent>[]) {
   }, [games])
 }
 
-function LeagueStage({ ws, stage, matches }: { ws: Workspace; stage: CompetitionStage; matches: PlannedMatch[] }) {
+type StageProps = {
+  ws: Workspace
+  stage: CompetitionStage
+  matches: PlannedMatch[]
+  /** The key of a match to open first. */
+  focus?: string
+}
+
+function LeagueStage({ ws, stage, matches, focus }: StageProps) {
   const [mode, setMode] = useState<GroupMode>(() => defaultGroupMode(matches))
   const [teamId, setTeamId] = useState("")
   const shown = matches.filter((match) => {
@@ -175,7 +200,7 @@ function LeagueStage({ ws, stage, matches }: { ws: Workspace; stage: Competition
           </div>
           <span className="type-meta ml-auto">{shown.length} trận</span>
         </div>
-        <MatchGroups ws={ws} groups={groups} mode={mode} restFrom={teamId ? undefined : teamIds} />
+        <MatchGroups ws={ws} groups={groups} mode={mode} restFrom={teamId ? undefined : teamIds} focus={focus} />
         {!matches.length && <p className="type-meta">Giai đoạn này chưa có trận. Dùng "Thiết lập lịch" để tạo.</p>}
       </div>
       <StandingsPanel ws={ws} stage={stage} />
@@ -183,10 +208,10 @@ function LeagueStage({ ws, stage, matches }: { ws: Workspace; stage: Competition
   )
 }
 
-function BracketStage({ ws, stage, matches }: { ws: Workspace; stage: CompetitionStage; matches: PlannedMatch[] }) {
+function BracketStage({ ws, stage, matches, focus }: StageProps) {
   const [view, setView] = useState<"bracket" | "list">("bracket")
   const [selected, setSelected] = useState<string | null>(
-    () => matches.find((match) => !hasScore(ws.resolved.get(match.key)))?.key ?? null,
+    () => focus ?? matches.find((match) => !hasScore(ws.resolved.get(match.key)))?.key ?? null,
   )
   const chosen = matches.find((match) => match.key === selected)
   const usesSeeds = matches.some((match) => match.a.type === "SEED" || match.b.type === "SEED")
@@ -306,20 +331,22 @@ function MatchGroups({
   groups,
   mode,
   restFrom,
+  focus,
 }: {
   ws: Workspace
   groups: MatchGroup[]
   mode: GroupMode
   /** Teams of the stage, to name who sits a round out; left out when the list is filtered. */
   restFrom?: string[]
+  focus?: string
 }) {
   const [toggled, setToggled] = useState<Record<string, boolean>>({})
-  const [openMatch, setOpenMatch] = useState<string | null>(null)
+  const [openMatch, setOpenMatch] = useState<string | null>(focus ?? null)
   const today = dayKeyInZone(Date.now(), ws.plan.timezone)
   return (
     <div className="space-y-3">
       {groups.map((group, index) => {
-        const open = toggled[group.key] ?? index < 2
+        const open = toggled[group.key] ?? (index < 2 || group.matches.some((match) => match.key === focus))
         const complete = group.scored === group.matches.length
         const span = Number.isFinite(group.firstAt)
           ? shortDay(group.firstAt, ws.plan.timezone) +
@@ -375,6 +402,7 @@ function MatchGroups({
                       match={match}
                       today={today}
                       open={openMatch === match.key}
+                      focused={match.key === focus}
                       onToggle={() => setOpenMatch(openMatch === match.key ? null : match.key)}
                     />
                   ))}
@@ -393,14 +421,21 @@ function MatchLine({
   match,
   today,
   open,
+  focused,
   onToggle,
 }: {
   ws: Workspace
   match: PlannedMatch
   today: string
   open: boolean
+  /** The match a link asked for: it is scrolled into view once. */
+  focused?: boolean
   onToggle: () => void
 }) {
+  const line = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (focused) line.current?.scrollIntoView?.({ block: "center" })
+  }, [focused])
   const row = ws.resolved.get(match.key)
   const scored = hasScore(row)
   const record = ws.series.find((entry) => entry.id === match.seriesId)
@@ -427,7 +462,7 @@ function MatchLine({
     )
   }
   return (
-    <div className={cn("border-b last:border-b-0", open && "bg-muted/40")}>
+    <div ref={line} className={cn("border-b last:border-b-0", open && "bg-muted/40")}>
       <button
         type="button"
         aria-expanded={open}

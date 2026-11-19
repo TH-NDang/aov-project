@@ -24,6 +24,7 @@ import {
   zonedInputInstant,
   zonedInputTime,
 } from "./model"
+import { MatchPeople } from "./match-people"
 import { BestOfField, SlotEditor } from "./plan-fields"
 import type { Workspace } from "./parts"
 import { NativeSelect } from "@/components/native-select"
@@ -93,6 +94,7 @@ export function MatchPanel({ ws, match }: { ws: Workspace; match: PlannedMatch }
           )}
         </Fact>
       </dl>
+      {record && <MatchPeople ws={ws} record={record} />}
       {resolved && !resolved.consistent && (
         <p className="type-body text-destructive" role="alert">
           Kết quả không còn khớp suất thi đấu. Kiểm tra hai đội và BO của trận trước khi công bố.

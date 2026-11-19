@@ -13,6 +13,7 @@ import { RecordLifecycleActions } from "./record-lifecycle-actions"
 import { recordLabel } from "../model/record-lifecycle-model"
 import {
   initialRegistryValues,
+  keptSeriesFields,
   keptTournamentFields,
   registryContent,
   registryFormIssue,
@@ -171,10 +172,11 @@ function RegistryForm({
         values,
         registryFields(kind).map((field) => field.key),
       ) as Content
-      const content =
-        entry && kind === "tournaments"
+      const content = !entry
+        ? fields
+        : kind === "tournaments"
           ? keptTournamentFields(fields as TournamentContent, entry.content as TournamentContent)
-          : fields
+          : keptSeriesFields(fields as SeriesContent, entry.content as SeriesContent)
       if (entry) await tournamentApi.save(kind, entry, content)
       else await tournamentApi.create(kind, content)
       await client.invalidateQueries({ queryKey: tournamentKeys.all })

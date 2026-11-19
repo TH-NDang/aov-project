@@ -157,7 +157,9 @@ public final class TournamentContent {
             List<TournamentPlacement> placements,
             List<TournamentAward> awards,
             List<TournamentLink> links,
-            UUID parentTournamentId
+            UUID parentTournamentId,
+            List<CrewMember> broadcast,
+            List<StaffMember> staff
     ) {
         public Tournament {
             tier = tier == null ? TournamentTier.UNKNOWN : tier;
@@ -167,6 +169,18 @@ public final class TournamentContent {
             placements = placements == null ? List.of() : List.copyOf(placements);
             awards = awards == null ? List.of() : List.copyOf(awards);
             links = links == null ? List.of() : List.copyOf(links);
+            broadcast = broadcast == null ? List.of() : List.copyOf(broadcast);
+            staff = staff == null ? List.of() : List.copyOf(staff);
+        }
+
+        public Tournament(String code, String name, String region, Integer year, LocalDate startsOn,
+                LocalDate endsOn, String sourceUrl, String note, String logoUrl, TournamentTier tier,
+                CompetitionType competitionType, VenueMode venueMode, TournamentStatus status,
+                TournamentResult result, String localCurrency, List<TournamentPlacement> placements,
+                List<TournamentAward> awards, List<TournamentLink> links, UUID parentTournamentId) {
+            this(code, name, region, year, startsOn, endsOn, sourceUrl, note, logoUrl, tier, competitionType,
+                    venueMode, status, result, localCurrency, placements, awards, links, parentTournamentId, null,
+                    null);
         }
 
         public Tournament(String code, String name, String region, Integer year, LocalDate startsOn,
@@ -216,15 +230,59 @@ public final class TournamentContent {
     ) {
     }
 
-    /** An individual or team prize such as MVP; {@code playerId} links a registered player when one is known. */
+    /**
+     * An individual or team prize such as MVP. {@code playerId} and {@code teamId} link the registered player and team
+     * when they are known; {@code recipientName} and {@code teamName} stay readable either way.
+     */
     public record TournamentAward(
             String title,
             UUID playerId,
             String recipientName,
             String teamName,
             BigDecimal prizeUsd,
-            BigDecimal prizeLocal
+            BigDecimal prizeLocal,
+            UUID teamId
     ) {
+        public TournamentAward(String title, UUID playerId, String recipientName, String teamName,
+                BigDecimal prizeUsd, BigDecimal prizeLocal) {
+            this(title, playerId, recipientName, teamName, prizeUsd, prizeLocal, null);
+        }
+    }
+
+    /** What a person did on the broadcast of a tournament or a match. */
+    public enum BroadcastRole {
+        HOST,
+        CASTER,
+        INTERVIEWER,
+        GUEST_ANALYST
+    }
+
+    /** What a person did for a team at one tournament. */
+    public enum StaffRole {
+        COACH,
+        TEAM_ANALYST
+    }
+
+    /** A person of the broadcast, named by their individual profile page. */
+    public record CrewMember(
+            UUID pageId,
+            BroadcastRole role
+    ) {
+    }
+
+    /**
+     * A member of a team's staff at one tournament, named by their individual profile page. {@code title} is the
+     * wording shown as written, such as an assistant coach.
+     */
+    public record StaffMember(
+            UUID teamId,
+            UUID pageId,
+            StaffRole role,
+            String title
+    ) {
+        public StaffMember {
+            title = title == null || title.isBlank() ? null : title.strip();
+        }
     }
 
     public record TournamentLink(
@@ -294,8 +352,27 @@ public final class TournamentContent {
             String note,
             SeriesResult result,
             boolean repeatPicksAllowed,
-            @Nullable MatchTitle title
+            @Nullable MatchTitle title,
+            List<CrewMember> broadcast,
+            @Nullable UUID mvpPlayerId
     ) {
+        public Series {
+            broadcast = broadcast == null ? List.of() : List.copyOf(broadcast);
+        }
+
+        public Series(String code, UUID tournamentId, String name, String stage, UUID teamAId, UUID teamBId,
+                Integer bestOf, Instant scheduledAt, String sourceUrl, String note, SeriesResult result,
+                boolean repeatPicksAllowed, @Nullable MatchTitle title) {
+            this(code, tournamentId, name, stage, teamAId, teamBId, bestOf, scheduledAt, sourceUrl, note, result,
+                    repeatPicksAllowed, title, null, null);
+        }
+
+        /** The same series moved to where its planned match now stands; who played and who worked it stay. */
+        public Series planned(String name, String stage, Instant scheduledAt, @Nullable MatchTitle title) {
+            return new Series(code, tournamentId, name, stage, teamAId, teamBId, bestOf, scheduledAt, sourceUrl, note,
+                    result, repeatPicksAllowed, title, broadcast, mvpPlayerId);
+        }
+
         /**
          * A series without a title: {@code name} alone says what it is. {@code repeatPicksAllowed}: this match was
          * played without the rule against re-picking a hero.
@@ -548,7 +625,8 @@ public final class TournamentContent {
             List<GameSide> sides,
             Boolean includeUnscoped,
             GameTimeline timeline,
-            GameDraft draft
+            GameDraft draft,
+            @Nullable UUID mvpPlayerId
     ) {
         /** Clients may omit {@code includeUnscoped}; it then keeps the catalog to the game's season and patch. */
         public Game {
@@ -556,6 +634,14 @@ public final class TournamentContent {
             sides = sides == null ? List.of() : List.copyOf(sides);
             timeline = timeline == null ? GameTimeline.EMPTY : timeline;
             draft = draft == null ? GameDraft.EMPTY : draft;
+        }
+
+        public Game(UUID seriesId, Integer number, String region, String locale, UUID seasonId, UUID patchVariantId,
+                Instant startedAt, Integer durationSeconds, Side winner, String sourceUrl,
+                Integer sourceTimestampSeconds, String note, List<GameSide> sides, Boolean includeUnscoped,
+                GameTimeline timeline, GameDraft draft) {
+            this(seriesId, number, region, locale, seasonId, patchVariantId, startedAt, durationSeconds, winner,
+                    sourceUrl, sourceTimestampSeconds, note, sides, includeUnscoped, timeline, draft, null);
         }
 
         public Game(UUID seriesId, Integer number, String region, String locale, UUID seasonId, UUID patchVariantId,

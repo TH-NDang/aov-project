@@ -31,6 +31,7 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
             (CASE WHEN :published THEN published_content ELSE content END)->'personRoles', string_to_array(:roles, ','))))
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR
             lower((CASE WHEN :published THEN published_content ELSE content END)->>'name') LIKE lower(concat('%', :query, '%')))
+          AND (:organizationId = '' OR (CASE WHEN :published THEN published_content ELSE content END)->>'organizationId' = :organizationId)
         ORDER BY updated_at DESC, id
         """, countQuery = """
         SELECT count(*) FROM community.page p
@@ -41,9 +42,10 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
             (CASE WHEN :published THEN published_content ELSE content END)->'personRoles', string_to_array(:roles, ','))))
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR
             lower((CASE WHEN :published THEN published_content ELSE content END)->>'name') LIKE lower(concat('%', :query, '%')))
+          AND (:organizationId = '' OR (CASE WHEN :published THEN published_content ELSE content END)->>'organizationId' = :organizationId)
         """, nativeQuery = true)
     Page<PageRecord> search(String kind, Collection<String> individuals, String query, String roles,
-            boolean published, Pageable pageable);
+            String organizationId, boolean published, Pageable pageable);
 
     /**
      * Admin directory listing: drafts included, with the country, identity and ordering a directory asks for. Native:
@@ -58,6 +60,7 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR lower(content->>'name') LIKE lower(concat('%', :query, '%')))
           AND (:country = '' OR content->>'country' = :country)
           AND (:entityIds = '' OR CAST(entity_id AS text) = ANY(string_to_array(:entityIds, ',')))
+          AND (:organizationId = '' OR content->>'organizationId' = :organizationId)
         ORDER BY CASE WHEN :sort = 'NAME' THEN lower(content->>'name') END,
                  CASE WHEN :sort = 'ACTIVITY' THEN jsonb_array_length(coalesce(content->'history', '[]')) END DESC,
                  updated_at DESC, id
@@ -70,9 +73,10 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR lower(content->>'name') LIKE lower(concat('%', :query, '%')))
           AND (:country = '' OR content->>'country' = :country)
           AND (:entityIds = '' OR CAST(entity_id AS text) = ANY(string_to_array(:entityIds, ',')))
+          AND (:organizationId = '' OR content->>'organizationId' = :organizationId)
         """, nativeQuery = true)
     Page<PageRecord> adminDirectory(String kind, Collection<String> individuals, String query, String roles,
-            String country, String entityIds, String sort, Pageable pageable);
+            String country, String entityIds, String organizationId, String sort, Pageable pageable);
 
     /**
      * Pages for a picker or directory ordered by activity. An exact name comes first, then pages tied to the page in
@@ -97,6 +101,7 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
           AND (:roles = '' OR (p.kind IN (:individuals) AND jsonb_exists_any(p.content->'personRoles', string_to_array(:roles, ','))))
           AND strpos(p.search_names, tournament.search_key(:query)) > 0
           AND (:country = '' OR p.content->>'country' = :country)
+          AND (:organizationId = '' OR p.content->>'organizationId' = :organizationId)
         ORDER BY tournament.name_match_rank(tournament.search_key(:query), p.search_names) > 0,
                  :relatedPageId <> '' AND p.content->'history'
                      @> jsonb_build_array(jsonb_build_object('relatedPageId', :relatedPageId)) DESC,
@@ -112,10 +117,11 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
           AND (:roles = '' OR (p.kind IN (:individuals) AND jsonb_exists_any(p.content->'personRoles', string_to_array(:roles, ','))))
           AND strpos(p.search_names, tournament.search_key(:query)) > 0
           AND (:country = '' OR p.content->>'country' = :country)
+          AND (:organizationId = '' OR p.content->>'organizationId' = :organizationId)
         """, nativeQuery = true)
     Page<ActiveRow> byActivity(String kind, String kinds, Collection<String> identities,
             Collection<String> individuals, String query, String roles, String country, String relatedPageId,
-            Pageable pageable);
+            String organizationId, Pageable pageable);
 
     interface ActiveRow {
         UUID getId();
@@ -169,6 +175,13 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
           content->>'channelOrganizationId' = :id OR published_content->>'channelOrganizationId' = :id)
         """, nativeQuery = true)
     long countChannelReferences(String circuit, String id);
+
+    /** Native: reads the owning organization inside the jsonb documents. */
+    @Query(value = """
+        SELECT count(*) FROM community.page WHERE kind = :team AND (
+          content->>'organizationId' = :id OR published_content->>'organizationId' = :id)
+        """, nativeQuery = true)
+    long countOwnerReferences(String team, String id);
 
     /** Native: orders by the name inside the jsonb document. {@code editorial} is the kind with no followers. */
     @Query(value = """

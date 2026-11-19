@@ -26,6 +26,9 @@ export const pageKeys = {
   members: (pageId: string) => [...pages, pageId, "members"] as const,
   handover: (pageId: string) => [...pages, pageId, "handover"] as const,
   teams: (actorKey: string, pageId: string) => [...pages, actorKey, pageId, "teams"] as const,
+  /** The team pages an organization owns. */
+  ownedTeams: (actorKey: string, organizationId: string) =>
+    [...pages, actorKey, organizationId, "owned-teams"] as const,
   claims: (actorKey: string) => [...pages, actorKey, "claims"] as const,
   reports: (actorKey: string) => [...pages, actorKey, "reports"] as const,
   picker: (actorKey: string, search: string) => [...pages, actorKey, "picker", search] as const,
@@ -65,6 +68,11 @@ export const pageApi = {
       `/admin/pages?${new URLSearchParams({ ...(kind ? { kind } : {}), ...(personRole ? { personRole } : {}), ...(relatedPageId ? { relatedPageId } : {}), q, sort: "ACTIVE", page: String(page), size: "24" })}`,
     ),
   read: (id: string) => communityRequest<CommunityProfile>(`/admin/pages/${id}`),
+  /** Team pages that name this organization as their owner, by name. */
+  ownedTeams: (organizationId: string, page = 0) =>
+    communityRequest<PageSlice<CommunityProfile>>(
+      `/admin/pages?${new URLSearchParams({ kind: "TEAM", organizationId, sort: "NAME", page: String(page), size: "24" })}`,
+    ),
   teams: (id: string) => communityRequest<TeamAffiliation[]>(`/admin/pages/${id}/teams`),
   create: (kind: ProfileKind, code: string, content: ProfileContent, entityId?: string) =>
     send<CommunityProfile>("/admin/pages", "POST", { kind, code, content, entityId }),
@@ -102,6 +110,6 @@ export function pageError(error: unknown, conflict?: string): string {
   if (code === "PAGE_NOT_FOUND") return "Không tìm thấy hồ sơ hoặc nội dung chưa được xuất bản."
   if (code === "DUPLICATE_RECORD") return "Mã hoặc hồ sơ liên kết đã tồn tại. Hãy kiểm tra lại danh sách."
   if (code === "PAGE_INVALID_CONTENT")
-    return "Kiểm tra thông tin bắt buộc, đường dẫn nguồn và quyền đại diện. Yêu cầu phải do người khác xét duyệt."
+    return "Kiểm tra thông tin bắt buộc, đường dẫn nguồn, giải và hồ sơ được liên kết, tổ chức chủ quản và quyền đại diện. Yêu cầu phải do người khác xét duyệt."
   return "Chưa hoàn tất thao tác. Hãy kiểm tra kết nối và thử lại."
 }

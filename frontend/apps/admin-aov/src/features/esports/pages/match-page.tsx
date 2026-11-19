@@ -160,14 +160,15 @@ function MatchView({ access }: { access: Access }) {
     meta: { silent: true },
   })
   const roster = useMemo(() => {
-    const names = new Map((players.data ?? []).map((player) => [player.id, player.content.nickname]))
+    const profiles = new Map((players.data ?? []).map((player) => [player.id, player.content]))
     const byTeam = new Map<string, RosterOption[]>()
     // Members who left stay listed, last, so a game they played can still name them; filling never seats them.
     for (const { content } of rosters.data ?? []) {
       const members = byTeam.get(content.teamId) ?? []
       members.push({
         id: content.playerId,
-        name: names.get(content.playerId) ?? "Tuyển thủ",
+        name: profiles.get(content.playerId)?.nickname ?? "Tuyển thủ",
+        photoUrl: profiles.get(content.playerId)?.photoUrl,
         lane: content.lane,
         status: content.status,
       })
@@ -940,6 +941,7 @@ function MatchViewer({
             items={items}
             catalog={catalog.data}
             canPublish={canPublish}
+            tournamentId={series.content.tournamentId}
             tournamentRegion={tournamentRegion}
             onEnableEditing={onEnableEditing}
             heroes={catalog.data?.heroes ?? []}

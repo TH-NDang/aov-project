@@ -446,6 +446,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         {step === "overview" && (
           <OverviewStep
             ws={ws}
+            record={tournament.data}
             checks={checks}
             totals={totals}
             family={family}
@@ -453,7 +454,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
             onAddPart={() => setAddingPart(true)}
           />
         )}
-        {step === "teams" && <TeamsStep ws={ws} />}
+        {step === "teams" && <TeamsStep ws={ws} tournament={tournament.data} />}
         {step === "format" && <FormatStep ws={ws} />}
         {step === "schedule" && <ScheduleStep ws={ws} />}
         {step === "final" && <FinalStep ws={ws} tournament={tournament.data} />}

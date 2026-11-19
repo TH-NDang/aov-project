@@ -248,6 +248,13 @@ const routes: RouteObject[] = [
             }),
           },
           {
+            path: "link-review",
+            handle: title("Liên kết cần xem"),
+            lazy: async () => ({
+              Component: (await import("@/features/tournaments/pages/link-review-page")).LinkReviewPage,
+            }),
+          },
+          {
             path: "tournaments/registry",
             handle: { pageTab: false } satisfies RouteHandle,
             lazy: async () => ({

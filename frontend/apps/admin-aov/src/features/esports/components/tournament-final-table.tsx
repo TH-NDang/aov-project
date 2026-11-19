@@ -4,16 +4,22 @@ import { ExternalLink, Trophy } from "lucide-react"
 import { LocalMoney } from "@aov/ui/components/local-money"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@aov/ui/components/table"
 import type { TeamView } from "../model/game-view"
-import { SectionTitle } from "./primitives"
+import { PlayerPhoto, SectionTitle } from "./primitives"
 
-/** Final standings, prizes and related links of a tournament. */
+/**
+ * Final standings, prizes and related links of a tournament. A linked team shows its logo and a linked recipient their
+ * photo, so a name still written as text stands out as one without a record.
+ */
 export function TournamentFinalTable({
   content,
   team,
+  player,
   action,
 }: {
   content: TournamentContent
   team: (id: string) => TeamView
+  /** A registered player the awards name, when the screen has them. */
+  player?: (id: string) => { name: string; photoUrl?: string | null } | undefined
   action?: ReactNode
 }) {
   const { placements = [], awards = [], links = [], localCurrency } = content
@@ -80,26 +86,38 @@ export function TournamentFinalTable({
       )}
       {!!awards.length && (
         <ul className="grid gap-2 @2xl:grid-cols-2">
-          {awards.map((award, index) => (
-            <li key={`${award.title}-${index}`} className="admin-section px-3 py-2">
-              <p className="type-label">{award.title}</p>
-              <p className="type-body">
-                {award.recipientName}
-                {award.teamName ? ` · ${award.teamName}` : ""}
-              </p>
-              {(award.prizeUsd != null || award.prizeLocal != null) && (
-                <p className="type-meta">
-                  <LocalMoney
-                    amounts={[
-                      { amount: award.prizeUsd, currency: "USD" },
-                      { amount: award.prizeLocal, currency },
-                    ]}
-                    on={prizeDay}
-                  />
+          {awards.map((award, index) => {
+            const recipient = award.playerId ? player?.(award.playerId) : undefined
+            const logo = award.teamId ? team(award.teamId).logoUrl : undefined
+            return (
+              <li key={`${award.title}-${index}`} className="admin-section px-3 py-2">
+                <p className="type-label">{award.title}</p>
+                <p className="type-body flex min-w-0 items-center gap-2">
+                  {award.playerId && (
+                    <PlayerPhoto name={award.recipientName} url={recipient?.photoUrl ?? undefined} size={24} />
+                  )}
+                  <span className="truncate">{award.recipientName}</span>
+                  {award.teamName && (
+                    <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                      ·{logo && <img src={logo} alt="" className="size-5 shrink-0 object-contain" />}
+                      <span className="truncate">{award.teamName}</span>
+                    </span>
+                  )}
                 </p>
-              )}
-            </li>
-          ))}
+                {(award.prizeUsd != null || award.prizeLocal != null) && (
+                  <p className="type-meta">
+                    <LocalMoney
+                      amounts={[
+                        { amount: award.prizeUsd, currency: "USD" },
+                        { amount: award.prizeLocal, currency },
+                      ]}
+                      on={prizeDay}
+                    />
+                  </p>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
       {!!links.length && (

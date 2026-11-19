@@ -5,6 +5,7 @@ import { LocalTime } from "@aov/ui/components/local-time"
 import { StreamImage } from "../../components/stream-image"
 import { useStreamLocale } from "../../components/stream-locale"
 import { hueOf } from "../../components/community-ui"
+import { EntityPageLink } from "../../components/public-competitions"
 import { matchUnderway } from "../../lib/competition-model"
 import { competitionMatchHref, matchState, type CompetitionMatch } from "../../lib/match-model"
 import { matchRound, matchSides, type MatchSide } from "../../lib/match-schedule"
@@ -131,6 +132,8 @@ export function MatchRow({ entry, competition = false }: { entry: CompetitionMat
 }
 
 export type HeadTeam = {
+  /** The registry team, whose page the name opens once it is published. */
+  teamId?: string | null
   name: string
   shortName?: string
   logoUrl?: string | null
@@ -168,6 +171,9 @@ export function seriesHeadOf(game: PublishedGame, locale = "vi-VN"): Head {
 
 function DuelTeam({ team, side }: { team: HeadTeam; side: "a" | "b" }) {
   const open = team.known === false
+  const name = (
+    <TeamName wide={team.name} compact={team.shortName && team.name.length > HEAD_NAME ? team.shortName : team.name} />
+  )
   return (
     <span className="tn-duel-team" data-side={side} data-lost={team.lost || undefined} data-open={open || undefined}>
       {open ? (
@@ -176,10 +182,13 @@ function DuelTeam({ team, side }: { team: HeadTeam; side: "a" | "b" }) {
         <StreamImage src={team.logoUrl} name={team.name} />
       )}
       <span>
-        <TeamName
-          wide={team.name}
-          compact={team.shortName && team.name.length > HEAD_NAME ? team.shortName : team.name}
-        />
+        {team.teamId && !open ? (
+          <EntityPageLink kind="TEAM" id={team.teamId} name={team.name}>
+            {name}
+          </EntityPageLink>
+        ) : (
+          name
+        )}
       </span>
     </span>
   )

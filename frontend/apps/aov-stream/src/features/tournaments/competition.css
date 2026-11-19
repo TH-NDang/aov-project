@@ -345,6 +345,12 @@
   color: rgb(255 255 255 / 72%);
   font-weight: 600;
 }
+/* A team with a published page opens it from its name. */
+.tn-duel-team a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
 .tn-duel-blank {
   width: 72px;
   height: 72px;

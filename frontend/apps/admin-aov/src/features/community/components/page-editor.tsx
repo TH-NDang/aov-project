@@ -58,6 +58,7 @@ import { ProfileQuickEditSheet, type ProfileQuickEditTarget } from "./profile-qu
 import { ProfileCountry } from "./profile-country"
 import { ProfileTypeIcon } from "./profile-icons"
 import { CircuitChannelsField } from "./circuit-channels-field"
+import { OwnedTeamsSection, TeamOwnerSection } from "./team-organization"
 import { toast } from "sonner"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
@@ -531,7 +532,12 @@ function Editor({
         <div className="min-w-0 space-y-5">
           {update.isError && (
             <p role="alert" className="type-body rounded-lg border border-destructive/30 p-4 text-destructive">
-              {pageError(update.error)}
+              {pageError(
+                update.error,
+                entry.kind === "TEAM" && content.organizationId
+                  ? "Hồ sơ vừa thay đổi, hoặc tổ chức chủ quản chưa được xuất bản. Tải lại hoặc xuất bản tổ chức trước."
+                  : undefined,
+              )}
             </p>
           )}
           {tab === "access" && community ? (
@@ -549,6 +555,17 @@ function Editor({
                 tab={tab}
                 disabled={!access.canWrite || update.isPending}
               />
+              {entry.kind === "TEAM" && tab === "overview" && (
+                <TeamOwnerSection
+                  value={content.organizationId}
+                  actorKey={access.actorKey}
+                  canWrite={access.canWrite && !uploading && !update.isPending}
+                  onChange={(organizationId) => setContent((current) => ({ ...current, organizationId }))}
+                />
+              )}
+              {entry.kind === "ORGANIZATION" && tab === "overview" && (
+                <OwnedTeamsSection organizationId={entry.id} actorKey={access.actorKey} />
+              )}
               {entry.kind === "CIRCUIT" && tab === "overview" && (
                 <CircuitChannelsField
                   content={content}
