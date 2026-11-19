@@ -149,7 +149,8 @@ Admin có tab Tuyển thủ, Ban huấn luyện và Broadcast; vai trò được
 PERSON có thông tin, hoạt động/sự nghiệp, nguồn và quyền đại diện; không mặc định hiện thành tích hay trận đấu.
 Thông tin từ đội hình của một giải được ghi rõ tên giải, trạng thái chính thức/dự bị/đã rời đội và nguồn;
 không suy diễn ngày gia nhập/rời đội từ ngày diễn ra giải. Nhân sự broadcast được ghi sự kiện trong lịch sử
-hoạt động, không tự liên kết vào một mùa giải chưa được tạo trong ứng dụng.
+hoạt động, không tự liên kết vào một mùa giải chưa được tạo trong ứng dụng. Từ 19/11/2026, giải đã có trong ứng dụng
+ghi ê-kíp phát sóng và ban huấn luyện bằng liên kết tới hồ sơ (xem "Liên kết giữa các bản ghi thi đấu").
 
 Page ORGANIZATION, TEAM, PLAYER, PERSON độc lập tài khoản và không giữ mật khẩu. Tài khoản dùng issuer + subject
 của JWT. Page chưa có đại diện vẫn có thông tin biên tập, nguồn, lịch sử và người theo dõi.
@@ -317,8 +318,9 @@ chúng ghi nhận, không suy diễn số liệu:
 
 - Hạng giải thêm `D` (Liquipedia tier 5); loại giải thêm `SHOWMATCH` và `OTHER`. Tier 1–4 tương ứng S, A, B, C.
 - Giải có `placements` (hạng dạng chữ vì có thể đồng hạng "5-8", đội, tiền thưởng USD và nội tệ, trận cuối),
-  `awards` (giải cá nhân, người nhận, đội), `links` (nhãn, URL) và `localCurrency`. `teamId`/`playerId` trong
-  các dòng này là tham chiếu mềm: tên vẫn đọc được khi chưa có hoặc đã xóa bản ghi liên kết.
+  `awards` (giải cá nhân, người nhận, đội), `links` (nhãn, URL) và `localCurrency`. Tên trong các dòng này vẫn đọc
+  được khi chưa có bản ghi liên kết. Từ 19/11/2026, `teamId`/`playerId` của các dòng này không còn là tham chiếu mềm:
+  backend kiểm tra khi lưu và chặn xóa bản ghi được nhắc (xem "Liên kết giữa các bản ghi thi đấu").
 - Trận nhận BO2, BO4 là thể thức đấu đủ số ván: tổng hai vế bằng BO, được hòa. BO lẻ giữ quy tắc cũ.
 - Trận có `repeatPicksAllowed` khi được đấu không có luật cấm chọn lại tướng; chỉ khi đó backend và Admin mới
   bỏ qua luật này. Mặc định vẫn áp dụng luật.
@@ -478,6 +480,122 @@ giải lặp lại một giải nhiều lần. Người dùng yêu cầu bỏ c�
 Chưa đổi. Snapshot công bố của một giải mang `parentTournamentId` như mọi trường khác của giải, để Stream gom các phần
 thành tab ở bước sau. Hiện chưa có giải nào được công bố.
 
+## Liên kết giữa các bản ghi thi đấu (19/11/2026)
+
+Theo ADR-032, người dùng duyệt hướng làm ngày 19/11/2026. Lần nhập Liquipedia để lại nhiều quan hệ dạng chữ trong ghi chú
+(MVP, bình luận viên) hoặc trong tiêu đề mục lịch sử (giải của huấn luyện viên). Mục này đổi các quan hệ đó thành liên
+kết. Người vẫn là hồ sơ PERSON hoặc PLAYER, tổ chức là hồ sơ ORGANIZATION; không có loại bản ghi mới.
+
+### Mô hình
+
+| Bản ghi | Trường | Ý nghĩa |
+|---|---|---|
+| Giải | `broadcast[]` {`pageId`, `role`} | Ê-kíp phát sóng của cả giải. `role`: HOST (MC), CASTER (bình luận viên), INTERVIEWER (phỏng vấn), GUEST_ANALYST (khách mời phân tích) |
+| Giải | `staff[]` {`teamId`, `pageId`, `role`, `title`} | Ban huấn luyện của một đội ở giải này. `role`: COACH, TEAM_ANALYST. `title` là chữ tùy chọn, hiển thị đúng như ghi ("Trợ lý huấn luyện viên") |
+| Giải thưởng của giải | `teamId` | Đội của người nhận, cạnh `teamName` |
+| Trận | `broadcast[]` | Người phát sóng riêng trận này, cùng dạng với giải |
+| Trận | `mvpPlayerId` | MVP của cả trận |
+| Ván | `mvpPlayerId` | MVP của ván |
+| Mục lịch sử của hồ sơ | `tournamentId` | Giải của mốc này |
+| Hồ sơ đội | `organizationId` | Tổ chức chủ quản |
+
+- Mọi trường mới đều không bắt buộc; bản ghi cũ không có thì đọc là rỗng. Chữ cũ (`recipientName`, `teamName`, ghi
+  chú, tiêu đề lịch sử) được giữ.
+- Một giải có tối đa 64 người trong `broadcast` và 256 dòng `staff`; một trận tối đa 16 người. Không lặp cùng người với
+  cùng vai trò (ở `staff` là cùng đội, cùng người, cùng vai trò). `title` tối đa 100 ký tự.
+- Vai trò ở đây độc lập với `personRoles` của hồ sơ: hồ sơ không cần ghi sẵn vai trò đó.
+- MVP không bắt buộc ngồi ở một vị trí của ván, vì nhiều ván chưa ghi đủ tuyển thủ. Admin đưa tuyển thủ của ván và đội
+  hình hai đội lên trước trong ô chọn.
+- Thay người, nhà tài trợ, thành phố và máy chủ vẫn là chữ. Đội vô địch, á quân trong `result` vẫn là chữ; thứ hạng 1 và
+  2 trong `placements` là nơi có liên kết.
+
+### Kiểm tra khi lưu
+
+| Liên kết | Quy tắc | Sai trả |
+|---|---|---|
+| Đội ở `placements`, `awards`, `staff`; tuyển thủ ở `awards`, `mvpPlayerId` | Bản ghi có thật, không ở thùng rác (như giải chính của một phần) | 409 `TOURNAMENT_RECORD_DELETED`, kèm `usages` |
+| `pageId` ở `broadcast`, `staff` | Hồ sơ PERSON hoặc PLAYER có thật | 400 `TOURNAMENT_INVALID_CONTENT` |
+| `role` | Mã trong danh sách trên | 400 `INVALID_REQUEST` |
+| `tournamentId` ở lịch sử và thành tích hồ sơ | Một giải có thật, kể cả ở thùng rác | 422 `PAGE_INVALID_CONTENT` |
+| `relatedPageId` ở lịch sử hồ sơ | Một hồ sơ có thật | 422 `PAGE_INVALID_CONTENT` |
+| `organizationId` | Chỉ hồ sơ TEAM; trỏ một ORGANIZATION có thật; công bố đội cần tổ chức đã công bố | 422 `PAGE_INVALID_CONTENT`; khi công bố 409 `PAGE_CONFLICT` |
+
+### Xóa và khôi phục
+
+- Đội hoặc tuyển thủ đang được nhắc ở thứ hạng, giải thưởng hay ban huấn luyện của một giải chưa xóa không xóa được:
+  `deletion-impact` có usage `TOURNAMENT_RESULT` (thứ hạng, giải thưởng) hoặc `TOURNAMENT_STAFF` (ban huấn luyện).
+  Tuyển thủ là MVP của trận hoặc ván chưa xóa có usage `SERIES` hoặc `GAME`. Xóa trả 409 `TOURNAMENT_RECORD_IN_USE`.
+- Khôi phục một giải, trận hay ván cần các đội và tuyển thủ nó nhắc còn hoạt động: 409 `TOURNAMENT_RESTORE_BLOCKED`.
+- Hồ sơ người có trong `broadcast` hay `staff` của giải hoặc `broadcast` của trận chưa xóa không xóa được bản nháp
+  (409 `PAGE_CONFLICT`, như hồ sơ được kế hoạch giải tham chiếu). Tổ chức đang là chủ quản của một đội cũng vậy.
+- Lịch sử và thành tích trên hồ sơ không chặn xóa giải: đó là bằng chứng sự nghiệp, vẫn đọc được bằng chữ.
+
+### Bản công bố
+
+- Snapshot của giải có thêm `people` {`pageId`: {`id`, `code`, `name`, `avatarUrl`, `published`}}, gồm mọi người ở
+  `broadcast` và `staff` của giải và `broadcast` của các trận trong snapshot. Hồ sơ đã công bố cho tên, ảnh và mã theo
+  bản công bố. Hồ sơ chưa công bố cho tên theo bản nháp, không có `code` và `avatarUrl`, và người đọc không có liên kết
+  tới đó. Công bố giải không bị chặn vì người chưa công bố.
+- MVP của các trận được thêm vào `players` của snapshot giải; MVP của ván được thêm vào `players` của snapshot ván.
+- Snapshot chụp trước ngày này không có các trường trên; ứng dụng đọc như trước.
+
+### Liên kết cần xem
+
+`GET /admin/link-review?kind=&page=&size=` (`tournament:read`, size 1–100) liệt kê những chỗ còn chữ mà chưa có liên kết,
+trong bản ghi và giải không ở thùng rác. `GET /admin/link-review/facets` trả [{`kind`, `count`}].
+
+| kind | Dòng được liệt kê | `text` |
+|---|---|---|
+| GAME_MVP | Ghi chú ván có "MVP: " và ván chưa có `mvpPlayerId` | Phần ghi chú từ sau "MVP: " tới hết dòng |
+| SERIES_MVP | Ghi chú trận có dòng bắt đầu "MVP: " hoặc "MVP trận: " và trận chưa có `mvpPlayerId` | Tên trước dấu "(" |
+| SERIES_BROADCAST | Ghi chú trận có dòng bắt đầu "Bình luận: " và trận chưa có `broadcast` | Các tên sau "Bình luận: " |
+| AWARD_PLAYER | Giải thưởng chưa có `playerId` | `recipientName` |
+| AWARD_TEAM | Giải thưởng có `teamName` nhưng chưa có `teamId` | `teamName` |
+
+Mỗi dòng: {`kind`, `recordId`, `tournamentId`, `tournamentName`, `seriesId`, `gameNumber`, `label`, `text`}. `recordId` là
+ván, trận hoặc giải cần mở để sửa; `label` là tên trận hoặc tên giải thưởng. Xếp theo giải bắt đầu gần nhất, rồi tên giải,
+rồi `recordId`.
+
+### Admin
+
+- Tổng quan: mục "Ê-kíp phát sóng" vẽ ảnh, tên và vai trò từng người; thêm người bằng ô chọn hồ sơ PERSON/PLAYER có tìm
+  kiếm và tạo nhanh hồ sơ PERSON với vai trò đã chọn, như ô chọn tổ chức.
+- Đội & đội hình: mỗi khối đội có dòng "Ban huấn luyện"; sửa trong bảng đội hình của đội đó.
+- Chung cuộc: đội của thứ hạng và của giải thưởng chọn từ danh sách đội của giải; người nhận chọn từ tuyển thủ (đội hình
+  của đội đã chọn trước) hoặc ghi chữ khi người đó chưa có bản ghi. Ghi chữ khác thì bỏ liên kết cũ. Không còn tự nối đội
+  theo tên gõ.
+- Lịch & kết quả: bảng trận có MVP trận (chọn trong đội hình hai đội) và người phát sóng riêng trận.
+- Màn ván: MVP, chọn từ tuyển thủ của ván rồi đội hình hai đội.
+- Hồ sơ: mục lịch sử chọn được giải; hồ sơ đội chọn tổ chức chủ quản.
+- Màn "Liên kết cần xem" có tab theo `kind` kèm số đếm; mỗi dòng mở đúng chỗ sửa.
+
+### Stream
+
+- Trang giải: mục "Ê-kíp phát sóng" nhóm theo vai trò; ban huấn luyện dưới đội hình từng đội; đội của giải thưởng thành
+  liên kết khi đội có hồ sơ công bố.
+- Trang trận: tên đội dẫn tới hồ sơ đội; MVP trận và người phát sóng của trận.
+- Trang ván: MVP; tên tuyển thủ dẫn tới hồ sơ khi có hồ sơ công bố.
+- Hồ sơ: mốc lịch sử có giải dẫn tới trang giải khi giải đã công bố; hồ sơ đội hiện tổ chức chủ quản; hồ sơ tổ chức liệt
+  kê các đội chủ quản đã công bố (`GET /pages?kind=TEAM&organizationId=`).
+
+### Điền ngược dữ liệu cũ
+
+Script `research/community-links/` (ADR-032), chạy tay, không phải migration:
+
+1. Xuất dữ liệu bằng một truy vấn chỉ đọc, rồi lập kế hoạch: chỉ đề xuất khi chữ khớp đúng một bản ghi, so tên theo
+   cách của `tournament.normalize_reference_search` (không phân biệt hoa thường và dấu).
+   - MVP của ván và trận: tên trong đội hình hai đội của trận ở giải đó (tên thi đấu hoặc tên gọi khác).
+   - Bình luận viên của trận: tên trùng đúng một hồ sơ PERSON hoặc PLAYER.
+   - Ê-kíp phát sóng của giải: hồ sơ PERSON có mục lịch sử với URL nguồn `<URL nguồn của giải>#Broadcast`; vai trò lấy
+     từ chữ của mục ("MC", "Bình luận viên", "Phỏng vấn", "Khách mời phân tích").
+   - Ban huấn luyện: mục lịch sử PERSON có hồ sơ đội và URL nguồn trùng đúng một giải; "Huấn luyện viên…" là COACH,
+     "Chuyên viên phân tích đội tuyển" là TEAM_ANALYST, chữ gốc vào `title`.
+   - `tournamentId` của mục lịch sử: URL nguồn (bỏ phần sau "#") trùng đúng một giải.
+   - Đội của giải thưởng: `teamName` trùng tên đúng một đội có đội hình, thứ hạng hoặc đăng ký ở giải đó.
+2. Ghi qua Admin API: đọc lại bản ghi, chỉ ghi khi trường còn trống, gửi kèm version; xung đột version thì đọc lại một
+   lần. Mỗi lần ghi vào sổ để hoàn tác.
+3. Chạy trên dữ liệu thật cần người dùng đồng ý riêng. Phần không khớp chắc chắn ở lại trong "Liên kết cần xem".
+
 ## Cơ sở dữ liệu
 
 V006 tạo schema community và các bảng page, page_audit, page_member, page_claim, page_invitation,
@@ -556,6 +674,9 @@ V022 phục vụ "Đưa danh tính vào thùng rác": view `tournament.trashed_i
 và tuyển thủ đang ở thùng rác. Danh sách, ô chọn hồ sơ và danh sách đội của thành viên bỏ qua page có `entity_id` nằm
 trong view; view đọc sổ đăng ký lúc truy vấn nên khôi phục danh tính là đủ để page hiện lại. Không đổi dữ liệu.
 
+"Liên kết giữa các bản ghi thi đấu" (19/11/2026) không thêm migration: các trường mới nằm trong tài liệu jsonb, và dữ liệu
+cũ được điền bằng script chạy tay thay vì migration (ADR-032).
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
@@ -565,7 +686,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 
 | Endpoint | Dữ liệu / hành vi |
 |---|---|
-| GET /pages?kind=&q=&page=&size= | Chỉ bản công bố; tìm theo tên công bố |
+| GET /pages?kind=&q=&organizationId=&page=&size= | Chỉ bản công bố; tìm theo tên công bố. `organizationId` chỉ giữ hồ sơ đội có tổ chức chủ quản đó |
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
 | GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&level=&teamId=&playerId=&state=&page=&size= | `level` ALL (mặc định) hoặc MAIN: chỉ giải chính, tìm cả theo tên các phần, xếp theo thành viên gần hôm nay nhất. Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
 | GET /admin/tournaments/facets?level= | {total,statuses,regions,years}, cho tab và bộ lọc mà không tải cả danh sách; `level=MAIN` đếm theo giải chính |
@@ -575,10 +696,11 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /admin/reference-catalog?q=&kind= | Khớp tên rồi hoạt động gần nhất; tra theo `ids` không xếp hạng |
 | GET /admin/series?q=&tournamentId=, /admin/games?tournamentId= | Trận/ván; trong một giải theo lịch, xuyên giải theo độ khớp rồi mới nhất |
 | GET /admin/tournaments/stats | [{tournamentId,teams,matches,played}], không tải từng trận |
+| GET /admin/link-review?kind=&page=&size=, /admin/link-review/facets | Chỗ còn chữ chưa có liên kết / số đếm theo `kind` (xem "Liên kết cần xem") |
 | GET /admin/teams/directory?q=&country=&sort=&page=&size= | Danh bạ đội: số giải, trận, thắng-thua, chức vô địch, tiền thưởng, giải gần nhất, `lastActiveOn` và đội hình gần nhất có trên hồ sơ. sort: RECENT, TOURNAMENTS, TITLES, PRIZE, NAME |
 | GET /admin/players/directory?q=&country=&lane=&status=&sort=&page=&size= | Danh bạ tuyển thủ: vị trí, đội và giải của dòng đội hình gần nhất, `lastActiveOn`, số giải, chức vô địch, tướng tủ. sort: RECENT, TOURNAMENTS, TITLES, NAME |
 | GET /admin/competitions/page-stats | [{pageId,tournaments,firstYear,lastYear,tiers,latestTournament}] theo trang tổ chức và hệ thống giải |
-| GET /admin/pages, /admin/pages/{id} | Bản nháp. Danh sách nhận thêm country, entityIds (tối đa 100 định danh) và sort: RECENT (mới sửa), NAME, ACTIVITY (nhiều mục lịch sử nhất), ACTIVE (theo "Ưu tiên gần đây", dòng có thêm `lastActiveOn`). relatedPageId đưa hồ sơ có lịch sử gắn với trang đó lên trước, dòng có `related`; chỉ dùng với ACTIVE |
+| GET /admin/pages, /admin/pages/{id} | Bản nháp. Danh sách nhận thêm country, entityIds (tối đa 100 định danh), organizationId (như danh sách công khai, theo bản nháp) và sort: RECENT (mới sửa), NAME, ACTIVITY (nhiều mục lịch sử nhất), ACTIVE (theo "Ưu tiên gần đây", dòng có thêm `lastActiveOn`). relatedPageId đưa hồ sơ có lịch sử gắn với trang đó lên trước, dòng có `related`; chỉ dùng với ACTIVE |
 | POST /admin/pages | {kind,code,entityId?,content} |
 | PUT /admin/pages/{id} | {version,content} |
 | POST /admin/pages/{id}/publish hoặc /withdraw | {version} |
