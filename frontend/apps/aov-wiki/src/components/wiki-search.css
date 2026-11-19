@@ -67,12 +67,15 @@
 .wiki-search[data-size="hero"] .wiki-search-icon {
   color: var(--aov-accent);
 }
-/* The compact header turns into this field while searching; its list hangs from the header, edge to edge. */
+/* The compact header turns into this field while searching: a soft round fill, like the wide bar's field. */
 .wiki-search[data-size="sheet"] {
   position: static;
   flex: 1;
   height: 40px;
   padding-right: 0;
+  border-color: transparent;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--aov-text) 7%, transparent);
 }
 .wiki-search[data-size="sheet"] input,
 .wiki-search[data-size="hero"] input {
@@ -110,10 +113,59 @@
   left: auto;
   width: max(100%, 380px);
 }
+/* On phones the open search is a screen of its own under the header, so the page behind it no longer shows. */
 .wiki-search[data-size="sheet"] .wiki-search-panel {
-  right: 8px;
-  left: 8px;
+  position: fixed;
+  top: var(--wiki-header-height);
+  right: 0;
+  bottom: 0;
+  left: 0;
   min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: env(safe-area-inset-bottom);
+  border: 0;
+  border-top: 1px solid var(--aov-line);
+  border-radius: 0;
+  background: var(--aov-bg);
+  box-shadow: none;
+}
+.wiki-search[data-size="sheet"] .wiki-search-panel ul a {
+  min-height: 52px;
+}
+/* Before any word: every section as a large target, then a line on what can be found. */
+.wiki-search-start-title {
+  font: var(--wiki-type-meta);
+  margin: 0;
+  padding: 18px 16px 8px;
+  color: var(--aov-muted);
+  font-weight: 600;
+}
+.wiki-search-start {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 0 8px;
+}
+.wiki-search-start a {
+  font: var(--wiki-type-category);
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 12px 4px;
+  border-radius: var(--aov-radius-card);
+  color: var(--aov-text);
+  text-align: center;
+  text-decoration: none;
+}
+.wiki-search-start a:is(:hover, :active, :focus-visible) {
+  background: var(--aov-raised);
+}
+.wiki-search-start-hint {
+  font: var(--wiki-type-meta);
+  margin: 0;
+  padding: 16px;
+  color: var(--aov-muted);
 }
 .wiki-search-panel ul {
   margin: 0;

@@ -1,0 +1,38 @@
+/* A quiet trail above a page title: muted links, chevrons between, the current page in the text colour. */
+.wiki-breadcrumb ol {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-breadcrumb li {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 2px;
+}
+.wiki-breadcrumb a {
+  padding: 2px 4px;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-muted);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.wiki-breadcrumb a:is(:hover, :focus-visible) {
+  color: var(--aov-accent);
+}
+.wiki-breadcrumb [aria-current="page"] {
+  overflow: hidden;
+  padding: 2px 4px;
+  color: var(--aov-text-soft);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-breadcrumb-separator {
+  flex: none;
+  color: var(--aov-line-strong);
+}

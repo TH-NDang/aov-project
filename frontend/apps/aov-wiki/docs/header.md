@@ -53,8 +53,9 @@ Một hàng cao 48px (`WikiHeaderCompact`):
 - Giữa: tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
   trang này tự có `h1` mang tên riêng, nên header chỉ ghi tên mục (`pageTitleIsHeading`). Kho trang bị ghi chung "Kho
   trang bị", bốn phần là dãy tab dính ngay dưới header.
-- Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành nút đóng và ô nhập; danh sách gợi ý trải gần hết bề ngang
-  dưới header.
+- Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành nút quay lại và ô nhập bo tròn, và bên dưới header mở
+  một màn tìm kiếm phủ kín trang: chưa gõ thì có lưới "Đi nhanh tới" chín mục và một dòng gợi ý cách tìm; gõ chữ thì
+  danh sách gợi ý chiếm cả màn, mỗi hàng cao 52px.
 - Mục lục (`LibraryContents` trong `src/components/library-contents.tsx`, cùng danh sách `LibraryNavigation` với sidebar
   của bố cục wide) mở tấm trượt từ phải, rộng tối đa 320px, liệt
   kê mọi mục theo bốn nhóm Sổ tay nhân vật, Kho trang bị, Lối chơi, Tham khảo (`LibraryNavigation` trong

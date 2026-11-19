@@ -82,12 +82,26 @@ export function HeroDetailLayout({
   style?: CSSProperties
 }) {
   usePageHead(meta)
+  const layout = usePageLayout()
+  const main = (
+    <main id="main" className="wiki-hero-detail-main" tabIndex={-1}>
+      {children}
+    </main>
+  )
+  // Wide screens keep the sections beside the hero, as on the list pages; the artwork then fills the page column.
   return (
     <div className="wiki-hero-detail-shell" style={style}>
       <WikiHeader variant="hero" backTo={backTo} section="heroes" />
-      <main id="main" className="wiki-hero-detail-main" tabIndex={-1}>
-        {children}
-      </main>
+      {layout === "compact" ? (
+        main
+      ) : (
+        <div className="wiki-library-body" data-page="hero">
+          <aside className="wiki-library-sidebar">
+            <LibraryNavigation layout="sidebar" active="heroes" />
+          </aside>
+          {main}
+        </div>
+      )}
     </div>
   )
 }

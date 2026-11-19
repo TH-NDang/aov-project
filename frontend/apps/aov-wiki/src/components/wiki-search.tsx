@@ -8,7 +8,7 @@ import { wikiReferencesQuery } from "../lib/wiki-references"
 import { WikiIcon } from "./wiki-icon"
 import { SITE_NAME } from "../lib/seo/page-meta"
 import { foldSearchText } from "@aov/ui/lib/search-text"
-import { SECTION_NAMES } from "../lib/wiki-sections"
+import { SECTION_NAMES, wikiSections } from "../lib/wiki-sections"
 import "./wiki-search.css"
 
 const LIMIT = 8
@@ -101,6 +101,9 @@ export function WikiSearch({
   const listId = useId()
   const { matches, needle, pending, failed, retry } = useMatches(search)
   const open = focused && needle.length > 0
+  // On phones the search is a screen of its own while it is open: before any word it offers the sections.
+  const sheet = size === "sheet"
+  const panelShown = open || sheet
   const lists = LISTS.map(([path, key]) => ({
     label: t(...SECTION_NAMES[key]),
     to: href(`${path}?${new URLSearchParams({ q: search.trim() })}`),
@@ -145,7 +148,7 @@ export function WikiSearch({
         ref={input}
         type="search"
         role="combobox"
-        aria-expanded={open}
+        aria-expanded={panelShown}
         aria-controls={listId}
         aria-autocomplete="list"
         aria-activedescendant={open ? `${listId}-${marked}` : undefined}
@@ -187,7 +190,27 @@ export function WikiSearch({
           <WikiIcon name="close" size={16} />
         </button>
       )}
-      {open && (
+      {sheet && !needle && (
+        <div className="wiki-search-panel" data-start>
+          <p className="wiki-search-start-title">{t("Đi nhanh tới", "Jump to")}</p>
+          <nav className="wiki-search-start" aria-label={t("Các mục của Wiki", "Wiki sections")}>
+            {wikiSections.map((section) => (
+              <Link key={section.key} to={href(section.path)} onClick={finish}>
+                <WikiIcon name={section.icon} size={30} />
+                {section.key === "updates" ? t("Cập nhật", "Updates") : t(...SECTION_NAMES[section.key])}
+              </Link>
+            ))}
+          </nav>
+          <p className="wiki-search-start-hint">
+            {wikiText(
+              locale,
+              "Gõ tên tướng, trang bị, phù hiệu, bảng ngọc, phụ trợ hoặc thuật ngữ để tìm.",
+              "Type the name of a hero, item, enchantment, arcana, talent or term.",
+            )}
+          </p>
+        </div>
+      )}
+      {(open || (sheet && needle)) && (
         // Keeps focus in the field while a result is pressed, so the list does not close before the click lands.
         <div className="wiki-search-panel" onMouseDown={(event) => event.preventDefault()}>
           {matches.length === 0 && (

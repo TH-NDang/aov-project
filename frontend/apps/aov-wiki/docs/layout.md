@@ -10,11 +10,13 @@
   nội dung bắt đầu trên cùng một đường.
 - Trên wide, `WikiLibraryLayout` đặt sidebar các mục (`LibraryNavigation layout="sidebar"` trong
   `src/components/library-navigation.tsx`) bên trái trang: Trang chủ, rồi các mục theo nhóm Sổ tay nhân vật, Kho trang
-  bị, Lối chơi, Tham khảo, mục đang ở được tô vàng. Sidebar rộng 200px, dính dưới thanh đầu trang và tự cuộn nếu cửa
+  bị, Lối chơi, Tham khảo. Rê chuột thì hàng có nền mờ; mục đang ở có nền vàng nhạt, chữ vàng đậm và một vạch tròn ngắn
+  ở mép trái. Sidebar rộng 200px, dính dưới thanh đầu trang và tự cuộn nếu cửa
   sổ thấp; dưới 1180px chỉ còn icon (52px), tên mục hiện trong tooltip bên phải icon ngay khi rê chuột hoặc focus
-  bằng bàn phím. Trang chủ không có sidebar vì đã có các ô mục. Chi tiết tướng (`HeroDetailLayout`) cũng không có:
-  ảnh tướng trải hết bề ngang, trang có đường quay lại Thư viện Tướng và mục lục "Trên trang này" của riêng nó. Trên
-  compact các mục nằm trong tấm mục lục mở từ header.
+  bằng bàn phím. Trang chủ không có sidebar vì đã có các ô mục. Chi tiết tướng (`HeroDetailLayout`) cũng có sidebar trên
+  wide: ảnh tướng nằm trong cột trang bên phải sidebar, vẫn bắt đầu dưới thanh đầu trang trong suốt. Phía trên tên tướng
+  là breadcrumb Trang chủ › Tướng › tên tướng (`WikiBreadcrumb` trong `src/components/wiki-breadcrumb.tsx`) thay cho
+  nút quay lại. Trên compact các mục nằm trong tấm mục lục mở từ header.
 - Mỗi trang danh sách mở bằng `CatalogHeading` (`src/layout/catalog-heading.tsx`): tiêu đề (`title`), tối đa một dòng mờ
   (`lead`), tối đa một nút hoặc phiên bản dữ liệu bên phải (`action`), và đường quay lại (`back`) cho trang không mở từ
   header. Trên compact phần này không hiện vì header đã ghi tên trang; trang mà header không ghi tên (Liên hệ, Tài khoản)

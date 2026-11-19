@@ -24,7 +24,9 @@ const PATHS = {
   ),
   feedback: (
     <>
-      <path d="M20 14v6H4V4h10m0 0 2-2 6 6-2 2-6-6Zm-1 1-5 5-1 4 4-1 5-5M7 17h7" />
+      {/* A rounded pen resting on the corner of an open page: suggest a change to what is written. */}
+      <path d="M12 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V12" />
+      <path d="M17.6 3.4a1.9 1.9 0 0 1 2.7 2.7l-7.6 7.6a2 2 0 0 1-.9.5l-2.6.7.7-2.6a2 2 0 0 1 .5-.9Z" />
     </>
   ),
   imagePlus: (

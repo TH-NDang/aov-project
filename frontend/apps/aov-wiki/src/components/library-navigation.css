@@ -42,16 +42,38 @@
 .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-group {
   margin: 0 0 16px;
 }
+/*
+ * Pointing at a row gives it a faint fill; the page you are on takes a soft accent fill, the accent colour and a short
+ * rounded bar at its left edge, rather than a square stripe.
+ */
 .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link {
+  position: relative;
   min-height: 40px;
   padding: 6px 10px;
   color: var(--aov-text-soft);
+  transition:
+    background 150ms,
+    color 150ms;
 }
 .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link:hover {
+  background: color-mix(in srgb, var(--aov-text) 6%, transparent);
   color: var(--aov-text);
 }
 .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link[aria-current="page"] {
+  background: color-mix(in srgb, var(--aov-accent) 13%, transparent);
+  box-shadow: none;
   color: var(--aov-accent);
+  font-weight: 600;
+}
+.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  left: 0;
+  width: 3px;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-accent);
 }
 /* Narrow desktops and tablets on their side: only the icons stay, each named by its tooltip and for screen readers. */
 @media (max-width: 1179.98px) {
