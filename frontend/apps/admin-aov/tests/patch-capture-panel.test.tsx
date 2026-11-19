@@ -430,8 +430,9 @@ async function mount() {
   const client = new QueryClient()
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
-  const { PatchCapturePanel, PatchCaptureLink, PatchCaptureToggle } =
-    await import("../src/features/publishing/components/captures/patch-capture-panel")
+  const { PatchCapturePanel } = await import("../src/features/publishing/components/captures/patch-capture-panel")
+  const { PatchCaptureLink, PatchCaptureToggle } =
+    await import("../src/features/publishing/components/captures/patch-capture-buttons")
   const { PatchCaptureProvider } = await import("../src/features/publishing/api/use-patch-captures")
   const { useState } = React
   const navigations: CaptureTarget[] = []

@@ -1,541 +1,32 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type KeyboardEvent,
-  type PointerEvent,
-  type RefObject,
-} from "react"
-import {
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  Focus,
-  Images,
-  Maximize,
-  PanelRightClose,
-  PanelRightOpen,
-  X,
-  ZoomIn,
-  ZoomOut,
-} from "lucide-react"
-import { Badge } from "@aov/ui/components/badge"
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react"
+import { AlertTriangle, Images, PanelRightClose, PanelRightOpen, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { Kbd } from "@aov/ui/components/kbd"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { cn } from "@aov/ui/lib/utils"
-import { CopyButton } from "@/components/copy-button"
 import {
-  CAPTURE_MAX_SCALE,
-  captureBoxOnScreen,
+  CAPTURE_ZOOM_STEP,
   captureBoxZoom,
   captureCardZoom,
   captureFit,
   captureFocusBox,
   captureGroupTarget,
   captureRegions,
-  captureImageTitle,
-  captureLinkHints,
-  captureLinkLabels,
   captureSha256,
-  captureSourcePath,
-  clampCaptureZoom,
   zoomCaptureAt,
   type CaptureGroup,
   type CaptureImage,
   type CaptureRegion,
   type CaptureZoom,
 } from "../../model/captures/patch-capture-model"
-import { usePatchCaptureContext, type CaptureState, type PatchCaptureWorkspace } from "../../api/use-patch-captures"
+import { captureStateMessage } from "../../model/captures/capture-panel-model"
+import type { PatchCaptureWorkspace } from "../../api/use-patch-captures"
 import { useSourceUrls } from "../../../files/source-links"
-
-const ZOOM_STEP = 1.25
-const SIZE_KEY = "aov-admin:hero-capture-size"
-/** Width as a percentage of the split and height as dvh, so a saved size still fits another window. */
-const defaultSize = { width: 50, height: 52 }
-const clampWidth = (value: number) => Math.round(Math.min(75, Math.max(30, value)))
-const clampHeight = (value: number) => Math.round(Math.min(80, Math.max(25, value)))
-
-function readSize() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(SIZE_KEY) ?? "{}") as Partial<typeof defaultSize>
-    return {
-      width: clampWidth(typeof saved.width === "number" ? saved.width : defaultSize.width),
-      height: clampHeight(typeof saved.height === "number" ? saved.height : defaultSize.height),
-    }
-  } catch {
-    return defaultSize
-  }
-}
-
-function saveSize(size: typeof defaultSize) {
-  try {
-    localStorage.setItem(SIZE_KEY, JSON.stringify(size))
-  } catch {
-    /* The size still lasts for this page. */
-  }
-}
-
-/** The edge the panel shares with the page. Beside the page it moves sideways; under it, up and down. */
-function CaptureResizeHandle({
-  direction,
-  value,
-  min,
-  max,
-  onChange,
-  onCommit,
-  onReset,
-  className,
-}: {
-  direction: "width" | "height"
-  value: number
-  min: number
-  max: number
-  onChange: (point: { x: number; y: number }) => void
-  onCommit: () => void
-  onReset: () => void
-  className: string
-}) {
-  const [dragging, setDragging] = useState(false)
-  const label = direction === "width" ? "Kéo để đổi độ rộng khung ảnh" : "Kéo để đổi chiều cao khung ảnh"
-  return (
-    <div
-      role="separator"
-      tabIndex={0}
-      aria-label={label}
-      title={`${label} · bấm đúp để về cỡ ban đầu`}
-      aria-orientation={direction === "width" ? "vertical" : "horizontal"}
-      aria-valuenow={value}
-      aria-valuemin={min}
-      aria-valuemax={max}
-      data-dragging={dragging || undefined}
-      className={cn(
-        "group/handle absolute z-20 flex touch-none items-center justify-center outline-none select-none",
-        direction === "width"
-          ? "inset-y-0 -left-1.5 w-3 cursor-col-resize"
-          : "inset-x-0 -top-1.5 h-3 cursor-row-resize",
-        className,
-      )}
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.currentTarget.setPointerCapture?.(event.pointerId)
-        setDragging(true)
-      }}
-      onPointerMove={(event) => {
-        if (dragging) onChange({ x: event.clientX, y: event.clientY })
-      }}
-      onPointerUp={() => {
-        setDragging(false)
-        onCommit()
-      }}
-      onPointerCancel={() => {
-        setDragging(false)
-        onCommit()
-      }}
-      onDoubleClick={onReset}
-    >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "rounded-full bg-border transition-colors group-hover/handle:bg-primary group-focus-visible/handle:bg-primary group-data-dragging/handle:bg-primary",
-          direction === "width" ? "h-10 w-1" : "h-1 w-10",
-        )}
-      />
-    </div>
-  )
-}
-
-/** Header toggle for the whole panel; hidden for an account that cannot open source files. */
-export function PatchCaptureToggle() {
-  const captures = usePatchCaptureContext()
-  if (!captures || captures.state.status === "idle" || captures.state.status === "unavailable") return null
-  const count = captures.groups.length ? captures.groups.flatMap((group) => group.images).length : null
-  const label = captures.open ? "Đóng khung ảnh gốc" : "Mở khung ảnh gốc của tướng"
-  return (
-    <Button
-      type="button"
-      variant={captures.open ? "secondary" : "outline"}
-      size="sm"
-      className="shrink-0"
-      aria-pressed={captures.open}
-      aria-label={label}
-      title={label}
-      onClick={captures.toggle}
-    >
-      <Images className="size-4" />
-      <span className="@max-5xl:sr-only">Ảnh gốc</span>
-      {count !== null && <span className="text-xs tabular-nums text-muted-foreground">{count}</span>}
-    </Button>
-  )
-}
-
-/** Sits beside one item so its own screenshots are a single click away; says so plainly when there are none. */
-export function PatchCaptureLink({ groupKey, name, skinKey }: { groupKey: string; name: string; skinKey?: string }) {
-  const captures = usePatchCaptureContext()
-  const group = captures?.groups.find((item) => item.key === groupKey)
-  if (!captures || !group) return null
-  const own = skinKey ? group.images.filter((image) => image.skinKey === skinKey) : group.images
-  const count = own.length
-  const label = count ? `Xem ${count} ảnh gốc của ${name}` : `${name} không có ảnh gốc`
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="xs"
-      className="shrink-0 text-muted-foreground"
-      aria-label={label}
-      title={label}
-      onClick={() => captures.reveal(groupKey, own[0]?.id)}
-    >
-      <Images />
-      {count ? <span className="tabular-nums">{count}</span> : "Không có ảnh"}
-    </Button>
-  )
-}
-
-function stateMessage(state: CaptureState, patchCode: string | undefined) {
-  switch (state.status) {
-    case "loading":
-      return "Đang tìm ảnh gốc của tướng…"
-    case "no-patch":
-      return patchCode
-        ? `Patch ${patchCode} chưa có bộ ảnh gốc.`
-        : "Bản đang xem chưa gắn patch, nên không xác định được bộ ảnh gốc."
-    case "no-hero":
-      return state.heroCode
-        ? `Bộ ảnh patch ${patchCode} không có tướng “${state.heroCode}”.`
-        : "Không xác định được mã của tướng này nên không nối được với bộ ảnh."
-    case "error":
-      return state.message
-    default:
-      return null
-  }
-}
-
-/** Dims everything but the card, in the picture's own coordinates so it fits and zooms exactly as the picture does. */
-function CaptureCardMark({ box, zoom }: { box: NonNullable<CaptureImage["box"]>; zoom: CaptureZoom }) {
-  const { x, y, width, height, imageWidth, imageHeight } = box
-  return (
-    <svg
-      data-testid="capture-card-mark"
-      aria-hidden="true"
-      viewBox={`0 0 ${imageWidth} ${imageHeight}`}
-      className="pointer-events-none absolute inset-0 size-full origin-top-left"
-      style={{ transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})` }}
-    >
-      <path
-        fill="rgb(0 0 0 / 0.5)"
-        fillRule="evenodd"
-        d={`M0 0H${imageWidth}V${imageHeight}H0Z M${x} ${y}H${x + width}V${y + height}H${x}Z`}
-      />
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        fill="none"
-        stroke="var(--primary)"
-        strokeWidth={2}
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
-  )
-}
-
-/** Shows only the card, since a row of whole shop screens would all look the same at this size. */
-export function CaptureCardThumbnail({
-  url,
-  box,
-  className = "w-16",
-}: {
-  /** Empty while the presigned link is on its way. */
-  url: string | undefined
-  box: NonNullable<CaptureImage["box"]>
-  className?: string
-}) {
-  return (
-    <span
-      className={cn("relative block overflow-hidden bg-muted", className)}
-      style={{ aspectRatio: box.width / box.height }}
-    >
-      {url && (
-        <img
-          src={url}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          className="absolute max-w-none"
-          style={{
-            width: `${(box.imageWidth / box.width) * 100}%`,
-            height: `${(box.imageHeight / box.height) * 100}%`,
-            left: `${(-box.x / box.width) * 100}%`,
-            top: `${(-box.y / box.height) * 100}%`,
-          }}
-        />
-      )}
-    </span>
-  )
-}
-
-function CaptureViewer({
-  image,
-  url,
-  failed,
-  onExpired,
-  title,
-  frame,
-  zoom,
-  onZoom,
-  onPrevious,
-  onNext,
-  regions,
-  natural,
-  onReady,
-  onRegion,
-}: {
-  image: CaptureImage
-  /** The presigned link; empty while it is on its way. */
-  url: string | undefined
-  /** No stored bytes were found for the picture. */
-  failed: boolean
-  /** Asks for a new link when the old one has expired; false when the link was fresh and the picture is broken. */
-  onExpired: () => boolean
-  title: string
-  frame: RefObject<HTMLDivElement | null>
-  zoom: CaptureZoom
-  onZoom: (update: (zoom: CaptureZoom, width: number, height: number) => CaptureZoom) => void
-  onPrevious?: () => void
-  onNext?: () => void
-  /** Parts of the picture that lead to the page. */
-  regions: CaptureRegion[]
-  natural: { width: number; height: number } | null
-  onReady: (natural: { width: number; height: number }) => void
-  onRegion: (region: CaptureRegion) => void
-}) {
-  const [loaded, setLoaded] = useState<"loading" | "ready" | "error">("loading")
-  const status = failed ? "error" : loaded
-  const [drag, setDrag] = useState<{ pointer: number; x: number; y: number } | null>(null)
-  const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null)
-  // Where a press started and on which region, so a press that did not move still picks the region while zoomed.
-  const press = useRef<{ x: number; y: number; region: string | null } | null>(null)
-  useEffect(() => {
-    const element = frame.current
-    if (!element) return
-    const measure = () => {
-      const bounds = element.getBoundingClientRect()
-      setFrameSize(bounds.width && bounds.height ? { width: bounds.width, height: bounds.height } : null)
-    }
-    measure()
-    if (typeof ResizeObserver === "undefined") return
-    const observer = new ResizeObserver(measure)
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [frame])
-  const point = useCallback(
-    (clientX: number, clientY: number) => {
-      const bounds = frame.current!.getBoundingClientRect()
-      return { x: clientX - bounds.left, y: clientY - bounds.top }
-    },
-    [frame],
-  )
-  // React's wheel listener is passive, and the page behind must not scroll while zooming.
-  useEffect(() => {
-    const element = frame.current
-    if (!element) return
-    const onWheel = (event: WheelEvent) => {
-      event.preventDefault()
-      const factor = event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP
-      const at = point(event.clientX, event.clientY)
-      onZoom((current, width, height) => zoomCaptureAt(current, current.scale * factor, at, width, height))
-    }
-    element.addEventListener("wheel", onWheel, { passive: false })
-    return () => element.removeEventListener("wheel", onWheel)
-  }, [frame, onZoom, point])
-  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    const region = (event.target as Element).closest?.("[data-capture-region]")?.getAttribute("data-capture-region")
-    press.current = { x: event.clientX, y: event.clientY, region: region ?? null }
-    if (zoom.scale === 1 || event.button !== 0) return
-    event.currentTarget.setPointerCapture?.(event.pointerId)
-    setDrag({ pointer: event.pointerId, x: event.clientX - zoom.x, y: event.clientY - zoom.y })
-  }
-  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!drag || drag.pointer !== event.pointerId) return
-    onZoom((current, width, height) =>
-      clampCaptureZoom({ ...current, x: event.clientX - drag.x, y: event.clientY - drag.y }, width, height),
-    )
-  }
-  return (
-    <div
-      ref={frame}
-      data-testid="capture-frame"
-      className={cn(
-        "group/frame relative aspect-[20/9] max-h-[calc(var(--capture-height)-8.5rem)] w-full shrink-0 touch-none overflow-hidden bg-muted/60 select-none @5xl/hero-split:max-h-[60dvh]",
-        zoom.scale > 1 ? (drag ? "cursor-grabbing" : "cursor-grab") : "cursor-zoom-in",
-      )}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={(event) => {
-        // While zoomed the frame holds the pointer, so the region button never sees the click: pick it here.
-        const start = press.current
-        press.current = null
-        if (drag && start?.region && Math.hypot(event.clientX - start.x, event.clientY - start.y) < 5) {
-          const region = regions.find((item) => item.key === start.region)
-          if (region) onRegion(region)
-        }
-        setDrag(null)
-      }}
-      onPointerCancel={() => setDrag(null)}
-      onDoubleClick={(event) => {
-        const at = point(event.clientX, event.clientY)
-        onZoom((current, width, height) =>
-          current.scale > 1 ? captureFit : zoomCaptureAt(current, 2.5, at, width, height),
-        )
-      }}
-    >
-      {url && (
-        <img
-          src={url}
-          alt={title}
-          draggable={false}
-          className="size-full origin-top-left object-contain"
-          style={{ transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})` }}
-          onLoad={(event) => {
-            setLoaded("ready")
-            onReady({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })
-          }}
-          onError={() => {
-            // A link past its ten minutes is renewed and the picture loads again under the new one.
-            if (!onExpired()) setLoaded("error")
-          }}
-        />
-      )}
-      {image.box && status === "ready" && <CaptureCardMark box={image.box} zoom={zoom} />}
-      {status === "ready" && natural && frameSize && regions.length > 0 && (
-        // Outlined while the pointer is over the picture; each part names where it leads.
-        <div className="pointer-events-none absolute inset-0">
-          {regions.map((region) => {
-            const place = captureBoxOnScreen(region.box, natural, frameSize, zoom)
-            return (
-              <button
-                key={region.key}
-                type="button"
-                data-capture-region={region.key}
-                aria-label={`Đi tới ${region.label}`}
-                title={`Đi tới ${region.label}`}
-                className="group/region pointer-events-auto absolute rounded-md border border-transparent outline-none transition-colors group-hover/frame:border-primary/35 hover:border-primary hover:bg-primary/10 focus-visible:border-primary focus-visible:bg-primary/10"
-                style={{ left: place.left, top: place.top, width: place.width, height: place.height }}
-                onDoubleClick={(event) => event.stopPropagation()}
-                onClick={() => onRegion(region)}
-              >
-                <span className="type-meta pointer-events-none absolute top-0 left-0 max-w-[16rem] -translate-y-full truncate rounded-md bg-background/90 px-1.5 text-foreground opacity-0 shadow-sm transition-opacity group-hover/region:opacity-100 group-focus-visible/region:opacity-100">
-                  Đi tới {region.label}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      )}
-      {status === "loading" && (
-        <p role="status" className="type-meta absolute inset-0 flex items-center justify-center p-4 text-center">
-          Đang mở ảnh gốc…
-        </p>
-      )}
-      {status === "error" && (
-        <p
-          role="alert"
-          className="type-body absolute inset-0 flex items-center justify-center bg-muted p-4 text-center text-destructive"
-        >
-          Không đọc được ảnh gốc {image.fileName}.
-        </p>
-      )}
-      {onPrevious && (
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full"
-          aria-label="Ảnh trước"
-          onPointerDown={(event) => event.stopPropagation()}
-          onDoubleClick={(event) => event.stopPropagation()}
-          onClick={onPrevious}
-        >
-          <ChevronLeft />
-        </Button>
-      )}
-      {onNext && (
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full"
-          aria-label="Ảnh sau"
-          onPointerDown={(event) => event.stopPropagation()}
-          onDoubleClick={(event) => event.stopPropagation()}
-          onClick={onNext}
-        >
-          <ChevronRight />
-        </Button>
-      )}
-    </div>
-  )
-}
-
-function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: CaptureImage; url: string | undefined }) {
-  return (
-    <div className="space-y-3 px-3 py-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="type-label min-w-0 break-words">{captureImageTitle(group, image)}</h3>
-        <Badge
-          variant={image.link === "REVIEWED" ? "secondary" : "outline"}
-          title={captureLinkHints[image.link]}
-          className={cn(image.link !== "REVIEWED" && "border-(--aov-warning)/40 text-(--aov-warning)")}
-        >
-          {captureLinkLabels[image.link]}
-        </Badge>
-      </div>
-      {image.reading && (
-        <p className="type-body">
-          {image.card ? `Đọc từ thẻ số ${image.card}: ` : "Đọc được: "}
-          <span className="font-semibold">{image.reading}</span>
-        </p>
-      )}
-      <p className="type-meta">{captureLinkHints[image.link]}</p>
-      {image.notes.length > 0 && (
-        <div
-          aria-label="Ghi chú rà soát"
-          className="space-y-2 rounded-lg border border-(--aov-warning)/25 bg-(--aov-warning-soft) p-3 text-xs leading-5 [overflow-wrap:anywhere]"
-        >
-          {image.notes.map((note) => (
-            <p key={note} className="flex gap-2">
-              <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-(--aov-warning)" />
-              {note}
-            </p>
-          ))}
-        </div>
-      )}
-      <div className="flex min-w-0 items-center gap-2 overflow-hidden rounded-md border bg-muted/40 px-2 py-1.5 text-xs">
-        <code className="min-w-0 flex-1 truncate font-mono" title={captureSourcePath(image)}>
-          {image.fileName}
-        </code>
-        <CopyButton value={captureSourcePath(image)} label="Sao chép đường dẫn tệp nguồn" />
-        {url ? (
-          <Button variant="ghost" size="icon-xs" asChild>
-            <a href={url} target="_blank" rel="noreferrer" aria-label="Mở ảnh gốc trong thẻ mới">
-              <ExternalLink />
-            </a>
-          </Button>
-        ) : (
-          <Button variant="ghost" size="icon-xs" disabled aria-label="Mở ảnh gốc trong thẻ mới">
-            <ExternalLink />
-          </Button>
-        )}
-      </div>
-    </div>
-  )
-}
+import { CaptureDetails } from "./capture-details"
+import { CaptureResizeHandle } from "./capture-resize-handle"
+import { CaptureThumbnails } from "./capture-thumbnails"
+import { CaptureViewer } from "./capture-viewer"
+import { CaptureZoomBar } from "./capture-zoom-bar"
+import { useCaptureSize } from "./use-capture-size"
 
 /**
  * Sits beside the hero page rather than over it, so the entered data stays readable and editable while comparing. Arrow
@@ -544,19 +35,7 @@ function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: Cap
 export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspace }) {
   const { state, patchCode, viewedPatchCode, otherPatches, groups, activeKey, imageId, focusRequest } = captures
   const panel = useRef<HTMLElement>(null)
-  const [size, setSize] = useState(readSize)
-  const wide = size.width >= 60
-  const latestSize = useRef(size)
-  latestSize.current = size
-  const changeSize = (next: Partial<typeof defaultSize>) => setSize((current) => ({ ...current, ...next }))
-  const keepSize = () => saveSize(latestSize.current)
-  const dragTo = ({ x, y }: { x: number; y: number }) => {
-    const split = panel.current?.parentElement?.getBoundingClientRect()
-    if (!split) return
-    if (panel.current && getComputedStyle(panel.current.parentElement!).flexDirection === "row")
-      changeSize({ width: clampWidth(((split.right - x) / split.width) * 100) })
-    else changeSize({ height: clampHeight(((split.bottom - y) / window.innerHeight) * 100) })
-  }
+  const { size, wide, dragTo, keepSize, resetWidth, resetHeight, toggleWide } = useCaptureSize(panel)
   const [zoom, setZoom] = useState<CaptureZoom>(captureFit)
   const frame = useRef<HTMLDivElement>(null)
   const thumbnails = useRef<HTMLDivElement>(null)
@@ -615,9 +94,9 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
     const actions: Record<string, () => void> = {
       ArrowLeft: () => step(-1),
       ArrowRight: () => step(1),
-      "+": () => stepZoom(ZOOM_STEP),
-      "=": () => stepZoom(ZOOM_STEP),
-      "-": () => stepZoom(1 / ZOOM_STEP),
+      "+": () => stepZoom(CAPTURE_ZOOM_STEP),
+      "=": () => stepZoom(CAPTURE_ZOOM_STEP),
+      "-": () => stepZoom(1 / CAPTURE_ZOOM_STEP),
       "0": () => setZoom(captureFit),
     }
     const action = actions[event.key]
@@ -628,7 +107,7 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
   // The open group's pictures go out as one request, so moving through the strip never waits for a link.
   const urls = useSourceUrls(group?.images.map(captureSha256) ?? [])
   const url = image ? urls.url(captureSha256(image)) : undefined
-  const message = group?.shop ? null : stateMessage(state, patchCode)
+  const message = group?.shop ? null : captureStateMessage(state, patchCode)
   return (
     <aside
       ref={panel}
@@ -649,10 +128,7 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
         className="hidden @5xl/hero-split:flex"
         onChange={dragTo}
         onCommit={keepSize}
-        onReset={() => {
-          changeSize({ width: defaultSize.width })
-          saveSize({ ...size, width: defaultSize.width })
-        }}
+        onReset={resetWidth}
       />
       <CaptureResizeHandle
         direction="height"
@@ -662,10 +138,7 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
         className="@5xl/hero-split:hidden"
         onChange={dragTo}
         onCommit={keepSize}
-        onReset={() => {
-          changeSize({ height: defaultSize.height })
-          saveSize({ ...size, height: defaultSize.height })
-        }}
+        onReset={resetHeight}
       />
       <header className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
         <Images className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -689,11 +162,7 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
           aria-pressed={wide}
           aria-label={wide ? "Thu hẹp khung ảnh" : "Mở rộng khung ảnh"}
           title={wide ? "Thu hẹp khung ảnh" : "Mở rộng khung ảnh"}
-          onClick={() => {
-            const next = { ...size, width: wide ? defaultSize.width : 68 }
-            setSize(next)
-            saveSize(next)
-          }}
+          onClick={toggleWide}
         >
           {wide ? <PanelRightClose /> : <PanelRightOpen />}
         </Button>
@@ -781,96 +250,20 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
                 }}
                 onRegion={pick}
               />
-              <div className="flex items-center gap-1 border-b px-3 py-1.5">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Thu nhỏ ảnh"
-                  title="Thu nhỏ ảnh"
-                  disabled={zoom.scale <= 1}
-                  onClick={() => stepZoom(1 / ZOOM_STEP)}
-                >
-                  <ZoomOut />
-                </Button>
-                <span className="type-meta w-12 text-center tabular-nums" aria-live="polite">
-                  {Math.round(zoom.scale * 100)}%
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Phóng to ảnh"
-                  title="Phóng to ảnh"
-                  disabled={zoom.scale >= CAPTURE_MAX_SCALE}
-                  onClick={() => stepZoom(ZOOM_STEP)}
-                >
-                  <ZoomIn />
-                </Button>
-                {focusBox && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Phóng vào phần cần đọc"
-                    title="Phóng vào phần cần đọc"
-                    onClick={() => zoomToFocus()}
-                  >
-                    <Focus />
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Vừa khung"
-                  title="Vừa khung"
-                  disabled={zoom.scale === 1}
-                  onClick={() => setZoom(captureFit)}
-                >
-                  <Maximize />
-                </Button>
-                <span className="type-meta ml-auto hidden @5xl/hero-split:inline">
-                  <Kbd>←</Kbd> <Kbd>→</Kbd> chuyển ảnh · lăn chuột phóng to, kéo để di chuyển
-                </span>
-              </div>
+              <CaptureZoomBar
+                zoom={zoom}
+                onStep={stepZoom}
+                onFocus={focusBox ? () => zoomToFocus() : undefined}
+                onFit={() => setZoom(captureFit)}
+              />
               {group.images.length > 1 && (
-                <div
-                  ref={thumbnails}
-                  role="group"
-                  aria-label={`Các ảnh của ${group.title}`}
-                  className="flex items-start gap-2 overflow-x-auto p-3"
-                >
-                  {group.images.map((member, index) => (
-                    <button
-                      key={member.id}
-                      type="button"
-                      aria-current={member.id === image.id}
-                      aria-label={`Ảnh ${index + 1}: ${member.entryName ?? member.fileName}`}
-                      title={member.entryName ?? member.fileName}
-                      className={cn(
-                        "shrink-0 overflow-hidden rounded-md border-2 outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        !member.box && "w-28",
-                        member.id === image.id ? "border-primary" : "border-transparent opacity-80 hover:opacity-100",
-                      )}
-                      onClick={() => (member.skinKey ? open(group, member) : captures.select(group.key, member.id))}
-                    >
-                      {member.box ? (
-                        <CaptureCardThumbnail url={urls.url(captureSha256(member))} box={member.box} />
-                      ) : urls.url(captureSha256(member)) ? (
-                        <img
-                          src={urls.url(captureSha256(member))}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          className="aspect-[20/9] w-full bg-muted object-cover"
-                        />
-                      ) : (
-                        <span className="block aspect-[20/9] w-full bg-muted" />
-                      )}
-                    </button>
-                  ))}
-                </div>
+                <CaptureThumbnails
+                  group={group}
+                  image={image}
+                  stripRef={thumbnails}
+                  urlOf={(member) => urls.url(captureSha256(member))}
+                  onPick={(member) => (member.skinKey ? open(group, member) : captures.select(group.key, member.id))}
+                />
               )}
               <CaptureDetails group={group} image={image} url={url} />
             </>

@@ -19,7 +19,7 @@ import {
 } from "@/lib/api/publishing-api"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { captureGroupKeys } from "../../model/captures/patch-capture-model"
-import { PatchCaptureLink } from "../captures/patch-capture-panel"
+import { PatchCaptureLink } from "../captures/patch-capture-buttons"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
 import { NativeSelect } from "@/components/native-select"
 
