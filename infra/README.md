@@ -135,7 +135,9 @@ Mọi giá trị nằm trong `.env`; Git chỉ theo dõi `.env.example`. Secret 
 | `ADMIN_AUTH_CLIENT_SECRET`, `WIKI_IMPORTER_CLIENT_SECRET` | Secret của client `admin-aov-backend`, `wiki-importer`; chỉ đọc khi import realm |
 | `GOOGLE_LOGIN_ENABLED` | Bật nút đăng nhập Google ở Admin; cần provider `google` trong Keycloak, có sẵn sau khi [chuyển dữ liệu dev lên](#chuyển-dữ-liệu-dev-lên) |
 | `WIKI_SERVICE_CLIENT_SECRET` | Secret client `wiki-service` cho trang Cài đặt tài khoản (ADR-028); chỉ đọc khi import realm. Sau lần import đầu (hoặc với realm đã có) chạy `backend/wiki-service/scripts/sync-account-security.ps1 -ServerUrl http://localhost:18081/idp` để bật form mã khôi phục, flow hỏi mã sau Google và áp secret |
-| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH`, `MAIL_STARTTLS`, `MAIL_FROM` | SMTP gửi mã xác nhận đổi mật khẩu; để trống `MAIL_HOST` thì trang Cài đặt không cho đổi mật khẩu |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH`, `MAIL_STARTTLS`, `MAIL_FROM` | SMTP dùng chung: mã xác nhận đổi mật khẩu, link quên mật khẩu của Keycloak và cảnh báo của máy chủ (xem [Cảnh báo qua email](#cảnh-báo-qua-email)); để trống `MAIL_HOST` thì không gửi gì và trang Cài đặt không cho đổi mật khẩu |
+| `ALERT_EMAIL` | Nơi nhận cảnh báo của máy chủ |
+| `OFFSITE_BUCKET`, `OFFSITE_ACCESS_KEY`, `OFFSITE_SECRET_KEY` | Bucket R2 riêng và token chỉ dùng cho nó, nơi chép bản dump mỗi đêm (xem [Bản sao ngoài máy](#bản-sao-ngoài-máy)); để trống thì dump chỉ nằm trên máy này |
 | `STORAGE_ENDPOINT` | Endpoint S3 của R2, `https://<account-id>.r2.cloudflarestorage.com` |
 | `STORAGE_PUBLIC_ENDPOINT` | Địa chỉ ghi vào URL ký sẵn; để trống là dùng `STORAGE_ENDPOINT`, đúng với R2 |
 | `STORAGE_REGION`, `STORAGE_PATH_STYLE` | `auto` và `true` với R2 |
@@ -184,7 +186,42 @@ Lệnh sau chép R2 về `backups/media/<tên bucket>/`: `imports/` của bucket
 Trên máy chủ, `aov-backup.timer` chạy cả hai mỗi đêm, database trước để mọi object mà bản dump tham chiếu đều có trong bản
 chép ngay sau đó (xem [Việc chạy theo lịch](#việc-chạy-theo-lịch)).
 
-Bản chép này nằm cùng máy với stack: nó giữ được dữ liệu khi mất object trên R2, không giữ được khi mất máy.
+Bản chép R2 nằm cùng máy với stack: nó giữ được dữ liệu khi mất object trên R2, không giữ được khi mất máy.
+
+### Bản sao ngoài máy
+
+Mỗi đêm, ngay sau khi dump, `db-offsite` chép các thư mục trong `backups/db/` lên một bucket R2 riêng (ADR-021, bổ sung
+19/11/2026 về cảnh báo và backup ngoài máy). Thư mục đã có trên bucket được bỏ qua; script không bao giờ xóa gì trên đó. Bản
+đang ghi (`.partial`) và bản chuyển dữ liệu dev (`dev-*`) không được chép. Ảnh và tệp nguồn vốn nằm trên R2 nên không chép thêm.
+
+Chuẩn bị một lần trên Cloudflare (R2 → Overview):
+
+1. **Create bucket**, ví dụ `aov-backup-private`. Không gắn tên miền, không bật `r2.dev`.
+2. Trong bucket đó, Settings → **Object lifecycle rules** → thêm quy tắc xóa object sau 60 ngày. Mỗi bản dump khoảng 30 MB,
+   nên 60 ngày nằm trong 10 GB miễn phí. Muốn VPS không xóa được bản gần đây, thêm **Bucket lock rule** (ví dụ 30 ngày).
+3. R2 → **Manage API tokens** → Create API token: quyền **Object Read & Write**, chỉ áp cho bucket vừa tạo.
+4. Trên VPS, thêm vào `infra/.env` (chế độ 600):
+
+   ```text
+   OFFSITE_BUCKET=aov-backup-private
+   OFFSITE_ACCESS_KEY=<Access Key ID của token>
+   OFFSITE_SECRET_KEY=<Secret Access Key của token>
+   ```
+
+5. Chép thử ngay, không cần chờ tới đêm:
+
+   ```bash
+   docker compose run --rm db-offsite
+   ```
+
+`.env` không lên bucket. Hãy giữ một bản `.env` ở chỗ khác, ví dụ trong trình quản lý mật khẩu: khôi phục trên máy mới cần đúng
+các secret đó.
+
+Lấy một bản dump về máy mới, rồi khôi phục như ở mục dưới:
+
+```bash
+docker compose run --rm -v ./backups/db:/restore --entrypoint rclone db-offsite copy offsite:aov-backup-private/db/<thư mục> /restore/<thư mục>
+```
 
 ## Khôi phục
 
@@ -311,15 +348,17 @@ journalctl -u aov-deploy.service -n 100
 
 ## Việc chạy theo lịch
 
-Hai timer systemd nữa chạy `scripts/scheduled.sh` giữa các lần cập nhật (ADR-021, bổ sung 19/11/2026):
+Ba timer systemd nữa chạy `scripts/scheduled.sh` giữa các lần cập nhật (ADR-021, hai bổ sung 19/11/2026):
 
 | Timer | Khi nào | Làm gì |
 |---|---|---|
 | `aov-wiki-pages.timer` | 15 phút một lần | `scheduled.sh pages`: chạy lại `wiki-prerender` trên bản đang chạy, để nội dung vừa xuất bản có trang riêng và có trong `sitemap.xml`. Lỗi thì site giữ trang cũ |
-| `aov-backup.timer` | 03:00 giờ Việt Nam mỗi ngày | `scheduled.sh backup`: `db-backup` với nhãn `daily`, rồi `media-backup` |
+| `aov-backup.timer` | 03:00 giờ Việt Nam mỗi ngày | `scheduled.sh backup`: `db-backup` với nhãn `daily`, `db-offsite` (khi có `OFFSITE_BUCKET`), rồi `media-backup` |
+| `aov-watch.timer` | 5 phút một lần | `scheduled.sh watch`: kiểm tra sức khỏe, gửi email khi có vấn đề và khi hết (xem [Cảnh báo qua email](#cảnh-báo-qua-email)) |
 
-- Cả hai dùng chung khóa với `deploy.sh`, nên không chạy giữa một lần cập nhật. `pages` gặp lần cập nhật thì bỏ lượt, vì lần cập
-  nhật tự prerender; `backup` chờ tối đa một giờ, và nhả khóa trước khi chép R2.
+- Cả ba dùng chung khóa với `deploy.sh`, nên không chạy giữa một lần cập nhật. `pages` và `watch` gặp khóa thì bỏ lượt (lần cập
+  nhật tự prerender và tự gọi thử các địa chỉ công khai); `backup` chờ tối đa một giờ, và nhả khóa trước khi chép.
+- `db-offsite` lỗi thì `media-backup` vẫn chạy, rồi lần chạy báo lỗi.
 - `pages` chỉ chạy khi checkout nằm đúng ở commit trong `infra/.deploy/deployed`. Một lần cập nhật dừng giữa chừng làm nó báo lỗi
   mỗi 15 phút cho tới khi một lần cập nhật thành công.
 - Bản `daily` giữ `BACKUP_KEEP` bản mới nhất, riêng với bản `auto` của các lần cập nhật. Lần `media-backup` đầu tiên tải toàn bộ
@@ -329,24 +368,70 @@ Hai timer systemd nữa chạy `scripts/scheduled.sh` giữa các lần cập nh
 Cài một lần, sau khi checkout nằm ở `/opt/aov-project`; đổi file unit trong repo thì chép lại:
 
 ```bash
-sudo cp /opt/aov-project/infra/systemd/aov-wiki-pages.* /opt/aov-project/infra/systemd/aov-backup.* /etc/systemd/system/
+sudo cp /opt/aov-project/infra/systemd/aov-* /etc/systemd/system/
 ```
 
 ```bash
-sudo systemctl daemon-reload && sudo systemctl enable --now aov-wiki-pages.timer aov-backup.timer
+sudo systemctl daemon-reload && sudo systemctl enable --now aov-wiki-pages.timer aov-backup.timer aov-watch.timer
 ```
 
 Xem các lần chạy và lần chạy kế tiếp:
 
 ```bash
-journalctl -u aov-wiki-pages.service -u aov-backup.service -n 100
+journalctl -u aov-wiki-pages.service -u aov-backup.service -u aov-watch.service -n 100
 ```
 
 ```bash
 systemctl list-timers 'aov-*'
 ```
 
-Chưa có cảnh báo gửi đi đâu: một lần chạy lỗi chỉ hiện trong journal và trong `systemctl --failed`.
+## Cảnh báo qua email
+
+Máy chủ gửi email tới `ALERT_EMAIL` qua SMTP của `MAIL_*` (ADR-021, bổ sung 19/11/2026 về cảnh báo và backup ngoài máy):
+
+- **Một lần chạy lỗi** của `aov-deploy`, `aov-wiki-pages` hay `aov-backup`: `OnFailure=` gọi `aov-alert@.service`, gửi log của
+  đúng lần chạy đó. Cùng một lỗi lặp lại (cùng dòng log cuối) chỉ gửi một lần mỗi sáu giờ; lỗi khác gửi ngay.
+- **Kiểm tra sức khỏe** năm phút một lần (`aov-watch.timer`): các địa chỉ công khai trả lời qua Caddy, các service chạy và không
+  `unhealthy`, đĩa dưới 85%, bản backup `daily` mới nhất chưa quá 26 giờ. Lỗi được thử lại sau 30 giây rồi mới gửi; danh sách
+  đổi thì gửi ngay, giữ nguyên thì sáu giờ một lần, hết lỗi thì có một email báo đã ổn.
+- Kiểm tra chạy trên chính VPS: máy tắt hẳn hay mất mạng thì không có email nào.
+- Chưa đặt `MAIL_HOST`, `MAIL_PASSWORD` hoặc `ALERT_EMAIL` thì không gửi gì; nội dung chỉ vào journal.
+
+DigitalOcean chặn cổng 25, 465 và 587 đi ra từ droplet, nên Gmail không dùng được. Cách đang dùng là Resend qua cổng 2587:
+
+1. Tạo tài khoản ở resend.com, vào **Domains** → **Add Domain** → `athahub.com`.
+2. Thêm các bản ghi DNS Resend đưa ra (DKIM, SPF cho `send.athahub.com`) trong Cloudflare → DNS của `athahub.com`, để
+   **DNS only**. Chờ Resend báo **Verified**.
+3. **API Keys** → Create API Key, quyền **Sending access**, chỉ cho `athahub.com`.
+4. Trên VPS, trong `infra/.env`:
+
+   ```text
+   MAIL_HOST=smtp.resend.com
+   MAIL_PORT=2587
+   MAIL_USERNAME=resend
+   MAIL_PASSWORD=<API key>
+   MAIL_FROM=AOV <no-reply@athahub.com>
+   ALERT_EMAIL=<email nhận cảnh báo>
+   ```
+
+5. Cho wiki-service đọc giá trị mới, đặt SMTP cho Keycloak (bật "Quên mật khẩu"), rồi gửi thử một email:
+
+   ```bash
+   bash scripts/deploy.sh --refresh
+   ```
+
+   ```bash
+   docker compose run --rm keycloak-mail
+   ```
+
+   ```bash
+   echo "Thử gửi từ máy chủ." | bash scripts/alert.sh send "test"
+   ```
+
+`keycloak-mail` phải chạy lại mỗi khi đổi `MAIL_*`, vì Keycloak chỉ đọc file realm lần đầu tạo realm. Nó không bật "Xác minh
+email": bật lên sẽ buộc mọi tài khoản đang có phải xác minh ở lần đăng nhập kế.
+
+Cài unit cùng các timer ở [Việc chạy theo lịch](#việc-chạy-theo-lịch); `aov-alert@.service` không cần `enable`.
 
 ## Chuyển dữ liệu dev lên
 
@@ -447,15 +532,17 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
   với origin loopback, chưa chạy trên VPS và chưa chạy với PowerShell 7 trên Ubuntu.
 - **Sau ngày ra mắt**: máy dev không ghi vào ba bucket thật nữa. Thu hồi token R2 của máy dev hoặc đổi nó sang chỉ đọc; khi cần
   dev tiếp thì tạo bộ bucket dev nhỏ, gần như trống, với token và địa chỉ ảnh riêng.
-- **Sao lưu ra ngoài máy**: backup chạy mỗi đêm (`aov-backup.timer`) nhưng nằm cùng máy. Cần một chỗ lưu riêng.
-- **Email của Keycloak**: chưa có SMTP nên quên mật khẩu và xác minh email chưa hoạt động. Đăng ký mở sẵn như realm local
-  (`registrationAllowed`), cần quyết định có giữ không.
+- **Sao lưu ra ngoài máy**: mã đã có ([Bản sao ngoài máy](#bản-sao-ngoài-máy)); còn phải tạo bucket, quy tắc vòng đời và
+  token trên Cloudflare rồi điền `OFFSITE_*`.
+- **Email**: mã đã có ([Cảnh báo qua email](#cảnh-báo-qua-email)); còn phải tạo tài khoản Resend, xác minh tên miền và điền
+  `MAIL_*`, `ALERT_EMAIL`. "Xác minh email" vẫn tắt. Đăng ký mở sẵn như realm local (`registrationAllowed`), cần quyết định có
+  giữ không.
 - **Đăng nhập Google**: provider `google` đi theo khi chuyển dữ liệu dev lên; đặt `GOOGLE_LOGIN_ENABLED=true`. Chưa đăng nhập
   thử qua Google trên origin thật.
 - **Tài khoản thật**: tạo biên tập viên và gán vai trò trong console; bật MFA nếu cần.
 - **CDN hoặc load balancer**: nếu đặt trước Caddy phải khai báo `trusted_proxies`, nếu không giới hạn tần suất theo IP sẽ sai.
-- **Theo dõi**: chưa có giám sát uptime, cảnh báo đầy đĩa hay gom log; log JSON hiện chỉ xoay vòng trong Docker. Lần cập nhật,
-  prerender hay backup bị lỗi chỉ hiện trong journal của máy chủ.
+- **Theo dõi**: kiểm tra sức khỏe chạy trên chính VPS. Khi mở cổng 443 cho mọi người, thêm một dịch vụ theo dõi bên ngoài để biết
+  cả khi máy tắt hẳn. Chưa gom log; log JSON chỉ xoay vòng trong Docker.
 - **Tính năng chỉ có ở Vite dev**: JSON storage của Admin cần dev server, nên bản build trả 404 cho nó.
 - **Content-Security-Policy** chưa đặt, nên hiện không có gì chặn R2. Khi bật phải liệt kê nguồn thật: ít nhất `img-src` có
   tên miền ảnh và endpoint R2 (ảnh đối chứng qua URL ký sẵn), `connect-src` có endpoint R2 (upload, manifest tệp nguồn), cùng

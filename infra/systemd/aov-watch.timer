@@ -1,0 +1,11 @@
+# Every five minutes. A run that is still busy is not started twice.
+[Unit]
+Description=Check the AOV stack every five minutes
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=5min
+RandomizedDelaySec=30s
+
+[Install]
+WantedBy=timers.target
