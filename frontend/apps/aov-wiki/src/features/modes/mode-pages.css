@@ -269,7 +269,7 @@ a.wiki-mode-card:hover {
   position: absolute;
   inset: 0 0 auto;
   height: 56%;
-  background: linear-gradient(rgb(8 12 22 / 55%), transparent);
+  background: linear-gradient(rgb(12 14 18 / 55%), transparent);
   pointer-events: none;
 }
 .wiki-mode-badges {
@@ -287,7 +287,7 @@ a.wiki-mode-card:hover {
   max-width: 100%;
   padding: 3px 9px;
   border-radius: var(--aov-radius-pill);
-  background: rgb(8 12 22 / 88%);
+  background: rgb(12 14 18 / 88%);
   font-weight: 600;
   white-space: normal;
 }

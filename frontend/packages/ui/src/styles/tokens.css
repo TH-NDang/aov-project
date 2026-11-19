@@ -41,19 +41,22 @@
   --aov-brand-stream-accent: #aebbe3;
   --aov-brand-stream-wordmark: #b6bfdf;
 
-  /* AOV Wiki: a deep ink-blue page like the game's lobby, cards one step lighter, marks in a rich gold. Fixed, not themed. */
-  --aov-wiki-night: #0d1322;
-  --aov-wiki-bar: #080c16;
-  --aov-wiki-panel: #1d2840;
-  --aov-wiki-panel-high: #26344f;
-  --aov-wiki-panel-deep: #161f33;
-  --aov-wiki-line: #26324b;
-  --aov-wiki-line-strong: #3b4b6b;
-  --aov-wiki-gold: #f2c26a;
-  --aov-wiki-gold-bright: #ffdf9e;
-  --aov-wiki-text: #f5f0e6;
-  --aov-wiki-text-soft: #c8d0de;
-  --aov-wiki-text-muted: #8f9cb5;
+  /*
+   * AOV Wiki, "soft night": a near-neutral graphite page with no blue cast, cards one step lighter, marks in a muted
+   * champagne gold, so the artwork carries the colour and long reading stays easy on the eyes. Fixed, not themed.
+   */
+  --aov-wiki-night: #121419;
+  --aov-wiki-bar: #0c0e12;
+  --aov-wiki-panel: #20242d;
+  --aov-wiki-panel-high: #2a2f3a;
+  --aov-wiki-panel-deep: #191c23;
+  --aov-wiki-line: #262b35;
+  --aov-wiki-line-strong: #363d4a;
+  --aov-wiki-gold: #d8bc84;
+  --aov-wiki-gold-bright: #ecd6a8;
+  --aov-wiki-text: #ececea;
+  --aov-wiki-text-soft: #c4c8cf;
+  --aov-wiki-text-muted: #8c929d;
   --aov-wiki-success: #52e0a0;
   --aov-wiki-danger: #ff7d7d;
   --aov-wiki-warning: #ffc75e;

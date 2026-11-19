@@ -22,8 +22,8 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
   nên giữ tông riêng. Màu mạnh trên trang chỉ đến từ ảnh và icon của game.
 - Wiki và Stream mỗi app có bộ màu riêng trong `tokens.css`: `--aov-wiki-*` và `--aov-stream-*` (màu logo cú). `wiki.css`
   và `stream.css` gán bộ màu này vào các token chung, nên các thành phần dùng chung tự theo. Admin giữ bảng màu gốc.
-- Bộ màu Wiki "Đêm hoàng kim": nền trang xanh mực đậm như sảnh trong game, thẻ sáng hơn nền một bậc, dấu nhấn vàng đậm,
-  luôn tối. `wiki.css` gán: nền trang `--aov-bg`, thẻ `--aov-surface`, rê chuột và điều khiển `--aov-raised`, ô chìm
+- Bộ màu Wiki "Đêm dịu": nền than chì gần như trung tính (không ánh xanh), thẻ sáng hơn nền một bậc, dấu nhấn vàng
+  champagne dịu, luôn tối; màu mạnh để dành cho ảnh tướng và icon. `wiki.css` gán: nền trang `--aov-bg`, thẻ `--aov-surface`, rê chuột và điều khiển `--aov-raised`, ô chìm
   `--aov-sunken`, đường kẻ `--aov-line` và `--aov-line-strong`, chữ `--aov-text`, `--aov-text-soft`, `--aov-muted`, nhấn
   `--aov-accent` và `--aov-accent-strong`. Bảng nổi (popover, menu, sheet, drawer) lấy `--aov-raised` làm nền, nên mục
   được đánh dấu bên trong lên thêm một bậc (`--aov-wiki-panel-high`).
