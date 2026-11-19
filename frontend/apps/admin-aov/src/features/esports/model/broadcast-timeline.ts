@@ -61,6 +61,21 @@ const SHORTEST_SPAN = 60
 export const clampSpan = (duration: number, span: number) =>
   Math.min(duration, Math.max(Math.min(SHORTEST_SPAN, duration), span))
 
+/**
+ * Video seconds the track labels: a round step that leaves about 85 pixels per label, and the last second of the
+ * video, which replaces a step label too close before it.
+ */
+export function timelineTicks(duration: number, width: number) {
+  const wanted = duration / Math.max(2, Math.floor(width / 85))
+  const step = [30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400].find((value) => value >= wanted) ?? 28800
+  const ticks = Array.from({ length: Math.floor(duration / step) + 1 }, (_, index) => index * step)
+  if (ticks.at(-1) !== duration) {
+    if (ticks.length > 1 && duration - ticks[ticks.length - 1] < step * 0.5) ticks.pop()
+    ticks.push(duration)
+  }
+  return ticks
+}
+
 export function spanLabel(span: number, duration: number) {
   if (span >= duration) return "Cả video"
   if (span < 3600) return `${Math.max(1, Math.round(span / 60))} phút`
@@ -81,6 +96,23 @@ export type RetimeTarget =
   | { kind: "gameStart"; gameId: string }
   | { kind: "mark"; gameId: string; side: Side; part: MarkPart; at: number }
 
+/** The video seconds a marker may be dropped between. */
+export type RetimeRange = { min: number; max: number }
+
+/** One key per marker of the track, so the marker being dragged or just dropped is found again among the others. */
+export const markerKey = (target: RetimeTarget) =>
+  target.kind === "event"
+    ? `event:${target.gameId}|${target.id}`
+    : target.kind === "turn"
+      ? `turn:${target.gameId}|${target.order}`
+      : target.kind === "mark"
+        ? `mark:${target.gameId}|${target.side}|${target.part}|${target.at}`
+        : `${target.kind}:${target.gameId}`
+
+/** A dragged position as a whole second inside the range its marker may be dropped in. */
+export const withinRange = (second: number, range: RetimeRange) =>
+  Math.min(range.max, Math.max(range.min, Math.round(second)))
+
 /** Where the games around a chapter sit, so a dragged edge never enters another game. */
 export type Neighbours = { previousEnd?: number | null; nextFrom?: number | null }
 
@@ -95,7 +127,7 @@ export function retimeRange(
   target: RetimeTarget,
   axisEnd: number,
   neighbours: Neighbours = {},
-): { min: number; max: number } | null {
+): RetimeRange | null {
   const range = (min: number, max: number) => (max >= min ? { min, max } : null)
   if (target.kind === "event") {
     const event = chapter.events.find((candidate) => candidate.id === target.id)
