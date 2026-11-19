@@ -5,9 +5,12 @@ import type { GameContent, Participant } from "@aov/community-contracts"
 import {
   clampSpan,
   defaultSpan,
+  markerKey,
   retimeRange,
   spanLabel,
   timelineSpans,
+  timelineTicks,
+  withinRange,
   type RetimeTarget,
 } from "../src/features/esports/model/broadcast-timeline"
 import type { GameView } from "../src/features/esports/model/game-view"
@@ -421,4 +424,36 @@ test("the track zooms around the pointer with Ctrl + wheel and with a two-finger
     assert.equal(clampSpan(30, 5), 30, "a video shorter than a minute is its own shortest span")
     assert.equal(clampSpan(7200, 99999), 7200)
   })
+})
+
+test("every marker of the track has a key of its own, and a dragged one lands on a whole second of its range", () => {
+  const targets: RetimeTarget[] = [
+    { kind: "event", gameId: "g1", id: "k1" },
+    { kind: "turn", gameId: "g1", order: 1 },
+    { kind: "draftStart", gameId: "g1" },
+    { kind: "draftLock", gameId: "g1" },
+    { kind: "gameStart", gameId: "g1" },
+    { kind: "mark", gameId: "g1", side: "BLUE", part: "spell", at: 42 },
+    { kind: "mark", gameId: "g1", side: "BLUE", part: "arcana", at: 42 },
+    { kind: "gameStart", gameId: "g2" },
+  ]
+  assert.equal(new Set(targets.map(markerKey)).size, targets.length)
+  assert.equal(markerKey({ kind: "turn", gameId: "g1", order: 1 }), markerKey(targets[1]!), "a key names its marker")
+
+  const range = { min: 100, max: 200 }
+  assert.equal(withinRange(150.4, range), 150)
+  assert.equal(withinRange(40, range), 100)
+  assert.equal(withinRange(980, range), 200)
+})
+
+test("the track labels a round second about every 85 pixels and always the last second of the video", () => {
+  assert.deepEqual(timelineTicks(900, 800), [0, 120, 240, 360, 480, 600, 720, 840, 900])
+  assert.deepEqual(
+    timelineTicks(1000, 800),
+    [0, 120, 240, 360, 480, 600, 720, 840, 1000],
+    "the end replaces a label less than half a step before it",
+  )
+  assert.deepEqual(timelineTicks(310, 85), [0, 310], "a narrow track still shows the start and the end")
+  assert.deepEqual(timelineTicks(20144, 800).at(-1), 20144)
+  assert.ok(timelineTicks(20144, 800).length <= 10)
 })
