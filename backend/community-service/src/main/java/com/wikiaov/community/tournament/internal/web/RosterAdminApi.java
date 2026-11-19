@@ -6,7 +6,7 @@ import com.wikiaov.community.tournament.internal.application.TournamentViews.Cre
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Update;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterMembership;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,9 +1,9 @@
 package com.wikiaov.community.tournament.internal.directory.application;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.CareerStatus;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Lane;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.CompetitionType;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;
 import java.math.BigDecimal;

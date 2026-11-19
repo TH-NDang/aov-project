@@ -4,11 +4,9 @@ import { GamePage } from "./features/tournaments/game-page"
 import { CommunityHome } from "./features/community/pages/community-home"
 import { CommunityExplore } from "./features/community/pages/community-explore"
 import { CommunityProfilePage } from "./features/community/pages/community-profile"
-import {
-  CommunityAccount,
-  CommunityPageManager,
-  CommunityInvitation,
-} from "./features/community/pages/community-account"
+import { CommunityAccount } from "./features/community/pages/community-account-page"
+import { CommunityPageManager } from "./features/community/pages/community-manage-page"
+import { CommunityInvitation } from "./features/community/pages/community-invitation-page"
 import { CommunityLoginCallback } from "./components/community-session"
 import "./features/community/components/community.css"
 import { PublicCompetitionPage } from "./features/tournaments/competition-page"

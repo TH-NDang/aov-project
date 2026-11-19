@@ -5,7 +5,8 @@ import { Button } from "@aov/ui/components/button"
 import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
 import { EquipmentEditor } from "@/features/tournaments/components/equipment-editor"
-import { LoadoutEditor, type ObservedAtControl } from "./loadout-editor"
+import { LoadoutEditor } from "./loadout-editor"
+import type { ObservedAtControl } from "./loadout-section"
 import { HeroIcon, LaneIcon, TimeTag, VIDEO_MARK } from "../components/primitives"
 import {
   canFillFromRoster,

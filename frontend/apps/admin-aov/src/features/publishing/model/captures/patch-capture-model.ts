@@ -279,6 +279,8 @@ export interface CaptureZoom {
 
 export const captureFit: CaptureZoom = { scale: 1, x: 0, y: 0 }
 export const CAPTURE_MAX_SCALE = 8
+/** One step of the zoom buttons, keys and wheel. */
+export const CAPTURE_ZOOM_STEP = 1.25
 
 /** Keeps the scaled image covering the frame, so panning can never reveal empty space or lose the picture. */
 export function clampCaptureZoom(zoom: CaptureZoom, width: number, height: number): CaptureZoom {

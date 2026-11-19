@@ -10,7 +10,7 @@ import { SkillSourceBadges, SkillSourceDetails } from "../import/hero-source-det
 import { ImageCreditSummary } from "../assets/image-credit-summary"
 import type { Skill } from "@/lib/hero-types"
 import { HeroTranslationNotice } from "../workspace/hero-translation-notice"
-import { PatchCaptureLink } from "../captures/patch-capture-panel"
+import { PatchCaptureLink } from "../captures/patch-capture-buttons"
 import { captureGroupKeys } from "../../model/captures/patch-capture-model"
 import { translatedText, sectionTextFields, type TranslationTarget } from "../../model/hero-translation-model"
 import { SkillVideosSection } from "../../../videos/skill-videos-section"

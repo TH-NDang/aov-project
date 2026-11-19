@@ -12,7 +12,7 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p lint/tsconfig.json",
     "lint": "node --experimental-strip-types lint/source-rules.ts && eslint src",
-    "test": "node --experimental-strip-types --test \"tests/*.test.mjs\"",
+    "test": "tsx --import ./tests/fixtures/css-loader.mjs --test \"tests/*.test.mjs\" \"tests/*.test.tsx\"",
     "test:auth": "node --experimental-strip-types --test tests/public-auth.test.mjs tests/public-auth-restore.test.mjs",
     "test:time-zone": "node --experimental-strip-types --test tests/time-zone.test.mjs tests/date-format.test.mjs",
     "test:currency": "node --experimental-strip-types --test tests/currency.test.mjs",
@@ -41,6 +41,8 @@
     "@aov/typescript-config": "workspace:*",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.0"
+    "jsdom": "^30.1.2",
+    "tailwindcss": "^4.1.0",
+    "tsx": "^4.23.15"
   }
 }

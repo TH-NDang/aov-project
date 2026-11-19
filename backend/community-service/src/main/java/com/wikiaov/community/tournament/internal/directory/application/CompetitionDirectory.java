@@ -21,11 +21,11 @@ import com.wikiaov.community.tournament.internal.directory.persistence.Directory
 import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryListings.RankedRow;
 import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryListings.TeamRow;
 import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.CareerStatus;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterStatus;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.CareerStatus;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Lane;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Player;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterStatus;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;

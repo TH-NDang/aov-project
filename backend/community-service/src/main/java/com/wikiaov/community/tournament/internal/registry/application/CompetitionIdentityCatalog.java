@@ -2,8 +2,8 @@ package com.wikiaov.community.tournament.internal.registry.application;
 
 import com.wikiaov.community.tournament.CompetitionIdentities;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Player;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Team;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
