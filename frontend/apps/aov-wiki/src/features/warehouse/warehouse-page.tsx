@@ -1,3 +1,4 @@
+import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
 import { PublishedWarehouseView } from "./warehouse-view"
@@ -5,7 +6,7 @@ import { CatalogHeading } from "../../layout/catalog-heading"
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { warehouseCatalogQuery, warehouseGroupsQuery } from "./warehouse-api"
+import { warehouseCatalogQuery, warehouseGroupsQuery } from "../../lib/warehouse-api"
 import { WarehouseCatalog } from "./warehouse-catalogs"
 import { WarehouseControls } from "./warehouse-controls"
 import { WarehouseDetail } from "./warehouse-detail"
@@ -18,9 +19,9 @@ import {
   warehouseKind,
   type PublishedWarehouseRecord,
   type WarehouseEntry,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 import "./warehouse-page.css"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText, wikiText } from "../../context/wiki-context"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { notFoundMeta, warehouseEntryMeta } from "../../lib/seo/page-meta"
@@ -28,20 +29,22 @@ import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
 import { WarehouseTabs } from "./warehouse-tabs"
 
+/** The catalog until it loads; one array, so the lists made from it are not worked out again on every render. */
+const NO_ENTRIES: PublishedWarehouseRecord[] = []
 /** The entry of the catalog that is open, in whichever catalog is on screen. */
 const OPEN_ENTRY =
   ':is(.shop-item-select, .wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-pressed="true"]'
 
 export default function WarehousePage() {
   const scope = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const text = useWikiText()
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const wide = usePageLayout() === "wide"
   const { tab, entryCode } = useParams()
   const kind = warehouseKind(tab ?? null)
   const changes = usePublishedChanges(warehouseChangeDomain[kind])
-  const sectionName = scope.t(kind)
+  const sectionName = wikiText(scope.locale, ...SECTION_NAMES[kind])
   const search = params.get("q") ?? ""
   const group = params.get("group") ?? ""
   const selectedId = entryCode ?? null
@@ -51,7 +54,7 @@ export default function WarehousePage() {
   const held = useRef<{ element: HTMLElement; top: number } | null>(null)
   const catalog = useQuery(warehouseCatalogQuery(kind, scope))
   const metadata = useQuery(warehouseGroupsQuery(kind, scope.locale))
-  const entries = catalog.data ?? []
+  const entries = catalog.data ?? NO_ENTRIES
   const groups = metadata.data ?? []
   const filtered = useMemo(
     () => entries.filter((entry) => matchesWarehouseSearch(entry, search, scope.locale)),
@@ -64,7 +67,7 @@ export default function WarehousePage() {
   // Rich text and patch notes link entries by id, but the page for sharing and indexing is the one named by code.
   useEffect(() => {
     if (selectedCode && selectedId !== selectedCode)
-      navigate({ pathname: warehousePath(kind, selectedCode), search: window.location.search }, { replace: true })
+      void navigate({ pathname: warehousePath(kind, selectedCode), search: window.location.search }, { replace: true })
   }, [kind, navigate, selectedCode, selectedId])
 
   usePageHead(
@@ -138,7 +141,7 @@ export default function WarehousePage() {
       const home = onBoard ? board : (entry.content.categoryCode ?? positions[0]?.categoryCode)
       if (home) next.set("group", home)
     }
-    navigate(
+    void navigate(
       { pathname: warehousePath(kind, entry.code), search: `?${next}` },
       // Going from one entry to the next should not fill the back button; opening the sheet still can be undone by it.
       { replace: wide || !!selectedId },
@@ -153,7 +156,7 @@ export default function WarehousePage() {
     // An item opened from a link chose the board; the board stays on it once the item closes.
     const next = new URLSearchParams(params)
     if (kind === "items" && itemView.layout === "shop" && itemView.category) next.set("group", itemView.category)
-    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
+    void navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
   }
 
   function setSearch(value: string) {
@@ -175,7 +178,7 @@ export default function WarehousePage() {
       if (value) next.set(key, value)
       else next.delete(key)
     }
-    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
+    void navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
   }
 
   const changed = filtered.filter((entry) => changes.subjects.has(entry.id))
@@ -221,7 +224,7 @@ export default function WarehousePage() {
           <div className="wiki-warehouse-notice" role="status">
             {text("Chưa tải được bộ lọc nhóm.", "Group filters could not be loaded.")}
             <button type="button" onClick={() => void metadata.refetch()}>
-              {scope.t("retry")}
+              {wikiText(scope.locale, "Thử lại", "Retry")}
             </button>
           </div>
         )}
@@ -232,7 +235,7 @@ export default function WarehousePage() {
               "Showing cached data while the connection is unavailable.",
             )}
             <button type="button" onClick={() => void catalog.refetch()}>
-              {scope.t("retry")}
+              {wikiText(scope.locale, "Thử lại", "Retry")}
             </button>
           </div>
         )}
@@ -242,15 +245,15 @@ export default function WarehousePage() {
             {catalog.isPending ? (
               <WarehouseSkeleton kind={kind} layout={itemView.preferred} />
             ) : catalog.isError && !catalog.data ? (
-              <div className="wiki-warehouse-empty" role="status">
+              <div className="wiki-warehouse-empty wiki-mascot-state" role="status">
                 <h2>{text("Chưa tải được dữ liệu", "Data could not be loaded")}</h2>
                 <p>{text("Kiểm tra kết nối rồi thử lại.", "Check your connection and try again.")}</p>
                 <button type="button" onClick={() => void catalog.refetch()} disabled={catalog.isFetching}>
-                  {scope.t("retry")}
+                  {wikiText(scope.locale, "Thử lại", "Retry")}
                 </button>
               </div>
             ) : !filtered.length ? (
-              <div className="wiki-warehouse-empty" role="status">
+              <div className="wiki-warehouse-empty wiki-mascot-state" role="status">
                 <h2>
                   {search
                     ? text("Không có kết quả phù hợp", "No matching results")

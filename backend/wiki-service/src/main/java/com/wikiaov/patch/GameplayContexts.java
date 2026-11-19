@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public interface GameplayContexts {
     /**
@@ -28,6 +29,14 @@ public interface GameplayContexts {
     void requireRuleset(UUID rulesetId);
 
     PatchVariantReference variant(UUID variantId);
+
+    /**
+     * Where a variant stands in its ruleset; later patches have higher numbers and an observation without a patch is
+     * 0. The four warehouse catalogs order their revisions with it (ADR-031).
+     */
+    static long rulesetOrdinal(GameplayContexts contexts, @Nullable UUID variantId) {
+        return variantId == null ? 0 : contexts.variant(variantId).rulesetOrdinal();
+    }
 
     String patchCode(UUID variantId);
 

@@ -1,15 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
-import { characterMediaOwners, ownerMainEntry } from "../src/features/media/character-image-viewer-data"
-import type { Request } from "../src/features/publishing/publishing-api"
-import type { CharacterImageEntry, CharacterImageGroup } from "../src/features/media/character-image-api"
-import type { Preview } from "../src/features/publishing/types"
+import { characterMediaOwners, ownerMainEntry } from "../src/features/media/model/character-image-viewer-data"
+import type { Request } from "@/lib/api/publishing-api"
+import type { CharacterImageEntry, CharacterImageGroup } from "../src/features/media/api/character-image-api"
+import type { Preview } from "@/lib/hero-types"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 function viewerFixture(): Preview {
   const content = structuredClone(fixtureContent)
@@ -72,12 +72,12 @@ test("secondary media entries expose only explicit primary bindings and keep mis
 })
 
 test("one-preview media viewer preserves clicked alternatives, switches only mains, protects candidates and opens skins in place", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/media" })
+  const dom = createWindow("http://localhost/hero/media")
   let wide = true
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: wide, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   const preview = viewerFixture()
   let published = false
   let reads = 0
@@ -145,19 +145,7 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
     }
     throw new Error(`Unexpected fixture fetch: ${path}`)
   }
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle,
+  restoreGlobals = installWindow(dom.window, {
     requestAnimationFrame: (callback: () => void) => setTimeout(callback, 0),
     cancelAnimationFrame: clearTimeout,
     ResizeObserver: class {
@@ -165,18 +153,13 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
       unobserve() {}
       disconnect() {}
     },
-    BroadcastChannel: undefined,
     fetch: fetcher,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
-  const { CharacterImageDetail } = await import("../src/features/media/character-image-detail")
-  const { SkinMediaDetail } = await import("../src/features/media/skin-media-detail")
-  const { SkinBadgeLabel } = await import("../src/features/media/skin-badge-label")
+  const { CharacterImageDetail } = await import("../src/features/media/components/characters/character-image-detail")
+  const { SkinMediaDetail } = await import("../src/features/media/components/characters/skin-media-detail")
+  const { SkinBadgeLabel } = await import("../src/features/media/components/badges/skin-badge-label")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
@@ -190,13 +173,7 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
         </MemoryRouter>,
       ),
     )
-  const waitFor = async (condition: () => boolean) => {
-    for (let count = 0; count < 150 && !condition(); count++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), document.body.textContent ?? "")
-  }
+
   const click = async (element: Element | undefined | null) => {
     assert.ok(element)
     await act(async () => (element as HTMLElement).click())
@@ -340,13 +317,8 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50))
-    })
+    await flush()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

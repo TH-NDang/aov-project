@@ -2,9 +2,15 @@ package com.wikiaov.gamemode.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
 import java.text.Normalizer;
@@ -25,7 +31,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -33,7 +38,7 @@ import tools.jackson.databind.json.JsonMapper;
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class GameModeIntegrationTest {
     private static final String ADMIN = "/api/wiki/v1/admin/game-modes";
 
@@ -249,8 +254,9 @@ class GameModeIntegrationTest {
         publishedGuide();
         String like = READER + "/" + code + "/auto-chess/likes/" + LINEUP_ID;
         String reader = "busy-" + UUID.randomUUID();
-        for (int i = 0; i < 60; i++)
+        for (int i = 0; i < 60; i++) {
             mvc.perform(put(like).with(person(reader))).andExpect(status().isOk());
+        }
 
         mvc.perform(put(like).with(person(reader))).andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.code").value("GAME_MODE_RATE_LIMITED"));

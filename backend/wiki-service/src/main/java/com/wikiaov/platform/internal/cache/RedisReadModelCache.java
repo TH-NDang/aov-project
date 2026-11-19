@@ -35,8 +35,9 @@ class RedisReadModelCache implements ReadModelCache {
         this.epochs = epochs;
         this.json = json;
         this.properties = properties;
-        for (int i = 0; i < locks.length; i++)
+        for (int i = 0; i < locks.length; i++) {
             locks[i] = new Object();
+        }
         hits = metrics.counter("wiki.read.model.cache", "result", "hit");
         misses = metrics.counter("wiki.read.model.cache", "result", "miss");
         bypasses = metrics.counter("wiki.read.model.cache", "result", "bypass");
@@ -78,8 +79,9 @@ class RedisReadModelCache implements ReadModelCache {
     private <T> T lookup(String key, Class<T> type) {
         try {
             String value = redis.opsForValue().get(key);
-            if (value == null || value.getBytes(StandardCharsets.UTF_8).length > properties.maxValueBytes())
+            if (value == null || value.getBytes(StandardCharsets.UTF_8).length > properties.maxValueBytes()) {
                 return null;
+            }
             return json.readValue(value, type);
         } catch (RuntimeException error) {
             unavailable(error);
@@ -91,9 +93,10 @@ class RedisReadModelCache implements ReadModelCache {
         failures.increment();
         long now = System.nanoTime();
         long previous = retryAfter.getAndSet(now + properties.retryDelay().toNanos());
-        if (previous <= now)
+        if (previous <= now) {
             log.warn("Read-model Redis cache unavailable; using database loader ({})",
                     error.getClass().getSimpleName());
+        }
     }
 
     private String digest(String value) {

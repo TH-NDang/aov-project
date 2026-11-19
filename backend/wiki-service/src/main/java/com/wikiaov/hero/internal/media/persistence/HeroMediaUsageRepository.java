@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.media.persistence;
 
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
+import com.wikiaov.platform.RevisionState;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -13,7 +14,7 @@ public interface HeroMediaUsageRepository extends Repository<HeroRevision, UUID>
 
         UUID getRevisionId();
 
-        String getState();
+        RevisionState getState();
 
         UUID getAssetId();
 
@@ -44,50 +45,50 @@ public interface HeroMediaUsageRepository extends Repository<HeroRevision, UUID>
             select distinct r.heroId as heroId,r.id as revisionId,r.state as state,b.assetId as assetId,
                 b.mediaRole as role,true as shown
             from HeroRevision r,MediaBindingRow b
-            where b.mediaBindingRevisionId=r.mediaBindingRevisionId and r.state<>'DISCARDED'
+            where b.mediaBindingRevisionId=r.mediaBindingRevisionId and r.state<>com.wikiaov.platform.RevisionState.DISCARDED
                 and (:all=true or b.assetId=:assetId)
             union
             select distinct r.heroId as heroId,r.id as revisionId,r.state as state,s.iconAssetId as assetId,
                 concat('SKILL_ICON:',s.skillKey) as role,true as shown
             from HeroRevision r,SkillSnapshotRow s
-            where s.skillSetRevisionId=r.skillsRevisionId and s.iconAssetId is not null and r.state<>'DISCARDED'
+            where s.skillSetRevisionId=r.skillsRevisionId and s.iconAssetId is not null and r.state<>com.wikiaov.platform.RevisionState.DISCARDED
                 and (:all=true or s.iconAssetId=:assetId)
             union
             select distinct r.heroId as heroId,r.id as revisionId,r.state as state,i.assetId as assetId,
                 concat('SKILL_STATE:',i.skillKey) as role,true as shown
             from HeroRevision r,SkillStateIconRow i
-            where i.skillSetRevisionId=r.skillsRevisionId and r.state<>'DISCARDED'
+            where i.skillSetRevisionId=r.skillsRevisionId and r.state<>com.wikiaov.platform.RevisionState.DISCARDED
                 and (:all=true or i.assetId=:assetId)
             union
             select distinct r.heroId as heroId,r.id as revisionId,r.state as state,s.artAssetId as assetId,
                 concat('SKIN_ART:',s.skinKey) as role,true as shown
             from HeroRevision r,SkinSnapshotRow s
-            where s.skinSetRevisionId=r.skinsRevisionId and s.artAssetId is not null and r.state<>'DISCARDED'
+            where s.skinSetRevisionId=r.skinsRevisionId and s.artAssetId is not null and r.state<>com.wikiaov.platform.RevisionState.DISCARDED
                 and (:all=true or s.artAssetId=:assetId)
             union
             select distinct r.heroId as heroId,r.id as revisionId,r.state as state,s.headAssetId as assetId,
                 concat('SKIN_HEAD:',s.skinKey) as role,case when s.portraitAssetId is null then true else false end as shown
             from HeroRevision r,SkinSnapshotRow s
-            where s.skinSetRevisionId=r.skinsRevisionId and s.headAssetId is not null and r.state<>'DISCARDED'
+            where s.skinSetRevisionId=r.skinsRevisionId and s.headAssetId is not null and r.state<>com.wikiaov.platform.RevisionState.DISCARDED
                 and (:all=true or s.headAssetId=:assetId)
             union
             select distinct r.heroId as heroId,r.id as revisionId,r.state as state,s.portraitAssetId as assetId,
                 concat('SKIN_PORTRAIT:',s.skinKey) as role,true as shown
             from HeroRevision r,SkinSnapshotRow s
-            where s.skinSetRevisionId=r.skinsRevisionId and s.portraitAssetId is not null and r.state<>'DISCARDED'
+            where s.skinSetRevisionId=r.skinsRevisionId and s.portraitAssetId is not null and r.state<>com.wikiaov.platform.RevisionState.DISCARDED
                 and (:all=true or s.portraitAssetId=:assetId)
             union
             select distinct r.heroId as heroId,r.id as revisionId,r.state as state,b.assetId as assetId,
                 b.mediaRole as role,false as shown
             from HeroRevision r,HeroImageOption b
-            where b.mediaBindingRevisionId=r.mediaBindingRevisionId and r.state<>'DISCARDED'
+            where b.mediaBindingRevisionId=r.mediaBindingRevisionId and r.state<>com.wikiaov.platform.RevisionState.DISCARDED
                 and (:all=true or b.assetId=:assetId)
             union
             select distinct r.heroId as heroId,r.id as revisionId,r.state as state,b.assetId as assetId,
                 concat('SKIN_',case when b.mediaRole='SPLASH' then 'ART' else b.mediaRole end,':',b.skinKey) as role,
                 false as shown
             from HeroRevision r,SkinImageOption b
-            where b.skinSetRevisionId=r.skinsRevisionId and r.state<>'DISCARDED'
+            where b.skinSetRevisionId=r.skinsRevisionId and r.state<>com.wikiaov.platform.RevisionState.DISCARDED
                 and (:all=true or b.assetId=:assetId)
             """)
     List<Usage> findUsages(UUID assetId, boolean all);

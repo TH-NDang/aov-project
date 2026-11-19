@@ -1,7 +1,10 @@
 package com.wikiaov.hero.internal.gallery.persistence.entity;
 
+import com.wikiaov.hero.internal.gallery.domain.HeroGalleryKind;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -21,7 +24,8 @@ public class HeroGalleryItem {
     private UUID id;
     private UUID heroId;
     private UUID assetId;
-    private String kind;
+    @Enumerated(EnumType.STRING)
+    private HeroGalleryKind kind;
     @Column(columnDefinition = "text")
     private String caption;
     private String partKey;

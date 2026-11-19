@@ -1,71 +1,81 @@
 package com.wikiaov.hero.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.MutableClock;
-import com.wikiaov.media.*;
+import com.wikiaov.TestcontainersConfiguration;
+import com.wikiaov.hero.internal.importing.application.HeroImportJobs;
+import com.wikiaov.hero.internal.importing.infrastructure.HeroImportWorker;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.media.MediaUsageProvider;
+import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.patch.GameplayContexts;
-import java.time.*;
-import java.util.*;
-import java.util.concurrent.*;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
+import jakarta.persistence.EntityManagerFactory;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import org.hamcrest.Matchers;
+import org.hibernate.SessionFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.*;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.*;
-import org.springframework.test.web.servlet.request.*;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(DomainCoreIntegrationTest.Beans.class)
-@EnabledIf("databaseAvailable")
+@Import({TestcontainersConfiguration.class, DomainCoreIntegrationTest.Beans.class})
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@DockerBacked
 class DomainCoreIntegrationTest {
     private static final String ROOT = "/api/wiki/v1";
     private static final UUID VN = UUID.fromString("5d5dcd5e-15b9-4d43-884d-111111111111");
     private static final UUID TH = UUID.fromString("5d5dcd5e-15b9-4d43-884d-222222222222");
-    private static PostgreSQLContainer database;
-
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry props) {
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external != null) {
-            props.add("spring.datasource.url", () -> external);
-            props.add("spring.datasource.username", () -> "wiki_test");
-            props.add("spring.datasource.password", () -> "");
-        } else {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            props.add("spring.datasource.url", database::getJdbcUrl);
-            props.add("spring.datasource.username", database::getUsername);
-            props.add("spring.datasource.password", database::getPassword);
-        }
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
-    }
 
     @TestConfiguration
     static class Beans {
@@ -92,13 +102,13 @@ class DomainCoreIntegrationTest {
     @Autowired
     MutableClock clock;
     @Autowired
-    jakarta.persistence.EntityManagerFactory entityManagers;
+    EntityManagerFactory entityManagers;
     @MockitoBean
     MediaAssets media;
     @Autowired
     List<MediaUsageProvider> usageProviders;
     @Autowired
-    com.wikiaov.hero.internal.importing.application.HeroImportJobs importJobs;
+    HeroImportJobs importJobs;
     private UUID ruleset, variant, patch;
     private final Map<MediaSemanticType, UUID> assets = new EnumMap<>(MediaSemanticType.class);
 
@@ -199,7 +209,7 @@ class DomainCoreIntegrationTest {
         var draft = create();
         send(post(path(uuid(draft, "heroId"), id(draft)) + "/publish"),
                 Map.of("expectedVersion", 1), 422);
-        send(get(ROOT + "/admin/patches?size=101"), null, 422);
+        send(get(ROOT + "/admin/patches?size=101"), null, 400);
     }
 
     @Test
@@ -276,7 +286,7 @@ class DomainCoreIntegrationTest {
                 INSERT INTO hero.hero_combat_stat_value (stats_revision_id, stat_key, percent_value, unit_code)
                 VALUES (?, 'MAGIC_DEFENSE', 1, 'POINT')
                 """).param(UUID.randomUUID()).update())
-                .isInstanceOf(org.springframework.dao.DataAccessException.class);
+                .isInstanceOf(DataAccessException.class);
     }
 
     private static Map<String, Object> statBody(Number version, Map<String, Object> stat) {
@@ -318,14 +328,15 @@ class DomainCoreIntegrationTest {
 
         assertThat(jdbc.sql("SELECT summary FROM hero.hero_skill_translation ORDER BY summary NULLS LAST")
                 .query(String.class).list()).containsExactly("Lướt tới và hất tung mục tiêu.", null, null);
-        for (var malformed : List.of(" ", "Lướt tới.\nHất tung mục tiêu."))
+        for (var malformed : List.of(" ", "Lướt tới.\nHất tung mục tiêu.")) {
             assertThatThrownBy(() -> jdbc.sql("""
                     INSERT INTO hero.hero_skill_translation (skill_set_revision_id, skill_key, locale, name,
                         description, summary)
                     VALUES (?, 'skill-1', 'en-US', 'Skill', 'Description', ?)
                     """).param(UUID.randomUUID()).param(malformed).update())
-                    .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+                    .isInstanceOf(DataIntegrityViolationException.class)
                     .hasMessageContaining("hero_skill_translation_summary_check");
+        }
     }
 
     private Map<String, Object> summaryBody(Number version, String summary) {
@@ -356,12 +367,12 @@ class DomainCoreIntegrationTest {
         var refs = (Map<String, String>) draft.get("sections");
         String profile = refs.get("profile");
         var section = mvc.perform(get(ROOT + "/hero-profile-revisions/" + profile)).andExpect(status().isOk())
-                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("immutable")))
+                .andExpect(header().string("Cache-Control", Matchers.containsString("immutable")))
                 .andReturn();
         assertThatThrownBy(
                 () -> jdbc.sql("UPDATE hero.hero_profile_translation SET name='Tampered' WHERE profile_revision_id=?")
                         .param(UUID.fromString(profile)).update())
-                .isInstanceOf(org.springframework.dao.DataAccessException.class);
+                .isInstanceOf(DataAccessException.class);
         var correction = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"),
                 Map.of("rulesetId", ruleset, "sourceRevisionId", draftId, "cause", "CONTENT_CORRECTION"), 201);
         UUID c = uuid(correction, "id");
@@ -406,10 +417,11 @@ class DomainCoreIntegrationTest {
         send(post(path(hero, draftId) + "/publish"), Map.of("expectedVersion", number(draft, "version")), 200);
         UUID sticker = UUID.randomUUID(), oldIcon = UUID.randomUUID();
         for (var image : Map.of(sticker, MediaSemanticType.CHIBI_STICKER, oldIcon, MediaSemanticType.HERO_SKILL_ICON)
-                .entrySet())
+                .entrySet()) {
             when(media.find(image.getKey())).thenReturn(Optional.of(new MediaAssetReference(image.getKey(),
                     image.getValue(), MediaAssetState.ACTIVE, new MediaAssetReference.CurrentVersion(UUID.randomUUID(),
                             "image/webp", 128, 128, "/media/" + image.getKey() + "/v1.webp"))));
+        }
         String gallery = ROOT + "/admin/heroes/" + hero + "/gallery";
 
         // The published version's images come from the version itself.
@@ -627,9 +639,9 @@ class DomainCoreIntegrationTest {
         send(post(previousPath), Map.of("description", "  ", "sourceUrl", "https://example.org/old"), 422);
         send(post(previousPath), Map.of("description", "x".repeat(4001), "sourceUrl", "https://example.org/old"), 422);
         send(post(ROOT + "/admin/hero-changes/" + newerChange + "/mechanics/" + stat.get("id") + "/previous"),
-                Map.of("description", "Not a mechanic", "sourceUrl", "https://example.org/old"), 422);
+                Map.of("description", "Not a mechanic", "sourceUrl", "https://example.org/old"), 404);
         send(post(ROOT + "/admin/hero-changes/" + olderChange + "/mechanics/" + mechanic.get("id") + "/previous"),
-                Map.of("description", "Another change set", "sourceUrl", "https://example.org/old"), 422);
+                Map.of("description", "Another change set", "sourceUrl", "https://example.org/old"), 404);
         assertThat(send(post(previousPath),
                 Map.of("description", " Earlier behaviour ", "sourceUrl", "https://example.org/old?oldid=1"), 201))
                 .containsEntry("id", mechanic.get("id"));
@@ -671,8 +683,8 @@ class DomainCoreIntegrationTest {
                 .isEqualTo(0);
         assertThat(send(get(ROOT + "/admin/heroes?page=1&size=1"), null, 200).get("totalElements")).isEqualTo(2);
         send(get(ROOT + "/admin/heroes?seasonId=" + season + "&patchVariantId=" + variant), null, 422);
-        send(get(ROOT + "/admin/heroes?sort=unknown"), null, 422);
-        send(get(ROOT + "/admin/heroes?q=" + "a".repeat(101)), null, 422);
+        send(get(ROOT + "/admin/heroes?sort=unknown"), null, 400);
+        send(get(ROOT + "/admin/heroes?q=" + "a".repeat(101)), null, 400);
         send(get(ROOT + "/admin/heroes?unknown=1"), null, 400);
 
         clock.set(Instant.parse("2026-10-15T07:00:00Z"));
@@ -971,7 +983,7 @@ class DomainCoreIntegrationTest {
         var start = new CountDownLatch(1);
         try {
             List<Future<Integer>> results = new ArrayList<>();
-            for (String name : List.of("Editor A", "Editor B"))
+            for (String name : List.of("Editor A", "Editor B")) {
                 results.add(executor.submit(() -> {
                     start.await();
                     String payload = json.writeValueAsString(Map.of("expectedDraftVersion", 1, "translations",
@@ -984,6 +996,7 @@ class DomainCoreIntegrationTest {
                                     .contentType(MediaType.APPLICATION_JSON).content(payload))
                             .andReturn().getResponse().getStatus();
                 }));
+            }
             start.countDown();
             assertThat(List.of(results.get(0).get(10, TimeUnit.SECONDS), results.get(1).get(10, TimeUnit.SECONDS)))
                     .containsExactlyInAnyOrder(200, 409);
@@ -1008,11 +1021,118 @@ class DomainCoreIntegrationTest {
                 201);
         UUID profile = UUID.fromString((String) ((Map<?, ?>) other.get("sections")).get("profile"));
         assertThatThrownBy(() -> jdbc.sql("UPDATE hero.hero_revision SET profile_revision_id=? WHERE id=?")
-                .params(profile, id).update()).isInstanceOf(org.springframework.dao.DataAccessException.class);
+                .params(profile, id).update()).isInstanceOf(DataAccessException.class);
         send(post(ROOT + "/admin/heroes/" + hero + "/drafts"),
                 Map.of("rulesetId", ruleset, "sourceRevisionId", id, "cause", "CONTENT_CORRECTION"), 409);
         mvc.perform(get(ROOT + "/heroes?region=VN&region=TH")).andExpect(status().isBadRequest());
-        mvc.perform(get(ROOT + "/heroes?size=101")).andExpect(status().isUnprocessableEntity());
+        mvc.perform(get(ROOT + "/heroes?size=101")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void sectionPagesChangeHistoryPatchPagesAndRevisionReadsKeepTheirJsonShape() throws Exception {
+        var draft = create();
+        UUID hero = uuid(draft, "heroId"), original = uuid(draft, "id");
+        draft = complete(hero, original, draft);
+        String p = path(hero, original);
+        draft = send(put(p + "/skins"), Map.of("expectedDraftVersion", number(draft, "version"), "skins",
+                List.of(Map.of("skinKey", "skin-1", "displayOrder", 0, "artAssetId",
+                        assets.get(MediaSemanticType.HERO_SKIN_ART), "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Trang phục 1"))))),
+                200);
+        draft = send(put(p + "/traits"), Map.of("expectedDraftVersion", number(draft, "version"), "traits",
+                List.of(Map.of("code", "DASH", "skillKeys", List.of("skill-1"), "translations",
+                        List.of(Map.of("locale", "vi-VN", "detail", "Lướt tới"))),
+                        Map.of("code", "HARD_CC", "skillKeys", List.of(), "translations", List.of()))),
+                200);
+        send(post(p + "/publish"), Map.of("expectedVersion", number(draft, "version")), 200);
+        var sections = (Map<String, String>) draft.get("sections");
+
+        UUID patch2 = id(send(post(ROOT + "/admin/patches"), Map.of("code", "patch-test-2", "translations",
+                List.of(Map.of("locale", "vi-VN", "title", "Hai", "summary", ""))), 201));
+        UUID v2 = id(send(post(ROOT + "/admin/patches/" + patch2 + "/variants"),
+                Map.of("rulesetId", ruleset, "variantCode", "TEST", "rulesetOrdinal", 2), 201));
+        send(post(ROOT + "/admin/patch-variants/" + v2 + "/publish"), null, 204);
+        var fork = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"), Map.of("rulesetId", ruleset,
+                "sourceRevisionId", original, "cause", "GAME_PATCH", "effectiveFromPatchVariantId", v2), 201);
+        UUID forked = id(fork);
+        fork = send(put(path(hero, forked) + "/combat-stats"), Map.of("expectedDraftVersion", 1, "values",
+                List.of(Map.of("statKey", "HP", "baseValue", 3600, "unit", "POINT"))), 200);
+        send(post(path(hero, forked) + "/publish"), Map.of("expectedVersion", number(fork, "version")), 200);
+        send(post(ROOT + "/admin/patch-variants/" + v2 + "/hero-changes"), Map.of("heroId", hero,
+                "fromHeroRevisionId", original, "toHeroRevisionId", forked, "summaryTranslations",
+                List.of(Map.of("locale", "vi-VN", "summary", "Tăng máu")), "changes",
+                List.of(Map.of("type", "STAT", "statKey", "HP", "oldValue", 3500, "newValue", 3600, "unit", "POINT",
+                        "changeKind", "BUFF"),
+                        Map.of("type", "MECHANIC", "mechanicKey", "passive-shield", "description", "Khiên mới",
+                                "changeKind", "ADJUSTMENT"),
+                        Map.of("type", "OTHER", "description", "Sửa lỗi", "changeKind", "ADJUSTMENT"))),
+                201);
+        release(v2, VN, "2026-10-16T00:00:00Z", 201);
+        clock.set(Instant.parse("2026-10-16T00:00:01Z"));
+
+        assertThat(names(read(ROOT + "/hero-profile-revisions/" + sections.get("profile")))).containsExactly("id",
+                "content");
+        assertThat(names(read(ROOT + "/hero-profile-revisions/" + sections.get("profile")).path("content")))
+                .containsExactly("roles", "positions", "name", "title", "summary", "lore", "strengths",
+                        "weaknesses", "counterTips", "actualLocale", "fallbackApplied");
+        assertThat(read(ROOT + "/hero-profile-revisions/" + sections.get("profile") + "?locale=en-US")
+                .path("content").path("fallbackApplied").asBoolean()).isTrue();
+        assertThat(names(read(ROOT + "/hero-overview-rating-revisions/" + sections.get("overviewRatings"))
+                .path("content"))).containsExactly("scaleCode", "survivability", "attackDamage", "skillEffects",
+                        "difficulty", "derived");
+        assertThat(names(read(ROOT + "/hero-stats-revisions/" + sections.get("combatStats")).path("content")))
+                .containsExactly("values");
+        var skills = read(ROOT + "/hero-skills-revisions/" + sections.get("skills")).path("content");
+        assertThat(names(skills)).containsExactly("skills", "traits");
+        assertThat(names(skills.path("skills").get(0))).containsExactly("skillKey", "kind", "formKey",
+                "displayOrder", "iconAssetId", "effects", "stateIcons", "name", "description", "summary",
+                "actualLocale", "fallbackApplied");
+        assertThat(names(skills.path("traits").get(0))).containsExactly("code", "skillKeys", "detail",
+                "actualLocale", "fallbackApplied");
+        assertThat(skills.path("traits").get(1).path("actualLocale").isNull()).isTrue();
+        assertThat(names(read(ROOT + "/hero-skins-revisions/" + sections.get("skins")).path("content")
+                .path("skins").get(0))).containsExactly("skinKey", "displayOrder", "artAssetId", "rarityCode",
+                        "headAssetId", "portraitAssetId", "images", "name", "description", "acquisitionNote",
+                        "actualLocale", "fallbackApplied");
+        assertThat(names(read(ROOT + "/hero-media-binding-revisions/" + sections.get("mediaBindings"))
+                .path("content"))).containsExactly("bindings", "images");
+
+        var history = read(ROOT + "/heroes/" + hero + "/changes");
+        assertThat(names(history)).containsExactly("items", "page", "size", "totalElements");
+        var entry = history.path("items").get(0);
+        assertThat(names(entry)).containsExactly("id", "overallKind", "assessmentVersion", "heroId", "heroCode",
+                "patchVariantId", "fromHeroRevisionId", "toHeroRevisionId", "sourceKind", "sourceUrl",
+                "introducesHero", "actualLocale", "summary", "changes", "patch");
+        assertThat(entry.path("changes").valueStream().map(DomainCoreIntegrationTest::names)).containsExactly(
+                List.of("id", "changeKind", "sortOrder", "type", "statKey", "oldValue", "newValue", "unitCode"),
+                List.of("id", "changeKind", "sortOrder", "type", "mechanicKey", "description", "previous"),
+                List.of("id", "changeKind", "sortOrder", "type", "description"));
+        var patchFields = List.of("id", "code", "sequence", "locale", "title", "summary", "description",
+                "actualLocale", "fallbackApplied", "region", "requestedLocale", "variantId", "rulesetId",
+                "effectiveAt");
+        assertThat(names(entry.path("patch"))).containsExactlyElementsOf(patchFields);
+        assertThat(names(read(ROOT + "/patches/" + patch2))).containsExactlyElementsOf(patchFields);
+        assertThat(names(read(ROOT + "/patches").path("items").get(0))).containsExactlyElementsOf(patchFields);
+        var patchChanges = read(ROOT + "/patches/" + patch2 + "/changes");
+        assertThat(names(patchChanges)).containsExactly("patch", "variantId", "effectiveAt", "items", "page",
+                "size", "totalElements");
+        assertThat(names(patchChanges.path("items").get(0))).doesNotContain("patch").contains("changes");
+        assertThat(read(ROOT + "/admin/patch-variants/" + v2 + "/hero-changes").get(0).has("patch")).isFalse();
+
+        var revision = read(ROOT + "/admin/heroes/" + hero + "/revisions/" + original);
+        assertThat(names(revision)).containsExactly("revision", "content");
+        assertThat(names(revision.path("content"))).containsExactly("profile", "overviewRatings", "combatStats",
+                "skills", "skins", "mediaBindings");
+        assertThat(revision.path("content").path("profile").has("sources")).isTrue();
+    }
+
+    private JsonNode read(String path) throws Exception {
+        return json.readTree(mvc.perform(get(path).with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+    }
+
+    private static List<String> names(JsonNode node) {
+        return node.propertyStream().map(Map.Entry::getKey).toList();
     }
 
     private Map<String, Object> create() throws Exception {
@@ -1162,7 +1282,7 @@ class DomainCoreIntegrationTest {
 
     @Test
     void publishReadinessRunsTheSameQueriesWhateverTheNumberOfHeroes() throws Exception {
-        var statistics = entityManagers.unwrap(org.hibernate.SessionFactory.class).getStatistics();
+        var statistics = entityManagers.unwrap(SessionFactory.class).getStatistics();
         statistics.setStatisticsEnabled(true);
         try {
             create();
@@ -1170,9 +1290,10 @@ class DomainCoreIntegrationTest {
             assertThat(publishReadiness()).hasSize(1);
             long one = statistics.getPrepareStatementCount();
 
-            for (String code : List.of("airi", "butterfly", "capheny"))
+            for (String code : List.of("airi", "butterfly", "capheny")) {
                 send(post(ROOT + "/admin/heroes"), Map.of("code", code, "initialLocale", "vi-VN", "name", code,
                         "rulesetId", ruleset, "releaseId", releaseId(variant)), 201);
+            }
             statistics.clear();
             assertThat(publishReadiness()).hasSize(4);
 
@@ -1245,8 +1366,8 @@ class DomainCoreIntegrationTest {
         assertThat((List<?>) send(get(filtered + "&page=1"), null, 200).get("items")).isEmpty();
         assertThat(send(get(ROOT + "/admin/heroes?position=mid"), null, 200).get("totalElements")).isEqualTo(0);
         assertThat(send(get(ROOT + "/admin/heroes?role=MAGE"), null, 200).get("totalElements")).isEqualTo(0);
-        send(get(ROOT + "/admin/heroes?role=UNKNOWN"), null, 422);
-        send(get(ROOT + "/admin/heroes?position=unknown"), null, 422);
+        send(get(ROOT + "/admin/heroes?role=UNKNOWN"), null, 400);
+        send(get(ROOT + "/admin/heroes?position=unknown"), null, 400);
 
         draft = send(post(path(hero, revisionId) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
         var newer = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"), Map.of("sourceRevisionId", revisionId,
@@ -1331,8 +1452,9 @@ class DomainCoreIntegrationTest {
                 "values", Map.of("name", "Incomplete", "skills", List.of(skill)));
         var preview = send(post(ROOT + "/admin/heroes/import/preview"), input, 200);
         assertThat(preview.get("canApply")).isEqualTo(true);
-        assertThat((List<String>) preview.get("warnings")).anyMatch(w -> w.contains("skill-1"));
-        assertThat((List<String>) preview.get("warnings")).anyMatch(w -> w.contains("Cần kiểm tra nguồn"));
+        assertThat((List<Map<String, Object>>) preview.get("warnings"))
+                .extracting(warning -> warning.get("code"), warning -> warning.get("skillKey"))
+                .contains(tuple("MISSING_ROLES", null), tuple("SKILL_SOURCE_NEEDS_REVIEW", "skill-1"));
         var result = send(post(ROOT + "/admin/heroes/import/apply"), input, 200);
         assertThat(result.get("heroId")).isNotNull();
         send(post(path(uuid(result, "heroId"), uuid(result, "revisionId")) + "/publish"),
@@ -1510,8 +1632,9 @@ class DomainCoreIntegrationTest {
     }
 
     private void seedImportSeason() throws Exception {
-        if (jdbc.sql("SELECT count(*) FROM patch.ranked_season").query(Long.class).single() > 0)
+        if (jdbc.sql("SELECT count(*) FROM patch.ranked_season").query(Long.class).single() > 0) {
             return;
+        }
         var season = send(post(ROOT + "/admin/seasons"), Map.of("code", "test-season", "displayName", "S1 2026"), 201);
         send(post(ROOT + "/admin/seasons/" + season.get("id") + "/schedules"), Map.of("regionId", VN,
                 "startsAt", "2026-01-01T00:00:00Z", "endsAt", "2027-01-01T00:00:00Z"), 201);
@@ -1611,8 +1734,9 @@ class DomainCoreIntegrationTest {
         Map<String, Object> body = new HashMap<>();
         body.put("rulesetId", ruleset);
         body.put("validFrom", from);
-        if (to != null)
+        if (to != null) {
             body.put("validTo", to);
+        }
         send(post(ROOT + "/admin/regions/" + region + "/ruleset-assignments"), body, status);
     }
 
@@ -1682,7 +1806,7 @@ class DomainCoreIntegrationTest {
         assertThatThrownBy(() -> importJobs.execute(remaining)).isInstanceOf(RuntimeException.class);
         assertThat(jdbc.sql("SELECT count(*) FROM hero.hero WHERE code='broken-hero'").query(Long.class).single())
                 .isZero();
-        var worker = new com.wikiaov.hero.internal.importing.infrastructure.HeroImportWorker(importJobs);
+        var worker = new HeroImportWorker(importJobs);
         worker.tick();
         worker.tick();
         assertThat(send(get(endpoint + "/" + jobId), null, 200))
@@ -1783,8 +1907,9 @@ class DomainCoreIntegrationTest {
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write"),
                 new SimpleGrantedAuthority("hero:publish"), new SimpleGrantedAuthority("patch:write"),
                 new SimpleGrantedAuthority("patch:publish"), new SimpleGrantedAuthority("region:admin")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

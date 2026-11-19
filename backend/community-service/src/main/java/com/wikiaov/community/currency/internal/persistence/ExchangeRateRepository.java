@@ -2,6 +2,7 @@ package com.wikiaov.community.currency.internal.persistence;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,7 +11,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface ExchangeRateRepository extends Repository<ExchangeRateRecord, ExchangeRateRecord.Key> {
-    /** Rows are a JSON array, so a year of rates is one statement. A later fetch of a day corrects the earlier one. */
+    /**
+     * Rows are a JSON array, so a year of rates is one statement. A later fetch of a day corrects the earlier one.
+     * Native for jsonb_to_recordset and ON CONFLICT.
+     */
     @Transactional
     @Modifying
     @Query(value = """
@@ -25,14 +29,17 @@ public interface ExchangeRateRepository extends Repository<ExchangeRateRecord, E
         """, nativeQuery = true)
     int upsert(@Param("rows") String rows, @Param("source") String source, @Param("fetchedAt") Instant fetchedAt);
 
-    @Query(value = """
-        SELECT currency, CAST(max(rate_date) AS text) AS latest
-          FROM currency.exchange_rate
-         GROUP BY currency
-        """, nativeQuery = true)
+    @Query("""
+        select rate.key.currency as currency, max(rate.key.rateDate) as latest
+          from ExchangeRateRecord rate
+         group by rate.key.currency
+        """)
     List<LatestDay> latestDays();
 
-    /** For each day and currency, the newest rate published on or before that day. Days and currencies are JSON arrays. */
+    /**
+     * For each day and currency, the newest rate published on or before that day. Days and currencies are JSON arrays.
+     * Native for the lateral join over jsonb arrays.
+     */
     @Query(value = """
         SELECT d.day AS day, r.currency AS currency, CAST(r.rate_date AS text) AS rateDate,
                r.units_per_usd AS unitsPerUsd
@@ -52,7 +59,7 @@ public interface ExchangeRateRepository extends Repository<ExchangeRateRecord, E
     interface LatestDay {
         String getCurrency();
 
-        String getLatest();
+        LocalDate getLatest();
     }
 
     interface EffectiveRate {

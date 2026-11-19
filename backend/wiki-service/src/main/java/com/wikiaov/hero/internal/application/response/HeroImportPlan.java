@@ -1,5 +1,6 @@
 package com.wikiaov.hero.internal.application.response;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -14,6 +15,6 @@ public record HeroImportPlan(
         String classification,
         boolean canApply,
         UUID sourcePatchVariantId,
-        java.util.List<String> warnings
+        List<HeroImportWarning> warnings
 ) {
 }

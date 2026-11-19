@@ -14,6 +14,8 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 - Màu trạng thái (`--aov-success`, `--aov-danger`, `--aov-warning`, `--aov-info`, `--aov-live`) chỉ mang ý nghĩa trạng
   thái, không dùng để trang trí: xanh lá là tăng sức mạnh hoặc thắng, đỏ là giảm sức mạnh hoặc thua, xanh dương là điều
   chỉnh, cam là làm lại, `--aov-live` là đang phát trực tiếp.
+- Giá bằng vàng trong game và đồng vàng đứng cạnh giá dùng `--aov-game-gold`, màu hổ phách của đồng vàng trong game,
+  không dùng màu nhấn.
 - Các cặp chữ/nền chính đạt tỉ lệ tương phản AA (từ 4.5:1) ở cả hai chế độ, kể cả chữ mờ (`--aov-muted`). Chữ mờ chỉ
   đặt trên nền trang hoặc nền thẻ, không đặt trên nền đã tô màu. Khi đổi màu phải kiểm tra lại.
 - Màu cố định chỉ còn ở phần phủ lên ảnh: lớp tối dưới chữ và nút nằm trên ảnh tướng, chữ trên ảnh bìa. Ảnh là nội dung
@@ -28,7 +30,9 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 - Stream đặt tên lại các token chung thành `--hub-*` ở đầu `stream.css` và chạy được ở cả giao diện sáng lẫn tối. Thanh
   trên và chân trang luôn màu chàm đêm. Logo đội và giải nằm trên ô `--hub-plate`, để logo vẽ cho nền tối vẫn thấy được ở
   giao diện sáng.
-- Biểu đồ một chuỗi số liệu dùng `--chart-1` (lấy từ `--aov-chart`). Ở bảng màu gốc, màu này tối hơn màu nhấn vì màu
+- Chữ AOV WiKi và AOV Stream trong menu chuyển ứng dụng giữ màu riêng của từng sản phẩm ở mọi app: `--aov-brand-wiki-*`,
+  `--aov-brand-stream-*` trong `tokens.css`. Các thành phần dùng chung trong `packages/ui` chỉ đọc token, không gõ màu.
+- Biểu đồ một chuỗi số liệu dùng `--chart-1` (lấy từ `--aov-chart`); các chuỗi tiếp theo lấy `--aov-chart-2` đến `--aov-chart-5`. Ở bảng màu gốc, màu này tối hơn màu nhấn vì màu
   nhấn quá sáng cho mảng đặc trên nền tối; Wiki dùng chính màu vàng của mình.
 
 ## Chữ
@@ -94,7 +98,12 @@ Thanh điều hướng nằm bên trái. Để đổi lại bên phải, thêm `
 
 ## Trang đăng nhập
 
-Theme Keycloak `aov-public` dùng cùng giá trị màu và phông nhưng phải chép tay vì chạy ngoài ứng dụng React. Khi đổi màu nhấn hoặc màu nền trong `tokens.css`, sửa cả `infra/local/keycloak-themes/aov-public/login/resources/css/aov-login.css` trong `backend/wiki-service`.
+Hai theme Keycloak `aov-public` và `aov-admin` chạy ngoài ứng dụng React nên mỗi theme mang một bản chép của token:
+khối `:root` ở đầu `aov-public/login/resources/css/aov-login.css` và `aov-admin/login/resources/css/aov-admin.css`
+trong `backend/wiki-service/infra/local/keycloak-themes`, nằm giữa hai dòng chú thích đánh dấu. `pnpm lint` báo lỗi khi bản chép khác `tokens.css`; sau khi đổi token, chạy
+`node --experimental-strip-types lint/login-theme-tokens.ts --write` trong `packages/ui`. Trang đăng nhập luôn tối nên
+nhận giá trị tối của token. Vài màu riêng của trang (chữ sáng của tiêu đề, nền ô nhập, màu báo lỗi và thành công) vẫn
+viết tay vì bộ màu chung chưa có màu tương ứng.
 
 ## Phiên đăng nhập của Wiki và Stream
 

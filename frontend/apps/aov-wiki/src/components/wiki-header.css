@@ -135,7 +135,7 @@
   .wiki-header-inner {
     gap: 10px;
   }
-  .wiki-header .public-app-wordmark {
+  .wiki-header .wiki-header-wordmark {
     display: none;
   }
   .wiki-topnav > a,
@@ -376,7 +376,7 @@
   background: var(--header-bg);
   opacity: var(--header-solid, 0);
 }
-.wiki-compact-header[data-variant="library"]::before {
+.wiki-compact-header:is([data-variant="library"], [data-solid])::before {
   opacity: 1;
 }
 .wiki-compact-header[data-searching] {
@@ -406,9 +406,6 @@
   border: 1px solid color-mix(in srgb, var(--aov-accent) 50%, transparent);
   border-radius: var(--aov-radius-control);
   object-fit: cover;
-}
-.wiki-mobile-wordmark {
-  font-size: 18px;
 }
 .wiki-compact-utilities {
   display: flex;

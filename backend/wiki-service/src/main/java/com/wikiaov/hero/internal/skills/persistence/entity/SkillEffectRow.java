@@ -1,10 +1,20 @@
 package com.wikiaov.hero.internal.skills.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-
-import jakarta.persistence.*;
+import com.wikiaov.platform.AssignedIdentifierEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import java.io.Serializable;
+import java.util.Map;
 import java.util.UUID;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter
@@ -25,8 +35,8 @@ public class SkillEffectRow extends AssignedIdentifierEntity<SkillEffectRow.Key>
 
     private String effectType;
 
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
-    private java.util.Map<String, Object> metadata;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> metadata;
 
     @Override
     public Key getId() {
@@ -36,7 +46,7 @@ public class SkillEffectRow extends AssignedIdentifierEntity<SkillEffectRow.Key>
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class Key implements java.io.Serializable {
+    public static class Key implements Serializable {
         public UUID skillSetRevisionId;
         public String skillKey;
         public int effectOrder;

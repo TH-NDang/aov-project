@@ -1,3 +1,5 @@
 /** video module. Public contracts belong here; implementation belongs in internal. */
-@org.springframework.modulith.ApplicationModule
+@ApplicationModule
 package com.wikiaov.video;
+
+import org.springframework.modulith.ApplicationModule;

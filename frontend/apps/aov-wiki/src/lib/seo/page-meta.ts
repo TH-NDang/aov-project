@@ -1,5 +1,7 @@
-import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "../../features/hero/hero-classifications.ts"
+import { localeText } from "@aov/ui/lib/locale-text"
+import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "../hero-classifications.ts"
 import { warehousePath, WAREHOUSE_TABS } from "../wiki-catalog.ts"
+import { warehouseText } from "@aov/ui/lib/warehouse-content"
 
 export const SITE_NAME = "AOV WiKi"
 const DESCRIPTION_LENGTH = 160
@@ -71,7 +73,7 @@ export interface PatchLike {
 export type WarehouseTab = (typeof WAREHOUSE_TABS)[number]
 export type SectionKey = "heroes" | "skins" | WarehouseTab | "updates" | "terms" | "modes"
 
-const pick = (locale: string, vietnamese: string, english: string) => (locale.startsWith("en") ? english : vietnamese)
+const pick = (locale: string, vietnamese: string, english: string) => localeText(locale)(vietnamese, english)
 
 const titled = (heading: string) => `${heading} | ${SITE_NAME}`
 
@@ -176,15 +178,6 @@ export function clampDescription(value: string, limit = DESCRIPTION_LENGTH) {
   return `${(lastSpace > limit / 2 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.–—-]+$/u, "")}…`
 }
 
-/** The chosen translation, or the first one when a language has not been written yet. */
-export function translationFor<T extends { locale: string }>(translations: readonly T[], locale: string) {
-  return (
-    translations.find((translation) => translation.locale === locale) ??
-    translations.find((translation) => translation.locale === "vi-VN") ??
-    translations[0]
-  )
-}
-
 const pageImage = (media: MediaLike | null | undefined, alt: string): PageImage | undefined => {
   const version = media?.currentVersion
   return version
@@ -228,8 +221,8 @@ export function contactMeta(locale: string): PageMeta {
     heading,
     description: pick(
       locale,
-      "Gửi góp ý, báo sai dữ liệu hoặc đề xuất gỡ ảnh cho đội ngũ biên tập AOV WiKi.",
-      "Send feedback, report wrong data or ask for an image to be removed by the AOV WiKi editors.",
+      `Gửi góp ý, báo sai dữ liệu hoặc đề xuất gỡ ảnh cho đội ngũ biên tập ${SITE_NAME}.`,
+      `Send feedback, report wrong data or ask for an image to be removed by the ${SITE_NAME} editors.`,
     ),
     path: "/contact",
     locale,
@@ -245,7 +238,11 @@ export function notFoundMeta(locale: string, path: string, section?: SectionKey)
   return {
     title: titled(heading),
     heading,
-    description: pick(locale, "Không tìm thấy nội dung này trên AOV WiKi.", "This page was not found on AOV WiKi."),
+    description: pick(
+      locale,
+      `Không tìm thấy nội dung này trên ${SITE_NAME}.`,
+      `This page was not found on ${SITE_NAME}.`,
+    ),
     path,
     locale,
     image: DEFAULT_IMAGE,
@@ -310,7 +307,7 @@ export function heroMeta(hero: HeroMetaSource, locale: string): PageMeta {
 }
 
 export function warehouseEntryMeta(tab: WarehouseTab, entry: WarehouseEntryLike, locale: string): PageMeta {
-  const text = translationFor(entry.content.translations, locale)
+  const text = warehouseText(entry.content.translations, locale)
   const name = text?.name ?? entry.code
   const section = pick(locale, ...SECTIONS[tab].name)
   const heading = `${name} — ${section}`

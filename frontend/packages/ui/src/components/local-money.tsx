@@ -14,6 +14,7 @@ import {
 } from "../lib/currency"
 import { formatCalendarDate } from "../lib/time-zone"
 import { ValueReveal } from "./value-reveal"
+import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 
 type LocalMoneyProps = {
   /** The same prize in every unit it was recorded in, such as its dollars and its local amount. */
@@ -47,7 +48,7 @@ export function LocalMoney({
   const rates = useExchangeRates(on, needsRates)
   if (!originals.length) return <>{fallback}</>
 
-  const english = locale.startsWith("en")
+  const english = isEnglishLocale(locale)
   const write = compact ? formatCompactMoney : formatMoney
   const resolved = resolveMoney(originals, target, rates)
   const original = originals.map((money) => formatMoney(money.amount, money.currency, locale)).join(" · ")

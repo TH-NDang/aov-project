@@ -2,11 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 async function createView(observe = true) {
-  const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true, url: "http://localhost/hero/test" })
+  const dom = createWindow("http://localhost/hero/test")
   const observers: FakeObserver[] = []
   class FakeObserver {
     disconnected = false
@@ -44,28 +44,14 @@ async function createView(observe = true) {
       )
     }
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    BroadcastChannel: undefined,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     IntersectionObserver: observe ? FakeObserver : undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
-  const { HeroScrollIdentity } = await import("../src/features/publishing/hero-scroll-identity")
+  const { HeroScrollIdentity } = await import("../src/features/publishing/components/workspace/hero-scroll-identity")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
-  client.setQueryData(["hero-content-asset", "head-asset"], {
+  client.setQueryData(["media", "asset", "head-asset", "content"], {
     id: "head-asset",
     currentUrl: "/media/head-asset.webp",
     provenance: [],
@@ -119,10 +105,7 @@ async function createView(observe = true) {
       await act(async () => root.unmount())
       client.clear()
       dom.window.close()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else Reflect.deleteProperty(globalThis, key)
-      }
+      restoreGlobals()
     },
   }
 }
@@ -202,15 +185,13 @@ test("scroll and resize fallback works without IntersectionObserver and cleans u
     view.setHeadingTop(15)
     await act(async () => {
       view.document.getElementById("inner-scroll")!.dispatchEvent(new view.dom.window.Event("scroll"))
-      await new Promise((resolve) => setTimeout(resolve, 30))
     })
-    assert.equal(view.host().dataset.visible, "true")
+    await waitFor(() => view.host().dataset.visible === "true", "Scrolling the heading away shows the identity")
     view.setHeadingTop(130)
     await act(async () => {
       view.dom.window.dispatchEvent(new view.dom.window.Event("resize"))
-      await new Promise((resolve) => setTimeout(resolve, 30))
     })
-    assert.equal(view.host().dataset.visible, "false")
+    await waitFor(() => view.host().dataset.visible === "false", "The heading back in view hides the identity")
     assert.equal(view.host().querySelector("img"), null)
   } finally {
     await view.close()

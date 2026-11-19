@@ -1,14 +1,22 @@
 package com.wikiaov.community.tournament.internal.planning.persistence;
 
-import java.util.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
+import jakarta.persistence.LockModeType;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 
 public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlanRecord, UUID> {
     /**
      * The seasons of an organizer or circuit, in the order of the tournament list. A tournament in the trash takes its
      * plan with it. A part of a main event is a season of a page only when its main event is not one already: a
-     * qualifier run by the same organizer comes with its main event instead of standing beside it.
+     * qualifier run by the same organizer comes with its main event instead of standing beside it. Native: orders by
+     * the recency views of V013 and V016, which PostgreSQL functions compute.
      */
     @Query(value = """
         SELECT p.* FROM tournament.competition_plan p
@@ -38,17 +46,20 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
 
     Page<CompetitionPlanRecord> findByPublishedAtIsNotNullOrderByPublishedAtDesc(Pageable pageable);
 
-    @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from CompetitionPlanRecord p where p.id = :id")
     Optional<CompetitionPlanRecord> lock(UUID id);
 
+    /** Native for the jsonb path over the entrants. */
     @Query(value = "select count(*) from tournament.competition_plan p where jsonb_path_exists(p.content, '$.entrants[*] ? (@.teamId == $id)', jsonb_build_object('id', cast(:id as text)))", nativeQuery = true)
     long countTeamReferences(String id);
 
     /**
      * Plans and plan history that name a record. The plan of the record's own tournament (its series, games and roster
      * rows belong to it too) is left out while it has never been published: such a draft is part of the tournament and
-     * goes to the trash with it. Once published or withdrawn, the plan and its history keep protecting the record.
+     * goes to the trash with it. Once published or withdrawn ({@code publicActions} names the revision actions that say
+     * so), the plan and its history keep protecting the record. Native: looks for the id in the text of the jsonb
+     * documents.
      */
     @Query(value = """
         WITH owner AS (
@@ -64,7 +75,7 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
           SELECT p.id FROM tournament.competition_plan p, owner
           WHERE CAST(p.id AS text) = owner.tournament_id AND p.published_snapshot IS NULL
             AND NOT EXISTS (SELECT 1 FROM tournament.plan_revision r
-                            WHERE r.tournament_id = p.id AND r.action IN ('PUBLISH', 'WITHDRAW'))
+                            WHERE r.tournament_id = p.id AND r.action IN (:publicActions))
         )
         SELECT (SELECT count(*) FROM tournament.competition_plan p
                 WHERE p.id NOT IN (SELECT id FROM own_draft)
@@ -74,11 +85,13 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
                 WHERE r.tournament_id NOT IN (SELECT id FROM own_draft)
                   AND CAST(r.content AS text) LIKE concat('%', :id, '%'))
         """, nativeQuery = true)
-    long countReferences(String kind, String id);
+    long countReferences(String kind, String id, Collection<String> publicActions);
 
+    /** Native: looks for the image path in the text of the jsonb documents. */
     @Query(value = "select (select count(*) from tournament.competition_plan where cast(published_snapshot as text) like concat('%/', :id, '/%')) + (select count(*) from tournament.plan_revision where cast(content as text) like concat('%/', :id, '/%'))", nativeQuery = true)
     long countMedia(String id);
 
+    /** Native: finds image paths in the jsonb documents with a PostgreSQL regular expression. */
     @Query(value = """
         SELECT pairs.asset FROM (
         SELECT DISTINCT found.owner, lower(m[2]) AS asset FROM (
@@ -89,6 +102,7 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
         """, nativeQuery = true)
     List<String> allMedia();
 
+    /** Native: filters by ids inside the jsonb published snapshot. */
     @Query(value = """
         SELECT * FROM tournament.competition_plan WHERE published_at IS NOT NULL
           AND (:team = '' OR jsonb_exists(published_snapshot->'teams', :team))

@@ -1,7 +1,14 @@
 package com.wikiaov.hero.internal.change.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.hero.internal.application.response.HeroPatchView.Direction;
 import com.wikiaov.hero.internal.application.response.HeroPatchView.Provenance;
@@ -12,15 +19,24 @@ import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory.Entry;
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Cause;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
+import com.wikiaov.hero.internal.domain.HeroContent.Stat;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -42,12 +58,13 @@ class HeroPatchDerivationTests {
 
     @BeforeEach
     void setUp() {
-        old = revision(hero, ruleset, "PUBLISHED", past.id(), 1);
-        baseline = revision(hero, ruleset, "PUBLISHED", current.id(), 2);
+        old = revision(hero, ruleset, RevisionState.PUBLISHED, past.id(), 1);
+        baseline = revision(hero, ruleset, RevisionState.PUBLISHED, current.id(), 2);
         when(store.revisions(hero)).thenReturn(List.of(old, baseline));
         when(contexts.rulesetVariants(ruleset)).thenReturn(List.of(past, middle, current));
-        for (var variant : List.of(past, middle, current))
+        for (var variant : List.of(past, middle, current)) {
             when(contexts.variant(variant.id())).thenReturn(variant);
+        }
         when(sections.content(eq(HeroSection.COMBAT_STATS), any())).thenReturn(new Stats(
                 List.of(new Stat("HP", new BigDecimal("3500"), null, new BigDecimal("100"), "POINT")), List.of()));
         when(sections.content(eq(HeroSection.PROFILE), any()))
@@ -134,20 +151,21 @@ class HeroPatchDerivationTests {
     @Test
     void refusesDraftDiscardedForeignAndUndatedAnchorsInsteadOfFallingBack() {
         var invalid = List.of(
-                revision(hero, ruleset, "DRAFT", current.id(), 3),
-                revision(hero, ruleset, "DISCARDED", current.id(), 4),
-                revision(UUID.randomUUID(), ruleset, "PUBLISHED", current.id(), 5),
-                revision(hero, UUID.randomUUID(), "PUBLISHED", current.id(), 6),
-                revision(hero, ruleset, "PUBLISHED", null, 7),
-                revision(hero, ruleset, "PUBLISHED", UUID.randomUUID(), 8));
+                revision(hero, ruleset, RevisionState.DRAFT, current.id(), 3),
+                revision(hero, ruleset, RevisionState.DISCARDED, current.id(), 4),
+                revision(UUID.randomUUID(), ruleset, RevisionState.PUBLISHED, current.id(), 5),
+                revision(hero, UUID.randomUUID(), RevisionState.PUBLISHED, current.id(), 6),
+                revision(hero, ruleset, RevisionState.PUBLISHED, null, 7),
+                revision(hero, ruleset, RevisionState.PUBLISHED, UUID.randomUUID(), 8));
         var revisions = new ArrayList<>(invalid);
         revisions.add(old);
         revisions.add(baseline);
         when(store.revisions(hero)).thenReturn(revisions);
 
-        for (var candidate : invalid)
+        for (var candidate : invalid) {
             assertThatThrownBy(() -> derivation.at(hero, past.id(), candidate.id())).isInstanceOf(ApiException.class)
                     .hasMessageContaining("The anchor must be a published revision");
+        }
         assertThatThrownBy(() -> derivation.at(hero, past.id(), UUID.randomUUID())).isInstanceOf(ApiException.class);
         verifyNoInteractions(sections, history);
     }
@@ -169,7 +187,7 @@ class HeroPatchDerivationTests {
                 true);
     }
 
-    private HeroRevisionView revision(UUID heroId, UUID rulesetId, String state, UUID patch, long number) {
+    private HeroRevisionView revision(UUID heroId, UUID rulesetId, RevisionState state, UUID patch, long number) {
         return new HeroRevisionView(UUID.randomUUID(), heroId, rulesetId, number, state, 1, number, Instant.now(),
                 Cause.DATA_BASELINE, null, patch,
                 Map.of(HeroSection.COMBAT_STATS, UUID.randomUUID(), HeroSection.PROFILE, UUID.randomUUID()));

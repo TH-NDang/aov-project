@@ -5,7 +5,7 @@ import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
 import { useStreamLocale } from "../../components/stream-locale"
 import { ReferenceArt } from "./reference-art"
-import { clock, orderedParticipants, seriesRound, seriesSides, unbroken } from "./tournament-model"
+import { clock, orderedParticipants, seriesRound, seriesSides, unbroken } from "../../lib/tournament-model"
 
 /** The five picks of one side in lane order, underlined in the colour of the side it played on. */
 function PickStrip({ game, side, slot }: { game: PublishedGame; side: GameSide; slot?: "a" | "b" }) {
@@ -39,9 +39,9 @@ export function GameCard({
   competition?: boolean
   round?: boolean
 }) {
-  const { text } = useStreamLocale()
+  const { text, languageTag } = useStreamLocale()
   const { number, durationSeconds, winner } = game.content
-  const round = layout === "card" && named ? seriesRound(game.series.name) : null
+  const round = layout === "card" && named ? seriesRound(game.series, languageTag) : null
   return (
     <Link className="tn-game" data-layout={layout} to={`/games/${game.id}`}>
       <span className="tn-game-title">

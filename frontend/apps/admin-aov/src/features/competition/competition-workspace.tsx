@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react"
-import { useParams, useSearchParams, useBlocker } from "react-router"
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, type ComponentType } from "react"
+import { useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   CalendarDays,
@@ -14,13 +14,13 @@ import {
   Trophy,
   Users,
 } from "lucide-react"
-import type { CompetitionPlan, CompetitionView, DocumentView, TeamContent } from "@aov/community-contracts"
+import type { CompetitionPlan, CompetitionView, TeamContent } from "@aov/community-contracts"
 import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
-import { communityRequest } from "@/app/auth/session"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
-import { pageApi, pageKeys, publicSite } from "@/features/community/page-api"
+import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
+import { pageApi, pageKeys, publicSite } from "@/features/community/api/page-api"
 import { StatusPill, TierBadge } from "@/features/esports/components/primitives"
 import { useRosters, useTournamentGames, useTournamentSeries } from "@/features/esports/data/use-esports-data"
 import {
@@ -31,10 +31,10 @@ import {
   tournamentPath,
   type Access,
 } from "@/features/esports/pages/esports-shell"
-import { RegistryEditor } from "@/features/tournaments/registry-editor"
-import { tournamentApi, tournamentKeys } from "@/features/tournaments/tournament-api"
-import { tournamentDates } from "@/features/tournaments/tournament-metadata"
-import { partLabel, type EventFamily } from "@/features/tournaments/tournament-parts"
+import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
+import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { tournamentDates } from "@/features/tournaments/components/tournament-metadata"
+import { partLabel, type EventFamily } from "@/features/tournaments/model/tournament-parts"
 import { competitionApi, competitionKeys } from "./competition-api"
 import { EventPartTabs } from "./workspace/event-parts"
 import { FinalStep } from "./workspace/final-step"
@@ -72,7 +72,7 @@ export function CompetitionWorkspace() {
 function Loader({ access }: { access: Access }) {
   const { tournamentId = "" } = useParams()
   const query = useQuery({
-    queryKey: [...competitionKeys, access.actorKey, tournamentId],
+    queryKey: competitionKeys.plan(access.actorKey, tournamentId),
     queryFn: () => competitionApi.read(tournamentId),
   })
   if (query.isError)
@@ -118,19 +118,19 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
   const rosters = useRosters(entry.id)
   const games = useTournamentGames(entry.id)
   const tournament = useQuery({
-    queryKey: [...tournamentKeys.all, "tournaments", access.actorKey, "one", entry.id],
+    queryKey: tournamentKeys.one("tournaments", access.actorKey, entry.id),
     queryFn: ({ signal }) => tournamentApi.read("tournaments", entry.id, signal),
   })
   // A tournament is either a main event or a part of one; both show the same row of tabs.
   const mainEventId = entry.content.tournament.parentTournamentId || entry.id
   const isPart = mainEventId !== entry.id
   const mainEvent = useQuery({
-    queryKey: [...tournamentKeys.all, "tournaments", access.actorKey, "one", mainEventId],
+    queryKey: tournamentKeys.one("tournaments", access.actorKey, mainEventId),
     queryFn: ({ signal }) => tournamentApi.read("tournaments", mainEventId, signal),
     enabled: isPart,
   })
   const parts = useQuery({
-    queryKey: [...tournamentKeys.all, "parts", access.actorKey, mainEventId],
+    queryKey: tournamentKeys.parts(access.actorKey, mainEventId),
     queryFn: ({ signal }) => tournamentApi.tournamentParts(mainEventId, signal),
     staleTime: 30_000,
   })
@@ -144,22 +144,29 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     [mainEventId, isPart, mainEvent.data, entry.content.tournament.name, parts.data],
   )
   const organization = useQuery({
-    queryKey: [...pageKeys, access.actorKey, plan.organizerPageId],
+    queryKey: pageKeys.page(access.actorKey, plan.organizerPageId),
     queryFn: () => pageApi.read(plan.organizerPageId!),
     enabled: !!plan.organizerPageId,
   })
   // What readers see now; compared with the draft to list what a new publication would change.
   const published = useQuery({
-    queryKey: [...competitionKeys, "published", entry.id, entry.publishedAt],
-    queryFn: () => communityRequest<CompetitionView>(`/competitions/${entry.id}`),
+    queryKey: competitionKeys.published(entry.id, entry.publishedAt),
+    queryFn: () => competitionApi.readPublished(entry.id),
     enabled: !!entry.publishedAt,
   })
 
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) => dirty && currentLocation.pathname !== nextLocation.pathname,
+  useLeaveGuard(leavingPage(dirty), () =>
+    confirmDiscard({
+      title: "Rời trang?",
+      description: "Bạn đang có thay đổi chưa lưu.",
+      confirmLabel: "Rời trang, bỏ thay đổi",
+    }),
   )
+  // Read only when the server copy changes: a save that ends the edits must not take the plan and its version back to
+  // the copy loaded before it.
+  const hasEdits = useEffectEvent(() => dirty)
   useEffect(() => {
-    if (!dirty) {
+    if (!hasEdits()) {
       setPlan(entry.content.plan)
       setBaseline(entry.content.plan)
     }
@@ -195,9 +202,10 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
               ? "Đã mở nhập kết quả cho các cặp đã xác định."
               : "Đã lưu bản nháp.",
       )
-      client.setQueryData([...competitionKeys, access.actorKey, entry.id], value)
+      client.setQueryData(competitionKeys.plan(access.actorKey, entry.id), value)
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
     },
+    meta: { silent: true },
   })
   const change = useCallback(<K extends keyof CompetitionPlan>(key: K, value: CompetitionPlan[K]) => {
     setPlan((old) => ({ ...old, [key]: value }))
@@ -418,9 +426,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0">
-                <span
-                  className={cn("type-body block font-semibold whitespace-nowrap", !active && "text-muted-foreground")}
-                >
+                <span className={cn("type-body block whitespace-nowrap", !active && "text-muted-foreground")}>
                   {STEP_LABELS[id]}
                 </span>
                 <span className="type-meta flex items-center gap-1 whitespace-nowrap">
@@ -436,17 +442,6 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         })}
       </nav>
       {mutate.error && <LoadError error={mutate.error} onRetry={() => mutate.reset()} />}
-      {blocker.state === "blocked" && (
-        <div role="alertdialog" aria-label="Thay đổi chưa lưu" className="rounded-xl border bg-card p-5">
-          <p className="mb-3">Bạn đang có thay đổi chưa lưu.</p>
-          <Button variant="outline" onClick={() => blocker.reset()}>
-            Ở lại chỉnh sửa
-          </Button>{" "}
-          <Button variant="destructive" onClick={() => blocker.proceed()}>
-            Rời trang, bỏ thay đổi
-          </Button>
-        </div>
-      )}
       <div className="min-w-0">
         {step === "overview" && (
           <OverviewStep
@@ -474,19 +469,12 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         )}
       </div>
       {editing && tournament.data && (
-        <RegistryEditor
-          open
-          kind="tournaments"
-          entry={tournament.data}
-          teams={Object.entries(teams).map(([id, content]) => documentOf(id, content))}
-          onClose={() => setEditing(false)}
-        />
+        <RegistryEditor open kind="tournaments" entry={tournament.data} onClose={() => setEditing(false)} />
       )}
       {addingPart && (
         <RegistryEditor
           open
           kind="tournaments"
-          teams={[]}
           defaults={partDefaults(entry.id, info)}
           onClose={() => setAddingPart(false)}
         />
@@ -505,14 +493,4 @@ const partDefaults = (mainEventId: string, main: CompetitionView["content"]["tou
   ...(main.year ? { year: String(main.year) } : {}),
   ...(main.tier ? { tier: main.tier } : {}),
   ...(main.logoUrl ? { logoUrl: main.logoUrl } : {}),
-})
-
-/** The tournament editor only lists team names, so the snapshot's teams stand in for full records. */
-const documentOf = (id: string, content: TeamContent): DocumentView<TeamContent> => ({
-  id,
-  version: 0,
-  createdAt: "",
-  updatedAt: "",
-  content,
-  missingFields: [],
 })

@@ -1,8 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query"
 import {
   createEntityIndex,
@@ -11,22 +9,23 @@ import {
   type SkillReferenceOwner,
 } from "@aov/ui/lib/entity-rich-text"
 import type { ReferenceSearchPage } from "@aov/ui/lib/entity-rich-text-editor"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import type { SkillReferenceScope } from "../src/features/terminology/skill-reference-api"
+import { createWindow, flush, installWindow, waitFor, withGlobals } from "./fixtures/dom"
 
-const originalFetch = globalThis.fetch
-const originalChannel = globalThis.BroadcastChannel
 let currentFetch: typeof fetch = async () => {
   throw new Error("Unexpected network request")
 }
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
-Object.defineProperty(globalThis, "fetch", { configurable: true, writable: true, value: dispatchFetch })
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-const { createSkillReferenceApi, createSkillReferenceSearch, skillReferenceEntryOptions, skillReferenceKeys } =
-  await import("../src/features/terminology/skill-reference-api")
-const { invalidateReferenceCatalog } = await import("../src/features/terminology/reference-api")
-Object.defineProperty(globalThis, "fetch", { configurable: true, writable: true, value: originalFetch })
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: originalChannel })
+const [
+  { createSkillReferenceApi, createSkillReferenceSearch, skillReferenceEntryOptions, skillReferenceKeys },
+  { invalidateReferenceCatalog },
+] = await withGlobals({ fetch: dispatchFetch, BroadcastChannel: undefined }, () =>
+  Promise.all([
+    import("../src/features/terminology/skill-reference-api"),
+    import("../src/features/terminology/reference-api"),
+  ]),
+)
 
 const heroId = "00000000-0000-4000-8000-000000000001"
 const id = (number: number) => `${heroId}.skill-1-${number}`
@@ -53,7 +52,6 @@ const page = (items: EntityReference[]): ReferenceSearchPage => ({
   size: 20,
   totalElements: items.length,
 })
-const settle = () => new Promise((resolve) => setTimeout(resolve, 10))
 function deferredApi() {
   const calls: { path: string; signal: AbortSignal; finish: (value: ReferenceSearchPage) => void }[] = []
   const request: Request = <T,>(path: string, init?: RequestInit) =>
@@ -136,23 +134,23 @@ test("batch cancellation belongs to live consumers and only aborts HTTP after al
   const stopSame = same.subscribe(() => {})
   const stopSecond = second.subscribe(() => {})
   try {
-    await settle()
+    await flush()
     assert.equal(calls.length, 1)
     stopFirst()
     assert.equal(calls[0]!.signal.aborted, false)
     stopSame()
     assert.equal(calls[0]!.signal.aborted, false, "A different identity still needs the shared request")
     calls[0]!.finish(page([entity(id(1)), entity(id(2))]))
-    await settle()
+    await flush()
     assert.equal(client.getQueryData(skillReferenceKeys.entry(scope, id(1))), undefined)
     assert.equal(client.getQueryData<EntityReference>(skillReferenceKeys.entry(scope, id(2)))?.id, id(2))
     const third = new QueryObserver(client, skillReferenceEntryOptions(client, scope, id(3), api))
     const stopThird = third.subscribe(() => {})
-    await settle()
+    await flush()
     stopThird()
     assert.equal(calls[1]!.signal.aborted, true)
     calls[1]!.finish(page([entity(id(3))]))
-    await settle()
+    await flush()
     assert.equal(client.getQueryData(skillReferenceKeys.entry(scope, id(3))), undefined)
   } finally {
     stopFirst()
@@ -242,12 +240,12 @@ test("catalog invalidation fences late lookup and search responses before fresh 
       "Fresh",
     )
     const obsolete = client.fetchQuery(skillReferenceEntryOptions(client, scope, id(2), api)).catch((error) => error)
-    await settle()
+    await flush()
     await invalidateReferenceCatalog(client)
     assert.equal(calls[2]!.signal.aborted, true)
     calls[2]!.finish(page([entity(id(2), "Old lookup")]))
     await obsolete
-    await settle()
+    await flush()
     assert.equal(client.getQueryData(skillReferenceKeys.entry(scope, id(2))), undefined)
   } finally {
     client.clear()
@@ -255,7 +253,7 @@ test("catalog invalidation fences late lookup and search responses before fresh 
 })
 
 test("readers share explicit lookups and resolve only unambiguous owner-qualified skill mentions", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero" })
+  const dom = createWindow("http://localhost/hero")
   const batches: string[][] = []
   const slotRequests: string[] = []
   const owner = entity(id(1)).owner!
@@ -308,19 +306,10 @@ test("readers share explicit lookups and resolve only unambiguous owner-qualifie
     }
     throw new Error(`Unexpected request ${path}`)
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: dispatchFetch,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { useSkillReferences } = await import("../src/features/terminology/use-skill-references")
   const { createRoot } = await import("react-dom/client")
@@ -347,15 +336,9 @@ test("readers share explicit lookups and resolve only unambiguous owner-qualifie
     await render(false)
     assert.equal(batches.length, 0)
     await render(true)
-    for (
-      let attempt = 0;
-      attempt < 100 &&
-      dom.window.document.querySelector('[data-reader="first"]')?.textContent !== "skill-1-1|skill-1-2";
-      attempt++
+    await waitFor(
+      () => dom.window.document.querySelector('[data-reader="first"]')?.textContent === "skill-1-1|skill-1-2",
     )
-      await act(async () => {
-        await settle()
-      })
     assert.equal(dom.window.document.querySelector('[data-reader="first"]')?.textContent, "skill-1-1|skill-1-2")
     assert.equal(dom.window.document.querySelector('[data-reader="second"]')?.textContent, "skill-1-2")
     assert.equal(batches.length, 1)
@@ -373,9 +356,7 @@ test("readers share explicit lookups and resolve only unambiguous owner-qualifie
         </QueryClientProvider>,
       ),
     )
-    for (let attempt = 0; attempt < 100 && rendered.get("named")?.length !== 3; attempt++) {
-      await act(settle)
-    }
+    await waitFor(() => rendered.get("named")?.length === 3)
     assert.deepEqual(slotRequests.sort(), [
       `${heroId}:chiêu 0`,
       `${heroId}:chiêu 2`,
@@ -403,9 +384,6 @@ test("readers share explicit lookups and resolve only unambiguous owner-qualifie
     client.clear()
     await logout()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

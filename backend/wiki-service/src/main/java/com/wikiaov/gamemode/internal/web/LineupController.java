@@ -11,7 +11,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Likes and saved lineups of the signed-in reader. Like every {@code /users/me} route, each one needs a person's bearer
@@ -26,33 +35,39 @@ public class LineupController implements LineupApi {
         this.lineups = lineups;
     }
 
+    @Override
     @GetMapping(version = "1")
     public MyState me(@PathVariable String code, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return lineups.me(code);
     }
 
+    @Override
     @PutMapping(path = "/likes/{lineupId}", version = "1")
     public LikeState like(@PathVariable String code, @PathVariable UUID lineupId) {
         return lineups.like(code, lineupId);
     }
 
+    @Override
     @DeleteMapping(path = "/likes/{lineupId}", version = "1")
     public LikeState unlike(@PathVariable String code, @PathVariable UUID lineupId) {
         return lineups.unlike(code, lineupId);
     }
 
+    @Override
     @PostMapping(path = "/lineups", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public OwnLineup create(@PathVariable String code, @RequestBody SaveLineup input) {
         return lineups.create(code, input);
     }
 
+    @Override
     @PutMapping(path = "/lineups/{lineupId}", version = "1")
     public OwnLineup update(@PathVariable String code, @PathVariable UUID lineupId, @RequestBody SaveLineup input) {
         return lineups.update(code, lineupId, input);
     }
 
+    @Override
     @DeleteMapping(path = "/lineups/{lineupId}", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String code, @PathVariable UUID lineupId, @RequestParam long expectedVersion,

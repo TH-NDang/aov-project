@@ -196,7 +196,15 @@ test("robots.txt keeps the API open for rendering and closes everything without 
 // End to end against a stand-in for the public API: the real script, real files, no backend and no domain.
 
 const PUBLIC_API: Record<string, unknown> = {
-  "/heroes": { items: [{ id: "hero-1", code: "airi", name: "Airi", roles: ["ASSASSIN"] }], totalElements: 1 },
+  "/heroes": {
+    context: { region: "VN", requestedLocale: "vi-VN" },
+    page: {
+      items: [{ id: "hero-1", code: "airi", name: "Airi", roles: ["ASSASSIN"] }],
+      page: 0,
+      size: 100,
+      totalElements: 1,
+    },
+  },
   "/heroes/hero-1": {
     media: { SPLASH: media("https://cdn.test/airi.jpg") },
     content: {

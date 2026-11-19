@@ -1,27 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("import wizard carries patch context and never selects rows without a known baseline", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  const { HeroImport } = await import("../src/features/publishing/hero-import")
+  const dom = createWindow("http://localhost/publishing")
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
+  const { HeroImport } = await import("../src/features/publishing/components/import/hero-import")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
@@ -32,8 +20,8 @@ test("import wizard carries patch context and never selects rows without a known
     if (path.endsWith("/relation-fields")) return { skills: [], skins: [] } as T
     if (path.endsWith("/fields"))
       return [
-        { key: "name", label: "Tên tướng", type: "text" },
-        { key: "roles", label: "Vai trò", type: "json" },
+        { key: "name", type: "text" },
+        { key: "roles", type: "json" },
       ] as T
     const body = JSON.parse(String(init?.body))
     calls.push({ path, body })
@@ -53,7 +41,7 @@ test("import wizard carries patch context and never selects rows without a known
       classification: known ? "CHANGED" : "INSUFFICIENT_DATA",
       canApply: known,
       sourcePatchVariantId: known ? "previous" : null,
-      warnings: known ? [] : ["Chưa có mốc trước để so sánh."],
+      warnings: known ? [] : [{ code: "NO_EARLIER_SNAPSHOT", skillKey: null, locale: null }],
     } as T
   }
   const click = async (text: string) => {
@@ -61,8 +49,8 @@ test("import wizard carries patch context and never selects rows without a known
     assert.ok(button, `Missing button: ${text}`)
     await act(async () => {
       button.click()
-      await new Promise((r) => setTimeout(r, 20))
     })
+    await flush()
   }
   try {
     await act(async () => {
@@ -90,11 +78,8 @@ test("import wizard carries patch context and never selects rows without a known
           />
         </QueryClientProvider>,
       )
-      await new Promise((r) => setTimeout(r, 30))
     })
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 30))
-    })
+    await flush(6)
     const radio = dom.window.document.querySelector<HTMLInputElement>('input[value="PATCH_UPDATE"]')!
     await act(async () => {
       radio.click()
@@ -115,10 +100,11 @@ test("import wizard carries patch context and never selects rows without a known
     })
     await act(async () => {
       file.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-      await new Promise((r) => setTimeout(r, 20))
     })
+    await flush()
     await click("Kiểm tra 2")
     assert.match(dom.window.document.body.textContent!, /Thiếu mốc so sánh/)
+    assert.match(dom.window.document.body.textContent!, /Chưa có mốc trước patch này để so sánh/)
     assert.match(dom.window.document.body.textContent!, /Lưu 1 bản nháp/)
     assert.equal(dom.window.document.querySelector("script"), null)
     assert.ok(calls.every((c) => c.body.contextId === "release" && c.body.mode === "PATCH_UPDATE"))
@@ -144,58 +130,42 @@ test("import wizard carries patch context and never selects rows without a known
     await act(async () => root.unmount())
     cache.clear()
     dom.window.close()
-    for (const [key, value] of originals) {
-      if (value) Object.defineProperty(globalThis, key, value)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 
 test("folder import uploads only mapped hero, skill and skin images after confirmation", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  const { HeroImport } = await import("../src/features/publishing/hero-import")
+  const dom = createWindow("http://localhost/publishing")
+  const uploads: string[] = []
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
+    fetch: async (_url: string, init?: RequestInit) => {
+      uploads.push((init?.body as File).name)
+      return new Response("", { status: 200 })
+    },
+  })
+  const { HeroImport } = await import("../src/features/publishing/components/import/hero-import")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
   const activity: { status: string; completed: number; total: number }[] = []
   const calls: { path: string; body: Record<string, unknown> }[] = []
-  const uploads: string[] = []
-  const oldFetch = globalThis.fetch
-  globalThis.fetch = async (_url, init) => {
-    uploads.push((init?.body as File).name)
-    return new Response("", { status: 200 })
-  }
   let asset = 0
   const request: Request = async <T,>(path: string, init?: RequestInit) => {
     if (path.includes("/upload-sessions/")) return { ...JSON.parse(String(init?.body ?? "{}")), version: 0 } as T
     if (path.endsWith("/relation-fields"))
       return {
         skills: ["skillKey", "kind", "name", "description"]
-          .map((key) => ({ key, label: key, type: "text" }))
-          .concat([{ key: "iconAssetId", label: "iconAssetId", type: "image" }]),
-        skins: ["skinKey", "name"]
-          .map((key) => ({ key, label: key, type: "text" }))
-          .concat([{ key: "artAssetId", label: "artAssetId", type: "image" }]),
+          .map((key) => ({ key, type: "text" }))
+          .concat([{ key: "iconAssetId", type: "image" }]),
+        skins: ["skinKey", "name"].map((key) => ({ key, type: "text" })).concat([{ key: "artAssetId", type: "image" }]),
       } as T
     if (path.endsWith("/fields"))
       return [
-        { key: "name", label: "Name", type: "text" },
-        { key: "portrait", label: "Portrait", type: "image" },
-        { key: "skills", label: "Skills", type: "json" },
-        { key: "skins", label: "Skins", type: "json" },
+        { key: "name", type: "text" },
+        { key: "portrait", type: "image" },
+        { key: "skills", type: "json" },
+        { key: "skins", type: "json" },
       ] as T
     const body = JSON.parse(String(init?.body ?? "{}"))
     calls.push({ path, body })
@@ -221,8 +191,8 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     assert.ok(button, `Missing button: ${text}`)
     await act(async () => {
       button.click()
-      await new Promise((r) => setTimeout(r, 20))
     })
+    await flush()
   }
   try {
     await act(async () => {
@@ -250,11 +220,8 @@ test("folder import uploads only mapped hero, skill and skin images after confir
           />
         </QueryClientProvider>,
       )
-      await new Promise((r) => setTimeout(r, 30))
     })
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 30))
-    })
+    await flush(6)
     const rows = [
       {
         code: "airi",
@@ -296,11 +263,11 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     await act(async () => {
       data.value = "data/heroes.json"
       data.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-      await new Promise((r) => setTimeout(r, 30))
     })
+    await flush()
     for (const [label, value] of [
-      ["skills: iconAssetId", "icon"],
-      ["skins: artAssetId", "cover"],
+      ["skills: Ảnh icon kỹ năng", "icon"],
+      ["skins: Ảnh nền trang phục", "cover"],
     ]) {
       const select = dom.window.document.querySelector<HTMLSelectElement>(`select[aria-label="${label}"]`)!
       assert.ok(select)
@@ -313,11 +280,7 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     assert.deepEqual(uploads, [])
     assert.ok(!calls.some((c) => c.path.includes("/media/")))
     await click("Lưu 1 bản nháp")
-    for (let attempt = 0; attempt < 100 && !calls.some((call) => call.path.endsWith("/jobs")); attempt++) {
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 20))
-      })
-    }
+    await waitFor(() => calls.some((call) => call.path.endsWith("/jobs")), "Saving starts the import job")
     assert.deepEqual(uploads, ["hero.png", "skill.png", "skin.png"])
     const job = calls.find((c) => c.path.endsWith("/jobs"))!
     const values = (job.body.rows as { values: Record<string, unknown> }[])[0].values
@@ -325,13 +288,9 @@ test("folder import uploads only mapped hero, skill and skin images after confir
     assert.equal((values.skills as Record<string, unknown>[])[0].iconAssetId, "asset-2")
     assert.equal((values.skins as Record<string, unknown>[])[0].artAssetId, "asset-3")
   } finally {
-    globalThis.fetch = oldFetch
     await act(async () => root.unmount())
     cache.clear()
     dom.window.close()
-    for (const [key, value] of originals) {
-      if (value) Object.defineProperty(globalThis, key, value)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

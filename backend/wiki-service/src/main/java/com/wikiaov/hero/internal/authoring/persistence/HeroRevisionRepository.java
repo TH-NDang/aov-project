@@ -1,17 +1,20 @@
 package com.wikiaov.hero.internal.authoring.persistence;
 
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 
 public interface HeroRevisionRepository
         extends
             JpaRepository<HeroRevision, UUID>,
-            org.springframework.data.jpa.repository.JpaSpecificationExecutor<HeroRevision> {
+            JpaSpecificationExecutor<HeroRevision> {
     Optional<HeroRevision> findByHeroIdAndId(UUID heroId, UUID id);
 
     List<HeroRevision> findByHeroIdOrderByRevisionNoDesc(UUID heroId);
@@ -24,18 +27,18 @@ public interface HeroRevisionRepository
         Instant getUpdatedAt();
     }
 
-    @org.springframework.data.jpa.repository.Query("select r.heroId as heroId,max(r.updatedAt) as updatedAt from HeroRevision r where r.heroId in :ids group by r.heroId")
+    @Query("select r.heroId as heroId,max(r.updatedAt) as updatedAt from HeroRevision r where r.heroId in :ids group by r.heroId")
     List<EditedTime> editedTimes(Collection<UUID> ids);
 
-    boolean existsByStateAndProfileRevisionId(String state, UUID id);
+    boolean existsByStateAndProfileRevisionId(RevisionState state, UUID id);
 
-    boolean existsByStateAndOverviewRatingRevisionId(String state, UUID id);
+    boolean existsByStateAndOverviewRatingRevisionId(RevisionState state, UUID id);
 
-    boolean existsByStateAndCombatStatsRevisionId(String state, UUID id);
+    boolean existsByStateAndCombatStatsRevisionId(RevisionState state, UUID id);
 
-    boolean existsByStateAndSkillsRevisionId(String state, UUID id);
+    boolean existsByStateAndSkillsRevisionId(RevisionState state, UUID id);
 
-    boolean existsByStateAndSkinsRevisionId(String state, UUID id);
+    boolean existsByStateAndSkinsRevisionId(RevisionState state, UUID id);
 
-    boolean existsByStateAndMediaBindingRevisionId(String state, UUID id);
+    boolean existsByStateAndMediaBindingRevisionId(RevisionState state, UUID id);
 }

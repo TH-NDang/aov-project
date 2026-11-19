@@ -1,8 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
@@ -12,9 +10,10 @@ import {
   referenceInputValue,
   selectReferenceInput,
 } from "./fixtures/reference-input"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
 
 test("catalog lists backend heroes, warehouse items and glossary; filters, mentions and server round-trip work", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/terminology", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/terminology")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
@@ -69,45 +68,17 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
       })
     return fixture.fetcher(input, init)
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    Element: dom.window.Element,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
-    Event: dom.window.Event,
-    CustomEvent: dom.window.CustomEvent,
-    MouseEvent: dom.window.MouseEvent,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { TerminologyPage } = await import("../src/features/terminology/terminology-page")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document
-  const waitFor = async (test: () => boolean) => {
-    for (let i = 0; i < 150 && !test(); i++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 20))
-      })
-    assert.ok(test())
-  }
+
   const button = (name: string) =>
     [...document.querySelectorAll<HTMLButtonElement>("button")].find(
       (node) => (node.getAttribute("aria-label") || node.textContent?.trim()) === name,
@@ -334,11 +305,8 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     await act(async () => root.unmount())
     client.clear()
     await logout()
-    await new Promise((resolve) => setTimeout(resolve, 30))
+    await flush()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

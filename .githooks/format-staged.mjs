@@ -18,7 +18,7 @@ if (process.env.SKIP_FORMAT === "1") {
 
 const JAVA_MODULES = ["backend/wiki-service", "backend/community-service"];
 const FRONTEND = "frontend";
-const PRETTIER_FILES = /\.(?:[cm]?[jt]sx?|json|css|html)$/;
+const PRETTIER_FILES = /\.(?:[cm]?[jt]sx?|json|css|html|ya?ml)$/;
 const PRETTIER_SKIP = /(?:^|\/)(?:pnpm-lock\.yaml|package-lock\.json)$/;
 const MAVEN_BATCH = 25; // Keeps the command line short on Windows.
 
@@ -80,8 +80,9 @@ function formatJava(module, files) {
       .map((f) => ".*" + escapeRegex(f.slice(module.length + 1)).replaceAll("/", "[\\\\/]"))
       .join(",");
     const args = ["-q", "-B", "spotless:apply", `-DspotlessFiles=${patterns}`];
+    // A full path: with NoDefaultCurrentDirectoryInExePath set, cmd.exe does not look in the current directory.
     const result = windows
-      ? spawnSync("cmd.exe", ["/d", "/c", "mvnw.cmd", ...args], { cwd: moduleDir, encoding: "utf8" })
+      ? spawnSync("cmd.exe", ["/d", "/c", path.join(moduleDir, "mvnw.cmd"), ...args], { cwd: moduleDir, encoding: "utf8" })
       : spawnSync("sh", ["./mvnw", ...args], { cwd: moduleDir, encoding: "utf8" });
     if (result.error || result.status !== 0) {
       console.error(`[format] Spotless failed in ${module} (syntax error, or Java/Maven not available):`);

@@ -6,14 +6,16 @@ import { fileKind, formatMonth, formatShare, formatStorage, groupLabel } from ".
 import { loadSourceLink } from "../src/features/files/source-links.ts"
 import { joinPath, safeFileName, sha256Hex, sourceContentType } from "../src/features/files/source-upload.ts"
 
-test("storage figures use the decimal gigabyte R2 bills in, with a Vietnamese decimal comma", () => {
-  assert.equal(formatStorage(4_250_000_000), "4,25 GB")
-  assert.equal(formatStorage(10_000_000_000), "10 GB")
-  assert.equal(formatStorage(261_100_000), "261,1 MB")
-  assert.equal(formatStorage(127_003), "127 KB")
-  assert.equal(formatStorage(0), "0 B")
-  assert.equal(formatShare(0.4253), "43%")
-  assert.equal(formatShare(0.00885), "0,9%")
+test("storage figures use the decimal gigabyte R2 bills in, written in the reader's locale", () => {
+  assert.equal(formatStorage(4_250_000_000, "vi-VN"), "4,25 GB")
+  assert.equal(formatStorage(4_250_000_000, "en-US"), "4.25 GB")
+  assert.equal(formatStorage(10_000_000_000, "vi-VN"), "10 GB")
+  assert.equal(formatStorage(261_100_000, "vi-VN"), "261,1 MB")
+  assert.equal(formatStorage(127_003, "vi-VN"), "127 KB")
+  assert.equal(formatStorage(0, "vi-VN"), "0 B")
+  assert.equal(formatShare(0.4253, "vi-VN"), "43%")
+  assert.equal(formatShare(0.00885, "vi-VN"), "0,9%")
+  assert.equal(formatShare(0.00885, "en-US"), "0.9%")
   assert.equal(formatMonth("2026-11"), "Tháng 11/2026")
 })
 

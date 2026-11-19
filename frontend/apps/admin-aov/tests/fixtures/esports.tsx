@@ -82,7 +82,6 @@ const options = new URLSearchParams(location.search)
 const { verifySession } = await import("../../src/app/auth/session")
 await verifySession()
 const { TournamentHubPage } = await import("../../src/features/esports/pages/tournament-hub-page")
-const { TournamentPage } = await import("../../src/features/esports/pages/tournament-page")
 const { MatchPage } = await import("../../src/features/esports/pages/match-page")
 const { GamePage } = await import("../../src/features/esports/pages/game-page")
 const start =
@@ -98,16 +97,12 @@ createRoot(document.getElementById("root")!).render(
           <Link className="ml-3 underline" to="/tournaments">
             Giải đấu
           </Link>
-          <Link className="ml-3 underline" to={`/tournaments/${data.TOURNAMENT_ID}`}>
-            Trang giải
-          </Link>
           <Link className="ml-3 underline" to={`/tournaments/${data.TOURNAMENT_ID}/matches/${data.SERIES_ID}`}>
             Trang trận
           </Link>
         </div>
         <Routes>
           <Route path="/tournaments" element={<TournamentHubPage />} />
-          <Route path="/tournaments/:tournamentId" element={<TournamentPage />} />
           <Route path="/tournaments/:tournamentId/matches/:seriesId" element={<MatchPage />} />
           <Route path="/tournaments/:tournamentId/matches/:seriesId/games/:gameId" element={<GamePage />} />
         </Routes>

@@ -8,13 +8,13 @@ import { useStreamLocale } from "../../components/stream-locale"
 import { StreamShell } from "../../components/stream-shell"
 import { FilterSelect, ScheduleNote } from "./competition-schedule"
 import { GameCard } from "./game-card"
-import { searchKey } from "./match-schedule"
-import { gamesQuery, tournamentsQuery } from "./tournament-api"
-import { seriesRound, seriesTeams } from "./tournament-model"
+import { gamesQuery, tournamentsQuery } from "../../lib/tournament-api"
+import { seriesRound, seriesTeams } from "../../lib/tournament-model"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /** The match a game belongs to in a few words: both teams and, where the match has one, its round. */
 function matchName(game: PublishedGame, locale: string) {
-  const round = seriesRound(game.series.name)
+  const round = seriesRound(game.series, locale)
   const teams = seriesTeams(game, locale)
     .map((team) => team.shortName)
     .join(" vs ")
@@ -31,7 +31,7 @@ export function TournamentDirectory() {
   const tournament = params.get("tournament") || ""
   const seriesId = params.get("series") || ""
   const q = params.get("q") || ""
-  const search = useDeferredValue(searchKey(q.trim()))
+  const search = useDeferredValue(foldSearchText(q.trim()))
   const games = useInfiniteQuery(gamesQuery({ tournamentId: tournament || undefined, seriesId: seriesId || undefined }))
   const tournaments = useQuery(tournamentsQuery)
   const competitions = tournaments.data?.items ?? []
@@ -39,10 +39,10 @@ export function TournamentDirectory() {
   const visible = entries.filter(
     (game) =>
       !search ||
-      searchKey(
+      foldSearchText(
         [
           game.tournament.name,
-          game.series.name,
+          seriesRound(game.series, languageTag),
           ...Object.values(game.teams).flatMap((team) => [team.name, team.shortName]),
         ]
           .filter(Boolean)
@@ -71,28 +71,37 @@ export function TournamentDirectory() {
     <StreamShell>
       <title>{text("Tra cứu ván đấu — AOV Stream", "Game lookup — AOV Stream")}</title>
       <div className="tn-games">
-        <Link className="cp-back" to="/competitions">
+        <Link className="cp-back" data-flush="" to="/competitions">
           <StreamIcon name="back" size={16} />
           {text("Giải đấu", "Tournaments")}
         </Link>
-        <header className="tn-page-head">
+        <header className="tn-page-head" data-lead="kept">
           <div>
             <h1>{text("Tra cứu ván đấu", "Game lookup")}</h1>
             <p>
               {total == null
-                ? "Cấm chọn và đội hình của từng ván đã công bố."
-                : [`${total.toLocaleString(languageTag)} ván đã công bố`, !seriesId && only]
+                ? text(
+                    "Cấm chọn và đội hình của từng ván đã công bố.",
+                    "Bans, picks and lineups of every published game.",
+                  )
+                : [
+                    text(
+                      `${total.toLocaleString(languageTag)} ván đã xuất bản`,
+                      `${total.toLocaleString(languageTag)} published ${total === 1 ? "game" : "games"}`,
+                    ),
+                    !seriesId && only,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
             </p>
           </div>
         </header>
         <div className="tn-games-bar">
-          <label className="stream-search">
+          <label className="stream-search tn-games-search">
             <StreamIcon name="search" size={16} />
             <input
-              aria-label="Tìm ván đấu theo đội hoặc vòng đấu"
-              placeholder="Tìm đội, vòng đấu…"
+              aria-label={text("Tìm ván đấu theo đội hoặc vòng đấu", "Search games by team or round")}
+              placeholder={text("Tìm đội, vòng đấu…", "Search teams, rounds…")}
               value={q}
               onChange={(event) => filter("q", event.target.value)}
             />
@@ -102,8 +111,9 @@ export function TournamentDirectory() {
               label={text("Giải đấu", "Tournament")}
               value={tournament || "all"}
               onChange={(value) => filter("tournament", value)}
-              all="Mọi giải đấu"
+              all={text("Mọi giải đấu", "All tournaments")}
               options={competitions.map((entry) => [entry.id, `${entry.content.name} (${entry.gameCount})`])}
+              className="tn-games-select"
             />
           )}
         </div>
@@ -125,13 +135,18 @@ export function TournamentDirectory() {
         {games.isPending ? (
           <div className="tn-game-grid" role="status" aria-label={text("Đang tải ván đấu", "Loading games")}>
             {Array.from({ length: 6 }, (_, index) => (
-              <span className="hub-skeleton" key={index} aria-hidden="true" />
+              <span className="hub-skeleton tn-game-card-skeleton" key={index} aria-hidden="true" />
             ))}
           </div>
         ) : games.isLoadingError ? (
           <div className="hub-state" role="alert">
-            <h2>Chưa tải được ván đấu</h2>
-            <p>Kho dữ liệu giải đấu chưa phản hồi. Thử lại sau ít phút.</p>
+            <h2>{text("Chưa tải được ván đấu", "The games could not be loaded")}</h2>
+            <p>
+              {text(
+                "Kho dữ liệu giải đấu chưa phản hồi. Thử lại sau ít phút.",
+                "The tournament data store is not answering. Try again in a few minutes.",
+              )}
+            </p>
             <button type="button" className="cp-button" onClick={() => void games.refetch()}>
               {text("Thử lại", "Retry")}
             </button>
@@ -145,11 +160,16 @@ export function TournamentDirectory() {
         ) : games.hasNextPage ? null : (
           <div className="hub-state">
             <h2>
-              {filtered ? "Không tìm thấy ván phù hợp" : text("Chưa có ván đấu được công bố", "No games published yet")}
+              {filtered
+                ? text("Không tìm thấy ván phù hợp", "No matching games found")
+                : text("Chưa có ván đấu được công bố", "No games published yet")}
             </h2>
             <p>
               {filtered
-                ? "Thử tên đội khác hoặc bỏ bộ lọc đang chọn."
+                ? text(
+                    "Thử tên đội khác hoặc bỏ bộ lọc đang chọn.",
+                    "Try another team name or clear the chosen filters.",
+                  )
                 : text(
                     "Các ván đã được rà soát và xuất bản sẽ xuất hiện tại đây.",
                     "Games that have been reviewed and published will appear here.",

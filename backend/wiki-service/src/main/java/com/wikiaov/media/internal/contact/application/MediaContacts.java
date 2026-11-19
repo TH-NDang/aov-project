@@ -14,6 +14,7 @@ import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
+import java.util.Map;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.PageRequest;
@@ -74,7 +75,7 @@ public class MediaContacts {
         if (entry.getResolvedAt() == null) {
             entry.resolve(clock.instant());
             audit.record(new AuditEntry(actors.require(), "MEDIA_CONTACT_RESOLVED", "MEDIA_CONTACT", id,
-                    null, null, null, null, java.util.Map.of()));
+                    null, null, null, null, Map.of()));
         }
         return view(entry);
     }

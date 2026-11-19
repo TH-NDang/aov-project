@@ -1,12 +1,18 @@
 package com.wikiaov.spell.internal.catalog.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.spell.internal.application.SpellErrorCode;
+import com.wikiaov.spell.internal.catalog.persistence.entity.SpellRevision;
 import com.wikiaov.spell.internal.domain.SpellContent;
 import java.math.BigDecimal;
 import java.util.List;
@@ -80,15 +86,15 @@ class SpellContentRulesTest {
                 .hasMessage("Invalid spell state key.");
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void archivedLegacyBaselineDoesNotRequireObservationPatchButGamePatchDoes() {
-        var revision = new com.wikiaov.spell.internal.catalog.persistence.entity.SpellRevision();
-        revision.setCause("DATA_BASELINE");
+        var revision = new SpellRevision();
+        revision.setCause(CatalogCause.DATA_BASELINE);
         var removed = new SpellContent(null, BigDecimal.ONE, null, "ACCOUNT_CREATION", "REMOVED", true, 0,
                 null, null, null, List.of(), List.of(), List.of(), null);
         assertThat(rules.archived(revision, removed)).isTrue();
         assertThat(rules.readiness(revision, removed)).doesNotContain("effectiveFromPatchVariantId");
-        revision.setCause("GAME_PATCH");
+        revision.setCause(CatalogCause.GAME_PATCH);
         assertThat(rules.archived(revision, removed)).isFalse();
         assertThat(rules.readiness(revision, removed)).contains("effectiveFromPatchVariantId");
     }

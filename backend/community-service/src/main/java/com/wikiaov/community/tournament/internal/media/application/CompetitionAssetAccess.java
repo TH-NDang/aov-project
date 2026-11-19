@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@Transactional
 public class CompetitionAssetAccess implements CompetitionAssets {
     private final CompetitionMedia media;
     private final RegistryWriteGuard writes;
@@ -17,9 +16,11 @@ public class CompetitionAssetAccess implements CompetitionAssets {
     }
 
     @Override
+    @Transactional
     public void acquire(String... urls) {
         writes.acquire();
-        for (String url : urls)
+        for (String url : urls) {
             media.requireAvailable(url);
+        }
     }
 }

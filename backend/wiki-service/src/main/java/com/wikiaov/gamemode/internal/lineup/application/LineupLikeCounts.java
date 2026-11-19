@@ -33,8 +33,9 @@ public class LineupLikeCounts {
     public Map<UUID, LikeCount> counts(UUID modeId, Collection<UUID> lineupIds) {
         var result = new HashMap<UUID, LikeCount>();
         lineupIds.forEach(id -> result.put(id, new LikeCount(0, 0)));
-        if (lineupIds.isEmpty())
+        if (lineupIds.isEmpty()) {
             return result;
+        }
         likes.totals(modeId, trendStart(), lineupIds).forEach(row -> result.put(row.lineupId(),
                 new LikeCount(row.likes(), row.recentLikes() == null ? 0 : row.recentLikes())));
         return result;

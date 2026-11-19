@@ -2,7 +2,12 @@ package com.wikiaov.hero.internal.change.application;
 
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
-import com.wikiaov.hero.internal.application.response.HeroPatchView.*;
+import com.wikiaov.hero.internal.application.response.HeroPatchView.Anchor;
+import com.wikiaov.hero.internal.application.response.HeroPatchView.Direction;
+import com.wikiaov.hero.internal.application.response.HeroPatchView.Provenance;
+import com.wikiaov.hero.internal.application.response.HeroPatchView.RoleValue;
+import com.wikiaov.hero.internal.application.response.HeroPatchView.SkillFieldValue;
+import com.wikiaov.hero.internal.application.response.HeroPatchView.StatValue;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
@@ -20,7 +25,15 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.ApiException;
-import java.util.*;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.RevisionState;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -47,17 +60,19 @@ public class HeroPatchDerivation {
     public HeroPatchView at(UUID heroId, UUID variantId, UUID anchorRevisionId) {
         var variant = contexts.variant(variantId);
         var revisions = store.revisions(heroId);
-        if (revisions.isEmpty())
+        if (revisions.isEmpty()) {
             throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "The hero does not exist.");
+        }
 
         Map<UUID, Long> ordinals = contexts.rulesetVariants(variant.rulesetId()).stream()
                 .collect(Collectors.toMap(PatchVariantReference::id, PatchVariantReference::rulesetOrdinal));
         var anchor = anchorRevisionId == null
                 ? anchor(revisions, variant, ordinals)
                 : selectedAnchor(heroId, anchorRevisionId, revisions, variant, ordinals);
-        if (anchor == null)
+        if (anchor == null) {
             return new HeroPatchView(heroId, variantId, new Anchor(Direction.NONE, null, null), List.of(), List.of(),
                     List.of(), List.of());
+        }
 
         var derived = new Derived(anchor.direction());
         derived.start(stats(anchor.revision()), profile(anchor.revision()));
@@ -70,7 +85,7 @@ public class HeroPatchDerivation {
     private static Anchoring selectedAnchor(UUID heroId, UUID revisionId, List<HeroRevisionView> revisions,
             PatchVariantReference variant, Map<UUID, Long> ordinals) {
         var revision = revisions.stream().filter(candidate -> candidate.id().equals(revisionId)
-                && candidate.heroId().equals(heroId) && candidate.state().equals("PUBLISHED")
+                && candidate.heroId().equals(heroId) && candidate.state() == RevisionState.PUBLISHED
                 && candidate.rulesetId().equals(variant.rulesetId())
                 && candidate.effectiveFromPatchVariantId() != null
                 && ordinals.containsKey(candidate.effectiveFromPatchVariantId())).findFirst()
@@ -88,7 +103,7 @@ public class HeroPatchDerivation {
     private static Anchoring anchor(List<HeroRevisionView> revisions, PatchVariantReference variant,
             Map<UUID, Long> ordinals) {
         long target = variant.rulesetOrdinal();
-        var published = revisions.stream().filter(revision -> revision.state().equals("PUBLISHED")
+        var published = revisions.stream().filter(revision -> revision.state() == RevisionState.PUBLISHED
                 && revision.rulesetId().equals(variant.rulesetId())).toList();
 
         var before = published.stream().filter(revision -> ordinal(revision, ordinals) <= target)
@@ -111,7 +126,7 @@ public class HeroPatchDerivation {
         Comparator<Entry> byPatch = Comparator
                 .comparingLong(entry -> ordinals.get(entry.header().getPatchVariantId()));
 
-        return history.forHero(heroId, "vi-VN").stream().filter(entry -> {
+        return history.forHero(heroId, CatalogLocales.DEFAULT).stream().filter(entry -> {
             Long ordinal = ordinals.get(entry.header().getPatchVariantId());
             return ordinal != null && (backward
                     ? ordinal > target && ordinal <= anchor.ordinal()
@@ -185,20 +200,22 @@ public class HeroPatchDerivation {
         private void stat(StatChangeClassification stat, UUID changeSetId, UUID patchVariantId) {
             var value = forward ? stat.getNewValue() : stat.getOldValue();
             var previous = stats.get(stat.getStatKey());
-            if (value == null)
+            if (value == null) {
                 stats.remove(stat.getStatKey());
-            else
+            } else {
                 stats.put(stat.getStatKey(), new StatValue(stat.getStatKey(), stat.getUnitCode(), value, null,
                         previous == null ? null : previous.growthPerLevel(), Provenance.DERIVED, changeSetId,
                         patchVariantId));
+            }
         }
 
         private void role(RoleChangeClassification role, UUID changeSetId, UUID patchVariantId) {
-            var code = Role.valueOf(role.getRoleCode());
-            if (role.isAdded() == forward)
+            var code = role.getRoleCode();
+            if (role.isAdded() == forward) {
                 roles.put(code, new RoleValue(code, Provenance.DERIVED, changeSetId, patchVariantId));
-            else
+            } else {
                 roles.remove(code);
+            }
         }
 
         HeroPatchView view(UUID heroId, UUID variantId, Anchor anchor) {

@@ -1,6 +1,6 @@
 import type { EntityKind } from "./entity-rich-text"
 import type { EditorSnapshot, TextSelection } from "./entity-rich-text-editor"
-import { exampleTablePattern, readExampleTable, type ParagraphStyle } from "./rich-text-blocks"
+import { exampleTablePattern, readExampleTable, type ParagraphStyle } from "@aov/ui/lib/rich-text-blocks"
 
 export type ReferenceInputPart =
   | { type: "exampleTable"; token: string; rows: string[][]; label: string }

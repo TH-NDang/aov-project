@@ -1,6 +1,10 @@
 package com.wikiaov.build.internal.persistence.entity;
 
+import com.wikiaov.build.internal.domain.BuildSource;
+import com.wikiaov.platform.AssignedIdentifierEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -21,7 +25,8 @@ public class CaptureRow extends AssignedIdentifierEntity<UUID> {
 
     private String code;
     private String regionCode;
-    private String sourceKind;
+    @Enumerated(EnumType.STRING)
+    private BuildSource sourceKind;
     private String sourceLabel;
     private Instant capturedAt;
     private String sourceTimeZone;

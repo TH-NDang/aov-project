@@ -61,6 +61,10 @@ kcadm.sh update clients/<id của admin-aov-backend> -r wikiaov -s attributes.lo
 ```
 
 Ảnh mascot được sao chép từ asset frontend; khi đổi logo cần cập nhật bản trong `resources/img` của theme.
+Màu và phông của cả hai theme lấy từ khối token ở đầu `aov-public/.../css/aov-login.css` và
+`aov-admin/.../css/aov-admin.css`, chép nguyên từ `frontend/packages/ui/src/styles/tokens.css`. Không sửa tay khối
+này: sau khi đổi token, chạy
+`node --experimental-strip-types lint/login-theme-tokens.ts --write` trong `frontend/packages/ui`.
 Sau khi sửa theme trên môi trường bật cache, triển khai lại/restart Keycloak theo quy trình vận hành.
 Khi nâng Keycloak cần kiểm tra lại template kế thừa, script password visibility, đăng ký và MFA.
 

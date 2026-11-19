@@ -14,13 +14,14 @@ import {
   type StorageRow,
   type StorageTable,
 } from "./storage-model"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
+import { NativeSelect } from "@/components/native-select"
 
-export const SELECT_CLASS =
-  "h-9 w-full rounded-md border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
 export const displayValue = (value: unknown) =>
   value === undefined ? "—" : typeof value === "string" ? value : JSON.stringify(value)
+/** Rows before a file is read; one array, so the columns are not worked out again on every render. */
+const NO_ROWS: StorageRow[] = []
 
 export function ImportDialog({
   table,
@@ -42,7 +43,7 @@ export function ImportDialog({
   const [filename, setFilename] = useState("")
   const [filter, setFilter] = useState("all")
   const [result, setResult] = useState<{ added: number; updated: number; skipped: number } | null>(null)
-  const rows = arrays[arrayName] ?? []
+  const rows = arrays[arrayName] ?? NO_ROWS
   const columns = useMemo(() => [...new Set(rows.flatMap((row) => Object.keys(row)))], [rows])
   const counts = plan
     ? {
@@ -136,7 +137,7 @@ export function ImportDialog({
         {result ? (
           <div className="space-y-4">
             <p className="flex items-center gap-2 font-medium">
-              <Check className="size-5 text-green-600" />
+              <Check className="size-5 text-(--aov-success)" />
               Đã nhập xong
             </p>
             <p>
@@ -162,22 +163,22 @@ export function ImportDialog({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-2 text-sm">
                     Danh sách trong tệp
-                    <select
-                      className={SELECT_CLASS}
+                    <NativeSelect
+                      className="w-full"
                       value={arrayName}
                       onChange={(event) => chooseArray(event.target.value)}
                     >
                       {Object.keys(arrays).map((name) => (
                         <option key={name}>{name}</option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                   <label className="grid gap-2 text-sm">
                     {table.idColumn
                       ? `Cột ánh xạ với ID “${table.idColumn}”`
                       : "Chọn cột làm ID (duy nhất, không trống)"}
-                    <select
-                      className={SELECT_CLASS}
+                    <NativeSelect
+                      className="w-full"
                       value={sourceId}
                       onChange={(event) => {
                         setSourceId(event.target.value)
@@ -188,7 +189,7 @@ export function ImportDialog({
                       {columns.map((column) => (
                         <option key={column}>{column}</option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </label>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -253,9 +254,9 @@ export function ImportDialog({
               luôn được giữ nguyên.
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              <select
+              <NativeSelect
                 aria-label="Lọc kết quả nhập"
-                className={`${SELECT_CLASS} w-auto`}
+
                 value={filter}
                 onChange={(event) => {
                   setFilter(event.target.value)
@@ -265,7 +266,7 @@ export function ImportDialog({
                 <option value="new">Dòng mới</option>
                 <option value="update">Có thay đổi</option>
                 <option value="same">Giống hiện tại</option>
-              </select>
+              </NativeSelect>
               <Button
                 variant="outline"
                 size="sm"

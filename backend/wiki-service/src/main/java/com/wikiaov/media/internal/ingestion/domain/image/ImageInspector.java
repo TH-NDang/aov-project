@@ -47,6 +47,7 @@ public final class ImageInspector {
                     ? corrupt("The object is too short to be an image.")
                     : invalid(InvalidMediaReason.UNSUPPORTED_FORMAT, "Only PNG, JPEG and WebP images are accepted.");
         }
+
         // Parsers re-read the head, then continue with the rest of the stream.
         DataInputStream data = new DataInputStream(new SequenceInputStream(new ByteArrayInputStream(head), metered));
         ImageFormat format = detect(head);
@@ -61,8 +62,10 @@ public final class ImageInspector {
             throw corrupt("The image header is truncated.");
         }
         checkDimensions(size[0], size[1], limits);
+
         metered.drain();
         checkCompleteness(format, head, metered);
+
         return new ImageInspection(format, size[0], size[1], metered.count(), metered.sha256Hex());
     }
 

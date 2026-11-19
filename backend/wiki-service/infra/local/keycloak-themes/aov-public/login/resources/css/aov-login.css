@@ -46,11 +46,121 @@
   src: url("../fonts/be-vietnam-pro-latin-700-normal.woff2") format("woff2");
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
+/* Shared tokens: a copy of frontend/packages/ui/src/styles/tokens.css, written by lint/login-theme-tokens.ts. */
+:root {
+  /* Surfaces: one page color, one level for cards, one for hover and controls. */
+  --aov-bg: light-dark(#f6f7f9, #0f1319);
+  --aov-surface: light-dark(#ffffff, #171c24);
+  --aov-raised: light-dark(#eef0f4, #1f2630);
+  --aov-sunken: light-dark(#eceef2, #0b0e13);
+  --aov-popover: light-dark(#ffffff, #1c222b);
+  --aov-overlay: light-dark(rgb(15 19 25 / 40%), rgb(5 7 10 / 72%));
+
+  /* Lines separate content; a surface and a line are rarely needed together. */
+  --aov-line: light-dark(#e1e4ea, #2b3340);
+  --aov-line-strong: light-dark(#c9cfd9, #3d4757);
+
+  /* Text */
+  --aov-text: light-dark(#14181f, #edeff2);
+  --aov-text-soft: light-dark(#39414e, #c9cfd8);
+  --aov-muted: light-dark(#5b6472, #a4adba);
+
+  /* One brand accent across the product family. */
+  --aov-accent: light-dark(#8a6414, #e2bc76);
+  --aov-accent-strong: light-dark(#6f4f0d, #f0d49c);
+  --aov-accent-soft: light-dark(#f7efdc, rgb(226 188 118 / 14%));
+  --aov-on-accent: light-dark(#ffffff, #1a1408);
+
+  --aov-chart: light-dark(#8a6414, #b98c35);
+  /* Further chart series, for charts with more than one. */
+  --aov-chart-2: light-dark(oklch(0.6 0.118 184.704), oklch(0.696 0.17 162.48));
+  --aov-chart-3: light-dark(oklch(0.398 0.07 227.392), oklch(0.769 0.188 70.08));
+  --aov-chart-4: light-dark(oklch(0.828 0.189 84.429), oklch(0.627 0.265 303.9));
+  --aov-chart-5: light-dark(oklch(0.769 0.188 70.08), oklch(0.645 0.246 16.439));
+
+  /* Product wordmarks: each product keeps its own ink and accent wherever its name is drawn, in any app. */
+  --aov-brand-wiki-ink: #f5e6cc;
+  --aov-brand-wiki-accent: #e5b566;
+  --aov-brand-stream-ink: #eee0ba;
+  --aov-brand-stream-accent: #aebbe3;
+  --aov-brand-stream-wordmark: #b6bfdf;
+
+  /* AOV Wiki: a deep ink-blue page like the game's lobby, cards one step lighter, marks in a rich gold. Fixed, not themed. */
+  --aov-wiki-night: #0d1322;
+  --aov-wiki-bar: #080c16;
+  --aov-wiki-panel: #1d2840;
+  --aov-wiki-panel-high: #26344f;
+  --aov-wiki-panel-deep: #161f33;
+  --aov-wiki-line: #26324b;
+  --aov-wiki-line-strong: #3b4b6b;
+  --aov-wiki-gold: #f2c26a;
+  --aov-wiki-gold-bright: #ffdf9e;
+  --aov-wiki-text: #f5f0e6;
+  --aov-wiki-text-soft: #c8d0de;
+  --aov-wiki-text-muted: #8f9cb5;
+  --aov-wiki-success: #52e0a0;
+  --aov-wiki-danger: #ff7d7d;
+  --aov-wiki-warning: #ffc75e;
+  --aov-wiki-info: #8db9ff;
+
+  /* AOV Stream, from its owl logo: night indigo, periwinkle feathers, gold eyes, cream face. */
+  --aov-stream-night: #141d31;
+  --aov-stream-dusk: #1e2742;
+  --aov-stream-indigo: #2a3354;
+  --aov-stream-indigo-line: #3a4570;
+  --aov-stream-feather: #555f8e;
+  --aov-stream-feather-light: #7d87b1;
+  --aov-stream-gold: #d3a857;
+  --aov-stream-periwinkle-deep: #38427a;
+  --aov-stream-tan: #eac98f;
+  --aov-stream-cream: #fff4d7;
+  --aov-stream-text-soft: #d3d6e6;
+  --aov-stream-text-muted: #a9b0cf;
+  --aov-stream-mist: #eff0f7;
+  --aov-stream-mist-sunken: #e3e5f1;
+  --aov-stream-mist-line: #d3d7e8;
+  --aov-stream-ink: #1c2a3b;
+  --aov-stream-ink-soft: #353654;
+
+  /* In-game gold: a price in gold and its coin, in the coin's amber rather than the brand accent. */
+  --aov-game-gold: light-dark(oklch(66.6% 0.179 58.318), oklch(82.8% 0.189 84.429));
+
+  /* Status colors carry meaning only; they are not decoration. */
+  --aov-success: light-dark(#12804f, #4cc38a);
+  --aov-success-soft: light-dark(#e3f6ec, rgb(76 195 138 / 14%));
+  --aov-danger: light-dark(#c3313f, #ef6b6b);
+  --aov-danger-soft: light-dark(#fdecee, rgb(239 107 107 / 14%));
+  --aov-warning: light-dark(#a15c07, #e8a33d);
+  --aov-warning-soft: light-dark(#fdf1dc, rgb(232 163 61 / 14%));
+  --aov-info: light-dark(#2a6fc9, #6fa8ff);
+  --aov-info-soft: light-dark(#e6f0fb, rgb(111 168 255 / 14%));
+  --aov-live: light-dark(#d92d3a, #ff5a5f);
+
+  /* Shape: controls, cards and large artwork. Pills are for chips only. */
+  --aov-radius-control: 6px;
+  --aov-radius-card: 10px;
+  --aov-radius-media: 14px;
+  --aov-radius-pill: 999px;
+
+  --aov-shadow: light-dark(0 1px 2px rgb(16 24 40 / 6%), 0 1px 2px rgb(0 0 0 / 30%));
+  --aov-shadow-lg: light-dark(0 14px 34px -14px rgb(16 24 40 / 24%), 0 16px 40px -16px rgb(0 0 0 / 65%));
+
+  /* Layout */
+  --aov-page-max: 1280px;
+  --aov-gutter: clamp(16px, 3vw, 32px);
+  --aov-topbar: 56px;
+
+  /* Be Vietnam Pro is drawn for Vietnamese diacritics; the stack keeps metrics close before it loads. */
+  --aov-font-sans:
+    "Be Vietnam Pro", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+}
+/* End of the shared tokens. */
 :root {
   color-scheme: dark;
   font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
-  background: #0f1319;
-  color: #edeff2;
+  background: var(--aov-bg);
+  color: var(--aov-text);
   font-synthesis: none;
 }
 * {
@@ -61,20 +171,20 @@ body {
   min-width: 280px;
 }
 body[data-brand="stream"] {
-  --accent: #e2bc76;
-  --accent-dark: #1a1408;
-  --gold: #e2bc76;
-  --story: #171c24;
-  --glow: #e2bc7626;
-  --ink: #edeff2;
+  --accent: var(--aov-accent);
+  --accent-dark: var(--aov-on-accent);
+  --gold: var(--aov-accent);
+  --story: var(--aov-surface);
+  --glow: color-mix(in srgb, var(--aov-accent) 15%, transparent);
+  --ink: var(--aov-text);
 }
 body[data-brand="wiki"] {
-  --accent: #e2bc76;
-  --accent-dark: #1a1408;
-  --gold: #e2bc76;
-  --story: #171c24;
-  --glow: #e2bc7626;
-  --ink: #edeff2;
+  --accent: var(--aov-accent);
+  --accent-dark: var(--aov-on-accent);
+  --gold: var(--aov-accent);
+  --story: var(--aov-surface);
+  --glow: color-mix(in srgb, var(--aov-accent) 15%, transparent);
+  --ink: var(--aov-text);
 }
 a {
   color: var(--accent);
@@ -255,7 +365,7 @@ input[type="submit"] {
   min-width: 0;
   min-height: 100svh;
   padding: 24px clamp(24px, 4.5vw, 72px);
-  background: radial-gradient(ellipse at top right, #ffffff03, transparent 55%), #0f1319;
+  background: radial-gradient(ellipse at top right, #ffffff03, transparent 55%), var(--aov-bg);
 }
 .aov-toolbar {
   display: flex;
@@ -268,14 +378,14 @@ input[type="submit"] {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #a4adba;
+  color: var(--aov-muted);
   font-size: 12px;
   font-weight: 600;
 }
 .aov-locale {
   position: relative;
   margin-left: auto;
-  color: #a4adba;
+  color: var(--aov-muted);
   font-size: 12px;
 }
 .aov-locale summary {
@@ -294,7 +404,7 @@ input[type="submit"] {
   padding: 6px;
   border: 1px solid #ffffff1a;
   border-radius: 10px;
-  background: #1c222b;
+  background: var(--aov-popover);
   box-shadow: 0 12px 30px #0005;
 }
 .aov-locale a {
@@ -329,13 +439,13 @@ input[type="submit"] {
 }
 .aov-form-intro {
   margin: 10px 0 0;
-  color: #a4adba;
+  color: var(--aov-muted);
   font-size: 13px;
   line-height: 1.7;
 }
 .aov-required {
   margin: 12px 0 0;
-  color: #a4adba;
+  color: var(--aov-muted);
   font-size: 12px;
 }
 .aov-required > span,
@@ -371,10 +481,10 @@ input[type="submit"] {
   display: block;
   width: 100%;
   min-height: 44px;
-  border: 1px solid #3d4757;
+  border: 1px solid var(--aov-line-strong);
   border-radius: 8px;
   padding: 10px 12px;
-  background: #171c24;
+  background: var(--aov-surface);
   color: #f2f0eb;
   font-size: 14px;
   line-height: 22px;
@@ -453,7 +563,7 @@ input[type="radio"] {
   justify-content: center;
   min-height: 44px;
   padding: 10px 18px;
-  border: 1px solid #3d4757;
+  border: 1px solid var(--aov-line-strong);
   border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
@@ -495,7 +605,7 @@ input[type="radio"] {
 .aov-help {
   display: block;
   margin: 8px 0;
-  color: #a4adba;
+  color: var(--aov-muted);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -527,7 +637,7 @@ input[type="radio"] {
 }
 .aov-social h2 {
   margin: 16px 0 12px;
-  color: #a4adba;
+  color: var(--aov-muted);
   font-size: 12px;
   font-weight: 400;
 }
@@ -546,7 +656,7 @@ input[type="radio"] {
   width: 100%;
   min-height: 44px;
   padding: 10px 14px;
-  border: 1px solid #3d4757;
+  border: 1px solid var(--aov-line-strong);
   border-radius: 8px;
   color: #e4e7f0;
   font-size: 13px;
@@ -569,7 +679,7 @@ input[type="radio"] {
 }
 #kc-info {
   margin-top: 20px;
-  color: #a4adba;
+  color: var(--aov-muted);
   font-size: 13px;
   text-align: center;
   line-height: 1.7;

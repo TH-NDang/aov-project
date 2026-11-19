@@ -2,15 +2,17 @@ import { type CSSProperties, type ReactNode } from "react"
 import { Outlet, useLocation, useMatch } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiHeader } from "../components/wiki-header"
-import { warehouseKind } from "../features/warehouse/warehouse-types"
+import { warehouseKind } from "../lib/warehouse-types"
+import { SECTION_NAMES } from "../lib/wiki-sections"
 import "./wiki-library-layout.css"
-import { useWikiContext } from "../context/wiki-context"
+import { useWikiContext, useWikiText } from "../context/wiki-context"
 import { libraryPageMeta, type PageMeta } from "../lib/seo/page-meta"
 import { usePageHead } from "../lib/seo/use-page-head"
 
 /** The frame of every list and reference page: the header with the sections, then the page at full width. */
 export function WikiLibraryLayout() {
-  const { t, locale } = useWikiContext()
+  const { locale } = useWikiContext()
+  const t = useWikiText()
   const layout = usePageLayout()
   const { pathname } = useLocation()
   const isWarehouse = useMatch("/warehouse/*")
@@ -31,17 +33,18 @@ export function WikiLibraryLayout() {
           : isSkins
             ? "skins"
             : "heroes"
-  const pageTitle = t(active)
+  const pageTitle = t(...SECTION_NAMES[active])
   usePageHead(libraryPageMeta(pathname, locale))
 
   return (
     <div className="wiki-library-shell">
       {/* On the compact layout the armory's parts are tabs below the header, which names the whole armory. */}
-      {/* A mode's page opens on its cover, so on phones the header starts clear over it and darkens on scroll. */}
+      {/* On phones a mode's page keeps the buttons drawn for artwork, on a bar that is solid from the first pixel. */}
       {/* One mode or one update names itself in its own h1; the header then only says which section it belongs to. */}
       <WikiHeader
         variant={layout === "compact" && isModeDetail ? "hero" : "library"}
-        pageTitle={layout === "compact" && isWarehouse ? t("warehouse") : pageTitle}
+        solid={Boolean(isModeDetail)}
+        pageTitle={layout === "compact" && isWarehouse ? t("Kho trang bị", "Armory") : pageTitle}
         pageTitleIsHeading={!isModeDetail && !isPatchDetail}
         section={active}
       />

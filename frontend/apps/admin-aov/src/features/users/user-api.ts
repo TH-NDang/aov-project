@@ -27,7 +27,17 @@ export interface UserPage {
   size: number
   totalElements: number
 }
-export const userKeys = { self: ["user-profile", "me"] as const, all: ["user-profile"] as const }
+type Maybe = string | null | undefined
+export const userKeys = {
+  all: ["user-profile"] as const,
+  self: ["user-profile", "me"] as const,
+  /** The signed-in account's own profile, kept apart per account. */
+  selfOf: (issuer: Maybe, subject: Maybe) => ["user-profile", "me", issuer, subject] as const,
+  detail: (issuer: Maybe, subject: Maybe, userId: Maybe) =>
+    ["user-profile", "detail", issuer, subject, userId] as const,
+  list: (issuer: Maybe, subject: Maybe, term: string) =>
+    ["user-profile", "infinite-list", issuer, subject, term] as const,
+}
 export const selfProfile = (signal?: AbortSignal) => backendRequest<UserProfile>("/users/me", { signal })
 export const getProfile = (id: string, signal?: AbortSignal) =>
   backendRequest<UserProfile>(`/admin/users/${id}`, { signal })

@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import React, { act, useState } from "react"
-import { JSDOM } from "jsdom"
 import type { Catalog, GameContent, Participant, Reference } from "@aov/community-contracts"
 import type { GameSeat, GameView } from "../src/features/esports/model/game-view"
 import {
@@ -15,6 +14,8 @@ import {
   replacedMainPicks,
   stepArcana,
 } from "../src/features/esports/model/loadout"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
+import { latency } from "./fixtures/latency"
 
 const stone = (code: string, name: string, color: string, tier = 3): Reference => ({
   id: code,
@@ -154,10 +155,9 @@ async function withDom(
     document: Document
     render: (node: React.ReactNode) => Promise<void>
     click: (selector: string) => Promise<void>
-    settle: () => Promise<void>
   }) => Promise<void>,
 ) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost:5175/tournaments" })
+  const dom = createWindow("http://localhost:5175/tournaments")
   const window = dom.window
   const values = {
     React,
@@ -185,14 +185,10 @@ async function withDom(
     },
     IS_REACT_ACT_ENVIRONMENT: true,
   }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(window, values)
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(window.document.getElementById("root")!)
-  const settle = () => act(async () => new Promise<void>((resolve) => setTimeout(resolve, 60)))
   try {
     await run({
       document: window.document,
@@ -204,14 +200,10 @@ async function withDom(
         assert.ok(element, `nothing matches ${selector}`)
         await act(async () => element.click())
       },
-      settle,
     })
   } finally {
     await act(async () => root.unmount())
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
+    restoreGlobals()
     window.close()
   }
 }
@@ -232,7 +224,7 @@ const confirmButton = (document: Document, label: string) =>
   )
 
 test("arcana and emblems are picked on pictures and their status follows what is recorded", async () => {
-  await withDom(async ({ document, render, click, settle }) => {
+  await withDom(async ({ document, render, click }) => {
     const { LoadoutEditor } = await import("../src/features/esports/pages/loadout-editor")
     const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
     let latest = participant("JUNGLE")
@@ -305,11 +297,11 @@ test("arcana and emblems are picked on pictures and their status follows what is
     )
     assert.deepEqual(ids(latest.enchantments.entries), ["light-1", "light-3"], "looking at a branch changes nothing")
     await click('[data-enchantment="abyss-3"]')
-    await settle()
+    await waitFor(() => document.querySelector('[role="alertdialog"]'), "the main branch question opens")
     assert.match(document.querySelector('[role="alertdialog"]')?.textContent ?? "", /Đổi nhánh chính sang Vực Hỗn Mang/)
     assert.deepEqual(ids(latest.enchantments.entries), ["light-1", "light-3"])
     await act(async () => confirmButton(document, "Đổi nhánh chính")!.click())
-    await settle()
+    await waitFor(() => ids(latest.enchantments.entries).join() === "abyss-3", "the new main branch is recorded")
     assert.deepEqual(ids(latest.enchantments.entries), ["abyss-3"])
 
     // "Not shown" is said with its own button and never leaves entries behind.
@@ -318,10 +310,13 @@ test("arcana and emblems are picked on pictures and their status follows what is
         .querySelector<HTMLButtonElement>('[data-part="arcana"] button[aria-pressed="false"][title^="Đánh dấu"]')!
         .click(),
     )
-    await settle()
+    await waitFor(
+      () => /2 loại ngọc đã ghi/.test(document.querySelector('[role="alertdialog"]')?.textContent ?? ""),
+      "the not-shown question opens",
+    )
     assert.match(document.querySelector('[role="alertdialog"]')?.textContent ?? "", /2 loại ngọc đã ghi/)
     await act(async () => confirmButton(document, "Bỏ và đánh dấu")!.click())
-    await settle()
+    await waitFor(() => latest.arcana.status === "NOT_SHOWN", "the arcana are recorded as not shown")
     assert.equal(latest.arcana.status, "NOT_SHOWN")
     assert.deepEqual(latest.arcana.entries, [])
     assert.match(document.querySelector('[data-part="arcana"]')!.textContent ?? "", /không xem đây là bảng trống/)
@@ -404,7 +399,7 @@ const gameContent = (first: Partial<Participant> = {}): GameContent =>
   }) as GameContent
 
 test("edits made before the previous one is saved do not undo each other", async () => {
-  await withDom(async ({ document, render, click, settle }) => {
+  await withDom(async ({ document, render, click }) => {
     const { LoadoutPanel } = await import("../src/features/esports/pages/loadout-panel")
     const start = gameContent({
       arcana: {
@@ -423,7 +418,7 @@ test("edits made before the previous one is saved do not undo each other", async
     // The service: answers after a moment, one change at a time, each applied to what it holds.
     const send = (change: (content: GameContent) => GameContent) =>
       (queue = queue.then(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 8))
+        await latency(8)
         if (!accept) return false
         server = change(server)
         show(server)
@@ -456,7 +451,7 @@ test("edits made before the previous one is saved do not undo each other", async
     assert.deepEqual(listed(), ["Bỏ Công vật lý · Xuyên giáp", "Bỏ Máu tối đa"], "the row leaves at once")
     assert.deepEqual(recorded(), ["r-ad", "r-crit", "p-hp"], "while the service has not answered yet")
     await click('[aria-label="Bỏ Công vật lý · Xuyên giáp"]')
-    await settle()
+    await waitFor(() => recorded().join() === "p-hp", "both removals are saved")
     assert.deepEqual(recorded(), ["p-hp"], "the second removal did not bring the first row back")
     assert.deepEqual(listed(), ["Bỏ Máu tối đa"])
     assert.equal(server.sides[0]!.participants[0]!.arcana.status, "PARTIAL")
@@ -465,7 +460,7 @@ test("edits made before the previous one is saved do not undo each other", async
     accept = false
     await click('[aria-label="Bỏ Máu tối đa"]')
     assert.deepEqual(listed(), [])
-    await settle()
+    await waitFor(() => listed().length === 1, "the refused removal is taken back")
     assert.deepEqual(listed(), ["Bỏ Máu tối đa"], "the panel returns to what is saved")
     await render(<Host error="Phiên bản đã đổi." />)
     assert.match(document.querySelector('[role="alert"]')?.textContent ?? "", /chưa lưu được.*Phiên bản đã đổi\./)

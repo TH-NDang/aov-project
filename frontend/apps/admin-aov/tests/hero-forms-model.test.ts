@@ -11,9 +11,9 @@ import {
   sharedTextOf,
   withCardImages,
   withSharedText,
-  type HeroForms,
-} from "../src/features/publishing/hero-forms-model"
-import { ROLES, type Profile, type Revision } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/hero-forms-model"
+import { ROLES, type Profile, type Revision } from "@/lib/hero-types"
+import { type HeroForms } from "@/lib/api/publishing-api"
 
 const form = (id: string, code: string, roles: string[], name: string, published = true) => ({
   id,

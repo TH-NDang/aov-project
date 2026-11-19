@@ -1,21 +1,22 @@
 package com.wikiaov.community.tournament.internal.web;
 
-import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.Version;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
-import org.springframework.web.bind.annotation.*;
 
-@RequestMapping(path = ApiPaths.ADMIN
-        + "/{kind:teams|players|tournaments|series|roster-memberships|games}/{id}", version = "1")
+@Tag(name = "record lifecycle")
 public interface RecordLifecycleApi {
-    @GetMapping("/deletion-impact")
-    Impact impact(@PathVariable String kind, @PathVariable UUID id, HttpServletRequest request);
+    @Operation(operationId = "recordLifecycleApi_impact", summary = "Read what keeps a record from being deleted")
+    Impact impact(String kind, UUID id, @Parameter(hidden = true) HttpServletRequest request);
 
-    @PostMapping("/delete")
-    State delete(@PathVariable String kind, @PathVariable UUID id, @RequestBody Version request);
+    @Operation(operationId = "recordLifecycleApi_delete", summary = "Move a record to the trash")
+    State delete(String kind, UUID id, Version request);
 
-    @PostMapping("/restore")
-    State restore(@PathVariable String kind, @PathVariable UUID id, @RequestBody Version request);
+    @Operation(operationId = "recordLifecycleApi_restore", summary = "Restore a record from the trash")
+    State restore(String kind, UUID id, Version request);
 }

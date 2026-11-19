@@ -3,7 +3,7 @@ import { PopoverPortalContainer } from "@aov/ui/components/popover"
 import { Link } from "react-router"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImageCredit } from "../../components/wiki-image-credit"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import { ruleBlocks, type ModeImage, type RuleSection } from "./auto-chess-model"
 import type { ModeAvailability, ModeDuration } from "./mode-api"
 
@@ -59,7 +59,7 @@ export function AvailabilityState({
   if (quiet && known.tone === "unknown") return null
   const label = wikiText(locale, known.label, known.english)
   return (
-    <span className="mode-state" data-tone={known.tone} title={availability.gameLabel ? label : undefined}>
+    <span className="wiki-mode-state" data-tone={known.tone} title={availability.gameLabel ? label : undefined}>
       {availability.gameLabel || label}
     </span>
   )
@@ -96,7 +96,7 @@ export function ModeArt({
 }) {
   const { locale } = useWikiContext()
   return (
-    <span className={`mode-art ${className}`} data-empty={!image || undefined}>
+    <span className={`wiki-mode-art ${className}`} data-empty={!image || undefined}>
       {image ? (
         <img
           src={image.url}
@@ -112,7 +112,7 @@ export function ModeArt({
           }
         />
       ) : (
-        <span className="mode-art-fallback" aria-hidden="true">
+        <span className="wiki-mode-art-fallback" aria-hidden="true">
           <WikiIcon name="mode" size={40} />
         </span>
       )}
@@ -147,13 +147,13 @@ export function ModeHeading({
   action?: ReactNode
 }) {
   return (
-    <header className="mode-heading" data-action={action ? "" : undefined}>
+    <header className="wiki-mode-heading" data-action={action ? "" : undefined}>
       <h2 id={id}>
-        {icon && <span className="mode-heading-icon">{icon}</span>}
+        {icon && <span className="wiki-mode-heading-icon">{icon}</span>}
         {title}
         {count !== undefined && <small>{count}</small>}
       </h2>
-      {action && <div className="mode-heading-action">{action}</div>}
+      {action && <div className="wiki-mode-heading-action">{action}</div>}
       {note && <p>{note}</p>}
     </header>
   )
@@ -184,24 +184,24 @@ export function RuleList({ rules, collapsible }: { rules: RuleSection[]; collaps
     groups.set(key, [...(groups.get(key) ?? []), rule])
   }
   return (
-    <div className="mode-rules">
+    <div className="wiki-mode-rules">
       {[...groups.entries()].map(([group, entries], index) => {
         // A rule sits under its group's h3; where the group folds behind a summary, or there is none, it is the h3.
         const Title = group && !collapsible ? "h4" : "h3"
         const items = entries.map((rule, at) => (
-          <div key={`${rule.title}-${at}`} className="mode-rule">
+          <div key={`${rule.title}-${at}`} className="wiki-mode-rule">
             <Title>{rule.title}</Title>
             <RuleBody body={rule.body} />
           </div>
         ))
         if (!group) return <div key={index}>{items}</div>
         return collapsible ? (
-          <details key={group} className="mode-rule-group" open={index === 0}>
+          <details key={group} className="wiki-mode-rule-group" open={index === 0}>
             <summary>{group}</summary>
             {items}
           </details>
         ) : (
-          <section key={group} className="mode-rule-group">
+          <section key={group} className="wiki-mode-rule-group">
             <h3>{group}</h3>
             {items}
           </section>
@@ -230,7 +230,7 @@ export function ModeDialog({
   title?: string
   children: ReactNode
 }) {
-  const { t } = useWikiContext()
+  const t = useWikiText()
   const dialog = useRef<HTMLDialogElement>(null)
   // Term cards inside the drawer mount in it: the modal drawer is in the top layer and would cover them otherwise.
   const [host, setHost] = useState<HTMLDialogElement | null>(null)
@@ -252,7 +252,7 @@ export function ModeDialog({
         dialog.current = element
         setHost(element)
       }}
-      className="mode-dialog"
+      className="wiki-mode-dialog"
       aria-label={label}
       onClose={() => {
         settle(0)
@@ -263,7 +263,7 @@ export function ModeDialog({
       }}
     >
       <header
-        className="mode-dialog-head"
+        className="wiki-mode-dialog-head"
         onPointerDown={(event) => {
           if (event.pointerType === "mouse" || (event.target as HTMLElement).closest("button")) return
           drag.current = { start: event.clientY, delta: 0 }
@@ -285,14 +285,14 @@ export function ModeDialog({
           settle(0)
         }}
       >
-        <span className="mode-dialog-grip" aria-hidden="true" />
-        <h2 className="mode-dialog-title">{title ?? label}</h2>
-        <button type="button" className="mode-dialog-close" aria-label={t("close")} onClick={onClose}>
+        <span className="wiki-mode-dialog-grip" aria-hidden="true" />
+        <h2 className="wiki-mode-dialog-title">{title ?? label}</h2>
+        <button type="button" className="wiki-mode-dialog-close" aria-label={t("Đóng", "Close")} onClick={onClose}>
           <WikiIcon name="close" size={20} />
         </button>
       </header>
       <PopoverPortalContainer.Provider value={host}>
-        <div className="mode-dialog-body">{open && children}</div>
+        <div className="wiki-mode-dialog-body">{open && children}</div>
       </PopoverPortalContainer.Provider>
     </dialog>
   )
@@ -336,17 +336,17 @@ export function ModeFab({ label, to, onClick }: { label: string; to?: string; on
       >
         <path d="M12 5v14M5 12h14" />
       </svg>
-      <span className="mode-fab-label">{label}</span>
+      <span className="wiki-mode-fab-label">{label}</span>
     </>
   )
   return (
-    <div ref={wrap} className="mode-fab-wrap" data-scrolling="false">
+    <div ref={wrap} className="wiki-mode-fab-wrap" data-scrolling="false">
       {to ? (
-        <Link className="mode-fab" to={to} aria-label={label} title={label}>
+        <Link className="wiki-mode-fab" to={to} aria-label={label} title={label}>
           {body}
         </Link>
       ) : (
-        <button type="button" className="mode-fab" aria-label={label} title={label} onClick={onClick}>
+        <button type="button" className="wiki-mode-fab" aria-label={label} title={label} onClick={onClick}>
           {body}
         </button>
       )}

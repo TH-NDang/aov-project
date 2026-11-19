@@ -8,6 +8,10 @@
   gap: 8px 16px;
   margin-bottom: 12px;
 }
+/* In a section that spaces its parts with a gap, the heading keeps no margin of its own. */
+.tn-heading[data-flush] {
+  margin-bottom: 0;
+}
 .tn-heading h2 {
   display: flex;
   flex-wrap: wrap;
@@ -23,6 +27,10 @@
   color: var(--hub-muted);
   font-size: 13px;
   font-weight: 400;
+}
+/* A title that is a link turns to the accent when pointed at. */
+.tn-heading h2 > a:hover {
+  color: var(--hub-accent-strong);
 }
 /* The link keeps the heading's line height while its area to press is 36px tall. */
 .tn-heading > a,
@@ -70,6 +78,9 @@ a.tn-match:focus-visible {
 }
 .tn-match[data-live] {
   border-color: color-mix(in srgb, var(--hub-red) 55%, var(--hub-border));
+}
+.tn-match[data-final] {
+  border-color: var(--hub-accent-border);
 }
 .tn-match-meta,
 .tn-match-foot {
@@ -125,17 +136,14 @@ a.tn-match:focus-visible {
   white-space: nowrap;
 }
 .tn-match-team {
+  --stream-image-size: 24px;
+  --stream-image-radius: var(--aov-radius-control);
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   line-height: 20px;
-}
-.tn-match-team > .stream-image {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--aov-radius-control);
 }
 .tn-match-team > strong {
   overflow: hidden;
@@ -197,17 +205,6 @@ a.tn-match:focus-visible {
   font-size: 12px;
   font-weight: 600;
 }
-/* A state among them is a fact like the others, unless it is on now: deepened so white text reads in both themes. */
-.hub-banner-stats > .hub-status {
-  background: rgb(255 255 255 / 14%);
-  color: #fff;
-}
-.hub-banner-stats > .hub-status[data-status="ONGOING"] {
-  background: color-mix(in srgb, var(--hub-success) 72%, black);
-}
-.hub-banner-stats > .hub-status[data-status="LIVE"] {
-  background: color-mix(in srgb, var(--hub-red) 76%, black);
-}
 
 /* ---------- Home: the row of matches above the feed ---------- */
 .tn-strip {
@@ -229,7 +226,7 @@ a.tn-match:focus-visible {
 .tn-strip-row > * {
   scroll-snap-align: start;
 }
-.tn-strip-row > .hub-skeleton {
+.tn-strip-row > .tn-strip-skeleton {
   height: 112px;
   border: 0;
 }
@@ -298,6 +295,12 @@ a.tn-match:focus-visible {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+/* Without a logo, the monogram over the colour drawn from the name. */
+.tn-logo > b {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 @media (max-width: 899.98px) {

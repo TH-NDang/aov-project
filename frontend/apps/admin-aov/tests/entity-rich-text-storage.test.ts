@@ -1,12 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { ReferenceSettingsDocument } from "@aov/ui/lib/reference-settings"
+import { withGlobals } from "./fixtures/dom"
 
 test("shared backend settings preserve translations and reject stale saves or failed responses", async () => {
-  const channel = globalThis.BroadcastChannel
-  Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-  const { createReferenceSettingsApi, defaultSettings } = await import("../src/features/terminology/settings-api")
-  Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: channel })
+  const { createReferenceSettingsApi, defaultSettings } = await withGlobals(
+    { BroadcastChannel: undefined },
+    () => import("../src/features/terminology/settings-api"),
+  )
   let stored: ReferenceSettingsDocument = { version: 1, settings: structuredClone(defaultSettings) }
   const requests: string[] = []
   const api = createReferenceSettingsApi(async <T>(path: string, init?: RequestInit): Promise<T> => {

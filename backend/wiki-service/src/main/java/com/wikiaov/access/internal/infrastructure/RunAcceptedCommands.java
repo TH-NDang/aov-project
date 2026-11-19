@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 class RunAcceptedCommands implements AcceptedCommands {
+    @Override
     public void runHeroImport(Actor owner, Runnable command) {
         var previous = SecurityContextHolder.getContext();
         var context = SecurityContextHolder.createEmptyContext();

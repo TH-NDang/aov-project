@@ -1,16 +1,22 @@
 package com.wikiaov.community.currency.internal.web;
 
-import com.wikiaov.community.currency.internal.application.CurrencyErrorCode;
 import com.wikiaov.community.currency.internal.application.ExchangeRates;
 import com.wikiaov.community.currency.internal.application.ExchangeRates.Rates;
 import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.platform.ApiFieldError;
+import com.wikiaov.community.platform.ApiPaths;
+import com.wikiaov.community.platform.PlatformErrorCode;
+import com.wikiaov.community.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Set;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,10 +28,9 @@ class ExchangeRateController implements ExchangeRateApi {
     }
 
     @Override
-    public ResponseEntity<Rates> rates(List<String> on, HttpServletRequest request) {
-        for (var name : request.getParameterMap().keySet())
-            if (!name.equals("on"))
-                throw invalid("Unsupported query parameter: " + name);
+    @GetMapping(path = ApiPaths.ROOT + "/exchange-rates", version = "1")
+    public ResponseEntity<Rates> rates(@RequestParam(required = false) List<String> on, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of(), Set.of("on"));
 
         var days = on == null ? List.<LocalDate>of() : on.stream().map(ExchangeRateController::day).toList();
 
@@ -42,6 +47,7 @@ class ExchangeRateController implements ExchangeRateApi {
     }
 
     private static ApiException invalid(String detail) {
-        return new ApiException(CurrencyErrorCode.EXCHANGE_RATE_INVALID_QUERY, detail);
+        return new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, detail,
+                List.of(new ApiFieldError("on", "INVALID_VALUE", "Invalid value.")));
     }
 }

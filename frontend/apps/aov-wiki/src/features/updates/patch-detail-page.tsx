@@ -1,3 +1,4 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { changeKindIcon } from "@aov/ui/components/change-kind-icons"
@@ -6,7 +7,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router"
 import { patchChangeLabel } from "../../components/patch-changes-row"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { changeKind } from "../../lib/published-change-subjects"
 import { changeSetKind, parseChangeSummary } from "../../lib/wiki-change-format"
@@ -14,9 +15,9 @@ import type { ChangeDomain } from "../../lib/wiki-patch-changes"
 import { notFoundMeta, patchMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
-import { heroDetailQuery, type HeroDetail } from "../hero/hero-api"
-import { activeSection } from "../hero/hero-section-position"
-import { ChangeDisclosure, ChangeKind, ChangeList } from "./change-list"
+import { heroDetailQuery, type HeroDetail } from "../../lib/hero-api"
+import { activeSection } from "../../lib/hero-section-position"
+import { ChangeDisclosure, ChangeKind, ChangeList } from "../../components/change-list"
 import { ReleaseDate } from "./release-date"
 import {
   patchChangesQuery,
@@ -24,7 +25,7 @@ import {
   releaseDateValue,
   type PatchChangeRow,
   type PatchRelease,
-} from "./updates-api"
+} from "../../lib/updates-api"
 import "./updates.css"
 
 const DOMAINS: { domain: ChangeDomain; title: [string, string]; tab?: string }[] = [
@@ -255,7 +256,7 @@ function HeroNotes({
 }) {
   const scope = useWikiContext()
   const layout = usePageLayout()
-  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const text = useWikiText()
   const { row, hero, name, kind } = entry
   const variant = scope.options?.patches.find((patch) => patch.id === variantId)
   const count = row.changes?.length ?? 0
@@ -337,7 +338,8 @@ function CatalogNotes({ id, row, tab }: { id: string; row: PatchChangeRow; tab?:
 
 function PatchContent({ release }: { release: PatchRelease }) {
   const scope = useWikiContext()
-  const { locale, t, href } = scope
+  const { locale, href } = scope
+  const t = localeText(locale)
   const layout = usePageLayout()
   const { hash } = useLocation()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
@@ -493,7 +495,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
       ) : (
         <CatalogHeading
           title={title}
-          back={{ to: href("/updates"), label: t("updates") }}
+          back={{ to: href("/updates"), label: t("Ghi chú cập nhật", "Patch notes") }}
           lead={meta}
           action={sourceLink}
         />
@@ -564,11 +566,11 @@ function PatchContent({ release }: { release: PatchRelease }) {
           {pending &&
             (filled.length ? (
               <p role="status" className="wiki-updates-state">
-                {t("loading")}
+                {t("Đang tải…", "Loading…")}
               </p>
             ) : (
               <div className="wiki-updates-skeleton" role="status">
-                <span className="sr-only">{t("loading")}</span>
+                <span className="sr-only">{t("Đang tải…", "Loading…")}</span>
                 <span />
                 <span />
                 <span />
@@ -581,7 +583,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
                 type="button"
                 onClick={() => results.forEach((result) => result.isError && void result.refetch())}
               >
-                {t("retry")}
+                {t("Thử lại", "Retry")}
               </button>
             </div>
           )}
@@ -602,7 +604,8 @@ function PatchContent({ release }: { release: PatchRelease }) {
 
 export function PatchDetailPage() {
   const scope = useWikiContext()
-  const { locale, t, href } = scope
+  const { locale, href } = scope
+  const t = localeText(locale)
   const { patchCode } = useParams()
   const releases = useQuery(patchReleasesQuery(scope))
   const release = releases.data?.find((item) => item.code === patchCode || item.id === patchCode)
@@ -620,7 +623,7 @@ export function PatchDetailPage() {
         <PatchContent key={release.id} release={release} />
       ) : releases.isPending ? (
         <div className="wiki-updates-skeleton" role="status">
-          <span className="sr-only">{t("loading")}</span>
+          <span className="sr-only">{t("Đang tải…", "Loading…")}</span>
           <span />
           <span />
           <span />
@@ -629,7 +632,7 @@ export function PatchDetailPage() {
         <div role="status" className="wiki-updates-state">
           <p>{wikiText(locale, "Chưa tải được bản cập nhật.", "Could not load this update.")}</p>
           <button type="button" onClick={() => void releases.refetch()}>
-            {t("retry")}
+            {t("Thử lại", "Retry")}
           </button>
         </div>
       ) : (

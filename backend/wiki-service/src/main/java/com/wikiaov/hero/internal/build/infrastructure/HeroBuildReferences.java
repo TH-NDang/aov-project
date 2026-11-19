@@ -18,22 +18,27 @@ import org.springframework.transaction.annotation.Transactional;
 public class HeroBuildReferences implements BuildReferenceProvider {
     private final HeroIdentityRepository heroes;
 
+    @Override
     public BuildReferenceKind kind() {
         return BuildReferenceKind.HERO;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
         heroes.findByCodeIn(codes)
                 .forEach(hero -> result.put(hero.getCode(), BuildReference.of(hero.getId(), hero.getCode())));
-        for (String code : codes)
-            if (!result.containsKey(code))
+        for (String code : codes) {
+            if (!result.containsKey(code)) {
                 heroes.findByCode(code)
                         .ifPresent(hero -> result.put(code, BuildReference.of(hero.getId(), hero.getCode())));
+            }
+        }
         return result;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();

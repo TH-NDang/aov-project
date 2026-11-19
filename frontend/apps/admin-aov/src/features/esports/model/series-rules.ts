@@ -1,6 +1,12 @@
 import type { GameContent, Selection, Side } from "@aov/community-contracts"
 import { nameKey } from "./name-key"
 
+/** Series lengths the community service accepts; an even one is played in full and may end in a draw. */
+export const BEST_OF_CHOICES = [1, 2, 3, 4, 5, 7, 9] as const
+
+export const isBestOf = (value: unknown): value is (typeof BEST_OF_CHOICES)[number] =>
+  BEST_OF_CHOICES.includes(value as (typeof BEST_OF_CHOICES)[number])
+
 /** A hero a team already played in an earlier game of the series. */
 export type HeroUse = { gameNumber: number; hero: { id?: string | null; name: string } }
 export type HeroLocks = { decider: boolean; byTeam: Map<string, HeroUse[]> }

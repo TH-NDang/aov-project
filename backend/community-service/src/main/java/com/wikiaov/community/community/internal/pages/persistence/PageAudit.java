@@ -1,6 +1,11 @@
 package com.wikiaov.community.community.internal.pages.persistence;
 
-import jakarta.persistence.*;
+import com.wikiaov.community.community.internal.domain.PageAuditAction;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,7 +16,8 @@ public class PageAudit {
     private UUID id;
     private UUID pageId;
     private String actor;
-    private String action;
+    @Enumerated(EnumType.STRING)
+    private PageAuditAction action;
     private Instant occurredAt;
 
     public PageAudit() {
@@ -42,11 +48,11 @@ public class PageAudit {
         this.actor = value;
     }
 
-    public String getAction() {
+    public PageAuditAction getAction() {
         return action;
     }
 
-    public void setAction(String value) {
+    public void setAction(PageAuditAction value) {
         this.action = value;
     }
 

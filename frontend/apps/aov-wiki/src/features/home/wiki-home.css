@@ -245,7 +245,6 @@
   border-radius: var(--aov-radius-control);
   background: var(--aov-raised);
 }
-.wiki-home-change-art .wiki-image,
 .wiki-home-change-art img {
   width: 100%;
   height: 100%;
@@ -365,6 +364,8 @@
   list-style: none;
 }
 .wiki-home-roles a {
+  --wiki-hero-glyph-size: 24px;
+  --wiki-hero-glyph-color: var(--aov-accent);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -379,11 +380,8 @@
 .wiki-home-roles a:hover {
   background: var(--aov-raised);
 }
-.wiki-home-roles .wiki-hero-glyph {
-  width: 24px;
-  height: 24px;
+.wiki-home-role-mark {
   grid-row: span 2;
-  color: var(--aov-accent);
 }
 .wiki-home-roles strong {
   font: var(--wiki-type-category);

@@ -14,6 +14,7 @@ import {
   useUserTimeZone,
   type TimeValue,
 } from "../lib/time-zone"
+import { isEnglishLocale } from "@aov/ui/lib/locale-text"
 
 type LocalTimeProps = {
   value: TimeValue | null | undefined
@@ -78,7 +79,7 @@ function ConvertedTime({
   useDateFormat()
 
   const source = isValidTimeZone(sourceTimeZone) ? canonicalTimeZone(sourceTimeZone) : "UTC"
-  const english = locale.startsWith("en")
+  const english = isEnglishLocale(locale)
   const shown = formatInZone(date, timeZone, DATE_TIME_FORMAT, locale)
   const original = formatInZone(date, source, DATE_TIME_FORMAT, locale)
   const sourceName = timeZoneLabel(source, date, locale)

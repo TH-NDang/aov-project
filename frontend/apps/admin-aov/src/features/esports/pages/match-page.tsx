@@ -31,11 +31,12 @@ import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { cn } from "@aov/ui/lib/utils"
-import { RegistryEditor } from "@/features/tournaments/registry-editor"
-import { initialGame } from "@/features/tournaments/tournament-model"
-import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/tournament-api"
+import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
+import { initialGame } from "@/features/tournaments/model/tournament-model"
+import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 import { useGameCatalog, useGames, useRecords, useRosters } from "../data/use-esports-data"
 import { useTournamentView } from "../data/use-tournament-view"
+import { useSeriesVideo } from "../data/series-video"
 import { WikiReferences } from "./wiki-references"
 import {
   BestOfBadge,
@@ -54,6 +55,7 @@ import { VodPlayer, type VodPlayerHandle } from "../components/game/vod-player"
 import { BroadcastTimeline, type TimelineRow } from "../components/series/broadcast-timeline"
 import { broadcastChapters, type RetimeTarget } from "../model/broadcast-timeline"
 import { seriesWinner } from "../model/competition"
+import { seriesLabel } from "../model/series-label"
 import { buildGameView, referenceIndex, type GameView, type TeamView } from "../model/game-view"
 import { stageInfo } from "../model/labels"
 import { RelativeDate } from "../components/relative-date"
@@ -69,7 +71,8 @@ import {
   type GameChapter,
 } from "../model/series-vod"
 import { killScoreAt, type TimelineEvent, type TimelineKind } from "../model/timeline"
-import { formatClock, parseClock, youtubeLinkTime, youtubeVideoId } from "../model/vod"
+import { youtubeLinkTime, youtubeVideoId } from "../model/vod"
+import { formatClock, parseClock } from "@/lib/clock"
 import { seriesLocks } from "../model/series-rules"
 import { earliestLive, moveTurn, readDraft, setDraftTimes } from "../model/draft"
 import { MARK_LABELS, moveMark } from "../model/observation-marks"
@@ -94,6 +97,8 @@ const isTyping = (target: EventTarget | null) =>
 const SEEK_SETTLE_MS = 2500
 /** How long a moved marker can be put back with one click. */
 const UNDO_MS = 8000
+/** The catalog's items until it loads; one array, so the lookups built from it are not rebuilt on every render. */
+const NO_ITEMS: Reference[] = []
 /** A marker moved on the timeline: what happened, and how to put it back. */
 type MoveUndo = { id: number; gameId: string; text: string; revert: () => void }
 export type GameStart = { url: string; second: number }
@@ -152,6 +157,7 @@ function MatchView({ access }: { access: Access }) {
         )
       return created.id
     },
+    meta: { silent: true },
   })
   const roster = useMemo(() => {
     const names = new Map((players.data ?? []).map((player) => [player.id, player.content.nickname]))
@@ -206,7 +212,7 @@ function MatchView({ access }: { access: Access }) {
         items={[
           { label: "Giải đấu", to: "/tournaments" },
           { label: view.tournament.content.name, to: tournamentPath(tournamentId) },
-          { label: record.content.name || stageInfo(record.content.stage).label },
+          { label: seriesLabel(record.content) || stageInfo(record.content.stage).label },
         ]}
       />
       <MatchHeader content={record.content} team={view.team}>
@@ -272,7 +278,6 @@ function MatchView({ access }: { access: Access }) {
           entry={record as DocumentView<SeriesContent>}
           open
           onClose={() => setEditing(false)}
-          teams={view.teams}
           tournamentId={tournamentId}
         />
       )}
@@ -322,7 +327,6 @@ function MatchViewer({
   addGame: { number: number; pending: boolean; onAdd: (start: GameStart | null) => Promise<string> } | null
 }) {
   const phone = usePhoneLayout()
-  const client = useQueryClient()
   const [draftLink, setDraftLink] = useDraftVideo(series.id)
   const draftId = youtubeVideoId(draftLink)
   const video = seriesVideo(series.content, games) ?? (draftId ? { videoId: draftId, url: draftLink } : null)
@@ -352,7 +356,7 @@ function MatchViewer({
   const gameAt = focused ? chapterClock(focused, at) : 0
 
   const catalog = useGameCatalog(focusedEntry?.content)
-  const items: Reference[] = catalog.data?.items ?? []
+  const items = catalog.data?.items ?? NO_ITEMS
   const lookups = useMemo(() => itemLookups(items), [items])
   const views = useMemo(
     () => Object.fromEntries(games.map((entry) => [entry.id, buildGameView(entry, teams, players, catalog.data)])),
@@ -417,15 +421,8 @@ function MatchViewer({
     url.searchParams.delete("game")
     return url.toString()
   }
-  // One broadcast for the whole match: the link is written to every game, each keeps its own start second.
-  const applyVideoToAll = async (url: string) => {
-    for (const entry of games) {
-      if (entry.content.sourceUrl === url) continue
-      const latest = await tournamentApi.read("games", entry.id)
-      await tournamentApi.save("games", latest, { ...latest.content, sourceUrl: url })
-    }
-    await client.invalidateQueries({ queryKey: [...tournamentKeys.all, "games"] })
-  }
+  const seriesVideoWrite = useSeriesVideo(games)
+  const applyVideoToAll = (url: string) => seriesVideoWrite.mutate(url)
 
   const progressOf = useMemo(
     () => Object.fromEntries(games.map((entry) => [entry.id, recordingProgress(entry)])),
@@ -454,7 +451,7 @@ function MatchViewer({
     setPanel({ kind: "draft" })
   }
   const useVideo = (url: string) => {
-    if (games.length) void applyVideoToAll(url)
+    if (games.length) applyVideoToAll(url)
     else setDraftLink(url)
     const start = youtubeLinkTime(url)
     if (start !== null) setPlayhead(start)
@@ -511,6 +508,8 @@ function MatchViewer({
   useEffect(() => {
     if (undoGame && undoGame !== focused?.gameId) setUndo(null)
   }, [undoGame, focused?.gameId])
+  const offerUndo = (gameId: string, text: string, revert: () => void) =>
+    setUndo({ id: Date.now(), gameId, text, revert })
   const retime = (target: RetimeTarget, second: number) => {
     const chapter = chapters.find((candidate) => candidate.gameId === target.gameId)
     if (!chapter || target.gameId !== focused?.gameId) return
@@ -519,7 +518,7 @@ function MatchViewer({
     const save = (change: Change) => void gameActions.current?.save((content) => change(content) ?? content)
     const move = (text: string, apply: Change, revert: Change) => {
       save(apply)
-      setUndo({ id: Date.now(), gameId: target.gameId, text, revert: () => save(revert) })
+      offerUndo(target.gameId, `Đã đổi giây · ${text}`, () => save(revert))
     }
     const onVideo = (before: number) => `${VIDEO_MARK} ${formatClock(before)} → ${formatClock(second)}`
     const game = `Ván ${view?.number ?? chapter.number}`
@@ -677,7 +676,7 @@ function MatchViewer({
       ref={player}
       videoId={videoId}
       startAt={at}
-      title={series.content.name || "Video trận đấu"}
+      title={seriesLabel(series.content) || "Video trận đấu"}
       onTime={onVideoTime}
       onDuration={setVideoDuration}
       onPlayingChange={setPlaying}
@@ -691,7 +690,7 @@ function MatchViewer({
       <span className="text-xs font-semibold text-muted-foreground">
         {here ? "Đang phát" : "Ván đang chọn"} · Ván {focused.number}
       </span>
-      <span className="esp-num ml-auto flex items-center gap-2 text-lg font-black">
+      <span className="esp-num ml-auto flex items-center gap-2 text-base font-bold">
         <TeamLogo team={focusedView.sides.BLUE.team} size={22} />
         <span className="text-[var(--esp-blue)]">{score.BLUE}</span>
         <span className="text-muted-foreground">–</span>
@@ -770,7 +769,7 @@ function MatchViewer({
             role="status"
             className="esp-num flex items-center gap-2 text-foreground animate-in fade-in"
           >
-            Đã đổi giây · {undo.text}
+            {undo.text}
             <Button
               size="sm"
               variant="secondary"
@@ -960,9 +959,10 @@ function MatchViewer({
             onPanel={setPanel}
             onDetail={setDetail}
             seekGame={(second, play) => seekChapter(focused, second, play)}
-            onVideoUrl={(url) => void applyVideoToAll(url)}
+            onVideoUrl={applyVideoToAll}
             shareLink={shareLink}
             actions={gameActions}
+            onUndoable={(text, revert) => offerUndo(focused.gameId, text, revert)}
           >
             {(parts) =>
               phone ? (
@@ -1249,7 +1249,7 @@ function MatchHeader({
         {won && <Crown size={16} className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[var(--esp-gold)]" />}
       </span>
       <span className={cn("flex min-w-0 flex-col gap-1", align === "right" ? "items-end" : "items-start")}>
-        <span className="block max-w-full truncate font-bold @3xl:text-lg">
+        <span className="block max-w-full truncate font-bold @3xl:text-base">
           <span className="@xl:hidden">{view.shortName}</span>
           <span className="hidden @xl:inline">{view.name}</span>
         </span>
@@ -1286,11 +1286,11 @@ function MatchHeader({
         </div>
         <div className="flex items-center gap-2 @xl:gap-3 @3xl:gap-8">
           {side(team(content.teamAId), content.result?.scoreA, winner === "A", "left")}
-          <div className="esp-num flex shrink-0 items-center gap-2 text-3xl font-black @3xl:text-4xl">
+          <div className="esp-num flex shrink-0 items-center gap-2 text-2xl font-bold">
             <span className={winner === "B" ? "text-white/35" : winner === "A" ? "text-[var(--esp-gold)]" : ""}>
               {content.result?.scoreA ?? "–"}
             </span>
-            <span className="text-xl text-white/40">:</span>
+            <span className="text-base text-white/40">:</span>
             <span className={winner === "A" ? "text-white/35" : winner === "B" ? "text-[var(--esp-gold)]" : ""}>
               {content.result?.scoreB ?? "–"}
             </span>

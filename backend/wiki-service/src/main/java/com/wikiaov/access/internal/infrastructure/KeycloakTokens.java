@@ -49,22 +49,26 @@ class KeycloakTokens implements IdentityTokens {
         this.client = RestClient.builder().requestFactory(factory).build();
     }
 
+    @Override
     public Tokens password(String username, String password, @Nullable String otp) {
         var form = form("password");
         form.add("username", username);
         form.add("password", password);
-        if (otp != null)
+        if (otp != null) {
             form.add("totp", otp);
+        }
         form.add("scope", "openid");
         return exchange(form, AuthErrorCode.AUTH_INVALID_CREDENTIALS);
     }
 
+    @Override
     public Tokens refresh(String refreshToken) {
         var form = form("refresh_token");
         form.add("refresh_token", refreshToken);
         return exchange(form, AuthErrorCode.AUTH_SESSION_EXPIRED);
     }
 
+    @Override
     public Tokens code(String code, String verifier, String redirectUri) {
         var form = form("authorization_code");
         form.add("code", code);
@@ -73,6 +77,7 @@ class KeycloakTokens implements IdentityTokens {
         return exchange(form, AuthErrorCode.AUTH_INVALID_STATE);
     }
 
+    @Override
     public void revoke(String refreshToken) {
         var form = form(null);
         form.add("token", refreshToken);
@@ -85,6 +90,7 @@ class KeycloakTokens implements IdentityTokens {
         }
     }
 
+    @Override
     public String authorizationUrl(String state, String challenge, String redirectUri) {
         return UriComponentsBuilder.fromUriString(issuer + "/protocol/openid-connect/auth")
                 .queryParam("client_id", properties.clientId()).queryParam("redirect_uri", redirectUri)
@@ -96,13 +102,15 @@ class KeycloakTokens implements IdentityTokens {
     }
 
     private MultiValueMap<String, String> form(String grant) {
-        if (properties.clientSecret().isBlank())
+        if (properties.clientSecret().isBlank()) {
             throw unavailable();
+        }
         var form = new LinkedMultiValueMap<String, String>();
         form.add("client_id", properties.clientId());
         form.add("client_secret", properties.clientSecret());
-        if (grant != null)
+        if (grant != null) {
             form.add("grant_type", grant);
+        }
         return form;
     }
 
@@ -111,14 +119,16 @@ class KeycloakTokens implements IdentityTokens {
             TokenBody body = client.post().uri(backchannel + "/protocol/openid-connect/token")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED).body(form).retrieve()
                     .onStatus(status -> status.value() == 400 || status.value() == 401, (request, response) -> {
-                        if (response.getStatusCode().value() == 401 && !isRejectedGrant(response))
+                        if (response.getStatusCode().value() == 401 && !isRejectedGrant(response)) {
                             throw unavailable();
+                        }
 
                         throw new ApiException(rejected, "The identity provider rejected the authentication request.");
                     }).body(TokenBody.class);
             if (body == null || body.accessToken() == null || body.refreshToken() == null
-                    || body.expiresIn() <= 0 || body.refreshExpiresIn() <= 0)
+                    || body.expiresIn() <= 0 || body.refreshExpiresIn() <= 0) {
                 throw unavailable();
+            }
             return new Tokens(body.accessToken(), body.expiresIn(), body.refreshToken(), body.refreshExpiresIn());
         } catch (RestClientException exception) {
             // Do not propagate upstream response bodies or request credentials to logs or API errors.

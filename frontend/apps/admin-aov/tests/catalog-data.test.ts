@@ -5,9 +5,9 @@ import {
   translationCoverage,
   appliedMarkets,
   targetVariants,
-} from "../src/features/publishing/catalog-data"
-import type { PublicationOverview } from "../src/features/publishing/publication-overview"
-import type { Content, Revision } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/catalog/catalog-data"
+import type { PublicationOverview } from "../src/features/publishing/api/publication-overview"
+import type { Content, Revision } from "@/lib/hero-types"
 const overview: PublicationOverview = {
   asOf: "2026-10-16T00:00:00Z",
   rulesets: [],
@@ -102,6 +102,7 @@ function revision(id: string, variant: string, revisionNo: number, state: Revisi
     version: 1,
     cause: "DATA_BASELINE",
     sections: {} as Revision["sections"],
+    publicationSequence: null,
     publishedAt: "2026-10-01T00:00:00Z",
     sourceRevisionId: null,
     effectiveFromPatchVariantId: variant,

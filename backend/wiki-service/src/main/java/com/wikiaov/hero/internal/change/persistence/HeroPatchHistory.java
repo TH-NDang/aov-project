@@ -13,7 +13,7 @@ import com.wikiaov.hero.internal.change.persistence.entity.RoleChangeClassificat
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
+import com.wikiaov.hero.internal.domain.HeroChanges;
 import com.wikiaov.hero.internal.domain.HeroChanges.Change;
 import com.wikiaov.hero.internal.domain.HeroChanges.MechanicChange;
 import com.wikiaov.hero.internal.domain.HeroChanges.OtherChange;
@@ -22,8 +22,8 @@ import com.wikiaov.hero.internal.domain.HeroChanges.SkillChange;
 import com.wikiaov.hero.internal.domain.HeroChanges.StatChange;
 import com.wikiaov.hero.internal.domain.HeroChanges.Summary;
 import com.wikiaov.hero.internal.domain.HeroChanges.VisualChange;
+import com.wikiaov.platform.CatalogLocales;
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,7 +53,7 @@ public class HeroPatchHistory {
         this.previous = previous;
     }
 
-    public void create(UUID id, UUID variantId, com.wikiaov.hero.internal.domain.HeroChanges.Record input,
+    public void create(UUID id, UUID variantId, HeroChanges.Record input,
             Instant createdAt, Actor actor) {
         var value = new HeroPatchChangeSet();
         value.setId(id);
@@ -92,7 +92,7 @@ public class HeroPatchHistory {
 
         value.setId(UUID.randomUUID());
         value.setChangeSetId(changeSetId);
-        value.setChangeKind(change.changeKind().name());
+        value.setChangeKind(change.changeKind());
         value.setSortOrder(order);
 
         changes.save(value);
@@ -156,8 +156,9 @@ public class HeroPatchHistory {
     }
 
     private List<Entry> entries(List<Header> headers, String locale) {
-        if (headers.isEmpty())
+        if (headers.isEmpty()) {
             return List.of();
+        }
 
         var ids = headers.stream().map(Header::getId).toList();
         var assessmentById = assessments.findAllById(ids).stream()
@@ -173,9 +174,7 @@ public class HeroPatchHistory {
                 : previous.findAllById(mechanicIds).stream()
                         .collect(Collectors.toMap(MechanicChangePrevious::getMechanicChangeId, Function.identity()));
 
-        var preferred = Comparator.comparing((HeroPatchChangeTranslation t) -> !t.getLocale().equals(locale))
-                .thenComparing(t -> !t.getLocale().equals("vi-VN"))
-                .thenComparing(HeroPatchChangeTranslation::getLocale);
+        var preferred = CatalogLocales.preference(locale, HeroPatchChangeTranslation::getLocale);
 
         return headers.stream().map(header -> new Entry(header, assessmentById.get(header.getId()),
                 copyById.getOrDefault(header.getId(), List.of()).stream().min(preferred).orElse(null),
@@ -214,7 +213,7 @@ public class HeroPatchHistory {
 
     private static RoleChangeClassification role(RoleChange input) {
         var value = new RoleChangeClassification();
-        value.setRoleCode(input.roleCode().name());
+        value.setRoleCode(input.roleCode());
         value.setAdded(input.added());
 
         return value;
@@ -222,7 +221,7 @@ public class HeroPatchHistory {
 
     private static VisualChangeClassification visual(VisualChange input) {
         var value = new VisualChangeClassification();
-        value.setMediaRole(input.mediaRole().name());
+        value.setMediaRole(input.mediaRole());
         value.setOldAssetId(input.oldAssetId());
         value.setNewAssetId(input.newAssetId());
 

@@ -1,10 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import { waitFor } from "./fixtures/wait-for"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 type Contents = typeof import("../src/components/section-contents")
 
@@ -17,30 +16,12 @@ async function withUi(
     click: (element: Element | null) => Promise<void>
   }) => Promise<void>,
 ) {
-  const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true })
+  const dom = createWindow()
   const intersections = intersectionHarness()
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    MutationObserver: dom.window.MutationObserver,
-    NodeFilter: dom.window.NodeFilter,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    CustomEvent: dom.window.CustomEvent,
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     IntersectionObserver: intersections.Observer,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const contents = await import("../src/components/section-contents")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -60,10 +41,7 @@ async function withUi(
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 
@@ -158,9 +136,9 @@ test("a contents page opens on the requested section, loads lazy parts on demand
     picked.length = 0
     await click(drawer.querySelector('nav button[aria-controls="part-b"]'))
     assert.equal(document.querySelector('[role="dialog"]'), null, "Picking a section closes the drawer")
-    // The drawer hands the pick over from Radix's close autofocus, which fires on a timer after the drawer unmounts.
-    await waitFor(() => picked.length > 0, "The pick is reported once the drawer has closed")
-    assert.deepEqual(picked, ["part-b"], "The jump waits for the drawer to close, then reports the pick")
+    // The drawer hands focus back on a timer of its own, and only then does the jump run.
+    await waitFor(() => picked.length > 0, "The jump waits for the drawer to close, then reports the pick")
+    assert.deepEqual(picked, ["part-b"])
     assert.match(document.body.textContent!, /Danh sách kỹ năng/)
   })
 })

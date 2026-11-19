@@ -1,6 +1,5 @@
 package com.wikiaov.hero.internal.media.application;
 
-import com.wikiaov.hero.internal.application.response.*;
 import com.wikiaov.hero.internal.application.response.HeroMediaGroup;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.application.response.SkinBadgeRelation;
@@ -8,25 +7,28 @@ import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
 import com.wikiaov.hero.internal.media.persistence.HeroMediaRepository;
 import com.wikiaov.hero.internal.media.persistence.entity.HeroImageOption;
-import com.wikiaov.hero.internal.media.persistence.entity.HeroImageOption.*;
 import com.wikiaov.hero.internal.media.persistence.entity.MediaBindingRow;
-import com.wikiaov.hero.internal.media.persistence.entity.MediaBindingRow.*;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
-import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow.*;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinImageOption;
-import com.wikiaov.hero.internal.skins.persistence.entity.SkinImageOption.*;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinSnapshotRow;
-import com.wikiaov.hero.internal.skins.persistence.entity.SkinSnapshotRow.*;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinTranslationRow;
-import com.wikiaov.hero.internal.skins.persistence.entity.SkinTranslationRow.*;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -50,12 +52,15 @@ public class HeroMediaQueries {
     public PageSlice<HeroMediaGroup> list(UUID rulesetId, MediaRole role, String locale, String q, int page, int size) {
         bounds(page, size);
         HeroValidation.locale(locale);
-        if (q.trim().length() > 100)
+        if (q.trim().length() > 100) {
             throw HeroValidation.invalid("Search must contain at most 100 characters.");
+        }
+
         var selected = repository.page(rulesetId, ordinals(rulesetId), q.trim().toLowerCase(Locale.ROOT), page, size);
         var content = content(selected.items(), locale);
         var views = store.revisions(selected.items().stream().map(HeroRevision::getHeroId).distinct().toList()).stream()
                 .collect(Collectors.toMap(HeroRevisionView::id, Function.identity()));
+
         return selected.map(revision -> {
             var hero = content.heroes().get(revision.getHeroId());
             var text = profile(content, revision);
@@ -120,6 +125,7 @@ public class HeroMediaQueries {
     public PageSlice<SkinBadgeRelation> badgeSkins(String code, UUID rulesetId, String locale, int page, int size) {
         bounds(page, size);
         HeroValidation.locale(locale);
+
         var selected = repository.selected(rulesetId, ordinals(rulesetId));
         var content = content(selected, locale);
         List<SkinBadgeRelation> rows = new ArrayList<>();
@@ -127,20 +133,24 @@ public class HeroMediaQueries {
             var hero = content.heroes().get(revision.getHeroId());
             var text = profile(content, revision);
             for (var skin : content.skins().getOrDefault(revision.getSkinsRevisionId(), List.of())) {
-                if (Objects.equals(skin.getRarityCode(), code))
+                if (Objects.equals(skin.getRarityCode(), code)) {
                     rows.add(new SkinBadgeRelation(hero.getId(), hero.getCode(),
                             text == null ? hero.getCode() : text.getName(),
                             skin.getSkinKey(), skinName(content, revision, skin.getSkinKey()), revision.getId(),
                             skin.getArtAssetId()));
+                }
             }
         }
-        int from = Math.min(page * size, rows.size());
-        return new PageSlice<>(rows.subList(from, Math.min(from + size, rows.size())), page, size, rows.size());
+
+        // Paged in memory: the skins come from the revision each hero shows in the ruleset, so the page is cut after
+        // that choice; the list is bounded by the skins that carry one badge.
+        return PageSlice.of(rows, page, size);
     }
 
     private Map<UUID, Long> ordinals(UUID rulesetId) {
-        if (rulesetId != null)
+        if (rulesetId != null) {
             contexts.requireRuleset(rulesetId);
+        }
         return contexts.catalogVariants(null).stream()
                 .filter(variant -> rulesetId == null || variant.rulesetId().equals(rulesetId))
                 .collect(Collectors.toMap(PatchVariantReference::id, PatchVariantReference::rulesetOrdinal));
@@ -166,6 +176,7 @@ public class HeroMediaQueries {
                 .toList();
         var skins = revisions.stream().map(HeroRevision::getSkinsRevisionId).filter(Objects::nonNull).distinct()
                 .toList();
+
         return new Content(repository.heroes(heroIds).stream()
                 .collect(Collectors.toMap(HeroIdentity::getId, Function.identity())),
                 repository.profiles(profiles).stream()
@@ -186,26 +197,17 @@ public class HeroMediaQueries {
 
     private static ProfileTranslationRow profile(Content content, HeroRevision revision) {
         return content.profiles().getOrDefault(revision.getProfileRevisionId(), List.of()).stream()
-                .min(Comparator
-                        .<ProfileTranslationRow>comparingInt(text -> localeRank(text.getLocale(), content.locale()))
-                        .thenComparing(ProfileTranslationRow::getLocale))
-                .orElse(null);
+                .min(CatalogLocales.preference(content.locale(), ProfileTranslationRow::getLocale)).orElse(null);
     }
 
     private static String skinName(Content content, HeroRevision revision, String key) {
         return content.skinNames().getOrDefault(revision.getSkinsRevisionId(), List.of()).stream()
                 .filter(text -> text.getSkinKey().equals(key))
-                .min(Comparator.<SkinTranslationRow>comparingInt(text -> localeRank(text.getLocale(), content.locale()))
-                        .thenComparing(SkinTranslationRow::getLocale))
+                .min(CatalogLocales.preference(content.locale(), SkinTranslationRow::getLocale))
                 .map(SkinTranslationRow::getName).orElse(key);
     }
 
-    public static int localeRank(String locale, String requested) {
-        return locale.equals(requested) ? 0 : locale.equals("vi-VN") ? 1 : locale.equals("en-US") ? 2 : 3;
-    }
-
     public static void bounds(int page, int size) {
-        if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE)
-            throw HeroValidation.invalid("Invalid page bounds.");
+        HeroValidation.requireReachableOffset(page, size);
     }
 }

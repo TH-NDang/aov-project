@@ -1,46 +1,70 @@
 package com.wikiaov.terminology.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyCollection;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
+import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.hero.internal.domain.SkillReferenceSearch;
 import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceRepository;
-import com.wikiaov.media.*;
-import com.wikiaov.patch.*;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchVariantReference;
+import com.wikiaov.patch.RulesetReference;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.terminology.SkillReferenceProvider;
 import jakarta.persistence.EntityManagerFactory;
+import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 import org.hibernate.SessionFactory;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.*;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@EnabledIf("databaseAvailable")
+@Import(TestcontainersConfiguration.class)
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@DockerBacked
 class SkillReferenceCatalogIntegrationTest {
-    private static PostgreSQLContainer database;
     private final UUID ruleset = UUID.randomUUID(), otherRuleset = UUID.randomUUID();
     private final UUID firstPatch = UUID.randomUUID(), secondPatch = UUID.randomUUID(), futurePatch = UUID.randomUUID();
     private final UUID airi = UUID.randomUUID(), edras = UUID.randomUUID(), wukong = UUID.randomUUID();
@@ -65,37 +89,12 @@ class SkillReferenceCatalogIntegrationTest {
     @MockitoBean
     MediaAssets media;
 
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external != null) {
-            properties.add("spring.datasource.url", () -> external);
-            properties.add("spring.datasource.username", () -> "wiki_test");
-            properties.add("spring.datasource.password", () -> "");
-        } else {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            properties.add("spring.datasource.url", database::getJdbcUrl);
-            properties.add("spring.datasource.username", database::getUsername);
-            properties.add("spring.datasource.password", database::getPassword);
-        }
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
-    }
-
     @BeforeEach
     void fixture() {
-        for (var id : List.of(ruleset, otherRuleset))
+        for (var id : List.of(ruleset, otherRuleset)) {
             sql.update("insert into patch.gameplay_ruleset values (?,?,?,'ACTIVE',now())", id, "test-" + id,
                     "Skill refs");
+        }
         var variants = new ArrayList<PatchVariantReference>();
         int ordinal = 0;
         for (var id : List.of(firstPatch, secondPatch, futurePatch)) {
@@ -112,10 +111,11 @@ class SkillReferenceCatalogIntegrationTest {
         when(contexts.resolve(eq("VN"), any())).thenReturn(context(2));
         when(media.findAll(anyCollection())).thenAnswer(call -> {
             var result = new HashMap<UUID, MediaAssetReference>();
-            for (var id : call.<Collection<UUID>>getArgument(0))
+            for (var id : call.<Collection<UUID>>getArgument(0)) {
                 result.put(id, new MediaAssetReference(id, MediaSemanticType.HERO_SKILL_ICON, MediaAssetState.ACTIVE,
                         new MediaAssetReference.CurrentVersion(UUID.randomUUID(), "image/png", 128, 128,
                                 "/assets/" + id)));
+            }
             return result;
         });
         hero(airi, "airi");
@@ -174,8 +174,9 @@ class SkillReferenceCatalogIntegrationTest {
             assertThat(items.size()).isEqualTo(1);
             assertThat(items.get(0).get("skillKey").asString()).isEqualTo("skill-1-2");
         }
-        for (String q : List.of("airi hai quai", "Hải quái c1", "airi s1"))
+        for (String q : List.of("airi hai quai", "Hải quái c1", "airi s1")) {
             assertThat(admin(q, null).get("items").get(0).get("id").asString()).isEqualTo(airi + ".skill-1-1");
+        }
         assertThat(admin("edras hai quai", null).get("totalElements").asInt()).isZero();
     }
 
@@ -248,10 +249,12 @@ class SkillReferenceCatalogIntegrationTest {
     void validatesScopeAuthorityAndBoundedLookupInput() throws Exception {
         mvc.perform(get(path())).andExpect(status().isUnauthorized());
         mvc.perform(get(path()).with(jwt())).andExpect(status().isForbidden());
-        for (var parameter : List.of("unknown", "region"))
+        for (var parameter : List.of("unknown", "region")) {
             mvc.perform(get(path()).param(parameter, "x").with(reader())).andExpect(status().isBadRequest());
-        for (var ids : List.of("bad", airi + ".", (airi + ".skill-1-1,").repeat(50) + airi + ".skill-1-1"))
+        }
+        for (var ids : List.of("bad", airi + ".", (airi + ".skill-1-1,").repeat(50) + airi + ".skill-1-1")) {
             mvc.perform(get(path()).param("ids", ids).with(reader())).andExpect(status().isBadRequest());
+        }
         mvc.perform(get(path()).param("q", "airi").param("ids", airi + ".skill-1-1").with(reader()))
                 .andExpect(status().isBadRequest());
         mvc.perform(get(path()).param("size", "101").with(reader())).andExpect(status().isBadRequest());
@@ -308,10 +311,11 @@ class SkillReferenceCatalogIntegrationTest {
                 });
     }
 
-    private tools.jackson.databind.JsonNode admin(String q, String ids) throws Exception {
+    private JsonNode admin(String q, String ids) throws Exception {
         var request = get(path()).param("rulesetId", ruleset.toString()).param("q", q).with(reader());
-        if (ids != null)
+        if (ids != null) {
             request.param("ids", ids);
+        }
         return json.readTree(
                 mvc.perform(request).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
     }
@@ -320,7 +324,7 @@ class SkillReferenceCatalogIntegrationTest {
         return "/api/wiki/v1/admin/reference-skills";
     }
 
-    private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor reader() {
+    private static SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor reader() {
         return jwt().authorities(new SimpleGrantedAuthority("catalog:read"));
     }
 
@@ -351,10 +355,11 @@ class SkillReferenceCatalogIntegrationTest {
                             + " values (?,?,'DRAFT',now(),'test','editor')",
                     id, owner);
         }
-        for (String locale : List.of("vi-VN", "en-US"))
+        for (String locale : List.of("vi-VN", "en-US")) {
             sql.update(
                     "insert into hero.hero_profile_translation(profile_revision_id,locale,name,summary) values (?,?,?,?)",
                     sections.getFirst(), locale, name, "Private full summary");
+        }
         sql.update("insert into hero.hero_media_binding values (?,'HEAD',?)", sections.get(5), head);
         int order = 0;
         for (var entry : new TreeMap<>(names).entrySet()) {
@@ -364,11 +369,12 @@ class SkillReferenceCatalogIntegrationTest {
                     "insert into hero.hero_skill_snapshot(skill_set_revision_id,hero_id,skill_key,kind,display_order,icon_asset_id)"
                             + " values (?,?,?,'ACTIVE',?,?)",
                     sections.get(3), owner, entry.getKey(), order++, icon);
-            for (String locale : List.of("vi-VN", "en-US"))
+            for (String locale : List.of("vi-VN", "en-US")) {
                 sql.update(
                         "insert into hero.hero_skill_translation(skill_set_revision_id,skill_key,locale,name,description)"
                                 + " values (?,?,?,?,?)",
                         sections.get(3), entry.getKey(), locale, entry.getValue(), "D".repeat(5000));
+            }
         }
         var id = UUID.randomUUID();
         sql.update(
@@ -378,7 +384,7 @@ class SkillReferenceCatalogIntegrationTest {
                         + "updated_at,created_by_issuer,created_by_subject,updated_by_issuer,updated_by_subject)"
                         + " values (?,?,?,?,?,1,?,?,'DATA_BASELINE',?,?,?,?,?,?,?,now(),now(),'test','editor','test','editor')",
                 id, owner, scope, number, state, state.equals("PUBLISHED") ? (long) number : null,
-                state.equals("PUBLISHED") ? java.sql.Timestamp.from(Instant.now().minusSeconds(60)) : null,
+                state.equals("PUBLISHED") ? Timestamp.from(Instant.now().minusSeconds(60)) : null,
                 patch, sections.get(0), sections.get(1), sections.get(2), sections.get(3), sections.get(4),
                 sections.get(5));
         return id;

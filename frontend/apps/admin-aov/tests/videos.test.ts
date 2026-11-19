@@ -10,15 +10,15 @@ import {
   type CrawlVideo,
 } from "../src/features/videos/crawl-import"
 import {
-  formatClock,
-  parseClock,
   previewLink,
   purposesFor,
   reorder,
   subjectLabel,
+  subjectMatches,
   type AdminVideo,
   type VideoSubject,
 } from "../src/features/videos/video-model"
+import { formatClock, parseClock } from "@/lib/clock"
 
 const hero = (id: string, code: string, name: string, aliases: string[] = []): VideoSubject => ({
   kind: "HERO",
@@ -285,4 +285,13 @@ test("a subject is named with its hero", () => {
   assert.equal(subjectLabel(subjects, video("a", 0)), "Allain · Lân Sư Vũ Thần")
   assert.equal(subjectLabel(subjects, { ...video("a", 0), subjectKind: "HERO", subjectKey: null }), "Allain")
   assert.equal(subjectLabel([], video("a", 0)), "Tướng chưa rõ · lan-su")
+})
+
+test("a subject is found by its name typed without accents, đ included", () => {
+  const subject = hero("h1", "hero-17", "Điêu Thuyền", ["Diaochan"])
+
+  assert.equal(subjectMatches("dieu thuyen", subject), true)
+  assert.equal(subjectMatches("ĐIÊU", subject), true)
+  assert.equal(subjectMatches("diaochan", subject), true)
+  assert.equal(subjectMatches("lauriel", subject), false)
 })

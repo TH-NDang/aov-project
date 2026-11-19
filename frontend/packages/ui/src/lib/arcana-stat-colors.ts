@@ -1,5 +1,6 @@
-import { defaultEntityColor, foldEntitySearch, type EntityReference } from "@aov/ui/lib/entity-rich-text"
+import { defaultEntityColor, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { ArcanaContent } from "./warehouse-content"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 /** Each group lists the stat keys, the Vietnamese labels seen in the data and the English labels of `en-US` content. */
 const statGroups: [string, string[]][] = [
@@ -62,7 +63,7 @@ const statGroups: [string, string[]][] = [
 ]
 
 const normalize = (value: string) =>
-  foldEntitySearch(value.replace(/([a-z])([A-Z])/g, "$1 $2"))
+  foldSearchText(value.replace(/([a-z])([A-Z])/g, "$1 $2"))
     .replace(/[-_\s]+/g, " ")
     .trim()
 const groupsByLabel = new Map(statGroups.flatMap(([term, labels]) => labels.map((label) => [normalize(label), term])))

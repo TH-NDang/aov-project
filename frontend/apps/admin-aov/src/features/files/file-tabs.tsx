@@ -5,9 +5,9 @@ import { cn } from "@aov/ui/lib/utils"
 export type FileTab = "images" | "sources" | "storage"
 
 const TABS: { tab: FileTab; label: string; to: string; Icon: typeof Images }[] = [
-  { tab: "images", label: "Ảnh công khai", to: "/image-management", Icon: Images },
-  { tab: "sources", label: "Tệp nguồn", to: "/image-management?tab=sources", Icon: FolderLock },
-  { tab: "storage", label: "Dung lượng R2", to: "/image-management?tab=storage", Icon: HardDrive },
+  { tab: "images", label: "Ảnh công khai", to: "/files", Icon: Images },
+  { tab: "sources", label: "Tệp nguồn", to: "/files?tab=sources", Icon: FolderLock },
+  { tab: "storage", label: "Dung lượng R2", to: "/files?tab=storage", Icon: HardDrive },
 ]
 
 export function readFileTab(params: URLSearchParams): FileTab {

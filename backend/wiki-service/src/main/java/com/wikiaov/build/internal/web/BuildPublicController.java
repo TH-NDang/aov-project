@@ -22,6 +22,7 @@ public class BuildPublicController implements BuildPublicApi {
         this.builds = builds;
     }
 
+    @Override
     @GetMapping(version = "1")
     public ResponseEntity<BuildViews.HeroBuilds> heroBuilds(@RequestParam String hero, @RequestParam String region,
             HttpServletRequest request) {

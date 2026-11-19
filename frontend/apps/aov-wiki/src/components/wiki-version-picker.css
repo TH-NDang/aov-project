@@ -2,7 +2,7 @@
 .wiki-version-picker {
   display: flex;
   min-width: 0;
-  min-height: 32px;
+  min-height: 36px;
   align-items: center;
   gap: 8px;
   color: var(--aov-muted);
@@ -23,7 +23,7 @@
 /* Where versions can be chosen the value only gains a chevron, so the control reads the same on every page and pulls
    no attention from the list; it is drawn as a control on hover, while open and while an earlier version is shown. */
 .wiki-version-trigger {
-  height: 32px;
+  height: 36px;
   margin-left: -9px;
   border: 1px solid transparent;
   border-radius: var(--aov-radius-control);
@@ -79,6 +79,14 @@
   align-items: center;
   gap: 4px;
   color: var(--aov-accent);
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-version-reset::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .wiki-version-reset:hover {
   color: var(--aov-accent-strong);

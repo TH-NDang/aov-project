@@ -44,7 +44,7 @@ Người dùng chọn Đấu Trường Danh Vọng Mùa Đông 2026 làm giải 
 | Bước | Nội dung |
 |---|---|
 | Tổng quan | Thông tin giải, tổ chức, hệ thống giải, địa điểm; việc nên làm tiếp và tiến độ ghi nhận |
-| Đội & đội hình | Gộp hai bước "đội tham dự" và "đội hình": mỗi đội một khối có logo, trạng thái tham dự và đội hình ở giải này vẽ ra ngay (năm vị trí chính thức có ảnh và tên tuyển thủ, rồi dự bị, người đã rời); sửa đội hình mở bảng riêng |
+| Đội & đội hình | Gộp hai bước "đội tham dự" và "đội hình": mỗi đội một khối có logo, trạng thái tham dự và đội hình ở giải này vẽ ra ngay (năm vị trí chính thức có ảnh và tên tuyển thủ, rồi dự bị, người đã rời); sửa đội hình mở bảng riêng. Biểu tượng bút ở dòng đội mở bảng sửa bản ghi đội và bản ghi các tuyển thủ trong đội hình của giải (18/11/2026), là nơi duy nhất sửa các bản ghi này từ khi màn Registry cũ bị bỏ |
 | Thể thức | Mỗi giai đoạn một thẻ tóm tắt; chọn thẻ mới mở phần sửa |
 | Lịch & kết quả | Tab theo giai đoạn. Vòng tròn: trận gom theo vòng hoặc theo ngày, bảng xếp hạng nằm cạnh. Loại trực tiếp và nhánh thắng/thua: sơ đồ nhánh dựng từ suất WINNER/LOSER |
 | Chung cuộc | Thứ hạng chung cuộc, tiền thưởng và giải thưởng của giải (`placements`, `awards`, `links`) |
@@ -70,6 +70,36 @@ vẫn chụp toàn bộ giải, không công bố riêng từng trận. Bảng x
 Bước "Công bố" tách mục bắt buộc (nguồn kiểm chứng, ít nhất hai đội, ít nhất một giai đoạn, tổ chức đã công bố
 nếu có liên kết) khỏi mục nên bổ sung (đội hình, lịch, giờ đấu, kết quả khớp suất, kết quả đủ, thứ hạng chung
 cuộc). Mục nên bổ sung không chặn công bố.
+
+### Tên trận theo mã (18/11/2026)
+
+Người dùng chọn cách này ngày 18/11/2026 để tên trận do lịch tự động sinh ra hiển thị đúng ngôn ngữ người đọc. Trận
+trong kế hoạch và loạt trận có thêm `title` {kind, leg, round, number}: mã cho biết trận là gì trong giai đoạn, kèm các
+số cần thiết. Ứng dụng đọc (Admin, Stream) viết tên từ `title` bằng ngôn ngữ người đọc, không đọc chữ để quyết định
+hiển thị. `label` của trận và `name` của loạt trận là tên biên tập viên tự đặt, không bắt buộc; khi có thì hiển thị thay
+cho `title`. Đổi tên không bỏ `title`, xóa tên thì trận lại hiển thị theo `title`.
+
+| kind | Số | Tiếng Việt | Tiếng Anh |
+|---|---|---|---|
+| ROUND_ROBIN | `leg`, `round` | Lượt 1 · Vòng 2 | Leg 1 · Round 2 |
+| UPPER_SEMIFINAL | `number` | Bán kết nhánh thắng 1 | Upper bracket semifinal 1 |
+| UPPER_FINAL | — | Chung kết nhánh thắng | Upper bracket final |
+| LOWER_ROUND | `round`, `number` | Vòng 1 nhánh thua · 2 | Lower bracket round 1 · 2 |
+| LOWER_SEMIFINAL | — | Bán kết nhánh thua | Lower bracket semifinal |
+| LOWER_FINAL | — | Chung kết nhánh thua | Lower bracket final |
+| GRAND_FINAL | — | Chung kết tổng | Grand final |
+| EXTRA | — | Trận bổ sung | Additional match |
+
+- Lịch tạo tự động (vòng tròn, mẫu playoffs AOG) chỉ có `title`, không có `label`. Trận Admin thêm thủ công có `title`
+  EXTRA.
+- `title` phải có `kind`; `leg`, `round`, `number` nếu có thì từ 1 đến 99. Sai trả 400 `TOURNAMENT_INVALID_CONTENT`, ở
+  kế hoạch lẫn ở loạt trận.
+- Lưu kế hoạch đồng bộ `label` sang `name` và `title` sang `title` của loạt trận đã liên kết; materialize tạo loạt trận
+  có cả hai.
+- Suất TBD không còn bắt buộc nhãn. Suất chưa có nhãn được ứng dụng viết là "Chưa xác định" / "TBD"; Admin không ghi
+  sẵn "Đội A", "Đội B" nữa.
+- Snapshot công bố, lịch sử kế hoạch và snapshot ván đã chụp trước đây không có `title`; ứng dụng hiển thị tên đã lưu
+  trong đó cho tới lần công bố sau.
 
 ## Page và quyền đại diện
 
@@ -130,6 +160,18 @@ không có trường này được coi là không chính thức. History/roster 
 UUID mùa giải. Bản nháp riêng bản xuất bản; công bố cần ít nhất một nguồn. Đại diện có lớp trình bày
 riêng (giới thiệu, ảnh, liên kết), không được sửa thành tích, lịch sử, đội hình hay kết quả biên tập.
 
+Thứ hạng của thành tích (18/11/2026): `placement` là chữ hiển thị đúng như biên tập viên viết ("Vô địch", "Champion",
+"MVP"). Thứ hạng lưu riêng bằng số, cùng cách ghi hạng với `placements` của giải: `place` là hạng chung cuộc (1 là vô
+địch, 2 là á quân), `placeTo` là hạng cuối của một hạng đồng hạng ("5-8" là `place` 5, `placeTo` 8); `award: true` đánh
+dấu giải thưởng cá nhân (MVP, tuyển thủ xuất sắc), không có hạng. `place` từ 1 đến 999; `placeTo` chỉ có khi có `place`,
+lớn hơn `place` và tối đa 999; giải thưởng cá nhân không có `place`. Sai trả 422 PAGE_INVALID_CONTENT.
+
+Stream chọn dấu của mỗi giải (cúp cho vô địch, số hạng, dấu giải thưởng) theo hạng tốt nhất đã lưu. Thành tích cũ chưa có
+thứ hạng được đọc từ chữ bằng một hàm dùng chung của `@aov/community-contracts`, hiểu cả tiếng Việt và tiếng Anh ("Vô
+địch", "Champion", "1st", "Á quân", "Runner-up", "Hạng 3", "3rd", "Hạng 5-8", "5th–8th", "Top 8" là hạng 5–8); chữ
+không đọc được coi là giải thưởng như trước. Admin chọn thứ hạng trong form thành tích. Người đại diện không sửa thành
+tích nên Stream không có ô nhập.
+
 Nội dung giao diện phân theo loại hồ sơ: ORGANIZATION có giới thiệu, lịch sử hoạt động và giải đấu tổ chức;
 TEAM có đội hình/ban huấn luyện, lịch sử và thành tích; PLAYER có sự nghiệp và thành tích. Tổ chức không
 hiển thị hoặc cho nhập đội hình/thành tích thi đấu; dữ liệu cũ vẫn giữ nguyên khi lưu các mục khác.
@@ -154,6 +196,24 @@ Người thường viết bằng danh tính cá nhân, theo dõi, bình luận, 
 sửa bài. Tác giả sửa bài cá nhân, người có quyền viết page sửa bài page. Bài đã kiểm duyệt không được
 tự xuất bản lại. Bản nháp cá nhân không hiển thị cho người khác. Thông báo nội bộ cho bài page mới,
 bình luận, xử lý yêu cầu và thay đổi quyền; không gửi email. Quyền page không cấp quyền quản trị giải.
+
+Nội dung thông báo (18/11/2026): backend không lưu câu chữ của thông báo. Mỗi thông báo lưu `kind` và `parameters`;
+ứng dụng của người đọc viết câu bằng ngôn ngữ người đọc chọn (Stream có tiếng Việt và tiếng Anh) và không đọc câu chữ để
+quyết định hiển thị.
+
+| kind | Khi nào | parameters |
+|---|---|---|
+| PAGE_POST_PUBLISHED | Page đang theo dõi đăng bài với tư cách page | `pageName` |
+| PAGE_LIVE_STARTED | Page đang theo dõi bắt đầu phát trực tiếp | `pageName`, `title` |
+| POST_COMMENTED | Người khác bình luận bài của mình | — |
+| REPORT_RESOLVED | Báo cáo của mình đã được xử lý | — |
+| PAGE_CLAIM_APPROVED, PAGE_CLAIM_REJECTED | Yêu cầu quản lý trang được chấp thuận / không được chấp thuận | — |
+| PAGE_OWNERSHIP_RECEIVED | Nhận quyền OWNER bằng mã bàn giao hoặc được chuyển owner | — |
+| PAGE_MEMBERSHIP_REVOKED | Bị thu hồi quyền quản lý trang | — |
+
+`pageName` là tên công bố của page lúc gửi, không đổi khi page đổi tên sau đó; `title` là tiêu đề buổi phát. Mỗi loại
+có đúng các tham số trong bảng. Thông báo gửi trước V018 không có `kind` và giữ câu đã lưu trong `message`; ứng dụng
+hiển thị câu đó như trước. Loại mà ứng dụng chưa biết thì hiển thị `message` nếu có, nếu không thì một câu chung.
 
 Thích bài viết (02/11/2026): tài khoản đã đăng nhập thích/bỏ thích bài đã đăng của page công khai, mỗi
 tài khoản tối đa một lượt mỗi bài; gửi lại cùng trạng thái không đổi gì. Bài trả số lượt thích; `liked`
@@ -211,6 +271,28 @@ hồ sơ nhanh. Tên/ảnh lấy từ hồ sơ đã chọn; vị trí, trạng t
 Áp dụng chỉ cập nhật bản chỉnh sửa tại chỗ, Lưu nháp mới ghi đội hình. Hồ sơ tạo nhanh được lưu độc lập.
 Vai trò kiêm nhiệm của tuyển thủ là tùy chọn; vị trí thi đấu chỉ chọn trong đội. Các mục lịch sử,
 thành tích và nguồn thu gọn thành dòng tóm tắt, mở ô nhập qua icon sửa.
+
+### Vị trí và trạng thái theo mã (18/11/2026)
+
+Người dùng chọn cách này ngày 18/11/2026. Mỗi thành viên đội hình có thêm hai mã, không bắt buộc:
+
+- `lane`: vị trí thi đấu, cùng mã với đội hình của giải (TOP, JUNGLE, MID, DRAGON, SUPPORT).
+- `standing`: ACTIVE (đội hình chính), SUBSTITUTE (dự bị), STAFF (ban huấn luyện), LEFT (đã rời đội).
+
+`role` và `status` vẫn là chữ hiển thị đúng như đã ghi ("Đi rừng · Đội trưởng", "Dự bị · AOG Winter 2026"); ứng dụng
+đọc mã để nhóm thành viên, chọn icon vị trí và đánh dấu người ngồi ngoài, rồi viết tên nhóm và vị trí bằng ngôn ngữ người
+đọc. Thành viên STAFF không có `lane`; sai trả 422 `PAGE_INVALID_CONTENT`, mã không có trong danh sách trả 400.
+
+Admin chọn vị trí trong đội từ danh sách: chọn một vị trí thi đấu ghi `lane` cùng chữ của vị trí đó; chọn huấn luyện
+viên hoặc phân tích đội tuyển ghi `standing` STAFF và bỏ `lane`; chữ tùy chỉnh đi kèm ô chọn vị trí thi đấu riêng.
+Trạng thái chọn theo mã, kèm ô ghi chú tự do cho `status`. Stream nhóm đội hình theo `standing` (chính thức, dự bị,
+ban huấn luyện, đã rời đội; dòng chưa có mã ở nhóm "Thành viên"), hiện icon và tên vị trí theo `lane`.
+
+Đội trưởng (18/11/2026): thành viên có thêm `captain` (true/false, thiếu là false). Admin bật tắt bằng ô "Đội trưởng"
+trong bảng thành viên và vẽ vương miện theo `captain`; Stream ghi "Đội trưởng"/"Captain" theo ngôn ngữ người đọc cạnh
+tên. Không ứng dụng nào tìm chữ trong `role` để biết ai là đội trưởng nữa; chữ cũ trong `role` vẫn giữ nguyên. Với
+thành viên có `lane`, Stream hiện tên vị trí theo mã và dấu đội trưởng, không hiện phần ghi chú sau vị trí trong `role`
+(chữ đầy đủ vẫn xem được khi rê chuột).
 
 ## Dữ liệu giải lịch sử (06/11/2026)
 
@@ -424,6 +506,35 @@ V016 phục vụ "Giải chính và các phần của giải": cột sinh `tourn
 index theo cột đó cho các giải là phần, và view `tournament.event_window`: mỗi giải chính một dòng với `recency_rank`,
 `recency_distance` của thành viên gần hôm nay nhất trong giải chính và các phần chưa xóa.
 
+Mọi cột lưu tài khoản (`edited_by`, `deleted_by`, `actor`) dùng một dạng khóa: issuer và subject của JWT, cách nhau bằng
+một dấu xuống dòng; chỉ `CommunityActor` ghép khóa này. V017 đổi các khóa cũ ghép bằng dấu `|` trong schema tournament
+(team, player, tournament, series, game, roster_membership, game_publication, competition_plan, plan_revision) sang dạng đó;
+khóa đã đúng dạng giữ nguyên.
+
+V018 phục vụ "Nội dung thông báo": thêm vào `community.notification` cột `kind` (mã loại) và `parameters` (jsonb, mặc
+định `{}`), bỏ ràng buộc bắt buộc của `message` và thêm ràng buộc mỗi dòng có `kind` hoặc `message`. Dòng cũ giữ
+nguyên `message` và không có `kind`; dòng mới không lưu `message`.
+
+V019 phục vụ "Tên trận theo mã", chạy một lần trên dữ liệu đã lưu. Trong bản nháp kế hoạch (`competition_plan.content`),
+nhãn trận trùng đúng một mẫu đã sinh ("Lượt N · Vòng M", "Bán kết nhánh thắng N", "Vòng N nhánh thua · M", "Chung kết
+nhánh thắng", "Bán kết nhánh thua", "Chung kết nhánh thua", "Chung kết tổng", "Trận bổ sung") đổi thành `title` và bỏ
+`label`; nhãn "Đội A", "Đội B" của suất TBD bị bỏ. Loạt trận có `content.name` trùng các mẫu đó cũng đổi thành `title`,
+cột `name` theo đó để trống. Nhãn khác, lịch sử kế hoạch (`plan_revision`), snapshot công bố của giải và snapshot ván
+giữ nguyên.
+
+V020 phục vụ "Vị trí và trạng thái theo mã", chạy một lần trên bản nháp và bản công bố của mọi page TEAM. Mã chỉ được
+điền khi chữ nói rõ, theo đúng các cách đọc Admin đã dùng: phần đầu của `role` là tên một vị trí ("Đi rừng", "Đường
+giữa", "Jungle", "Support"…) thì có `lane`; là huấn luyện viên hoặc phân tích đội tuyển thì `standing` STAFF. Phần đầu
+của `status` "Đã rời đội"/"Inactive" thì LEFT, "Ban huấn luyện" thì STAFF, "Dự bị"/"Substitute" thì SUBSTITUTE, "Đội
+hình chính"/"Chính thức"/"Active" thì ACTIVE. Khi chữ không nói gì: `lane` lấy theo vị trí của tuyển thủ mà page
+PLAYER liên kết đại diện; `standing` (chỉ khi `status` để trống) lấy theo dòng đội hình giải gần nhất của tuyển thủ đó
+với chính đội này (ACTIVE, SUBSTITUTE, INACTIVE thành LEFT). Chữ khác ("Cho mượn", "Thử việc", vai trò tự ghi) không
+được đoán; `role` và `status` giữ nguyên.
+
+V021 phục vụ "Đội trưởng", chạy một lần trên bản nháp và bản công bố của mọi page TEAM: thành viên có `role` chứa
+"Đội trưởng" hoặc "Captain" như một từ riêng (đầu chữ, sau dấu cách, "·" hoặc "|", không phân biệt hoa thường và dấu)
+được ghi `captain: true`; `role` giữ nguyên, thành viên khác không đổi.
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
@@ -475,11 +586,11 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | POST /me/pages/{id}/reports | {postId?,commentId?,reason}; không có postId là góp ý hồ sơ |
 | POST /me/pages/{id}/moderate | {postId,commentId?,hidden} |
 | GET /admin/community-reports; POST /admin/community-reports/{id}/resolve | Hàng chờ; {resolution,hide} |
-| GET /me/notifications; POST /me/notifications/{id}/read | Hộp thông báo riêng; đánh dấu đọc |
+| GET /me/notifications; POST /me/notifications/{id}/read | Hộp thông báo riêng, mỗi dòng {id,pageId,kind,parameters,message?,createdAt,read} (xem "Nội dung thông báo"); đánh dấu đọc |
 | GET /me/notifications/unread; POST /me/notifications/read-all | {unread} số chưa đọc / đánh dấu tất cả đã đọc |
 | GET /competitions?teamId=&playerId=&organizerPageId=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức |
 | GET /competitions/{id} | Snapshot giải |
-| GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Lỗi EXCHANGE_RATE_INVALID_QUERY 400 |
+| GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Ngày sai dạng hoặc quá 60 ngày trả 400 INVALID_QUERY_PARAMETER |
 | GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp, theo thứ tự danh sách giải) / kế hoạch cùng dữ liệu giải quyết |
 | PUT /admin/competitions/{id} | {version,content:CompetitionPlan} |
 | POST /admin/competitions/preview | {content,stageCode,opponent}; lịch xem trước, không ghi DB |
@@ -487,6 +598,14 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 
 Lỗi page: PAGE_NOT_FOUND 404, PAGE_ACTION_FORBIDDEN 403, PAGE_CONFLICT 409, PAGE_INVALID_CONTENT 422.
 Thi đấu dùng bộ TOURNAMENT_* hiện có. Không tin vai trò hoặc tên tác giả do client gửi trong body.
+
+Lỗi dùng chung một dạng với wiki-service: RFC 9457 kèm `code`, `requestId` (trùng header `X-Request-Id` của mọi câu trả lời) và
+`errors[]` {path, code, message} khi lỗi gắn với một trường; ngữ cảnh của module (`usages`, `missingFields`, `references`) vẫn là
+thành viên cấp trên của problem. Tham số truy vấn lạ, lặp lại, sai kiểu hoặc ngoài giới hạn trang trả 400 INVALID_QUERY_PARAMETER
+(`on`, `ids`, `entityIds` được lặp). Field JSON lạ trong body bị từ chối: 400 INVALID_REQUEST, `errors[].code = UNKNOWN_FIELD`.
+Hai lần ghi đồng thời vào cùng bản ghi trả 409 VERSION_CONFLICT; ràng buộc unique trả 409 DUPLICATE_RECORD,
+ở mọi module của service. Thiếu hoặc sai token trả 401 UNAUTHENTICATED, thiếu quyền 403 FORBIDDEN. Lỗi không lường
+trước được ghi log và trả 500 INTERNAL_ERROR.
 
 ## Vận hành dev
 

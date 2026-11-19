@@ -12,11 +12,41 @@ import {
   bracketLanes,
   bySoonest,
   champion,
+  competitionStatus,
   matchRoundLabel,
   matchStrip,
   playedOrder,
-} from "../src/features/tournaments/competition-model.ts"
-import { competitionMatches } from "../src/features/tournaments/match-model.ts"
+} from "../src/lib/competition-model.ts"
+
+/** 01:00 on 17 November in Hanoi, still 16 November in UTC. */
+const AFTER_HANOI_MIDNIGHT = Date.parse("2026-11-16T18:00:00Z")
+const dated = (startsOn: string, endsOn: string, timezone = "Asia/Ho_Chi_Minh", status?: TournamentContent["status"]) =>
+  ({
+    tournament: { code: "aog", name: "AOG", region: "VN", startsOn, endsOn, status },
+    plan: { timezone },
+  }) as unknown as CompetitionView["content"]
+
+test("a competition that starts today where it is played is ongoing just after local midnight", () => {
+  assert.equal(competitionStatus(dated("2026-11-17", "2026-11-20"), AFTER_HANOI_MIDNIGHT), "ONGOING")
+})
+
+test("a competition that ended yesterday where it is played is finished just after local midnight", () => {
+  assert.equal(competitionStatus(dated("2026-11-10", "2026-11-16"), AFTER_HANOI_MIDNIGHT), "FINISHED")
+})
+
+test("the dates are read on the competition's own calendar, not in UTC", () => {
+  assert.equal(
+    competitionStatus(dated("2026-11-17", "2026-11-20", "America/Los_Angeles"), AFTER_HANOI_MIDNIGHT),
+    "UPCOMING",
+  )
+})
+
+test("an edited status wins over the dates", () => {
+  const edited = dated("2026-11-17", "2026-11-20", "Asia/Ho_Chi_Minh", "FINISHED")
+
+  assert.equal(competitionStatus(edited, AFTER_HANOI_MIDNIGHT), "FINISHED")
+})
+import { competitionMatches } from "../src/lib/match-model.ts"
 
 const HOUR = 60 * 60 * 1000
 const NOW = Date.parse("2026-11-13T12:00:00Z")
@@ -87,6 +117,13 @@ test("a match stops counting as on now three hours after its start", () => {
   const match = [planned("stale", { scheduledAt: at(-3) })]
   assert.deepEqual(matchStrip(entries(match), NOW), [])
   assert.equal(matchStrip(entries(match), NOW - 1).length, 1)
+})
+
+test("a match without a name reads its title in the reader's language", () => {
+  const match = planned("m", { label: null, title: { kind: "ROUND_ROBIN", leg: 2, round: 4 } })
+
+  assert.equal(matchRoundLabel(match, { name: "Vòng bảng" }, "vi-VN"), "Lượt 2 · Vòng 4")
+  assert.equal(matchRoundLabel(match, { name: "Vòng bảng" }, "en-US"), "Leg 2 · Round 4")
 })
 
 test("a round label drops the pairing and the stage name that the row already shows", () => {
@@ -206,10 +243,26 @@ const tournament = (result?: Partial<NonNullable<TournamentContent["result"]>> |
     result: result && { sourceUrl: "", verification: "PRIMARY", ...result },
   }) as TournamentContent
 
-test("the champion is read only from a recorded result", () => {
+test("a competition without a final table or a recorded champion has no champion", () => {
   assert.equal(champion(tournament(), teams), null)
   assert.equal(champion(tournament(null), teams), null)
   assert.equal(champion(tournament({ winnerName: "", runnerUpName: "BOOM Esports" }), teams), null)
+})
+
+test("the champion saved in the final table is matched to its team by id", () => {
+  const finished = {
+    ...tournament(),
+    placements: [
+      { place: "1", teamId: "fpl", teamName: "FPT Polytechnic", lastOpponent: "BOOM Esports", lastScore: "4-2" },
+      { place: "2", teamId: "bme", teamName: "BOOM Esports" },
+    ],
+  }
+
+  const won = champion(finished, teams)
+
+  assert.equal(won?.winner, teams.fpl)
+  assert.equal(won?.runnerUp, teams.bme)
+  assert.equal(won?.score, "4–2")
 })
 
 test("the champion and the runner-up are matched to their teams by full or short name", () => {

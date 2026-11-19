@@ -1,19 +1,14 @@
-import { useState, type FormEvent } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 import { Button } from "@aov/ui/components/button"
+import { Input } from "@aov/ui/components/input"
+import { Textarea } from "@aov/ui/components/textarea"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
+import { confirmDiscard } from "@/components/confirm-dialog"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
-import { control } from "../publishing/fields"
-import {
-  createCollection,
-  refreshSourceFiles,
-  SOURCE_CATEGORIES,
-  updateCollection,
-  type SourceCategory,
-  type SourceCollection,
-} from "./files-api"
+import { SOURCE_CATEGORIES, useSaveCollection, type SourceCategory, type SourceCollection } from "./files-api"
 import { CATEGORY_HINTS, CATEGORY_LABELS } from "./files-format"
+import { NativeSelect } from "@/components/native-select"
 
 const CODE = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
@@ -30,8 +25,19 @@ export function CollectionFormSheet({
   onSaved: (saved: SourceCollection) => void
 }) {
   const wide = useIsWide()
+  const dirty = useRef(false)
+  // Closing with typed text asks first, like every other editor of the Admin.
+  const close = async () => {
+    if (
+      dirty.current &&
+      !(await confirmDiscard({ title: "Đóng mà không lưu?", description: "Thông tin vừa nhập sẽ mất." }))
+    )
+      return
+    dirty.current = false
+    onClose()
+  }
   return (
-    <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
+    <Sheet open={open} onOpenChange={(next) => !next && void close()}>
       <SheetContent
         side={wide ? "right" : "bottom"}
         className={wide ? "w-[min(480px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
@@ -44,7 +50,19 @@ export function CollectionFormSheet({
               : "Mỗi bộ là một lượt chụp hay một gói dữ liệu của một chức năng."}
           </SheetDescription>
         </SheetHeader>
-        {open && <CollectionForm key={collection?.id ?? "new"} collection={collection} onSaved={onSaved} />}
+        {open && (
+          <CollectionForm
+            key={collection?.id ?? "new"}
+            collection={collection}
+            onDirtyChange={(value) => {
+              dirty.current = value
+            }}
+            onSaved={(saved) => {
+              dirty.current = false
+              onSaved(saved)
+            }}
+          />
+        )}
       </SheetContent>
     </Sheet>
   )
@@ -52,38 +70,37 @@ export function CollectionFormSheet({
 
 function CollectionForm({
   collection,
+  onDirtyChange,
   onSaved,
 }: {
   collection: SourceCollection | null
+  onDirtyChange: (dirty: boolean) => void
   onSaved: (saved: SourceCollection) => void
 }) {
-  const client = useQueryClient()
+  const save = useSaveCollection(collection)
   const [code, setCode] = useState("")
   const [category, setCategory] = useState<SourceCategory>("IMPORT_DATA")
   const [label, setLabel] = useState(collection?.label ?? "")
   const [note, setNote] = useState(collection?.note ?? "")
   const [capturedOn, setCapturedOn] = useState(collection?.capturedOn ?? "")
   const [error, setError] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
+  const saving = save.isPending
   const codeValid = collection !== null || CODE.test(code)
+  const dirty =
+    code !== "" ||
+    label !== (collection?.label ?? "") ||
+    note !== (collection?.note ?? "") ||
+    capturedOn !== (collection?.capturedOn ?? "")
+  useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange])
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     if (!codeValid || !label.trim()) return
-    setSaving(true)
     setError(null)
-    try {
-      const input = { label: label.trim(), note: note.trim() || null, capturedOn: capturedOn || null }
-      const saved = collection
-        ? await updateCollection(collection, input)
-        : await createCollection({ ...input, code, category })
-      await refreshSourceFiles(client)
-      onSaved(saved)
-    } catch (cause) {
-      setError(errorMessage(cause))
-    } finally {
-      setSaving(false)
-    }
+    save.mutate(
+      { label: label.trim(), note: note.trim() || null, capturedOn: capturedOn || null, code, category },
+      { onSuccess: onSaved, onError: (cause) => setError(errorMessage(cause)) },
+    )
   }
 
   return (
@@ -95,8 +112,7 @@ function CollectionForm({
         <>
           <label className="grid gap-1.5">
             <span className="type-label">Mã bộ</span>
-            <input
-              className={control}
+            <Input
               value={code}
               required
               maxLength={120}
@@ -108,8 +124,8 @@ function CollectionForm({
           </label>
           <label className="grid gap-1.5">
             <span className="type-label">Chức năng</span>
-            <select
-              className={control}
+            <NativeSelect
+              className="w-full"
               value={category}
               onChange={(event) => setCategory(event.target.value as SourceCategory)}
             >
@@ -118,15 +134,14 @@ function CollectionForm({
                   {CATEGORY_LABELS[key]}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <span className="type-meta">{CATEGORY_HINTS[category]}</span>
           </label>
         </>
       )}
       <label className="grid gap-1.5">
         <span className="type-label">Tên hiển thị</span>
-        <input
-          className={control}
+        <Input
           value={label}
           required
           maxLength={200}
@@ -136,22 +151,11 @@ function CollectionForm({
       </label>
       <label className="grid gap-1.5">
         <span className="type-label">Ngày chụp</span>
-        <input
-          className={control}
-          type="date"
-          value={capturedOn}
-          onChange={(event) => setCapturedOn(event.target.value)}
-        />
+        <Input type="date" value={capturedOn} onChange={(event) => setCapturedOn(event.target.value)} />
       </label>
       <label className="grid gap-1.5">
         <span className="type-label">Ghi chú</span>
-        <textarea
-          className={control}
-          rows={3}
-          maxLength={2000}
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-        />
+        <Textarea rows={3} maxLength={2000} value={note} onChange={(event) => setNote(event.target.value)} />
       </label>
       {error && (
         <p role="alert" className="type-body text-destructive">

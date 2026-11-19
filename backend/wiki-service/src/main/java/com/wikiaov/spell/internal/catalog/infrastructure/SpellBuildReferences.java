@@ -3,6 +3,7 @@ package com.wikiaov.spell.internal.catalog.infrastructure;
 import com.wikiaov.build.BuildReference;
 import com.wikiaov.build.BuildReferenceKind;
 import com.wikiaov.build.BuildReferenceProvider;
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.spell.internal.catalog.persistence.SpellIdentityRepository;
 import com.wikiaov.spell.internal.catalog.persistence.SpellRevisionRepository;
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellIdentity;
@@ -25,32 +26,39 @@ public class SpellBuildReferences implements BuildReferenceProvider {
     private final SpellIdentityRepository identities;
     private final SpellRevisionRepository revisions;
 
+    @Override
     public BuildReferenceKind kind() {
         return BuildReferenceKind.SPELL;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findByCodeIn(codes)))
+        for (var identity : published(identities.findByCodeIn(codes))) {
             result.put(identity.getCode(), reference(identity));
+        }
         return result;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findAllById(ids)))
+        for (var identity : published(identities.findAllById(ids))) {
             result.put(identity.getId(), reference(identity));
+        }
         return result;
     }
 
     /** The given identities that have a published revision. */
     private List<SpellIdentity> published(List<SpellIdentity> found) {
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return List.of();
+        }
         Set<UUID> published = revisions
-                .findByOwnerIdInAndState(found.stream().map(SpellIdentity::getId).toList(), "PUBLISHED").stream()
+                .findByOwnerIdInAndState(found.stream().map(SpellIdentity::getId).toList(), RevisionState.PUBLISHED)
+                .stream()
                 .map(SpellRevision::getOwnerId).collect(Collectors.toSet());
         return found.stream().filter(identity -> published.contains(identity.getId())).toList();
     }

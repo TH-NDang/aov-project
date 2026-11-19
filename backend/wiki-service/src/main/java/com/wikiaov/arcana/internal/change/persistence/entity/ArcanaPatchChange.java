@@ -1,9 +1,14 @@
 package com.wikiaov.arcana.internal.change.persistence.entity;
 
-import com.wikiaov.platform.CatalogChanges.*;
-import jakarta.persistence.*;
+import com.wikiaov.platform.CatalogChanges.Kind;
+import com.wikiaov.platform.CatalogChanges.Summary;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;

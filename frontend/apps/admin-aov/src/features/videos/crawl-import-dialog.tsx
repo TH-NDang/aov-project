@@ -95,6 +95,7 @@ export function CrawlImportDialog({
     },
     onSuccess: setOutcome,
     onSettled: () => cache.invalidateQueries({ queryKey: videoKeys.lists }),
+    meta: { silent: true },
   })
 
   const counts = plan.counts

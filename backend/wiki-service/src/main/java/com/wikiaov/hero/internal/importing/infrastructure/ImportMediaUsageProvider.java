@@ -3,8 +3,15 @@ package com.wikiaov.hero.internal.importing.infrastructure;
 import com.wikiaov.hero.internal.application.HeroImportRequest;
 import com.wikiaov.hero.internal.importing.persistence.HeroImportJobRepository;
 import com.wikiaov.hero.internal.importing.persistence.HeroUploadSessionRepository;
-import com.wikiaov.media.*;
-import java.util.*;
+import com.wikiaov.media.MediaUsage;
+import com.wikiaov.media.MediaUsageProvider;
+import com.wikiaov.media.MediaUsageScope;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
@@ -27,6 +34,7 @@ public class ImportMediaUsageProvider implements MediaUsageProvider {
         this.uploads = uploads;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         var usages = new ArrayList<MediaUsage>();
@@ -44,20 +52,24 @@ public class ImportMediaUsageProvider implements MediaUsageProvider {
         return usages;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
         for (var session : uploads.findAll()) {
-            for (var assetId : assetIds(session.getStateJson()))
+            for (var assetId : assetIds(session.getStateJson())) {
                 usages.computeIfAbsent(assetId, ignored -> new ArrayList<>()).add(session(session.getId()));
+            }
         }
         for (var job : jobs.unfinished()) {
             var rows = json.readValue(job.getRequestJson(), HeroImportRequest[].class);
             for (int i = job.getCompleted(); i < rows.length; i++) {
-                for (var assetId : assetIds(json.writeValueAsString(rows[i].values())))
+                for (var assetId : assetIds(json.writeValueAsString(rows[i].values()))) {
                     usages.computeIfAbsent(assetId, ignored -> new ArrayList<>()).add(job(job.getId(), rows[i].code()));
+                }
             }
         }
+
         return usages;
     }
 

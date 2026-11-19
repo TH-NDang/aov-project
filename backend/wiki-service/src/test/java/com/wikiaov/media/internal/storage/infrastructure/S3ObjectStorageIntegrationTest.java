@@ -3,6 +3,8 @@ package com.wikiaov.media.internal.storage.infrastructure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.wikiaov.DockerBacked;
+import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.storage.application.port.PresignedRequest;
 import com.wikiaov.platform.ApiException;
@@ -18,10 +20,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -30,28 +29,14 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
  * Exercises the adapter against a real S3-compatible server (SeaweedFS, the same image as compose.yaml).
  * SeaweedFS verifies request signatures, so the security cases below are meaningful. Requires Docker.
  */
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class S3ObjectStorageIntegrationTest {
 
-    private static final String ACCESS_KEY = "test-access";
-    private static final String SECRET_KEY = "test-secret";
-    private static final String S3_CONFIG = """
-            {"identities": [{"name": "test",
-              "credentials": [{"accessKey": "%s", "secretKey": "%s"}],
-              "actions": ["Admin", "Read", "Write", "List", "Tagging"]}]}
-            """.formatted(ACCESS_KEY, SECRET_KEY);
+    private static final String ACCESS_KEY = SeaweedFsTestConfiguration.ACCESS_KEY;
+    private static final String SECRET_KEY = SeaweedFsTestConfiguration.SECRET_KEY;
 
-    // The builder methods return the same container; the extension starts and stops it,
-    // so the compiler's resource-leak analysis is a false positive here.
-    @SuppressWarnings("resource")
     @Container
-    static final GenericContainer<?> SEAWEEDFS = new GenericContainer<>("chrislusf/seaweedfs:4.48")
-            .withCommand("server", "-dir=/data", "-s3", "-s3.port=8333", "-s3.config=/etc/seaweedfs/s3.json")
-            .withCopyToContainer(Transferable.of(S3_CONFIG), "/etc/seaweedfs/s3.json")
-            .withExposedPorts(8333)
-            // The S3 API answers anonymous requests with 403 once it is ready.
-            .waitingFor(Wait.forHttp("/").forPort(8333).forStatusCode(403)
-                    .withStartupTimeout(Duration.ofMinutes(2)));
+    static final GenericContainer<?> SEAWEEDFS = SeaweedFsTestConfiguration.seaweedFs();
 
     private static URI endpoint;
     private static S3Client s3;

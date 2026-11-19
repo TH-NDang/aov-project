@@ -1,5 +1,7 @@
 package com.wikiaov.hero.internal.domain;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum HeroSection {
     PROFILE,
     OVERVIEW_RATINGS,
@@ -8,7 +10,7 @@ public enum HeroSection {
     SKINS,
     MEDIA_BINDINGS;
 
-    @com.fasterxml.jackson.annotation.JsonValue
+    @JsonValue
     public String jsonKey() {
         return switch (this) {
             case PROFILE -> "profile";

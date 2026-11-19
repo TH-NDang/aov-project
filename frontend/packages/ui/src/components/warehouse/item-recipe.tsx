@@ -3,6 +3,7 @@ import { useWarehouseText, WarehouseAsset } from "./warehouse-view"
 import { warehouseName, type ItemContent, type WarehouseEntry } from "@aov/ui/lib/warehouse-content"
 import type { ItemSimilarity } from "@aov/ui/lib/item-description"
 import { cn } from "@aov/ui/lib/utils"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 type Item = WarehouseEntry<ItemContent>
 export const recipeStatusNames = { UNKNOWN: "Chưa xác nhận", NONE: "Không cần ghép", VERIFIED: "Đã xác nhận" }
@@ -21,7 +22,7 @@ export function RecipeItemLabel({ item, locale, note }: { item?: Item; locale: s
         </span>
         {item?.content.price != null && (
           <span className="type-meta block">
-            {item.content.price.toLocaleString(locale)} {t("vàng", "gold")}
+            {formatGameNumber(item.content.price)} {t("vàng", "gold")}
           </span>
         )}
         {note && <span className="type-meta block">{note}</span>}
@@ -126,7 +127,7 @@ export function ItemRecipeView<E extends Item>({
   const fee = content.price != null && total !== null && total <= content.price ? content.price - total : null
   const hasParts = content.components.length > 0
   const unconfirmed = content.recipeStatus === "UNKNOWN"
-  const gold = (amount: number) => `${amount.toLocaleString(locale)} ${t("vàng", "gold")}`
+  const gold = (amount: number) => `${formatGameNumber(amount)} ${t("vàng", "gold")}`
   const shown = expanded ? upgrades : upgrades.slice(0, UPGRADES_SHOWN)
   return (
     <>

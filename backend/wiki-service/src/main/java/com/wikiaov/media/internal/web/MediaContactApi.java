@@ -15,6 +15,7 @@ public interface MediaContactApi {
     }
 
     @Operation(operationId = "mediaContactApi_submit", summary = "Contact WikiAOV about media or sources", description = "Store a private contact request. No authentication is required. Asset and version must be supplied together. Limited to five submissions per connection address every ten minutes on each instance.", responses = {
-            @ApiResponse(responseCode = "201", description = "Request stored; only a receipt identifier is returned.", useReturnTypeSchema = true)})
+            @ApiResponse(responseCode = "201", description = "Request stored; only a receipt identifier is returned.", useReturnTypeSchema = true)
+    })
     ResponseEntity<Receipt> submit(HttpServletRequest http, @Valid ContactRequest request);
 }

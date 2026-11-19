@@ -1,13 +1,20 @@
 package com.wikiaov.community.tournament.internal.archive.application;
 
-import com.wikiaov.community.tournament.internal.application.*;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.tournament.internal.application.TournamentErrors;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
+import com.wikiaov.community.tournament.internal.games.application.GameRecords;
+import com.wikiaov.community.tournament.internal.registry.application.PlayerRegistry;
+import com.wikiaov.community.tournament.internal.registry.application.SeriesRegistry;
+import com.wikiaov.community.tournament.internal.registry.application.TeamRegistry;
+import com.wikiaov.community.tournament.internal.registry.application.TournamentRegistry;
 import com.wikiaov.community.tournament.internal.roster.application.RosterAdministration;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RecordLifecycles {
@@ -29,6 +36,7 @@ public class RecordLifecycles {
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
     public Impact impact(String kind, UUID id) {
         return switch (kind) {
             case "teams" -> teams.deletionImpact(id);
@@ -42,9 +50,9 @@ public class RecordLifecycles {
     }
 
     @PreAuthorize("hasAuthority('tournament:write')")
+    @Transactional
     public State mutate(String kind, UUID id, Long version, Action action) {
-        var auth = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        String actor = auth.getToken().getIssuer() + "|" + auth.getToken().getSubject();
+        String actor = CommunityActor.editorKey();
         return switch (kind) {
             case "teams" -> teams.lifecycle(id, version, action, actor);
             case "players" -> players.lifecycle(id, version, action, actor);

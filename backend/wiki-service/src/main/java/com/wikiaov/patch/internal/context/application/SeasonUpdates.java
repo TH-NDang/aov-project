@@ -5,6 +5,7 @@ import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.application.response.SeasonUpdatesView;
 import com.wikiaov.patch.internal.context.persistence.SeasonUpdatesRepository;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.util.IllformedLocaleException;
@@ -34,13 +35,15 @@ public class SeasonUpdates {
         validate(locale, limit);
         var now = clock.instant();
         var context = contexts.find(region, now).orElse(null);
-        if (context == null)
+        if (context == null) {
             return new SeasonUpdatesView(region, locale, now, null, null, List.of());
+        }
 
         var season = repository.currentSeason(context.regionId(), context.patchVariantId(), now, PageRequest.of(0, 1))
                 .stream().findFirst().orElse(null);
-        if (season == null)
+        if (season == null) {
             return new SeasonUpdatesView(region, locale, now, null, context.patchId(), List.of());
+        }
 
         var releases = repository.publishedReleases(context.regionId(), context.rulesetId(), season.getId(), now,
                 PageRequest.of(0, limit));
@@ -56,8 +59,9 @@ public class SeasonUpdates {
         Map<UUID, SeasonUpdatesRepository.Text> result = new LinkedHashMap<>();
         if (!releases.isEmpty()) {
             var patchIds = releases.stream().map(SeasonUpdatesRepository.Release::getId).distinct().toList();
-            for (var text : repository.preferredTexts(patchIds, locale))
-                result.putIfAbsent(text.getPatchId(), text);
+            repository.texts(patchIds).stream()
+                    .sorted(CatalogLocales.preference(locale, SeasonUpdatesRepository.Text::getLocale))
+                    .forEach(text -> result.putIfAbsent(text.getPatchId(), text));
         }
         return result;
     }
@@ -71,11 +75,13 @@ public class SeasonUpdates {
     }
 
     private static void validate(String locale, int limit) {
-        if (limit < 1 || limit > 10)
+        if (limit < 1 || limit > 10) {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Limit must be between 1 and 10.");
+        }
         try {
-            if (!new Locale.Builder().setLanguageTag(locale).build().toLanguageTag().equals(locale))
+            if (!new Locale.Builder().setLanguageTag(locale).build().toLanguageTag().equals(locale)) {
                 throw new IllegalArgumentException();
+            }
         } catch (IllegalArgumentException | IllformedLocaleException exception) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "Use a canonical BCP 47 locale.");
         }

@@ -2,8 +2,11 @@ package com.wikiaov.hero.internal.badges.persistence;
 
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadgeGroupTranslation;
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadgeTranslation;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
@@ -27,9 +30,9 @@ public class SkinBadgeTexts {
         translations.forEach(text -> incoming.put(text.getLocale(), text));
         for (var old : badges(List.of(id))) {
             var next = incoming.remove(old.getLocale());
-            if (next == null)
+            if (next == null) {
                 badges.delete(old);
-            else {
+            } else {
                 old.setDisplayName(next.getDisplayName());
                 old.setIconAssetId(next.getIconAssetId());
             }
@@ -43,10 +46,11 @@ public class SkinBadgeTexts {
         translations.forEach(text -> incoming.put(text.getLocale(), text));
         for (var old : groups(List.of(id))) {
             var next = incoming.remove(old.getLocale());
-            if (next == null)
+            if (next == null) {
                 groups.delete(old);
-            else
+            } else {
                 old.setDisplayName(next.getDisplayName());
+            }
         }
         groups.saveAll(incoming.values());
         groups.flush();

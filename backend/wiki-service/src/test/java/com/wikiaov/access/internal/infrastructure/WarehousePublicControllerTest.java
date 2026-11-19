@@ -1,8 +1,11 @@
 package com.wikiaov.access.internal.infrastructure;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.wikiaov.arcana.internal.catalog.application.ArcanaCatalog;
 import com.wikiaov.arcana.internal.web.ArcanaPublicController;
@@ -76,9 +79,10 @@ class WarehousePublicControllerTest {
                 .thenReturn(
                         List.of(new PublicEnchantmentBranchView("vuc-hon-mang", 1, "#f00", List.of(text), null, null)));
 
-        for (var route : List.of("items", "arcana", "enchantments", "spells"))
+        for (var route : List.of("items", "arcana", "enchantments", "spells")) {
             mvc.perform(get("/api/wiki/v1/" + route)).andExpect(status().isOk())
                     .andExpect(jsonPath("$.items").isEmpty());
+        }
         mvc.perform(get("/api/wiki/v1/item-categories")).andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].code").value("cong"))
                 .andExpect(jsonPath("$[0].translations[0].locale").value("vi-VN"));
@@ -99,11 +103,12 @@ class WarehousePublicControllerTest {
         when(spells.published("VN", "en-US", 0, 20, season, patch, true))
                 .thenReturn(new PageSlice<>(List.of(), 0, 20, 0));
 
-        for (var route : List.of("items", "arcana", "enchantments", "spells"))
+        for (var route : List.of("items", "arcana", "enchantments", "spells")) {
             mvc.perform(get("/api/wiki/v1/" + route).param("locale", "en-US")
                     .param("seasonId", season.toString()).param("patchVariantId", patch.toString())
                     .param("includeUnscoped", "true")).andExpect(status().isOk())
                     .andExpect(jsonPath("$.items").isEmpty());
+        }
         verify(items).published("VN", "en-US", 0, 20, season, patch, true);
         verify(arcana).published("VN", "en-US", 0, 20, season, patch, true);
         verify(enchantments).published("VN", "en-US", 0, 20, season, patch, true);

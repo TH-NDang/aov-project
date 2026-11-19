@@ -28,6 +28,18 @@
   --aov-on-accent: light-dark(#ffffff, #1a1408);
 
   --aov-chart: light-dark(#8a6414, #b98c35);
+  /* Further chart series, for charts with more than one. */
+  --aov-chart-2: light-dark(oklch(0.6 0.118 184.704), oklch(0.696 0.17 162.48));
+  --aov-chart-3: light-dark(oklch(0.398 0.07 227.392), oklch(0.769 0.188 70.08));
+  --aov-chart-4: light-dark(oklch(0.828 0.189 84.429), oklch(0.627 0.265 303.9));
+  --aov-chart-5: light-dark(oklch(0.769 0.188 70.08), oklch(0.645 0.246 16.439));
+
+  /* Product wordmarks: each product keeps its own ink and accent wherever its name is drawn, in any app. */
+  --aov-brand-wiki-ink: #f5e6cc;
+  --aov-brand-wiki-accent: #e5b566;
+  --aov-brand-stream-ink: #eee0ba;
+  --aov-brand-stream-accent: #aebbe3;
+  --aov-brand-stream-wordmark: #b6bfdf;
 
   /* AOV Wiki: a deep ink-blue page like the game's lobby, cards one step lighter, marks in a rich gold. Fixed, not themed. */
   --aov-wiki-night: #0d1322;
@@ -65,6 +77,9 @@
   --aov-stream-mist-line: #d3d7e8;
   --aov-stream-ink: #1c2a3b;
   --aov-stream-ink-soft: #353654;
+
+  /* In-game gold: a price in gold and its coin, in the coin's amber rather than the brand accent. */
+  --aov-game-gold: light-dark(oklch(66.6% 0.179 58.318), oklch(82.8% 0.189 84.429));
 
   /* Status colors carry meaning only; they are not decoration. */
   --aov-success: light-dark(#12804f, #4cc38a);

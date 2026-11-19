@@ -3,9 +3,20 @@ package com.wikiaov.hero.internal.alias.persistence;
 import com.wikiaov.hero.internal.alias.persistence.entity.ImageFileAlias;
 import com.wikiaov.hero.internal.alias.persistence.entity.SkinKeyAlias;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeRepository;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.ImageOption;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Skin;
+import com.wikiaov.hero.internal.domain.HeroContent.Skins;
 import java.text.Normalizer;
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -24,19 +35,22 @@ public class IdentifierAliases {
         String base = Normalizer
                 .normalize(name.toLowerCase(Locale.ROOT).replace('đ', 'd').replace("+", "-plus"), Normalizer.Form.NFD)
                 .replaceAll("\\p{M}+", "").replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "");
-        if (base.isBlank())
+        if (base.isBlank()) {
             throw new IllegalArgumentException("The badge name must contain Latin letters or digits.");
+        }
         base = base.substring(0, Math.min(base.length(), 48)).replaceAll("-$", "") + "-" + region;
         Set<String> used = new HashSet<>(badges.codes());
         int sequence = 1;
-        while (used.contains(base + "-" + sequence))
+        while (used.contains(base + "-" + sequence)) {
             sequence++;
+        }
         return base + "-" + sequence;
     }
 
     public Skins skins(UUID heroId, Skins incoming) {
-        if (incoming.skins() == null || incoming.skins().stream().anyMatch(s -> s == null || s.skinKey() == null))
+        if (incoming.skins() == null || incoming.skins().stream().anyMatch(s -> s == null || s.skinKey() == null)) {
             throw new IllegalArgumentException("Skin records and their keys are required.");
+        }
         Map<String, String> keys = heroId == null
                 ? Map.of()
                 : aliases.skins(heroId).stream()
@@ -56,8 +70,9 @@ public class IdentifierAliases {
 
     private Map<MediaRole, List<ImageOption>> images(Map<MediaRole, List<ImageOption>> incoming) {
         var ids = incoming.values().stream().flatMap(Collection::stream).map(ImageOption::assetId).distinct().toList();
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return incoming;
+        }
         var aliases = this.aliases.images(ids).stream()
                 .collect(Collectors.toMap(ImageFileAlias::getAssetId, Function.identity()));
         Map<MediaRole, List<ImageOption>> result = new EnumMap<>(MediaRole.class);

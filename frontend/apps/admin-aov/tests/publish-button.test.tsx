@@ -1,11 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 async function withButton(
-  props: Partial<React.ComponentProps<typeof import("../src/features/publishing/publish-button").PublishButton>>,
+  props: Partial<
+    React.ComponentProps<typeof import("../src/features/publishing/components/workspace/publish-button").PublishButton>
+  >,
   run: (ui: {
     document: Document
     click: (element: Element | null | undefined) => Promise<void>
@@ -14,33 +16,16 @@ async function withButton(
     rerender: (next: typeof props) => Promise<void>
   }) => Promise<void>,
 ) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/a" })
+  const dom = createWindow("http://localhost/hero/a")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   // Radix and React Router decide how to behave when first imported, so they must see the DOM above.
   const { createRoot } = await import("react-dom/client")
   const { MemoryRouter } = await import("react-router")
-  const { PublishButton } = await import("../src/features/publishing/publish-button")
+  const { PublishButton } = await import("../src/features/publishing/components/workspace/publish-button")
   const calls: string[] = []
   const root = createRoot(dom.window.document.getElementById("root")!)
   const render = (next: typeof props) =>
@@ -76,9 +61,7 @@ async function withButton(
     })
   } finally {
     await act(async () => root.unmount())
-    for (const [key, descriptor] of originals)
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
+    restoreGlobals()
     dom.window.close()
   }
 }
@@ -128,7 +111,7 @@ test("a blocked button stays clickable while a busy one does not", async () => {
 })
 
 test("baseline contexts are read season by season, because the endpoint needs a season", async () => {
-  const { loadBaselineContexts } = await import("../src/features/publishing/baseline-context-form")
+  const { loadBaselineContexts } = await import("../src/features/publishing/components/import/baseline-context-form")
   const requested: string[] = []
   const contexts = await loadBaselineContexts(async <T,>(path: string) => {
     requested.push(path)
@@ -147,7 +130,7 @@ test("baseline contexts are read season by season, because the endpoint needs a 
 })
 
 test("a saved change counts per section, and listing roles in another order is not one", async () => {
-  const { savedHeroSections } = await import("../src/features/publishing/hero-draft-changes")
+  const { savedHeroSections } = await import("../src/features/publishing/components/patch-changes/hero-draft-changes")
   const { fixtureContent } = await import("./fixtures/hero-workspace-data")
   const changed = structuredClone(fixtureContent)
   changed.PROFILE!.roles = [...changed.PROFILE!.roles].reverse()

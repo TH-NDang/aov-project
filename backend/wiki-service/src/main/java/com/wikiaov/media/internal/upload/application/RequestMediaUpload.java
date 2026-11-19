@@ -1,7 +1,9 @@
 package com.wikiaov.media.internal.upload.application;
 
 import com.wikiaov.access.Actor;
+import com.wikiaov.access.ActorType;
 import com.wikiaov.access.CurrentActor;
+import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.MediaProperties;
 import com.wikiaov.media.internal.application.SourceInput;
@@ -18,6 +20,7 @@ import com.wikiaov.media.internal.upload.persistence.MediaUploadSessionRepositor
 import com.wikiaov.media.internal.upload.persistence.entity.MediaUploadSession;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.ApiFieldError;
+import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -76,11 +79,11 @@ public class RequestMediaUpload {
     public UploadTicket avatar(Command command) {
         Actor actor = currentActor.require();
         MediaAsset asset = assetAccess.requireActiveAsset(command.assetId());
-        if (actor.type() != com.wikiaov.access.ActorType.HUMAN
-                || asset.getSemanticType() != com.wikiaov.media.MediaSemanticType.USER_AVATAR
+        if (actor.type() != ActorType.HUMAN
+                || asset.getSemanticType() != MediaSemanticType.USER_AVATAR
                 || !asset.getCreatedByIssuer().equals(actor.issuer())
                 || !asset.getCreatedBySubject().equals(actor.subject()) || asset.hasCurrentVersion()) {
-            throw new ApiException(com.wikiaov.platform.PlatformErrorCode.FORBIDDEN,
+            throw new ApiException(PlatformErrorCode.FORBIDDEN,
                     "Avatar upload is not owned by this caller.");
         }
         return issue(command);

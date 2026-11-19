@@ -37,11 +37,13 @@ public final class SeasonCalendarRules {
         public void requireSeasonOrder(long selectedOrdinal, long existingOrdinal, Instant existingStart,
                 Instant existingEnd) {
             if ((existingOrdinal < selectedOrdinal && !existingStart.isBefore(start))
-                    || (existingOrdinal > selectedOrdinal && !existingStart.isAfter(start)))
+                    || (existingOrdinal > selectedOrdinal && !existingStart.isAfter(start))) {
                 throw new InvalidCalendar(Violation.INCONSISTENT_ORDER);
+            }
             if ((existingOrdinal < selectedOrdinal && existingEnd != null && existingEnd.isAfter(start))
-                    || (existingOrdinal > selectedOrdinal && end != null && end.isAfter(existingStart)))
+                    || (existingOrdinal > selectedOrdinal && end != null && end.isAfter(existingStart))) {
                 throw new InvalidCalendar(Violation.OVERLAPPING_SEASONS);
+            }
         }
 
         public void requireIncludesRelease(Instant effectiveAt, LocalDate effectiveOn, ZoneId zone) {
@@ -49,20 +51,23 @@ public final class SeasonCalendarRules {
             var latest = effectiveOn == null
                     ? earliest.plusNanos(1)
                     : effectiveOn.plusDays(1).atStartOfDay(zone).toInstant();
-            if (!latest.isAfter(start) || (end != null && !earliest.isBefore(end)))
+            if (!latest.isAfter(start) || (end != null && !earliest.isBefore(end))) {
                 throw new InvalidCalendar(Violation.EXCLUDED_RELEASE);
+            }
         }
     }
 
     public static Window resolve(Instant startsAt, Instant endsAt, LocalDate startsOn, LocalDate endsOn,
             String timezone) {
-        if ((startsAt == null) == (startsOn == null) || (endsAt != null && endsOn != null))
+        if ((startsAt == null) == (startsOn == null) || (endsAt != null && endsOn != null)) {
             throw new InvalidCalendar(Violation.INVALID_PRECISION);
+        }
         var zone = ZoneId.of(timezone);
         var start = startsAt != null ? startsAt : startsOn.atStartOfDay(zone).toInstant();
         var end = endsAt != null ? endsAt : (endsOn == null ? null : endsOn.plusDays(1).atStartOfDay(zone).toInstant());
-        if (end != null && !end.isAfter(start))
+        if (end != null && !end.isAfter(start)) {
             throw new InvalidCalendar(Violation.INVALID_END);
+        }
         return new Window(start, end);
     }
 }

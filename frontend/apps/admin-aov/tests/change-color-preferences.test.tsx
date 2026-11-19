@@ -1,28 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
-import * as React from "react"
+import type { JSDOM } from "jsdom"
 import { act } from "react"
 import type { Root } from "react-dom/client"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    Element: dom.window.Element,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  const dom = createWindow("http://localhost/publishing")
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     ResizeObserver: class {
       observe() {}
       unobserve() {}
@@ -31,11 +17,7 @@ async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
     fetch: async () => {
       throw new Error("Change color preferences must not request live data")
     },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   try {
@@ -43,18 +25,15 @@ async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 
 test("change color settings persist independent colors and synchronize all badges without changing arrow identities", async () => {
   await withDocument(async (root, dom) => {
     const { ChangeColorSettings, changeColorsStorageKey } =
-      await import("../src/features/publishing/change-color-preferences")
-    const { ChangeKindBadge } = await import("../src/features/publishing/hero-change-badges")
+      await import("../src/features/publishing/components/patch-changes/change-color-preferences")
+    const { ChangeKindBadge } = await import("../src/features/publishing/components/patch-changes/hero-change-badges")
     const document = dom.window.document
     await act(async () =>
       root.render(
@@ -123,8 +102,9 @@ test("stored preferences load on a fresh mount while malformed values and later 
   ]
   for (const { saved, buff, nerf } of values) {
     await withDocument(async (root, dom) => {
-      const { changeColorsStorageKey } = await import("../src/features/publishing/change-color-preferences")
-      const { ChangeKindBadge } = await import("../src/features/publishing/hero-change-badges")
+      const { changeColorsStorageKey } =
+        await import("../src/features/publishing/components/patch-changes/change-color-preferences")
+      const { ChangeKindBadge } = await import("../src/features/publishing/components/patch-changes/hero-change-badges")
       dom.window.localStorage.setItem(changeColorsStorageKey, saved)
       await act(async () =>
         root.render(
@@ -150,8 +130,8 @@ test("stored preferences load on a fresh mount while malformed values and later 
 test("blocked storage retains usable session preferences and reloads changes received while the settings were unmounted", async () => {
   await withDocument(async (root, dom) => {
     const { changeColorsStorageKey, useChangeColors } =
-      await import("../src/features/publishing/change-color-preferences")
-    const { ChangeKindBadge } = await import("../src/features/publishing/hero-change-badges")
+      await import("../src/features/publishing/components/patch-changes/change-color-preferences")
+    const { ChangeKindBadge } = await import("../src/features/publishing/components/patch-changes/hero-change-badges")
     function Host() {
       const { setColor } = useChangeColors()
       return (

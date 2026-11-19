@@ -3,27 +3,27 @@
  * tab row, unit portraits and trait icons, the drawer and the floating button of mode-ui.tsx). The list and the mode
  * page keep their own styles in mode-pages.css, the guide's tabs theirs in guide.css. Colors come from the wiki tokens.
  */
-.mode-page {
+.wiki-mode-page {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   min-width: 0;
 }
 /* A section of a page: its heading, then its content straight on the page. */
-.mode-section {
+.wiki-mode-section {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-width: 0;
 }
 /* A section's heading: its name in gold with an optional count, one muted line under it, a thin gold rule below. */
-.mode-heading {
+.wiki-mode-heading {
   display: grid;
   gap: 2px;
   padding-bottom: 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--aov-accent) 24%, transparent);
 }
-.mode-heading h2 {
+.wiki-mode-heading h2 {
   font: var(--wiki-type-section);
   display: flex;
   flex-wrap: wrap;
@@ -31,64 +31,72 @@
   gap: 4px 10px;
   color: var(--aov-accent);
 }
-.mode-heading p {
+.wiki-mode-heading p {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
-.mode-heading-icon {
+.wiki-mode-heading-icon {
   display: inline-flex;
   align-self: center;
 }
 /* The one action of a heading sits at the end of its first line. */
-.mode-heading[data-action] {
+.wiki-mode-heading[data-action] {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 12px;
 }
-.mode-heading[data-action] > p {
+.wiki-mode-heading[data-action] > p {
   grid-column: 1 / -1;
 }
-.mode-heading-action {
+.wiki-mode-heading-action {
   display: flex;
   gap: 8px;
   align-items: center;
 }
-.mode-heading h2 small {
+.wiki-mode-heading h2 small {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
   font-variant-numeric: tabular-nums;
 }
-.mode-meta {
+/* A group's heading while it loads: a bar where the name will be, over the same rule. */
+.wiki-mode-heading[data-skeleton]::before {
+  content: "";
+  width: 120px;
+  height: 24px;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
+.wiki-mode-meta {
   font: var(--wiki-type-meta);
   display: flex;
   flex-wrap: wrap;
   gap: 2px 10px;
   color: var(--aov-muted);
 }
-.mode-prose {
+.wiki-mode-prose {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
 }
-.mode-empty {
+.wiki-mode-empty {
   font: var(--wiki-type-body);
   padding: 28px 16px;
   color: var(--aov-muted);
   text-align: center;
 }
-.mode-message {
+.wiki-mode-message {
   font: var(--wiki-type-meta);
   color: var(--aov-warning);
 }
 
 /* Filters: a field first, then chips on one row that scrolls sideways instead of wrapping. */
-.mode-filter-bar {
+.wiki-mode-filter-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
 }
 /* The row's own padding leaves room for a chip's focus ring, which a scrolling row would cut otherwise. */
-.mode-chip-row {
+.wiki-mode-chip-row {
   display: flex;
   gap: 6px;
   min-width: 0;
@@ -97,16 +105,16 @@
   overflow-x: auto;
   scrollbar-width: none;
 }
-.mode-chip-row::-webkit-scrollbar {
+.wiki-mode-chip-row::-webkit-scrollbar {
   display: none;
 }
 /* A chip row never widens the page: it takes what is left and scrolls inside it. */
-.mode-filter-bar > .mode-chip-row {
+.wiki-mode-filter-bar > .wiki-mode-chip-row {
   flex: 1 1 auto;
   max-width: calc(100% + 10px);
 }
 /* The Wiki's chip: a pill of the card colour; on a card it takes the steps above the card. */
-.mode-chip {
+.wiki-mode-chip {
   font: var(--wiki-type-meta);
   display: inline-flex;
   flex: none;
@@ -125,88 +133,52 @@
     background 0.12s ease,
     border-color 0.12s ease,
     color 0.12s ease;
+  position: relative;
 }
-.mode-chip:hover {
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-mode-chip::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
+.wiki-mode-chip:hover {
   background: var(--mode-chip-hover, var(--aov-raised));
   color: var(--aov-text);
 }
-:is(.mode-feature, .lineup-card) {
-  --mode-chip-bg: var(--aov-raised);
-  --mode-chip-hover: var(--aov-wiki-panel-high);
-}
+/* A card under its chips sets --mode-chip-bg and --mode-chip-hover to the steps above its own. */
 /* The chosen chip: a gold outline over a faint gold tint. */
-.mode-chip[aria-pressed="true"],
-.mode-chip[aria-current="page"],
-.mode-chip[data-tone="accent"] {
+.wiki-mode-chip[aria-pressed="true"],
+.wiki-mode-chip[aria-current="page"],
+.wiki-mode-chip[data-tone="accent"] {
   border-color: var(--aov-accent);
   background: var(--aov-accent-soft);
   color: var(--aov-accent-strong);
 }
-.mode-chip:disabled {
+.wiki-mode-chip:disabled {
   cursor: default;
   opacity: 0.5;
 }
-.mode-chip > svg {
+.wiki-mode-chip > svg {
   flex: none;
 }
 /* A chip's count stays muted until the chip is chosen; muted text would lose its contrast on the tint. */
-.mode-chip small {
+.wiki-mode-chip small {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
   font-variant-numeric: tabular-nums;
 }
-.mode-chip[aria-pressed="true"] small {
+.wiki-mode-chip[aria-pressed="true"] small {
   color: inherit;
 }
 
-/*
- * Guide tabs: one row under the mode's name that stays under the header, whose height is --wiki-header-height, and
- * scrolls sideways when it is narrow. Sticky parts of the guide sit right under this row (--guide-tabs-height).
- */
-.guide-tabs {
-  position: sticky;
-  top: var(--wiki-header-height);
-  z-index: 5;
-  display: flex;
-  gap: 28px;
-  overflow-x: auto;
-  background: color-mix(in srgb, var(--aov-bg) 92%, transparent);
-  box-shadow: inset 0 -1px 0 var(--aov-line);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  scrollbar-width: none;
-}
-.guide-tabs::-webkit-scrollbar {
-  display: none;
-}
-.guide-tab {
-  font: var(--wiki-type-category);
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  min-height: 45px;
-  border-bottom: 2px solid transparent;
-  color: var(--aov-text-soft);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.guide-tab:hover {
-  color: var(--aov-text);
-}
-.guide-tab[aria-current="page"] {
-  border-bottom-color: var(--aov-accent);
-  color: var(--aov-accent);
-}
-.guide-tab:focus-visible {
-  outline-offset: -2px;
-}
-/* Sticky parts of the guide sit right under the tab row. */
+/* Sticky parts of the guide sit right under the guide's tab row (mode-pages.css). */
 :root {
   --guide-tabs-height: 45px;
 }
 
 /* Portrait: the game's unit icon framed in its cost color */
-.guide-portrait {
+.wiki-guide-portrait {
   position: relative;
   display: inline-grid;
   flex: none;
@@ -219,36 +191,36 @@
   background: var(--aov-sunken);
   box-shadow: 0 0 0 1px rgb(0 0 0 / 35%);
 }
-.guide-portrait img {
+.wiki-guide-portrait img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.guide-portrait b {
+.wiki-guide-portrait b {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
-.guide-portrait[data-size="xs"] {
+.wiki-guide-portrait[data-size="xs"] {
   width: 28px;
   height: 28px;
   border-width: 1.5px;
   border-radius: var(--aov-radius-control);
 }
-.guide-portrait[data-size="sm"] {
+.wiki-guide-portrait[data-size="sm"] {
   width: 36px;
   height: 36px;
   border-radius: var(--aov-radius-control);
 }
-.guide-portrait[data-size="md"] {
+.wiki-guide-portrait[data-size="md"] {
   width: 56px;
   height: 56px;
 }
-.guide-portrait[data-size="lg"] {
+.wiki-guide-portrait[data-size="lg"] {
   width: 72px;
   height: 72px;
   border-radius: var(--aov-radius-media);
 }
-.guide-trait-icon {
+.wiki-guide-trait-icon {
   display: inline-block;
   flex: none;
   border-radius: 50%;
@@ -258,7 +230,7 @@
 }
 
 /* Detail drawer: from the right on wide screens; the phone rule below turns it into a bottom sheet. */
-.mode-dialog {
+.wiki-mode-dialog {
   position: fixed;
   inset: 0 0 0 auto;
   width: min(520px, 100vw);
@@ -275,19 +247,19 @@
   box-shadow: var(--aov-shadow-lg);
   color: var(--aov-text);
 }
-.mode-dialog[open] {
+.wiki-mode-dialog[open] {
   display: flex;
   flex-direction: column;
   animation: mode-drawer-right 0.22s ease-out;
 }
-.mode-dialog::backdrop {
+.wiki-mode-dialog::backdrop {
   background: var(--aov-overlay);
   animation: mode-drawer-fade 0.2s ease-out;
 }
-html:has(.mode-dialog[open]) {
+html:has(.wiki-mode-dialog[open]) {
   overflow: hidden;
 }
-.mode-dialog-head {
+.wiki-mode-dialog-head {
   position: relative;
   display: flex;
   flex: none;
@@ -296,13 +268,13 @@ html:has(.mode-dialog[open]) {
   padding: 12px 12px 12px 18px;
   border-bottom: 1px solid var(--aov-line);
 }
-.mode-dialog-title {
+.wiki-mode-dialog-title {
   font: var(--wiki-type-category);
   flex: 1;
   min-width: 0;
   color: var(--aov-muted);
 }
-.mode-dialog-close {
+.wiki-mode-dialog-close {
   display: inline-grid;
   place-items: center;
   width: 36px;
@@ -313,11 +285,11 @@ html:has(.mode-dialog[open]) {
   color: var(--aov-text);
   cursor: pointer;
 }
-.mode-dialog-close:hover {
+.wiki-mode-dialog-close:hover {
   border-color: var(--aov-accent);
 }
 /* Hidden tooltips of icons near the edge must not make the drawer scroll sideways. */
-.mode-dialog-body {
+.wiki-mode-dialog-body {
   flex: 1;
   min-height: 0;
   overflow-x: clip;
@@ -325,7 +297,7 @@ html:has(.mode-dialog[open]) {
   overscroll-behavior: contain;
   padding: 18px;
 }
-.mode-dialog-grip {
+.wiki-mode-dialog-grip {
   display: none;
 }
 @keyframes mode-drawer-right {
@@ -345,21 +317,15 @@ html:has(.mode-dialog[open]) {
 }
 
 @media (max-width: 899.98px) {
-  .mode-page {
+  .wiki-mode-page {
     gap: 16px;
   }
   /* What a finger presses is 36px tall or more. */
-  .mode-chip {
+  .wiki-mode-chip {
     min-height: 36px;
   }
-  /* The tabs run to the screen's edges, so the row scrolls under them; the first label keeps the page's gutter. */
-  .guide-tabs {
-    gap: 22px;
-    margin-inline: calc(-1 * var(--wiki-gutter));
-    padding-inline: var(--wiki-gutter);
-  }
   /* Phones: a sheet rising from the bottom, its bar a handle to drag it away. */
-  .mode-dialog {
+  .wiki-mode-dialog {
     inset: auto 0 0 0;
     width: 100vw;
     height: auto;
@@ -370,14 +336,14 @@ html:has(.mode-dialog[open]) {
     box-shadow: var(--aov-shadow-lg);
     transition: transform 0.18s ease-out;
   }
-  .mode-dialog[open] {
+  .wiki-mode-dialog[open] {
     animation-name: mode-drawer-up;
   }
-  .mode-dialog-head {
+  .wiki-mode-dialog-head {
     padding: 18px 12px 10px 16px;
     touch-action: none;
   }
-  .mode-dialog-grip {
+  .wiki-mode-dialog-grip {
     position: absolute;
     top: 7px;
     left: 50%;
@@ -388,24 +354,24 @@ html:has(.mode-dialog[open]) {
     background: var(--aov-line-strong);
     transform: translateX(-50%);
   }
-  .mode-dialog-body {
+  .wiki-mode-dialog-body {
     padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mode-chip,
-  .mode-dialog {
+  .wiki-mode-chip,
+  .wiki-mode-dialog {
     transition: none;
   }
-  .mode-dialog[open],
-  .mode-dialog::backdrop {
+  .wiki-mode-dialog[open],
+  .wiki-mode-dialog::backdrop {
     animation: none;
   }
 }
 
 /* The floating "+": a named pill on wide screens, a round button on phones that tucks in while scrolling. */
-.mode-fab-wrap {
+.wiki-mode-fab-wrap {
   position: fixed;
   z-index: 30;
   right: 20px;
@@ -414,7 +380,7 @@ html:has(.mode-dialog[open]) {
     transform 0.24s ease,
     opacity 0.24s ease;
 }
-.mode-fab {
+.wiki-mode-fab {
   font: var(--wiki-type-category);
   display: inline-flex;
   gap: 8px;
@@ -429,34 +395,35 @@ html:has(.mode-dialog[open]) {
   text-decoration: none;
   cursor: pointer;
 }
-.mode-fab:is(:hover, :focus-visible) {
+.wiki-mode-fab:is(:hover, :focus-visible) {
   filter: brightness(1.08);
 }
-body:has(.mode-fab-wrap) .wiki-site-footer {
-  padding-bottom: 88px;
+/* The footer leaves this much room under its last line for the button (wiki-footer.css). */
+body:has(.wiki-mode-fab-wrap) {
+  --wiki-floating-button-space: 88px;
 }
 @media (max-width: 899.98px) {
-  .mode-fab-wrap {
+  .wiki-mode-fab-wrap {
     right: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom));
   }
-  .mode-fab {
+  .wiki-mode-fab {
     justify-content: center;
     width: 56px;
     height: 56px;
     padding: 0;
   }
-  .mode-fab-label {
+  .wiki-mode-fab-label {
     display: none;
   }
   /* While the page scrolls only a sliver shows at the right edge. */
-  .mode-fab-wrap[data-scrolling="true"] {
+  .wiki-mode-fab-wrap[data-scrolling="true"] {
     opacity: 0.75;
     transform: translateX(52px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mode-fab-wrap {
+  .wiki-mode-fab-wrap {
     transition: none;
   }
 }

@@ -1,19 +1,27 @@
 package com.wikiaov.patch.internal.context.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
+import com.wikiaov.patch.internal.application.response.CatalogContextView.Language;
 import com.wikiaov.patch.internal.application.response.RegionView;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
-import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository.*;
+import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository.CatalogDate;
+import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository.CatalogPatch;
 import com.wikiaov.patch.internal.context.persistence.SeasonUpdatesRepository;
 import com.wikiaov.patch.internal.ruleset.application.Regions;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PlatformErrorCode;
-import java.time.*;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -43,12 +51,11 @@ class CatalogContextsTest {
                 .thenReturn(List.of(current, middle, old));
         var dates = List.of(date(currentVariant, LocalDate.of(2026, 10, 15), now.minusSeconds(60)),
                 date(middleVariant, null, Instant.parse("2026-09-28T18:00:00Z")));
-        var titles = List.of(text(currentPatch, "Mid-season update"), text(currentPatch, "Bản địa"),
-                text(oldPatch, "Observed baseline"));
+        var titles = List.of(text(currentPatch, "vi-VN", "Bản địa"), text(currentPatch, "en-US", "Mid-season update"),
+                text(oldPatch, "vi-VN", "Observed baseline"));
         when(repository.catalogDates(region, List.of(currentVariant, middleVariant, oldVariant), now))
                 .thenReturn(dates);
-        when(translations.preferredTexts(List.of(currentPatch, middlePatch, oldPatch), "en-US"))
-                .thenReturn(titles);
+        when(translations.texts(List.of(currentPatch, middlePatch, oldPatch))).thenReturn(titles);
 
         var result = service.read("VN", "en-US");
 
@@ -71,6 +78,18 @@ class CatalogContextsTest {
             assertThat(value.regionalDate()).isNull();
             assertThat(value.published()).isTrue();
         });
+    }
+
+    @Test
+    void offersTheSameLocaleCodesWhicheverLanguageTheReaderUses() {
+        stubContext();
+        when(repository.catalogPatches(ruleset, now, 3, null, null, Pageable.unpaged())).thenReturn(List.of());
+
+        var vietnamese = service.read("VN", "vi-VN");
+        var english = service.read("VN", "en-US");
+
+        assertThat(vietnamese.locales()).containsExactly(new Language("vi-VN"), new Language("en-US"));
+        assertThat(english.locales()).isEqualTo(vietnamese.locales());
     }
 
     @Test
@@ -117,9 +136,10 @@ class CatalogContextsTest {
         return value;
     }
 
-    private SeasonUpdatesRepository.Text text(UUID id, String title) {
+    private SeasonUpdatesRepository.Text text(UUID id, String locale, String title) {
         var value = mock(SeasonUpdatesRepository.Text.class);
         when(value.getPatchId()).thenReturn(id);
+        when(value.getLocale()).thenReturn(locale);
         when(value.getTitle()).thenReturn(title);
         return value;
     }

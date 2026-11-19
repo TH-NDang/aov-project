@@ -23,6 +23,7 @@ public class SkinImagePublicationController implements SkinImagePublicationApi {
         this.publications = publications;
     }
 
+    @Override
     @PostMapping(version = "1")
     public HeroRevisionView publish(@PathVariable UUID heroId, @RequestBody SkinImagePublicationRequest body,
             HttpServletRequest request) {

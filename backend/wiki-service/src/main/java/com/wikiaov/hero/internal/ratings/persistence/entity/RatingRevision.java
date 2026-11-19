@@ -1,8 +1,9 @@
 package com.wikiaov.hero.internal.ratings.persistence.entity;
 
 import com.wikiaov.hero.internal.sections.persistence.entity.SectionRevision;
-
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,9 +13,9 @@ import lombok.Setter;
 @Table(schema = "hero", name = "hero_overview_rating_revision")
 public class RatingRevision extends SectionRevision {
     private String scaleCode;
-    private java.math.BigDecimal survivability;
-    private java.math.BigDecimal attackDamage;
-    private java.math.BigDecimal skillEffects;
-    private java.math.BigDecimal difficulty;
+    private BigDecimal survivability;
+    private BigDecimal attackDamage;
+    private BigDecimal skillEffects;
+    private BigDecimal difficulty;
     private boolean derived;
 }

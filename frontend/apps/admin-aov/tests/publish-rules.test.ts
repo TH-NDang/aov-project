@@ -6,8 +6,8 @@ import {
   publishBlockers,
   usesObservedStats,
   type PublishContent,
-} from "../src/features/publishing/publish-rules"
-import type { Content, Revision } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/publish-rules"
+import type { Content, Revision } from "@/lib/hero-types"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 
 const complete = (): Content => {

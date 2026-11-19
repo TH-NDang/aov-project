@@ -1,32 +1,24 @@
 package com.wikiaov.community.community.internal.application;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.wikiaov.community.community.internal.domain.NotificationKind;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.*;
-import org.springframework.data.domain.Page;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class PageViews {
     private PageViews() {
-    }
-
-    public record Slice<T>(
-            List<T> items,
-            long totalElements,
-            int page,
-            int size
-    ) {
-        public static <T> Slice<T> of(Page<T> value) {
-            return new Slice<>(value.getContent(), value.getTotalElements(), value.getNumber(), value.getSize());
-        }
     }
 
     public record Profile(
             UUID id,
             Long version,
             String code,
-            String kind,
+            PageContent.Kind kind,
             UUID entityId,
             PageContent content,
             boolean published,
@@ -37,7 +29,7 @@ public final class PageViews {
             @JsonInclude(JsonInclude.Include.NON_NULL) LocalDate lastActiveOn,
             @JsonInclude(JsonInclude.Include.NON_NULL) Boolean related
     ) {
-        public Profile(UUID id, Long version, String code, String kind, UUID entityId, PageContent content,
+        public Profile(UUID id, Long version, String code, PageContent.Kind kind, UUID entityId, PageContent content,
                 boolean published, boolean represented, long followers, Instant updatedAt, Live live) {
             this(id, version, code, kind, entityId, content, published, represented, followers, updatedAt, live, null,
                     null);
@@ -120,7 +112,7 @@ public final class PageViews {
     public record PageCard(
             UUID id,
             String code,
-            String kind,
+            PageContent.Kind kind,
             String name,
             String avatarUrl,
             boolean represented
@@ -155,10 +147,16 @@ public final class PageViews {
     ) {
     }
 
+    /**
+     * An inbox line. The reader's app words {@code kind} with {@code parameters}; a line sent before kinds existed has
+     * no kind and carries its stored {@code message} instead.
+     */
     public record Notification(
             UUID id,
             UUID pageId,
-            String message,
+            @Nullable NotificationKind kind,
+            Map<String, String> parameters,
+            @JsonInclude(JsonInclude.Include.NON_NULL) @Nullable String message,
             Instant createdAt,
             boolean read
     ) {

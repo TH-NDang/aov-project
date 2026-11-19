@@ -2,12 +2,12 @@ import { Link } from "react-router"
 import { Building2, CalendarDays, Layers, ListChecks, Pencil, Trophy } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import { Button } from "@aov/ui/components/button"
-import { Section } from "@/features/community/profile-fields"
+import { Section } from "@/features/community/components/profile-form-primitives"
 import { youtubeVideoId } from "@/features/esports/model/vod"
 import { tournamentPath } from "@/features/esports/pages/esports-shell"
-import { TeamRegionBadge } from "@/features/tournaments/team-region"
-import { tournamentDates } from "@/features/tournaments/tournament-metadata"
-import type { EventFamily } from "@/features/tournaments/tournament-parts"
+import { TeamRegionBadge } from "@/features/tournaments/components/team-region"
+import { tournamentDates } from "@/features/tournaments/components/tournament-metadata"
+import type { EventFamily } from "@/features/tournaments/model/tournament-parts"
 import { CompetitionInformationFields } from "../competition-information-fields"
 import { OrganizationPicker } from "../organization-picker"
 import { EventPartsPanel } from "./event-parts"
@@ -138,7 +138,7 @@ export function OverviewStep({
             {next.map((check) => (
               <li key={check.id} className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-b-0">
                 <span className="min-w-0">
-                  <span className="type-body block font-semibold">{check.label}</span>
+                  <span className="type-body block">{check.label}</span>
                   <span className="type-meta">{check.detail}</span>
                 </span>
                 <Button type="button" variant="outline" onClick={() => ws.go(check.step)}>
@@ -149,7 +149,7 @@ export function OverviewStep({
             {detailLeft > 0 && (
               <li className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-b-0">
                 <span className="min-w-0">
-                  <span className="type-body block font-semibold">Ghi chi tiết {detailLeft} ván</span>
+                  <span className="type-body block">Ghi chi tiết {detailLeft} ván</span>
                   <span className="type-meta">Tuyển thủ, phụ trợ và thứ tự cấm chọn theo video</span>
                 </span>
                 <Button type="button" variant="outline" onClick={() => ws.go("schedule")}>

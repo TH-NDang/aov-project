@@ -45,7 +45,7 @@ lục bên trái và không có thanh điều hướng ở đáy màn hình.
 
 | Trang | Compact | Wide |
 |---|---|---|
-| Đầu trang | Một hàng cao 48px: logo (trang chủ) hoặc nút về trang chủ hoặc quay lại, tên trang, tìm kiếm, mục lục, "⋯". Bấm tìm kiếm thì cả hàng thành nút đóng và ô nhập | Một thanh cao 56px: logo và menu chuyển ứng dụng, các mục Tướng, Trang phục, Kho trang bị (menu bốn phần), Chế độ chơi, Cập nhật, Thuật ngữ, ô tìm kiếm, thị trường và tài khoản. Dưới 1180px ẩn chữ AOV Wiki; dưới 1024px ô tìm kiếm thành nút, bấm thì ô nhập thay chỗ các mục |
+| Đầu trang | Một hàng cao 48px: logo (trang chủ) hoặc nút về trang chủ hoặc quay lại, tên trang, tìm kiếm, mục lục, "⋯". Bấm tìm kiếm thì cả hàng thành nút đóng và ô nhập | Một thanh cao 56px: logo và menu chuyển ứng dụng, các mục Tướng, Trang phục, Kho trang bị (menu bốn phần), Chế độ chơi, Cập nhật, Thuật ngữ, ô tìm kiếm, thị trường và tài khoản. Dưới 1180px ẩn chữ AOV WiKi; dưới 1024px ô tìm kiếm thành nút, bấm thì ô nhập thay chỗ các mục |
 | Điều hướng mục | Nút mục lục mở tấm trượt bên phải với mọi mục theo nhóm | Các mục nằm trên thanh đầu trang |
 | Đầu trang danh sách | Tên trang nằm trên header, trang không lặp lại. Trang con (một chế độ, một bản cập nhật) tự có đường quay lại và tên | `CatalogHeading`: tiêu đề, một dòng mờ, phiên bản dữ liệu hoặc một nút bên phải; trang con có đường quay lại phía trên tiêu đề |
 | Trang chủ | Ảnh tướng của ngày ở trên, header trong suốt đè lên → tiêu đề, ô tìm lớn, dòng bản đang áp dụng → 9 ô mục thành 3 × 3, icon trên tên, không có số đếm → Thay đổi ở bản đang áp dụng, hai tướng một hàng → Các bản cập nhật → Vai trò | Ảnh tướng của ngày phủ nửa phải, tiêu đề và ô tìm lớn bên trái → 9 ô mục trên một hàng (3 × 3 dưới 1180px) → Thay đổi ở bản đang áp dụng bên trái, Các bản cập nhật và 6 vai trò ở cột phải 340px (300px dưới 1180px) |
@@ -101,7 +101,7 @@ Trang tướng trong Admin có hai tab quản lý: **Nội dung** và **Lịch s
 - **Sửa tại chỗ.** Bút mở trình sửa thay chỗ nội dung của đúng phần đó, tiêu đề hiện nhãn "Đang sửa"; sửa phần Tổng quan thì trình sửa chiếm cả thẻ Tổng quan. Trong lúc sửa, bút ở các phần khác bị khóa cho tới khi lưu hoặc hủy. Phiên bản đã xuất bản không có bút ở từng phần: bút ở đầu trang tạo bản nháp trước.
 - Mở trình sửa thì `tab` trong URL ghi phần đang sửa (`?tab=skills`, `?tab=media`…; Tổng quan thì bỏ `tab`), để đóng trình sửa thì trang mở lại ở phần đó. Liên kết cũ vẫn dùng được: `?view=skills` mở trang Nội dung ở phần Kỹ năng, `?view=patch` và `?view=versions` mở tab Lịch sử.
 
-Component: `HeroContent` trong `apps/admin-aov/src/features/publishing/hero-content.tsx`. Thứ tự các phần và id của từng phần (`hero-content-<phần>`) nằm trong `hero-content-tabs.tsx`; hai tab quản lý nằm trong `hero-workspace-tabs.tsx`.
+Component: `HeroContent` trong `apps/admin-aov/src/features/publishing/components/workspace/hero-content.tsx`. Thứ tự các phần và id của từng phần (`hero-content-<phần>`) nằm trong `hero-content-tabs.tsx`; hai tab quản lý nằm trong `hero-workspace-tabs.tsx`.
 
 Component dùng chung cho ngăn chi tiết: `SectionContents`, `ContentsSection` và `useSectionContents` trong `apps/admin-aov/src/components/section-contents.tsx`. Trang khai báo chiều cao các thanh dính phía trên bằng `--contents-offset` (px) trên `SectionContents`. Thanh dính cần `[overflow-anchor:none]` để trình duyệt không lấy nó làm mốc giữ vị trí cuộn.
 

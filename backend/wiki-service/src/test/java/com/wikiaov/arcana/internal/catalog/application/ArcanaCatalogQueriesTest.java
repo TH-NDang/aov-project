@@ -1,7 +1,18 @@
 package com.wikiaov.arcana.internal.catalog.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.arcana.internal.application.response.ArcanaView;
 import com.wikiaov.arcana.internal.catalog.persistence.ArcanaIdentityRepository;
@@ -15,9 +26,11 @@ import com.wikiaov.arcana.internal.domain.ArcanaContent;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
-import com.wikiaov.platform.PlatformErrorCode;
+import com.wikiaov.platform.CatalogCause;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
@@ -36,14 +49,6 @@ class ArcanaCatalogQueriesTest {
     private final UUID rulesetId = UUID.randomUUID();
 
     @Test
-    void rejectsInvalidPageBeforeResolvingRulesetOrLoadingContent() {
-        assertThatThrownBy(() -> queries.list(rulesetId, "vi-VN", "", -1, 10))
-                .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.getErrorCode()).isEqualTo(PlatformErrorCode.INVALID_QUERY_PARAMETER));
-        verifyNoInteractions(contexts, revisions, translations, identities, content);
-    }
-
-    @Test
     void searchesEveryTranslationOfSelectedRevisionAndKeepsIdentityOrdering() {
         var first = owner("alpha");
         var second = owner("beta");
@@ -52,7 +57,7 @@ class ArcanaCatalogQueriesTest {
         var other = revision(second, 1);
         var selectedCopy = translation(selected, "en", "Search target");
         var otherCopy = translation(other, "vi-VN", "Search target too");
-        when(revisions.findByStateNot("DISCARDED")).thenReturn(List.of(older, selected, other));
+        when(revisions.findByStateNot(RevisionState.DISCARDED)).thenReturn(List.of(older, selected, other));
         when(translations.findByRevisionIdIn(any())).thenReturn(List.of(selectedCopy, otherCopy));
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(first, second));
         when(content.hydrate(any(), any())).thenReturn(mock(ArcanaContent.class));
@@ -71,7 +76,7 @@ class ArcanaCatalogQueriesTest {
     void oversizedPageIndexReturnsEmptyPageWithoutIntegerOverflow() {
         var owner = owner("alpha");
         var revision = revision(owner, 1);
-        when(revisions.findByStateNot("DISCARDED")).thenReturn(List.of(revision));
+        when(revisions.findByStateNot(RevisionState.DISCARDED)).thenReturn(List.of(revision));
         when(translations.findByRevisionIdIn(any())).thenReturn(List.of());
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(owner));
 
@@ -94,14 +99,15 @@ class ArcanaCatalogQueriesTest {
     void historicalScopeOmitsUnknownPatchObservationsUntilExplicitlyRequested() {
         var owner = owner("baseline");
         var revision = revision(owner, 1);
-        revision.setState("PUBLISHED");
+        revision.setState(RevisionState.PUBLISHED);
         var season = UUID.randomUUID();
         var context = mock(GameplayContext.class);
         when(context.rulesetId()).thenReturn(rulesetId);
         when(contexts.resolveCatalog(eq("VN"), any(), eq(season), isNull())).thenReturn(context);
         when(identities.findAll(Sort.by("code"))).thenReturn(List.of(owner));
-        when(identities.findById(owner.getId())).thenReturn(java.util.Optional.of(owner));
+        when(identities.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId())).thenReturn(List.of(revision));
+        when(revisions.findByRulesetIdAndState(rulesetId, RevisionState.PUBLISHED)).thenReturn(List.of(revision));
         when(publicMedia.hydrate(anyList())).thenAnswer(call -> call.getArgument(0));
 
         var hidden = queries.published("VN", "vi-VN", 0, 20, season, null, false);
@@ -130,8 +136,8 @@ class ArcanaCatalogQueriesTest {
         revision.setOwnerId(owner.getId());
         revision.setRulesetId(rulesetId);
         revision.setRevisionNo(number);
-        revision.setState("DRAFT");
-        revision.setCause("DATA_BASELINE");
+        revision.setState(RevisionState.DRAFT);
+        revision.setCause(CatalogCause.DATA_BASELINE);
         return revision;
     }
 

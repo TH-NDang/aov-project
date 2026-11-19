@@ -1,8 +1,16 @@
 package com.wikiaov.community.community.internal.social.persistence;
 
-import jakarta.persistence.*;
+import com.wikiaov.community.community.internal.domain.PostStatus;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -18,7 +26,8 @@ public class CommunityPost {
     private String authorName;
     private boolean asPage;
     private String body;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private PostStatus status;
     private Instant createdAt;
     private Instant updatedAt;
     private String kind = "TEXT";
@@ -84,11 +93,11 @@ public class CommunityPost {
         this.body = value;
     }
 
-    public String getStatus() {
+    public PostStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String value) {
+    public void setStatus(PostStatus value) {
         this.status = value;
     }
 

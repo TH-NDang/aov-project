@@ -44,7 +44,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         title: "Quản lý tệp",
         icon: "imageLibrary",
-        to: "/image-management",
+        to: "/files",
         description: "Ảnh công khai, tệp nguồn riêng tư và dung lượng R2",
         capability: "catalog:read",
       },

@@ -1,0 +1,78 @@
+.tournament-record-lifecycle {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.tournament-delete-trigger {
+  flex-shrink: 0;
+}
+.tournament-record-blocked,
+.tournament-trash-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.tournament-record-blocked {
+  color: var(--destructive);
+}
+.tournament-record-usages {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+.tournament-record-usages li,
+.tournament-record-usages li > span,
+.tournament-record-usages a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tournament-record-usages li {
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--aov-radius-control);
+  background: var(--muted);
+}
+.tournament-record-usages a {
+  color: var(--primary);
+}
+.tournament-restore-action {
+  display: flex;
+  align-items: start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tournament-restore-action > .tournament-error {
+  flex-basis: 100%;
+}
+.tournament-trash-list {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--border);
+}
+.tournament-trash-list article {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--background);
+}
+.tournament-trash-list article > div:first-child {
+  display: grid;
+  gap: 3px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.tournament-trash-list small {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .tournament-trash-list article {
+    flex-wrap: wrap;
+  }
+}

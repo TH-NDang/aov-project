@@ -1,4 +1,5 @@
 import { useId } from "react"
+import "./gold-icon.css"
 
 /**
  * The mode's gold: a small minted coin with a rim, a star stamp and a glint. It is artwork, so it keeps its own gold in
@@ -10,7 +11,7 @@ export function GoldIcon({ size = 14, label }: { size?: number; label?: string }
   const rim = `${id}-rim`
   return (
     <svg
-      className="gold-icon"
+      className="wiki-guide-gold-icon"
       width={size}
       height={size}
       viewBox="0 0 20 20"

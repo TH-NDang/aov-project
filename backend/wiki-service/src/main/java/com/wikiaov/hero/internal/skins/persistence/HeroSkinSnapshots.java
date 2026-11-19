@@ -2,13 +2,19 @@ package com.wikiaov.hero.internal.skins.persistence;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
+import com.wikiaov.hero.internal.badges.domain.SkinBadgeKind;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeRepository;
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadge;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.ImageOption;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Skin;
+import com.wikiaov.hero.internal.domain.HeroContent.SkinTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skins;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
+import com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinIdentityRow;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinImageOption;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinSnapshotRow;
@@ -16,7 +22,12 @@ import com.wikiaov.hero.internal.skins.persistence.entity.SkinTranslationRow;
 import com.wikiaov.hero.internal.skins.persistence.entity.SkinsRevision;
 import com.wikiaov.platform.ApiException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -41,7 +52,7 @@ public class HeroSkinSnapshots implements HeroSectionSnapshots {
     }
 
     @Override
-    public com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository<?> revisions() {
+    public SectionRevisionRepository<?> revisions() {
         return revisions;
     }
 
@@ -59,27 +70,31 @@ public class HeroSkinSnapshots implements HeroSectionSnapshots {
 
     private void save(UUID heroId, UUID revisionId, Skin skin, Instant at) {
         ensureBadge(skin.rarityCode(), at);
-        if (identities.findById(new SkinIdentityRow.Key(heroId, skin.skinKey())).isEmpty())
+
+        if (identities.findById(new SkinIdentityRow.Key(heroId, skin.skinKey())).isEmpty()) {
             identities.save(new SkinIdentityRow(heroId, skin.skinKey(), at));
+        }
         identities.flush();
         snapshots.saveAndFlush(new SkinSnapshotRow(revisionId, heroId, skin.skinKey(), skin.displayOrder(),
                 skin.artAssetId(), skin.rarityCode(), skin.headAssetId(), skin.portraitAssetId()));
         skin.images().forEach((role, options) -> {
-            for (int n = 0; n < options.size(); n++)
+            for (int n = 0; n < options.size(); n++) {
                 images.save(new SkinImageOption(revisionId, skin.skinKey(), role.name(), n,
                         options.get(n).assetId(), options.get(n).label()));
+            }
         });
         translations.saveAll(skin.translations().stream().map(t -> new SkinTranslationRow(revisionId,
                 skin.skinKey(), t.locale(), t.name(), t.description(), t.acquisitionNote())).toList());
     }
 
     private void ensureBadge(String code, Instant at) {
-        if (code == null || badges.findByCode(code).isPresent())
+        if (code == null || badges.findByCode(code).isPresent()) {
             return;
+        }
         var badge = new SkinBadge();
         badge.setId(UUID.randomUUID());
         badge.setCode(code);
-        badge.setKind("UNKNOWN");
+        badge.setKind(SkinBadgeKind.UNKNOWN);
         badge.setCreatedAt(at);
         badge.setUpdatedAt(at);
         try {
@@ -98,6 +113,7 @@ public class HeroSkinSnapshots implements HeroSectionSnapshots {
                 .collect(Collectors.groupingBy(SkinTranslationRow::getSkinKey));
         var options = images.findBySkinSetRevisionIdIn(ids, Sort.by("imageOrder")).stream()
                 .collect(Collectors.groupingBy(SkinImageOption::getSkinKey));
+
         return new Skins(snapshots.findBySkinSetRevisionIdIn(ids, Sort.by("displayOrder")).stream()
                 .map(s -> new Skin(s.getSkinKey(), s.getDisplayOrder(), s.getArtAssetId(), s.getRarityCode(),
                         texts.getOrDefault(s.getSkinKey(), List.of()).stream()

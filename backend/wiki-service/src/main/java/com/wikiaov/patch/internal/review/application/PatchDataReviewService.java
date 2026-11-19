@@ -1,18 +1,26 @@
 package com.wikiaov.patch.internal.review.application;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.application.response.PatchDataReviewView;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
+import com.wikiaov.patch.internal.domain.PatchDataReviewState;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.review.persistence.PatchDataReviewRepository;
 import com.wikiaov.patch.internal.review.persistence.entity.PatchDataReview;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Clock;
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.*;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -32,7 +40,7 @@ public class PatchDataReviewService implements PatchDataReviews {
         this.clock = clock;
     }
 
-    @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.patch.internal.application.service.PatchDataReviewService.Update")
+    @Schema(name = "com.wikiaov.patch.internal.application.service.PatchDataReviewService.Update")
     public record Update(
             String state,
             long expectedVersion
@@ -43,49 +51,63 @@ public class PatchDataReviewService implements PatchDataReviews {
     public PatchDataReviewView update(UUID id, Update input) {
         var variant = variants.lockById(id).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant was not found."));
-        if (input.state() == null || !Set.of("IN_PROGRESS", "COMPLETE").contains(input.state())
-                || input.expectedVersion() < 0)
+        if (input.state() == null || !PatchDataReviewState.isName(input.state())
+                || input.expectedVersion() < 0) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "Invalid editorial review state.");
-        if (!variant.getStatus().equals("PUBLISHED"))
+        }
+        if (variant.getStatus() != PatchVariantStatus.PUBLISHED) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID,
                     "Publish the patch variant before completing data review.");
+        }
+
         var value = reviews.findById(id).orElseGet(PatchDataReview::new);
-        if (value.getVersion() != input.expectedVersion())
+        if (value.getVersion() != input.expectedVersion()) {
             throw new ApiException(PatchErrorCode.PATCH_CONFLICT,
                     "The patch data review has changed. Reload before saving.");
+        }
+
         var actor = actors.require();
+
         value.setPatchVariantId(id);
-        value.setState(input.state());
+        value.setState(PatchDataReviewState.valueOf(input.state()));
         value.setVersion(value.getVersion() + 1);
-        value.setCompletedAt(input.state().equals("COMPLETE") ? clock.instant() : null);
+        value.setCompletedAt(value.getState() == PatchDataReviewState.COMPLETE ? clock.instant() : null);
         value.setUpdatedAt(clock.instant());
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
         reviews.saveAndFlush(value);
-        audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_UPDATED", "PATCH", id, null, input.expectedVersion(),
+
+        audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_UPDATED", CatalogAggregates.PATCH, id, null,
+                input.expectedVersion(),
                 value.getVersion(), null, Map.of("state", input.state())));
+
         return new PatchDataReviewView(id, value.getState(), value.getVersion(), value.getCompletedAt());
     }
 
+    @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void markDirty(UUID id) {
-        if (id == null)
+        if (id == null) {
             return;
+        }
         variants.lockById(id).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant was not found."));
         var value = reviews.findById(id).orElse(null);
-        if (value == null || !value.getState().equals("COMPLETE"))
+        if (value == null || value.getState() != PatchDataReviewState.COMPLETE) {
             return;
+        }
         var actor = actors.require();
         long previous = value.getVersion();
-        value.setState("IN_PROGRESS");
+
+        value.setState(PatchDataReviewState.IN_PROGRESS);
         value.setVersion(previous + 1);
         value.setCompletedAt(null);
         value.setUpdatedAt(clock.instant());
         value.setUpdatedByIssuer(actor.issuer());
         value.setUpdatedBySubject(actor.subject());
         reviews.saveAndFlush(value);
-        audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_REOPENED", "PATCH", id, null, previous,
+
+        audit.record(new AuditEntry(actor, "PATCH_DATA_REVIEW_REOPENED", CatalogAggregates.PATCH, id, null, previous,
                 value.getVersion(), null, Map.of()));
     }
 }

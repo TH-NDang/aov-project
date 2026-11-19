@@ -1,5 +1,5 @@
+import type { ObjectiveKind, Side } from "@aov/community-contracts"
 import { useMemo } from "react"
-import type { Side } from "@aov/community-contracts"
 import { Ban, Crown, Flag, History, PackagePlus, TriangleAlert, UserPlus } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import type { GameView, IconRef } from "../../model/game-view"
@@ -10,7 +10,6 @@ import {
   objectivesAt,
   seatStatsAt,
   type ItemRef,
-  type ObjectiveKind,
   type SeatKey,
   type TimelineEvent,
 } from "../../model/timeline"
@@ -107,7 +106,7 @@ export function Scoreboard({
               </EntityRef>
             ))}
           </span>
-          <span className="esp-num text-2xl font-black text-[var(--side)]" aria-label={`${score[code]} hạ gục`}>
+          <span className="esp-num text-2xl font-bold text-[var(--side)]" aria-label={`${score[code]} hạ gục`}>
             {score[code]}
           </span>
         </header>
@@ -190,7 +189,7 @@ export function Scoreboard({
                       type="button"
                       onClick={() => onEditLoadout(seat.key, "player")}
                       className={cn(
-                        "flex max-w-full items-center gap-1 rounded-md border border-dashed border-amber-500 px-1.5 py-0.5 text-left text-xs font-semibold text-amber-600 hover:bg-amber-500/10 dark:text-amber-400",
+                        "flex max-w-full items-center gap-1 rounded-md border border-dashed border-(--aov-warning) px-1.5 py-0.5 text-left text-xs font-semibold text-(--aov-warning) hover:bg-(--aov-warning)/10",
                         on("@5xl/board:ml-auto @5xl/board:flex-row-reverse"),
                       )}
                       title="Chọn tuyển thủ chơi vị trí này"
@@ -222,7 +221,7 @@ export function Scoreboard({
                     />
                     {reused != null && (
                       <span
-                        className="inline-flex items-center gap-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400"
+                        className="inline-flex items-center gap-0.5 text-xs font-semibold text-(--aov-warning)"
                         title="Theo luật BO, đội không được chọn lại tướng đã dùng ở ván trước"
                       >
                         <TriangleAlert size={10} /> đã dùng ở V{reused}

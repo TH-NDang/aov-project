@@ -2,19 +2,16 @@ import { createContext, useContext, useState, type ComponentProps } from "react"
 import { Slot } from "radix-ui"
 import { X } from "lucide-react"
 import { Drawer as DrawerPrimitive } from "vaul"
-import { cn } from "../lib/utils"
-import { useIsMobile } from "../hooks/use-mobile"
+import { cn } from "@aov/ui/lib/utils"
+import { usePageLayout } from "../hooks/use-page-layout"
 import * as DialogBase from "./dialog"
 import * as PopoverBase from "./popover"
 import * as MenuBase from "./dropdown-menu"
 import { DrawerContent, DrawerHandle, DrawerTitle, DrawerClose, DrawerTrigger } from "./drawer"
+import { useLocaleText } from "@aov/ui/hooks/use-locale-text"
 
-/**
- * These overlays sit under every app, so the close button reads the language of the page instead of taking it from each
- * caller. All three apps keep that language on the document element.
- */
-const closeLabel = () =>
-  typeof document !== "undefined" && document.documentElement.lang.startsWith("en") ? "Close" : "Đóng"
+/** These overlays sit under every app, so the close button takes the app's language instead of a prop. */
+const useCloseLabel = () => useLocaleText()("Đóng", "Close")
 
 const DrawerDepth = createContext(false)
 const OverlayContext = createContext({ mobile: false, close: () => {} })
@@ -36,6 +33,7 @@ export function PublicDrawerContent({
   title,
   ...props
 }: ComponentProps<typeof DrawerContent> & { title?: string }) {
+  const closeLabel = useCloseLabel()
   return (
     <DrawerContent
       {...props}
@@ -46,7 +44,7 @@ export function PublicDrawerContent({
       {title && (
         <div className="public-bottom-heading">
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerClose aria-label={closeLabel()} className="public-bottom-close">
+          <DrawerClose aria-label={closeLabel} className="public-bottom-close">
             <X size={18} aria-hidden="true" />
           </DrawerClose>
         </div>
@@ -66,7 +64,7 @@ function OverlayRoot({
   onOpenChange,
   ...props
 }: RootProps & { kind: "dialog" | "popover" | "menu" }) {
-  const isMobile = useIsMobile()
+  const isMobile = usePageLayout() === "compact"
   const mobile = mobileDrawer && isMobile
   const [localOpen, setLocalOpen] = useState(defaultOpen)
   const open = controlled ?? localOpen
@@ -144,6 +142,7 @@ export function DialogContent({
   ...props
 }: ComponentProps<typeof DialogBase.DialogContent>) {
   const { mobile } = useContext(OverlayContext)
+  const closeLabel = useCloseLabel()
   if (!mobile)
     return (
       <DialogBase.DialogContent showCloseButton={showCloseButton} {...props}>
@@ -154,7 +153,7 @@ export function DialogContent({
     <PublicDrawerContent {...props}>
       {children}
       {showCloseButton && (
-        <DrawerClose className="public-bottom-close" aria-label={closeLabel()}>
+        <DrawerClose className="public-bottom-close" aria-label={closeLabel}>
           <X size={18} />
         </DrawerClose>
       )}
@@ -220,6 +219,12 @@ export function DropdownMenuContent({
       <div className="public-bottom-menu">{children}</div>
     </PublicDrawerContent>
   )
+}
+
+/** A title at the top of a menu. A drawer already shows its `drawerTitle` in its heading, so it leaves this out. */
+export function DropdownMenuTitle(props: ComponentProps<"div">) {
+  const { mobile } = useContext(OverlayContext)
+  return mobile ? null : <div {...props} />
 }
 
 export function DropdownMenuItem({

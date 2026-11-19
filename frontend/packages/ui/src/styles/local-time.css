@@ -7,7 +7,7 @@
 .local-time[role="button"]:focus-visible {
   outline: 2px solid var(--aov-accent);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: var(--aov-radius-control);
 }
 .local-time-hidden {
   position: absolute;
@@ -62,5 +62,5 @@
 .local-money[role="button"]:focus-visible {
   outline: 2px solid var(--aov-accent);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: var(--aov-radius-control);
 }

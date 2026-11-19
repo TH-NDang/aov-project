@@ -189,7 +189,8 @@
   width: 42px;
   object-fit: contain;
 }
-.wiki-skin-filter-art > .wiki-image {
+/* The picture takes the fit its kind sets above. */
+.wiki-skin-filter-art > .wiki-skin-filter-image {
   object-fit: inherit;
 }
 .wiki-skin-filter-name {
@@ -354,6 +355,13 @@
   font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
   white-space: nowrap;
 }
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-skin-chip::after {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
 /* The chip is 32px high and its touch target 40px. */
 .wiki-skin-chip::before {
   content: "";
@@ -447,7 +455,7 @@
 }
 .wiki-skin-group-link {
   display: inline-flex;
-  min-height: 32px;
+  min-height: 36px;
   flex: none;
   align-items: center;
   gap: 6px;
@@ -667,5 +675,16 @@
   .wiki-skin-card > .wiki-skin-badge {
     width: 44px;
     height: 22px;
+  }
+}
+
+/* Each hero's skins come up as they scroll into view, in browsers that can drive an animation from scrolling. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .wiki-skin-group {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 26%;
+    }
   }
 }

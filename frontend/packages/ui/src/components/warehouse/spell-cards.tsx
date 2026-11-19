@@ -143,7 +143,7 @@ function SpellCard({
         </p>
       )}
       <div className="mt-auto flex w-full min-w-0 items-center justify-center gap-1 border-t border-border/50 pt-1.5 text-xs leading-4 text-muted-foreground">
-        <SpellCooldown seconds={entry.content.cooldownSeconds} locale={locale} />
+        <SpellCooldown seconds={entry.content.cooldownSeconds} />
       </div>
       {!!changeKinds.length && (
         <div className="flex justify-center">

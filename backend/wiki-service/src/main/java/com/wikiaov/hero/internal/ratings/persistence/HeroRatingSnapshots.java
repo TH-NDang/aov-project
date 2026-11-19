@@ -1,14 +1,20 @@
 package com.wikiaov.hero.internal.ratings.persistence;
 
 import com.wikiaov.access.Actor;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Ratings;
+import com.wikiaov.hero.internal.domain.HeroContent.Source;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.ratings.persistence.entity.RatingRevision;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
+import com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -26,7 +32,7 @@ public class HeroRatingSnapshots implements HeroSectionSnapshots {
     }
 
     @Override
-    public com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository<?> revisions() {
+    public SectionRevisionRepository<?> revisions() {
         return revisions;
     }
 
@@ -57,8 +63,9 @@ public class HeroRatingSnapshots implements HeroSectionSnapshots {
     public Map<UUID, Ratings> contents(Collection<UUID> ids) {
         var references = sources.find(section(), ids);
         Map<UUID, Ratings> result = new HashMap<>();
-        for (var rating : revisions.findAllById(ids))
+        for (var rating : revisions.findAllById(ids)) {
             result.put(rating.getId(), ratings(rating, references.getOrDefault(rating.getId(), List.of())));
+        }
         return result;
     }
 

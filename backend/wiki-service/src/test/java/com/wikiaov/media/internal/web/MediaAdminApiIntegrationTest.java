@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
@@ -18,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.wikiaov.DockerBacked;
 import com.wikiaov.MutableClock;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
@@ -42,11 +44,19 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -60,9 +70,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * The admin media API end to end: real PostgreSQL, real S3-compatible storage, real presigned uploads.
@@ -73,7 +85,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class,
         MediaAdminApiIntegrationTest.TestBeans.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class MediaAdminApiIntegrationTest {
 
     private static final String BASE = "/api/wiki/v1/admin/media";
@@ -103,6 +115,48 @@ class MediaAdminApiIntegrationTest {
     CompetitionMediaReferences competitionReferences;
 
     @Test
+    void anEditorSourceWhoseLabelSoundsUnverifiedStillCreditsTheImage() throws Exception {
+        String id = createAsset("PATCH_ART");
+        String version = JsonPath.read(uploadVersion(id, TestImages.png(29, 29), "image/png"), "$.versionId");
+        mvc.perform(post(BASE + "/assets/" + id + "/versions/" + version + "/sources").with(editor())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"type\":\"COMMUNITY\",\"label\":\"Chưa xác minh tác giả gốc\",\"ownerName\":\"Fan\"}"))
+                .andExpect(status().isOk());
+
+        String page = mvc.perform(get(BASE + "/assets?needsCredit=true&semanticType=PATCH_ART&size=100").with(reader()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        assertThat(JsonPath.<List<String>>read(page, "$.items[*].id")).doesNotContain(id);
+    }
+
+    @Test
+    void aNewVersionWithoutASourceIsAnsweredAsAnUnverifiedPlaceholderWithoutText() throws Exception {
+        String id = createAsset("PATCH_ART");
+        String first = JsonPath.read(uploadVersion(id, TestImages.png(31, 31), "image/png"), "$.versionId");
+        mvc.perform(post(BASE + "/assets/" + id + "/versions/" + first + "/sources").with(editor())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"type\":\"GAME_CLIENT\",\"label\":\"Game capture\",\"ownerName\":\"Garena\"}"))
+                .andExpect(status().isOk());
+        String second = JsonPath.read(uploadVersion(id, TestImages.png(32, 32), "image/png"), "$.versionId");
+
+        mvc.perform(get(BASE + "/assets/" + id).with(reader())).andExpect(status().isOk())
+                .andExpect(
+                        jsonPath("$.provenance[?(@.versionId == '%s')].unverified".formatted(first), contains(false)))
+                .andExpect(
+                        jsonPath("$.provenance[?(@.versionId == '%s')].unverified".formatted(second), contains(true)))
+                .andExpect(jsonPath("$.provenance[?(@.versionId == '%s')].label".formatted(second), contains("")));
+        activate(id, second, assetVersion(id)).andExpect(status().isOk());
+
+        assertThat(mediaAssets.find(UUID.fromString(id)).orElseThrow().currentVersion().sources()).singleElement()
+                .satisfies(credit -> {
+                    assertThat(credit.unverified()).isTrue();
+                    assertThat(credit.label()).isEmpty();
+                });
+        mvc.perform(get(BASE + "/assets").param("semanticType", "PATCH_ART").param("size", "100").with(reader()))
+                .andExpect(jsonPath("$.items[?(@.id == '%s')].sources[*].unverified".formatted(id), contains(true)));
+    }
+
+    @Test
     void deletionRemovesAllVersionsAndResumesAfterCacheFailure() throws Exception {
         String assetId = createAsset("OTHER");
         String first = uploadVersion(assetId, TestImages.png(35, 35), "image/png");
@@ -113,12 +167,12 @@ class MediaAdminApiIntegrationTest {
         String secondKey = "assets/" + assetId + "/" + secondId + ".png";
         long expected = assetVersion(assetId);
         var id = UUID.fromString(assetId);
-        org.mockito.Mockito.doAnswer(invocation -> {
+        Mockito.doAnswer(invocation -> {
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             return null;
         }).when(competitionMedia).retire(id);
-        org.mockito.Mockito.doThrow(new ApiException(MediaErrorCode.MEDIA_CACHE_PURGE_FAILED, "Synthetic CDN failure"))
-                .doNothing().when(mediaCache).purge(org.mockito.ArgumentMatchers.anyList());
+        Mockito.doThrow(new ApiException(MediaErrorCode.MEDIA_CACHE_PURGE_FAILED, "Synthetic CDN failure"))
+                .doNothing().when(mediaCache).purge(ArgumentMatchers.anyList());
 
         deleteAsset(assetId, expected).andExpect(status().isBadGateway());
         assertThat(storage.stat(firstKey)).isEmpty();
@@ -136,10 +190,10 @@ class MediaAdminApiIntegrationTest {
                 .andExpect(jsonPath("$.publicUrls").value(2))
                 .andExpect(jsonPath("$.lastError").value(nullValue()));
         deleteAsset(assetId, expected).andExpect(status().isOk()).andExpect(jsonPath("$.state").value("COMPLETE"));
-        org.mockito.Mockito.verify(mediaCache, org.mockito.Mockito.times(2)).purge(List.of(
+        Mockito.verify(mediaCache, Mockito.times(2)).purge(List.of(
                 "/media/" + assetId + "/" + secondId + ".png", "/media/" + assetId + "/" + firstId + ".png"));
         mvc.perform(get(BASE + "/assets?semanticType=OTHER&size=100").with(reader()))
-                .andExpect(jsonPath("$.items[*].id", org.hamcrest.Matchers.not(hasItem(assetId))));
+                .andExpect(jsonPath("$.items[*].id", Matchers.not(hasItem(assetId))));
     }
 
     @Test
@@ -156,8 +210,8 @@ class MediaAdminApiIntegrationTest {
         uploadRequest(assetId, "{\"contentType\":\"image/png\",\"sizeBytes\":100}").andExpect(status().isCreated());
         deleteAsset(assetId, assetVersion(assetId)).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("MEDIA_UPLOAD_IN_PROGRESS"));
-        org.mockito.Mockito.verify(mediaCache, org.mockito.Mockito.never())
-                .purge(org.mockito.ArgumentMatchers.anyList());
+        Mockito.verify(mediaCache, Mockito.never())
+                .purge(ArgumentMatchers.anyList());
     }
 
     @Test
@@ -168,7 +222,7 @@ class MediaAdminApiIntegrationTest {
                 .andExpect(status().isForbidden());
         deleteAsset(assetId, 42).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("MEDIA_ASSET_VERSION_CONFLICT"));
-        org.mockito.Mockito.doThrow(new ApiException(MediaErrorCode.MEDIA_ASSET_IN_USE, "Competition reference"))
+        Mockito.doThrow(new ApiException(MediaErrorCode.MEDIA_ASSET_IN_USE, "Competition reference"))
                 .when(competitionMedia).requireUnused(UUID.fromString(assetId));
         deleteAsset(assetId, 0).andExpect(status().isConflict());
         mvc.perform(get(BASE + "/assets/" + assetId).with(reader()))
@@ -432,8 +486,8 @@ class MediaAdminApiIntegrationTest {
         usages.byAsset.put(draftOnly, List.of(draft));
         usages.byAsset.put(historyOnly, List.of(old));
         usages.byAsset.put(storedOnly, List.of(option));
-        org.mockito.Mockito.when(competitionReferences.references())
-                .thenReturn(java.util.Optional.of(Map.of(competition, 2L)));
+        Mockito.when(competitionReferences.references())
+                .thenReturn(Optional.of(Map.of(competition, 2L)));
 
         var rows = BASE + "/assets";
         mvc.perform(get(rows).param("withUsage", "true").param("size", "100").with(reader()))
@@ -468,15 +522,16 @@ class MediaAdminApiIntegrationTest {
                 .andExpect(jsonPath("$.states.STORED_ONLY").isNumber())
                 .andExpect(jsonPath("$.states.NONE").isNumber());
 
-        org.mockito.Mockito.when(competitionReferences.references()).thenReturn(java.util.Optional.empty());
+        Mockito.when(competitionReferences.references()).thenReturn(Optional.empty());
         mvc.perform(get(BASE + "/usage-totals").with(reader()))
                 .andExpect(jsonPath("$.competitionChecked").value(false));
         mvc.perform(get(rows).param("withUsage", "true").param("size", "100").with(reader()))
                 .andExpect(jsonPath(usageOf(competition) + ".state").value(hasItem("NONE")))
                 .andExpect(jsonPath(usageOf(competition) + ".competition").value(hasItem(nullValue())));
 
-        for (var id : List.of(shown, draftOnly, historyOnly, storedOnly))
+        for (var id : List.of(shown, draftOnly, historyOnly, storedOnly)) {
             usages.byAsset.remove(id);
+        }
     }
 
     @Test
@@ -663,7 +718,7 @@ class MediaAdminApiIntegrationTest {
     @Test
     void readingSeveralAssetsValidatesTheQuery() throws Exception {
         String id = UUID.randomUUID().toString();
-        String tooMany = String.join(",", java.util.Collections.nCopies(101, id));
+        String tooMany = String.join(",", Collections.nCopies(101, id));
 
         for (String ids : List.of(tooMany, "", "not-a-uuid", id + ",," + id)) {
             mvc.perform(get(BASE + "/assets/batch").param("ids", ids).with(reader()))
@@ -949,7 +1004,7 @@ class MediaAdminApiIntegrationTest {
                 201);
         String release = (String) pipeline(post(root + "/admin/patch-variants/" + variant + "/releases"),
                 Map.of("regionId", region, "seasonId", season, "effectiveAt", "2029-01-02T00:00:00Z"), 201).get("id");
-        Map<String, String> assets = new java.util.HashMap<>();
+        Map<String, String> assets = new HashMap<>();
         for (String semantic : List.of("HEAD", "PORTRAIT", "SPLASH", "SKILL_ICON", "SKIN_ART")) {
             String asset = createAsset("HERO_" + semantic);
             uploadVersion(asset, TestImages.png(40, 30), "image/png");
@@ -963,7 +1018,7 @@ class MediaAdminApiIntegrationTest {
         String hero = (String) draft.get("heroId"), revision = (String) draft.get("id");
         String path = root + "/admin/heroes/" + hero + "/drafts/" + revision;
         mvc.perform(get(root + "/heroes/" + hero)).andExpect(status().isNotFound());
-        Map<String, Object> sections = new java.util.LinkedHashMap<>();
+        Map<String, Object> sections = new LinkedHashMap<>();
         sections.put("profile", Map.of("translations",
                 List.of(Map.of("locale", "vi-VN", "name", "Synthetic test hero")), "roles", List.of("ASSASSIN")));
         sections.put("overview-ratings", Map.of("scaleCode", "GAME_OVERVIEW_10", "survivability", 1, "attackDamage", 2,
@@ -986,12 +1041,12 @@ class MediaAdminApiIntegrationTest {
         sections.put("media-bindings", Map.of("bindings", Map.of("HEAD", assets.get("HEAD"), "PORTRAIT",
                 assets.get("PORTRAIT"), "SPLASH", assets.get("SPLASH"))));
         for (var section : sections.entrySet()) {
-            Map<String, Object> body = new java.util.HashMap<>((Map<String, Object>) section.getValue());
+            Map<String, Object> body = new HashMap<>((Map<String, Object>) section.getValue());
             body.put("expectedDraftVersion", draft.get("version"));
-            draft = pipeline(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            draft = pipeline(MockMvcRequestBuilders
                     .put(path + "/" + section.getKey()), body, 200);
         }
-        pipeline(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+        pipeline(MockMvcRequestBuilders
                 .put(root + "/admin/heroes/" + hero + "/skill-images/2/1"),
                 Map.of("expectedVersion", -1, "assetId", libraryIcon, "sourceFilename", "fixture-2-1.png"), 200);
         var published = pipeline(post(path + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
@@ -1016,16 +1071,17 @@ class MediaAdminApiIntegrationTest {
     }
 
     private Map<String, Object> pipeline(
-            org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request,
+            MockHttpServletRequestBuilder request,
             Object body, int expected) throws Exception {
         request.with(jwt().jwt(t -> t.subject("pipeline").issuer("http://localhost/realms/test"))
-                .authorities(java.util.stream.Stream
+                .authorities(Stream
                         .of("catalog:read", "hero:write", "hero:publish", "region:admin", "patch:write",
                                 "patch:publish")
                         .map(SimpleGrantedAuthority::new).toArray(SimpleGrantedAuthority[]::new)));
-        var mapper = tools.jackson.databind.json.JsonMapper.builder().build();
-        if (body != null)
+        var mapper = JsonMapper.builder().build();
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body));
+        }
         String result = mvc.perform(request).andExpect(status().is(expected)).andReturn().getResponse()
                 .getContentAsString();
         return result.isEmpty() ? Map.of() : mapper.readValue(result, Map.class);

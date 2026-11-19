@@ -1,14 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
+import { createWindow, flush, installWindow } from "./fixtures/dom"
 
 test("publication overview shows flags and hero heads, and only tabs with changes in the selected patch", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/game-configuration" })
+  const dom = createWindow("http://localhost/game-configuration")
   const fixture = createHeroFixture()
   const recorded: unknown[] = []
   const fetcher: typeof fetch = async (input, init) => {
@@ -28,33 +27,13 @@ test("publication overview shows flags and hero heads, and only tabs with change
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    DocumentFragment: dom.window.DocumentFragment,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    // The change table picks overall assessments with a Radix select, which looks for its form.
-    HTMLFormElement: dom.window.HTMLFormElement,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     fetch: fetcher,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
     requestAnimationFrame: (callback: () => void) => setTimeout(callback, 0),
     cancelAnimationFrame: clearTimeout,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  const { GameConfigurationPage } = await import("../src/features/publishing/game-configuration-page")
+  })
+  const { GameConfigurationPage } = await import("../src/features/publishing/pages/game-configuration-page")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -171,12 +150,12 @@ test("publication overview shows flags and hero heads, and only tabs with change
       },
     ],
   )
-  cache.setQueryData(["hero-content-asset", "head"], { currentUrl: "/fixture-head.png" })
+  cache.setQueryData(["media", "asset", "head", "content"], { currentUrl: "/fixture-head.png" })
   const updateCache = async (key: readonly unknown[], value: unknown) => {
     await act(async () => {
       cache.setQueryData(key, value)
-      await new Promise((resolve) => setTimeout(resolve, 10))
     })
+    await flush()
   }
   try {
     await verifySession()
@@ -225,9 +204,9 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.ok(tabs()[0].querySelector("svg"))
     assert.ok(document.querySelector('img[src="/fixture-head.png"]'))
     assert.ok(document.querySelector('td img[src="/images/flags/vn.svg"]'))
-    const overview = cache.getQueryData<import("../src/features/publishing/publication-overview").PublicationOverview>([
-      "publication-overview",
-    ])!
+    const overview = cache.getQueryData<
+      import("../src/features/publishing/api/publication-overview").PublicationOverview
+    >(["publication-overview"])!
     await updateCache(["publication-overview"], {
       ...overview,
       markets: overview.markets.map((market) => ({ ...market, currentReleaseId: null })),
@@ -308,7 +287,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.ok([...document.querySelectorAll("h2")].some((title) => title.textContent === "patch-october"))
     const press = async (label: string) =>
       act(async () => [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === label)!.click())
-    cache.setQueryData(["hero-content-asset", "item-icon"], { currentUrl: "/item-icon.png" })
+    cache.setQueryData(["media", "asset", "item-icon", "content"], { currentUrl: "/item-icon.png" })
     await updateCache(
       ["warehouse", "items", "rules", "vi-VN"],
       [
@@ -366,9 +345,6 @@ test("publication overview shows flags and hero heads, and only tabs with change
     await logout()
     cache.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

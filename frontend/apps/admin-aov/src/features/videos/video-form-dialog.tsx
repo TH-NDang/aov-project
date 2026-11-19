@@ -17,15 +17,13 @@ import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
 import { useSession } from "@/app/auth/auth-gate"
 import { errorMessage } from "@/lib/api/errors"
-import { usePublicationOverview } from "../publishing/publication-overview"
+import { usePublicationOverview } from "../publishing/api/publication-overview"
 import { SubjectPicker } from "./subject-picker"
 import { VideoPlayerDialog } from "./video-player-dialog"
 import { lookupYoutubeVideo, videoApi, videoKeys } from "./video-api"
 import {
   capabilityFor,
-  formatClock,
   isWebLink,
-  parseClock,
   previewLink,
   PURPOSE_LABELS,
   purposesFor,
@@ -37,6 +35,7 @@ import {
   type VideoPurpose,
   type VideoSubject,
 } from "./video-model"
+import { formatClock, parseClock } from "@/lib/clock"
 
 const NO_PATCH = "none"
 
@@ -152,7 +151,7 @@ function VideoForm({
       }
       return video ? videoApi.update(video.id, saveBody(video, changes)) : videoApi.create(changes)
     },
-    meta: { successMessage: video ? "Đã lưu video." : "Đã thêm video." },
+    meta: { silent: true, successMessage: video ? "Đã lưu video." : "Đã thêm video." },
     onSuccess: async () => {
       await cache.invalidateQueries({ queryKey: videoKeys.lists })
       onClose()

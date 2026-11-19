@@ -1,0 +1,66 @@
+/* A group of filter chips on one line: a muted label, then each choice with its mark and name. */
+.wiki-hero-chips {
+  display: flex;
+  min-width: 0;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+/* Wide enough for either label, so the chips of two stacked groups start on one line. */
+.wiki-hero-chips-label {
+  min-width: 44px;
+  flex: none;
+  margin-right: 2px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  white-space: nowrap;
+}
+.wiki-hero-chip {
+  --wiki-hero-glyph-size: 16px;
+  display: inline-flex;
+  height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-pill);
+  padding: 0 10px 0 8px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-meta);
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition:
+    color 160ms,
+    border-color 160ms,
+    background 160ms;
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-hero-chip::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
+@media (hover: hover) {
+  .wiki-hero-chip:hover {
+    background: var(--aov-raised);
+    color: var(--aov-text);
+  }
+}
+/* The chosen chip, as everywhere in the Wiki: a gold outline over a faint gold tint. */
+.wiki-hero-chip[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+/* The quick switch's rows clip what leaves them, so the focus ring is drawn inside the chip. */
+.wiki-hero-chips[data-layout="sheet"] .wiki-hero-chip:focus-visible {
+  outline-offset: -2px;
+}
+@media (max-width: 899.98px) {
+  .wiki-hero-chips[data-layout="sheet"] .wiki-hero-chip {
+    height: 36px;
+  }
+}

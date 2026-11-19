@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { HeroSourceCoverage, SkillSource } from "../server/patch-capture-manifest"
-import { readinessRows, type Draft, type HeroPublishReadiness } from "../src/features/publishing/publish-readiness"
-import type { PublishBlocker } from "../src/features/publishing/publish-rules"
+import { readinessRows, type Draft } from "../src/features/publishing/model/publish-readiness"
+import type { PublishBlocker } from "../src/features/publishing/model/publish-rules"
 import {
   captureSetFor,
   orderByCaptures,
@@ -12,8 +12,9 @@ import {
   sourceGaps,
   sourceGapSummary,
   statList,
-} from "../src/features/publishing/source-image-gaps"
-import type { Revision } from "../src/features/publishing/types"
+} from "../src/features/publishing/model/captures/source-image-gaps"
+import type { Revision } from "@/lib/hero-types"
+import { type HeroPublishReadiness } from "@/lib/api/publishing-api"
 
 /** What the attributes screen shows for a hero whose numbers were all readable. */
 const readable = {
@@ -316,6 +317,7 @@ const revision = (heroId: string, state: Revision["state"], patchVariant = "patc
   version: 1,
   cause: "DATA_BASELINE",
   sections: {} as Revision["sections"],
+  publicationSequence: null,
   publishedAt: null,
   sourceRevisionId: null,
   effectiveFromPatchVariantId: patchVariant,
@@ -339,7 +341,7 @@ const variant = (id: string, patchCode: string) => ({
   rulesetId: "standard",
   rulesetOrdinal: 1,
   seasonId: "s4",
-  status: "PUBLISHED",
+  status: "PUBLISHED" as const,
 })
 
 test("rows are ranked by how useful their captures are, and heroes with nothing to capture drop out", () => {

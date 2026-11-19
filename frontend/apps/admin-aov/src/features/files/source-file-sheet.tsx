@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Download, Replace, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { LocalTime } from "@aov/ui/components/local-time"
@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { confirmAction } from "@/components/confirm-dialog"
 import { CopyButton } from "@/components/copy-button"
 import { useIsWide } from "@/hooks/use-media-query"
-import { deleteSourceFile, downloadLink, refreshSourceFiles, useSourceFile, useSourceLinks } from "./files-api"
+import { refreshSourceFiles, useDeleteSourceFile, useDownloadLink, useSourceFile, useSourceLinks } from "./files-api"
 import { CATEGORY_LABELS, fileKind, formatStorage } from "./files-format"
 import { sha256Hex, sourceContentType, uploadSourceFile } from "./source-upload"
 
@@ -33,14 +33,22 @@ export function SourceFileSheet({
   const details = file.data
   const image = details?.contentType.startsWith("image/") ? [details.sha256] : []
   const links = useSourceLinks(image)
-  const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const picker = useRef<HTMLInputElement>(null)
+  const link = useDownloadLink()
+  const removal = useDeleteSourceFile()
+  // Replacing shows its error under the file, so the shared toast stays quiet.
+  const replacement = useMutation({
+    mutationFn: uploadSourceFile,
+    onError: (cause) => setError(cause instanceof Error ? cause.message : "Không thay được tệp."),
+    onSettled: () => refreshSourceFiles(client),
+    meta: { silent: true },
+  })
+  const busy = replacement.isPending ? "replace" : removal.isPending ? "remove" : null
 
-  const download = async () => {
+  const download = () => {
     if (!details) return
-    const link = await downloadLink(details.id)
-    window.location.assign(link.url)
+    link.mutate(details.id, { onSuccess: ({ url }) => window.location.assign(url) })
   }
 
   const replace = async (picked: File) => {
@@ -52,27 +60,32 @@ export function SourceFileSheet({
     }
     const accepted = await confirmAction({
       title: "Thay tệp này?",
-      description: `${details.path}: ${formatStorage(details.sizeBytes)} → ${picked.name}, ${formatStorage(picked.size)}. Đường dẫn trỏ sang dữ liệu tệp mới; dữ liệu tệp cũ còn lại cho tới khi được dọn như dữ liệu tệp mồ côi.`,
+      description:
+        "Đường dẫn trỏ sang dữ liệu tệp mới; dữ liệu tệp cũ còn lại cho tới khi được dọn như dữ liệu tệp mồ côi.",
+      details: (
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1">
+          <dt className="type-label">Đang dùng</dt>
+          <dd>
+            {details.path} · {formatStorage(details.sizeBytes)}
+          </dd>
+          <dt className="type-label">Thay bằng</dt>
+          <dd>
+            {picked.name} · {formatStorage(picked.size)}
+          </dd>
+        </dl>
+      ),
       confirmLabel: "Thay tệp",
     })
     if (!accepted) return
-    setBusy("replace")
     setError(null)
-    try {
-      await uploadSourceFile({
-        collectionId: details.collection.id,
-        path: details.path,
-        file: picked,
-        sha256: await sha256Hex(picked),
-        contentType,
-        replace: { fileId: details.id, expectedVersion: details.version },
-      })
-      await refreshSourceFiles(client)
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thay được tệp.")
-    } finally {
-      setBusy(null)
-    }
+    replacement.mutate({
+      collectionId: details.collection.id,
+      path: details.path,
+      file: picked,
+      sha256: await sha256Hex(picked),
+      contentType,
+      replace: { fileId: details.id, expectedVersion: details.version },
+    })
   }
 
   const remove = async () => {
@@ -86,14 +99,7 @@ export function SourceFileSheet({
       confirmLabel: "Bỏ khỏi bộ",
     })
     if (!accepted) return
-    setBusy("remove")
-    try {
-      await deleteSourceFile(details)
-      await refreshSourceFiles(client)
-      onClose()
-    } finally {
-      setBusy(null)
-    }
+    removal.mutate(details, { onSuccess: onClose })
   }
 
   return (
@@ -178,7 +184,7 @@ export function SourceFileSheet({
               </p>
             )}
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => void download()}>
+              <Button variant="outline" disabled={link.isPending} onClick={download}>
                 <Download />
                 Tải về
               </Button>

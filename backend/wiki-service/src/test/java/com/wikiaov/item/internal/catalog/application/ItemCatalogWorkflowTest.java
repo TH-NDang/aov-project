@@ -1,9 +1,13 @@
 package com.wikiaov.item.internal.catalog.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.item.internal.application.ItemCommands;
 import com.wikiaov.item.internal.catalog.persistence.ItemIdentityRepository;
 import com.wikiaov.item.internal.catalog.persistence.ItemRecipeLockRepository;
@@ -15,6 +19,7 @@ import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,7 +45,7 @@ class ItemCatalogWorkflowTest {
         var revision = new ItemRevision();
         revision.setId(revisionId);
         revision.setOwnerId(id);
-        revision.setState("DRAFT");
+        revision.setState(RevisionState.DRAFT);
         revision.setVersion(2);
         when(recipeLock.lockGraph()).thenReturn(Optional.of(new ItemRecipeLock()));
         when(identities.lockById(id)).thenReturn(Optional.of(owner));

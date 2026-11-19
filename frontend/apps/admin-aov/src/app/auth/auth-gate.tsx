@@ -14,13 +14,13 @@ import {
   cancelLogin,
   authMessage,
 } from "./session"
+import { Input } from "@aov/ui/components/input"
 
 export function useSession() {
   return useSyncExternalStore(subscribeSession, getSession)
 }
 
-const inputStyle =
-  "h-12 w-full rounded-xl border border-white/10 bg-[#24242b] px-3.5 text-base placeholder:text-[#85838f] focus:outline-2 focus:outline-[#e7bd7a] sm:text-sm"
+const inputStyle = "h-12 rounded-xl bg-muted px-3.5 sm:text-sm dark:bg-muted"
 export function AuthGate({ children }: { children: ReactNode }) {
   const session = useSession()
   const queryClient = useQueryClient()
@@ -91,14 +91,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
       <Dialog open={open && session.status === "anonymous"} onOpenChange={changeOpen}>
         <DialogContent
           showCloseButton={!busy}
-          className="max-h-[calc(100svh-2rem)] overflow-y-auto gap-0 rounded-3xl border-white/10 bg-[#1b1b20] px-6 py-10 text-[#eeedf2] sm:max-w-[440px] sm:px-9"
+          className="dark max-h-[calc(100svh-2rem)] overflow-y-auto gap-0 rounded-3xl border-border bg-popover px-6 py-10 text-popover-foreground sm:max-w-[440px] sm:px-9"
         >
           <div className="mb-7 flex items-center justify-center gap-3">
             <AovMark className="size-11" />
             <AovWordmark product="Admin" className="text-3xl" />
           </div>
           <DialogTitle className="text-center text-2xl">Đăng nhập tài khoản</DialogTitle>
-          <DialogDescription className="mt-3 text-center leading-relaxed text-[#aaa6b5]">
+          <DialogDescription className="mt-3 text-center leading-relaxed text-muted-foreground">
             Chào mừng trở lại cùng AOV WiKi.
           </DialogDescription>
           <form
@@ -109,10 +109,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
             }}
           >
             <div className="space-y-2">
-              <label htmlFor="admin-username" className="text-xs text-[#c4c2cc]">
+              <label htmlFor="admin-username" className="text-xs text-(--aov-text-soft)">
                 Tên người dùng hoặc email
               </label>
-              <input
+              <Input
                 id="admin-username"
                 name="username"
                 autoComplete="username"
@@ -128,11 +128,11 @@ export function AuthGate({ children }: { children: ReactNode }) {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="admin-password" className="text-xs text-[#c4c2cc]">
+              <label htmlFor="admin-password" className="text-xs text-(--aov-text-soft)">
                 Mật khẩu
               </label>
               <div className="relative">
-                <input
+                <Input
                   id="admin-password"
                   name="password"
                   type={visible ? "text" : "password"}
@@ -152,17 +152,17 @@ export function AuthGate({ children }: { children: ReactNode }) {
                   aria-pressed={visible}
                   aria-controls="admin-password"
                   onClick={() => setVisible(!visible)}
-                  className="absolute inset-y-0 right-0 grid w-12 place-items-center rounded-xl text-[#aaa6b5] focus-visible:outline-2 focus-visible:outline-[#e7bd7a]"
+                  className="absolute inset-y-0 right-0 grid w-12 place-items-center rounded-xl text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
             </div>
             <div className="space-y-2">
-              <label htmlFor="admin-otp" className="text-xs text-[#c4c2cc]">
+              <label htmlFor="admin-otp" className="text-xs text-(--aov-text-soft)">
                 Mã xác thực 2 bước (nếu tài khoản đã bật)
               </label>
-              <input
+              <Input
                 id="admin-otp"
                 name="otp"
                 inputMode="numeric"
@@ -171,40 +171,41 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 maxLength={6}
                 disabled={busy}
                 value={otp}
-                onChange={(event) => setOtp(event.target.value.replace(/D/g, "").slice(0, 6))}
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="6 chữ số trong ứng dụng xác thực"
                 aria-describedby="admin-otp-help"
                 className={inputStyle + " tracking-[0.3em]"}
               />
-              <p id="admin-otp-help" className="text-xs text-[#aaa6b5]">
+              <p id="admin-otp-help" className="text-xs text-muted-foreground">
                 Bỏ trống nếu chưa bật. Mã khôi phục chỉ dùng được khi đăng nhập bằng Google hoặc trên Wiki.
               </p>
             </div>
             <button
               type="submit"
               disabled={busy || !username.trim() || !password || (otp.length > 0 && otp.length !== 6)}
-              className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#e7bd7a] px-4 font-semibold text-[#242019] hover:bg-[#f3cf99] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e7bd7a] disabled:opacity-50"
+              className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-primary px-4 font-semibold text-primary-foreground hover:bg-(--aov-accent-strong) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring disabled:opacity-50"
             >
               Đăng nhập <ArrowUpRight className="size-4" />
             </button>
           </form>
-          <div className="my-6 flex items-center gap-3 text-xs text-[#908d9a]">
-            <span className="h-px flex-1 bg-white/10" />
+          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
             hoặc
-            <span className="h-px flex-1 bg-white/10" />
+            <span className="h-px flex-1 bg-border" />
           </div>
           <button
             disabled={busy || !session.googleEnabled}
             onClick={() => void choose("google")}
-            className="flex min-h-12 items-center justify-center gap-3 rounded-xl border border-white/15 bg-[#24242b] px-4 text-sm font-semibold hover:bg-[#303039] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e7bd7a] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-h-12 items-center justify-center gap-3 rounded-xl border border-input bg-muted px-4 text-sm font-semibold hover:bg-(--aov-line) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <img src={import.meta.env.BASE_URL + "images/google.svg"} alt="" className="size-5" /> Đăng nhập với Google
+            <img src={`${import.meta.env?.BASE_URL ?? "/"}images/google.svg`} alt="" className="size-5" /> Đăng nhập với
+            Google
           </button>
           {!session.googleEnabled && (
-            <p className="mt-2 text-center text-xs text-[#aaa6b5]">Đăng nhập Google chưa được cấu hình.</p>
+            <p className="mt-2 text-center text-xs text-muted-foreground">Đăng nhập Google chưa được cấu hình.</p>
           )}
           {busy && (
-            <p role="status" className="mt-5 flex items-center justify-center gap-2 text-sm text-[#e7bd7a]">
+            <p role="status" className="mt-5 flex items-center justify-center gap-2 text-sm text-primary">
               <LoaderCircle className="size-4 animate-spin" />
               {method === "google" ? "Hoàn tất đăng nhập trong cửa sổ vừa mở." : "Đang đăng nhập…"}
             </p>
@@ -215,11 +216,11 @@ export function AuthGate({ children }: { children: ReactNode }) {
             </button>
           )}
           {error && (
-            <p role="alert" className="mt-5 text-sm text-red-300">
+            <p role="alert" className="mt-5 text-sm text-destructive">
               {error}
             </p>
           )}
-          <p className="mt-7 text-center text-xs leading-relaxed text-[#92909b]">
+          <p className="mt-7 text-center text-xs leading-relaxed text-muted-foreground">
             Dành cho tài khoản được cấp quyền quản trị.
           </p>
         </DialogContent>

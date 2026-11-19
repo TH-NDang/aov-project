@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { buildResourceMediaSources, findResourceMediaSource } from "../../../packages/ui/src/lib/resource-media-sources"
 import { creditHttpUrl, currentMediaSources, needsMediaCredit } from "../../../packages/ui/src/lib/media-credit"
-import { uploadHeroImage, upgradeHeroImage, type Request } from "../src/features/publishing/publishing-api"
+import { uploadHeroImage, upgradeHeroImage, type Request } from "@/lib/api/publishing-api"
 
 test("source resolution follows exact bytes, including renamed files, and preserves derived artwork", () => {
   const index = buildResourceMediaSources({
@@ -28,10 +28,18 @@ test("source resolution follows exact bytes, including renamed files, and preser
       ],
     },
   })
-  assert.equal(findResourceMediaSource(index, "assets/renamed.png", "a").type, "OFFICIAL")
-  assert.equal(findResourceMediaSource(index, "assets/head/a.png", "changed").label, "Chưa xác minh nguồn")
-  assert.equal(findResourceMediaSource(index, "assets/icon.png", "b").type, "OTHER")
-  assert.equal(findResourceMediaSource(index, "assets/icon.png", "b").ownerName, null)
+  assert.equal(findResourceMediaSource(index, "assets/renamed.png", "a")?.type, "OFFICIAL")
+  assert.equal(findResourceMediaSource(index, "assets/icon.png", "b")?.type, "OTHER")
+  assert.equal(findResourceMediaSource(index, "assets/icon.png", "b")?.ownerName, null)
+})
+
+test("an imported file with no known source is sent without one instead of with a placeholder label", () => {
+  const index = buildResourceMediaSources({
+    "danh-sach-anh.json": [{ file: "assets/head/a.png", sha256: "a", url: "https://cdn.example/a.png" }],
+  })
+
+  assert.equal(findResourceMediaSource(index, "assets/head/a.png", "changed"), undefined)
+  assert.equal(findResourceMediaSource([], "https://cdn.example/b.png")?.label, "cdn.example")
 })
 
 test("an explicitly unknown collection date never inherits the dataset date", () => {
@@ -100,9 +108,16 @@ test("missing credits stay visible while confirmed game captures do not require 
   assert.equal(needsMediaCredit([]), true)
   assert.equal(needsMediaCredit([{ label: "Logo đội tuyển", url: "https://example.com/logo.png" }]), true)
   assert.equal(needsMediaCredit([{ label: "Ảnh chụp Liên Quân", ownerName: "Garena", url: null }]), false)
-  assert.equal(needsMediaCredit([{ label: "Chưa xác minh nguồn", ownerName: "Garena" }]), true)
   assert.equal(
-    needsMediaCredit([{ label: "Chưa xác minh nguồn" }, { label: "Ảnh chụp Liên Quân", ownerName: "Garena" }]),
+    needsMediaCredit([
+      { label: "", unverified: true },
+      { label: "Ảnh chụp Liên Quân", ownerName: "Garena" },
+    ]),
     false,
   )
+})
+
+test("an unverified source never credits an image, whatever its label says", () => {
+  assert.equal(needsMediaCredit([{ label: "Garena press kit", ownerName: "Garena", unverified: true }]), true)
+  assert.equal(needsMediaCredit([{ label: "Chưa xác minh tác giả gốc", ownerName: "Fan", unverified: false }]), false)
 })

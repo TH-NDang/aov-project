@@ -1,10 +1,20 @@
 package com.wikiaov.hero.internal.skills.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-
-import jakarta.persistence.*;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
+import com.wikiaov.platform.AssignedIdentifierEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import java.io.Serializable;
 import java.util.UUID;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -22,7 +32,8 @@ public class SkillSnapshotRow extends AssignedIdentifierEntity<SkillSnapshotRow.
     @Id
     private String skillKey;
 
-    private String kind;
+    @Enumerated(EnumType.STRING)
+    private SkillKind kind;
 
     private String formKey;
 
@@ -38,7 +49,7 @@ public class SkillSnapshotRow extends AssignedIdentifierEntity<SkillSnapshotRow.
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class Key implements java.io.Serializable {
+    public static class Key implements Serializable {
         public UUID skillSetRevisionId;
         public String skillKey;
     }

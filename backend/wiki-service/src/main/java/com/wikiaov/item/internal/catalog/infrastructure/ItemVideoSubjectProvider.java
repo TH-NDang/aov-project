@@ -19,15 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class ItemVideoSubjectProvider implements VideoSubjectProvider {
     private final ItemIdentityRepository items;
 
+    @Override
     public Set<VideoSubjectKind> kinds() {
         return Set.of(VideoSubjectKind.ITEM);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public boolean exists(VideoSubjectKind kind, UUID id, @Nullable String key) {
         return kind == VideoSubjectKind.ITEM && items.existsById(id);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<VideoSubject> subjects(String locale) {
         return VideoSubjectName.collapse(VideoSubjectKind.ITEM, items.videoSubjectNames(), locale, Map.of());

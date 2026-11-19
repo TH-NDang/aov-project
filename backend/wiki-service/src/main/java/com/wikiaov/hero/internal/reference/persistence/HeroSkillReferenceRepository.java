@@ -61,8 +61,9 @@ public class HeroSkillReferenceRepository {
     }
 
     public List<Copy> owners(List<Row> rows) {
-        if (rows.isEmpty())
+        if (rows.isEmpty()) {
             return List.of();
+        }
 
         var profiles = rows.stream().map(Row::profileRevisionId).filter(Objects::nonNull).distinct().toList();
         return queries.findOwnerCopies(profiles).stream()

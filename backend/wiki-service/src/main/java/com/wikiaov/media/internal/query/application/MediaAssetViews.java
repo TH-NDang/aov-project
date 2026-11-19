@@ -1,6 +1,5 @@
 package com.wikiaov.media.internal.query.application;
 
-import com.wikiaov.media.internal.application.response.*;
 import com.wikiaov.media.internal.application.response.MediaAssetDetails;
 import com.wikiaov.media.internal.application.response.MediaVersionDetails;
 import com.wikiaov.media.internal.application.response.MediaVersionResult;
@@ -58,7 +57,7 @@ public class MediaAssetViews {
                 .toList();
         List<ProvenanceDetails> provenanceDetails = assetProvenance.stream()
                 .map(record -> new ProvenanceDetails(record.getId(), record.getAssetVersionId(),
-                        record.getSourceType(), record.getSourceLabel(), record.getSourceUrl(),
+                        record.getSourceType(), record.getSourceLabel(), record.isUnverified(), record.getSourceUrl(),
                         record.getObservedAt(), record.getNote(), record.getOwnerName(), record.getContactUrl(),
                         record.getOwnerId(), record.getOwnerPageId(), record.getRelatedPageId(),
                         record.getReferenceVersion()))

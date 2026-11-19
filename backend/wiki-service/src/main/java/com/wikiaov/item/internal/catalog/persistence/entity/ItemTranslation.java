@@ -1,9 +1,15 @@
 package com.wikiaov.item.internal.catalog.persistence.entity;
 
 import com.wikiaov.item.internal.domain.ItemContent;
-import com.wikiaov.platform.CatalogText.*;
-import jakarta.persistence.*;
-import java.util.*;
+import com.wikiaov.platform.CatalogText.Effect;
+import com.wikiaov.platform.CatalogText.Translation;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;

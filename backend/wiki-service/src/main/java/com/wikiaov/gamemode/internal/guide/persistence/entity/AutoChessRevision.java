@@ -2,8 +2,11 @@ package com.wikiaov.gamemode.internal.guide.persistence.entity;
 
 import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.domain.RevisionRecord;
+import com.wikiaov.platform.RevisionState;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -25,7 +28,8 @@ public class AutoChessRevision implements RevisionRecord {
 
     private long revisionNo;
 
-    private String state;
+    @Enumerated(EnumType.STRING)
+    private RevisionState state;
 
     private long version;
 

@@ -1,7 +1,13 @@
 package com.wikiaov.patch.internal.release.persistence.entity;
 
-import jakarta.persistence.*;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,12 +25,13 @@ public class PatchRelease {
     private UUID regionId;
 
     private Instant effectiveAt;
-    private java.time.LocalDate effectiveOn;
+    private LocalDate effectiveOn;
     private Instant confirmedAt;
 
     private Instant announcedAt;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private PatchReleaseStatus status;
 
     private String sourceUrl;
 

@@ -4,11 +4,16 @@ import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
-import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.platform.ApiException;
-import java.util.*;
+import com.wikiaov.platform.RevisionState;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
@@ -20,10 +25,6 @@ public class HeroStore {
     public HeroStore(HeroIdentityRepository heroes, HeroRevisionRepository revisions) {
         this.heroes = heroes;
         this.revisions = revisions;
-    }
-
-    public HeroIdentity hero(UUID id) {
-        return heroes.findById(id).orElseThrow();
     }
 
     public HeroIdentity requireHero(UUID id) {
@@ -46,12 +47,12 @@ public class HeroStore {
 
     public boolean publishedSectionExists(HeroSection section, UUID id) {
         return switch (section) {
-            case PROFILE -> revisions.existsByStateAndProfileRevisionId("PUBLISHED", id);
-            case OVERVIEW_RATINGS -> revisions.existsByStateAndOverviewRatingRevisionId("PUBLISHED", id);
-            case COMBAT_STATS -> revisions.existsByStateAndCombatStatsRevisionId("PUBLISHED", id);
-            case SKILLS -> revisions.existsByStateAndSkillsRevisionId("PUBLISHED", id);
-            case SKINS -> revisions.existsByStateAndSkinsRevisionId("PUBLISHED", id);
-            case MEDIA_BINDINGS -> revisions.existsByStateAndMediaBindingRevisionId("PUBLISHED", id);
+            case PROFILE -> revisions.existsByStateAndProfileRevisionId(RevisionState.PUBLISHED, id);
+            case OVERVIEW_RATINGS -> revisions.existsByStateAndOverviewRatingRevisionId(RevisionState.PUBLISHED, id);
+            case COMBAT_STATS -> revisions.existsByStateAndCombatStatsRevisionId(RevisionState.PUBLISHED, id);
+            case SKILLS -> revisions.existsByStateAndSkillsRevisionId(RevisionState.PUBLISHED, id);
+            case SKINS -> revisions.existsByStateAndSkinsRevisionId(RevisionState.PUBLISHED, id);
+            case MEDIA_BINDINGS -> revisions.existsByStateAndMediaBindingRevisionId(RevisionState.PUBLISHED, id);
         };
     }
 
@@ -60,7 +61,7 @@ public class HeroStore {
                 "The hero does not exist."));
     }
 
-    public com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision editableEntity(UUID id) {
+    public HeroRevision editableEntity(UUID id) {
         return revisions.findById(id).orElseThrow(() -> new ApiException(HeroErrorCode.HERO_REVISION_NOT_FOUND,
                 "The hero revision does not exist."));
     }
@@ -73,7 +74,7 @@ public class HeroStore {
         revisions.saveAndFlush(revision);
     }
 
-    public java.time.Instant createdAt(UUID revisionId) {
+    public Instant createdAt(UUID revisionId) {
         return editableEntity(revisionId).getCreatedAt();
     }
 
@@ -90,7 +91,7 @@ public class HeroStore {
         return revisions.findByHeroIdInOrderByRevisionNoDesc(heroIds).stream().map(this::view).toList();
     }
 
-    private HeroRevisionView view(com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision r) {
+    private HeroRevisionView view(HeroRevision r) {
         Map<HeroSection, UUID> sections = new EnumMap<>(HeroSection.class);
         put(sections, HeroSection.PROFILE, r.getProfileRevisionId());
         put(sections, HeroSection.OVERVIEW_RATINGS, r.getOverviewRatingRevisionId());
@@ -99,12 +100,13 @@ public class HeroStore {
         put(sections, HeroSection.SKINS, r.getSkinsRevisionId());
         put(sections, HeroSection.MEDIA_BINDINGS, r.getMediaBindingRevisionId());
         return new HeroRevisionView(r.getId(), r.getHeroId(), r.getRulesetId(), r.getRevisionNo(), r.getState(),
-                r.getVersion(), r.getPublicationSequence(), r.getPublishedAt(), Cause.valueOf(r.getCause()),
+                r.getVersion(), r.getPublicationSequence(), r.getPublishedAt(), r.getCause(),
                 r.getSourceRevisionId(), r.getEffectiveFromPatchVariantId(), sections);
     }
 
     private static void put(Map<HeroSection, UUID> target, HeroSection section, UUID value) {
-        if (value != null)
+        if (value != null) {
             target.put(section, value);
+        }
     }
 }

@@ -45,8 +45,9 @@ class CommunityMediaReferences implements CompetitionMediaReferences {
 
     @Override
     public Optional<Map<UUID, Long>> references() {
-        if (!(SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken jwt))
+        if (!(SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken jwt)) {
             return Optional.empty();
+        }
 
         var now = clock.instant();
         answers.values().removeIf(answer -> !now.isBefore(answer.expires()));

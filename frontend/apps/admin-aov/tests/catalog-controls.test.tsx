@@ -1,35 +1,21 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
+import type { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import type { Root } from "react-dom/client"
-import type { CatalogFilter } from "../src/features/publishing/catalog-context"
-import type { PublicationOverview } from "../src/features/publishing/publication-overview"
+import type { PublicationOverview } from "../src/features/publishing/api/publication-overview"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
+import { type CatalogFilter } from "@/lib/catalog-scope"
 
 async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
+  const dom = createWindow("http://localhost/publishing")
   Object.defineProperty(dom.window, "matchMedia", {
     configurable: true,
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    BroadcastChannel: undefined,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    Element: dom.window.Element,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     ResizeObserver: class {
       observe() {}
       unobserve() {}
@@ -38,11 +24,7 @@ async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
     fetch: async () => {
       throw new Error("Catalog controls must not request live data")
     },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   try {
@@ -50,19 +32,16 @@ async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 
 test("hero timeline defaults to all heroes and keeps a patch selected when returning to current", async () => {
   await withDocument(async (root, dom) => {
     const { MemoryRouter, useSearchParams } = await import("react-router")
-    const { CatalogTimeline } = await import("../src/features/publishing/catalog-timeline")
+    const { CatalogTimeline } = await import("../src/features/publishing/components/catalog/catalog-timeline")
     const { catalogOverview } = await import("./fixtures/hero-catalog-data")
-    const { patchHeroLocation } = await import("../src/features/publishing/hero-location")
+    const { patchHeroLocation } = await import("../src/features/publishing/model/hero-location")
     let current = new URLSearchParams()
     function Host() {
       const [params, setParams] = useSearchParams()
@@ -118,7 +97,7 @@ test("phones select patches directly on the rail and open only the options in a 
       value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
     })
     const { MemoryRouter } = await import("react-router")
-    const { CatalogTimeline } = await import("../src/features/publishing/catalog-timeline")
+    const { CatalogTimeline } = await import("../src/features/publishing/components/catalog/catalog-timeline")
     const { catalogOverview } = await import("./fixtures/hero-catalog-data")
     let selected: CatalogFilter | undefined
     await act(async () =>
@@ -163,8 +142,8 @@ test("catalog navigation remembers the season or patch, pins empty selections an
   await withDocument(async (root, dom) => {
     const { MemoryRouter, useNavigate, useSearchParams } = await import("react-router")
     const { useCatalogScopePreference, catalogTabTarget, useSavedCatalogScope } =
-      await import("../src/features/publishing/catalog-scope-memory")
-    const { CatalogTimeline } = await import("../src/features/publishing/catalog-timeline")
+      await import("../src/features/publishing/components/catalog/catalog-scope-memory")
+    const { CatalogTimeline } = await import("../src/features/publishing/components/catalog/catalog-timeline")
     const { catalogOverview } = await import("./fixtures/hero-catalog-data")
     let go: (to: string) => void
     let saved = ""
@@ -216,11 +195,10 @@ test("catalog navigation remembers the season or patch, pins empty selections an
       const enter = new dom.window.Event("pointerover", { bubbles: true })
       Object.defineProperty(enter, "pointerType", { value: "mouse" })
       trigger.dispatchEvent(enter)
-      await new Promise((resolve) => setTimeout(resolve, 180))
     })
-    const check = dom.window.document.querySelector<HTMLInputElement>(
-      '[data-slot="popover-content"] input[type=checkbox]',
-    )!
+    const check = await waitFor(() =>
+      dom.window.document.querySelector<HTMLInputElement>('[data-slot="popover-content"] input[type=checkbox]'),
+    )
     assert.ok(check?.checked)
     await act(async () => check.click())
     assert.equal(patch("current-patch")?.getAttribute("aria-pressed"), "true")
@@ -238,7 +216,7 @@ test("catalog navigation remembers the season or patch, pins empty selections an
 test("hero change summaries show a single overall assessment and open accessible details", async () => {
   await withDocument(async (root, dom) => {
     const { HeroChangeSummary, ChangeKindBadge, curatedChangeKinds } =
-      await import("../src/features/publishing/hero-change-badges")
+      await import("../src/features/publishing/components/patch-changes/hero-change-badges")
     assert.deepEqual(curatedChangeKinds(["NERF", "BUFF", "BUFF"]), ["BUFF", "NERF"])
     assert.deepEqual(curatedChangeKinds(["ADJUST", "ADJUSTMENT", "BUG_FIX", "FIX"]), ["ADJUSTMENT", "FIX"])
     const document = dom.window.document
@@ -283,7 +261,7 @@ test("hero change summaries show a single overall assessment and open accessible
 
 test("unassessed changes remain neutral and selected patch dates are not repeated in each row", async () => {
   await withDocument(async (root, dom) => {
-    const { HeroChangeSummary } = await import("../src/features/publishing/hero-change-badges")
+    const { HeroChangeSummary } = await import("../src/features/publishing/components/patch-changes/hero-change-badges")
     const document = dom.window.document
     const render = async (overallKind: string | null) =>
       act(async () =>
@@ -318,7 +296,7 @@ test("unassessed changes remain neutral and selected patch dates are not repeate
 
 test("catalog filters explain change-only scope, clear stale patch selection, and reset explicitly", async () => {
   await withDocument(async (root, dom) => {
-    const { CatalogContext } = await import("../src/features/publishing/catalog-context")
+    const { CatalogContext } = await import("../src/features/publishing/components/catalog/catalog-context")
     const data: PublicationOverview = {
       asOf: "2026-10-18T00:00:00Z",
       rulesets: [{ id: "rules", code: "aov-standard", description: "Shared rules" }],
@@ -409,9 +387,9 @@ test("catalog filters explain change-only scope, clear stale patch selection, an
 test("timeline preserves catalog display mode across patches and hides data filters in market configuration", async () => {
   await withDocument(async (root, dom) => {
     const { MemoryRouter, useSearchParams } = await import("react-router")
-    const { CatalogTimeline } = await import("../src/features/publishing/catalog-timeline")
-    const { catalogScopePatch } = await import("../src/features/publishing/catalog-scope")
-    const { patchHeroLocation } = await import("../src/features/publishing/hero-location")
+    const { CatalogTimeline } = await import("../src/features/publishing/components/catalog/catalog-timeline")
+    const { catalogScopePatch } = await import("@/lib/catalog-scope")
+    const { patchHeroLocation } = await import("../src/features/publishing/model/hero-location")
     const data: PublicationOverview = {
       asOf: "2026-11-03T00:00:00Z",
       rulesets: [{ id: "rules", code: "standard", description: null }],

@@ -1,11 +1,26 @@
 package com.wikiaov.hero.internal.catalog.application;
 
 import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView;
-import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.*;
+import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.Draft;
+import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.DraftMedia;
+import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.DraftProfile;
+import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.DraftRatings;
+import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.DraftSkill;
+import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.DraftSkillText;
+import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.DraftSkills;
+import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.DraftStats;
+import com.wikiaov.hero.internal.application.response.HeroPublishReadinessView.Name;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.Ratings;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Stat;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
@@ -18,7 +33,12 @@ import com.wikiaov.hero.internal.stats.persistence.HeroStatSnapshots;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.GameplayContexts;
-import java.util.*;
+import com.wikiaov.platform.RevisionState;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -44,12 +64,13 @@ public class HeroPublishReadiness {
     @PreAuthorize("hasAuthority('catalog:read')")
     public List<HeroPublishReadinessView> list() {
         var heroes = store.heroes(false);
-        if (heroes.isEmpty())
+        if (heroes.isEmpty()) {
             return List.of();
+        }
 
         // The store orders each hero's revisions from newest to oldest; the newest one names the hero in the list.
         var revisions = store.revisions(heroes.stream().map(HeroIdentity::getId).toList()).stream()
-                .filter(revision -> !revision.state().equals("DISCARDED"))
+                .filter(revision -> revision.state() != RevisionState.DISCARDED)
                 .collect(Collectors.groupingBy(HeroRevisionView::heroId));
         var drafts = revisions.values().stream().flatMap(List::stream).filter(HeroPublishReadiness::isDraft).toList();
         var newest = revisions.values().stream().map(List::getFirst).toList();
@@ -113,7 +134,7 @@ public class HeroPublishReadiness {
     }
 
     private static boolean isDraft(HeroRevisionView revision) {
-        return revision.state().equals("DRAFT");
+        return revision.state() == RevisionState.DRAFT;
     }
 
     private static List<UUID> sectionIds(List<HeroRevisionView> revisions, HeroSection section) {

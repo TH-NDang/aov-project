@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
 import { ArrowDown, ArrowLeft, ArrowUp, Copy, ListPlus, Plus, Trash2, Upload } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
@@ -14,9 +15,18 @@ import { AVAILABILITY_LABEL, missingLabel } from "./game-mode-import"
 import { confirmAction } from "@/components/confirm-dialog"
 import { HeroCodePicker, RowMenu } from "./entry-controls"
 import { RulesEditor } from "./rules-editor"
+import { NativeSelect } from "@/components/native-select"
+
+/** Discarding a draft drops every change saved in it, so it asks first. */
+export const confirmDraftDiscard = () =>
+  confirmAction({
+    title: "Bỏ bản nháp này?",
+    description: "Mọi thay đổi đã lưu trong bản nháp sẽ mất. Bản đang xuất bản trên Wiki giữ nguyên.",
+    confirmLabel: "Bỏ nháp",
+    cancelLabel: "Giữ bản nháp",
+  })
 
 export const field = "grid gap-1"
-export const selectClass = "h-9 rounded-md border bg-transparent px-3 type-body"
 
 /** Mode editor: one open draft at a time, saved with the version it was read at, then published. */
 export function GameModeEditorPage() {
@@ -72,6 +82,7 @@ export function GameModeEditorPage() {
         ],
       ),
     onError: (error) => setMessage(errorMessage(error)),
+    meta: { silent: true },
   })
 
   if (!mode.data || !content) return <Page>{mode.isError ? errorMessage(mode.error) : "Đang tải…"}</Page>
@@ -103,7 +114,9 @@ export function GameModeEditorPage() {
               <Button
                 variant="outline"
                 disabled={!canWrite || action.isPending}
-                onClick={() => action.mutate("discard")}
+                onClick={async () => {
+                  if (await confirmDraftDiscard()) action.mutate("discard")
+                }}
               >
                 Bỏ nháp
               </Button>
@@ -145,15 +158,14 @@ export function GameModeEditorPage() {
               </label>
               <label className={field}>
                 <span className="type-label">Nhóm</span>
-                <select
-                  className={selectClass}
+                <NativeSelect
                   value={content.group ?? ""}
                   onChange={(event) => set({ group: (event.target.value || null) as ModeContent["group"] })}
                 >
                   <option value="">Chưa chọn</option>
                   <option value="PVP">PVP</option>
                   <option value="ENTERTAINMENT">Chế độ giải trí</option>
-                </select>
+                </NativeSelect>
               </label>
               <label className={field}>
                 <span className="type-label">Thứ tự trong nhóm</span>
@@ -206,14 +218,13 @@ export function GameModeEditorPage() {
               </label>
               <label className={field}>
                 <span className="type-label">Cẩm nang chi tiết</span>
-                <select
-                  className={selectClass}
+                <NativeSelect
                   value={content.guideKind}
                   onChange={(event) => set({ guideKind: event.target.value as ModeContent["guideKind"] })}
                 >
                   <option value="NONE">Không có</option>
                   <option value="AUTO_CHESS">Cờ Liên Quân</option>
-                </select>
+                </NativeSelect>
               </label>
             </div>
             <label className={field}>
@@ -292,8 +303,7 @@ export function GameModeEditorPage() {
           <Section title="Tình trạng mở">
             <label className={field}>
               <span className="type-label">Trạng thái</span>
-              <select
-                className={selectClass}
+              <NativeSelect
                 value={content.availability?.status ?? ""}
                 onChange={(event) =>
                   set({
@@ -310,7 +320,7 @@ export function GameModeEditorPage() {
                     {label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
             {(
               [
@@ -367,7 +377,7 @@ export function GameModeEditorPage() {
             <ul className="type-meta grid gap-1">
               {history.data?.map((revision) => (
                 <li key={revision.id}>
-                  #{revision.revisionNo} · {revision.state} · {new Date(revision.updatedAt).toLocaleString("vi-VN")}
+                  #{revision.revisionNo} · {revision.state} · <LocalTime value={revision.updatedAt} />
                   {revision.changeNote && ` · ${revision.changeNote}`}
                 </li>
               ))}

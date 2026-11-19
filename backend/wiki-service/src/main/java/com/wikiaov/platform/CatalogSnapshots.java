@@ -17,8 +17,8 @@ public final class CatalogSnapshots {
             UUID ownerId,
             UUID patchVariantId,
             long revisionNo,
-            String state,
-            String cause,
+            RevisionState state,
+            CatalogCause cause,
             T value
     ) {
     }

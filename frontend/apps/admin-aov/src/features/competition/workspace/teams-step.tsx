@@ -8,14 +8,15 @@ import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
 import { LaneIcon, PlayerPhoto, TeamLogo } from "@/features/esports/components/primitives"
 import { useRecords } from "@/features/esports/data/use-esports-data"
-import { LANE_LABELS } from "@/features/esports/model/labels"
-import { RecordPicker } from "@/features/tournaments/record-picker"
-import { TeamRosterSheet } from "@/features/tournaments/team-roster-sheet"
-import { tournamentApi, tournamentKeys } from "@/features/tournaments/tournament-api"
-import { rosterBoard } from "./model"
+import { RecordPicker } from "@/features/tournaments/components/record-picker"
+import { TeamRecordSheet } from "@/features/tournaments/components/team-record-sheet"
+import { TeamRosterSheet } from "@/features/tournaments/components/team-roster-sheet"
+import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { rosterBoard, rosterOrder } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
-import { selectClass } from "./plan-fields"
 import { useRosterPlayers } from "./use-roster-players"
+import { NativeSelect } from "@/components/native-select"
+import { LANE_LABELS } from "@/lib/lanes"
 
 const ENTRY_STATUS: Record<string, string> = {
   REGISTERED: "Đã đăng ký",
@@ -46,7 +47,7 @@ function Starter({ lane, rows, names }: { lane: Lane; rows: RosterMembershipCont
           <div key={row.playerId} className="flex min-w-0 items-center gap-2" title={row.note ?? undefined}>
             <PlayerPhoto name={nickname} url={names.players?.get(row.playerId)?.photoUrl} size={32} />
             <span className="min-w-0">
-              <span className="type-body block truncate font-semibold">{nickname}</span>
+              <span className="type-body block truncate">{nickname}</span>
               <span className="type-meta flex items-center gap-1">
                 <LaneIcon lane={lane} size={14} className="shrink-0" />
                 <span className="truncate">{LANE_LABELS[lane].short}</span>
@@ -101,8 +102,9 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
   const [editing, setEditing] = useState(false)
   const [missingOnly, setMissingOnly] = useState(false)
   const [rosterTeam, setRosterTeam] = useState<string | null>(null)
+  const [recordTeam, setRecordTeam] = useState<string | null>(null)
   const team = useQuery({
-    queryKey: [...tournamentKeys.all, "teams", ws.access.actorKey, "one", rosterTeam],
+    queryKey: tournamentKeys.one("teams", ws.access.actorKey, rosterTeam),
     queryFn: ({ signal }) => tournamentApi.read("teams", rosterTeam!, signal),
     enabled: !!rosterTeam,
   })
@@ -166,11 +168,21 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <span className="type-meta w-4 text-right">{ws.plan.entrants.indexOf(entry) + 1}</span>
                 <TeamLogo team={view} size={32} />
-                <span className="type-body min-w-0 truncate font-semibold">{view.name}</span>
+                <span className="type-body min-w-0 truncate">{view.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Sửa hồ sơ đội ${view.name} và tuyển thủ`}
+                  title={`Sửa hồ sơ đội ${view.name} và tuyển thủ`}
+                  onClick={() => setRecordTeam(entry.teamId)}
+                >
+                  <Pencil aria-hidden />
+                </Button>
                 {editing && ws.canEdit ? (
-                  <select
+                  <NativeSelect
                     aria-label={`Trạng thái ${view.name}`}
-                    className={cn(selectClass, "h-9 w-40")}
+                    className="w-40"
                     value={entry.status || "REGISTERED"}
                     onChange={(event) =>
                       setEntrants(
@@ -185,7 +197,7 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
                         {label}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 ) : (
                   <Chip tone={entry.status === "WITHDRAWN" ? "danger" : "neutral"}>
                     {ENTRY_STATUS[entry.status] ?? ENTRY_STATUS.REGISTERED}
@@ -275,6 +287,15 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
       <Link className="type-body underline" to="/players">
         Quản lý hồ sơ tuyển thủ
       </Link>
+      {recordTeam && (
+        <TeamRecordSheet
+          teamId={recordTeam}
+          playerIds={rosterOrder(rostersOf(recordTeam)).map((row) => row.playerId)}
+          actorKey={ws.access.actorKey}
+          canWrite={ws.access.canWrite}
+          onClose={() => setRecordTeam(null)}
+        />
+      )}
       {rosterTeam && team.data && (
         <TeamRosterSheet
           team={team.data}

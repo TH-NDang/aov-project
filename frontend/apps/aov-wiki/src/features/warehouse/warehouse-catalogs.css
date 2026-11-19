@@ -154,6 +154,10 @@
   color: var(--aov-accent);
   font-variant-numeric: tabular-nums;
 }
+/* The coin takes the price's gold too. */
+.wiki-item-row-price svg {
+  color: currentColor;
+}
 
 /* One look for every entry of a catalog that can be opened: a quiet surface, and a gold outline once chosen. */
 :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-pressed="true"] {
@@ -383,9 +387,9 @@
 }
 /* The question mark beside a region's label keeps a target a finger can hit. */
 .wiki-item-board button[data-item-region-help] {
-  width: 32px;
-  height: 32px;
-  margin-block: -6px;
+  width: 36px;
+  height: 36px;
+  margin-block: -8px;
 }
 /* Finished items of the middle column: a rule and a label instead of a frame around cards. */
 .wiki-item-board .shop-viewport section > section {
@@ -421,6 +425,8 @@
   gap: 10px;
 }
 .wiki-arcana-column > h3 {
+  --wiki-warehouse-art-size: 22px;
+  --wiki-warehouse-art-radius: 50%;
   font: var(--wiki-type-entry);
   display: flex;
   align-items: center;
@@ -432,11 +438,6 @@
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
   font-variant-numeric: tabular-nums;
-}
-.wiki-arcana-column > h3 .wiki-warehouse-art {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
 }
 .wiki-arcana-group {
   display: grid;
@@ -460,6 +461,8 @@
   grid-template-columns: repeat(var(--fill), minmax(0, 1fr));
 }
 .wiki-arcana-row {
+  --wiki-warehouse-art-size: 36px;
+  --wiki-warehouse-art-radius: 50%;
   display: flex;
   min-width: 0;
   min-height: 56px;
@@ -471,11 +474,6 @@
   background: var(--aov-surface);
   text-align: left;
   transition: background 140ms;
-}
-.wiki-arcana-row .wiki-warehouse-art {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
 }
 .wiki-arcana-row-text {
   display: grid;
@@ -574,6 +572,8 @@
 }
 /* A narrow branch stacks the picture over the name; a wide one sets them side by side. */
 .wiki-enchantment-node {
+  --wiki-warehouse-art-size: 40px;
+  --wiki-warehouse-art-radius: 50%;
   display: flex;
   min-width: 0;
   min-height: 60px;
@@ -586,11 +586,6 @@
   background: var(--aov-surface);
   text-align: center;
   transition: background 140ms;
-}
-.wiki-enchantment-node .wiki-warehouse-art {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
 }
 .wiki-enchantment-node > span {
   display: grid;
@@ -644,6 +639,8 @@
   }
 }
 .wiki-spell-card {
+  --wiki-warehouse-art-size: 48px;
+  --wiki-warehouse-art-radius: 50%;
   display: flex;
   min-width: 0;
   align-items: flex-start;
@@ -654,11 +651,6 @@
   background: var(--aov-surface);
   text-align: left;
   transition: background 140ms;
-}
-.wiki-spell-card .wiki-warehouse-art {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
 }
 .wiki-spell-card-text {
   display: grid;
@@ -696,4 +688,17 @@
   color: var(--aov-text-soft);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+}
+
+/* Rows and cards come up as they scroll into view, in browsers that can drive an animation from scrolling. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .wiki-item-row,
+    .wiki-arcana-row,
+    .wiki-spell-card {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 26%;
+    }
+  }
 }

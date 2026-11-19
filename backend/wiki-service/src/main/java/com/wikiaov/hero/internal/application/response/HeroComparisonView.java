@@ -11,7 +11,7 @@ public record HeroComparisonView(
         Map<HeroSection, Object> before,
         Map<HeroSection, Object> after,
         List<Difference> changes,
-        List<String> warnings
+        List<HeroComparisonWarning> warnings
 ) {
     public record Difference(
             HeroSection section,

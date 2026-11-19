@@ -5,8 +5,11 @@ import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
 import com.wikiaov.gamemode.internal.domain.GameModeContent;
 import com.wikiaov.gamemode.internal.domain.RevisionRecord;
 import com.wikiaov.gamemode.internal.lineup.domain.LineupInsights;
+import com.wikiaov.gamemode.internal.lineup.domain.LineupStatus;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaCredit;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +17,7 @@ import java.util.UUID;
 
 /** HTTP response shapes of the game mode module. Text content is Vietnamese ({@code contentLocale = vi-VN}). */
 public final class GameModeViews {
-    public static final String CONTENT_LOCALE = "vi-VN";
+    public static final String CONTENT_LOCALE = CatalogLocales.DEFAULT;
 
     private GameModeViews() {
     }
@@ -34,7 +37,7 @@ public final class GameModeViews {
     public record Revision(
             UUID id,
             long revisionNo,
-            String state,
+            RevisionState state,
             long version,
             UUID sourceRevisionId,
             String changeNote,
@@ -162,7 +165,7 @@ public final class GameModeViews {
             String note,
             List<LineupUnit> units,
             List<String> emblems,
-            String status,
+            LineupStatus status,
             long version,
             long likes,
             Instant createdAt,
@@ -176,7 +179,7 @@ public final class GameModeViews {
             String note,
             List<LineupUnit> units,
             List<String> emblems,
-            String status,
+            LineupStatus status,
             String hiddenReason,
             String authorSubject,
             long version,

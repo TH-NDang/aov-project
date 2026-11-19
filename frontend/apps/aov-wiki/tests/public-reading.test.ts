@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { ContactRequestError, sendContactRequest } from "../src/features/contact/contact-request.ts"
+import { ContactRequestError, sendContactRequest } from "../src/lib/contact-request.ts"
 
 const suggestion = { name: "Reader", email: "reader@example.test", topic: "OTHER", message: "Suggested text" }
 

@@ -1,9 +1,9 @@
 .public-bottom-drawer[data-vaul-drawer] {
-  --drawer-surface: var(--hub-surface, #252a33);
-  --drawer-text: var(--hub-text, #eee8df);
-  --drawer-muted: var(--hub-muted, #aab0bc);
-  --drawer-line: var(--hub-border, #ffffff18);
-  --drawer-accent: var(--hub-accent, #d5b77c);
+  --drawer-surface: var(--hub-surface, var(--aov-popover));
+  --drawer-text: var(--hub-text, var(--aov-text));
+  --drawer-muted: var(--hub-muted, var(--aov-muted));
+  --drawer-line: var(--hub-border, var(--aov-line));
+  --drawer-accent: var(--hub-accent, var(--aov-accent));
   inset: auto 0 0;
   display: flex;
   width: 100%;
@@ -15,16 +15,16 @@
   overflow: hidden;
   border: 1px solid var(--drawer-line);
   border-bottom: 0;
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--aov-radius-media) var(--aov-radius-media) 0 0;
   background: var(--drawer-surface);
   color: var(--drawer-text);
-  box-shadow: 0 -12px 40px #0003;
+  box-shadow: var(--aov-shadow-lg);
   outline: none;
   animation: none;
   transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 .public-bottom-overlay[data-vaul-overlay] {
-  background: #0006;
+  background: var(--aov-overlay);
   animation-duration: 240ms;
 }
 .public-bottom-handle[data-vaul-handle] {
@@ -44,7 +44,7 @@
   left: 14px;
   width: 36px;
   height: 3px;
-  border-radius: 3px;
+  border-radius: var(--aov-radius-pill);
   background: var(--drawer-muted);
   opacity: 0.4;
 }
@@ -77,7 +77,7 @@
   width: 36px;
   height: 36px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--aov-radius-control);
   background: transparent;
   color: var(--drawer-muted);
 }
@@ -85,10 +85,15 @@
   background: var(--drawer-line);
   color: var(--drawer-text);
 }
+/*
+ * A drawer whose content runs to its edges sets --public-bottom-body-padding on itself, and one that paints the area
+ * under its content sets --public-bottom-body-surface.
+ */
 .public-bottom-body {
   position: relative;
   min-height: 0;
-  padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  padding: var(--public-bottom-body-padding, 16px 16px max(16px, env(safe-area-inset-bottom)));
+  background: var(--public-bottom-body-surface, none);
   overflow-y: auto;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
@@ -99,8 +104,7 @@
   display: grid;
   gap: 4px;
 }
-.public-bottom-body > h2:first-child,
-.public-bottom-menu > .public-app-menu-title {
+.public-bottom-body > h2:first-child {
   display: none;
 }
 .public-bottom-menu .public-bottom-menu-item {
@@ -110,7 +114,7 @@
   min-height: 44px;
   padding: 10px 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--aov-radius-control);
   background: transparent;
   color: inherit;
   font-size: 13px;

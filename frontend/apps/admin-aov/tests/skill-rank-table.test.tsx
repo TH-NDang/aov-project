@@ -1,28 +1,16 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
-import { compareSkillRanks } from "../src/features/publishing/skill-rank-values"
-import type { Skill } from "../src/features/publishing/types"
+import { compareSkillRanks } from "@aov/ui/lib/skill-rank-values"
+import type { Skill } from "@/lib/hero-types"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 test("skill details show rank columns and comparison toggles retain the changed-cell markers", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  const { SkillSourceDetails } = await import("../src/features/publishing/hero-source-details")
-  const { SkillRankComparison } = await import("../src/features/publishing/skill-rank-table")
+  const dom = createWindow("http://localhost")
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
+  const { SkillSourceDetails } = await import("../src/features/publishing/components/import/hero-source-details")
+  const { SkillRankComparison } = await import("../src/features/publishing/components/skills/skill-rank-table")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const source: Skill = {
@@ -55,7 +43,7 @@ test("skill details show rank columns and comparison toggles retain the changed-
     assert.equal(document.querySelector("tbody th")?.textContent, "Hồi chiêu (giây)")
     assert.deepEqual(
       [...document.querySelectorAll("tbody td")].map((cell) => cell.textContent),
-      ["8", "7,7", "7,4", "7,1", "6,8", "6,5", "8 - 0.3/cấp chiêu"],
+      ["8", "7.7", "7.4", "7.1", "6.8", "6.5", "8 - 0.3/cấp chiêu"],
     )
     assert.equal(document.querySelectorAll("tbody td:last-child").length, 1)
     assert.doesNotMatch(document.body.textContent!, /\brank\b/)
@@ -82,9 +70,6 @@ test("skill details show rank columns and comparison toggles retain the changed-
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

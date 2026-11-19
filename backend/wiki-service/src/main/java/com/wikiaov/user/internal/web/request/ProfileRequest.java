@@ -3,7 +3,10 @@ package com.wikiaov.user.internal.web.request;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.user.internal.application.UserErrorCode;
 import com.wikiaov.user.internal.domain.ProfileInput;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 

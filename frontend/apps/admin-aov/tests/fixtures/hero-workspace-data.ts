@@ -1,5 +1,5 @@
-import { SECTIONS, type Content, type Position, type Revision } from "../../src/features/publishing/types"
-import { heroReviewItems } from "../../src/features/publishing/hero-source-review"
+import { SECTIONS, type Content, type HeroRow, type Position, type Revision } from "@/lib/hero-types"
+import { heroReviewItems } from "../../src/features/publishing/model/import/hero-source-review"
 
 const positionCodes: Record<string, Position> = {
   top: "TOP",
@@ -78,9 +78,14 @@ export const fixtureRevision: Revision = {
   state: "DRAFT",
   cause: "DATA_BASELINE",
   sections: {} as Revision["sections"],
+  publicationSequence: null,
   publishedAt: null,
   sourceRevisionId: null,
   effectiveFromPatchVariantId: null,
+}
+/** A catalog row as the API sends it: no forms, edits or gameplay changes unless the test gives them. */
+export function fixtureHeroRow(row: Pick<HeroRow, "id" | "code" | "revisions"> & Partial<HeroRow>): HeroRow {
+  return { lastEditedAt: null, gameplayChanges: [], holderId: null, formKey: null, formIds: [], ...row }
 }
 export const fixturePreviousRevision: Revision = {
   ...fixtureRevision,
@@ -296,7 +301,7 @@ export function createHeroFixture(annotations = false, history = false) {
               },
             ]
           : [],
-        warnings: [],
+        warnings: [{ code: fromRevisionId ? "SNAPSHOT_DIFFERENCE_UNPROVEN" : "NO_EARLIER_SNAPSHOT" }],
       })
     }
     if (path.endsWith("/revisions")) return Response.json(history ? [revision, fixturePreviousRevision] : [revision])

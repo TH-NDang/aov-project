@@ -93,16 +93,12 @@ export function useSkillReferenceSearch(rulesetId = ""): EntityReferenceSearch {
   const client = useQueryClient()
   const owner = useId()
   const session = useSyncExternalStore(subscribeSession, getSession, getSession)
+  // Keyed on who is signed in, not on each copy of the session the store hands out.
+  const issuer = session.actor?.issuer
+  const subject = session.actor?.subject
   return useMemo(() => {
-    if (!session.actor) return async ({ page }) => ({ items: [], page, size: 20, totalElements: 0 })
-    return createSkillReferenceSearch(
-      client,
-      {
-        issuer: session.actor.issuer,
-        subject: session.actor.subject,
-        rulesetId,
-      },
-      owner,
-    )
-  }, [client, owner, rulesetId, session.actor?.issuer, session.actor?.subject])
+    if (issuer === undefined || subject === undefined)
+      return async ({ page }) => ({ items: [], page, size: 20, totalElements: 0 })
+    return createSkillReferenceSearch(client, { issuer, subject, rulesetId }, owner)
+  }, [client, owner, rulesetId, issuer, subject])
 }

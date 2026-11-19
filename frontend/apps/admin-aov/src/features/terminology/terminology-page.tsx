@@ -18,7 +18,7 @@ import { useIsWide } from "@/hooks/use-media-query"
 import { languageOptions } from "../users/profile-preference-picker"
 import { memo, useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { EntityRichText } from "@aov/ui/components/entity-rich-text"
+import { EntityRichText, EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
 import {
   createEntityIndex,
   managedCommunityReference,
@@ -36,18 +36,20 @@ import { Textarea } from "@aov/ui/components/textarea"
 import { useBeforeUnload, useSearchParams } from "react-router"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { useReferenceCatalog } from "./catalog"
-import { saveSettings, loadLegacySettings } from "./settings-api"
+import { saveSettings, loadLegacySettings, referenceSettingsKeys } from "./settings-api"
 import { ReferenceCatalogTable } from "./reference-catalog-table"
 import { ReferencePreviewWorkspace } from "./reference-preview-workspace"
 import { AdminDescriptionField } from "./rich-text-field"
 import { useSkillReferences } from "./use-skill-references"
 import { useCommunityReferences, useReferenceSearch } from "./use-community-references"
-import { EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
 import { TermIconPicker } from "./term-icon-picker"
 import { mergeReferenceCatalog, updateHeroAliases } from "./hero-aliases"
 import { HeroAliasEditor } from "./hero-alias-editor"
 import { invalidateReferenceCatalog } from "./reference-api"
 import { confirmDiscard } from "@/components/confirm-dialog"
+import { randomId } from "@/lib/random-id"
+import { useSearchParam } from "@/hooks/use-search-param"
+import { NativeSelect } from "@/components/native-select"
 
 const ReferencePreview = memo(EntityRichText)
 
@@ -90,7 +92,8 @@ export function TerminologyPage() {
   useEffect(() => {
     setSelectedValue(params.get("entry") ?? (params.get("term") ? `term:${params.get("term")}` : ""))
   }, [params])
-  const [locale, setLocale] = useState("vi-VN")
+  // The language of the translations lives in the URL, so a reload or a shared link keeps it.
+  const [locale, setLocale] = useSearchParam("locale", "vi-VN")
   const [preview, setPreview] = useState("")
   const [message, setMessage] = useState("")
   const [saving, setSaving] = useState(false)
@@ -196,7 +199,7 @@ export function TerminologyPage() {
     try {
       const valid = validateRichTextSettings(value)
       const document = await saveSettings(valid, catalog.settings.data!.version)
-      client.setQueryData(["rich-text-settings"], document)
+      client.setQueryData(referenceSettingsKeys.all, document)
       setDraft(null)
       await invalidateReferenceCatalog(client)
       setMessage("Đã lưu. Admin và wiki dùng chung thiết lập này.")
@@ -230,7 +233,7 @@ export function TerminologyPage() {
     ) : null
   }
   function createTerm() {
-    const id = crypto.randomUUID()
+    const id = randomId()
     const next: EntityReference = {
       id,
       kind: "term",
@@ -350,8 +353,7 @@ export function TerminologyPage() {
             </label>
             <label className="grid gap-2 text-sm font-medium">
               Ngôn ngữ dự phòng
-              <select
-                className="h-10 rounded-lg border bg-background px-3"
+              <NativeSelect
                 value={settings.fallbackLocale}
                 onChange={(e) => setDraft({ ...settings, fallbackLocale: e.target.value })}
               >
@@ -360,7 +362,7 @@ export function TerminologyPage() {
                     {languageOptions.find((o) => o.value === code)?.label ?? code}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
               <span className="text-xs font-normal leading-5 text-muted-foreground">
                 Dùng khi một mục chưa có bản dịch ở ngôn ngữ đang xem.
               </span>
@@ -418,7 +420,7 @@ export function TerminologyPage() {
                     {languageOptions.find((option) => option.value === locale)?.label ?? locale}
                   </span>
                   <ChevronDown aria-hidden className="size-3.5 text-muted-foreground" />
-                  <select
+                  <NativeSelect
                     aria-label="Ngôn ngữ danh mục"
                     className="absolute inset-0 size-full cursor-pointer text-base opacity-0"
                     value={locale}
@@ -429,7 +431,7 @@ export function TerminologyPage() {
                         {o.label}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </label>
               </>
             }
@@ -499,8 +501,7 @@ export function TerminologyPage() {
                   <>
                     <label className="grid gap-1.5 text-sm">
                       Ngôn ngữ bản dịch
-                      <select
-                        className="h-10 rounded-lg border bg-background px-3"
+                      <NativeSelect
                         value={locale}
                         onChange={(e) => setLocale(e.target.value)}
                         aria-label="Ngôn ngữ bản dịch"
@@ -515,7 +516,7 @@ export function TerminologyPage() {
                             {languageOptions.find((o) => o.value === code)?.label ?? code} · {code}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     </label>
                     <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Bản dịch hiện có">
                       {entity.translations.map((text) => (

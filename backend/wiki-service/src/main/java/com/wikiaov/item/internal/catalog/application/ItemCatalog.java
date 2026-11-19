@@ -19,9 +19,12 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogCause;
 import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.HashSet;
 import java.util.List;
@@ -99,15 +102,17 @@ public class ItemCatalog {
 
     @PreAuthorize("hasAuthority('item:write')")
     public ItemView create(Create input) {
-        if (identities.findByCode(input.code()).isPresent())
+        if (identities.findByCode(input.code()).isPresent()) {
             conflict("The code is already in use.");
+        }
         requireObservationContext(input.rulesetId(), input.effectiveFromPatchVariantId(), false);
 
         var owner = createIdentity(input.code());
         var content = initialContent(input);
         contentRules.validate(content);
 
-        var revision = newDraft(owner, input.rulesetId(), null, "DATA_BASELINE", input.effectiveFromPatchVariantId());
+        var revision = newDraft(owner, input.rulesetId(), null, CatalogCause.DATA_BASELINE,
+                input.effectiveFromPatchVariantId());
         revisionContent.saveContent(revision, content);
         recordAuditEvent("CREATED", owner, revision, null);
 
@@ -121,7 +126,8 @@ public class ItemCatalog {
         requireForkSource(source, input);
         UUID effective = resolveForkContext(source, input);
 
-        var revision = newDraft(owner, input.rulesetId(), source.getId(), input.cause(), effective);
+        var revision = newDraft(owner, input.rulesetId(), source.getId(), CatalogCause.ofFork(input.cause()),
+                effective);
         revisionContent.saveContent(revision, revisionContent.content(source));
         recordAuditEvent("DRAFT_CREATED", owner, revision, input.changeNote());
 
@@ -130,7 +136,7 @@ public class ItemCatalog {
 
     @PreAuthorize("hasAuthority('item:write')")
     public ItemView update(UUID id, UUID revisionId, Update input) {
-        recipeLock.lockGraph().orElseThrow();
+        recipeLock.lockGraph().orElseThrow(() -> new IllegalStateException("The item recipe lock row is missing."));
         var owner = lockIdentity(id);
         var revision = requireEditableDraft(id, revisionId, input.expectedVersion());
 
@@ -138,12 +144,14 @@ public class ItemCatalog {
         requireTranslationOnlyChange(revision, input.content());
         boolean contextChanged = updateObservationContext(revision, input);
 
-        if (input.content().components().stream().anyMatch(c -> c.itemId().equals(id)))
+        if (input.content().components().stream().anyMatch(c -> c.itemId().equals(id))) {
             fail("An item cannot build itself.");
+        }
         checkRecipeCycle(id, input.content(), revision.getRulesetId(), new HashSet<>());
 
-        if (revisionContent.content(revision).equals(input.content()) && !contextChanged)
+        if (revisionContent.content(revision).equals(input.content()) && !contextChanged) {
             return revisionContent.view(owner, revision);
+        }
 
         revisionContent.saveContent(revision, input.content());
         advanceVersion(revision);
@@ -160,9 +168,10 @@ public class ItemCatalog {
                 !hasUnscopedBaseline(revision));
         var content = revisionContent.content(revision);
         var missing = contentRules.missing(content);
-        if (!missing.isEmpty())
+        if (!missing.isEmpty()) {
             throw new ApiException(ItemErrorCode.ITEM_INVALID_CONTENT,
                     "Complete the required fields before publication.", Map.of("missingFields", missing));
+        }
         contentRules.validate(content);
 
         publishRevision(revision);
@@ -176,7 +185,7 @@ public class ItemCatalog {
         var owner = lockIdentity(id);
         var revision = requireEditableDraft(id, revisionId, input.expectedVersion());
 
-        revision.setState("DISCARDED");
+        revision.setState(RevisionState.DISCARDED);
         advanceVersion(revision);
         recordAuditEvent("DRAFT_DISCARDED", owner, revision, input.changeNote());
 
@@ -221,44 +230,54 @@ public class ItemCatalog {
     }
 
     private void requireForkSource(ItemRevision source, Fork input) {
-        if (!source.getState().equals("PUBLISHED") || !source.getRulesetId().equals(input.rulesetId()))
+        if (source.getState() != RevisionState.PUBLISHED || !source.getRulesetId().equals(input.rulesetId())) {
             fail("The source must be published in the selected ruleset.");
-        if (!Set.of("GAME_PATCH", "CONTENT_CORRECTION", "TRANSLATION_UPDATE").contains(input.cause()))
+        }
+        if (CatalogCause.ofFork(input.cause()) == null) {
             fail("Invalid revision cause.");
+        }
     }
 
     private UUID resolveForkContext(ItemRevision source, Fork input) {
         UUID effective = input.effectiveFromPatchVariantId() == null
                 ? source.getEffectiveFromPatchVariantId()
                 : input.effectiveFromPatchVariantId();
-        if (effective == null && input.cause().equals("GAME_PATCH"))
+        if (effective == null && CatalogCause.ofFork(input.cause()) == CatalogCause.GAME_PATCH) {
             fail("A gameplay change requires a patch context.");
-        if (effective == null && !hasUnscopedBaseline(source))
+        }
+        if (effective == null && !hasUnscopedBaseline(source)) {
             fail("The source does not define a published baseline observation.");
+        }
         requireObservationContext(input.rulesetId(), effective, false);
-        if (patchOrdinal(source) > patchOrdinal(effective))
+        if (patchOrdinal(source) > patchOrdinal(effective)) {
             fail("A future snapshot cannot reconstruct an earlier patch.");
-        if (!input.cause().equals("GAME_PATCH") && !Objects.equals(effective, source.getEffectiveFromPatchVariantId()))
+        }
+        if (CatalogCause.ofFork(input.cause()) != CatalogCause.GAME_PATCH
+                && !Objects.equals(effective, source.getEffectiveFromPatchVariantId())) {
             fail("Content corrections retain source gameplay applicability.");
+        }
 
         return effective;
     }
 
     private void requireTranslationOnlyChange(ItemRevision revision, ItemContent content) {
-        if (revision.getCause().equals("TRANSLATION_UPDATE")
-                && !revision.getGameplay().mechanics().equals(content.mechanics()))
+        if (revision.getCause() == CatalogCause.TRANSLATION_UPDATE
+                && !revision.getGameplay().mechanics().equals(content.mechanics())) {
             fail("Translation revisions cannot change gameplay fields.");
+        }
     }
 
     private boolean updateObservationContext(ItemRevision revision, Update input) {
         boolean contextChanged = input.effectiveFromPatchVariantId() != null
                 && !Objects.equals(input.effectiveFromPatchVariantId(), revision.getEffectiveFromPatchVariantId());
         boolean clearContext = Boolean.TRUE.equals(input.clearPatchContext());
-        if (clearContext && input.effectiveFromPatchVariantId() != null)
+        if (clearContext && input.effectiveFromPatchVariantId() != null) {
             fail("A patch context cannot be set and cleared together.");
+        }
         if (contextChanged || clearContext) {
-            if (!revision.getCause().equals("DATA_BASELINE") || revision.getSourceRevisionId() != null)
+            if (revision.getCause() != CatalogCause.DATA_BASELINE || revision.getSourceRevisionId() != null) {
                 fail("Only an independent baseline draft can change its observation context.");
+            }
             requireObservationContext(revision.getRulesetId(), input.effectiveFromPatchVariantId(), !clearContext);
             revision.setEffectiveFromPatchVariantId(input.effectiveFromPatchVariantId());
         }
@@ -272,19 +291,23 @@ public class ItemCatalog {
 
     private ItemRevision requireEditableDraft(UUID id, UUID revisionId, long expected) {
         var revision = queries.revision(id, revisionId);
-        if (!revision.getState().equals("DRAFT"))
+        if (revision.getState() != RevisionState.DRAFT) {
             conflict("Only drafts can be edited.");
-        if (revision.getVersion() != expected)
+        }
+        if (revision.getVersion() != expected) {
             throw new ApiException(ItemErrorCode.ITEM_CONFLICT, "The draft has changed.",
                     Map.of("currentVersion", revision.getVersion()));
+        }
         return revision;
     }
 
-    private ItemRevision newDraft(ItemIdentity owner, UUID ruleset, UUID source, String cause, UUID effective) {
+    private ItemRevision newDraft(ItemIdentity owner, UUID ruleset, UUID source, CatalogCause cause, UUID effective) {
         var history = revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId());
         if (history.stream()
-                .anyMatch(revision -> revision.getRulesetId().equals(ruleset) && revision.getState().equals("DRAFT")))
+                .anyMatch(revision -> revision.getRulesetId().equals(ruleset)
+                        && revision.getState() == RevisionState.DRAFT)) {
             conflict("A draft already exists for the ruleset.");
+        }
 
         var actor = actors.require();
         var revision = new ItemRevision();
@@ -293,7 +316,7 @@ public class ItemCatalog {
         revision.setRulesetId(ruleset);
         revision.setRevisionNo(history.stream().filter(v -> v.getRulesetId().equals(ruleset))
                 .mapToLong(ItemRevision::getRevisionNo).max().orElse(0) + 1);
-        revision.setState("DRAFT");
+        revision.setState(RevisionState.DRAFT);
         revision.setVersion(1);
         revision.setCause(cause);
         revision.setSourceRevisionId(source);
@@ -310,12 +333,13 @@ public class ItemCatalog {
     private boolean hasUnscopedBaseline(ItemRevision revision) {
         boolean baseline = CatalogObservation.isUnscopedBaseline(revision.getCause(), revision.getSourceRevisionId(),
                 revision.getEffectiveFromPatchVariantId());
-        if (baseline && !revision.getCause().equals("DATA_BASELINE")) {
+        if (baseline && revision.getCause() != CatalogCause.DATA_BASELINE) {
             var source = queries.revision(revision.getOwnerId(), revision.getSourceRevisionId());
-            if (!source.getState().equals("PUBLISHED") || !source.getRulesetId().equals(revision.getRulesetId())
+            if (source.getState() != RevisionState.PUBLISHED || !source.getRulesetId().equals(revision.getRulesetId())
                     || !CatalogObservation.isUnscopedBaseline(source.getCause(), source.getSourceRevisionId(),
-                            source.getEffectiveFromPatchVariantId()))
+                            source.getEffectiveFromPatchVariantId())) {
                 fail("The source must be a published baseline in the selected ruleset.");
+            }
         }
         return baseline;
     }
@@ -323,13 +347,15 @@ public class ItemCatalog {
     private void requireObservationContext(UUID ruleset, UUID effective, boolean publication) {
         contexts.requireRuleset(ruleset);
         if (effective == null) {
-            if (publication)
+            if (publication) {
                 fail("A patch observation context is required before publication.");
+            }
             return;
         }
         var variant = contexts.variant(effective);
-        if (!variant.rulesetId().equals(ruleset) || publication && !variant.published())
+        if (!variant.rulesetId().equals(ruleset) || publication && !variant.published()) {
             fail("The patch must belong to the ruleset and be published first.");
+        }
     }
 
     private long patchOrdinal(ItemRevision revision) {
@@ -337,7 +363,7 @@ public class ItemCatalog {
     }
 
     private long patchOrdinal(UUID id) {
-        return id == null ? 0 : contexts.variant(id).rulesetOrdinal();
+        return GameplayContexts.rulesetOrdinal(contexts, id);
     }
 
     private void advanceVersion(ItemRevision revision) {
@@ -349,19 +375,23 @@ public class ItemCatalog {
     }
 
     private void recordAuditEvent(String action, ItemIdentity owner, ItemRevision revision, String note) {
-        audit.record(new AuditEntry(actors.require(), "ITEM_" + action, "ITEM", owner.getId(), revision.getId(),
+        audit.record(new AuditEntry(actors.require(), "ITEM_" + action, CatalogAggregates.ITEM, owner.getId(),
+                revision.getId(),
                 revision.getVersion() == 1 ? null : revision.getVersion() - 1, revision.getVersion(), note, Map.of()));
     }
 
     private void checkRecipeCycle(UUID owner, ItemContent candidate, UUID ruleset, Set<UUID> visiting) {
         for (var component : candidate.components()) {
-            if (component.itemId().equals(owner))
+            if (component.itemId().equals(owner)) {
                 fail("The recipe would create a cycle.");
-            if (!visiting.add(component.itemId()))
+            }
+            if (!visiting.add(component.itemId())) {
                 continue;
+            }
             var other = queries.latest(queries.identity(component.itemId()), ruleset);
-            if (other != null)
+            if (other != null) {
                 checkRecipeCycle(owner, other.content(), ruleset, visiting);
+            }
         }
     }
 
@@ -390,11 +420,12 @@ public class ItemCatalog {
                 .filter(v -> v.getRulesetId().equals(revision.getRulesetId()))
                 .map(ItemRevision::getPublicationSequence).filter(Objects::nonNull).mapToLong(Long::longValue).max()
                 .orElse(0) + 1);
-        revision.setState("PUBLISHED");
+        revision.setState(RevisionState.PUBLISHED);
         revision.setPublishedAt(clock.instant());
         advanceVersion(revision);
         if (revision.getEffectiveFromPatchVariantId() != null
-                && Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause()))
+                && revision.getCause().gameplay()) {
             dataReviews.markDirty(revision.getEffectiveFromPatchVariantId());
+        }
     }
 }

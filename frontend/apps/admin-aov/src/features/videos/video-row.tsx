@@ -6,7 +6,8 @@ import { cn } from "@aov/ui/lib/utils"
 import { useSession } from "@/app/auth/auth-gate"
 import { confirmAction } from "@/components/confirm-dialog"
 import { videoPlayback, videoProviderName, videoThumbnail, videoWatchUrl } from "@aov/ui/lib/video-playback"
-import { capabilityFor, formatClock, PURPOSE_LABELS, STATUS_LABELS, type AdminVideo } from "./video-model"
+import { capabilityFor, PURPOSE_LABELS, STATUS_LABELS, type AdminVideo } from "./video-model"
+import { formatClock } from "@/lib/clock"
 import { VideoPlayerDialog } from "./video-player-dialog"
 
 /** One video with what an editor needs to decide about it, and the actions they are allowed to take. */

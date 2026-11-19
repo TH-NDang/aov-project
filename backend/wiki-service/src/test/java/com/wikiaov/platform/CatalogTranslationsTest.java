@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.CatalogTranslations.Violation;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -26,7 +27,7 @@ class CatalogTranslationsTest {
     @Test
     void reportsTheCollectionLimitBeforeInspectingIndividualRows() {
         var invalid = text("INVALID", "");
-        assertThat(CatalogTranslations.firstViolation(java.util.Collections.nCopies(51, invalid)))
+        assertThat(CatalogTranslations.firstViolation(Collections.nCopies(51, invalid)))
                 .contains(Violation.TOO_MANY_TRANSLATIONS);
         assertThat(Violation.TOO_MANY_TRANSLATIONS.detail()).isEqualTo("Too many translations.");
     }

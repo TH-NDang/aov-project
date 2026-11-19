@@ -33,7 +33,7 @@ export function UserDetailPage() {
   const [reloadError, setReloadError] = useState("")
   const [reloading, setReloading] = useState(false)
   const query = useQuery({
-    queryKey: [...userKeys.all, "detail", actor?.issuer, actor?.subject, userId],
+    queryKey: userKeys.detail(actor?.issuer, actor?.subject, userId),
     queryFn: ({ signal }) => getProfile(userId, signal),
     enabled: canRead && validId,
     retry: false,
@@ -111,7 +111,7 @@ export function UserDetailPage() {
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-1">
-                <h2 className="break-words text-xl font-bold">{query.data.displayName}</h2>
+                <h2 className="type-section-title break-words">{query.data.displayName}</h2>
                 <p className="text-sm text-muted-foreground">Hồ sơ người dùng</p>
               </div>
               {canWrite && (

@@ -1,7 +1,13 @@
 package com.wikiaov.hero.internal.domain;
 
-import com.wikiaov.hero.internal.domain.HeroContent.*;
-import java.util.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /** Keeps the summaries editors wrote when skills are replaced by text that carries none, such as the game's own. */
 public final class HeroSkillSummaries {
@@ -34,15 +40,17 @@ public final class HeroSkillSummaries {
         Map<String, String> summaries = new HashMap<>();
         prior.translations().stream().filter(text -> text.summary() != null)
                 .forEach(text -> summaries.put(text.locale(), text.summary()));
-        if (summaries.isEmpty())
+        if (summaries.isEmpty()) {
             return skill;
+        }
 
         List<SkillTranslation> translations = new ArrayList<>();
-        for (var text : skill.translations())
+        for (var text : skill.translations()) {
             translations.add(text == null || text.summary() != null || !summaries.containsKey(text.locale())
                     ? text
                     : new SkillTranslation(text.locale(), text.name(), text.description(),
                             summaries.get(text.locale())));
+        }
 
         return new Skill(skill.skillKey(), skill.kind(), skill.formKey(), skill.displayOrder(), skill.iconAssetId(),
                 Collections.unmodifiableList(translations), skill.effects(), skill.stateIcons());

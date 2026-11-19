@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { WikiSectionTiles } from "../../components/wiki-section-tiles"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import type { WikiSectionKey } from "../../lib/wiki-sections"
-import { heroCatalogQuery } from "../hero/hero-api"
+import { heroCatalogQuery } from "../../lib/hero-api"
 import { sectionCountsQuery } from "./home-api"
 
 /** What a tile says under its name when it has no count of its own. */

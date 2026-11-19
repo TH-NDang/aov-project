@@ -26,7 +26,7 @@ type Preferences = Pick<UserProfile, "locale" | "timeZone" | "currency"> & { dat
 export function SettingsPage() {
   const { actor } = useSession()
   const client = useQueryClient()
-  const key = [...userKeys.self, actor?.issuer, actor?.subject]
+  const key = userKeys.selfOf(actor?.issuer, actor?.subject)
   const profile = useQuery({ queryKey: key, queryFn: ({ signal }) => selfProfile(signal) })
   const timeZone = useUserTimeZone()
   const dateFormat = useDateFormat()

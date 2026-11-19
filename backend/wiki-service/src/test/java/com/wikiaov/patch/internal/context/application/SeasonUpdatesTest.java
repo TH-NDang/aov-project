@@ -57,8 +57,7 @@ class SeasonUpdatesTest {
                 .thenReturn(List.of(release));
         var preferred = text("en-US", "Mid-season update");
         var fallback = text("vi-VN", "Local fallback");
-        when(repository.preferredTexts(List.of(patchId), "en-US"))
-                .thenReturn(List.of(preferred, fallback));
+        when(repository.texts(List.of(patchId))).thenReturn(List.of(fallback, preferred));
 
         var result = service.read("VN", "en-US", 4);
 

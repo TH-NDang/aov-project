@@ -1,5 +1,5 @@
-import type { HeroGameplayChange, HeroRow, PageSlice, Revision } from "../../src/features/publishing/types"
-import type { PublicationOverview } from "../../src/features/publishing/publication-overview"
+import type { HeroGameplayChange, HeroRow, PageSlice, Revision } from "@/lib/hero-types"
+import type { PublicationOverview } from "../../src/features/publishing/api/publication-overview"
 import { fixtureContent } from "./hero-workspace-data"
 
 export const catalogOverview: PublicationOverview = {
@@ -81,6 +81,7 @@ function revision(heroId: string, patch: string, revisionNo = 1, rulesetId = "st
     version: 1,
     cause: "DATA_BASELINE",
     sections: {} as Revision["sections"],
+    publicationSequence: null,
     publishedAt: "2099-05-06T07:08:09Z",
     sourceRevisionId: null,
     effectiveFromPatchVariantId: patch,
@@ -95,6 +96,8 @@ function change(heroId: string, patch: string, toRevision: string): HeroGameplay
     patchVariantId: patch,
     fromHeroRevisionId: null,
     toHeroRevisionId: toRevision,
+    sourceKind: "SNAPSHOT",
+    overallKind: null,
     changeKinds: patch === "patch-current" ? ["BUFF", "NERF"] : ["BUFF"],
     recordedAt: "2026-10-15T10:00:00Z",
     summary: `Curated ${patch} adjustment`,
@@ -110,6 +113,9 @@ export function createHeroCatalogFixture() {
     revisions: [revision(`id-${code}`, "patch-early")],
     lastEditedAt: edited,
     gameplayChanges: [],
+    holderId: null,
+    formKey: null,
+    formIds: [],
   })
   const baseline = make("aa-baseline-only", "Baseline only")
   const old = make("ab-old-change", "Old season adjustment", "2026-10-10T01:02:03Z")

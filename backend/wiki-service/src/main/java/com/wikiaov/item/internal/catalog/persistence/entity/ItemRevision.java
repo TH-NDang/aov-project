@@ -1,7 +1,14 @@
 package com.wikiaov.item.internal.catalog.persistence.entity;
 
 import com.wikiaov.item.internal.domain.ItemContent;
-import jakarta.persistence.*;
+import com.wikiaov.platform.CatalogCause;
+import com.wikiaov.platform.RevisionState;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
@@ -19,11 +26,13 @@ public class ItemRevision {
     private UUID ownerId;
     private UUID rulesetId;
     private long revisionNo;
-    private String state;
+    @Enumerated(EnumType.STRING)
+    private RevisionState state;
     private long version;
     private Long publicationSequence;
     private Instant publishedAt;
-    private String cause;
+    @Enumerated(EnumType.STRING)
+    private CatalogCause cause;
     private UUID effectiveFromPatchVariantId;
     private UUID sourceRevisionId;
     private UUID iconAssetId;

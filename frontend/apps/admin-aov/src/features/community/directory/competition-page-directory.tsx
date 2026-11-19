@@ -6,9 +6,10 @@ import type { CommunityProfile, CompetitionPageEntry } from "@aov/community-cont
 import { tournamentPath, type Access } from "@/features/esports/pages/esports-shell"
 import { Monogram, TierBadge } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
-import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
-import { activityLabel } from "@/features/tournaments/record-reason"
-import { directoryApi, directoryKeys, useDebounced, yearRange } from "./directory-api"
+import { ManagementToolbar } from "@/features/tournaments/components/management-list"
+import { activityLabel } from "@/features/tournaments/model/record-reason"
+import { directoryApi, useDebounced, yearRange } from "./directory-api"
+import { pageKeys } from "../api/page-api"
 import {
   CountryLabel,
   DirectoryBody,
@@ -17,6 +18,7 @@ import {
   directorySections,
   useDirectoryFilters,
 } from "./directory-shell"
+import { NativeSelect } from "@/components/native-select"
 
 const COMPETITION_PAGE_SORTS = { ACTIVE: "Gần đây trước", TOURNAMENTS: "Nhiều giải nhất", NAME: "Tên A–Z" }
 type CompetitionPageSort = keyof typeof COMPETITION_PAGE_SORTS
@@ -30,12 +32,12 @@ function useCompetitionPages(kind: "ORGANIZATION" | "CIRCUIT", access: Access) {
   const sort = (filters.values.sort || "ACTIVE") as CompetitionPageSort
   const search = useDebounced(filters.values.q)
   const pages = useQuery({
-    queryKey: [...directoryKeys, access.actorKey, kind, search, sort === "NAME" ? "NAME" : "ACTIVE"],
+    queryKey: pageKeys.directory.competitionPages(access.actorKey, kind, search, sort === "NAME" ? "NAME" : "ACTIVE"),
     queryFn: ({ signal }) =>
       directoryApi.profiles({ kind, q: search, sort: sort === "NAME" ? "NAME" : "ACTIVE", size: 100 }, signal),
   })
   const stats = useQuery({
-    queryKey: [...directoryKeys, access.actorKey, "competition-page-stats"],
+    queryKey: pageKeys.directory.competitionPageStats(access.actorKey),
     queryFn: ({ signal }) => directoryApi.competitionPages(signal),
     staleTime: 60_000,
   })
@@ -97,18 +99,18 @@ function CompetitionPageSortSelect({
   onChange: (value: string) => void
 }) {
   return (
-    <select
+    <NativeSelect
       aria-label={label}
       value={sort}
       onChange={(event) => onChange(event.target.value)}
-      className={managementSelectClassName}
+      className="max-w-full"
     >
       {Object.entries(COMPETITION_PAGE_SORTS).map(([value, name]) => (
         <option key={value} value={value}>
           {name}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   )
 }
 

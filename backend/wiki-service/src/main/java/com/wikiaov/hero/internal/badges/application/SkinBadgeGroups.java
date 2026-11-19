@@ -1,13 +1,13 @@
 package com.wikiaov.hero.internal.badges.application;
 
-import com.wikiaov.access.*;
-import com.wikiaov.hero.internal.application.*;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.SkinBadgeGroupCommands;
-import com.wikiaov.hero.internal.application.SkinBadgeGroupCommands.*;
 import com.wikiaov.hero.internal.application.response.SkinBadgeGroupView;
-import com.wikiaov.hero.internal.application.response.SkinBadgeGroupView.*;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
+import com.wikiaov.hero.internal.badges.domain.SkinBadgeGroupKind;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeGroupRepository;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeRepository;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeTexts;
@@ -16,9 +16,19 @@ import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadgeGroup;
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadgeGroupTranslation;
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadgeTranslation;
 import com.wikiaov.hero.internal.media.application.HeroMediaQueries;
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
@@ -50,6 +60,7 @@ public class SkinBadgeGroups {
     public PageSlice<SkinBadgeGroupView> list(String locale, String q, int page, int size) {
         HeroMediaQueries.bounds(page, size);
         HeroValidation.locale(locale);
+
         String search = SkinBadges.search(q);
         var all = groups.findAll(Sort.by("code").and(Sort.by("id")));
         var translations = repository.groups(
@@ -68,29 +79,33 @@ public class SkinBadgeGroups {
                     .filter(badge -> groupMatch || SkinBadges.matches(badge,
                             badgeTranslations.getOrDefault(badge.getId(), List.of()), search))
                     .count();
-            if (search.isEmpty() || groupMatch || count > 0)
+            if (search.isEmpty() || groupMatch || count > 0) {
                 matching.add(view(group, texts, locale, count, groupMatch));
+            }
         }
         long unassigned = allBadges.stream().filter(badge -> badge.getGroupId() == null)
                 .filter(badge -> SkinBadges.matches(badge,
                         badgeTranslations.getOrDefault(badge.getId(), List.of()), search))
                 .count();
-        if (search.isEmpty() || unassigned > 0)
+        if (search.isEmpty() || unassigned > 0) {
             matching.add(new SkinBadgeGroupView(null, "__ungrouped", null, 0, List.of(), null, null, true,
                     unassigned, false));
-        int from = Math.min(page * size, matching.size());
-        return new PageSlice<>(matching.subList(from, Math.min(from + size, matching.size())), page, size,
-                matching.size());
+        }
+
+        // Paged in memory: the list adds a row for ungrouped badges and counts the matching badges of each group, and
+        // a catalog holds a few dozen groups.
+        return PageSlice.of(matching, page, size);
     }
 
     @Transactional
     @PreAuthorize("hasAuthority('hero:write')")
     public SkinBadgeGroupView create(SkinBadgeGroupCommands.Create input) {
         validate(input.translations());
+
         var group = new SkinBadgeGroup();
         group.setId(UUID.randomUUID());
         group.setCode(input.code());
-        group.setKind(input.kind());
+        group.setKind(SkinBadgeGroupKind.valueOf(input.kind()));
         group.setCreatedAt(clock.instant());
         group.setUpdatedAt(clock.instant());
         try {
@@ -98,35 +113,47 @@ public class SkinBadgeGroups {
         } catch (DataIntegrityViolationException failure) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_GROUP_CONFLICT, "The badge group code already exists.");
         }
+
         var translations = rows(group.getId(), input.translations());
         repository.replaceBadgeGroupTranslations(group.getId(), translations);
-        audit.record(AuditEntry.of(actors.require(), "SKIN_BADGE_GROUP_CREATED", "SKIN_BADGE_GROUP", group.getId()));
-        return view(group, translations, "vi-VN", 0, false);
+
+        audit.record(AuditEntry.of(actors.require(), "SKIN_BADGE_GROUP_CREATED", CatalogAggregates.SKIN_BADGE_GROUP,
+                group.getId()));
+
+        return view(group, translations, CatalogLocales.DEFAULT, 0, false);
     }
 
     @Transactional
     @PreAuthorize("hasAuthority('hero:write')")
     public SkinBadgeGroupView update(UUID id, SkinBadgeGroupCommands.Update input) {
         var group = groups.lock(id).orElseThrow(SkinBadgeGroups::missing);
-        if (group.getVersion() != input.expectedVersion())
+        if (group.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_GROUP_CONFLICT,
                     "The badge group changed. Reload before saving.");
+        }
         validate(input.translations());
-        group.setKind(input.kind());
+
+        group.setKind(SkinBadgeGroupKind.valueOf(input.kind()));
         group.setVersion(Math.addExact(group.getVersion(), 1));
         group.setUpdatedAt(clock.instant());
+
         var translations = rows(id, input.translations());
         repository.replaceBadgeGroupTranslations(id, translations);
+
         groups.flush();
-        audit.record(new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_UPDATED", "SKIN_BADGE_GROUP", id,
-                null, input.expectedVersion(), group.getVersion(), null, Map.of()));
+
+        audit.record(
+                new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_UPDATED", CatalogAggregates.SKIN_BADGE_GROUP, id,
+                        null, input.expectedVersion(), group.getVersion(), null, Map.of()));
         long count = badges.findAll().stream().filter(badge -> id.equals(badge.getGroupId())).count();
-        return view(group, translations, "vi-VN", count, false);
+
+        return view(group, translations, CatalogLocales.DEFAULT, count, false);
     }
 
     public void require(UUID id) {
-        if (id != null && !groups.existsById(id))
+        if (id != null && !groups.existsById(id)) {
             throw missing();
+        }
     }
 
     private static ApiException missing() {
@@ -141,8 +168,9 @@ public class SkinBadgeGroups {
         Set<String> locales = new HashSet<>();
         for (var text : translations) {
             HeroValidation.locale(text.locale());
-            if (!locales.add(text.locale()))
+            if (!locales.add(text.locale())) {
                 throw HeroValidation.invalid("Badge group translation locales must be unique.");
+            }
         }
     }
 
@@ -155,9 +183,7 @@ public class SkinBadgeGroups {
     private static SkinBadgeGroupView view(SkinBadgeGroup group, List<SkinBadgeGroupTranslation> translations,
             String locale, long count, boolean matchedByGroup) {
         var ordered = translations.stream().sorted(Comparator.comparing(SkinBadgeGroupTranslation::getLocale)).toList();
-        var selected = ordered.stream()
-                .min(Comparator.comparingInt(text -> HeroMediaQueries.localeRank(text.getLocale(), locale)))
-                .orElse(null);
+        var selected = CatalogLocales.pick(ordered, locale, SkinBadgeGroupTranslation::getLocale);
         return new SkinBadgeGroupView(group.getId(), group.getCode(), group.getKind(), group.getVersion(),
                 ordered.stream()
                         .map(text -> new SkinBadgeGroupView.Translation(text.getLocale(), text.getDisplayName()))

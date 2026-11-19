@@ -1,0 +1,54 @@
+/* Quests: the number, the task, then the reward at the row's end, ruled like the guide's other entries. */
+.wiki-guide-quest {
+  --entry-pad: 12px;
+  min-width: 0;
+  padding-block: var(--entry-pad, 14px);
+  border-top: 1px solid var(--aov-line);
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+/* Number and reward take the task's line height, so all three read on one line. */
+.wiki-guide-quest > b {
+  font: var(--wiki-type-meta);
+  line-height: 1.5rem;
+  color: var(--aov-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-guide-quest p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text);
+}
+.wiki-guide-quest-reward {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  max-width: 220px;
+  min-height: 1.5rem;
+  color: var(--aov-accent-strong);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-guide-quest-reward > svg {
+  align-self: center;
+}
+.wiki-guide-quest-reward[data-missing] {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-quest {
+    grid-template-columns: 24px minmax(0, 1fr);
+    row-gap: 4px;
+  }
+  .wiki-guide-quest-reward {
+    grid-column: 2;
+    justify-content: flex-start;
+    max-width: none;
+    text-align: left;
+  }
+}

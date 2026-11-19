@@ -1,6 +1,8 @@
 package com.wikiaov.platform.internal.cache;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -19,7 +21,8 @@ public record ReadModelCacheProperties(
     public ReadModelCacheProperties {
         if (publicTtl == null || publicTtl.isNegative() || publicTtl.isZero()
                 || adminTtl == null || adminTtl.isNegative() || adminTtl.isZero()
-                || retryDelay == null || retryDelay.isNegative() || retryDelay.isZero())
+                || retryDelay == null || retryDelay.isNegative() || retryDelay.isZero()) {
             throw new IllegalArgumentException("Cache durations must be positive.");
+        }
     }
 }

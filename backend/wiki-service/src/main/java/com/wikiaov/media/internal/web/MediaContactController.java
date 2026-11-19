@@ -24,6 +24,7 @@ class MediaContactController implements MediaContactApi {
         this.throttle = throttle;
     }
 
+    @Override
     @PostMapping(version = "1")
     public ResponseEntity<Receipt> submit(HttpServletRequest http, @RequestBody ContactRequest request) {
         QueryParameters.requireOnly(http, Set.of());

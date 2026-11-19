@@ -20,10 +20,12 @@ public enum AuthErrorCode implements ApiErrorCode {
         this.title = title;
     }
 
+    @Override
     public HttpStatus status() {
         return status;
     }
 
+    @Override
     public String title() {
         return title;
     }

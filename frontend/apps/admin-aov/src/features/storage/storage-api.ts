@@ -16,6 +16,10 @@ async function request<T>(path: string, method = "GET", value?: unknown): Promis
   return result as T
 }
 
+export const storageKeys = {
+  tables: ["storage"] as const,
+  table: (id: string | null) => ["storage", id] as const,
+}
 export const storageApi = {
   list: () => request<TableSummary[]>("/"),
   get: (id: string) => request<StorageTable>(`/${id}`),

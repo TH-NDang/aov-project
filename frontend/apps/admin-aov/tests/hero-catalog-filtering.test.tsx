@@ -1,16 +1,15 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { catalogOverview, createHeroCatalogFixture } from "./fixtures/hero-catalog-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
-import type { CatalogFilter } from "../src/features/publishing/catalog-context"
+import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
+import { type CatalogFilter } from "@/lib/catalog-scope"
 
 test("catalog transport encodes search and keeps every server filter in its cache identity", async () => {
-  const { createPublishingApi, heroCatalogKey } = await import("../src/features/publishing/publishing-api")
+  const { createPublishingApi, publishingKeys } = await import("@/lib/api/publishing-api")
   let requested = ""
   const api = createPublishingApi(async <T,>(path: string) => {
     requested = path
@@ -31,7 +30,7 @@ test("catalog transport encodes search and keeps every server filter in its cach
   const params = new URL(requested, "http://localhost").searchParams
   assert.equal(params.get("page"), "2")
   for (const [key, value] of Object.entries(query)) assert.equal(params.get(key), value)
-  const original = heroCatalogKey(query)
+  const original = publishingKeys.heroCatalog(query)
   for (const variant of [
     { ...query, q: "Airi" },
     { ...query, seasonId: "season-old" },
@@ -43,48 +42,36 @@ test("catalog transport encodes search and keeps every server filter in its cach
     { ...query, position: "mid" },
     { ...query, hasWarnings: "" },
   ])
-    assert.notDeepEqual(heroCatalogKey(variant), original)
+    assert.notDeepEqual(publishingKeys.heroCatalog(variant), original)
   assert.deepEqual(
-    heroCatalogKey({}),
-    heroCatalogKey({ q: "", seasonId: "", patchVariantId: "", rulesetId: "", locale: "vi-VN", sort: "code" }),
+    publishingKeys.heroCatalog({}),
+    publishingKeys.heroCatalog({
+      q: "",
+      seasonId: "",
+      patchVariantId: "",
+      rulesetId: "",
+      locale: "vi-VN",
+      sort: "code",
+    }),
   )
 })
 
 test("hero catalog uses server changes-only filters, global search, edited sorting and isolated query caches", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
+  const dom = createWindow("http://localhost/publishing")
   const fixture = createHeroCatalogFixture()
   const intersections = intersectionHarness()
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const original = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    DocumentFragment: dom.window.DocumentFragment,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle,
+  const restoreGlobals = installWindow(dom.window, {
     fetch: fixture.fetcher,
-    BroadcastChannel: undefined,
     IntersectionObserver: intersections.Observer,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    original.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { HeroCatalog } = await import("../src/features/publishing/hero-catalog")
-  const { CatalogViewMode } = await import("../src/features/publishing/catalog-view-mode")
-  const { heroCatalogKey } = await import("../src/features/publishing/publishing-api")
+  const { HeroCatalog } = await import("../src/features/publishing/components/catalog/hero-catalog")
+  const { CatalogViewMode } = await import("../src/features/publishing/components/catalog/catalog-view-mode")
+  const { publishingKeys } = await import("@/lib/api/publishing-api")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: Infinity } },
@@ -104,13 +91,7 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
         </MemoryRouter>,
       )
     })
-  const waitFor = async (condition: () => boolean, message: string) => {
-    for (let attempt = 0; attempt < 400 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
-      })
-    assert.ok(condition(), message)
-  }
+
   const codes = () =>
     [...document.querySelectorAll<HTMLButtonElement>('tbody button[aria-label^="Xem tướng "]')].map((button) =>
       button.getAttribute("aria-label")!.replace("Xem tướng ", ""),
@@ -254,10 +235,8 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
       () => search().value === "Voyage" && codes().length === 1 && codes()[0] === "zz-search-target",
       "Returning to a cached search restores its own rows",
     )
-    await act(async () => {
-      releaseSlow!()
-      await new Promise((resolve) => setTimeout(resolve, 30))
-    })
+    await act(async () => releaseSlow!())
+    await flush()
     releaseSlow = undefined
     assert.deepEqual(
       codes(),
@@ -326,7 +305,7 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
       { locale: "en-US", rulesetId: "alternate", sort: "edited-desc" as const },
     ])
       assert.ok(
-        cache.getQueryData(heroCatalogKey(query)),
+        cache.getQueryData(publishingKeys.heroCatalog(query)),
         `Expected independent cache entry for ${JSON.stringify(query)}`,
       )
     await act(async () =>
@@ -364,9 +343,6 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
     cache.clear()
     await logout()
     dom.window.close()
-    for (const [key, descriptor] of original) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

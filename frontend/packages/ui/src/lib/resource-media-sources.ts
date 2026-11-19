@@ -95,16 +95,26 @@ export function buildResourceMediaSources(documents: Record<string, unknown>): R
   return output
 }
 
-export function findResourceMediaSource(index: ResourceMediaSource[], path: string, digest?: string): MediaSourceInput {
+/**
+ * The source recorded for an imported file, by path or by digest. A file named by an HTTP(S) address records that
+ * host as its source; any other file without a manifest entry has no known source and gets none, so the image is shown
+ * as having no source (or, for a later version, the server records an unverified placeholder).
+ */
+export function findResourceMediaSource(
+  index: ResourceMediaSource[],
+  path: string,
+  digest?: string,
+): MediaSourceInput | undefined {
   const normalized = path.replace(/^\/__resources\//, "")
   const direct = index.find((row) => row.path === normalized && (!digest || !row.sha256 || row.sha256 === digest))
   const match = direct ?? (digest ? index.find((row) => row.sha256 === digest) : undefined)
   if (match) return { ...match.source, note: `${normalized}\n${match.source.note ?? ""}`.slice(0, 2000) }
   const url = http(path)
+  if (!url) return undefined
   return {
     type: "OTHER",
-    label: url ? new URL(url).hostname : "Chưa xác minh nguồn",
-    url: url ?? null,
+    label: new URL(url).hostname,
+    url,
     ownerName: null,
     contactUrl: null,
     note: normalized.slice(0, 2000),

@@ -1,13 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import {
-  currentCatalogScope,
-  resolveCatalogScope,
-  showAllCatalogEntries,
-} from "../src/features/publishing/catalog-scope"
-import { heroCatalogRows } from "../src/features/publishing/catalog-data"
+import { currentCatalogScope, resolveCatalogScope, showAllCatalogEntries } from "@/lib/catalog-scope"
+import { heroCatalogRows } from "../src/features/publishing/model/catalog/catalog-data"
 import { catalogOverview, createHeroCatalogFixture } from "./fixtures/hero-catalog-data"
-import type { PublicationOverview } from "../src/features/publishing/publication-overview"
+import type { PublicationOverview } from "../src/features/publishing/api/publication-overview"
 
 const overview: PublicationOverview = {
   ...catalogOverview,

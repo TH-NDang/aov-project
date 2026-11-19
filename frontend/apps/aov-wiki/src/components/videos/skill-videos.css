@@ -1,0 +1,93 @@
+/* Videos of the ability being read, inside its panel: a row of small pressable entries, no frames of their own. */
+.wiki-skill-videos {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  margin-block: 12px;
+}
+.wiki-skill-video-stage {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+.wiki-skill-video-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.wiki-skill-video-bar strong {
+  font: var(--wiki-type-meta);
+  flex: 1 1 200px;
+  min-width: 0;
+  color: var(--aov-text);
+  font-weight: 600;
+}
+.wiki-skill-video-bar button {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  color: var(--aov-muted);
+}
+.wiki-skill-video-bar button:is(:hover, :focus-visible) {
+  color: var(--aov-accent);
+}
+.wiki-skill-video-list {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 2px;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: thin;
+}
+.wiki-skill-video-list li {
+  flex: 0 0 min(280px, 85%);
+  min-width: 0;
+}
+.wiki-skill-video-list li > :is(button, a) {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-control);
+  padding: 4px;
+  background: var(--aov-raised);
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+.wiki-skill-video-list li > :is(button, a):hover {
+  border-color: var(--aov-line-strong);
+}
+.wiki-skill-video-list li > button[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 12%, var(--aov-raised));
+}
+.wiki-skill-videos :is(button, a):focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+.wiki-skill-video-text {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.wiki-skill-video-none {
+  font: var(--wiki-type-meta);
+  margin-block: 12px;
+  color: var(--aov-muted);
+}
+.wiki-skill-options button > svg.wiki-skill-has-video {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 12px;
+  height: 12px;
+  color: var(--aov-accent);
+}

@@ -1,14 +1,31 @@
 package com.wikiaov.hero.internal.web;
 
+import com.wikiaov.hero.HeroChangeEntry;
+import com.wikiaov.hero.internal.application.response.HeroAssessmentView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
 import com.wikiaov.hero.internal.change.application.HeroPatchDerivation;
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
-import com.wikiaov.platform.*;
+import com.wikiaov.hero.internal.domain.HeroChanges;
+import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.CreatedId;
+import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class HeroChangesController implements HeroChangesApi {
@@ -20,32 +37,37 @@ public class HeroChangesController implements HeroChangesApi {
         this.derivation = derivation;
     }
 
+    @Override
     @PostMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> record(@PathVariable UUID id,
-            @RequestBody com.wikiaov.hero.internal.domain.HeroChanges.Record body) {
-        return Map.of("id", changes.record(id, body));
+    public CreatedId record(@PathVariable UUID id,
+            @RequestBody HeroChanges.Record body) {
+        return new CreatedId(changes.record(id, body));
     }
 
+    @Override
     @PutMapping(path = ApiPaths.ADMIN + "/hero-changes/{id}/assessment", version = "1")
-    public Map<String, Object> assess(@PathVariable UUID id, @RequestBody HeroPatchChanges.AssessmentInput input) {
+    public HeroAssessmentView assess(@PathVariable UUID id, @RequestBody HeroPatchChanges.AssessmentInput input) {
         return changes.assess(id, input);
     }
 
+    @Override
     @PostMapping(path = ApiPaths.ADMIN + "/hero-changes/{changeSetId}/mechanics/{changeId}/previous", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, UUID> recordPrevious(@PathVariable UUID changeSetId, @PathVariable UUID changeId,
+    public CreatedId recordPrevious(@PathVariable UUID changeSetId, @PathVariable UUID changeId,
             @RequestBody HeroPatchChanges.PreviousInput input) {
-        return Map.of("id", changes.recordPrevious(changeSetId, changeId, input));
+        return new CreatedId(changes.recordPrevious(changeSetId, changeId, input));
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
-    public List<Map<String, Object>> authoringChanges(@PathVariable UUID id,
-            @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
+    public List<HeroChangeEntry> authoringChanges(@PathVariable UUID id,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return changes.forAuthoringVariant(id, locale);
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ADMIN + "/heroes/{heroId}/patch-view", version = "1")
     public HeroPatchView patchView(@PathVariable UUID heroId, @RequestParam UUID patchVariantId,
             @RequestParam(required = false) UUID anchorRevisionId, HttpServletRequest request) {
@@ -53,9 +75,12 @@ public class HeroChangesController implements HeroChangesApi {
         return derivation.at(heroId, patchVariantId, anchorRevisionId);
     }
 
+    @Override
     @GetMapping(path = ApiPaths.ROOT + "/heroes/{heroId}/changes", version = "1")
-    public ResponseEntity<?> history(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<PageSlice<HeroChangeEntry>> history(@PathVariable UUID heroId,
+            @RequestParam(defaultValue = "VN") String region,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size"));

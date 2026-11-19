@@ -1,7 +1,8 @@
 package com.wikiaov.hero.internal.profile.persistence;
 
 import com.wikiaov.access.Actor;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfilePositionRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRevision;
@@ -10,8 +11,15 @@ import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRo
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
+import com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -33,7 +41,7 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
     }
 
     @Override
-    public com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository<?> revisions() {
+    public SectionRevisionRepository<?> revisions() {
         return revisions;
     }
 
@@ -47,12 +55,13 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
                             t.summary(), t.lore(), t.strengths(), t.weaknesses(), t.counterTips()))
                     .toList());
             roles.saveAll(
-                    value.roles().stream().map(role -> new ProfileRoleRow(revision.getId(), role.name())).toList());
+                    value.roles().stream().map(role -> new ProfileRoleRow(revision.getId(), role)).toList());
             positions.saveAll(value.positions().stream()
-                    .map(position -> new ProfilePositionRow(revision.getId(), position.name())).toList());
+                    .map(position -> new ProfilePositionRow(revision.getId(), position)).toList());
             sources.save(section(), revision.getId(), value.sources());
         }
         revisions.flush();
+
         return revision.getId();
     }
 
@@ -72,18 +81,19 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
         // An enum's hash changes between JVM runs, so only keeping the query's order gives clients a stable answer.
         var selectedRoles = roles.findByProfileRevisionIdIn(ids, Sort.by("roleCode")).stream()
                 .collect(Collectors.groupingBy(ProfileRoleRow::getProfileRevisionId,
-                        Collectors.mapping(row -> Role.valueOf(row.getRoleCode()),
+                        Collectors.mapping(ProfileRoleRow::getRoleCode,
                                 Collectors.toCollection(LinkedHashSet::new))));
         var selectedPositions = positions.findByProfileRevisionIdIn(ids, Sort.by("positionCode")).stream()
                 .collect(Collectors.groupingBy(ProfilePositionRow::getProfileRevisionId,
-                        Collectors.mapping(row -> Position.valueOf(row.getPositionCode()),
+                        Collectors.mapping(ProfilePositionRow::getPositionCode,
                                 Collectors.toCollection(LinkedHashSet::new))));
 
         Map<UUID, Profile> result = new HashMap<>();
-        for (UUID id : ids)
+        for (UUID id : ids) {
             result.put(id, new Profile(texts.getOrDefault(id, List.of()),
                     selectedRoles.getOrDefault(id, new LinkedHashSet<>()),
                     selectedPositions.getOrDefault(id, new LinkedHashSet<>()), references.getOrDefault(id, List.of())));
+        }
         return result;
     }
 

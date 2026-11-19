@@ -3,21 +3,20 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-qu
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
 import { useNavigate, useSearchParams } from "react-router"
-import type { DocumentView, TournamentContent } from "@aov/community-contracts"
-import { Plus, Upload } from "lucide-react"
+import type { DocumentView, TournamentContent, TournamentStats as ContractStats } from "@aov/community-contracts"
+import { Plus, Trash2, Upload } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
-import { FilterTab, FilterTabs } from "@/components/filter-tabs"
+import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
-import { RegistryEditor } from "@/features/tournaments/registry-editor"
-import { RegistryImportSheet } from "@/features/tournaments/registry-import"
-import { useRecords, useTournamentStats } from "../data/use-esports-data"
-import type { TournamentStats } from "../components/tournament-cards"
-import { TournamentList } from "@/features/tournaments/tournament-list"
-import { regionsNamedBy } from "@/features/tournaments/record-reason"
-import { partsByMainEvent } from "@/features/tournaments/tournament-parts"
-import { tournamentApi, tournamentKeys, type TournamentSort } from "@/features/tournaments/tournament-api"
+import { RegistryEditor } from "@/features/tournaments/components/registry-editor"
+import { RegistryImportSheet } from "@/features/tournaments/components/registry-import"
+import { useTournamentStats } from "../data/use-esports-data"
+import { TournamentList } from "@/features/tournaments/components/tournament-list"
+import { regionsNamedBy } from "@/features/tournaments/model/record-reason"
+import { partsByMainEvent } from "@/features/tournaments/model/tournament-parts"
+import { tournamentApi, tournamentKeys, type TournamentSort } from "@/features/tournaments/api/tournament-api"
 import { useDebounced } from "@/features/community/directory/directory-api"
 import {
   ManagementEmpty,
@@ -25,12 +24,14 @@ import {
   ManagementLoading,
   ManagementPanel,
   ManagementToolbar,
-  managementSelectClassName,
-} from "@/features/tournaments/management-list"
+} from "@/features/tournaments/components/management-list"
 import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { AccessGate, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
+import { NativeSelect } from "@/components/native-select"
 
 type StatusFilter = "all" | NonNullable<TournamentContent["status"]>
+type TournamentStats = Omit<ContractStats, "tournamentId">
+
 const STATUS_FILTERS: StatusFilter[] = ["all", "ONGOING", "UPCOMING", "FINISHED", "ANNOUNCED", "UNKNOWN"]
 const SORTS: Record<TournamentSort, string> = {
   RECENT: "Gần đây trước",
@@ -55,7 +56,7 @@ function Hub({ access }: { access: Access }) {
   const year = params.get("year") ?? ""
   const settled = useDebounced(search)
   const tournaments = useInfiniteQuery({
-    queryKey: [...tournamentKeys.all, "hub", access.actorKey, settled, status, tier, region, year, order],
+    queryKey: tournamentKeys.hub(access.actorKey, settled, { status, tier, region, year }, order),
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       tournamentApi.searchTournaments(
@@ -78,21 +79,19 @@ function Hub({ access }: { access: Access }) {
     placeholderData: keepPreviousData,
   })
   const facets = useQuery({
-    queryKey: [...tournamentKeys.all, "hub-facets", access.actorKey],
+    queryKey: tournamentKeys.hubFacets(access.actorKey),
     queryFn: ({ signal }) => tournamentApi.tournamentFacets(signal, "MAIN"),
     staleTime: 30_000,
   })
   const parts = useQuery({
-    queryKey: [...tournamentKeys.all, "parts", access.actorKey, "every"],
+    queryKey: tournamentKeys.parts(access.actorKey, "every"),
     queryFn: ({ signal }) => tournamentApi.tournamentParts(undefined, signal),
     staleTime: 30_000,
   })
   const partsByEvent = useMemo(() => partsByMainEvent(parts.data ?? []), [parts.data])
   const counters = useTournamentStats()
-  // Only the create form needs the team list; it is too long to load for every visit to this page.
-  const teams = useRecords("teams", creating)
   const plans = useQuery({
-    queryKey: [...competitionKeys, access.actorKey, "summaries"],
+    queryKey: competitionKeys.summaries(access.actorKey),
     queryFn: competitionApi.summaries,
   })
 
@@ -138,19 +137,25 @@ function Hub({ access }: { access: Access }) {
       <PageHeader
         title="Giải đấu"
         actions={
-          access.canWrite && (
-            <>
+          <>
+            {access.canWrite && (
               <Button onClick={() => setCreating(true)}>
                 <Plus aria-hidden="true" /> Tạo giải đấu
               </Button>
-              <PageActionsMenu label="Giải đấu: nhập dữ liệu">
+            )}
+            <PageActionsMenu label="Giải đấu: nhập dữ liệu và thùng rác">
+              {access.canWrite && (
                 <DropdownMenuItem onSelect={() => setImporting(true)}>
                   <Upload />
                   Nhập dữ liệu
                 </DropdownMenuItem>
-              </PageActionsMenu>
-            </>
-          )
+              )}
+              <DropdownMenuItem onSelect={() => navigate("/tournaments/trash")}>
+                <Trash2 />
+                Thùng rác
+              </DropdownMenuItem>
+            </PageActionsMenu>
+          </>
         }
       />
 
@@ -180,11 +185,11 @@ function Hub({ access }: { access: Access }) {
             placeholder="Tên giải đấu, mã hoặc khu vực…"
             onReset={filtered ? resetFilters : undefined}
           >
-            <select
+            <NativeSelect
               aria-label="Hạng giải"
               value={tier}
               onChange={(event) => setFilter("tier", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Tất cả hạng giải</option>
               {Object.entries(TIER_LABELS).map(([value, label]) => (
@@ -192,12 +197,12 @@ function Hub({ access }: { access: Access }) {
                   {label}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Khu vực giải đấu"
               value={region}
               onChange={(event) => setFilter("region", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Mọi khu vực</option>
               {regions.map((value) => (
@@ -205,12 +210,12 @@ function Hub({ access }: { access: Access }) {
                   {regionName(value)}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Năm giải đấu"
               value={year}
               onChange={(event) => setFilter("year", event.target.value)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               <option value="">Mọi năm</option>
               {years.map((value) => (
@@ -218,19 +223,19 @@ function Hub({ access }: { access: Access }) {
                   {value}
                 </option>
               ))}
-            </select>
-            <select
+            </NativeSelect>
+            <NativeSelect
               aria-label="Sắp xếp giải đấu"
               value={order}
               onChange={(event) => setOrder(event.target.value as TournamentSort)}
-              className={managementSelectClassName}
+              className="max-w-full"
             >
               {Object.entries(SORTS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </ManagementToolbar>
           {visible.length ? (
             <TournamentList
@@ -262,9 +267,7 @@ function Hub({ access }: { access: Access }) {
         </ManagementPanel>
       )}
 
-      {creating && (
-        <RegistryEditor kind="tournaments" open onClose={() => setCreating(false)} teams={teams.data ?? []} />
-      )}
+      {creating && <RegistryEditor kind="tournaments" open onClose={() => setCreating(false)} />}
       {importing && <RegistryImportSheet key={access.actorKey} onClose={() => setImporting(false)} />}
     </EsportsPage>
   )

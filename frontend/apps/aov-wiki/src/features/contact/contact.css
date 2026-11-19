@@ -77,14 +77,13 @@
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
 }
+/* The receipt's number keeps a little more room before the button that starts another request. */
 .wiki-contact-receipt .wiki-contact-receipt-id {
   font: var(--wiki-type-meta);
+  margin-bottom: 8px;
   color: var(--aov-muted);
   overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
-}
-.wiki-contact-receipt .wiki-button {
-  margin-top: 8px;
 }
 
 @media (max-width: 899.98px) {

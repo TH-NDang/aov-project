@@ -17,8 +17,7 @@ import java.util.UUID;
 public interface SkinImagePublicationApi {
     @Operation(operationId = "skinImagePublicationApi_publish", summary = "Publish skin images without publishing draft content", description = "Requires catalog:read, hero:write and hero:publish. Copies only artwork bindings and image options from the specified draft to the current published hero. Retains every non-image field and existing draft. The supplied published source and draft version must still match.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "200", description = "The new visual-only published revision, or the current source when its images already match.", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "409", description = "The published source or image draft version changed.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
-            @ApiResponse(responseCode = "default", description = "RFC 9457 Problem Details.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+            @ApiResponse(responseCode = "409", description = "The published source or image draft version changed.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
     })
     HeroRevisionView publish(UUID heroId, @Valid SkinImagePublicationRequest body,
             @Parameter(hidden = true) HttpServletRequest request);

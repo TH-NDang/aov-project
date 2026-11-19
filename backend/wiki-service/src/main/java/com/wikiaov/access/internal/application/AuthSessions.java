@@ -44,8 +44,9 @@ public class AuthSessions {
             boolean allowed = jwt.getSubject() != null && !jwt.getSubject().isBlank()
                     && resources != null && resources.get(resourceClientId) instanceof Map<?, ?> client
                     && client.get("roles") instanceof Collection<?> roles && roles.contains(Capabilities.CATALOG_READ);
-            if (allowed)
+            if (allowed) {
                 return tokens;
+            }
             identity.revoke(tokens.refreshToken());
             throw new ApiException(PlatformErrorCode.FORBIDDEN, "The account cannot access the admin application.");
         } catch (JwtException exception) {

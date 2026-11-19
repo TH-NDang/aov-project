@@ -1,8 +1,10 @@
 package com.wikiaov.arcana.internal.domain;
 
 import com.wikiaov.platform.CatalogText;
-import com.wikiaov.platform.CatalogText.*;
-import java.util.*;
+import com.wikiaov.platform.CatalogText.Stat;
+import com.wikiaov.platform.CatalogText.Translation;
+import java.util.List;
+import java.util.UUID;
 
 public record ArcanaContent(
         UUID iconAssetId,
@@ -24,7 +26,7 @@ public record ArcanaContent(
 
     public ArcanaContent publicCopy(String locale) {
         return new ArcanaContent(iconAssetId, color, tier, stats,
-                com.wikiaov.platform.CatalogText.select(translations, locale), null);
+                CatalogText.select(translations, locale), null);
     }
 
     public ArcanaContent withTranslations(List<Translation> copy) {

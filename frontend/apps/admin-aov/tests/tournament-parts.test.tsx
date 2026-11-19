@@ -1,16 +1,20 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import React, { act } from "react"
-import { JSDOM } from "jsdom"
+import { act } from "react"
 import type { DocumentView, TournamentContent, TournamentPart } from "@aov/community-contracts"
+import { inDom, renderer, withGlobals } from "./fixtures/dom"
 
-const channel = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-const { partLabel, partPhase, partsByMainEvent, partsOnLine } =
-  await import("../src/features/tournaments/tournament-parts")
-const { initialRegistryValues, registryContent } = await import("../src/features/tournaments/registry-form-model")
-const { createTournamentApi } = await import("../src/features/tournaments/tournament-api")
-if (channel) Object.defineProperty(globalThis, "BroadcastChannel", channel)
+const [
+  { partLabel, partPhase, partsByMainEvent, partsOnLine },
+  { initialRegistryValues, registryContent },
+  { createTournamentApi },
+] = await withGlobals({ BroadcastChannel: undefined }, () =>
+  Promise.all([
+    import("../src/features/tournaments/model/tournament-parts"),
+    import("../src/features/tournaments/model/registry-form-model"),
+    import("../src/features/tournaments/api/tournament-api"),
+  ]),
+)
 
 const NOW = new Date("2026-11-13T05:00:00Z")
 const ZONE = "Asia/Ho_Chi_Minh"
@@ -153,45 +157,11 @@ test("lists ask for main events and the parts of an event are read on their own"
   assert.equal(new URL(seen[6], "http://localhost").searchParams.get("level"), "MAIN", "the main event picker")
 })
 
-async function withDom(run: (document: Document) => Promise<void>) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost:5175/tournaments", pretendToBeVisual: true })
-  const values = {
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    Event: dom.window.Event,
-    MouseEvent: dom.window.MouseEvent,
-    getComputedStyle: dom.window.getComputedStyle,
-    requestAnimationFrame: dom.window.requestAnimationFrame,
-    cancelAnimationFrame: dom.window.cancelAnimationFrame,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  try {
-    await run(dom.window.document)
-  } finally {
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
-    dom.window.close()
-  }
-}
-
 test("a main event names its parts under its row and each part opens on its own", async () => {
-  await withDom(async (document) => {
-    const { TournamentList } = await import("../src/features/tournaments/tournament-list")
+  await inDom({ url: "http://localhost:5175/tournaments" }, async ({ document }) => {
+    const { TournamentList } = await import("../src/features/tournaments/components/tournament-list")
     const { MemoryRouter } = await import("react-router")
-    const { createRoot } = await import("react-dom/client")
-    const root = createRoot(document.getElementById("root")!)
+    const draw = renderer()
     const row = (id: string, name: string): DocumentView<TournamentContent> => ({
       id,
       version: 0,
@@ -204,46 +174,40 @@ test("a main event names its parts under its row and each part opens on its own"
     const parts = new Map([["cup", names.map((name, index) => part(`part-${index}`, `Premier League 2026 - ${name}`))]])
     let opened = ""
     const render = (search: string) =>
-      act(async () =>
-        root.render(
-          <MemoryRouter>
-            <TournamentList
-              entries={[row("cup", "Premier League 2026"), row("solo", "Solo Cup 2026")]}
-              stats={new Map()}
-              parts={parts}
-              search={search}
-              partHref={(id) => `/tournaments/${id}`}
-              onOpen={(entry) => {
-                opened = entry.id
-              }}
-            />
-          </MemoryRouter>,
-        ),
+      draw(
+        <MemoryRouter>
+          <TournamentList
+            entries={[row("cup", "Premier League 2026"), row("solo", "Solo Cup 2026")]}
+            stats={new Map()}
+            parts={parts}
+            search={search}
+            partHref={(id) => `/tournaments/${id}`}
+            onOpen={(entry) => {
+              opened = entry.id
+            }}
+          />
+        </MemoryRouter>,
       )
-    try {
-      await render("")
-      const rows = [...document.querySelectorAll("tbody tr")]
-      assert.equal(rows.length, 2, "parts are not rows of their own")
-      assert.match(rows[0].textContent ?? "", /5 phần/)
-      assert.doesNotMatch(rows[1].textContent ?? "", /phần/, "an event without parts has no parts line")
+    await render("")
+    const rows = [...document.querySelectorAll("tbody tr")]
+    assert.equal(rows.length, 2, "parts are not rows of their own")
+    assert.match(rows[0].textContent ?? "", /5 phần/)
+    assert.doesNotMatch(rows[1].textContent ?? "", /phần/, "an event without parts has no parts line")
 
-      const links = [...rows[0].querySelectorAll<HTMLAnchorElement>("a")]
-      assert.deepEqual(
-        links.map((link) => link.textContent),
-        ["Wildcard", "Queens Showdown", "1v1 Tournament", "Open Qualifier"],
-      )
-      assert.equal(links[0].getAttribute("href"), "/tournaments/part-0")
-      assert.match(links[0].title, /^Premier League 2026 - Wildcard · /, "the full name stays one hover away")
+    const links = [...rows[0].querySelectorAll<HTMLAnchorElement>("a")]
+    assert.deepEqual(
+      links.map((link) => link.textContent),
+      ["Wildcard", "Queens Showdown", "1v1 Tournament", "Open Qualifier"],
+    )
+    assert.equal(links[0].getAttribute("href"), "/tournaments/part-0")
+    assert.match(links[0].title, /^Premier League 2026 - Wildcard · /, "the full name stays one hover away")
 
-      const more = [...rows[0].querySelectorAll("button")].find((button) => /phần khác/.test(button.textContent ?? ""))!
-      assert.equal(more.textContent, "+1 phần khác")
-      await act(async () => more.click())
-      assert.equal(opened, "cup", "the rest wait inside the main event")
+    const more = [...rows[0].querySelectorAll("button")].find((button) => /phần khác/.test(button.textContent ?? ""))!
+    assert.equal(more.textContent, "+1 phần khác")
+    await act(async () => more.click())
+    assert.equal(opened, "cup", "the rest wait inside the main event")
 
-      await render("closed")
-      assert.equal(document.querySelector("tbody tr a")?.textContent, "Closed Qualifier", "what was searched for leads")
-    } finally {
-      await act(async () => root.unmount())
-    }
+    await render("closed")
+    assert.equal(document.querySelector("tbody tr a")?.textContent, "Closed Qualifier", "what was searched for leads")
   })
 })

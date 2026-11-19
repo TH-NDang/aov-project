@@ -17,6 +17,7 @@ import { z } from "zod"
 import { useSession } from "@/app/auth/auth-gate"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatus } from "@/app/drafts/draft-status"
+import { mediaKeys } from "@/features/media/api/media-cache"
 
 const profileDraftSchema = z.object({
   displayName: z.string(),
@@ -71,7 +72,7 @@ export function ProfileForm({
   const [avatarPreview, setAvatarPreview] = useState<{ assetId: string; url: string } | null>(null)
   const canReadMedia = useSession().actor?.capabilities.includes("catalog:read")
   const avatar = useQuery({
-    queryKey: ["profile-draft-avatar", draft.avatarAssetId],
+    queryKey: mediaKeys.assetView(draft.avatarAssetId, "avatar"),
     enabled: !!draft.avatarAssetId && draft.avatarAssetId !== server.avatarAssetId && canReadMedia,
     queryFn: async () => {
       const asset = await backendRequest<{
@@ -149,11 +150,11 @@ export function ProfileForm({
     <form onSubmit={save} className={fullWidth ? "w-full" : "overflow-hidden admin-section"}>
       <div
         aria-hidden="true"
-        className="relative h-32 overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-800 sm:h-44"
+        className="relative h-32 overflow-hidden bg-gradient-to-br from-(--aov-stream-night) via-(--aov-stream-indigo) to-(--aov-stream-dusk) sm:h-44"
       >
-        <div className="absolute -right-12 -top-24 size-80 rounded-full border border-white/10 bg-indigo-400/10" />
+        <div className="absolute -right-12 -top-24 size-80 rounded-full border border-white/10 bg-(--aov-stream-feather-light)/10" />
         <div className="absolute right-20 top-8 size-64 rotate-45 rounded-3xl border border-white/10" />
-        <div className="absolute -bottom-32 left-1/4 size-60 rounded-full bg-violet-400/10 blur-3xl" />
+        <div className="absolute -bottom-32 left-1/4 size-60 rounded-full bg-(--aov-stream-feather)/10 blur-3xl" />
       </div>
       <div className={`relative space-y-7 px-5 pb-6 sm:px-8 sm:pb-8 ${fullWidth ? "mx-auto w-full max-w-3xl" : ""}`}>
         <div className="-mt-12 flex flex-wrap items-end gap-x-5 gap-y-4 sm:-mt-14">

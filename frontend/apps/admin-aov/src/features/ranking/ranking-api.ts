@@ -1,6 +1,6 @@
 import { backendRequest } from "@/app/auth/session"
 import { fetchPublishedSets, isSourceAccessDenied } from "../files/capture-sets"
-import type { Request } from "../publishing/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 
 export type RankingBoard = "RATES" | "FIGURES"
 export type RankingRole = "TANK" | "WARRIOR" | "ASSASSIN" | "MAGE" | "MARKSMAN" | "SUPPORT"
@@ -90,7 +90,6 @@ export interface RankingPage {
   page: number
   size: number
   totalElements: number
-  totalPages: number
 }
 
 export interface ReviewValue {

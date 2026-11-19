@@ -2,6 +2,7 @@ package com.wikiaov.platform.internal.domain;
 
 import com.wikiaov.platform.CatalogSnapshots.Change;
 import com.wikiaov.platform.CatalogSnapshots.Snapshot;
+import com.wikiaov.platform.RevisionState;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,8 +14,6 @@ import java.util.stream.Collectors;
 
 /** Pure selection rules shared by the revision-based catalogs. No persistence or framework dependencies. */
 public final class CatalogSnapshotSelector {
-    private static final Set<String> GAMEPLAY_CAUSES = Set.of("DATA_BASELINE", "GAME_PATCH");
-
     private CatalogSnapshotSelector() {
     }
 
@@ -22,7 +21,7 @@ public final class CatalogSnapshotSelector {
             Set<UUID> explicitTargets) {
         Map<UUID, Set<UUID>> recordedPatches = new HashMap<>();
         for (var candidate : candidates) {
-            if (selectedPatches.contains(candidate.patchVariantId()) && GAMEPLAY_CAUSES.contains(candidate.cause())) {
+            if (selectedPatches.contains(candidate.patchVariantId()) && candidate.cause().gameplay()) {
                 recordedPatches.computeIfAbsent(candidate.ownerId(), ignored -> new HashSet<>())
                         .add(candidate.patchVariantId());
             }
@@ -43,7 +42,7 @@ public final class CatalogSnapshotSelector {
                         (first, second) -> ordinal.applyAsLong(first.patchVariantId()) >= ordinal
                                 .applyAsLong(second.patchVariantId()) ? first : second));
         return candidates.stream()
-                .filter(candidate -> candidate.state().equals("PUBLISHED")
+                .filter(candidate -> candidate.state() == RevisionState.PUBLISHED
                         && (candidate.patchVariantId() == null
                                 ? includeUnscoped && !selectedPatches.isEmpty()
                                 : applicablePatches.contains(candidate.patchVariantId())))

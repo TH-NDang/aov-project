@@ -16,7 +16,7 @@ public interface SeasonUpdatesRepository extends Repository<PatchRelease, UUID> 
             select s.id as id,s.code as code,s.displayName as displayName
             from PatchRelease rel join PatchVariant v on v.id=rel.patchVariantId
             join RankedSeason s on s.id=coalesce(rel.seasonId,v.seasonId)
-            where rel.regionId=:regionId and v.id=:variantId and rel.status='SCHEDULED'
+            where rel.regionId=:regionId and v.id=:variantId and rel.status=com.wikiaov.patch.internal.domain.PatchReleaseStatus.SCHEDULED
                 and rel.effectiveAt<=:at
             order by rel.effectiveAt desc,rel.id
             """)
@@ -29,8 +29,8 @@ public interface SeasonUpdatesRepository extends Repository<PatchRelease, UUID> 
             join GamePatch p on p.id=v.patchId
             where rel.regionId=:regionId and v.rulesetId=:rulesetId
                 and coalesce(rel.seasonId,v.seasonId)=:seasonId
-                and rel.status='SCHEDULED' and rel.effectiveAt<=:at
-                and v.status='PUBLISHED' and p.status='PUBLISHED'
+                and rel.status=com.wikiaov.patch.internal.domain.PatchReleaseStatus.SCHEDULED and rel.effectiveAt<=:at
+                and v.status=com.wikiaov.patch.internal.domain.PatchVariantStatus.PUBLISHED and p.status=com.wikiaov.patch.internal.domain.PatchStatus.PUBLISHED
             order by rel.effectiveAt desc,v.rulesetOrdinal desc,rel.id
             """)
     List<Release> publishedReleases(UUID regionId, UUID rulesetId, UUID seasonId, Instant at, Pageable page);
@@ -38,9 +38,8 @@ public interface SeasonUpdatesRepository extends Repository<PatchRelease, UUID> 
     @Query("""
             select t.patchId as patchId,t.locale as locale,t.title as title,t.summary as summary
             from GamePatchTranslation t where t.patchId in :patchIds
-            order by t.patchId,case when t.locale=:locale then 0 when t.locale='vi-VN' then 1 else 2 end,t.locale
             """)
-    List<Text> preferredTexts(Collection<UUID> patchIds, String locale);
+    List<Text> texts(Collection<UUID> patchIds);
 
     interface Season {
         UUID getId();

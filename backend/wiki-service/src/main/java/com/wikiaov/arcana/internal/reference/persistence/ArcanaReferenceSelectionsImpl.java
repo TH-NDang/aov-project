@@ -3,6 +3,7 @@ package com.wikiaov.arcana.internal.reference.persistence;
 import com.wikiaov.arcana.internal.catalog.persistence.entity.ArcanaIdentity;
 import com.wikiaov.arcana.internal.catalog.persistence.entity.ArcanaRevision;
 import com.wikiaov.arcana.internal.catalog.persistence.entity.ArcanaTranslation;
+import com.wikiaov.platform.RevisionState;
 import com.wikiaov.terminology.AdminReferenceProvider.Row;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -37,12 +38,13 @@ public class ArcanaReferenceSelectionsImpl implements ArcanaReferenceSelections 
         predicates.add(builder.equal(translation.get("revisionId"), revision.get("id")));
         predicates.add(builder.equal(revision.get("rulesetId"), rulesetId));
         predicates.add(published
-                ? builder.equal(revision.get("state"), "PUBLISHED")
-                : builder.notEqual(revision.get("state"), "DISCARDED"));
+                ? builder.equal(revision.get("state"), RevisionState.PUBLISHED)
+                : builder.notEqual(revision.get("state"), RevisionState.DISCARDED));
         if (published) {
             predicates.add(builder.le(rank, cutoff));
-            if (!allowUnscoped)
+            if (!allowUnscoped) {
                 predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
+            }
         }
 
         var newer = query.subquery(UUID.class);
@@ -58,12 +60,13 @@ public class ArcanaReferenceSelectionsImpl implements ArcanaReferenceSelections 
         newerPredicates.add(builder.equal(candidate.get("ownerId"), revision.get("ownerId")));
         newerPredicates.add(builder.equal(candidate.get("rulesetId"), revision.get("rulesetId")));
         newerPredicates.add(published
-                ? builder.equal(candidate.get("state"), "PUBLISHED")
-                : builder.notEqual(candidate.get("state"), "DISCARDED"));
+                ? builder.equal(candidate.get("state"), RevisionState.PUBLISHED)
+                : builder.notEqual(candidate.get("state"), RevisionState.DISCARDED));
         if (published) {
             newerPredicates.add(builder.le(newerRank, cutoff));
-            if (!allowUnscoped)
+            if (!allowUnscoped) {
                 newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
+            }
         }
         newerPredicates.add(builder.or(builder.gt(newerRank, rank),
                 builder.and(builder.equal(newerRank, rank), builder.gt(newerSequence, sequence))));
@@ -82,8 +85,9 @@ public class ArcanaReferenceSelectionsImpl implements ArcanaReferenceSelections 
     }
 
     private static Expression<Long> ordinal(CriteriaBuilder builder, Path<UUID> patch, Map<UUID, Long> ordinals) {
-        if (ordinals.isEmpty())
+        if (ordinals.isEmpty()) {
             return builder.literal(0L);
+        }
 
         var rank = builder.<UUID, Long>selectCase(patch);
         new TreeMap<>(ordinals).forEach(rank::when);

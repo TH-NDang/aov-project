@@ -1,12 +1,18 @@
 package com.wikiaov.spell.internal.reference.infrastructure;
 
-import com.wikiaov.media.*;
+import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.spell.internal.reference.persistence.SpellReferenceRepository;
 import com.wikiaov.terminology.AdminReferenceProvider;
 import com.wikiaov.terminology.PublicReferenceProvider;
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +33,12 @@ public class SpellPublicReferences implements PublicReferenceProvider, AdminRefe
         this.clock = clock;
     }
 
+    @Override
     public List<AdminReferenceProvider.Candidate> references(UUID rulesetId, Map<UUID, Long> patchOrdinals) {
         return AdminReferenceProvider.candidates(references.authoring(rulesetId, patchOrdinals), "spell", rulesetId);
     }
 
+    @Override
     public List<PublicReferenceProvider.Candidate> references(String region, String locale) {
         var at = clock.instant();
         var context = contexts.resolve(region, at);
@@ -39,6 +47,7 @@ public class SpellPublicReferences implements PublicReferenceProvider, AdminRefe
         return references(new PublicReferenceProvider.Scope(context, ordinals, at), locale);
     }
 
+    @Override
     public List<PublicReferenceProvider.Candidate> references(PublicReferenceProvider.Scope scope, String locale) {
         var rows = references.published(scope.gameplay(), scope.patchOrdinals(), scope.allowUnscoped());
         var grouped = rows.stream().collect(Collectors.groupingBy(AdminReferenceProvider.Row::id,
@@ -47,10 +56,7 @@ public class SpellPublicReferences implements PublicReferenceProvider, AdminRefe
                 .filter(Objects::nonNull).collect(Collectors.toSet()));
         var output = new ArrayList<PublicReferenceProvider.Candidate>();
         for (var values : grouped.values()) {
-            var copy = values.stream().filter(t -> t.locale().equals(locale)).findFirst()
-                    .or(() -> values.stream().filter(t -> t.locale().equals("vi-VN")).findFirst())
-                    .or(() -> values.stream().filter(t -> t.locale().equals("en-US")).findFirst())
-                    .orElse(values.getFirst());
+            var copy = CatalogLocales.pick(values, locale, AdminReferenceProvider.Row::locale);
             var asset = copy.iconAssetId() == null ? null : assets.get(copy.iconAssetId());
             String icon = asset != null && asset.usable() ? asset.currentVersion().url() : null;
             output.add(new PublicReferenceProvider.Candidate(copy.id(), "spell", copy.name(), copy.description(),

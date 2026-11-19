@@ -1,8 +1,13 @@
 package com.wikiaov.hero.internal.authoring.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-
-import jakarta.persistence.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Cause;
+import com.wikiaov.platform.AssignedIdentifierEntity;
+import com.wikiaov.platform.RevisionState;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
@@ -22,7 +27,8 @@ public class HeroRevision extends AssignedIdentifierEntity<UUID> {
 
     private long revisionNo;
 
-    private String state;
+    @Enumerated(EnumType.STRING)
+    private RevisionState state;
 
     private long version;
 
@@ -30,7 +36,8 @@ public class HeroRevision extends AssignedIdentifierEntity<UUID> {
 
     private Instant publishedAt;
 
-    private String cause;
+    @Enumerated(EnumType.STRING)
+    private Cause cause;
 
     private UUID sourceRevisionId;
 

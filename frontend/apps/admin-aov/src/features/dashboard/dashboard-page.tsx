@@ -24,14 +24,17 @@ import { NAV_ICONS } from "@/app/aov-nav-icon"
 import { formatNumber } from "@/lib/text"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
-import { createPublishingApi } from "../publishing/publishing-api"
-import type { PageSlice } from "../publishing/types"
-import { dateLabel, useContentLocale, usePublicationOverview } from "../publishing/publication-overview"
-import { defaultRulesetId } from "../publishing/default-ruleset"
+import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
+import type { PageSlice } from "@/lib/hero-types"
+import { useContentLocale, usePublicationOverview } from "../publishing/api/publication-overview"
+import { dateLabel } from "@/lib/schedule-date"
+import { defaultRulesetId } from "@/lib/default-ruleset"
 import { Button } from "@aov/ui/components/button"
-import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/warehouse-api"
-import { warehouseText } from "../warehouse/warehouse-types"
+import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/api/warehouse-api"
+import { warehouseText } from "@aov/ui/lib/warehouse-content"
 import { cn } from "@aov/ui/lib/utils"
+import { mediaKeys } from "@/features/media/api/media-cache"
+import { characterImageKeys } from "../media/api/character-image-api"
 
 const publishing = createPublishingApi(backendRequest)
 
@@ -65,26 +68,26 @@ export function DashboardPage() {
   const { actor } = useSession()
   const canReadHeroes = actor?.capabilities.includes("catalog:read") ?? false
   const heroes = useQuery({
-    queryKey: ["publishing-heroes", "dashboard"],
+    queryKey: publishingKeys.dashboardHeroes,
     queryFn: () => publishing.heroes(),
     enabled: canReadHeroes,
     staleTime: 30000,
   })
   const images = useQuery({
-    queryKey: ["managed-images", "dashboard"],
+    queryKey: mediaKeys.list("dashboard"),
     queryFn: () => backendRequest<PageSlice<unknown>>("/admin/media/assets?page=0&size=1"),
     enabled: canReadHeroes,
     staleTime: 30000,
   })
   const badges = useQuery({
-    queryKey: ["skin-badges", "dashboard"],
+    queryKey: characterImageKeys.dashboardBadges,
     queryFn: () => backendRequest<PageSlice<unknown>>("/admin/skin-badges?page=0&size=1"),
     enabled: canReadHeroes,
     staleTime: 30000,
   })
   const locale = useContentLocale()
   const rulesets = useQuery({
-    queryKey: ["publishing-rulesets"],
+    queryKey: publishingKeys.rulesets,
     queryFn: publishing.rulesets,
     enabled: canReadHeroes,
     staleTime: 60000,
@@ -150,7 +153,7 @@ export function DashboardPage() {
             value: images.data?.totalElements,
             hint: "Trong thư viện ảnh",
             icon: NAV_ICONS.imageLibrary,
-            to: "/image-management",
+            to: "/files",
           },
           {
             label: "Bậc trang phục",
@@ -397,7 +400,7 @@ function CurrentPatchCard({ locale }: { locale: string }) {
   const season = data?.seasons.find((entry) => entry.id === (variant?.seasonId ?? market?.currentSeasonId))
   const pending = data?.releases.filter((entry) => entry.phase === "AWAITING_CONFIRMATION").length ?? 0
   const changes = useQuery({
-    queryKey: ["patch-changes", variant?.id, locale],
+    queryKey: publishingKeys.patchChanges(variant?.id, locale),
     queryFn: () =>
       backendRequest<{ heroId: string; sourceKind?: string }[]>(
         `/admin/patch-variants/${variant!.id}/hero-changes?locale=${encodeURIComponent(locale)}`,
@@ -433,19 +436,17 @@ function CurrentPatchCard({ locale }: { locale: string }) {
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <dt className="text-xs text-muted-foreground">Tướng có thay đổi</dt>
-                <dd className="text-lg font-semibold tabular-nums">
+                <dd className="text-base font-semibold tabular-nums">
                   {changes.data ? formatNumber(changes.data.length) : "…"}
                 </dd>
               </div>
               <div className="border-l pl-3">
                 <dt className="text-xs text-muted-foreground">Ghi từ ghi chú cập nhật</dt>
-                <dd className="text-lg font-semibold tabular-nums">{changes.data ? formatNumber(fromNotes) : "…"}</dd>
+                <dd className="text-base font-semibold tabular-nums">{changes.data ? formatNumber(fromNotes) : "…"}</dd>
               </div>
             </dl>
             {pending > 0 && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                {pending} lịch phát hành đang chờ xác nhận áp dụng.
-              </p>
+              <p className="text-xs text-(--aov-warning)">{pending} lịch phát hành đang chờ xác nhận áp dụng.</p>
             )}
             <Button asChild variant="outline" size="sm">
               <Link to={`/game-configuration?season=${variant.seasonId ?? ""}&patch=${variant.id}`}>

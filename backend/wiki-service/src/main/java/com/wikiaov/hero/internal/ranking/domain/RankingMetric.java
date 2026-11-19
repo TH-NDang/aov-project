@@ -48,19 +48,25 @@ public enum RankingMetric {
     public Optional<String> problem(BigDecimal number, String tier, boolean hasHero, boolean needsReview) {
         boolean numberSet = number != null, tierSet = tier != null;
         if ((kind != Kind.PERCENT && kind != Kind.AMOUNT && numberSet) || (kind != Kind.TIER && tierSet)
-                || (kind != Kind.HERO && hasHero))
+                || (kind != Kind.HERO && hasHero)) {
             return Optional.of(name() + " takes only a " + kind.field + ".");
-        if (!numberSet && !tierSet && !hasHero)
+        }
+        if (!numberSet && !tierSet && !hasHero) {
             return needsReview ? Optional.empty() : Optional.of(name() + " without a value must wait for review.");
+        }
 
-        if (tierSet && !TIER_VALUE.matcher(tier).matches())
+        if (tierSet && !TIER_VALUE.matcher(tier).matches()) {
             return Optional.of("A tier is T0 to T9.");
-        if (numberSet && (number.signum() < 0 || number.stripTrailingZeros().scale() > 2))
+        }
+        if (numberSet && (number.signum() < 0 || number.stripTrailingZeros().scale() > 2)) {
             return Optional.of(name() + " is a non-negative number with at most two decimals.");
-        if (numberSet && kind == Kind.PERCENT && number.compareTo(HUNDRED) > 0)
+        }
+        if (numberSet && kind == Kind.PERCENT && number.compareTo(HUNDRED) > 0) {
             return Optional.of(name() + " is a percentage from 0 to 100.");
-        if (numberSet && number.compareTo(AMOUNT_LIMIT) > 0)
+        }
+        if (numberSet && number.compareTo(AMOUNT_LIMIT) > 0) {
             return Optional.of(name() + " is too large.");
+        }
         return Optional.empty();
     }
 

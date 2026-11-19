@@ -2,15 +2,24 @@ package com.wikiaov.hero.internal.importing.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.access.AcceptedCommands;
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
+import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
+import com.wikiaov.hero.internal.alias.persistence.IdentifierAliases;
 import com.wikiaov.hero.internal.application.HeroImportJobRequest;
+import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
+import com.wikiaov.hero.internal.authoring.application.HeroValidation;
+import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
 import com.wikiaov.hero.internal.importing.persistence.HeroImportJobRepository;
 import com.wikiaov.hero.internal.importing.persistence.HeroUploadSessionRepository;
+import com.wikiaov.patch.GameplayContexts;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -52,6 +61,21 @@ class HeroImportAuthorizationTest {
             signInWith("hero:write");
             assertThat(jobs.list()).isEmpty();
             verify(repository).visible("issuer", "editor");
+        }
+    }
+
+    @Test
+    void theImportFieldListsNeedHeroWrite() {
+        try (var context = new AnnotationConfigApplicationContext(SecurityTestConfiguration.class)) {
+            var imports = context.getBean(HeroImports.class);
+
+            signInWith("catalog:read");
+            assertDenied(imports::fields);
+            assertDenied(imports::relationFields);
+
+            signInWith("hero:write");
+            assertThat(imports.fields()).isNotEmpty();
+            assertThat(imports.relationFields()).containsKeys("skills", "skins");
         }
     }
 
@@ -112,12 +136,19 @@ class HeroImportAuthorizationTest {
         @Bean
         HeroImportJobs jobs(HeroImportJobRepository repository, CurrentActor actors) {
             return new HeroImportJobs(repository, actors, mock(AcceptedCommands.class), mock(HeroImports.class),
-                    JsonMapper.builder().build());
+                    mock(AuditLog.class), JsonMapper.builder().build());
+        }
+
+        @Bean
+        HeroImports imports() {
+            return new HeroImports(mock(HeroIdentityRepository.class), mock(HeroAuthoring.class),
+                    mock(HeroValidation.class), mock(GameplayContexts.class), JsonMapper.builder().build(),
+                    mock(IdentifierAliases.class));
         }
 
         @Bean
         HeroUploadSessions sessions(HeroUploadSessionRepository repository, CurrentActor actors) {
-            return new HeroUploadSessions(repository, actors, JsonMapper.builder().build());
+            return new HeroUploadSessions(repository, actors, mock(AuditLog.class), JsonMapper.builder().build());
         }
     }
 }

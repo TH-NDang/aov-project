@@ -1,7 +1,8 @@
 package com.wikiaov.enchantment.internal.change.persistence;
 
 import com.wikiaov.enchantment.internal.change.persistence.entity.EnchantmentPatchChange;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EnchantmentPatchChangeRepository extends JpaRepository<EnchantmentPatchChange, UUID> {

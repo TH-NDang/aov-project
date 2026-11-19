@@ -10,31 +10,23 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { Input } from "@aov/ui/components/input"
 import { Badge } from "@aov/ui/components/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@aov/ui/components/alert-dialog"
 import { Page, PageHeader } from "@/components/page-header"
+import { confirmAction } from "@/components/confirm-dialog"
 import { useSearchParam } from "@/hooks/use-search-param"
-import { ImportDialog, SELECT_CLASS, displayValue } from "./import-dialog"
+import { ImportDialog, displayValue } from "./import-dialog"
 import { StorageDataTable } from "./storage-data-table"
-import { storageApi } from "./storage-api"
+import { storageApi, storageKeys } from "./storage-api"
 import { rowId, validColumn, validateTable, type StorageRow, type StorageTable } from "./storage-model"
+import { NativeSelect } from "@/components/native-select"
 
 type Editor = { kind: "create" | "rename" | "column" | "row"; column?: string; row?: StorageRow }
 
 export function StoragePage() {
   const client = useQueryClient()
   const [selected, setSelected] = useSearchParam("table")
-  const tables = useQuery({ queryKey: ["storage"], queryFn: storageApi.list })
+  const tables = useQuery({ queryKey: storageKeys.tables, queryFn: storageApi.list })
   const query = useQuery({
-    queryKey: ["storage", selected],
+    queryKey: storageKeys.table(selected),
     queryFn: () => storageApi.get(selected),
     enabled: Boolean(selected),
   })
@@ -46,34 +38,46 @@ export function StoragePage() {
   const [creating, setCreating] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [archived, setArchived] = useState(false)
-  const [confirmation, setConfirmation] = useState<{ title: string; description: string; next: StorageTable } | null>(
-    null,
-  )
   const mutation = useMutation({
     mutationFn: storageApi.save,
     onSuccess: (saved) => {
-      client.setQueryData(["storage", saved.id], saved)
-      void client.invalidateQueries({ queryKey: ["storage"], exact: true })
+      client.setQueryData(storageKeys.table(saved.id), saved)
+      void client.invalidateQueries({ queryKey: storageKeys.tables, exact: true })
     },
+    meta: { silent: true },
   })
   useChangeEffect(() => {
     setEditor(null)
     setImportOpen(false)
     setError("")
   }, [selected])
-  const save = async (next: StorageTable) => {
-    validateTable(next)
-    await mutation.mutateAsync(next)
-  }
-  const run = async (next: StorageTable) => {
-    try {
-      await save(next)
-      toast.success("Đã lưu bảng JSON.")
-      setError("")
-    } catch (cause) {
-      setError(cause instanceof Error ? storageErrorMessage(cause.message) : "Không thể lưu.")
-    }
-  }
+  const { mutateAsync } = mutation
+  const save = useCallback(
+    async (next: StorageTable) => {
+      validateTable(next)
+      await mutateAsync(next)
+    },
+    [mutateAsync],
+  )
+  const run = useCallback(
+    async (next: StorageTable) => {
+      try {
+        await save(next)
+        toast.success("Đã lưu bảng JSON.")
+        setError("")
+      } catch (cause) {
+        setError(cause instanceof Error ? storageErrorMessage(cause.message) : "Không thể lưu.")
+      }
+    },
+    [save],
+  )
+  /** Deleting rows or columns cannot be undone, so it asks first and saves only on a yes. */
+  const confirmDelete = useCallback(
+    async (question: { title: string; description: string }, next: StorageTable) => {
+      if (await confirmAction({ ...question, confirmLabel: "Xóa" })) await run(next)
+    },
+    [run],
+  )
   const openEditor = useCallback(
     (next: Editor) => {
       setEditor(next)
@@ -95,31 +99,32 @@ export function StoragePage() {
   const deleteRow = useCallback(
     (row: StorageRow) => {
       if (!table?.idColumn) return
-      setConfirmation({
-        title: "Xóa dòng dữ liệu?",
-        description: `Dòng có ID ${rowId(row[table.idColumn])} sẽ bị xóa khỏi bảng.`,
-        next: {
+      void confirmDelete(
+        { title: "Xóa dòng dữ liệu?", description: `Dòng có ID ${rowId(row[table.idColumn])} sẽ bị xóa khỏi bảng.` },
+        {
           ...table,
           rows: table.rows.filter((item) => rowId(item[table.idColumn!]) !== rowId(row[table.idColumn!])),
         },
-      })
+      )
     },
-    [table],
+    [table, confirmDelete],
   )
   const deleteColumn = useCallback(
     (column: string) => {
       if (!table || column === table.idColumn) return
-      setConfirmation({
-        title: `Xóa cột ${column}?`,
-        description: "Các giá trị trong cột này cũng sẽ bị xóa. Bạn có thể xuất JSON để giữ bản sao.",
-        next: {
+      void confirmDelete(
+        {
+          title: `Xóa cột ${column}?`,
+          description: "Các giá trị trong cột này cũng sẽ bị xóa. Bạn có thể xuất JSON để giữ bản sao.",
+        },
+        {
           ...table,
           columns: table.columns.filter((key) => key !== column),
           rows: table.rows.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) => key !== column))),
         },
-      })
+      )
     },
-    [table],
+    [table, confirmDelete],
   )
   const submitEditor = async () => {
     try {
@@ -127,7 +132,7 @@ export function StoragePage() {
       if (editor.kind === "create") {
         setCreating(true)
         const created = await storageApi.create(text.trim())
-        await client.invalidateQueries({ queryKey: ["storage"], exact: true })
+        await client.invalidateQueries({ queryKey: storageKeys.tables, exact: true })
         setSelected(created.id)
       } else if (table) {
         let next = table
@@ -217,7 +222,7 @@ export function StoragePage() {
       <div className="flex flex-wrap items-end gap-3">
         <label className="grid min-w-56 gap-2 text-sm">
           Bảng dữ liệu
-          <select className={SELECT_CLASS} value={selected} onChange={(event) => setSelected(event.target.value)}>
+          <NativeSelect className="w-full" value={selected} onChange={(event) => setSelected(event.target.value)}>
             <option value="">Chọn bảng…</option>
             {tables.data
               ?.filter((item) => archived || !item.archived)
@@ -226,7 +231,7 @@ export function StoragePage() {
                   {item.name} · {item.rowCount} dòng{item.archived ? " (đã ẩn)" : ""}
                 </option>
               ))}
-          </select>
+          </NativeSelect>
         </label>
         <label className="flex h-9 items-center gap-2 text-sm">
           <input type="checkbox" checked={archived} onChange={(event) => setArchived(event.target.checked)} />
@@ -255,7 +260,7 @@ export function StoragePage() {
         table && (
           <>
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="mr-2 text-lg font-bold">{table.name}</h2>
+              <h2 className="type-section-title mr-2">{table.name}</h2>
               <Badge variant="outline">
                 {table.rows.length} dòng · {table.columns.length} cột
               </Badge>
@@ -318,9 +323,9 @@ export function StoragePage() {
               ) : (
                 <label className="flex items-center gap-2 text-sm">
                   Cột ID
-                  <select
+                  <NativeSelect
                     aria-label="Cột ID"
-                    className={`${SELECT_CLASS} w-auto`}
+
                     value={table.idColumn ?? ""}
                     disabled={mutation.isPending}
                     onChange={(event) => void run({ ...table, idColumn: event.target.value || null })}
@@ -329,7 +334,7 @@ export function StoragePage() {
                     {table.columns.map((column) => (
                       <option key={column}>{column}</option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </label>
               )}
             </div>
@@ -397,18 +402,6 @@ export function StoragePage() {
           </Button>
         </DialogContent>
       </Dialog>
-      <AlertDialog open={Boolean(confirmation)} onOpenChange={(open) => !open && setConfirmation(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{confirmation?.title}</AlertDialogTitle>
-            <AlertDialogDescription>{confirmation?.description}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmation && void run(confirmation.next)}>Xóa</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Page>
   )
 }

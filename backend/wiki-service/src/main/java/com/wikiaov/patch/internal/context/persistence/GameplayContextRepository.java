@@ -19,10 +19,10 @@ public interface GameplayContextRepository extends Repository<PatchRelease, UUID
             select new com.wikiaov.patch.GameplayContext(r.id,r.code,rs.id,rs.code,
                 p.id,p.code,v.id,v.rulesetOrdinal,rel.effectiveAt)
             from Region r join RulesetAssignment a on a.regionId=r.id
-            join GameplayRuleset rs on rs.id=a.rulesetId and rs.lifecycleState='ACTIVE'
-            join PatchRelease rel on rel.regionId=r.id and rel.status='SCHEDULED' and rel.effectiveAt<=:at
-            join PatchVariant v on v.id=rel.patchVariantId and v.rulesetId=rs.id and v.status='PUBLISHED'
-            join GamePatch p on p.id=v.patchId and p.status='PUBLISHED'
+            join GameplayRuleset rs on rs.id=a.rulesetId and rs.lifecycleState=com.wikiaov.patch.internal.domain.PatchLifecycleState.ACTIVE
+            join PatchRelease rel on rel.regionId=r.id and rel.status=com.wikiaov.patch.internal.domain.PatchReleaseStatus.SCHEDULED and rel.effectiveAt<=:at
+            join PatchVariant v on v.id=rel.patchVariantId and v.rulesetId=rs.id and v.status=com.wikiaov.patch.internal.domain.PatchVariantStatus.PUBLISHED
+            join GamePatch p on p.id=v.patchId and p.status=com.wikiaov.patch.internal.domain.PatchStatus.PUBLISHED
             where r.code=:region and a.validFrom<=:at and (a.validTo is null or a.validTo>:at)
             order by rel.effectiveAt desc
             """)
@@ -34,7 +34,7 @@ public interface GameplayContextRepository extends Repository<PatchRelease, UUID
                 s.displayName as seasonName,s.ordinal as seasonOrdinal
             from PatchVariant v join GamePatch p on p.id=v.patchId
             left join RankedSeason s on s.id=v.seasonId
-            where v.rulesetId=:rulesetId and v.status='PUBLISHED' and p.status='PUBLISHED'
+            where v.rulesetId=:rulesetId and v.status=com.wikiaov.patch.internal.domain.PatchVariantStatus.PUBLISHED and p.status=com.wikiaov.patch.internal.domain.PatchStatus.PUBLISHED
                 and v.publishedAt<=:at and v.rulesetOrdinal<=:cutoff
                 and (:seasonId is null or v.seasonId=:seasonId)
                 and (:patchVariantId is null or v.id=:patchVariantId)
@@ -47,7 +47,7 @@ public interface GameplayContextRepository extends Repository<PatchRelease, UUID
             select rel.patchVariantId as patchVariantId,rel.effectiveAt as effectiveAt,rel.effectiveOn as effectiveOn
             from PatchRelease rel
             where rel.regionId=:regionId and rel.patchVariantId in :variantIds
-                and rel.status='SCHEDULED' and rel.effectiveAt<=:at
+                and rel.status=com.wikiaov.patch.internal.domain.PatchReleaseStatus.SCHEDULED and rel.effectiveAt<=:at
             order by rel.effectiveAt desc,rel.id
             """)
     List<CatalogDate> catalogDates(UUID regionId, Collection<UUID> variantIds, Instant at);
@@ -55,24 +55,24 @@ public interface GameplayContextRepository extends Repository<PatchRelease, UUID
     @Query("""
             select new com.wikiaov.patch.PatchReleaseReference(p.id,v.id,v.rulesetId,rel.effectiveAt)
             from PatchRelease rel join Region r on r.id=rel.regionId
-            join PatchVariant v on v.id=rel.patchVariantId and v.status='PUBLISHED'
-            join GamePatch p on p.id=v.patchId and p.status='PUBLISHED'
-            where r.code=:region and rel.status='SCHEDULED' order by p.sequence desc,rel.effectiveAt desc
+            join PatchVariant v on v.id=rel.patchVariantId and v.status=com.wikiaov.patch.internal.domain.PatchVariantStatus.PUBLISHED
+            join GamePatch p on p.id=v.patchId and p.status=com.wikiaov.patch.internal.domain.PatchStatus.PUBLISHED
+            where r.code=:region and rel.status=com.wikiaov.patch.internal.domain.PatchReleaseStatus.SCHEDULED order by p.sequence desc,rel.effectiveAt desc
             """)
     List<PatchReleaseReference> publishedReleases(String region);
 
     String MARKET_AUTHORING = """
             select new com.wikiaov.patch.AuthoringContext(rel.id,r.id,r.code,s.id,s.displayName,
                 v.rulesetId,v.id,p.code,v.rulesetOrdinal,rel.effectiveAt)
-            from PatchRelease rel join Region r on r.id=rel.regionId and r.lifecycleState='ACTIVE'
+            from PatchRelease rel join Region r on r.id=rel.regionId and r.lifecycleState=com.wikiaov.patch.internal.domain.PatchLifecycleState.ACTIVE
             join SeasonSchedule schedule on schedule.regionId=r.id
                 and rel.effectiveAt>=schedule.startsAt and rel.effectiveAt<schedule.endsAt
                 and (rel.seasonId is null or rel.seasonId=schedule.seasonId)
             join RankedSeason s on s.id=schedule.seasonId
-            join PatchVariant v on v.id=rel.patchVariantId and v.status='PUBLISHED'
-            join GamePatch p on p.id=v.patchId and p.status='PUBLISHED'
-            join GameplayRuleset rs on rs.id=v.rulesetId and rs.lifecycleState='ACTIVE'
-            where rel.status='SCHEDULED'
+            join PatchVariant v on v.id=rel.patchVariantId and v.status=com.wikiaov.patch.internal.domain.PatchVariantStatus.PUBLISHED
+            join GamePatch p on p.id=v.patchId and p.status=com.wikiaov.patch.internal.domain.PatchStatus.PUBLISHED
+            join GameplayRuleset rs on rs.id=v.rulesetId and rs.lifecycleState=com.wikiaov.patch.internal.domain.PatchLifecycleState.ACTIVE
+            where rel.status=com.wikiaov.patch.internal.domain.PatchReleaseStatus.SCHEDULED
             """;
 
     String SHARED_AUTHORING = """
@@ -80,8 +80,8 @@ public interface GameplayContextRepository extends Repository<PatchRelease, UUID
                 v.rulesetId,v.id,p.code,v.rulesetOrdinal,null)
             from PatchVariant v join GamePatch p on p.id=v.patchId
             join RankedSeason s on s.id=v.seasonId
-            join GameplayRuleset rs on rs.id=v.rulesetId and rs.lifecycleState='ACTIVE'
-            where v.status in ('DRAFT','PUBLISHED')
+            join GameplayRuleset rs on rs.id=v.rulesetId and rs.lifecycleState=com.wikiaov.patch.internal.domain.PatchLifecycleState.ACTIVE
+            where v.status in (com.wikiaov.patch.internal.domain.PatchVariantStatus.DRAFT,com.wikiaov.patch.internal.domain.PatchVariantStatus.PUBLISHED)
             """;
 
     @Query(MARKET_AUTHORING + " and r.id=:regionId and s.id=:seasonId order by rel.effectiveAt")

@@ -3,7 +3,6 @@ import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { JSDOM } from "jsdom"
 import {
   createEntityIndex,
   extractSkillReferenceIds,
@@ -21,6 +20,7 @@ import {
 } from "@aov/ui/lib/entity-rich-text-editor"
 import { intersectionHarness } from "./fixtures/intersection-observer"
 import { referenceInput, fillReferenceInput, referenceInputValue } from "./fixtures/reference-input"
+import { createWindow, flush, installWindow, parseHtml } from "./fixtures/dom"
 
 const heroId = "43dec8c3-0197-4459-bbdf-9812fbc12dd6"
 const skill: EntityReference = {
@@ -123,37 +123,18 @@ test("saved skill lookup is bounded, rejects malformed identities and survives a
   )
 })
 
-test("remote skill suggestions debounce, page on inner scroll, retain lazy paired icons and insert the exact variant", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
+test("remote skill suggestions debounce, page on inner scroll, retain lazy paired icons and insert the exact variant", async (t) => {
+  const dom = createWindow()
   const observer = intersectionHarness()
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    Event: dom.window.Event,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     IntersectionObserver: observer.Observer,
     ResizeObserver: class {
       observe() {}
       unobserve() {}
       disconnect() {}
     },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  })
   const { createRoot } = await import("react-dom/client")
   const { EntityRichTextEditor } = await import("@aov/ui/components/entity-rich-text-editor")
   const { EntityRichText } = await import("@aov/ui/components/entity-rich-text")
@@ -204,9 +185,13 @@ test("remote skill suggestions debounce, page on inner scroll, retain lazy paire
     act(async () => {
       fillReferenceInput(area(), text)
     })
+  // The editor searches 300 ms after the last keystroke. The clock moves past it at once; one turn of the event loop
+  // then lets the answered search render.
+  t.mock.timers.enable({ apis: ["setTimeout"] })
   const wait = (ms = 340) =>
     act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, ms))
+      t.mock.timers.tick(ms)
+      await new Promise((resolve) => setImmediate(resolve))
     })
   try {
     await act(async () => root.render(<Harness />))
@@ -289,15 +274,11 @@ test("remote skill suggestions debounce, page on inner scroll, retain lazy paire
     assert.equal(document.querySelector("a")?.getAttribute("href"), resolveEntityRoute(skill, "admin"))
     assert.equal(document.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
   } finally {
-    await act(async () => {
-      root.unmount()
-      await new Promise((resolve) => setTimeout(resolve, 30))
-    })
+    t.mock.timers.reset()
+    await act(async () => root.unmount())
+    await flush()
     dom.window.close()
-    for (const [key, value] of originals) {
-      if (value) Object.defineProperty(globalThis, key, value)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 
@@ -311,12 +292,11 @@ test("skill rendering pairs the correct owner with the specific skill and keeps 
       context="admin"
     />,
   )
-  const dom = new JSDOM(html)
+  const page = parseHtml(html)
   assert.match(
-    dom.window.document.querySelector('[role="button"]')!.getAttribute("aria-label")!,
+    page.querySelector('[role="button"]')!.getAttribute("aria-label")!,
     /Edras.*Tung hoành.*Chiêu 1.*Biến thể 2/,
   )
-  assert.equal(dom.window.document.querySelectorAll("img").length, 2)
-  assert.equal(dom.window.document.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
-  dom.window.close()
+  assert.equal(page.querySelectorAll("img").length, 2)
+  assert.equal(page.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
 })

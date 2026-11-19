@@ -2,14 +2,21 @@ package com.wikiaov.video.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +25,13 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -30,7 +39,7 @@ import tools.jackson.databind.json.JsonMapper;
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class VideoIntegrationTest {
     private static final String ADMIN = "/api/wiki/v1/admin/videos";
     private static final String PUBLIC = "/api/wiki/v1/videos";
@@ -53,7 +62,7 @@ class VideoIntegrationTest {
         jdbc.sql("""
                 INSERT INTO hero.hero (id, code, created_at, created_by_issuer, created_by_subject)
                 VALUES (?, ?, ?, 'test', 'test')
-                """).params(hero, "video-hero-" + hero, java.sql.Timestamp.from(Instant.now())).update();
+                """).params(hero, "video-hero-" + hero, Timestamp.from(Instant.now())).update();
         jdbc.sql("INSERT INTO hero.hero_skin (hero_id, skin_key, created_at) VALUES (?, 'lan-su', now())")
                 .param(hero).update();
         jdbc.sql("INSERT INTO hero.hero_skill (hero_id, skill_key, created_at) VALUES (?, 'skill-1', now())")
@@ -217,7 +226,7 @@ class VideoIntegrationTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("items");
 
         assertThat(subjects.findValuesAsString("kind")).contains("HERO", "SKIN", "SKILL");
-        var heroRows = java.util.stream.StreamSupport.stream(subjects.spliterator(), false)
+        var heroRows = StreamSupport.stream(subjects.spliterator(), false)
                 .filter(row -> row.get("id").asText().equals(hero.toString())).toList();
         assertThat(heroRows).hasSize(3);
         assertThat(heroRows.stream().map(row -> row.get("kind").asText()).toList())
@@ -229,8 +238,8 @@ class VideoIntegrationTest {
                 .getContentAsString());
     }
 
-    private org.springframework.test.web.servlet.ResultActions send(
-            org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request, String body,
+    private ResultActions send(
+            MockHttpServletRequestBuilder request, String body,
             RequestPostProcessor actor) throws Exception {
         var prepared = request.contentType(MediaType.APPLICATION_JSON).content(body);
         return mvc.perform(actor == null ? prepared : prepared.with(actor));
@@ -254,6 +263,6 @@ class VideoIntegrationTest {
 
     private RequestPostProcessor actor(String... capabilities) {
         return jwt().authorities(Arrays.stream(capabilities).map(SimpleGrantedAuthority::new)
-                .toArray(org.springframework.security.core.GrantedAuthority[]::new));
+                .toArray(GrantedAuthority[]::new));
     }
 }

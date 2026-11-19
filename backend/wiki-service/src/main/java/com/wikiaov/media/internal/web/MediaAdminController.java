@@ -84,23 +84,27 @@ class MediaAdminController implements MediaAdminApi {
         this.setMediaFocalPoint = setMediaFocalPoint;
     }
 
+    @Override
     @PostMapping(path = "/assets/{assetId}/versions/{versionId}/sources", version = "1")
     public MediaAssetDetails addSource(@PathVariable UUID assetId, @PathVariable UUID versionId,
             @RequestBody SourceRequest source) {
         return addMediaSource.execute(assetId, versionId, source.toInput());
     }
 
+    @Override
     @PutMapping(path = "/assets/{assetId}/versions/{versionId}/focal-point", version = "1")
     public MediaAssetDetails setFocalPoint(@PathVariable UUID assetId, @PathVariable UUID versionId,
             @RequestBody FocalPointRequest point) {
         return setMediaFocalPoint.execute(assetId, versionId, point.toPoint());
     }
 
+    @Override
     @DeleteMapping(path = "/assets/{assetId}/versions/{versionId}/focal-point", version = "1")
     public MediaAssetDetails clearFocalPoint(@PathVariable UUID assetId, @PathVariable UUID versionId) {
         return setMediaFocalPoint.execute(assetId, versionId, null);
     }
 
+    @Override
     @PostMapping(path = "/assets", version = "1")
     public ResponseEntity<MediaAssetDetails> createAsset(@PathVariable String apiVersion,
             @RequestBody CreateAssetRequest request) {
@@ -109,6 +113,7 @@ class MediaAdminController implements MediaAdminApi {
         return ResponseEntity.created(assetUri(apiVersion, asset.id())).body(asset);
     }
 
+    @Override
     @GetMapping(path = "/assets", version = "1")
     public PageSlice<MediaAssetSummary> listAssets(HttpServletRequest http,
             @RequestParam(required = false) @Nullable MediaSemanticType semanticType,
@@ -123,6 +128,7 @@ class MediaAdminController implements MediaAdminApi {
                 : usageOverview.list(semanticType, needsCredit, usage, page, size);
     }
 
+    @Override
     @GetMapping(path = "/usage-totals", version = "1")
     public MediaUsageTotals usageTotals(HttpServletRequest http,
             @RequestParam(required = false) @Nullable MediaSemanticType semanticType,
@@ -131,18 +137,21 @@ class MediaAdminController implements MediaAdminApi {
         return usageOverview.totals(semanticType, needsCredit);
     }
 
+    @Override
     @GetMapping(path = "/assets/{assetId}", version = "1")
     public MediaAssetDetails getAsset(HttpServletRequest http, @PathVariable UUID assetId) {
         QueryParameters.requireOnly(http, Set.of());
         return queries.get(assetId);
     }
 
+    @Override
     @GetMapping(path = "/assets/batch", version = "1")
     public MediaAssetBatch getAssets(HttpServletRequest http, @RequestParam List<UUID> ids) {
         QueryParameters.requireOnly(http, Set.of("ids"));
         return new MediaAssetBatch(queries.getAll(ids));
     }
 
+    @Override
     @PostMapping(path = "/assets/{assetId}/version-uploads", version = "1")
     public ResponseEntity<UploadTicket> requestUpload(@PathVariable String apiVersion, @PathVariable UUID assetId,
             @RequestBody UploadRequest request) {
@@ -155,23 +164,27 @@ class MediaAdminController implements MediaAdminApi {
         return ResponseEntity.created(location).body(ticket);
     }
 
+    @Override
     @GetMapping(path = "/uploads/{uploadId}", version = "1")
     public UploadStatus getUpload(HttpServletRequest http, @PathVariable UUID uploadId) {
         QueryParameters.requireOnly(http, Set.of());
         return queries.upload(uploadId);
     }
 
+    @Override
     @PostMapping(path = "/uploads/{uploadId}/complete", version = "1")
     public MediaVersionResult completeUpload(@PathVariable UUID uploadId) {
         return completeMediaUpload.execute(uploadId);
     }
 
+    @Override
     @PostMapping(path = "/assets/{assetId}/versions/{versionId}/activate", version = "1")
     public MediaAssetDetails activateVersion(@PathVariable UUID assetId, @PathVariable UUID versionId,
             @RequestBody ExpectedVersionRequest request) {
         return activateMediaAssetVersion.execute(assetId, versionId, request.expectedVersion());
     }
 
+    @Override
     @PostMapping(path = "/imports/register", version = "1")
     public ResponseEntity<MediaVersionResult> registerImport(@PathVariable String apiVersion,
             @RequestBody RegisterImportRequest request) {
@@ -182,6 +195,7 @@ class MediaAdminController implements MediaAdminApi {
                 : ResponseEntity.created(assetUri(apiVersion, result.assetId())).body(result);
     }
 
+    @Override
     @GetMapping(path = "/assets/{assetId}/usages", version = "1")
     public MediaUsageReport findUsages(HttpServletRequest http, @PathVariable UUID assetId,
             @RequestParam(defaultValue = "ANY") UsageScopeParameter scope) {
@@ -189,6 +203,7 @@ class MediaAdminController implements MediaAdminApi {
         return findMediaUsages.execute(assetId, scope.toScope());
     }
 
+    @Override
     @PostMapping(path = "/assets/{assetId}/deprecate", version = "1")
     public MediaAssetDetails deprecateAsset(@PathVariable UUID assetId, @RequestBody DeprecateRequest request) {
         return deprecateMediaAsset.execute(assetId, request.expectedVersion(), request.reason());

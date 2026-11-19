@@ -6,14 +6,15 @@ import {
   plainComparisonText,
   comparisonPathLabels,
   comparisonImages,
-} from "../src/features/publishing/hero-comparison"
-import { captureDataset } from "../src/features/publishing/hero-source-dataset"
+} from "../src/features/publishing/model/assessment/hero-comparison"
+import { captureDataset } from "../src/features/publishing/model/import/hero-source-dataset"
 import {
   heroReviewItems,
   setHeroReviewResolved,
   sourceHttpUrl,
   sourceReviewNotes,
-} from "../src/features/publishing/hero-source-review"
+} from "../src/features/publishing/model/import/hero-source-review"
+import { withGlobals } from "./fixtures/dom"
 
 test("Vietnamese differences reconstruct both texts and do not silently drop words or numbers", () => {
   const before = "Sát thương 120 (+50% công vật lý).\nLàm chậm 1 giây."
@@ -323,7 +324,7 @@ test("skill warning matching handles both array paths and named source slots wit
 test("review resolution clears all copies of one warning, preserves evidence and can be reopened", () => {
   const flag = { field: "hero.skills[1].description", note: "Clipped description", status: "visible_text_preserved" }
   const other = { ...flag, field: "hero.skills[2].description" }
-  const skills: import("../src/features/publishing/types").Skill[] = [1, 2].map((index) => ({
+  const skills: import("@/lib/hero-types").Skill[] = [1, 2].map((index) => ({
     skillKey: `skill-${index}-1`,
     kind: "ACTIVE",
     displayOrder: index,
@@ -377,15 +378,12 @@ test("unscoped warnings with identical wording remain independent for each skill
 
 test("skill source details render a safe source link and keep clipped text in hero warnings", async () => {
   const React = await import("react")
-  const previous = Object.getOwnPropertyDescriptor(globalThis, "React")
-  const previousBroadcast = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
-  Object.defineProperty(globalThis, "React", { configurable: true, writable: true, value: React })
-  Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-  try {
-    const { SkillSourceDetails, heroReviewNotes } = await import("../src/features/publishing/hero-source-details")
+  await withGlobals({ React, BroadcastChannel: undefined }, async () => {
+    const { SkillSourceDetails, heroReviewNotes } =
+      await import("../src/features/publishing/components/import/hero-source-details")
     const { renderToStaticMarkup } = await import("react-dom/server")
     const note = "Mô tả đã bị cắt, cần bổ sung phần còn lại."
-    const skill: import("../src/features/publishing/types").Skill = {
+    const skill: import("@/lib/hero-types").Skill = {
       skillKey: "skill-1-1",
       kind: "ACTIVE",
       formKey: null,
@@ -409,10 +407,5 @@ test("skill source details render a safe source link and keep clipped text in he
     assert.deepEqual(heroReviewNotes([skill]), [note])
     skill.effects[0].metadata.sourceImageUrl = "javascript:alert(1)"
     assert.doesNotMatch(renderToStaticMarkup(React.createElement(SkillSourceDetails, { skill })), /<a\b/)
-  } finally {
-    if (previous) Object.defineProperty(globalThis, "React", previous)
-    else Reflect.deleteProperty(globalThis, "React")
-    if (previousBroadcast) Object.defineProperty(globalThis, "BroadcastChannel", previousBroadcast)
-    else Reflect.deleteProperty(globalThis, "BroadcastChannel")
-  }
+  })
 })

@@ -5,7 +5,6 @@ import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
-import { control } from "../publishing/fields"
 import { estimateUpload, refreshSourceFiles, type SourceCollection, type StorageEstimate } from "./files-api"
 import { formatCount, formatShare, formatStorage, LEVEL_COLORS, LEVEL_LABELS } from "./files-format"
 import {
@@ -16,6 +15,7 @@ import {
   sourceContentType,
   uploadSourceFile,
 } from "./source-upload"
+import { Input } from "@aov/ui/components/input"
 
 type Status = "hashing" | "ready" | "uploading" | "stored" | "uploaded" | "failed" | "refused"
 
@@ -150,8 +150,7 @@ function UploadForm({ collection, onClose }: { collection: SourceCollection; onC
     <div className="grid min-h-0 flex-1 content-start gap-4 overflow-y-auto px-4 pb-6">
       <label className="grid gap-1.5">
         <span className="type-label">Thư mục trong bộ</span>
-        <input
-          className={control}
+        <Input
           value={folder}
           disabled={running}
           placeholder="raw/shop/2026-09-16 (để trống: gốc của bộ)"

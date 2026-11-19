@@ -1,22 +1,33 @@
 #!/usr/bin/env node
-// Pre-commit check: code comments must be written in English.
-// Scans only lines added in the staged diff, so existing code never blocks a commit.
-// Bypass for a genuine exception: git commit --no-verify
+// Code comments must be written in English (AGENTS.md), in every tracked source folder except docs and resources/.
+// Scans only added lines, so existing code never blocks a change:
+//   node check-english-comments.mjs                 lines added in the staged diff (pre-commit)
+//   node check-english-comments.mjs --range A...B   lines added between two commits (CI)
+// Bypass a commit for a genuine exception: git commit --no-verify
 
 import { execFileSync } from "node:child_process";
 
-const CHECKED_ROOTS = ["backend/", "frontend/"];
-const SKIPPED_PATHS = [/\/docs\//, /\/node_modules\//, /\/target\//, /\/dist\//, /\/generated\//];
+const SKIPPED_PATHS = [/^\/resources\//, /\/docs\//, /\/node_modules\//, /\/target\//, /\/dist\//, /\/generated\//];
+
+const rangeAt = process.argv.indexOf("--range");
+const range = rangeAt === -1 ? null : process.argv[rangeAt + 1];
+if (rangeAt !== -1 && !range) {
+  console.error("Usage: check-english-comments.mjs [--range <base>...<head>]");
+  process.exit(2);
+}
+const DIFF_TARGET = range ? [range] : ["--cached"];
 
 // Comment syntax per file extension.
 const SLASH = { line: ["//"], block: true };
 const HASH = { line: ["#"], block: false };
+const POWERSHELL = { line: ["#"], block: false, powershell: true };
 const SYNTAX = {
-  java: SLASH, kt: SLASH, ts: SLASH, tsx: SLASH, js: SLASH, jsx: SLASH, mjs: SLASH, cjs: SLASH,
+  java: SLASH, kt: SLASH, ts: SLASH, tsx: SLASH, mts: SLASH, cts: SLASH, js: SLASH, jsx: SLASH, mjs: SLASH, cjs: SLASH,
   css: { line: [], block: true },
   scss: SLASH,
   sql: { line: ["--"], block: true },
-  yml: HASH, yaml: HASH, properties: HASH, sh: HASH, toml: HASH, dockerfile: HASH,
+  yml: HASH, yaml: HASH, properties: HASH, sh: HASH, toml: HASH, dockerfile: HASH, py: HASH,
+  ps1: POWERSHELL, psm1: POWERSHELL, psd1: POWERSHELL,
   html: { line: [], block: false, xml: true },
   xml: { line: [], block: false, xml: true },
 };
@@ -32,12 +43,13 @@ function git(args) {
 function extensionOf(path) {
   const name = path.split("/").pop().toLowerCase();
   if (name === "dockerfile") return "dockerfile";
+  // Git hooks are shell scripts without an extension.
+  if (path.startsWith(".githooks/") && !name.includes(".")) return "sh";
   const dot = name.lastIndexOf(".");
   return dot === -1 ? "" : name.slice(dot + 1);
 }
 
 function isCandidate(path) {
-  if (!CHECKED_ROOTS.some((root) => path.startsWith(root))) return false;
   if (SKIPPED_PATHS.some((re) => re.test("/" + path))) return false;
   return extensionOf(path) in SYNTAX;
 }
@@ -48,6 +60,10 @@ function commentPart(line, syntax) {
   if (syntax.block) {
     if (trimmed.startsWith("/*") || trimmed.startsWith("*") || trimmed.startsWith("{/*")) return trimmed;
     const open = line.indexOf("/*");
+    if (open !== -1) return line.slice(open);
+  }
+  if (syntax.powershell) {
+    const open = line.indexOf("<#");
     if (open !== -1) return line.slice(open);
   }
   if (syntax.xml) {
@@ -70,7 +86,7 @@ function commentPart(line, syntax) {
 }
 
 function addedLines(path) {
-  const diff = git(["diff", "--cached", "-U0", "--no-color", "--", path]);
+  const diff = git(["diff", ...DIFF_TARGET, "-U0", "--no-color", "--", path]);
   const result = [];
   let lineNo = 0;
   for (const raw of diff.split("\n")) {
@@ -82,7 +98,7 @@ function addedLines(path) {
   return result;
 }
 
-const staged = git(["diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"])
+const staged = git(["diff", ...DIFF_TARGET, "--name-only", "--diff-filter=ACMR", "-z"])
   .split("\0")
   .filter(Boolean)
   .filter(isCandidate);
@@ -99,7 +115,7 @@ for (const path of staged) {
 }
 
 if (violations.length > 0) {
-  console.error("\n[pre-commit] Code comments must be written in English (see AGENTS.md).");
+  console.error("\n[comments] Code comments must be written in English (see AGENTS.md).");
   console.error("Vietnamese text found in comments:\n");
   console.error(violations.join("\n"));
   console.error("\nTranslate these comments, then commit again.");

@@ -1,26 +1,38 @@
 package com.wikiaov.hero.internal.badges.application;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.hero.internal.alias.persistence.IdentifierAliases;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.SkinBadgeCommands;
-import com.wikiaov.hero.internal.application.SkinBadgeCommands.*;
-import com.wikiaov.hero.internal.application.response.*;
 import com.wikiaov.hero.internal.application.response.SkinBadgeRelation;
 import com.wikiaov.hero.internal.application.response.SkinBadgeView;
-import com.wikiaov.hero.internal.application.response.SkinBadgeView.*;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
+import com.wikiaov.hero.internal.badges.domain.SkinBadgeKind;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeRepository;
 import com.wikiaov.hero.internal.badges.persistence.SkinBadgeTexts;
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadge;
 import com.wikiaov.hero.internal.badges.persistence.entity.SkinBadgeTranslation;
 import com.wikiaov.hero.internal.media.application.HeroMediaQueries;
-import com.wikiaov.media.*;
-import com.wikiaov.platform.*;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -58,23 +70,21 @@ public class SkinBadges {
             boolean ungrouped, int page, int size) {
         HeroMediaQueries.bounds(page, size);
         HeroValidation.locale(locale);
-        if (groupId != null && ungrouped)
+        if (groupId != null && ungrouped) {
             throw HeroValidation.invalid("Choose either a badge group or ungrouped badges.");
+        }
         groups.require(groupId);
-        var all = badges.findAll(Sort.by("code").and(Sort.by("id")));
-        var translations = translations(all.stream().map(SkinBadge::getId).toList());
         String search = search(q);
-        var matching = all.stream().filter(badge -> groupId == null || groupId.equals(badge.getGroupId()))
-                .filter(badge -> !ungrouped || badge.getGroupId() == null)
-                .filter(badge -> matches(badge, translations.getOrDefault(badge.getId(), List.of()), search))
-                .toList();
+
+        var found = badges.findAll(SkinBadgeRepository.listed(groupId, ungrouped, search),
+                PageRequest.of(page, size, Sort.by("code").and(Sort.by("id"))));
+        var translations = translations(found.getContent().stream().map(SkinBadge::getId).toList());
         var counts = gallery.badgeCounts(rulesetId);
-        int from = Math.min(page * size, matching.size());
-        var items = matching.subList(from, Math.min(from + size, matching.size())).stream()
+
+        return new PageSlice<>(found.getContent().stream()
                 .map(badge -> view(badge, translations.getOrDefault(badge.getId(), List.of()), locale,
                         counts.getOrDefault(badge.getCode(), 0L)))
-                .toList();
-        return new PageSlice<>(items, page, size, matching.size());
+                .toList(), page, size, found.getTotalElements());
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
@@ -87,16 +97,20 @@ public class SkinBadges {
     public SkinBadgeView create(SkinBadgeCommands.Create input) {
         validate(input.translations());
         groups.require(input.groupId());
+
         var badge = new SkinBadge();
         badge.setId(UUID.randomUUID());
+
         String code = input.code();
         if (code == null) {
-            if (input.translations().isEmpty())
+            if (input.translations().isEmpty()) {
                 throw HeroValidation.invalid("A badge name is required to generate its code.");
+            }
             String region = input.regionCode() == null ? "vn" : input.regionCode();
             if (!region.equals("global") && !Locale.getISOCountries(Locale.IsoCountryCode.PART1_ALPHA2)
-                    .contains(region.toUpperCase(Locale.ROOT)))
+                    .contains(region.toUpperCase(Locale.ROOT))) {
                 throw HeroValidation.invalid("The badge region must be an ISO country code or global.");
+            }
             try {
                 code = aliases.nextBadgeCode(input.translations().getFirst().displayName(),
                         region);
@@ -104,8 +118,9 @@ public class SkinBadges {
                 throw HeroValidation.invalid(invalid.getMessage());
             }
         }
+
         badge.setCode(code);
-        badge.setKind(input.kind());
+        badge.setKind(SkinBadgeKind.valueOf(input.kind()));
         badge.setGroupId(input.groupId());
         badge.setCreatedAt(clock.instant());
         badge.setUpdatedAt(clock.instant());
@@ -114,56 +129,77 @@ public class SkinBadges {
         } catch (DataIntegrityViolationException failure) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_CONFLICT, "The skin badge code already exists.");
         }
+
         var translations = rows(badge.getId(), input.translations());
         repository.replaceBadgeTranslations(badge.getId(), translations);
-        audit.record(AuditEntry.of(actors.require(), "SKIN_BADGE_CREATED", "SKIN_BADGE", badge.getId()));
-        return view(badge, translations, "vi-VN", 0);
+
+        audit.record(
+                AuditEntry.of(actors.require(), "SKIN_BADGE_CREATED", CatalogAggregates.SKIN_BADGE, badge.getId()));
+
+        return view(badge, translations, CatalogLocales.DEFAULT, 0);
     }
 
     @Transactional
     @PreAuthorize("hasAuthority('hero:write')")
     public SkinBadgeView update(UUID id, SkinBadgeCommands.Update input) {
         var badge = badges.lock(id).orElseThrow(() -> missing());
-        if (badge.getVersion() != input.expectedVersion())
+        if (badge.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_CONFLICT, "The skin badge changed. Reload before saving.");
+        }
         validate(input.translations());
-        badge.setKind(input.kind());
+
+        badge.setKind(SkinBadgeKind.valueOf(input.kind()));
         badge.setVersion(Math.addExact(badge.getVersion(), 1));
         badge.setUpdatedAt(clock.instant());
+
         var translations = rows(id, input.translations());
         repository.replaceBadgeTranslations(id, translations);
+
         badges.flush();
-        audit.record(new AuditEntry(actors.require(), "SKIN_BADGE_UPDATED", "SKIN_BADGE", id, null,
+
+        audit.record(new AuditEntry(actors.require(), "SKIN_BADGE_UPDATED", CatalogAggregates.SKIN_BADGE, id, null,
                 input.expectedVersion(), badge.getVersion(), null, Map.of()));
-        return view(badge, translations, "vi-VN", gallery.badgeCounts(null).getOrDefault(badge.getCode(), 0L));
+
+        return view(badge, translations, CatalogLocales.DEFAULT,
+                gallery.badgeCounts(null).getOrDefault(badge.getCode(), 0L));
     }
 
     @Transactional
     @PreAuthorize("hasAuthority('hero:write')")
     public SkinBadgeView assignGroup(UUID id, SkinBadgeCommands.AssignGroup input) {
         var badge = badges.lock(id).orElseThrow(SkinBadges::missing);
-        if (badge.getVersion() != input.expectedVersion())
+        if (badge.getVersion() != input.expectedVersion()) {
             throw new ApiException(HeroErrorCode.HERO_BADGE_CONFLICT, "The skin badge changed. Reload before saving.");
+        }
         groups.require(input.groupId());
+
         UUID previous = badge.getGroupId();
+
         badge.setGroupId(input.groupId());
         badge.setVersion(Math.addExact(badge.getVersion(), 1));
         badge.setUpdatedAt(clock.instant());
         badges.flush();
+
         Map<String, Object> detail = new HashMap<>();
-        if (previous != null)
+        if (previous != null) {
             detail.put("previousGroupId", previous.toString());
-        if (input.groupId() != null)
+        }
+        if (input.groupId() != null) {
             detail.put("groupId", input.groupId().toString());
-        audit.record(new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_ASSIGNED", "SKIN_BADGE", id, null,
-                input.expectedVersion(), badge.getVersion(), null, detail));
-        return view(badge, translations(List.of(id)).getOrDefault(id, List.of()), "vi-VN",
+        }
+
+        audit.record(
+                new AuditEntry(actors.require(), "SKIN_BADGE_GROUP_ASSIGNED", CatalogAggregates.SKIN_BADGE, id, null,
+                        input.expectedVersion(), badge.getVersion(), null, detail));
+
+        return view(badge, translations(List.of(id)).getOrDefault(id, List.of()), CatalogLocales.DEFAULT,
                 gallery.badgeCounts(null).getOrDefault(badge.getCode(), 0L));
     }
 
     static String search(String q) {
-        if (q.trim().length() > 100)
+        if (q.trim().length() > 100) {
             throw HeroValidation.invalid("Search must contain at most 100 characters.");
+        }
         return q.trim().toLowerCase(Locale.ROOT);
     }
 
@@ -176,14 +212,16 @@ public class SkinBadges {
         Set<String> locales = new HashSet<>();
         for (var translation : translations) {
             HeroValidation.locale(translation.locale());
-            if (!locales.add(translation.locale()))
+            if (!locales.add(translation.locale())) {
                 throw HeroValidation.invalid("Badge translation locales must be unique.");
+            }
             if (translation.iconAssetId() != null) {
                 var asset = media.find(translation.iconAssetId()).orElseThrow(() -> new ApiException(
                         HeroErrorCode.HERO_INVALID_MEDIA, "The badge icon does not exist."));
-                if (!asset.usable() || asset.semanticType() != MediaSemanticType.SKIN_BADGE)
+                if (!asset.usable() || asset.semanticType() != MediaSemanticType.SKIN_BADGE) {
                     throw new ApiException(HeroErrorCode.HERO_INVALID_MEDIA,
                             "Badge icons must be usable SKIN_BADGE assets.");
+                }
             }
         }
     }
@@ -210,9 +248,7 @@ public class SkinBadges {
     private static SkinBadgeView view(SkinBadge badge, List<SkinBadgeTranslation> translations, String locale,
             long count) {
         var ordered = translations.stream().sorted(Comparator.comparing(SkinBadgeTranslation::getLocale)).toList();
-        var selected = ordered.stream()
-                .min(Comparator.comparingInt(text -> HeroMediaQueries.localeRank(text.getLocale(), locale)))
-                .orElse(null);
+        var selected = CatalogLocales.pick(ordered, locale, SkinBadgeTranslation::getLocale);
         return new SkinBadgeView(badge.getId(), badge.getCode(), badge.getKind(), badge.getGroupId(),
                 badge.getVersion(),
                 ordered.stream()

@@ -8,7 +8,7 @@
   align-items: center;
   gap: 8px;
 }
-.competition-filters .stream-search {
+.competition-filters .competition-search {
   flex: 999 1 210px;
   width: auto;
   min-width: 0;
@@ -58,11 +58,11 @@
   align-items: center;
   gap: 8px;
 }
-.tn-schedule-bar > .hub-pills {
+.tn-schedule-bar > .tn-schedule-scope {
   min-width: 0;
   flex: 0 1 auto;
 }
-.tn-schedule-bar > .public-filter-button {
+.tn-schedule-bar > .tn-schedule-filter {
   margin-left: auto;
 }
 .tn-schedule-bar > .competition-filter-group {
@@ -78,7 +78,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.competition-filters > .hub-pills {
+.competition-filters > .competition-scope {
   flex: none;
 }
 /* The sentence wraps in its own column, so the way out stays beside it instead of dropping to a line of its own. */
@@ -115,7 +115,7 @@
   min-width: 0;
   gap: 16px;
 }
-.tn-schedule-part > .tn-heading {
+.tn-schedule-part > .tn-schedule-heading {
   margin-bottom: -4px;
 }
 .tn-day {
@@ -140,7 +140,7 @@
   text-transform: uppercase;
 }
 /* Room for the halo of the live dot, so it stays inside the column. */
-.tn-day-title > .tn-live {
+.tn-day-title > .tn-day-live {
   margin-left: 3px;
 }
 .tn-fixtures {
@@ -184,6 +184,8 @@
   font-weight: 700;
 }
 .tn-fixture-team {
+  --stream-image-size: 24px;
+  --stream-image-radius: var(--aov-radius-control);
   display: flex;
   min-width: 0;
   align-items: center;
@@ -197,15 +199,12 @@
 .tn-fixture-team[data-side="b"] {
   grid-area: b;
 }
-.tn-fixture-team > .stream-image,
 .tn-fixture-blank {
   width: 24px;
   height: 24px;
   flex: none;
-  border-radius: var(--aov-radius-control);
-}
-.tn-fixture-blank {
   border: 1px dashed var(--hub-border-strong);
+  border-radius: var(--aov-radius-control);
 }
 .tn-fixture-team > strong {
   min-width: 0;
@@ -292,10 +291,6 @@
   flex-direction: column;
   gap: var(--hub-layout-gap);
 }
-.tn-match-page > .cp-back {
-  align-self: flex-start;
-  margin: 0;
-}
 .tn-match-page[aria-busy="true"] > :not(.cp-back, .tn-duel, .tn-game-tabs) {
   opacity: 0.5;
 }
@@ -326,6 +321,11 @@
   line-height: 28px;
 }
 .tn-duel-team {
+  --stream-image-size: 72px;
+  --stream-image-radius: var(--hub-radius);
+  --stream-image-plate: rgb(255 255 255 / 10%);
+  --stream-image-ink: rgb(255 255 255 / 82%);
+  --stream-image-initials: 20px;
   display: flex;
   min-width: 0;
   align-items: center;
@@ -345,22 +345,12 @@
   color: rgb(255 255 255 / 72%);
   font-weight: 600;
 }
-.tn-duel-team > .stream-image,
 .tn-duel-blank {
   width: 72px;
   height: 72px;
   flex: none;
-  border-radius: var(--hub-radius);
-}
-.tn-duel-team > .stream-image {
-  background: rgb(255 255 255 / 10%);
-}
-.tn-duel-team > .stream-image > span {
-  color: rgb(255 255 255 / 82%);
-  font-size: 20px;
-}
-.tn-duel-blank {
   border: 1px dashed rgb(255 255 255 / 40%);
+  border-radius: var(--hub-radius);
 }
 .tn-duel-score {
   display: grid;
@@ -369,7 +359,7 @@
   align-items: center;
   gap: 0 12px;
   font-size: 44px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 48px;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -503,34 +493,17 @@
   min-width: 0;
   gap: 12px;
 }
-.tn-match-games > .tn-heading {
-  margin-bottom: 0;
-}
 .tn-game-list {
   overflow: hidden;
   border-radius: var(--hub-radius-sm);
   background: var(--hub-surface);
 }
-.tn-game-list > .tn-game {
-  border-radius: 0;
-  background: none;
-}
-.tn-game-list > .tn-game + .tn-game {
-  border-top: 1px solid var(--hub-border);
-}
-.tn-game-list > .tn-game:hover,
-.tn-game-list > .tn-game:focus-visible {
-  background: var(--hub-hover);
-}
-.tn-game-list > .tn-game:focus-visible {
-  outline-offset: -2px;
-}
-.tn-game-list > .hub-skeleton {
+.tn-game-list > .tn-game-skeleton {
   display: block;
   height: 64px;
   border-radius: 0;
 }
-.tn-game-list > .hub-skeleton + .hub-skeleton {
+.tn-game-list > .tn-game-skeleton + .tn-game-skeleton {
   margin-top: 1px;
 }
 /* What is not there, said once. */
@@ -600,9 +573,9 @@
     min-width: 0;
   }
   .tn-fixture-team {
+    --stream-image-size: 22px;
     gap: 6px;
   }
-  .tn-fixture-team > .stream-image,
   .tn-fixture-blank {
     width: 22px;
     height: 22px;
@@ -633,11 +606,11 @@
   }
   .tn-duel-team,
   .tn-duel-team[data-side="a"] {
+    --stream-image-size: 56px;
     flex-direction: column;
     gap: 8px;
     text-align: center;
   }
-  .tn-duel-team > .stream-image,
   .tn-duel-blank {
     width: 56px;
     height: 56px;

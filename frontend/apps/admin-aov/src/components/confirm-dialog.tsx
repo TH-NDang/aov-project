@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { create } from "zustand"
 import {
   AlertDialog,
@@ -13,8 +14,14 @@ import {
 export interface ConfirmOptions {
   title: string
   description: string
+  /** A list or summary the answer depends on, such as what is replaced by what; it sits between the text and buttons. */
+  details?: ReactNode
   confirmLabel: string
   cancelLabel?: string
+  /** The details say the action cannot run yet, such as a record still in use: only Cancel answers. */
+  confirmDisabled?: boolean
+  /** `publish` for an action that loses nothing, such as publishing checked work: its button is not red. */
+  tone?: "destructive" | "publish"
 }
 
 interface ConfirmRequest extends ConfirmOptions {
@@ -46,8 +53,8 @@ function focusToRestore() {
 
 /**
  * Asks in the app's own dialog and resolves with the answer. A newer question cancels one still open, so an answer can
- * never apply to the wrong action. Every question guards something that cannot be undone: the action is red and focus
- * opens on Cancel, so a stray Enter keeps the user's work.
+ * never apply to the wrong action. A question guards something that cannot be undone: the action is red, unless its
+ * tone says it loses nothing, and focus opens on Cancel, so a stray Enter keeps the user's work.
  */
 export function confirmAction(options: ConfirmOptions) {
   const { open, request } = useConfirmStore.getState()
@@ -57,6 +64,11 @@ export function confirmAction(options: ConfirmOptions) {
   return new Promise<boolean>((resolve) => {
     useConfirmStore.setState({ open: true, request: { ...options, returnFocus, resolve } })
   })
+}
+
+/** Answers the open question with Cancel, for a link in its details that leads elsewhere in the app. */
+export function cancelConfirm() {
+  answer(false)
 }
 
 /** The usual question before throwing away unsaved edits. */
@@ -91,9 +103,14 @@ export function ConfirmDialogHost() {
           <AlertDialogTitle>{request?.title}</AlertDialogTitle>
           <AlertDialogDescription>{request?.description}</AlertDialogDescription>
         </AlertDialogHeader>
+        {request?.details && <div className="type-body min-w-0 break-words">{request.details}</div>}
         <AlertDialogFooter>
           <AlertDialogCancel>{request?.cancelLabel ?? "Hủy"}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={() => answer(true)}>
+          <AlertDialogAction
+            variant={request?.tone === "publish" ? "default" : "destructive"}
+            disabled={request?.confirmDisabled}
+            onClick={() => answer(true)}
+          >
             {request?.confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

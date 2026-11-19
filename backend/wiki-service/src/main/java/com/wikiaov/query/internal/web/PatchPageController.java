@@ -1,83 +1,64 @@
 package com.wikiaov.query.internal.web;
 
-import com.wikiaov.hero.HeroChangeQueries;
-import com.wikiaov.patch.PatchCatalog;
-import com.wikiaov.platform.*;
-import com.wikiaov.query.internal.application.PublishedCatalogChanges;
-import com.wikiaov.spell.SpellChangeQueries;
+import com.wikiaov.patch.PublishedPatch;
+import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.QueryParameters;
+import com.wikiaov.query.internal.application.PatchChangesPage;
+import com.wikiaov.query.internal.application.PatchPages;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ROOT + "/patches")
 public class PatchPageController implements PatchPageApi {
-    private final PatchCatalog patches;
-    private final HeroChangeQueries heroes;
-    private final SpellChangeQueries spells;
+    private final PatchPages pages;
 
-    private final List<CatalogChangeProvider> catalogs;
-
-    public PatchPageController(PatchCatalog patches, HeroChangeQueries heroes, SpellChangeQueries spells,
-            List<CatalogChangeProvider> catalogs) {
-        this.patches = patches;
-        this.heroes = heroes;
-        this.spells = spells;
-        this.catalogs = catalogs;
+    public PatchPageController(PatchPages pages) {
+        this.pages = pages;
     }
 
+    @Override
     @GetMapping(version = "1")
-    public ResponseEntity<?> list(@RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<PageSlice<PublishedPatch>> list(@RequestParam(defaultValue = "VN") String region,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size"));
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
-                .body(patches.list(region, locale, page, size));
+                .body(pages.list(region, locale, page, size));
     }
 
+    @Override
     @GetMapping(path = "/{id}", version = "1")
-    public ResponseEntity<?> detail(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
+    public ResponseEntity<PublishedPatch> detail(@PathVariable UUID id,
+            @RequestParam(defaultValue = "VN") String region,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
-                .body(patches.published(id, region, locale));
+                .body(pages.detail(id, region, locale));
     }
 
+    @Override
     @GetMapping(path = "/{id}/changes", version = "1")
-    public ResponseEntity<?> changes(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "HERO") String domain,
-            @RequestParam(required = false) UUID patchVariantId, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size,
+    public ResponseEntity<PatchChangesPage> changes(@PathVariable UUID id,
+            @RequestParam(defaultValue = "VN") String region,
+            @RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
+            @RequestParam(defaultValue = "HERO") String domain, @RequestParam(required = false) UUID patchVariantId,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "50") int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "domain", "patchVariantId", "page", "size"));
-        var provider = catalogs.stream().filter(catalog -> domain.equals(catalog.domain())).findFirst();
-        if (!Set.of("HERO", "SPELL").contains(domain) && provider.isEmpty())
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
-                    "This domain does not have an implemented change provider.");
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
-        var patch = patchVariantId == null
-                ? patches.published(id, region, locale)
-                : patches.publishedVariant(id, patchVariantId, region, locale);
-        UUID variant = (UUID) patch.get("variantId");
-        List<Map<String, Object>> all;
-        if (domain.equals("HERO")) {
-            all = heroes.forVariant(variant, locale);
-        } else {
-            List<Map<String, Object>> legacy = domain.equals("SPELL") ? spells.forVariant(variant, locale) : List.of();
-            all = provider.map(catalog -> PublishedCatalogChanges.forVariant(catalog, (UUID) patch.get("rulesetId"),
-                    variant, locale, legacy)).orElse(legacy);
-        }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("patch", patch);
-        response.put("variantId", variant);
-        response.put("effectiveAt", patch.get("effectiveAt"));
-        response.put("items", all.stream().skip((long) page * size).limit(size).toList());
-        response.put("page", page);
-        response.put("size", size);
-        response.put("totalElements", all.size());
-        return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic()).body(response);
+        return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
+                .body(pages.changes(id, region, locale, domain, patchVariantId, page, size));
     }
 }

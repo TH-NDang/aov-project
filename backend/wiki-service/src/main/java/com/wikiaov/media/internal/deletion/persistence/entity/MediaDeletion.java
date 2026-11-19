@@ -1,7 +1,13 @@
 package com.wikiaov.media.internal.deletion.persistence.entity;
 
+import com.wikiaov.media.internal.deletion.domain.MediaDeletionState;
 import com.wikiaov.media.internal.shared.persistence.entity.AssignedIdEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -24,7 +30,8 @@ public class MediaDeletion extends AssignedIdEntity {
     private List<String> objectKeys;
     @JdbcTypeCode(SqlTypes.JSON)
     private List<String> publicUrls;
-    private String state;
+    @Enumerated(EnumType.STRING)
+    private MediaDeletionState state;
     private @Nullable String lastError;
     private @Nullable Instant leaseUntil;
     private Instant requestedAt;
@@ -44,13 +51,13 @@ public class MediaDeletion extends AssignedIdEntity {
         deletion.expectedVersion = expectedVersion;
         deletion.objectKeys = List.copyOf(keys);
         deletion.publicUrls = List.copyOf(urls);
-        deletion.state = "PREPARED";
+        deletion.state = MediaDeletionState.PREPARED;
         deletion.requestedAt = now;
         return deletion;
     }
 
     public boolean complete() {
-        return "COMPLETE".equals(state);
+        return state == MediaDeletionState.COMPLETE;
     }
 
     public void claim(Instant until) {
@@ -59,11 +66,11 @@ public class MediaDeletion extends AssignedIdEntity {
     }
 
     public void originDeleted() {
-        state = "ORIGIN_DELETED";
+        state = MediaDeletionState.ORIGIN_DELETED;
     }
 
     public void finish(Instant now) {
-        state = "COMPLETE";
+        state = MediaDeletionState.COMPLETE;
         completedAt = now;
         leaseUntil = null;
         lastError = null;

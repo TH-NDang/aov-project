@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, pickTranslation } from "@aov/ui/lib/translation-fallback"
+
 export type WarehouseKind = "items" | "enchantments" | "arcana" | "spells"
 export interface WarehouseTranslation {
   locale: string
@@ -86,12 +88,12 @@ export interface WarehouseMetadata {
   color: string | null
   translations: { locale: string; name: string; description?: string | null; suitability?: string | null }[]
 }
-export function warehouseText<T extends { locale: string }>(translations: T[], locale = "vi-VN"): T | undefined {
-  return (
-    translations.find((text) => text.locale === locale) ??
-    translations.find((text) => text.locale === "vi-VN") ??
-    translations[0]
-  )
+/** The translation in the reader's language, falling back as `pickTranslation` does. */
+export function warehouseText<T extends { locale: string }>(
+  translations: readonly T[],
+  locale = DEFAULT_LOCALE,
+): T | undefined {
+  return pickTranslation(translations, locale)
 }
 export function warehouseName(
   entry: Pick<WarehouseEntry, "code"> & { content: Pick<WarehouseContent, "translations"> },

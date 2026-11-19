@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.user.internal.account.application.port.AccountMail;
@@ -30,6 +31,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.mail.health.MailHealthIndicator;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,7 +44,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Account security over HTTP with real persistence; the identity provider and SMTP are replaced by mocks. */
 // A configured SMTP host creates the mail sender, so the test can prove the mail health check stays off.
@@ -50,7 +51,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class AccountSecurityIntegrationTest {
     private static final String BASE = "/api/wiki/v1/users/me/security";
     private static final String ISSUER = "https://identity.example";
@@ -85,7 +86,7 @@ class AccountSecurityIntegrationTest {
                 .content("{\"language\":\"vi\"}")).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.emailHint").value("r•••r@example.com"));
         var code = ArgumentCaptor.forClass(String.class);
-        verify(mail, org.mockito.Mockito.atLeastOnce()).sendPasswordCode(eq("reader@example.com"), code.capture(),
+        verify(mail, Mockito.atLeastOnce()).sendPasswordCode(eq("reader@example.com"), code.capture(),
                 eq(Duration.ofMinutes(10)), eq(AccountMail.Language.VI));
         return code.getValue();
     }

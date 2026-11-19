@@ -2,10 +2,15 @@ package com.wikiaov.user.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.wikiaov.DockerBacked;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.media.TestImages;
@@ -13,8 +18,14 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,14 +35,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(properties = {"wiki.user.profile-defaults.locale=en-GB",
         "wiki.user.profile-defaults.time-zone=Europe/London"})
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 class UserProfileIntegrationTest {
     private static final String BASE = "/api/wiki/v1";
     @Autowired
@@ -40,7 +50,7 @@ class UserProfileIntegrationTest {
     private static RequestPostProcessor person(String subject, String... roles) {
         return jwt().jwt(token -> token.subject(subject).issuer("https://identity.example")
                 .claim("preferred_username", subject).claim("name", "Editor"))
-                .authorities(java.util.Arrays.stream(roles).map(SimpleGrantedAuthority::new)
+                .authorities(Arrays.stream(roles).map(SimpleGrantedAuthority::new)
                         .toArray(SimpleGrantedAuthority[]::new));
     }
 
@@ -160,9 +170,9 @@ class UserProfileIntegrationTest {
         String subject = UUID.randomUUID().toString();
         for (long version = 0; version < 2; version++) {
             String body = profile(version, null);
-            var start = new java.util.concurrent.CountDownLatch(1);
-            try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
-                java.util.concurrent.Callable<Integer> save = () -> {
+            var start = new CountDownLatch(1);
+            try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                Callable<Integer> save = () -> {
                     start.await();
                     return mvc.perform(put(BASE + "/users/me").with(person(subject))
                             .contentType("application/json").content(body)).andReturn().getResponse().getStatus();
@@ -170,8 +180,8 @@ class UserProfileIntegrationTest {
                 var first = executor.submit(save);
                 var second = executor.submit(save);
                 start.countDown();
-                assertThat(java.util.List.of(first.get(30, java.util.concurrent.TimeUnit.SECONDS),
-                        second.get(30, java.util.concurrent.TimeUnit.SECONDS)))
+                assertThat(List.of(first.get(30, TimeUnit.SECONDS),
+                        second.get(30, TimeUnit.SECONDS)))
                         .containsExactlyInAnyOrder(200, 409);
             }
             mvc.perform(get(BASE + "/users/me").with(person(subject)))

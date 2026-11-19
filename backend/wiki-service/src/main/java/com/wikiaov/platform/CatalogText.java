@@ -1,21 +1,18 @@
 package com.wikiaov.platform;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /** Localized catalog copy and numeric modifiers shared by the small catalog APIs. */
 public final class CatalogText {
     private CatalogText() {
     }
 
+    /** The translation a reader of {@code locale} sees, as a list of at most one, following the catalog fallback order. */
     public static List<Translation> select(List<Translation> translations, String locale) {
-        for (String candidate : List.of(locale, "vi-VN", "en-US")) {
-            var found = translations.stream().filter(text -> text.locale().equals(candidate)).findFirst();
-            if (found.isPresent())
-                return List.of(found.get());
-        }
-        return translations.stream().sorted(Comparator.comparing(Translation::locale)).findFirst()
-                .map(List::of).orElseGet(List::of);
+        var selected = CatalogLocales.pick(translations, locale, Translation::locale);
+        return selected == null ? List.of() : List.of(selected);
     }
 
     /**

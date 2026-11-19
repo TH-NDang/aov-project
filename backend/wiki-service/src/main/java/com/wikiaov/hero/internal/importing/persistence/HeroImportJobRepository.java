@@ -1,8 +1,12 @@
 package com.wikiaov.hero.internal.importing.persistence;
 
 import com.wikiaov.hero.internal.importing.persistence.entity.HeroImportJob;
-import java.util.*;
-import org.springframework.data.jpa.repository.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 public interface HeroImportJobRepository extends JpaRepository<HeroImportJob, UUID> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
@@ -29,6 +33,10 @@ public interface HeroImportJobRepository extends JpaRepository<HeroImportJob, UU
     @Query(value = "SELECT * FROM hero.import_job WHERE completed < total ORDER BY updated_at LIMIT 20", nativeQuery = true)
     List<HeroImportJob> pending();
 
+    /**
+     * Native on purpose: SKIP LOCKED lets a second worker pass over a job another worker holds instead of waiting for
+     * it, and {@code @Lock} has no portable way to ask for that.
+     */
     @Query(value = "SELECT * FROM hero.import_job WHERE id = :id FOR UPDATE SKIP LOCKED", nativeQuery = true)
     Optional<HeroImportJob> lock(UUID id);
 

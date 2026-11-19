@@ -1,6 +1,12 @@
 package com.wikiaov.hero.internal.importing.persistence.entity;
 
-import jakarta.persistence.*;
+import com.wikiaov.access.ActorType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
@@ -18,7 +24,8 @@ public class HeroImportJob {
     @Column(nullable = false)
     private String ownerSubject;
     @Column(nullable = false)
-    private String ownerType;
+    @Enumerated(EnumType.STRING)
+    private ActorType ownerType;
     @Column(nullable = false, columnDefinition = "text")
     private String requestJson;
     @Column(nullable = false, columnDefinition = "text")

@@ -2,12 +2,21 @@ package com.wikiaov.build.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +30,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import tools.jackson.databind.json.JsonMapper;
 
 /** ADR-026: recommended builds read from screenshots, with shared arcana pages and enchantment sets. */
@@ -29,7 +37,7 @@ import tools.jackson.databind.json.JsonMapper;
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class})
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@DockerBacked
 @SuppressWarnings("unchecked")
 class BuildCaptureIntegrationTest {
     private static final String ADMIN = "/api/wiki/v1/admin/build-captures";
@@ -50,8 +58,9 @@ class BuildCaptureIntegrationTest {
     @BeforeEach
     void seed() {
         jdbc.sql("TRUNCATE build.capture, build.arcana_page, build.enchantment_set CASCADE").update();
-        for (String domain : List.of("item", "arcana", "enchantment", "spell"))
+        for (String domain : List.of("item", "arcana", "enchantment", "spell")) {
             jdbc.sql("TRUNCATE " + domain + "." + domain + " CASCADE").update();
+        }
         jdbc.sql("TRUNCATE hero.import_job").update();
         jdbc.sql("TRUNCATE hero.hero CASCADE").update();
         ids.clear();
@@ -70,8 +79,9 @@ class BuildCaptureIntegrationTest {
         toro = hero("toro");
         hero("krixi");
         jdbc.sql("INSERT INTO hero.hero_code_alias (legacy_code, hero_id) VALUES ('toro-old', ?)").param(toro).update();
-        for (int number = 1; number <= 7; number++)
+        for (int number = 1; number <= 7; number++) {
             catalog("item", "item-" + number, "{}", true);
+        }
         catalog("item", "item-draft", "{}", false);
         catalog("spell", "flicker", "{}", true);
         catalog("spell", "punish", "{}", true);
@@ -272,9 +282,10 @@ class BuildCaptureIntegrationTest {
                 + "created_by_issuer, created_by_subject, updated_by_issuer, updated_by_subject) "
                 + "VALUES (?, ?, ?, 1, 'DRAFT', 1, 'DATA_BASELINE', ?, cast(? as jsonb), now(), now(), 'test', "
                 + "'editor', 'test', 'editor')").params(revision, owner, ruleset, variant, gameplay).update();
-        if (published)
+        if (published) {
             jdbc.sql("UPDATE " + domain + "." + domain + "_revision SET state = 'PUBLISHED', "
                     + "publication_sequence = 1, published_at = now() WHERE id = ?").param(revision).update();
+        }
     }
 
     /**
@@ -337,15 +348,17 @@ class BuildCaptureIntegrationTest {
 
     private static List<Map<String, Object>> items(String... codes) {
         List<Map<String, Object>> items = new ArrayList<>();
-        for (int index = 0; index < codes.length; index++)
+        for (int index = 0; index < codes.length; index++) {
             items.add(Map.of("slot", index + 1, "code", codes[index]));
+        }
         return items;
     }
 
     private static List<Map<String, Object>> enchantments(String... codes) {
         List<Map<String, Object>> enchantments = new ArrayList<>();
-        for (int index = 0; index < codes.length; index++)
+        for (int index = 0; index < codes.length; index++) {
             enchantments.add(Map.of("slot", index + 1, "code", codes[index]));
+        }
         return enchantments;
     }
 
@@ -403,8 +416,9 @@ class BuildCaptureIntegrationTest {
             List<GrantedAuthority> authorities) throws Exception {
         request.with(jwt().jwt(t -> t.issuer("https://test.example/issuer").subject("editor"))
                 .authorities(authorities));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

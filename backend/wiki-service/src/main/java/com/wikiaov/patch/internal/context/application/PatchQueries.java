@@ -1,16 +1,24 @@
 package com.wikiaov.patch.internal.context.application;
 
-import com.wikiaov.patch.*;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchCatalog;
+import com.wikiaov.patch.PatchReleaseReference;
+import com.wikiaov.patch.PublishedPatch;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchRepository;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchTranslationRepository;
+import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatchTranslation;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
+import com.wikiaov.patch.internal.domain.PatchStatus;
 import com.wikiaov.patch.internal.ruleset.application.Regions;
-import com.wikiaov.platform.*;
+import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.*;
-import org.springframework.data.domain.PageRequest;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +42,8 @@ public class PatchQueries implements PatchCatalog {
         this.clock = clock;
     }
 
-    public Map<String, Object> published(UUID id, String region, String locale) {
+    @Override
+    public PublishedPatch published(UUID id, String region, String locale) {
         validateLocale(locale);
         var release = releases(region).stream().filter(r -> r.patchId().equals(id)).findFirst()
                 .orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
@@ -42,50 +51,43 @@ public class PatchQueries implements PatchCatalog {
         return view(id, region, locale, release.variantId(), release.rulesetId(), release.effectiveAt());
     }
 
-    public Map<String, Object> publishedVariant(UUID id, UUID variantId, String region, String locale) {
+    @Override
+    public PublishedPatch publishedVariant(UUID id, UUID variantId, String region, String locale) {
         validateLocale(locale);
         var context = gameplay.resolveCatalog(region, clock.instant(), null, variantId);
-        if (!context.patchId().equals(id))
+        if (!context.patchId().equals(id)) {
             throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
                     "The requested variant does not belong to this patch.");
+        }
 
         return view(id, region, locale, context.patchVariantId(), context.rulesetId(), context.effectiveAt());
     }
 
-    private Map<String, Object> view(UUID id, String region, String locale, UUID variantId, UUID rulesetId,
+    private PublishedPatch view(UUID id, String region, String locale, UUID variantId, UUID rulesetId,
             Instant effectiveAt) {
-        var patch = patches.findByIdAndStatus(id, "PUBLISHED").orElseThrow(
+        var patch = patches.findByIdAndStatus(id, PatchStatus.PUBLISHED).orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "Patch resource does not exist."));
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("id", patch.getId());
-        result.put("code", patch.getCode());
-        result.put("sequence", patch.getSequence());
-        translations.preferred(id, locale, PageRequest.of(0, 1)).stream().findFirst().ifPresent(text -> {
-            result.put("locale", text.getLocale());
-            result.put("title", text.getTitle());
-            result.put("summary", text.getSummary());
-            result.put("description", text.getDescription());
-            result.put("actualLocale", text.getLocale());
-            result.put("fallbackApplied", !locale.equals(text.getLocale()));
-        });
-        result.put("region", region);
-        result.put("requestedLocale", locale);
-        result.put("variantId", variantId);
-        result.put("rulesetId", rulesetId);
-        result.put("effectiveAt", effectiveAt);
-        return result;
+        var text = CatalogLocales.pick(translations.findByPatchId(id), locale, GamePatchTranslation::getLocale);
+
+        return new PublishedPatch(patch.getId(), patch.getCode(), patch.getSequence(),
+                text == null
+                        ? null
+                        : new PublishedPatch.Text(text.getLocale(), text.getTitle(), text.getSummary(),
+                                text.getDescription(), text.getLocale(), !locale.equals(text.getLocale())),
+                region, locale, variantId, rulesetId, effectiveAt);
     }
 
-    public PageSlice<Map<String, Object>> list(String region, String locale, int page, int size) {
+    @Override
+    public PageSlice<PublishedPatch> list(String region, String locale, int page, int size) {
         validateLocale(locale);
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PatchErrorCode.PATCH_INVALID, "Invalid page bounds.");
         var ids = releases(region).stream().map(PatchReleaseReference::patchId).distinct().toList();
+        // Paged in memory: the patches come from the market's release schedule, and a market has a few dozen.
         long offset = (long) page * size;
         return new PageSlice<>(ids.stream().skip(offset).limit(size).map(id -> published(id, region, locale)).toList(),
                 page, size, ids.size());
     }
 
+    @Override
     public List<PatchReleaseReference> releases(String region) {
         regions.select(region);
         return contexts.publishedReleases(region);
@@ -93,8 +95,9 @@ public class PatchQueries implements PatchCatalog {
 
     private static void validateLocale(String value) {
         try {
-            if (!new Locale.Builder().setLanguageTag(value).build().toLanguageTag().equals(value))
+            if (!new Locale.Builder().setLanguageTag(value).build().toLanguageTag().equals(value)) {
                 throw new IllegalArgumentException();
+            }
         } catch (IllegalArgumentException exception) {
             throw new ApiException(PatchErrorCode.PATCH_INVALID, "Use a canonical BCP 47 locale.");
         }

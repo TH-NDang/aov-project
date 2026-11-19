@@ -23,7 +23,7 @@ public interface PatchReleaseRepository extends JpaRepository<PatchRelease, UUID
     Optional<Target> targetById(UUID id);
 
     @Query("select count(r)>0 from PatchRelease r join PatchVariant v on v.id=r.patchVariantId "
-            + "where r.regionId=:regionId and r.status='SCHEDULED' and v.rulesetId=:rulesetId "
+            + "where r.regionId=:regionId and r.status=com.wikiaov.patch.internal.domain.PatchReleaseStatus.SCHEDULED and v.rulesetId=:rulesetId "
             + "and ((r.effectiveAt<=:at and v.rulesetOrdinal>=:ordinal) "
             + "or (r.effectiveAt>=:at and v.rulesetOrdinal<=:ordinal))")
     boolean contradictsTimeline(UUID regionId, UUID rulesetId, Instant at, long ordinal);

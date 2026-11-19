@@ -1,8 +1,6 @@
-import { backendRequest } from "@/app/auth/session"
 import { isApiError } from "@/lib/api/errors"
 import type { CaptureKind, CaptureSetFile } from "../../../server/capture-sets.ts"
-import type { PageSlice } from "../publishing/types"
-import type { SourceCollection } from "./files-api"
+import { linksByPath, listCollections, type SourceCollection } from "./files-api"
 
 /** Where the sync tool publishes a capture collection's derived manifest (server/capture-sets.ts, ADR-030 section 8). */
 export const CAPTURE_SET_FILE = "capture-manifest.json"
@@ -22,19 +20,14 @@ const pending = new Map<CaptureKind, Promise<PublishedSet<CaptureSetFile>[]>>()
 async function collectionsOf(kind: CaptureKind) {
   const collections: SourceCollection[] = []
   for (let page = 0; ; page++) {
-    const slice = await backendRequest<PageSlice<SourceCollection>>(
-      `/admin/source-collections?category=${kind}&page=${page}&size=100`,
-    )
+    const slice = await listCollections(new URLSearchParams({ category: kind, page: String(page), size: "100" }))
     collections.push(...slice.items)
     if (!slice.items.length || collections.length >= slice.totalElements) return collections
   }
 }
 
 async function readSet(collection: SourceCollection): Promise<PublishedSet<CaptureSetFile> | null> {
-  const links = await backendRequest<{ items: { path: string; sha256: string; url: string }[] }>(
-    `/admin/source-collections/${collection.id}/links`,
-    { method: "POST", body: JSON.stringify({ paths: [CAPTURE_SET_FILE] }) },
-  )
+  const links = await linksByPath(collection.id, [CAPTURE_SET_FILE])
   const link = links.items.find((item) => item.path === CAPTURE_SET_FILE)
   // Pictures arrive before their manifest, so a collection being filled is simply not offered yet.
   if (!link) return null

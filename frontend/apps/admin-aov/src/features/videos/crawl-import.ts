@@ -1,4 +1,5 @@
 import type { VideoPurpose, VideoStatus, VideoSubject, VideoSubjectKind } from "./video-model"
+import { normalize } from "@/lib/text"
 
 /** Files produced by the lienquan-youtube-crawl analysis (`analysis/results/catalog`). */
 export interface CrawlVideo {
@@ -89,11 +90,7 @@ const MIN_PARTIAL_NAME = 4
 
 /** Compares names without accents, case or punctuation. */
 export function foldName(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
+  return normalize(value)
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
 }

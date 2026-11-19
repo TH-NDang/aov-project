@@ -9,7 +9,7 @@ import {
   type TimelineEvent,
   type TimelineKind,
 } from "../../model/timeline"
-import { formatClock } from "../../model/vod"
+import { formatClock } from "@/lib/clock"
 import { TimeTag, VideoMark } from "../primitives"
 import { clusterTitle, type ItemLookups } from "./cluster-card"
 import { EventLine } from "./event-line"

@@ -1,0 +1,177 @@
+/* Traits: the index of every trait beside the chosen one in full, or the faction × class table. */
+.wiki-guide-trait-browser {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+/* The chosen trait stays in view under the tab row while the index scrolls. */
+.wiki-guide-trait-detail {
+  position: sticky;
+  top: calc(var(--wiki-header-height) + var(--guide-tabs-height) + 16px);
+  display: grid;
+  gap: 16px;
+  max-height: calc(100dvh - var(--wiki-header-height) - var(--guide-tabs-height) - 32px);
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+/* In the dialog the trait is the dialog's whole body, so it neither sticks nor scrolls nor draws a card. */
+.wiki-mode-dialog .wiki-guide-trait-detail {
+  position: static;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  background: none;
+}
+.wiki-guide-trait-detail-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.wiki-guide-trait-detail-head > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.wiki-guide-trait-detail-head h2 {
+  font: var(--wiki-type-section);
+  color: var(--aov-text);
+}
+.wiki-guide-trait-detail .wiki-guide-detail-block h3 {
+  font: var(--wiki-type-category);
+}
+.wiki-guide-trait-members {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 4px;
+}
+.wiki-guide-trait-member {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: var(--aov-radius-card);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.wiki-guide-trait-member:hover {
+  background: var(--aov-raised);
+}
+.wiki-guide-trait-member span {
+  font: var(--wiki-type-meta);
+  max-width: 100%;
+  color: var(--aov-text);
+  font-weight: 600;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.wiki-guide-trait-member small {
+  gap: 3px;
+}
+.wiki-guide-trait-table-scroll {
+  min-width: 0;
+  overflow-x: auto;
+}
+.wiki-guide-trait-table {
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.wiki-guide-trait-table th,
+.wiki-guide-trait-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--aov-line);
+  background: var(--aov-bg);
+  vertical-align: middle;
+}
+.wiki-guide-trait-table td + td,
+.wiki-guide-trait-table th + td,
+.wiki-guide-trait-table thead th + th {
+  border-left: 1px solid var(--aov-line);
+}
+.wiki-guide-trait-table thead th {
+  min-width: 76px;
+  border-bottom-color: var(--aov-line-strong);
+  vertical-align: bottom;
+}
+.wiki-guide-trait-table th button {
+  font: var(--wiki-type-meta);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  color: var(--aov-text-soft);
+  cursor: pointer;
+}
+.wiki-guide-trait-table th button span {
+  max-width: 88px;
+  text-align: center;
+}
+.wiki-guide-trait-table th button:hover {
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+/* The class column stays in view while the table scrolls sideways. */
+.wiki-guide-trait-table tbody th,
+.wiki-guide-trait-table thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 140px;
+}
+.wiki-guide-trait-table tbody th button {
+  grid-template-columns: 28px minmax(0, 1fr);
+  justify-items: start;
+  align-items: center;
+  gap: 8px;
+}
+.wiki-guide-trait-table tbody th button span {
+  text-align: start;
+}
+.wiki-guide-trait-table td {
+  text-align: center;
+}
+.wiki-guide-trait-table td button {
+  margin: 1px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--aov-radius-control);
+  background: none;
+  cursor: pointer;
+}
+.wiki-guide-trait-table tbody tr:hover > * {
+  background: var(--aov-surface);
+}
+.wiki-guide-trait-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+@media (max-width: 899.98px) {
+  .wiki-guide-trait-browser {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wiki-guide-trait-table tbody th,
+  .wiki-guide-trait-table thead th:first-child {
+    min-width: 96px;
+  }
+  .wiki-guide-trait-table thead th {
+    min-width: 64px;
+  }
+  .wiki-guide-trait-table tbody th button {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+  .wiki-guide-trait-table tbody th button span {
+    text-align: center;
+  }
+}

@@ -148,10 +148,9 @@ IndexedDB phụ thuộc quota và chính sách giữ dữ liệu của trình du
 Trong `frontend`:
 
 ```powershell
-pnpm --filter @aov/admin-aov test:drafts
-pnpm --filter @aov/admin-aov test:publishing
+pnpm --filter @aov/admin-aov test
 pnpm --filter @aov/admin-aov typecheck
 pnpm --filter @aov/admin-aov build
 ```
 
-Test dùng IndexedDB giả lập hoặc fetch fixture, không ghi dữ liệu backend đang chạy. Các trường hợp gồm đóng/mở form, reload nháp, dữ liệu chưa hợp lệ, cô lập tài khoản/revision, đổi locale, xung đột, ghi/xóa đua nhau và lỗi lưu thiết bị/backend.
+Lệnh test chạy mọi tệp trong `tests/`; nháp nằm ở `draft-form.test.tsx`, `draft-merge.test.ts`, `draft-store.test.ts`, phần xuất bản ở `publishing.test.ts`. Test dùng IndexedDB giả lập hoặc fetch fixture, không ghi dữ liệu backend đang chạy. Các trường hợp gồm đóng/mở form, reload nháp, dữ liệu chưa hợp lệ, cô lập tài khoản/revision, đổi locale, xung đột, ghi/xóa đua nhau và lỗi lưu thiết bị/backend.

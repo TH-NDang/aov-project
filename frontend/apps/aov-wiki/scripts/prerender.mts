@@ -4,7 +4,7 @@
  * Runs after `vite build` and can run again at any time without rebuilding: it reads the template from dist/200.html
  * and replaces what an earlier run wrote. See backend/docs/adr/ADR-022-wiki-static-prerender.md.
  */
-import type { HeroRole } from "../src/features/hero/hero-classifications.ts"
+import type { HeroRole } from "../src/lib/hero-classifications.ts"
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -22,7 +22,7 @@ import {
   type PublishedPatch,
   type StaticPage,
 } from "../src/lib/seo/static-pages.ts"
-import { translationFor } from "../src/lib/seo/page-meta.ts"
+import { warehouseText } from "@aov/ui/lib/warehouse-content"
 
 const DETAIL_CONCURRENCY = 4
 const PAGE_SIZE = 100
@@ -68,13 +68,18 @@ function apiReader(apiBase: string, retryDelayMs: number) {
 
 type Reader = ReturnType<typeof apiReader>
 
-async function readPages<T>(read: Reader, apiPath: string) {
+type Slice<T> = { items: T[]; totalElements: number }
+
+/** Every row of a list; `sliceOf` finds the page in an answer that carries more than the page (GET /heroes). */
+async function readPages<T>(read: Reader, apiPath: string, sliceOf = (body: unknown) => body as Slice<T>) {
   const items: T[] = []
   for (let page = 0; ; page++) {
-    const slice = await read<{ items: T[]; totalElements: number }>(apiPath, {
-      page: String(page),
-      size: String(PAGE_SIZE),
-    })
+    const slice = sliceOf(
+      await read<unknown>(apiPath, {
+        page: String(page),
+        size: String(PAGE_SIZE),
+      }),
+    )
     items.push(...slice.items)
     if (!slice.items.length || items.length >= slice.totalElements) return items
   }
@@ -113,7 +118,7 @@ interface HeroDetailResponse {
 }
 
 async function readHeroes(read: Reader) {
-  const rows = await readPages<HeroListRow>(read, "/heroes")
+  const rows = await readPages<HeroListRow>(read, "/heroes", (body) => (body as { page: Slice<HeroListRow> }).page)
   const heroes = await mapLimit(rows, DETAIL_CONCURRENCY, async (row): Promise<PublishedHero | null> => {
     try {
       const detail = await read<HeroDetailResponse>(`/heroes/${encodeURIComponent(row.id)}`)
@@ -175,7 +180,7 @@ async function readTerms(read: Reader) {
     }
   }>("/reference-catalog")
   return settings.entities.flatMap((entity) => {
-    const text = entity.kind === "term" ? translationFor(entity.translations ?? [], STATIC_SCOPE.locale) : undefined
+    const text = entity.kind === "term" ? warehouseText(entity.translations ?? [], STATIC_SCOPE.locale) : undefined
     return text ? [{ id: entity.id, name: text.name, description: text.description }] : []
   })
 }

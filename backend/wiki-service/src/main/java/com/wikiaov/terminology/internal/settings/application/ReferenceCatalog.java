@@ -1,18 +1,21 @@
 package com.wikiaov.terminology.internal.settings.application;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import com.wikiaov.terminology.internal.application.ReferenceErrorCode;
 import com.wikiaov.terminology.internal.application.response.ReferenceSettingsView;
 import com.wikiaov.terminology.internal.domain.ReferenceSettings;
-import com.wikiaov.terminology.internal.domain.ReferenceSettings.*;
 import com.wikiaov.terminology.internal.settings.persistence.ReferenceConfigurationRepository;
 import com.wikiaov.terminology.internal.settings.persistence.entity.ReferenceConfiguration;
 import java.time.Clock;
-import java.util.*;
+import java.util.Map;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.*;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ReferenceCatalog {
@@ -62,9 +65,10 @@ public class ReferenceCatalog {
         content.replace(input.entities());
         long before = config.getVersion();
         updateConfiguration(config, input);
-        audit.record(new AuditEntry(actors.require(), "REFERENCE_SETTINGS_UPDATED", "REFERENCE_SETTINGS",
-                config.getId(), null, before, config.getVersion(), null,
-                Map.of("entryCount", input.entities().size())));
+        audit.record(
+                new AuditEntry(actors.require(), "REFERENCE_SETTINGS_UPDATED", CatalogAggregates.REFERENCE_SETTINGS,
+                        config.getId(), null, before, config.getVersion(), null,
+                        Map.of("entryCount", input.entities().size())));
 
         return new ReferenceSettingsView(config.getVersion(), input);
     }
@@ -78,11 +82,13 @@ public class ReferenceCatalog {
     }
 
     private ReferenceConfiguration lockCurrentConfiguration(long expectedVersion) {
-        var config = configurations.lockById(ReferenceConfiguration.ID).orElseThrow();
-        if (config.getVersion() != expectedVersion)
+        var config = configurations.lockById(ReferenceConfiguration.ID)
+                .orElseThrow(ReferenceCatalog::missingConfiguration);
+        if (config.getVersion() != expectedVersion) {
             throw new ApiException(ReferenceErrorCode.REFERENCE_VERSION_CONFLICT,
                     "Reference settings have changed. Reload before saving.",
                     Map.of("currentVersion", config.getVersion()));
+        }
         return config;
     }
 
@@ -95,9 +101,15 @@ public class ReferenceCatalog {
     }
 
     private ReferenceSettingsView readSnapshot() {
-        var config = configurations.findById(ReferenceConfiguration.ID).orElseThrow();
+        var config = configurations.findById(ReferenceConfiguration.ID)
+                .orElseThrow(ReferenceCatalog::missingConfiguration);
         var values = content.entries();
         return new ReferenceSettingsView(config.getVersion(),
                 new ReferenceSettings(1, config.isAutoRecognize(), config.getFallbackLocale(), values));
+    }
+
+    /** The single settings row is created by a migration. */
+    private static IllegalStateException missingConfiguration() {
+        return new IllegalStateException("The reference settings row is missing.");
     }
 }

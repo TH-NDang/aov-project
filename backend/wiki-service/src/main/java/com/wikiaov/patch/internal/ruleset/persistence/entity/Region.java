@@ -1,7 +1,10 @@
 package com.wikiaov.patch.internal.ruleset.persistence.entity;
 
+import com.wikiaov.patch.internal.domain.PatchLifecycleState;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
@@ -28,7 +31,8 @@ public class Region {
     @Column(nullable = false, length = 64)
     private String timezone;
     @Column(name = "lifecycle_state", nullable = false, length = 16)
-    private String lifecycleState;
+    @Enumerated(EnumType.STRING)
+    private PatchLifecycleState lifecycleState;
     @Column(name = "unavailable_reason", length = 255)
     private @Nullable String unavailableReason;
     @Column(name = "sort_order", nullable = false)
@@ -42,12 +46,12 @@ public class Region {
         this.productName = productName;
         this.defaultLocale = defaultLocale;
         this.timezone = timezone;
-        this.lifecycleState = available ? "ACTIVE" : "LOCKED";
+        this.lifecycleState = available ? PatchLifecycleState.ACTIVE : PatchLifecycleState.LOCKED;
         this.unavailableReason = available ? null : "Data is not available yet.";
         this.sortOrder = 100;
     }
 
     public boolean isAvailable() {
-        return "ACTIVE".equals(lifecycleState);
+        return lifecycleState == PatchLifecycleState.ACTIVE;
     }
 }

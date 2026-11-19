@@ -1,6 +1,10 @@
 package com.wikiaov.patch.internal.application.response;
 
+import com.wikiaov.patch.internal.domain.PatchDataReviewState;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,8 +53,8 @@ public final class PublicationOverviewView {
             UUID regionId,
             Instant startsAt,
             Instant endsAt,
-            java.time.LocalDate startsOn,
-            java.time.LocalDate endsOn,
+            LocalDate startsOn,
+            LocalDate endsOn,
             String phase
     ) {
     }
@@ -63,8 +67,8 @@ public final class PublicationOverviewView {
             UUID rulesetId,
             long rulesetOrdinal,
             UUID seasonId,
-            String status,
-            String dataReviewState,
+            PatchVariantStatus status,
+            PatchDataReviewState dataReviewState,
             long dataReviewVersion,
             Instant dataReviewedAt
     ) {
@@ -76,10 +80,10 @@ public final class PublicationOverviewView {
             UUID regionId,
             UUID seasonId,
             Instant effectiveAt,
-            java.time.LocalDate effectiveOn,
+            LocalDate effectiveOn,
             Instant confirmedAt,
             String sourceUrl,
-            String status,
+            PatchReleaseStatus status,
             String phase
     ) {
     }

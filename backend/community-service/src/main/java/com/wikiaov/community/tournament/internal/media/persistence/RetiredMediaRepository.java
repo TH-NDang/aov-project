@@ -10,6 +10,7 @@ public interface RetiredMediaRepository extends Repository<RetiredMediaAsset, UU
 
     RetiredMediaAsset save(RetiredMediaAsset asset);
 
+    /** Native: looks for the image id in the text of every jsonb document. */
     @Query(value = """
         SELECT count(*) FROM (
             SELECT content FROM tournament.team
@@ -26,7 +27,8 @@ public interface RetiredMediaRepository extends Repository<RetiredMediaAsset, UU
 
     /**
      * Images of live records. Series, rosters and games hold no image of their own, and game publications only copy
-     * these, so they are left to {@link #countReferences}, which is slow enough to run for one image at a time.
+     * these, so they are left to {@link #countReferences}, which is slow enough to run for one image at a time. Native
+     * for the PostgreSQL regular expression over the jsonb text.
      */
     @Query(value = """
         SELECT pairs.asset FROM (

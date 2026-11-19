@@ -1,8 +1,11 @@
 package com.wikiaov.media.internal.contact.persistence.entity;
 
+import com.wikiaov.media.internal.contact.domain.MediaContactStatus;
 import com.wikiaov.media.internal.shared.persistence.entity.AssignedIdEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -32,7 +35,8 @@ public class MediaContactRequest extends AssignedIdEntity {
     @Column(nullable = false, length = 4000)
     private String message;
     @Column(nullable = false, length = 16)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private MediaContactStatus status;
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
     @Column(name = "resolved_at")
@@ -48,14 +52,14 @@ public class MediaContactRequest extends AssignedIdEntity {
         entry.email = email;
         entry.topic = topic;
         entry.message = message;
-        entry.status = "OPEN";
+        entry.status = MediaContactStatus.OPEN;
         entry.createdAt = now;
         return entry;
     }
 
     public void resolve(Instant now) {
         if (resolvedAt == null) {
-            status = "RESOLVED";
+            status = MediaContactStatus.RESOLVED;
             resolvedAt = now;
         }
     }

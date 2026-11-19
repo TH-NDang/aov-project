@@ -1,6 +1,6 @@
 # AOV frontend
 
-Monorepo React + TypeScript + Vite, pnpm workspace và Turborepo. Các component shadcn/ui (style new-york) được cài trong packages/ui. `admin-aov` đã có giao diện quản trị (xem mục bên dưới); `aov-wiki` và `aov-stream` vẫn chỉ hiển thị Hello.
+Monorepo React + TypeScript + Vite, pnpm workspace và Turborepo. Các component shadcn/ui (style new-york) được cài trong packages/ui. `aov-wiki` là Wiki công khai, `aov-stream` là trang cộng đồng và giải đấu, `admin-aov` là giao diện quản trị (xem mục bên dưới).
 
 ## Cấu trúc
 

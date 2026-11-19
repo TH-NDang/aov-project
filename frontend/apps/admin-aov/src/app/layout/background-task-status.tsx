@@ -3,9 +3,12 @@ import { Activity, CheckCircle2, CircleAlert, LoaderCircle, X } from "lucide-rea
 import { useState } from "react"
 import { useSession } from "../auth/auth-gate"
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@aov/ui/components/sidebar"
-import { useBackgroundTasks } from "../background-tasks"
-import { useImportJobs, useDismissImportNotification, jobDescription } from "@/features/publishing/import-jobs"
-import type { BackgroundTask } from "../background-tasks"
+import { useBackgroundTasks, type BackgroundTask } from "../background-tasks"
+import {
+  useImportJobs,
+  useDismissImportNotification,
+  jobDescription,
+} from "@/features/publishing/components/import/import-jobs"
 type StatusTask = BackgroundTask & { serverJob?: boolean }
 export function BackgroundTaskStatus() {
   const { actor } = useSession()
@@ -88,7 +91,7 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
                 }}
               >
                 <Icon
-                  className={`size-4 shrink-0 ${running ? "animate-spin text-primary" : task.status === "error" ? "text-amber-500" : "text-muted-foreground"}`}
+                  className={`size-4 shrink-0 ${running ? "animate-spin text-primary" : task.status === "error" ? "text-(--aov-warning)" : "text-muted-foreground"}`}
                 />
                 <span className="grid min-w-0 flex-1 gap-1.5 group-data-[collapsible=icon]:hidden">
                   <span className="flex items-center justify-between gap-2 text-xs font-medium">

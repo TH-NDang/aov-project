@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
 import {
   ArrowUpRight,
   Captions,
@@ -16,8 +16,10 @@ import {
   Youtube,
 } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
-import { formatClock, youtubeWatchUrl } from "../../model/vod"
+import { youtubeWatchUrl } from "../../model/vod"
+import { formatClock } from "@/lib/clock"
 import { usePhoneLayout } from "./floating-panel"
+import { NativeSelect } from "@/components/native-select"
 
 type YTPlayer = {
   seekTo(seconds: number, allowSeekAhead: boolean): void
@@ -287,30 +289,33 @@ export const VodPlayer = forwardRef<
 
   soundOff.current = muted
   /** The viewer asked to play while a first frame was awaited: the video simply keeps running, with its sound. */
-  const releaseHold = (current: YTPlayer) => {
+  const releaseHold = useCallback((current: YTPlayer) => {
     if (!holdFrame.current) return
     holdFrame.current = false
     if (!soundOff.current) current.unMute?.()
-  }
-  const seekTo = (second: number, play = false) => {
-    const target = Math.max(0, second)
-    if (ready.current && player.current) {
-      // YouTube starts a video that was never played as soon as it is sought, and draws nothing if it is paused at
-      // once. A seek that did not ask to play lets it start without sound and stops it on the first frame, so a
-      // marker dragged along the timeline shows the picture there without setting the broadcast running.
-      const state = player.current.getPlayerState()
-      if (play) releaseHold(player.current)
-      else if ((state === -1 || state === 5) && !holdFrame.current) {
-        holdFrame.current = true
-        player.current.mute?.()
+  }, [])
+  const seekTo = useCallback(
+    (second: number, play = false) => {
+      const target = Math.max(0, second)
+      if (ready.current && player.current) {
+        // YouTube starts a video that was never played as soon as it is sought, and draws nothing if it is paused at
+        // once. A seek that did not ask to play lets it start without sound and stops it on the first frame, so a
+        // marker dragged along the timeline shows the picture there without setting the broadcast running.
+        const state = player.current.getPlayerState()
+        if (play) releaseHold(player.current)
+        else if ((state === -1 || state === 5) && !holdFrame.current) {
+          holdFrame.current = true
+          player.current.mute?.()
+        }
+        player.current.seekTo(target, true)
+        if (play) player.current.playVideo()
+      } else {
+        pendingSeek.current = { second: target, play: play || pendingSeek.current?.play === true }
       }
-      player.current.seekTo(target, true)
-      if (play) player.current.playVideo()
-    } else {
-      pendingSeek.current = { second: target, play: play || pendingSeek.current?.play === true }
-    }
-  }
-  const toggle = () => {
+    },
+    [releaseHold],
+  )
+  const toggle = useCallback(() => {
     const current = player.current
     if (!ready.current || !current) {
       pendingSeek.current = { second: pendingSeek.current?.second ?? latestStart.current, play: true }
@@ -319,8 +324,9 @@ export const VodPlayer = forwardRef<
     releaseHold(current)
     if (current.getPlayerState() === PLAYING) current.pauseVideo()
     else current.playVideo()
-  }
+  }, [releaseHold])
 
+  // Both helpers only read refs, so the handle stays the same object.
   useImperativeHandle(
     ref,
     () => ({
@@ -328,8 +334,7 @@ export const VodPlayer = forwardRef<
       toggle,
       currentTime: () => (ready.current && player.current ? player.current.getCurrentTime() : null),
     }),
-    // Both helpers only read refs, so the handle can stay stable.
-    [],
+    [seekTo, toggle],
   )
 
   // While dragging, moves are followed on the whole window and the video frame ignores the pointer, so passing over
@@ -366,7 +371,7 @@ export const VodPlayer = forwardRef<
   if (failed)
     return (
       <div className="flex aspect-video flex-col items-center justify-center gap-3 rounded-xl bg-[var(--esp-ink)] p-6 text-center text-sm text-white/80">
-        <Youtube size={28} className="text-red-500" />
+        <Youtube size={28} className="text-destructive" />
         Không tải được trình phát YouTube (có thể bị chặn bởi trình duyệt hoặc mạng).
         <a
           className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-white hover:bg-white/20"
@@ -431,7 +436,7 @@ export const VodPlayer = forwardRef<
       >
         <div
           className={cn(
-            "flex cursor-grab touch-none items-center gap-2 bg-zinc-900 px-2 py-1.5 text-xs select-none active:cursor-grabbing",
+            "flex cursor-grab touch-none items-center gap-2 bg-black/90 px-2 py-1.5 text-xs select-none active:cursor-grabbing",
             !floating && "hidden",
           )}
           role="toolbar"
@@ -482,7 +487,7 @@ export const VodPlayer = forwardRef<
           />
         </div>
         <div
-          className="flex h-10 shrink-0 items-center gap-0.5 bg-zinc-900 px-1.5 text-xs"
+          className="flex h-10 shrink-0 items-center gap-0.5 bg-black/90 px-1.5 text-xs"
           aria-label="Điều khiển video"
         >
           <button type="button" className={control} aria-label={playing ? "Tạm dừng" : "Phát"} onClick={toggle}>
@@ -552,10 +557,10 @@ export const VodPlayer = forwardRef<
               }
             }}
           />
-          <select
+          <NativeSelect
             value={rate}
             aria-label="Tốc độ phát"
-            className="h-7 shrink-0 rounded-md bg-transparent px-1 text-xs hover:bg-white/15 [&>option]:text-black"
+            className="h-7 shrink-0 border-0 bg-transparent px-1 text-xs shadow-none hover:bg-white/15 md:text-xs dark:bg-transparent [&>option]:text-black"
             onChange={(event) => {
               const next = Number(event.target.value)
               setRate(next)
@@ -567,7 +572,7 @@ export const VodPlayer = forwardRef<
                 {value}×
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <button
             type="button"
             className={cn(control, youtubeControls && "bg-white/20")}
@@ -606,7 +611,7 @@ export const VodPlayer = forwardRef<
             aria-label="Xem trên YouTube"
             title="Xem trên YouTube"
           >
-            <Youtube size={16} className="text-red-500" />
+            <Youtube size={16} className="text-destructive" />
           </a>
         </div>
       </div>

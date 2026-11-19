@@ -25,13 +25,15 @@ public class AuthThrottle {
         windows.entrySet().removeIf(entry -> entry.getValue().until <= now);
         Window window = windows.get(key);
         if (window == null) {
-            if (windows.size() >= 10000)
+            if (windows.size() >= 10000) {
                 throw limited();
+            }
             window = new Window(now + 60000);
             windows.put(key, window);
         }
-        if (++window.count > limit)
+        if (++window.count > limit) {
             throw limited();
+        }
     }
 
     private ApiException limited() {

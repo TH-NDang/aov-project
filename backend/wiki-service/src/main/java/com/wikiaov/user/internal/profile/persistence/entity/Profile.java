@@ -1,7 +1,14 @@
 package com.wikiaov.user.internal.profile.persistence.entity;
 
 import com.wikiaov.user.internal.domain.ProfileInput;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -63,10 +70,12 @@ public class Profile implements Persistable<UUID> {
         locale = input.locale();
         timeZone = input.timeZone();
         // A client that does not know these preferences leaves them as they were.
-        if (input.dateFormat() != null)
+        if (input.dateFormat() != null) {
             dateFormat = input.dateFormat();
-        if (input.currency() != null)
+        }
+        if (input.currency() != null) {
             currency = input.currency();
+        }
         avatarAssetId = input.avatarAssetId();
         // Every accepted save must dirty the entity, even when a test clock is fixed.
         updatedAt = updatedAt != null && !now.isAfter(updatedAt) ? updatedAt.plusNanos(1000) : now;

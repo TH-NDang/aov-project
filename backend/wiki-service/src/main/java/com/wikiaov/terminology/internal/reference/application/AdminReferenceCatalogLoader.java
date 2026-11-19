@@ -5,7 +5,11 @@ import com.wikiaov.terminology.AdminReferenceProvider;
 import com.wikiaov.terminology.internal.application.response.AdminReferenceCatalogView;
 import com.wikiaov.terminology.internal.domain.HeroReferenceAliases;
 import com.wikiaov.terminology.internal.settings.application.HeroAliasConfiguration;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -40,8 +44,9 @@ public class AdminReferenceCatalogLoader {
 
     private static AdminReferenceProvider.Candidate overlay(AdminReferenceProvider.Candidate candidate,
             Map<String, Map<String, List<String>>> supplemental) {
-        if (!candidate.kind().equals("hero"))
+        if (!candidate.kind().equals("hero")) {
             return candidate;
+        }
         var localized = supplemental.getOrDefault(candidate.id().toString(), Map.of());
         var translations = candidate.translations().stream()
                 .map(text -> new AdminReferenceProvider.Translation(text.locale(), text.name(),

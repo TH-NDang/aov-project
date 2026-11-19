@@ -2,6 +2,7 @@ import { Info, ExternalLink, Copyright, CircleAlert } from "lucide-react"
 import type { ReactNode } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "./public-overlay"
 import { creditHttpUrl, needsMediaCredit, type MediaCredit } from "../lib/media-credit"
+import { localeText } from "@aov/ui/lib/locale-text"
 
 /** Render as a sibling of image links and preview buttons, never inside an interactive card. */
 export function ImageCredit({
@@ -28,7 +29,7 @@ export function ImageCredit({
   /** The reader's language; source and owner names stay as they were recorded. */
   locale?: string
 }) {
-  const t = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
+  const t = localeText(locale)
   const missing = flagMissing && needsMediaCredit(sources)
   const reference = (id: string, label: string) =>
     renderPageReference ? (
@@ -93,7 +94,8 @@ export function ImageCredit({
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    {t("Lấy từ:", "Taken from:")} {source.label}
+                    {t("Lấy từ:", "Taken from:")}{" "}
+                    {source.unverified ? t("Chưa xác minh nguồn", "Source not verified") : source.label}
                   </p>
                   {source.relatedPageId && (pageBaseHref || renderPageReference) && (
                     <p>{reference(source.relatedPageId, t("Xem hồ sơ nội dung liên quan", "See the related page"))}</p>

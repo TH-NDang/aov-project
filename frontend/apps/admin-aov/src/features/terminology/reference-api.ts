@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { backendRequest } from "@/app/auth/session"
-import type { Request } from "../publishing/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 
 export const referenceCatalogKeys = {
   all: ["reference-catalog"] as const,

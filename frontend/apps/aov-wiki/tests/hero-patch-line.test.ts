@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { previousPatch } from "../src/features/hero/hero-patch-line.ts"
-import { localizedStatText, statText } from "../src/features/hero/hero-stat-text.ts"
+import { previousPatch } from "../src/lib/hero-patch-line.ts"
+import { statText } from "../src/features/hero/model/hero-stat-text.ts"
 
 test("the previous version follows season and patch order inside one ruleset", () => {
   const seasons = [
@@ -26,7 +26,9 @@ test("a stat with a percent reads the way the game shows it", () => {
   assert.equal(statText({ baseValue: 80, percentValue: 0 }), "80 | 0%")
   assert.equal(statText({ baseValue: 145, percentValue: null }), "145")
   assert.equal(statText({ baseValue: 3720 }), "3720")
-  assert.equal(localizedStatText("150 | 20%", "vi-VN"), "150 | 20%")
-  assert.equal(localizedStatText("12.5 | 7.5%", "vi-VN"), "12,5 | 7,5%")
-  assert.equal(localizedStatText("3720", "vi-VN"), "3.720")
+})
+
+test("a stat with decimals keeps the game's dot and no thousands separator", () => {
+  assert.equal(statText({ baseValue: 12.5, percentValue: 7.5 }), "12.5 | 7.5%")
+  assert.equal(statText({ baseValue: 3200.5 }), "3200.5")
 })

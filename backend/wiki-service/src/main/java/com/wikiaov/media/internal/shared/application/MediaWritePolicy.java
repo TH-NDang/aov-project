@@ -7,6 +7,7 @@ import com.wikiaov.media.internal.asset.persistence.entity.MediaAsset;
 import com.wikiaov.media.internal.domain.model.ActorRef;
 import com.wikiaov.media.internal.ingestion.domain.image.InvalidMediaException;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ public final class MediaWritePolicy {
 
     /** Layer 2 of the access checks (01 section 20.4): every media write needs {@code media:write}. */
     public static final String CAN_WRITE_MEDIA = "hasAuthority('" + Capabilities.MEDIA_WRITE + "')";
-    public static final String AUDIT_AGGREGATE = "MEDIA_ASSET";
+    public static final String AUDIT_AGGREGATE = CatalogAggregates.MEDIA_ASSET;
 
     private MediaWritePolicy() {
     }

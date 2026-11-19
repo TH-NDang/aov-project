@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class HeroPublishReadinessController implements HeroPublishReadinessApi {
     private final HeroPublishReadiness readiness;
 
+    @Override
     @GetMapping(version = "1")
     public List<HeroPublishReadinessView> list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());

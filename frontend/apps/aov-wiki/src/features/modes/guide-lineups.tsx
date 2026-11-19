@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { MODE_PARAMS, readModeParam, readParam, writeParam } from "../../lib/search-params"
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate, useSearchParams } from "react-router"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
@@ -10,8 +11,8 @@ import {
 } from "@aov/ui/components/public-overlay"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { signIn, useWikiSession } from "../auth/wiki-auth"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
+import { signIn, useWikiSession } from "../../lib/wiki-auth"
 import {
   BOARD_SLOTS,
   cellOf,
@@ -28,11 +29,13 @@ import { ModeFab, ModeHeading } from "./mode-ui"
 import {
   communityLineupsQuery,
   lineupErrorMessage,
+  modeKeys,
   myStateQuery,
   setLike,
   type LineupSort,
   type PublicGuide,
 } from "./mode-api"
+import "./guide-lineups.css"
 
 const TIER_ORDER: Record<string, number> = { S: 0, A: 1, B: 2, C: 3 }
 
@@ -42,7 +45,7 @@ const SORTS: [LineupSort, LabelNames][] = [
   ["recent", ["Mới cập nhật", "Recently updated"]],
 ]
 /** How a sort reads in the address; the default sort has none. */
-const SORT_KEYS: Partial<Record<LineupSort, string>> = { trending: "dang-len", recent: "moi" }
+const SORT_KEYS: Partial<Record<LineupSort, string>> = { trending: "trending", recent: "recent" }
 
 /** Likes of the signed-in reader, with the server's answer applied right away. */
 function useLikes(code: string) {
@@ -57,7 +60,7 @@ function useLikes(code: string) {
     onSuccess: (result) => {
       setMessage("")
       setOverrides((current) => ({ ...current, [result.lineupId]: { liked: result.liked, likes: result.likes } }))
-      void client.invalidateQueries({ queryKey: ["wiki", "game-mode", code, "insights"] })
+      void client.invalidateQueries({ queryKey: modeKeys.insights(code) })
     },
     onError: (error) => setMessage(lineupErrorMessage(error, locale)),
   })
@@ -76,15 +79,14 @@ type Likes = ReturnType<typeof useLikes>
 
 /** The heart and the count; a signed-out reader is asked to sign in, a reader's own lineup cannot be liked. */
 function LikeButton({ id, base, likes, own }: { id: string; base: number; likes: Likes; own?: boolean }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const count = likes.likes(id, base)
   const counted = text(`${count} lượt thích`, `${count} ${count === 1 ? "like" : "likes"}`)
   if (likes.session.status !== "authenticated")
     return (
       <button
         type="button"
-        className="mode-chip like-button"
+        className="wiki-mode-chip wiki-guide-like-button"
         aria-label={`${counted}. ${text("Đăng nhập để thích", "Sign in to like")}`}
         title={text("Đăng nhập để thích", "Sign in to like")}
         onClick={() => void signIn()}
@@ -102,7 +104,7 @@ function LikeButton({ id, base, likes, own }: { id: string; base: number; likes:
   return (
     <button
       type="button"
-      className="mode-chip like-button"
+      className="wiki-mode-chip wiki-guide-like-button"
       aria-pressed={liked}
       aria-label={`${counted}. ${action}`}
       disabled={own || likes.pending === id}
@@ -125,12 +127,11 @@ function LineupUnits({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const shown = units.filter((item) => index.units.has(item.unitCode))
   return (
     <div
-      className="lineup-units"
+      className="wiki-guide-lineup-units"
       aria-label={text(
         `${Math.min(shown.length, BOARD_SLOTS)}/${BOARD_SLOTS} ô`,
         `${Math.min(shown.length, BOARD_SLOTS)}/${BOARD_SLOTS} slots`,
@@ -143,24 +144,28 @@ function LineupUnits({
           <button
             key={item.unitCode}
             type="button"
-            className="lineup-unit"
+            className="wiki-guide-lineup-unit"
             data-carry={item.carry}
             data-extra={extra || undefined}
             style={costStyle(unit.cost)}
             title={`${unit.name}${item.row ? ` · ${text(...ROW_NAMES[item.row])}` : ""}${item.carry ? text(" · chủ lực", " · carry") : ""}${extra ? text(" · ô thêm từ trang bị", " · extra slot from an item") : ""}`}
             onClick={() => onOpen(unit.code)}
           >
-            <span className="lineup-portrait">
+            <span className="wiki-guide-lineup-portrait">
               <UnitPortrait unit={unit} index={index} size="md" />
               {item.carry && (
-                <em className="carry-mark" title={text("Chủ lực", "Carry")} aria-label={text("Chủ lực", "Carry")}>
+                <em
+                  className="wiki-guide-carry-mark"
+                  title={text("Chủ lực", "Carry")}
+                  aria-label={text("Chủ lực", "Carry")}
+                >
                   M
                 </em>
               )}
             </span>
-            <span className="lineup-unit-name">{unit.name}</span>
+            <span className="wiki-guide-lineup-unit-name">{unit.name}</span>
             {item.itemCodes.length > 0 && (
-              <span className="lineup-items">
+              <span className="wiki-guide-lineup-items">
                 {item.itemCodes.map((code) => {
                   const entry = index.items.get(code)
                   const src = index.image(entry?.iconAssetId)
@@ -172,7 +177,7 @@ function LineupUnits({
         )
       })}
       {Array.from({ length: Math.max(0, BOARD_SLOTS - shown.length) }, (_, at) => (
-        <span key={`empty-${at}`} className="lineup-slot-empty" aria-hidden="true" />
+        <span key={`empty-${at}`} className="wiki-guide-lineup-slot-empty" aria-hidden="true" />
       ))}
     </div>
   )
@@ -199,10 +204,15 @@ function LineupPieces({
 
 /** Cards while the community lineups load, in the grid they will fill. */
 function LineupSkeletons() {
+  const text = useWikiText()
   return (
-    <div className="lineup-grid" role="status" aria-label="Đang tải đội hình cộng đồng">
-      <span className="lineup-card lineup-skeleton" />
-      <span className="lineup-card lineup-skeleton" />
+    <div
+      className="wiki-guide-lineup-grid"
+      role="status"
+      aria-label={text("Đang tải đội hình cộng đồng", "Loading community lineups")}
+    >
+      <span className="wiki-guide-lineup-card wiki-guide-lineup-skeleton" />
+      <span className="wiki-guide-lineup-card wiki-guide-lineup-skeleton" />
     </div>
   )
 }
@@ -218,28 +228,27 @@ export function LineupsTab({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
-  const { href, locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const { href } = useWikiContext()
+  const text = useWikiText()
   const compact = usePageLayout() === "compact"
   const likes = useLikes(code)
   const [view, setView] = useLineupView()
   // The community list's sort and unit live in the address, so a reload or a shared link keeps them.
   const [params, setParams] = useSearchParams()
-  const sort = SORTS.find(([key]) => SORT_KEYS[key] === params.get("xep"))?.[0] ?? "popular"
-  const asked = params.get("quan")
+  const sort = SORTS.find(([key]) => SORT_KEYS[key] === readModeParam(params, MODE_PARAMS.sort))?.[0] ?? "popular"
+  const asked = readParam(params, MODE_PARAMS.lineupUnit)
   const unit = asked && index.units.has(asked) ? asked : null
-  const change = (key: "xep" | "quan", value: string | null | undefined) =>
+  const change = (key: "sort" | "lineupUnit", value: string | null | undefined) =>
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
-        if (value) next.set(key, value)
-        else next.delete(key)
+        writeParam(next, MODE_PARAMS[key], value)
         return next
       },
       { replace: true, preventScrollReset: true },
     )
-  const setSort = (value: LineupSort) => change("xep", SORT_KEYS[value])
-  const setUnit = (value: string | null) => change("quan", value)
+  const setSort = (value: LineupSort) => change("sort", SORT_KEYS[value])
+  const setUnit = (value: string | null) => change("lineupUnit", value)
   const community = useInfiniteQuery(communityLineupsQuery(code, sort, unit))
   const communityLineups = community.data?.pages.flatMap((page) => page.items) ?? []
   const communityTotal = community.data?.pages[0]?.totalElements
@@ -250,26 +259,26 @@ export function LineupsTab({
       (guide.lineupLikes[b.id]?.likes ?? 0) - (guide.lineupLikes[a.id]?.likes ?? 0),
   )
   const builderLink = (units: LineupUnit[], emblems: string[]) =>
-    href(`/modes/${encodeURIComponent(code)}/xep-doi-hinh?${encodeLineup(units, emblems)}`)
-  const postHref = href(`/modes/${encodeURIComponent(code)}/xep-doi-hinh`)
+    href(`/modes/${encodeURIComponent(code)}/builder?${encodeLineup(units, emblems)}`)
+  const postHref = href(`/modes/${encodeURIComponent(code)}/builder`)
 
   return (
-    <div className="guide-tab-body lineup-tab">
+    <div className="wiki-guide-tab-body wiki-guide-lineup-tab">
       {likes.message && (
-        <p className="mode-message" role="alert">
+        <p className="wiki-mode-message" role="alert">
           {likes.message}
         </p>
       )}
-      <section className="mode-section" aria-labelledby="lineups-editorial">
+      <section className="wiki-mode-section" aria-labelledby="lineups-editorial">
         <ModeHeading
           id="lineups-editorial"
           title={text("Đội hình đề xuất", "Recommended lineups")}
           count={editorial.length}
-          note="Xếp theo hạng biên tập, rồi theo lượt thích."
+          note={text("Xếp theo hạng biên tập, rồi theo lượt thích.", "Ranked by the editors' tier, then by likes.")}
           action={<LineupViewSwitch view={view} onChange={setView} labels={!compact} />}
         />
         {editorial.length ? (
-          <div className="lineup-grid">
+          <div className="wiki-guide-lineup-grid">
             {editorial.map((lineup) => (
               <EditorialLineup
                 key={lineup.id}
@@ -285,32 +294,38 @@ export function LineupsTab({
             ))}
           </div>
         ) : (
-          <p className="mode-meta">Biên tập viên chưa đề xuất đội hình nào.</p>
+          <p className="wiki-mode-meta">
+            {text("Biên tập viên chưa đề xuất đội hình nào.", "The editors have not suggested a lineup yet.")}
+          </p>
         )}
       </section>
 
-      <section className="mode-section" aria-labelledby="lineups-community">
+      <section className="wiki-mode-section" aria-labelledby="lineups-community">
         <ModeHeading
           id="lineups-community"
           title={text("Đội hình cộng đồng", "Community lineups")}
           count={communityTotal}
-          note="Đội hình người đọc đã lưu và chia sẻ."
+          note={text("Đội hình người đọc đã lưu và chia sẻ.", "Lineups readers saved and shared.")}
           action={
             compact ? undefined : (
-              <Link className="mode-chip" data-tone="accent" to={postHref}>
+              <Link className="wiki-mode-chip" data-tone="accent" to={postHref}>
                 <WikiIcon name="plus" size={16} />
                 {text("Đăng đội hình", "Post a lineup")}
               </Link>
             )
           }
         />
-        <div className="guide-toolbar" data-stack={compact || undefined}>
-          <div className="mode-chip-row" role="group" aria-label="Sắp xếp đội hình cộng đồng">
+        <div className="wiki-guide-toolbar" data-stack={compact || undefined}>
+          <div
+            className="wiki-mode-chip-row"
+            role="group"
+            aria-label={text("Sắp xếp đội hình cộng đồng", "Sort community lineups")}
+          >
             {SORTS.map(([key, label]) => (
               <button
                 key={key}
                 type="button"
-                className="mode-chip"
+                className="wiki-mode-chip"
                 aria-pressed={sort === key}
                 onClick={() => setSort(key)}
               >
@@ -318,7 +333,7 @@ export function LineupsTab({
               </button>
             ))}
           </div>
-          <label className="guide-select">
+          <label className="wiki-guide-select">
             <span className="sr-only">{text("Lọc theo quân cờ", "Filter by unit")}</span>
             <select value={unit ?? ""} onChange={(event) => setUnit(event.target.value || null)}>
               <option value="">{text("Mọi quân cờ", "All units")}</option>
@@ -333,33 +348,36 @@ export function LineupsTab({
         {community.isPending ? (
           <LineupSkeletons />
         ) : community.isLoadingError ? (
-          <div className="guide-state" role="alert">
+          <div className="wiki-guide-state" role="alert">
             <p>{text("Chưa tải được đội hình cộng đồng.", "Community lineups could not be loaded.")}</p>
-            <button type="button" className="mode-chip" onClick={() => void community.refetch()}>
+            <button type="button" className="wiki-mode-chip" onClick={() => void community.refetch()}>
               {text("Thử lại", "Retry")}
             </button>
           </div>
         ) : communityLineups.length === 0 ? (
-          <div className="guide-state">
+          <div className="wiki-guide-state">
             <p>
               {unit
-                ? "Chưa có đội hình cộng đồng nào có quân cờ này."
-                : "Chưa có đội hình cộng đồng. Hãy là người đầu tiên chia sẻ đội hình!"}
+                ? text("Chưa có đội hình cộng đồng nào có quân cờ này.", "No community lineup uses this unit yet.")
+                : text(
+                    "Chưa có đội hình cộng đồng. Hãy là người đầu tiên chia sẻ đội hình!",
+                    "No community lineups yet. Be the first to share one!",
+                  )}
             </p>
-            <Link className="mode-chip" data-tone="accent" to={postHref}>
-              Xếp và đăng đội hình
+            <Link className="wiki-mode-chip" data-tone="accent" to={postHref}>
+              {text("Xếp và đăng đội hình", "Build and share a lineup")}
             </Link>
           </div>
         ) : (
           <>
-            <div className="lineup-grid">
+            <div className="wiki-guide-lineup-grid">
               {communityLineups.map((lineup) => (
-                <article key={lineup.id} className="lineup-card">
-                  <header className="lineup-head">
-                    <div className="lineup-title">
+                <article key={lineup.id} className="wiki-guide-lineup-card">
+                  <header className="wiki-guide-lineup-head">
+                    <div className="wiki-guide-lineup-title">
                       <h3>{lineup.name}</h3>
                       {lineup.recentLikes > 0 && (
-                        <p className="lineup-recent">
+                        <p className="wiki-guide-lineup-recent">
                           {text(
                             `+${lineup.recentLikes} lượt thích tuần này`,
                             `+${lineup.recentLikes} ${lineup.recentLikes === 1 ? "like" : "likes"} this week`,
@@ -367,7 +385,7 @@ export function LineupsTab({
                         </p>
                       )}
                     </div>
-                    <span className="lineup-head-actions">
+                    <span className="wiki-guide-lineup-head-actions">
                       <LikeButton id={lineup.id} base={lineup.likes} likes={likes} own={own.has(lineup.id)} />
                       <LineupCopyMenu builder={builderLink(lineup.units, lineup.emblems)} />
                     </span>
@@ -401,12 +419,11 @@ type Stage = (typeof STAGES)[number]["key"]
 
 /** Items the lineup builds first, numbered in order, each naming itself and its effect on hover. */
 function PriorityItems({ codes, index }: { codes: string[]; index: GuideIndex }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   return (
-    <section className="lineup-extra" aria-label={text("Trang bị ưu tiên", "Priority items")}>
+    <section className="wiki-guide-lineup-extra" aria-label={text("Trang bị ưu tiên", "Priority items")}>
       <h4>{text("Trang bị ưu tiên", "Priority items")}</h4>
-      <ol className="lineup-priority">
+      <ol className="wiki-guide-lineup-priority">
         {codes.map((code, at) => {
           const item = index.items.get(code)
           const src = index.image(item?.iconAssetId)
@@ -425,13 +442,12 @@ function PriorityItems({ codes, index }: { codes: string[]; index: GuideIndex })
 
 /** Blessings to take with the lineup, in order, each with the game's card icon. */
 function PriorityBlessings({ codes, index }: { codes: string[]; index: GuideIndex }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const blessings = new Map(index.content.blessings.map((blessing) => [blessing.code, blessing]))
   return (
-    <section className="lineup-extra" aria-label={text("Chúc phúc ưu tiên", "Priority blessings")}>
+    <section className="wiki-guide-lineup-extra" aria-label={text("Chúc phúc ưu tiên", "Priority blessings")}>
       <h4>{text("Chúc phúc ưu tiên", "Priority blessings")}</h4>
-      <ol className="lineup-priority">
+      <ol className="wiki-guide-lineup-priority">
         {codes.map((code, at) => {
           const blessing = blessings.get(code)
           if (!blessing) return null
@@ -454,8 +470,7 @@ function PriorityBlessings({ codes, index }: { codes: string[]; index: GuideInde
 
 /** Open a lineup in the builder, or copy it to paste there later with the builder's paste button. */
 function LineupCopyMenu({ builder }: { builder: string }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
   const copy = async () => {
@@ -466,7 +481,7 @@ function LineupCopyMenu({ builder }: { builder: string }) {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
-        className="lineup-icon-button"
+        className="wiki-guide-lineup-icon-button"
         aria-label={copied ? text("Đã sao chép đội hình", "Lineup copied") : text("Sao chép đội hình", "Copy lineup")}
         title={copied ? text("Đã sao chép", "Copied") : text("Sao chép đội hình", "Copy lineup")}
         data-done={copied || undefined}
@@ -477,16 +492,16 @@ function LineupCopyMenu({ builder }: { builder: string }) {
         align="end"
         sideOffset={8}
         drawerTitle={text("Đội hình này", "This lineup")}
-        className="lineup-menu"
+        className="wiki-guide-lineup-menu"
       >
-        <DropdownMenuItem className="lineup-menu-item" onSelect={() => navigate(builder)}>
+        <DropdownMenuItem className="wiki-guide-lineup-menu-item" onSelect={() => navigate(builder)}>
           <WikiIcon name="chessboard" size={20} />
           <span>
             <b>{text("Mở trong Xếp đội hình", "Open in Lineup builder")}</b>
             <small>{text("Xếp tiếp ngay từ đội hình này", "Keep building from this lineup")}</small>
           </span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="lineup-menu-item" onSelect={() => void copy()}>
+        <DropdownMenuItem className="wiki-guide-lineup-menu-item" onSelect={() => void copy()}>
           <WikiIcon name="copy" size={20} />
           <span>
             <b>{text("Sao chép đội hình", "Copy lineup")}</b>
@@ -505,11 +520,10 @@ function LineupCopyMenu({ builder }: { builder: string }) {
 
 /** Tips for playing the lineup, after a rule at the card's foot. */
 function LineupTips({ tip }: { tip?: string | null }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   if (!tip) return null
   return (
-    <aside className="lineup-tips" aria-label={text("Mẹo", "Tips")}>
+    <aside className="wiki-guide-lineup-tips" aria-label={text("Mẹo", "Tips")}>
       <WikiIcon name="bulb" size={18} />
       <p>
         <b>{text("Mẹo", "Tips")}</b> {tip}
@@ -537,8 +551,7 @@ function EditorialLineup({
   onOpen: (code: string) => void
   builder: string
 }) {
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const stages = lineup.stages ?? []
   const [stage, setStage] = useState<Stage>("LATE")
   const current = stage === "LATE" ? null : stages.find((entry) => entry.stage === stage)
@@ -550,36 +563,40 @@ function EditorialLineup({
     : lineup.units
   const priorityItems = lineup.priorityItemCodes ?? []
   return (
-    <article className="lineup-card">
-      <header className="lineup-head">
+    <article className="wiki-guide-lineup-card">
+      <header className="wiki-guide-lineup-head">
         {lineup.tier && (
-          <span className="lineup-tier" data-tier={lineup.tier} title={text("Hạng biên tập", "Editorial tier")}>
+          <span
+            className="wiki-guide-lineup-tier"
+            data-tier={lineup.tier}
+            title={text("Hạng biên tập", "Editorial tier")}
+          >
             {lineup.tier}
           </span>
         )}
-        <div className="lineup-title">
+        <div className="wiki-guide-lineup-title">
           <h3>{lineup.name}</h3>
           {lineup.summary && <p>{lineup.summary}</p>}
           {recent > 0 && (
-            <p className="lineup-recent">
+            <p className="wiki-guide-lineup-recent">
               {text(`+${recent} lượt thích tuần này`, `+${recent} ${recent === 1 ? "like" : "likes"} this week`)}
             </p>
           )}
         </div>
-        <span className="lineup-head-actions">
+        <span className="wiki-guide-lineup-head-actions">
           <LikeButton id={lineup.id} base={base} likes={likes} />
           <LineupCopyMenu builder={builder} />
         </span>
       </header>
       {(lineup.difficulty || lineup.emblems.length > 0) && (
-        <p className="lineup-facts">
+        <p className="wiki-guide-lineup-facts">
           {lineup.difficulty && (
             <span>
               {text("Độ khó", "Difficulty")}: {text(...DIFFICULTY_NAMES[lineup.difficulty])}
             </span>
           )}
           {lineup.emblems.length > 0 && (
-            <span className="guide-trait-tags" aria-label={text("Huy hiệu", "Emblems")}>
+            <span className="wiki-guide-trait-tags" aria-label={text("Huy hiệu", "Emblems")}>
               {text("Huy hiệu", "Emblems")}
               {lineup.emblems.map((emblem, at) => (
                 <TraitTag key={`${emblem}-${at}`} code={emblem} index={index} />
@@ -590,13 +607,13 @@ function EditorialLineup({
       )}
       <ActiveTraits units={shown} emblems={lineup.emblems} index={index} />
       {stages.length > 0 && (
-        <div className="lineup-stages" role="group" aria-label={text("Giai đoạn trận", "Game stage")}>
+        <div className="wiki-guide-lineup-stages" role="group" aria-label={text("Giai đoạn trận", "Game stage")}>
           {STAGES.filter((entry) => entry.key === "LATE" || stages.some((item) => item.stage === entry.key)).map(
             (entry) => (
               <button
                 key={entry.key}
                 type="button"
-                className="mode-chip"
+                className="wiki-mode-chip"
                 aria-pressed={stage === entry.key}
                 onClick={() => setStage(entry.key)}
               >
@@ -607,9 +624,9 @@ function EditorialLineup({
         </div>
       )}
       <LineupPieces units={shown} view={view} index={index} onOpen={onOpen} />
-      {current?.note && <p className="lineup-stage-note">{current.note}</p>}
+      {current?.note && <p className="wiki-guide-lineup-stage-note">{current.note}</p>}
       {(priorityItems.length > 0 || lineup.blessingCodes.length > 0) && (
-        <div className="lineup-side">
+        <div className="wiki-guide-lineup-side">
           {priorityItems.length > 0 && <PriorityItems codes={priorityItems} index={index} />}
           {lineup.blessingCodes.length > 0 && <PriorityBlessings codes={lineup.blessingCodes} index={index} />}
         </div>

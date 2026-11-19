@@ -9,6 +9,7 @@ import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentId
 import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentRevision;
 import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentTranslation;
 import com.wikiaov.enchantment.internal.change.persistence.EnchantmentPatchChangeRepository;
+import com.wikiaov.enchantment.internal.change.persistence.entity.EnchantmentPatchChange;
 import com.wikiaov.media.MediaUsage;
 import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.patch.CatalogPatchScope;
@@ -17,9 +18,10 @@ import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogChanges;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogSnapshots;
 import com.wikiaov.platform.PageSlice;
-import com.wikiaov.platform.PlatformErrorCode;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,10 +29,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -79,9 +81,9 @@ class EnchantmentCatalogQueries {
 
     PageSlice<EnchantmentView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean draftsOnly) {
-        requirePageBounds(page, size);
-        if (rulesetId != null)
+        if (rulesetId != null) {
             contexts.requireRuleset(rulesetId);
+        }
         String needle = q.strip().toLowerCase(Locale.ROOT);
         var candidates = activeSnapshots(rulesetId, draftsOnly);
         var scoped = snapshotsInScope(candidates, rulesetId, seasonId, patchVariantId, includeUnchanged);
@@ -91,15 +93,10 @@ class EnchantmentCatalogQueries {
         return requestedPage(owners, selected, copies, page, size);
     }
 
-    private void requirePageBounds(int page, int size) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
-    }
-
     private List<CatalogSnapshots.Snapshot<EnchantmentRevision>> activeSnapshots(UUID rulesetId, boolean draftsOnly) {
         var records = draftsOnly
-                ? revisions.findByRulesetIdAndState(rulesetId, "DRAFT")
-                : revisions.findByStateNot("DISCARDED");
+                ? revisions.findByRulesetIdAndState(rulesetId, RevisionState.DRAFT)
+                : revisions.findByStateNot(RevisionState.DISCARDED);
         return records.stream()
                 .filter(revision -> rulesetId == null || revision.getRulesetId().equals(rulesetId))
                 .map(revision -> new CatalogSnapshots.Snapshot<>(revision.getId(), revision.getOwnerId(),
@@ -111,11 +108,13 @@ class EnchantmentCatalogQueries {
     private List<CatalogSnapshots.Snapshot<EnchantmentRevision>> snapshotsInScope(
             List<CatalogSnapshots.Snapshot<EnchantmentRevision>> candidates, UUID rulesetId,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged) {
-        if (seasonId == null && patchVariantId == null)
+        if (seasonId == null && patchVariantId == null) {
             return candidates;
+        }
         var scope = CatalogPatchScope.resolve(contexts, rulesetId, seasonId, patchVariantId, includeUnchanged);
-        if (includeUnchanged)
+        if (includeUnchanged) {
             return carriedForwardSnapshots(candidates, scope);
+        }
         return changedSnapshots(candidates, rulesetId, scope.selectedPatchIds());
     }
 
@@ -136,14 +135,14 @@ class EnchantmentCatalogQueries {
         var explicitTargets = patchChanges.findAll().stream()
                 .filter(f -> (rulesetId == null || rulesetId.equals(f.getRulesetId()))
                         && allowed.contains(f.getPatchVariantId()))
-                .map(f -> f.getToRevisionId()).collect(java.util.stream.Collectors.toSet());
+                .map(f -> f.getToRevisionId()).collect(Collectors.toSet());
         return CatalogSnapshots.changedAt(candidates, allowed, explicitTargets);
     }
 
     private Map<UUID, List<EnchantmentTranslation>> translationsFor(Map<UUID, EnchantmentRevision> selected) {
         return translations
                 .findByRevisionIdIn(selected.values().stream().map(EnchantmentRevision::getId).toList()).stream()
-                .collect(java.util.stream.Collectors.groupingBy(EnchantmentTranslation::getRevisionId));
+                .collect(Collectors.groupingBy(EnchantmentTranslation::getRevisionId));
     }
 
     private List<EnchantmentIdentity> matchingOwners(Map<UUID, EnchantmentRevision> selected,
@@ -159,21 +158,22 @@ class EnchantmentCatalogQueries {
     private PageSlice<EnchantmentView> requestedPage(List<EnchantmentIdentity> owners,
             Map<UUID, EnchantmentRevision> selected,
             Map<UUID, List<EnchantmentTranslation>> copies, int page, int size) {
-        int start = (int) Math.min((long) page * size, owners.size());
-        var pageRows = owners.subList(start, Math.min(start + size, owners.size())).stream().map(owner -> {
+        // Paged in memory: the snapshot each entry shows comes from the revision selection rules (CatalogSnapshots)
+        // and the search reads translations, so the page is cut after both; a catalog holds a few hundred entries.
+        return PageSlice.of(owners, page, size).map(owner -> {
             var revision = selected.get(owner.getId());
             var copy = copies.getOrDefault(revision.getId(), List.of());
             var c = revisionContent.hydrate(revision, copy);
             return new EnchantmentView(owner.getId(), owner.getCode(), revisionContent.revisionView(owner, revision), c,
                     contentRules.readiness(revision, c));
-        }).toList();
-        return new PageSlice<>(pageRows, page, size, owners.size());
+        });
     }
 
     EnchantmentView latest(UUID id, UUID rulesetId) {
         var found = latest(identity(id), rulesetId);
-        if (found == null)
+        if (found == null) {
             throw new ApiException(EnchantmentErrorCode.ENCHANTMENT_NOT_FOUND, "No snapshot is available.");
+        }
         return found;
     }
 
@@ -190,7 +190,7 @@ class EnchantmentCatalogQueries {
     List<MediaUsage> usages(UUID assetId) {
         var active = contexts.active(clock.instant());
         var found = revisions.findAll().stream()
-                .filter(revision -> !revision.getState().equals("DISCARDED")
+                .filter(revision -> revision.getState() != RevisionState.DISCARDED
                         && contentRules.assets(revision.getGameplay()).contains(assetId))
                 .toList();
         var names = usageNames(found);
@@ -204,11 +204,12 @@ class EnchantmentCatalogQueries {
         Map<UUID, List<MediaUsage>> usages = new HashMap<>();
 
         for (var revision : revisions.findAll()) {
-            var assets = revision.getState().equals("DISCARDED")
+            var assets = revision.getState() == RevisionState.DISCARDED
                     ? List.<UUID>of()
                     : contentRules.assets(revision.getGameplay());
-            if (assets.isEmpty())
+            if (assets.isEmpty()) {
                 continue;
+            }
             var usage = usage(revision, active);
             assets.forEach(asset -> usages.computeIfAbsent(asset, ignored -> new ArrayList<>()).add(usage));
         }
@@ -217,26 +218,27 @@ class EnchantmentCatalogQueries {
     }
 
     private MediaUsage usage(EnchantmentRevision revision, List<GameplayContext> active) {
-        boolean current = revision.getState().equals("PUBLISHED")
+        boolean current = revision.getState() == RevisionState.PUBLISHED
                 && active.stream().filter(c -> c.rulesetId().equals(revision.getRulesetId()))
                         .anyMatch(c -> current(revision.getOwnerId(), c).map(v -> v.getId().equals(revision.getId()))
                                 .orElse(false));
 
         return new MediaUsage("ENCHANTMENT", "ENCHANTMENT", revision.getOwnerId(), revision.getId(), "ICON",
-                revision.getState().equals("DRAFT")
+                revision.getState() == RevisionState.DRAFT
                         ? MediaUsageScope.DRAFT
                         : current ? MediaUsageScope.CURRENT : MediaUsageScope.HISTORICAL);
     }
 
-    /** The Vietnamese name of each revision, or another language's when it has none. */
+    /** The name of each revision for Admin, which reads Vietnamese, falling back as a reader of that locale would. */
     private Map<UUID, String> usageNames(List<EnchantmentRevision> found) {
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return Map.of();
+        }
 
         Map<UUID, String> names = new HashMap<>();
         translations.findByRevisionIdIn(found.stream().map(EnchantmentRevision::getId).toList()).stream()
-                .sorted(Comparator.comparing(row -> row.getLocale().equals("vi-VN")))
-                .forEach(row -> names.put(row.getRevisionId(), row.getName()));
+                .sorted(CatalogLocales.preference(CatalogLocales.DEFAULT, EnchantmentTranslation::getLocale))
+                .forEach(row -> names.putIfAbsent(row.getRevisionId(), row.getName()));
 
         return names;
     }
@@ -247,19 +249,35 @@ class EnchantmentCatalogQueries {
 
     PageSlice<EnchantmentView> published(String region, String locale, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
-        if (page < 0 || size < 1 || size > 100)
-            throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
         var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
                 includeUnscoped);
         var context = scope.gameplay();
-        var rows = identities.findAll(Sort.by("code")).stream()
-                .map(owner -> current(owner.getId(), context)
-                        .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
-                        .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
-                .filter(Objects::nonNull).toList();
-        int start = (int) Math.min((long) page * size, rows.size());
-        return new PageSlice<>(publicMedia.hydrate(rows.subList(start, Math.min(start + size, rows.size()))), page,
-                size, rows.size());
+        var current = currentByOwner(context);
+        var listed = identities.findAll(Sort.by("code")).stream()
+                .filter(owner -> current.containsKey(owner.getId()))
+                .filter(owner -> scope.allowUnscoped()
+                        || current.get(owner.getId()).getEffectiveFromPatchVariantId() != null)
+                .toList();
+
+        // Paged in memory: the revision each entry shows comes from the read rules above, not from one column, and a
+        // catalog holds a few hundred entries. Only the page is turned into views.
+        var slice = PageSlice.of(listed, page, size)
+                .map(owner -> revisionContent.publicView(owner, current.get(owner.getId()), locale));
+        return slice.withItems(publicMedia.hydrate(slice.items()));
+    }
+
+    /** The revision readers see of every entry of the context's ruleset, read with one query per table. */
+    private Map<UUID, EnchantmentRevision> currentByOwner(GameplayContext context) {
+        var facts = patchChanges.findByRulesetId(context.rulesetId()).stream()
+                .collect(Collectors.groupingBy(EnchantmentPatchChange::getOwnerId));
+        var histories = revisions.findByRulesetIdAndState(context.rulesetId(), RevisionState.PUBLISHED).stream()
+                .sorted(Comparator.comparingLong(EnchantmentRevision::getRevisionNo).reversed())
+                .collect(Collectors.groupingBy(EnchantmentRevision::getOwnerId));
+
+        Map<UUID, EnchantmentRevision> current = new HashMap<>();
+        histories.forEach((owner, history) -> current(facts.getOrDefault(owner, List.of()), history, context)
+                .ifPresent(revision -> current.put(owner, revision)));
+        return current;
     }
 
     EnchantmentView publishedOne(UUID id, String region, String locale) {
@@ -281,15 +299,25 @@ class EnchantmentCatalogQueries {
     }
 
     Optional<EnchantmentRevision> current(UUID id, GameplayContext context) {
-        var lifecycle = patchChanges.findByOwnerId(id).stream()
+        return current(patchChanges.findByOwnerId(id), revisions.findByOwnerIdOrderByRevisionNoDesc(id), context);
+    }
+
+    /**
+     * The revision readers see of one entry in {@code context}, chosen from its change facts and its revisions newest
+     * first; an entry removed at or before the context has none.
+     */
+    private Optional<EnchantmentRevision> current(List<EnchantmentPatchChange> facts, List<EnchantmentRevision> history,
+            GameplayContext context) {
+        var lifecycle = facts.stream()
                 .filter(f -> f.getRulesetId().equals(context.rulesetId()) && f.getKinds().stream()
                         .anyMatch(k -> k == CatalogChanges.Kind.REMOVED || k == CatalogChanges.Kind.ADDED))
                 .filter(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal() <= context.rulesetOrdinal())
                 .max(Comparator.comparingLong(f -> contexts.variant(f.getPatchVariantId()).rulesetOrdinal()));
-        if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED))
+        if (lifecycle.isPresent() && lifecycle.get().getKinds().contains(CatalogChanges.Kind.REMOVED)) {
             return Optional.empty();
-        return revisions.findByOwnerIdOrderByRevisionNoDesc(id).stream()
-                .filter(revision -> revision.getState().equals("PUBLISHED")
+        }
+        return history.stream()
+                .filter(revision -> revision.getState() == RevisionState.PUBLISHED
                         && revision.getRulesetId().equals(context.rulesetId())
                         && patchOrdinal(revision) <= context.rulesetOrdinal())
                 .max(Comparator.<EnchantmentRevision>comparingLong(this::patchOrdinal)
@@ -300,7 +328,7 @@ class EnchantmentCatalogQueries {
 
     EnchantmentView latest(EnchantmentIdentity owner, UUID rulesetId) {
         return revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId()).stream()
-                .filter(revision -> !revision.getState().equals("DISCARDED")
+                .filter(revision -> revision.getState() != RevisionState.DISCARDED
                         && (rulesetId == null || revision.getRulesetId().equals(rulesetId)))
                 .max(Comparator.<EnchantmentRevision>comparingLong(this::patchOrdinal)
                         .thenComparingLong(EnchantmentRevision::getRevisionNo))
@@ -323,6 +351,6 @@ class EnchantmentCatalogQueries {
     }
 
     long patchOrdinal(UUID id) {
-        return id == null ? 0 : contexts.variant(id).rulesetOrdinal();
+        return GameplayContexts.rulesetOrdinal(contexts, id);
     }
 }

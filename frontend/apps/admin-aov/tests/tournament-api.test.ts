@@ -1,13 +1,19 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { DocumentView, GameContent } from "@aov/community-contracts"
-import { initialGame } from "../src/features/tournaments/tournament-model"
+import { initialGame } from "../src/features/tournaments/model/tournament-model"
 
 const channelDescriptor = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
 Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-const { createTournamentApi, tournamentIssueFields } = await import("../src/features/tournaments/tournament-api")
+const { createTournamentApi, tournamentError, tournamentIssueFields } =
+  await import("../src/features/tournaments/api/tournament-api")
 const { ApiError } = await import("../src/lib/api/errors")
 if (channelDescriptor) Object.defineProperty(globalThis, "BroadcastChannel", channelDescriptor)
+
+test("a duplicate record is explained as a code or game number already taken", () => {
+  const error = new ApiError({ status: 409, code: "DUPLICATE_RECORD", title: "Duplicate record" })
+  assert.match(tournamentError(error), /đã được dùng/)
+})
 
 test("publication errors expose actionable missing paths without parsing an English detail message", () => {
   const problem = {

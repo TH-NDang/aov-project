@@ -4,7 +4,7 @@ import { changeKindIcon, changeKindIcons } from "@aov/ui/components/change-kind-
 import { LocalTime } from "@aov/ui/components/local-time"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../context/wiki-context"
-import { patchDayLabel } from "../features/home/patch-day-label"
+import { patchDayLabel } from "../lib/patch-day-label"
 import { WikiIcon } from "./wiki-icon"
 import { WikiImage } from "./wiki-image"
 import "./patch-changes-row.css"

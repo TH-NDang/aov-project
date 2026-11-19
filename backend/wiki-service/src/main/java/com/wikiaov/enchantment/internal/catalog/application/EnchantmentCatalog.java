@@ -20,8 +20,12 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
+import com.wikiaov.platform.CatalogCause;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,15 +110,17 @@ public class EnchantmentCatalog {
 
     @PreAuthorize("hasAuthority('enchantment:write')")
     public EnchantmentView create(Create input) {
-        if (identities.findByCode(input.code()).isPresent())
+        if (identities.findByCode(input.code()).isPresent()) {
             conflict("The code is already in use.");
+        }
         requireObservationContext(input.rulesetId(), input.effectiveFromPatchVariantId(), false);
 
         var owner = createIdentity(input.code());
         var content = initialContent(input);
         contentRules.validate(content);
 
-        var revision = newDraft(owner, input.rulesetId(), null, "DATA_BASELINE", input.effectiveFromPatchVariantId());
+        var revision = newDraft(owner, input.rulesetId(), null, CatalogCause.DATA_BASELINE,
+                input.effectiveFromPatchVariantId());
         revisionContent.saveContent(revision, content);
         recordAuditEvent("CREATED", owner, revision, null);
 
@@ -128,7 +134,8 @@ public class EnchantmentCatalog {
         requireForkSource(source, input);
         UUID effective = resolveForkContext(source, input);
 
-        var revision = newDraft(owner, input.rulesetId(), source.getId(), input.cause(), effective);
+        var revision = newDraft(owner, input.rulesetId(), source.getId(), CatalogCause.ofFork(input.cause()),
+                effective);
         revisionContent.saveContent(revision, revisionContent.content(source));
         recordAuditEvent("DRAFT_CREATED", owner, revision, input.changeNote());
 
@@ -144,8 +151,9 @@ public class EnchantmentCatalog {
         requireTranslationOnlyChange(revision, input.content());
         boolean contextChanged = updateObservationContext(revision, input);
 
-        if (revisionContent.content(revision).equals(input.content()) && !contextChanged)
+        if (revisionContent.content(revision).equals(input.content()) && !contextChanged) {
             return revisionContent.view(owner, revision);
+        }
 
         revisionContent.saveContent(revision, input.content());
         advanceVersion(revision);
@@ -161,9 +169,10 @@ public class EnchantmentCatalog {
         requireObservationContext(revision.getRulesetId(), revision.getEffectiveFromPatchVariantId(), true);
         var content = revisionContent.content(revision);
         var missing = contentRules.missing(content);
-        if (!missing.isEmpty())
+        if (!missing.isEmpty()) {
             throw new ApiException(EnchantmentErrorCode.ENCHANTMENT_INVALID_CONTENT,
                     "Complete the required fields before publication.", Map.of("missingFields", missing));
+        }
         contentRules.validate(content);
 
         publishRevision(revision);
@@ -183,11 +192,13 @@ public class EnchantmentCatalog {
     }
 
     private Map<UUID, EnchantmentIdentity> lockReorderMembers(EnchantmentOrdering.Nodes input) {
-        if (metadata.lockByCode(input.branchCode()).isEmpty())
+        if (metadata.lockByCode(input.branchCode()).isEmpty()) {
             fail("Unknown enchantment branch.");
+        }
         var ids = input.entries().stream().map(EnchantmentOrdering.Node::id).toList();
-        if (new HashSet<>(ids).size() != ids.size())
+        if (new HashSet<>(ids).size() != ids.size()) {
             fail("Duplicate enchantment identities are not allowed.");
+        }
         var owners = new HashMap<UUID, EnchantmentIdentity>();
         ids.stream().sorted().forEach(id -> owners.put(id, lockIdentity(id)));
         return owners;
@@ -196,16 +207,20 @@ public class EnchantmentCatalog {
     private void requireCompleteTierMembership(EnchantmentOrdering.Nodes input, Set<UUID> ids) {
         var peers = new HashSet<UUID>();
         for (int page = 0;; page++) {
-            var slice = list(input.rulesetId(), "vi-VN", "", page, 100);
-            for (var entry : slice.items())
+            var slice = list(input.rulesetId(), CatalogLocales.DEFAULT, "", page, 100);
+            for (var entry : slice.items()) {
                 if (input.branchCode().equals(entry.content().branchCode())
-                        && Objects.equals(input.tier(), entry.content().tier()))
+                        && Objects.equals(input.tier(), entry.content().tier())) {
                     peers.add(entry.id());
-            if ((long) (page + 1) * 100 >= slice.totalElements())
+                }
+            }
+            if ((long) (page + 1) * 100 >= slice.totalElements()) {
                 break;
+            }
         }
-        if (!peers.equals(new HashSet<>(ids)))
+        if (!peers.equals(new HashSet<>(ids))) {
             conflict("The tier membership has changed. Reload before reordering.");
+        }
     }
 
     private List<EnchantmentRevision> requireReorderableDrafts(EnchantmentOrdering.Nodes input,
@@ -217,10 +232,12 @@ public class EnchantmentCatalog {
             var latest = queries.latest(owners.get(entry.id()), input.rulesetId());
             if (!revision.getRulesetId().equals(input.rulesetId()) || !input.branchCode().equals(g.branchCode())
                     || !Objects.equals(input.tier(), g.tier()) || latest == null
-                    || !latest.revision().id().equals(revision.getId()))
+                    || !latest.revision().id().equals(revision.getId())) {
                 conflict("Only the current drafts in the selected branch and tier can be reordered.");
-            if (revision.getCause().equals("TRANSLATION_UPDATE"))
+            }
+            if (revision.getCause() == CatalogCause.TRANSLATION_UPDATE) {
                 fail("Translation revisions cannot change gameplay fields.");
+            }
             ordered.add(revision);
         }
         return ordered;
@@ -230,8 +247,9 @@ public class EnchantmentCatalog {
         for (int index = 0; index < ordered.size(); index++) {
             var revision = ordered.get(index);
             var g = revision.getGameplay();
-            if (Objects.equals(index, g.position()))
+            if (Objects.equals(index, g.position())) {
                 continue;
+            }
             revision.setGameplay(new EnchantmentContent(g.iconAssetId(), g.branchCode(), g.tier(), index,
                     List.of(), g.notes()));
             advanceVersion(revision);
@@ -246,7 +264,7 @@ public class EnchantmentCatalog {
         var owner = lockIdentity(id);
         var revision = requireEditableDraft(id, revisionId, input.expectedVersion());
 
-        revision.setState("DISCARDED");
+        revision.setState(RevisionState.DISCARDED);
         advanceVersion(revision);
         recordAuditEvent("DRAFT_DISCARDED", owner, revision, input.changeNote());
 
@@ -291,10 +309,12 @@ public class EnchantmentCatalog {
     }
 
     private void requireForkSource(EnchantmentRevision source, Fork input) {
-        if (!source.getState().equals("PUBLISHED") || !source.getRulesetId().equals(input.rulesetId()))
+        if (source.getState() != RevisionState.PUBLISHED || !source.getRulesetId().equals(input.rulesetId())) {
             fail("The source must be published in the selected ruleset.");
-        if (!Set.of("GAME_PATCH", "CONTENT_CORRECTION", "TRANSLATION_UPDATE").contains(input.cause()))
+        }
+        if (CatalogCause.ofFork(input.cause()) == null) {
             fail("Invalid revision cause.");
+        }
     }
 
     private UUID resolveForkContext(EnchantmentRevision source, Fork input) {
@@ -302,26 +322,31 @@ public class EnchantmentCatalog {
                 ? source.getEffectiveFromPatchVariantId()
                 : input.effectiveFromPatchVariantId();
         requireObservationContext(input.rulesetId(), effective, false);
-        if (patchOrdinal(source) > patchOrdinal(effective))
+        if (patchOrdinal(source) > patchOrdinal(effective)) {
             fail("A future snapshot cannot reconstruct an earlier patch.");
-        if (!input.cause().equals("GAME_PATCH") && !Objects.equals(effective, source.getEffectiveFromPatchVariantId()))
+        }
+        if (CatalogCause.ofFork(input.cause()) != CatalogCause.GAME_PATCH
+                && !Objects.equals(effective, source.getEffectiveFromPatchVariantId())) {
             fail("Content corrections retain source gameplay applicability.");
+        }
 
         return effective;
     }
 
     private void requireTranslationOnlyChange(EnchantmentRevision revision, EnchantmentContent content) {
-        if (revision.getCause().equals("TRANSLATION_UPDATE")
-                && !revision.getGameplay().mechanics().equals(content.mechanics()))
+        if (revision.getCause() == CatalogCause.TRANSLATION_UPDATE
+                && !revision.getGameplay().mechanics().equals(content.mechanics())) {
             fail("Translation revisions cannot change gameplay fields.");
+        }
     }
 
     private boolean updateObservationContext(EnchantmentRevision revision, Update input) {
         boolean contextChanged = input.effectiveFromPatchVariantId() != null
                 && !Objects.equals(input.effectiveFromPatchVariantId(), revision.getEffectiveFromPatchVariantId());
         if (contextChanged) {
-            if (!revision.getCause().equals("DATA_BASELINE") || revision.getSourceRevisionId() != null)
+            if (revision.getCause() != CatalogCause.DATA_BASELINE || revision.getSourceRevisionId() != null) {
                 fail("Only an independent baseline draft can change its observation context.");
+            }
             requireObservationContext(revision.getRulesetId(), input.effectiveFromPatchVariantId(), true);
             revision.setEffectiveFromPatchVariantId(input.effectiveFromPatchVariantId());
         }
@@ -335,20 +360,24 @@ public class EnchantmentCatalog {
 
     private EnchantmentRevision requireEditableDraft(UUID id, UUID revisionId, long expected) {
         var revision = queries.revision(id, revisionId);
-        if (!revision.getState().equals("DRAFT"))
+        if (revision.getState() != RevisionState.DRAFT) {
             conflict("Only drafts can be edited.");
-        if (revision.getVersion() != expected)
+        }
+        if (revision.getVersion() != expected) {
             throw new ApiException(EnchantmentErrorCode.ENCHANTMENT_CONFLICT, "The draft has changed.",
                     Map.of("currentVersion", revision.getVersion()));
+        }
         return revision;
     }
 
-    private EnchantmentRevision newDraft(EnchantmentIdentity owner, UUID ruleset, UUID source, String cause,
+    private EnchantmentRevision newDraft(EnchantmentIdentity owner, UUID ruleset, UUID source, CatalogCause cause,
             UUID effective) {
         var history = revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId());
         if (history.stream()
-                .anyMatch(revision -> revision.getRulesetId().equals(ruleset) && revision.getState().equals("DRAFT")))
+                .anyMatch(revision -> revision.getRulesetId().equals(ruleset)
+                        && revision.getState() == RevisionState.DRAFT)) {
             conflict("A draft already exists for the ruleset.");
+        }
 
         var actor = actors.require();
         var revision = new EnchantmentRevision();
@@ -357,7 +386,7 @@ public class EnchantmentCatalog {
         revision.setRulesetId(ruleset);
         revision.setRevisionNo(history.stream().filter(v -> v.getRulesetId().equals(ruleset))
                 .mapToLong(EnchantmentRevision::getRevisionNo).max().orElse(0) + 1);
-        revision.setState("DRAFT");
+        revision.setState(RevisionState.DRAFT);
         revision.setVersion(1);
         revision.setCause(cause);
         revision.setSourceRevisionId(source);
@@ -374,13 +403,15 @@ public class EnchantmentCatalog {
     private void requireObservationContext(UUID ruleset, UUID effective, boolean publication) {
         contexts.requireRuleset(ruleset);
         if (effective == null) {
-            if (publication)
+            if (publication) {
                 fail("A patch observation context is required before publication.");
+            }
             return;
         }
         var variant = contexts.variant(effective);
-        if (!variant.rulesetId().equals(ruleset) || publication && !variant.published())
+        if (!variant.rulesetId().equals(ruleset) || publication && !variant.published()) {
             fail("The patch must belong to the ruleset and be published first.");
+        }
     }
 
     private long patchOrdinal(EnchantmentRevision revision) {
@@ -388,7 +419,7 @@ public class EnchantmentCatalog {
     }
 
     private long patchOrdinal(UUID id) {
-        return id == null ? 0 : contexts.variant(id).rulesetOrdinal();
+        return GameplayContexts.rulesetOrdinal(contexts, id);
     }
 
     private void advanceVersion(EnchantmentRevision revision) {
@@ -400,7 +431,8 @@ public class EnchantmentCatalog {
     }
 
     private void recordAuditEvent(String action, EnchantmentIdentity owner, EnchantmentRevision revision, String note) {
-        audit.record(new AuditEntry(actors.require(), "ENCHANTMENT_" + action, "ENCHANTMENT", owner.getId(),
+        audit.record(new AuditEntry(actors.require(), "ENCHANTMENT_" + action, CatalogAggregates.ENCHANTMENT,
+                owner.getId(),
                 revision.getId(),
                 revision.getVersion() == 1 ? null : revision.getVersion() - 1, revision.getVersion(), note, Map.of()));
     }
@@ -430,10 +462,11 @@ public class EnchantmentCatalog {
                 .filter(v -> v.getRulesetId().equals(revision.getRulesetId()))
                 .map(EnchantmentRevision::getPublicationSequence).filter(Objects::nonNull).mapToLong(Long::longValue)
                 .max().orElse(0) + 1);
-        revision.setState("PUBLISHED");
+        revision.setState(RevisionState.PUBLISHED);
         revision.setPublishedAt(clock.instant());
         advanceVersion(revision);
-        if (Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause()))
+        if (revision.getCause().gameplay()) {
             dataReviews.markDirty(revision.getEffectiveFromPatchVariantId());
+        }
     }
 }

@@ -209,6 +209,13 @@ button:disabled {
   margin: 0 auto;
   padding: 0 var(--hub-gutter);
 }
+/* The logo, then the application switcher. */
+.hub-brand-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
 .hub-brand-link {
   display: flex;
   flex-shrink: 0;
@@ -303,8 +310,9 @@ button:disabled {
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
   border-radius: var(--aov-radius-control);
   color: var(--hub-accent-strong);
 }
@@ -498,7 +506,6 @@ button:disabled {
   .hub-topnav,
   .hub-search-open .hub-topnav {
     display: flex;
-    order: 3;
     flex: 1 0 100%;
     height: 42px;
     margin: 0 calc(-1 * var(--hub-gutter));
@@ -578,6 +585,10 @@ button:disabled {
   font-size: 13px;
   line-height: 20px;
 }
+/* In a card that spaces its parts with a gap, the text keeps no margin of its own. */
+.hub-card-text[data-flush] {
+  margin: 0;
+}
 
 /* ---------- Small shared marks ---------- */
 .hub-kicker {
@@ -628,6 +639,23 @@ button:disabled {
   background: var(--aov-warning-soft);
   color: var(--aov-warning);
 }
+/* On a banner's art a state is a fact like the others, unless it is on now: deepened so white text reads in both themes. */
+.hub-status[data-tone="banner"] {
+  background: rgb(255 255 255 / 14%);
+  color: #fff;
+}
+.hub-status[data-tone="banner"][data-status="ONGOING"] {
+  background: color-mix(in srgb, var(--hub-success) 72%, black);
+}
+.hub-status[data-tone="banner"][data-status="LIVE"] {
+  background: color-mix(in srgb, var(--hub-red) 76%, black);
+}
+/* In a card's first line, beside the circuit's name. */
+.hub-status[data-size="small"] {
+  height: 22px;
+  flex: none;
+  padding: 0 8px;
+}
 .hub-skeleton-rows,
 .hub-skeleton {
   border-radius: var(--hub-radius-sm);
@@ -648,6 +676,10 @@ button:disabled {
 }
 .hub-pills::-webkit-scrollbar {
   display: none;
+}
+/* A row that sits on a rule keeps a little room above and below for the chips' focus ring. */
+.hub-pills[data-padded] {
+  padding-block: 2px;
 }
 .hub-pills > button {
   display: inline-flex;
@@ -692,6 +724,18 @@ button:disabled {
 .hub-pills > [aria-pressed="true"] small,
 .hub-pills > [aria-current] small {
   background: color-mix(in srgb, var(--hub-on-accent) 18%, transparent);
+  color: inherit;
+}
+/* A row whose counts read as part of each chip's label: no badge, the chip's own colour once chosen. */
+.hub-pills[data-counts="plain"] > button > small {
+  min-width: 0;
+  padding: 0;
+  background: none;
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.hub-pills[data-counts="plain"] > [aria-pressed="true"] > small {
   color: inherit;
 }
 
@@ -774,16 +818,22 @@ button:disabled {
 .stream-search input::placeholder {
   color: var(--hub-muted);
 }
+/*
+ * A logo or picture on its plate. Its surroundings size it with --stream-image-size and round it with
+ * --stream-image-radius; on a dark banner they set --stream-image-plate, and --stream-image-ink and
+ * --stream-image-initials for the letters shown in place of a missing picture.
+ */
 .stream-image {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 100%;
-  height: 100%;
+  width: var(--stream-image-size, 100%);
+  height: var(--stream-image-size, 100%);
   overflow: hidden;
-  background: var(--hub-plate);
+  border-radius: var(--stream-image-radius, 0);
+  background: var(--stream-image-plate, var(--hub-plate));
   vertical-align: middle;
 }
 .stream-image img {
@@ -797,9 +847,9 @@ button:disabled {
   opacity: 1;
 }
 .stream-image > span {
-  color: var(--hub-on-plate);
-  font-size: 12px;
-  font-weight: 650;
+  color: var(--stream-image-ink, var(--hub-on-plate));
+  font-size: var(--stream-image-initials, 12px);
+  font-weight: 700;
 }
 /* The quiet line under a list that has nothing more to load. */
 .stream-load-more {
@@ -872,13 +922,9 @@ button:disabled {
 .hub-popover-header strong {
   font-size: 16px;
 }
-.hub-popover-header .cp-text-button {
-  font-size: 12px;
-}
 /* On phones the list opens as a bottom sheet that already carries the title: the rows run to the sheet's edges. */
-.hub-notifications.public-bottom-drawer > .public-bottom-body {
-  padding-inline: 0;
-  padding-top: 0;
+.hub-notifications.public-bottom-drawer {
+  --public-bottom-body-padding: 0 0 max(16px, env(safe-area-inset-bottom));
 }
 .hub-notifications.public-bottom-drawer .hub-popover-header {
   justify-content: flex-start;
@@ -944,7 +990,7 @@ button:disabled {
   border-top: 1px solid var(--hub-border);
   color: var(--hub-accent-strong);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 700;
   text-align: center;
 }
 .hub-popover-footer:hover {

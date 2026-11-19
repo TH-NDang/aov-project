@@ -2,8 +2,12 @@ package com.wikiaov.item.internal.application.response;
 
 import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.platform.CatalogCause;
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public record ItemView(
         UUID id,
@@ -27,11 +31,11 @@ public record ItemView(
             String code,
             UUID rulesetId,
             long revisionNo,
-            String state,
+            RevisionState state,
             long version,
             Long publicationSequence,
             Instant publishedAt,
-            String cause,
+            CatalogCause cause,
             UUID effectiveFromPatchVariantId,
             UUID sourceRevisionId,
             Instant createdAt,

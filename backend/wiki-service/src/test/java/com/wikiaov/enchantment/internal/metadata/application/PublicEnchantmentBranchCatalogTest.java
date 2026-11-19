@@ -1,7 +1,13 @@
 package com.wikiaov.enchantment.internal.metadata.application;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.enchantment.internal.metadata.persistence.EnchantmentBranchRepository;
 import com.wikiaov.enchantment.internal.metadata.persistence.EnchantmentBranchTranslationRepository;
@@ -60,7 +66,7 @@ class PublicEnchantmentBranchCatalogTest {
             });
         });
         assertThat(fallback.getFirst().translations()).singleElement()
-                .satisfies(text -> assertThat(text.locale()).isEqualTo("vi-VN"));
+                .satisfies(text -> assertThat(text.locale()).isEqualTo("en-US"));
         verify(translations, times(2)).findByOwnerCodeInOrderByLocale(List.of("sample"));
         verify(media, times(2)).findAll(Set.of(icon, background));
         verifyNoMoreInteractions(translations, media);

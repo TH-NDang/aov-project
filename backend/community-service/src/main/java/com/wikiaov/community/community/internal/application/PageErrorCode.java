@@ -1,20 +1,27 @@
 package com.wikiaov.community.community.internal.application;
 
 import com.wikiaov.community.platform.ApiErrorCode;
+import org.springframework.http.HttpStatus;
 
 public enum PageErrorCode implements ApiErrorCode {
-    PAGE_NOT_FOUND(404),
-    PAGE_INVALID_CONTENT(422),
-    PAGE_CONFLICT(409),
-    PAGE_ACTION_FORBIDDEN(403);
+    PAGE_NOT_FOUND(HttpStatus.NOT_FOUND),
+    PAGE_INVALID_CONTENT(HttpStatus.UNPROCESSABLE_CONTENT),
+    PAGE_CONFLICT(HttpStatus.CONFLICT),
+    PAGE_ACTION_FORBIDDEN(HttpStatus.FORBIDDEN);
 
-    private final int status;
+    private final HttpStatus status;
 
-    PageErrorCode(int status) {
+    PageErrorCode(HttpStatus status) {
         this.status = status;
     }
 
-    public int status() {
+    @Override
+    public HttpStatus status() {
         return status;
+    }
+
+    @Override
+    public String title() {
+        return "Page request failed";
     }
 }

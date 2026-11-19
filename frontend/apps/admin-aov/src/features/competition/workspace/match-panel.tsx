@@ -6,15 +6,27 @@ import { CalendarClock, ExternalLink, Pencil, PlayCircle, Swords, Trash2 } from 
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { LocalTime } from "@aov/ui/components/local-time"
+import { timeZoneLabel } from "@aov/ui/lib/time-zone"
 import { confirmAction } from "@/components/confirm-dialog"
-import { Field } from "@/features/community/profile-fields"
+import { Field } from "@/features/community/components/profile-form-primitives"
 import { youtubeVideoId } from "@/features/esports/model/vod"
 import { matchPath } from "@/features/esports/pages/esports-shell"
-import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/tournament-api"
-import { RESULT_VERIFICATIONS } from "@/features/tournaments/tournament-metadata"
-import { hasScore, hostOf, isWebLink, resultProblem, slotText } from "./model"
-import { BestOfField, SlotEditor, localInputTime, selectClass } from "./plan-fields"
+import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/api/tournament-api"
+import { RESULT_VERIFICATIONS } from "@/features/tournaments/components/tournament-metadata"
+import {
+  hasScore,
+  hostOf,
+  isWebLink,
+  matchLabel,
+  matchTitleLabel,
+  resultProblem,
+  slotText,
+  zonedInputInstant,
+  zonedInputTime,
+} from "./model"
+import { BestOfField, SlotEditor } from "./plan-fields"
 import type { Workspace } from "./parts"
+import { NativeSelect } from "@/components/native-select"
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -135,7 +147,7 @@ function VideoForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; 
   const [problem, setProblem] = useState("")
   const save = useMutation({
     mutationFn: () => tournamentApi.save("series", record, { ...record.content, sourceUrl: url.trim() || undefined }),
-    meta: { successMessage: "Đã lưu link video." },
+    meta: { silent: true, successMessage: "Đã lưu link video." },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
       onDone()
@@ -224,7 +236,7 @@ function ResultForm({
               verifiedOn: current?.verifiedOn ?? null,
             },
       }),
-    meta: { successMessage: "Đã lưu tỷ số." },
+    meta: { silent: true, successMessage: "Đã lưu tỷ số." },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: tournamentKeys.all })
       onDone()
@@ -292,8 +304,8 @@ function ResultForm({
         <Field label="Nguồn kết quả" type="url" value={source} onChange={(event) => setSource(event.target.value)} />
         <label className="grid gap-2">
           <span className="type-label">Mức xác minh</span>
-          <select
-            className={selectClass}
+          <NativeSelect
+            className="w-full"
             value={verification}
             onChange={(event) => setVerification(event.target.value as ResultVerification)}
           >
@@ -302,7 +314,7 @@ function ResultForm({
                 {label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
       </div>
       {(problem || save.error) && (
@@ -345,7 +357,7 @@ function PlanForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; o
   const remove = async () => {
     const confirmed = await confirmAction({
       title: "Bỏ trận nháp này?",
-      description: `${match.label || match.key} chưa có loạt trận thật nên sẽ bị gỡ khỏi lịch khi bạn lưu bản nháp.`,
+      description: `${matchLabel(match)} chưa có loạt trận thật nên sẽ bị gỡ khỏi lịch khi bạn lưu bản nháp.`,
       confirmLabel: "Bỏ trận",
     })
     if (!confirmed) return
@@ -357,11 +369,16 @@ function PlanForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; o
   return (
     <div className="space-y-4 bg-muted/40 px-4 py-4">
       <div className="grid gap-4 md:grid-cols-3">
-        <Field label="Tên trận" value={match.label} onChange={(event) => update({ label: event.target.value })} />
+        <Field
+          label="Tên trận"
+          value={match.label ?? ""}
+          placeholder={matchTitleLabel(match) ?? undefined}
+          onChange={(event) => update({ label: event.target.value || null })}
+        />
         <label className="grid gap-2">
           <span className="type-label">Giai đoạn</span>
-          <select
-            className={selectClass}
+          <NativeSelect
+            className="w-full"
             value={match.stageCode}
             onChange={(event) => update({ stageCode: event.target.value })}
           >
@@ -370,7 +387,7 @@ function PlanForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; o
                 {stage.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <Field
           label="Vòng đấu"
@@ -404,12 +421,10 @@ function PlanForm({ ws, match, onDone }: { ws: Workspace; match: PlannedMatch; o
           onChange={(b) => update({ b })}
         />
         <Field
-          label={`Giờ đấu (${Intl.DateTimeFormat().resolvedOptions().timeZone})`}
+          label={`Giờ đấu (${timeZoneLabel(ws.plan.timezone)})`}
           type="datetime-local"
-          value={localInputTime(match.scheduledAt)}
-          onChange={(event) =>
-            update({ scheduledAt: event.target.value ? new Date(event.target.value).toISOString() : null })
-          }
+          value={zonedInputTime(match.scheduledAt, ws.plan.timezone)}
+          onChange={(event) => update({ scheduledAt: zonedInputInstant(event.target.value, ws.plan.timezone) })}
         />
       </div>
       <div className="flex flex-wrap items-center gap-2">

@@ -1,19 +1,19 @@
+import type { ObjectiveKind } from "@aov/community-contracts"
 import { ArrowRightLeft, ChevronsRight, Flag, ShoppingBag, Skull, Sparkles, Swords, Tag } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import type { GameSeat, GameView } from "../../model/game-view"
-import { LANE_LABELS } from "../../model/labels"
 import {
   ITEM_ACTION_LABELS,
   OBJECTIVE_LABELS,
   eventSide,
   objectiveActor,
   type ItemRef,
-  type ObjectiveKind,
   type SeatKey,
   type TimelineEvent,
 } from "../../model/timeline"
 import { HeroIcon, ItemSlot } from "../primitives"
 import { seatLookup } from "./event-text"
+import { LANE_LABELS } from "@/lib/lanes"
 
 // Original emblems generated for this project; `new URL` keeps them bundled by Vite and loadable in Node tests.
 const OBJECTIVE_ART: Partial<Record<ObjectiveKind, string>> = {

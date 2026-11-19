@@ -2,7 +2,7 @@ import * as React from "react"
 import { Pipette } from "lucide-react"
 import { Button } from "./button"
 import { colorsUsedIn, gameTextColors } from "../lib/rich-text-blocks"
-import { cn } from "../lib/utils"
+import { cn } from "@aov/ui/lib/utils"
 
 type EyeDropperConstructor = new () => { open(): Promise<{ sRGBHex: string }> }
 

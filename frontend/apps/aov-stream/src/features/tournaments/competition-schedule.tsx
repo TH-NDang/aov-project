@@ -8,7 +8,7 @@ import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { formatCalendarDate, useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { useStreamLocale } from "../../components/stream-locale"
 import { MatchRow } from "./match-components"
-import type { CompetitionMatch } from "./match-model"
+import type { CompetitionMatch } from "../../lib/match-model"
 import {
   dayHeading,
   knownScheduleDay,
@@ -18,7 +18,7 @@ import {
   scheduleParts,
   type ScheduleGroup,
   type ScheduleScope,
-} from "./match-schedule"
+} from "../../lib/match-schedule"
 
 /** Matches shown before the reader scrolls for more. */
 const STEP = 40
@@ -39,17 +39,23 @@ export function scheduleDayLabel(day: string, locale: string) {
   return day === "unscheduled" ? "các trận chờ xếp lịch" : `ngày ${formatCalendarDate(day, undefined, locale)}`
 }
 
-/** The quick switch between everything, what is ahead and what was played. */
+/** The quick switch between everything, what is ahead and what was played. `className` places it in its bar. */
 export function ScheduleScopePills({
   value,
   onChange,
+  className,
 }: {
   value: ScheduleScope
   onChange: (scope: ScheduleScope) => void
+  className?: string
 }) {
   const { text } = useStreamLocale()
   return (
-    <div className="hub-pills" role="group" aria-label={text("Trạng thái trận đấu", "Match status")}>
+    <div
+      className={className ? `hub-pills ${className}` : "hub-pills"}
+      role="group"
+      aria-label={text("Trạng thái trận đấu", "Match status")}
+    >
       {SCOPES.map(([key, label]) => (
         <button type="button" key={key} aria-pressed={value === key} onClick={() => onChange(key)}>
           {text(...label)}
@@ -59,23 +65,28 @@ export function ScheduleScopePills({
   )
 }
 
-/** A filter with an "all" choice first. */
+/** A filter with an "all" choice first. `className` places it in the bar that holds it. */
 export function FilterSelect({
   label,
   value,
   onChange,
   all,
   options,
+  className,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   all: string
   options: string[][]
+  className?: string
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger aria-label={label} className="competition-select">
+      <SelectTrigger
+        aria-label={label}
+        className={className ? `competition-select ${className}` : "competition-select"}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent drawerTitle={label}>
@@ -109,7 +120,7 @@ function DayTitle({ group, part, timeZone, now }: { group: ScheduleGroup; part: 
   if (group.key === "live")
     return (
       <h3 className="tn-day-title">
-        <span className="tn-live">{text("Đang diễn ra", "Ongoing")}</span>
+        <span className="tn-live tn-day-live">{text("Đang diễn ra", "Ongoing")}</span>
       </h3>
     )
   if (group.at == null)
@@ -196,7 +207,7 @@ export function ScheduleList({
         ([part, total, shown]) =>
           shown.length > 0 && (
             <section className="tn-schedule-part" key={part} aria-labelledby={`schedule-${part}`}>
-              <div className="tn-heading">
+              <div className="tn-heading tn-schedule-heading">
                 <h2 id={`schedule-${part}`}>
                   {text(...PART_TITLES[part])}{" "}
                   <small>
@@ -213,7 +224,7 @@ export function ScheduleList({
       )}
       <InfiniteScroll
         query={loader}
-        label="Đang tải thêm trận đấu"
+        label={text("Đang tải thêm trận đấu", "Loading more matches")}
         retryLabel={text("Tải lại phần tiếp theo", "Load the next part again")}
       />
     </div>
@@ -228,11 +239,18 @@ export function ScheduleEmpty({ filtered, onClear }: { filtered: boolean; onClea
   const { text } = useStreamLocale()
   return (
     <div className="hub-state">
-      <h2>{filtered ? "Không có trận phù hợp" : "Chưa có lịch thi đấu"}</h2>
+      <h2>
+        {filtered
+          ? text("Không có trận phù hợp", "No matching matches")
+          : text("Chưa có lịch thi đấu", "No schedule yet")}
+      </h2>
       <p>
         {filtered
-          ? "Không trận nào khớp với bộ lọc đang chọn."
-          : "Lịch và kết quả sẽ xuất hiện tại đây khi được công bố."}
+          ? text("Không trận nào khớp với bộ lọc đang chọn.", "No match fits the chosen filters.")
+          : text(
+              "Lịch và kết quả sẽ xuất hiện tại đây khi được công bố.",
+              "The schedule and results will appear here once they are published.",
+            )}
       </p>
       {filtered && onClear && (
         <button type="button" className="cp-button" onClick={onClear}>
@@ -309,7 +327,7 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
           label={text("Đội", "Team")}
           value={team}
           onChange={(value) => update("team", value)}
-          all="Mọi đội"
+          all={text("Mọi đội", "All teams")}
           options={teamIds.map((id) => [id, teams[id]!.name])}
         />
       )}
@@ -325,16 +343,26 @@ export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }
     <div className="tn-schedule-view">
       {(switchable || selectCount > 0) && (
         <div className="tn-schedule-bar">
-          {switchable && <ScheduleScopePills value={scope} onChange={(value) => update("scope", value)} />}
+          {switchable && (
+            <ScheduleScopePills
+              value={scope}
+              onChange={(value) => update("scope", value)}
+              className="tn-schedule-scope"
+            />
+          )}
           {selectCount > 0 &&
             (folded ? (
               <PublicFilterSheet
-                title="Lọc trận đấu"
+                title={text("Lọc trận đấu", "Filter matches")}
                 triggerLabel={text("Lọc", "Filter")}
+                triggerClassName="tn-schedule-filter"
                 count={active}
                 resetLabel={text("Xóa lọc", "Clear filters")}
                 onReset={clear}
-                resultLabel={`Xem ${total.toLocaleString(languageTag)} trận`}
+                resultLabel={text(
+                  `Xem ${total.toLocaleString(languageTag)} trận`,
+                  `Show ${total.toLocaleString(languageTag)} ${total === 1 ? "match" : "matches"}`,
+                )}
               >
                 <div className="competition-sheet-filters">{selects}</div>
               </PublicFilterSheet>

@@ -46,23 +46,28 @@ public final class GameModeContentRules {
     /** Fields that must be filled before publication; an empty list means the revision can be published. */
     public static List<String> missingFields(GameModeContent content) {
         var missing = new ArrayList<String>();
-        if (content.name() == null || content.name().isBlank())
+        if (content.name() == null || content.name().isBlank()) {
             missing.add("name");
-        if (content.group() == null)
+        }
+        if (content.group() == null) {
             missing.add("group");
-        if (content.availability() == null || content.availability().status() == null)
+        }
+        if (content.availability() == null || content.availability().status() == null) {
             missing.add("availability.status");
+        }
         return missing;
     }
 
     /** Every asset the revision refers to, in display order. */
     public static Set<UUID> assets(GameModeContent content) {
         var ids = new LinkedHashSet<UUID>();
-        if (content.artAssetId() != null)
+        if (content.artAssetId() != null) {
             ids.add(content.artAssetId());
+        }
         content.specialItems().forEach(item -> {
-            if (item.iconAssetId() != null)
+            if (item.iconAssetId() != null) {
                 ids.add(item.iconAssetId());
+            }
         });
         return ids;
     }
@@ -97,24 +102,28 @@ public final class GameModeContentRules {
     }
 
     private static void duration(ContentChecks checks, GameModeContent.Duration duration) {
-        if (duration == null)
+        if (duration == null) {
             return;
+        }
         checks.range("duration.minMinutes", duration.minMinutes(), 1, 600, false);
         checks.range("duration.maxMinutes", duration.maxMinutes(), 1, 600, false);
         if (duration.minMinutes() != null && duration.maxMinutes() != null
-                && duration.minMinutes() > duration.maxMinutes())
+                && duration.minMinutes() > duration.maxMinutes()) {
             checks.fail("duration.maxMinutes", "INVALID_RANGE", "The longest time is shorter than the shortest.");
+        }
     }
 
     private static void availability(ContentChecks checks, GameModeContent.Availability availability) {
-        if (availability == null)
+        if (availability == null) {
             return;
+        }
         checks.oneOf("availability.status", availability.status(), AVAILABILITY, false);
         checks.text("availability.gameLabel", availability.gameLabel(), 120, false);
         checks.text("availability.note", availability.note(), 500, false);
         if (availability.startsOn() != null && availability.endsOn() != null
-                && availability.endsOn().isBefore(availability.startsOn()))
+                && availability.endsOn().isBefore(availability.startsOn())) {
             checks.fail("availability.endsOn", "INVALID_RANGE", "The end date is before the start date.");
+        }
     }
 
     private static void heroes(ContentChecks checks, GameModeContent content) {
@@ -128,8 +137,9 @@ public final class GameModeContentRules {
             }
             checks.text(at + ".name", hero.name(), 120, true);
             checks.text(at + ".note", hero.note(), 500, false);
-            if (hero.heroCode() != null && !ContentChecks.CODE.matcher(hero.heroCode()).matches())
+            if (hero.heroCode() != null && !ContentChecks.CODE.matcher(hero.heroCode()).matches()) {
                 checks.fail(at + ".heroCode", "INVALID_CODE", "Use the hero's catalog code.");
+            }
         }
     }
 

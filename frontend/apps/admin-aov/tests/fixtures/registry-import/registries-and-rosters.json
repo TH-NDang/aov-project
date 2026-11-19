@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-27",
+  "note": "A small copy of the shape of the AOG 2026 Winter registry package; names and links are made up.",
+  "scope": { "eventCode": "aog-2026-winter" },
+  "teams": [
+    {
+      "existingCode": "team-flash-vn",
+      "logo": { "file": "logos/team-flash.png", "license": "unknown" },
+      "verification": { "source": "liquipedia", "checkedOn": "2026-10-27" },
+      "content": {
+        "code": "team-flash-vn",
+        "name": "Team Flash",
+        "shortName": "FL",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": ["Flash"]
+      }
+    },
+    {
+      "logo": { "file": "logos/rex-regum.png", "license": "unknown" },
+      "verification": { "source": "liquipedia", "checkedOn": "2026-10-27" },
+      "content": {
+        "code": "rex-regum-qeon-vn-vn",
+        "name": "Rex Regum Qeon VN",
+        "shortName": "RRQ",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": []
+      }
+    }
+  ],
+  "players": [
+    {
+      "playerSourceUrl": "https://liquipedia.example/maris",
+      "photo": { "file": "players/maris.png" },
+      "content": {
+        "code": "maris",
+        "nickname": "Maris",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": [],
+        "lane": "MID",
+        "careerStatus": "ACTIVE"
+      }
+    },
+    {
+      "playerSourceUrl": "https://liquipedia.example/lai-bang",
+      "content": {
+        "code": "lai-bang",
+        "nickname": "Lai Bâng",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": ["Bâng"],
+        "lane": "DRAGON",
+        "careerStatus": "ACTIVE"
+      }
+    },
+    {
+      "importReady": false,
+      "content": { "code": "unknown-player", "nickname": "?" }
+    }
+  ],
+  "tournament": {
+    "content": {
+      "code": "aog-2026-winter",
+      "name": "AOG Winter 2026",
+      "region": "VN",
+      "year": 2026,
+      "startsOn": "2026-10-01",
+      "endsOn": "2026-11-08",
+      "sourceUrl": "https://liquipedia.example/aog-2026-winter",
+      "tier": "A",
+      "competitionType": "LEAGUE",
+      "venueMode": "OFFLINE",
+      "status": "ONGOING"
+    }
+  },
+  "rosters": [
+    {
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "playerCode": "maris",
+      "captain": true,
+      "sourceFlags": ["roster-page"],
+      "content": { "lane": "MID", "status": "ACTIVE" }
+    },
+    {
+      "teamCode": "team-flash-vn",
+      "playerCode": "maris",
+      "sourceFlags": ["transfer-note"],
+      "content": { "lane": "MID", "status": "INACTIVE", "endsOn": "2026-09-30" }
+    },
+    {
+      "teamCode": "team-flash-vn",
+      "playerCode": "lai-bang",
+      "content": { "lane": "DRAGON", "status": "ACTIVE" }
+    }
+  ]
+}

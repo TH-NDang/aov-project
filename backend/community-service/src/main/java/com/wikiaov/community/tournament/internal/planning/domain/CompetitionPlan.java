@@ -1,7 +1,11 @@
 package com.wikiaov.community.tournament.internal.planning.domain;
 
+import com.wikiaov.community.tournament.internal.domain.MatchTitle;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public record CompetitionPlan(
         String circuit,
@@ -35,12 +39,24 @@ public record CompetitionPlan(
     ) {
     }
 
+    /** How a team takes part in the competition; absent when the sources do not say. */
+    public enum EntryStatus {
+        INVITED,
+        QUALIFIED,
+        REGISTERED,
+        WITHDRAWN
+    }
+
     public record Entry(
             UUID teamId,
             Integer seed,
-            String status,
+            @Nullable EntryStatus status,
             String note
     ) {
+        /** A team that withdrew keeps its entry but plays no match. */
+        public boolean plays() {
+            return status != EntryStatus.WITHDRAWN;
+        }
     }
 
     public record Stage(
@@ -81,19 +97,25 @@ public record CompetitionPlan(
         }
     }
 
+    /**
+     * A planned match. {@code title} says what it is in its stage, as a code readers word in their language;
+     * {@code label} is a name an editor typed, shown instead of the title when present. A renamed match keeps its
+     * title.
+     */
     public record Match(
             String key,
             String stageCode,
             int round,
-            String label,
+            @Nullable String label,
             int bestOf,
             Instant scheduledAt,
             Slot a,
             Slot b,
-            UUID seriesId
+            UUID seriesId,
+            @Nullable MatchTitle title
     ) {
         public Match linked(UUID id) {
-            return new Match(key, stageCode, round, label, bestOf, scheduledAt, a, b, id);
+            return new Match(key, stageCode, round, label, bestOf, scheduledAt, a, b, id, title);
         }
     }
 

@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 public record ReferenceSettings(
         int schemaVersion,
@@ -50,6 +53,7 @@ public record ReferenceSettings(
     public void validate() {
         require(schemaVersion == 1 && locale(fallbackLocale), "Invalid settings schema or fallback locale.");
         require(entities != null && entities.size() <= 2000, "Invalid reference catalog size.");
+
         var keys = new HashSet<String>();
         long characters = 0;
         for (var e : entities) {
@@ -99,18 +103,23 @@ public record ReferenceSettings(
     }
 
     private static boolean safeUrl(String value, boolean localOnly) {
-        if (!text(value, 2048, false) || !value.equals(value.strip()))
+        if (!text(value, 2048, false) || !value.equals(value.strip())) {
             return false;
+        }
         try {
             String decoded = value;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++) {
                 decoded = URLDecoder.decode(decoded.replace("+", "%2B"), StandardCharsets.UTF_8);
-            if (decoded.matches("(?s).*[\\x00-\\x20\\x7f\\\\].*") || decoded.startsWith("//"))
+            }
+            if (decoded.matches("(?s).*[\\x00-\\x20\\x7f\\\\].*") || decoded.startsWith("//")) {
                 return false;
-            if (value.startsWith("/") && decoded.startsWith("/"))
+            }
+            if (value.startsWith("/") && decoded.startsWith("/")) {
                 return true;
-            if (localOnly)
+            }
+            if (localOnly) {
                 return false;
+            }
             var uri = URI.create(value);
             return Set.of("http", "https").contains(uri.getScheme()) && uri.getHost() != null
                     && uri.getUserInfo() == null;
@@ -120,7 +129,8 @@ public record ReferenceSettings(
     }
 
     private static void require(boolean valid, String detail) {
-        if (!valid)
+        if (!valid) {
             throw new IllegalArgumentException(detail);
+        }
     }
 }

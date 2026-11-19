@@ -1,7 +1,9 @@
 package com.wikiaov.spell.internal.catalog.persistence;
 
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellTranslation;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SpellTranslationRepository extends JpaRepository<SpellTranslation, UUID> {

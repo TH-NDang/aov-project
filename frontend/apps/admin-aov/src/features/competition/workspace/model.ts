@@ -1,16 +1,21 @@
-import type {
-  CompetitionPlan,
-  CompetitionSlot,
-  CompetitionSnapshot,
-  CompetitionStage,
-  CompetitionStanding,
-  DocumentView,
-  GameContent,
-  PlannedMatch,
-  ResolvedMatch,
-  RosterMembershipContent,
-  TeamContent,
+import {
+  type CompetitionPlan,
+  type CompetitionSlot,
+  type CompetitionSnapshot,
+  type CompetitionStage,
+  type CompetitionStanding,
+  type DocumentView,
+  type GameContent,
+  type PlannedMatch,
+  type ResolvedMatch,
+  type RosterMembershipContent,
+  type TeamContent,
+  matchName,
+  matchTitleText,
+  slotLabel,
 } from "@aov/community-contracts"
+import { localeText } from "@aov/ui/lib/locale-text"
+import { dayKeyInZone, toInstant } from "@aov/ui/lib/time-zone"
 
 export const WORKSPACE_STEPS = ["overview", "teams", "format", "schedule", "final", "publish"] as const
 export type WorkspaceStep = (typeof WORKSPACE_STEPS)[number]
@@ -52,11 +57,44 @@ export function stageProgress(stageCode: string, plan: CompetitionPlan, resolved
   return { total: matches.length, scored: matches.filter((match) => hasScore(resolved.get(match.key))).length }
 }
 
-/** Calendar day of a moment in the tournament's own time zone, as `yyyy-mm-dd`. */
-export function dayKey(value: string | number | Date, timeZone: string) {
-  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(
-    new Date(value),
+const wallClock = (timeZone: string) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  })
+
+/** The wall clock of a moment in a zone, as yyyy-mm-ddThh:mm:ss. */
+function wallTime(at: number, timeZone: string) {
+  const parts = Object.fromEntries(
+    wallClock(timeZone)
+      .formatToParts(at)
+      .map((part) => [part.type, part.value]),
   )
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`
+}
+
+/** A moment as a datetime-local value on the wall clock of the tournament's zone; empty without a moment. */
+export function zonedInputTime(value: string | null | undefined, timeZone: string) {
+  const date = toInstant(value)
+  return date ? wallTime(date.getTime(), timeZone).slice(0, 16) : ""
+}
+
+/**
+ * The moment a datetime-local value names on the wall clock of a zone, as an ISO string; null when empty or invalid.
+ * The zone's offset is read at the guessed moment and once more, so a time next to a clock change lands right.
+ */
+export function zonedInputInstant(input: string, timeZone: string) {
+  const asUtc = Date.parse(`${input}:00Z`)
+  if (!input || Number.isNaN(asUtc)) return null
+  let guess = asUtc
+  for (let round = 0; round < 2; round++) guess = asUtc - (Date.parse(`${wallTime(guess, timeZone)}Z`) - guess)
+  return new Date(guess).toISOString()
 }
 
 export type GroupMode = "round" | "day"
@@ -87,7 +125,7 @@ export function groupMatches(
 ): MatchGroup[] {
   const groups = new Map<string, MatchGroup>()
   for (const match of [...matches].sort((a, b) => matchTime(a) - matchTime(b) || a.key.localeCompare(b.key))) {
-    const day = match.scheduledAt ? dayKey(match.scheduledAt, timeZone) : undefined
+    const day = match.scheduledAt ? dayKeyInZone(match.scheduledAt, timeZone) : undefined
     const key = mode === "round" ? `round-${match.round}` : (day ?? "unscheduled")
     let group = groups.get(key)
     if (!group) {
@@ -127,18 +165,35 @@ export function restingTeams(group: MatchGroup, teamIds: string[], resolved: Map
   return teamIds.filter((id) => !playing.has(id))
 }
 
+/** Admin reads Vietnamese. */
+const adminText = localeText("vi-VN")
+
+/** What a planned match is called in Admin: the name an editor typed, its title, or at least its key. */
+export const matchLabel = (match: PlannedMatch) => matchName(match, adminText) || match.key
+
+/** The title of a planned match in Admin's words, which its name field shows until an editor types one. */
+export const matchTitleLabel = (match: PlannedMatch) => matchTitleText(match.title, adminText)
+
+/**
+ * A match an editor adds by hand to a stage: titled as an additional match, with both sides open and unnamed, so every
+ * reader words them in its own language.
+ */
+export function extraMatch(stage: Pick<CompetitionStage, "code" | "bestOf">, key: string): PlannedMatch {
+  return {
+    key,
+    stageCode: stage.code,
+    round: 1,
+    label: null,
+    title: { kind: "EXTRA" },
+    bestOf: stage.bestOf,
+    a: { type: "TBD" },
+    b: { type: "TBD" },
+  }
+}
+
 /** How one side of a planned match reads before its team is known. */
 export function slotText(slot: CompetitionSlot, plan: CompetitionPlan, teams: Record<string, TeamContent>): string {
-  if (slot.type === "TEAM") return teams[slot.teamId || ""]?.name || "Đội chưa có thông tin"
-  if (slot.type === "SEED") {
-    const seeded = plan.playoffSeeds[slot.seed ?? 0]
-    return (seeded && teams[seeded]?.name) || `Hạt giống ${slot.seed}`
-  }
-  if (slot.type === "WINNER" || slot.type === "LOSER") {
-    const source = plan.matches.find((match) => match.key === slot.matchKey)
-    return `${slot.type === "WINNER" ? "Thắng" : "Thua"} ${source?.label || slot.matchKey}`
-  }
-  return slot.label || "Chưa xác định"
+  return slotLabel(slot, plan, teams, adminText)
 }
 
 export type BracketLane = "upper" | "lower" | "final"
@@ -466,7 +521,7 @@ export function pendingChanges(draft: CompetitionSnapshot, published: Competitio
       continue
     }
     if (now?.teamAId !== was?.teamAId || now?.teamBId !== was?.teamBId)
-      changes.push({ kind: "match", text: `Đổi cặp đấu: ${match.label || pair}` })
+      changes.push({ kind: "match", text: `Đổi cặp đấu: ${matchName(match, adminText) || pair}` })
     if (hasScore(now) && !hasScore(was))
       changes.push({ kind: "score", text: `Tỷ số mới: ${pair} ${now!.scoreA} : ${now!.scoreB}` })
     else if (!hasScore(now) && hasScore(was))
@@ -517,7 +572,15 @@ export function pendingChanges(draft: CompetitionSnapshot, published: Competitio
   return changes
 }
 
-export type SuggestedPlacement = { place: string; teamId?: string; teamName: string; reason: string }
+export type SuggestedPlacement = {
+  place: string
+  teamId?: string
+  teamName: string
+  reason: string
+  /** The team's last match in the bracket: who it played and the score from its side, such as "4–2". */
+  lastOpponent?: string
+  lastScore?: string
+}
 
 /**
  * Final ranking read from a linked elimination bracket: the final gives first and second, each match whose loser goes
@@ -539,7 +602,15 @@ export function suggestedPlacements(
     const row = index.get(key)
     if (!row || !hasScore(row) || !row.consistent || row.scoreA === row.scoreB) return null
     const aWon = row.scoreA! > row.scoreB!
-    return { winner: aWon ? row.teamAId : row.teamBId, loser: aWon ? row.teamBId : row.teamAId, row }
+    const high = Math.max(row.scoreA!, row.scoreB!)
+    const low = Math.min(row.scoreA!, row.scoreB!)
+    return {
+      winner: aWon ? row.teamAId : row.teamBId,
+      loser: aWon ? row.teamBId : row.teamAId,
+      row,
+      winnerScore: `${high}–${low}`,
+      loserScore: `${low}–${high}`,
+    }
   }
   const dropsSomewhere = new Set(
     plan.matches.flatMap((match) =>
@@ -556,17 +627,21 @@ export function suggestedPlacements(
           place: "1",
           teamId: decided.winner ?? undefined,
           teamName: name(decided.winner),
-          reason: `Thắng ${final.match.label}`,
+          reason: `Thắng ${matchLabel(final.match)}`,
+          lastOpponent: name(decided.loser) || undefined,
+          lastScore: decided.winnerScore,
         }
-      : { place: "1", teamName: "", reason: `Chờ ${final.match.label}` },
+      : { place: "1", teamName: "", reason: `Chờ ${matchLabel(final.match)}` },
     decided
       ? {
           place: "2",
           teamId: decided.loser ?? undefined,
           teamName: name(decided.loser),
-          reason: `Thua ${final.match.label}`,
+          reason: `Thua ${matchLabel(final.match)}`,
+          lastOpponent: name(decided.winner) || undefined,
+          lastScore: decided.loserScore,
         }
-      : { place: "2", teamName: "", reason: `Chờ ${final.match.label}` },
+      : { place: "2", teamName: "", reason: `Chờ ${matchLabel(final.match)}` },
   )
   let next = 3
   const eliminating = layout.nodes
@@ -583,9 +658,11 @@ export function suggestedPlacements(
               place,
               teamId: result.loser ?? undefined,
               teamName: name(result.loser),
-              reason: `Thua ${node.match.label} · ${Math.min(result.row.scoreA!, result.row.scoreB!)}–${Math.max(result.row.scoreA!, result.row.scoreB!)}`,
+              reason: `Thua ${matchLabel(node.match)} · ${result.loserScore}`,
+              lastOpponent: name(result.winner) || undefined,
+              lastScore: result.loserScore,
             }
-          : { place, teamName: "", reason: `Chờ ${node.match.label}` },
+          : { place, teamName: "", reason: `Chờ ${matchLabel(node.match)}` },
       )
     }
     next += group.length
@@ -615,6 +692,18 @@ const ROSTER_LANES = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"] as const
  * One team's roster the way a reader scans it: the five positions in map order, then the bench, then who left.
  * A position can hold nobody or more than one starter, and a starter may have no position recorded yet.
  */
+/** A team's roster lines in the order its row draws them: starters by lane, then the bench, who left and the rest. */
+export function rosterOrder(rows: RosterMembershipContent[]) {
+  const board = rosterBoard(rows)
+  return [
+    ...board.lanes.flatMap((cell) => cell.players),
+    ...board.unplaced,
+    ...board.bench,
+    ...board.left,
+    ...board.unknown,
+  ]
+}
+
 export function rosterBoard(rows: RosterMembershipContent[]) {
   const of = (status: string) => rows.filter((row) => (row.status ?? "UNKNOWN") === status)
   const starters = of("ACTIVE")

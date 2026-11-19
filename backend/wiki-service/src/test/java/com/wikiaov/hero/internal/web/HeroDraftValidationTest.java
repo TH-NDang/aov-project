@@ -1,15 +1,35 @@
 package com.wikiaov.hero.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Profile;
+import com.wikiaov.hero.internal.domain.HeroContent.ProfileTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Publication;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillStateIcon;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
+import com.wikiaov.hero.internal.domain.HeroContent.Skills;
+import com.wikiaov.hero.internal.domain.HeroContent.Stat;
+import com.wikiaov.hero.internal.domain.HeroContent.Stats;
 import com.wikiaov.hero.internal.domain.HeroSection;
-import com.wikiaov.media.*;
+import com.wikiaov.media.MediaAssetReference;
+import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
 import jakarta.validation.Validation;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -45,21 +65,24 @@ class HeroDraftValidationTest {
             var validation = new HeroValidation(null, factory.getValidator(), null);
             var hundred = BigDecimal.valueOf(100);
 
-            for (var key : List.of("ARMOR", "MAGIC_DEFENSE", "ARMOR_PIERCE", "MAGIC_PIERCE"))
+            for (var key : List.of("ARMOR", "MAGIC_DEFENSE", "ARMOR_PIERCE", "MAGIC_PIERCE")) {
                 assertThatCode(() -> validation.validate(HeroSection.COMBAT_STATS, stats(new Stat(key,
                         BigDecimal.valueOf(150), BigDecimal.valueOf(20), null, "POINT")))).doesNotThrowAnyException();
-            for (var percent : List.of(BigDecimal.ZERO, hundred))
+            }
+            for (var percent : List.of(BigDecimal.ZERO, hundred)) {
                 assertThatCode(() -> validation.validate(HeroSection.COMBAT_STATS,
                         stats(new Stat("ARMOR", BigDecimal.TEN, percent, null, "POINT"))))
                         .doesNotThrowAnyException();
+            }
 
             var refused = List.of(new Stat("HP", BigDecimal.TEN, BigDecimal.ONE, null, "POINT"),
                     new Stat("ARMOR", null, BigDecimal.ONE, BigDecimal.ONE, "POINT"),
                     new Stat("ARMOR", BigDecimal.TEN, BigDecimal.valueOf(-1), null, "POINT"),
                     new Stat("ARMOR", BigDecimal.TEN, BigDecimal.valueOf(101), null, "POINT"));
-            for (var stat : refused)
+            for (var stat : refused) {
                 assertThatThrownBy(() -> validation.validate(HeroSection.COMBAT_STATS, stats(stat)))
                         .isInstanceOf(ApiException.class);
+            }
         }
     }
 
@@ -101,13 +124,15 @@ class HeroDraftValidationTest {
                     skills(icon, new SkillStateIcon(icon, "Hải quái")),
                     skills(icon, new SkillStateIcon(sea, "  ")),
                     skills(icon, new SkillStateIcon(portrait, "Hải quái")));
-            for (var value : refused)
+            for (var value : refused) {
                 assertThatThrownBy(() -> validation.validate(HeroSection.SKILLS, value))
                         .isInstanceOf(ApiException.class);
+            }
 
             var tooMany = new ArrayList<SkillStateIcon>();
-            for (int n = 0; n < 11; n++)
+            for (int n = 0; n < 11; n++) {
                 tooMany.add(new SkillStateIcon(UUID.randomUUID(), "Trạng thái " + n));
+            }
             assertThat(factory.getValidator()
                     .validate(skills(icon, tooMany.toArray(SkillStateIcon[]::new)).skills().getFirst()))
                     .anyMatch(v -> v.getPropertyPath().toString().equals("stateIcons"));
@@ -133,9 +158,10 @@ class HeroDraftValidationTest {
                     .as("A summary is optional, also for publication").doesNotThrowAnyException();
             assertThatCode(() -> validation.validate(HeroSection.SKILLS, summarized("x".repeat(300))))
                     .doesNotThrowAnyException();
-            for (var refused : List.of("x".repeat(301), "Lướt tới.\nHất tung.", "Lướt tới.\r\nHất tung."))
+            for (var refused : List.of("x".repeat(301), "Lướt tới.\nHất tung.", "Lướt tới.\r\nHất tung.")) {
                 assertThatThrownBy(() -> validation.validate(HeroSection.SKILLS, summarized(refused)))
                         .isInstanceOf(ApiException.class);
+            }
         }
     }
 

@@ -1,7 +1,9 @@
 package com.wikiaov.hero.internal.media.persistence;
 
 import com.wikiaov.access.Actor;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Bindings;
+import com.wikiaov.hero.internal.domain.HeroContent.ImageOption;
+import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.media.persistence.entity.HeroImageOption;
 import com.wikiaov.hero.internal.media.persistence.entity.MediaBindingRow;
@@ -9,8 +11,16 @@ import com.wikiaov.hero.internal.media.persistence.entity.MediaRevision;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
+import com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -31,7 +41,7 @@ public class HeroMediaSnapshots implements HeroSectionSnapshots {
     }
 
     @Override
-    public com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository<?> revisions() {
+    public SectionRevisionRepository<?> revisions() {
         return revisions;
     }
 
@@ -43,13 +53,15 @@ public class HeroMediaSnapshots implements HeroSectionSnapshots {
             value.bindings()
                     .forEach((role, asset) -> bindings.save(new MediaBindingRow(revision.getId(), role.name(), asset)));
             value.images().forEach((role, images) -> {
-                for (int n = 0; n < images.size(); n++)
+                for (int n = 0; n < images.size(); n++) {
                     options.save(new HeroImageOption(revision.getId(), role.name(), n, images.get(n).assetId(),
                             images.get(n).label()));
+                }
             });
             sources.save(section(), revision.getId(), value.sources());
         }
         revisions.flush();
+
         return revision.getId();
     }
 

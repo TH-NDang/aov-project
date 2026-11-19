@@ -1,6 +1,8 @@
 package com.wikiaov.hero.internal.skills.application;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.AuditEntry;
+import com.wikiaov.access.AuditLog;
+import com.wikiaov.access.CurrentActor;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.HeroSkillImageCommand;
 import com.wikiaov.hero.internal.application.response.HeroSkillImageView;
@@ -8,10 +10,15 @@ import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
 import com.wikiaov.hero.internal.skills.persistence.HeroSkillImageRepository;
 import com.wikiaov.hero.internal.skills.persistence.SkillIdentityRepository;
 import com.wikiaov.hero.internal.skills.persistence.entity.HeroSkillImage;
-import com.wikiaov.media.*;
+import com.wikiaov.media.MediaAssets;
+import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,8 +47,9 @@ public class HeroSkillImages {
 
     @PreAuthorize("hasAuthority('catalog:read')")
     public List<HeroSkillImageView> list(UUID heroId) {
-        if (!heroes.existsById(heroId))
+        if (!heroes.existsById(heroId)) {
             throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "The hero does not exist.");
+        }
         return images.findByHeroIdOrderBySourceSlotAscVariantNoAsc(heroId).stream().map(HeroSkillImages::view).toList();
     }
 
@@ -52,25 +60,33 @@ public class HeroSkillImages {
                 "The hero does not exist."));
         if (sourceSlot < 0 || sourceSlot > 99 || variantNo < 1 || variantNo > 100
                 || input.sourceFilename().contains("/") || input.sourceFilename().contains("\\")
-                || input.sourceFilename().equals(".") || input.sourceFilename().equals(".."))
+                || input.sourceFilename().equals(".") || input.sourceFilename().equals("..")) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT, "Invalid skill image source identity.");
-        if (input.skillKey() != null && !skills.existsByHeroIdAndSkillKey(heroId, input.skillKey()))
+        }
+        if (input.skillKey() != null && !skills.existsByHeroIdAndSkillKey(heroId, input.skillKey())) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT,
                     "A skill image can only link to an existing skill identity.");
+        }
         if (media.find(input.assetId()).filter(a -> a.usable() && a.semanticType() == MediaSemanticType.HERO_SKILL_ICON)
-                .isEmpty())
+                .isEmpty()) {
             throw new ApiException(HeroErrorCode.HERO_INVALID_MEDIA, "Use an active uploaded hero skill icon.");
+        }
+
         var existing = images.findByHeroIdAndSourceSlotAndVariantNo(heroId, sourceSlot, variantNo);
         if (existing.isPresent()) {
             var row = existing.get();
             if (Objects.equals(row.getAssetId(), input.assetId()) && Objects.equals(row.getSkillKey(), input.skillKey())
                     && Objects.equals(row.getSourceFilename(), input.sourceFilename())
-                    && Objects.equals(row.getLabel(), input.label()))
+                    && Objects.equals(row.getLabel(), input.label())) {
                 return view(row);
-            if (row.getVersion() != input.expectedVersion())
+            }
+            if (row.getVersion() != input.expectedVersion()) {
                 conflict(row.getVersion());
-        } else if (input.expectedVersion() != -1)
+            }
+        } else if (input.expectedVersion() != -1) {
             conflict(-1);
+        }
+
         var row = existing.orElseGet(() -> {
             var created = new HeroSkillImage();
             created.setId(UUID.randomUUID());
@@ -82,6 +98,7 @@ public class HeroSkillImages {
             return created;
         });
         long before = row.getVersion();
+
         row.setAssetId(input.assetId());
         row.setSkillKey(input.skillKey());
         row.setSourceFilename(input.sourceFilename());
@@ -89,9 +106,11 @@ public class HeroSkillImages {
         row.setVersion(before + 1);
         row.setUpdatedAt(clock.instant());
         images.saveAndFlush(row);
-        audit.record(new AuditEntry(actors.require(), "HERO_SKILL_IMAGE_SAVED", "HERO", heroId, null,
+
+        audit.record(new AuditEntry(actors.require(), "HERO_SKILL_IMAGE_SAVED", CatalogAggregates.HERO, heroId, null,
                 existing.isEmpty() ? null : before, row.getVersion(), null,
                 Map.of("imageId", row.getId(), "slot", sourceSlot, "variant", variantNo, "assetId", row.getAssetId())));
+
         return view(row);
     }
 

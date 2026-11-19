@@ -1,12 +1,22 @@
 package com.wikiaov.hero.internal.shop.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-
-import jakarta.persistence.*;
+import com.wikiaov.hero.internal.shop.domain.SkinAcquisitionMethod;
+import com.wikiaov.platform.AssignedIdentifierEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /** How a skin could be obtained from {@code capturedOn} until the next row. */
 @Entity
@@ -28,7 +38,8 @@ public class SkinAcquisitionRow extends AssignedIdentifierEntity<SkinAcquisition
     @Id
     private LocalDate capturedOn;
 
-    private String method;
+    @Enumerated(EnumType.STRING)
+    private SkinAcquisitionMethod method;
     private Integer voucherPrice;
     private String eventName;
     private boolean needsReview;
@@ -50,7 +61,7 @@ public class SkinAcquisitionRow extends AssignedIdentifierEntity<SkinAcquisition
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class Key implements java.io.Serializable {
+    public static class Key implements Serializable {
         public UUID heroId;
         public String skinKey;
         public String regionCode;

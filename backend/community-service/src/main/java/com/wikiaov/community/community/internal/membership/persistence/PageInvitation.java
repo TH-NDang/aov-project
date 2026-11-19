@@ -1,6 +1,12 @@
 package com.wikiaov.community.community.internal.membership.persistence;
 
-import jakarta.persistence.*;
+import com.wikiaov.community.community.internal.domain.PageContent.Role;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -13,7 +19,8 @@ public class PageInvitation {
     private UUID id;
     private UUID pageId;
     private String tokenHash;
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
     private Instant expiresAt;
     private Instant acceptedAt;
 
@@ -45,11 +52,11 @@ public class PageInvitation {
         this.tokenHash = value;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String value) {
+    public void setRole(Role value) {
         this.role = value;
     }
 

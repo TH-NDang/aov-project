@@ -1,0 +1,121 @@
+/* Explore: live channels, new videos and the page directory, or what a search found. */
+.cp-container.ex-page {
+  gap: 32px;
+}
+/* The page head stands a little closer to the first section than the sections do to each other. */
+.ex-page > .ex-page-head {
+  margin-bottom: -8px;
+}
+.ex-page > .ex-back {
+  margin-bottom: -20px;
+}
+
+/* New videos: four across, two on a compact layout, so a row is always full. */
+.ex-video-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.ex-video {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  transition: background-color 120ms;
+}
+.ex-video:hover {
+  background: var(--hub-hover);
+}
+/* The picture fills the 16:9 box whatever its own shape. */
+.ex-video-thumb {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  place-items: center;
+  background: var(--hub-sunken);
+  color: var(--hub-muted);
+}
+.ex-video-thumb > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ex-video-body {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 4px;
+  padding: 10px 12px 12px;
+}
+/* Titles of one series differ at their end, so a title gets the lines it needs before it is cut. */
+.ex-video-body > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+/* A long page name gives way; when the video was posted always shows. */
+.ex-video-body > small {
+  display: flex;
+  min-width: 0;
+  gap: 6px;
+  color: var(--hub-muted);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.ex-video-body > small > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ex-video-body > small > span:last-child {
+  flex: none;
+}
+.ex-video-body > small > span:last-child::before {
+  content: "·";
+  margin-right: 6px;
+}
+
+/* Search results */
+.ex-searching {
+  display: grid;
+  gap: 12px;
+}
+.ex-searching > .ex-heading-skeleton {
+  width: 160px;
+  height: 24px;
+}
+/* Posts keep the width they have in the home feed. */
+.ex-posts {
+  max-width: 760px;
+}
+
+@media (max-width: 899.98px) {
+  .cp-container.ex-page {
+    gap: 28px;
+  }
+  .ex-video-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .ex-video-body {
+    padding: 8px 10px 10px;
+  }
+  .ex-video-body > strong {
+    -webkit-line-clamp: 4;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ex-video {
+    transition: none;
+  }
+}

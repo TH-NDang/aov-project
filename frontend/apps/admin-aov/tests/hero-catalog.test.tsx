@@ -1,36 +1,24 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 test("hero catalog keeps every loaded row and exposes the hero code and actions at all widths", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
+  const dom = createWindow("http://localhost/publishing")
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  const { HeroCatalog } = await import("../src/features/publishing/hero-catalog")
-  const { heroCatalogKey } = await import("../src/features/publishing/publishing-api")
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
+  const { HeroCatalog } = await import("../src/features/publishing/components/catalog/hero-catalog")
+  const { publishingKeys } = await import("@/lib/api/publishing-api")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: 0 } } })
   const items = Array.from({ length: 25 }, (_, i) => ({ id: `database-id-${i}`, code: `hero-${i}`, revisions: [] }))
-  cache.setQueryData(heroCatalogKey({ locale: "vi-VN" }), {
+  cache.setQueryData(publishingKeys.heroCatalog({ locale: "vi-VN" }), {
     pages: [
       { items: items.slice(0, 20), page: 0, size: 20, totalElements: 25 },
       { items: items.slice(20), page: 1, size: 20, totalElements: 25 },
@@ -67,9 +55,6 @@ test("hero catalog keeps every loaded row and exposes the hero code and actions 
     await act(async () => root.unmount())
     cache.clear()
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

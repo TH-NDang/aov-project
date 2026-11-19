@@ -2,7 +2,6 @@ import type { ReactNode } from "react"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@aov/ui/components/hover-card"
 import { cn } from "@aov/ui/lib/utils"
 import type { GameSeat } from "../../model/game-view"
-import { LANE_LABELS } from "../../model/labels"
 import {
   ARCANA_COLORS,
   STONES_PER_COLOR,
@@ -12,6 +11,7 @@ import {
   type LoadoutPart,
 } from "../../model/loadout"
 import { HeroIcon, LaneIcon } from "../primitives"
+import { LANE_LABELS } from "@/lib/lanes"
 
 const stoneCounts = (loadout: GameSeat["arcana"]) =>
   Object.fromEntries(
@@ -29,7 +29,7 @@ function EmptySlot({ round, size = 20 }: { round?: boolean; size?: number }) {
       style={{ width: size, height: size }}
       className={cn(
         "grid shrink-0 place-items-center border border-dashed border-muted-foreground/50 text-xs leading-none text-muted-foreground",
-        round ? "rounded-full" : "rounded-[5px]",
+        round ? "rounded-full" : "rounded-sm",
       )}
     >
       ?
@@ -253,7 +253,7 @@ export function SeatLoadout({
         }
       >
         {seat.spell ? (
-          <HeroIcon hero={seat.spell} size={20} title="" className="rounded-[5px] ring-1 ring-[var(--esp-gold)]/70" />
+          <HeroIcon hero={seat.spell} size={20} title="" className="rounded-sm ring-1 ring-[var(--esp-gold)]/70" />
         ) : (
           <EmptySlot />
         )}

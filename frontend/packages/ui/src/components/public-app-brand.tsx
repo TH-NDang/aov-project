@@ -1,4 +1,5 @@
-import { cn } from "../lib/utils"
+import { cn } from "@aov/ui/lib/utils"
+import { useLocaleText } from "@aov/ui/hooks/use-locale-text"
 import "./public-app-brand.css"
 
 /** Drawn rather than typed: round strokes match the owl beside it, and the spark is the one in its logo. */
@@ -33,9 +34,18 @@ function StreamWordmarkArt() {
   )
 }
 
-export function PublicAppWordmark({ product, className }: { product: "Wiki" | "Stream"; className?: string }) {
+/** The app's name as its logo; `small` is the size of a phone's top bar. */
+export function PublicAppWordmark({
+  product,
+  size,
+  className,
+}: {
+  product: "Wiki" | "Stream"
+  size?: "small"
+  className?: string
+}) {
   return (
-    <span className={cn("public-app-wordmark", className)} data-product={product.toLowerCase()}>
+    <span className={cn("public-app-wordmark", className)} data-product={product.toLowerCase()} data-size={size}>
       {product === "Stream" ? (
         <>
           <span className="sr-only">AOV Stream</span>
@@ -56,7 +66,7 @@ export function PublicAppOptionBody({
   image,
   description,
   current = false,
-  currentLabel = "Đang xem",
+  currentLabel,
 }: {
   product: "Wiki" | "Stream"
   image: string
@@ -64,13 +74,14 @@ export function PublicAppOptionBody({
   current?: boolean
   currentLabel?: string
 }) {
+  const t = useLocaleText()
   return (
     <>
       <img className="public-app-option-image" src={image} alt="" width="44" height="44" />
       <span className="public-app-option-copy">
         <span className="public-app-option-heading">
           <PublicAppWordmark product={product} />
-          {current && <span className="public-app-current">{currentLabel}</span>}
+          {current && <span className="public-app-current">{currentLabel ?? t("Đang xem", "Current")}</span>}
         </span>
         <span className="public-app-description">{description}</span>
       </span>

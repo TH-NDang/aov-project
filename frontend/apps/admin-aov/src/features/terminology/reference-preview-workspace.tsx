@@ -6,6 +6,7 @@ import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { EntityReferenceSearch } from "@aov/ui/lib/entity-rich-text-editor"
 import { languageOptions } from "../users/profile-preference-picker"
 import { AdminDescriptionField } from "./rich-text-field"
+import { NativeSelect } from "@/components/native-select"
 
 const example =
   "Gây <b>sát thương phép</b> và làm chậm mục tiêu. Nhận <color=#16a34a>lá chắn</color> khi sử dụng chiêu."
@@ -59,9 +60,9 @@ export function ReferencePreviewWorkspace({
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-muted/20 p-2.5">
         <label className="flex h-9 min-w-0 items-center gap-2 rounded-lg border bg-background px-2.5 type-body shadow-xs focus-within:ring-2 focus-within:ring-ring/30">
           <Languages aria-hidden className="hidden size-4 shrink-0 text-muted-foreground @xl/preview:block" />
-          <select
+          <NativeSelect
             aria-label="Ngôn ngữ thử hiển thị"
-            className="min-w-0 max-w-44 bg-background outline-none"
+            className="h-auto min-w-0 max-w-44 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
             value={locale}
             onChange={(event) => onLocaleChange(event.target.value)}
           >
@@ -70,7 +71,7 @@ export function ReferencePreviewWorkspace({
                 {option.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </label>
         <Button
           type="button"

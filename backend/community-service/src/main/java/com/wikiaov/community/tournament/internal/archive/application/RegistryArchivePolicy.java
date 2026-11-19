@@ -1,14 +1,20 @@
 package com.wikiaov.community.tournament.internal.archive.application;
 
 import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.tournament.CompetitionReferences;
 import com.wikiaov.community.tournament.internal.application.TournamentErrorCode;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
-import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.*;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Impact;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.State;
+import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Usage;
+import com.wikiaov.community.tournament.internal.archive.domain.DependentKind;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryDependencies;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
-import com.wikiaov.community.tournament.internal.archive.persistence.RegistryUsageRepository;
+import com.wikiaov.community.tournament.internal.archive.persistence.RegistryUsages;
 import com.wikiaov.community.tournament.internal.archive.persistence.RegistryWriteGuard;
-import com.wikiaov.community.tournament.internal.persistence.VersionedRecord;
+import com.wikiaov.community.tournament.internal.archive.persistence.VersionedRecord;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -17,11 +23,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class RegistryArchivePolicy {
     private final RegistryWriteGuard writes;
-    private final RegistryUsageRepository usages;
-    private final List<com.wikiaov.community.tournament.CompetitionReferences> additional;
+    private final RegistryUsages usages;
+    private final List<CompetitionReferences> additional;
 
-    public RegistryArchivePolicy(RegistryWriteGuard writes, RegistryUsageRepository usages,
-            List<com.wikiaov.community.tournament.CompetitionReferences> additional) {
+    public RegistryArchivePolicy(RegistryWriteGuard writes, RegistryUsages usages,
+            List<CompetitionReferences> additional) {
         this.writes = writes;
         this.usages = usages;
         this.additional = additional;
@@ -32,15 +38,16 @@ public class RegistryArchivePolicy {
     }
 
     public Impact impact(RegistryKind kind, VersionedRecord row) {
-        var references = new java.util.ArrayList<>(
-                usages.usages(kind.name(), row.getId()).stream().filter(usage -> usage.getCount() > 0)
-                        .map(usage -> new Usage(usage.getType(), usage.getCount(),
-                                usagePath(usage.getType(), kind, row.getId())))
+        var references = new ArrayList<>(
+                usages.usages(kind.name(), row.getId()).stream().filter(usage -> usage.count() > 0)
+                        .map(usage -> usage(DependentKind.valueOf(usage.type()), usage.count(), kind,
+                                row.getId()))
                         .toList());
-        long extra = additional.stream().mapToLong(provider -> provider.identityReferences(kind.name(), row.getId()))
+        long extra = additional.stream().mapToLong(provider -> provider.identityReferences(kind.subject(), row.getId()))
                 .sum();
-        if (extra > 0)
-            references.add(new Usage("COMPETITION_PAGE", extra, "/tournaments"));
+        if (extra > 0) {
+            references.add(usage(DependentKind.COMPETITION_PAGE, extra, kind, row.getId()));
+        }
         return new Impact(row.getId(), row.getVersion(), row.getDeletedAt(),
                 row.getDeletedAt() == null && references.isEmpty(), references);
     }
@@ -51,32 +58,37 @@ public class RegistryArchivePolicy {
         if (action == Action.DELETE) {
             requireActive(row);
             var impact = impact(kind, row);
-            if (!impact.canDelete())
+            if (!impact.canDelete()) {
                 throw new ApiException(TournamentErrorCode.TOURNAMENT_RECORD_IN_USE,
                         "This record is still used by editorial data or immutable published history.",
                         Map.of("usages", impact.usages()));
+            }
             row.delete(actor);
         } else {
             var missing = unavailableParents(content);
-            if (!missing.isEmpty())
+            if (!missing.isEmpty()) {
                 throw new ApiException(TournamentErrorCode.TOURNAMENT_RESTORE_BLOCKED,
                         "Restore the required parent records before restoring this record.", Map.of("usages", missing));
-            if (row.getDeletedAt() != null)
+            }
+            if (row.getDeletedAt() != null) {
                 row.restore(actor);
+            }
         }
     }
 
     public void validateParents(Object content) {
         var missing = unavailableParents(content);
-        if (!missing.isEmpty())
+        if (!missing.isEmpty()) {
             throw new ApiException(TournamentErrorCode.TOURNAMENT_RECORD_DELETED,
                     "Choose existing active parent records before saving.", Map.of("usages", missing));
+        }
     }
 
     public static void requireActive(VersionedRecord row) {
-        if (row.getDeletedAt() != null)
+        if (row.getDeletedAt() != null) {
             throw new ApiException(TournamentErrorCode.TOURNAMENT_RECORD_DELETED,
                     "This record is in the trash. Restore it before editing.");
+        }
     }
 
     public static State state(VersionedRecord row) {
@@ -89,17 +101,26 @@ public class RegistryArchivePolicy {
                 .map(parent -> new Usage(parent.kind().name(), 1, parentPath(parent.kind(), parent.id()))).toList();
     }
 
-    private static String usagePath(String type, RegistryKind kind, UUID id) {
-        if (type.equals("ROSTER_MEMBERSHIP") && kind == RegistryKind.TEAM)
+    private static Usage usage(DependentKind type, long count, RegistryKind kind, UUID id) {
+        return new Usage(type.name(), count, usagePath(type, kind, id));
+    }
+
+    private static String usagePath(DependentKind type, RegistryKind kind, UUID id) {
+        if (type == DependentKind.ROSTER_MEMBERSHIP && kind == RegistryKind.TEAM) {
             return "/tournaments?tab=teams&roster=" + id;
-        if (type.equals("ROSTER_MEMBERSHIP") && kind == RegistryKind.PLAYER)
+        }
+        if (type == DependentKind.ROSTER_MEMBERSHIP && kind == RegistryKind.PLAYER) {
             return "/tournaments?tab=players&player=" + id;
-        if (type.equals("SERIES") && kind == RegistryKind.TOURNAMENT)
+        }
+        if (type == DependentKind.SERIES && kind == RegistryKind.TOURNAMENT) {
             return "/tournaments?tournament=" + id;
-        if (type.equals("GAME") && kind == RegistryKind.SERIES)
+        }
+        if (type == DependentKind.GAME && kind == RegistryKind.SERIES) {
             return "/tournaments?series=" + id;
-        if (type.equals("TOURNAMENT_PART"))
+        }
+        if (type == DependentKind.TOURNAMENT_PART) {
             return "/tournaments/" + id;
+        }
         return "/tournaments";
     }
 

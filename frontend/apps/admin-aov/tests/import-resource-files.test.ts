@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { importImageFile, resolveImportImage } from "../src/features/publishing/import-files"
+import { importImageFile, resolveImportImage } from "../src/features/publishing/model/import/import-files"
 
 const limit = 25 * 1024 * 1024
 const empty = new Map<string, File>()

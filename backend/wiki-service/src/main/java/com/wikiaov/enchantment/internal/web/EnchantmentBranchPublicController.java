@@ -3,6 +3,7 @@ package com.wikiaov.enchantment.internal.web;
 import com.wikiaov.enchantment.internal.application.response.PublicEnchantmentBranchView;
 import com.wikiaov.enchantment.internal.metadata.application.PublicEnchantmentBranchCatalog;
 import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -21,8 +22,9 @@ public class EnchantmentBranchPublicController implements EnchantmentBranchPubli
         this.catalog = catalog;
     }
 
+    @Override
     @GetMapping(version = "1")
-    public List<PublicEnchantmentBranchView> list(@RequestParam(defaultValue = "vi-VN") String locale,
+    public List<PublicEnchantmentBranchView> list(@RequestParam(defaultValue = CatalogLocales.DEFAULT) String locale,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return catalog.read(locale);

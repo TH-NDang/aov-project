@@ -1,14 +1,20 @@
 package com.wikiaov.media.internal.deletion.infrastructure;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.MediaProperties;
 import com.wikiaov.platform.ApiException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -32,7 +38,7 @@ class CloudflareMediaCacheTest {
         for (var batch : List.of(urls.subList(0, 30), urls.subList(30, 41))) {
             server.expect(requestTo(ENDPOINT)).andExpect(method(HttpMethod.POST))
                     .andExpect(header("Authorization", "Bearer test-purge-token"))
-                    .andExpect(content().json(json.writeValueAsString(java.util.Map.of("files", batch))))
+                    .andExpect(content().json(json.writeValueAsString(Map.of("files", batch))))
                     .andRespond(withSuccess("{\"success\":true}", MediaType.APPLICATION_JSON));
         }
         new CloudflareMediaCache(config(true), media(BASE), builder).purge(urls);

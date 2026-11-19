@@ -18,7 +18,7 @@ import {
   type WarehouseGroup,
   type WarehouseKind,
   warehouseText,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 import { warehouseViewGroups } from "./warehouse-view"
 import "./warehouse-catalogs.css"
 
@@ -63,10 +63,10 @@ function ItemRow({
       <span className="wiki-item-row-main">
         <strong>{name}</strong>
         {text?.summary && <small>{text.summary}</small>}
-        <ItemStatChips stats={view.statsOf(entry)} locale={locale} />
+        <ItemStatChips stats={view.statsOf(entry)} />
       </span>
       <span className="wiki-item-row-price">
-        <ItemPrice amount={entry.content.price} locale={locale} />
+        <ItemPrice amount={entry.content.price} />
       </span>
     </button>
   )

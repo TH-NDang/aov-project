@@ -2,29 +2,15 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { EntityReferenceInputHandle } from "@aov/ui/components/entity-reference-input"
 import { readReferenceInputSnapshot, setReferenceInputSelection } from "@aov/ui/lib/reference-input-dom"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 test("ordinary typing preserves the native range, text nodes, chip content and editor listeners", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    Event: dom.window.Event,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  const dom = createWindow()
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { EntityReferenceInput } = await import("@aov/ui/components/entity-reference-input")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -123,9 +109,6 @@ test("ordinary typing preserves the native range, text nodes, chip content and e
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })

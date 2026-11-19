@@ -1,26 +1,47 @@
 package com.wikiaov.hero.internal.skins.application;
 
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
-import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView.*;
+import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView.Badge;
+import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView.Entry;
+import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView.Filter;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.catalog.application.HeroReadMoments;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository;
-import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.*;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.BadgeText;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.Candidate;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.ProfileText;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.Skin;
+import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.SkinText;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PageSlice;
 import java.text.Normalizer;
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
 public class PublicSkinCatalog {
+    /** The largest page of the public skin library (03, public skin catalog). */
+    public static final int MAX_PAGE_SIZE = 60;
+
     private final PublicSkinCatalogRepository repository;
     private final MediaAssets media;
     private final Clock clock;
@@ -43,12 +64,13 @@ public class PublicSkinCatalog {
 
     public PublicSkinCatalogView read(String region, String locale, String q, String hero, String rarity, int page,
             int size, UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
-        validate(locale, q, hero, rarity, page, size);
+        validate(locale, q, hero, rarity);
         var at = clock.instant();
         var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);
         var selected = selectCurrent(repository.candidates(moment.context().rulesetId(), at), moment);
-        if (selected.isEmpty())
+        if (selected.isEmpty()) {
             return new PublicSkinCatalogView(new PageSlice<>(List.of(), page, size, 0), List.of(), List.of());
+        }
 
         var catalog = localize(selected, locale);
         var heroes = catalog.stream().map(row -> new Filter(row.hero().getHeroCode(), row.heroName())).distinct()
@@ -70,10 +92,9 @@ public class PublicSkinCatalog {
                         .thenComparing(row -> row.skin().getSkinKey()))
                 .toList();
 
-        long offset = (long) page * size;
-        var slice = offset >= matching.size()
-                ? List.<Localized>of()
-                : matching.subList((int) offset, (int) Math.min(offset + size, matching.size()));
+        // Paged in memory: each hero's skins come from the revision the read moment chooses and the search reads
+        // localized names, so the page is cut after both; only the page is hydrated.
+        var slice = PageSlice.of(matching, page, size).items();
         var items = hydrate(slice);
         return new PublicSkinCatalogView(new PageSlice<>(items, page, size, matching.size()), heroes, rarities);
     }
@@ -95,8 +116,9 @@ public class PublicSkinCatalog {
                 ? Map.<UUID, List<ProfileText>>of()
                 : repository.profileTexts(profileIds).stream()
                         .collect(Collectors.groupingBy(ProfileText::getProfileId));
-        if (skinsIds.isEmpty())
+        if (skinsIds.isEmpty()) {
             return List.of();
+        }
         var skins = repository.skins(skinsIds);
         var texts = repository.skinTexts(skinsIds).stream()
                 .collect(Collectors.groupingBy(text -> new SkinKey(text.getSkinsId(), text.getSkinKey())));
@@ -114,8 +136,9 @@ public class PublicSkinCatalog {
                     ProfileText::getLocale);
             String heroName = profile == null ? hero.getHeroCode() : profile.getName();
             for (var skin : byRevision.getOrDefault(hero.getSkinsId(), List.of())) {
-                if (isBaseAppearance(hero.getHeroCode(), skin.getSkinKey()))
+                if (isBaseAppearance(hero.getHeroCode(), skin.getSkinKey())) {
                     continue;
+                }
 
                 var text = translation(texts.getOrDefault(new SkinKey(skin.getSkinsId(), skin.getSkinKey()), List.of()),
                         locale, SkinText::getLocale);
@@ -136,18 +159,21 @@ public class PublicSkinCatalog {
     }
 
     private List<Entry> hydrate(List<Localized> rows) {
-        if (rows.isEmpty())
+        if (rows.isEmpty()) {
             return List.of();
+        }
         var bindingIds = rows.stream().map(row -> row.hero().getBindingsId()).filter(Objects::nonNull).distinct()
                 .toList();
         Map<UUID, UUID> heads = new HashMap<>();
-        if (!bindingIds.isEmpty())
+        if (!bindingIds.isEmpty()) {
             repository.heads(bindingIds).forEach(head -> heads.put(head.getBindingsId(), head.getAssetId()));
+        }
         Set<UUID> assetIds = new HashSet<>(heads.values());
         for (var row : rows) {
             add(assetIds, row.skin().getPortraitId(), row.skin().getHeadId(), row.skin().getArtId());
-            if (row.badge() != null)
+            if (row.badge() != null) {
                 add(assetIds, row.badge().getIconId());
+            }
         }
 
         var assets = media.findAll(assetIds);
@@ -171,15 +197,15 @@ public class PublicSkinCatalog {
     }
 
     private static void add(Set<UUID> assets, UUID... ids) {
-        for (var id : ids)
-            if (id != null)
+        for (var id : ids) {
+            if (id != null) {
                 assets.add(id);
+            }
+        }
     }
 
-    private static <T> T translation(List<T> values, String locale, Function<T, String> language) {
-        return values.stream().min(Comparator.comparingInt((T value) -> language.apply(value).equals(locale)
-                ? 0
-                : language.apply(value).equals("vi-VN") ? 1 : 2).thenComparing(language)).orElse(null);
+    private static <T> @Nullable T translation(List<T> values, String locale, Function<T, String> language) {
+        return CatalogLocales.pick(values, locale, language);
     }
 
     private static String normalized(String value) {
@@ -193,14 +219,15 @@ public class PublicSkinCatalog {
         return Arrays.stream(terms).allMatch(text::contains);
     }
 
-    private static void validate(String locale, String q, String hero, String rarity, int page, int size) {
+    private static void validate(String locale, String q, String hero, String rarity) {
         HeroValidation.locale(locale);
-        if (q.length() > 120 || page < 0 || size < 1 || size > 60)
-            throw HeroValidation.invalid(
-                    "Search text must be at most 120 characters; page must be nonnegative and size between 1 and 60.");
+        if (q.length() > 120) {
+            throw HeroValidation.badQuery("Search text must be at most 120 characters.");
+        }
         if ((hero != null && (hero.isBlank() || hero.length() > 200))
-                || (rarity != null && (rarity.isBlank() || rarity.length() > 64)))
-            throw HeroValidation.invalid("Hero and rarity filters must be nonblank valid codes.");
+                || (rarity != null && (rarity.isBlank() || rarity.length() > 64))) {
+            throw HeroValidation.badQuery("Hero and rarity filters must be nonblank valid codes.");
+        }
     }
 
     private record SkinKey(

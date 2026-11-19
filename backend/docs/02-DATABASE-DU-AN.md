@@ -1745,7 +1745,7 @@ FK nội bộ tới nhóm. `hero.skin_badge.group_id` nullable tham chiếu nhó
 thị chính. Không có nhóm thật mang mã __ungrouped; đó là read model tổng hợp các nhãn group_id=null.
 
 Nhóm là metadata tổ chức, không phải section gameplay và không làm thay đổi rarity_code hay loại
-nhãn đã có. Tên nhóm hỗ trợ bản dịch, cùng chuỗi dự phòng exact locale → vi-VN → en-US → locale
+nhãn đã có. Tên nhóm hỗ trợ bản dịch, cùng chuỗi dự phòng exact locale → en-US → vi-VN → locale
 đầu tiên. Thêm/sửa nhóm có audit và expectedVersion; chuyển nhóm tăng version của nhãn. Sửa tên/icon
 nhãn bằng hợp đồng cũ giữ nguyên group_id, tránh client/import cũ vô tình bỏ nhóm.
 ### Alias sau chuẩn hóa mã ảnh và nhân vật
@@ -1944,6 +1944,13 @@ sang page Community, không có khóa ngoại chéo dịch vụ. `media.media_up
 Nguồn cũ không có tham chiếu vẫn hợp lệ. Chỉ hai UUID được sửa qua thao tác tham chiếu có kiểm tra
 phiên bản và audit; thông tin nguồn gốc và bytes giữ nguyên. Tham chiếu không xác nhận quyền sở hữu,
 không cấp quyền quản lý page, không tự nối theo tên. Xem ADR-017 và đặc tả 04.
+
+Migration V074 bổ sung `unverified BOOLEAN NOT NULL DEFAULT FALSE` vào `media.media_provenance`: `true` khi nguồn được
+ghi mà không có bằng chứng ảnh từ đâu tới, ví dụ nguồn giữ chỗ hệ thống ghi khi phiên bản mới tải lên không kèm nguồn.
+Nguồn `unverified` không bao giờ được tính là ghi công đầy đủ. Migration đánh dấu các dòng cũ có `source_label` chứa
+“Chưa xác minh”, đúng như bộ lọc cũ nhận ra chúng; từ đó bộ lọc đọc cột này thay cho câu chữ của nhãn.
+Từ 18/11/2026 nguồn giữ chỗ được ghi với `source_label` rỗng: cờ mang ý nghĩa, giao diện tự ghi chữ cho nguồn
+`unverified`. Dòng cũ giữ nhãn đã ghi, không cần migration.
 
 ## Video theo đối tượng — V047 (ADR-019)
 

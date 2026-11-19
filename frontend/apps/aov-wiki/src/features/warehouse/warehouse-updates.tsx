@@ -1,15 +1,15 @@
 import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { ChangeKindLabel } from "../../components/patch-changes-row"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText, wikiText } from "../../context/wiki-context"
 import { changeKind, publishedNotesForSubject } from "../../lib/published-change-subjects"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
-import type { PublishedWarehouseRecord } from "./warehouse-types"
+import type { PublishedWarehouseRecord } from "../../lib/warehouse-types"
 
 export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord }) {
   const scope = useWikiContext()
   const changes = usePublishedChanges(warehouseChangeDomain[entry.kind], true)
-  const t = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const t = useWikiText()
   const seasons = new Map(scope.options?.seasons.map((s) => [s.id, s]))
   const patches = changes.patches
     .map(({ variant, rows }) => ({ variant, rows: publishedNotesForSubject(rows, entry.id) }))
@@ -60,7 +60,7 @@ export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord })
               changes.retry()
             }}
           >
-            {scope.t("retry")}
+            {wikiText(scope.locale, "Thử lại", "Retry")}
           </button>
         </p>
       )}

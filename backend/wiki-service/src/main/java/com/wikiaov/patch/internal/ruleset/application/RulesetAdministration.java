@@ -3,11 +3,11 @@ package com.wikiaov.patch.internal.ruleset.application;
 import com.wikiaov.access.AuditEntry;
 import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
-import com.wikiaov.patch.internal.application.PatchCommands.*;
 import com.wikiaov.patch.internal.application.PatchCommands.Assignment;
 import com.wikiaov.patch.internal.application.PatchCommands.CreateRegion;
 import com.wikiaov.patch.internal.application.PatchCommands.Ruleset;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
+import com.wikiaov.patch.internal.domain.PatchLifecycleState;
 import com.wikiaov.patch.internal.ruleset.persistence.GameplayRulesetRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RegionRepository;
 import com.wikiaov.patch.internal.ruleset.persistence.RulesetAssignmentRepository;
@@ -15,7 +15,12 @@ import com.wikiaov.patch.internal.ruleset.persistence.entity.GameplayRuleset;
 import com.wikiaov.patch.internal.ruleset.persistence.entity.Region;
 import com.wikiaov.patch.internal.ruleset.persistence.entity.RulesetAssignment;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogAggregates;
 import java.time.Clock;
+import java.time.DateTimeException;
+import java.time.ZoneId;
+import java.util.IllformedLocaleException;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.function.Supplier;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -42,15 +47,15 @@ public class RulesetAdministration {
 
     public UUID region(CreateRegion input) {
         try {
-            java.time.ZoneId.of(input.timezone());
-            new java.util.Locale.Builder().setLanguageTag(input.defaultLocale()).build();
-        } catch (java.time.DateTimeException | java.util.IllformedLocaleException exception) {
+            ZoneId.of(input.timezone());
+            new Locale.Builder().setLanguageTag(input.defaultLocale()).build();
+        } catch (DateTimeException | IllformedLocaleException exception) {
             throw invalid("The region locale or time zone is invalid.");
         }
         UUID id = UUID.randomUUID();
         persist(() -> regions.saveAndFlush(new Region(id, input.code(), input.displayName(), input.productName(),
                 input.defaultLocale(), input.timezone(), input.available())));
-        audit.record(AuditEntry.of(actors.require(), "REGION_CREATED", "REGION", id));
+        audit.record(AuditEntry.of(actors.require(), "REGION_CREATED", CatalogAggregates.REGION, id));
         return id;
     }
 
@@ -60,7 +65,7 @@ public class RulesetAdministration {
         entity.setId(id);
         entity.setCode(input.code());
         entity.setDescription(input.description());
-        entity.setLifecycleState("ACTIVE");
+        entity.setLifecycleState(PatchLifecycleState.ACTIVE);
         entity.setCreatedAt(clock.instant());
         persist(() -> rulesets.saveAndFlush(entity));
         record("RULESET_CREATED", id);
@@ -68,8 +73,10 @@ public class RulesetAdministration {
     }
 
     public UUID assign(UUID regionId, Assignment input) {
-        if (input.validTo() != null && !input.validTo().isAfter(input.validFrom()))
+        if (input.validTo() != null && !input.validTo().isAfter(input.validFrom())) {
             throw invalid("Assignment end must follow its start.");
+        }
+
         regions.lockById(regionId).orElseThrow(RulesetAdministration::notFound);
         rulesets.lockById(input.rulesetId()).orElseThrow(RulesetAdministration::notFound);
         UUID id = UUID.randomUUID();
@@ -80,12 +87,14 @@ public class RulesetAdministration {
         entity.setValidFrom(input.validFrom());
         entity.setValidTo(input.validTo());
         persist(() -> assignments.saveAndFlush(entity));
+
         record("REGION_RULESET_ASSIGNED", id);
+
         return id;
     }
 
     private void record(String action, UUID id) {
-        audit.record(AuditEntry.of(actors.require(), action, "PATCH", id));
+        audit.record(AuditEntry.of(actors.require(), action, CatalogAggregates.PATCH, id));
     }
 
     private static void persist(Supplier<?> operation) {

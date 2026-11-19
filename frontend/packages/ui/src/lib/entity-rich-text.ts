@@ -1,4 +1,5 @@
 import { isParagraphStyle, readExampleTable, type ParagraphStyle } from "./rich-text-blocks"
+import { foldSearchText } from "@aov/ui/lib/search-text"
 
 export const entityKindLabels = {
   hero: "Tướng",
@@ -79,7 +80,7 @@ export function defaultEntityColor(
     ? entity.id
     : entity.translations
         ?.flatMap((entry) => [entry.name, ...entry.aliases])
-        .map((label) => foldEntitySearch(label).replace(/\s+/g, "-").trim())
+        .map((label) => foldSearchText(label).replace(/\s+/g, "-").trim())
         .find((label) => Object.hasOwn(termColors, label))
   const colors = semantic ? termColors[semantic] : undefined
   return colors ? `light-dark(${colors[0]}, ${colors[1]})` : undefined
@@ -377,10 +378,10 @@ export type EntityIndex = {
   bracketedSkills: Map<string, Match | null>
   accentInsensitive: boolean
 }
-export const foldEntitySearch = (value: string) =>
-  value.normalize("NFD").replace(/\p{M}/gu, "").replace(/[đĐ]/g, "d").toLowerCase()
+/** The name Admin's reference tables use for {@link foldSearchText}. */
+export const foldEntitySearch = foldSearchText
 const fold = (value: string, accentInsensitive: boolean) =>
-  accentInsensitive ? foldEntitySearch(value) : value.normalize("NFC").toLowerCase()
+  accentInsensitive ? foldSearchText(value) : value.normalize("NFC").toLowerCase()
 const skillMentionKey = (label: string, accentInsensitive: boolean) =>
   fold(label.trim().replace(/\s+/gu, " "), accentInsensitive)
 

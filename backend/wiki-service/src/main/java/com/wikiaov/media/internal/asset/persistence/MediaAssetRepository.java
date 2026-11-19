@@ -72,7 +72,7 @@ public interface MediaAssetRepository extends Repository<MediaAsset, UUID> {
                     )
                   ))
                   and trim(p.sourceLabel) <> ''
-                  and p.sourceLabel not like '%Chưa xác minh%'
+                  and p.unverified = false
                   and p.ownerName is not null and trim(p.ownerName) <> ''
               )
             """)

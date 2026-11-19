@@ -1,6 +1,12 @@
 package com.wikiaov.community.community.internal.membership.persistence;
 
-import jakarta.persistence.*;
+import com.wikiaov.community.community.internal.domain.ClaimStatus;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -15,7 +21,8 @@ public class PageClaim {
     private String actor;
     private String name;
     private String evidence;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private ClaimStatus status;
     private String resolution;
     private String reviewedBy;
     private Instant createdAt;
@@ -68,11 +75,11 @@ public class PageClaim {
         this.evidence = value;
     }
 
-    public String getStatus() {
+    public ClaimStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String value) {
+    public void setStatus(ClaimStatus value) {
         this.status = value;
     }
 

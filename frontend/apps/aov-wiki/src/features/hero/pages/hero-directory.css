@@ -1,0 +1,253 @@
+.wiki-hero-directory {
+  max-width: 100%;
+  /* On a compact page the row of changes scrolls out to the screen edges. */
+  --wiki-changes-bleed: var(--wiki-gutter);
+}
+
+/* The field that searches the heroes by name, on this page and in the quick switch. */
+.wiki-hero-search {
+  display: flex;
+  flex: 1;
+  max-width: 340px;
+  min-width: 0;
+  height: 36px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding-inline: 12px 10px;
+  color: var(--aov-muted);
+  background: var(--aov-surface);
+}
+.wiki-hero-search > svg {
+  flex: none;
+}
+.wiki-hero-search input {
+  font: var(--wiki-type-body);
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: var(--aov-text);
+}
+.wiki-hero-search input::placeholder {
+  color: var(--aov-muted);
+}
+.wiki-hero-search:focus-within {
+  border-color: var(--aov-accent);
+  background: var(--aov-sunken);
+}
+
+/* Wide layout: the search on its own line, then the lanes and the roles as two groups of chips. */
+.wiki-hero-controls {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+/* A group that does not fit beside the other moves to the next line whole; a single chip never wraps alone. */
+.wiki-hero-filter-groups {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+/* The heading of the list: its name, how many heroes it holds and, while filtered, the way back to all of them. */
+.wiki-hero-list-heading {
+  display: flex;
+  min-height: 32px;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.wiki-hero-list-heading h2 {
+  min-width: 0;
+  color: var(--aov-accent);
+  font: var(--wiki-type-section);
+}
+.wiki-hero-list-heading small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-hero-clear {
+  display: inline-flex;
+  min-height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--aov-accent);
+  font: var(--wiki-type-category);
+  white-space: nowrap;
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-hero-clear::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
+.wiki-hero-clear:hover {
+  color: var(--aov-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Seven cards across the full page, fewer as it narrows. */
+.wiki-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.wiki-hero-list-state {
+  display: grid;
+  min-height: 280px;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  color: var(--aov-muted);
+  text-align: center;
+}
+.wiki-hero-list-state h2 {
+  font: var(--wiki-type-section);
+  color: var(--aov-text);
+}
+.wiki-hero-list-state p {
+  font: var(--wiki-type-body);
+  max-width: 320px;
+}
+.wiki-hero-list-state button {
+  font: var(--wiki-type-category);
+  min-height: 36px;
+  margin-top: 6px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  padding: 8px 16px;
+  color: var(--aov-text);
+}
+.wiki-hero-list-state button:hover {
+  background: var(--aov-raised);
+}
+.wiki-hero-list-state button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* Compact layout: search and one filter button stay pinned, so the heroes start on the first screen. */
+.wiki-hero-toolbar-compact {
+  position: sticky;
+  z-index: 15;
+  top: var(--wiki-header-height);
+  display: flex;
+  gap: 8px;
+  margin: -4px calc(-1 * var(--wiki-gutter)) 0;
+  padding: 8px var(--wiki-gutter);
+  background: var(--aov-bg);
+}
+/* The version the list shows: one quiet line under the search. */
+.wiki-hero-version {
+  display: flex;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+.wiki-hero-toolbar-compact .wiki-hero-search {
+  height: 40px;
+  max-width: none;
+}
+/* 16px keeps iOS from zooming the page when the field gets focus. */
+.wiki-hero-toolbar-compact .wiki-hero-search input {
+  font-size: 16px;
+}
+.wiki-hero-sheet-group {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+.wiki-hero-sheet-group > legend {
+  font: var(--wiki-type-meta);
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--drawer-muted, var(--aov-muted));
+}
+/* Three across, which the five lanes and the six roles both fill without leaving one choice alone on a row. */
+.wiki-hero-sheet-group > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.wiki-hero-sheet-choice {
+  --wiki-hero-glyph-size: 20px;
+  display: inline-flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--drawer-line, var(--aov-line));
+  border-radius: var(--aov-radius-control);
+  padding: 4px 10px;
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-category);
+  font-weight: 400;
+  text-align: left;
+}
+/* A phone has room for two; the lane left over takes the whole last row. */
+@media (max-width: 519.98px) {
+  .wiki-hero-sheet-group > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wiki-hero-sheet-choice:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+.wiki-hero-sheet-choice[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+
+@media (max-width: 1099.98px) {
+  .wiki-hero-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+@media (max-width: 899.98px) {
+  .wiki-hero-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .wiki-hero-list-heading,
+  .wiki-hero-clear {
+    min-height: 36px;
+  }
+}
+@media (max-width: 719.98px) {
+  .wiki-hero-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+@media (max-width: 479.98px) {
+  .wiki-hero-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* The heroes come up as they scroll into view, in browsers that can drive an animation from scrolling. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .wiki-hero-grid > * {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 26%;
+    }
+  }
+}

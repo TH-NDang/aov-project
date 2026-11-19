@@ -2,15 +2,20 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
-import type { Request } from "../src/features/publishing/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
+import { withGlobals } from "./fixtures/dom"
 
-const originalChannel = globalThis.BroadcastChannel
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-const { createReferenceCatalogApi, referenceCatalogKeys, invalidateReferenceCatalog } =
-  await import("../src/features/terminology/reference-api")
-const { invalidateHeroCatalogs } = await import("../src/features/publishing/publishing-cache")
-const { invalidateWarehouseCatalogs } = await import("../src/features/warehouse/warehouse-api")
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: originalChannel })
+const {
+  createReferenceCatalogApi,
+  referenceCatalogKeys,
+  invalidateReferenceCatalog,
+  invalidateHeroCatalogs,
+  invalidateWarehouseCatalogs,
+} = await withGlobals({ BroadcastChannel: undefined }, async () => ({
+  ...(await import("../src/features/terminology/reference-api")),
+  ...(await import("../src/features/publishing/api/publishing-cache")),
+  ...(await import("../src/features/warehouse/api/warehouse-api")),
+}))
 
 const entities: EntityReference[] = [
   {
@@ -82,10 +87,10 @@ test("hero and warehouse changes invalidate compact references without expiring 
   try {
     for (const refresh of [invalidateHeroCatalogs, invalidateWarehouseCatalogs]) {
       for (const key of keys) client.setQueryData(key, entities)
-      client.setQueryData(["publishing-asset", "head-id"], { currentUrl: "/head.webp" })
+      client.setQueryData(["media", "asset", "head-id", "detail"], { currentUrl: "/head.webp" })
       await refresh(client)
       for (const key of keys) assert.equal(client.getQueryState(key)?.isInvalidated, true)
-      assert.equal(client.getQueryState(["publishing-asset", "head-id"])?.isInvalidated, false)
+      assert.equal(client.getQueryState(["media", "asset", "head-id", "detail"])?.isInvalidated, false)
     }
   } finally {
     client.clear()

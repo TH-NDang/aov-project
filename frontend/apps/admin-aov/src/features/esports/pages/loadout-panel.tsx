@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import type { Catalog, GameContent, ObservationStatus, Participant, Side } from "@aov/community-contracts"
 import { Clock3, EyeOff, Shield, Swords, TriangleAlert, Users, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
-import { EquipmentEditor } from "@/features/tournaments/equipment-editor"
+import { EquipmentEditor } from "@/features/tournaments/components/equipment-editor"
 import { LoadoutEditor, type ObservedAtControl } from "./loadout-editor"
 import { HeroIcon, LaneIcon, TimeTag, VIDEO_MARK } from "../components/primitives"
 import {
@@ -15,10 +15,11 @@ import {
 } from "../components/game/draft-editor"
 import { ReferencePicker } from "../components/game/reference-picker"
 import type { GameView, IconRef } from "../model/game-view"
-import { LANE_LABELS } from "../model/labels"
 import type { LoadoutPart } from "../model/loadout"
 import { seatSide, type SeatKey } from "../model/timeline"
-import { formatClock } from "../model/vod"
+import { formatClock } from "@/lib/clock"
+import { NativeSelect } from "@/components/native-select"
+import { LANE_LABELS } from "@/lib/lanes"
 
 /** The game clock for the player position, and back to video time for display and seeking. */
 export type LoadoutClock = {
@@ -130,14 +131,14 @@ export function LoadoutPanel({
   // A mark taken before the game clock starts (draft, loading screen) is kept at 0:00.
   const nowGame = clock?.videoNow != null ? Math.max(0, Math.round(clock.toGame(clock.videoNow) ?? 0)) : null
 
+  // Only a new request moves the panel; the lookup reads the seats of the same game.
+  const findSeat = useEffectEvent((key?: SeatKey) => seatOf(key))
   useEffect(() => {
-    const wanted = seatOf(target?.seat)
+    const wanted = findSeat(target?.seat)
     if (!wanted) return
     scrollTo.current = target?.part ?? null
     setSeat(wanted)
     setTab(target?.part === "equipment" ? "equipment" : "loadout")
-    // Only a new request moves the panel; the lookup reads the seats of the same game.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target])
   useEffect(() => {
     if (!scrollTo.current) return
@@ -218,7 +219,7 @@ export function LoadoutPanel({
                     {value?.playerId ? (
                       <span className="max-w-20 truncate">{entry.playerName}</span>
                     ) : (
-                      <span className="text-amber-600 dark:text-amber-400">Chưa ghi</span>
+                      <span className="text-(--aov-warning)">Chưa ghi</span>
                     )}
                     <SeatDots participant={value} />
                   </button>
@@ -315,13 +316,13 @@ export function LoadoutPanel({
           {/* Who played this seat is chosen here, from the team's registered players. */}
           <header className="flex flex-wrap items-center gap-2" data-part="player">
             <LaneIcon lane={participant.lane} size={16} className="text-[var(--side)]" />
-            <select
+            <NativeSelect
               aria-label={`Tuyển thủ ${LANE_LABELS[participant.lane].name} của ${view.sides[seat.side].team.name}`}
               value={participant.playerId ?? ""}
               onChange={(event) => updateSeat(seat, (value) => ({ ...value, playerId: event.target.value || null }))}
               className={cn(
                 "h-8 max-w-full min-w-44 rounded-md border bg-background px-2 text-sm font-semibold",
-                !participant.playerId && "border-dashed border-amber-500 text-amber-600 dark:text-amber-400",
+                !participant.playerId && "border-dashed border-(--aov-warning) text-(--aov-warning)",
               )}
             >
               <option value="">Chưa ghi tuyển thủ</option>
@@ -333,7 +334,7 @@ export function LoadoutPanel({
                   {rosterOptionLabel(member, participant.lane)}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <span className="text-xs text-muted-foreground">
               {LANE_LABELS[participant.lane].name} · {participant.hero?.name || "chưa có tướng"}
             </span>

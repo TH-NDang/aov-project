@@ -6,7 +6,7 @@ import {
   formatInZone,
   isCalendarDate,
 } from "@aov/ui/lib/time-zone"
-import type { Lane, Side, TournamentContent } from "@aov/community-contracts"
+import type { TournamentContent } from "@aov/community-contracts"
 
 export type StagePhase = "GROUP" | "UPPER" | "LOWER" | "FINAL" | "OTHER"
 export type StageInfo = { code: string; label: string; phase: StagePhase; order: number }
@@ -47,25 +47,6 @@ export function stageInfo(stage?: string | null): StageInfo {
   }
   return { code, label: code, phase: "OTHER", order: 90 }
 }
-
-export const PHASE_LABELS: Record<StagePhase, string> = {
-  GROUP: "Vòng bảng",
-  UPPER: "Nhánh thắng",
-  LOWER: "Nhánh thua",
-  FINAL: "Chung kết",
-  OTHER: "Khác",
-}
-
-export const LANE_LABELS: Record<Lane, { name: string; short: string }> = {
-  TOP: { name: "Đường Caesar", short: "Caesar" },
-  JUNGLE: { name: "Đi rừng", short: "Rừng" },
-  MID: { name: "Đường giữa", short: "Giữa" },
-  DRAGON: { name: "Đường Rồng", short: "Rồng" },
-  SUPPORT: { name: "Trợ thủ", short: "Trợ thủ" },
-}
-export const LANE_ORDER: Lane[] = ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"]
-
-export const SIDE_LABELS: Record<Side, string> = { BLUE: "Đội Xanh", RED: "Đội Đỏ" }
 
 export const TIER_LABELS: Record<NonNullable<TournamentContent["tier"]>, string> = {
   S: "S-Tier",

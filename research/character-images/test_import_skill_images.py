@@ -45,7 +45,8 @@ class SkillImageImportTest(unittest.TestCase):
         file.name = "test.png"
         file.read_bytes.return_value = b"image"
         source = {**self.row(), "path": file}
-        with patch.object(module.helpers, "upload_ticket") as upload:
+        with patch.object(module.helpers, "upload_ticket") as upload, \
+                patch.object(module.helpers, "source_credit", return_value={"kind": "TEST"}):
             self.assertEqual(importer.upload(source), "asset")
         upload.assert_called_once_with(ticket, b"image", importer.args.upload_host)
 

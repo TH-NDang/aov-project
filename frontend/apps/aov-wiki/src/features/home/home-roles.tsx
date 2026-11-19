@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { heroCatalogQuery } from "../hero/hero-api"
-import { HERO_ROLES, localizedHeroOptions } from "../hero/hero-classifications"
-import { HeroGlyph } from "../hero/hero-glyph"
+import { heroCatalogQuery } from "../../lib/hero-api"
+import { HERO_ROLES, localizedHeroOptions } from "../../lib/hero-classifications"
+import { HeroGlyph } from "../../components/hero-glyph"
 
 /** The six roles as shortcuts into the hero list, each with how many published heroes play it. */
 export function HomeRoles() {
@@ -22,7 +22,7 @@ export function HomeRoles() {
           return (
             <li key={role.value}>
               <Link to={href(`/hero?role=${role.value}`)}>
-                <HeroGlyph name={role.glyph} />
+                <HeroGlyph name={role.glyph} className="wiki-home-role-mark" />
                 <strong>{role.label}</strong>
                 {count > 0 && <small>{count}</small>}
               </Link>

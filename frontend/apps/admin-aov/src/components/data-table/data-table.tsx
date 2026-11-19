@@ -26,7 +26,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { formatNumber } from "@/lib/text"
 import { FacetedFilter, type FacetOption } from "./faceted-filter"
 import { dataTableFeatures, EMPTY_TABLE_DATA, type DataColumnDef } from "./table-features"
-import { InfiniteScroll } from "@/components/infinite-scroll"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedCount } from "@aov/ui/hooks/use-revealed-rows"
 
 const ROW_BATCH = 25

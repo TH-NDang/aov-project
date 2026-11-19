@@ -171,7 +171,7 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
   đang đọc. Trên compact đầu trang có "Tất cả bản cập nhật" và tên bản (`h1`), mục lục thành một hàng cuộn ngang có ảnh
   tướng. Nhảy tới một mục ghi vị trí đó vào địa chỉ để chia sẻ được.
 - Mọi nhãn loại thay đổi (Tăng sức mạnh, Giảm sức mạnh, Làm lại, Sửa lỗi…) đi kèm hình vẽ riêng, trên Wiki và Admin.
-- Thay đổi của tướng dùng chung `ChangeList` (`src/features/updates/change-list.tsx`) cho trang này và trang tướng. Mỗi
+- Thay đổi của tướng dùng chung `ChangeList` (`src/components/change-list.tsx`) cho trang này và trang tướng. Mỗi
   tướng có đánh giá tổng thể (hoặc nhãn suy ra khi chưa đánh giá), số thay đổi và tóm tắt; các thay đổi gom theo từng kỹ
   năng, có ảnh và tên kỹ năng khi tướng đã có hồ sơ công khai. Loại thay đổi đã ghi cho cả tướng không lặp lại ở từng
   dòng. Giá trị ngắn hiện thành "cũ → mới" trên một dòng, giá trị dài xếp hai dòng Trước/Sau. Giá trị đổi theo cấp chiêu

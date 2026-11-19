@@ -1,0 +1,40 @@
+package com.wikiaov.community.tournament.internal.registry.persistence;
+
+import com.wikiaov.community.tournament.internal.archive.persistence.VersionedRecord;
+
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+@Entity
+@Table(schema = "tournament", name = "team")
+public class TeamRecord extends VersionedRecord {
+    private String code;
+    private String name;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private Team content;
+
+    protected TeamRecord() {
+    }
+
+    public TeamRecord(UUID id, Team content, String actor) {
+        super(id, actor);
+        setContent(content, actor);
+    }
+
+    public Team getContent() {
+        return content;
+    }
+
+    public void setContent(Team content, String actor) {
+        this.content = content;
+        this.code = content.code();
+        this.name = content.name();
+        touch(actor);
+    }
+}

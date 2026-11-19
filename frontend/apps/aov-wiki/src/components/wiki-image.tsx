@@ -1,13 +1,15 @@
 import { useCallback, useRef, useState, type ComponentPropsWithoutRef } from "react"
 import "./wiki-image.css"
 import { WikiImageCredit as ImageCredit } from "./wiki-image-credit"
-import type { HeroMedia } from "../features/hero/hero-api"
+import type { HeroMedia } from "../lib/hero-api"
 import { focalPosition, type FocalPoint } from "@aov/ui/lib/focal-point"
 
 type WikiImageProps = ComponentPropsWithoutRef<"img"> & {
   media?: HeroMedia
   /** The point of the picture to keep in view when the frame crops it. */
   focus?: FocalPoint | null
+  /** False leaves out the shimmer shown while the picture loads, for a mark drawn over another picture. */
+  placeholder?: boolean
 }
 type ImageState = "loading" | "ready" | "error"
 
@@ -21,6 +23,7 @@ function ImageFrame({
   alt,
   media,
   focus,
+  placeholder = true,
   ...imageProps
 }: WikiImageProps) {
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -57,7 +60,7 @@ function ImageFrame({
       data-state={state}
       aria-busy={state === "loading" || undefined}
     >
-      <span className="wiki-image-placeholder" aria-hidden="true" />
+      {placeholder && <span className="wiki-image-placeholder" aria-hidden="true" />}
       <img
         {...imageProps}
         ref={attachImage}

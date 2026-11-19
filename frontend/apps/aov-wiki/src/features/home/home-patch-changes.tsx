@@ -7,11 +7,11 @@ import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { usePublishedChanges } from "../../lib/wiki-patch-changes"
-import { heroCatalogQuery, type HeroListForm, type HeroListItem } from "../hero/hero-api"
-import { HERO_ROLES, localizedHeroOptions } from "../hero/hero-classifications"
-import { heroFormPath } from "../hero/hero-forms"
+import { heroCatalogQuery, type HeroListForm, type HeroListItem } from "../../lib/hero-api"
+import { HERO_ROLES, localizedHeroOptions } from "../../lib/hero-classifications"
+import { heroFormPath } from "../../lib/hero-forms"
 import { seasonUpdatesQuery } from "./home-api"
-import { patchDayLabel } from "./patch-day-label"
+import { patchDayLabel } from "../../lib/patch-day-label"
 
 /** The order readers look for: who is new, who was remade, who got stronger, who got weaker, then the rest. */
 const KIND_ORDER = ["RELEASE", "ADDED", "REWORK", "BUFF", "NERF", "ADJUSTMENT", "BALANCE", "FIX", "UPDATED", "REMOVED"]

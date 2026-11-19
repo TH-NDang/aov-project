@@ -1,5 +1,7 @@
 /* The armory: search and filters, then the catalog at full width. An open entry stands in a panel beside it. */
 .wiki-warehouse-page {
+  /* The compact layout's tab bar runs edge to edge under the header. */
+  --public-tab-bar-margin: -12px calc(-1 * var(--wiki-gutter)) 12px;
   color: var(--aov-text);
 }
 .wiki-warehouse-page :is(button, a) {
@@ -10,13 +12,6 @@
   display: flex;
   min-width: 0;
   align-items: center;
-}
-.wiki-warehouse-version > .wiki-version-picker {
-  margin: 0;
-}
-/* Runs edge to edge under the header on the compact layout. */
-.wiki-warehouse-page > .public-tab-bar {
-  margin: -12px calc(-1 * var(--wiki-gutter)) 12px;
 }
 .wiki-warehouse-page > .wiki-warehouse-version {
   min-height: 28px;
@@ -91,8 +86,9 @@
 }
 .wiki-warehouse-search button {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  margin: -4px;
   flex: none;
   place-items: center;
   border-radius: var(--aov-radius-control);
@@ -159,6 +155,13 @@
     background 140ms,
     border-color 140ms;
 }
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-warehouse-chip::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
 .wiki-warehouse-chip > svg {
   flex: none;
 }
@@ -183,10 +186,10 @@
 }
 .wiki-warehouse-chip-art,
 .wiki-warehouse-art.wiki-warehouse-chip-art {
-  width: 20px;
-  height: 20px;
+  width: var(--wiki-warehouse-art-size, 20px);
+  height: var(--wiki-warehouse-art-size, 20px);
   flex: none;
-  border-radius: 4px;
+  border-radius: var(--wiki-warehouse-art-radius, 4px);
 }
 .wiki-warehouse-clear {
   font: var(--wiki-type-meta);
@@ -195,6 +198,14 @@
   padding: 0 6px;
   color: var(--aov-accent);
   white-space: nowrap;
+  position: relative;
+}
+
+/* The control keeps its 32px look (DESIGN-TOKENS) while its tap area reaches the 36px minimum. */
+.wiki-warehouse-clear::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
 }
 .wiki-warehouse-switch {
   display: inline-flex;
@@ -371,12 +382,13 @@
 }
 
 /* ---------- Artwork ---------- */
+/* A catalog's rows, nodes and cards size the picture with --wiki-warehouse-art-size and round it with --wiki-warehouse-art-radius. */
 .wiki-warehouse-art {
   display: block;
-  width: 44px;
-  height: 44px;
+  width: var(--wiki-warehouse-art-size, 44px);
+  height: var(--wiki-warehouse-art-size, 44px);
   flex-shrink: 0;
-  border-radius: var(--aov-radius-control);
+  border-radius: var(--wiki-warehouse-art-radius, var(--aov-radius-control));
   object-fit: contain;
 }
 .wiki-warehouse-art-fallback {
@@ -592,8 +604,7 @@
 .wiki-warehouse-detail .item-price-text {
   color: inherit;
 }
-.wiki-warehouse-detail-price svg,
-.wiki-item-row-price svg {
+.wiki-warehouse-detail-price svg {
   color: currentColor;
 }
 /* Sections follow one another with a thin rule between them; nothing inside the panel is boxed again. */
@@ -632,7 +643,7 @@
 /* "Show more" under a list reads as a link at the list's left edge. */
 .wiki-warehouse-detail-body > section > button {
   justify-self: start;
-  min-height: 32px;
+  min-height: 36px;
   color: var(--aov-accent);
 }
 /* The last line of a list of facts meets the rule of the next section. */
@@ -818,18 +829,6 @@
   font: var(--wiki-type-meta);
   max-width: 280px;
   color: var(--aov-muted);
-}
-/* The suggestion form takes the place of the entry's text; its buttons stay in reach while it scrolls. */
-.wiki-warehouse-suggestion {
-  margin-top: 16px;
-  border-top: 1px solid var(--aov-line);
-  padding-top: 12px;
-}
-.wiki-warehouse-suggestion .wiki-feedback-actions {
-  position: sticky;
-  bottom: -20px;
-  padding-block: 8px;
-  background: var(--aov-surface);
 }
 .wiki-warehouse-step {
   display: grid;

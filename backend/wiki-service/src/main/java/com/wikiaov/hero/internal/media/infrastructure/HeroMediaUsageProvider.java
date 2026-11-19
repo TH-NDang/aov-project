@@ -5,9 +5,18 @@ import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository;
 import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository.OwnerName;
 import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository.PartName;
 import com.wikiaov.hero.internal.media.persistence.HeroMediaUsageRepository.Usage;
-import com.wikiaov.media.*;
+import com.wikiaov.media.MediaUsage;
+import com.wikiaov.media.MediaUsageProvider;
+import com.wikiaov.media.MediaUsageScope;
+import com.wikiaov.platform.CatalogLocales;
+import com.wikiaov.platform.RevisionState;
 import java.time.Clock;
-import java.util.*;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
@@ -16,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class HeroMediaUsageProvider implements MediaUsageProvider {
     private static final UUID ANY_ASSET = new UUID(0, 0);
-    private static final String DISPLAY_LOCALE = "vi-VN";
+    private static final String DISPLAY_LOCALE = CatalogLocales.DEFAULT;
 
     private final HeroMediaUsageRepository repository;
     private final HeroQueries queries;
@@ -28,12 +37,14 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
         this.clock = clock;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         var rows = repository.findUsages(assetId, false);
         return named(usages(rows, current(rows)));
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, List<MediaUsage>> findAllUsages() {
         var rows = repository.findUsages(ANY_ASSET, true);
@@ -53,7 +64,7 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
         Map<String, MediaUsage> places = new LinkedHashMap<>();
         for (var row : rows) {
             var usage = new MediaUsage("HERO", "HERO", row.getHeroId(), row.getRevisionId(), row.getRole(),
-                    "DRAFT".equals(row.getState())
+                    row.getState() == RevisionState.DRAFT
                             ? MediaUsageScope.DRAFT
                             : current.contains(row.getRevisionId())
                                     ? MediaUsageScope.CURRENT
@@ -67,8 +78,9 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
     }
 
     private List<MediaUsage> named(List<MediaUsage> usages) {
-        if (usages.isEmpty())
+        if (usages.isEmpty()) {
             return usages;
+        }
 
         var revisions = usages.stream().map(MediaUsage::revisionId).collect(Collectors.toSet());
         var heroes = preferred(repository.heroNames(revisions), OwnerName::getRevisionId);
@@ -88,12 +100,12 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
         return name.getRevisionId() + ":" + name.getPartKey();
     }
 
-    /** Vietnamese first, then a stable choice, so a place keeps its name between requests. */
+    /** Vietnamese first, then the catalog fallback order, so a place keeps its name between requests. */
     private static <K, T extends OwnerName> Map<K, String> preferred(List<T> names, Function<T, K> key) {
-        Comparator<OwnerName> order = Comparator.comparing((OwnerName name) -> !DISPLAY_LOCALE.equals(name.getLocale()))
-                .thenComparing(OwnerName::getLocale);
+        Comparator<OwnerName> order = CatalogLocales.preference(DISPLAY_LOCALE, OwnerName::getLocale);
 
         return names.stream().collect(Collectors.groupingBy(key,
-                Collectors.collectingAndThen(Collectors.minBy(order), best -> best.orElseThrow().getName())));
+                Collectors.collectingAndThen(Collectors.minBy(order), best -> best
+                        .orElseThrow(() -> new IllegalStateException("A grouped place has no name.")).getName())));
     }
 }

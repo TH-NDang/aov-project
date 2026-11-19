@@ -1,7 +1,8 @@
 package com.wikiaov.hero.internal.domain;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class SkillReferenceSearchTest {
@@ -9,9 +10,9 @@ class SkillReferenceSearchTest {
     void parsesOwnerSlotAndVariantIndependentlyOfWordOrder() {
         assertThat(SkillReferenceSearch.parse("chiêu 1 airi")).isEqualTo(SkillReferenceSearch.parse("airi chiêu 1"));
         assertThat(SkillReferenceSearch.parse("EdRas Chiêu 2 1"))
-                .isEqualTo(new SkillReferenceSearch(java.util.List.of("edras"), 2, 1));
+                .isEqualTo(new SkillReferenceSearch(List.of("edras"), 2, 1));
         assertThat(SkillReferenceSearch.parse("edras chiêu 1 2"))
-                .isEqualTo(new SkillReferenceSearch(java.util.List.of("edras"), 1, 2));
+                .isEqualTo(new SkillReferenceSearch(List.of("edras"), 1, 2));
         assertThat(SkillReferenceSearch.parse("Ngộ Không nội tại").words()).containsExactly("ngo", "khong");
         assertThat(SkillReferenceSearch.parse("Ngộ Không nội tại").sourceSlot()).isZero();
         assertThat(SkillReferenceSearch.parse("passive Airi").sourceSlot()).isZero();
@@ -19,7 +20,7 @@ class SkillReferenceSearchTest {
 
     @Test
     void aVariantCanBeWrittenAsAPhaseAFormOrAVariant() {
-        var expected = new SkillReferenceSearch(java.util.List.of("edras"), 2, 2);
+        var expected = new SkillReferenceSearch(List.of("edras"), 2, 2);
         assertThat(SkillReferenceSearch.parse("edras chiêu 2 giai đoạn 2")).isEqualTo(expected);
         assertThat(SkillReferenceSearch.parse("edras chiêu 2 biến thể 2")).isEqualTo(expected);
         assertThat(SkillReferenceSearch.parse("edras chiêu 2 dạng 2")).isEqualTo(expected);
@@ -28,13 +29,13 @@ class SkillReferenceSearchTest {
     @Test
     void acceptsTheShortSlotStylesPlayersWrite() {
         assertThat(SkillReferenceSearch.parse("airi c1"))
-                .isEqualTo(new SkillReferenceSearch(java.util.List.of("airi"), 1, null));
+                .isEqualTo(new SkillReferenceSearch(List.of("airi"), 1, null));
         assertThat(SkillReferenceSearch.parse("S2 Airi"))
-                .isEqualTo(new SkillReferenceSearch(java.util.List.of("airi"), 2, null));
+                .isEqualTo(new SkillReferenceSearch(List.of("airi"), 2, null));
         assertThat(SkillReferenceSearch.parse("edras c2 2"))
-                .isEqualTo(new SkillReferenceSearch(java.util.List.of("edras"), 2, 2));
+                .isEqualTo(new SkillReferenceSearch(List.of("edras"), 2, 2));
         assertThat(SkillReferenceSearch.parse("edras chiêu1"))
-                .isEqualTo(new SkillReferenceSearch(java.util.List.of("edras"), 1, null));
+                .isEqualTo(new SkillReferenceSearch(List.of("edras"), 1, null));
         assertThat(SkillReferenceSearch.parse("chiêu cuối Airi").sourceSlot()).isEqualTo(3);
         assertThat(SkillReferenceSearch.parse("airi ult").sourceSlot()).isEqualTo(3);
         assertThat(SkillReferenceSearch.parse("airi nt").sourceSlot()).isZero();
@@ -61,8 +62,9 @@ class SkillReferenceSearchTest {
 
     @Test
     void recognizesSkillCategoryCommandsWithoutTreatingThemAsNames() {
-        for (var q : java.util.List.of("@Kỹ năng", "Kỹ năng", "chiêu thức", "chiêu", "skills"))
+        for (var q : List.of("@Kỹ năng", "Kỹ năng", "chiêu thức", "chiêu", "skills")) {
             assertThat(SkillReferenceSearch.parse(q).words()).isEmpty();
+        }
         assertThat(SkillReferenceSearch.parse("Kỹ năng Edras").words()).containsExactly("edras");
         assertThat(SkillReferenceSearch.parse("chiêu thức 2 Edras").sourceSlot()).isEqualTo(2);
     }

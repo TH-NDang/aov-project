@@ -28,8 +28,9 @@ public class GoogleLoginFlows {
 
     public synchronized Flow start() {
         flows.entrySet().removeIf(entry -> entry.getValue().expiresAt() <= clock.millis());
-        if (flows.size() >= 1000)
+        if (flows.size() >= 1000) {
             throw new ApiException(AuthErrorCode.AUTH_RATE_LIMITED, "Too many pending login flows.");
+        }
         Flow flow = new Flow(secret(), secret(), secret(), clock.millis() + 300000);
         flows.put(flow.state(), flow);
         return flow;

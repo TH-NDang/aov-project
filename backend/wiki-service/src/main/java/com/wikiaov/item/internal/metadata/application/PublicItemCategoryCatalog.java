@@ -7,9 +7,9 @@ import com.wikiaov.item.internal.metadata.persistence.entity.ItemCategoryTransla
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.CatalogText.MetadataTranslation;
 import com.wikiaov.platform.PlatformErrorCode;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,21 +33,25 @@ public class PublicItemCategoryCatalog {
     }
 
     public List<PublicItemCategoryView> read(String locale) {
-        if (locale == null || !locale.matches("[a-z]{2,3}(?:-[A-Z]{2})?"))
+        if (locale == null || !locale.matches(CatalogLocales.PATTERN)) {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid metadata locale.");
+        }
 
         var rows = records.findAllByOrderByDisplayOrderAscCodeAsc();
-        if (rows.isEmpty())
+        if (rows.isEmpty()) {
             return List.of();
+        }
         var codes = rows.stream().map(row -> row.getCode()).toList();
         var copies = translations.findByOwnerCodeInOrderByLocale(codes).stream()
                 .collect(Collectors.groupingBy(ItemCategoryTranslation::getOwnerCode));
         var ids = new HashSet<UUID>();
         rows.forEach(row -> {
-            if (row.getIconAssetId() != null)
+            if (row.getIconAssetId() != null) {
                 ids.add(row.getIconAssetId());
-            if (row.getBackgroundAssetId() != null)
+            }
+            if (row.getBackgroundAssetId() != null) {
                 ids.add(row.getBackgroundAssetId());
+            }
         });
         var assets = ids.isEmpty() ? Map.<UUID, MediaAssetReference>of() : media.findAll(ids);
 
@@ -57,14 +61,11 @@ public class PublicItemCategoryCatalog {
     }
 
     private static List<MetadataTranslation> select(List<ItemCategoryTranslation> values, String locale) {
-        return values.stream()
-                .min(Comparator.comparingInt((ItemCategoryTranslation value) -> value.getLocale().equals(locale)
-                        ? 0
-                        : value.getLocale().equals("vi-VN") ? 1 : value.getLocale().equals("en-US") ? 2 : 3)
-                        .thenComparing(ItemCategoryTranslation::getLocale))
-                .map(value -> List.of(new MetadataTranslation(value.getLocale(), value.getName(),
-                        value.getDescription(), value.getSuitability())))
-                .orElseGet(List::of);
+        var value = CatalogLocales.pick(values, locale, ItemCategoryTranslation::getLocale);
+        return value == null
+                ? List.of()
+                : List.of(new MetadataTranslation(value.getLocale(), value.getName(), value.getDescription(),
+                        value.getSuitability()));
     }
 
     private static MediaAssetReference usable(Map<UUID, MediaAssetReference> assets, UUID id) {

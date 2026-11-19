@@ -7,6 +7,7 @@ import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.response.MediaDeletionView;
 import com.wikiaov.media.internal.asset.application.MediaAssetAccess;
 import com.wikiaov.media.internal.asset.persistence.MediaAssetVersionRepository;
+import com.wikiaov.media.internal.deletion.domain.MediaDeletionState;
 import com.wikiaov.media.internal.deletion.persistence.MediaDeletionRepository;
 import com.wikiaov.media.internal.deletion.persistence.entity.MediaDeletion;
 import com.wikiaov.media.internal.domain.model.UploadState;
@@ -50,7 +51,7 @@ public class MediaDeletionRecords {
 
     public record Work(
             UUID assetId,
-            String state,
+            MediaDeletionState state,
             List<String> keys,
             List<String> urls
     ) {
@@ -74,8 +75,9 @@ public class MediaDeletionRecords {
         MediaDeletion deletion;
         if (existing.isPresent()) {
             deletion = existing.get();
-            if (deletion.complete())
+            if (deletion.complete()) {
                 return work(deletion);
+            }
             if (deletion.getExpectedVersion() != expectedVersion) {
                 throw MediaWritePolicy.versionConflict(asset.getLockVersion());
             }
@@ -119,8 +121,9 @@ public class MediaDeletionRecords {
     @Transactional
     public void originDeleted(UUID assetId) {
         var deletion = lock(assetId);
-        if (!deletion.complete())
+        if (!deletion.complete()) {
             deletion.originDeleted();
+        }
     }
 
     @Transactional
@@ -140,8 +143,9 @@ public class MediaDeletionRecords {
     @Transactional
     public void failed(UUID assetId, String code) {
         var deletion = lock(assetId);
-        if (!deletion.complete())
+        if (!deletion.complete()) {
             deletion.failed(code);
+        }
     }
 
     private MediaDeletion require(UUID assetId) {
@@ -150,7 +154,8 @@ public class MediaDeletionRecords {
     }
 
     private MediaDeletion lock(UUID assetId) {
-        return deletions.lock(assetId).orElseThrow();
+        return deletions.lock(assetId).orElseThrow(() -> new ApiException(MediaErrorCode.MEDIA_DELETION_NOT_FOUND,
+                "No deletion was requested for this image."));
     }
 
     private static Work work(MediaDeletion deletion) {

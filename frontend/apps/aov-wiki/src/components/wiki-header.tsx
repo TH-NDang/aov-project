@@ -7,19 +7,21 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTitle,
   DropdownMenuTrigger,
 } from "@aov/ui/components/public-overlay"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { SITE_NAME } from "../lib/seo/page-meta"
 import "./wiki-header.css"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { useWikiContext, wikiText, useWikiText } from "../context/wiki-context"
 import { WikiPreferenceControls } from "../context/wiki-preferences"
-import { wikiSections, type WikiSectionKey } from "../lib/wiki-sections"
+import { wikiSections, type WikiSectionKey, SECTION_NAMES } from "../lib/wiki-sections"
 import { LibraryContents } from "./library-contents"
 import { WikiIcon } from "./wiki-icon"
 import { WikiSearch } from "./wiki-search"
-import { WikiAccountMenu } from "../features/auth/wiki-account"
-import { useWikiAccountPreferences } from "../features/auth/wiki-auth"
+import { WikiAccountMenu } from "./wiki-account"
+import { useWikiAccountPreferences } from "../lib/wiki-auth"
 
 type IconName =
   "search" | "globe" | "user" | "chevron" | "check" | "home" | "more" | "close" | "chevronRight" | "contents"
@@ -45,7 +47,7 @@ const SECTIONS: Section[] = [
   {
     id: "wiki",
     product: "Wiki",
-    label: "AOV Wiki",
+    label: SITE_NAME,
     description: "Tra cứu tướng, trang bị, phù hiệu",
     image: WIKI_LOGO_URL,
     href: "/",
@@ -80,16 +82,17 @@ function SectionItemBody({ section }: { section: Section }) {
 
 /** Area switcher beside the wordmark. The compact layout has this list in the "more" sheet. */
 function SectionSelector() {
-  const { t, href } = useWikiContext()
+  const { href } = useWikiContext()
+  const t = useWikiText()
   const current = SECTIONS.find((s) => s.id === CURRENT_SECTION)!
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         className="public-app-trigger wiki-app-switcher"
         data-product="wiki"
-        aria-label={`${t("application")} — ${current.label}`}
+        aria-label={`${t("Chọn ứng dụng", "Choose application")} — ${current.label}`}
       >
-        <PublicAppWordmark product="Wiki" />
+        <PublicAppWordmark product="Wiki" className="wiki-header-wordmark" />
         <span className="public-app-chevron">
           <Icon name="chevron" />
         </span>
@@ -99,10 +102,12 @@ function SectionSelector() {
         alignOffset={-42}
         sideOffset={10}
         className="public-app-theme public-app-menu"
-        drawerTitle={t("application")}
+        drawerTitle={t("Chọn ứng dụng", "Choose application")}
         data-appearance="wiki"
       >
-        <div className="public-app-menu-title">{t("application")}</div>
+        <DropdownMenuTitle className="public-app-menu-title">
+          {t("Chọn ứng dụng", "Choose application")}
+        </DropdownMenuTitle>
         {SECTIONS.map((s) => {
           const selected = s.id === CURRENT_SECTION
           return (
@@ -143,21 +148,26 @@ function useScrollProgressVar(ref: RefObject<HTMLElement | null>, distance: numb
 
 /** The compact layout's sheet for what is not about the wiki's contents: account, the other app and settings. */
 function MoreMenu() {
-  const { t, href, locale } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const t = useWikiText()
 
   return (
     <PublicPreferencesDrawer
       product="wiki"
       locale={locale}
       trigger={
-        <button type="button" className="wiki-compact-button" aria-label={t("more")}>
+        <button type="button" className="wiki-compact-button" aria-label={t("Thêm", "More")}>
           <Icon name="more" />
         </button>
       }
     >
       <WikiAccountMenu inline />
-      <div className="public-preferences-label">{t("application")}</div>
-      <nav aria-label={t("application")} className="public-preferences-apps" data-appearance="wiki">
+      <div className="public-preferences-label">{t("Chọn ứng dụng", "Choose application")}</div>
+      <nav
+        aria-label={t("Chọn ứng dụng", "Choose application")}
+        className="public-preferences-apps"
+        data-appearance="wiki"
+      >
         {SECTIONS.map((s) => {
           const selected = s.id === CURRENT_SECTION
           return (
@@ -192,9 +202,10 @@ const sectionOf = (key: WikiSectionKey) => wikiSections.find((section) => sectio
 
 /** The main sections, always in the top bar on wide screens; the four parts of the armory share one menu. */
 function TopNavigation({ active }: { active?: WikiSectionKey }) {
-  const { t, href, locale } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const t = useWikiText()
   const inWarehouse = WAREHOUSE_KEYS.some((key) => key === active)
-  const link = (key: WikiSectionKey, label = t(key)) => (
+  const link = (key: WikiSectionKey, label = t(...SECTION_NAMES[key])) => (
     <Link key={key} to={href(sectionOf(key).path)} aria-current={active === key ? "page" : undefined}>
       {label}
     </Link>
@@ -205,22 +216,27 @@ function TopNavigation({ active }: { active?: WikiSectionKey }) {
       {link("skins")}
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger className="wiki-topnav-menu" data-current={inWarehouse || undefined}>
-          {t("warehouse")}
+          {t("Kho trang bị", "Armory")}
           <Icon name="chevron" className="size-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" sideOffset={6} className="wiki-topnav-panel" drawerTitle={t("warehouse")}>
+        <DropdownMenuContent
+          align="start"
+          sideOffset={6}
+          className="wiki-topnav-panel"
+          drawerTitle={t("Kho trang bị", "Armory")}
+        >
           {WAREHOUSE_KEYS.map((key) => (
             <DropdownMenuItem key={key} asChild>
               <Link to={href(sectionOf(key).path)} aria-current={active === key ? "page" : undefined}>
                 <WikiIcon name={sectionOf(key).icon} size={28} className="size-7" />
-                {t(key)}
+                {t(...SECTION_NAMES[key])}
               </Link>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
       {link("modes")}
-      {link("updates", t("updatesShort"))}
+      {link("updates", t("Cập nhật", "Updates"))}
       {link("terms")}
     </nav>
   )
@@ -235,6 +251,8 @@ interface WikiHeaderProps {
   backTo?: string
   /** The section to mark in the navigation. */
   section?: WikiSectionKey
+  /** Fills the compact bar from the first pixel, for a page with no artwork under it. */
+  solid?: boolean
 }
 
 /** One row: the way back, where you are, then search, the contents and the sheet with everything else. */
@@ -244,8 +262,10 @@ function WikiHeaderCompact({
   pageTitleIsHeading = true,
   backTo,
   section,
+  solid = false,
 }: WikiHeaderProps) {
-  const { t, href, locale } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const t = useWikiText()
   const [searching, setSearching] = useState(false)
   const Title = pageTitleIsHeading ? "h1" : "p"
   // Over artwork the row starts clear and darkens during the first 100px of scroll.
@@ -268,19 +288,19 @@ function WikiHeaderCompact({
       </header>
     )
   return (
-    <header ref={headerRef} className="wiki-compact-header" data-variant={variant}>
+    <header ref={headerRef} className="wiki-compact-header" data-variant={variant} data-solid={solid || undefined}>
       {backTo ? (
         <Link className="wiki-compact-button" to={href(backTo)} aria-label={wikiText(locale, "Quay lại", "Back")}>
           <WikiIcon name="chevronLeft" size={22} />
         </Link>
       ) : pageTitle ? (
-        <a className="wiki-compact-button" href={href("/")} aria-label={t("home")}>
+        <a className="wiki-compact-button" href={href("/")} aria-label={t("Trang chủ", "Home")}>
           <Icon name="home" />
         </a>
       ) : (
-        <a className="wiki-compact-brand" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
+        <a className="wiki-compact-brand" href={href("/")} aria-label={`${SITE_NAME} — ${t("Trang chủ", "Home")}`}>
           <img src={WIKI_LOGO_URL} alt="" width={28} height={28} fetchPriority="high" />
-          <PublicAppWordmark product="Wiki" className="wiki-mobile-wordmark" />
+          <PublicAppWordmark product="Wiki" size="small" />
         </a>
       )}
       {pageTitle ? (
@@ -288,12 +308,12 @@ function WikiHeaderCompact({
       ) : (
         <span className="flex-1" />
       )}
-      <nav className="wiki-compact-utilities" aria-label={t("utilities")}>
+      <nav className="wiki-compact-utilities" aria-label={t("Tiện ích", "Utilities")}>
         <button
           ref={searchButton}
           type="button"
           className="wiki-compact-button"
-          aria-label={t("search")}
+          aria-label={t("Tìm kiếm", "Search")}
           onClick={() => setSearching(true)}
         >
           <Icon name="search" />
@@ -306,7 +326,8 @@ function WikiHeaderCompact({
 }
 
 function WikiHeaderWide({ variant = "home", section }: WikiHeaderProps) {
-  const { t, href, locale } = useWikiContext()
+  const { href, locale } = useWikiContext()
+  const t = useWikiText()
   // Hero headers darken over the first 100px of scroll, as they start on top of the artwork.
   const headerRef = useRef<HTMLElement>(null)
   useScrollProgressVar(headerRef, 100)
@@ -318,7 +339,7 @@ function WikiHeaderWide({ variant = "home", section }: WikiHeaderProps) {
     <header ref={headerRef} data-variant={variant} className="wiki-header">
       <div className="wiki-header-inner" data-searching={searching || undefined}>
         <div className="public-app-theme wiki-header-brand" data-appearance="wiki">
-          <a className="wiki-header-logo" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
+          <a className="wiki-header-logo" href={href("/")} aria-label={`${SITE_NAME} — ${t("Trang chủ", "Home")}`}>
             <img src={WIKI_LOGO_URL} alt="" width={32} height={32} fetchPriority="high" />
           </a>
           <SectionSelector />
@@ -330,13 +351,13 @@ function WikiHeaderWide({ variant = "home", section }: WikiHeaderProps) {
           ref={searchButton}
           type="button"
           className="wiki-header-search-toggle"
-          aria-label={searching ? wikiText(locale, "Đóng tìm kiếm", "Close search") : t("search")}
+          aria-label={searching ? wikiText(locale, "Đóng tìm kiếm", "Close search") : t("Tìm kiếm", "Search")}
           aria-expanded={searching}
           onClick={() => setSearching((value) => !value)}
         >
           <Icon name={searching ? "close" : "search"} />
         </button>
-        <nav className="wiki-header-tools" aria-label={t("utilities")}>
+        <nav className="wiki-header-tools" aria-label={t("Tiện ích", "Utilities")}>
           <WikiPreferenceControls />
           <WikiAccountMenu />
         </nav>

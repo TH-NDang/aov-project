@@ -1,12 +1,22 @@
 package com.wikiaov.hero.internal.shop.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-
-import jakarta.persistence.*;
+import com.wikiaov.hero.internal.shop.domain.HeroAvailability;
+import com.wikiaov.platform.AssignedIdentifierEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /** What the shop asked for a hero from {@code capturedOn} until the next row. */
 @Entity
@@ -25,7 +35,8 @@ public class HeroShopPriceRow extends AssignedIdentifierEntity<HeroShopPriceRow.
     @Id
     private LocalDate capturedOn;
 
-    private String availability;
+    @Enumerated(EnumType.STRING)
+    private HeroAvailability availability;
     private Integer goldPrice;
     private Integer voucherPrice;
     private boolean needsReview;
@@ -46,7 +57,7 @@ public class HeroShopPriceRow extends AssignedIdentifierEntity<HeroShopPriceRow.
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class Key implements java.io.Serializable {
+    public static class Key implements Serializable {
         public UUID heroId;
         public String regionCode;
         public LocalDate capturedOn;

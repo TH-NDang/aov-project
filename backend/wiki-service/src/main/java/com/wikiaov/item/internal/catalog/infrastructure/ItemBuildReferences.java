@@ -7,6 +7,7 @@ import com.wikiaov.item.internal.catalog.persistence.ItemIdentityRepository;
 import com.wikiaov.item.internal.catalog.persistence.ItemRevisionRepository;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemIdentity;
 import com.wikiaov.item.internal.catalog.persistence.entity.ItemRevision;
+import com.wikiaov.platform.RevisionState;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -25,32 +26,39 @@ public class ItemBuildReferences implements BuildReferenceProvider {
     private final ItemIdentityRepository identities;
     private final ItemRevisionRepository revisions;
 
+    @Override
     public BuildReferenceKind kind() {
         return BuildReferenceKind.ITEM;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<String, BuildReference> byCodes(Collection<String> codes) {
         Map<String, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findByCodeIn(codes)))
+        for (var identity : published(identities.findByCodeIn(codes))) {
             result.put(identity.getCode(), reference(identity));
+        }
         return result;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Map<UUID, BuildReference> byIds(Collection<UUID> ids) {
         Map<UUID, BuildReference> result = new HashMap<>();
-        for (var identity : published(identities.findAllById(ids)))
+        for (var identity : published(identities.findAllById(ids))) {
             result.put(identity.getId(), reference(identity));
+        }
         return result;
     }
 
     /** The given identities that have a published revision. */
     private List<ItemIdentity> published(List<ItemIdentity> found) {
-        if (found.isEmpty())
+        if (found.isEmpty()) {
             return List.of();
+        }
         Set<UUID> published = revisions
-                .findByOwnerIdInAndState(found.stream().map(ItemIdentity::getId).toList(), "PUBLISHED").stream()
+                .findByOwnerIdInAndState(found.stream().map(ItemIdentity::getId).toList(), RevisionState.PUBLISHED)
+                .stream()
                 .map(ItemRevision::getOwnerId).collect(Collectors.toSet());
         return found.stream().filter(identity -> published.contains(identity.getId())).toList();
     }

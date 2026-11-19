@@ -54,10 +54,8 @@ public class SourceOrphans {
     public PageSlice<SourceFileViews.Orphan> list(int page, int size) {
         List<SourceObject> orphans = orphans();
 
-        int from = (int) Math.min((long) page * size, orphans.size());
-        int to = Math.min(from + size, orphans.size());
-        return new PageSlice<>(orphans.subList(from, to).stream().map(SourceOrphans::view).toList(), page, size,
-                orphans.size());
+        // Paged in memory: an orphan is an object that no source file and no usage names, read from several sources.
+        return PageSlice.of(orphans, page, size).map(SourceOrphans::view);
     }
 
     /** Count and bytes of the orphans, for the storage summary. */

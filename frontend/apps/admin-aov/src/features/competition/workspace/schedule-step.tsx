@@ -17,6 +17,8 @@ import { Button } from "@aov/ui/components/button"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { cn } from "@aov/ui/lib/utils"
 import { confirmAction } from "@/components/confirm-dialog"
+import { randomId } from "@/lib/random-id"
+import { dayKeyInZone, formatCalendarDate, formatInZone } from "@aov/ui/lib/time-zone"
 import { MatchRecordingStrip } from "@/features/esports/components/match-recording-strip"
 import { TeamLogo } from "@/features/esports/components/primitives"
 import { matchRecording } from "@/features/esports/model/match-recording"
@@ -25,11 +27,12 @@ import { matchPath } from "@/features/esports/pages/esports-shell"
 import { competitionApi } from "../competition-api"
 import { MatchPanel } from "./match-panel"
 import {
-  dayKey,
   defaultGroupMode,
+  extraMatch,
   groupMatches,
   hasScore,
   isLeagueStage,
+  matchLabel,
   restingTeams,
   seedsFromStandings,
   slotText,
@@ -39,7 +42,7 @@ import {
 } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
 import { PlanBracket } from "./plan-bracket"
-import { selectClass } from "./plan-fields"
+import { NativeSelect } from "@/components/native-select"
 
 const ROW = "grid-cols-[88px_minmax(0,1fr)_72px_minmax(0,1fr)_minmax(0,auto)_20px]"
 
@@ -80,7 +83,7 @@ export function ScheduleStep({ ws }: { ws: Workspace }) {
                 aria-selected={active}
                 onClick={() => setStageCode(entry.code)}
                 className={cn(
-                  "type-body flex min-h-9 items-center gap-2 rounded-md px-3 font-semibold transition-colors",
+                  "type-body flex min-h-9 items-center gap-2 rounded-md px-3 transition-colors",
                   active ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -136,9 +139,9 @@ function LeagueStage({ ws, stage, matches }: { ws: Workspace; stage: Competition
     <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <select
+          <NativeSelect
             aria-label="Lọc theo đội"
-            className={cn(selectClass, "h-9 w-auto min-w-44")}
+            className="min-w-44"
             value={teamId}
             onChange={(event) => setTeamId(event.target.value)}
           >
@@ -148,7 +151,7 @@ function LeagueStage({ ws, stage, matches }: { ws: Workspace; stage: Competition
                 {ws.team(id).name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <div className="flex rounded-md border p-0.5" role="group" aria-label="Cách gom trận">
             {(
               [
@@ -234,7 +237,7 @@ function BracketStage({ ws, stage, matches }: { ws: Workspace; stage: Competitio
       </Panel>
       {view === "bracket" && chosen && (
         <Panel
-          title={chosen.label || chosen.key}
+          title={matchLabel(chosen)}
           meta={`${sideName(ws, chosen, "a")} gặp ${sideName(ws, chosen, "b")} · BO${chosen.bestOf}`}
           action={<ScoreChip ws={ws} match={chosen} />}
           className="border-primary/60"
@@ -292,16 +295,11 @@ function dayLabel(day: string | undefined, today: string) {
   if (day === today) return "Hôm nay"
   if (day === shift(1)) return "Ngày mai"
   if (day === shift(-1)) return "Hôm qua"
-  return new Intl.DateTimeFormat("vi-VN", {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "UTC",
-  }).format(new Date(`${day}T00:00:00Z`))
+  return formatCalendarDate(day, { weekday: "long", day: "2-digit", month: "2-digit" })
 }
 
 const shortDay = (value: number, timeZone: string) =>
-  new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", timeZone }).format(new Date(value))
+  formatInZone(value, timeZone, { day: "2-digit", month: "2-digit" })
 
 function MatchGroups({
   ws,
@@ -317,7 +315,7 @@ function MatchGroups({
 }) {
   const [toggled, setToggled] = useState<Record<string, boolean>>({})
   const [openMatch, setOpenMatch] = useState<string | null>(null)
-  const today = dayKey(Date.now(), ws.plan.timezone)
+  const today = dayKeyInZone(Date.now(), ws.plan.timezone)
   return (
     <div className="space-y-3">
       {groups.map((group, index) => {
@@ -326,7 +324,7 @@ function MatchGroups({
         const span = Number.isFinite(group.firstAt)
           ? shortDay(group.firstAt, ws.plan.timezone) +
             (Number.isFinite(group.lastAt) &&
-            dayKey(group.lastAt, ws.plan.timezone) !== dayKey(group.firstAt, ws.plan.timezone)
+            dayKeyInZone(group.lastAt, ws.plan.timezone) !== dayKeyInZone(group.firstAt, ws.plan.timezone)
               ? `–${shortDay(group.lastAt, ws.plan.timezone)}`
               : "")
           : ""
@@ -408,7 +406,7 @@ function MatchLine({
   const record = ws.series.find((entry) => entry.id === match.seriesId)
   const live = ws.published ? ws.published.resolved.find((entry) => entry.key === match.key) : undefined
   const unpublished = !!ws.published && (row?.scoreA ?? null) !== (live?.scoreA ?? null)
-  const isToday = !!match.scheduledAt && dayKey(match.scheduledAt, ws.plan.timezone) === today
+  const isToday = !!match.scheduledAt && dayKeyInZone(match.scheduledAt, ws.plan.timezone) === today
   const games = ws.games?.filter((entry) => entry.content.seriesId === match.seriesId).length
   const side = (which: "a" | "b") => {
     const id = which === "a" ? row?.teamAId : row?.teamBId
@@ -447,7 +445,7 @@ function MatchLine({
         {side("a")}
         <span
           className={cn(
-            "type-body inline-flex h-7 items-center justify-center rounded-md border px-2 font-bold tabular-nums",
+            "type-body inline-flex h-7 items-center justify-center rounded-md border px-2 tabular-nums",
             scored ? "bg-muted" : "border-dashed font-semibold text-primary",
             open && "border-primary",
           )}
@@ -617,8 +615,8 @@ function SeedStrip({ ws, matches }: { ws: Workspace; matches: PlannedMatch[] }) 
           {seeds.map((seed) => (
             <label key={seed} className="grid gap-2">
               <span className="type-label">Hạt giống {seed}</span>
-              <select
-                className={selectClass}
+              <NativeSelect
+                className="w-full"
                 value={ws.plan.playoffSeeds[seed] || ""}
                 onChange={(event) => {
                   const values = { ...ws.plan.playoffSeeds }
@@ -635,7 +633,7 @@ function SeedStrip({ ws, matches }: { ws: Workspace; matches: PlannedMatch[] }) 
                       {ws.team(entry.teamId).name}
                     </option>
                   ))}
-              </select>
+              </NativeSelect>
             </label>
           ))}
         </div>
@@ -651,6 +649,7 @@ function ScheduleSetup({ ws, stage }: { ws: Workspace; stage: CompetitionStage }
   const generate = useMutation({
     mutationFn: () => competitionApi.preview(ws.plan, stage.code, opponent),
     onSuccess: setPreview,
+    meta: { silent: true },
   })
   const canGenerate = ["ROUND_ROBIN", "DOUBLE_ELIMINATION"].includes(stage.format)
   const linked = ws.plan.matches.some((match) => match.stageCode === stage.code && match.seriesId)
@@ -679,33 +678,20 @@ function ScheduleSetup({ ws, stage }: { ws: Workspace; stage: CompetitionStage }
           {stage.format === "DOUBLE_ELIMINATION" && (
             <label className="grid gap-2">
               <span className="type-label">Đối thủ do hạt giống 1 chọn</span>
-              <select
-                className={selectClass}
+              <NativeSelect
+                className="w-full"
                 value={opponent}
                 onChange={(event) => setOpponent(Number(event.target.value))}
               >
                 <option value={3}>Hạt giống 3</option>
                 <option value={4}>Hạt giống 4</option>
-              </select>
+              </NativeSelect>
             </label>
           )}
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
-              ws.change("matches", [
-                ...ws.plan.matches,
-                {
-                  key: `M_${crypto.randomUUID().slice(0, 8)}`,
-                  stageCode: stage.code,
-                  round: 1,
-                  label: "Trận bổ sung",
-                  bestOf: stage.bestOf,
-                  a: { type: "TBD", label: "Đội A" },
-                  b: { type: "TBD", label: "Đội B" },
-                },
-              ])
-            }
+            onClick={() => ws.change("matches", [...ws.plan.matches, extraMatch(stage, `M_${randomId().slice(0, 8)}`)])}
           >
             <Plus aria-hidden /> Thêm trận thủ công
           </Button>
@@ -729,7 +715,8 @@ function ScheduleSetup({ ws, stage }: { ws: Workspace; stage: CompetitionStage }
             <div className="max-h-64 space-y-1 overflow-auto">
               {preview.map((match) => (
                 <p className="type-body" key={match.key}>
-                  {match.label} · {slotText(match.a, ws.plan, ws.teams)} – {slotText(match.b, ws.plan, ws.teams)} · BO
+                  {matchLabel(match)} · {slotText(match.a, ws.plan, ws.teams)} – {slotText(match.b, ws.plan, ws.teams)}{" "}
+                  · BO
                   {match.bestOf}
                 </p>
               ))}

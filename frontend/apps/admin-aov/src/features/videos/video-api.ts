@@ -1,5 +1,5 @@
 import { backendRequest } from "@/app/auth/session"
-import type { Request } from "../publishing/publishing-api"
+import type { Request } from "@/lib/api/publishing-api"
 import type { ImportVideo } from "./crawl-import"
 import type {
   AdminVideo,
@@ -28,7 +28,6 @@ export interface VideoPage {
   page: number
   size: number
   totalElements: number
-  totalPages: number
 }
 
 export interface ImportResult {

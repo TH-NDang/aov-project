@@ -1,5 +1,4 @@
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { Check, ChevronsUpDown, Link2, MoreHorizontal, Sparkles, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@aov/ui/components/command"
@@ -15,16 +14,14 @@ import {
 } from "@aov/ui/components/dropdown-menu"
 import { Input } from "@aov/ui/components/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
-import { backendRequest } from "@/app/auth/session"
-import { commandFilter } from "@/lib/text"
-
-const fold = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase()
+import { commandFilter, normalize } from "@/lib/text"
+import { usePublicHeroes } from "@/lib/public-heroes"
 
 export interface MenuAction {
   label: string
   icon?: ReactNode
-  /** Not needed when the action only opens its choices. */
-  onSelect?: () => void
+  /** Not needed when the action only opens its choices. May ask first, and then settles once answered. */
+  onSelect?: () => void | Promise<void>
   disabled?: boolean
   destructive?: boolean
   /** Draws a line above the action, to set apart the ones that remove something. */
@@ -119,10 +116,10 @@ export function SuggestInput({
   const [active, setActive] = useState(0)
   // Focus shows every suggestion; only typing narrows them.
   const [typing, setTyping] = useState(false)
-  const needle = typing ? fold(value.trim()) : ""
+  const needle = typing ? normalize(value.trim()) : ""
   const shown = useMemo(() => {
     const unique = [...new Set(suggestions.map((entry) => entry.trim()).filter(Boolean))]
-    return unique.filter((entry) => !needle || fold(entry).includes(needle)).slice(0, 12)
+    return unique.filter((entry) => !needle || normalize(entry).includes(needle)).slice(0, 12)
   }, [suggestions, needle])
   const choose = (entry: string) => {
     onChange(entry)
@@ -251,27 +248,8 @@ interface HeroOption {
   head?: string
 }
 
-interface HeroPage {
-  items: { code: string; name: string; head?: { currentVersion?: { url?: string } | null } | null }[]
-  totalPages: number
-}
-
-/** Every published hero, for linking a unit to its Wiki page. */
-const heroOptionsQuery = {
-  queryKey: ["game-modes", "hero-options"],
-  staleTime: 300000,
-  queryFn: async ({ signal }: { signal: AbortSignal }) => {
-    const heroes: HeroOption[] = []
-    for (let page = 0; page < 10; page++) {
-      const slice = await backendRequest<HeroPage>(`/heroes?page=${page}&size=100`, { signal })
-      heroes.push(
-        ...slice.items.map((hero) => ({ code: hero.code, name: hero.name, head: hero.head?.currentVersion?.url })),
-      )
-      if (page + 1 >= slice.totalPages) break
-    }
-    return heroes.sort((a, b) => a.name.localeCompare(b.name, "vi"))
-  },
-}
+/** Every published hero by name, for linking a unit to its Wiki page. */
+const sortedByName = (heroes: HeroOption[]) => [...heroes].sort((a, b) => a.name.localeCompare(b.name, "vi"))
 
 /**
  * Picks the Wiki hero a unit stands for from the published heroes, with their faces. The hero named like the unit is
@@ -287,10 +265,10 @@ export function HeroCodePicker({
   onChange: (code: string | null) => void
 }) {
   const [open, setOpen] = useState(false)
-  const heroes = useQuery(heroOptionsQuery)
+  const heroes = usePublicHeroes(sortedByName)
   const list = heroes.data ?? []
   const selected = list.find((hero) => hero.code === value)
-  const match = !value ? list.find((hero) => fold(hero.name) === fold(unitName.trim())) : undefined
+  const match = !value ? list.find((hero) => normalize(hero.name) === normalize(unitName.trim())) : undefined
 
   return (
     <div className="grid gap-1.5">

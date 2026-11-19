@@ -4,7 +4,6 @@ import { readVideoLink, videoCanSeek } from "@aov/ui/lib/video-playback"
 import {
   byPurpose,
   formatDuration,
-  formatVideoDate,
   isVideoEndedMessage,
   neighbours,
   purposeLabel,
@@ -15,7 +14,7 @@ import {
   videoThumbnail,
   videoWatchUrl,
   type PublicVideo,
-} from "../src/features/videos/video-model.ts"
+} from "../src/components/videos/video-model.ts"
 
 const video = (changes: Partial<PublicVideo> = {}): PublicVideo => ({
   id: "v",
@@ -241,9 +240,4 @@ test("the end of a YouTube video is read from its status messages", () => {
   assert.equal(isVideoEndedMessage(JSON.stringify({ event: "initialDelivery", info: { playerState: 0 } })), false)
   assert.equal(isVideoEndedMessage("not json"), false)
   assert.equal(isVideoEndedMessage({ event: "onStateChange", info: 0 }), false)
-})
-
-test("a published date reads the same in every time zone", () => {
-  assert.equal(formatVideoDate("2026-07-27", "en-US"), "Jul 27, 2026")
-  assert.equal(formatVideoDate("not a date", "en-US"), "not a date")
 })

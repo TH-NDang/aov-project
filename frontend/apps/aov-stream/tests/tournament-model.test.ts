@@ -11,7 +11,7 @@ import {
   seriesSides,
   seriesTeams,
   snapshotAt,
-} from "../src/features/tournaments/tournament-model.ts"
+} from "../src/lib/tournament-model.ts"
 import type { EquipmentSnapshot, GameSide, Participant, PublishedGame } from "@aov/community-contracts"
 
 const snapshot = (atSeconds: number): EquipmentSnapshot => ({
@@ -82,11 +82,18 @@ test("a missing picture is replaced by two letters of the name", () => {
 })
 
 test("a series name loses its pairing, which the teams beside it already show", () => {
-  assert.equal(seriesRound("Vòng 18 · FPL vs SGP"), "Vòng 18")
-  assert.equal(seriesRound("Chung kết tổng"), "Chung kết tổng")
-  assert.equal(seriesRound("Vòng 1 nhánh thua · 2"), "Vòng 1 nhánh thua · 2")
-  assert.equal(seriesRound("HEV vs. BĐ"), null)
+  assert.equal(seriesRound({ name: "Vòng 18 · FPL vs SGP" }), "Vòng 18")
+  assert.equal(seriesRound({ name: "Chung kết tổng" }), "Chung kết tổng")
+  assert.equal(seriesRound({ name: "Vòng 1 nhánh thua · 2" }), "Vòng 1 nhánh thua · 2")
+  assert.equal(seriesRound({ name: "HEV vs. BĐ" }), null)
   assert.equal(seriesRound(undefined), null)
+})
+
+test("a series made from a generated match reads its title in the reader's language", () => {
+  const series = { name: null, title: { kind: "LOWER_ROUND", round: 1, number: 2 } } as const
+
+  assert.equal(seriesRound(series, "vi-VN"), "Vòng 1 nhánh thua · 2")
+  assert.equal(seriesRound(series, "en-US"), "Lower bracket round 1 · 2")
 })
 
 test("a note imported from a wiki is shown without its markup", () => {

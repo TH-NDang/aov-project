@@ -1,10 +1,10 @@
 package com.wikiaov.community.community.internal.pages.application;
 
+import com.wikiaov.community.community.internal.application.PageChecks;
 import com.wikiaov.community.community.internal.domain.PageContent;
-import com.wikiaov.community.community.internal.domain.PageRules;
 import com.wikiaov.community.community.internal.pages.persistence.PageRecord;
 import com.wikiaov.community.community.internal.pages.persistence.PageRepository;
-import java.util.*;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
@@ -18,24 +18,28 @@ public class PageRosterProfiles {
     }
 
     public PageContent resolve(PageContent.Kind kind, PageContent content) {
-        if (kind != PageContent.Kind.TEAM)
+        if (kind != PageContent.Kind.TEAM) {
             return content;
+        }
         var ids = content.roster().stream().map(PageContent.Member::pageId).filter(Objects::nonNull).distinct()
                 .toList();
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return content;
+        }
         var people = pages.findAllById(ids).stream().collect(Collectors.toMap(PageRecord::getId, row -> row));
         for (var id : ids) {
             var person = people.get(id);
-            if (person == null || !Set.of("PLAYER", "PERSON").contains(person.getKind()))
-                throw PageRules.invalid("Team roster members must link an existing individual profile.");
+            if (person == null || !person.getKind().individual()) {
+                throw PageChecks.invalid("Team roster members must link an existing individual profile.");
+            }
         }
 
         var roster = content.roster().stream().map(member -> member.pageId() == null
                 ? member
                 : new PageContent.Member(member.pageId(), people.get(member.pageId()).getContent().name(),
                         member.role(),
-                        member.status(), member.startsOn(), member.endsOn(), member.sourceUrl()))
+                        member.status(), member.startsOn(), member.endsOn(), member.sourceUrl(), member.lane(),
+                        member.standing(), member.captain()))
                 .toList();
         return new PageContent(content.name(), content.shortName(), content.country(), content.biography(),
                 content.avatarUrl(), content.coverUrl(), content.links(), content.sources(), content.history(),

@@ -1,10 +1,15 @@
 package com.wikiaov.enchantment.internal.catalog.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.enchantment.internal.application.response.EnchantmentView;
 import com.wikiaov.enchantment.internal.domain.EnchantmentContent;
+import com.wikiaov.enchantment.internal.metadata.persistence.EnchantmentBranchRepository;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssetState;
 import com.wikiaov.media.MediaAssets;
@@ -18,7 +23,7 @@ import org.junit.jupiter.api.Test;
 class EnchantmentPublicMediaTest {
     private final MediaAssets media = mock(MediaAssets.class);
     private final EnchantmentPublicMedia hydration = new EnchantmentPublicMedia(media, new EnchantmentContentRules(
-            media, mock(com.wikiaov.enchantment.internal.metadata.persistence.EnchantmentBranchRepository.class)));
+            media, mock(EnchantmentBranchRepository.class)));
 
     @Test
     void batchesReturnedRowAssetsAndExcludesUnusableOrUnrelatedMetadata() {

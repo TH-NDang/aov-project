@@ -1,8 +1,10 @@
 package com.wikiaov.community.community.internal.membership.persistence;
 
-import java.util.*;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
+import com.wikiaov.community.community.internal.domain.PageContent.Role;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PageInvitationRepository extends JpaRepository<PageInvitation, UUID> {
 
@@ -10,5 +12,5 @@ public interface PageInvitationRepository extends JpaRepository<PageInvitation, 
 
     List<PageInvitation> findByPageIdAndAcceptedAtIsNull(UUID pageId);
 
-    List<PageInvitation> findByPageIdAndRoleAndAcceptedAtIsNull(UUID pageId, String role);
+    List<PageInvitation> findByPageIdAndRoleAndAcceptedAtIsNull(UUID pageId, Role role);
 }

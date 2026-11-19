@@ -2,10 +2,11 @@ import { useState, type ReactNode } from "react"
 import type { Lane, TournamentContent } from "@aov/community-contracts"
 import { cn } from "@aov/ui/lib/utils"
 import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
-import { LANE_LABELS, STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
+import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { initials, type IconRef, type TeamView } from "../model/game-view"
 import type { SlotState } from "../model/timeline"
 import { VIDEO_MARK } from "../model/vod"
+import { LANE_LABELS } from "@/lib/lanes"
 
 const safeImage = (url?: string | null) => (!!url && /^(https?:\/\/|\/)/i.test(url) ? url : null)
 
@@ -182,7 +183,7 @@ export function RegionFlag({ code, withName = true }: { code?: string; withName?
         <img
           src={`/images/flags/${code.toLowerCase()}.svg`}
           alt=""
-          className="h-3 w-[18px] rounded-[2px] object-cover"
+          className="h-3 w-[18px] object-cover"
           loading="lazy"
         />
       ) : (
@@ -270,20 +271,6 @@ export function ResultTag({ won, className }: { won: boolean; className?: string
   )
 }
 
-export function ScorePill({ score, win, size = "md" }: { score?: number; win?: boolean; size?: "md" | "lg" }) {
-  return (
-    <span
-      className={cn(
-        "esp-num inline-grid place-items-center rounded-md font-bold",
-        size === "lg" ? "h-12 min-w-12 px-2 text-3xl" : "h-7 min-w-7 px-1.5 text-sm",
-        score === undefined ? "bg-muted text-muted-foreground" : win ? "esp-win-score" : "bg-muted text-foreground",
-      )}
-    >
-      {score ?? "–"}
-    </span>
-  )
-}
-
 /** Lane glyph in the current text color. */
 export function LaneIcon({ lane, size = 16, className }: { lane: Lane; size?: number; className?: string }) {
   return <HeroLaneIcon lane={lane} size={size} label={LANE_LABELS[lane].name} className={className} />
@@ -295,7 +282,7 @@ export { VIDEO_MARK }
 /** The red video mark used beside broadcast positions. */
 export function VideoMark({ className }: { className?: string }) {
   return (
-    <span aria-hidden="true" className={cn("text-red-500", className)}>
+    <span aria-hidden="true" className={cn("text-destructive", className)}>
       {VIDEO_MARK}
     </span>
   )
@@ -330,7 +317,7 @@ export function TimeTag({
       title={TIME_TAGS[kind].label}
       aria-label={`${TIME_TAGS[kind].label} ${seconds == null ? "chưa rõ" : text}`}
     >
-      <span aria-hidden="true" className={kind === "video" ? "text-[0.8em] text-red-500" : "text-[0.85em]"}>
+      <span aria-hidden="true" className={kind === "video" ? "text-[0.8em] text-destructive" : "text-[0.85em]"}>
         {TIME_TAGS[kind].mark}
       </span>
       {seconds == null ? "--:--" : text}

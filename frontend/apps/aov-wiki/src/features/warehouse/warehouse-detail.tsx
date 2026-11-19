@@ -1,3 +1,4 @@
+import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { ItemOverview } from "@aov/ui/components/warehouse/item-overview"
 import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
 import { arcanaGroupLabel } from "@aov/ui/components/warehouse/arcana-cards"
@@ -19,7 +20,7 @@ import { WikiImageCredit } from "../../components/wiki-image-credit"
 import { WarehouseUpdates } from "./warehouse-updates"
 import { WarehouseArtwork } from "./warehouse-artwork"
 import { FeedbackDialog } from "../../components/feedback-dialog"
-import { SubjectVideos } from "../videos/subject-videos"
+import { SubjectVideos } from "../../components/videos/subject-videos"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { arcanaTitle } from "./warehouse-arcana"
@@ -35,7 +36,7 @@ import {
   type WarehouseGroup,
   type WarehouseKind,
   type WarehouseText,
-} from "./warehouse-types"
+} from "../../lib/warehouse-types"
 
 const STAT_LABELS: Record<string, [string, string]> = {
   physicalAttack: ["Công vật lý", "Attack Damage"],
@@ -225,7 +226,7 @@ function DetailContent({
   return (
     <>
       <div className="wiki-warehouse-detail-bar">
-        <span>{eyebrow(entry, groups, scope.locale, scope.t(kind))}</span>
+        <span>{eyebrow(entry, groups, scope.locale, wikiText(scope.locale, ...SECTION_NAMES[kind]))}</span>
         {/* Where the picture comes from sits with the other tools, so nothing covers the picture itself. */}
         {artwork?.currentVersion && (
           <WikiImageCredit
@@ -255,7 +256,7 @@ function DetailContent({
             <Title>{entryTitle(entry, scope.locale)}</Title>
             {entry.kind === "items" && (
               <div className="wiki-warehouse-detail-price">
-                <ItemPrice amount={entry.content.price} locale={scope.locale} />
+                <ItemPrice amount={entry.content.price} />
               </div>
             )}
           </div>
@@ -266,7 +267,7 @@ function DetailContent({
               setEditing(false)
               requestAnimationFrame(() => pencil.current?.focus())
             }}
-            target={`${scope.t(kind)} · ${warehouseName(entry, scope.locale)}${state && kind === "spells" ? " · " + (text?.name || state.key) : ""}`}
+            target={`${wikiText(scope.locale, ...SECTION_NAMES[kind])} · ${warehouseName(entry, scope.locale)}${state && kind === "spells" ? " · " + (text?.name || state.key) : ""}`}
             identity={`${kind}/${entry.code}${state && kind === "spells" ? "/" + state.key : ""}`}
             revision={entry.revision.id}
             fields={[

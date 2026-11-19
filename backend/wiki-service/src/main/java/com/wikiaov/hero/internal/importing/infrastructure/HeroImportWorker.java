@@ -1,13 +1,14 @@
 package com.wikiaov.hero.internal.importing.infrastructure;
 
 import com.wikiaov.hero.internal.importing.application.HeroImportJobs;
-import com.wikiaov.hero.internal.importing.application.HeroImportJobs.*;
 import com.wikiaov.platform.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.*;
+import org.springframework.dao.TransientDataAccessException;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @Configuration
 @EnableScheduling
@@ -27,7 +28,7 @@ public class HeroImportWorker {
                 jobs.execute(pending);
             } catch (ApiException failure) {
                 jobs.failed(pending, failure.getErrorCode().name(), failure.getMessage());
-            } catch (org.springframework.dao.TransientDataAccessException failure) {
+            } catch (TransientDataAccessException failure) {
                 LOG.warn("Import transaction will retry for job {}", pending.id());
             } catch (RuntimeException failure) {
                 LOG.error("Import failed for job {} row {}", pending.id(), pending.index(), failure);

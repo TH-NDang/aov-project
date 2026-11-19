@@ -1,15 +1,25 @@
 package com.wikiaov.hero.internal.web;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.DockerBacked;
 import com.wikiaov.MutableClock;
+import com.wikiaov.TestcontainersConfiguration;
 import java.time.Instant;
-import java.util.*;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.EnabledIf;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -17,51 +27,25 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.*;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
 /** ADR-025: snapshots of the game's hero ranking boards, imported from screenshots and reviewed value by value. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(DomainCoreIntegrationTest.Beans.class)
-@EnabledIf("databaseAvailable")
+@Import({TestcontainersConfiguration.class, DomainCoreIntegrationTest.Beans.class})
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@DockerBacked
 @SuppressWarnings("unchecked")
 class HeroRankingIntegrationTest {
     private static final String ROOT = "/api/wiki/v1/admin/ranking-snapshots";
     private static final String RATES_PAGE = "a".repeat(64);
     private static final String FIGURES_PAGE = "b".repeat(64);
-    private static PostgreSQLContainer database;
-
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry props) {
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external != null) {
-            props.add("spring.datasource.url", () -> external);
-            props.add("spring.datasource.username", () -> "wiki_test");
-            props.add("spring.datasource.password", () -> "");
-        } else {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            props.add("spring.datasource.url", database::getJdbcUrl);
-            props.add("spring.datasource.username", database::getUsername);
-            props.add("spring.datasource.password", database::getPassword);
-        }
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
-    }
 
     @Autowired
     MockMvc mvc;
@@ -318,8 +302,9 @@ class HeroRankingIntegrationTest {
     private Map<String, Object> send(MockHttpServletRequestBuilder request, Object body, int status) throws Exception {
         request.with(jwt().jwt(t -> t.issuer("https://test.example/issuer").subject("editor")).authorities(
                 new SimpleGrantedAuthority("catalog:read"), new SimpleGrantedAuthority("hero:write")));
-        if (body != null)
+        if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        }
         var response = mvc.perform(request).andExpect(status().is(status)).andReturn().getResponse();
         return response.getContentAsString().isEmpty()
                 ? Map.of()

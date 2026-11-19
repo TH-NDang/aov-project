@@ -1,44 +1,24 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
-import * as React from "react"
 import { act } from "react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { Request } from "../src/features/publishing/publishing-api"
-import type { ImportContext } from "../src/features/publishing/import-context"
-import type { HeroRow, Revision } from "../src/features/publishing/types"
-import { fixtureRevision } from "./fixtures/hero-workspace-data"
+import { button as findButton, click, render, testQueryClient, waitFor, withDom } from "./fixtures/dom"
+import type { Request } from "@/lib/api/publishing-api"
+import type { ImportContext } from "../src/features/publishing/components/import/import-context"
+import type { HeroRow, Revision } from "@/lib/hero-types"
+import { fixtureHeroRow, fixtureRevision } from "./fixtures/hero-workspace-data"
 
-test("baseline migration confirms first, only moves eligible drafts, and retains per-row failures", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/import", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLButtonElement: dom.window.HTMLButtonElement,
-    Node: dom.window.Node,
-    Element: dom.window.Element,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    IS_REACT_ACT_ENVIRONMENT: true,
+const dom = withDom({
+  url: "http://localhost/publishing/import",
+  globals: () => ({
     fetch: async () => {
       throw new Error("The migration regression must use its request fixture")
     },
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  const { BaselineMigration } = await import("../src/features/publishing/baseline-migration")
-  const { createRoot } = await import("react-dom/client")
-  const root = createRoot(dom.window.document.getElementById("root")!)
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
+  }),
+})
+
+test("baseline migration confirms first, only moves eligible drafts, and retains per-row failures", async () => {
+  const { BaselineMigration } = await import("../src/features/publishing/components/import/baseline-migration")
+  const cache = testQueryClient()
   const context: ImportContext = {
     contextId: "s3-authoring-context",
     rulesetId: fixtureRevision.rulesetId,
@@ -62,27 +42,39 @@ test("baseline migration confirms first, only moves eligible drafts, and retains
   const eligibleA = draft("airi", 7)
   const eligibleB = draft("aleister", 11)
   const heroes: HeroRow[] = [
-    { id: "airi", code: "airi", revisions: [eligibleA] },
-    {
+    fixtureHeroRow({ id: "airi", code: "airi", revisions: [eligibleA] }),
+    fixtureHeroRow({
       id: "aleister",
       code: "aleister",
       revisions: [eligibleB, draft("aleister-other", 2, { rulesetId: "other-rules", state: "PUBLISHED" })],
-    },
-    {
+    }),
+    fixtureHeroRow({
       id: "published",
       code: "published",
       revisions: [draft("published", 20), draft("published-history", 1, { state: "PUBLISHED" })],
-    },
-    { id: "derived", code: "derived", revisions: [draft("derived", 30, { sourceRevisionId: "earlier-revision" })] },
-    { id: "correction", code: "correction", revisions: [draft("correction", 40, { cause: "CONTENT_CORRECTION" })] },
-    { id: "not-draft", code: "not-draft", revisions: [draft("not-draft", 50, { state: "PUBLISHED" })] },
-    { id: "other-rules", code: "other-rules", revisions: [draft("other-rules", 60, { rulesetId: "other-rules" })] },
-    {
+    }),
+    fixtureHeroRow({
+      id: "derived",
+      code: "derived",
+      revisions: [draft("derived", 30, { sourceRevisionId: "earlier-revision" })],
+    }),
+    fixtureHeroRow({
+      id: "correction",
+      code: "correction",
+      revisions: [draft("correction", 40, { cause: "CONTENT_CORRECTION" })],
+    }),
+    fixtureHeroRow({ id: "not-draft", code: "not-draft", revisions: [draft("not-draft", 50, { state: "PUBLISHED" })] }),
+    fixtureHeroRow({
+      id: "other-rules",
+      code: "other-rules",
+      revisions: [draft("other-rules", 60, { rulesetId: "other-rules" })],
+    }),
+    fixtureHeroRow({
       id: "already-there",
       code: "already-there",
       revisions: [draft("already-there", 70, { effectiveFromPatchVariantId: context.patchVariantId })],
-    },
-    { id: "discarded", code: "discarded", revisions: [draft("discarded", 80, { state: "DISCARDED" })] },
+    }),
+    fixtureHeroRow({ id: "discarded", code: "discarded", revisions: [draft("discarded", 80, { state: "DISCARDED" })] }),
   ]
   const mutations: { path: string; body: Record<string, unknown>; settled: boolean }[] = []
   const pageRequests: number[] = []
@@ -111,31 +103,18 @@ test("baseline migration confirms first, only moves eligible drafts, and retains
   }
   const busy: boolean[] = []
   const movedAfter: number[] = []
-  const document = dom.window.document
-  const waitFor = async (condition: () => boolean) => {
-    for (let attempt = 0; attempt < 150 && !condition(); attempt++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition(), "Expected migration state was not reached")
-  }
-  const button = (text: string) =>
-    [...document.querySelectorAll<HTMLButtonElement>("button")].find((node) => node.textContent?.includes(text))!
-  const click = async (node: HTMLButtonElement) => act(async () => node.click())
-  try {
+  const button = (text: string) => findButton(text)!
+  {
     cache.setQueryData(["publishing-preview", "airi", eligibleA.id], { stale: true })
     cache.setQueryData(["publishing-preview", "aleister", eligibleB.id], { failed: true })
-    await act(async () =>
-      root.render(
-        <QueryClientProvider client={cache}>
-          <BaselineMigration
-            context={context}
-            request={request}
-            onBusyChange={(value) => busy.push(value)}
-            onMoved={() => movedAfter.push(mutations.filter((operation) => operation.settled).length)}
-          />
-        </QueryClientProvider>,
-      ),
+    await render(
+      <BaselineMigration
+        context={context}
+        request={request}
+        onBusyChange={(value) => busy.push(value)}
+        onMoved={() => movedAfter.push(mutations.filter((operation) => operation.settled).length)}
+      />,
+      { client: cache },
     )
     assert.deepEqual(pageRequests, [])
     const disclosure = document.querySelector("details")!
@@ -186,13 +165,5 @@ test("baseline migration confirms first, only moves eligible drafts, and retains
     assert.deepEqual(cache.getQueryData(["publishing-preview", "aleister", eligibleB.id]), { failed: true })
     assert.equal(mutations.length, 2)
     assert.deepEqual(unexpected, [])
-  } finally {
-    await act(async () => root.unmount())
-    cache.clear()
-    dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
   }
 })

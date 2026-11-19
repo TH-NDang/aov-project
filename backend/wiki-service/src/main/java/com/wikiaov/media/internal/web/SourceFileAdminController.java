@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.web;
 
 import com.wikiaov.media.internal.source.application.SourceCollections;
+import com.wikiaov.media.internal.source.application.SourceCommands;
 import com.wikiaov.media.internal.source.application.SourceFileViews;
 import com.wikiaov.media.internal.source.application.SourceFiles;
 import com.wikiaov.media.internal.source.application.SourceLinks;
@@ -8,7 +9,6 @@ import com.wikiaov.media.internal.source.application.SourceOrphans;
 import com.wikiaov.media.internal.source.application.SourceUploads;
 import com.wikiaov.media.internal.source.domain.SourceCategory;
 import com.wikiaov.media.internal.web.request.ExpectedVersionRequest;
-import com.wikiaov.media.internal.web.request.SourceRequests;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
@@ -48,6 +48,7 @@ class SourceFileAdminController implements SourceFileAdminApi {
         this.orphans = orphans;
     }
 
+    @Override
     @GetMapping(path = "/source-collections", version = "1")
     public PageSlice<SourceFileViews.Collection> listCollections(HttpServletRequest http,
             @RequestParam(required = false) @Nullable SourceCategory category,
@@ -57,31 +58,35 @@ class SourceFileAdminController implements SourceFileAdminApi {
         return collections.list(category, q, page, size);
     }
 
+    @Override
     @GetMapping(path = "/source-collections/{collectionId}", version = "1")
     public SourceFileViews.Collection getCollection(HttpServletRequest http, @PathVariable UUID collectionId) {
         QueryParameters.requireOnly(http, Set.of());
         return collections.get(collectionId);
     }
 
+    @Override
     @PostMapping(path = "/source-collections", version = "1")
     public ResponseEntity<SourceFileViews.Collection> createCollection(
-            @RequestBody SourceRequests.CreateCollection body) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(collections.create(body.code(), body.category(),
-                body.label(), body.note(), body.capturedOn()));
+            @RequestBody SourceCommands.CreateCollectionCommand body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(collections.create(body));
     }
 
+    @Override
     @PutMapping(path = "/source-collections/{collectionId}", version = "1")
     public SourceFileViews.Collection updateCollection(@PathVariable UUID collectionId,
-            @RequestBody SourceRequests.UpdateCollection body) {
-        return collections.update(collectionId, body.expectedVersion(), body.label(), body.note(), body.capturedOn());
+            @RequestBody SourceCommands.UpdateCollectionCommand body) {
+        return collections.update(collectionId, body);
     }
 
+    @Override
     @PostMapping(path = "/source-collections/{collectionId}/delete", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCollection(@PathVariable UUID collectionId, @RequestBody ExpectedVersionRequest body) {
         collections.delete(collectionId, body.expectedVersion());
     }
 
+    @Override
     @GetMapping(path = "/source-collections/{collectionId}/files", version = "1")
     public PageSlice<SourceFileViews.File> listFiles(HttpServletRequest http, @PathVariable UUID collectionId,
             @RequestParam(required = false) @Nullable String prefix,
@@ -91,59 +96,64 @@ class SourceFileAdminController implements SourceFileAdminApi {
         return files.list(collectionId, prefix, q, page, size);
     }
 
+    @Override
     @GetMapping(path = "/source-files/{fileId}", version = "1")
     public SourceFileViews.FileDetails getFile(HttpServletRequest http, @PathVariable UUID fileId) {
         QueryParameters.requireOnly(http, Set.of());
         return files.details(fileId);
     }
 
+    @Override
     @PostMapping(path = "/source-files/{fileId}/delete", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteFile(@PathVariable UUID fileId, @RequestBody ExpectedVersionRequest body) {
         files.delete(fileId, body.expectedVersion());
     }
 
+    @Override
     @PostMapping(path = "/source-collections/{collectionId}/uploads", version = "1")
     public ResponseEntity<SourceFileViews.UploadResult> requestUpload(@PathVariable UUID collectionId,
-            @RequestBody SourceRequests.Upload body) {
-        SourceUploads.Replace replace = body.replace() == null
-                ? null
-                : new SourceUploads.Replace(body.replace().fileId(), body.replace().expectedVersion());
-        SourceFileViews.UploadResult result = uploads.request(collectionId, body.path(), body.sha256(),
-                body.sizeBytes(), body.contentType(), replace);
+            @RequestBody SourceCommands.UploadCommand body) {
+        SourceFileViews.UploadResult result = uploads.request(collectionId, body);
 
         HttpStatus status = result.status() == SourceFileViews.UploadStatus.STORED ? HttpStatus.OK : HttpStatus.CREATED;
         return ResponseEntity.status(status).cacheControl(CacheControl.noStore()).body(result);
     }
 
+    @Override
     @GetMapping(path = "/source-uploads/{uploadId}", version = "1")
     public SourceFileViews.Upload getUpload(HttpServletRequest http, @PathVariable UUID uploadId) {
         QueryParameters.requireOnly(http, Set.of());
         return uploads.status(uploadId);
     }
 
+    @Override
     @PostMapping(path = "/source-uploads/{uploadId}/complete", version = "1")
     public SourceFileViews.Completed completeUpload(@PathVariable UUID uploadId) {
         return uploads.complete(uploadId);
     }
 
+    @Override
     @PostMapping(path = "/source-files/links", version = "1")
-    public ResponseEntity<SourceFileViews.Links> linksBySha256(@RequestBody SourceRequests.LinksBySha256 body) {
+    public ResponseEntity<SourceFileViews.Links> linksBySha256(@RequestBody SourceCommands.LinksBySha256Command body) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(links.bySha256(body.sha256()));
     }
 
+    @Override
     @PostMapping(path = "/source-collections/{collectionId}/links", version = "1")
     public ResponseEntity<SourceFileViews.PathLinks> linksByPath(@PathVariable UUID collectionId,
-            @RequestBody SourceRequests.LinksByPath body) {
+            @RequestBody SourceCommands.LinksByPathCommand body) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
                 .body(links.byPaths(collectionId, body.paths()));
     }
 
+    @Override
     @PostMapping(path = "/source-files/{fileId}/download-link", version = "1")
     public ResponseEntity<SourceFileViews.Download> downloadLink(@PathVariable UUID fileId) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(links.download(fileId));
     }
 
+    @Override
     @GetMapping(path = "/source-objects/orphans", version = "1")
     public PageSlice<SourceFileViews.Orphan> listOrphans(HttpServletRequest http,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "50") int size) {
@@ -151,6 +161,7 @@ class SourceFileAdminController implements SourceFileAdminApi {
         return orphans.list(page, size);
     }
 
+    @Override
     @PostMapping(path = "/source-objects/{sha256}/delete", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteOrphan(@PathVariable String sha256) {

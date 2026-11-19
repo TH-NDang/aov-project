@@ -3,7 +3,13 @@ package com.wikiaov.patch.internal.release.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
@@ -13,6 +19,8 @@ import com.wikiaov.access.CurrentActor;
 import com.wikiaov.patch.internal.application.PatchCommands.Release;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
+import com.wikiaov.patch.internal.domain.PatchReleaseStatus;
+import com.wikiaov.patch.internal.domain.PatchVariantStatus;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore.ReleaseTarget;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore.VariantSnapshot;
@@ -45,7 +53,7 @@ class PatchReleaseWorkflowTests {
     private final AuditLog audit = mock(AuditLog.class);
     private final PatchReleaseWorkflow workflow = new PatchReleaseWorkflow(releases, seasons,
             Clock.fixed(NOW, ZoneOffset.UTC), actors, audit);
-    private final VariantSnapshot published = new VariantSnapshot(rulesetId, 3, "PUBLISHED");
+    private final VariantSnapshot published = new VariantSnapshot(rulesetId, 3, PatchVariantStatus.PUBLISHED);
     private final Actor actor = new Actor("issuer", "editor", ActorType.HUMAN, null, Set.of());
 
     @BeforeEach
@@ -81,7 +89,7 @@ class PatchReleaseWorkflowTests {
         assertThat(release.getAnnouncedAt()).isEqualTo(announcedAt);
         assertThat(release.getCreatedAt()).isEqualTo(NOW);
         assertThat(release.getSourceUrl()).isEqualTo(input.sourceUrl());
-        assertThat(release.getStatus()).isEqualTo("SCHEDULED");
+        assertThat(release.getStatus()).isEqualTo(PatchReleaseStatus.SCHEDULED);
         assertThat(release.getEffectiveOn()).isNull();
         assertThat(release.getConfirmedAt()).isNull();
     }
@@ -104,7 +112,7 @@ class PatchReleaseWorkflowTests {
         assertThat(saved.getValue().getSeasonId()).isEqualTo(seasonId);
         assertThat(saved.getValue().getEffectiveOn()).isEqualTo(LOCAL_TODAY);
         assertThat(saved.getValue().getEffectiveAt()).isNull();
-        assertThat(saved.getValue().getStatus()).isEqualTo("DRAFT");
+        assertThat(saved.getValue().getStatus()).isEqualTo(PatchReleaseStatus.DRAFT);
     }
 
     @Test
@@ -180,7 +188,8 @@ class PatchReleaseWorkflowTests {
     @Test
     void requiresPublicationBeforeRulesetAssignment() {
         prepareScheduling(seasonId);
-        when(releases.lockAndReadVariant(variantId)).thenReturn(new VariantSnapshot(rulesetId, 3, "DRAFT"));
+        when(releases.lockAndReadVariant(variantId))
+                .thenReturn(new VariantSnapshot(rulesetId, 3, PatchVariantStatus.DRAFT));
 
         assertInvalid(() -> workflow.schedule(variantId, exactRelease()),
                 "Publish the variant before scheduling a release.");
@@ -233,7 +242,7 @@ class PatchReleaseWorkflowTests {
         assertThat(release.getEffectiveAt()).isEqualTo(NOW);
         assertThat(release.getConfirmedAt()).isEqualTo(NOW);
         assertThat(release.getEffectiveOn()).isEqualTo(LOCAL_TODAY);
-        assertThat(release.getStatus()).isEqualTo("SCHEDULED");
+        assertThat(release.getStatus()).isEqualTo(PatchReleaseStatus.SCHEDULED);
         verify(releases, never()).insert(any());
     }
 
@@ -242,7 +251,7 @@ class PatchReleaseWorkflowTests {
         var release = prepareConfirmation(null);
         Instant originallyConfirmed = NOW.minusSeconds(100);
         release.setConfirmedAt(originallyConfirmed);
-        release.setStatus("SCHEDULED");
+        release.setStatus(PatchReleaseStatus.SCHEDULED);
 
         workflow.confirm(releaseId);
 
@@ -266,7 +275,7 @@ class PatchReleaseWorkflowTests {
     @Test
     void refusesNonDraftReleaseBeforeCheckingFutureDateOrPublication() {
         var release = prepareConfirmation(LOCAL_TODAY.plusDays(1));
-        release.setStatus("SCHEDULED");
+        release.setStatus(PatchReleaseStatus.SCHEDULED);
 
         assertInvalid(() -> workflow.confirm(releaseId),
                 "Only a date-only release awaiting confirmation can be confirmed.");
@@ -288,7 +297,7 @@ class PatchReleaseWorkflowTests {
     void reportsFutureCalendarDateBeforeUnpublishedVariant() {
         var release = prepareConfirmation(LOCAL_TODAY.plusDays(1));
         when(releases.readVariantAfterLockingRuleset(variantId))
-                .thenReturn(new VariantSnapshot(rulesetId, 3, "DRAFT"));
+                .thenReturn(new VariantSnapshot(rulesetId, 3, PatchVariantStatus.DRAFT));
 
         assertInvalid(() -> workflow.confirm(releaseId), "A future release cannot be confirmed as applied.");
 
@@ -300,7 +309,7 @@ class PatchReleaseWorkflowTests {
     void requiresPublishedVariantBeforeConfirmingTheSeasonOrTimeline() {
         var release = prepareConfirmation(LOCAL_TODAY);
         when(releases.readVariantAfterLockingRuleset(variantId))
-                .thenReturn(new VariantSnapshot(rulesetId, 3, "DRAFT"));
+                .thenReturn(new VariantSnapshot(rulesetId, 3, PatchVariantStatus.DRAFT));
 
         assertInvalid(() -> workflow.confirm(releaseId), "Publish the variant before confirming its release.");
 
@@ -317,7 +326,7 @@ class PatchReleaseWorkflowTests {
         assertInvalid(() -> workflow.confirm(releaseId),
                 "The release would contradict the region patch timeline.");
 
-        assertThat(release.getStatus()).isEqualTo("DRAFT");
+        assertThat(release.getStatus()).isEqualTo(PatchReleaseStatus.DRAFT);
         assertThat(release.getEffectiveAt()).isNull();
         assertThat(release.getConfirmedAt()).isNull();
         verifyNoInteractions(audit);
@@ -338,7 +347,7 @@ class PatchReleaseWorkflowTests {
         release.setId(releaseId);
         release.setSeasonId(seasonId);
         release.setEffectiveOn(date);
-        release.setStatus("DRAFT");
+        release.setStatus(PatchReleaseStatus.DRAFT);
         when(releases.lockRelease(releaseId)).thenReturn(release);
         return release;
     }

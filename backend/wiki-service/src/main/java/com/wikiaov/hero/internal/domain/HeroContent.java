@@ -1,10 +1,19 @@
 package com.wikiaov.hero.internal.domain;
 
+import com.wikiaov.platform.CatalogCodes;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public final class HeroContent {
     public interface Publication {
@@ -157,7 +166,7 @@ public final class HeroContent {
     }
 
     public record Skill(
-            @NotBlank @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") @Size(max = 64) String skillKey,
+            @NotBlank @Pattern(regexp = CatalogCodes.PATTERN) @Size(max = 64) String skillKey,
             @NotNull SkillKind kind,
             @Size(max = 64) String formKey,
             @PositiveOrZero int displayOrder,
@@ -245,7 +254,7 @@ public final class HeroContent {
     }
 
     public record Skin(
-            @NotBlank @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") @Size(max = 64) String skinKey,
+            @NotBlank @Pattern(regexp = CatalogCodes.PATTERN) @Size(max = 64) String skinKey,
             @PositiveOrZero int displayOrder,
             UUID artAssetId,
             @Size(max = 64) String rarityCode,

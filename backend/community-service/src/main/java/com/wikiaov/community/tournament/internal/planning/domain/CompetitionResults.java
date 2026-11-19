@@ -1,8 +1,20 @@
 package com.wikiaov.community.tournament.internal.planning.domain;
 
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
-import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.*;
-import java.util.*;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Entry;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Slot;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan.Stage;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.function.ToIntFunction;
 
 public final class CompetitionResults {
     private CompetitionResults() {
@@ -57,8 +69,9 @@ public final class CompetitionResults {
                     ? match.seriesId() == null
                     : Objects.equals(a, recorded.teamAId()) && Objects.equals(b, recorded.teamBId())
                             && match.bestOf() == recorded.bestOf();
-            if (a != null && a.equals(b))
+            if (a != null && a.equals(b)) {
                 consistent = false;
+            }
             var result = recorded == null ? null : recorded.result();
             resolved.put(match.key(), new Resolved(match.key(), a, b, result == null ? null : result.scoreA(),
                     result == null ? null : result.scoreB(), match.seriesId(), consistent));
@@ -88,12 +101,13 @@ public final class CompetitionResults {
         var matches = plan.matches().stream().filter(match -> match.stageCode().equals(stage.code()))
                 .map(match -> index.get(match.key())).toList();
         var stats = new LinkedHashMap<UUID, int[]>();
-        plan.entrants().stream().filter(entry -> !"WITHDRAWN".equals(entry.status()))
+        plan.entrants().stream().filter(Entry::plays)
                 .forEach(entry -> stats.put(entry.teamId(), new int[5]));
         for (var match : matches) {
             if (!match.consistent() || match.scoreA() == null || !stats.containsKey(match.teamAId())
-                    || !stats.containsKey(match.teamBId()))
+                    || !stats.containsKey(match.teamBId())) {
                 continue;
+            }
             add(stats.get(match.teamAId()), match.scoreA(), match.scoreB(), stage);
             add(stats.get(match.teamBId()), match.scoreB(), match.scoreA(), stage);
         }
@@ -117,22 +131,25 @@ public final class CompetitionResults {
                     int observed = 0;
                     for (var match : matches) {
                         if (!mini.containsKey(match.teamAId()) || !mini.containsKey(match.teamBId())
-                                || match.winner() == null)
+                                || match.winner() == null) {
                             continue;
+                        }
                         observed++;
                         mini.compute(match.winner(), (key, value) -> value + stage.winPoints());
                         mini.compute(match.loser(), (key, value) -> value + stage.lossPoints());
                     }
-                    if (observed == group.size() * (group.size() - 1) / 2 * stage.legs())
+                    if (observed == group.size() * (group.size() - 1) / 2 * stage.legs()) {
                         refined.addAll(split(List.of(group), mini::get));
-                    else
+                    } else {
                         refined.add(group);
+                    }
                 }
                 groups = refined;
-            } else if (rule.equals("GAME_DIFF"))
+            } else if (rule.equals("GAME_DIFF")) {
                 groups = split(groups, team -> stats.get(team)[2] - stats.get(team)[3]);
-            else if (rule.equals("GAME_WINS"))
+            } else if (rule.equals("GAME_WINS")) {
                 groups = split(groups, team -> stats.get(team)[2]);
+            }
         }
         var rows = new ArrayList<Standing>();
         for (var group : groups) {
@@ -147,12 +164,13 @@ public final class CompetitionResults {
         return new Table(stage.code(), complete, List.copyOf(rows));
     }
 
-    private static List<List<UUID>> split(List<List<UUID>> groups, java.util.function.ToIntFunction<UUID> value) {
+    private static List<List<UUID>> split(List<List<UUID>> groups, ToIntFunction<UUID> value) {
         var result = new ArrayList<List<UUID>>();
         for (var group : groups) {
             var scores = new TreeMap<Integer, List<UUID>>(Comparator.reverseOrder());
-            for (var team : group)
+            for (var team : group) {
                 scores.computeIfAbsent(value.applyAsInt(team), key -> new ArrayList<>()).add(team);
+            }
             result.addAll(scores.values());
         }
         return result;
@@ -160,8 +178,9 @@ public final class CompetitionResults {
 
     private static void add(int[] stats, int own, int other, Stage stage) {
         stats[0]++;
-        if (own > other)
+        if (own > other) {
             stats[1]++;
+        }
         stats[2] += own;
         stats[3] += other;
         stats[4] += own > other ? stage.winPoints() : stage.lossPoints();

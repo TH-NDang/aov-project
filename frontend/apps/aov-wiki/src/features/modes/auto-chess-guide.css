@@ -1,0 +1,7 @@
+.wiki-guide-edition {
+  font: var(--wiki-type-meta);
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--aov-line);
+  color: var(--aov-muted);
+}

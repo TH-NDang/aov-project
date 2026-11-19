@@ -11,7 +11,12 @@ import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.patch.AuthoringContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
-import java.util.*;
+import com.wikiaov.platform.RevisionState;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 /** Chooses the historical snapshot and the draft appropriate to an import mode. */
 final class HeroImportRevisions {
@@ -25,29 +30,36 @@ final class HeroImportRevisions {
 
     HeroRevisionView selectSnapshot(UUID heroId, HeroImportRequest input, AuthoringContext target) {
         var revisions = activeRevisions(heroId, target.rulesetId());
-        var draft = revisions.stream().filter(r -> r.state().equals("DRAFT")).findFirst();
-        if (draft.isPresent())
+        var draft = revisions.stream().filter(r -> r.state() == RevisionState.DRAFT).findFirst();
+        if (draft.isPresent()) {
             return requireMatchingDraft(draft.get(), input.mode(), target.patchVariantId());
+        }
         var exact = latestSnapshotAt(revisions, target.patchVariantId());
-        if (input.mode() == Mode.CORRECTION)
+        if (input.mode() == Mode.CORRECTION) {
             return exact.orElse(null);
-        if (exact.isPresent())
+        }
+        if (exact.isPresent()) {
             throw new ApiException(HeroErrorCode.HERO_IMPORT_SNAPSHOT_EXISTS,
                     "This patch already has a snapshot. Choose correction mode.");
-        if (input.mode() == Mode.BASELINE)
+        }
+
+        if (input.mode() == Mode.BASELINE) {
             return null;
+        }
+
         return latestSnapshotBefore(revisions, target.rulesetOrdinal());
     }
 
     private List<HeroRevisionView> activeRevisions(UUID heroId, UUID rulesetId) {
         return authoring.revisions(heroId).stream()
-                .filter(r -> r.rulesetId().equals(rulesetId) && !r.state().equals("DISCARDED")).toList();
+                .filter(r -> r.rulesetId().equals(rulesetId) && r.state() != RevisionState.DISCARDED).toList();
     }
 
     private HeroRevisionView requireMatchingDraft(HeroRevisionView draft, Mode mode, UUID patchVariantId) {
-        if (!Objects.equals(draft.effectiveFromPatchVariantId(), patchVariantId) || draft.cause() != cause(mode))
+        if (!Objects.equals(draft.effectiveFromPatchVariantId(), patchVariantId) || draft.cause() != cause(mode)) {
             throw new ApiException(HeroErrorCode.HERO_IMPORT_DRAFT_CONFLICT,
                     "Another draft exists. Finish or discard it before changing patch or import mode.");
+        }
         return draft;
     }
 
@@ -75,15 +87,19 @@ final class HeroImportRevisions {
     }
 
     HeroRevisionView openDraft(HeroImportRequest input, HeroImportPlan plan) {
-        if (plan.heroId() == null)
+        if (plan.heroId() == null) {
             return authoring.create(new HeroCommands.Create(input.code(), input.locale(),
                     (String) plan.after().get("name"), input.rulesetId(), input.contextId()));
-        if (plan.revisionId() == null)
+        }
+        if (plan.revisionId() == null) {
             return authoring.baseline(plan.heroId(), input.contextId(), input.locale(),
                     (String) plan.after().get("name"));
+        }
         var draft = authoring.read(plan.heroId(), plan.revisionId());
-        if (draft.state().equals("DRAFT"))
+        if (draft.state() == RevisionState.DRAFT) {
             return draft;
+        }
+
         return authoring.fork(plan.heroId(), new HeroCommands.Fork(input.rulesetId(), draft.id(),
                 cause(input.mode()), contexts.authoringContext(input.contextId()).patchVariantId(),
                 "Imported hero fields"));

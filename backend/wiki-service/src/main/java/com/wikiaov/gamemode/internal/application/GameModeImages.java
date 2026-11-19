@@ -33,11 +33,13 @@ public class GameModeImages {
     /** Usable images by asset id; missing or unready assets are left out instead of failing the page. */
     public Map<UUID, Image> hydrate(Collection<UUID> ids) {
         var result = new LinkedHashMap<UUID, Image>();
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return result;
+        }
         media.findAll(ids).forEach((id, asset) -> {
-            if (asset.usable())
+            if (asset.usable()) {
                 result.put(id, image(asset));
+            }
         });
         return result;
     }
@@ -48,20 +50,23 @@ public class GameModeImages {
      * @param expected allowed kinds by asset id
      */
     public void requirePublishable(Map<UUID, Set<MediaSemanticType>> expected) {
-        if (expected.isEmpty())
+        if (expected.isEmpty()) {
             return;
+        }
         var found = media.findAll(expected.keySet());
         List<String> problems = new ArrayList<>();
         expected.forEach((id, kinds) -> {
             var asset = found.get(id);
-            if (asset == null || !asset.usable())
+            if (asset == null || !asset.usable()) {
                 problems.add(id + " is not a ready image");
-            else if (!kinds.contains(asset.semanticType()))
+            } else if (!kinds.contains(asset.semanticType())) {
                 problems.add(id + " is a " + asset.semanticType() + " image");
+            }
         });
-        if (!problems.isEmpty())
+        if (!problems.isEmpty()) {
             throw new ApiException(GameModeErrorCode.GAME_MODE_INVALID_CONTENT,
                     "Some images cannot be published.", Map.of("images", problems));
+        }
     }
 
     private static Image image(MediaAssetReference asset) {

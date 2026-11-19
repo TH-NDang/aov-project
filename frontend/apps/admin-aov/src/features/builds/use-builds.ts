@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { backendRequest } from "@/app/auth/session"
 import {
   buildKeys,
   buildsApi,
@@ -25,31 +24,6 @@ export function useBuildCapture(id: string | null | undefined) {
 
 export function useCaptureSets() {
   return useQuery({ queryKey: buildKeys.captureSets, queryFn: () => fetchCaptureSets() })
-}
-
-interface HeroPage {
-  items: { code: string; name: string; head?: { currentVersion?: { url?: string } | null } | null }[]
-  totalPages: number
-}
-
-/** Faces of every published hero and form, by code; a hero without one falls back to its initial. */
-export function useHeroHeads() {
-  return useQuery({
-    queryKey: ["build-captures", "hero-heads"],
-    staleTime: 300_000,
-    queryFn: async ({ signal }) => {
-      const heads = new Map<string, string>()
-      for (let page = 0; page < 10; page++) {
-        const slice = await backendRequest<HeroPage>(`/heroes?playable=true&page=${page}&size=100`, { signal })
-        for (const hero of slice.items) {
-          const url = hero.head?.currentVersion?.url
-          if (url) heads.set(hero.code, url)
-        }
-        if (page + 1 >= slice.totalPages) break
-      }
-      return heads
-    },
-  })
 }
 
 function patchSummary(client: ReturnType<typeof useQueryClient>, summary: CaptureSummary) {
@@ -98,6 +72,8 @@ export function useCaptureActions() {
   })
   const importSet = useMutation({
     mutationFn: (body: unknown) => buildsApi.importCapture(body),
+    // The import dialog shows a failure next to the set; the shared toast stays quiet.
+    meta: { silent: true },
     onSuccess: (detail) => {
       client.setQueryData(buildKeys.detail(detail.id), detail)
       return client.invalidateQueries({ queryKey: buildKeys.list })

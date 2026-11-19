@@ -30,6 +30,7 @@ aov-project/
 │   └── community-service/ Java 21, Maven Wrapper — manual tournament backend; separate DB/API
 ├── frontend/           pnpm + Turborepo: apps/aov-wiki, apps/aov-stream, apps/admin-aov, packages/ui
 ├── infra/              Production-like Docker Compose: reverse proxy, realm template, backup scripts (guide: infra/README.md)
+├── research/           Importers and checks for collected data (Python, Node), with unit tests
 └── resources/          Local copies only, git-ignored (ADR-030); resources/README.md says where the data lives.
 ```
 
@@ -73,14 +74,15 @@ listed here; anything not listed follows the common rule.
 - Shared HTTP contracts have one shape in both services: `ApiPaths`, `ApiException` with a module-owned `ApiErrorCode`
   enum, `PageSlice`, `QueryParameters.requireOnly`, RFC 9457 problem details with a request id, and
   `fail-on-unknown-properties: true` for request bodies. Each lives once in the service's `platform` module; do not
-  re-implement them per module. community-service still keeps per-module page types and query checks (move them to
-  its `platform` when those modules are reworked) and still accepts unknown properties.
+  re-implement them per module.
 - An exception handler never maps `IllegalArgumentException` or another unexpected exception to a 4xx answer.
   Unexpected errors are logged and answered with 500.
-- Both services run `ModuleArchitectureTests` and `LayerArchitectureTests`. community-service has only its module test
-  (`ModuleArchitectureTest`) so far.
-- Deliberate difference: community-service may use native PostgreSQL queries for reads over its `jsonb` documents
-  (ADR-015).
+- Both services run their module test (`ModuleArchitectureTests`, `ModuleArchitectureTest` in community-service) and
+  `LayerArchitectureTests`.
+- Deliberate differences of community-service: it may use native PostgreSQL queries for reads over its `jsonb`
+  documents (ADR-015); a problem keeps its context (`usages`, `missingFields`, `references`) as top-level members
+  rather than under `context`, because Admin reads them there; `QueryParameters.requireOnly` also takes the list
+  parameters that may repeat (`on`, `ids`, `entityIds`).
 - Schema changes only through Flyway migrations in `src/main/resources/db/migration`. Never edit an applied migration. JPA `ddl-auto` stays `validate`.
 - Object storage only through the `ObjectStorage` port and `S3ObjectStorage` (AWS SDK for Java 2.x). No MinIO SDK.
 - Media bytes never pass through the backend: presigned upload to `incoming/`, then `complete` validates and copies to
@@ -124,7 +126,7 @@ Do not run concurrent builds against the same output directory or edit shared so
 `frontend/AGENTS.md` adds the rules for the data layer, folder structure and stylesheets.
 
 - React + TypeScript + Vite. Shared UI from `@aov/ui` (`packages/ui`).
-- Commands: `pnpm dev`, `pnpm typecheck`, `pnpm build`, `pnpm format` (run inside `frontend`).
+- Commands: `pnpm dev`, `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm format` (run inside `frontend`).
 - Formatting is owned by Prettier (`frontend/.prettierrc.json`: no semicolons, double quotes, 120 columns).
 - Lists load as the reader scrolls, never with page buttons. Put `InfiniteScroll` (`@aov/ui/components/infinite-scroll`)
   right after the last row, inside the box that scrolls. Drive it with `useInfiniteQuery` and `nextPageOf`
@@ -139,14 +141,17 @@ Do not run concurrent builds against the same output directory or edit shared so
   tournament's end date, so it reads at the rate of that day. Pass every unit a prize was recorded in; use
   `LocalPrizeText` for free text such as `plan.prizePool`. A missing rate keeps the original amount. Gold and vouchers
   are in-game currencies and never go through it.
-- Format numbers with the reader's locale, never a hard-coded `"vi-VN"` in `toLocaleString` or `Intl.NumberFormat`.
+- Format numbers of the interface (row counts, views, statistics, money) with the reader's locale, never a hard-coded
+  `"vi-VN"` in `toLocaleString` or `Intl.NumberFormat`. In-game figures are the exception: health, damage, seconds,
+  metres and percentages in hero, item, arcana and trait text and in editorial notes are written as the game writes
+  them (`1200`, `0.35`) whatever the reader's locale, as `frontend/docs/QUY-UOC-VIET.md` section 3 says.
 - Colors, radius and the font family come from `packages/ui/src/styles/tokens.css` (see `frontend/docs/DESIGN-TOKENS.md`).
   App stylesheets alias those tokens; do not declare new palette values, except for overlays on artwork.
   Status colors use the token utilities (`text-destructive`, `bg-destructive/10`) or the token itself where no utility
   exists (`text-(--aov-warning)`, `bg-(--aov-success-soft)`), never Tailwind palette classes with hand-written `dark:`
   variants.
 - Typography (admin) follows a 12/14/16/24 reading scale. Never use text smaller than 12px (`text-xs`), in Tailwind
-  classes, inline styles or CSS; `pnpm run test:typography` in `apps/admin-aov` fails otherwise. Reading text is
+  classes, inline styles or CSS; `pnpm lint` fails otherwise. Reading text is
   regular weight, titles bold. Use the role styles from `packages/ui/src/styles/typography.css` instead of picking
   sizes: `type-page-title` (24/32 bold, used by `PageHeader`), `type-section-title` (16/24 bold, section `h2`),
   `type-body` (14/20), `type-label` (12/16 semibold, column headers and field labels), `type-meta` (12/16 muted).
@@ -163,18 +168,20 @@ These rules apply to new and touched tests; existing tests keep their names and 
   storage and uses the one shared container configuration and the one shared Docker gate. No other suffix; the
   architecture tests keep their existing names.
 - Frontend: every package needs a `test` script that runs every file under `tests/`. CI must run
-  `pnpm format:check`, `pnpm typecheck` (Admin's also checks `tests/`) and `pnpm test`; a test that none of these runs
-  is a gap to fix.
+  `pnpm format:check`, `pnpm typecheck` (Admin's also checks `tests/` and `lint/`), `pnpm lint` and `pnpm test`; a
+  test or lint rule that none of these runs is a gap to fix.
 - Shared set-up lives in one place per suite (`tests/fixtures/` in each frontend package, a test support package in
   each service). Do not paste a bootstrap block into a test file.
 - A test waits for a condition with the suite's shared `waitFor` helper or uses fake timers. No fixed sleeps.
-- One behavior per test, named as a sentence. Do not assert on source text or on file hashes.
+- One behavior per test, named as a sentence. A test does not assert on source text or on file hashes.
+- A rule about the source itself (no text under 12px, no `window.confirm`, which modules a folder may import) is a lint
+  check, not a test: it lives in the package's `lint/` folder, prints the offending files and runs as `pnpm lint`.
 
 ## Git
 
 - Conventional Commits with a scope from this list: `wiki/<module>`, `community/<module>`, `wiki` or `community` for
   a change across one service, `fe/admin-aov`, `fe/aov-wiki`, `fe/aov-stream`, `fe/ui`, `fe/community-contracts`, `fe`
-  for the whole frontend workspace, `infra`, `ci`, `hooks`, `spec`, `agents`, `resources`. Examples:
+  for the whole frontend workspace, `infra`, `ci`, `hooks`, `spec`, `agents`, `research`, `resources`. Examples:
   `feat(wiki/hero): ...`, `fix(fe/aov-wiki): ...`, `docs(spec): ...`, `chore(infra): ...`.
 - One logical change per commit. Commit spec changes separately from code.
 - Never commit secrets (`.env`, keys, tokens). Only `.env.example` is tracked.
@@ -182,7 +189,10 @@ These rules apply to new and touched tests; existing tests keep their names and 
   import data live in the R2 source collections, and `pnpm sources:sync pull` (in `frontend/apps/admin-aov`) restores a
   local copy. Never commit files from `resources/`. Keep the Git LFS rules in `.gitattributes`; do not change them
   without asking.
-- CI: `.github/workflows/backend.yml` runs `mvnw verify` (with Docker, so Testcontainers tests run) on every push touching `backend/wiki-service`.
+- CI: `.github/workflows/backend.yml` runs `mvnw verify` (with Docker, so Testcontainers tests run), the Python script
+  tests and the launcher checks on every push touching `backend/wiki-service`; `community-backend.yml` does the same for
+  community-service, `frontend.yml` runs the frontend checks, `research.yml` the research importer tests, and
+  `comments.yml` the English comment check on the pushed commits.
 - A Flyway version number is taken when the branch is merged, not when the migration is written: use the next free
   number on the target branch and rename the file in the merge. A gap is fine. Never reuse or renumber a version that
   a shared database has applied; a branch's own local database is repaired or reset instead.
@@ -204,7 +214,8 @@ git lfs install --skip-repo
      frontend files with Prettier (skipped with a warning until `pnpm install` has installed it).
      Fully staged files are re-staged. A partially staged file is formatted in the working tree only and
      the commit stops: review it, `git add` it, commit again.
-  2. Rejects Vietnamese text in comments of staged code under `backend/` and `frontend/`.
+  2. Rejects Vietnamese text in comments of staged code in every folder except docs and `resources/`.
+     `comments.yml` runs the same check in CI (`--range <base>...<head>`) for clones without the hooks.
 - Skip formatting once: `SKIP_FORMAT=1 git commit ...` (PowerShell: `$env:SKIP_FORMAT=1; git commit ...; Remove-Item Env:SKIP_FORMAT`).
 - `pre-push`, `post-checkout`, `post-commit`, `post-merge`: Git LFS hooks.
 - Bypass only for a genuine exception: `git commit --no-verify`.

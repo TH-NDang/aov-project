@@ -7,13 +7,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 public interface HeroIdentityRepository
         extends
             JpaRepository<HeroIdentity, UUID>,
-            org.springframework.data.jpa.repository.JpaSpecificationExecutor<HeroIdentity> {
+            JpaSpecificationExecutor<HeroIdentity> {
     @Query("select h from HeroIdentity h where h.code=:code or h.id in (select a.heroId from HeroCodeAlias a where a.legacyCode=:code)")
     Optional<HeroIdentity> findByCode(String code);
 

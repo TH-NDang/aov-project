@@ -6,8 +6,20 @@ import type {
   PageSlice,
 } from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
-import { tournamentKeys } from "@/features/tournaments/tournament-api"
-export const competitionKeys = [...tournamentKeys.all, "plans"] as const
+import { tournamentKeys } from "@/features/tournaments/api/tournament-api"
+const plans = [...tournamentKeys.all, "plans"] as const
+/** Under the tournament keys, so a write to a tournament record refreshes the plans built on it too. */
+export const competitionKeys = {
+  all: plans,
+  plan: (actorKey: string, tournamentId: string) => [...plans, actorKey, tournamentId] as const,
+  summaries: (actorKey: string) => [...plans, actorKey, "summaries"] as const,
+  ofOrganization: (actorKey: string, kind: "ORGANIZATION" | "CIRCUIT" | undefined, organizationId: string) =>
+    [...plans, actorKey, kind, organizationId] as const,
+  /** What readers see of one competition, read again whenever it is published anew. */
+  published: (tournamentId: string, publishedAt: string | null | undefined) =>
+    [...plans, "published", tournamentId, publishedAt] as const,
+}
+
 export const competitionApi = {
   inCircuit: (circuitPageId: string, page = 0) =>
     communityRequest<PageSlice<CompetitionSummary>>(
@@ -29,6 +41,8 @@ export const competitionApi = {
     throw new Error("Danh sách quá lớn. Hãy thu hẹp phạm vi.")
   },
   read: (id: string) => communityRequest<CompetitionView>(`/admin/competitions/${id}`),
+  /** The published copy, as the public site serves it. */
+  readPublished: (id: string) => communityRequest<CompetitionView>(`/competitions/${id}`),
   save: (entry: CompetitionView, content: CompetitionPlan) =>
     communityRequest<CompetitionView>(`/admin/competitions/${entry.id}`, {
       method: "PUT",

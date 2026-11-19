@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef } from "react"
+import { MODE_PARAMS, readParam, writeParam } from "../../lib/search-params"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiIcon } from "../../components/wiki-icon"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { useWikiContext, useWikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
-import { foldText } from "./auto-chess-model"
 import { modeCardsQuery, type ModeCard } from "./mode-api"
 import { ModeCards, ModeCardsSkeleton, modeMetaText } from "./mode-cards"
 import { AvailabilityState, GROUP_NAMES, hasSchedule, isOpen, ModeArt, ModeHeading } from "./mode-ui"
+import { foldSearchText } from "@aov/ui/lib/search-text"
+import { modesLead, scheduleNote } from "./mode-lead"
 import "./modes.css"
 import "./mode-pages.css"
 
@@ -23,25 +25,23 @@ const FILTERS: { key: Filter; label: string; english: string }[] = [
 ]
 
 const GROUPS = ["PVP", "ENTERTAINMENT"] as const
-
-/** The schedule is what the game's lobby showed when it was recorded, so the page says so once. */
-const SCHEDULE_NOTE = "Lịch mở ghi theo sảnh chọn chế độ, có thể đã đổi."
+/** The modes until they load; one array, so the filtered list is not worked out again on every render. */
+const NO_MODES: ModeCard[] = []
 
 /** Every published game mode: a guide first, then the game's groups, as a grid on wide screens and a list on phones. */
 export function ModesPage() {
-  const { locale, t } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const layout = usePageLayout()
   const [params, setParams] = useSearchParams()
-  const filter = (FILTERS.find((item) => item.key === params.get("loc"))?.key ?? "all") as Filter
-  const search = params.get("q") ?? ""
+  const filter = (FILTERS.find((item) => item.key === readParam(params, MODE_PARAMS.filter))?.key ?? "all") as Filter
+  const search = readParam(params, MODE_PARAMS.search) ?? ""
   const modes = useQuery(modeCardsQuery())
-  const all = modes.data?.items ?? []
+  const all = modes.data?.items ?? NO_MODES
 
   const visible = useMemo(() => {
-    const needle = foldText(search.trim())
+    const needle = foldSearchText(search.trim())
     return all.filter((mode) => {
-      if (needle && !foldText(`${mode.name} ${mode.summary ?? ""}`).includes(needle)) return false
+      if (needle && !foldSearchText(`${mode.name} ${mode.summary ?? ""}`).includes(needle)) return false
       if (filter === "PVP" || filter === "ENTERTAINMENT") return mode.group === filter
       if (filter === "open") return isOpen(mode.availability)
       if (filter === "guide") return mode.hasGuide
@@ -66,20 +66,20 @@ export function ModesPage() {
     const chip = chosen.getBoundingClientRect()
     row.scrollLeft += chip.left - box.left - (box.width - chip.width) / 2
   }, [filter])
-  const counts = [
-    text(`${all.length} chế độ`, `${all.length} ${all.length === 1 ? "mode" : "modes"}`),
-    text(`${openCount} đang mở`, `${openCount} open`),
-    ...(unknownCount ? [text(`${unknownCount} chưa rõ lịch mở`, `${unknownCount} with schedule unknown`)] : []),
-  ].join(", ")
+  const counts = !all.length
+    ? ""
+    : [
+        text(`${all.length} chế độ`, `${all.length} ${all.length === 1 ? "mode" : "modes"}`),
+        text(`${openCount} đang mở`, `${openCount} open`),
+        ...(unknownCount ? [text(`${unknownCount} chưa rõ lịch mở`, `${unknownCount} with schedule unknown`)] : []),
+      ].join(", ")
 
-  function update(changes: Record<string, string | null>) {
+  function update(changes: Partial<Record<"search" | "filter", string | null>>) {
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
-        for (const [key, value] of Object.entries(changes)) {
-          if (value) next.set(key, value)
-          else next.delete(key)
-        }
+        for (const [key, value] of Object.entries(changes))
+          writeParam(next, MODE_PARAMS[key as "search" | "filter"], value)
         return next
       },
       { replace: true, preventScrollReset: true },
@@ -87,11 +87,11 @@ export function ModesPage() {
   }
 
   return (
-    <div className="mode-page mode-index">
-      <div className="mode-index-head">
-        <CatalogHeading title={t("modes")} lead={all.length ? `${counts}. ${SCHEDULE_NOTE}` : SCHEDULE_NOTE} />
-        <div className="mode-filter-bar" role="group" aria-label={text("Lọc chế độ", "Filter modes")}>
-          <div className="mode-find">
+    <div className="wiki-mode-page wiki-mode-index">
+      <div className="wiki-mode-index-head">
+        <CatalogHeading title={text("Chế độ chơi", "Game modes")} lead={modesLead(text, counts)} />
+        <div className="wiki-mode-filter-bar" role="group" aria-label={text("Lọc chế độ", "Filter modes")}>
+          <div className="wiki-mode-find">
             <label>
               <WikiIcon name="search" size={18} />
               <input
@@ -99,23 +99,27 @@ export function ModesPage() {
                 value={search}
                 placeholder={text("Tìm chế độ…", "Search modes…")}
                 aria-label={text("Tìm chế độ", "Search modes")}
-                onChange={(event) => update({ q: event.target.value || null })}
+                onChange={(event) => update({ search: event.target.value || null })}
               />
             </label>
             {search && (
-              <button type="button" aria-label="Xóa từ khóa" onClick={() => update({ q: null })}>
+              <button
+                type="button"
+                aria-label={text("Xóa từ khóa", "Clear the search")}
+                onClick={() => update({ search: null })}
+              >
                 <WikiIcon name="close" size={16} />
               </button>
             )}
           </div>
-          <div ref={chips} className="mode-chip-row">
+          <div ref={chips} className="wiki-mode-chip-row">
             {FILTERS.map((item) => (
               <button
                 key={item.key}
                 type="button"
-                className="mode-chip"
+                className="wiki-mode-chip"
                 aria-pressed={filter === item.key}
-                onClick={() => update({ loc: item.key === "all" ? null : item.key })}
+                onClick={() => update({ filter: item.key === "all" ? null : item.key })}
               >
                 {text(item.label, item.english)}
               </button>
@@ -126,34 +130,34 @@ export function ModesPage() {
 
       {modes.isPending ? (
         <div
-          className="mode-index-loading"
+          className="wiki-mode-index-loading"
           role="status"
           aria-label={text("Đang tải danh sách chế độ", "Loading the list of modes")}
         >
-          <div className="mode-feature" data-skeleton="true" />
+          <div className="wiki-mode-feature" data-skeleton="true" />
           {[6, 10].map((count) => (
-            <div key={count} className="mode-group">
-              <div className="mode-heading" data-skeleton="true" />
+            <div key={count} className="wiki-mode-group">
+              <div className="wiki-mode-heading" data-skeleton="true" />
               <ModeCardsSkeleton count={count} />
             </div>
           ))}
         </div>
       ) : modes.isError ? (
-        <div className="mode-notice wiki-mascot-state" role="alert">
+        <div className="wiki-mode-notice wiki-mascot-state" role="alert">
           <h2>{text("Chưa tải được danh sách chế độ", "The list of modes could not be loaded")}</h2>
-          <button type="button" className="mode-chip" onClick={() => modes.refetch()}>
+          <button type="button" className="wiki-mode-chip" onClick={() => modes.refetch()}>
             {text("Thử lại", "Retry")}
           </button>
         </div>
       ) : all.length === 0 ? (
-        <p className="mode-notice wiki-mascot-state" role="status">
-          Chưa có chế độ nào được công bố.
+        <p className="wiki-mode-notice wiki-mascot-state" role="status">
+          {text("Chưa có chế độ nào.", "No modes yet.")}
         </p>
       ) : visible.length === 0 ? (
-        <div className="mode-notice wiki-mascot-state" role="status">
-          <h2>Không có chế độ nào khớp</h2>
-          <p>Thử từ khóa khác hoặc bỏ bộ lọc đang chọn.</p>
-          <button type="button" className="mode-chip" onClick={() => update({ q: null, loc: null })}>
+        <div className="wiki-mode-notice wiki-mascot-state" role="status">
+          <h2>{text("Không có chế độ nào khớp", "No mode matches")}</h2>
+          <p>{text("Thử từ khóa khác hoặc bỏ bộ lọc đang chọn.", "Try other words or clear the filters.")}</p>
+          <button type="button" className="wiki-mode-chip" onClick={() => update({ search: null, filter: null })}>
             {text("Xóa bộ lọc", "Clear filters")}
           </button>
         </div>
@@ -166,7 +170,7 @@ export function ModesPage() {
             const entries = listed.filter((mode) => mode.group === group)
             if (!entries.length) return null
             return (
-              <section key={group} className="mode-group" aria-labelledby={`mode-group-${group}`}>
+              <section key={group} className="wiki-mode-group" aria-labelledby={`mode-group-${group}`}>
                 <ModeHeading
                   id={`mode-group-${group}`}
                   title={text(GROUP_NAMES[group][0], GROUP_NAMES[group][1])}
@@ -178,9 +182,10 @@ export function ModesPage() {
           })}
           {/* Wide screens read this under the page title; phones have no title block, so it closes the list. */}
           {layout === "compact" && (
-            <p className="mode-footnote">
-              {unknownShown > 0 && `${unknownShown} chế độ chưa rõ lịch mở. `}
-              {SCHEDULE_NOTE}
+            <p className="wiki-mode-footnote">
+              {unknownShown > 0 &&
+                text(`${unknownShown} chế độ chưa rõ lịch mở. `, `${unknownShown} modes have no known schedule. `)}
+              {scheduleNote(text)}
             </p>
           )}
         </>
@@ -195,37 +200,37 @@ export function ModesPage() {
  */
 function GuideFeature({ mode }: { mode: ModeCard }) {
   const { href, locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const base = `/modes/${encodeURIComponent(mode.code)}`
   const meta = modeMetaText(mode, locale)
   return (
-    <article className="mode-feature">
-      <ModeArt className="mode-feature-art" image={mode.art} name={mode.name} inCard eager />
-      <div className="mode-feature-body">
-        <p className="mode-feature-kicker">{text("Cẩm nang", "Guide")}</p>
+    <article className="wiki-mode-feature">
+      <ModeArt className="wiki-mode-feature-art" image={mode.art} name={mode.name} inCard eager />
+      <div className="wiki-mode-feature-body">
+        <p className="wiki-mode-feature-kicker">{text("Cẩm nang", "Guide")}</p>
         <h2>{mode.name}</h2>
-        <p className="mode-feature-meta">
+        <p className="wiki-mode-feature-meta">
           {meta && <span>{meta}</span>}
           <AvailabilityState availability={mode.availability} quiet />
         </p>
-        {mode.summary && <p className="mode-prose mode-clamp">{mode.summary}</p>}
-        <nav className="mode-chip-row" aria-label={`Cẩm nang ${mode.name}`}>
-          <Link className="mode-cta" to={href(base)}>
+        {mode.summary && <p className="wiki-mode-prose wiki-mode-clamp">{mode.summary}</p>}
+        <nav className="wiki-mode-chip-row" aria-label={text(`Cẩm nang ${mode.name}`, `${mode.name} guide`)}>
+          <Link className="wiki-mode-cta" to={href(base)}>
             {text("Mở cẩm nang", "Open the guide")}
             <WikiIcon name="arrow" size={16} />
           </Link>
           {mode.guideKind === "AUTO_CHESS" && (
             <>
-              <Link className="mode-chip" to={href(`${base}/quan-co`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/units`)}>
                 {text("Quân cờ", "Units")}
               </Link>
-              <Link className="mode-chip" to={href(`${base}/phe-nghe`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/traits`)}>
                 {text("Phe & Nghề", "Factions & Classes")}
               </Link>
-              <Link className="mode-chip" to={href(`${base}/doi-hinh`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/lineups`)}>
                 {text("Đội hình", "Lineups")}
               </Link>
-              <Link className="mode-chip" to={href(`${base}/xep-doi-hinh`)}>
+              <Link className="wiki-mode-chip" to={href(`${base}/builder`)}>
                 {text("Xếp đội hình", "Lineup builder")}
               </Link>
             </>

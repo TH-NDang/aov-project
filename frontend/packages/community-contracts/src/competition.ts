@@ -1,4 +1,5 @@
 import type { PlayerContent, TeamContent, TournamentContent, SeriesContent, RosterMembershipContent } from "./index"
+import { matchName, type MatchTitle, type TitleText } from "./match-titles.ts"
 
 export type CompetitionSlot = {
   type: "TEAM" | "SEED" | "WINNER" | "LOSER" | "TBD"
@@ -7,11 +8,16 @@ export type CompetitionSlot = {
   matchKey?: string | null
   label?: string | null
 }
+/**
+ * A match of a competition plan. `title` says what it is in its stage, worded by `matchName`; `label` is a name an
+ * editor typed, shown instead when set. Matches saved before titles carry only their `label`.
+ */
 export type PlannedMatch = {
   key: string
   stageCode: string
   round: number
-  label: string
+  label?: string | null
+  title?: MatchTitle | null
   bestOf: number
   scheduledAt?: string | null
   a: CompetitionSlot
@@ -118,10 +124,28 @@ export function aogStages(sourceUrl = ""): CompetitionStage[] {
     },
   ]
 }
-export function slotLabel(slot: CompetitionSlot, teams: Record<string, TeamContent>): string {
-  if (slot.type === "TEAM") return teams[slot.teamId || ""]?.name || "Đội chưa có thông tin"
-  if (slot.type === "SEED") return `Hạt giống ${slot.seed}`
-  if (slot.type === "WINNER" || slot.type === "LOSER")
-    return `${slot.type === "WINNER" ? "Thắng" : "Thua"} ${slot.matchKey}`
-  return slot.label || "Chưa xác định"
+/**
+ * How one side of a planned match reads before its team is known, in the language `text` picks: the seeded team or
+ * the seed, the match it comes from, or the editor's description of an open slot.
+ */
+export function slotLabel(
+  slot: CompetitionSlot,
+  plan: Pick<CompetitionPlan, "matches" | "playoffSeeds">,
+  teams: Record<string, TeamContent>,
+  text: TitleText,
+): string {
+  if (slot.type === "TEAM")
+    return teams[slot.teamId || ""]?.name || text("Đội chưa có thông tin", "No team information yet")
+  if (slot.type === "SEED") {
+    const seeded = plan.playoffSeeds[slot.seed ?? 0]
+    return (seeded && teams[seeded]?.name) || text(`Hạt giống ${slot.seed}`, `Seed ${slot.seed}`)
+  }
+  if (slot.type === "WINNER" || slot.type === "LOSER") {
+    const source = plan.matches.find((match) => match.key === slot.matchKey)
+    const name = (source && matchName(source, text)) || slot.matchKey || ""
+    return slot.type === "WINNER"
+      ? text(`Thắng ${name}`, `Winner of ${name}`)
+      : text(`Thua ${name}`, `Loser of ${name}`)
+  }
+  return slot.label?.trim() || text("Chưa xác định", "TBD")
 }

@@ -2,6 +2,8 @@ package com.wikiaov.platform.internal.infrastructure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.wikiaov.access.internal.web.request.LoginRequest;
+import com.wikiaov.user.internal.web.request.PasswordChangeRequests;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Map;
@@ -61,5 +63,28 @@ class TextNormalizationConfigurationTest {
         assertThat(TextNormalizationConfiguration.nfc("armor-penetration")).isEqualTo("armor-penetration");
         assertThat(TextNormalizationConfiguration.nfc(null)).isNull();
         assertThat(json.readValue("\"\"", String.class)).isEmpty();
+    }
+
+    @Test
+    void aPasswordIsReadExactlyAsTheClientSentIt() {
+        String body = """
+                {"username": "%1$s", "password": "%1$s"}
+                """.formatted(DECOMPOSED);
+
+        LoginRequest login = json.readValue(body, LoginRequest.class);
+
+        assertThat(login.password()).isEqualTo(DECOMPOSED);
+        assertThat(login.username()).isEqualTo(NAME);
+    }
+
+    @Test
+    void aNewPasswordIsReadExactlyAsTheClientSentIt() {
+        String body = """
+                {"code": "123456", "newPassword": "%s"}
+                """.formatted(DECOMPOSED);
+
+        var confirm = json.readValue(body, PasswordChangeRequests.Confirm.class);
+
+        assertThat(confirm.newPassword()).isEqualTo(DECOMPOSED);
     }
 }

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react"
+import { localeText } from "@aov/ui/lib/locale-text"
 
 type Locale = "vi" | "en"
 const key = "aov-stream-locale"
@@ -16,7 +17,7 @@ export const streamLanguageTag = (value: Locale = locale) => (value === "en" ? "
  * Picks the wording outside React, in models and request helpers. It reads the choice when called, so call it while
  * rendering or handling an event, never at module level.
  */
-export const streamText = (vi: string, en: string) => (locale === "en" ? en : vi)
+export const streamText = (vi: string, en: string) => localeText(locale)(vi, en)
 
 /** Screen readers pick their voice from the document language. */
 function announceLanguage() {
@@ -44,7 +45,7 @@ export function useStreamLocale() {
   return {
     locale: value,
     languageTag: streamLanguageTag(value),
-    text: (vi: string, en: string) => (value === "en" ? en : vi),
+    text: localeText(value),
     setLocale: setStreamLocale,
   }
 }

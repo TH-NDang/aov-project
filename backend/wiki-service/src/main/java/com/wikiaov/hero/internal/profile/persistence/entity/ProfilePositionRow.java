@@ -1,10 +1,20 @@
 package com.wikiaov.hero.internal.profile.persistence.entity;
 
-import com.wikiaov.hero.internal.shared.persistence.entity.AssignedIdentifierEntity;
-
-import jakarta.persistence.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Position;
+import com.wikiaov.platform.AssignedIdentifierEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import java.io.Serializable;
 import java.util.UUID;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -18,7 +28,8 @@ public class ProfilePositionRow extends AssignedIdentifierEntity<ProfilePosition
     private UUID profileRevisionId;
 
     @Id
-    private String positionCode;
+    @Enumerated(EnumType.STRING)
+    private Position positionCode;
 
     @Override
     public Key getId() {
@@ -28,8 +39,8 @@ public class ProfilePositionRow extends AssignedIdentifierEntity<ProfilePosition
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class Key implements java.io.Serializable {
+    public static class Key implements Serializable {
         public UUID profileRevisionId;
-        public String positionCode;
+        public Position positionCode;
     }
 }

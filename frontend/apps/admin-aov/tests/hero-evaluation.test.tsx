@@ -2,11 +2,11 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
-import { cleanTraits, suggestTraits, withTraitDetail } from "../src/features/publishing/hero-traits"
-import { draftHeroNotes } from "../src/features/publishing/hero-notes-draft"
-import type { HeroRankingReading } from "../src/features/publishing/publishing-api"
-import type { Content, Skill, Trait } from "../src/features/publishing/types"
+import { cleanTraits, suggestTraits, withTraitDetail } from "../src/features/publishing/model/assessment/hero-traits"
+import { draftHeroNotes } from "../src/features/publishing/model/assessment/hero-notes-draft"
+import type { HeroRankingReading } from "@/lib/api/publishing-api"
+import type { Content, Skill, Trait } from "@/lib/hero-types"
+import { createWindow, installWindow } from "./fixtures/dom"
 
 const skill = (
   skillKey: string,
@@ -137,7 +137,7 @@ test("the notes draft names its sources and leaves out points that do not fit th
   const strengths = notes.strengths!.split("\n")
   assert.equal(
     strengths[0],
-    "Gây nhiều sát thương: 98.000 sát thương gây ra mỗi trận, hạng 3/128 ở Đấu hạng Tinh anh ngày 11/11/2026.",
+    "Gây nhiều sát thương: 98000 sát thương gây ra mỗi trận, hạng 3/128 ở Đấu hạng Tinh anh ngày 11/11/2026.",
   )
   assert.ok(strengths.includes("Khống chế cứng: Địa chấn (choáng 1 giây)."))
   assert.doesNotMatch(notes.weaknesses!, /Ít hạ gục/, "Few kills is not a weakness of a support")
@@ -145,6 +145,22 @@ test("the notes draft names its sources and leaves out points that do not fit th
   assert.match(notes.weaknesses!, /Thanh Sinh tồn của game chỉ 3\/10/)
   assert.doesNotMatch(notes.weaknesses!, /lá chắn, hồi máu/, "The hero heals itself")
   assert.equal(notes.counterTips, "Trang bị giảm hồi máu cắt bớt lượng hồi từ Lưỡi hái.")
+})
+
+test("the notes draft writes decimal figures with a point and no thousands separator, as the game does", () => {
+  const notes = draftHeroNotes({
+    traits: [],
+    skills: kit,
+    roles: ["MAGE"],
+    ranking: {
+      ...ranking,
+      entry: { ...ranking.entry!, figures: [{ metric: "KILLS", value: 1.254, rank: 120, of: 128 }] },
+    },
+    survivability: { value: 3.5, maximum: 10 },
+  })
+
+  assert.match(notes.weaknesses!, /^Ít hạ gục: 1\.25 lần hạ gục mỗi trận,/m)
+  assert.match(notes.weaknesses!, /Thanh Sinh tồn của game chỉ 3\.5\/10\./)
 })
 
 test("without a confirmed snapshot the draft uses the traits alone", () => {
@@ -156,26 +172,12 @@ test("without a confirmed snapshot the draft uses the traits alone", () => {
 })
 
 async function createView() {
-  const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true, url: "http://localhost/hero/test" })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  const dom = createWindow("http://localhost/hero/test")
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { QueryClient, QueryClientProvider } = await import("@tanstack/react-query")
-  const { HeroEvaluation } = await import("../src/features/publishing/hero-evaluation")
+  const { HeroEvaluation } = await import("../src/features/publishing/components/assessment/hero-evaluation")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const root = createRoot(dom.window.document.getElementById("root")!)
   return {
@@ -187,10 +189,7 @@ async function createView() {
     close: async () => {
       await act(async () => root.unmount())
       client.clear()
-      for (const [key, descriptor] of originals) {
-        if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-        else delete (globalThis as Record<string, unknown>)[key]
-      }
+      restoreGlobals()
       dom.window.close()
     },
   }
@@ -269,6 +268,7 @@ test("checking a suggested trait fills in its skills and detail, and only change
           version: 4,
           cause: "CONTENT_CORRECTION",
           sections: {} as never,
+          publicationSequence: null,
           publishedAt: null,
           sourceRevisionId: null,
           effectiveFromPatchVariantId: null,

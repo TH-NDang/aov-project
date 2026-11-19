@@ -56,3 +56,23 @@ export const wikiSections = [
 ] as const
 
 export type WikiSectionKey = (typeof wikiSections)[number]["key"]
+
+/** The name of each section and group of sections, in Vietnamese and English. */
+export const SECTION_NAMES: Record<string, readonly [string, string]> = {
+  characters: ["Sổ tay nhân vật", "Character handbook"],
+  heroes: ["Tướng", "Heroes"],
+  skins: ["Trang phục", "Skins"],
+  warehouse: ["Kho trang bị", "Armory"],
+  items: ["Trang bị", "Equipment"],
+  enchantments: ["Phù hiệu", "Enchantments"],
+  arcana: ["Bảng ngọc", "Arcana"],
+  spells: ["Phụ trợ", "Talents"],
+  news: ["Tham khảo", "Reference"],
+  updates: ["Ghi chú cập nhật", "Patch notes"],
+  updatesShort: ["Cập nhật", "Updates"],
+  terms: ["Thuật ngữ", "Glossary"],
+  map: ["Bản đồ", "Maps"],
+  mode: ["Chế độ chơi", "Game modes"],
+  modes: ["Chế độ chơi", "Game modes"],
+  play: ["Lối chơi", "Gameplay"],
+}

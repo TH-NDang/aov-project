@@ -2,52 +2,49 @@ package com.wikiaov.community.tournament.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import com.wikiaov.community.testsupport.CommunityApplicationTest;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.CompetitionType;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.SeriesResult;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Verification;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.*;
-import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /** The recency rules of spec 04, on real SQL and through the API. */
-@SpringBootTest
-@AutoConfigureMockMvc
+@CommunityApplicationTest
 class CompetitionRecencyIntegrationTest {
-    static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:17.6");
-    static {
-        DATABASE.start();
-    }
-
-    @DynamicPropertySource
-    static void database(DynamicPropertyRegistry properties) {
-        properties.add("spring.datasource.url", DATABASE::getJdbcUrl);
-        properties.add("spring.datasource.username", DATABASE::getUsername);
-        properties.add("spring.datasource.password", DATABASE::getPassword);
-    }
-
-    @AfterAll
-    static void stop() {
-        DATABASE.stop();
-    }
-
     static final String ROOT = "/api/community/v1";
     static final String ADMIN = ROOT + "/admin";
     static final LocalDate TODAY = LocalDate.now();
@@ -211,6 +208,13 @@ class CompetitionRecencyIntegrationTest {
         var main = read(get(ADMIN + "/tournaments/facets").param("level", "MAIN"));
         assertThat(every.path("total").asInt() - main.path("total").asInt()).isGreaterThanOrEqualTo(3);
         authorizedFails(get(ADMIN + "/tournaments/facets").param("level", "NOPE"));
+    }
+
+    @Test
+    void anUnknownTournamentLevelIsAnInvalidQueryParameter() throws Exception {
+        mvc.perform(authorized(get(ADMIN + "/tournaments").param("level", "NOPE")))
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"))
+                .andExpect(jsonPath("$.errors[0].path").value("level"));
     }
 
     @Test
@@ -483,9 +487,10 @@ class CompetitionRecencyIntegrationTest {
         var older = tournament(marker, "older", -800, -790);
         var running = tournament(marker, "running", -2, 6);
         var ended = tournament(marker, "ended", -60, -50);
-        for (var season : List.of(older, running, ended))
+        for (var season : List.of(older, running, ended)) {
             send(put(ADMIN + "/competitions/" + season), Map.of("version", 0, "content",
                     Map.of("organizerPageId", organizer.path("id").asText())));
+        }
 
         var seasons = read(get(ADMIN + "/competitions").param("organizerPageId", organizer.path("id").asText()));
         assertThat(ids(seasons)).containsExactly(running.toString(), ended.toString(), older.toString());
@@ -586,9 +591,11 @@ class CompetitionRecencyIntegrationTest {
     }
 
     private static int seasonsOf(JsonNode stats, JsonNode page) {
-        for (var row : stats)
-            if (row.path("pageId").asText().equals(page.path("id").asText()))
+        for (var row : stats) {
+            if (row.path("pageId").asText().equals(page.path("id").asText())) {
                 return row.path("tournaments").asInt();
+            }
+        }
         throw new AssertionError("No statistics for page " + page.path("id").asText());
     }
 
@@ -618,8 +625,9 @@ class CompetitionRecencyIntegrationTest {
 
     private JsonNode page(String kind, String code, UUID entityId, Map<String, ?> content) throws Exception {
         var body = new HashMap<String, Object>(Map.of("kind", kind, "code", code, "content", content));
-        if (entityId != null)
+        if (entityId != null) {
             body.put("entityId", entityId);
+        }
         return send(post(ADMIN + "/pages"), body);
     }
 
@@ -635,8 +643,9 @@ class CompetitionRecencyIntegrationTest {
         var seen = new ArrayList<String>();
         for (int page = 0; page < 10; page++) {
             var rows = read(get(ADMIN + path).param("q", q).param("page", String.valueOf(page)).param("size", "2"));
-            if (rows.path("items").isEmpty())
+            if (rows.path("items").isEmpty()) {
                 break;
+            }
             seen.addAll(contentCodes(rows));
         }
         return seen;
@@ -686,16 +695,20 @@ class CompetitionRecencyIntegrationTest {
     }
 
     private static String activeOn(JsonNode rows, String code) {
-        for (var row : rows.path("items"))
-            if (row.path("content").path("code").asText().equals(code))
+        for (var row : rows.path("items")) {
+            if (row.path("content").path("code").asText().equals(code)) {
                 return row.has("lastActiveOn") ? row.path("lastActiveOn").asText() : null;
+            }
+        }
         throw new AssertionError("No row " + code);
     }
 
     private static JsonNode entry(JsonNode rows, String code) {
-        for (var row : rows.path("items"))
-            if (row.path("code").asText().equals(code))
+        for (var row : rows.path("items")) {
+            if (row.path("code").asText().equals(code)) {
                 return row;
+            }
+        }
         throw new AssertionError("No row " + code);
     }
 

@@ -1,7 +1,11 @@
 package com.wikiaov.hero.internal.change.persistence;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.wikiaov.access.Actor;
 import com.wikiaov.access.ActorType;
@@ -16,8 +20,17 @@ import com.wikiaov.hero.internal.change.persistence.entity.RoleChangeClassificat
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
-import com.wikiaov.hero.internal.domain.HeroChanges.*;
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroChanges;
+import com.wikiaov.hero.internal.domain.HeroChanges.Change;
+import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
+import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
+import com.wikiaov.hero.internal.domain.HeroChanges.MechanicChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.OtherChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.RoleChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.SkillChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.StatChange;
+import com.wikiaov.hero.internal.domain.HeroChanges.Summary;
+import com.wikiaov.hero.internal.domain.HeroChanges.VisualChange;
 import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
 import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import java.math.BigDecimal;
@@ -47,7 +60,7 @@ class HeroPatchHistoryTests {
         var ids = List.of(first.getId(), second.getId(), third.getId());
         var assessment = new HeroPatchAssessment();
         assessment.setChangeSetId(second.getId());
-        assessment.setKind(com.wikiaov.hero.internal.domain.HeroChanges.OverallKind.BUFF);
+        assessment.setKind(HeroChanges.OverallKind.BUFF);
         var fact = new OtherChangeClassification();
         fact.setChangeSetId(first.getId());
         when(sets.historyForVariant(variant)).thenReturn(List.of(first, second, third));
@@ -83,7 +96,7 @@ class HeroPatchHistoryTests {
         UUID asset = UUID.randomUUID();
         var actor = new Actor("issuer", "editor", ActorType.HUMAN, "Editor", Set.of());
         var at = Instant.parse("2026-10-20T03:00:00Z");
-        var source = new com.wikiaov.hero.internal.domain.HeroChanges.Record(UUID.randomUUID(), null, null, null,
+        var source = new HeroChanges.Record(UUID.randomUUID(), null, null, null,
                 target,
                 List.of(new Summary("vi-VN", "Summary")), List.of(new OtherChange(Kind.OTHER, "Note")), null);
         history.create(changeSet, variant, source, at, actor);
@@ -95,8 +108,9 @@ class HeroPatchHistoryTests {
                 new VisualChange(Kind.OTHER, MediaRole.HEAD, null, asset),
                 new MechanicChange(Kind.FIX, "landing", "Fixed landing"),
                 new OtherChange(Kind.OTHER, "Other note"));
-        for (int index = 0; index < facts.size(); index++)
+        for (int index = 0; index < facts.size(); index++) {
             history.appendChange(changeSet, index, facts.get(index));
+        }
 
         var savedSet = ArgumentCaptor.forClass(HeroPatchChangeSet.class);
         verify(sets).saveAndFlush(savedSet.capture());
@@ -132,11 +146,11 @@ class HeroPatchHistoryTests {
             assertThat(value.getNewValue()).isEqualTo("Updated");
         });
         assertThat(savedFacts.getAllValues().get(2)).isInstanceOfSatisfying(RoleChangeClassification.class, value -> {
-            assertThat(value.getRoleCode()).isEqualTo("WARRIOR");
+            assertThat(value.getRoleCode()).isEqualTo(Role.WARRIOR);
             assertThat(value.isAdded()).isTrue();
         });
         assertThat(savedFacts.getAllValues().get(3)).isInstanceOfSatisfying(VisualChangeClassification.class, value -> {
-            assertThat(value.getMediaRole()).isEqualTo("HEAD");
+            assertThat(value.getMediaRole()).isEqualTo(MediaRole.HEAD);
             assertThat(value.getOldAssetId()).isNull();
             assertThat(value.getNewAssetId()).isEqualTo(asset);
         });

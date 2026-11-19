@@ -1,5 +1,4 @@
-/** A stoppage inside the broadcast: the game clock holds at `atSeconds` for `durationSeconds` of video. */
-export type VodPause = { atSeconds: number; durationSeconds: number }
+import type { VodPause } from "@aov/community-contracts"
 
 /** Maps the in-game clock onto one official broadcast video that may contain several games and pauses. */
 export type VodSync = { url: string; startSecond: number | null; pauses: VodPause[] }
@@ -41,8 +40,6 @@ export function youtubeLinkTime(url?: string | null): number | null {
 export const youtubeWatchUrl = (videoId: string, seconds?: number | null) =>
   `https://www.youtube.com/watch?v=${videoId}${seconds != null && seconds >= 0 ? `&t=${Math.floor(seconds)}s` : ""}`
 
-export const youtubeThumbnail = (videoId: string) => `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
-
 const sortedPauses = (pauses: VodPause[]) =>
   pauses.filter((pause) => pause.durationSeconds > 0 && pause.atSeconds >= 0).sort((a, b) => a.atSeconds - b.atSeconds)
 
@@ -70,22 +67,3 @@ export function videoToGame(sync: VodSync, videoSecond: number): number | null {
 
 /** Play triangle forced to text presentation; Windows otherwise draws U+25B6 as a blue emoji tile. */
 export const VIDEO_MARK = String.fromCodePoint(0x25b6, 0xfe0e)
-
-/** `m:ss` under an hour, `h:mm:ss` otherwise. */
-export function formatClock(value: number | null | undefined): string {
-  if (value == null || !Number.isFinite(value)) return "--:--"
-  const total = Math.max(0, Math.floor(value))
-  const hours = Math.floor(total / 3600)
-  const minutes = Math.floor((total % 3600) / 60)
-  const seconds = String(total % 60).padStart(2, "0")
-  return hours ? `${hours}:${String(minutes).padStart(2, "0")}:${seconds}` : `${minutes}:${seconds}`
-}
-
-/** Accepts `90`, `1:30`, `1:02:03`; returns null for anything else. */
-export function parseClock(value: string): number | null {
-  const input = value.trim()
-  if (!/^\d+(?::\d{1,2}){0,2}$/.test(input)) return null
-  const parts = input.split(":").map(Number)
-  if (parts.slice(1).some((part) => part >= 60)) return null
-  return parts.reduce((total, part) => total * 60 + part, 0)
-}

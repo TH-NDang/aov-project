@@ -1,5 +1,6 @@
 package com.wikiaov.media.internal.application.response;
 
+import com.wikiaov.media.internal.contact.domain.MediaContactStatus;
 import java.time.Instant;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
@@ -12,7 +13,7 @@ public record MediaContactView(
         String email,
         String topic,
         String message,
-        String status,
+        MediaContactStatus status,
         Instant createdAt,
         @Nullable Instant resolvedAt
 ) {

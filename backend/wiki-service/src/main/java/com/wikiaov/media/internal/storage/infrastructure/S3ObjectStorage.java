@@ -4,12 +4,13 @@ import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
 import com.wikiaov.media.internal.storage.application.port.PresignedRequest;
 import com.wikiaov.media.internal.storage.application.port.StoredObject;
-
 import com.wikiaov.platform.ApiException;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -88,8 +89,9 @@ class S3ObjectStorage implements ObjectStorage {
         try {
             call("delete", key, () -> s3.deleteObject(request -> request.bucket(properties.bucketFor(key)).key(key)));
         } catch (ApiException exception) {
-            if (exception.getErrorCode() != MediaErrorCode.MEDIA_OBJECT_NOT_FOUND)
+            if (exception.getErrorCode() != MediaErrorCode.MEDIA_OBJECT_NOT_FOUND) {
                 throw exception;
+            }
         }
     }
 
@@ -113,7 +115,7 @@ class S3ObjectStorage implements ObjectStorage {
     /** RFC 6266 header with an ASCII fallback, so names with Vietnamese letters survive every browser. */
     static String attachment(String fileName) {
         String ascii = fileName.replaceAll("[^A-Za-z0-9._-]", "_");
-        String encoded = java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8).replace("+",
+        String encoded = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+",
                 "%20");
         return "attachment; filename=\"" + ascii + "\"; filename*=UTF-8''" + encoded;
     }

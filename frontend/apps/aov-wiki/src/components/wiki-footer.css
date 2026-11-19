@@ -1,7 +1,11 @@
-/* One quiet band under every page; its text and its rule line up with the page column. */
+/*
+ * One quiet band under every page; its text and its rule line up with the page column. A page with a floating button
+ * sets --wiki-floating-button-space on the body, and the band leaves that much room under its last line.
+ */
 .wiki-site-footer {
   margin-top: auto;
   border-top: 1px solid var(--header-line);
+  padding-bottom: var(--wiki-floating-button-space, 0);
   background: var(--aov-wiki-bar);
 }
 .wiki-footer-main,
@@ -45,14 +49,13 @@
   padding: 0;
   list-style: none;
 }
-/* Links and the feedback button read as one list, whichever element each one has to be. */
-.wiki-footer-links li > a,
-.wiki-footer-links li > .wiki-feedback-trigger.with-label {
+/* The feedback button draws its link variant the same way (feedback-dialog.css), so the list reads as one. */
+.wiki-footer-links li > a {
   font: var(--wiki-type-meta);
   display: inline-flex;
   width: auto;
   height: auto;
-  min-height: 32px;
+  min-height: 36px;
   align-items: center;
   gap: 8px;
   border: 0;
@@ -65,8 +68,7 @@
 .wiki-footer-links li > a > svg:last-child:not(:first-child) {
   color: var(--aov-muted);
 }
-.wiki-footer-links li > a:is(:hover, :focus-visible),
-.wiki-footer-links li > .wiki-feedback-trigger.with-label:is(:hover, :focus-visible) {
+.wiki-footer-links li > a:is(:hover, :focus-visible) {
   background: none;
   color: var(--aov-accent);
 }
@@ -94,8 +96,7 @@
   .wiki-footer-links ul {
     flex-direction: column;
   }
-  .wiki-footer-links li > a,
-  .wiki-footer-links li > .wiki-feedback-trigger.with-label {
+  .wiki-footer-links li > a {
     min-height: 40px;
   }
 }

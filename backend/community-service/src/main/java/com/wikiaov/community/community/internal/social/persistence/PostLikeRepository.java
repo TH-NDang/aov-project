@@ -1,11 +1,19 @@
 package com.wikiaov.community.community.internal.social.persistence;
 
-import java.util.*;
-import org.springframework.data.jpa.repository.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 public interface PostLikeRepository extends JpaRepository<PostLike, UUID> {
 
-    /** Adds the like unless the account already liked the post, so concurrent repeats need no page lock. */
+    /**
+     * Adds the like unless the account already liked the post, so concurrent repeats need no page lock. Native for
+     * ON CONFLICT.
+     */
     @Modifying(flushAutomatically = true)
     @Query(value = """
             INSERT INTO community.post_like (id, post_id, actor, created_at)
@@ -15,7 +23,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, UUID> {
     int like(UUID id, UUID postId, String actor);
 
     @Modifying(flushAutomatically = true)
-    @Query(value = "DELETE FROM community.post_like WHERE post_id = :postId AND actor = :actor", nativeQuery = true)
+    @Query("delete from PostLike l where l.postId = :postId and l.actor = :actor")
     int unlike(UUID postId, String actor);
 
     long countByPostId(UUID postId);

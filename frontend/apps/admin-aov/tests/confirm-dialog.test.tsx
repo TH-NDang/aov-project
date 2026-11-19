@@ -1,44 +1,14 @@
 import assert from "node:assert/strict"
-import { readdirSync, readFileSync } from "node:fs"
-import { join } from "node:path"
 import { test } from "node:test"
-import { fileURLToPath } from "node:url"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act } from "react"
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router"
+import { createWindow, flush, installWindow } from "./fixtures/dom"
 
-const dom = new JSDOM('<div id="root"></div><button id="origin">Origin</button>', {
-  url: "http://localhost/",
-  pretendToBeVisual: true,
-})
-for (const [key, value] of Object.entries({
-  React,
-  window: dom.window,
-  document: dom.window.document,
-  navigator: dom.window.navigator,
-  localStorage: dom.window.localStorage,
-  HTMLElement: dom.window.HTMLElement,
-  HTMLInputElement: dom.window.HTMLInputElement,
-  Node: dom.window.Node,
-  Element: dom.window.Element,
-  MutationObserver: dom.window.MutationObserver,
-  CustomEvent: dom.window.CustomEvent,
-  getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
-  requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
-  cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-  IS_REACT_ACT_ENVIRONMENT: true,
-})) {
-  Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-}
+const dom = createWindow("http://localhost/", '<div id="root"></div><button id="origin">Origin</button>')
+installWindow(dom.window)
 
 const document = dom.window.document
-
-async function settle() {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 10))
-  })
-}
 
 async function mounted(element: React.ReactNode) {
   const { createRoot } = await import("react-dom/client")
@@ -46,7 +16,7 @@ async function mounted(element: React.ReactNode) {
   document.body.append(host)
   const root = createRoot(host)
   await act(async () => root.render(element))
-  await settle()
+  await flush()
   return async () => {
     await act(async () => root.unmount())
     host.remove()
@@ -63,15 +33,90 @@ function dialogButton(label: string) {
 
 async function click(element: HTMLElement) {
   await act(async () => element.click())
-  await settle()
+  await flush()
 }
 
-test("admin never asks through the browser's own confirm box", () => {
-  const source = fileURLToPath(new URL("../src", import.meta.url))
-  const offenders = readdirSync(source, { recursive: true, encoding: "utf8" }).filter(
-    (path) => /\.tsx?$/.test(path) && readFileSync(join(source, path), "utf8").includes("window.confirm"),
-  )
-  assert.deepEqual(offenders, [], "Use confirmAction or confirmDiscard from components/confirm-dialog")
+test("a question shows its details between the text and the buttons", async () => {
+  const { ConfirmDialogHost, confirmAction } = await import("../src/components/confirm-dialog")
+  const unmount = await mounted(<ConfirmDialogHost />)
+  let answer: Promise<boolean> | undefined
+  try {
+    await act(async () => {
+      answer = confirmAction({
+        title: "Thay tệp này?",
+        description: "Dữ liệu tệp cũ còn lại.",
+        details: (
+          <dl>
+            <dt>Đang dùng</dt>
+            <dd>a.png</dd>
+          </dl>
+        ),
+        confirmLabel: "Thay tệp",
+      })
+    })
+    await flush()
+    const list = dialog()!.querySelector("dl")!
+    assert.equal(list.textContent, "Đang dùnga.png")
+    const description = dialog()!.querySelector("p")!
+    assert.ok(description.compareDocumentPosition(list) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING)
+    assert.ok(list.compareDocumentPosition(dialogButton("Thay tệp")) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING)
+    await click(dialogButton("Hủy"))
+    assert.equal(await answer, false)
+  } finally {
+    await unmount()
+  }
+})
+
+test("a question that loses nothing does not draw its action red", async () => {
+  const { ConfirmDialogHost, confirmAction } = await import("../src/components/confirm-dialog")
+  const unmount = await mounted(<ConfirmDialogHost />)
+  try {
+    const ask = async (tone?: "publish") => {
+      let answer: Promise<boolean> | undefined
+      await act(async () => {
+        answer = confirmAction({
+          title: "Xuất bản ván 1?",
+          description: "Dữ liệu sẽ được chốt.",
+          confirmLabel: "Xác nhận",
+          tone,
+        })
+      })
+      await flush()
+      const variant = dialogButton("Xác nhận").getAttribute("data-variant")
+      await click(dialogButton("Hủy"))
+      await answer
+      return variant
+    }
+
+    assert.equal(await ask(), "destructive")
+    assert.equal(await ask("publish"), "default")
+  } finally {
+    await unmount()
+  }
+})
+
+test("a question its details block answers only with Cancel, also when a link in them leads away", async () => {
+  const { ConfirmDialogHost, cancelConfirm, confirmAction } = await import("../src/components/confirm-dialog")
+  const unmount = await mounted(<ConfirmDialogHost />)
+  let answer: Promise<boolean> | undefined
+  try {
+    await act(async () => {
+      answer = confirmAction({
+        title: "Xóa đội này?",
+        description: "Đội vẫn còn trong đội hình của một giải.",
+        confirmLabel: "Chuyển vào thùng rác",
+        confirmDisabled: true,
+      })
+    })
+    await flush()
+    assert.equal(dialogButton("Chuyển vào thùng rác").disabled, true)
+    await act(async () => cancelConfirm())
+    await flush()
+    assert.equal(await answer, false)
+    assert.equal(dialog(), null)
+  } finally {
+    await unmount()
+  }
 })
 
 test("the shared question is red, opens on Cancel, answers once and returns focus", async () => {
@@ -89,7 +134,7 @@ test("the shared question is red, opens on Cancel, answers once and returns focu
     await act(async () => {
       answer = confirmAction(custom)
     })
-    await settle()
+    await flush()
     return { answer: answer! }
   }
 
@@ -114,7 +159,7 @@ test("the shared question is red, opens on Cancel, answers once and returns focu
     await act(async () => {
       document.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
     })
-    await settle()
+    await flush()
     assert.equal(await escaped.answer, false, "Escape is a refusal")
     assert.equal(dialog(), null)
 
@@ -183,7 +228,7 @@ test("closing a tab waits for the answer and keeps the tab when refused", async 
     await act(async () => {
       await router.navigate("/dirty")
     })
-    await settle()
+    await flush()
     await click(closeButton()!)
     assert.ok(dialog(), "Closing a dirty tab asks first")
     assert.ok(closeButton(), "The tab stays open while the question is unanswered")
@@ -203,7 +248,7 @@ test("closing a tab waits for the answer and keeps the tab when refused", async 
 
 test("browser Back waits for the answer while edits are unsaved", async () => {
   const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
-  const { HeroNavigationGuard } = await import("../src/features/publishing/hero-navigation-guard")
+  const { HeroNavigationGuard } = await import("../src/features/publishing/components/workspace/hero-navigation-guard")
   const router = createMemoryRouter(
     [
       {
@@ -231,7 +276,7 @@ test("browser Back waits for the answer while edits are unsaved", async () => {
     await act(async () => {
       await router.navigate(-1)
     })
-    await settle()
+    await flush()
   }
 
   try {

@@ -2,7 +2,9 @@ package com.wikiaov.hero.internal.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroContent.Skill;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillKind;
+import com.wikiaov.hero.internal.domain.HeroContent.SkillTranslation;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;

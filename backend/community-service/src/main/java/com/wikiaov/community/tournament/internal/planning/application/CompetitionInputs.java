@@ -4,11 +4,23 @@ import com.wikiaov.community.tournament.CompetitionCircuits;
 import com.wikiaov.community.tournament.CompetitionOrganizations;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
-import com.wikiaov.community.tournament.internal.persistence.*;
-import com.wikiaov.community.tournament.internal.planning.domain.*;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionPlan;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionResults;
+import com.wikiaov.community.tournament.internal.planning.domain.CompetitionSnapshot;
+import com.wikiaov.community.tournament.internal.registry.persistence.PlayerRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.SeriesRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.TeamRepository;
+import com.wikiaov.community.tournament.internal.registry.persistence.TournamentRepository;
 import com.wikiaov.community.tournament.internal.roster.persistence.RosterRepository;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -74,12 +86,14 @@ public class CompetitionInputs {
         }
         var seriesMap = new LinkedHashMap<UUID, Series>();
         for (var match : plan.matches()) {
-            if (match.seriesId() == null)
+            if (match.seriesId() == null) {
                 continue;
+            }
             var row = series.findById(match.seriesId()).orElseThrow(TournamentErrors::missing);
             RegistryArchivePolicy.requireActive(row);
-            if (!id.equals(row.getContent().tournamentId()))
+            if (!id.equals(row.getContent().tournamentId())) {
                 throw TournamentErrors.invalid("Series belongs to another competition.");
+            }
             seriesMap.put(row.getId(), row.getContent());
         }
         var members = rosters.search(id, null, null, "ACTIVE", Pageable.unpaged()).stream()

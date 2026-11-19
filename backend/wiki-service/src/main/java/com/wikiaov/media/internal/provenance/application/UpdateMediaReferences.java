@@ -44,9 +44,10 @@ public class UpdateMediaReferences {
                 .filter(row -> sourceId.equals(row.getId())).findFirst()
                 .orElseThrow(
                         () -> new ApiException(MediaErrorCode.MEDIA_SOURCE_NOT_FOUND, "Media source does not exist."));
-        if (source.getReferenceVersion() != expectedVersion)
+        if (source.getReferenceVersion() != expectedVersion) {
             throw new ApiException(MediaErrorCode.MEDIA_SOURCE_VERSION_CONFLICT,
                     "Media references have changed. Reload before saving.");
+        }
 
         var before = MediaWritePolicy.metadata("ownerPageId", source.getOwnerPageId(), "relatedPageId",
                 source.getRelatedPageId());

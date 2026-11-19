@@ -9,9 +9,9 @@ import {
   DialogTrigger,
 } from "@aov/ui/components/public-overlay"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
-import { useWikiContext, wikiText } from "../context/wiki-context"
+import { useWikiContext, useWikiText } from "../context/wiki-context"
 import { WikiIcon } from "./wiki-icon"
-import { ContactRequestError, sendContactRequest } from "../features/contact/contact-request"
+import { ContactRequestError, sendContactRequest } from "../lib/contact-request"
 import { FeedbackImages } from "./feedback-images"
 import "./feedback-dialog.css"
 
@@ -20,7 +20,8 @@ interface FeedbackProps {
   target?: string
   identity?: string
   revision?: string
-  showLabel?: boolean
+  /** `link` draws the trigger as one more link of a list of links, with its name: the footer's. */
+  variant?: "icon" | "link"
   fields?: { label: string; value: string; multiline?: boolean }[]
   onCloseInline?: () => void
 }
@@ -65,13 +66,13 @@ function Feedback({
   target,
   identity,
   revision,
-  showLabel,
+  variant = "icon",
   fields = [],
   onCloseInline,
   path,
 }: FeedbackProps & { path: string }) {
   const scope = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const text = useWikiText()
   const title = target ? text("Đề xuất chỉnh sửa", "Suggest an edit") : text("Góp ý trang này", "Page feedback")
   const [open, setOpen] = useState(false)
   const [field, setField] = useState(0)
@@ -306,7 +307,7 @@ function Feedback({
   )
   if (onCloseInline)
     return (
-      <section aria-label={title} className="wiki-warehouse-suggestion">
+      <section aria-label={title} className="wiki-feedback-inline">
         <p className="wiki-feedback-note">{reviewNote}</p>
         {content}
       </section>
@@ -325,18 +326,19 @@ function Feedback({
       <DialogTrigger asChild>
         <button
           type="button"
-          className={showLabel ? "wiki-feedback-trigger with-label" : "wiki-feedback-trigger"}
+          className="wiki-feedback-trigger"
+          data-variant={variant}
           title={target ? `${title} · ${target}` : title}
           aria-label={target ? `${title} · ${target}` : title}
         >
           <WikiIcon name="feedback" size={17} />
-          {showLabel && title}
+          {variant === "link" && title}
         </button>
       </DialogTrigger>
       <DialogContent className="wiki-feedback-dialog" showCloseButton={false}>
         <div className="wiki-feedback-heading">
           <DialogTitle>{title}</DialogTitle>
-          <DialogClose className="wiki-feedback-close" aria-label={scope.t("close")} disabled={busy}>
+          <DialogClose className="wiki-feedback-close" aria-label={text("Đóng", "Close")} disabled={busy}>
             <WikiIcon name="close" size={18} />
           </DialogClose>
         </div>

@@ -27,10 +27,12 @@ public enum UserErrorCode implements ApiErrorCode {
         this.status = status;
     }
 
+    @Override
     public HttpStatus status() {
         return status;
     }
 
+    @Override
     public String title() {
         return name();
     }

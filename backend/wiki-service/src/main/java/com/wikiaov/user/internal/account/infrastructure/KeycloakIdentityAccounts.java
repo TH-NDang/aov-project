@@ -69,8 +69,9 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
     KeycloakIdentityAccounts(KeycloakAccountProperties properties, String backchannel, Clock clock,
             RestClient.Builder builder) {
         Matcher realm = ISSUER.matcher(backchannel.replaceAll("/+$", ""));
-        if (!realm.matches())
+        if (!realm.matches()) {
             throw new IllegalArgumentException("The identity provider address must be a Keycloak realm URL");
+        }
         String origin = realm.group(1);
         this.properties = properties;
         this.realmUrl = origin + "/realms/" + realm.group(2);
@@ -92,8 +93,9 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
                 .headers(headers -> headers.setBearerAuth(token)).retrieve().body(KcUser.class));
         KcCredential[] credentials = admin(token -> client.get().uri(adminUrl + "/users/{id}/credentials", subject)
                 .headers(headers -> headers.setBearerAuth(token)).retrieve().body(KcCredential[].class));
-        if (user == null || credentials == null)
+        if (user == null || credentials == null) {
             throw unavailable();
+        }
 
         List<KcCredential> list = Arrays.asList(credentials);
         Password password = list.stream().filter(credential -> "password".equals(credential.type())).findFirst()
@@ -126,8 +128,9 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
     public List<Session> sessions(String subject) {
         KcSession[] sessions = admin(token -> client.get().uri(adminUrl + "/users/{id}/sessions", subject)
                 .headers(headers -> headers.setBearerAuth(token)).retrieve().body(KcSession[].class));
-        if (sessions == null)
+        if (sessions == null) {
             throw unavailable();
+        }
         return Arrays.stream(sessions).filter(session -> session.id() != null)
                 .map(session -> new Session(session.id(), blankToNull(session.ipAddress()),
                         instant(session.start()), instant(session.lastAccess()),
@@ -137,8 +140,9 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
 
     @Override
     public Optional<Map<String, Device>> devices(String callerAccessToken) {
-        if (properties.clientSecret().isBlank())
+        if (properties.clientSecret().isBlank()) {
             return Optional.empty();
+        }
         try {
             var form = new LinkedMultiValueMap<String, String>();
             form.add("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
@@ -150,8 +154,9 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
             form.add("audience", "account");
             TokenBody exchanged = client.post().uri(realmUrl + "/protocol/openid-connect/token")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED).body(form).retrieve().body(TokenBody.class);
-            if (exchanged == null || exchanged.accessToken() == null)
+            if (exchanged == null || exchanged.accessToken() == null) {
                 return Optional.empty();
+            }
 
             KcDevice[] devices = client.get().uri(realmUrl + "/account/sessions/devices")
                     .accept(MediaType.APPLICATION_JSON)
@@ -183,13 +188,15 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
     private static Map<String, Device> bySession(KcDevice[] devices) {
         var result = new HashMap<String, Device>();
         for (KcDevice device : devices) {
-            if (device == null || device.sessions() == null)
+            if (device == null || device.sessions() == null) {
                 continue;
+            }
             for (KcDeviceSession session : device.sessions()) {
-                if (session != null && session.id() != null)
+                if (session != null && session.id() != null) {
                     result.put(session.id(), new Device(blankToNull(session.browser()), blankToNull(device.os()),
                             blankToNull(device.osVersion()), blankToNull(device.device()),
                             Boolean.TRUE.equals(device.mobile())));
+                }
             }
         }
         return result;
@@ -197,8 +204,9 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
 
     /** Runs an Admin API call with the service-account token, renewing it once when Keycloak rejects it. */
     private <T> T admin(Function<String, T> call) {
-        if (properties.clientSecret().isBlank())
+        if (properties.clientSecret().isBlank()) {
             throw unavailable();
+        }
         try {
             try {
                 return call.apply(serviceToken());
@@ -214,20 +222,23 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
 
     private String serviceToken() {
         ServiceToken cached = serviceToken;
-        if (cached != null && cached.expiresAt().isAfter(clock.instant().plusSeconds(30)))
+        if (cached != null && cached.expiresAt().isAfter(clock.instant().plusSeconds(30))) {
             return cached.value();
+        }
         synchronized (this) {
             cached = serviceToken;
-            if (cached != null && cached.expiresAt().isAfter(clock.instant().plusSeconds(30)))
+            if (cached != null && cached.expiresAt().isAfter(clock.instant().plusSeconds(30))) {
                 return cached.value();
+            }
             var form = new LinkedMultiValueMap<String, String>();
             form.add("grant_type", "client_credentials");
             form.add("client_id", properties.clientId());
             form.add("client_secret", properties.clientSecret());
             TokenBody body = client.post().uri(realmUrl + "/protocol/openid-connect/token")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED).body(form).retrieve().body(TokenBody.class);
-            if (body == null || body.accessToken() == null || body.expiresIn() <= 0)
+            if (body == null || body.accessToken() == null || body.expiresIn() <= 0) {
                 throw unavailable();
+            }
             serviceToken = new ServiceToken(body.accessToken(), clock.instant().plusSeconds(body.expiresIn()));
             return body.accessToken();
         }
@@ -237,8 +248,9 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
         String policy = "invalidPasswordMessage";
         try (body) {
             Matcher matcher = POLICY_KEY.matcher(new String(body.readNBytes(4096), StandardCharsets.UTF_8));
-            if (matcher.find())
+            if (matcher.find()) {
                 policy = matcher.group(1);
+            }
         } catch (IOException exception) {
             // Keep the generic policy key.
         }
@@ -256,8 +268,9 @@ class KeycloakIdentityAccounts implements IdentityAccounts {
     }
 
     private static @Nullable Integer number(Pattern pattern, @Nullable String data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
         Matcher matcher = pattern.matcher(data);
         return matcher.find() ? Integer.valueOf(matcher.group(1)) : null;
     }

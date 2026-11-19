@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import {
   getReferenceInputSelection,
@@ -12,6 +11,7 @@ import {
   setReferenceInputSelection,
 } from "@aov/ui/lib/reference-input-dom"
 import type { EntityReferenceInputHandle } from "@aov/ui/components/entity-reference-input"
+import { createWindow, installWindow, waitFor } from "./fixtures/dom"
 
 const heroId = "00000000-0000-4000-8000-000000000001"
 const token = `<ref=skill:${heroId}.skill-1-2>Phi tiêu</ref>`
@@ -34,7 +34,7 @@ const skill: EntityReference = {
 }
 
 test("reference DOM maps atomic token boundaries without including icon or owner text", () => {
-  const dom = new JSDOM('<div id="root"></div>')
+  const dom = createWindow()
   const root = dom.window.document.getElementById("root")!
   const chip = dom.window.document.createElement("span")
   chip.setAttribute("data-reference-token", token)
@@ -58,24 +58,10 @@ test("reference DOM maps atomic token boundaries without including icon or owner
   dom.window.close()
 })
 
-test("IME changes remain undecorated until commit, overflow rolls back, and disabled fieldsets reject mutations", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    Event: dom.window.Event,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+test("IME changes remain undecorated until commit, overflow rolls back, and disabled fieldsets reject mutations", async (t) => {
+  const dom = createWindow()
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { EntityReferenceInput } = await import("@aov/ui/components/entity-reference-input")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -141,14 +127,22 @@ test("IME changes remain undecorated until commit, overflow rolls back, and disa
     assert.equal(input().textContent, "abc")
     assert.equal(ends, 1)
     await act(async () => input().dispatchEvent(new dom.window.CompositionEvent("compositionstart", { bubbles: true })))
-    await type("abcđ")
-    assert.equal(saved, "abcđ")
-    await act(async () => new Promise((resolve) => setTimeout(resolve, 400)))
-    assert.equal(highlights.size, 0, "Composition pauses do not decorate unfinished input")
+    // Recognition runs 350 ms after the text changes; the clock moves past it without waiting.
+    t.mock.timers.enable({ apis: ["setTimeout"] })
+    try {
+      await type("abcđ")
+      assert.equal(saved, "abcđ")
+      await act(async () => t.mock.timers.tick(400))
+      assert.equal(highlights.size, 0, "Composition pauses do not decorate unfinished input")
+    } finally {
+      t.mock.timers.reset()
+    }
     await act(async () => input().dispatchEvent(new dom.window.CompositionEvent("compositionend", { bubbles: true })))
     assert.equal(saved, "abcđ")
-    await act(async () => new Promise((resolve) => setTimeout(resolve, 400)))
-    assert.equal(highlights.size, 1, "Finishing composition schedules recognition even when the value is unchanged")
+    await waitFor(
+      () => highlights.size === 1,
+      "Finishing composition schedules recognition even when the value is unchanged",
+    )
     assert.equal(input().textContent, "abcđ")
     const before = changes
     await act(async () => root.render(<Harness disabled />))
@@ -160,31 +154,14 @@ test("IME changes remain undecorated until commit, overflow rolls back, and disa
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 
 test("reference input keeps chips atomic, stable during typing and hydration, and serializes clipboard/newlines safely", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    MutationObserver: dom.window.MutationObserver,
-    Event: dom.window.Event,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  const dom = createWindow()
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
   const { EntityReferenceInput } = await import("@aov/ui/components/entity-reference-input")
   const root = createRoot(dom.window.document.getElementById("root")!)
@@ -298,15 +275,12 @@ test("reference input keeps chips atomic, stable during typing and hydration, an
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 })
 
 test("icons beside recognised names are decoration: the source, the caret and the text around them stay as typed", async () => {
-  const dom = new JSDOM('<div id="root"></div>')
+  const dom = createWindow()
   const root = dom.window.document.getElementById("root")!
   const { createEntityIndex } = await import("@aov/ui/lib/entity-rich-text")
   const { decorateReferences, passiveReferenceHighlights, removeDecorations } =

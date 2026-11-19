@@ -1,12 +1,12 @@
 import { lazy, Suspense } from "react"
 import { useSearchParams } from "react-router"
-import { ImageManagementPage } from "../media/image-management-page"
+import { ImageManagementPage } from "../media/pages/image-management-page"
 import { readFileTab } from "./file-tabs"
 
 const SourceFilesPage = lazy(() =>
   import("./source-files-page").then((module) => ({ default: module.SourceFilesPage })),
 )
-const StoragePage = lazy(() => import("./storage-page").then((module) => ({ default: module.StoragePage })))
+const R2UsagePage = lazy(() => import("./r2-usage-page").then((module) => ({ default: module.R2UsagePage })))
 
 /** One entry point for every file of the project: public images, private source files and R2 usage. */
 export function FileManagementPage() {
@@ -21,7 +21,7 @@ export function FileManagementPage() {
         </p>
       }
     >
-      {tab === "sources" ? <SourceFilesPage /> : <StoragePage />}
+      {tab === "sources" ? <SourceFilesPage /> : <R2UsagePage />}
     </Suspense>
   )
 }

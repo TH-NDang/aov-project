@@ -1,5 +1,4 @@
 import type { RowData } from "@tanstack/react-table"
-export { facetFilterFn } from "./table-features"
 import type { DataColumn as Column } from "./table-features"
 import type { ComponentType } from "react"
 import { Check, PlusCircle } from "lucide-react"
@@ -88,7 +87,7 @@ export function FacetedFilter<TData extends RowData, TValue>({
                   <CommandItem key={option.value} value={option.label} onSelect={() => toggle(option.value)}>
                     <div
                       className={cn(
-                        "flex size-4 items-center justify-center rounded-[4px] border",
+                        "flex size-4 items-center justify-center rounded-sm border",
                         isSelected
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-input [&_svg]:invisible",

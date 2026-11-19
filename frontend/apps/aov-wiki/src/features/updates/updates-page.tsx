@@ -1,3 +1,4 @@
+import { localeText } from "@aov/ui/lib/locale-text"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { changeKindIcon, changeKindIcons } from "@aov/ui/components/change-kind-icons"
@@ -7,11 +8,11 @@ import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { patchChangeLabel } from "../../components/patch-changes-row"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
-import { useWikiContext, wikiText, type WikiPatch } from "../../context/wiki-context"
+import { useWikiContext, wikiText, type WikiPatch, useWikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { changeSetKind } from "../../lib/wiki-change-format"
-import { heroCatalogQuery } from "../hero/hero-api"
-import { patchChangesQuery, patchReleasesQuery, type PatchChangeRow, type PatchRelease } from "./updates-api"
+import { heroCatalogQuery } from "../../lib/hero-api"
+import { patchChangesQuery, patchReleasesQuery, type PatchChangeRow, type PatchRelease } from "../../lib/updates-api"
 import { ReleaseDate } from "./release-date"
 import "./updates.css"
 
@@ -43,7 +44,7 @@ function PatchRow({
 }) {
   const scope = useWikiContext()
   const { locale, href } = scope
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const faceCount = FACES[usePageLayout()]
   // The same notes the patch page reads, so opening the patch afterwards needs no second request.
   const changes = useQuery(patchChangesQuery(scope, release, "HERO"))
@@ -121,7 +122,8 @@ function PatchRow({
 
 export function UpdatesPage() {
   const scope = useWikiContext()
-  const { locale, t } = scope
+  const { locale } = scope
+  const t = localeText(locale)
   const releases = useQuery(patchReleasesQuery(scope))
   // Names and portraits come from the hero list the home page and the hero library already keep.
   const catalog = useQuery(heroCatalogQuery(scope))
@@ -162,7 +164,7 @@ export function UpdatesPage() {
   return (
     <>
       <CatalogHeading
-        title={t("updates")}
+        title={t("Ghi chú cập nhật", "Patch notes")}
         lead={wikiText(
           locale,
           "Những gì đã thay đổi trong từng phiên bản, theo ghi chú đã được đối chiếu với nguồn công bố.",
@@ -171,7 +173,7 @@ export function UpdatesPage() {
       />
       {releases.isPending ? (
         <div className="wiki-updates-skeleton" role="status">
-          <span className="sr-only">{t("loading")}</span>
+          <span className="sr-only">{t("Đang tải…", "Loading…")}</span>
           <span />
           <span />
           <span />
@@ -180,7 +182,7 @@ export function UpdatesPage() {
         <div role="status" className="wiki-updates-state">
           <p>{wikiText(locale, "Chưa tải được danh sách cập nhật.", "Could not load the updates.")}</p>
           <button type="button" onClick={() => void releases.refetch()}>
-            {t("retry")}
+            {t("Thử lại", "Retry")}
           </button>
         </div>
       ) : !ordered.length ? (
@@ -193,7 +195,8 @@ export function UpdatesPage() {
             <section key={seasonId} className="wiki-updates-season">
               <header className="wiki-updates-heading">
                 <h2>
-                  {seasons.find((season) => season.id === seasonId)?.displayName ?? t("updates")}
+                  {seasons.find((season) => season.id === seasonId)?.displayName ??
+                    t("Ghi chú cập nhật", "Patch notes")}
                   <small>
                     {wikiText(
                       locale,

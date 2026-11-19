@@ -3,10 +3,10 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
-import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { SkillImage } from "../src/features/publishing/skill-artwork"
-import type { Skill } from "../src/features/publishing/types"
+import type { SkillImage } from "../src/features/publishing/components/skills/skill-artwork"
+import type { Skill } from "@/lib/hero-types"
+import { createWindow, installWindow, waitFor, withGlobals } from "./fixtures/dom"
 
 const skill = (
   key = "skill-1-1",
@@ -36,16 +36,8 @@ const image = (assetId: string, sourceSlot: number, variantNo: number, skillKey:
 const library = [image("lib-1-1", 1, 1), image("lib-3-2", 3, 2), image("lib-2-1-a", 2, 1), image("lib-2-1-b", 2, 1)]
 
 /** Source modules compile with classic JSX here, so module-level JSX needs a global React while loading. */
-async function loadIcon() {
-  const original = Object.getOwnPropertyDescriptor(globalThis, "React")
-  Object.defineProperty(globalThis, "React", { configurable: true, writable: true, value: React })
-  try {
-    return await import("../src/features/publishing/comparison-skill-icon")
-  } finally {
-    if (original) Object.defineProperty(globalThis, "React", original)
-    else Reflect.deleteProperty(globalThis, "React")
-  }
-}
+const loadIcon = () =>
+  withGlobals({ React }, () => import("../src/features/publishing/components/skills/comparison-skill-icon"))
 
 test("a skill without an icon in either version takes its library picture by the skills view rule, or none", async () => {
   const { comparisonLibraryImage: pick } = await loadIcon()
@@ -66,25 +58,14 @@ test("a skill without an icon in either version takes its library picture by the
 })
 
 test("comparison skill icons share one library request, keep bound images and show honest missing icons", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/hero" })
+  const dom = createWindow("http://localhost/publishing/hero")
   Object.defineProperty(dom.window, "matchMedia", {
     configurable: true,
     value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
   })
-  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let restoreGlobals = () => {}
   const requests: string[] = []
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    BroadcastChannel: undefined,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
+  restoreGlobals = installWindow(dom.window)
   // The API client keeps the fetch it found when it loaded, so the fake answers through the shared dispatcher.
   const restoreFetch = setFetch(async (input) => {
     const path = String(input).replace("/api/wiki/v1", "")
@@ -94,21 +75,15 @@ test("comparison skill icons share one library request, keep bound images and sh
     return Response.json({ code: "NOT_FOUND" }, { status: 404 })
   })
   const { createRoot } = await import("react-dom/client")
-  const { ComparisonSkillIcon } = await import("../src/features/publishing/comparison-skill-icon")
+  const { ComparisonSkillIcon } = await import("../src/features/publishing/components/skills/comparison-skill-icon")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   for (const id of ["old", "new", "lib-1-1", "lib-3-2"])
-    client.setQueryData(["hero-content-asset", id], { currentUrl: `/media/${id}.png` })
+    client.setQueryData(["media", "asset", id, "content"], { currentUrl: `/media/${id}.png` })
   const document = dom.window.document
   const render = async (children: React.ReactNode) =>
     act(async () => root.render(<QueryClientProvider client={client}>{children}</QueryClientProvider>))
-  const waitFor = async (condition: () => boolean) => {
-    for (let count = 0; count < 100 && !condition(); count++)
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5))
-      })
-    assert.ok(condition())
-  }
+
   const sources = () => [...document.querySelectorAll("img")].map((picture) => picture.getAttribute("src"))
   try {
     await render(<ComparisonSkillIcon before={null} after={null} heroId="hero-1" />)
@@ -154,8 +129,6 @@ test("comparison skill icons share one library request, keep bound images and sh
     client.clear()
     restoreFetch()
     dom.window.close()
-    for (const [key, descriptor] of originals)
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
+    restoreGlobals()
   }
 })

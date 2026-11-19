@@ -1,16 +1,16 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import React, { act } from "react"
-import { JSDOM } from "jsdom"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { act } from "react"
 import type { DocumentView, TeamContent } from "@aov/community-contracts"
+import { inDom, QuietResizeObserver, render, waitFor, withGlobals } from "./fixtures/dom"
 
-const channel = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
-Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
-const { activityLabel, recordReason, regionsNamedBy, tournamentTiming } =
-  await import("../src/features/tournaments/record-reason")
-const { createTournamentApi, tournamentApi } = await import("../src/features/tournaments/tournament-api")
-if (channel) Object.defineProperty(globalThis, "BroadcastChannel", channel)
+const [{ activityLabel, recordReason, regionsNamedBy, tournamentTiming }, { createTournamentApi, tournamentApi }] =
+  await withGlobals({ BroadcastChannel: undefined }, () =>
+    Promise.all([
+      import("../src/features/tournaments/model/record-reason"),
+      import("../src/features/tournaments/api/tournament-api"),
+    ]),
+  )
 
 const NOW = new Date("2026-11-07T05:00:00Z")
 const ZONE = "Asia/Ho_Chi_Minh"
@@ -85,51 +85,9 @@ test("lists ask the server for its order and walking a whole list does not pay f
   assert.equal(seen[4].searchParams.has("alsoRegions"), false)
 })
 
-async function withDom(run: (document: Document, window: JSDOM["window"]) => Promise<void>) {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost:5175/tournaments", pretendToBeVisual: true })
-  const values = {
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    Event: dom.window.Event,
-    HTMLInputElement: dom.window.HTMLInputElement,
-    HTMLButtonElement: dom.window.HTMLButtonElement,
-    NodeFilter: dom.window.NodeFilter,
-    MutationObserver: dom.window.MutationObserver,
-    CustomEvent: dom.window.CustomEvent,
-    MouseEvent: dom.window.MouseEvent,
-    getComputedStyle: dom.window.getComputedStyle,
-    requestAnimationFrame: dom.window.requestAnimationFrame,
-    cancelAnimationFrame: dom.window.cancelAnimationFrame,
-    ResizeObserver: class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    },
-    IS_REACT_ACT_ENVIRONMENT: true,
-  }
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries(values)) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  try {
-    await run(dom.window.document, dom.window)
-  } finally {
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete (globalThis as Record<string, unknown>)[key]
-    }
-    dom.window.close()
-  }
-}
-
 test("the picker shows the server's rows with their reasons, leaves out what is taken and passes its context on", async () => {
-  await withDom(async (document, window) => {
+  const page = { url: "http://localhost:5175/tournaments", globals: () => ({ ResizeObserver: QuietResizeObserver }) }
+  await inDom(page, async ({ document, window }) => {
     const asked: unknown[] = []
     const pick = tournamentApi.pick
     tournamentApi.pick = (async (_kind: string, filters: unknown) => {
@@ -152,39 +110,29 @@ test("the picker shows the server's rows with their reasons, leaves out what is 
     }) as never
     const chosen: string[] = []
     // Radix decides at import time whether a document exists, so this comes after the DOM above.
-    const { RecordPicker } = await import("../src/features/tournaments/record-picker")
-    const { createRoot } = await import("react-dom/client")
-    const root = createRoot(document.getElementById("root")!)
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const { RecordPicker } = await import("../src/features/tournaments/components/record-picker")
     try {
-      await act(async () =>
-        root.render(
-          <QueryClientProvider client={client}>
-            <RecordPicker
-              kind="teams"
-              value=""
-              label="Thêm đội"
-              context={{ tournamentId: "event" }}
-              exclude={["taken"]}
-              onChange={(id) => chosen.push(id)}
-            />
-          </QueryClientProvider>,
-        ),
+      const view = await render(
+        <RecordPicker
+          kind="teams"
+          value=""
+          label="Thêm đội"
+          context={{ tournamentId: "event" }}
+          exclude={["taken"]}
+          onChange={(id) => chosen.push(id)}
+        />,
       )
       assert.equal(asked.length, 0, "nothing loads until the picker is opened")
 
-      const trigger = document.querySelector("button")!
+      const trigger = view.container.querySelector("button")!
       await act(async () => {
         trigger.dispatchEvent(new window.MouseEvent("click", { bubbles: true }))
-        await new Promise((resolve) => setTimeout(resolve, 20))
       })
+      await waitFor(() => asked.length > 0, "Opening the picker asks for the first page")
       assert.deepEqual(asked[0], { q: "", tournamentId: "event", page: 0 })
 
       const options = () => [...document.querySelectorAll<HTMLButtonElement>(".tournament-picker-options > button")]
-      for (let attempt = 0; attempt < 50 && !options().length; attempt++)
-        await act(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 20))
-        })
+      await waitFor(() => options().length > 0, "The picker lists the teams")
       const buttons = options()
       const text = buttons.map((button) => button.textContent)
       assert.equal(buttons.length, 2, "the row already taken is left out")
@@ -194,8 +142,6 @@ test("the picker shows the server's rows with their reasons, leaves out what is 
       await act(async () => buttons[0].dispatchEvent(new window.MouseEvent("click", { bubbles: true })))
       assert.deepEqual(chosen, ["ours"])
     } finally {
-      await act(async () => root.unmount())
-      client.clear()
       tournamentApi.pick = pick
     }
   })

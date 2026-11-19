@@ -2,18 +2,27 @@ package com.wikiaov.patch.internal.context.application;
 
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.internal.application.response.CatalogContextView;
-import com.wikiaov.patch.internal.application.response.CatalogContextView.*;
+import com.wikiaov.patch.internal.application.response.CatalogContextView.Current;
+import com.wikiaov.patch.internal.application.response.CatalogContextView.Language;
+import com.wikiaov.patch.internal.application.response.CatalogContextView.Patch;
+import com.wikiaov.patch.internal.application.response.CatalogContextView.Season;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository.CatalogDate;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository.CatalogPatch;
 import com.wikiaov.patch.internal.context.persistence.SeasonUpdatesRepository;
 import com.wikiaov.patch.internal.ruleset.application.Regions;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogLocales;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,6 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class CatalogContexts {
+    /** The interface languages the Wiki offers, as locale codes; the frontend names each language itself. */
+    private static final List<String> LOCALES = List.of(CatalogLocales.DEFAULT, CatalogLocales.ENGLISH);
+
     private final GameplayContexts contexts;
     private final GameplayContextRepository repository;
     private final SeasonUpdatesRepository translations;
@@ -38,9 +50,10 @@ public class CatalogContexts {
     }
 
     public CatalogContextView read(String region, String locale) {
-        if (!Set.of("vi-VN", "en-US").contains(locale))
+        if (!LOCALES.contains(locale)) {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                     "Choose a supported catalog locale: vi-VN or en-US.");
+        }
 
         var now = clock.instant();
         var context = contexts.resolve(region, now);
@@ -55,18 +68,20 @@ public class CatalogContexts {
         Map<UUID, String> titles = new LinkedHashMap<>();
         if (!patches.isEmpty()) {
             var ids = patches.stream().map(CatalogPatch::getId).toList();
-            for (var date : repository.catalogDates(context.regionId(), ids, now))
+            for (var date : repository.catalogDates(context.regionId(), ids, now)) {
                 dates.putIfAbsent(date.getPatchVariantId(), regionalDate(date, zone));
+            }
             var patchIds = patches.stream().map(CatalogPatch::getPatchId).distinct().toList();
-            for (var text : translations.preferredTexts(patchIds, locale))
-                titles.putIfAbsent(text.getPatchId(), text.getTitle());
+            translations.texts(patchIds).stream()
+                    .sorted(CatalogLocales.preference(locale, SeasonUpdatesRepository.Text::getLocale))
+                    .forEach(text -> titles.putIfAbsent(text.getPatchId(), text.getTitle()));
         }
 
         var bySeason = patches.stream().filter(patch -> patch.getSeasonId() != null)
                 .collect(Collectors.groupingBy(CatalogPatch::getSeasonId));
         var seasons = bySeason.values().stream().map(values -> season(values, currentSeason, dates, titles))
                 .sorted(Comparator.comparingLong(Season::ordinal).reversed().thenComparing(Season::code)).toList();
-        return new CatalogContextView(markets, languages(locale), seasons,
+        return new CatalogContextView(markets, LOCALES.stream().map(Language::new).toList(), seasons,
                 new Current(context.rulesetId(), currentSeason, context.patchVariantId()));
     }
 
@@ -87,11 +102,5 @@ public class CatalogContexts {
         return date.getEffectiveOn() == null
                 ? date.getEffectiveAt().atZone(zone).toLocalDate()
                 : date.getEffectiveOn();
-    }
-
-    private static List<Language> languages(String locale) {
-        boolean vietnamese = locale.equals("vi-VN");
-        return List.of(new Language("vi-VN", vietnamese ? "Tiếng Việt" : "Vietnamese", "Tiếng Việt"),
-                new Language("en-US", vietnamese ? "Tiếng Anh" : "English", "English"));
     }
 }

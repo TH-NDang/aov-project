@@ -1,12 +1,30 @@
 package com.wikiaov.community.community.internal.web;
 
-import com.wikiaov.community.community.internal.application.PageViews.*;
+import com.wikiaov.community.community.internal.application.PageViews.Claim;
+import com.wikiaov.community.community.internal.application.PageViews.Comment;
+import com.wikiaov.community.community.internal.application.PageViews.FeedPost;
+import com.wikiaov.community.community.internal.application.PageViews.Handover;
+import com.wikiaov.community.community.internal.application.PageViews.Liking;
+import com.wikiaov.community.community.internal.application.PageViews.Live;
+import com.wikiaov.community.community.internal.application.PageViews.Member;
+import com.wikiaov.community.community.internal.application.PageViews.Notification;
+import com.wikiaov.community.community.internal.application.PageViews.Post;
+import com.wikiaov.community.community.internal.application.PageViews.Profile;
+import com.wikiaov.community.community.internal.application.PageViews.Report;
+import com.wikiaov.community.community.internal.application.PageViews.TeamAffiliation;
+import com.wikiaov.community.community.internal.application.PageViews.UnreadCount;
 import com.wikiaov.community.community.internal.domain.PageContent;
-import com.wikiaov.community.platform.*;
-import java.util.*;
-import org.springframework.web.bind.annotation.*;
+import com.wikiaov.community.platform.PageLimits;
+import com.wikiaov.community.platform.PageSlice;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-@RequestMapping(version = "1")
+@Tag(name = "pages")
 public interface PageApi {
 
     record CreatePage(
@@ -115,184 +133,181 @@ public interface PageApi {
     ) {
     }
 
-    @GetMapping(ApiPaths.ROOT + "/pages")
-    Slice<Profile> pages(@RequestParam(required = false) String kind, @RequestParam(defaultValue = "") String q,
-            @RequestParam(required = false) String personRole,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+    @Operation(operationId = "pageApi_pages", summary = "List published pages")
+    PageSlice<Profile> pages(String kind, String q, String personRole, @Min(0) int page,
+            @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @GetMapping(ApiPaths.ROOT + "/pages/{id}")
-    Profile page(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_page", summary = "Read a published page")
+    Profile page(UUID id);
 
-    @GetMapping(ApiPaths.ROOT + "/pages/by-code/{code}")
-    Profile byCode(@PathVariable String code);
+    @Operation(operationId = "pageApi_byCode", summary = "Read a published page by its code")
+    Profile byCode(String code);
 
-    @GetMapping(ApiPaths.ROOT + "/admin/pages")
-    Slice<Profile> adminPages(@RequestParam(required = false) String kind, @RequestParam(defaultValue = "") String q,
-            @RequestParam(required = false) String personRole,
-            @RequestParam(defaultValue = "") String country,
-            @RequestParam(defaultValue = "") List<UUID> entityIds,
-            @RequestParam(defaultValue = "RECENT") String sort,
-            @RequestParam(required = false) UUID relatedPageId,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+    @Operation(operationId = "pageApi_adminPages", summary = "List pages for editors")
+    PageSlice<Profile> adminPages(String kind, String q, String personRole, String country, List<UUID> entityIds,
+            String sort, UUID relatedPageId, @Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @GetMapping(ApiPaths.ROOT + "/admin/pages/{id}")
-    Profile adminPage(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_byEntity", summary = "Read the published page of a team or player")
+    Profile byEntity(String kind, UUID id);
 
-    @GetMapping(ApiPaths.ROOT + "/admin/pages/{id}/teams")
-    List<TeamAffiliation> adminTeams(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_adminPage", summary = "Read a page draft")
+    Profile adminPage(UUID id);
 
-    @GetMapping(ApiPaths.ROOT + "/pages/{id}/teams")
-    List<TeamAffiliation> teams(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_adminTeams", summary = "List the teams of a person, drafts included")
+    List<TeamAffiliation> adminTeams(UUID id);
 
-    @PostMapping(ApiPaths.ROOT + "/admin/pages")
-    Profile create(@RequestBody CreatePage body);
+    @Operation(operationId = "pageApi_teams", summary = "List the published teams of a person")
+    List<TeamAffiliation> teams(UUID id);
 
-    @PutMapping(ApiPaths.ROOT + "/admin/pages/{id}")
-    Profile save(@PathVariable UUID id, @RequestBody SavePage body);
+    @Operation(operationId = "pageApi_create", summary = "Create a page")
+    Profile create(CreatePage body);
 
-    @PostMapping(ApiPaths.ROOT + "/admin/pages/{id}/publish")
-    Profile publish(@PathVariable UUID id, @RequestBody Version body);
+    @Operation(operationId = "pageApi_save", summary = "Save a page draft")
+    Profile save(UUID id, SavePage body);
 
-    @PostMapping(ApiPaths.ROOT + "/admin/pages/{id}/withdraw")
-    Profile withdraw(@PathVariable UUID id, @RequestBody Version body);
+    @Operation(operationId = "pageApi_publish", summary = "Publish a page")
+    Profile publish(UUID id, Version body);
+
+    @Operation(operationId = "pageApi_withdraw", summary = "Withdraw a page")
+    Profile withdraw(UUID id, Version body);
 
     /** Deletes a never-published draft without representatives or activity; see spec 04, draft deletion. */
-    @PostMapping(ApiPaths.ROOT + "/admin/pages/{id}/delete")
-    void delete(@PathVariable UUID id, @RequestBody Version body);
+    @Operation(operationId = "pageApi_delete", summary = "Delete a page draft")
+    void delete(UUID id, Version body);
 
-    @GetMapping(ApiPaths.ROOT + "/admin/pages/{id}/handover")
-    Handover handover(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_handover", summary = "Read the owner handover of a page")
+    Handover handover(UUID id);
 
     /** Returns the owner handover code once; only its hash is stored. See spec 04, page handover. */
-    @PostMapping(ApiPaths.ROOT + "/admin/pages/{id}/handover")
-    Map<String, Object> issueHandover(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_issueHandover", summary = "Issue an owner handover code")
+    Map<String, Object> issueHandover(UUID id);
 
-    @PostMapping(ApiPaths.ROOT + "/admin/pages/{id}/handover/cancel")
-    void cancelHandover(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_cancelHandover", summary = "Cancel the owner handover")
+    void cancelHandover(UUID id);
 
-    @GetMapping(ApiPaths.ROOT + "/me")
+    @Operation(operationId = "pageApi_me", summary = "Read the signed-in account")
     Map<String, Object> me();
 
-    @GetMapping(ApiPaths.ROOT + "/me/pages")
+    @Operation(operationId = "pageApi_managed", summary = "List the pages the account manages")
     List<Profile> managed();
 
-    @GetMapping(ApiPaths.ROOT + "/me/pages/{id}")
-    Map<String, Object> pageMe(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_managedProfile", summary = "Read a page the account manages")
+    Profile managedProfile(UUID id);
 
-    @PutMapping(ApiPaths.ROOT + "/me/pages/{id}/presentation")
-    Profile presentation(@PathVariable UUID id, @RequestBody PresentationWrite body);
+    @Operation(operationId = "pageApi_feed", summary = "List the posts of a managed page as its feed")
+    PageSlice<Post> feed(UUID id, @Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/claims")
-    Claim claim(@PathVariable UUID id, @RequestBody Proof body);
+    @Operation(operationId = "pageApi_pageMe", summary = "Read the account's role on a page")
+    Map<String, Object> pageMe(UUID id);
 
-    @GetMapping(ApiPaths.ROOT + "/me/claims")
+    @Operation(operationId = "pageApi_presentation", summary = "Save the presentation of a page")
+    Profile presentation(UUID id, PresentationWrite body);
+
+    @Operation(operationId = "pageApi_claim", summary = "Claim a page")
+    Claim claim(UUID id, Proof body);
+
+    @Operation(operationId = "pageApi_myClaims", summary = "List the account's claims")
     List<Claim> myClaims();
 
-    @GetMapping(ApiPaths.ROOT + "/admin/page-claims")
-    Slice<Claim> claims(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+    @Operation(operationId = "pageApi_claims", summary = "List pending claims")
+    PageSlice<Claim> claims(@Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @PostMapping(ApiPaths.ROOT + "/admin/page-claims/{id}/decision")
-    Claim decision(@PathVariable UUID id, @RequestBody Decision body);
+    @Operation(operationId = "pageApi_decision", summary = "Decide a claim")
+    Claim decision(UUID id, Decision body);
 
-    @GetMapping(ApiPaths.ROOT + "/me/pages/{id}/members")
-    List<Member> members(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_members", summary = "List the representatives of a page")
+    List<Member> members(UUID id);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/invitations")
-    Map<String, Object> invite(@PathVariable UUID id, @RequestBody Invite body);
+    @Operation(operationId = "pageApi_invite", summary = "Invite a representative")
+    Map<String, Object> invite(UUID id, Invite body);
 
-    @PostMapping(ApiPaths.ROOT + "/me/invitations/accept")
-    Map<String, UUID> accept(@RequestBody Token body);
+    @Operation(operationId = "pageApi_accept", summary = "Accept an invitation or handover")
+    Map<String, UUID> accept(Token body);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/members/{memberId}/revoke")
-    void revoke(@PathVariable UUID id, @PathVariable UUID memberId);
+    @Operation(operationId = "pageApi_revoke", summary = "Revoke a representative")
+    void revoke(UUID id, UUID memberId);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/members/{memberId}/transfer")
-    void transfer(@PathVariable UUID id, @PathVariable UUID memberId);
+    @Operation(operationId = "pageApi_transfer", summary = "Transfer page ownership")
+    void transfer(UUID id, UUID memberId);
 
-    @GetMapping(ApiPaths.ROOT + "/pages/{id}/posts")
-    Slice<Post> posts(@PathVariable UUID id, @RequestParam(required = false) String kind,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size);
+    @Operation(operationId = "pageApi_posts", summary = "List the published posts of a page")
+    PageSlice<Post> posts(UUID id, String kind, @Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @GetMapping(ApiPaths.ROOT + "/me/pages/{id}/posts")
-    Slice<Post> managePosts(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size);
+    @Operation(operationId = "pageApi_managePosts", summary = "List the posts of a managed page")
+    PageSlice<Post> managePosts(UUID id, @Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/posts")
-    Post writePost(@PathVariable UUID id, @RequestBody PostWrite body);
+    @Operation(operationId = "pageApi_writePost", summary = "Write a post")
+    Post writePost(UUID id, PostWrite body);
 
-    @PutMapping(ApiPaths.ROOT + "/me/pages/{id}/posts/{postId}")
-    Post updatePost(@PathVariable UUID id, @PathVariable UUID postId, @RequestBody PostWrite body);
+    @Operation(operationId = "pageApi_updatePost", summary = "Change a post")
+    Post updatePost(UUID id, UUID postId, PostWrite body);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/posts/{postId}/pin")
-    Post pinPost(@PathVariable UUID id, @PathVariable UUID postId, @RequestBody Pin body);
+    @Operation(operationId = "pageApi_pinPost", summary = "Pin or unpin a post")
+    Post pinPost(UUID id, UUID postId, Pin body);
 
-    @GetMapping(ApiPaths.ROOT + "/posts")
-    Slice<FeedPost> latestPosts(@RequestParam(required = false) String kind, @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size);
+    @Operation(operationId = "pageApi_latestPosts", summary = "List the latest posts")
+    PageSlice<FeedPost> latestPosts(String kind, String q, @Min(0) int page,
+            @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @GetMapping(ApiPaths.ROOT + "/me/feed")
-    Slice<FeedPost> timeline(@RequestParam(defaultValue = "false") boolean following,
-            @RequestParam(required = false) String kind, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size);
+    @Operation(operationId = "pageApi_timeline", summary = "Read the account's feed")
+    PageSlice<FeedPost> timeline(boolean following, String kind, @Min(0) int page,
+            @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
     /** Pages broadcasting now; see spec 04, live status. */
-    @GetMapping(ApiPaths.ROOT + "/live")
-    Slice<Profile> live(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size);
+    @Operation(operationId = "pageApi_live", summary = "List pages broadcasting now")
+    PageSlice<Profile> live(@Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @PutMapping(ApiPaths.ROOT + "/me/pages/{id}/live")
-    Live startLive(@PathVariable UUID id, @RequestBody LiveWrite body);
+    @Operation(operationId = "pageApi_startLive", summary = "Start or update a broadcast")
+    Live startLive(UUID id, LiveWrite body);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/live/end")
-    void endLive(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_endLive", summary = "End a broadcast")
+    void endLive(UUID id);
 
-    @PutMapping(ApiPaths.ROOT + "/admin/pages/{id}/live")
-    Live startLiveAsEditor(@PathVariable UUID id, @RequestBody LiveWrite body);
+    @Operation(operationId = "pageApi_startLiveAsEditor", summary = "Start or update a broadcast as an editor")
+    Live startLiveAsEditor(UUID id, LiveWrite body);
 
-    @PostMapping(ApiPaths.ROOT + "/admin/pages/{id}/live/end")
-    void endLiveAsEditor(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_endLiveAsEditor", summary = "End a broadcast as an editor")
+    void endLiveAsEditor(UUID id);
 
-    @GetMapping(ApiPaths.ROOT + "/me/follows")
-    Slice<Profile> follows(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+    @Operation(operationId = "pageApi_follows", summary = "List the pages the account follows")
+    PageSlice<Profile> follows(@Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @GetMapping(ApiPaths.ROOT + "/me/suggestions")
-    Slice<Profile> suggestions(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size);
+    @Operation(operationId = "pageApi_suggestions", summary = "Suggest pages to follow")
+    PageSlice<Profile> suggestions(@Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @GetMapping(ApiPaths.ROOT + "/posts/{id}/comments")
-    Slice<Comment> comments(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "30") int size);
+    @Operation(operationId = "pageApi_comments", summary = "List the comments of a post")
+    PageSlice<Comment> comments(UUID id, @Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @PostMapping(ApiPaths.ROOT + "/me/posts/{id}/comments")
-    Comment comment(@PathVariable UUID id, @RequestBody CommentWrite body);
+    @Operation(operationId = "pageApi_comment", summary = "Comment on a post")
+    Comment comment(UUID id, CommentWrite body);
 
-    @PostMapping(ApiPaths.ROOT + "/me/posts/{id}/like")
-    Liking like(@PathVariable UUID id, @RequestBody Like body);
+    @Operation(operationId = "pageApi_like", summary = "Like or unlike a post")
+    Liking like(UUID id, Like body);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/follow")
-    void follow(@PathVariable UUID id, @RequestBody Follow body);
+    @Operation(operationId = "pageApi_follow", summary = "Follow or unfollow a page")
+    void follow(UUID id, Follow body);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/reports")
-    void report(@PathVariable UUID id, @RequestBody ReportWrite body);
+    @Operation(operationId = "pageApi_report", summary = "Report a post or comment")
+    void report(UUID id, ReportWrite body);
 
-    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/moderate")
-    void moderate(@PathVariable UUID id, @RequestBody Moderation body);
+    @Operation(operationId = "pageApi_moderate", summary = "Hide or restore a post or comment")
+    void moderate(UUID id, Moderation body);
 
-    @GetMapping(ApiPaths.ROOT + "/admin/community-reports")
-    Slice<Report> reports(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+    @Operation(operationId = "pageApi_reports", summary = "List community reports")
+    PageSlice<Report> reports(@Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @PostMapping(ApiPaths.ROOT + "/admin/community-reports/{id}/resolve")
-    void resolve(@PathVariable UUID id, @RequestBody Resolution body);
+    @Operation(operationId = "pageApi_resolve", summary = "Resolve a community report")
+    void resolve(UUID id, Resolution body);
 
-    @GetMapping(ApiPaths.ROOT + "/me/notifications")
-    Slice<Notification> notifications(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "24") int size);
+    @Operation(operationId = "pageApi_notifications", summary = "List the account's notifications")
+    PageSlice<Notification> notifications(@Min(0) int page, @Min(1) @Max(PageLimits.MAX_SIZE) int size);
 
-    @PostMapping(ApiPaths.ROOT + "/me/notifications/{id}/read")
-    void readNotification(@PathVariable UUID id);
+    @Operation(operationId = "pageApi_readNotification", summary = "Mark a notification as read")
+    void readNotification(UUID id);
 
-    @GetMapping(ApiPaths.ROOT + "/me/notifications/unread")
+    @Operation(operationId = "pageApi_unreadNotifications", summary = "Count unread notifications")
     UnreadCount unreadNotifications();
 
-    @PostMapping(ApiPaths.ROOT + "/me/notifications/read-all")
+    @Operation(operationId = "pageApi_readAllNotifications", summary = "Mark every notification as read")
     void readAllNotifications();
 }

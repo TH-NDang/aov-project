@@ -5,18 +5,11 @@ import type {
   PlannedMatch,
   TeamContent,
 } from "@aov/community-contracts"
-import { Field } from "@/features/community/profile-fields"
+import { Field } from "@/features/community/components/profile-form-primitives"
 import { CompetitionChoiceField } from "../competition-choice-field"
 import { bestOfOptions, stageNameOptions } from "../competition-field-options"
-import { FORMAT_NAMES } from "./model"
-
-export const selectClass = "h-10 w-full rounded-md border bg-background px-3 text-sm"
-
-export function localInputTime(value?: string | null) {
-  if (!value) return ""
-  const date = new Date(value)
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
-}
+import { FORMAT_NAMES, matchLabel } from "./model"
+import { NativeSelect } from "@/components/native-select"
 
 export function BestOfField({
   label,
@@ -32,8 +25,8 @@ export function BestOfField({
   return (
     <label className="grid gap-2">
       <span className="type-label">{label}</span>
-      <select
-        className={selectClass}
+      <NativeSelect
+        className="w-full"
         value={String(value)}
         disabled={disabled}
         onChange={(event) => onChange(Number(event.target.value))}
@@ -43,7 +36,7 @@ export function BestOfField({
             {option.label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   )
 }
@@ -76,8 +69,8 @@ export function SlotEditor({
   return (
     <label className="grid gap-2">
       <span className="type-label">{label}</span>
-      <select
-        className={selectClass}
+      <NativeSelect
+        className="w-full"
         disabled={disabled}
         value={selected}
         onChange={(event) => {
@@ -89,7 +82,7 @@ export function SlotEditor({
                 ? { type, seed: Number(id) }
                 : type === "WINNER" || type === "LOSER"
                   ? { type, matchKey: id }
-                  : { type: "TBD", label },
+                  : { type: "TBD" },
           )
         }}
       >
@@ -111,14 +104,14 @@ export function SlotEditor({
         <optgroup label="Kết quả trận trước">
           {previous.flatMap((match) => [
             <option key={`${match.key}-W`} value={`WINNER:${match.key}`}>
-              Thắng {match.label || match.key}
+              Thắng {matchLabel(match)}
             </option>,
             <option key={`${match.key}-L`} value={`LOSER:${match.key}`}>
-              Thua {match.label || match.key}
+              Thua {matchLabel(match)}
             </option>,
           ])}
         </optgroup>
-      </select>
+      </NativeSelect>
     </label>
   )
 }
@@ -157,8 +150,8 @@ export function StageFields({
           />
           <label className="grid gap-2">
             <span className="type-label">Thể thức</span>
-            <select
-              className={selectClass}
+            <NativeSelect
+              className="w-full"
               value={stage.format}
               onChange={(event) => onChange({ ...stage, format: event.target.value })}
             >
@@ -167,7 +160,7 @@ export function StageFields({
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           <BestOfField label="BO" value={stage.bestOf} onChange={(bestOf) => onChange({ ...stage, bestOf })} />
           {league && (
@@ -205,8 +198,8 @@ export function StageFields({
             ))}
             <label className="grid gap-2">
               <span className="type-label">Khi bằng điểm, xét lần lượt</span>
-              <select
-                className={selectClass}
+              <NativeSelect
+                className="w-full"
                 value={stage.tieBreakers.join(",")}
                 onChange={(event) =>
                   onChange({ ...stage, tieBreakers: event.target.value ? event.target.value.split(",") : [] })
@@ -217,7 +210,7 @@ export function StageFields({
                     {label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </label>
           </div>
         </fieldset>

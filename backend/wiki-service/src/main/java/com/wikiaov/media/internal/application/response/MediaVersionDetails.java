@@ -2,7 +2,6 @@ package com.wikiaov.media.internal.application.response;
 
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.internal.domain.model.MediaVersionState;
-
 import java.time.Instant;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;

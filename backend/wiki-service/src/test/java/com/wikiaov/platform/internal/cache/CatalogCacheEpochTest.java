@@ -1,6 +1,7 @@
 package com.wikiaov.platform.internal.cache;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.wikiaov.platform.internal.persistence.cache.CatalogCacheEpochRepository;
 import java.lang.reflect.Proxy;
@@ -27,8 +28,9 @@ class CatalogCacheEpochTest {
     @AfterEach
     void cleanThreadResources() {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            for (var synchronization : TransactionSynchronizationManager.getSynchronizations())
+            for (var synchronization : TransactionSynchronizationManager.getSynchronizations()) {
                 synchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+            }
         }
         TransactionSynchronizationManager.clear();
     }

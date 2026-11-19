@@ -3,23 +3,24 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTitle,
   DropdownMenuTrigger,
 } from "@aov/ui/components/public-overlay"
 import owlMark from "../assets/stream-owl.svg"
 import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
-import { useIsMobile } from "@aov/ui/hooks/use-mobile"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useStreamLocale } from "./stream-locale"
 import "./stream-app-switcher.css"
 
 export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
   const { text } = useStreamLocale()
-  const mobile = useIsMobile()
+  const mobile = usePageLayout() === "compact"
   const wikiLogoUrl = new URL("images/mole-logo-v4.png", `${wikiUrl.replace(/\/$/, "")}/`).href
 
   if (mobile)
     return (
-      <span className="public-app-theme" data-product="stream">
-        <PublicAppWordmark product="Stream" />
+      <span className="public-app-theme stream-brand-wordmark" data-product="stream">
+        <PublicAppWordmark product="Stream" size="small" />
       </span>
     )
 
@@ -50,7 +51,9 @@ export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
         className="public-app-theme public-app-menu"
         drawerTitle={text("Chọn ứng dụng", "Choose application")}
       >
-        <div className="public-app-menu-title">{text("Chọn ứng dụng", "Choose application")}</div>
+        <DropdownMenuTitle className="public-app-menu-title">
+          {text("Chọn ứng dụng", "Choose application")}
+        </DropdownMenuTitle>
         <DropdownMenuItem asChild className="public-app-option" data-product="wiki">
           <a href={wikiUrl}>
             <PublicAppOptionBody

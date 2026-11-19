@@ -8,7 +8,12 @@ import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/heroes/{heroId}/forms")
@@ -19,12 +24,14 @@ public class HeroFormsController implements HeroFormsApi {
         this.forms = forms;
     }
 
+    @Override
     @GetMapping(version = "1")
     public HeroFormsView read(@PathVariable UUID heroId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return forms.view(heroId);
     }
 
+    @Override
     @PutMapping(version = "1")
     public HeroFormsView replace(@PathVariable UUID heroId, @RequestBody ReplaceForms body) {
         return forms.replace(heroId, body);

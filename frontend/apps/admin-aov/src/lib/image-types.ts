@@ -22,3 +22,10 @@ export const IMAGE_TYPE_LABELS: Record<string, string> = {
 }
 
 export const imageTypeLabel = (type: string) => IMAGE_TYPE_LABELS[type] ?? type
+
+/** Image files the Media upload accepts, and its size limit; every upload in the Admin checks the same two rules. */
+export const UPLOAD_IMAGE_TYPES: readonly string[] = ["image/png", "image/jpeg", "image/webp"]
+export const MAX_IMAGE_BYTES = 25 * 1024 * 1024
+
+export const isUploadableImage = (file: Pick<File, "type" | "size">) =>
+  UPLOAD_IMAGE_TYPES.includes(file.type) && file.size > 0 && file.size <= MAX_IMAGE_BYTES

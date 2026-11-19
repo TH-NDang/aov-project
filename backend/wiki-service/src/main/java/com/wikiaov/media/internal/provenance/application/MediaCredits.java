@@ -19,6 +19,7 @@ public final class MediaCredits {
                 ? records.stream().filter(record -> record.getAssetVersionId() == null).toList()
                 : specific;
         return selected.stream().map(record -> new MediaCredit(record.getSourceType().name(), record.getSourceLabel(),
+                record.isUnverified(),
                 publicUrl(record.getSourceUrl()), record.getOwnerName(), publicUrl(record.getContactUrl()),
                 record.getObservedAt(), record.getOwnerPageId(), record.getRelatedPageId()))
                 .distinct().toList();

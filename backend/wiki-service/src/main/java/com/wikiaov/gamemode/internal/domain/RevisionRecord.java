@@ -1,25 +1,20 @@
 package com.wikiaov.gamemode.internal.domain;
 
+import com.wikiaov.platform.RevisionState;
 import java.time.Instant;
 import java.util.UUID;
 
 /** What the draft and publication workflow needs from a mode or guide revision, independent of its content. */
 public interface RevisionRecord {
-    String DRAFT = "DRAFT";
-
-    String PUBLISHED = "PUBLISHED";
-
-    String DISCARDED = "DISCARDED";
-
     UUID getId();
 
     UUID getModeId();
 
     long getRevisionNo();
 
-    String getState();
+    RevisionState getState();
 
-    void setState(String state);
+    void setState(RevisionState state);
 
     long getVersion();
 

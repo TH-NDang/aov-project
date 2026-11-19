@@ -1,4 +1,4 @@
-import type { EquipmentEvent, EquipmentSnapshot, Lane, Side } from "@aov/community-contracts"
+import type { EquipmentEvent, EquipmentSnapshot, Lane, ObjectiveKind, Side } from "@aov/community-contracts"
 
 /** Stable seat inside one game: side plus lane, e.g. `BLUE:MID`. */
 export type SeatKey = `${Side}:${Lane}`
@@ -7,7 +7,6 @@ export const seatSide = (key: SeatKey): Side => key.split(":")[0] as Side
 export const otherSide = (side: Side): Side => (side === "BLUE" ? "RED" : "BLUE")
 
 export type ItemRef = { id?: string | null; name: string }
-export type ObjectiveKind = "DARK_SLAYER" | "ABYSSAL_DRAGON" | "TURRET" | "BASE" | "OTHER"
 export type ItemAction = "BUY" | "SELL" | "UPGRADE" | "SWAP"
 
 export const OBJECTIVE_LABELS: Record<ObjectiveKind, string> = {
@@ -114,21 +113,6 @@ export function objectivesAt(events: TimelineEvent[], at: number) {
     counts[event.side][event.objective] = (counts[event.side][event.objective] ?? 0) + 1
   }
   return counts
-}
-
-/** Kill difference (blue minus red) as step points for the momentum line. */
-export function killMomentum(events: TimelineEvent[], duration: number) {
-  const points = [{ at: 0, diff: 0 }]
-  let diff = 0
-  for (const event of sortEvents(events)) {
-    if (event.kind !== "KILL") continue
-    const side = eventSide(event)
-    if (!side) continue
-    diff += side === "BLUE" ? 1 : -1
-    points.push({ at: event.at, diff })
-  }
-  points.push({ at: duration, diff })
-  return points
 }
 
 /**

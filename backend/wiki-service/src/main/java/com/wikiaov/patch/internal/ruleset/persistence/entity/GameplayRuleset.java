@@ -1,6 +1,11 @@
 package com.wikiaov.patch.internal.ruleset.persistence.entity;
 
-import jakarta.persistence.*;
+import com.wikiaov.patch.internal.domain.PatchLifecycleState;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
@@ -18,7 +23,8 @@ public class GameplayRuleset {
 
     private String description;
 
-    private String lifecycleState;
+    @Enumerated(EnumType.STRING)
+    private PatchLifecycleState lifecycleState;
 
     private Instant createdAt;
 

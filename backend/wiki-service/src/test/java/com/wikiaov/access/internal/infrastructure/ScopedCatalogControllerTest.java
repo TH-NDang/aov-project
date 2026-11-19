@@ -1,11 +1,14 @@
 package com.wikiaov.access.internal.infrastructure;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.hero.internal.application.response.HeroListView;
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
 import com.wikiaov.hero.internal.catalog.application.HeroQueries;
+import com.wikiaov.hero.internal.catalog.application.HeroSectionPages;
 import com.wikiaov.hero.internal.skins.application.PublicSkinCatalog;
 import com.wikiaov.hero.internal.web.HeroPublicController;
 import com.wikiaov.hero.internal.web.PublicSkinCatalogController;
@@ -42,6 +45,9 @@ class ScopedCatalogControllerTest {
     HeroQueries heroes;
 
     @MockitoBean
+    HeroSectionPages sectionPages;
+
+    @MockitoBean
     PublicSkinCatalog skins;
 
     @MockitoBean
@@ -65,7 +71,7 @@ class ScopedCatalogControllerTest {
         var season = UUID.randomUUID();
         var patch = UUID.randomUUID();
         when(heroes.list("VN", "en-US", 0, 20, "", null, "code,asc", season, patch, false, false))
-                .thenReturn(Map.of("items", List.of()));
+                .thenReturn(new HeroListView(null, new PageSlice<>(List.of(), 0, 20, 0)));
         when(heroes.detail(hero, "VN", "en-US", false, season, patch, false))
                 .thenReturn(Map.of("id", hero));
         when(heroes.detail(hero, "VN", "en-US", true, season, patch, false))
@@ -76,10 +82,11 @@ class ScopedCatalogControllerTest {
                 .thenReturn(new ReferenceSettingsView(1, new ReferenceSettings(1, true, "vi-VN", List.of())));
 
         for (var route : List.of("heroes", "heroes/" + hero, "heroes/" + hero + "/manifest", "skins",
-                "reference-catalog"))
+                "reference-catalog")) {
             mvc.perform(get("/api/wiki/v1/" + route).param("locale", "en-US")
                     .param("seasonId", season.toString()).param("patchVariantId", patch.toString()))
                     .andExpect(status().isOk());
+        }
 
         verify(heroes).list("VN", "en-US", 0, 20, "", null, "code,asc", season, patch, false, false);
         verify(heroes).detail(hero, "VN", "en-US", false, season, patch, false);

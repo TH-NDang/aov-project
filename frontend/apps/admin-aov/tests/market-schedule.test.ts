@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { releaseEnd } from "../src/features/publishing/release-window"
-import type { PublicationOverview, Release } from "../src/features/publishing/publication-overview"
+import { releaseEnd } from "../src/features/publishing/model/setup/release-window"
+import type { PublicationOverview, Release } from "../src/features/publishing/api/publication-overview"
 const first: Release = {
   id: "r1",
   variantId: "v1",

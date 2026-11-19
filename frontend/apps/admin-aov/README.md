@@ -2,15 +2,16 @@
 
 ## Trang tướng và biên dịch
 
-`/publishing` mở danh sách có cột tên cố định, bản dịch dạng biểu tượng ngôn ngữ kèm số ngôn ngữ có nội dung thật (không tính fallback). Bấm tên/mũi tên để mở drawer trên desktop hoặc bottom sheet trên mobile; có thể mở toàn trang.
+`/hero` mở danh sách có cột tên cố định, bản dịch dạng biểu tượng ngôn ngữ kèm số ngôn ngữ có nội dung thật (không tính fallback). Bấm tên/mũi tên để mở drawer trên desktop hoặc bottom sheet trên mobile; có thể mở toàn trang.
 
 `/hero/publish-readiness` cho biết với mọi tướng: đã xuất bản chưa, có bản nháp không và bản nháp còn thiếu gì. Lọc theo chưa xuất bản, sẵn sàng xuất bản hoặc còn thiếu. Bấm một mục còn thiếu để mở tướng đúng phần cần sửa; đợi patch thì mở patch đó. Trang dùng chung điều kiện với nút Xuất bản (`publish-rules.ts`) và không xuất bản hàng loạt; máy chủ vẫn kiểm tra lại khi xuất bản.
 
-`/publishing/:heroId` ưu tiên đọc hồ sơ, kỹ năng, chỉ số, trang phục và ảnh. Bút trên từng nhóm mở trình sửa nhóm đó; Lưu gọi API draft thật với version, Hủy chỉ bỏ thay đổi của nhóm đang sửa. Metadata, nhập tài nguyên và xuất bản nằm trong các mục mở rộng. Đóng drawer/tab có thay đổi cần xác nhận; thao tác lưu đang chạy chặn đóng. Đổi tab vẫn giữ bản đang sửa; tải lại trình duyệt không tự lưu nội dung chưa gửi.
+`/hero/:heroId` ưu tiên đọc hồ sơ, kỹ năng, chỉ số, trang phục và ảnh. Bút trên từng nhóm mở trình sửa nhóm đó; Lưu gọi API draft thật với version, Hủy chỉ bỏ thay đổi của nhóm đang sửa. Metadata, nhập tài nguyên và xuất bản nằm trong các mục mở rộng. Đóng drawer/tab có thay đổi cần xác nhận; thao tác lưu đang chạy chặn đóng. Đổi tab vẫn giữ bản đang sửa; tải lại trình duyệt không tự lưu nội dung chưa gửi.
 
-`/publishing/:heroId/translations?revision=...&locale=en-US` đối chiếu nguồn–đích cho hồ sơ, kỹ năng và trang phục. Chỉ cập nhật văn bản locale đích, giữ nguyên ngôn ngữ khác, ảnh và gameplay; cần quyền `hero:write` và revision DRAFT. Bản published cần tạo draft (lý do Bản dịch) trong phần thao tác nâng cao. Đây là dịch nội dung, không phải dịch giao diện; chưa có quy trình duyệt bản dịch riêng hay dịch tự động.
+`/hero/:heroId/translations?revision=...&locale=en-US` đối chiếu nguồn–đích cho hồ sơ, kỹ năng và trang phục. Chỉ cập nhật văn bản locale đích, giữ nguyên ngôn ngữ khác, ảnh và gameplay; cần quyền `hero:write` và revision DRAFT. Bản published cần tạo draft (lý do Bản dịch) trong phần thao tác nâng cao. Đây là dịch nội dung, không phải dịch giao diện; chưa có quy trình duyệt bản dịch riêng hay dịch tự động.
 
-Fixture kiểm tra trực quan: `/tests/fixtures/hero-workspace.html` khi Vite dev đang chạy. Trang chỉ dùng dữ liệu tổng hợp và chặn toàn bộ fetch; không gọi hay sửa API thật, không nằm trong entry build production. Kiểm thử: `pnpm --filter @aov/admin-aov test:publishing` và `pnpm --filter @aov/admin-aov test:tabs`.
+Fixture kiểm tra trực quan: `/tests/fixtures/hero-workspace.html` khi Vite dev đang chạy. Trang chỉ dùng dữ liệu tổng hợp và chặn toàn bộ fetch; không gọi hay sửa API thật, không nằm trong entry build production. Kiểm thử: `pnpm --filter @aov/admin-aov test` chạy mọi tệp trong `tests/`. Chạy riêng một tệp với cùng cờ:
+`pnpm --filter @aov/admin-aov exec tsx --tsconfig tests/tsconfig.json --import ./tests/fixtures/css-loader.mjs --test tests/<tệp>`.
 
 ## Đóng thông báo import
 
@@ -98,9 +99,8 @@ muốn nhiều replica cần cấu hình/thiết kế bổ sung theo ADR-007.
 
 ## Phạm vi dữ liệu
 
-Auth nối backend thật. Các trang tướng/trang phục/trang bị vẫn dùng `createMockApi()`;
-JSON storage vẫn là công cụ phát triển cục bộ, không phải API production có phân quyền.
-Khi chuyển dữ liệu sang backend, dùng `backendRequest` để gửi Bearer token.
+Auth và mọi trang dữ liệu nối backend thật qua `backendRequest` (Bearer token). JSON storage (`/storage`) vẫn là
+công cụ phát triển cục bộ, không phải API production có phân quyền.
 
 ## Ảnh gốc của patch
 
@@ -140,7 +140,7 @@ tới trình duyệt, nên bản build triển khai dùng được như Vite dev
 ### Vùng trên ảnh và điều hướng (09/11/2026)
 
 Ảnh chụp màn hình thông tin tướng trong game giữ một bố cục cố định trên ảnh tỉ lệ 20:9. Các vùng đo trên ảnh 2400 × 1080
-của patch 2026-10-30 nằm trong `captureRegions` và `captureFocusBox` (`src/features/publishing/patch-capture-model.ts`),
+của patch 2026-10-30 nằm trong `captureRegions` và `captureFocusBox` (`src/features/publishing/model/captures/patch-capture-model.ts`),
 tính theo tỉ lệ của ảnh. Ảnh có tỉ lệ khác, ảnh cửa hàng và ảnh chưa nối mục không được đoán vùng.
 
 - **Phóng sẵn vào phần cần đọc:** ảnh tổng quan mở ở cột chi tiết bên trái (sở trường, 4 icon chiêu, vai trò); ảnh chỉ số mở
@@ -165,7 +165,7 @@ tính theo tỉ lệ của ảnh. Ảnh có tỉ lệ khác, ảnh cửa hàng v
 Trang **Sẵn sàng xuất bản** có thêm cột **Ảnh gốc cần chụp** và bộ lọc **Cần chụp ảnh gốc**: với mỗi tướng, mục nào chưa có
 ảnh, ảnh nào không cho thấy điều cần thấy, cần mở màn hình nào trong game và ảnh đó giúp đối chiếu dữ liệu gì. Bản nháp được
 đối chiếu với bộ ảnh của patch của nó; patch chưa có bộ ảnh thì dùng bộ mới nhất. Cách tính nằm ở
-`src/features/publishing/source-image-gaps.ts`:
+`src/features/publishing/model/captures/source-image-gaps.ts`:
 
 - **Chỉ số**: không có ảnh thuộc tính, ảnh chỉ chụp trang tướng (mọi số đều không thấy) hoặc bị che một phần. Tướng mà
   màn Thuộc tính không có dòng tài nguyên (như Charlotte) ghi `noResource: true` trong bản đọc, nên không bị tính là che.
@@ -207,7 +207,7 @@ Trong `frontend`:
 ```powershell
 pnpm exec prettier --write apps/admin-aov/src/app/auth apps/admin-aov/src/main.tsx apps/admin-aov/src/lib/api/authenticated-client.ts apps/admin-aov/tests/auth.test.ts
 pnpm --filter @aov/admin-aov typecheck
-pnpm --filter @aov/admin-aov test:auth
+pnpm --filter @aov/admin-aov test
 pnpm --filter @aov/admin-aov build
 ```
 
@@ -261,17 +261,18 @@ Chọn thị trường không đổi locale/múi giờ hồ sơ. Chưa triển k
 - Gỡ avatar chỉ gỡ liên kết, không xóa bytes. File đã upload nhưng chưa lưu hồ sơ vẫn nằm trong media,
   có thể kiểm tra qua media usage trước khi áp dụng chính sách dọn file.
 
-Kiểm tra: `pnpm --filter @aov/admin-aov test:users`. Backend: `./mvnw.cmd verify`
+Kiểm tra: `pnpm --filter @aov/admin-aov test`. Backend: `./mvnw.cmd verify`
 (chạy PostgreSQL/SeaweedFS test riêng bằng Testcontainers, không dùng dữ liệu local của bạn).
 
 ## Biên tập Hero với backend
 
-- `/heroes`, `/heroes/:slug`, `/skins` và `/reference/skins`: đường dẫn cũ chuyển về `/publishing`. Không còn trang quản lý tướng/trang phục riêng từ tài nguyên; slug tài nguyên không được chuyển thẳng thành UUID backend.
-- `/publishing`: danh mục backend, tạo Hero, chọn ruleset, mở draft/revision.
-- `/publishing/:heroId`: sửa từng section, lưu với optimistic version, fork/publish/discard; trang phục nằm trong tab **Trang phục** của phiên bản tướng.
-- `/image-management`: xem MediaAsset, phiên bản ảnh và nơi sử dụng; đường dẫn `/publishing-media` cũ chuyển về đây.
+- `/heroes`, `/heroes/:slug`, `/skins` và `/reference/skins`: đường dẫn cũ chuyển về `/hero`. Không còn trang quản lý tướng/trang phục riêng từ tài nguyên; slug tài nguyên không được chuyển thẳng thành UUID backend.
+- `/hero`: danh mục backend, tạo Hero, chọn ruleset, mở draft/revision.
+- `/hero/:heroId`: sửa từng section, lưu với optimistic version, fork/publish/discard; trang phục nằm trong tab **Trang phục** của phiên bản tướng.
+- `/files` (Quản lý tệp): ảnh công khai (MediaAsset, phiên bản ảnh và nơi sử dụng), tệp nguồn riêng tư và dung lượng
+  R2; đường dẫn `/image-management` và `/publishing-media` cũ chuyển về đây và giữ nguyên query.
 
-Từ `/publishing`, mở **Gameplay context** để tạo ruleset, gán timeline vùng, tạo patch/variant,
+Từ `/hero`, mở **Gameplay context** để tạo ruleset, gán timeline vùng, tạo patch/variant,
 publish variant và nhập lịch phát hành có URL nguồn. Các danh mục này đọc lại được sau khi tải trang.
 Ngôn ngữ không quyết định ruleset; lịch phát hành dùng ngày giờ máy bạn và được gửi dưới dạng UTC.
 
@@ -320,7 +321,7 @@ pnpm dev:admin
 pnpm dev:wiki
 ```
 
-Admin: http://localhost:5175/publishing, wiki: http://localhost:5173.
+Admin: http://localhost:5175/hero, wiki: http://localhost:5173.
 Đăng nhập tài khoản có `catalog:read`; chỉnh Hero cần `hero:write`, xuất bản cần `hero:publish`,
 ảnh cần `media:write`, context cần `region:admin` / `patch:write` / `patch:publish` theo thao tác.
 Auth dùng gateway/session hiện có, không lưu access token trong localStorage.
@@ -337,7 +338,7 @@ Không công khai filer hoặc dùng credential storage trên frontend productio
 Kiểm tra luồng tích hợp frontend:
 
 ```bash
-pnpm --filter @aov/admin-aov test:publishing
+pnpm --filter @aov/admin-aov test
 pnpm typecheck
 pnpm build
 ```
@@ -349,12 +350,12 @@ Dữ liệu tổng hợp trong các test chỉ nằm trong database/container te
 
 ### Chuẩn hóa Hero, import và mùa xếp hạng
 
-- **Tướng** (`/publishing`) là nơi tạo/sửa draft, import JSON/CSV, kiểm tra và publish. Chọn bộ quy tắc/ngôn ngữ trước khi mở import.
+- **Tướng** (`/hero`) là nơi tạo/sửa draft, import JSON/CSV, kiểm tra và publish. Chọn bộ quy tắc/ngôn ngữ trước khi mở import.
 - Import tối đa 200 tướng/file 5 MB. Chọn cột mã tướng, ánh xạ vào trường backend công bố; không tạo cột tự do. Chọn bổ sung chỗ trống/ghi đè/bỏ qua theo trường, xem trước, rồi chọn các bản ghi cần nhập. Ô trống không xóa dữ liệu. Mảng kỹ năng/trang phục ghi đè cả danh sách; vai trò là mảng mã hợp lệ như `["ASSASSIN"]`.
 - Import ghi draft, không publish. Mỗi tướng nguyên tử; tướng lỗi không hủy các tướng đã nhập thành công. Xung đột phiên bản yêu cầu xem trước lại.
 - Cột ảnh dùng link HTTPS trực tiếp; sau xác nhận frontend tải và upload qua Media API rồi mới gắn UUID. Có thể upload/chọn ảnh ngay trong từng section. Nguồn chặn CORS hoặc chuyển hướng cần tải file về máy trước. Không có worker tải URL phía server.
 - **Phiên bản và thị trường** (`/game-configuration`) quản lý ruleset, patch/release và mùa. Mùa có tên linh hoạt (S21, S1 2026) nhưng mã ổn định; có thể gắn mùa khi đặt lịch phát hành, backend kiểm tra vùng và khoảng thời gian.
-- **Thư viện ảnh** (`/publishing-media`) nằm riêng. Lưu trữ cũ bị gỡ khỏi menu; `/storage` và file dữ liệu vẫn giữ để xuất/chuyển dữ liệu.
+- **Quản lý tệp** (`/files`) giữ ảnh công khai, tệp nguồn và dung lượng R2. Lưu trữ cũ bị gỡ khỏi menu; `/storage` và file dữ liệu vẫn giữ để xuất/chuyển dữ liệu.
 - Khởi động lại backend để áp dụng V009. Không reset database. Frontend dùng `pnpm generate:hero-api` từ thư mục `frontend` để cập nhật type từ OpenAPI; CI kiểm tra file sinh.
 
 ### Nhập dữ liệu khi chưa có lịch sử
@@ -375,12 +376,12 @@ Trang Import chuẩn bị dữ liệu/ảnh rồi gửi một tác vụ có UUID
 - Kỹ năng và trang phục có ánh xạ trường con do backend công bố. Biến thể kỹ năng có thể tách qua mảng `variants`, với các cột `variant.*`; tùy chọn tạo mã từ slot/index phải có giá trị ổn định. Thiếu trường bắt buộc được báo lỗi, không sinh mô tả/vai trò giả.
 - Chỉ ảnh được ánh xạ và cần áp dụng mới upload. Trường bỏ qua hoặc nhóm chỉ bổ sung nhưng đã có danh sách không tải ảnh. Trường con không ánh xạ giữ giá trị cũ theo mã bản ghi, bao gồm ảnh và bản dịch khác. Ghi đè nhóm vẫn thay thế danh sách: các mã không có trong file sẽ không còn trong danh sách mới.
 - Xem trước không tải ảnh. Bước xác nhận upload qua Media rồi gửi tác vụ bền vững. Ảnh lặp cùng đường dẫn và loại trong phiên import được dùng lại. File LFS pointer được báo cần tải ảnh thật trước.
-- Trang phục được nhập và quản lý trong từng phiên bản tướng tại `/publishing/:heroId?tab=skins`. Các trang danh sách riêng `/skins` và `/reference/skins` đã bỏ và chuyển về danh mục tướng. Công cụ portrait/head/cover và bậc trang phục vẫn đọc bộ tài nguyên ảnh; số liệu ở đó không đại diện cho media hoặc trang phục đã nhập vào backend.
+- Trang phục được nhập và quản lý trong từng phiên bản tướng tại `/hero/:heroId?tab=skins`. Các trang danh sách riêng `/skins` và `/reference/skins` đã bỏ và chuyển về danh mục tướng. Công cụ portrait/head/cover và bậc trang phục vẫn đọc bộ tài nguyên ảnh; số liệu ở đó không đại diện cho media hoặc trang phục đã nhập vào backend.
 
 ### Tổng quan phiên bản và bảng tướng
 
 - `/game-configuration`: bảng ruleset/thị trường tại thời điểm backend; mở mùa rồi patch để xem thay đổi gameplay đã ghi nhận. Menu dấu ba chấm cạnh tiêu đề bảng chứa Tạo ruleset, Tạo mùa, Tạo patch và liên kết thị trường. Các biểu mẫu mở trong panel bên phải trên desktop, từ dưới lên trên mobile. Mùa tương lai và lịch patch tương lai được phân biệt với hiện tại.
-- `/publishing`: không chọn mùa/patch thì hiển thị toàn bộ tướng cùng thay đổi gameplay gần nhất đã biên tập trong từng ruleset. Chọn mùa chỉ giữ tướng có change set trong mùa đó; chọn thêm patch thu hẹp tới patch. Mỗi tướng/ruleset có một dòng, gom mọi loại thay đổi của phạm vi và mở được từng patch. Baseline, sửa bản dịch hoặc bản nháp GAME_PATCH chưa có change set không được coi là thay đổi gameplay. Mã tướng được ghim; nút xem nhanh mở bên phải hoặc từ dưới lên theo kích thước màn hình.
+- `/hero`: không chọn mùa/patch thì hiển thị toàn bộ tướng cùng thay đổi gameplay gần nhất đã biên tập trong từng ruleset. Chọn mùa chỉ giữ tướng có change set trong mùa đó; chọn thêm patch thu hẹp tới patch. Mỗi tướng/ruleset có một dòng, gom mọi loại thay đổi của phạm vi và mở được từng patch. Baseline, sửa bản dịch hoặc bản nháp GAME_PATCH chưa có change set không được coi là thay đổi gameplay. Mã tướng được ghim; nút xem nhanh mở bên phải hoặc từ dưới lên theo kích thước màn hình.
 - Tìm theo tên/mã và sắp xếp chỉnh sửa gần nhất được xử lý trước phân trang ở backend; tải thêm chỉ nối các kết quả thuộc cùng bộ lọc. TanStack Query phân biệt mùa, patch, ruleset, chuỗi tìm, locale và cách sắp xếp. URL giữ `q`/`sort` cùng `season`/`patch`; nhập tìm kiếm chờ 300 ms trước khi gửi. Chỉnh sửa gần nhất dùng timestamp đã lưu của hồ sơ/revision, hiển thị theo múi giờ người dùng; không thay bằng ngày patch hoặc giờ hiện tại khi thiếu.
 - Biểu tượng BUFF, NERF, ADJUSTMENT, REWORK, FIX và OTHER lấy từ change set đã biên tập, có nhãn/tooltip và chú giải trên đầu cột. Mùa có cả buff và nerf giữ cả hai, không tự suy thành điều chỉnh. Fixture `tests/fixtures/hero-catalog-filtering.html?theme=dark` phục vụ kiểm tra riêng bằng dữ liệu trong bộ nhớ; không gọi API dữ liệu thật.
 - Icon thị trường chỉ là nhãn, không mở popup. Trong bảng tổng quan, hover tên thị trường hiện nút mở lịch mùa/patch (nút luôn hiện trên thiết bị cảm ứng). Cột thị trường ở bảng tướng chỉ đánh dấu nơi bản đã xuất bản đang thực sự áp dụng. Bản dịch đếm nội dung theo các ngôn ngữ được hỗ trợ; bấm để xem tiến độ từng ngôn ngữ và mở đúng bản cần sửa. Chỉ số này chưa phải trạng thái duyệt hay kiểm chứng bản dịch.
@@ -453,14 +454,14 @@ chuẩn bị/upload; sau khi backend nhận tác vụ mới có thể đóng tra
 
 ### Tiếp tục upload import sau khi đóng trang
 
-Sau khi xác nhận nhập, backend lưu phiên upload và tiến trình từng ảnh. Mở lại `/publishing/import`, mục **Upload đang dở** hiển thị các phiên của tài khoản hiện tại. Chọn **Tiếp tục upload**, chọn lại folder/ZIP ban đầu nếu thiếu ảnh rồi bấm **Tiếp tục phiên đã lưu**. Không cần chọn lại mùa/patch hay ánh xạ; chúng đã nằm trong phiên. Ảnh hoàn tất được bỏ qua, file thay thế được kiểm tra SHA-256. Có thể tiếp tục bằng máy khác khi đăng nhập cùng tài khoản và chọn đúng gói nguồn.
+Sau khi xác nhận nhập, backend lưu phiên upload và tiến trình từng ảnh. Mở lại `/hero/import`, mục **Upload đang dở** hiển thị các phiên của tài khoản hiện tại. Chọn **Tiếp tục upload**, chọn lại folder/ZIP ban đầu nếu thiếu ảnh rồi bấm **Tiếp tục phiên đã lưu**. Không cần chọn lại mùa/patch hay ánh xạ; chúng đã nằm trong phiên. Ảnh hoàn tất được bỏ qua, file thay thế được kiểm tra SHA-256. Có thể tiếp tục bằng máy khác khi đăng nhập cùng tài khoản và chọn đúng gói nguồn.
 
 Upload dừng khi trình duyệt đóng; tác vụ nhập chỉ chạy tự động trên máy chủ sau khi nhận đủ dữ liệu. Ảnh đang tải dở có thể phải tải lại toàn bộ file đó, không hỗ trợ tiếp tục theo byte. **Bỏ phiên** xóa checkpoint, không xóa ảnh đã lưu. Các lượt upload trước tính năng này không có checkpoint để khôi phục. Backend cần migration V015; không lưu token, presigned URL hay file bytes trong phiên.
 
 ## Liên kết tới vị trí đang xem của tướng
 
-- Xem bên cạnh bảng: `/publishing?hero=<hero-id>&revision=<revision-id>&tab=skills`.
-- Trang đầy đủ: `/publishing/<hero-id>?revision=<revision-id>&tab=media`.
+- Xem bên cạnh bảng: `/hero?hero=<hero-id>&revision=<revision-id>&tab=skills`.
+- Trang đầy đủ: `/hero/<hero-id>?revision=<revision-id>&tab=media`.
 - Biên dịch: thêm `view=translations&section=SKILLS&target=en-US&source=vi-VN`; `readLocale` lưu riêng ngôn ngữ xem.
 - So sánh: thêm `view=history&compare=<revision-id>&diff=split&changes=skills`.
 
@@ -491,7 +492,7 @@ Gõ `@` ở đầu nội dung/sau khoảng trắng hoặc dấu phân cách sẽ
 
 Bảng danh mục luôn hiện ở `/terminology`: tìm tên/alias/ID, lọc loại tham chiếu và thiếu bản dịch theo ngôn ngữ đang xem, đếm kết quả, phân trang 25 dòng, chọn tên để chỉnh sửa; có nguồn backend/thuật ngữ chung, alias, locale, ID ổn định và đích resolver. Mục mất nguồn được ghi rõ, không coi đó là target backend hợp lệ. Mô tả hover hiển thị b/i/color; ref hợp lệ trong mô tả hover được đổi thành nhãn thuần và không tự nhận diện để tránh card lồng/đệ quy. Ref tại phần nội dung chính vẫn tương tác bình thường. Fixture `tests/fixtures/hero-workspace.html?annotations=1` chỉ dùng dữ liệu tổng hợp riêng cùng fetch in-memory, không gọi API tài khoản/storage thật.
 
-Tham chiếu thủ công ưu tiên hơn tự nhận diện; không lồng liên kết. Parser không chạy HTML, kiểm tra URL/màu, giới hạn 100.000 ký tự, độ sâu 8 và 500 tham chiếu mỗi nội dung. Danh mục được cache dùng chung, tải tối đa 4 hồ sơ tướng đồng thời; không gọi API theo từ. Chạy `pnpm --filter @aov/admin-aov test:rich-text` để kiểm tra lõi, renderer và lưu thiết lập.
+Tham chiếu thủ công ưu tiên hơn tự nhận diện; không lồng liên kết. Parser không chạy HTML, kiểm tra URL/màu, giới hạn 100.000 ký tự, độ sâu 8 và 500 tham chiếu mỗi nội dung. Danh mục được cache dùng chung, tải tối đa 4 hồ sơ tướng đồng thời; không gọi API theo từ. `pnpm --filter @aov/admin-aov test` kiểm tra lõi, renderer và lưu thiết lập.
 
 Thiết lập dùng chung lưu trong PostgreSQL qua `/admin/reference-settings`, đọc công khai qua `/reference-settings`
 và `/reference-catalog?region&locale`. Bản dịch thuật ngữ tách bảng; quyền `hero:write` cho biên tập,
@@ -537,7 +538,7 @@ chú gỡ phụ trợ, ghi chú biên tập, tên gọi khác (mỗi dòng một
 người dùng không phải mô tả game nên cũng giữ nguyên. Tab **Thử hiển thị** của trang thuật ngữ và ô sửa nhãn đặc tính
 của kỹ năng cũng dùng ô này, không còn khung "Kết quả hiển thị" thứ hai.
 
-Tóm tắt kỹ năng (`SkillSummaryField` trong `src/features/publishing/skill-summary-field.tsx`) cũng là ô văn bản thường:
+Tóm tắt kỹ năng (`SkillSummaryField` trong `src/features/publishing/components/skills/skill-summary-field.tsx`) cũng là ô văn bản thường:
 một đoạn, tối đa 300 ký tự, có bộ đếm theo mốc 200 ký tự của quy tắc viết, xuống dòng khi dán được đổi thành khoảng
 trắng. Ô nằm ngay trên ô mô tả của chiêu trong trình sửa kỹ năng và trong phần dịch; khi đọc, tóm tắt hiện trên mô tả và
 tên trong game vẫn được nhận diện.
@@ -560,7 +561,7 @@ tên trong game vẫn được nhận diện.
   Tab Thuật ngữ bỏ lọc loại/trạng thái không phù hợp và link lặp tới chính định nghĩa.
 
 Đặc tả chi tiết nằm trong backend/docs 01/02/03 và ADR-011. Kiểm tra renderer/editor/lưu thiết lập:
-`pnpm --filter @aov/admin-aov test:rich-text`; API đọc công khai được kiểm tra bằng kiểm thử tích hợp backend; renderer kiểm tra cả ngữ cảnh admin/wiki. Kiểm tra backend: `ReferenceSettingsTest`, `ReferenceSettingsIntegrationTest`,
+`pnpm --filter @aov/admin-aov test`; API đọc công khai được kiểm tra bằng kiểm thử tích hợp backend; renderer kiểm tra cả ngữ cảnh admin/wiki. Kiểm tra backend: `ReferenceSettingsTest`, `ReferenceSettingsIntegrationTest`,
 `HeroPublicReferencesTest` và `ModuleArchitectureTests`.
 
 ## Luồng quản lý tướng, mốc dữ liệu và bản dịch
@@ -778,10 +779,11 @@ tìm tên/mã để khôi phục. Cần khôi phục các mục cha trước th�
 Ván đã từng xuất bản giữ lịch sử và chỉ có thể gỡ công khai, không được xóa. Mỗi thao tác dùng đúng phiên
 bản đã kiểm tra; thay đổi đồng thời yêu cầu tải lại thay vì ghi đè.
 
-Phân hạng, loại giải, hình thức, trạng thái và kết quả là thông tin bổ sung. Không tự xác định trạng thái
-hoặc đội vô địch theo ngày. Kết quả cần tên vô địch/á quân và link nguồn; tỷ số nhập đủ hai vế hoặc để trống.
-Mức kiểm chứng tách nguồn chính, nguồn phụ đã đối chiếu, bản lưu, báo chí và chưa xác minh; không tự coi
-phân hạng hoặc kết quả từ nguồn phụ là thông tin chính thức.
+Phân hạng, loại giải, hình thức và trạng thái là thông tin bổ sung. Không tự xác định trạng thái hoặc đội vô
+địch theo ngày. Đội vô địch, á quân và tỷ số trận cuối ghi ở bước Chung cuộc (`placements`); form giải không còn
+nhóm "Kết quả". Kết quả mà lần nhập dữ liệu cũ đã ghi (`result`) được giữ nguyên khi lưu giải, vì Stream vẫn đọc
+nó khi bảng chung cuộc chưa có đúng một đội hạng nhất. Mức kiểm chứng tách nguồn chính, nguồn phụ đã đối chiếu,
+bản lưu, báo chí và chưa xác minh; không tự coi phân hạng hoặc kết quả từ nguồn phụ là thông tin chính thức.
 Trận BO có thể ghi kết quả cuối cùng kèm nguồn ngay cả khi chưa thu thập từng ván; không tự tạo ván từ
 tỷ số. Kết quả hoàn tất cần một đội đạt số ván thắng của thể thức, đội còn lại ít hơn.
 
@@ -797,6 +799,8 @@ từng mục trước khi ghi. Gói hồ sơ chứa `teams`, `players`, `tournam
 và `teamBCode` thay vì UUID của máy khác. Đội hình có thể lấy mã giải chung từ `scope.eventCode`.
 Nhập gói hồ sơ trước gói trận nếu các danh tính cha chưa có. Gói mẫu và bằng chứng nằm trong bộ tệp nguồn
 `esports-2026-post-apl` (thư mục `aog-sample/`); `pnpm sources:sync pull` kéo về `resources/esports/2026-post-apl/` khi cần.
+Kiểm thử đọc mẫu nhỏ cùng dạng trong `tests/fixtures/registry-import/`; sau khi kéo dữ liệu, `pnpm check:source-data`
+kiểm tra trên bộ đầy đủ.
 
 Chương trình đối chiếu cả dữ liệu đang dùng và thùng rác theo mã; riêng đội hình đối chiếu bộ ba
 giải/đội/tuyển thủ. Chỉ khôi phục những mục có trong file, giữ UUID và giữ ảnh hiện có nếu URL ảnh
@@ -813,15 +817,17 @@ nguồn xác nhận; chương trình không tự suy ra giao dịch từ khác b
 Nút Lưu nháp ghi lên máy chủ; đổi trang hoặc đóng trình duyệt khi chưa lưu có cảnh báo. Xuất bản
 chốt nội dung, tên/ảnh tham chiếu và mốc gameplay để người xem Stream không bị thay đổi theo các
 lần chỉnh Wiki sau đó. Sửa nháp không tác động bản công khai; nút Gỡ công khai giữ bản nháp và lịch sử
-để sửa rồi xuất bản lại. Kiểm tra luồng này bằng `pnpm --filter @aov/admin-aov test:tournaments` và
-`pnpm --filter @aov/admin-aov test:auth` trong thư mục `frontend`.
+để sửa rồi xuất bản lại. Kiểm tra luồng này bằng `pnpm --filter @aov/admin-aov test` trong thư mục `frontend`.
 
 ## Giải đấu và dòng thời gian ván
 
-- `/tournaments`: danh sách giải (lọc trạng thái/hạng, tìm kiếm). `/tournaments/:id`: trang giải kiểu Liquipedia gồm
-  Tổng quan, Lịch thi đấu, Bảng xếp hạng (tạm tính từ tỉ số trận vòng bảng), Nhánh đấu (dựng từ mã vòng
-  `UPPER_BRACKET_*`, `LOWER_BRACKET_*`, `GRAND_FINAL`), Đội tham dự và Thống kê tướng. `/tournaments/registry`: đội và
-  tuyển thủ dùng chung.
+- `/tournaments`: danh sách giải (lọc trạng thái/hạng, tìm kiếm). `/tournaments/:id`: không gian làm việc sáu bước của
+  giải (Tổng quan, Đội & đội hình, Thể thức, Lịch & kết quả, Chung cuộc, Công bố). Bước Chung cuộc điền thứ hạng theo
+  nhánh đấu, kèm đối thủ và tỷ số trận cuối của từng đội. `/tournaments/trash`: thùng rác để khôi phục bản ghi đã xóa.
+  Hồ sơ cộng đồng của đội và tuyển thủ nằm ở `/teams` và `/players`; đường dẫn `/tournaments/registry` cũ chuyển về đó.
+  Bản ghi thi đấu của một đội và các tuyển thủ trong đội hình của giải được sửa từ biểu tượng bút ở dòng đội trong bước
+  Đội & đội hình: bảng mở ra hiển thị logo, ảnh và thông tin chỉ đọc, mỗi mục có bút riêng mở form với Lưu/Hủy, rời form
+  còn thay đổi thì hỏi trước khi bỏ.
 - `/tournaments/:id/matches/:seriesId`: trình xem cả trận trên **một video YouTube chính thức** (IFrame API, không sao
   chép video). Mỗi ván là một chương trên trục thời gian video, đặt theo `sourceUrl` + `sourceTimestampSeconds` của
   ván; ván chưa căn video được xếp nối tiếp (viền đứt). Bảng điểm, diễn biến và bộ ghi luôn theo ván mà video đang phát.
@@ -853,4 +859,4 @@ lần chỉnh Wiki sau đó. Sửa nháp không tác động bản công khai; n
 - Thành phần trong `src/features/esports/components` và `model` không phụ thuộc API/phiên admin để dùng lại cho trang
   công khai; trang chỉ đọc chỉ cần bỏ quyền ghi.
 - Xem nhanh bằng dữ liệu giả lập khi Vite dev đang chạy: `/tests/fixtures/esports.html` (thêm `?view` để xem chế độ chỉ
-  đọc). Kiểm thử: `pnpm --filter @aov/admin-aov test:tournaments`.
+  đọc). Kiểm thử: `pnpm --filter @aov/admin-aov test`.

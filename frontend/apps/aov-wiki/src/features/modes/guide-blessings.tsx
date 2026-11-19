@@ -1,9 +1,11 @@
 import { useState } from "react"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { BLESSING_TIER_NAMES, foldText, type Blessing } from "./auto-chess-model"
+import { useWikiText } from "../../context/wiki-context"
+import { BLESSING_TIER_NAMES, type Blessing } from "./auto-chess-model"
 import { ModeHeading } from "./mode-ui"
 import { BlessingIcon, GuideSearch, GuideText, TIER_STYLE, type GuideIndex } from "./guide-ui"
+import { foldSearchText } from "@aov/ui/lib/search-text"
+import "./guide-blessings.css"
 
 const BLESSING_TIERS = ["NORMAL", "EPIC", "LEGENDARY"] as const
 
@@ -14,7 +16,7 @@ const BLESSING_TIERS = ["NORMAL", "EPIC", "LEGENDARY"] as const
 function TierIcon({ tier, size = 18 }: { tier: Blessing["tier"]; size?: number }) {
   return (
     <svg
-      className="tier-icon"
+      className="wiki-guide-tier-icon"
       style={TIER_STYLE[tier]}
       width={size}
       height={size}
@@ -52,13 +54,12 @@ function TierIcon({ tier, size = 18 }: { tier: Blessing["tier"]; size?: number }
 /** Blessings by tier, each a row with the game's card icon; a search and one chip per tier narrow them. */
 export function BlessingsTab({ index }: { index: GuideIndex }) {
   const compact = usePageLayout() === "compact"
-  const { locale } = useWikiContext()
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const text = useWikiText()
   const [tier, setTier] = useState<Blessing["tier"] | null>(null)
   const [search, setSearch] = useState("")
-  const needle = foldText(search.trim())
+  const needle = foldSearchText(search.trim())
   const matches = (blessing: Blessing) =>
-    !needle || foldText(`${blessing.name} ${blessing.description ?? ""}`).includes(needle)
+    !needle || foldSearchText(`${blessing.name} ${blessing.description ?? ""}`).includes(needle)
   const sections = BLESSING_TIERS.filter((value) => !tier || tier === value)
     .map((value) => ({
       tier: value,
@@ -66,20 +67,20 @@ export function BlessingsTab({ index }: { index: GuideIndex }) {
     }))
     .filter((section) => section.blessings.length)
   return (
-    <section className="guide-tab-body" aria-label={text("Chúc phúc", "Blessings")}>
-      <div className="guide-toolbar" data-stack={compact || undefined}>
+    <section className="wiki-guide-tab-body" aria-label={text("Chúc phúc", "Blessings")}>
+      <div className="wiki-guide-toolbar" data-stack={compact || undefined}>
         <GuideSearch
           value={search}
           onChange={setSearch}
           label={text("Tìm chúc phúc", "Search blessings")}
-          placeholder="Tìm tên, hiệu ứng…"
+          placeholder={text("Tìm tên, hiệu ứng…", "Search names, effects…")}
         />
-        <div className="mode-chip-row" role="group" aria-label={text("Bậc chúc phúc", "Blessing tiers")}>
+        <div className="wiki-mode-chip-row" role="group" aria-label={text("Bậc chúc phúc", "Blessing tiers")}>
           {BLESSING_TIERS.map((value) => (
             <button
               key={value}
               type="button"
-              className="mode-chip"
+              className="wiki-mode-chip"
               aria-pressed={tier === value}
               onClick={() => setTier(tier === value ? null : value)}
             >
@@ -91,16 +92,16 @@ export function BlessingsTab({ index }: { index: GuideIndex }) {
         </div>
       </div>
       {sections.map((section) => (
-        <section key={section.tier} className="mode-section" aria-labelledby={`blessing-tier-${section.tier}`}>
+        <section key={section.tier} className="wiki-mode-section" aria-labelledby={`blessing-tier-${section.tier}`}>
           <ModeHeading
             id={`blessing-tier-${section.tier}`}
             title={text(...BLESSING_TIER_NAMES[section.tier])}
             count={section.blessings.length}
             icon={<TierIcon tier={section.tier} size={20} />}
           />
-          <ul className="guide-entries" data-columns="3">
+          <ul className="wiki-guide-entries" data-columns="3">
             {section.blessings.map((blessing) => (
-              <li key={blessing.code} className="guide-entry">
+              <li key={blessing.code} className="wiki-guide-entry">
                 <BlessingIcon blessing={blessing} index={index} />
                 <div>
                   <h3>{blessing.name}</h3>
@@ -116,7 +117,12 @@ export function BlessingsTab({ index }: { index: GuideIndex }) {
         </section>
       ))}
       {!sections.length && (
-        <p className="mode-empty">Không có chúc phúc khớp “{search.trim()}”. Thử tên khác hoặc bỏ chọn bậc.</p>
+        <p className="wiki-mode-empty">
+          {text(
+            `Không có chúc phúc khớp “${search.trim()}”. Thử tên khác hoặc bỏ chọn bậc.`,
+            `No blessing matches “${search.trim()}”. Try another name or clear the tier.`,
+          )}
+        </p>
       )}
     </section>
   )

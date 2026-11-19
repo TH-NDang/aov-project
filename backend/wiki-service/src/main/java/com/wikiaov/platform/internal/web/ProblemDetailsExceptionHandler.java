@@ -234,6 +234,7 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
         if (ex instanceof MaxUploadSizeExceededException) {
             return PlatformErrorCode.PAYLOAD_TOO_LARGE;
         }
+
         return status.is5xxServerError() ? PlatformErrorCode.INTERNAL_ERROR : PlatformErrorCode.INVALID_REQUEST;
     }
 

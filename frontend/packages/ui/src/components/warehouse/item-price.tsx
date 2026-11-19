@@ -1,17 +1,18 @@
 import { Coins } from "lucide-react"
 import { useWarehouseText } from "./warehouse-view"
+import { formatGameNumber } from "@aov/ui/lib/game-number"
 
 export function ItemPrice({
   amount,
-  locale,
   badge = false,
 }: {
   amount?: number | null
-  locale: string
+  /** @deprecated A price is written as the game writes it, so the locale no longer changes it. */
+  locale?: string
   badge?: boolean
 }) {
   const t = useWarehouseText()
-  const number = amount?.toLocaleString(locale)
+  const number = amount == null ? undefined : formatGameNumber(amount)
   const label = number == null ? t("Chưa rõ giá", "Price unknown") : `${number} ${t("vàng", "gold")}`
 
   if (badge) {
@@ -30,7 +31,7 @@ export function ItemPrice({
   if (number == null) return null
   return (
     <span className="inline-flex items-center gap-1 whitespace-nowrap">
-      <Coins aria-hidden="true" className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+      <Coins aria-hidden="true" className="size-3.5 shrink-0 text-(--aov-game-gold)" />
       <span className="item-price-text">{label}</span>
     </span>
   )

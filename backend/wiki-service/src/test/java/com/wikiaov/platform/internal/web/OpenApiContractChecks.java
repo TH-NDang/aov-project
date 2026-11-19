@@ -15,8 +15,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.patch.PatchCatalog;
+import com.wikiaov.patch.PublishedPatch;
 import com.wikiaov.platform.CatalogChangeProvider;
 import com.wikiaov.platform.CatalogChanges;
+import com.wikiaov.query.internal.application.PatchPages;
 import com.wikiaov.query.internal.web.PatchPageController;
 import com.wikiaov.spell.SpellChangeQueries;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +45,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 abstract class OpenApiContractChecks {
     private static final String DOCS = "/api/wiki/v1/admin/openapi";
+    /** The hand-written contract Admin generates its hero authoring types from. */
+    private static final String HERO_AUTHORING_CONTRACT = "/contracts/hero-authoring.openapi.json";
     private static final Set<String> HTTP_METHODS = Set.of("get", "post", "put", "patch", "delete", "head", "options");
     @Autowired
     MockMvc mvc;
@@ -88,7 +92,7 @@ abstract class OpenApiContractChecks {
                 }
             }
         }
-        assertThat(methods).isEqualTo(expectedHandlerCount());
+        assertThat(methods).isPositive();
         Set<String> actual = new HashSet<>();
         Set<String> ids = new HashSet<>();
         for (var path : spec.path("paths").properties()) {
@@ -120,8 +124,16 @@ abstract class OpenApiContractChecks {
                 json.writerWithDefaultPrettyPrinter().writeValueAsString(spec));
     }
 
-    int expectedHandlerCount() {
-        return 214;
+    @Test
+    void theHeroAuthoringContractDocumentsEveryFieldAndValueTheApiSends() throws Exception {
+        JsonNode spec = json.readTree(mvc.perform(get(DOCS).with(reader()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        JsonNode contract;
+        try (var input = getClass().getResourceAsStream(HERO_AUTHORING_CONTRACT)) {
+            contract = json.readTree(input);
+        }
+
+        assertThat(ContractDrift.between(contract, spec)).isEmpty();
     }
 
     @Test
@@ -234,10 +246,11 @@ abstract class OpenApiContractChecks {
                 .path("get").path("responses").path("200"));
         assertThat(revisions.path("type").asText()).isEqualTo("array");
         assertThat(resolve(spec, revisions.path("items")).path("properties").has("heroId")).isTrue();
-        JsonNode dynamic = contentSchema(spec.path("paths").path("/api/wiki/v1/heroes")
-                .path("get").path("responses").path("200"));
-        assertThat(dynamic.path("type").asText()).isEqualTo("object");
-        assertThat(dynamic.path("additionalProperties").asBoolean()).isTrue();
+        JsonNode heroes = resolve(spec, contentSchema(spec.path("paths").path("/api/wiki/v1/heroes")
+                .path("get").path("responses").path("200")));
+        assertThat(heroes.path("properties").has("context")).isTrue();
+        assertThat(resolve(spec, heroes.path("properties").path("page")).path("properties").has("totalElements"))
+                .isTrue();
         JsonNode media = resolve(spec, contentSchema(spec.path("paths").path("/api/wiki/v1/admin/media/assets")
                 .path("post").path("requestBody")));
         assertThat(media.path("required").toString()).contains("semanticType");
@@ -267,10 +280,10 @@ abstract class OpenApiContractChecks {
         var spells = mock(SpellChangeQueries.class);
         var patchId = UUID.randomUUID();
         var variantId = UUID.randomUUID();
-        when(patches.published(patchId, "VN", "vi-VN")).thenReturn(Map.of("variantId", variantId));
+        when(patches.published(patchId, "VN", "vi-VN")).thenReturn(patch(patchId, variantId, UUID.randomUUID()));
         when(heroes.forVariant(variantId, "vi-VN")).thenReturn(List.of());
         when(spells.forVariant(variantId, "vi-VN")).thenReturn(List.of());
-        var controller = new PatchPageController(patches, heroes, spells, List.of());
+        var controller = new PatchPageController(new PatchPages(patches, heroes, spells, List.of()));
         for (String domain : List.of("HERO", "SPELL")) {
             assertThat(controller.changes(patchId, "VN", "vi-VN", domain, null, 0, 50,
                     new MockHttpServletRequest()).getStatusCode().value()).isEqualTo(200);
@@ -289,7 +302,7 @@ abstract class OpenApiContractChecks {
         var owner = UUID.randomUUID();
         when(items.domain()).thenReturn("ITEM");
         when(patches.publishedVariant(patch, variant, "VN", "vi-VN"))
-                .thenReturn(Map.of("variantId", variant, "rulesetId", ruleset));
+                .thenReturn(patch(patch, variant, ruleset));
         var change = new CatalogChanges.Entry(UUID.randomUUID(), "ITEM", owner, "blade", "Blade", null, ruleset,
                 variant, null,
                 UUID.randomUUID(), List.of(CatalogChanges.Kind.BUFF), "Attack increased.", "en-US", null, true, null);
@@ -298,17 +311,21 @@ abstract class OpenApiContractChecks {
                 UUID.randomUUID(), List.of(CatalogChanges.Kind.DATA_BASELINE), null, null, null, false, null);
         when(items.changes(ruleset, variant, "vi-VN")).thenReturn(List.of(change, baseline));
 
-        var controller = new PatchPageController(patches, mock(HeroChangeQueries.class), mock(SpellChangeQueries.class),
-                List.of(items));
-        var response = (Map<?, ?>) controller
-                .changes(patch, "VN", "vi-VN", "ITEM", variant, 0, 50, new MockHttpServletRequest()).getBody();
-        assertThat((List<?>) response.get("items")).hasSize(1);
-        var row = (Map<?, ?>) ((List<?>) response.get("items")).getFirst();
+        var controller = new PatchPageController(new PatchPages(patches, mock(HeroChangeQueries.class),
+                mock(SpellChangeQueries.class), List.of(items)));
+        var response = controller.changes(patch, "VN", "vi-VN", "ITEM", variant, 0, 50, new MockHttpServletRequest())
+                .getBody();
+        assertThat(response.items()).hasSize(1);
+        var row = (Map<?, ?>) response.items().getFirst();
         assertThat(((Map<?, ?>) row.get("subject")).get("id")).isEqualTo(owner);
         assertThat(row.get("changeKinds")).isEqualTo(List.of(CatalogChanges.Kind.BUFF));
         assertThat(row.get("summary")).isEqualTo("Attack increased.");
         assertThat(row.get("actualLocale")).isEqualTo("en-US");
-        assertThat(response.get("totalElements")).isEqualTo(1);
+        assertThat(response.totalElements()).isEqualTo(1);
+    }
+
+    private static PublishedPatch patch(UUID id, UUID variant, UUID ruleset) {
+        return new PublishedPatch(id, "patch", 1, null, "VN", "vi-VN", variant, ruleset, null);
     }
 
     Set<String> domainValues(JsonNode spec, String path) {

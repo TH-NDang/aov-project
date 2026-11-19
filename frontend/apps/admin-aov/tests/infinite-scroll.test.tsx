@@ -1,11 +1,11 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act, Activity } from "react"
 import { intersectionHarness } from "./fixtures/intersection-observer"
+import { createWindow, installWindow } from "./fixtures/dom"
 
-type InfiniteScrollComponent = typeof import("../src/components/infinite-scroll").InfiniteScroll
+type InfiniteScrollComponent = typeof import("@aov/ui/components/infinite-scroll").InfiniteScroll
 type PagingQuery = React.ComponentProps<InfiniteScrollComponent>["query"]
 
 function pagingQuery(fetchNextPage: PagingQuery["fetchNextPage"]): PagingQuery {
@@ -21,25 +21,13 @@ async function withUi(
     sentinel: () => HTMLElement
   }) => Promise<void>,
 ) {
-  const dom = new JSDOM('<div id="root"></div>', { pretendToBeVisual: true })
+  const dom = createWindow()
   const intersections = intersectionHarness()
-  const originals = new Map<string, PropertyDescriptor | undefined>()
-  for (const [key, value] of Object.entries({
-    React,
-    window: dom.window,
-    document: dom.window.document,
-    navigator: dom.window.navigator,
-    HTMLElement: dom.window.HTMLElement,
-    Element: dom.window.Element,
-    Node: dom.window.Node,
-    getComputedStyle: dom.window.getComputedStyle,
+  let restoreGlobals = () => {}
+  restoreGlobals = installWindow(dom.window, {
     IntersectionObserver: intersections.Observer,
-    IS_REACT_ACT_ENVIRONMENT: true,
-  })) {
-    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
-    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  }
-  const { InfiniteScroll } = await import("../src/components/infinite-scroll")
+  })
+  const { InfiniteScroll } = await import("@aov/ui/components/infinite-scroll")
   const { createRoot } = await import("react-dom/client")
   const root = createRoot(dom.window.document.getElementById("root")!)
   try {
@@ -59,10 +47,7 @@ async function withUi(
   } finally {
     await act(async () => root.unmount())
     dom.window.close()
-    for (const [key, descriptor] of originals) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
-    }
+    restoreGlobals()
   }
 }
 
