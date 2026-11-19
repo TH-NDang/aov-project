@@ -74,6 +74,17 @@ export type CompetitionStanding = {
   tied: boolean
   qualified: boolean
 }
+/**
+ * A profile page a competition names for its broadcast or staff, as the snapshot read it. A page that was not
+ * published has no `code` or picture, and readers do not link to it.
+ */
+export type CompetitionPerson = {
+  id: string
+  code?: string | null
+  name: string
+  avatarUrl?: string | null
+  published: boolean
+}
 export type CompetitionSnapshot = {
   circuit?: { id: string; code: string; name: string; logoUrl?: string | null; published: boolean } | null
   organizer?: { id: string; code: string; name: string; logoUrl?: string | null; published: boolean } | null
@@ -85,6 +96,8 @@ export type CompetitionSnapshot = {
   rosters: RosterMembershipContent[]
   resolved: ResolvedMatch[]
   standings: { stageCode: string; complete: boolean; rows: CompetitionStanding[] }[]
+  /** Absent in snapshots taken before ADR-032. */
+  people?: Record<string, CompetitionPerson>
 }
 export type CompetitionView = { id: string; version: number; publishedAt?: string | null; content: CompetitionSnapshot }
 export type CompetitionSummary = {

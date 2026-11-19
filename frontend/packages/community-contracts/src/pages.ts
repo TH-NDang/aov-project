@@ -18,11 +18,13 @@ export type PageRole = "OWNER" | "EDITOR" | "MODERATOR"
 /** `official` marks a channel run by the organization, team or player itself. */
 export type ProfileLink = { label: string; url: string; official?: boolean | null }
 export type ProfileSource = { label: string; url: string; checkedOn?: string | null }
+/** A milestone; `tournamentId` names the tournament it happened at, when the app records it. */
 export type ProfileHistory = {
   startsOn?: string | null
   endsOn?: string | null
   title: string
   relatedPageId?: string | null
+  tournamentId?: string | null
   role?: string | null
   sourceUrl?: string | null
 }
@@ -74,6 +76,8 @@ export type ProfileContent = {
   roster: ProfileMember[]
   personRoles?: PersonRole[]
   channelOrganizationId?: string | null
+  /** The organization that owns a team; only team pages have one. */
+  organizationId?: string | null
 }
 export type TeamAffiliation = {
   teamPageId: string
