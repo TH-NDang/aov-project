@@ -75,3 +75,11 @@ jobs:
           docker pull --quiet "${{ steps.name.outputs.ref }}"
           docker run --rm -e SITE_ADDRESS=:80 -v "$PWD/infra/proxy:/etc/caddy:ro" "${{ steps.name.outputs.ref }}" \
             caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      # wiki-prerender runs only on the server, where a module missing from the image leaves the Wiki on its old bundle.
+      # Loading the job resolves every import it makes without rendering anything.
+      - name: Load the Wiki prerender job with this image's Node
+        if: matrix.image == 'web'
+        run: |
+          docker pull --quiet "${{ steps.name.outputs.ref }}"
+          docker run --rm "${{ steps.name.outputs.ref }}" node --experimental-strip-types \
+            --disable-warning=ExperimentalWarning --input-type=module -e 'await import("/job/scripts/prerender-job.mts")'
