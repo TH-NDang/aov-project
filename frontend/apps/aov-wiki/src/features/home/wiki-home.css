@@ -1,4 +1,4 @@
-/* Home: an opening with the search, the sections, then what the version in force changed. */
+/* Home: an opening, the sections, then what the version in force changed. */
 .wiki-home {
   color: var(--aov-text);
 }
@@ -7,8 +7,6 @@
 /* Hero artwork fills the right of the band and fades into the page on the left and at the bottom. */
 .wiki-home-intro {
   position: relative;
-  /* Above the sections that follow, so the open list of the search is not painted over. */
-  z-index: 1;
   isolation: isolate;
   display: flex;
   min-height: 340px;
@@ -53,9 +51,6 @@
   font: 700 2.5rem/3rem var(--wiki-font-display);
   letter-spacing: -0.02em;
   text-wrap: balance;
-}
-.wiki-home-intro .wiki-search {
-  width: min(100%, 620px);
 }
 .wiki-home-patch-pill {
   font: var(--wiki-type-category);

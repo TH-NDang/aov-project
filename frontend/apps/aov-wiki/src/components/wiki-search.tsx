@@ -85,7 +85,7 @@ export function WikiSearch({
   autoFocus = false,
   onDone,
 }: {
-  /** `bar` sits in the header, `hero` is the large box on the home page, `sheet` fills the compact header. */
+  /** `bar` sits in the header, `hero` is the large box on the not-found page, `sheet` fills the compact header. */
   size?: "bar" | "hero" | "sheet"
   autoFocus?: boolean
   /** Called after the reader picks a result or submits, so the caller can close what holds the search. */

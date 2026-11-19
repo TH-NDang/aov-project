@@ -7,8 +7,14 @@
   `src/layout/wiki-library-layout.tsx`; chi tiết tướng dùng `HeroDetailLayout` trong cùng file. Trang chủ, Liên hệ, Tài
   khoản và trang không tìm thấy tự đặt header của mình.
 - Trang nằm trong cột `--aov-page-max` (1280px), lề `--wiki-gutter` mỗi bên, cùng cột với thanh đầu trang nên logo và
-  nội dung bắt đầu trên cùng một đường. Không có cột mục lục bên trái: các mục nằm trên thanh đầu trang, hoặc trong tấm
-  mục lục trên compact.
+  nội dung bắt đầu trên cùng một đường.
+- Trên wide, `WikiLibraryLayout` đặt sidebar các mục (`LibraryNavigation layout="sidebar"` trong
+  `src/components/library-navigation.tsx`) bên trái trang: Trang chủ, rồi các mục theo nhóm Sổ tay nhân vật, Kho trang
+  bị, Lối chơi, Tham khảo, mục đang ở được tô vàng. Sidebar rộng 200px, dính dưới thanh đầu trang và tự cuộn nếu cửa
+  sổ thấp; dưới 1180px chỉ còn icon (52px), tên mục hiện trong tooltip bên phải icon ngay khi rê chuột hoặc focus
+  bằng bàn phím. Trang chủ không có sidebar vì đã có các ô mục. Chi tiết tướng (`HeroDetailLayout`) cũng không có:
+  ảnh tướng trải hết bề ngang, trang có đường quay lại Thư viện Tướng và mục lục "Trên trang này" của riêng nó. Trên
+  compact các mục nằm trong tấm mục lục mở từ header.
 - Mỗi trang danh sách mở bằng `CatalogHeading` (`src/layout/catalog-heading.tsx`): tiêu đề (`title`), tối đa một dòng mờ
   (`lead`), tối đa một nút hoặc phiên bản dữ liệu bên phải (`action`), và đường quay lại (`back`) cho trang không mở từ
   header. Trên compact phần này không hiện vì header đã ghi tên trang; trang mà header không ghi tên (Liên hệ, Tài khoản)
@@ -30,17 +36,18 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 ## Trang chủ
 
-- Thứ tự giống nhau ở hai bố cục (`src/features/home/wiki-home.tsx`): mở đầu có ô tìm kiếm → các mục của Wiki → thay đổi
+- Thứ tự giống nhau ở hai bố cục (`src/features/home/wiki-home.tsx`): mở đầu → các mục của Wiki → thay đổi
   của bản đang áp dụng → các bản cập nhật trong mùa và các vai trò. Hai bố cục chỉ khác tỉ lệ.
-- Mở đầu (`HomeIntro`): dòng nhỏ "AOV Wiki · Liên Quân Mobile", tiêu đề, ô tìm lớn (`WikiSearch size="hero"`, xem
-  `header.md`) và một dòng về bản đang áp dụng (ngày, tên bản, số tướng thay đổi) dẫn tới ghi chú của bản đó. Phía sau là
+- Mở đầu (`HomeIntro`): dòng nhỏ "AOV Wiki · Liên Quân Mobile", tiêu đề và một dòng về bản đang áp dụng (ngày, tên bản, số tướng thay đổi) dẫn tới ghi chú của bản đó. Phía sau là
   ảnh tướng của ngày (`home-banners.ts`: mỗi ngày một trong ba ảnh, tên tướng ghi ở góc), phủ nửa phải và mờ dần vào
   nền ở mép trái và mép dưới. Ảnh không tự chuyển trong lúc đọc. Trên compact ảnh nằm trên cùng, header trong suốt đè lên.
 - Các mục (`HomeSections`, dùng `WikiSectionTiles` trong `src/components/wiki-section-tiles.tsx`): chín ô Tướng, Trang
   phục, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, Chế độ chơi, Cập nhật, Thuật ngữ, lấy từ `src/lib/wiki-sections.ts`. Sáu
   ô đầu ghi số mục đã xuất bản, đọc từ tổng của một trang một dòng ở từng API danh mục (số tướng lấy từ danh sách tướng);
-  ba ô sau ghi một dòng mô tả. Từ 1180px chín ô nằm một hàng; 900–1179px thành 3 × 3, icon cạnh tên; compact 3 × 3, icon
-  trên tên, bỏ dòng phụ. Trang không tìm thấy dùng cùng bộ ô này.
+  ba ô sau ghi một dòng mô tả. Mỗi ô không có nền card: icon ở trên, tên, rồi dòng phụ mờ; rê chuột thì tên chuyển vàng
+  và icon nhích lên. Luôn tối đa hai hàng: từ 1180px chín ô một hàng; 900–1179px năm rồi bốn; compact ba ô một hàng, hiện
+  hai hàng đầu và phần trên của hàng thứ ba mờ dần (không bấm được) để người đọc biết còn mục; mũi tên mờ đè lên đó mở
+  hàng thứ ba và đổi chiều để thu gọn. Trang không tìm thấy dùng cùng bộ ô này.
 - Thay đổi ở bản đang áp dụng (`HomePatchChanges`): các tướng có ghi chú thay đổi ở bản đang áp dụng, nhóm theo loại
   thay đổi (mới, làm lại, tăng sức mạnh, giảm sức mạnh, rồi các loại khác), mỗi nhóm có hình và tên loại cùng số tướng.
   Mỗi tướng là một thẻ nhỏ có ảnh, tên và vai trò, vạch màu của loại bên trái; tướng đã có hồ sơ công khai thì mở trang

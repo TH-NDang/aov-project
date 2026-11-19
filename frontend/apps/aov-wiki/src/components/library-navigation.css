@@ -34,3 +34,61 @@
   color: var(--aov-accent);
   box-shadow: inset 2px 0 var(--aov-accent);
 }
+
+/* Sidebar of the wide layout: the same list, tighter, inside a column that starts at the page's edge. */
+.wiki-library-navigation[data-layout="sidebar"] {
+  padding: 0;
+}
+.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-group {
+  margin: 0 0 16px;
+}
+.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link {
+  min-height: 40px;
+  padding: 6px 10px;
+  color: var(--aov-text-soft);
+}
+.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link:hover {
+  color: var(--aov-text);
+}
+.wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link[aria-current="page"] {
+  color: var(--aov-accent);
+}
+/* Narrow desktops and tablets on their side: only the icons stay, each named by its tooltip and for screen readers. */
+@media (max-width: 1179.98px) {
+  .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-group {
+    margin-bottom: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--aov-line);
+  }
+  .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-group + .wiki-library-nav-group {
+    padding-top: 8px;
+  }
+  .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-group:last-child {
+    border-bottom: 0;
+  }
+  .wiki-library-navigation[data-layout="sidebar"] .wiki-library-nav-link {
+    justify-content: center;
+    padding: 6px;
+  }
+  .wiki-library-navigation[data-layout="sidebar"] :is(h3, .wiki-library-nav-name) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+/* The name of an icon in the narrowed sidebar, drawn like the Wiki's other popovers rather than the light default. */
+.wiki-library-nav-tooltip[data-slot="tooltip-content"] {
+  font: var(--wiki-type-meta);
+  padding: 6px 10px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-popover);
+  color: var(--aov-text);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-library-nav-tooltip[data-slot="tooltip-content"] svg {
+  visibility: hidden;
+}

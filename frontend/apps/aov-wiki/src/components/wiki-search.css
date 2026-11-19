@@ -45,7 +45,16 @@
   color: var(--aov-text);
 }
 
-/* The large box at the top of the home page. */
+/* The field in the wide header: no outline of its own, a soft round fill that firms up when pointed at. */
+.wiki-search[data-size="bar"] {
+  border-color: transparent;
+  border-radius: var(--aov-radius-pill);
+  background: color-mix(in srgb, var(--aov-text) 6%, transparent);
+}
+.wiki-search[data-size="bar"]:hover {
+  background: color-mix(in srgb, var(--aov-text) 9%, transparent);
+}
+/* The large box of the not-found page. */
 .wiki-search[data-size="hero"] {
   gap: 12px;
   height: 52px;
