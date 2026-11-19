@@ -56,33 +56,35 @@ async function liveBundle(siteDir: string, present: string[]): Promise<Set<strin
   return new Set(present.filter(isBundle))
 }
 
-/**
- * Whether `siteDir` already serves the bundle of `distDir`: the same release, where only pages would change. Bundle
- * files are named by their content, so a new build of different code brings different names.
- */
+/** Bundle files are named by their content, so a new build of different code brings different names. */
+function sameRelease(built: string[], live: Set<string>) {
+  const bundle = built.filter(isBundle).map((file) => path.normalize(file))
+  return bundle.length === live.size && bundle.every((file) => live.has(file))
+}
+
+/** Whether `siteDir` already serves the bundle of `distDir`: the same release, where only pages would change. */
 export async function servesBundleOf(distDir: string, siteDir: string) {
-  const built = (await filesIn(distDir)).filter(isBundle).map((file) => path.normalize(file))
   const present = await filesIn(siteDir).catch(() => [])
   const live = await liveBundle(
     siteDir,
     present.filter((file) => file !== PUBLISHED_BUNDLE),
   )
 
-  return built.length === live.size && built.every((file) => live.has(file))
+  return sameRelease(await filesIn(distDir), live)
 }
 
 /**
  * Makes `siteDir` hold what `distDir` holds while the proxy keeps serving it. New files arrive before old ones leave
  * and each one is swapped by a rename, so any page a reader gets still finds the bundle it refers to. The bundle of
  * the release being replaced stays until the next release, so a tab that opened it can still load a chunk later.
+ * Publishing the live release again, with new pages only, is not a release: what it kept from the one before stays.
  */
 export async function publishSite(distDir: string, siteDir: string) {
   const wanted = await filesIn(distDir)
   await mkdir(siteDir, { recursive: true })
-  const previousBundle = await liveBundle(
-    siteDir,
-    (await filesIn(siteDir)).filter((file) => file !== PUBLISHED_BUNDLE),
-  )
+  const before = (await filesIn(siteDir)).filter((file) => file !== PUBLISHED_BUNDLE)
+  const live = await liveBundle(siteDir, before)
+  const previousBundle = sameRelease(wanted, live) ? new Set(before.filter(isBundle)) : live
 
   const queue = [...wanted]
   await Promise.all(
