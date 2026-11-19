@@ -94,6 +94,13 @@ của giải; trước đây bản nháp này chặn mọi giải đã có thể
 mùa giải của đơn vị tổ chức hay chuỗi giải không hiện bản thể thức đó; khôi phục giải thì hiện lại. Thể thức đã từng
 công bố hoặc thu hồi vẫn là lịch sử và tiếp tục chặn việc xóa như cũ.
 
+Bổ sung 2026-11-19: bản thể thức và lịch sử thể thức của giải đã vào thùng rác đi theo giải. Như các trận, ván và
+dòng đội hình đăng ký của giải đó, chúng không còn giữ đội, tuyển thủ hay bản ghi nào khác của sổ đăng ký ngoài thùng
+rác. Trước đây, sau khi bỏ một giải vào thùng rác, mọi đội trong thể thức của nó không xóa được nữa.
+Chúng vẫn chặn xóa hẳn page mà chúng nêu tên, vì page bị xóa vĩnh viễn còn giải thì khôi phục được. Cùng ngày, page
+nháp chưa từng công bố và không có hoạt động của một đội/tuyển thủ được coi là một phần của danh tính đó: nó không chặn
+việc xóa danh tính và vào thùng rác cùng danh tính (chi tiết ở 04-QUAN-LY-THI-DAU-VA-PAGE, "Đưa danh tính vào thùng rác").
+
 Các thao tác ghi dùng cùng một khóa transaction phạm vi đồ thị tham chiếu giải đấu trong PostgreSQL,
 để việc tạo liên kết không chạy lọt giữa kiểm tra sử dụng và xóa. Khóa này chỉ bao quanh công việc
 database nhập tay; không giữ khóa trong lúc gọi Wiki, upload ảnh hay chờ dịch vụ ngoài.
