@@ -109,17 +109,20 @@
 }
 .public-app-trigger:hover,
 .public-app-trigger[data-state="open"] {
-  border-color: var(--app-border);
   background: var(--app-hover);
 }
+/* A plain mark beside the wordmark: the trigger's own hover is the only backing. */
 .public-app-chevron {
   display: grid;
-  width: 22px;
+  width: 16px;
   height: 22px;
   place-items: center;
-  border-radius: var(--aov-radius-control);
-  background: var(--app-hover);
+  margin-left: -4px;
   color: var(--app-muted);
+}
+.public-app-trigger:hover .public-app-chevron,
+.public-app-trigger[data-state="open"] .public-app-chevron {
+  color: var(--app-text);
 }
 .public-app-chevron > svg {
   width: 14px;
@@ -129,109 +132,94 @@
 .public-app-trigger[data-state="open"] .public-app-chevron > svg {
   transform: rotate(180deg);
 }
+/* The app switcher: a short title, then one quiet row per app with its logo, name and one line about it. */
 .public-app-menu {
-  width: min(352px, calc(100vw - 24px));
-  padding: 8px;
+  width: min(344px, calc(100vw - 24px));
+  padding: 6px;
   border: 1px solid var(--app-border);
-  border-radius: var(--aov-radius-media);
+  border-radius: var(--aov-radius-card);
   background: var(--app-surface);
   color: var(--app-text);
   box-shadow: var(--aov-shadow-lg);
 }
 .public-app-menu-title {
   display: block;
-  margin: 0 4px 8px;
-  padding: 8px 6px 12px;
-  border-bottom: 1px solid var(--app-border);
+  padding: 6px 10px 8px;
   color: var(--app-muted);
   font-size: 12px;
   font-weight: 600;
   line-height: 16px;
-  letter-spacing: 0.025em;
 }
 .public-app-option {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 86px;
-  padding: 12px;
-  border: 1px solid transparent;
-  border-radius: var(--aov-radius-card);
+  min-height: 56px;
+  padding: 8px 10px;
+  border-radius: var(--aov-radius-control);
   color: var(--app-text);
   text-decoration: none;
   cursor: pointer;
-  transition:
-    background 150ms,
-    border-color 150ms;
+  outline: 0;
+  transition: background 150ms;
 }
 .public-app-option + .public-app-option {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 .public-app-option[data-current="true"] {
-  border-color: color-mix(in srgb, var(--app-accent) 24%, transparent);
   background: var(--app-selected);
 }
-.public-app-option:hover,
-.public-app-option:focus {
-  border-color: var(--app-border);
+.public-app-option:is(:hover, :focus-visible, [data-highlighted]) {
   background: var(--app-hover);
   color: var(--app-text);
 }
 .public-app-option-image {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
-  border-radius: var(--aov-radius-card);
+  border-radius: var(--aov-radius-control);
   object-fit: cover;
-  box-shadow: 0 0 0 1px #ffffff14;
 }
 .public-app-option-copy {
   display: flex;
   min-width: 0;
   flex: 1;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
-.public-app-option-heading {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px 10px;
+.public-app-option-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
 }
-.public-app-option .public-app-wordmark {
-  font-size: 20px;
-}
-.public-app-current {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--app-accent);
+.public-app-description {
+  overflow: hidden;
+  color: var(--app-muted);
   font-size: 12px;
   font-weight: 400;
   line-height: 16px;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.public-app-current::before {
-  width: 4px;
-  height: 4px;
-  border-radius: var(--aov-radius-pill);
-  background: currentColor;
-  content: "";
-}
-.public-app-description {
-  color: var(--app-muted);
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 18px;
-}
-.public-app-option-arrow {
+.public-app-option-mark {
   flex-shrink: 0;
   color: var(--app-muted);
+  transition:
+    color 150ms,
+    transform 150ms;
+}
+.public-app-option[data-current="true"] .public-app-option-mark {
+  color: var(--app-accent);
+}
+.public-app-option:not([data-current="true"]):is(:hover, :focus-visible, [data-highlighted]) .public-app-option-mark {
+  color: var(--app-accent);
+  transform: translateX(2px);
 }
 @media (prefers-reduced-motion: reduce) {
   .public-app-trigger,
   .public-app-chevron > svg,
-  .public-app-option {
+  .public-app-option,
+  .public-app-option-mark {
     transition: none;
   }
 }

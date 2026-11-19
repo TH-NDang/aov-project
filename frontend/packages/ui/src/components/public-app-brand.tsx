@@ -77,32 +77,22 @@ export function PublicAppOptionBody({
   const t = useLocaleText()
   return (
     <>
-      <img className="public-app-option-image" src={image} alt="" width="44" height="44" />
+      <img className="public-app-option-image" src={image} alt="" width="36" height="36" />
       <span className="public-app-option-copy">
-        <span className="public-app-option-heading">
-          <PublicAppWordmark product={product} />
-          {current && <span className="public-app-current">{currentLabel ?? t("Đang xem", "Current")}</span>}
-        </span>
+        <span className="public-app-option-name">AOV {product}</span>
         <span className="public-app-description">{description}</span>
       </span>
-      {!current && (
-        <svg
-          className="public-app-option-arrow"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M5 12h14m-5-5 5 5-5 5"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
+      {current && <span className="sr-only">{currentLabel ?? t("Đang xem", "Current")}</span>}
+      {/* The app in use carries a check; the other an arrow that lights up when pointed at. */}
+      <svg className="public-app-option-mark" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d={current ? "m5 12.5 4.5 4.5L19 7.5" : "M5 12h14m-5-5 5 5-5 5"}
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
-import { CalendarDays, Clock3, Coins, Globe2, LogIn, LogOut, Moon, Sun, UserRound } from "lucide-react"
+import { CalendarDays, Clock3, Coins, Globe2, LogIn, LogOut, Moon, Sun } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./public-overlay"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./public-select"
 import { PublicCurrencySelect } from "./public-currency-select"
@@ -61,6 +61,7 @@ export function PublicAccountMenu(props: Props) {
         ref={trigger}
         className={`public-account-trigger ${triggerClassName}`}
         data-product={product}
+        data-account={name ? "signed-in" : "guest"}
         aria-label={text("Tài khoản và tùy chọn", "Account and preferences")}
         onPointerEnter={(event) => {
           if (mobile || event.pointerType !== "mouse") return
@@ -78,15 +79,7 @@ export function PublicAccountMenu(props: Props) {
           hovered.current = false
         }}
       >
-        <span className="public-account-trigger-user" aria-hidden="true">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" referrerPolicy="no-referrer" />
-          ) : name ? (
-            Array.from(name.trim())[0]?.toUpperCase()
-          ) : (
-            <UserRound size={19} />
-          )}
-        </span>
+        <AccountAvatar name={name} avatarUrl={avatarUrl} className="public-account-trigger-user" />
       </PopoverTrigger>
       <PopoverContent
         drawerTitle={text("Tài khoản và tùy chọn", "Account and preferences")}
@@ -132,6 +125,7 @@ export function PublicAccountOptions({
   theme,
   onThemeChange,
   name,
+  avatarUrl,
   loading,
   onSignIn,
   onSignOut,
@@ -140,32 +134,21 @@ export function PublicAccountOptions({
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(false)
   const text = localeText(locale)
+  const signedIn = Boolean(name && onSignOut)
   return (
     <>
       <div className="public-account-heading">
-        <span className="public-account-avatar">
-          <UserRound size={21} aria-hidden="true" />
-        </span>
+        <AccountAvatar name={name} avatarUrl={avatarUrl} className="public-account-avatar" />
         <div>
           <strong>{name || text("Chào bạn!", "Welcome!")}</strong>
-          <small>{text("Tài khoản AOV của bạn", "Your AOV account")}</small>
+          <small>
+            {signedIn
+              ? text("Tài khoản AOV của bạn", "Your AOV account")
+              : text("Một tài khoản cho Wiki và Stream", "One account for Wiki and Stream")}
+          </small>
         </div>
       </div>
-      {children && <PublicAccountLinks>{children}</PublicAccountLinks>}
-      <PublicAccountSettings
-        product={product}
-        locale={locale}
-        onLocaleChange={onLocaleChange}
-        languages={languages}
-        theme={theme}
-        onThemeChange={onThemeChange}
-      />
-      {name && onSignOut ? (
-        <button className="public-account-logout" type="button" onClick={onSignOut}>
-          <LogOut size={17} />
-          {text("Đăng xuất", "Sign out")}
-        </button>
-      ) : (
+      {!signedIn && (
         <div className="public-account-signin">
           <button
             type="button"
@@ -181,7 +164,6 @@ export function PublicAccountOptions({
             <LogIn size={17} />
             {pending || loading ? text("Đang kết nối…", "Connecting…") : text("Đăng nhập", "Sign in")}
           </button>
-          <p>{text("Một tài khoản cho Wiki và Stream.", "One account for Wiki and Stream.")}</p>
         </div>
       )}
       {error && (
@@ -189,7 +171,54 @@ export function PublicAccountOptions({
           {text("Chưa mở được đăng nhập. Vui lòng thử lại.", "Could not open sign-in. Please try again.")}
         </p>
       )}
+      {children && <PublicAccountLinks>{children}</PublicAccountLinks>}
+      <p className="public-account-section-label">{text("Tùy chọn", "Preferences")}</p>
+      <PublicAccountSettings
+        product={product}
+        locale={locale}
+        onLocaleChange={onLocaleChange}
+        languages={languages}
+        theme={theme}
+        onThemeChange={onThemeChange}
+      />
+      {signedIn && (
+        <button className="public-account-logout" type="button" onClick={onSignOut}>
+          <LogOut size={17} />
+          {text("Đăng xuất", "Sign out")}
+        </button>
+      )}
     </>
+  )
+}
+
+/**
+ * A guest's picture: a filled head and shoulders that fill the disc and meet its bottom edge, as a default profile
+ * picture does, rather than a thin outline floating in the middle.
+ */
+function GuestFigure() {
+  return (
+    <svg className="public-account-guest" viewBox="0 0 40 40" aria-hidden="true">
+      <circle cx="20" cy="15.5" r="7" fill="currentColor" />
+      <path d="M5.5 40c0-8.6 6.5-14.5 14.5-14.5S34.5 31.4 34.5 40Z" fill="currentColor" />
+    </svg>
+  )
+}
+
+/** The reader's picture, else the first letter of their name, else a figure; round and tinted with the app's accent. */
+function AccountAvatar({
+  name,
+  avatarUrl,
+  className,
+}: {
+  name?: string
+  avatarUrl?: string | null
+  className: string
+}) {
+  const initial = name ? Array.from(name.trim())[0]?.toUpperCase() : undefined
+  return (
+    <span className={className} data-avatar={avatarUrl ? "picture" : initial ? "initial" : "guest"} aria-hidden="true">
+      {avatarUrl ? <img src={avatarUrl} alt="" referrerPolicy="no-referrer" /> : initial ? initial : <GuestFigure />}
+    </span>
   )
 }
 
@@ -325,12 +354,16 @@ export function PublicAccountSettings({
 export function PublicAccountSummary({
   locale,
   name,
+  avatarUrl,
   loading,
   onSignIn,
   onSignOut,
   children,
   layout = "menu",
-}: Pick<PublicAccountOptionsProps, "locale" | "name" | "loading" | "onSignIn" | "onSignOut" | "children"> & {
+}: Pick<
+  PublicAccountOptionsProps,
+  "locale" | "name" | "avatarUrl" | "loading" | "onSignIn" | "onSignOut" | "children"
+> & {
   layout?: PublicAccountLayout
 }) {
   const [pending, setPending] = useState(false)
@@ -338,9 +371,7 @@ export function PublicAccountSummary({
   const text = localeText(locale)
   const summary = (
     <>
-      <span className="public-account-avatar">
-        <UserRound size={19} aria-hidden="true" />
-      </span>
+      <AccountAvatar name={name} avatarUrl={avatarUrl} className="public-account-avatar" />
       <span className="public-account-summary-copy">
         <strong>
           {name ||
