@@ -25,12 +25,10 @@
 .public-app-wordmark[data-product="wiki"] {
   --wordmark-ink: var(--brand-wiki-ink, var(--aov-brand-wiki-ink));
   --wordmark-accent: var(--brand-wiki-accent, var(--aov-brand-wiki-accent));
-  --wordmark-line: var(--wordmark-accent);
 }
 .public-app-wordmark[data-product="stream"] {
-  --wordmark-ink: var(--aov-stream-cream);
-  --wordmark-accent: var(--aov-brand-stream-wordmark);
-  --wordmark-line: var(--aov-stream-gold);
+  --wordmark-ink: var(--brand-stream-ink, var(--aov-stream-cream));
+  --wordmark-accent: var(--brand-stream-accent, var(--aov-brand-stream-wordmark));
 }
 .public-app-option[data-product="wiki"],
 .public-app-trigger[data-product="wiki"] {
@@ -42,54 +40,43 @@
   --app-accent: var(--brand-stream-accent, var(--aov-brand-stream-accent));
   --app-selected: var(--brand-stream-tint, color-mix(in srgb, var(--aov-brand-stream-accent) 8%, transparent));
 }
+/* One wordmark for every product: the same face, size and spacing, only the colours change. */
 .public-app-wordmark {
   display: inline-flex;
-  align-items: center;
-  gap: 0.42em;
+  align-items: baseline;
+  gap: 0.22em;
   color: var(--wordmark-ink);
-  font-family: "Segoe UI", Arial, sans-serif;
-  font-size: 22px;
+  font-family: var(--aov-font-sans);
+  font-size: 19px;
+  font-style: normal;
   line-height: 1;
   white-space: nowrap;
-  font-style: normal;
 }
 .public-app-wordmark[data-size="small"] {
-  font-size: 18px;
+  font-size: 17px;
 }
 .public-app-wordmark-prefix {
-  position: relative;
-  display: inline-block;
-  padding-right: 0.04em;
-  font-family: "Arial Black", "Segoe UI", sans-serif;
   font-weight: 700;
-  font-style: italic;
-  letter-spacing: -0.075em;
-  line-height: 0.95;
-  transform: skewX(-5deg);
+  letter-spacing: -0.03em;
 }
-.public-app-wordmark-prefix::after {
-  position: absolute;
-  right: 0.06em;
-  bottom: -0.18em;
-  left: 0.08em;
-  height: 2px;
-  background: var(--wordmark-line);
-  clip-path: polygon(0 0, 100% 0, 82% 100%, 0 100%);
-  content: "";
-}
+/* The product's name in its accent, with a light sheen from the accent towards the ink. */
 .public-app-wordmark-product {
-  color: var(--wordmark-accent);
-  padding-top: 2px;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 16px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  background: linear-gradient(
+    100deg,
+    var(--wordmark-accent) 35%,
+    color-mix(in srgb, var(--wordmark-accent) 55%, var(--wordmark-ink))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
-.public-app-wordmark-art {
-  display: block;
-  width: auto;
-  height: 1.1em;
+@media (forced-colors: active) {
+  .public-app-wordmark-product {
+    background: none;
+    color: CanvasText;
+  }
 }
 .public-app-trigger {
   display: inline-flex;

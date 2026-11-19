@@ -160,8 +160,9 @@ của người xem, riêng thanh trên và chân trang luôn màu đêm ngả t�
 | Nội dung | Cách trình bày |
 |---|---|
 | Nền trang | Một màu phẳng: sương tím nhạt ở giao diện sáng, đêm ngả tím ở giao diện tối; không họa tiết |
-| Thanh trên | Logo cú, các mục dạng tab chữ: mục đang ở chữ kem và vạch màu nhấn ở chân thanh. Ô tìm kiếm ở giữa và các nút tròn dùng nền mờ, không viền |
-| Chữ logo | Vẽ bằng nét tròn đậm cho hợp con cú: AOV màu kem của mặt cú, Stream màu xanh tím của lông, kèm ngôi sao nhỏ của logo |
+| Thanh trên và chân trang | Theo giao diện: nền trắng ở giao diện sáng, đêm ngả tím ở giao diện tối. Logo cú 32px, các mục dạng tab chữ: mục đang ở chữ đậm và vạch màu nhấn ở chân thanh. Ô tìm kiếm ở giữa và các nút tròn dùng nền mờ, không viền |
+| Tìm kiếm trên điện thoại | Bấm nút tìm kiếm thì thanh thành nút quay lại và ô nhập; bên dưới mở một màn phủ kín trang với lối tắt Bảng tin, Giải đấu, Khám phá và một dòng gợi ý, đến khi người xem tìm |
+| Chữ logo | Cùng một kiểu với Wiki (`PublicAppWordmark`): "AOV" đậm màu chữ, tên sản phẩm màu nhấn có ánh chuyển nhẹ, cùng cỡ chữ ở hai app |
 | Đầu trang danh sách | `.tn-page-head`: tiêu đề 28/36, một dòng mờ (ẩn trên compact), tối đa một nút bên phải |
 | Đầu một giải, một trận | Nền `.hub-art` màu sinh từ tên, vì các giải chưa có ảnh riêng; chỉ cao vừa nội dung |
 | Tiêu đề mục | `.tn-heading`: 18/24 đậm, số đếm mờ, một liên kết bên phải |

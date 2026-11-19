@@ -4,7 +4,7 @@
  * The AOV Stream shell and the blocks every page shares. What one feature renders lives in that feature's stylesheet.
  *
  * Light is the base theme; dark applies when the system asks for it (unless the viewer chose light) or when the viewer
- * chose dark. The top bar and the footer stay violet night in both themes, like the owl of the logo.
+ * chose dark. The top bar and the footer follow the theme: white over the lavender mist, violet night in the dark.
  */
 :root {
   color-scheme: light;
@@ -57,6 +57,12 @@
   --hub-danger: var(--aov-danger);
   --hub-danger-soft: var(--aov-danger-soft);
   --hub-shadow-lg: var(--aov-shadow-lg);
+  /* The top bar and the footer: white over the light page, a step darker than the page in the dark theme. */
+  --hub-bar: light-dark(#fff, var(--aov-stream-night));
+  --hub-bar-line: var(--aov-line);
+  /* The soft round fill of the bar's search and buttons. */
+  --hub-bar-fill: color-mix(in srgb, var(--aov-text) 6%, transparent);
+  --hub-bar-fill-hover: color-mix(in srgb, var(--aov-text) 10%, transparent);
   /*
    * The tile behind a team logo. Most logos are drawn for dark backgrounds (white or pale marks), so on a light page
    * the tile is a mid indigo on which both pale and dark marks stay visible.
@@ -189,16 +195,15 @@ button:disabled {
 }
 .hub-topbar,
 .hub-footer {
-  color-scheme: dark;
-  border-color: var(--aov-stream-indigo-line);
-  background: var(--aov-stream-night);
+  border-color: var(--hub-bar-line);
+  background: var(--hub-bar);
   color: var(--hub-text);
 }
 .hub-topbar {
   position: sticky;
   top: 0;
   z-index: 40;
-  border-bottom: 1px solid var(--aov-stream-indigo-line);
+  border-bottom: 1px solid var(--hub-bar-line);
 }
 .hub-topbar-inner {
   display: flex;
@@ -225,7 +230,10 @@ button:disabled {
   display: inline-flex;
   flex-shrink: 0;
 }
+/* 32px, the size of the Wiki logo, so the two apps open with marks of one size. */
 .stream-brand > img {
+  width: 32px;
+  height: 32px;
   border-radius: var(--hub-radius-sm);
 }
 /* The sections as tabs: the one you are in takes the full text colour over a short accent bar at the foot of the bar. */
@@ -240,7 +248,7 @@ button:disabled {
   align-items: center;
   gap: 6px;
   padding: 0 12px;
-  color: var(--aov-stream-text-muted);
+  color: var(--hub-muted);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
@@ -248,7 +256,7 @@ button:disabled {
 }
 .hub-topnav > a:hover,
 .hub-topnav > a[aria-current] {
-  color: var(--aov-stream-cream);
+  color: var(--hub-text);
 }
 .hub-topnav > a[aria-current]::after {
   content: "";
@@ -272,11 +280,11 @@ button:disabled {
   padding: 0 4px 0 14px;
   border: 1px solid transparent;
   border-radius: var(--aov-radius-pill);
-  background: color-mix(in srgb, var(--aov-stream-cream) 7%, transparent);
+  background: var(--hub-bar-fill);
   color: var(--hub-muted);
 }
 .hub-search:hover {
-  background: color-mix(in srgb, var(--aov-stream-cream) 10%, transparent);
+  background: var(--hub-bar-fill-hover);
 }
 .hub-search:focus-within {
   border-color: var(--hub-accent);
@@ -332,10 +340,10 @@ button:disabled {
 /* In the bar the round buttons match the search: a soft fill instead of an outline. */
 .hub-topbar .hub-icon-button {
   border-color: transparent;
-  background: color-mix(in srgb, var(--aov-stream-cream) 7%, transparent);
+  background: var(--hub-bar-fill);
 }
 .hub-topbar .hub-icon-button:hover {
-  background: color-mix(in srgb, var(--aov-stream-cream) 12%, transparent);
+  background: var(--hub-bar-fill-hover);
 }
 /* The search of the bar folds behind a button where the bar is short of room. */
 .hub-topbar .hub-search-link,
@@ -359,7 +367,7 @@ button:disabled {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border: 2px solid var(--aov-stream-night);
+  border: 2px solid var(--hub-bar);
   border-radius: var(--aov-radius-pill);
   background: var(--hub-accent);
   color: var(--hub-on-accent);
@@ -406,7 +414,7 @@ button:disabled {
   gap: 16px;
   padding: var(--hub-space-4) max(var(--hub-gutter), calc((100% - var(--aov-page-max)) / 2 + var(--hub-gutter)))
     var(--hub-space-5);
-  border-top: 1px solid var(--aov-stream-indigo-line);
+  border-top: 1px solid var(--hub-bar-line);
   color: var(--hub-muted);
   font-size: 12px;
 }
@@ -479,6 +487,63 @@ button:disabled {
     height: 36px;
   }
 }
+/* The search opened from the bar's button: a screen of its own under the bar, shortcuts until a search is made. */
+.hub-search-sheet {
+  display: none;
+}
+@media (max-width: 1099.98px) {
+  .hub-search-sheet {
+    position: fixed;
+    z-index: 39;
+    top: var(--hub-topbar);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: block;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px max(var(--hub-gutter), calc((100% - var(--aov-page-max)) / 2 + var(--hub-gutter)))
+      calc(16px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--hub-bar-line);
+    background: var(--hub-bg);
+  }
+  .hub-search-sheet-title {
+    margin: 10px 0 8px;
+    color: var(--hub-muted);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .hub-search-sheet nav {
+    display: grid;
+    gap: 2px;
+  }
+  .hub-search-sheet nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 12px;
+    border-radius: var(--hub-radius-sm);
+    color: var(--hub-text);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .hub-search-sheet nav a > svg {
+    color: var(--hub-accent);
+  }
+  .hub-search-sheet nav a:is(:hover, :active, :focus-visible) {
+    background: var(--hub-hover);
+  }
+  /* The shortcuts list the tabs, so the tab row under the bar steps aside meanwhile. */
+  .hub-search-shortcuts .hub-topnav {
+    display: none !important;
+  }
+  .hub-search-sheet-hint {
+    margin: 16px 0 0;
+    color: var(--hub-muted);
+    font-size: 13px;
+  }
+}
 /* Compact: the brand row scrolls away and the tab row under it stays pinned. */
 @media (max-width: 899.98px) {
   .hub-topbar {
@@ -507,7 +572,7 @@ button:disabled {
     margin: 0 calc(-1 * var(--hub-gutter));
     padding: 0 6px;
     overflow-x: auto;
-    border-top: 1px solid var(--aov-stream-indigo-line);
+    border-top: 1px solid var(--hub-bar-line);
     scrollbar-width: none;
   }
   .hub-topnav::-webkit-scrollbar {
