@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs"
 import path from "node:path"
 import type { Plugin, ResolvedConfig } from "vite"
-import { parseSiteUrl, renderRobots } from "./src/lib/seo/head-tags.ts"
+import { renderRobots } from "./src/lib/seo/head-tags.ts"
+import { parseSiteUrl } from "./src/lib/seo/site-url.ts"
 
 const NOINDEX = '<meta data-seo name="robots" content="noindex" />'
 const HEAD_END = "<!-- /seo:head -->"

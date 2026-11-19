@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { absoluteUrl, applyPageHead, headTags, parseSiteUrl } from "../src/lib/seo/head-tags.ts"
+import { absoluteUrl, applyPageHead, headTags } from "../src/lib/seo/head-tags.ts"
+import { parseSiteUrl } from "../src/lib/seo/site-url.ts"
 import {
   clampDescription,
   DEFAULT_IMAGE,

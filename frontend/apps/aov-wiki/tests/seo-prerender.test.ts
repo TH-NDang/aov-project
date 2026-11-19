@@ -5,7 +5,7 @@ import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { test, type TestContext } from "node:test"
-import { runPrerenderJob } from "../scripts/prerender-job.mts"
+import { ReleasedWithoutPages, runPrerenderJob } from "../scripts/prerender-job.mts"
 import { PUBLISHED_BUNDLE, publishSite } from "../scripts/publish-site.mts"
 import { prerender } from "../scripts/prerender.mts"
 import { renderRobots } from "../src/lib/seo/head-tags.ts"
@@ -419,15 +419,64 @@ test("a site published before the bundle list existed keeps its bundle for one r
   assert.equal(await exists(path.join(siteDir, "assets/app-old.js")), false)
 })
 
-test("a failing API leaves the live site alone and the job reports it", async (t) => {
+test("a failing API on the release already live leaves the site alone and the job reports it", async (t) => {
   const api = await publicApi(t, failing)
   const distDir = await builtSite(t)
-  const siteDir = await liveSite(t, { "200.html": "old", "hero/airi/index.html": "old" })
+  await mkdir(path.join(distDir, "assets"))
+  await writeFile(path.join(distDir, "assets/app-live.js"), "live")
+  const siteDir = await liveSite(t, {
+    "200.html": TEMPLATE,
+    "assets/app-live.js": "live",
+    "hero/airi/index.html": "old",
+    [PUBLISHED_BUNDLE]: JSON.stringify(["assets/app-live.js"]),
+  })
 
   await assert.rejects(runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 }))
 
-  assert.equal(await readFile(path.join(siteDir, "200.html"), "utf8"), "old")
   assert.equal(await readFile(path.join(siteDir, "hero/airi/index.html"), "utf8"), "old")
+})
+
+/** A site on an older release, with a page that loads its bundle; the build next to it brings a new bundle. */
+async function newRelease(t: TestContext) {
+  const distDir = await builtSite(t)
+  await mkdir(path.join(distDir, "assets"))
+  await writeFile(path.join(distDir, "assets/app-new.js"), "new")
+  const siteDir = await liveSite(t, {
+    "200.html": "old",
+    "assets/app-live.js": "live",
+    "hero/airi/index.html": "old",
+    [PUBLISHED_BUNDLE]: JSON.stringify(["assets/app-live.js"]),
+  })
+  return { distDir, siteDir }
+}
+
+test("a new release goes out without pages when prerendering fails, so its bundle never meets an API it cannot read", async (t) => {
+  const api = await publicApi(t, failing)
+  const { distDir, siteDir } = await newRelease(t)
+
+  await assert.rejects(
+    runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 }),
+    ReleasedWithoutPages,
+  )
+
+  assert.equal(await readFile(path.join(siteDir, "200.html"), "utf8"), TEMPLATE)
+  assert.equal(await readFile(path.join(siteDir, "assets/app-new.js"), "utf8"), "new")
+  assert.equal(await exists(path.join(siteDir, "hero/airi")), false)
+  assert.equal(await readFile(path.join(siteDir, "assets/app-live.js"), "utf8"), "live")
+})
+
+test("a renderer that cannot even load still lets a new release out", async (t) => {
+  const api = await publicApi(t)
+  const { distDir, siteDir } = await newRelease(t)
+  const loadRenderer = () => Promise.reject(new Error("Cannot find package '@aov/ui'"))
+
+  await assert.rejects(
+    runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1, loadRenderer }),
+    (error) => error instanceof ReleasedWithoutPages && /@aov\/ui/.test(error.message),
+  )
+
+  assert.equal(await readFile(path.join(siteDir, "200.html"), "utf8"), TEMPLATE)
+  assert.equal(api.requests.length, 0)
 })
 
 test("the first run leaves a working site even when the API cannot answer yet", async (t) => {

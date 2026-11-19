@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent } from "react"
-import { applyPageHead, parseSiteUrl } from "./head-tags"
+import { applyPageHead } from "./head-tags"
 import type { PageMeta } from "./page-meta"
+import { parseSiteUrl } from "./site-url"
 
 const SITE_URL = parseSiteUrl(import.meta.env.VITE_WIKI_URL)
 
