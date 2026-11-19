@@ -1,7 +1,15 @@
 import { useState } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import type { Lane, PlayerContent, RosterMembershipContent } from "@aov/community-contracts"
+import {
+  personRoleLabels,
+  type DocumentView,
+  type Lane,
+  type PlayerContent,
+  type RosterMembershipContent,
+  type StaffMember,
+  type TournamentContent,
+} from "@aov/community-contracts"
 import { Pencil, Trash2, UserRoundPlus, Users } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
@@ -10,7 +18,9 @@ import { LaneIcon, PlayerPhoto, TeamLogo } from "@/features/esports/components/p
 import { useRecords } from "@/features/esports/data/use-esports-data"
 import { RecordPicker } from "@/features/tournaments/components/record-picker"
 import { TeamRecordSheet } from "@/features/tournaments/components/team-record-sheet"
+import { PersonChip, type KnownPeople } from "@/features/tournaments/components/crew-people"
 import { TeamRosterSheet } from "@/features/tournaments/components/team-roster-sheet"
+import { staffOfTeam } from "@/features/tournaments/model/crew-model"
 import { tournamentApi, tournamentKeys } from "@/features/tournaments/api/tournament-api"
 import { rosterBoard, rosterOrder } from "./model"
 import { Chip, Notice, Panel, type Workspace } from "./parts"
@@ -97,8 +107,33 @@ function Others({
   )
 }
 
-/** Entrants with their tournament rosters drawn out: who plays where, who waits on the bench and who left. */
-export function TeamsStep({ ws }: { ws: Workspace }) {
+/** A team's coaches and analysts at this tournament, on one line under its roster; edited in the roster sheet. */
+function Staff({ lines, people, actorKey }: { lines: StaffMember[]; people: KnownPeople; actorKey: string }) {
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+      <span className="type-label text-muted-foreground">Ban huấn luyện</span>
+      {lines.length ? (
+        lines.map((line) => (
+          <PersonChip
+            key={`${line.pageId}-${line.role}`}
+            pageId={line.pageId}
+            known={people?.[line.pageId]}
+            actorKey={actorKey}
+            meta={line.title || personRoleLabels[line.role]}
+          />
+        ))
+      ) : (
+        <span className="type-meta">Chưa có</span>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Entrants with their tournament rosters drawn out: who plays where, who waits on the bench and who left, and the
+ * team's staff. `tournament` is the record that holds the staff; absent while it loads.
+ */
+export function TeamsStep({ ws, tournament }: { ws: Workspace; tournament?: DocumentView<TournamentContent> }) {
   const [editing, setEditing] = useState(false)
   const [missingOnly, setMissingOnly] = useState(false)
   const [rosterTeam, setRosterTeam] = useState<string | null>(null)
@@ -247,6 +282,13 @@ export function TeamsStep({ ws }: { ws: Workspace }) {
                     </div>
                   )}
                 </>
+              )}
+              {tournament && (
+                <Staff
+                  lines={staffOfTeam(tournament.content.staff, entry.teamId)}
+                  people={ws.entry.content.people}
+                  actorKey={ws.access.actorKey}
+                />
               )}
             </section>
           )

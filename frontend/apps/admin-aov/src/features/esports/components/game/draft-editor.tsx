@@ -22,7 +22,7 @@ import { ReferencePicker } from "./reference-picker"
 import { NativeSelect } from "@/components/native-select"
 import { LANE_LABELS } from "@/lib/lanes"
 
-export type RosterOption = { id: string; name: string; lane?: Lane | null; status?: RosterStatus }
+export type RosterOption = { id: string; name: string; lane?: Lane | null; status?: RosterStatus; photoUrl?: string }
 
 /** Starters first, then members of unknown standing, then substitutes. */
 const STANDING: Record<RosterStatus, number> = { ACTIVE: 0, UNKNOWN: 1, SUBSTITUTE: 2, INACTIVE: 3 }

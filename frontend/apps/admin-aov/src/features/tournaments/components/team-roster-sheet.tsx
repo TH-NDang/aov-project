@@ -9,6 +9,7 @@ import { confirmDiscard } from "@/components/confirm-dialog"
 import { RegistryLogo } from "./registry-logo"
 import { RecordPicker } from "./record-picker"
 import { RosterMembershipForm } from "./roster-membership-form"
+import { TeamStaffSection } from "./team-staff-section"
 import { ROSTER_STATUSES } from "../model/roster-model"
 import { TeamRegionBadge } from "./team-region"
 import { RESULT_VERIFICATIONS } from "./tournament-metadata"
@@ -76,7 +77,9 @@ export function TeamRosterSheet({
 }) {
   const [tournamentId, setTournamentId] = useState(initialTournamentId ?? "")
   const [editor, setEditor] = useState<{ entry?: DocumentView<RosterMembershipContent> } | null>(null)
-  const [dirty, setDirty] = useState(false)
+  const [rosterDirty, setDirty] = useState(false)
+  const [staffDirty, setStaffDirty] = useState(false)
+  const dirty = rosterDirty || staffDirty
   const [busy, setBusy] = useState(false)
   const memberships = useQuery({
     queryKey: tournamentKeys.teamRosters(actorKey, team.id, tournamentId),
@@ -114,10 +117,14 @@ export function TeamRosterSheet({
 
   async function request(action: Action) {
     if (busy) return
-    if (dirty) {
+    // The staff is edited on its own; only leaving the sheet or its tournament drops a staff edit.
+    const staffLost = staffDirty && (action.type === "close" || action.type === "tournament")
+    if (rosterDirty || staffLost) {
       const discard = await confirmDiscard({
-        title: "Đội hình còn thay đổi chưa lưu",
-        description: "Lưu thành viên để giữ thông tin trên máy chủ.",
+        title: rosterDirty ? "Đội hình còn thay đổi chưa lưu" : "Ban huấn luyện còn thay đổi chưa lưu",
+        description: rosterDirty
+          ? "Lưu thành viên để giữ thông tin trên máy chủ."
+          : "Bấm Lưu ở mục Ban huấn luyện để giữ thông tin trên máy chủ.",
       })
       if (!discard) return
     }
@@ -253,7 +260,7 @@ export function TeamRosterSheet({
                           entry={entry}
                           name={`thành viên ${player?.content.nickname || "đội hình"}`}
                           compact
-                          disabled={busy || dirty}
+                          disabled={busy || rosterDirty}
                           onChanged={() => {
                             if (editor?.entry?.id === entry.id) setEditor(null)
                           }}
@@ -269,6 +276,16 @@ export function TeamRosterSheet({
                 <p className="tournament-empty-inline">Chưa ghi nhận tuyển thủ cho đội tại giải này.</p>
               )}
             </>
+          )}
+          {tournamentId && (
+            <TeamStaffSection
+              key={tournamentId}
+              teamId={team.id}
+              tournamentId={tournamentId}
+              actorKey={actorKey}
+              canWrite={canWrite}
+              onDirtyChange={setStaffDirty}
+            />
           )}
         </SheetContent>
       </Sheet>

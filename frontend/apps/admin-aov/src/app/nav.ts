@@ -200,6 +200,12 @@ export const NAV_GROUPS: NavGroup[] = [
             description: "Giải đấu, lịch thi đấu và kết quả",
           },
           {
+            title: "Liên kết cần xem",
+            icon: "page",
+            to: "/link-review",
+            description: "MVP, bình luận viên và người nhận giải còn ghi bằng chữ",
+          },
+          {
             title: "Yêu cầu & kiểm duyệt",
             icon: "moderation",
             to: "/page-requests",

@@ -6,13 +6,17 @@ import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
 import { confirmAction } from "@/components/confirm-dialog"
 import { GameScope } from "@/features/tournaments/components/game-scope"
+import { MvpChooser, usePlayerName } from "@/features/tournaments/components/mvp-chooser"
 import { RecordLifecycleActions } from "@/features/tournaments/components/record-lifecycle-actions"
+import { candidateName, mvpGroups, type MvpGroup } from "@/features/tournaments/model/mvp-model"
+import type { RosterOption } from "../components/game/draft-editor"
 import { RelativeDate } from "../components/relative-date"
+import type { GameView } from "../model/game-view"
 
-/** What this panel edits: how the game's catalog is read, where it sits in the match, and a note. */
+/** What this panel edits: how the game's catalog is read, where it sits in the match, its MVP and a note. */
 export type GameInfo = Pick<
   GameContent,
-  "region" | "seasonId" | "patchVariantId" | "includeUnscoped" | "number" | "note"
+  "region" | "seasonId" | "patchVariantId" | "includeUnscoped" | "number" | "note" | "mvpPlayerId"
 >
 
 export const gameInfoOf = (content: GameContent): GameInfo => ({
@@ -22,7 +26,26 @@ export const gameInfoOf = (content: GameContent): GameInfo => ({
   includeUnscoped: content.includeUnscoped ?? false,
   number: content.number,
   note: content.note ?? "",
+  mvpPlayerId: content.mvpPlayerId ?? null,
 })
+
+/** Who the MVP list offers first: the players seated in the game, then the rest of both rosters. */
+export function gameMvpGroups(view: GameView | undefined, roster?: (teamId: string) => RosterOption[]): MvpGroup[] {
+  if (!view) return []
+  const sides = [view.sides.BLUE, view.sides.RED]
+  return mvpGroups([
+    {
+      key: "seated",
+      title: "Ra sân ván này",
+      players: sides.flatMap((side) =>
+        side.seats.flatMap((seat) =>
+          seat.playerId ? [{ id: seat.playerId, name: seat.playerName, photoUrl: seat.photoUrl }] : [],
+        ),
+      ),
+    },
+    ...sides.map((side) => ({ key: side.team.id, title: side.team.name, players: roster?.(side.team.id) ?? [] })),
+  ])
+}
 
 /** Only the fields that differ, so a save never writes back a value somebody else changed meanwhile. */
 export function changedGameInfo(before: GameInfo, after: GameInfo): Partial<GameInfo> {
@@ -32,12 +55,15 @@ export function changedGameInfo(before: GameInfo, after: GameInfo): Partial<Game
 
 /**
  * What a game is, apart from what happened in it: the market, season and patch its heroes and items are read in, its
- * number in the match and a note. Bans, picks, players, loadouts, the video and the result are recorded in their own
- * panels, so nothing here repeats them. Publishing is confirmed in the progress panel; taking the public copy down
- * and deleting the game live here because both remove the game from readers.
+ * number in the match, its MVP and a note. Bans, picks, players, loadouts, the video and the result are recorded in
+ * their own panels, so nothing here repeats them. Publishing is confirmed in the progress panel; taking the public
+ * copy down and deleting the game live here because both remove the game from readers.
  */
 export function GameInfoPanel({
   entry,
+  view,
+  roster,
+  tournamentId,
   tournamentRegion,
   canPublish,
   onSave,
@@ -46,6 +72,10 @@ export function GameInfoPanel({
   onOpenProgress,
 }: {
   entry: DocumentView<GameContent>
+  /** The game as drawn, whose seated players the MVP list offers first. */
+  view?: GameView
+  roster?: (teamId: string) => RosterOption[]
+  tournamentId?: string
   tournamentRegion?: string
   canPublish: boolean
   onSave: (change: Partial<GameInfo>) => void
@@ -58,6 +88,21 @@ export function GameInfoPanel({
   const change = changedGameInfo(stored, draft)
   const dirty = Object.keys(change).length > 0
   const numberValid = Number.isInteger(draft.number) && draft.number >= 1 && draft.number <= 99
+  const groups = gameMvpGroups(view, roster)
+  const storedMvp = usePlayerName(stored.mvpPlayerId, candidateName(groups, stored.mvpPlayerId))
+  const [mvpName, setMvpName] = useState("")
+  const save = async () => {
+    // A recorded MVP is replaced or taken off only after a question naming both.
+    if (change.mvpPlayerId !== undefined && stored.mvpPlayerId) {
+      const confirmed = await confirmAction({
+        title: draft.mvpPlayerId ? "Đổi MVP của ván?" : "Bỏ MVP của ván?",
+        description: `${storedMvp} → ${draft.mvpPlayerId ? mvpName || "tuyển thủ đã chọn" : "không có MVP"}.`,
+        confirmLabel: draft.mvpPlayerId ? "Đổi MVP" : "Bỏ MVP",
+      })
+      if (!confirmed) return
+    }
+    onSave(change)
+  }
   const withdraw = async () => {
     const confirmed = await confirmAction({
       title: `Gỡ ván ${entry.content.number} khỏi trang công khai?`,
@@ -99,13 +144,25 @@ export function GameInfoPanel({
           />
         </label>
       </div>
+      <section className="space-y-2" aria-label="MVP của ván">
+        <span className="text-xs font-medium text-muted-foreground">MVP</span>
+        <MvpChooser
+          value={draft.mvpPlayerId ?? null}
+          groups={groups}
+          context={{ tournamentId, teamId: view?.sides.BLUE.team.id || undefined }}
+          onChange={(id, name) => {
+            setDraft({ ...draft, mvpPlayerId: id })
+            setMvpName(name)
+          }}
+        />
+      </section>
       <div className="flex items-center justify-end gap-2">
         {dirty && (
           <Button size="sm" variant="ghost" type="button" onClick={() => setDraft(stored)}>
             Hủy
           </Button>
         )}
-        <Button size="sm" type="button" disabled={!dirty || !numberValid} onClick={() => onSave(change)}>
+        <Button size="sm" type="button" disabled={!dirty || !numberValid} onClick={() => void save()}>
           <Save size={14} /> Lưu thông tin ván
         </Button>
       </div>

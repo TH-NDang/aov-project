@@ -139,5 +139,7 @@ test("the tournament form writes no result, and saving keeps the one an import s
     localCurrency: undefined,
     awards: undefined,
     links: undefined,
+    broadcast: undefined,
+    staff: undefined,
   })
 })

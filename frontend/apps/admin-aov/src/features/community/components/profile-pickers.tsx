@@ -66,16 +66,18 @@ export function ProfilePicker({
 export function TournamentPicker({
   value,
   context,
+  label = "Liên kết mùa giải",
   onChange,
 }: {
   value?: string | null
   context?: PickerContext
+  label?: string
   onChange: (value: string) => void
 }) {
   return (
     <div className="grid gap-2">
-      <span className="type-label">Liên kết mùa giải</span>
-      <RecordPicker kind="tournaments" label="Liên kết mùa giải" value={value} context={context} onChange={onChange} />
+      <span className="type-label">{label}</span>
+      <RecordPicker kind="tournaments" label={label} value={value} context={context} onChange={onChange} />
     </div>
   )
 }

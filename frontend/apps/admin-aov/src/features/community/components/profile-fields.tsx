@@ -147,6 +147,12 @@ export function ProfileFields({
                     value={item.relatedPageId}
                     onChange={(value) => update("relatedPageId", value)}
                   />
+                  <TournamentPicker
+                    label="Giải đấu"
+                    value={item.tournamentId}
+                    context={tournamentContext}
+                    onChange={(value) => update("tournamentId", value)}
+                  />
                   <Field
                     label="Từ ngày"
                     type="date"

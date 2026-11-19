@@ -14,6 +14,8 @@ const USAGE_LABELS: Record<string, string> = {
   ROSTER_MEMBERSHIP: "Đội hình",
   SERIES: "Trận đấu",
   TOURNAMENT_PART: "Phần của giải",
+  TOURNAMENT_RESULT: "Thứ hạng hoặc giải thưởng của giải",
+  TOURNAMENT_STAFF: "Ban huấn luyện của giải",
   GAME: "Ván đấu",
   PUBLICATION_HISTORY: "Lịch sử xuất bản",
   TEAM: "Đội tuyển",
