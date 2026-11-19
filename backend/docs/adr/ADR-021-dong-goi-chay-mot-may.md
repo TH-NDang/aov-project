@@ -374,3 +374,17 @@
 - Cài hai timer là việc làm tay một lần trên VPS, như `aov-deploy.timer`; `deploy.sh` không cài unit. Đổi file unit trong repo
   thì phải chép lại.
 - Sau một lần cập nhật dừng giữa chừng, `aov-wiki-pages.service` báo lỗi mỗi 15 phút cho tới khi một lần cập nhật thành công.
+
+### Kiểm chứng (19/11/2026)
+
+- `tests/seo-prerender.test.ts` của Wiki: đưa lại cùng bản giữ bundle của bản trước và danh sách vẫn là bundle hiện tại; lần
+  phát hành bản khác kế tiếp xóa bundle đó. Test đầu thất bại với mã cũ.
+- shellcheck không báo gì với `scheduled.sh` và `deploy.sh`. `systemd-analyze verify` trên VPS nhận bốn file unit; lịch
+  `03:00:00 Asia/Ho_Chi_Minh` rơi vào 20:00 UTC.
+- Trên VPS, `scheduled.sh` chạy trong một checkout tạm với `docker` giả (stack thật không bị đụng tới):
+  - `pages` gọi `docker compose run --rm --no-deps wiki-prerender` khi đang giữ khóa;
+  - đang có lần cập nhật giữ khóa thì `pages` thoát mã 0 mà không gọi gì;
+  - checkout khác commit trong `deployed` thì `pages` thoát mã 1 mà không gọi gì;
+  - `backup` dump với nhãn `daily` khi đang giữ khóa, rồi chép R2 khi khóa đã nhả;
+  - `backup` chờ lần cập nhật giữ khóa xong rồi mới chạy.
+- Chưa thử: cài hai timer và để chúng chạy thật trên VPS, lần `media-backup` đầu tiên với R2 thật.
