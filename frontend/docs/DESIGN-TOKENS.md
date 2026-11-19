@@ -9,8 +9,8 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 
 - Mỗi màu dùng `light-dark()`, nên tự theo `color-scheme` mà từng app đang đặt: Wiki luôn tối, Stream và Admin theo lựa
   chọn của người xem hoặc hệ thống. Không viết lại bảng màu cho chế độ tối.
-- Màu nhấn là `--aov-accent`: vàng trên Wiki và Admin; Stream dùng chàm của cú ở giao diện sáng và vàng mắt cú ở giao
-  diện tối. Mỗi màn hình chỉ nên có một nút chính dùng màu này.
+- Màu nhấn là `--aov-accent`: vàng trên Wiki và Admin; Stream dùng xanh tím đậm của lông cú ở giao diện sáng và tím oải
+  hương ở giao diện tối; vàng mắt cú chỉ còn trong logo. Mỗi màn hình chỉ nên có một nút chính dùng màu này.
 - Màu trạng thái (`--aov-success`, `--aov-danger`, `--aov-warning`, `--aov-info`, `--aov-live`) chỉ mang ý nghĩa trạng
   thái, không dùng để trang trí: xanh lá là tăng sức mạnh hoặc thắng, đỏ là giảm sức mạnh hoặc thua, xanh dương là điều
   chỉnh, cam là làm lại, `--aov-live` là đang phát trực tiếp.

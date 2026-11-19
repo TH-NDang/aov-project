@@ -13,7 +13,7 @@ function appliedTheme(): Theme {
 }
 
 function paintBrowserChrome(theme: Theme) {
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#0c111d" : "#f3f5f9")
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#121220" : "#f6f6fb")
 }
 
 export function useStreamTheme() {

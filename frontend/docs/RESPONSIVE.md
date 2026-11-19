@@ -153,19 +153,20 @@ với tên `--aov-wiki-*` và được `wiki.css` gán vào các token chung.
 
 ### AOV Stream: màu của logo cú
 
-Chàm đêm, lông xanh tím, mắt vàng, mặt kem. Màu nằm trong `tokens.css` với tên `--aov-stream-*`. Trang theo chế độ sáng
-hoặc tối của người xem, riêng thanh trên và chân trang luôn màu chàm đêm.
+Bảng màu "Oải hương" lấy từ lông cú: đêm ngả tím, nhấn tím oải hương; vàng mắt cú và mặt kem chỉ còn trong logo, để
+Stream khác hẳn màu vàng của Wiki. Màu nằm trong `tokens.css` với tên `--aov-stream-*`. Trang theo chế độ sáng hoặc tối
+của người xem, riêng thanh trên và chân trang luôn màu đêm ngả tím.
 
 | Nội dung | Cách trình bày |
 |---|---|
-| Nền trang | Một màu phẳng: sương xanh nhạt ở giao diện sáng, chàm đêm ở giao diện tối; không họa tiết |
-| Mục đang ở trên thanh trên | Khối bo góc màu chàm giống nền logo, chữ kem đậm, ngôi sao vàng nhỏ ở góc |
+| Nền trang | Một màu phẳng: sương tím nhạt ở giao diện sáng, đêm ngả tím ở giao diện tối; không họa tiết |
+| Thanh trên | Logo cú, các mục dạng tab chữ: mục đang ở chữ kem và vạch màu nhấn ở chân thanh. Ô tìm kiếm ở giữa và các nút tròn dùng nền mờ, không viền |
 | Chữ logo | Vẽ bằng nét tròn đậm cho hợp con cú: AOV màu kem của mặt cú, Stream màu xanh tím của lông, kèm ngôi sao nhỏ của logo |
 | Đầu trang danh sách | `.tn-page-head`: tiêu đề 28/36, một dòng mờ (ẩn trên compact), tối đa một nút bên phải |
 | Đầu một giải, một trận | Nền `.hub-art` màu sinh từ tên, vì các giải chưa có ảnh riêng; chỉ cao vừa nội dung |
 | Tiêu đề mục | `.tn-heading`: 18/24 đậm, số đếm mờ, một liên kết bên phải |
 | Thẻ | Nền thẻ, bo 10px, không viền; rê chuột đổi nền, không xê dịch thẻ. Thẻ trận nhỏ `.tn-match` giữ viền mảnh |
-| Màu nhấn | Giao diện sáng: chàm của cú. Giao diện tối: vàng mắt cú. Liên kết, chip và tab đang chọn theo màu này |
+| Màu nhấn | Giao diện sáng: xanh tím đậm của lông cú. Giao diện tối: tím oải hương. Liên kết, chip và tab đang chọn theo màu này |
 | Chip | `.hub-pills`: một hàng cuộn ngang, chip đang chọn tô đặc màu nhấn |
 | Tab | `.cp-tabs`: chữ 14px; tab đang mở giữ màu chữ thường, đậm hơn và có vạch màu nhấn bên dưới; một hàng cuộn ngang |
 | Logo đội và giải | Nằm trên ô `--hub-plate`, để logo vẽ cho nền tối vẫn thấy ở giao diện sáng |
