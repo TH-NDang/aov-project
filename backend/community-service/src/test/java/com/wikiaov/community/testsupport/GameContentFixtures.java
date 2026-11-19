@@ -1,7 +1,7 @@
 package com.wikiaov.community.testsupport;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Reference;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Reference;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Selection;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 

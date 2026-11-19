@@ -1,12 +1,12 @@
 package com.wikiaov.community.tournament.internal.games.domain;
 
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Catalog;
 import com.wikiaov.community.tournament.internal.domain.CatalogLocales;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Game;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Participant;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Side;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Lane;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Participant;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

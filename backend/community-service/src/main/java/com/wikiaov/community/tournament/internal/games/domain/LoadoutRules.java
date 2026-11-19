@@ -1,10 +1,10 @@
 package com.wikiaov.community.tournament.internal.games.domain;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.ArcanaAllocation;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.EnchantmentAllocation;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Loadout;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.ObservationStatus;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.GameContent.ArcanaAllocation;
+import com.wikiaov.community.tournament.internal.domain.GameContent.EnchantmentAllocation;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Loadout;
+import com.wikiaov.community.tournament.internal.domain.GameContent.ObservationStatus;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

@@ -11,8 +11,8 @@ import com.wikiaov.community.tournament.internal.archive.application.RegistryArc
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
 import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
 import com.wikiaov.community.tournament.internal.domain.ReferenceLabels;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Player;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia;
 import com.wikiaov.community.tournament.internal.registry.persistence.PlayerRecord;
 import com.wikiaov.community.tournament.internal.registry.persistence.PlayerRepository;

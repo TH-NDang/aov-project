@@ -2,15 +2,15 @@ package com.wikiaov.community.tournament.internal.games.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftTurn;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameDraft;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameSide;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Participant;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
+import com.wikiaov.community.tournament.internal.domain.GameContent.DraftKind;
+import com.wikiaov.community.tournament.internal.domain.GameContent.DraftTurn;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Game;
+import com.wikiaov.community.tournament.internal.domain.GameContent.GameDraft;
+import com.wikiaov.community.tournament.internal.domain.GameContent.GameSide;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Participant;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Selection;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Side;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Lane;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;

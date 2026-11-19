@@ -4,12 +4,12 @@ import static com.wikiaov.community.testsupport.GameContentFixtures.reference;
 import static com.wikiaov.community.testsupport.GameContentFixtures.selection;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.EquipmentEvent;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.EquipmentSnapshot;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.EventType;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.InventorySlot;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Participant;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.GameContent.EquipmentEvent;
+import com.wikiaov.community.tournament.internal.domain.GameContent.EquipmentSnapshot;
+import com.wikiaov.community.tournament.internal.domain.GameContent.EventType;
+import com.wikiaov.community.tournament.internal.domain.GameContent.InventorySlot;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Participant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;

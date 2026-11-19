@@ -2,7 +2,7 @@ package com.wikiaov.community.tournament.internal.registry.persistence;
 
 import com.wikiaov.community.tournament.internal.archive.persistence.VersionedRecord;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Player;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

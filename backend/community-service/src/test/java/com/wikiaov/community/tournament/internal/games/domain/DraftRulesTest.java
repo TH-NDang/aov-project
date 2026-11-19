@@ -4,11 +4,11 @@ import static com.wikiaov.community.testsupport.GameContentFixtures.named;
 import static com.wikiaov.community.testsupport.GameContentFixtures.selection;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftKind;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.DraftTurn;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameDraft;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
+import com.wikiaov.community.tournament.internal.domain.GameContent.DraftKind;
+import com.wikiaov.community.tournament.internal.domain.GameContent.DraftTurn;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Game;
+import com.wikiaov.community.tournament.internal.domain.GameContent.GameDraft;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Side;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;

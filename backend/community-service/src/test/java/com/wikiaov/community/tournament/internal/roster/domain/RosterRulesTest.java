@@ -2,9 +2,9 @@ package com.wikiaov.community.tournament.internal.roster.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterMembership;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterStatus;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Lane;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterMembership;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.RosterStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Verification;
 import java.time.LocalDate;
 import java.util.UUID;

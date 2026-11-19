@@ -17,11 +17,11 @@ import com.wikiaov.community.tournament.internal.directory.application.Directory
 import com.wikiaov.community.tournament.internal.directory.application.PlayerFilter;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentFilter;
 import com.wikiaov.community.tournament.internal.directory.application.TournamentLevel;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Game;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Game;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Player;
+import com.wikiaov.community.tournament.internal.domain.RosterContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.games.application.GameRecords;
 import java.util.List;

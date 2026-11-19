@@ -1,7 +1,7 @@
 package com.wikiaov.community.tournament.internal.games.domain;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Reference;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Selection;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Reference;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Selection;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;

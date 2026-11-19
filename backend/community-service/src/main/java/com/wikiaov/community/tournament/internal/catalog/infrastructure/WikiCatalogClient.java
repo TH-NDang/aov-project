@@ -1,7 +1,7 @@
 package com.wikiaov.community.tournament.internal.catalog.infrastructure;
 
 import com.wikiaov.community.tournament.internal.catalog.application.port.WikiCatalogSource;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Reference;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Reference;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.Duration;

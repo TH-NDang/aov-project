@@ -1,9 +1,9 @@
 package com.wikiaov.community.tournament.internal.games.domain;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Catalog;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.EventType;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Participant;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Reference;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Catalog;
+import com.wikiaov.community.tournament.internal.domain.CatalogContent.Reference;
+import com.wikiaov.community.tournament.internal.domain.GameContent.EventType;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Participant;
 import java.util.HashSet;
 import java.util.List;
 import org.jspecify.annotations.Nullable;

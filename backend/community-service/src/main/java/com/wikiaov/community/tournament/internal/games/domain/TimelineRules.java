@@ -1,10 +1,10 @@
 package com.wikiaov.community.tournament.internal.games.domain;
 
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.GameTimeline;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Seat;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.Side;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.TimelineEvent;
-import com.wikiaov.community.tournament.internal.domain.TournamentContent.VodPause;
+import com.wikiaov.community.tournament.internal.domain.GameContent.GameTimeline;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Seat;
+import com.wikiaov.community.tournament.internal.domain.GameContent.Side;
+import com.wikiaov.community.tournament.internal.domain.GameContent.TimelineEvent;
+import com.wikiaov.community.tournament.internal.domain.GameContent.VodPause;
 import java.util.HashSet;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
