@@ -96,7 +96,8 @@ Không chặn `/api/`, vì Google cần gọi API để render trang.
 - Dùng chung thư mục qua named volume: Docker chỉ chép nội dung image vào volume khi tạo volume lần đầu, nên sau khi build
   lại, proxy vẫn phục vụ bundle cũ. Mỗi lần chạy, job phải chạy `prerender` trên `dist` của chính image trước, thành công
   mới thay **toàn bộ** nội dung volume bằng `dist` đó. Làm theo thứ tự này thì API lỗi không chạm vào volume, site tiếp tục
-  chạy bản cũ cho tới khi job thành công. Chỉ chép đè thì trang vừa gỡ xuất bản vẫn còn trong volume.
+  chạy bản cũ cho tới khi job thành công. Chỉ chép đè thì trang vừa gỡ xuất bản vẫn còn trong volume. *Từ 19/11/2026, quy tắc
+  này chỉ áp cho bản đang chạy; một bản mới vẫn được đưa ra khi prerender lỗi, chỉ không có trang riêng: xem bổ sung 19/11/2026.*
 - File mới được chép trước, file cũ xóa sau, và mỗi file thay bằng thao tác đổi tên, nên trong lúc thay, trang nào người đọc nhận được
   cũng còn đủ bundle nó trỏ tới. *Từ 18/11/2026, bundle của bản đang chạy được giữ thêm một lần phát hành cho tab đang mở, và Stream,
   Admin cũng được đưa ra theo cách này: xem ADR-021, bổ sung 18/11/2026.*
@@ -132,3 +133,64 @@ không kết nối được: job thoát mã lỗi, trang cũ vẫn phục vụ. 
 
 Chưa kiểm chứng được khi chưa có tên miền thật: công cụ debug của Facebook, Zalo, X; Google Search Console; canonical và
 sitemap trên địa chỉ thật; HTTPS.
+
+## Bổ sung 19/11/2026: bản mới luôn được đưa ra
+
+### Bối cảnh
+
+- Từ 18/11/2026, `infra/scripts/deploy.sh` đổi backend sang bản mới trước, rồi mới chạy `web-publish` và `wiki-prerender`
+  (ADR-021, bổ sung 18/11/2026). Theo mục "Vận hành" ở trên, job prerender lỗi thì site giữ trang cũ, và giữ luôn bundle cũ.
+- Lần deploy ngày 19/11/2026, job lỗi ngay khi nạp module: image của job thiếu `@aov/ui`. Backend mới trả `GET /heroes` dạng
+  `{context, page}`, bundle cũ của Wiki không đọc được, nên thư viện Tướng báo "Chưa thể tải thư viện Tướng" tới khi bản sửa image
+  được deploy.
+- Giữ trang cũ chỉ an toàn khi bundle đang phục vụ là bundle của chính bản đó. Khi backend đã lên bản mới, bundle cũ có thể không
+  còn đọc được API.
+
+### Quyết định
+
+1. Job so bundle đang phục vụ (danh sách `.published-bundle.json`, hoặc các file trong `assets/` với site chưa có danh sách) với
+   bundle trong `dist` của image. Tên file bundle sinh theo nội dung, nên cùng danh sách nghĩa là cùng bản.
+2. Cùng bản (chạy lại sau khi xuất bản, hoặc lần deploy chỉ đổi `wiki-service`): prerender lỗi thì site giữ nguyên như trước.
+3. Bản mới: prerender lỗi thì `dist` của bản mới vẫn được đưa ra (kèm `robots.txt` có sẵn từ lúc build), nhưng không có trang
+   riêng và `sitemap.xml`. Trang riêng cũ bị xóa vì chúng nạp bundle cũ. Bundle cũ vẫn được giữ thêm một lần cho tab đang mở.
+   Job vẫn thoát mã lỗi, in lý do kèm câu "The new bundle went out without prerendered pages"; `up --wait` vẫn báo lỗi,
+   `deploy.sh` ghi log rồi chạy tiếp.
+4. Mã dựng trang (`scripts/prerender.mts`) được nạp trong phần xử lý lỗi của job. Chỉ cần `prerender-job.mts`, `publish-site.mts`
+   và `src/lib/seo/site-url.ts` nạp được là quy tắc 3 chạy, kể cả khi lỗi là thiếu module như ngày 19/11/2026. Ba file này không
+   import package nào ngoài module của Node; luật "the prerender job loads no package before its renderer" trong
+   `lint/source-rules.ts` (chạy bằng `pnpm lint`) giữ điều đó.
+5. Workflow `images.yml` nạp cả `prerender-job.mts` lẫn `prerender.mts` trong image `web` vừa build. Thiếu module thì CI đỏ, và
+   timer không deploy commit đó.
+
+Trường hợp hệ thống mới chưa xuất bản tướng nào giữ nguyên như mục "Vận hành".
+
+### Phương án đã cân nhắc
+
+- Coi prerender lỗi là deploy hỏng và đưa backend về bản cũ: không làm an toàn được khi migration đã chạy, và container backend cũ
+  đã dừng khi container mới healthy.
+- Chạy prerender trước khi đổi backend: job cần API của bản mới, mà API đó chỉ nhận traffic sau khi đổi. Muốn vậy phải gọi thẳng
+  container mới trong lúc hai bản cùng chạy, phức tạp hơn nhiều so với lợi ích.
+- Giữ trang riêng cũ nhưng sửa thẻ script sang bundle mới: trang cũ dựng từ dữ liệu và template cũ, sửa tại chỗ dễ sai hơn để
+  trang rơi về `200.html`.
+- Timer tự chạy lại job tới khi thành công: lỗi do mã hay dữ liệu thì chạy lại vẫn lỗi. Việc lên lịch prerender vẫn để mở như mục
+  "Vận hành".
+
+### Hệ quả
+
+- Sau một lần lỗi như vậy, mọi địa chỉ sâu rơi về `200.html` có `noindex` và không có `sitemap.xml`, tới lần chạy thành công kế
+  tiếp: `docker compose run --rm wiki-prerender`, hoặc lần deploy sau có đổi frontend hay `wiki-service`. Người đọc vẫn dùng được
+  đầy đủ qua app.
+- Một lần chạy lại thành công trên cùng bản đưa trang riêng trở lại mà không đổi bundle.
+
+### Kiểm chứng (19/11/2026)
+
+- `tests/seo-prerender.test.ts`: bản mới gặp API lỗi vẫn ra `200.html` và bundle mới, trang riêng cũ bị xóa, bundle cũ còn
+  một lần; mã dựng trang không nạp được thì bản mới vẫn ra và không gọi API; API lỗi trên bản đang chạy giữ nguyên trang.
+- Image `web` build từ nhánh, chạy trên Node 22 với một volume tạm, đọc API thật của `athahub.com`:
+  - Lần đầu: 786 trang.
+  - Cùng bản, API không kết nối được: thoát mã lỗi, vẫn đủ 263 trang tướng và `sitemap.xml`.
+  - Site đang ở bundle cũ, API không kết nối được: `200.html` và bundle của image được đưa ra, trang riêng và `sitemap.xml` không
+    còn, `robots.txt` còn.
+  - Site đang ở bundle cũ, xóa liên kết `node_modules/@aov/ui` trong container (lỗi của ngày 19/11/2026): job báo thiếu `@aov/ui`
+    rồi vẫn đưa bản mới ra như trên. Lần diễn tập trước khi tách `site-url.ts` cho thấy chính job cũng không nạp được, nên luật lint
+    ở quyết định 4 là cần thiết.
