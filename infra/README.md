@@ -235,10 +235,15 @@ bản hoặc đặt theo lịch; không cần khởi động lại proxy:
 docker compose run --rm wiki-prerender
 ```
 
-Lần chạy tạo trang trên `dist` của chính container, thành công mới thay toàn bộ volume `wiki-site` mà proxy phục vụ. API lỗi thì
-site giữ nguyên trang cũ, proxy vẫn chạy, nhưng `docker compose up --wait` trả lỗi và `docker compose logs wiki-prerender` cho biết
-lý do; sau khi build lại, site vẫn ở bundle cũ cho tới khi có một lần chạy thành công. Hệ thống mới chưa xuất bản tướng nào vẫn khởi
-động bình thường, chỉ chưa có trang riêng. Trong môi trường đó, mọi địa chỉ sâu rơi về `200.html` có `noindex`.
+Lần chạy tạo trang trên `dist` của chính container, thành công mới thay toàn bộ volume `wiki-site` mà proxy phục vụ. Prerender lỗi
+thì `docker compose up --wait` trả lỗi, `docker compose logs wiki-prerender` cho biết lý do, proxy vẫn chạy:
+
+- Bundle trong image là bundle site đang phục vụ (chạy lại sau khi xuất bản): site giữ nguyên trang cũ.
+- Bundle mới (sau khi build lại): bundle mới vẫn được đưa ra để khớp với backend, nhưng chưa có trang riêng và `sitemap.xml` cho tới
+  lần chạy thành công kế tiếp (ADR-022, bổ sung 19/11/2026).
+
+Hệ thống mới chưa xuất bản tướng nào vẫn khởi động bình thường, chỉ chưa có trang riêng. Trong cả hai trường hợp không có trang
+riêng, mọi địa chỉ sâu rơi về `200.html` có `noindex`.
 
 Kiểm tra sau khi chạy: địa chỉ của một tướng phải trả về đúng tên tướng trong `<title>`, không phải tiêu đề trang chủ.
 

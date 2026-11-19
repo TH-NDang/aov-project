@@ -214,7 +214,9 @@ if $web; then
     docker compose run --rm --no-deps web-publish
 fi
 if $web || $wiki; then
-    docker compose run --rm --no-deps wiki-prerender || log "wiki-prerender failed; the Wiki keeps the pages it had."
+    # A failed run keeps the pages of the running release; a new release goes out without pages (ADR-022, addendum of
+    # 19/11/2026). The job says which, and the update goes on either way.
+    docker compose run --rm --no-deps wiki-prerender || log "wiki-prerender failed; see above for what the Wiki serves."
 fi
 
 if $proxy_image; then
