@@ -71,8 +71,11 @@ Một hàng cao 48px (`WikiHeaderCompact`):
   (`PublicAccountSummary`, không mở popup tài khoản lồng nhau), hai ô Wiki/Stream, rồi nhóm cài đặt ngôn ngữ, múi giờ,
   định dạng ngày, tiền tệ và thị trường dữ liệu.
 - Logo ứng dụng 32px; hàng cài đặt cao 48px. Nội dung cuộn khi màn hình thấp, giữ khoảng đệm theo vùng an toàn phía dưới.
-- Thanh kéo 36×3px nằm trong vùng 64×24px và chỉ vùng này nhận thao tác kéo đóng; cuộn/chọn bên trong không kéo theo
-  drawer. Nền phía sau giữ nguyên kích thước, phủ mờ nhẹ; hiệu ứng mở 240ms và tắt khi người dùng bật giảm chuyển động.
+- Mọi drawer dưới trên điện thoại (`PublicDrawer` trong `@aov/ui`, dùng chung với Stream) cao vừa nội dung, tối đa 85%
+  màn hình, nên phía trên luôn còn một dải trang phủ mờ; chạm vào đó, nhấn Escape, hoặc kéo drawer xuống từ bất kỳ đâu
+  (khi nội dung đã cuộn lên đầu) đều đóng. Không có nút X hiện ra; một nút đóng ẩn chỉ dành cho trình đọc màn hình.
+  Thanh nắm 40×4px ở đầu, tiêu đề 16px căn trái, góc trên bo 18px. Nền phía sau giữ nguyên kích thước; hiệu ứng mở
+  240ms và tắt khi người dùng bật giảm chuyển động.
 
 ## Cách viết style
 

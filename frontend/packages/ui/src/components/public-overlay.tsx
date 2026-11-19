@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, type ComponentProps } from "react"
 import { Slot } from "radix-ui"
-import { X } from "lucide-react"
 import { Drawer as DrawerPrimitive } from "vaul"
 import { cn } from "@aov/ui/lib/utils"
 import { usePageLayout } from "../hooks/use-page-layout"
@@ -16,15 +15,24 @@ const useCloseLabel = () => useLocaleText()("Đóng", "Close")
 const DrawerDepth = createContext(false)
 const OverlayContext = createContext({ mobile: false, close: () => {} })
 
-/** Keeps nested mobile choices inside the current drawer's focus and dismissal stack. */
+/**
+ * The phone's bottom sheet. It closes by a tap on the dimmed page above it, by Escape, or by dragging it down from
+ * anywhere once its content is scrolled to the top. Nested choices stay in the current drawer's focus and dismissal
+ * stack.
+ */
 export function PublicDrawer(props: ComponentProps<typeof DrawerPrimitive.Root>) {
   const nested = useContext(DrawerDepth)
   const Root = nested ? DrawerPrimitive.NestedRoot : DrawerPrimitive.Root
   return (
     <DrawerDepth.Provider value={true}>
-      <Root direction="bottom" handleOnly shouldScaleBackground={false} autoFocus {...props} />
+      <Root direction="bottom" shouldScaleBackground={false} autoFocus {...props} />
     </DrawerDepth.Provider>
   )
+}
+
+/** No visible close button: the sheet closes by a tap above it or a drag down; this one is for screen readers. */
+function HiddenClose() {
+  return <DrawerClose className="sr-only">{useCloseLabel()}</DrawerClose>
 }
 
 export function PublicDrawerContent({
@@ -33,7 +41,6 @@ export function PublicDrawerContent({
   title,
   ...props
 }: ComponentProps<typeof DrawerContent> & { title?: string }) {
-  const closeLabel = useCloseLabel()
   return (
     <DrawerContent
       {...props}
@@ -44,11 +51,9 @@ export function PublicDrawerContent({
       {title && (
         <div className="public-bottom-heading">
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerClose aria-label={closeLabel} className="public-bottom-close">
-            <X size={18} aria-hidden="true" />
-          </DrawerClose>
         </div>
       )}
+      <HiddenClose />
       <div className="public-bottom-body">{children}</div>
     </DrawerContent>
   )
@@ -142,23 +147,13 @@ export function DialogContent({
   ...props
 }: ComponentProps<typeof DialogBase.DialogContent>) {
   const { mobile } = useContext(OverlayContext)
-  const closeLabel = useCloseLabel()
   if (!mobile)
     return (
       <DialogBase.DialogContent showCloseButton={showCloseButton} {...props}>
         {children}
       </DialogBase.DialogContent>
     )
-  return (
-    <PublicDrawerContent {...props}>
-      {children}
-      {showCloseButton && (
-        <DrawerClose className="public-bottom-close" aria-label={closeLabel}>
-          <X size={18} />
-        </DrawerClose>
-      )}
-    </PublicDrawerContent>
-  )
+  return <PublicDrawerContent {...props}>{children}</PublicDrawerContent>
 }
 
 export function PopoverContent({
