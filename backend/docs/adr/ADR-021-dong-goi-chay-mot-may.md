@@ -1,8 +1,10 @@
 # ADR-021 — Đóng gói toàn hệ thống trên một máy và các đường dẫn proxy bổ sung
 
 **Trạng thái:** Chấp nhận, cùng [bổ sung 17/11/2026](#bổ-sung-17112026-object-storage-là-cloudflare-r2),
-[bổ sung 18/11/2026](#bổ-sung-18112026-cập-nhật-không-gián-đoạn) và
-[bổ sung 19/11/2026](#bổ-sung-19112026-việc-chạy-theo-lịch), mỗi bổ sung được người dùng duyệt cùng ngày
+[bổ sung 18/11/2026](#bổ-sung-18112026-cập-nhật-không-gián-đoạn),
+[bổ sung 19/11/2026](#bổ-sung-19112026-việc-chạy-theo-lịch) và
+[bổ sung 19/11/2026 về cảnh báo và backup ngoài máy](#bổ-sung-19112026-cảnh-báo-qua-email-backup-ngoài-máy-mail-của-keycloak),
+mỗi bổ sung được người dùng duyệt cùng ngày
 **Ngày:** 2026-11-07
 **Phạm vi:** `infra/`, `wiki-service`, `community-service`, `aov-stream`
 
@@ -388,3 +390,73 @@
   - `backup` dump với nhãn `daily` khi đang giữ khóa, rồi chép R2 khi khóa đã nhả;
   - `backup` chờ lần cập nhật giữ khóa xong rồi mới chạy.
 - Chưa thử: cài hai timer và để chúng chạy thật trên VPS, lần `media-backup` đầu tiên với R2 thật.
+
+## Bổ sung 19/11/2026: cảnh báo qua email, backup ngoài máy, mail của Keycloak
+
+### Bối cảnh
+
+- Lần cập nhật, prerender hay backup lỗi chỉ hiện trong journal của VPS. Không ai biết site ngừng trả lời hay đĩa sắp đầy, trừ
+  khi tự mở máy ra xem.
+- Backup nằm cùng máy với stack: mất máy là mất cả dữ liệu lẫn bản dump.
+- Realm `wikiaov` chưa có SMTP và tắt "Quên mật khẩu". Biến `MAIL_*` của wiki-service (ADR-028) trên VPS còn trống, nên đổi
+  mật khẩu bằng mã email cũng chưa chạy.
+- DigitalOcean chặn cổng 25, 465 và 587 đi ra từ droplet; đã thử ngày 19/11/2026, `smtp.gmail.com` không kết nối được, cổng
+  2525 và 2587 của các dịch vụ gửi mail thì được.
+- Người dùng chọn ngày 19/11/2026: cảnh báo gửi tới email của chủ dự án; gửi qua Resend; backup ngoài máy là một bucket R2
+  riêng.
+
+### Quyết định
+
+1. **Một cấu hình mail cho cả ba việc.** `MAIL_*` trong `.env` trỏ tới SMTP của Resend (`smtp.resend.com`, cổng 2587 với
+   STARTTLS, người dùng `resend`, mật khẩu là API key). Địa chỉ gửi nằm trên tên miền của site, ví dụ
+   `no-reply@athahub.com`, đã xác minh trong Resend bằng bản ghi DNS. wiki-service, Keycloak và các script trên máy chủ cùng
+   dùng nó.
+2. **Cảnh báo việc chạy lỗi.** `aov-deploy.service`, `aov-wiki-pages.service` và `aov-backup.service` có
+   `OnFailure=aov-alert@%n.service`. `infra/scripts/alert.sh` gửi tới `ALERT_EMAIL` log của đúng lần chạy đó.
+   - Cùng một lỗi lặp lại (so bằng dòng log cuối, bỏ dấu thời gian) chỉ gửi một lần mỗi sáu giờ: một lần cập nhật dừng giữa
+     chừng làm `pages` lỗi mỗi 15 phút mà không thành 96 email một ngày. Lỗi khác thì gửi ngay.
+   - Chưa đặt `MAIL_HOST`, `MAIL_PASSWORD` hoặc `ALERT_EMAIL` thì không gửi gì, nội dung chỉ vào journal.
+   - Địa chỉ nhận chỉ nằm trong `.env` của máy chủ, không nằm trong repo công khai.
+3. **Kiểm tra sức khỏe năm phút một lần** (`aov-watch.timer`, `scheduled.sh watch`), trên chính máy đó:
+   - các địa chỉ công khai trả lời qua Caddy, như bước cuối của `deploy.sh`, thêm một API công khai của community-service;
+   - `postgres`, `redis`, `keycloak`, `wiki-service`, `community-service`, `reverse-proxy` đang chạy và không `unhealthy`;
+   - đĩa dưới 85%;
+   - bản backup `daily` mới nhất chưa quá 26 giờ (khi đã có ít nhất một bản).
+
+   Thấy lỗi thì thử lại sau 30 giây; còn lỗi mới gửi. Danh sách lỗi đổi (không tính chữ số) thì gửi ngay; còn y như cũ thì sáu
+   giờ một lần. Hết lỗi thì gửi một email báo đã ổn. Đang có lần cập nhật giữ khóa thì bỏ lượt, vì Keycloak có thể đang khởi
+   động lại.
+4. **Backup ngoài máy.** `scheduled.sh backup` chép thư mục dump sang bucket R2 riêng (`OFFSITE_BUCKET`) bằng service
+   `db-offsite`, ngay sau khi dump và trước `media-backup`.
+   - Token riêng, chỉ có Object Read & Write trên bucket đó.
+   - Thư mục dump được ghi một lần nên thư mục đã có được bỏ qua. Script không bao giờ xóa gì trên bucket; bản cũ hết hạn bằng
+     quy tắc vòng đời của bucket (đề xuất 60 ngày), đặt trên Cloudflare.
+   - Bỏ qua thư mục đang ghi (`.partial`) và bản chuyển dữ liệu dev (`dev-*`).
+   - Ảnh và tệp nguồn vốn nằm trên R2 nên không chép thêm. `.env` không lên bucket: chủ dự án giữ một bản riêng, ví dụ trong
+     trình quản lý mật khẩu.
+   - Chép lỗi thì `media-backup` vẫn chạy, rồi lần chạy báo lỗi.
+5. **Mail của Keycloak.** Service một lần `keycloak-mail` (profile `ops`, `infra/keycloak/configure-mail.sh`) đặt SMTP của
+   realm theo `MAIL_*` và bật "Quên mật khẩu". Chạy tay mỗi khi đổi `MAIL_*`, vì Keycloak chỉ đọc file realm lần đầu. Không bật
+   "Xác minh email": bật lên sẽ buộc mọi tài khoản đang có xác minh ở lần đăng nhập kế.
+
+### Phương án đã cân nhắc
+
+| Phương án | Lý do không chọn |
+|---|---|
+| Gmail với mật khẩu ứng dụng | Cổng 465 và 587 bị DigitalOcean chặn; email của Keycloak sẽ đi từ Gmail cá nhân |
+| Xin DigitalOcean mở cổng 587 | Không chắc được duyệt, và vẫn cần một nơi gửi trên tên miền của site |
+| Dịch vụ theo dõi uptime bên ngoài | Cổng 443 hiện chỉ mở cho IP của chủ dự án nên dịch vụ ngoài không gọi được; xét lại khi mở site |
+| Gửi qua API HTTP của Resend | Keycloak và Spring Mail chỉ nói SMTP; một cách gửi cho cả ba việc đơn giản hơn |
+| DigitalOcean Backups | Người dùng chọn bucket R2; ảnh chụp cả máy tốn thêm tiền mỗi tháng |
+| Script tự xóa bản cũ trên bucket | Token của VPS sẽ cần quyền xóa có chủ đích; quy tắc vòng đời của bucket làm việc đó mà VPS không phải nhớ |
+
+### Hệ quả
+
+- Chủ dự án phải làm trên tài khoản của mình: tạo tài khoản Resend, thêm tên miền và bản ghi DNS trên Cloudflare, tạo API key;
+  tạo bucket backup, token của nó và quy tắc vòng đời; dán các khóa vào `.env` trên VPS. Hướng dẫn ở `infra/README.md`.
+- Sau khi dán `MAIL_*`: `deploy.sh --refresh` để wiki-service đọc giá trị mới, và `docker compose run --rm keycloak-mail`.
+- Gói miễn phí của Resend gửi 100 email mỗi ngày, đủ cho cảnh báo và email tài khoản lúc này.
+- Kiểm tra sức khỏe chạy trên chính VPS: máy tắt hẳn hoặc mất mạng thì không có email nào. Cần một dịch vụ bên ngoài khi cổng
+  443 mở cho mọi người.
+- Một lần cập nhật đổi Keycloak làm `/idp/` ngừng trả lời khoảng một phút, nhưng lúc đó lần cập nhật giữ khóa nên không có cảnh
+  báo.
