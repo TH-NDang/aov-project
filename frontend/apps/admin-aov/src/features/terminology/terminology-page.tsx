@@ -34,7 +34,7 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
 import { useBeforeUnload, useSearchParams } from "react-router"
-import { usePageCloseGuard } from "@/app/layout/page-tabs"
+import { PageLeaveGuard } from "@/components/page-leave-guard"
 import { useReferenceCatalog } from "./catalog"
 import { saveSettings, loadLegacySettings, referenceSettingsKeys } from "./settings-api"
 import { ReferenceCatalogTable } from "./reference-catalog-table"
@@ -102,15 +102,13 @@ export function TerminologyPage() {
     if (draft) setMessage("")
   }, [draft])
   const settings = draft ?? catalog.config
-  usePageCloseGuard(
-    async () =>
-      !saving &&
-      (!draft ||
-        (await confirmDiscard({
-          title: "Đóng trang thuật ngữ?",
-          description: "Thay đổi thuật ngữ chưa lưu sẽ bị bỏ.",
-        }))),
-  )
+  const askLeave = async () =>
+    !saving &&
+    (!draft ||
+      (await confirmDiscard({
+        title: "Rời trang thuật ngữ?",
+        description: "Thay đổi thuật ngữ chưa lưu sẽ bị bỏ.",
+      })))
   useBeforeUnload((event) => {
     if (draft || saving) event.preventDefault()
   })
@@ -244,6 +242,7 @@ export function TerminologyPage() {
   }
   return (
     <main className="mx-auto w-full min-w-0 max-w-7xl space-y-4 p-4 md:px-6 md:py-5">
+      <PageLeaveGuard dirty={!!draft || saving} ask={askLeave} />
       <fieldset disabled={saving || catalog.settings.isPending} className="contents">
         <header className="min-w-0 space-y-4">
           <PageHeader

@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { useSearchParams } from "react-router"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { publishingKeys } from "@/lib/api/publishing-api"
@@ -51,7 +50,6 @@ export function HeroQuickView({
   const canLeave = async () =>
     !saving &&
     (!unsafe || (await confirmDiscard({ title: "Đóng trang tướng này?", description: "Bạn có thay đổi chưa lưu." })))
-  usePageCloseGuard(() => !heroId || canLeave())
   return (
     <>
       <HeroNavigationGuard unsafe={!!heroId && (unsafe || saving)} busy={saving} />

@@ -2,7 +2,7 @@ import { catalogScopePatch, resolveCatalogScope, type CatalogFilter } from "@/li
 import { useCatalogScopePreference } from "@/features/publishing/components/catalog/catalog-scope-memory"
 import { HeroTimeline } from "@/features/publishing/components/workspace/hero-timeline"
 import { useEffect, useEffectEvent, useId, useRef, useState } from "react"
-import { Link, useBeforeUnload, useLocation, useNavigate } from "react-router"
+import { Link, useBeforeUnload, useNavigate } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, FileUp, Layers, MoreHorizontal, Plus, Save, Trash2, X, ChevronDown } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -16,7 +16,6 @@ import { PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
-import { replacingPageTab, usePageCloseGuard } from "@/app/layout/page-tabs"
 import { errorMessage } from "@/lib/api/errors"
 
 import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
@@ -131,7 +130,6 @@ export function PublishingWorkspace({
 }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { pathname } = useLocation()
   const capabilities = useSession().actor?.capabilities ?? []
   const canWrite = capabilities.includes("hero:write")
   const canPublish = capabilities.includes("hero:publish")
@@ -354,7 +352,6 @@ export function PublishingWorkspace({
     }
   })
   const canLeave = () => !busy
-  usePageCloseGuard(canLeave, !!heroId && !onUnsavedChange)
 
   function switchHero(next: HeroRow) {
     if (busy || next.id === heroId) return
@@ -376,12 +373,7 @@ export function PublishingWorkspace({
     const params = switchHeroLocation(urlParams, nextId)
     params.delete("revision")
     if (onUnsavedChange) void navigate({ search: `?${params}` }, { preventScrollReset: true, replace })
-    else
-      void navigate(heroPageLocation(nextId, params), {
-        preventScrollReset: true,
-        replace,
-        state: replace ? replacingPageTab(pathname) : undefined,
-      })
+    else void navigate(heroPageLocation(nextId, params), { preventScrollReset: true, replace })
   }
   // Opening the hero that holds forms lands on its default form, as the Wiki does. A link to one of its revisions, such
   // as the shared part's own page or a row of the readiness overview, still opens it.

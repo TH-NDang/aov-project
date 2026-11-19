@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useLocation, useNavigate, useParams } from "react-router"
 import { RefreshCw, SearchX, ShieldAlert, UsersRound } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
@@ -9,6 +10,7 @@ import { Button } from "@aov/ui/components/button"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { ProfileForm } from "./profile-form"
 import { UsersList, UsersListSkeleton } from "./users-list"
+import { UserDetailSheet } from "./user-detail-sheet"
 import { listProfiles, profileError, selfProfile, userKeys } from "./user-api"
 import { formatNumber } from "@/lib/text"
 
@@ -47,6 +49,10 @@ export function ProfilePage() {
 
 export function UsersPage() {
   const { actor } = useSession()
+  // A row opens its user in a drawer over the list; the address keeps the user so the drawer can be linked.
+  const { userId } = useParams()
+  const navigate = useNavigate()
+  const { search: listSearch } = useLocation()
   const canRead = actor?.capabilities.includes("user:read") === true
   const [search, setSearch] = useState("")
   const [term, setTerm] = useState("")
@@ -184,6 +190,7 @@ export function UsersPage() {
           )}
         </section>
       )}
+      <UserDetailSheet userId={userId} onClose={() => void navigate(`/users${listSearch}`)} />
     </Page>
   )
 }
