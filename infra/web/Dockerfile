@@ -33,6 +33,11 @@ COPY --from=frontend /workspace/frontend/apps/aov-wiki/package.json ./
 COPY --from=frontend /workspace/frontend/apps/aov-wiki/dist ./dist
 COPY --from=frontend /workspace/frontend/apps/aov-wiki/scripts ./scripts
 COPY --from=frontend /workspace/frontend/apps/aov-wiki/src ./src
+# The prerender scripts import @aov/ui/lib/*. Node strips TypeScript types only outside node_modules, so the package
+# lives in packages/ui and node_modules holds a link to it; Node follows the link to the real path.
+COPY --from=frontend /workspace/frontend/packages/ui/package.json ./packages/ui/
+COPY --from=frontend /workspace/frontend/packages/ui/src/lib ./packages/ui/src/lib
+RUN mkdir -p node_modules/@aov && ln -s ../../packages/ui node_modules/@aov/ui
 COPY --from=frontend /workspace/frontend/apps/aov-stream/dist ./apps/stream
 COPY --from=frontend /workspace/frontend/apps/admin-aov/dist ./apps/admin
 CMD ["node", "--experimental-strip-types", "--disable-warning=ExperimentalWarning", "scripts/prerender-job.mts"]
