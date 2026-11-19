@@ -181,12 +181,8 @@ Lệnh sau chép R2 về `backups/media/<tên bucket>/`: `imports/` của bucket
   miễn phí mỗi tháng.
 - Thư mục chiếm chỗ bằng tổng ba bucket, khoảng 4,4 GB theo ước tính của ADR-030.
 
-Đặt lịch hằng ngày trên máy chủ thật, database trước để mọi object mà bản dump tham chiếu đều có trong bản chép ngay sau đó,
-ví dụ với cron:
-
-```text
-0 3 * * * cd /duong-dan/infra && docker compose run --rm -e BACKUP_LABEL=daily db-backup && docker compose run --rm media-backup
-```
+Trên máy chủ, `aov-backup.timer` chạy cả hai mỗi đêm, database trước để mọi object mà bản dump tham chiếu đều có trong bản
+chép ngay sau đó (xem [Việc chạy theo lịch](#việc-chạy-theo-lịch)).
 
 Bản chép này nằm cùng máy với stack: nó giữ được dữ liệu khi mất object trên R2, không giữ được khi mất máy.
 
@@ -228,8 +224,9 @@ Bỏ qua bước này nếu R2 không mất gì. Object được ghi lại với
 
 Service một lần `wiki-prerender` tạo trang riêng cho từng tướng, trang phục, mục kho trang bị, thuật ngữ và bản cập nhật, kèm
 `sitemap.xml`, để công cụ tìm kiếm và bản xem trước liên kết đọc được mà không cần chạy JavaScript (ADR-022). Nó chạy mỗi lần
-`docker compose up`, sau khi `wiki-service` healthy. Nội dung mới chỉ có trang riêng sau lần chạy kế, nên hãy chạy lại khi vừa xuất
-bản hoặc đặt theo lịch; không cần khởi động lại proxy:
+`docker compose up`, sau khi `wiki-service` healthy. Nội dung mới chỉ có trang riêng sau lần chạy kế. Trên máy chủ,
+`aov-wiki-pages.timer` chạy lại 15 phút một lần (xem [Việc chạy theo lịch](#việc-chạy-theo-lịch)); muốn có ngay thì chạy tay, không
+cần khởi động lại proxy:
 
 ```bash
 docker compose run --rm wiki-prerender
@@ -244,6 +241,9 @@ thì `docker compose up --wait` trả lỗi, `docker compose logs wiki-prerender
 
 Hệ thống mới chưa xuất bản tướng nào vẫn khởi động bình thường, chỉ chưa có trang riêng. Trong cả hai trường hợp không có trang
 riêng, mọi địa chỉ sâu rơi về `200.html` có `noindex`.
+
+Sau một lần cập nhật dừng giữa chừng, tên `aov/web:local` có thể đã trỏ tới image của commit mới. Đừng chạy tay lúc đó: job sẽ coi
+đây là bản mới và đưa bundle mới ra trước backend mới. Timer tự bỏ qua trường hợp này cho tới khi một lần cập nhật thành công.
 
 Kiểm tra sau khi chạy: địa chỉ của một tướng phải trả về đúng tên tướng trong `<title>`, không phải tiêu đề trang chủ.
 
@@ -308,6 +308,45 @@ Xem các lần chạy:
 ```bash
 journalctl -u aov-deploy.service -n 100
 ```
+
+## Việc chạy theo lịch
+
+Hai timer systemd nữa chạy `scripts/scheduled.sh` giữa các lần cập nhật (ADR-021, bổ sung 19/11/2026):
+
+| Timer | Khi nào | Làm gì |
+|---|---|---|
+| `aov-wiki-pages.timer` | 15 phút một lần | `scheduled.sh pages`: chạy lại `wiki-prerender` trên bản đang chạy, để nội dung vừa xuất bản có trang riêng và có trong `sitemap.xml`. Lỗi thì site giữ trang cũ |
+| `aov-backup.timer` | 03:00 giờ Việt Nam mỗi ngày | `scheduled.sh backup`: `db-backup` với nhãn `daily`, rồi `media-backup` |
+
+- Cả hai dùng chung khóa với `deploy.sh`, nên không chạy giữa một lần cập nhật. `pages` gặp lần cập nhật thì bỏ lượt, vì lần cập
+  nhật tự prerender; `backup` chờ tối đa một giờ, và nhả khóa trước khi chép R2.
+- `pages` chỉ chạy khi checkout nằm đúng ở commit trong `infra/.deploy/deployed`. Một lần cập nhật dừng giữa chừng làm nó báo lỗi
+  mỗi 15 phút cho tới khi một lần cập nhật thành công.
+- Bản `daily` giữ `BACKUP_KEEP` bản mới nhất, riêng với bản `auto` của các lần cập nhật. Lần `media-backup` đầu tiên tải toàn bộ
+  object R2 về, khoảng 4,4 GB.
+- Máy tắt lúc 03:00 thì backup chạy khi máy bật lại.
+
+Cài một lần, sau khi checkout nằm ở `/opt/aov-project`; đổi file unit trong repo thì chép lại:
+
+```bash
+sudo cp /opt/aov-project/infra/systemd/aov-wiki-pages.* /opt/aov-project/infra/systemd/aov-backup.* /etc/systemd/system/
+```
+
+```bash
+sudo systemctl daemon-reload && sudo systemctl enable --now aov-wiki-pages.timer aov-backup.timer
+```
+
+Xem các lần chạy và lần chạy kế tiếp:
+
+```bash
+journalctl -u aov-wiki-pages.service -u aov-backup.service -n 100
+```
+
+```bash
+systemctl list-timers 'aov-*'
+```
+
+Chưa có cảnh báo gửi đi đâu: một lần chạy lỗi chỉ hiện trong journal và trong `systemctl --failed`.
 
 ## Chuyển dữ liệu dev lên
 
@@ -408,14 +447,15 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
   với origin loopback, chưa chạy trên VPS và chưa chạy với PowerShell 7 trên Ubuntu.
 - **Sau ngày ra mắt**: máy dev không ghi vào ba bucket thật nữa. Thu hồi token R2 của máy dev hoặc đổi nó sang chỉ đọc; khi cần
   dev tiếp thì tạo bộ bucket dev nhỏ, gần như trống, với token và địa chỉ ảnh riêng.
-- **Sao lưu ra ngoài máy**: backup hiện nằm cùng máy. Cần chỗ lưu riêng và lịch chạy.
+- **Sao lưu ra ngoài máy**: backup chạy mỗi đêm (`aov-backup.timer`) nhưng nằm cùng máy. Cần một chỗ lưu riêng.
 - **Email của Keycloak**: chưa có SMTP nên quên mật khẩu và xác minh email chưa hoạt động. Đăng ký mở sẵn như realm local
   (`registrationAllowed`), cần quyết định có giữ không.
 - **Đăng nhập Google**: provider `google` đi theo khi chuyển dữ liệu dev lên; đặt `GOOGLE_LOGIN_ENABLED=true`. Chưa đăng nhập
   thử qua Google trên origin thật.
 - **Tài khoản thật**: tạo biên tập viên và gán vai trò trong console; bật MFA nếu cần.
 - **CDN hoặc load balancer**: nếu đặt trước Caddy phải khai báo `trusted_proxies`, nếu không giới hạn tần suất theo IP sẽ sai.
-- **Theo dõi**: chưa có giám sát uptime, cảnh báo đầy đĩa hay gom log; log JSON hiện chỉ xoay vòng trong Docker.
+- **Theo dõi**: chưa có giám sát uptime, cảnh báo đầy đĩa hay gom log; log JSON hiện chỉ xoay vòng trong Docker. Lần cập nhật,
+  prerender hay backup bị lỗi chỉ hiện trong journal của máy chủ.
 - **Tính năng chỉ có ở Vite dev**: JSON storage của Admin cần dev server, nên bản build trả 404 cho nó.
 - **Content-Security-Policy** chưa đặt, nên hiện không có gì chặn R2. Khi bật phải liệt kê nguồn thật: ít nhất `img-src` có
   tên miền ảnh và endpoint R2 (ảnh đối chứng qua URL ký sẵn), `connect-src` có endpoint R2 (upload, manifest tệp nguồn), cùng

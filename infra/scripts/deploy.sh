@@ -25,7 +25,8 @@ env_value() { sed -n "s/^$1=//p" "$infra/.env" | tail -1; }
 mkdir -p "$state"
 exec 9>"$state/lock"
 if ! flock --nonblock 9; then
-    log "Another update is running."
+    # Held by another update, or by a scheduled job (scheduled.sh); the timer tries again five minutes later.
+    log "Another update or a scheduled job is running."
     exit 0
 fi
 cd "$infra"

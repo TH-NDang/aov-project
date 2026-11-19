@@ -1,0 +1,11 @@
+# Prerenders the running release of the Wiki again (infra/scripts/scheduled.sh; ADR-021, addendum of 19/11/2026).
+# Install: see "Việc chạy theo lịch" in infra/README.md. The path assumes the checkout in /opt.
+[Unit]
+Description=Prerender the Wiki again so that newly published content gets its pages
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /opt/aov-project/infra/scripts/scheduled.sh pages
+TimeoutStartSec=15min
