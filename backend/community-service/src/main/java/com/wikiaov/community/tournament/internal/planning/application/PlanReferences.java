@@ -18,9 +18,14 @@ public class PlanReferences implements CompetitionReferences {
         this.plans = plans;
     }
 
+    /**
+     * A registry record only ever goes to the trash, so a plan that went there with its tournament no longer keeps it
+     * out. A page is deleted for good: every plan that names it keeps protecting it, those in the trash included, since
+     * their tournament can still be restored.
+     */
     @Override
     public long identityReferences(Subject subject, UUID id) {
-        return plans.countReferences(subject.name(), id.toString(), PUBLIC_ACTIONS);
+        return plans.countReferences(subject.name(), id.toString(), PUBLIC_ACTIONS, subject == Subject.PAGE);
     }
 
     @Override

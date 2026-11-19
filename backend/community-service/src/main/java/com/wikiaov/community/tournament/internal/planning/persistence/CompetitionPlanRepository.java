@@ -58,7 +58,8 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
      * Plans and plan history that name a record. The plan of the record's own tournament (its series, games and roster
      * rows belong to it too) is left out while it has never been published: such a draft is part of the tournament and
      * goes to the trash with it. Once published or withdrawn ({@code publicActions} names the revision actions that say
-     * so), the plan and its history keep protecting the record. Native: looks for the id in the text of the jsonb
+     * so), the plan and its history keep protecting the record. The plans and history of tournaments in the trash are
+     * counted only when {@code includeTrash} asks for them. Native: looks for the id in the text of the jsonb
      * documents.
      */
     @Query(value = """
@@ -76,16 +77,19 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
           WHERE CAST(p.id AS text) = owner.tournament_id AND p.published_snapshot IS NULL
             AND NOT EXISTS (SELECT 1 FROM tournament.plan_revision r
                             WHERE r.tournament_id = p.id AND r.action IN (:publicActions))
+        ), trashed AS (
+          SELECT t.id FROM tournament.tournament t WHERE t.deleted_at IS NOT NULL AND NOT :includeTrash
         )
         SELECT (SELECT count(*) FROM tournament.competition_plan p
-                WHERE p.id NOT IN (SELECT id FROM own_draft)
+                WHERE p.id NOT IN (SELECT id FROM own_draft) AND p.id NOT IN (SELECT id FROM trashed)
                   AND (CAST(p.id AS text) = :id OR CAST(p.content AS text) LIKE concat('%', :id, '%')
                        OR CAST(p.published_snapshot AS text) LIKE concat('%', :id, '%')))
              + (SELECT count(*) FROM tournament.plan_revision r
                 WHERE r.tournament_id NOT IN (SELECT id FROM own_draft)
+                  AND r.tournament_id NOT IN (SELECT id FROM trashed)
                   AND CAST(r.content AS text) LIKE concat('%', :id, '%'))
         """, nativeQuery = true)
-    long countReferences(String kind, String id, Collection<String> publicActions);
+    long countReferences(String kind, String id, Collection<String> publicActions, boolean includeTrash);
 
     /** Native: looks for the image path in the text of the jsonb documents. */
     @Query(value = "select (select count(*) from tournament.competition_plan where cast(published_snapshot as text) like concat('%/', :id, '/%')) + (select count(*) from tournament.plan_revision where cast(content as text) like concat('%/', :id, '/%'))", nativeQuery = true)

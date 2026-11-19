@@ -252,7 +252,23 @@ thao tác của hồ sơ và giải phóng đường dẫn; ứng dụng ghi log
 PAGE_CONFLICT; hồ sơ đã công bố chỉ được thu hồi. Danh tính đội/tuyển thủ tạo kèm page không bị xóa theo.
 
 Bằng chứng claim, actor, token mời, audit không có trong API công khai. Ảnh còn được page hoặc lịch
-sử giải tham chiếu bị chặn retire. Danh tính còn gắn page/kế hoạch/snapshot bị chặn xóa theo cơ chế hiện có.
+sử giải tham chiếu bị chặn retire. Danh tính còn gắn page/kế hoạch/snapshot bị chặn xóa theo cơ chế hiện có, trừ
+page nháp và kế hoạch của giải ở thùng rác nêu ngay dưới đây.
+
+Đưa danh tính vào thùng rác (19/11/2026): page TEAM/PLAYER là một phần của danh tính nó đại diện khi page chưa từng
+công bố, không có người đại diện, yêu cầu nhận, thư mời, bài viết, người theo dõi, báo cáo hay thông báo, và không nằm
+trong đội hình của page TEAM nào mà đội đó còn ngoài thùng rác. Page như vậy không chặn việc xóa đội/tuyển thủ:
+`deletion-impact` không tính nó vào usage `COMPETITION_PAGE`. Khi danh tính vào thùng rác, page đi theo: danh sách và ô
+chọn hồ sơ trong Admin (`GET /admin/pages` ở mọi cách sắp xếp, kể cả khi lọc theo `entityIds`) và danh sách đội của một
+thành viên (`/pages/{id}/teams`) không hiện nó; chi tiết `GET /admin/pages/{id}` vẫn đọc được; công bố bị từ chối cho
+tới khi khôi phục danh tính. Khôi phục danh tính thì page hiện lại mà không cần ghi gì thêm. Page đã từng công bố hoặc
+còn một trong các hoạt động trên vẫn giữ danh tính ngoài thùng rác như trước. Đội ở thùng rác không còn giữ thành viên
+trong đội hình page của nó; còn việc xóa hẳn một page cá nhân vẫn bị chặn khi bất kỳ đội hình nào nêu tên nó, kể cả
+đội hình của đội ở thùng rác, vì đội đó còn khôi phục được.
+
+Kế hoạch và lịch sử kế hoạch của giải ở thùng rác cũng không còn giữ đội, tuyển thủ hay bản ghi nào khác của sổ đăng
+ký ngoài thùng rác (ADR-015, bổ sung 2026-11-19). Chúng vẫn chặn xóa hẳn page tổ chức, chuỗi giải hay page khác mà
+chúng nêu tên. Khôi phục giải không kiểm tra các đội trong kế hoạch: khôi phục đội trước rồi mới tới giải.
 
 ## Liên kết thành viên đội tuyển
 
@@ -496,8 +512,9 @@ ends_on, season_year, status, placement_team_ids; series: scheduled_at, team_a_i
 roster_membership: status, lane; competition_plan: entrant_team_ids, organizer_page_id, circuit_page_id; page:
 history_last_on; search_names cho team, player, tournament, series, page), các index theo lịch trận, đội và giải, cùng
 hàm và view tính khi đọc (tournament_window, tournament_team, team_tournament_activity, team_activity,
-player_tournament_activity, player_activity, page_activity). `tournament.page_activity` là phần duy nhất module community
-được đọc từ schema tournament; hàm `search_names`, `search_key`, `name_match_rank` dùng chung.
+player_tournament_activity, player_activity, page_activity). `tournament.page_activity` và view `tournament.trashed_identity`
+của V022 là hai phần duy nhất module community được đọc từ schema tournament; hàm `search_names`, `search_key`,
+`name_match_rank` dùng chung.
 
 Migration `V014` đưa tên thật (`fullName`) vào phần tìm kiếm của tuyển thủ: ô tìm trong danh bạ và ô chọn tuyển thủ đều tìm được
 theo tên thi đấu, tên thật, biệt danh hoặc mã.
@@ -534,6 +551,10 @@ với chính đội này (ACTIVE, SUBSTITUTE, INACTIVE thành LEFT). Chữ khác
 V021 phục vụ "Đội trưởng", chạy một lần trên bản nháp và bản công bố của mọi page TEAM: thành viên có `role` chứa
 "Đội trưởng" hoặc "Captain" như một từ riêng (đầu chữ, sau dấu cách, "·" hoặc "|", không phân biệt hoa thường và dấu)
 được ghi `captain: true`; `role` giữ nguyên, thành viên khác không đổi.
+
+V022 phục vụ "Đưa danh tính vào thùng rác": view `tournament.trashed_identity` (kind TEAM hoặc PLAYER, id) liệt kê đội
+và tuyển thủ đang ở thùng rác. Danh sách, ô chọn hồ sơ và danh sách đội của thành viên bỏ qua page có `entity_id` nằm
+trong view; view đọc sổ đăng ký lúc truy vấn nên khôi phục danh tính là đủ để page hiện lại. Không đổi dữ liệu.
 
 ## API
 
