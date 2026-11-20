@@ -671,11 +671,12 @@
   height: 96px;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* The picture keeps one height in every card of a row, whether the name below takes one line or two. */
+  justify-content: flex-start;
   gap: 4px;
   border: 1px solid color-mix(in srgb, var(--wiki-branch-tone, var(--aov-accent)) 22%, var(--aov-line));
   border-radius: var(--aov-radius-card);
-  padding: 8px 6px;
+  padding: 10px 6px 8px;
   background:
     radial-gradient(
       90% 70% at 50% 0%,
@@ -702,6 +703,9 @@
 }
 /* On a phone the cards are narrow: the name gets two lines and the note is left to the detail. */
 @media (max-width: 899.98px) {
+  .wiki-enchantment-node {
+    height: 100px;
+  }
   .wiki-enchantment-node strong {
     display: -webkit-box;
     white-space: normal;
