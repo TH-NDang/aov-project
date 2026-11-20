@@ -160,15 +160,14 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     assert.equal(new URLSearchParams(router.state.location.search).get("skill"), "passive")
     await click('[aria-label="Cách hiển thị kỹ năng"] button:nth-child(2)')
     assert.equal(new URLSearchParams(router.state.location.search).get("skillLayout"), "flat")
-    // Translating opens from a language's own pencil in the language menu at the top.
+    // Translating opens from a language's own pencil in the language sheet of the ⋯ menu.
     await act(async () => {
       document
-        .querySelector('[aria-label="Ngôn ngữ hiển thị nội dung"]')!
+        .querySelector('button[aria-label="Thao tác tướng"]')!
         .dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
     })
-    await act(async () =>
-      document.querySelector<HTMLElement>('[role="menuitem"][aria-label="Dịch sang Tiếng Anh (Mỹ)"]')!.click(),
-    )
+    await act(async () => document.querySelector<HTMLElement>("[data-language-menu-item]")!.click())
+    await act(async () => document.querySelector<HTMLElement>('button[aria-label="Dịch sang Tiếng Anh (Mỹ)"]')!.click())
     const target = document.querySelector<HTMLButtonElement>('[aria-label="Ngôn ngữ đích"]')!
     await act(async () => {
       target.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))

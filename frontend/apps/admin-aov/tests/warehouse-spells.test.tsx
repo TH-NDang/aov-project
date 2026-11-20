@@ -92,19 +92,20 @@ test("editing one spell translation preserves other locales, mechanics, states a
       },
     }
     await render(<SecondaryEditor {...props} />)
-    // The language icon at the top sets what the page reads and edits in; its menu tells the progress.
+    // The ⋯ menu holds the language the page reads and edits in; its row opens the language sheet with the progress.
     await act(async () => {
       document
-        .querySelector('button[aria-label="Ngôn ngữ: Tiếng Việt (Việt Nam)"]')!
+        .querySelector('button[aria-label="Thêm thao tác"]')!
         .dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
     })
+    await act(async () => document.querySelector<HTMLElement>("[data-language-menu-item]")!.click())
     // Each language row shows its flag, how far it is translated and its own pencil, as on the hero page.
-    const english = [...document.querySelectorAll<HTMLElement>('[role="menuitemradio"]')].find((item) =>
+    const english = [...document.querySelectorAll<HTMLElement>('[role="radio"][data-locale]')].find((item) =>
       item.textContent?.includes("Tiếng Anh (Mỹ)"),
     )!
     assert.match(english.textContent!, /Đủ nội dung|Thiếu \d+ mục/)
     assert.match(english.textContent!, /\d+\/\d+/)
-    assert.ok(document.querySelector('[role="menuitem"][aria-label="Sửa bằng Tiếng Anh (Mỹ)"]'))
+    assert.ok(document.querySelector('button[aria-label="Sửa bằng Tiếng Anh (Mỹ)"]'))
     await act(async () => english.click())
     assert.match(document.querySelector("#secondary-section-overview")?.textContent ?? "", /Increase movement speed/)
     await click("Sửa phụ trợ")

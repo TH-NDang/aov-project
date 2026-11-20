@@ -61,8 +61,8 @@ export function HeroVersionMenu({
           className={cn("h-8 shrink-0 bg-background font-normal", narrow ? "gap-1 px-2" : "gap-1.5 px-2.5")}
         >
           <span className="type-meta whitespace-nowrap tabular-nums">
-            Bản {revision.revisionNo}
-            {!narrow && ` · ${REVISION_STATES[revision.state]}`}
+            {/* A narrow header keeps the number alone; the full name stays in the tooltip and the list. */}
+            {narrow ? `#${revision.revisionNo}` : `Bản ${revision.revisionNo} · ${REVISION_STATES[revision.state]}`}
           </span>
           <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
         </Button>

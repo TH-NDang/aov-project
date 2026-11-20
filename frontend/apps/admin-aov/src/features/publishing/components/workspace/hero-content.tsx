@@ -403,7 +403,7 @@ function HeroContentBody({
       entries={entries}
       layout="panel"
       folded={!railRoom}
-      className="[--contents-offset:96px] max-sm:[--contents-offset:136px]"
+      className="[--contents-offset:104px]"
     >
       <div ref={contentRef} aria-label="Nội dung tướng" className="@container min-w-0 space-y-6">
         {tabs.map((key) => (

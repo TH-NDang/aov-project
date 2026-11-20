@@ -269,6 +269,7 @@ export function ItemEditor({
             onClose={close}
             language={
               <LanguagePicker
+                variant="menu"
                 translations={value.translations}
                 value={language}
                 onChange={chooseLanguage}

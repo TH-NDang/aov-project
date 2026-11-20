@@ -374,6 +374,7 @@ export function SecondaryEditor({
             language={
               isNew ? undefined : (
                 <LanguagePicker
+                  variant="menu"
                   translations={content.translations}
                   value={language}
                   onChange={chooseLanguage}

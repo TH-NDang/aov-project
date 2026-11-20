@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
@@ -35,12 +36,15 @@ import { HeroRevisionHistory } from "@/features/publishing/components/workspace/
 import { HeroPatchTimeline } from "@/features/publishing/components/patch-changes/hero-patch-view"
 
 import { HeroLanguagePicker } from "@/features/publishing/components/editing/hero-language-picker"
+import { LanguageMenuItem, LanguageSheet, type LanguageRow } from "@/components/language-sheet"
 import { HeroReviewNotice } from "@/features/publishing/components/workspace/hero-review-notice"
 import { reviewTab, type HeroReviewItem } from "@/features/publishing/model/import/hero-source-review"
 import {
   missingTranslationFields,
   translatedText,
   translationFields,
+  translationStatus,
+  translationStatusLabel,
   type TranslationField,
   type TranslationTarget,
 } from "@/features/publishing/model/hero-translation-model"
@@ -671,6 +675,32 @@ export function PublishingWorkspace({
       </Button>
     </>
   )
+  const [languageOpen, setLanguageOpen] = useState(false)
+  const languageRows: LanguageRow[] = languageOptions.map((option) => {
+    const progress = preview ? translationStatus(preview.content, option.value) : undefined
+    return {
+      code: option.value,
+      label: option.label,
+      status: progress ? translationStatusLabel(progress) : undefined,
+      done: progress?.completedFields,
+      total: progress?.totalFields,
+      complete: !!progress && progress.totalFields > 0 && !progress.missing.length,
+    }
+  })
+  const readingIncomplete = languageRows.some((row) => row.code === location.readLocale && !row.complete && !!row.total)
+  const languageSheet = preview && revision && !translating && (
+    <LanguageSheet
+      open={languageOpen}
+      onOpenChange={setLanguageOpen}
+      rows={languageRows}
+      value={location.readLocale}
+      onChange={setContentLocale}
+      disabled={editing && section !== "SKILLS"}
+      onEdit={translateInto}
+      editLabel={(label) => `Dịch sang ${label}`}
+      note={`Nội dung của bản #${revision.revisionNo}. Phần chưa dịch hiển thị bằng ngôn ngữ nguồn.`}
+    />
+  )
   const actionsMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -678,7 +708,19 @@ export function PublishingWorkspace({
           <MoreHorizontal className="size-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-60">
+        {/* The reading language sits here rather than as its own header button; it opens the language sheet. */}
+        {preview && revision && !translating && (
+          <>
+            <LanguageMenuItem
+              value={location.readLocale}
+              incomplete={readingIncomplete}
+              disabled={busy}
+              onOpen={() => setLanguageOpen(true)}
+            />
+            {((canPublish && heroId && formsOwner) || writable) && <DropdownMenuSeparator />}
+          </>
+        )}
         {canPublish && heroId && formsOwner && (
           <DropdownMenuItem disabled={busy} onSelect={() => setFormsOpen(true)}>
             <Layers />
@@ -902,14 +944,19 @@ export function PublishingWorkspace({
       ) : (
         // The header and the tab row stay at the top together while the page scrolls, as a sheet's do.
         <div className="sticky top-0 z-20 -mx-1 bg-background px-1 pt-1 [overflow-anchor:none]">
-          <header ref={headerRef} className="relative">
+          <header
+            ref={headerRef}
+            className="relative"
+            data-reading-locale={location.readLocale}
+            data-reading-status={languageRows.find((row) => row.code === location.readLocale)?.status}
+          >
             {/*
-              Two groups, always the same ones in the same order: the picture and the name, then every control (review
-              and draft status, version, language, the main action, the menu). A wide sheet keeps them on one row; a
-              phone puts the controls on the row under the name, so the name is never squeezed out and nothing hides.
+              One row at every width, as the warehouse sheets: the picture and the name with its status line, then the
+              same three controls (version, the main action, the menu, which also holds the reading language). Only the
+              name gives way.
             */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <div className="flex min-w-[10rem] flex-[1_1_12rem] items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
                 {!onUnsavedChange && (
                   <Button variant="ghost" size="icon" asChild>
                     <Link
@@ -937,76 +984,69 @@ export function PublishingWorkspace({
                     </h1>
                     {quickSwitcher}
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
-                  </p>
+                  {/* The line under the name: why this version exists, then its review and draft status as small chips. */}
+                  <div className="flex min-w-0 items-center gap-1.5 overflow-hidden [&_button]:h-6 [&_button]:gap-1 [&_button]:px-1.5 [&_button]:text-xs [&_button_svg]:size-3.5">
+                    <p className="truncate text-xs text-muted-foreground">
+                      {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
+                    </p>
+                    <PatchCaptureToggle />
+                    {preview && (
+                      <HeroReviewNotice
+                        skills={preview.content.SKILLS?.skills ?? []}
+                        locale={location.readLocale}
+                        disabled={busy}
+                        onReview={
+                          writable && !editorDisabled
+                            ? () => {
+                                updateLocation({ view: "overview", section: "SKILLS", tab: "skills" })
+                                setEditing(true)
+                                setReviewOpen(true)
+                              }
+                            : undefined
+                        }
+                        onNavigate={(item) => {
+                          if (!item.section) return
+                          setEditing(false)
+                          setReviewTarget(item)
+                          updateLocation({
+                            view: "overview",
+                            section: item.section,
+                            tab: reviewTab(item.section),
+                            skill: item.skillKey,
+                          })
+                        }}
+                      />
+                    )}
+                    {writable && (
+                      <DraftStatusControl
+                        key={revision.id}
+                        draft={localDraft}
+                        disabled={busy}
+                        sections={dirty.size}
+                        changed={new Set([...dirty, ...savedSections]).size}
+                        alwaysShown
+                        discardLabel="Bỏ thay đổi chưa lưu"
+                      >
+                        <HeroDraftChanges
+                          before={initialCopy}
+                          after={localDraft.value}
+                          saved={savedChanges.data}
+                          savedFailed={savedChanges.isError}
+                          locale={locale}
+                          name={heroName}
+                          revisionNo={revision.revisionNo}
+                        />
+                      </DraftStatusControl>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="ml-auto flex shrink-0 items-center gap-1.5">
-                <PatchCaptureToggle />
-                {preview && (
-                  <HeroReviewNotice
-                    skills={preview.content.SKILLS?.skills ?? []}
-                    locale={location.readLocale}
-                    disabled={busy}
-                    onReview={
-                      writable && !editorDisabled
-                        ? () => {
-                            updateLocation({ view: "overview", section: "SKILLS", tab: "skills" })
-                            setEditing(true)
-                            setReviewOpen(true)
-                          }
-                        : undefined
-                    }
-                    onNavigate={(item) => {
-                      if (!item.section) return
-                      setEditing(false)
-                      setReviewTarget(item)
-                      updateLocation({
-                        view: "overview",
-                        section: item.section,
-                        tab: reviewTab(item.section),
-                        skill: item.skillKey,
-                      })
-                    }}
-                  />
-                )}
-                {writable && (
-                  <DraftStatusControl
-                    key={revision.id}
-                    draft={localDraft}
-                    disabled={busy}
-                    sections={dirty.size}
-                    changed={new Set([...dirty, ...savedSections]).size}
-                    alwaysShown
-                    discardLabel="Bỏ thay đổi chưa lưu"
-                  >
-                    <HeroDraftChanges
-                      before={initialCopy}
-                      after={localDraft.value}
-                      saved={savedChanges.data}
-                      savedFailed={savedChanges.isError}
-                      locale={locale}
-                      name={heroName}
-                      revisionNo={revision.revisionNo}
-                    />
-                  </DraftStatusControl>
-                )}
+              <div className="flex shrink-0 items-center gap-1.5">
                 {versionMenu(!wideHeader)}
-                {preview && revision && !translating && (
-                  <HeroLanguagePicker
-                    content={preview.content}
-                    locale={location.readLocale}
-                    revisionNo={revision.revisionNo}
-                    disabled={busy}
-                    languagesDisabled={editing && section !== "SKILLS"}
-                    onChange={setContentLocale}
-                    onTranslate={translateInto}
-                  />
-                )}
                 {headerAction === "publish" && revision && publishButton()}
                 {headerAction === "draft" && draftPencil}
                 {actionsMenu}
+                {languageSheet}
                 {closeButton}
               </div>
             </div>
