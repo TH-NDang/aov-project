@@ -35,7 +35,6 @@ import { HeroRevisionHistory } from "@/features/publishing/components/workspace/
 import { HeroPatchTimeline } from "@/features/publishing/components/patch-changes/hero-patch-view"
 
 import { HeroLanguagePicker } from "@/features/publishing/components/editing/hero-language-picker"
-import { cn } from "@aov/ui/lib/utils"
 import { HeroReviewNotice } from "@/features/publishing/components/workspace/hero-review-notice"
 import { reviewTab, type HeroReviewItem } from "@/features/publishing/model/import/hero-source-review"
 import {
@@ -621,9 +620,10 @@ export function PublishingWorkspace({
         open={triggerClassName ? publishOpen : undefined}
         onOpenChange={triggerClassName ? setPublishOpen : undefined}
         triggerClassName={triggerClassName}
+        compact={!wideHeader}
       />
     )
-  // The version as "#n"; on a narrow header its menu also holds the reading language and the main action.
+  // The version as "#n" with its list; a narrow header drops the state word from its label, nothing else moves.
   const versionMenu = (narrow: boolean) =>
     revision && (
       <HeroVersionMenu
@@ -634,28 +634,6 @@ export function PublishingWorkspace({
         busy={busy}
         narrow={narrow}
         onChoose={chooseRevision}
-        language={
-          narrow && preview && !translating
-            ? {
-                content: preview.content,
-                locale: location.readLocale,
-                disabled: busy || (editing && section !== "SKILLS"),
-                onChange: setContentLocale,
-              }
-            : undefined
-        }
-        publish={
-          narrow && headerAction === "publish"
-            ? {
-                publishing,
-                onSelect: () => {
-                  // Gaps open the same list the header button shows; with none, the click publishes.
-                  if (issues.length || unsavedSections.length) setTimeout(() => setPublishOpen(true))
-                  else publishRevision()
-                },
-              }
-            : undefined
-        }
       />
     )
   // The single pencil on a published version: it opens the draft in progress or starts one of the chosen kind.
@@ -925,15 +903,13 @@ export function PublishingWorkspace({
         // The header and the tab row stay at the top together while the page scrolls, as a sheet's do.
         <div className="sticky top-0 z-20 -mx-1 bg-background px-1 pt-1 [overflow-anchor:none]">
           <header ref={headerRef} className="relative">
-            {/* The name and the controls wrap as two whole groups, so no button can end up alone on a line. */}
-            <div
-              className={
-                wideHeader
-                  ? "flex flex-wrap items-center justify-end gap-x-4 gap-y-3"
-                  : "flex min-w-0 items-center gap-1.5"
-              }
-            >
-              <div className={cn("flex min-w-0 items-center gap-2.5", wideHeader ? "flex-auto" : "flex-1 gap-2")}>
+            {/*
+              Two groups, always the same ones in the same order: the picture and the name, then every control (review
+              and draft status, version, language, the main action, the menu). A wide sheet keeps them on one row; a
+              phone puts the controls on the row under the name, so the name is never squeezed out and nothing hides.
+            */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <div className="flex min-w-[10rem] flex-[1_1_12rem] items-center gap-2">
                 {!onUnsavedChange && (
                   <Button variant="ghost" size="icon" asChild>
                     <Link
@@ -947,15 +923,12 @@ export function PublishingWorkspace({
                     </Link>
                   </Button>
                 )}
-                {/* A narrow header gives the name the room; the scrolled name bar still shows the picture. */}
-                {wideHeader && (
-                  <HeroAsset
-                    id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
-                    alt={`Ảnh tướng ${heroName}`}
-                    className="size-9 shrink-0 rounded-full"
-                    frameAspectRatio={1}
-                  />
-                )}
+                <HeroAsset
+                  id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
+                  alt={`Ảnh tướng ${heroName}`}
+                  className="size-8 shrink-0 rounded-full"
+                  frameAspectRatio={1}
+                />
                 <div className="min-w-0">
                   {/* Switching hero belongs to the name, so its button follows it on the same line. */}
                   <div className="flex min-w-0 items-center gap-1">
@@ -968,6 +941,8 @@ export function PublishingWorkspace({
                     {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
                   </p>
                 </div>
+              </div>
+              <div className="ml-auto flex shrink-0 items-center gap-1.5">
                 <PatchCaptureToggle />
                 {preview && (
                   <HeroReviewNotice
@@ -1017,36 +992,23 @@ export function PublishingWorkspace({
                     />
                   </DraftStatusControl>
                 )}
+                {versionMenu(!wideHeader)}
+                {preview && revision && !translating && (
+                  <HeroLanguagePicker
+                    content={preview.content}
+                    locale={location.readLocale}
+                    revisionNo={revision.revisionNo}
+                    disabled={busy}
+                    languagesDisabled={editing && section !== "SKILLS"}
+                    onChange={setContentLocale}
+                    onTranslate={translateInto}
+                  />
+                )}
+                {headerAction === "publish" && revision && publishButton()}
+                {headerAction === "draft" && draftPencil}
+                {actionsMenu}
+                {closeButton}
               </div>
-              {wideHeader ? (
-                <div className="flex min-w-0 shrink-0 items-center gap-2">
-                  {versionMenu(false)}
-                  {preview && revision && !translating && (
-                    <HeroLanguagePicker
-                      content={preview.content}
-                      locale={location.readLocale}
-                      revisionNo={revision.revisionNo}
-                      disabled={busy}
-                      languagesDisabled={editing && section !== "SKILLS"}
-                      onChange={setContentLocale}
-                      onTranslate={translateInto}
-                    />
-                  )}
-                  {headerAction === "publish" && revision && publishButton()}
-                  {headerAction === "draft" && draftPencil}
-                  {actionsMenu}
-                  {closeButton}
-                </div>
-              ) : (
-                // One row on a narrow header: the version menu also holds the language and the main action.
-                <div className="relative flex shrink-0 items-center gap-1.5">
-                  {versionMenu(true)}
-                  {headerAction === "draft" && draftPencil}
-                  {headerAction === "publish" && revision && publishButton("sr-only")}
-                  {actionsMenu}
-                  {closeButton}
-                </div>
-              )}
             </div>
             {(formSwitcher || sharedPart) && (
               <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">

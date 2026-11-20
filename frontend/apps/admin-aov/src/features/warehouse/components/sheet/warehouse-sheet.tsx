@@ -79,7 +79,7 @@ export function CopyCode({ code }: { code: string }) {
 
 /**
  * The right side of a sheet header, in one row of equal-height controls: the version, discarding the draft, saving,
- * publishing, the single pencil and closing. On a narrow screen the row drops below the name rather than squeezing it.
+ * publishing, the single pencil and closing. The row never wraps: on a phone the version moves under the name.
  */
 export function SheetActions({
   version,
@@ -110,9 +110,12 @@ export function SheetActions({
   language?: ReactNode
 }) {
   return (
-    <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+    <div className="ml-auto flex shrink-0 items-center justify-end gap-1.5">
+      {/* On a phone the version reads under the name instead, so the controls keep one row. */}
       {version && (
-        <span className={`type-meta mr-1 whitespace-nowrap ${editing ? "text-primary" : ""}`}>{version}</span>
+        <span className={`type-meta mr-1 whitespace-nowrap max-sm:hidden ${editing ? "text-primary" : ""}`}>
+          {version}
+        </span>
       )}
       {language}
       {discard && (

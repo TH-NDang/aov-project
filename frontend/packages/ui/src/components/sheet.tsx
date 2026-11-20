@@ -189,6 +189,13 @@ function SheetContent({
   const phoneSide = React.useContext(PhoneSheetSide)
   const edge = compact && phoneSide === "bottom" && (side === "right" || side === "left") ? "bottom" : side
   const closeLabel = useLocaleText()("Đóng", "Close")
+  // A detail sheet keeps one fixed height when it rises from the bottom, so it neither grows in steps while its data
+  // loads nor sits low when it holds little: a side sheet moved to the bottom, one drawn to fill the screen's height
+  // (its body scrolls inside, under a sticky header), or one that asks for most of the screen (max-h-[92dvh], as the
+  // Admin editors do). A small sheet of choices stays as tall as its content.
+  const fullHeight =
+    edge !== side ||
+    (typeof className === "string" && /(^|\s)(h-dvh|h-svh|h-screen|h-full|max-h-\[92dvh\])(\s|$)/.test(className))
   const closeRef = React.useRef<HTMLButtonElement>(null)
   // The sheet element arrives after it mounts in the portal, so the pull listens once it is there.
   const [sheetElement, setSheetElement] = React.useState<HTMLDivElement | null>(null)
@@ -218,10 +225,11 @@ function SheetContent({
           edge === "bottom" &&
             "inset-x-0 bottom-0 h-auto border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           className,
-          // A bottom sheet is as tall as its content, at most most of the screen, with the rounded top of a drawer;
-          // these come after the caller's classes so a side sheet's width or height never carries over on a phone.
+          // A bottom sheet has the rounded top of a drawer and at most most of the screen; these come after the caller's
+          // classes so a side sheet's width or height never carries over on a phone.
+          edge === "bottom" && (fullHeight ? "h-[92dvh]" : "h-auto"),
           edge === "bottom" &&
-            "inset-x-0 top-auto bottom-0 h-auto max-h-[92dvh] w-full max-w-none rounded-t-[18px] border-x-0 border-b-0 pb-[env(safe-area-inset-bottom)] sm:max-w-none",
+            "inset-x-0 top-auto bottom-0 max-h-[92dvh] w-full max-w-none rounded-t-[18px] data-[state=closed]:duration-200 data-[state=open]:duration-300 border-x-0 border-b-0 pb-[env(safe-area-inset-bottom)] sm:max-w-none",
         )}
         onEscapeKeyDown={onEscapeKeyDown}
         {...props}

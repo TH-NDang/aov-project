@@ -33,11 +33,7 @@ export function HeroWorkspaceTabs({
       aria-label="Các phần của tướng"
       className={cn("flex border-b bg-background", sticky && "sticky top-12 z-10 [overflow-anchor:none]")}
     >
-      <div
-        role="tablist"
-        aria-label="Không gian quản lý tướng"
-        className="flex min-w-0 flex-1 @2xl:gap-0.5 @2xl:overflow-x-auto"
-      >
+      <div role="tablist" aria-label="Không gian quản lý tướng" className="flex min-w-0 flex-1 gap-1 overflow-x-auto">
         {views.map(([key, Icon, label]) => {
           const selected = view === key || (key === "overview" && view === "translations")
           return (
@@ -50,14 +46,13 @@ export function HeroWorkspaceTabs({
               variant="ghost"
               size="sm"
               className={cn(
-                "relative shrink-0 rounded-b-none border-b-2 @2xl:h-9 @2xl:px-2.5",
-                // Narrow: icon over label; slots start from their label width and share the rest, so no label is cut.
-                "@max-2xl:h-14 @max-2xl:min-w-0 @max-2xl:flex-auto @max-2xl:flex-col @max-2xl:gap-1 @max-2xl:px-0.5 @max-2xl:text-xs @max-2xl:has-[>svg]:px-0.5",
+                // One height at every width: the icon beside the label, the chosen tab underlined in the accent.
+                "relative h-10 shrink-0 gap-1.5 rounded-b-none border-b-2 px-2.5",
                 selected ? "border-primary text-primary" : "border-transparent text-muted-foreground",
               )}
               onClick={() => onView(key)}
             >
-              <Icon className="size-4 @max-2xl:size-5" />
+              <Icon className="size-4" />
               <span className="max-w-full truncate">{label}</span>
             </Button>
           )
