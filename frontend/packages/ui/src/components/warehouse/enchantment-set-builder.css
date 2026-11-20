@@ -1,0 +1,446 @@
+/* An enchantment set drawn as the game draws it: a warm stage lit in the primary branch's colour, round spots joined
+   by glowing lines, a larger centre for tier III, arcs of choices beside a spot, and a reading panel on the right. */
+.esb {
+  --esb-tone: var(--aov-accent, #d6ad57);
+  --esb-node: 64px;
+  --esb-emblem: 84px;
+  --esb-center: 92px;
+  --esb-line: 4px;
+  /* The dark well behind each picture and the pale gold of its text, as on the game screen. */
+  --esb-well: color-mix(in srgb, var(--aov-bg, #121419) 60%, #000);
+  --esb-ink: color-mix(in srgb, var(--aov-game-gold, #d6ad57) 35%, #fff);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+  border: 1px solid color-mix(in srgb, var(--esb-tone) 35%, var(--aov-line, #333));
+  border-radius: 18px;
+  background:
+    radial-gradient(90% 120% at 25% 30%, color-mix(in srgb, var(--esb-tone) 26%, transparent), transparent 70%),
+    linear-gradient(160deg, color-mix(in srgb, var(--esb-tone) 10%, var(--aov-bg, #121419)), var(--aov-bg, #121419));
+  color: var(--aov-text, #eee);
+  container: esb / inline-size;
+}
+.esb-stage {
+  display: grid;
+  align-content: center;
+  gap: 44px;
+  min-width: 0;
+  padding: 40px 28px;
+}
+.esb-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.esb-row-side {
+  gap: 28px;
+}
+.esb-pair {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+/* A glowing line between two spots, in the colour of the branch it belongs to. */
+.esb-line {
+  flex: 1;
+  min-width: 14px;
+  height: var(--esb-line);
+  margin-inline: -2px;
+  border-radius: 999px;
+  background: var(--esb-tone);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--esb-tone) 70%, transparent);
+}
+.esb-row-side .esb-line {
+  max-width: 120px;
+  opacity: 0.85;
+}
+
+.esb-spot {
+  position: relative;
+  z-index: 1;
+  flex: none;
+}
+.esb-spot[data-open] {
+  z-index: 3;
+}
+.esb-node {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: var(--esb-node);
+  height: var(--esb-node);
+  place-items: center;
+  border: 3px solid color-mix(in srgb, var(--esb-tone) 85%, #000);
+  border-radius: 50%;
+  padding: 4px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--esb-tone) 30%, var(--esb-well)), var(--esb-well) 75%);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, #000 55%, transparent),
+    0 0 18px -4px color-mix(in srgb, var(--esb-tone) 80%, transparent);
+  cursor: pointer;
+  transition:
+    transform 160ms,
+    box-shadow 160ms;
+}
+.esb-node:hover,
+.esb-spot[data-open] > .esb-node {
+  transform: scale(1.05);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, #000 55%, transparent),
+    0 0 26px -2px var(--esb-tone);
+}
+.esb-node:focus-visible {
+  outline: 2px solid var(--esb-tone);
+  outline-offset: 3px;
+}
+.esb-node-art {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 50%;
+}
+.esb-node-art > * {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.esb-node[data-emblem] {
+  width: var(--esb-emblem);
+  height: var(--esb-emblem);
+  border-width: 2px;
+  padding: 10px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--esb-tone) 22%, var(--esb-well)), var(--esb-well) 80%);
+}
+/* Tier III is the centre: larger, set on a diamond, as the strongest enchantment of the branch. */
+.esb-node[data-center] {
+  width: var(--esb-center);
+  height: var(--esb-center);
+  border-color: var(--esb-tone);
+}
+.esb-node[data-center]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 4px;
+  transform: rotate(45deg);
+  border: 2px solid color-mix(in srgb, var(--esb-tone) 70%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--esb-tone) 18%, var(--esb-well));
+  box-shadow: 0 0 24px -6px var(--esb-tone);
+}
+.esb-node[data-empty] {
+  border-color: color-mix(in srgb, var(--aov-text, #eee) 30%, transparent);
+  background: color-mix(in srgb, #000 55%, transparent);
+  box-shadow: inset 0 0 12px #000;
+}
+/* The tier in Roman numerals on a small tab under the spot, as the game marks it. */
+.esb-tier {
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  display: grid;
+  min-width: 22px;
+  height: 18px;
+  place-items: center;
+  transform: translateX(-50%);
+  border: 1px solid color-mix(in srgb, var(--esb-tone) 70%, #000);
+  border-radius: 0 0 9px 9px;
+  padding: 0 4px;
+  background: var(--esb-well);
+  color: var(--esb-ink);
+  font:
+    700 0.75rem/1 Georgia,
+    "Times New Roman",
+    serif;
+}
+
+/* The choices of a spot on an arc beside it, highest place on top, each with its short label. */
+.esb-arc {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 14px);
+  display: grid;
+  gap: 6px;
+  transform: translateY(-50%);
+  border-right: 2px solid color-mix(in srgb, var(--esb-tone) 60%, transparent);
+  border-radius: 0 60% 60% 0;
+  padding: 10px 22px 10px 4px;
+  background: radial-gradient(
+    120% 100% at 0% 50%,
+    color-mix(in srgb, var(--esb-tone) 24%, transparent),
+    color-mix(in srgb, var(--esb-well) 94%, transparent) 70%
+  );
+  box-shadow: 0 10px 30px -10px #000;
+  animation: esb-arc-in 160ms ease-out;
+}
+.esb-spot[data-edge="end"] > .esb-arc {
+  right: calc(100% + 14px);
+  left: auto;
+  border-right: 0;
+  border-left: 2px solid color-mix(in srgb, var(--esb-tone) 60%, transparent);
+  border-radius: 60% 0 0 60%;
+  padding: 10px 4px 10px 22px;
+}
+.esb-choice {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 72px;
+  border-radius: 12px;
+  padding: 2px 4px;
+  color: var(--esb-ink);
+  cursor: pointer;
+}
+.esb-choice-art {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, var(--esb-tone) 50%, #000);
+  border-radius: 50%;
+  background: var(--esb-well);
+  transition:
+    transform 140ms,
+    box-shadow 140ms;
+}
+.esb-choice-art > * {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.esb-choice-label {
+  max-width: 96px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+}
+.esb-choice:hover .esb-choice-art,
+.esb-choice:focus-visible .esb-choice-art {
+  transform: scale(1.06);
+}
+.esb-choice[aria-pressed="true"] .esb-choice-art {
+  border-color: var(--esb-ink);
+  box-shadow: 0 0 14px var(--esb-tone);
+}
+.esb-choice:focus-visible {
+  outline: 2px solid var(--esb-tone);
+}
+@keyframes esb-arc-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.92);
+  }
+}
+
+/* The reading panel: the branch or enchantment chosen last, as the game's right column. */
+.esb-panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+  border-left: 1px solid color-mix(in srgb, var(--esb-tone) 25%, transparent);
+  border-radius: 0 17px 17px 0;
+  padding: 24px 20px;
+  background: color-mix(in srgb, #000 30%, transparent);
+}
+.esb-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.esb-panel-art {
+  position: relative;
+  display: grid;
+  width: 64px;
+  height: 64px;
+  flex: none;
+  place-items: center;
+  border: 2px solid var(--esb-tone);
+  border-radius: 50%;
+  padding: 4px;
+  background: var(--esb-well);
+  box-shadow: 0 0 16px -4px var(--esb-tone);
+}
+.esb-panel-art > :first-child {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: contain;
+}
+.esb-panel-head strong {
+  display: block;
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+.esb-panel-head small {
+  color: color-mix(in srgb, var(--esb-tone) 75%, #fff);
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.esb-panel-body {
+  min-height: 120px;
+  color: color-mix(in srgb, var(--aov-text, #eee) 90%, transparent);
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+.esb-panel-summary {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.esb-panel-body dl {
+  display: grid;
+  gap: 6px;
+}
+.esb-panel-body dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--esb-tone) 18%, transparent);
+  padding-bottom: 6px;
+}
+.esb-panel-body dt {
+  color: color-mix(in srgb, var(--aov-text, #eee) 65%, transparent);
+}
+.esb-panel-branch {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.esb-panel-emblem {
+  display: grid;
+  width: 96px;
+  height: 96px;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, var(--esb-tone) 70%, transparent);
+  border-radius: 50%;
+  padding: 12px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--esb-tone) 24%, transparent), var(--esb-well) 80%);
+}
+.esb-panel-emblem > * {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.esb-panel-branch strong {
+  color: color-mix(in srgb, var(--esb-tone) 80%, #fff);
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+.esb-panel-branch p {
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+.esb-panel-branch p > span {
+  color: color-mix(in srgb, var(--aov-text, #eee) 65%, transparent);
+}
+.esb-panel-empty {
+  color: color-mix(in srgb, var(--aov-text, #eee) 65%, transparent);
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+/* Summary or details, a pill switch like the game's. */
+.esb-switch {
+  display: inline-flex;
+  align-self: center;
+  border: 1px solid color-mix(in srgb, var(--aov-text, #eee) 20%, transparent);
+  border-radius: 999px;
+  padding: 2px;
+  background: color-mix(in srgb, #000 40%, transparent);
+}
+.esb-switch button {
+  border-radius: 999px;
+  padding: 4px 14px;
+  color: color-mix(in srgb, var(--aov-text, #eee) 60%, transparent);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+.esb-switch button[aria-pressed="true"] {
+  background: var(--aov-info, #3d8fe0);
+  color: #fff;
+}
+.esb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Narrow: smaller spots, the panel under the stage, and arcs that open below a spot instead of beside it. */
+@container esb (max-width: 720px) {
+  .esb {
+    --esb-node: 46px;
+    --esb-emblem: 58px;
+    --esb-center: 64px;
+    --esb-line: 3px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .esb-stage {
+    gap: 36px;
+    padding: 28px 14px 32px;
+  }
+  .esb-row-side {
+    gap: 14px;
+  }
+  .esb-panel {
+    border-top: 1px solid color-mix(in srgb, var(--esb-tone) 25%, transparent);
+    border-left: 0;
+    border-radius: 0 0 17px 17px;
+  }
+  .esb-arc,
+  .esb-spot[data-edge="end"] > .esb-arc {
+    top: calc(100% + 16px);
+    right: auto;
+    left: 50%;
+    display: flex;
+    transform: translateX(-50%);
+    border: 0;
+    border-top: 2px solid color-mix(in srgb, var(--esb-tone) 60%, transparent);
+    border-radius: 0 0 40% 40%;
+    padding: 10px 8px 14px;
+  }
+  .esb-spot[data-edge="start"] > .esb-arc {
+    left: -6px;
+    transform: none;
+  }
+  .esb-spot[data-edge="end"] > .esb-arc {
+    right: -6px;
+    left: auto;
+    transform: none;
+  }
+  .esb-choice {
+    min-width: 60px;
+  }
+  .esb-choice-art {
+    width: 44px;
+    height: 44px;
+  }
+  @keyframes esb-arc-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .esb-node,
+  .esb-choice-art {
+    transition: none;
+  }
+  .esb-arc {
+    animation: none;
+  }
+}

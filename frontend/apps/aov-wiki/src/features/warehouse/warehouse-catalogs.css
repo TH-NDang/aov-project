@@ -836,3 +836,18 @@
     }
   }
 }
+
+/* ---------- Enchantment set ---------- */
+/* Under the set's reading panel: copy a link that opens this very set. */
+.wiki-enchantment-set-share {
+  font: var(--wiki-type-meta);
+  min-height: 36px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 14px;
+  color: var(--aov-text-soft);
+}
+.wiki-enchantment-set-share:hover {
+  border-color: var(--aov-accent);
+  color: var(--aov-accent-strong);
+}

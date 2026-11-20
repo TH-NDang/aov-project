@@ -557,9 +557,37 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
 }
 
 /** The branches alone: a catalog of a few dozen, drawn branch by branch, needs no search. */
-function EnchantmentControls({ entries, groups, group, onFilters, loading }: ControlsProps) {
+function EnchantmentControls({ entries, groups, group, params, onFilters, loading }: ControlsProps) {
   const { locale } = useWikiContext()
   const text = useWikiText()
+  // The branches as trees, or the game's set screen where a player builds one set.
+  const building = params.get("view") === "set"
+  const trees = text("Cây hệ", "Branches")
+  const builder = text("Xếp bộ", "Build a set")
+  const viewSwitch = (
+    <div className="wiki-warehouse-switch" role="group" aria-label={text("Kiểu xem", "View")} data-labels>
+      <button
+        type="button"
+        aria-pressed={!building}
+        aria-label={trees}
+        title={trees}
+        onClick={() => onFilters({ view: null, set: null })}
+      >
+        <WikiIcon name="board" size={18} />
+        <span>{trees}</span>
+      </button>
+      <button
+        type="button"
+        aria-pressed={building}
+        aria-label={builder}
+        title={builder}
+        onClick={() => onFilters({ view: "set", group: null })}
+      >
+        <WikiIcon name="cards" size={18} />
+        <span>{builder}</span>
+      </button>
+    </div>
+  )
   const branches = groups.length > 0 && (
     <ChipGroup label={text("Hệ phù hiệu", "Enchantment branch")}>
       <Chip pressed={!group} onClick={() => onFilters({ group: null })}>
@@ -592,7 +620,14 @@ function EnchantmentControls({ entries, groups, group, onFilters, loading }: Con
       })}
     </ChipGroup>
   )
-  return <div className="wiki-warehouse-controls">{branches}</div>
+  return (
+    <div className="wiki-warehouse-controls">
+      <div className="wiki-warehouse-toolbar">
+        {!building && branches}
+        <div className="wiki-warehouse-toolbar-end">{viewSwitch}</div>
+      </div>
+    </div>
+  )
 }
 
 /** Search first, then the filters of the catalog on screen. */

@@ -309,6 +309,7 @@ export default function WarehousePage() {
                 params={params}
                 selectedId={selectedEntry?.id ?? selectedId}
                 onGroupChange={(value) => changeFilters({ group: value || null })}
+                onFilters={changeFilters}
                 onSelect={select}
                 onClear={clearSelection}
                 itemView={itemView}

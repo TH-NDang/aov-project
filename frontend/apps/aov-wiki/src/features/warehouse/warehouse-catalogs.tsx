@@ -9,6 +9,7 @@ import type { ItemCatalogView, WarehouseItem } from "./use-item-catalog"
 import { ArcanaCatalog } from "./warehouse-arcana"
 import { WarehouseArtwork } from "./warehouse-artwork"
 import { EnchantmentCatalog } from "./warehouse-enchantments"
+import { EnchantmentSetView } from "./warehouse-enchantment-set"
 import { warehouseItemLayout } from "./warehouse-item-layout"
 import { EmptyGroup, GroupHeading, romanTier } from "./warehouse-parts"
 import { SpellCatalog } from "./warehouse-spells"
@@ -34,6 +35,8 @@ interface CatalogProps {
   onSelect: (entry: WarehouseEntry, button?: HTMLButtonElement) => void
   onClear: () => void
   onGroupChange: (group: string) => void
+  /** Changes values kept in the address, such as the enchantment set being built. */
+  onFilters: (changes: Record<string, string | null>) => void
   itemView: ItemCatalogView
 }
 
@@ -218,6 +221,8 @@ export function WarehouseCatalog(props: CatalogProps) {
         onSelect={onSelect}
       />
     )
+  if (kind === "enchantments" && params.get("view") === "set")
+    return <EnchantmentSetView entries={allEntries} groups={groups} params={params} onFilters={props.onFilters} />
   if (kind === "enchantments")
     return (
       <EnchantmentCatalog entries={entries} groups={groups} group={group} selectedId={selectedId} onSelect={onSelect} />
