@@ -58,6 +58,12 @@ python -m unittest discover -s research/warehouse -p "test_*.py"
 
 Lệnh đầu chỉ đọc. Mục đang có bản nháp mở bị bỏ qua và được liệt kê kèm nguyên nhân của bản nháp đó; phải xuất bản hoặc bỏ bản nháp ấy trước. Mỗi bước ghi vào `.local-state/enchantment-corrections.jsonl`.
 
+Script cũng sửa được trang bị: tệp ghi `"kind": "items"` và đặt các mục dưới khóa `items`. `item-translations-en.json` viết lại mô tả tiếng Anh của 90 trang bị theo quy ước: nhãn đứng đầu (`Unique Passive – Name: …`), mỗi hiệu ứng một dòng theo đúng thứ tự bản tiếng Việt, hồi chiêu là câu cuối (`Cooldown: 3 seconds.`), khoảng số viết `32–60`, đơn vị viết đủ chữ. Mọi con số giữ nguyên; tệp được sinh bằng chính bộ đọc mô tả của Wiki rồi duyệt từng dòng. Ngày 20/11/2026 xuất bản 90 bản `TRANSLATION_UPDATE` trên dữ liệu dev.
+
+```powershell
+python research/warehouse/correct-enchantments.py --file research/warehouse/item-translations-en.json --apply --publish
+```
+
 Với bản đã triển khai, chạy từ máy của người có quyền, đặt khóa của client `wiki-importer` vào `WIKI_IMPORTER_CLIENT_SECRET` trong shell của mình (công cụ không in hay lưu khóa) rồi thêm `--backend https://athahub.com --keycloak https://athahub.com/idp`. `--apply --discard-translation-drafts` lưu nội dung các bản nháp dịch đang chặn vào `.local-state/` rồi bỏ chúng.
 
 ## Xuất bản bản nháp trang bị

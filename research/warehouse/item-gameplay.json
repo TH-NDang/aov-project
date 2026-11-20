@@ -395,7 +395,7 @@
         {
           "key": "hap-huyet",
           "activation": "ACTIVE",
-          "unique": false,
+          "unique": true,
           "cooldownSeconds": 60,
           "maxStacks": null,
           "grants": [
@@ -2969,7 +2969,7 @@
         {
           "key": "tich-tu",
           "activation": "ACTIVE",
-          "unique": false,
+          "unique": true,
           "cooldownSeconds": 60,
           "maxStacks": null,
           "grants": []
@@ -3147,7 +3147,7 @@
         {
           "key": "phong-an",
           "activation": "ACTIVE",
-          "unique": false,
+          "unique": true,
           "cooldownSeconds": 75,
           "maxStacks": null,
           "grants": []
@@ -3769,7 +3769,7 @@
         {
           "key": "bat-khuat",
           "activation": "ACTIVE",
-          "unique": false,
+          "unique": true,
           "cooldownSeconds": 90,
           "maxStacks": null,
           "grants": []
@@ -4107,7 +4107,7 @@
         {
           "key": "xa-nhat",
           "activation": "ACTIVE",
-          "unique": false,
+          "unique": true,
           "cooldownSeconds": 60,
           "maxStacks": null,
           "grants": [

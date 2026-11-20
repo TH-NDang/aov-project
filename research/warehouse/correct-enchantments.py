@@ -1,4 +1,6 @@
-"""Apply reviewed enchantment corrections or translations as drafts through the admin API.
+"""Apply reviewed enchantment or item corrections or translations as drafts through the admin API.
+
+A file names its catalog with "kind" ("enchantments" when absent, or "items") and lists its entries under that key.
 
 Reads enchantment-corrections.json (or the file given with --file), compares every entry with the published enchantment of the same code and, for
 those that differ, forks a correction draft, writes the corrected text and gameplay into it, and publishes it only with
@@ -66,6 +68,13 @@ def comparable(content, locale):
     return {"use": use, "text": {field: text.get(field) for field in TEXT_FIELDS}}
 
 
+def kind_of(corrections):
+    kind = corrections.get("kind", "enchantments")
+    if kind not in ("enchantments", "items"):
+        raise ValueError("Unknown catalog kind.")
+    return kind
+
+
 def plan(listed, corrections):
     """Which enchantments change, which already match, which are busy with a draft, which codes are unknown.
 
@@ -75,7 +84,7 @@ def plan(listed, corrections):
     by_code = {row["code"]: row for row in listed}
     busy = {row["code"] for row in listed if row["revision"]["state"] == "DRAFT"}
     result = {"change": [], "same": [], "busy": [], "unknown": []}
-    for code, change in corrections["enchantments"].items():
+    for code, change in corrections[kind_of(corrections)].items():
         row = by_code.get(code)
         if row is None:
             result["unknown"].append(code)
@@ -173,7 +182,8 @@ def main():
     api = load_api(args.backend, args.keycloak)
     ruleset = next(row for row in api.call("/admin/rulesets") if row["code"] == args.ruleset)
     locale = corrections["locale"]
-    listed = all_rows(api, "/admin/enchantments", rulesetId=ruleset["id"], locale=locale)
+    kind = kind_of(corrections)
+    listed = all_rows(api, f"/admin/{kind}", rulesetId=ruleset["id"], locale=locale)
     work = plan(listed, corrections)
     print(json.dumps({key: len(value) for key, value in work.items()}, ensure_ascii=False))
     for key in ("busy", "unknown"):
@@ -189,13 +199,13 @@ def main():
     if args.discard_translation_drafts:
         # The open translation drafts are kept in a file first, so their text is not lost with them.
         busy = [row for row in listed if row["code"] in work["busy"] and row["revision"]["cause"] == "TRANSLATION_UPDATE"]
-        saved = {row["code"]: api.call(f"/admin/enchantments/{row['id']}/revisions/{row['revision']['id']}")
+        saved = {row["code"]: api.call(f"/admin/{kind}/{row['id']}/revisions/{row['revision']['id']}")
                  for row in busy}
         STATE.mkdir(exist_ok=True)
         backup = STATE / f"translation-drafts-{int(time.time())}.json"
         backup.write_text(json.dumps(saved, ensure_ascii=False, indent=2), encoding="utf-8")
         for row in busy:
-            api.call(f"/admin/enchantments/{row['id']}/drafts/{row['revision']['id']}/discard", "POST", {
+            api.call(f"/admin/{kind}/{row['id']}/drafts/{row['revision']['id']}/discard", "POST", {
                 "expectedVersion": row["revision"]["version"], "changeNote": corrections["changeNote"]})
             ledger({"code": row["code"], "step": "discarded-translation", "revisionId": row["revision"]["id"]})
         print(f"Discarded {len(busy)} translation drafts; their text is in {backup}.")
@@ -205,17 +215,17 @@ def main():
     note = corrections["changeNote"]
     for code in work["change"]:
         row = by_code[code]
-        draft = api.call(f"/admin/enchantments/{row['id']}/drafts", "POST", {
+        draft = api.call(f"/admin/{kind}/{row['id']}/drafts", "POST", {
             "rulesetId": ruleset["id"], "sourceRevisionId": row["revision"]["id"],
             "cause": corrections.get("cause", "CONTENT_CORRECTION"), "changeNote": note})
         ledger({"code": code, "step": "forked", "id": row["id"], "revisionId": draft["revision"]["id"]})
-        content = corrected(draft["content"], corrections["enchantments"][code], locale)
-        saved = api.call(f"/admin/enchantments/{row['id']}/drafts/{draft['revision']['id']}", "PUT", {
+        content = corrected(draft["content"], corrections[kind][code], locale)
+        saved = api.call(f"/admin/{kind}/{row['id']}/drafts/{draft['revision']['id']}", "PUT", {
             "expectedVersion": draft["revision"]["version"], "content": content, "changeNote": note})
         ledger({"code": code, "step": "updated", "revisionId": draft["revision"]["id"],
                 "version": saved["revision"]["version"]})
         if args.publish:
-            api.call(f"/admin/enchantments/{row['id']}/drafts/{draft['revision']['id']}/publish", "POST", {
+            api.call(f"/admin/{kind}/{row['id']}/drafts/{draft['revision']['id']}/publish", "POST", {
                 "expectedVersion": saved["revision"]["version"], "changeNote": note})
             ledger({"code": code, "step": "published", "revisionId": draft["revision"]["id"]})
         print(f"{code}: {'published' if args.publish else 'draft saved'}")
