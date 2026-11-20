@@ -2,6 +2,18 @@
 .wiki-warehouse-page {
   /* The compact layout's tab bar runs edge to edge under the header. */
   --public-tab-bar-margin: -12px calc(-1 * var(--wiki-gutter)) 12px;
+  /* One look for every entry that opens: a fine edge, a surface lit a little from above, and on hover a lift with a
+     gold edge and glow. */
+  --wiki-entry-line: color-mix(in srgb, var(--aov-line) 80%, transparent);
+  --wiki-entry-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--aov-raised) 70%, var(--aov-surface)),
+    var(--aov-surface) 70%
+  );
+  --wiki-entry-hover-line: color-mix(in srgb, var(--aov-accent) 50%, var(--aov-line));
+  --wiki-entry-glow: 0 14px 28px -18px color-mix(in srgb, var(--aov-accent) 75%, transparent);
+  --wiki-entry-transition:
+    background 160ms, border-color 160ms, box-shadow 160ms, transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
   color: var(--aov-text);
 }
 .wiki-warehouse-page :is(button, a) {
@@ -131,6 +143,23 @@
   flex-wrap: wrap;
   overflow: visible;
 }
+/* A second, narrowing row of chips is drawn lighter than the groups above it, after a short caption. */
+.wiki-warehouse-chips[data-secondary] .wiki-warehouse-chip {
+  height: 28px;
+  border-color: var(--aov-line);
+  padding: 0 9px;
+  background: transparent;
+}
+.wiki-warehouse-chips[data-secondary] .wiki-warehouse-chip[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+}
+.wiki-warehouse-chips-caption {
+  flex: none;
+  margin-right: 2px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
 .wiki-warehouse-chip-pair {
   display: inline-flex;
   flex: none;
@@ -190,6 +219,7 @@
   height: var(--wiki-warehouse-art-size, 20px);
   flex: none;
   border-radius: var(--wiki-warehouse-art-radius, 4px);
+  box-shadow: none;
 }
 .wiki-warehouse-clear {
   font: var(--wiki-type-meta);
@@ -389,7 +419,12 @@
   height: var(--wiki-warehouse-art-size, 44px);
   flex-shrink: 0;
   border-radius: var(--wiki-warehouse-art-radius, var(--aov-radius-control));
+  /* A fine ring sets the picture off the card, the way the game frames its icons. */
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--aov-text) 12%, transparent);
   object-fit: contain;
+  /* A card the pointer rests on sets the scale, so its picture grows a little. */
+  transform: scale(var(--wiki-entry-art-scale, 1));
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .wiki-warehouse-art-fallback {
   display: grid;

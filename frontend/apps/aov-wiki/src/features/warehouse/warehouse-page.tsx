@@ -2,7 +2,7 @@ import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
 import { PublishedWarehouseView } from "./warehouse-view"
-import { CatalogHeading } from "../../layout/catalog-heading"
+import { WarehouseHeading } from "./warehouse-heading"
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -204,7 +204,12 @@ export default function WarehousePage() {
   return (
     <PublishedWarehouseView entries={entries} groups={groups} kind={kind}>
       <div className={`wiki-warehouse-page wiki-warehouse-${kind}`}>
-        <CatalogHeading title={sectionName} action={<div className="wiki-warehouse-version">{version}</div>} />
+        <WarehouseHeading
+          kind={kind}
+          title={sectionName}
+          count={catalog.isPending ? undefined : entries.length}
+          action={<div className="wiki-warehouse-version">{version}</div>}
+        />
         {!wide && <WarehouseTabs active={kind} />}
         <WarehouseControls
           kind={kind}

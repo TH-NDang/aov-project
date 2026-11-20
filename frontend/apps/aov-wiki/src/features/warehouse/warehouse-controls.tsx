@@ -109,9 +109,31 @@ function Chip({
   )
 }
 
-function ChipGroup({ label, wrap = false, children }: { label: string; wrap?: boolean; children: ReactNode }) {
+function ChipGroup({
+  label,
+  wrap = false,
+  caption,
+  children,
+}: {
+  label: string
+  wrap?: boolean
+  /** A short visible name before the chips; such a group is a secondary one and is drawn lighter. */
+  caption?: string
+  children: ReactNode
+}) {
   return (
-    <div className="wiki-warehouse-chips" role="group" aria-label={label} data-wrap={wrap || undefined}>
+    <div
+      className="wiki-warehouse-chips"
+      role="group"
+      aria-label={label}
+      data-wrap={wrap || undefined}
+      data-secondary={caption ? "" : undefined}
+    >
+      {caption && (
+        <span className="wiki-warehouse-chips-caption" aria-hidden>
+          {caption}
+        </span>
+      )}
       {children}
     </div>
   )
@@ -365,7 +387,7 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
       {/* The line stays in place while the catalog loads, so the catalog does not move when the chips arrive. */}
       <div className="wiki-warehouse-subbar">
         {stats.length > 0 && (
-          <ChipGroup label={text("Lọc theo chỉ số", "Filter by stat")} wrap>
+          <ChipGroup label={text("Lọc theo chỉ số", "Filter by stat")} caption={statsLabel} wrap>
             {statChips.slice(0, -2)}
             {/* The last two wrap together, so a chip never stands alone on a line. */}
             <span className="wiki-warehouse-chip-pair">{statChips.slice(-2)}</span>

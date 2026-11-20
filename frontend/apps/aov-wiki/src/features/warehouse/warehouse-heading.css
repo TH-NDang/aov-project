@@ -1,0 +1,68 @@
+/* The armory's banner: a soft gold glow from the top right, the part's emblem faint behind the text. */
+.wiki-warehouse-heading-banner {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  overflow: hidden;
+  isolation: isolate;
+  margin: 4px 0 20px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 22px 24px 20px;
+  background:
+    radial-gradient(120% 160% at 100% 0%, color-mix(in srgb, var(--aov-accent) 18%, transparent), transparent 58%),
+    linear-gradient(180deg, var(--aov-raised), var(--aov-surface));
+}
+.wiki-warehouse-heading-emblem {
+  position: absolute;
+  z-index: -1;
+  right: 18%;
+  bottom: -44px;
+  opacity: 0.12;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.wiki-warehouse-heading-text {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+.wiki-warehouse-heading-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--aov-accent);
+  font: 600 0.75rem/1rem var(--wiki-font-reading);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.wiki-warehouse-heading-banner h1 {
+  font: var(--wiki-type-page);
+  color: var(--aov-text);
+  letter-spacing: -0.02em;
+}
+.wiki-warehouse-heading-banner p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  max-width: 64ch;
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-body);
+}
+.wiki-warehouse-heading-count {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 35%, transparent);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 10px;
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+  font: 600 0.75rem/1.375rem var(--wiki-font-reading);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-warehouse-heading-action {
+  flex: none;
+}
