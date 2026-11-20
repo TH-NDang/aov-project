@@ -5,6 +5,7 @@ import { PublishedWarehouseView } from "./warehouse-view"
 import { WarehouseHeading } from "./warehouse-heading"
 import { ShowcasePieces, WarehouseShowcase, showcaseImages } from "./warehouse-showcase"
 import { EnchantmentShowcase } from "./warehouse-showcase-enchantments"
+import { ItemShowcase } from "./warehouse-showcase-items"
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -58,7 +59,10 @@ export default function WarehousePage() {
   const metadata = useQuery(warehouseGroupsQuery(kind, scope.locale))
   const entries = catalog.data ?? NO_ENTRIES
   const groups = metadata.data ?? []
-  const showcase = useMemo(() => (kind === "enchantments" ? [] : showcaseImages(entries)), [entries, kind])
+  const showcase = useMemo(
+    () => (kind === "enchantments" || kind === "items" ? [] : showcaseImages(entries)),
+    [entries, kind],
+  )
   const filtered = useMemo(
     () => entries.filter((entry) => matchesWarehouseSearch(entry, search, scope.locale)),
     [entries, search, scope.locale],
@@ -215,6 +219,8 @@ export default function WarehousePage() {
           showcase={(intro) =>
             kind === "enchantments" ? (
               <EnchantmentShowcase intro={intro} entries={entries} groups={groups} />
+            ) : kind === "items" ? (
+              <ItemShowcase intro={intro} entries={entries} groups={groups} />
             ) : (
               <WarehouseShowcase {...intro} scene={<ShowcasePieces images={showcase} wide={intro.wide} />} />
             )

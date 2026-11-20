@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react"
+import { useMemo, type CSSProperties } from "react"
 import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import {
@@ -8,14 +8,11 @@ import {
   type WarehouseGroup,
 } from "../../lib/warehouse-types"
 import type { WarehouseEnchantment } from "./use-item-catalog"
-import { useMediaQuery } from "./warehouse-layout"
+import { useShowcaseTurn } from "./use-showcase-turn"
 import { WarehouseShowcase, type ShowcaseIntro } from "./warehouse-showcase"
 import "./warehouse-showcase-enchantments.css"
 
 const TIER_NAMES = ["I", "II", "III"] as const
-/** How long one set stays before the next branch takes the lead, and how long the old set takes to fade. */
-const SET_STAYS_MS = 7000
-const SET_LEAVES_MS = 360
 
 /**
  * Where the pieces of the sample set stand, as shares of the scene, with their size in pixels: the primary branch
@@ -89,42 +86,15 @@ export function EnchantmentShowcase({
   )
 }
 
-/**
- * One sample set per branch, and the one on show. Every few seconds the next branch leads: the set fades and the new
- * one is put together piece by piece, tier I first. A reader who asks for less motion keeps the first set, and a
- * hidden tab keeps the set it has.
- */
+/** One sample set per branch, taking turns: each new set is put together piece by piece, tier I first. */
 function useSampleSets(entries: PublishedWarehouseRecord[], groups: WarehouseGroup[]) {
   const sets = useMemo(() => groups.flatMap((_, index) => sampleSet(entries, groups, index) ?? []), [entries, groups])
-  const still = useMediaQuery("(prefers-reduced-motion: reduce)")
-  const [turn, setTurn] = useState(0)
-  const [leaving, setLeaving] = useState(false)
-  const rotates = !still && sets.length > 1
+  const { scene, leaving } = useShowcaseTurn(sets, picturesOfSet)
+  return { set: scene, leaving }
+}
 
-  useEffect(() => {
-    if (!rotates) return
-    let swap: number | undefined
-    const timer = window.setInterval(() => {
-      if (document.hidden) return
-      setLeaving(true)
-      swap = window.setTimeout(() => {
-        setTurn((current) => current + 1)
-        setLeaving(false)
-      }, SET_LEAVES_MS)
-    }, SET_STAYS_MS)
-    return () => {
-      window.clearInterval(timer)
-      window.clearTimeout(swap)
-    }
-  }, [rotates])
-
-  // The next set's pictures load while this one is on show, so it is whole when its turn comes.
-  const next = rotates ? sets[(turn + 1) % sets.length] : undefined
-  useEffect(() => {
-    for (const piece of next ? [...next.path, ...next.sides] : []) new Image().src = piece.url
-  }, [next])
-
-  return { set: sets.length ? sets[turn % sets.length] : undefined, leaving }
+function picturesOfSet(set: SampleSet) {
+  return [...set.path, ...set.sides].map((piece) => piece.url)
 }
 
 function EnchantmentScene({ set, leaving, wide }: { set: SampleSet; leaving: boolean; wide: boolean }) {
