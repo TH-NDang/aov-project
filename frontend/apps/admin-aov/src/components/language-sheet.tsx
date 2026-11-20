@@ -71,7 +71,7 @@ export function LanguageSheet({
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-sm">
+      <SheetContent side="right" fitContent className="w-full gap-0 overflow-y-auto sm:max-w-sm">
         <SheetHeader className="border-b pr-12">
           <SheetTitle className="type-section-title">Ngôn ngữ hiển thị nội dung</SheetTitle>
           <SheetDescription className="type-meta">
