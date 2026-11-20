@@ -17,7 +17,9 @@ import com.wikiaov.community.community.internal.domain.PageContent;
 import com.wikiaov.community.platform.PageLimits;
 import com.wikiaov.community.platform.PageSlice;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
@@ -161,7 +163,7 @@ public interface PageApi {
     List<TeamAffiliation> teams(UUID id);
 
     @Operation(operationId = "pageApi_create", summary = "Create a page")
-    Profile create(CreatePage body);
+    Profile create(CreatePage body, boolean allowSameName, @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "pageApi_save", summary = "Save a page draft")
     Profile save(UUID id, SavePage body);

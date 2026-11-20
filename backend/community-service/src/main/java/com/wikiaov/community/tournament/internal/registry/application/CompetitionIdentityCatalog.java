@@ -42,10 +42,11 @@ class CompetitionIdentityCatalog implements CompetitionIdentities {
 
     @Override
     @Transactional
-    public Identity create(Kind kind, String code, String name, String country, String imageUrl, String actor) {
+    public Identity create(Kind kind, String code, String name, String country, String imageUrl, String actor,
+            boolean allowSameName) {
         var id = kind == Kind.TEAM
                 ? teams.create(new Team(code, name, null, country, imageUrl), actor).id()
-                : players.create(new Player(code, name, null, country, imageUrl, null), actor).id();
+                : players.create(new Player(code, name, null, country, imageUrl, null), actor, allowSameName).id();
         return read(kind, id);
     }
 

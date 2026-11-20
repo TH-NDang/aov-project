@@ -29,7 +29,12 @@ public interface CompetitionIdentities {
 
     Identity read(Kind kind, UUID id);
 
-    Identity create(Kind kind, String code, String name, String country, String imageUrl, String actor);
+    /**
+     * Creates the identity of a new page. Unless {@code allowSameName}, a player named like an active player of the
+     * same country is refused, so an editor links the existing profile instead (spec 04).
+     */
+    Identity create(Kind kind, String code, String name, String country, String imageUrl, String actor,
+            boolean allowSameName);
 
     void publish(Kind kind, UUID id, Details details, String actor);
 }

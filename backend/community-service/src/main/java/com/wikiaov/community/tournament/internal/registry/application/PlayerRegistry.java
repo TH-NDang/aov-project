@@ -1,6 +1,8 @@
 package com.wikiaov.community.tournament.internal.registry.application;
 
+import com.wikiaov.community.platform.ApiException;
 import com.wikiaov.community.platform.PageSlice;
+import com.wikiaov.community.tournament.internal.application.TournamentErrorCode;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
 import com.wikiaov.community.tournament.internal.application.TournamentViews;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.View;
@@ -16,6 +18,9 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia;
 import com.wikiaov.community.tournament.internal.registry.persistence.PlayerRecord;
 import com.wikiaov.community.tournament.internal.registry.persistence.PlayerRepository;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,10 +51,13 @@ public class PlayerRegistry {
         return TournamentViews.view(row, row.getContent());
     }
 
-    public View<Player> create(Player content, String actor) {
+    public View<Player> create(Player content, String actor, boolean allowSameName) {
         archives.lockWrites();
         validate(content);
         media.requireAvailable(content.photoUrl());
+        if (!allowSameName) {
+            refuseSameName(content);
+        }
 
         var row = repository.saveAndFlush(new PlayerRecord(UUID.randomUUID(), content, actor));
         return TournamentViews.view(row, row.getContent());
@@ -68,6 +76,33 @@ public class PlayerRegistry {
         repository.flush();
 
         return TournamentViews.view(row, row.getContent());
+    }
+
+    /**
+     * Two profiles of one person split their games and rosters, so a new player whose nickname or alias reads like an
+     * active player's of the same country is refused until the editor confirms a namesake (spec 04).
+     */
+    private void refuseSameName(Player content) {
+        if (content.country() == null || content.country().isBlank()) {
+            return;
+        }
+
+        var names = new ArrayList<String>();
+        names.add(content.nickname());
+        names.addAll(content.aliases());
+        var found = new LinkedHashMap<UUID, PlayerRecord>();
+        for (var name : names) {
+            repository.findSameName(content.country(), name).forEach(row -> found.putIfAbsent(row.getId(), row));
+        }
+        if (found.isEmpty()) {
+            return;
+        }
+
+        var players = found.values().stream().map(row -> Map.of("id", row.getId(), "code", row.getContent().code(),
+                "nickname", row.getContent().nickname(), "country", row.getContent().country())).toList();
+        throw new ApiException(TournamentErrorCode.TOURNAMENT_PLAYER_SAME_NAME,
+                "An active player of this country already has this name. Use that profile, or confirm a namesake.",
+                Map.of("players", players));
     }
 
     private void validate(Player content) {
