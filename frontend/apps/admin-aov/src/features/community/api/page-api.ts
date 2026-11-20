@@ -74,8 +74,14 @@ export const pageApi = {
       `/admin/pages?${new URLSearchParams({ kind: "TEAM", organizationId, sort: "NAME", page: String(page), size: "24" })}`,
     ),
   teams: (id: string) => communityRequest<TeamAffiliation[]>(`/admin/pages/${id}/teams`),
-  create: (kind: ProfileKind, code: string, content: ProfileContent, entityId?: string) =>
-    send<CommunityProfile>("/admin/pages", "POST", { kind, code, content, entityId }),
+  /** `allowSameName` confirms a namesake after the server named players of the same country (spec 04). */
+  create: (kind: ProfileKind, code: string, content: ProfileContent, entityId?: string, allowSameName = false) =>
+    send<CommunityProfile>(allowSameName ? "/admin/pages?allowSameName=true" : "/admin/pages", "POST", {
+      kind,
+      code,
+      content,
+      entityId,
+    }),
   save: (entry: CommunityProfile, content: ProfileContent) =>
     send<CommunityProfile>(`/admin/pages/${entry.id}`, "PUT", { version: entry.version, content }),
   publish: (entry: CommunityProfile, publish: boolean) =>

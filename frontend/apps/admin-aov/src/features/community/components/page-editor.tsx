@@ -22,6 +22,7 @@ import {
   Send,
   ShieldCheck,
   Trash2,
+  Merge,
   Trophy,
   Undo2,
   UserRound,
@@ -61,6 +62,7 @@ import { CircuitChannelsField } from "./circuit-channels-field"
 import { OwnedTeamsSection, TeamOwnerSection } from "./team-organization"
 import { toast } from "sonner"
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
+import { MergePlayerSheet } from "./merge-player-sheet"
 import { leavingPage, useLeaveGuard } from "@/hooks/use-leave-guard"
 
 export function PageEditor() {
@@ -120,6 +122,7 @@ function Editor({
   const [content, setContent] = useState(entry.content!)
   const [uploading, setUploading] = useState(false)
   const [quickEdit, setQuickEdit] = useState<ProfileQuickEditTarget | null>(null)
+  const [merging, setMerging] = useState(false)
   const sectionNavigation = useRef<HTMLElement>(null)
   useEffect(() => {
     const navigation = sectionNavigation.current
@@ -406,6 +409,12 @@ function Editor({
                       Ngừng xuất bản
                     </DropdownMenuItem>
                   )}
+                  {entry.kind === "PLAYER" && entry.entityId && access.canWrite && (
+                    <DropdownMenuItem disabled={dirty || uploading} onSelect={() => setMerging(true)}>
+                      <Merge />
+                      Gộp vào hồ sơ khác
+                    </DropdownMenuItem>
+                  )}
                   {!entry.published && access.canWrite && (
                     <DropdownMenuItem
                       variant="destructive"
@@ -472,6 +481,13 @@ function Editor({
           </div>
         </div>
       </header>
+      {merging && entry.entityId && (
+        <MergePlayerSheet
+          playerId={entry.entityId}
+          name={entry.content?.name || entry.code}
+          onClose={() => setMerging(false)}
+        />
+      )}
       {quickEdit && (access.canWrite || quickEdit.type === "link") && (
         <ProfileQuickEditSheet
           target={quickEdit}
