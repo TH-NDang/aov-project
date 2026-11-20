@@ -60,7 +60,8 @@ class ItemPublicMediaTest {
 
     private ItemView view(UUID icon) {
         return new ItemView(UUID.randomUUID(), "sample", null,
-                new ItemContent(icon, 1, 250, "cong", List.of(), "NONE", List.of(), List.of(), List.of(), null),
+                new ItemContent(icon, 1, 250, "cong", List.of(), "NONE", List.of(), List.of(), List.of(), List.of(),
+                        null),
                 List.of());
     }
 

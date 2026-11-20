@@ -177,6 +177,28 @@ class WarehouseCatalogIntegrationTest {
     }
 
     @Test
+    void itemEffectsKeepTheirStatGrantsAndRejectStatsOutsideTheSharedCodes() throws Exception {
+        category();
+        var created = create("items", "magic-robe", itemContent(null));
+        var content = itemContent(null);
+        content.put("stats", List.of(Map.of("key", "magic-attack", "value", 120), Map.of("key", "max-health", "value",
+                900)));
+        content.put("effects", List.of(Map.of("key", "pha-phep", "unique", false, "grants",
+                List.of(Map.of("stat", "magic-penetration", "value", 32, "maxValue", 60, "growth", "LEVEL", "cap", 150,
+                        "scalings", List.of(Map.of("source", "BONUS_HEALTH", "value", 3, "unit", "%")))))));
+
+        var saved = send(put(draftPath("items", created)), Map.of("expectedVersion", 1, "content", content), 200);
+
+        var effect = map(((List<?>) map(saved.get("content")).get("effects")).getFirst());
+        assertThat(effect).containsEntry("key", "pha-phep").containsEntry("activation", "PASSIVE");
+        var grant = map(((List<?>) effect.get("grants")).getFirst());
+        assertThat(grant).containsEntry("stat", "magic-penetration").containsEntry("growth", "LEVEL")
+                .containsEntry("target", "SELF");
+        content.put("stats", List.of(Map.of("key", "magicAttack", "value", 120, "unit", "POINT")));
+        send(put(draftPath("items", created)), Map.of("expectedVersion", 2, "content", content), 422);
+    }
+
+    @Test
     void anUnplacedBaselineCanAcquireAReviewedObservationContextWithoutChangingItsContent() throws Exception {
         var created = send(post(ROOT + "/arcana"), Map.of("code", "unplaced", "rulesetId", RULESET,
                 "initialLocale", "vi-VN", "name", "Ngọc chưa đặt mốc", "content", arcanaContent()), 201);
