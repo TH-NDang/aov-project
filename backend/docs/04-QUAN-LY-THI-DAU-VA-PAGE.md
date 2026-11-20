@@ -618,18 +618,19 @@ cặp nào cùng ngồi trong một ván.
 
 `POST /admin/players/{id}/merge {version,intoId,intoVersion}` gộp hồ sơ `{id}` vào `intoId` trong một giao dịch:
 
-1. Từ chối khi hai hồ sơ cùng ngồi trong một ván (400, đó là hai người), khi ván đã công bố hoặc lịch sử công bố có
-   tên hồ sơ bị gộp (409, bản công bố không đổi), hoặc khi version lệch.
+1. Từ chối khi hai hồ sơ cùng ngồi trong một ván (400, đó là hai người), khi ván đã công bố, lịch sử công bố hoặc
+   bản công bố kế hoạch giải có tên hồ sơ bị gộp (409, bản công bố không đổi), hoặc khi version lệch.
 2. Dòng đội hình: dòng của hồ sơ bị gộp ở cùng giải và đội với một dòng chưa xóa của hồ sơ giữ lại thì vào thùng
    rác; các dòng khác chuyển sang hồ sơ giữ lại.
 3. Ghế và MVP của ván, MVP của trận, giải thưởng của giải: id của hồ sơ bị gộp được thay bằng id hồ sơ giữ lại, kể cả
-   trong bản ghi đã ở thùng rác. Lịch sử kế hoạch giải giữ nguyên.
+   trong bản ghi đã ở thùng rác. Kế hoạch giải và lịch sử sửa kế hoạch cũng đổi theo, vì lịch sử đó vẫn chặn việc
+   xóa hồ sơ và vẫn nói về cùng một người.
 4. Hồ sơ giữ lại thêm tên thi đấu và tên gọi khác của hồ sơ bị gộp vào tên gọi khác (tối đa 20). Trường nào còn
    trống (họ tên, ảnh, ngày sinh, vị trí, trạng thái, tướng tủ) thì lấy từ hồ sơ bị gộp.
 5. Hồ sơ bị gộp vào thùng rác theo quy tắc xóa thường. Nếu nó còn được dùng (page đã sửa, dòng đội hình mà hồ sơ giữ
    lại đã có ở thùng rác) thì cả lần gộp bị hủy với 409 `TOURNAMENT_RECORD_IN_USE` và danh sách nơi dùng.
 
-Trả `{player, moved:{rosterLines,repeatedRosterLines,tournaments,series,games}}`. Khôi phục hồ sơ bị gộp không trả
+Trả `{player, moved:{rosterLines,repeatedRosterLines,tournaments,series,games,plans,planRevisions}}`. Khôi phục hồ sơ bị gộp không trả
 lại các liên kết đã chuyển.
 
 ## Cơ sở dữ liệu
