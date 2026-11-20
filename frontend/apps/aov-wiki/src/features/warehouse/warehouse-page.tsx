@@ -45,7 +45,8 @@ export default function WarehousePage() {
   const kind = warehouseKind(tab ?? null)
   const changes = usePublishedChanges(warehouseChangeDomain[kind])
   const sectionName = wikiText(scope.locale, ...SECTION_NAMES[kind])
-  const search = params.get("q") ?? ""
+  // Enchantments have no search field, so a search left in the address does not hide any of them.
+  const search = kind === "enchantments" ? "" : (params.get("q") ?? "")
   const group = params.get("group") ?? ""
   const selectedId = entryCode ?? null
   const trigger = useRef<HTMLButtonElement | null>(null)

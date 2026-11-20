@@ -10,14 +10,18 @@ import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { WarehouseAsset as HeroAsset } from "./warehouse-view"
 import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import {
+  enchantmentColumn,
+  ENCHANTMENT_COLUMNS,
   warehouseText,
   type EnchantmentContent,
   type WarehouseEntry,
   type WarehouseMetadata,
 } from "@aov/ui/lib/warehouse-content"
 
-const rowClass = "grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2 @min-[520px]/enchantments:gap-x-3"
-const railClass = "absolute left-1/2 w-px -translate-x-1/2 bg-[var(--branch-color)] opacity-25"
+// The tier column is as wide as the branch emblem above it and starts at the same edge, so one line runs from the
+// emblem down through the tier marks.
+const rowClass = "grid grid-cols-[3rem_minmax(0,1fr)] gap-x-3"
+const railClass = "absolute left-1/2 w-0.5 -translate-x-1/2 bg-[var(--branch-color)] opacity-60"
 
 export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>, B extends WarehouseMetadata>({
   records,
@@ -109,14 +113,15 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
         const tiers = [1, 2, 3].filter(
           (tier) => (!scoped && !search) || entries.some((entry) => entry.content.tier === tier),
         )
+        // Three places in every tier, each enchantment in the one its position names, so columns line up down the branch.
         const columns = Math.max(
-          3,
+          ENCHANTMENT_COLUMNS,
           ...tiers.map((tier) => entries.filter((entry) => entry.content.tier === tier).length),
         )
         return (
           <section
             key={branch.code}
-            className="@container/enchantments overflow-hidden border-t"
+            className="@container/enchantments overflow-hidden rounded-2xl border"
             style={
               {
                 "--branch-color": enchantmentBranchColor(branch),
@@ -127,7 +132,9 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
             }
           >
             <header className="enchantment-branch-heading flex items-center gap-3 border-b border-[var(--branch-border)] bg-linear-to-r from-[var(--branch-tint)] to-transparent p-4 @min-[520px]/enchantments:px-5">
-              <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-[var(--branch-border)] bg-background/60 p-2">
+              <div className="relative grid size-12 shrink-0 place-items-center rounded-full border-2 border-[var(--branch-color)] bg-[radial-gradient(circle,var(--branch-tint),transparent_72%)] p-1.5 shadow-[0_0_14px_-2px_color-mix(in_srgb,var(--branch-color)_55%,transparent)]">
+                {/* From under the emblem to the rule below the heading, where the tiers' line takes over. */}
+                <span aria-hidden className={cn(railClass, "top-full h-[17px]")} />
                 <HeroAsset
                   id={branch.iconAssetId}
                   alt=""
@@ -152,7 +159,7 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
                 </Button>
               )}
             </header>
-            <div className="p-2 @min-[520px]/enchantments:p-3">
+            <div className="px-4 pb-3 @min-[520px]/enchantments:px-5">
               {tiers.map((tier, tierIndex) => {
                 const nodes = entries
                   .filter((entry) => entry.content.tier === tier)
@@ -165,12 +172,12 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
                       {tierIndex !== tiers.length - 1 && (
                         <span aria-hidden className={cn(railClass, "top-10 bottom-0")} />
                       )}
-                      {tierIndex > 0 && <span aria-hidden className={cn(railClass, "top-0 h-10")} />}
+                      <span aria-hidden className={cn(railClass, "top-0 h-10")} />
                       <div className="relative mt-4 flex flex-col items-center gap-1 bg-card py-1">
                         <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
                           {t("Cấp", "Tier")}
                         </span>
-                        <span className="grid size-6 place-items-center rounded-full border border-[var(--branch-border)] bg-[var(--branch-tint)] font-serif text-xs font-semibold text-foreground">
+                        <span className="grid size-7 place-items-center rounded-full border-2 border-[color-mix(in_srgb,var(--branch-color)_60%,transparent)] bg-card font-serif text-xs font-semibold text-foreground">
                           {["I", "II", "III"][tier - 1]}
                         </span>
                       </div>
@@ -195,11 +202,14 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
                             key={entry.id}
                             type="button"
                             onClick={() => onOpen(entry)}
+                            style={{ gridColumn: enchantmentColumn(entry.content.position) ?? undefined }}
                             aria-label={`${t("Xem", "View")} ${label?.name ?? entry.code}`}
                             aria-pressed={selected}
                             className={cn(
-                              "enchantment-node group relative flex min-w-0 cursor-pointer flex-col items-center gap-1 rounded-lg border bg-background/50 px-1.5 py-2 text-center transition-colors outline-none hover:border-[var(--branch-color)] hover:bg-[var(--branch-tint)] focus-visible:ring-2 focus-visible:ring-[var(--branch-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-card @min-[520px]/enchantments:px-2",
-                              selected ? "border-[var(--branch-color)] bg-[var(--branch-tint)]" : "border-border/60",
+                              "enchantment-node group relative flex min-w-0 cursor-pointer flex-col items-center gap-1 rounded-lg border px-1.5 py-2 text-center transition-colors outline-none hover:border-[var(--branch-color)] hover:bg-[var(--branch-tint)] focus-visible:ring-2 focus-visible:ring-[var(--branch-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-card @min-[520px]/enchantments:px-2",
+                              selected
+                                ? "border-[var(--branch-color)] bg-[var(--branch-tint)]"
+                                : "border-[var(--branch-border)] bg-[radial-gradient(90%_70%_at_50%_0%,var(--branch-tint),transparent_75%)]",
                             )}
                           >
                             {selected ? (

@@ -543,9 +543,9 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
   )
 }
 
-function EnchantmentControls({ search, onSearch, entries, groups, group, onFilters, loading }: ControlsProps) {
+/** The branches alone: a catalog of a few dozen, drawn branch by branch, needs no search. */
+function EnchantmentControls({ entries, groups, group, onFilters, loading }: ControlsProps) {
   const { locale } = useWikiContext()
-  const roomy = useMediaQuery(ONE_LINE)
   const text = useWikiText()
   const branches = groups.length > 0 && (
     <ChipGroup label={text("Hệ phù hiệu", "Enchantment branch")}>
@@ -573,20 +573,7 @@ function EnchantmentControls({ search, onSearch, entries, groups, group, onFilte
       })}
     </ChipGroup>
   )
-  return (
-    <div className="wiki-warehouse-controls">
-      <div className="wiki-warehouse-toolbar">
-        <SearchField
-          value={search}
-          onChange={onSearch}
-          label={text("Tìm phù hiệu", "Search enchantments")}
-          placeholder={text("Tìm phù hiệu…", "Search enchantments…")}
-        />
-        {roomy && branches}
-      </div>
-      {!roomy && branches}
-    </div>
-  )
+  return <div className="wiki-warehouse-controls">{branches}</div>
 }
 
 /** Search first, then the filters of the catalog on screen. */

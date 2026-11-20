@@ -167,8 +167,8 @@
 
 /* One look for every entry of a catalog that can be opened: a quiet surface, and a gold outline once chosen. */
 :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card)[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--aov-accent) 70%, transparent);
-  background: color-mix(in srgb, var(--aov-accent) 10%, var(--aov-surface));
+  border-color: color-mix(in srgb, var(--wiki-entry-tone, var(--aov-accent)) 70%, transparent);
+  background: color-mix(in srgb, var(--wiki-entry-tone, var(--aov-accent)) 10%, var(--aov-surface));
 }
 /* Muted text is for the page and for plain cards; on the tint of the chosen one it takes the softer text colour. */
 :is(.wiki-item-row, .wiki-enchantment-node)[aria-pressed="true"] small,
@@ -178,7 +178,7 @@
 @media (hover: hover) {
   :is(.wiki-item-row, .wiki-arcana-row, .wiki-enchantment-node, .wiki-spell-card):not([aria-pressed="true"]):hover {
     border-color: var(--wiki-entry-hover-line);
-    background: var(--aov-raised);
+    background: var(--wiki-entry-hover-bg, var(--aov-raised));
     box-shadow: var(--wiki-entry-glow);
   }
 }
@@ -532,36 +532,72 @@
 }
 
 /* ---------- Enchantments ---------- */
+/* Two branches side by side stand as tall as each other. */
 .wiki-enchantments {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
+  align-items: stretch;
   gap: 32px;
 }
 .wiki-enchantments[data-single] {
   grid-template-columns: minmax(0, 1fr);
 }
+/* A branch in its own colour, as the game draws it: a rounded frame lit from the top, the emblem in a round rim, and
+   a line in that colour from the emblem down through the tier marks, beside the enchantments. The emblem and the marks
+   share one column, 44px wide. The page sets --branch-color from the branch. */
 .wiki-enchantment-branch {
+  --wiki-branch-tone: var(--branch-color, var(--aov-accent));
+  --wiki-branch-rail: color-mix(in srgb, var(--wiki-branch-tone) 60%, transparent);
+  /* Its enchantments hover, glow and show as chosen in the branch's colour rather than the page's gold. */
+  --wiki-entry-tone: var(--wiki-branch-tone);
+  --wiki-entry-hover-line: var(--wiki-branch-tone);
+  --wiki-entry-hover-bg:
+    radial-gradient(90% 80% at 50% 0%, color-mix(in srgb, var(--wiki-branch-tone) 26%, transparent), transparent 80%),
+    color-mix(in srgb, var(--aov-bg) 55%, transparent);
+  --wiki-entry-glow: 0 12px 26px -16px color-mix(in srgb, var(--wiki-branch-tone) 80%, transparent);
   display: grid;
   min-width: 0;
+  align-content: start;
   gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--wiki-branch-tone) 32%, var(--aov-line));
+  border-radius: var(--aov-radius-card);
+  padding: 14px 14px 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--wiki-branch-tone) 10%, transparent), transparent 160px);
   container: wiki-branch / inline-size;
 }
 .wiki-enchantment-branch > header {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin-bottom: 4px;
-  border-bottom: 1px solid color-mix(in srgb, var(--aov-accent) 24%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--wiki-branch-tone) 30%, transparent);
   padding-bottom: 10px;
 }
+/* From under the emblem's rim to the rule below the heading. */
+.wiki-enchantment-branch > header::after {
+  content: "";
+  position: absolute;
+  top: 44px;
+  bottom: -1px;
+  left: 21px;
+  width: 2px;
+  background: var(--wiki-branch-rail);
+}
 .wiki-enchantment-branch-art {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   flex: none;
+  border: 2px solid var(--wiki-branch-tone);
+  border-radius: 50%;
+  padding: 4px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--wiki-branch-tone) 28%, transparent), transparent 72%);
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--wiki-branch-tone) 55%, transparent);
+  object-fit: contain;
 }
 .wiki-enchantment-branch > header > div {
   min-width: 0;
+  padding-top: 2px;
 }
 .wiki-enchantment-branch h2 {
   font: var(--wiki-type-section);
@@ -569,7 +605,7 @@
   align-items: baseline;
   gap: 10px;
   margin: 0;
-  color: var(--aov-accent);
+  color: color-mix(in srgb, var(--wiki-branch-tone) 70%, var(--aov-text));
 }
 .wiki-enchantment-branch h2 small {
   font: var(--wiki-type-meta);
@@ -581,37 +617,71 @@
   color: var(--aov-muted);
 }
 .wiki-enchantment-tier {
+  position: relative;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 44px minmax(0, 1fr);
   gap: 8px;
 }
-/* The tier, as the game numbers it, beside the enchantments a player chooses between. */
+/* The line through the tier column, bridging the gap above; the last tier ends it at its mark. */
+.wiki-enchantment-tier::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  bottom: 0;
+  left: 21px;
+  width: 2px;
+  background: var(--wiki-branch-rail);
+}
+.wiki-enchantment-branch > header + .wiki-enchantment-tier::before {
+  top: -12px;
+}
+.wiki-enchantment-tier:last-child::before {
+  bottom: 50%;
+}
+/* The tier, as the game numbers it, a mark on the line beside the enchantments a player chooses between. */
 .wiki-enchantment-tier > span {
+  position: relative;
   display: grid;
+  width: 28px;
+  height: 28px;
   place-items: center;
-  color: var(--aov-muted);
-  font: 600 0.75rem/1rem var(--wiki-font-reading);
-  letter-spacing: 0.04em;
+  place-self: center;
+  border: 2px solid var(--wiki-branch-rail);
+  border-radius: 50%;
+  background: var(--aov-bg);
+  color: color-mix(in srgb, var(--wiki-branch-tone) 75%, var(--aov-text));
+  font: 700 0.75rem/1rem var(--wiki-font-reading);
+  letter-spacing: 0.02em;
 }
 .wiki-enchantment-tier > div {
   display: grid;
-  grid-template-columns: repeat(var(--nodes, 3), minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 /* A narrow branch stacks the picture over the name; a wide one sets them side by side. */
+/* Every enchantment of every branch is the same size, so the tiers line up from branch to branch: the name keeps one
+   line, the note under it one line, and the whole text opens with the entry. Its surface takes a glow of the branch's
+   colour from the top instead of a grey card. */
 .wiki-enchantment-node {
   --wiki-warehouse-art-size: 40px;
   --wiki-warehouse-art-radius: 50%;
   display: flex;
   min-width: 0;
-  min-height: 60px;
+  height: 96px;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  border: 1px solid var(--wiki-entry-line);
+  border: 1px solid color-mix(in srgb, var(--wiki-branch-tone, var(--aov-accent)) 22%, var(--aov-line));
   border-radius: var(--aov-radius-card);
   padding: 8px 6px;
-  background: var(--wiki-entry-bg);
+  background:
+    radial-gradient(
+      90% 70% at 50% 0%,
+      color-mix(in srgb, var(--wiki-branch-tone, var(--aov-accent)) 14%, transparent),
+      transparent 75%
+    ),
+    color-mix(in srgb, var(--aov-bg) 55%, transparent);
   text-align: center;
   transition: var(--wiki-entry-transition);
 }
@@ -620,19 +690,28 @@
   min-width: 0;
   gap: 1px;
 }
+/* The text takes the rest of the card, so a long name ends in an ellipsis instead of widening it. */
+.wiki-enchantment-node > span:last-child {
+  width: 100%;
+}
+.wiki-enchantment-node :is(strong, small) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .wiki-enchantment-node strong {
   color: var(--aov-text);
   font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
-  overflow-wrap: anywhere;
 }
 .wiki-enchantment-node small {
   color: var(--aov-muted);
   font: 400 0.75rem/1rem var(--wiki-font-reading);
-  overflow-wrap: anywhere;
 }
 @container wiki-branch (min-width: 500px) {
   .wiki-enchantment-node {
+    height: 64px;
     flex-direction: row;
+    justify-content: flex-start;
     gap: 10px;
     padding: 8px 12px 8px 8px;
     text-align: left;
