@@ -320,6 +320,8 @@
 /* Three columns across the room the board has; its cards start on the page's left edge. */
 .wiki-warehouse-page .wiki-item-board .shop-viewport {
   --shop-gap: 24px;
+  /* Room between rows for a recipe wire to pass midway, clear of the cards above and below it. */
+  --shop-row-gap: 16px;
   --shop-padding: 0px;
   --shop-column-width: clamp(87px, calc((100cqi + 4px - 2 * var(--shop-gap)) / 3), 400px);
   width: auto;

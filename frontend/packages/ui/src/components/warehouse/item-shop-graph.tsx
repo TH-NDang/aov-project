@@ -230,7 +230,7 @@ export function ItemShopGraph({
               {...connections.canvasHandlers}
             >
               <div
-                className="grid justify-center gap-x-[var(--shop-gap,48px)] gap-y-2"
+                className="grid justify-center gap-x-[var(--shop-gap,48px)] gap-y-[var(--shop-row-gap,0.5rem)]"
                 style={{ gridTemplateColumns: `repeat(${columns}, ${columnWidth})` }}
               >
                 {sectionsByColumn.map((sections, column) => (

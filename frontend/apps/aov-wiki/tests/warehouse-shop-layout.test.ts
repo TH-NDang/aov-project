@@ -271,3 +271,25 @@ test("routing supports ingredients and complete items in the same physical shop 
 
   assertClearOrthogonalRoute(routeItemWire(source, target, cards, 2), source, target, cards)
 })
+
+test("a wire that crosses a column between two rows runs midway through the gap", () => {
+  const source = { left: 0, right: 200, top: 100, bottom: 180 }
+  const above = { left: 248, right: 448, top: 0, bottom: 80 }
+  const below = { left: 248, right: 448, top: 100, bottom: 180 }
+  const target = { left: 496, right: 696, top: 0, bottom: 80 }
+  const route = routeItemWire(source, target, [source, above, below, target])
+  assert.ok(route)
+  const crossing = route.findIndex(
+    (point, i) => i > 0 && route[i - 1].y === point.y && route[i - 1].x < 248 && point.x > 448,
+  )
+  assert.ok(crossing > 0)
+  assert.equal(route[crossing].y, 90)
+})
+
+test("a wire to an item level with its source runs straight across", () => {
+  const source = { left: 0, right: 200, top: 0, bottom: 80 }
+  const target = { left: 248, right: 448, top: 0, bottom: 80 }
+  const route = routeItemWire(source, target, [source, target])
+  assert.ok(route)
+  assert.equal(route.length, 2)
+})
