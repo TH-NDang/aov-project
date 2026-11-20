@@ -250,8 +250,7 @@ public class EnchantmentCatalog {
             if (Objects.equals(index, g.position())) {
                 continue;
             }
-            revision.setGameplay(new EnchantmentContent(g.iconAssetId(), g.branchCode(), g.tier(), index,
-                    List.of(), g.notes()));
+            revision.setGameplay(g.atPosition(index));
             advanceVersion(revision);
             revisions.saveAndFlush(revision);
             recordAuditEvent("REORDERED", owners.get(revision.getOwnerId()), revision,
@@ -303,8 +302,8 @@ public class EnchantmentCatalog {
 
     private EnchantmentContent initialContent(Create input) {
         return input.content() == null
-                ? new EnchantmentContent(null, null, null, null,
-                        List.of(new Translation(input.initialLocale(), input.name(), null, null, null, null)), null)
+                ? EnchantmentContent.named(new Translation(input.initialLocale(), input.name(), null, null, null,
+                        null))
                 : input.content();
     }
 
