@@ -188,9 +188,9 @@ export const ITEM_STATS: ItemStatDefinition[] = [
     key: "adaptiveAttack",
     code: "adaptive-attack",
     vi: "Thuộc tính chủ đạo",
-    en: "Adaptive Force",
+    en: "Main Attribute",
     icon: "sword",
-    spellings: ["thuoc tinh chu dao", "adaptive force"],
+    spellings: ["thuoc tinh chu dao", "main attribute"],
   },
   {
     key: "attackRange",
@@ -301,7 +301,7 @@ function withoutMarker(line: string, marker: RegExp) {
 }
 
 function passiveFrom(line: string): ItemTextPassive {
-  const unique = UNIQUE.test(line)
+  const unique = UNIQUE.test(line) || UNIQUE_ACTIVE.test(line)
   const active = UNIQUE_ACTIVE.test(line) || ACTIVE_LABEL.test(line)
   let text = withoutMarker(withoutMarker(line, UNIQUE), UNIQUE_ACTIVE)
     .replace(ACTIVE_LABEL, "")

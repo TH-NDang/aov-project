@@ -40,7 +40,7 @@ test("the house format puts the label first and reads into stats, passives and a
     {
       name: "Bất khuất",
       text: "Nhận 35% miễn thương trong 3 giây. Hồi chiêu: 90 giây.",
-      unique: false,
+      unique: true,
       active: true,
     },
   ])
@@ -131,7 +131,7 @@ test("English active labels make an active wherever the label stands", () => {
   )
 
   assert.deepEqual(passives, [
-    { name: "Indomitable", text: "Gain 35% damage reduction for 3 seconds.", unique: false, active: true },
+    { name: "Indomitable", text: "Gain 35% damage reduction for 3 seconds.", unique: true, active: true },
     { name: "Blood Recovery", text: "Heals an ally", unique: false, active: true },
     { name: "Vanish", text: "Instantly enter stealth.", unique: false, active: true },
     { name: "Divine Shield", text: "Gain a shield. Cooldown: 60 seconds", unique: false, active: true },

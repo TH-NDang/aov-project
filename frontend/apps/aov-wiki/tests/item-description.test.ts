@@ -340,13 +340,13 @@ test("items of another tier are never alternatives, and ties go to the closest p
   )
 })
 
-test("active items are marked, and names may come last in angle brackets", () => {
+test("active items are marked, a unique active is unique, and names may come last in angle brackets", () => {
   const { passives } = parseItemDescription(
     "Nhận 35% miễn thương trong 3 giây. <Bất khuất>– Kích hoạt duy nhất\nKích hoạt chủ động – Hồi huyết: Hồi máu cho đồng minh\nNội tại – Nguyên lực: Tăng giáp cho đồng đội",
   )
 
   assert.deepEqual(passives, [
-    { name: "Bất khuất", text: "Nhận 35% miễn thương trong 3 giây.", unique: false, active: true },
+    { name: "Bất khuất", text: "Nhận 35% miễn thương trong 3 giây.", unique: true, active: true },
     { name: "Hồi huyết", text: "Hồi máu cho đồng minh", unique: false, active: true },
     { name: "Nguyên lực", text: "Tăng giáp cho đồng đội", unique: false },
   ])
@@ -379,7 +379,7 @@ test("English markers for active effects and bare passive prefixes are read like
   )
 
   assert.deepEqual(passives, [
-    { name: "Indomitable", text: "Gain 35% damage reduction for 3 seconds.", unique: false, active: true },
+    { name: "Indomitable", text: "Gain 35% damage reduction for 3 seconds.", unique: true, active: true },
     { name: "Blood Recovery", text: "Heals an ally", unique: false, active: true },
     { name: "Source Power", text: "Grants armor to allies", unique: false },
   ])

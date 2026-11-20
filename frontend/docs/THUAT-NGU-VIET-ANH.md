@@ -90,6 +90,8 @@ Cột "Nguồn": **G** = có trong nguồn đối chiếu ở trên; **D** = cá
 | Hồi máu/5s | HP/5s | G ("HP +30 / 5 sec") |
 | Hồi năng lượng/5s | Mana/5s | G |
 | Kháng hiệu ứng | Resistance | G |
+| Thuộc tính chủ đạo | Main attribute (Main Attribute khi là tên chỉ số) | D |
+| Tầm đánh | Attack Range | D |
 | Hồi chiêu | Cooldown | G |
 | Tiêu hao năng lượng | Mana cost | D |
 | Cấp tướng / cấp chiêu | Hero level / ability level | D |
