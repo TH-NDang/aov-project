@@ -1,9 +1,10 @@
 import type { WarehouseMetadata } from "./warehouse-types"
 import type { WarehouseContent, WarehouseStat, SpellContent } from "@aov/ui/lib/warehouse-content"
+import type { EnchantmentUse } from "@aov/ui/lib/enchantment-use"
 
 export type SecondaryKind = "arcana" | "spells" | "enchantments"
 
-export interface SecondaryContent extends WarehouseContent {
+export interface SecondaryContent extends WarehouseContent, Omit<EnchantmentUse, "cooldownSeconds"> {
   color?: "RED" | "PURPLE" | "GREEN"
   tier?: number
   stats?: WarehouseStat[]
@@ -43,7 +44,19 @@ export function newSecondaryContent(kind: SecondaryKind, locale: string, branchC
     translations: [{ locale, name: "", summary: null, description: null }],
   }
   if (kind === "arcana") return { ...shared, color: "RED", tier: 3, stats: [] }
-  if (kind === "enchantments") return { ...shared, branchCode, tier: 1, position: 0 }
+  if (kind === "enchantments")
+    return {
+      ...shared,
+      branchCode,
+      tier: 1,
+      position: 0,
+      activation: "UNKNOWN",
+      cooldownSeconds: null,
+      cooldownMaxSeconds: null,
+      maxUses: null,
+      availableFromSeconds: null,
+      availableUntilSeconds: null,
+    }
   return {
     ...shared,
     cooldownSeconds: null,

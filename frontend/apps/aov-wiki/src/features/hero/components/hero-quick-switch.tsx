@@ -1,3 +1,4 @@
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { localeText } from "@aov/ui/lib/locale-text"
 import { useRef, useState, type RefObject } from "react"
 import { useQuery } from "@tanstack/react-query"
@@ -30,6 +31,7 @@ function HeroPicker({
   onPick: () => void
   searchRef: RefObject<HTMLInputElement | null>
 }) {
+  const wide = usePageLayout() === "wide"
   const scope = useWikiContext()
   const { locale } = scope
   const t = localeText(locale)
@@ -82,13 +84,16 @@ function HeroPicker({
               "Find and switch to a published hero.",
             )}
           </SheetDescription>
-          <SheetClose
-            className="wiki-hero-switch-close"
-            aria-label={wikiText(locale, "Đóng danh sách tướng", "Close hero picker")}
-            title={t("Đóng", "Close")}
-          >
-            <WikiIcon name="close" />
-          </SheetClose>
+          {/* On a phone the sheet rises from the bottom and closes by a tap above it or a pull down: no X. */}
+          {wide && (
+            <SheetClose
+              className="wiki-hero-switch-close"
+              aria-label={wikiText(locale, "Đóng danh sách tướng", "Close hero picker")}
+              title={t("Đóng", "Close")}
+            >
+              <WikiIcon name="close" />
+            </SheetClose>
+          )}
         </div>
         <label className="wiki-hero-search wiki-hero-switch-search">
           <WikiIcon name="search" size={18} />

@@ -7,6 +7,13 @@ import { Field } from "../../../publishing/components/editing/fields"
 import { warehouseText } from "@aov/ui/lib/warehouse-content"
 import type { SecondaryKind, SecondaryContent, SecondaryBranch } from "../../model/secondary-content"
 import { NativeSelect } from "@/components/native-select"
+import { ENCHANTMENT_ACTIVATIONS, enchantmentActivationName } from "@aov/ui/lib/enchantment-use"
+
+/** Seconds of the match, shown and typed in minutes, since the game counts these moments in minutes. */
+const minutesOf = (seconds: number | null | undefined) => (seconds == null ? "" : seconds / 60)
+const secondsOf = (minutes: string) => (minutes === "" ? null : Math.round(Number(minutes) * 60))
+const numberOrNull = (value: string) => (value === "" ? null : Number(value))
+const vietnamese = (vi: string) => vi
 
 export function SecondaryMechanics({
   part,
@@ -57,6 +64,7 @@ export function SecondaryMechanics({
         </div>
         <TierField value={content.tier ?? 1} disabled={disabled} onChange={(tier) => onChange({ tier })} />
         <div className="self-end">{enchantmentOrderControl}</div>
+        <EnchantmentUseFields content={content} onChange={onChange} disabled={disabled} />
       </div>
     )
   if (kind === "arcana")
@@ -253,5 +261,85 @@ export function TierField({
         ))}
       </NativeSelect>
     </label>
+  )
+}
+
+/**
+ * How an enchantment is used: passive, an active item the player triggers, or an upgrade of the talent; then its
+ * cooldown (a range when it grows with each use), uses per match and the minutes of the match it can be used in. Empty
+ * means unknown or no limit.
+ */
+function EnchantmentUseFields({
+  content,
+  onChange,
+  disabled,
+}: {
+  content: SecondaryContent
+  onChange: (value: Partial<SecondaryContent>) => void
+  disabled: boolean
+}) {
+  return (
+    <fieldset className="grid gap-4 border-t pt-4 sm:col-span-2 sm:grid-cols-2" disabled={disabled}>
+      <legend className="type-label float-left mb-1 w-full">Cách dùng trong trận</legend>
+      <label className="grid gap-1.5 text-sm sm:col-span-2">
+        <span>Cách dùng</span>
+        <NativeSelect
+          className="w-full"
+          value={content.activation ?? "UNKNOWN"}
+          onChange={(event) => onChange({ activation: event.target.value as SecondaryContent["activation"] })}
+        >
+          {ENCHANTMENT_ACTIVATIONS.map((activation) => (
+            <option key={activation} value={activation}>
+              {enchantmentActivationName(activation, vietnamese)}
+            </option>
+          ))}
+        </NativeSelect>
+      </label>
+      <Field
+        label="Hồi chiêu (giây)"
+        type="number"
+        min={0}
+        step="any"
+        value={content.cooldownSeconds ?? ""}
+        onChange={(value) => onChange({ cooldownSeconds: numberOrNull(value) })}
+      />
+      <Field
+        label="Hồi chiêu dài nhất (giây)"
+        title="Khi hồi chiêu tăng dần qua mỗi lần dùng, như Chuyển sinh: 100 đến 310 giây."
+        type="number"
+        min={0}
+        step="any"
+        value={content.cooldownMaxSeconds ?? ""}
+        onChange={(value) => onChange({ cooldownMaxSeconds: numberOrNull(value) })}
+      />
+      <Field
+        label="Số lần dùng mỗi trận"
+        placeholder="Không giới hạn"
+        type="number"
+        min={1}
+        step={1}
+        value={content.maxUses ?? ""}
+        onChange={(value) => onChange({ maxUses: numberOrNull(value) })}
+      />
+      <div className="hidden sm:block" />
+      <Field
+        label="Có từ phút"
+        placeholder="Từ đầu trận"
+        type="number"
+        min={0}
+        step="any"
+        value={minutesOf(content.availableFromSeconds)}
+        onChange={(value) => onChange({ availableFromSeconds: secondsOf(value) })}
+      />
+      <Field
+        label="Dùng được đến phút"
+        placeholder="Đến hết trận"
+        type="number"
+        min={0}
+        step="any"
+        value={minutesOf(content.availableUntilSeconds)}
+        onChange={(value) => onChange({ availableUntilSeconds: secondsOf(value) })}
+      />
+    </fieldset>
   )
 }

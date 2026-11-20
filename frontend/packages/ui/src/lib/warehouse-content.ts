@@ -1,4 +1,5 @@
 import { DEFAULT_LOCALE, pickTranslation } from "@aov/ui/lib/translation-fallback"
+import type { EnchantmentUse } from "@aov/ui/lib/enchantment-use"
 
 export type WarehouseKind = "items" | "enchantments" | "arcana" | "spells"
 export interface WarehouseTranslation {
@@ -29,7 +30,7 @@ export interface ItemContent extends WarehouseContent {
   components: { itemId: string; quantity: number }[]
   stats: WarehouseStat[]
 }
-export interface EnchantmentContent extends WarehouseContent {
+export interface EnchantmentContent extends WarehouseContent, EnchantmentUse {
   branchCode: string
   tier: number
   position: number | null

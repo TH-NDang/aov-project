@@ -220,6 +220,15 @@
   padding: 2px;
   background: radial-gradient(circle, color-mix(in srgb, var(--chip-tone) 30%, transparent), transparent 72%);
 }
+/* On a phone a branch chip is its emblem alone, so the four branches and "all" fit one line. */
+@media (max-width: 899.98px) {
+  .wiki-warehouse-chip[data-tone]:has(.wiki-warehouse-chip-name[data-hideable]) {
+    padding: 0 4px;
+  }
+  .wiki-warehouse-chip[data-tone]:has(.wiki-warehouse-chip-name[data-hideable]) :is(.wiki-warehouse-chip-name, small) {
+    display: none;
+  }
+}
 .wiki-warehouse-chip[data-tone][aria-pressed="true"] {
   border-color: var(--chip-tone);
   background: color-mix(in srgb, var(--chip-tone) 16%, transparent);
@@ -576,8 +585,6 @@
 
 /* ---------- Detail: the same parts in the panel and in the sheet ---------- */
 .wiki-warehouse-detail[data-slot="sheet-content"] {
-  width: min(480px, 100vw);
-  max-width: 480px;
   gap: 0;
   border: 0;
   padding: 0;
@@ -990,23 +997,14 @@
     height: 80px;
   }
 }
-/* On a phone the detail comes up from the bottom, as tall as the entry needs. */
-@media (max-width: 640px) {
+/* A side panel on wide screens; on a phone the shared bottom sheet sizes it to the entry. */
+@media (min-width: 900px) {
   .wiki-warehouse-detail[data-slot="sheet-content"] {
-    inset: auto 0 0;
-    width: 100%;
-    max-width: none;
-    height: auto;
-    min-height: 240px;
-    max-height: min(90dvh, 780px);
-    border-radius: var(--aov-radius-media) var(--aov-radius-media) 0 0;
+    width: min(480px, 100vw);
+    max-width: 480px;
   }
-  .wiki-warehouse-detail[data-state="open"] {
-    animation: wiki-warehouse-rise 220ms ease-out;
-  }
-  .wiki-warehouse-detail[data-state="closed"] {
-    animation: wiki-warehouse-fall 180ms ease-in;
-  }
+}
+@media (max-width: 640px) {
   .wiki-warehouse-detail-bar {
     padding-left: 16px;
   }
@@ -1016,27 +1014,5 @@
   }
   .wiki-warehouse-detail-scroll {
     padding: 2px 16px max(20px, env(safe-area-inset-bottom));
-  }
-}
-@keyframes wiki-warehouse-rise {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-@keyframes wiki-warehouse-fall {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wiki-warehouse-detail[data-slot="sheet-content"] {
-    transition: none;
-    animation: none;
   }
 }

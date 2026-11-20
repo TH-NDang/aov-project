@@ -567,10 +567,12 @@ function EnchantmentControls({ entries, groups, group, onFilters, loading }: Con
       </Chip>
       {groups.map((branch) => {
         const icon = branch.icon?.currentVersion?.url
+        const name = warehouseText(branch.translations, locale)?.name || branch.code
         return (
           <Chip
             key={branch.code}
             pressed={group === branch.code}
+            label={icon ? name : undefined}
             count={
               loading
                 ? undefined
@@ -581,7 +583,10 @@ function EnchantmentControls({ entries, groups, group, onFilters, loading }: Con
             onClick={() => onFilters({ group: group === branch.code ? null : branch.code })}
           >
             {icon && <WikiImage className="wiki-warehouse-chip-art" src={icon} alt="" width="20" height="20" />}
-            {warehouseText(branch.translations, locale)?.name || branch.code}
+            {/* A phone shows the emblem alone; the name stays the button's accessible name. */}
+            <span className="wiki-warehouse-chip-name" data-hideable={icon ? "" : undefined}>
+              {name}
+            </span>
           </Chip>
         )
       })}

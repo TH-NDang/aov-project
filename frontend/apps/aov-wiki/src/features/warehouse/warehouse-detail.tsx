@@ -4,6 +4,7 @@ import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
 import { arcanaGroupLabel } from "@aov/ui/components/warehouse/arcana-cards"
 import { warehouseViewGroups } from "./warehouse-view"
 import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
+import { enchantmentUseFacts } from "@aov/ui/lib/enchantment-use"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import {
   useEffect,
@@ -16,7 +17,7 @@ import {
   type RefObject,
 } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImageCredit } from "../../components/wiki-image-credit"
@@ -347,6 +348,10 @@ function DetailContent({
             ) : (
               <>
                 {spellFacts.length > 0 && <Facts rows={spellFacts} />}
+                {/* How the enchantment is used, before what it does: passive or active, cooldown, uses, minutes. */}
+                {entry.kind === "enchantments" && enchantmentUseFacts(entry.content, ui).length > 0 && (
+                  <Facts rows={enchantmentUseFacts(entry.content, ui)} />
+                )}
                 {arcana && statRows.length > 0 && (
                   <section>
                     <h3>{ui("Chỉ số", "Stats")}</h3>
@@ -565,11 +570,8 @@ export function WarehouseDetail({
     )
   }
 
-  const close = (
-    <SheetClose className="wiki-warehouse-detail-tool" aria-label={closeLabel}>
-      <WikiIcon name="close" size={18} />
-    </SheetClose>
-  )
+  // The sheet rises from the bottom on a phone, where a tap above it or a pull down closes it, so it shows no X.
+  const close = null
   return (
     <Sheet
       open={!!selectedId}
@@ -579,6 +581,7 @@ export function WarehouseDetail({
     >
       <SheetContent
         side="right"
+        fitContent
         showCloseButton={false}
         className="wiki-warehouse-detail"
         onCloseAutoFocus={(event) => {

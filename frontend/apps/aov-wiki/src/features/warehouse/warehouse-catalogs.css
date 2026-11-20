@@ -665,6 +665,7 @@
 .wiki-enchantment-node {
   --wiki-warehouse-art-size: 40px;
   --wiki-warehouse-art-radius: 50%;
+  position: relative;
   display: flex;
   min-width: 0;
   height: 96px;
@@ -685,7 +686,21 @@
   text-align: center;
   transition: var(--wiki-entry-transition);
 }
-.wiki-enchantment-node > span {
+/* An enchantment the player triggers, or one that changes the talent, carries a small mark in its corner. */
+.wiki-enchantment-mark {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--wiki-branch-tone, var(--aov-accent)) 55%, transparent);
+  border-radius: 50%;
+  background: var(--aov-bg);
+  color: var(--wiki-branch-tone, var(--aov-accent));
+}
+.wiki-enchantment-node > span:not(.wiki-enchantment-mark) {
   display: grid;
   min-width: 0;
   gap: 1px;
@@ -698,6 +713,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* On a phone the cards are narrow: the name gets two lines and the note is left to the detail. */
+@media (max-width: 899.98px) {
+  .wiki-enchantment-node strong {
+    display: -webkit-box;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .wiki-enchantment-node small {
+    display: none;
+  }
 }
 .wiki-enchantment-node strong {
   color: var(--aov-text);
