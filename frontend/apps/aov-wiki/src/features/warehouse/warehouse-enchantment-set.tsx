@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import {
@@ -43,7 +43,6 @@ export function EnchantmentSetView({
   const scope = useWikiContext()
   const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
   const references = useQuery(wikiReferencesQuery(scope))
-  const [copied, setCopied] = useState(false)
 
   const records = useMemo(
     () => entries.filter((entry): entry is WarehouseEnchantment => entry.kind === "enchantments"),
@@ -97,16 +96,6 @@ export function EnchantmentSetView({
       set: next.map((id) => records.find((entry) => entry.id === id)?.code ?? "").join(","),
     })
 
-  const share = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1800)
-    } catch {
-      setCopied(false)
-    }
-  }
-
   if (!branches.length || !enchantments.length) return null
   return (
     <EnchantmentSetBuilder
@@ -125,11 +114,6 @@ export function EnchantmentSetView({
           context="wiki"
         />
       )}
-      actions={
-        <button type="button" className="wiki-enchantment-set-share" onClick={() => void share()}>
-          {copied ? text("Đã chép liên kết", "Link copied") : text("Chép liên kết bộ này", "Copy a link to this set")}
-        </button>
-      }
     />
   )
 }

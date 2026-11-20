@@ -24,8 +24,8 @@ export interface EnchantmentUse {
 type Text = (vi: string, en: string) => string
 
 const ACTIVATION_NAMES: Record<EnchantmentActivation, [string, string]> = {
-  PASSIVE: ["Nội tại", "Passive"],
-  ACTIVE: ["Kích hoạt", "Active"],
+  PASSIVE: ["Kích hoạt bị động", "Passive"],
+  ACTIVE: ["Kích hoạt chủ động", "Active"],
   TALENT_UPGRADE: ["Đổi phụ trợ", "Talent upgrade"],
   UNKNOWN: ["Chưa rõ", "Unknown"],
 }

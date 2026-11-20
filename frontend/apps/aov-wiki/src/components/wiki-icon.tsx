@@ -126,6 +126,8 @@ const PATHS = {
     </g>
   ),
   clipboard: <path d="M9 4h6v3H9zM8 5.5H6v14.5h12V5.5h-2M9 12h6M9 15.5h4" />,
+  /** Paste: a clipboard with an arrow coming down into it. */
+  paste: <path d="M9 4h6v3H9zM8 5.5H6v14.5h12V5.5h-2M12 10v6.5m-3-3 3 3 3-3" />,
   bulb: <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z" />,
   /** Cards in a grid. */
   cards: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,

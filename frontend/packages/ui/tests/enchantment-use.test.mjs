@@ -38,5 +38,5 @@ test("an active enchantment lists its use, uses and window in order", () => {
   const facts = enchantmentUseFacts({ activation: "ACTIVE", maxUses: 1, availableFromSeconds: 240 }, vi).map(
     ({ label, value }) => `${label}: ${value}`,
   )
-  assert.deepEqual(facts, ["Cách dùng: Kích hoạt", "Số lần dùng: 1 lần mỗi trận", "Có từ: Phút 4"])
+  assert.deepEqual(facts, ["Cách dùng: Kích hoạt chủ động", "Số lần dùng: 1 lần mỗi trận", "Có từ: Phút 4"])
 })

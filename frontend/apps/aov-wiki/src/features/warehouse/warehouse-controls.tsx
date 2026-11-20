@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react"
+import { EnchantmentSetTools } from "./warehouse-enchantment-set-tools"
 import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import { useRef, type ReactNode } from "react"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
@@ -620,12 +621,15 @@ function EnchantmentControls({ entries, groups, group, params, onFilters, loadin
       })}
     </ChipGroup>
   )
+  // The view switch leads its own line, with the set tools at its end while building; the branch chips get the
+  // whole line below, so nothing covers them.
   return (
     <div className="wiki-warehouse-controls">
       <div className="wiki-warehouse-toolbar">
-        {!building && branches}
-        <div className="wiki-warehouse-toolbar-end">{viewSwitch}</div>
+        {viewSwitch}
+        {building && <EnchantmentSetTools entries={entries} onFilters={onFilters} />}
       </div>
+      {!building && branches}
     </div>
   )
 }

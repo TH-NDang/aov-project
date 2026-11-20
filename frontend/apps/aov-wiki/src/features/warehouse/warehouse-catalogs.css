@@ -686,21 +686,7 @@
   text-align: center;
   transition: var(--wiki-entry-transition);
 }
-/* An enchantment the player triggers, or one that changes the talent, carries a small mark in its corner. */
-.wiki-enchantment-mark {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  display: grid;
-  width: 20px;
-  height: 20px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--wiki-branch-tone, var(--aov-accent)) 55%, transparent);
-  border-radius: 50%;
-  background: var(--aov-bg);
-  color: var(--wiki-branch-tone, var(--aov-accent));
-}
-.wiki-enchantment-node > span:not(.wiki-enchantment-mark) {
+.wiki-enchantment-node > span {
   display: grid;
   min-width: 0;
   gap: 1px;
@@ -838,16 +824,72 @@
 }
 
 /* ---------- Enchantment set ---------- */
-/* Under the set's reading panel: copy a link that opens this very set. */
-.wiki-enchantment-set-share {
+/* At the end of the view switch line: copy a link that opens the set, or paste one (or its five codes). */
+.wiki-enchantment-set-tools {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.wiki-enchantment-set-tools > button,
+.wiki-enchantment-set-paste button {
   font: var(--wiki-type-meta);
+  display: inline-flex;
   min-height: 36px;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--aov-line);
   border-radius: var(--aov-radius-pill);
   padding: 0 14px;
   color: var(--aov-text-soft);
 }
-.wiki-enchantment-set-share:hover {
+.wiki-enchantment-set-tools > button:hover,
+.wiki-enchantment-set-paste button:hover {
   border-color: var(--aov-accent);
   color: var(--aov-accent-strong);
+}
+/* On a phone the two tools are their icons alone, so they share the line with the view switch. */
+@media (max-width: 899.98px) {
+  .wiki-enchantment-set-tools > button {
+    width: 36px;
+    justify-content: center;
+    padding: 0;
+  }
+  .wiki-enchantment-set-tools > button > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+.wiki-enchantment-set-notice {
+  margin-right: auto;
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-meta);
+}
+.wiki-enchantment-set-paste {
+  display: flex;
+  min-width: min(100%, 320px);
+  flex: 1;
+  gap: 6px;
+}
+.wiki-enchantment-set-paste input {
+  font: var(--wiki-type-body);
+  min-width: 0;
+  min-height: 36px;
+  flex: 1;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 12px;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+.wiki-enchantment-set-paste input:focus-visible {
+  border-color: var(--aov-accent);
+  outline: none;
 }

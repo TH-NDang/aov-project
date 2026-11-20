@@ -24,6 +24,7 @@
 }
 .esb-stage {
   display: grid;
+  min-height: 400px;
   align-content: center;
   gap: 44px;
   min-width: 0;
@@ -250,6 +251,9 @@
   border-left: 1px solid color-mix(in srgb, var(--esb-tone) 25%, transparent);
   border-radius: 0 17px 17px 0;
   padding: 24px 20px;
+  /* The panel takes the stage's height and scrolls inside, so a long text never moves the set beside it. */
+  contain: size;
+  overflow-y: auto;
   background: color-mix(in srgb, #000 30%, transparent);
 }
 .esb-panel-head {
@@ -283,6 +287,7 @@
   line-height: 1.5rem;
 }
 .esb-panel-head small {
+  display: block;
   color: color-mix(in srgb, var(--esb-tone) 75%, #fff);
   font-weight: 600;
   font-size: 0.875rem;
@@ -296,12 +301,21 @@
   line-height: 1.5rem;
 }
 .esb-panel-summary {
-  margin-bottom: 8px;
+  display: inline-block;
+  margin-top: 6px;
+  border: 1px solid color-mix(in srgb, var(--esb-tone) 45%, transparent);
+  border-radius: 999px;
+  padding: 1px 10px;
+  background: color-mix(in srgb, var(--esb-tone) 14%, transparent);
+  color: var(--esb-ink);
   font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
 }
 .esb-panel-body dl {
   display: grid;
   gap: 6px;
+  margin-bottom: 12px;
 }
 .esb-panel-body dl > div {
   display: flex;
@@ -354,35 +368,6 @@
   font-size: 0.875rem;
   line-height: 1.375rem;
 }
-/* Summary or details, a pill switch like the game's. */
-.esb-switch {
-  display: inline-flex;
-  align-self: center;
-  border: 1px solid color-mix(in srgb, var(--aov-text, #eee) 20%, transparent);
-  border-radius: 999px;
-  padding: 2px;
-  background: color-mix(in srgb, #000 40%, transparent);
-}
-.esb-switch button {
-  border-radius: 999px;
-  padding: 4px 14px;
-  color: color-mix(in srgb, var(--aov-text, #eee) 60%, transparent);
-  font-weight: 600;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-}
-.esb-switch button[aria-pressed="true"] {
-  background: var(--aov-info, #3d8fe0);
-  color: #fff;
-}
-.esb-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin-top: auto;
-}
-
 /* Narrow: smaller spots, the panel under the stage, and arcs that open below a spot instead of beside it. */
 @container esb (max-width: 720px) {
   .esb {
@@ -403,6 +388,13 @@
     border-top: 1px solid color-mix(in srgb, var(--esb-tone) 25%, transparent);
     border-left: 0;
     border-radius: 0 0 17px 17px;
+    /* Under the stage the panel grows with its text, from a height that keeps short ones from jumping. */
+    min-height: 280px;
+    contain: none;
+    overflow-y: visible;
+  }
+  .esb-stage {
+    min-height: 0;
   }
   .esb-arc,
   .esb-spot[data-edge="end"] > .esb-arc {

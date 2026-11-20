@@ -1,7 +1,7 @@
 import { useWarehouseText } from "./warehouse-view"
 import { cardChangeKinds, WarehouseBadges as CatalogChangeBadges } from "./warehouse-view"
 import type { CSSProperties } from "react"
-import { ArrowUpRight, Check, Pencil, Repeat2, Zap } from "lucide-react"
+import { ArrowUpRight, Check, Pencil } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
@@ -9,7 +9,6 @@ import { cn } from "@aov/ui/lib/utils"
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { WarehouseAsset as HeroAsset } from "./warehouse-view"
 import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
-import { enchantmentActivationName, enchantmentUsesText } from "@aov/ui/lib/enchantment-use"
 import {
   enchantmentColumn,
   ENCHANTMENT_COLUMNS,
@@ -213,24 +212,6 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
                                 : "border-[var(--branch-border)] bg-[radial-gradient(90%_70%_at_50%_0%,var(--branch-tint),transparent_75%)]",
                             )}
                           >
-                            {(entry.content.activation === "ACTIVE" ||
-                              entry.content.activation === "TALENT_UPGRADE") && (
-                              <span
-                                className="absolute top-1.5 left-1.5 grid size-5 place-items-center rounded-full border border-[var(--branch-border)] bg-card text-[var(--branch-color)]"
-                                title={[
-                                  enchantmentActivationName(entry.content.activation, t),
-                                  enchantmentUsesText(entry.content.maxUses, t),
-                                ]
-                                  .filter(Boolean)
-                                  .join(" · ")}
-                              >
-                                {entry.content.activation === "ACTIVE" ? (
-                                  <Zap aria-hidden className="size-3" />
-                                ) : (
-                                  <Repeat2 aria-hidden className="size-3" />
-                                )}
-                              </span>
-                            )}
                             {selected ? (
                               <Check
                                 aria-hidden

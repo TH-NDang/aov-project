@@ -3,8 +3,6 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import type { CSSProperties } from "react"
 import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import { enchantmentColumn } from "@aov/ui/lib/warehouse-content"
-import { enchantmentActivationName, enchantmentUsesText } from "@aov/ui/lib/enchantment-use"
-import { WikiIcon } from "../../components/wiki-icon"
 import { enchantmentRows, type WarehouseEnchantment } from "./use-item-catalog"
 import { WarehouseArtwork } from "./warehouse-artwork"
 import { EmptyGroup, romanTier } from "./warehouse-parts"
@@ -28,13 +26,6 @@ function EnchantmentNode({
   const { locale } = useWikiContext()
   const name = warehouseName(entry, locale)
   const summary = warehouseText(entry.content.translations, locale)?.summary
-  const text = (vi: string, en: string) => wikiText(locale, vi, en)
-  const { activation, maxUses } = entry.content
-  // An enchantment the player triggers, or one that changes the talent, is marked in the corner.
-  const marked = activation === "ACTIVE" || activation === "TALENT_UPGRADE"
-  const mark = marked
-    ? [enchantmentActivationName(activation, text), enchantmentUsesText(maxUses, text)].filter(Boolean).join(" · ")
-    : null
   return (
     <button
       type="button"
@@ -44,12 +35,6 @@ function EnchantmentNode({
       aria-label={wikiText(locale, `Xem ${name}`, `View ${name}`)}
       onClick={(event) => onOpen(entry, event.currentTarget)}
     >
-      {mark && (
-        <span className="wiki-enchantment-mark" data-activation={activation} title={mark}>
-          <WikiIcon name={activation === "ACTIVE" ? "spark" : "switch"} size={12} />
-          <span className="sr-only">{mark}</span>
-        </span>
-      )}
       <WarehouseArtwork entry={entry} kind="enchantments" />
       <span title={summary ? `${name} · ${summary}` : name}>
         <strong>{name}</strong>

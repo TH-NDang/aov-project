@@ -48,7 +48,6 @@ export function EnchantmentSetBuilder({
   onChange,
   text,
   renderText = (body) => body,
-  actions,
 }: {
   branches: SetBuilderBranch[]
   enchantments: SetBuilderEnchantment[]
@@ -57,12 +56,9 @@ export function EnchantmentSetBuilder({
   text: Text
   /** Draws a description, such as the Wiki's rich text with its links. */
   renderText?: (body: string) => ReactNode
-  /** Under the panel, such as sharing the set. */
-  actions?: ReactNode
 }) {
   const [open, setOpen] = useState<Open>(null)
   const [focus, setFocus] = useState<Focus>(null)
-  const [brief, setBrief] = useState(false)
   const root = useRef<HTMLElement>(null)
   const codes = branches.map((branch) => branch.code)
   const branchOf = (code: string | null | undefined) => branches.find((branch) => branch.code === code)
@@ -297,38 +293,27 @@ export function EnchantmentSetBuilder({
                 <span>
                   <strong>{focused.name}</strong>
                   <small>{branchOf(focused.branchCode)?.name}</small>
+                  {focused.summary && <span className="esb-panel-summary">{focused.summary}</span>}
                 </span>
               </div>
+              {/* Everything at once: how it is used, then what it does. */}
               <div className="esb-panel-body">
-                {brief ? (
-                  <>
-                    {focused.summary && <p className="esb-panel-summary">{focused.summary}</p>}
-                    <dl>
-                      {enchantmentUseFacts(focused.use ?? {}, text).map((fact) => (
-                        <div key={fact.key}>
-                          <dt>{fact.label}</dt>
-                          <dd>{fact.value}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </>
-                ) : (
-                  focused.description && <div>{renderText(focused.description)}</div>
+                {enchantmentUseFacts(focused.use ?? {}, text).length > 0 && (
+                  <dl>
+                    {enchantmentUseFacts(focused.use ?? {}, text).map((fact) => (
+                      <div key={fact.key}>
+                        <dt>{fact.label}</dt>
+                        <dd>{fact.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 )}
-              </div>
-              <div className="esb-switch" role="group" aria-label={text("Cách đọc", "View")}>
-                <button type="button" aria-pressed={brief} onClick={() => setBrief(true)}>
-                  {text("Tóm tắt", "Summary")}
-                </button>
-                <button type="button" aria-pressed={!brief} onClick={() => setBrief(false)}>
-                  {text("Chi tiết", "Details")}
-                </button>
+                {focused.description && <div>{renderText(focused.description)}</div>}
               </div>
             </>
           ) : (
             <p className="esb-panel-empty">{text("Chọn một phù hiệu để xem.", "Pick an enchantment to read it.")}</p>
           )}
-          {actions && <div className="esb-actions">{actions}</div>}
         </aside>
       </section>
     </div>
