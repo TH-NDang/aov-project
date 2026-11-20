@@ -58,7 +58,7 @@ public class PlayerMerge {
         }
         if (rewrites.publishedReferences(sourceId) > 0) {
             throw new ApiException(TournamentErrorCode.TOURNAMENT_RECORD_IN_USE,
-                    "Published games name this player and never change, so it cannot be merged away.");
+                    "Published games or plans name this player and never change, so it cannot be merged away.");
         }
 
         var combined = combine(target.getContent(), source.getContent());

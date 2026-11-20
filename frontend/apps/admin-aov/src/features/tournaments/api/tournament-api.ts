@@ -136,7 +136,15 @@ export type TournamentFilters = {
 /** What a merge moved from the merged profile to the one that stays. */
 export type PlayerMergeResult = {
   player: DocumentView<TournamentRecords["players"]>
-  moved: { rosterLines: number; repeatedRosterLines: number; tournaments: number; series: number; games: number }
+  moved: {
+    rosterLines: number
+    repeatedRosterLines: number
+    tournaments: number
+    series: number
+    games: number
+    plans: number
+    planRevisions: number
+  }
 }
 export type PickerContext = { tournamentId?: string; teamId?: string; playerId?: string; level?: TournamentLevel }
 type RankedKind = "teams" | "players" | "tournaments"

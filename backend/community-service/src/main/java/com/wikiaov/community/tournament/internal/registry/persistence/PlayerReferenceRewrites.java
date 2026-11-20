@@ -7,7 +7,8 @@ import org.springframework.stereotype.Repository;
 /**
  * Fixed statements that move every editorial reference of one player to another when two profiles of one person are
  * merged (spec 04, merging players). An id is unique, so replacing its text inside a jsonb document can only touch
- * fields that name that player. Plan revisions and published snapshots are history and stay as they were.
+ * fields that name that player. Plan revisions are rewritten too, since they name the same person; published
+ * snapshots never change.
  */
 @Repository
 public class PlayerReferenceRewrites {
@@ -26,6 +27,8 @@ public class PlayerReferenceRewrites {
              + (SELECT COUNT(*) FROM tournament.game
                  WHERE published_snapshot IS NOT NULL
                    AND jsonb_exists(published_snapshot->'players',CAST(:source AS text)))
+             + (SELECT COUNT(*) FROM tournament.competition_plan
+                 WHERE strpos(CAST(published_snapshot AS text),CAST(:source AS text))>0)
         """;
 
     /** The target is already on that roster, so the source line would say the same thing twice. */
@@ -55,12 +58,20 @@ public class PlayerReferenceRewrites {
          WHERE strpos(CAST(content AS text),CAST(:source AS text))>0
         """;
 
+    private static final String REWRITE_PLAN_REVISIONS = """
+        UPDATE tournament.plan_revision
+           SET content=CAST(replace(CAST(content AS text),CAST(:source AS text),CAST(:target AS text)) AS jsonb)
+         WHERE strpos(CAST(content AS text),CAST(:source AS text))>0
+        """;
+
     public record Moved(
             int rosterLines,
             int repeatedRosterLines,
             int tournaments,
             int series,
-            int games
+            int games,
+            int plans,
+            int planRevisions
     ) {
     }
 
@@ -90,9 +101,12 @@ public class PlayerReferenceRewrites {
         int tournaments = update(REWRITE_DOCUMENTS.formatted("tournament"), source, target, actor);
         int series = update(REWRITE_DOCUMENTS.formatted("series"), source, target, actor);
         int games = update(REWRITE_DOCUMENTS.formatted("game"), source, target, actor);
+        int plans = update(REWRITE_DOCUMENTS.formatted("competition_plan"), source, target, actor);
+        int revisions = entities.createNativeQuery(REWRITE_PLAN_REVISIONS).setParameter("source", source)
+                .setParameter("target", target).executeUpdate();
 
         entities.clear();
-        return new Moved(roster, repeated, tournaments, series, games);
+        return new Moved(roster, repeated, tournaments, series, games, plans, revisions);
     }
 
     private int update(String sql, UUID source, UUID target, String actor) {
