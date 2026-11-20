@@ -208,6 +208,24 @@
 .wiki-warehouse-chip[aria-pressed="true"] small {
   color: inherit;
 }
+/* A chip with a colour of its own (an enchantment branch) rings its picture in it and is marked in it once chosen. */
+.wiki-warehouse-chip[data-tone] {
+  height: 36px;
+  padding: 0 12px 0 4px;
+}
+.wiki-warehouse-chip[data-tone] .wiki-warehouse-chip-art {
+  --wiki-warehouse-art-size: 28px;
+  border: 1.5px solid color-mix(in srgb, var(--chip-tone) 70%, transparent);
+  border-radius: 50%;
+  padding: 2px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--chip-tone) 30%, transparent), transparent 72%);
+}
+.wiki-warehouse-chip[data-tone][aria-pressed="true"] {
+  border-color: var(--chip-tone);
+  background: color-mix(in srgb, var(--chip-tone) 16%, transparent);
+  box-shadow: 0 0 14px -6px var(--chip-tone);
+  color: color-mix(in srgb, var(--chip-tone) 55%, var(--aov-text));
+}
 /* A ring drawn outside would be cut by a row that scrolls sideways. */
 .wiki-warehouse-chip:focus-visible,
 .wiki-warehouse-clear:focus-visible {
@@ -619,6 +637,30 @@
   width: 56px;
   height: 56px;
   border-radius: var(--aov-radius-card);
+}
+/* An enchantment reads in its branch's colour: a lit band behind its picture, which sits in a round rim like the
+   branch emblem, and the branch line above in that colour. */
+.wiki-warehouse-detail-identity[data-branch] {
+  border: 1px solid color-mix(in srgb, var(--branch-color) 30%, var(--aov-line));
+  border-radius: var(--aov-radius-card);
+  padding: 14px;
+  background: radial-gradient(
+    120% 150% at 0% 0%,
+    color-mix(in srgb, var(--branch-color) 20%, transparent),
+    transparent 65%
+  );
+}
+.wiki-warehouse-detail-identity[data-branch] > .wiki-warehouse-art {
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--branch-color);
+  border-radius: 50%;
+  padding: 5px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--branch-color) 28%, transparent), transparent 72%);
+  box-shadow: 0 0 18px -4px color-mix(in srgb, var(--branch-color) 60%, transparent);
+}
+.wiki-warehouse-detail-bar[data-branch] > span:first-child {
+  color: color-mix(in srgb, var(--branch-color) 75%, var(--aov-text));
 }
 .wiki-warehouse-detail-identity > div {
   min-width: 0;

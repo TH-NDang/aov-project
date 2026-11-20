@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react"
+import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import { useRef, type ReactNode } from "react"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { ItemCategoryArtwork } from "@aov/ui/components/item-category-icons"
@@ -91,6 +93,7 @@ function Chip({
   pressed,
   count,
   label,
+  tone,
   onClick,
   children,
 }: {
@@ -98,11 +101,21 @@ function Chip({
   count?: number
   /** The accessible name, where the visible text is an abbreviation. */
   label?: string
+  /** A colour of its own, such as an enchantment branch's: the chip's picture is ringed with it and it marks the choice. */
+  tone?: string
   onClick: () => void
   children: ReactNode
 }) {
   return (
-    <button type="button" className="wiki-warehouse-chip" aria-pressed={pressed} aria-label={label} onClick={onClick}>
+    <button
+      type="button"
+      className="wiki-warehouse-chip"
+      aria-pressed={pressed}
+      aria-label={label}
+      data-tone={tone ? "" : undefined}
+      style={tone ? ({ "--chip-tone": tone } as CSSProperties) : undefined}
+      onClick={onClick}
+    >
       {children}
       {count !== undefined && <small>{count}</small>}
     </button>
@@ -564,6 +577,7 @@ function EnchantmentControls({ entries, groups, group, onFilters, loading }: Con
                 : entries.filter((entry) => entry.kind === "enchantments" && entry.content.branchCode === branch.code)
                     .length
             }
+            tone={enchantmentBranchColor(branch)}
             onClick={() => onFilters({ group: group === branch.code ? null : branch.code })}
           >
             {icon && <WikiImage className="wiki-warehouse-chip-art" src={icon} alt="" width="20" height="20" />}

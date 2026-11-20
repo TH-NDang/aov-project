@@ -3,11 +3,14 @@ import { ItemOverview } from "@aov/ui/components/warehouse/item-overview"
 import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
 import { arcanaGroupLabel } from "@aov/ui/components/warehouse/arcana-cards"
 import { warehouseViewGroups } from "./warehouse-view"
+import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import {
   useEffect,
   useRef,
   useState,
   type ComponentProps,
+  type CSSProperties,
   type ElementType,
   type ReactNode,
   type RefObject,
@@ -142,8 +145,18 @@ function DetailContent({
   const name = warehouseName(entry, scope.locale)
   const settings = references.data
   const items = entries.filter((e) => e.kind === "items")
-  const sameTier =
+  // An enchantment wears its branch's colour; beside the branch on a wide screen, its neighbours are already in view.
+  const wide = usePageLayout() === "wide"
+  const branchTone =
     entry.kind === "enchantments"
+      ? enchantmentBranchColor({
+          code: entry.content.branchCode,
+          color: groups.find((group) => group.code === entry.content.branchCode)?.color ?? null,
+        })
+      : undefined
+  const toneStyle = branchTone ? ({ "--branch-color": branchTone } as CSSProperties) : undefined
+  const sameTier =
+    entry.kind === "enchantments" && !wide
       ? entries.filter(
           (e) =>
             e.kind === "enchantments" &&
@@ -225,7 +238,7 @@ function DetailContent({
 
   return (
     <>
-      <div className="wiki-warehouse-detail-bar">
+      <div className="wiki-warehouse-detail-bar" data-branch={branchTone ? "" : undefined} style={toneStyle}>
         <span>{eyebrow(entry, groups, scope.locale, wikiText(scope.locale, ...SECTION_NAMES[kind]))}</span>
         {/* Where the picture comes from sits with the other tools, so nothing covers the picture itself. */}
         {artwork?.currentVersion && (
@@ -250,7 +263,7 @@ function DetailContent({
         {close}
       </div>
       <div className="wiki-warehouse-detail-scroll">
-        <div className="wiki-warehouse-detail-identity">
+        <div className="wiki-warehouse-detail-identity" data-branch={branchTone ? "" : undefined} style={toneStyle}>
           <WarehouseArtwork entry={entry} kind={kind} assetId={artworkId} />
           <div>
             <Title>{entryTitle(entry, scope.locale)}</Title>
