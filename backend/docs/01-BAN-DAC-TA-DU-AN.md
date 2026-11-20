@@ -2341,7 +2341,13 @@ trang bị thành phần cùng số lượng. Chưa xác minh giữ UNKNOWN, kh�
 quan hệ gợi ý cũ. Tọa độ chưa biết giữ null. Ghi công thức được tuần tự hóa để kiểm tra chu trình.
 
 Phù hiệu tham chiếu danh mục nhánh riêng, có tên/mô tả/đối tượng phù hợp được dịch, icon, nền và
-màu hiển thị. Các nút có cấp I/II/III và thứ tự trong cấp. Bảng ngọc có màu, cấp và chỉ số số học;
+màu hiển thị. Các nút có cấp I/II/III và thứ tự trong cấp. Mỗi phù hiệu còn ghi cách dùng: bị động
+(tự có tác dụng), kích hoạt (cho người chơi một vật phẩm hay nút bấm để dùng, như Quả cầu băng sương)
+hoặc đổi phụ trợ (thay phụ trợ đang mang bằng bản khác, như Siêu hồi máu); chưa rõ thì giữ UNKNOWN,
+không suy diễn. Kèm theo là hồi chiêu (một số, hoặc khoảng khi hồi chiêu tăng dần qua mỗi lần dùng),
+số lần dùng tối đa trong một trận (để trống là không giới hạn) và mốc thời gian trong trận khi phù hiệu
+bắt đầu có hoặc thôi dùng được. Đây là số liệu gameplay, không đổi theo ngôn ngữ; mô tả vẫn nói đủ ý.
+Bảng ngọc có màu, cấp và chỉ số số học;
 nhãn chỉ số được dịch. Phụ trợ có hồi chiêu, mở khóa, trạng thái khả dụng, trạng thái biến thể,
 điểm tích trữ và ảnh tham khảo; mô tả từng trạng thái tách khỏi gameplay.
 

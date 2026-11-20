@@ -1309,11 +1309,19 @@ Revision có thể gồm:
 ```text
 branch/tree identity
 tier/position
+activation (PASSIVE / ACTIVE / TALENT_UPGRADE / UNKNOWN)
+cooldown (seconds, or a range when it grows with each use)
+max uses per match
+match time window (available from / until, in seconds)
 selection rules
 effects
 translations
 icon
 ```
+
+Cách dùng, hồi chiêu, số lần dùng và mốc thời gian nằm trong jsonb `gameplay` của revision cùng
+branchCode/tier/position; không có cột riêng. Revision cũ không có các khóa này đọc ra activation
+UNKNOWN và các số còn lại null.
 
 Không hard-code tree vào Hero revision; Hero/build sau này chỉ tham chiếu enchantment identity/version context.
 
