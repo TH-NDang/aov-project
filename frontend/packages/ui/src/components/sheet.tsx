@@ -177,12 +177,18 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  fitContent = false,
   onEscapeKeyDown,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   /** False when the caller draws its own close, or while the sheet must stay open. */
   showCloseButton?: boolean
+  /**
+   * A side sheet whose content is known and short (a list of choices, one picture) stays as tall as that content when
+   * it rises from the bottom, instead of taking most of the screen.
+   */
+  fitContent?: boolean
 }) {
   // On phones an app may have its side sheets rise from the bottom instead, like the public apps' drawers.
   const compact = usePageLayout() === "compact"
@@ -194,7 +200,7 @@ function SheetContent({
   // (its body scrolls inside, under a sticky header), or one that asks for most of the screen (max-h-[92dvh], as the
   // Admin editors do). A small sheet of choices stays as tall as its content.
   const fullHeight =
-    edge !== side ||
+    (edge !== side && !fitContent) ||
     (typeof className === "string" && /(^|\s)(h-dvh|h-svh|h-screen|h-full|max-h-\[92dvh\])(\s|$)/.test(className))
   const closeRef = React.useRef<HTMLButtonElement>(null)
   // The sheet element arrives after it mounts in the portal, so the pull listens once it is there.
