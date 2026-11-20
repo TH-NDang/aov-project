@@ -1,4 +1,5 @@
 import { DEFAULT_LOCALE, pickTranslation } from "@aov/ui/lib/translation-fallback"
+import type { EnchantmentUse } from "@aov/ui/lib/enchantment-use"
 
 export type WarehouseKind = "items" | "enchantments" | "arcana" | "spells"
 export interface WarehouseTranslation {
@@ -29,7 +30,7 @@ export interface ItemContent extends WarehouseContent {
   components: { itemId: string; quantity: number }[]
   stats: WarehouseStat[]
 }
-export interface EnchantmentContent extends WarehouseContent {
+export interface EnchantmentContent extends WarehouseContent, EnchantmentUse {
   branchCode: string
   tier: number
   position: number | null
@@ -100,4 +101,15 @@ export function warehouseName(
   locale = "vi-VN",
 ) {
   return warehouseText(entry.content.translations, locale)?.name || entry.code
+}
+
+/** Columns of an enchantment tier: the game sets three side by side, and a tier of two leaves one place empty. */
+export const ENCHANTMENT_COLUMNS = 3
+
+/**
+ * The column (1 to 3) an enchantment stands in within its tier, from its position as the game counts it from 0; null
+ * when the position is unknown, so it takes the next free place.
+ */
+export function enchantmentColumn(position: number | null | undefined) {
+  return position != null && position >= 0 && position < ENCHANTMENT_COLUMNS ? position + 1 : null
 }

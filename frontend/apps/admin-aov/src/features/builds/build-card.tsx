@@ -19,6 +19,7 @@ import {
 } from "./builds-model"
 import { ReferenceIcon, ReferencePicker, referenceName, type BuildReferences } from "./build-references"
 import { useReviewBuild } from "./use-builds"
+import { BuildEnchantmentSet } from "./build-enchantment-set"
 
 /**
  * One part of the build. The label sits beside the icons when the card is wide and above them when it is not, so the
@@ -133,20 +134,11 @@ function Editor({
           />
         ))}
       </Row>
-      <Row label="Phù hiệu">
-        <EnchantmentRow ids={draft.enchantments}>
-          {(id, slot) => (
-            <ReferencePicker
-              kind="enchantment"
-              value={id}
-              references={references}
-              label={slot <= 3 ? `Phù hiệu chính bậc ${slot}` : `Phù hiệu phụ ô ${slot - 3}`}
-              round
-              onChange={(value) => set({ enchantments: at(draft.enchantments, slot - 1, value) })}
-            />
-          )}
-        </EnchantmentRow>
-      </Row>
+      {/* The set is built on the game's set screen, which only offers what the game allows in each slot. */}
+      <div className="grid gap-1.5">
+        <span className="type-label text-muted-foreground">Phù hiệu</span>
+        <BuildEnchantmentSet value={draft.enchantments} onChange={(enchantments) => set({ enchantments })} />
+      </div>
       <Row label="Ngọc">
         {draft.arcana.map((entry, index) => (
           <span key={index} className="inline-flex items-center gap-1 rounded-md border px-1">

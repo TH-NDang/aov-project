@@ -9,8 +9,8 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
 
 - Mỗi màu dùng `light-dark()`, nên tự theo `color-scheme` mà từng app đang đặt: Wiki luôn tối, Stream và Admin theo lựa
   chọn của người xem hoặc hệ thống. Không viết lại bảng màu cho chế độ tối.
-- Màu nhấn là `--aov-accent`: vàng trên Wiki và Admin; Stream dùng chàm của cú ở giao diện sáng và vàng mắt cú ở giao
-  diện tối. Mỗi màn hình chỉ nên có một nút chính dùng màu này.
+- Màu nhấn là `--aov-accent`: vàng trên Wiki và Admin; Stream dùng xanh tím đậm của lông cú ở giao diện sáng và tím oải
+  hương ở giao diện tối; vàng mắt cú chỉ còn trong logo. Mỗi màn hình chỉ nên có một nút chính dùng màu này.
 - Màu trạng thái (`--aov-success`, `--aov-danger`, `--aov-warning`, `--aov-info`, `--aov-live`) chỉ mang ý nghĩa trạng
   thái, không dùng để trang trí: xanh lá là tăng sức mạnh hoặc thắng, đỏ là giảm sức mạnh hoặc thua, xanh dương là điều
   chỉnh, cam là làm lại, `--aov-live` là đang phát trực tiếp.
@@ -22,8 +22,8 @@ trắng của thẻ, menu Stream ở giao diện sáng, vì bộ màu chung chư
   nên giữ tông riêng. Màu mạnh trên trang chỉ đến từ ảnh và icon của game.
 - Wiki và Stream mỗi app có bộ màu riêng trong `tokens.css`: `--aov-wiki-*` và `--aov-stream-*` (màu logo cú). `wiki.css`
   và `stream.css` gán bộ màu này vào các token chung, nên các thành phần dùng chung tự theo. Admin giữ bảng màu gốc.
-- Bộ màu Wiki "Đêm hoàng kim": nền trang xanh mực đậm như sảnh trong game, thẻ sáng hơn nền một bậc, dấu nhấn vàng đậm,
-  luôn tối. `wiki.css` gán: nền trang `--aov-bg`, thẻ `--aov-surface`, rê chuột và điều khiển `--aov-raised`, ô chìm
+- Bộ màu Wiki "Đêm dịu": nền than chì gần như trung tính (không ánh xanh), thẻ sáng hơn nền một bậc, dấu nhấn vàng
+  champagne dịu, luôn tối; màu mạnh để dành cho ảnh tướng và icon. `wiki.css` gán: nền trang `--aov-bg`, thẻ `--aov-surface`, rê chuột và điều khiển `--aov-raised`, ô chìm
   `--aov-sunken`, đường kẻ `--aov-line` và `--aov-line-strong`, chữ `--aov-text`, `--aov-text-soft`, `--aov-muted`, nhấn
   `--aov-accent` và `--aov-accent-strong`. Bảng nổi (popover, menu, sheet, drawer) lấy `--aov-raised` làm nền, nên mục
   được đánh dấu bên trong lên thêm một bậc (`--aov-wiki-panel-high`).

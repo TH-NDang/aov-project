@@ -1,6 +1,6 @@
-import { useMemo, useState, type ReactNode } from "react"
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ImagePlus, Pencil, Trash2 } from "lucide-react"
+import { ChevronDown, ImagePlus, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { cn } from "@aov/ui/lib/utils"
@@ -74,7 +74,7 @@ const UPLOAD_TYPES: Record<GalleryKind, { value: string; label: string }[]> = {
 
 type Period = "all" | "current" | "past"
 const PERIODS: { key: Period; label: string }[] = [
-  { key: "all", label: "Mọi thời điểm" },
+  { key: "all", label: "Mọi lúc" },
   { key: "current", label: "Đang dùng" },
   { key: "past", label: "Trước đây" },
 ]
@@ -115,6 +115,39 @@ const PREVIEW_SHAPE = {
 } as const
 
 /**
+ * Whether the gallery has room, as measured, for the chosen image beside the grid. Narrower, the grid fills the width and
+ * a tap opens the image in a sheet, so a phone reads the pictures first instead of one large preview and a list.
+ */
+function useSideBySide(ref: RefObject<HTMLElement | null>) {
+  const [room, setRoom] = useState(false)
+  useLayoutEffect(() => {
+    const element = ref.current
+    if (!element || typeof ResizeObserver === "undefined") return
+    const measure = () => setRoom(element.getBoundingClientRect().width >= 640)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [ref])
+  return room
+}
+
+/** Whether a list held to a short height has more below its edge, measured again as its rows or width change. */
+function useCutOff(ref: RefObject<HTMLElement | null>, active: boolean, key: string) {
+  const [cut, setCut] = useState(false)
+  useLayoutEffect(() => {
+    const element = ref.current
+    if (!element || !active || typeof ResizeObserver === "undefined") return
+    const measure = () => setCut(element.scrollHeight > element.clientHeight + 2)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [ref, active, key])
+  return cut
+}
+
+/**
  * Every image of the hero in one place (ADR-027): those its versions show, the current one first and older ones after,
  * and images attached straight to the hero, such as skill icons from before a rework or stickers. Tabs split them by
  * what they show; the panel beside the grid shows the chosen one large, with where it was used.
@@ -147,6 +180,11 @@ export function HeroGallery({
   const [period, setPeriod] = useState<Period>("all")
   const [chosen, setChosen] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
+  const [viewing, setViewing] = useState(false)
+  const root = useRef<HTMLDivElement>(null)
+  const sideBySide = useSideBySide(root)
+  const [expanded, setExpanded] = useState(false)
+  const grid = useRef<HTMLUListElement>(null)
 
   const items = useMemo(() => gallery.data?.items ?? [], [gallery.data])
   const patchName = (id: string | null | undefined) => {
@@ -159,6 +197,12 @@ export function HeroGallery({
   const selected = shown.find((image) => image.assetId === chosen) ?? shown[0]
   // The large view steps through the images the grid shows now, in the same order, so the filter carries over.
   const largeView = useAssetGallery(shown.map((image) => ({ id: image.assetId, title: imageTitle(image, name) })))
+  // Measured only while folded: open, the list has no edge, and the button stays to fold it again.
+  const cutOff = useCutOff(grid, !expanded, `${kind}:${period}:${shown.length}:${sideBySide}`)
+  const filterBy = (next: () => void) => {
+    next()
+    setExpanded(false)
+  }
 
   if (gallery.isPending) return <p className="type-meta">Đang tải thư viện ảnh…</p>
   if (gallery.isError)
@@ -169,18 +213,27 @@ export function HeroGallery({
     )
 
   return (
-    <div className="min-w-0 space-y-3" aria-label="Thư viện ảnh của tướng">
-      <div className="flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Loại ảnh" className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+    <div ref={root} className="min-w-0 space-y-3" aria-label="Thư viện ảnh của tướng">
+      {/* One row whatever the width: the kinds scroll sideways, the period and the add button stay at the end. */}
+      <div className="flex min-w-0 items-center gap-2">
+        <div
+          role="tablist"
+          aria-label="Loại ảnh"
+          className={cn(
+            "-my-1 flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-1 pr-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            // The right edge fades on a phone, so a kind cut off there reads as more to swipe to.
+            !sideBySide && "mask-r-from-80%",
+          )}
+        >
           {KINDS.filter(({ key }) => key === "ALL" || counts(key) > 0 || kind === key).map(({ key, label }) => (
             <button
               key={key}
               type="button"
               role="tab"
               aria-selected={kind === key}
-              onClick={() => setKind(key)}
+              onClick={() => filterBy(() => setKind(key))}
               className={cn(
-                "type-body inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 transition-colors",
+                "type-body inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 whitespace-nowrap transition-colors",
                 kind === key ? "border-primary bg-primary/10 text-foreground" : "hover:bg-muted/60",
               )}
             >
@@ -189,12 +242,12 @@ export function HeroGallery({
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5">
           <NativeSelect
             aria-label="Thời điểm"
-            className="h-8"
+            className="h-8 w-auto"
             value={period}
-            onChange={(event) => setPeriod(event.target.value as Period)}
+            onChange={(event) => filterBy(() => setPeriod(event.target.value as Period))}
           >
             {PERIODS.map(({ key, label }) => (
               <option key={key} value={key}>
@@ -203,16 +256,24 @@ export function HeroGallery({
             ))}
           </NativeSelect>
           {canWrite && (
-            <Button type="button" size="sm" variant="outline" onClick={() => setAdding(true)}>
-              <ImagePlus aria-hidden className="size-4" /> Thêm ảnh
+            <Button
+              type="button"
+              size={sideBySide ? "sm" : "icon-sm"}
+              variant="outline"
+              aria-label="Thêm ảnh"
+              title="Thêm ảnh"
+              onClick={() => setAdding(true)}
+            >
+              <ImagePlus aria-hidden className="size-4" />
+              {sideBySide && "Thêm ảnh"}
             </Button>
           )}
         </div>
       </div>
 
       {shown.length ? (
-        <div className="grid min-w-0 gap-4 @min-[640px]:grid-cols-[minmax(0,1fr)_minmax(15rem,19rem)]">
-          {selected && (
+        <div className={cn("grid min-w-0 gap-4", sideBySide && "grid-cols-[minmax(0,1fr)_minmax(15rem,19rem)]")}>
+          {selected && sideBySide && (
             <GalleryDetail
               key={selected.assetId}
               heroId={heroId}
@@ -225,35 +286,93 @@ export function HeroGallery({
               locale={locale}
             />
           )}
-          {/* The grid keeps a fixed height and scrolls inside, so a hero with many images does not stretch the page.
-              About three and a half rows show, and the cut row tells there is more below. */}
-          <ul
-            aria-label="Ảnh"
-            className="grid max-h-[25rem] min-w-0 grid-flow-row-dense auto-rows-[7rem] grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] content-start gap-2 overflow-y-auto p-0.5 pr-1.5 @min-[640px]:order-first"
-          >
-            {shown.map((image) => (
-              <li key={image.assetId} className={TILE_CLASS[imageShape(image)]}>
+          {/* Folded, the grid shows its first rows and the top of the next, fading out, so a hero with many images does
+              not stretch the page and the cut row tells there is more; the chevron below opens the rest in place. No
+              scroll inside a scroll, which is hard to move with a thumb. */}
+          <div className={cn("min-w-0", sideBySide && "order-first")}>
+            <ul
+              ref={grid}
+              id="hero-gallery-grid"
+              aria-label="Ảnh"
+              className={cn(
+                "grid min-w-0 grid-flow-row-dense content-start gap-2 p-0.5",
+                sideBySide
+                  ? "auto-rows-[7rem] grid-cols-[repeat(auto-fill,minmax(6rem,1fr))]"
+                  : "auto-rows-[6rem] grid-cols-[repeat(auto-fill,minmax(5.25rem,1fr))]",
+                !expanded && (sideBySide ? "max-h-[19rem] overflow-hidden" : "max-h-[16.5rem] overflow-hidden"),
+                !expanded && cutOff && "mask-b-from-55%",
+              )}
+            >
+              {shown.map((image) => (
+                <li key={image.assetId} className={TILE_CLASS[imageShape(image)]}>
+                  <button
+                    type="button"
+                    aria-pressed={sideBySide ? selected?.assetId === image.assetId : undefined}
+                    aria-label={`Xem ${imageTitle(image, name)}`}
+                    onClick={() => {
+                      setChosen(image.assetId)
+                      if (!sideBySide) setViewing(true)
+                    }}
+                    className={cn(
+                      "relative block size-full overflow-hidden rounded-lg border bg-muted/30 focus-visible:outline-2 focus-visible:outline-ring",
+                      sideBySide && selected?.assetId === image.assetId && "ring-2 ring-primary",
+                    )}
+                  >
+                    <HeroAsset id={image.assetId} alt="" className="size-full rounded-none" />
+                    <TileBadge image={image} patchName={patchName} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {(cutOff || expanded) && (
+              <div className={cn("relative flex justify-center", !expanded && "-mt-5")}>
                 <button
                   type="button"
-                  aria-pressed={selected?.assetId === image.assetId}
-                  aria-label={`Xem ${imageTitle(image, name)}`}
-                  onClick={() => setChosen(image.assetId)}
-                  className={cn(
-                    "relative block size-full overflow-hidden rounded-lg border bg-muted/30 focus-visible:outline-2 focus-visible:outline-ring",
-                    selected?.assetId === image.assetId && "ring-2 ring-primary",
-                  )}
+                  aria-controls="hero-gallery-grid"
+                  aria-expanded={expanded}
+                  onClick={() => {
+                    // Folding again brings the top of the grid back into view, so the reader is not left below it.
+                    if (expanded) grid.current?.scrollIntoView({ block: "nearest" })
+                    setExpanded(!expanded)
+                  }}
+                  className="type-meta inline-flex min-h-8 items-center gap-1 rounded-full border bg-background px-3 text-foreground shadow-sm transition-colors hover:bg-muted"
                 >
-                  <HeroAsset id={image.assetId} alt="" className="size-full rounded-none" />
-                  <TileBadge image={image} patchName={patchName} />
+                  {expanded ? "Thu gọn" : `Xem tất cả ${shown.length} ảnh`}
+                  <ChevronDown aria-hidden className={cn("size-4 transition-transform", expanded && "rotate-180")} />
                 </button>
-              </li>
-            ))}
-          </ul>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <p className="type-meta rounded-lg border border-dashed p-4">
           {items.length ? "Không có ảnh nào khớp bộ lọc." : "Tướng chưa có ảnh nào."}
         </p>
+      )}
+
+      {!sideBySide && (
+        <Sheet open={viewing && !!selected} onOpenChange={setViewing}>
+          <SheetContent side="right" fitContent className="w-full gap-0 overflow-y-auto sm:max-w-md">
+            <SheetHeader className="sr-only">
+              <SheetTitle>{selected ? imageTitle(selected, name) : "Ảnh"}</SheetTitle>
+              <SheetDescription>Ảnh trong thư viện của tướng và những bản dữ liệu dùng nó.</SheetDescription>
+            </SheetHeader>
+            {selected && (
+              <GalleryDetail
+                key={selected.assetId}
+                bare
+                heroId={heroId}
+                image={selected}
+                gallery={largeView(shown.indexOf(selected))}
+                name={name}
+                patchName={patchName}
+                canWrite={canWrite}
+                content={content}
+                locale={locale}
+              />
+            )}
+          </SheetContent>
+        </Sheet>
       )}
 
       {canWrite && (
@@ -320,12 +439,13 @@ function imageStatus(image: GalleryImage, patchName: (id: string | null) => stri
 
 /** One hero data version that uses the image, in words a reader can follow. */
 function versionState(version: GalleryImage["versions"][number]) {
-  if (version.state === "DRAFT") return "bản nháp, chưa xuất bản"
-  return version.current ? "đang hiện trên Wiki" : "bản cũ"
+  if (version.state === "DRAFT") return "Bản nháp"
+  return version.current ? "Đang hiện" : "Bản cũ"
 }
 
 /** The chosen image large, what it is, which versions used it, and for an attached one, how to change it. */
 function GalleryDetail({
+  bare = false,
   heroId,
   image,
   gallery,
@@ -335,6 +455,8 @@ function GalleryDetail({
   content,
   locale,
 }: {
+  /** Drawn inside a sheet, which already frames it. */
+  bare?: boolean
   heroId: string
   image: GalleryImage
   /** The images the large view steps through, opened at this one. */
@@ -362,7 +484,10 @@ function GalleryDetail({
   const status = imageStatus(image, patchName)
 
   return (
-    <aside aria-label="Ảnh đang xem" className="min-w-0 space-y-3 rounded-xl border p-3 @min-[640px]:self-start">
+    <aside
+      aria-label="Ảnh đang xem"
+      className={cn("min-w-0 space-y-3", bare ? "px-4 pt-2 pb-6" : "self-start rounded-xl border p-3")}
+    >
       <HeroAsset
         id={image.assetId}
         alt={imageTitle(image, name)}
@@ -379,14 +504,24 @@ function GalleryDetail({
       {image.versions.length > 0 && (
         <div className="space-y-1.5">
           <p className="type-label text-muted-foreground">Có trong bản dữ liệu tướng</p>
-          <ul className="space-y-1.5">
+          {/* One line per version: its number, its state, and the patch it belongs to. */}
+          <ul className="divide-y rounded-lg border">
             {image.versions.map((version) => (
-              <li key={version.revisionId}>
-                <p className="type-body">
-                  Bản {version.revisionNo}: {versionState(version)}
-                </p>
+              <li key={version.revisionId} className="flex min-w-0 items-baseline gap-2 px-2.5 py-1.5">
+                <span className="type-label shrink-0 tabular-nums">#{version.revisionNo}</span>
+                <span
+                  className={cn(
+                    "type-body shrink-0",
+                    version.state === "DRAFT" && "text-(--aov-warning)",
+                    version.current && "text-(--aov-success)",
+                  )}
+                >
+                  {versionState(version)}
+                </span>
                 {patchName(version.patchVariantId) && (
-                  <p className="type-meta">Bản cập nhật {patchName(version.patchVariantId)}</p>
+                  <span className="type-meta ml-auto min-w-0 truncate text-right">
+                    {patchName(version.patchVariantId)}
+                  </span>
                 )}
               </li>
             ))}

@@ -19,7 +19,6 @@ export const knownRestyles = [
   "features/hero/components/hero-skins.css .wiki-skin-badge",
   "features/hero/components/hero-skins.css .wiki-skin-missing",
   "features/hero/components/hero-skins.css .wiki-skin-preview-art",
-  "features/home/wiki-home.css .wiki-search",
   "features/modes/guide-builder.css .wiki-guide-board",
   "features/modes/guide-builder.css .wiki-guide-board-bench",
   "features/modes/guide-builder.css .wiki-guide-lineup-icon-button",

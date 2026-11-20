@@ -5,13 +5,41 @@
   min-height: 100svh;
 }
 
-/* A page of the library: centered, as wide as the product allows. The sections live in the header. */
-.wiki-library-main {
+/* Wide layout: the sections in a sidebar, then the page, together as wide as the product allows. */
+.wiki-library-body {
+  display: grid;
   width: min(100%, var(--aov-page-max));
-  min-height: calc(100svh - var(--wiki-header-height));
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 28px;
   margin-inline: auto;
-  padding: 20px var(--wiki-gutter) 56px;
+  padding-inline: var(--wiki-gutter);
+}
+/* Stays in view while the page scrolls, and scrolls on its own if the window is too short for it. */
+.wiki-library-sidebar {
+  position: sticky;
+  top: var(--wiki-header-height);
+  align-self: start;
+  max-height: calc(100svh - var(--wiki-header-height));
+  overflow-y: auto;
+  margin-inline: -10px;
+  padding: 20px 0 24px;
+  overscroll-behavior: contain;
+}
+.wiki-library-main {
+  min-width: 0;
+  min-height: calc(100svh - var(--wiki-header-height));
+  padding: 20px 0 56px;
   outline: none;
+}
+/* Narrow desktops and tablets on their side: the sidebar keeps only its icons. */
+@media (max-width: 1179.98px) {
+  .wiki-library-body {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .wiki-library-sidebar {
+    margin-inline: 0;
+  }
 }
 .wiki-library-main-compact {
   --public-tab-bar-top: var(--wiki-header-height);

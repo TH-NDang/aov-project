@@ -144,6 +144,7 @@ export function HeroShopPanel({
           size="icon"
           className="size-7 shrink-0"
           aria-label="Chỉnh sửa giá tướng"
+          data-direct-edit
           title="Chỉnh sửa giá tướng"
           onClick={open}
         >

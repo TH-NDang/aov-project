@@ -430,9 +430,10 @@ async function mount() {
   const client = new QueryClient()
   restoreGlobals = installWindow(dom.window)
   const { createRoot } = await import("react-dom/client")
-  const { PatchCapturePanel, PatchCaptureLink, PatchCaptureToggle } =
+  const { PatchCapturePanel, PatchCaptureLink, PatchCaptureMenuItem } =
     await import("../src/features/publishing/components/captures/patch-capture-panel")
   const { PatchCaptureProvider } = await import("../src/features/publishing/api/use-patch-captures")
+  const { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } = await import("@aov/ui/components/dropdown-menu")
   const { useState } = React
   const navigations: CaptureTarget[] = []
   const select = (selected: string, patch: Partial<{ key: string; imageId: string | null }> = {}) => ({
@@ -491,7 +492,13 @@ async function mount() {
       <QueryClientProvider client={client}>
         <TooltipProvider>
           <PatchCaptureProvider value={captures as never}>
-            <PatchCaptureToggle />
+            {/* The row lives in the hero's ⋯ menu; the menu stays open, without trapping the rest of the page. */}
+            <DropdownMenu open modal={false}>
+              <DropdownMenuTrigger>Thao tác</DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <PatchCaptureMenuItem />
+              </DropdownMenuContent>
+            </DropdownMenu>
             <PatchCaptureLink groupKey="skill:skill-1-1" name="Lôi đình" />
             <PatchCaptureLink groupKey="skill:skill-2-1" name="Phong thần" />
             <PatchCaptureLink groupKey={captureGroupKeys.shopPrice} name="giá tướng" />
@@ -624,7 +631,7 @@ test("other states explain themselves, and the toggle disappears for an account 
     assert.equal(ui.document.querySelector("aside [role=alert]")?.textContent, "Không đọc được")
     assert.ok(ui.byLabel("Đóng khung ảnh gốc"))
     await ui.render({ status: "unavailable" })
-    assert.equal(ui.document.querySelector("[aria-pressed][aria-label*='ảnh gốc']"), null)
+    assert.equal(ui.document.querySelector("[role=menuitemcheckbox][aria-label*='ảnh gốc']"), null)
   })
 })
 

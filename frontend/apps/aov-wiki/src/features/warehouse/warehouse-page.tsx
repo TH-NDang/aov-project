@@ -2,7 +2,7 @@ import { SECTION_NAMES } from "../../lib/wiki-sections"
 import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
 import { PublishedWarehouseView } from "./warehouse-view"
-import { CatalogHeading } from "../../layout/catalog-heading"
+import { WarehouseHeading } from "./warehouse-heading"
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -45,7 +45,8 @@ export default function WarehousePage() {
   const kind = warehouseKind(tab ?? null)
   const changes = usePublishedChanges(warehouseChangeDomain[kind])
   const sectionName = wikiText(scope.locale, ...SECTION_NAMES[kind])
-  const search = params.get("q") ?? ""
+  // Enchantments have no search field, so a search left in the address does not hide any of them.
+  const search = kind === "enchantments" ? "" : (params.get("q") ?? "")
   const group = params.get("group") ?? ""
   const selectedId = entryCode ?? null
   const trigger = useRef<HTMLButtonElement | null>(null)
@@ -204,7 +205,12 @@ export default function WarehousePage() {
   return (
     <PublishedWarehouseView entries={entries} groups={groups} kind={kind}>
       <div className={`wiki-warehouse-page wiki-warehouse-${kind}`}>
-        <CatalogHeading title={sectionName} action={<div className="wiki-warehouse-version">{version}</div>} />
+        <WarehouseHeading
+          kind={kind}
+          title={sectionName}
+          count={catalog.isPending ? undefined : entries.length}
+          action={<div className="wiki-warehouse-version">{version}</div>}
+        />
         {!wide && <WarehouseTabs active={kind} />}
         <WarehouseControls
           kind={kind}
@@ -303,6 +309,7 @@ export default function WarehousePage() {
                 params={params}
                 selectedId={selectedEntry?.id ?? selectedId}
                 onGroupChange={(value) => changeFilters({ group: value || null })}
+                onFilters={changeFilters}
                 onSelect={select}
                 onClear={clearSelection}
                 itemView={itemView}

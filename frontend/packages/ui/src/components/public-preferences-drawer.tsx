@@ -1,5 +1,4 @@
 import { useState, type ComponentProps, type ReactNode } from "react"
-import { X } from "lucide-react"
 import { DrawerClose, DrawerContent, DrawerHandle, DrawerTitle, DrawerDescription, DrawerTrigger } from "./drawer"
 import { PublicDrawer as Drawer } from "./public-overlay"
 import { localeText } from "@aov/ui/lib/locale-text"
@@ -22,7 +21,7 @@ export function PublicPreferencesDrawer({
   const [open, setOpen] = useState(false)
   const text = localeText(locale)
   return (
-    <Drawer open={open} onOpenChange={setOpen} handleOnly shouldScaleBackground={false}>
+    <Drawer open={open} onOpenChange={setOpen} shouldScaleBackground={false}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
       <DrawerContent
         className="public-account-panel public-preferences-drawer"
@@ -39,9 +38,8 @@ export function PublicPreferencesDrawer({
           <DrawerDescription className="sr-only">
             {text("Tài khoản, ứng dụng và cài đặt", "Account, applications and settings")}
           </DrawerDescription>
-          <DrawerClose aria-label={text("Đóng", "Close")}>
-            <X size={18} aria-hidden="true" />
-          </DrawerClose>
+          {/* It closes by a tap above it or a drag down; this button is for screen readers. */}
+          <DrawerClose className="sr-only">{text("Đóng", "Close")}</DrawerClose>
         </div>
         <div className="public-preferences-body">{children}</div>
       </DrawerContent>

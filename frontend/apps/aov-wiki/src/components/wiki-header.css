@@ -1,4 +1,4 @@
-/* Wide layout: brand, the main sections, the search and the tools on one bar. */
+/* Wide layout: brand, the search and the tools on one bar. */
 .wiki-header {
   position: sticky;
   z-index: 40;
@@ -46,77 +46,10 @@
 .wiki-header-logo:hover > img {
   opacity: 0.85;
 }
-.wiki-topnav {
-  display: flex;
-  flex: none;
-  align-self: stretch;
-  gap: 2px;
-}
-.wiki-topnav > a,
-.wiki-topnav-menu {
-  font: var(--wiki-type-category);
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 10px;
-  color: var(--aov-text-soft);
-  text-decoration: none;
-  white-space: nowrap;
-}
-.wiki-topnav > a:hover,
-.wiki-topnav-menu:is(:hover, [data-state="open"]) {
-  color: var(--aov-text);
-}
-.wiki-topnav > a[aria-current],
-.wiki-topnav-menu[data-current] {
-  color: var(--aov-accent);
-}
-.wiki-topnav > a[aria-current]::after,
-.wiki-topnav-menu[data-current]::after {
-  content: "";
-  position: absolute;
-  right: 10px;
-  bottom: 0;
-  left: 10px;
-  height: 2px;
-  border-radius: 2px 2px 0 0;
-  background: var(--aov-accent);
-}
-.wiki-topnav-menu > svg {
-  color: var(--aov-muted);
-}
-.wiki-topnav-panel[data-slot] {
-  min-width: 220px;
-  padding: 6px;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-popover);
-  color: var(--aov-text);
-  box-shadow: var(--aov-shadow-lg);
-}
-.wiki-topnav-panel a {
-  font: var(--wiki-type-category);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 6px 10px;
-  border-radius: var(--aov-radius-control);
-  color: var(--aov-text);
-  text-decoration: none;
-  cursor: pointer;
-}
-.wiki-topnav-panel a:is(:hover, :focus, [data-highlighted]) {
-  background: var(--aov-raised);
-  outline: 0;
-}
-.wiki-topnav-panel a[aria-current] {
-  color: var(--aov-accent);
-}
+/* The field sits in the middle of the bar, between the brand and the tools. */
 .wiki-header .wiki-search {
-  flex: 0 1 280px;
-  margin-left: auto;
+  flex: 0 1 420px;
+  margin-inline: auto;
 }
 .wiki-header-tools {
   display: flex;
@@ -124,63 +57,9 @@
   align-items: center;
   gap: 8px;
 }
-/* Over artwork the controls keep a backing of their own until the bar has filled in. */
-.wiki-header[data-variant="hero"]
-  :is(.wiki-preference-trigger, .wiki-header-search-toggle, .wiki-search:not(:focus-within)) {
-  border-color: color-mix(in srgb, var(--aov-line-strong) 70%, transparent);
+/* Over artwork the controls take a darker fill until the bar has filled in, so they stay readable. */
+.wiki-header[data-variant="hero"] :is(.wiki-preference-trigger, .wiki-search:not(:focus-within)) {
   background: color-mix(in srgb, var(--aov-wiki-bar) 72%, transparent);
-}
-/* Narrow desktops and tablets on their side: the wordmark gives its room to the sections. */
-@media (max-width: 1179.98px) {
-  .wiki-header-inner {
-    gap: 10px;
-  }
-  .wiki-header .wiki-header-wordmark {
-    display: none;
-  }
-  .wiki-topnav > a,
-  .wiki-topnav-menu {
-    padding: 0 8px;
-  }
-  .wiki-header .wiki-search {
-    flex-basis: 220px;
-  }
-}
-/* Shown only where the bar has no room for the field. */
-.wiki-header-search-toggle {
-  display: none;
-  width: 36px;
-  height: 36px;
-  flex: none;
-  place-items: center;
-  margin-left: auto;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-control);
-  color: var(--aov-text-soft);
-}
-.wiki-header-search-toggle:hover {
-  background: var(--aov-raised);
-  color: var(--aov-text);
-}
-/* The narrowest wide layout: the search is a button, and pressing it swaps the sections for the field. */
-@media (max-width: 1023.98px) {
-  .wiki-header .wiki-search {
-    display: none;
-  }
-  .wiki-header-search-toggle {
-    display: grid;
-  }
-  .wiki-header-inner[data-searching] .wiki-topnav {
-    display: none;
-  }
-  .wiki-header-inner[data-searching] .wiki-search {
-    display: flex;
-    flex: 1;
-    margin-left: 0;
-  }
-  .wiki-header-inner[data-searching] .wiki-header-search-toggle {
-    margin-left: 0;
-  }
 }
 
 .wiki-preferences-desktop {
@@ -188,21 +67,26 @@
   align-items: center;
   gap: 8px;
 }
+/* The market button: the same soft round fill as the search and the account button beside it. */
 .wiki-preference-trigger {
   font: var(--wiki-type-meta);
   display: inline-flex;
   height: 36px;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-control);
-  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-pill);
+  padding: 0 10px 0 12px;
+  background: color-mix(in srgb, var(--aov-text) 6%, transparent);
   color: var(--aov-text-soft);
+}
+.wiki-preference-trigger > svg {
+  color: var(--aov-muted);
 }
 .wiki-preference-trigger:hover,
 .wiki-preference-trigger[data-state="open"] {
-  border-color: color-mix(in srgb, var(--aov-accent) 40%, transparent);
-  color: var(--aov-accent);
+  background: color-mix(in srgb, var(--aov-text) 9%, transparent);
+  color: var(--aov-text);
 }
 .wiki-preference-flag {
   display: block;

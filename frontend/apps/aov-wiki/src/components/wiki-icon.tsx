@@ -24,7 +24,9 @@ const PATHS = {
   ),
   feedback: (
     <>
-      <path d="M20 14v6H4V4h10m0 0 2-2 6 6-2 2-6-6Zm-1 1-5 5-1 4 4-1 5-5M7 17h7" />
+      {/* A rounded pen resting on the corner of an open page: suggest a change to what is written. */}
+      <path d="M12 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V12" />
+      <path d="M17.6 3.4a1.9 1.9 0 0 1 2.7 2.7l-7.6 7.6a2 2 0 0 1-.9.5l-2.6.7.7-2.6a2 2 0 0 1 .5-.9Z" />
     </>
   ),
   imagePlus: (
@@ -124,6 +126,8 @@ const PATHS = {
     </g>
   ),
   clipboard: <path d="M9 4h6v3H9zM8 5.5H6v14.5h12V5.5h-2M9 12h6M9 15.5h4" />,
+  /** Paste: a clipboard with an arrow coming down into it. */
+  paste: <path d="M9 4h6v3H9zM8 5.5H6v14.5h12V5.5h-2M12 10v6.5m-3-3 3 3 3-3" />,
   bulb: <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z" />,
   /** Cards in a grid. */
   cards: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,

@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { HeroLanguageIcon } from "../../../publishing/components/editing/hero-language-picker"
+import { LanguageMenuItem, LanguageSheet } from "@/components/language-sheet"
 import { AdminRichTextPreview } from "../../../terminology/rich-text-field"
 import { languageOptions } from "../../../users/profile-preference-picker"
 import { joinWrappedLines } from "./warehouse-sheet"
@@ -73,8 +74,9 @@ export function translationProgress(
 }
 
 /**
- * The language icon at the top of a sheet, drawn like the hero page's: the flag of the language the page reads and
- * edits in, a dot while it is not fully translated, and a menu with each language's progress and its own pencil.
+ * The language the sheet reads and edits in, drawn like the hero page's: the flag, a dot while it is not fully
+ * translated, and a list with each language's progress and its own pencil. `menu` draws it as a row of the sheet's ⋯
+ * menu that opens a language sheet, which is where the sheets keep it now; `button` is a header button of its own.
  */
 export function LanguagePicker({
   translations,
@@ -83,7 +85,18 @@ export function LanguagePicker({
   progress,
   disabled,
   onEdit,
+  variant = "button",
+  part = "item",
+  open = false,
+  onOpenChange,
+  onOpen,
 }: {
+  /** `menu` draws it for a sheet's ⋯ menu; `SheetActions` places its two `part`s and holds whether it is open. */
+  variant?: "button" | "menu"
+  part?: "item" | "sheet"
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  onOpen?: () => void
   translations: Text[]
   value: string
   onChange: (language: string) => void
@@ -104,6 +117,45 @@ export function LanguagePicker({
   }
   const current = state(value)
   const label = `Ngôn ngữ: ${languageName(value)}`
+  const contentClass = "w-[22rem] max-w-[calc(100vw-2rem)] rounded-xl p-1.5"
+  const list = (
+    <>
+      <DropdownMenuLabel className="px-2.5 py-2">
+        <span className="type-label block">Ngôn ngữ hiển thị nội dung</span>
+        <span className="type-meta mt-0.5 block">Bút bên cạnh mở trang bằng ngôn ngữ đó để dịch.</span>
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      <LanguageRows value={value} onChange={onChange} state={state} onEdit={onEdit} />
+    </>
+  )
+  // In a sheet's ⋯ menu the picker is two parts: its row in the menu, and the language sheet that row opens.
+  if (variant === "menu" && part === "item")
+    return (
+      <LanguageMenuItem value={value} incomplete={!current.complete} disabled={disabled} onOpen={() => onOpen?.()} />
+    )
+  if (variant === "menu")
+    return (
+      <LanguageSheet
+        open={open}
+        onOpenChange={(next) => onOpenChange?.(next)}
+        rows={languageOptions.map((option) => {
+          const row = state(option.value)
+          return {
+            code: option.value,
+            label: option.label,
+            status: row.label,
+            done: row.done,
+            total: row.total,
+            complete: row.complete,
+          }
+        })}
+        value={value}
+        onChange={onChange}
+        onEdit={onEdit}
+        editLabel={(name) => `Sửa bằng ${name}`}
+        disabled={disabled}
+      />
+    )
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -121,57 +173,65 @@ export function LanguagePicker({
           <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        collisionPadding={16}
-        className="w-[22rem] max-w-[calc(100vw-2rem)] rounded-xl p-1.5"
-      >
-        <DropdownMenuLabel className="px-2.5 py-2">
-          <span className="type-label block">Ngôn ngữ hiển thị nội dung</span>
-          <span className="type-meta mt-0.5 block">Bút bên cạnh mở trang bằng ngôn ngữ đó để dịch.</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
-          {languageOptions.map((option) => {
-            const row = state(option.value)
-            return (
-              <div key={option.value} className="flex items-center gap-1">
-                <DropdownMenuRadioItem
-                  value={option.value}
-                  textValue={option.label}
-                  className="min-h-11 min-w-0 flex-1 gap-3 rounded-lg py-2.5 pr-2.5 data-[state=checked]:bg-accent/60"
-                >
-                  <HeroLanguageIcon locale={option.value} />
-                  <span className="min-w-0 flex-1">
-                    <span className="type-body block">{option.label}</span>
-                    <span
-                      className={`type-meta mt-0.5 block ${row.complete && row.total ? "text-(--aov-success)" : ""}`}
-                    >
-                      {row.label}
-                    </span>
-                  </span>
-                  {!!row.total && (
-                    <span className="type-meta shrink-0 tabular-nums" aria-label="Số mục đã dịch">
-                      {row.done}/{row.total}
-                    </span>
-                  )}
-                </DropdownMenuRadioItem>
-                {onEdit && (
-                  <DropdownMenuItem
-                    className="size-9 shrink-0 justify-center rounded-lg p-0 text-muted-foreground"
-                    aria-label={`Sửa bằng ${option.label}`}
-                    title={`Sửa bằng ${option.label}`}
-                    onSelect={() => onEdit(option.value)}
-                  >
-                    <Pencil />
-                  </DropdownMenuItem>
-                )}
-              </div>
-            )
-          })}
-        </DropdownMenuRadioGroup>
+      <DropdownMenuContent align="end" collisionPadding={16} className={contentClass}>
+        {list}
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+type LanguageState = (code: string) => { done: number; total: number; label: string; complete: boolean }
+
+/** Each language with its progress, and its pencil while the version can be edited; shared by both kinds of picker. */
+function LanguageRows({
+  value,
+  onChange,
+  state,
+  onEdit,
+}: {
+  value: string
+  onChange: (language: string) => void
+  state: LanguageState
+  onEdit?: (language: string) => void
+}) {
+  return (
+    <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
+      {languageOptions.map((option) => {
+        const row = state(option.value)
+        return (
+          <div key={option.value} className="flex items-center gap-1">
+            <DropdownMenuRadioItem
+              value={option.value}
+              textValue={option.label}
+              className="min-h-11 min-w-0 flex-1 gap-3 rounded-lg py-2.5 pr-2.5 data-[state=checked]:bg-accent/60"
+            >
+              <HeroLanguageIcon locale={option.value} />
+              <span className="min-w-0 flex-1">
+                <span className="type-body block">{option.label}</span>
+                <span className={`type-meta mt-0.5 block ${row.complete && row.total ? "text-(--aov-success)" : ""}`}>
+                  {row.label}
+                </span>
+              </span>
+              {!!row.total && (
+                <span className="type-meta shrink-0 tabular-nums" aria-label="Số mục đã dịch">
+                  {row.done}/{row.total}
+                </span>
+              )}
+            </DropdownMenuRadioItem>
+            {onEdit && (
+              <DropdownMenuItem
+                className="size-9 shrink-0 justify-center rounded-lg p-0 text-muted-foreground"
+                aria-label={`Sửa bằng ${option.label}`}
+                title={`Sửa bằng ${option.label}`}
+                onSelect={() => onEdit(option.value)}
+              >
+                <Pencil />
+              </DropdownMenuItem>
+            )}
+          </div>
+        )
+      })}
+    </DropdownMenuRadioGroup>
   )
 }
 

@@ -191,7 +191,7 @@
   height: 24px;
   place-items: center;
   border-radius: 50%;
-  background: rgb(8 12 22 / 80%);
+  background: rgb(12 14 18 / 80%);
   color: #fff;
 }
 /* The mark stays small on the thumbnail; the area that takes the tap is 36px. */

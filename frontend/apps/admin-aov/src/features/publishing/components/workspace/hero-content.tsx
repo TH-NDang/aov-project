@@ -1,8 +1,14 @@
-import { type ComponentType, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { ImageIcon, LayoutDashboard, Pencil, Shirt, Swords } from "lucide-react"
+import { type ComponentType, type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { Clapperboard, ImageIcon, LayoutDashboard, ListChecks, Pencil, Shirt, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
-import { SectionHeading, sectionFrame } from "@/components/section-contents"
+import {
+  SectionContents,
+  SectionHeading,
+  sectionFrame,
+  useSectionContents,
+  type ContentsEntry,
+} from "@/components/section-contents"
 import { SECTIONS, type Content, type Section, type Revision } from "@/lib/hero-types"
 import { HeroOverviewCard, HeroOverviewFacts, type HeroOverviewProps } from "./hero-overview"
 import type { StatDefault } from "../../model/assessment/combat-attributes"
@@ -76,6 +82,7 @@ function HeroContentBody({
   busy,
   onEdit,
   onNeedsDraft,
+  loreEditable = false,
   onTranslate,
   canWrite = false,
   issues,
@@ -112,6 +119,8 @@ function HeroContentBody({
   /** `focus` names the one skin to open, when the pencil of a single skin was used. */
   onEdit: (section: Section, profilePart?: "information" | "lore", focus?: string) => void
   onNeedsDraft?: () => void
+  /** The lore window keeps its pencil on a draft while the page reads. */
+  loreEditable?: boolean
   /** Prices and skin acquisition follow the shop, so they only ask for the right to write. */
   canWrite?: boolean
   issues?: string[]
@@ -127,6 +136,9 @@ function HeroContentBody({
   const skins = visibleSkins(content.SKINS?.skins ?? [])
   const [localSkill, setLocalSkill] = useState<string>()
   const contentRef = useRef<HTMLDivElement>(null)
+  const contents = useSectionContents({ first: heroContentSectionId("overview") })
+  // Measured on the whole contents box, not the column beside the list, so showing the list cannot hide it again.
+  const railRoom = useRailRoom(contents.wrapper)
   const activeSkill = selectedSkillKey ?? localSkill
   const target = reviewTarget
   const editingTab = editing ? reviewTab(editing.section) : null
@@ -220,6 +232,7 @@ function HeroContentBody({
     editable,
     busy,
     locked: !!editing,
+    loreEditable,
     onEdit,
     onNeedsDraft,
     onTranslate,
@@ -384,16 +397,56 @@ function HeroContentBody({
       ) : null,
   }
 
-  // Every part is on one page, in reading order, so nothing waits behind a tab.
+  // Every part is on one page, in reading order, so nothing waits behind a tab. The contents list the parts as the
+  // warehouse sheets do: a column on the right of a wide sheet, a floating button on a narrow one.
+  const tabs = heroContentTabs(!!heroId)
+  const entries: ContentsEntry[] = tabs.map((key) => ({ id: heroContentSectionId(key), ...CONTENTS_ENTRIES[key] }))
   return (
-    <div ref={contentRef} aria-label="Nội dung tướng" className="@container min-w-0 space-y-6">
-      {heroContentTabs(!!heroId).map((key) => (
-        <div key={key} id={heroContentSectionId(key)} className="min-w-0 scroll-mt-28">
-          {panels[key]()}
-        </div>
-      ))}
-    </div>
+    <SectionContents
+      contents={contents}
+      entries={entries}
+      layout="panel"
+      folded={!railRoom}
+      className="[--contents-offset:104px]"
+    >
+      <div ref={contentRef} aria-label="Nội dung tướng" className="@container min-w-0 space-y-6">
+        {tabs.map((key) => (
+          <div key={key} id={heroContentSectionId(key)} className="min-w-0 scroll-mt-28">
+            {panels[key]()}
+          </div>
+        ))}
+      </div>
+    </SectionContents>
   )
+}
+
+/**
+ * Whether the page is wide enough, as measured, for the contents column (the panel layout's 42rem). Until a width is
+ * measured the list stays behind the floating button: jsdom, which has no layout, spends unbounded memory drawing the
+ * column across this page's many updates.
+ */
+function useRailRoom(ref: RefObject<HTMLElement | null>) {
+  const [room, setRoom] = useState(false)
+  useLayoutEffect(() => {
+    const element = ref.current
+    if (!element || typeof ResizeObserver === "undefined") return
+    const measure = () => setRoom(element.getBoundingClientRect().width >= 672)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [ref])
+  return room
+}
+
+/** How each part of the hero's page is named in its contents. */
+const CONTENTS_ENTRIES: Record<HeroContentTab, Omit<ContentsEntry, "id">> = {
+  overview: { label: "Tổng quan", icon: LayoutDashboard },
+  skills: { label: "Kỹ năng", icon: Swords },
+  evaluation: { label: "Đánh giá", icon: ListChecks },
+  skins: { label: "Trang phục", icon: Shirt },
+  media: { label: "Ảnh", icon: ImageIcon },
+  videos: { label: "Video", icon: Clapperboard },
 }
 
 /** A detail tab's card: the heading carries the count, the editing state and the pencil. */

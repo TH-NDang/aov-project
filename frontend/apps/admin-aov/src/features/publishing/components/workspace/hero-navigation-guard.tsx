@@ -9,9 +9,10 @@ export function HeroNavigationGuard({ unsafe, busy }: { unsafe: boolean; busy: b
 }
 
 function HistoryGuard({ busy }: { busy: boolean }) {
-  // Explicit close controls already confirm; browser Back/Forward must protect the same edits.
+  // Browser Back/Forward and any move to another page (the sidebar, the breadcrumb) protect the unsaved edits.
   useLeaveGuard(
-    ({ historyAction }) => historyAction === "POP",
+    ({ historyAction, currentLocation, nextLocation }) =>
+      historyAction === "POP" || currentLocation.pathname !== nextLocation.pathname,
     async () => !busy && confirmDiscard({ title: "Chuyển trang?", description: "Bạn có thay đổi chưa lưu." }),
   )
   return null

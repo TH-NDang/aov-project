@@ -8,14 +8,15 @@
   display: flex;
   width: 100%;
   max-width: none;
-  max-height: calc(100dvh - 40px);
+  /* As tall as its content, at most 85% of the screen, so the page always shows above it and a tap there closes it. */
+  max-height: min(85dvh, calc(100dvh - 48px));
   margin: 0;
   gap: 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--drawer-line);
-  border-bottom: 0;
-  border-radius: var(--aov-radius-media) var(--aov-radius-media) 0 0;
+  border: 0;
+  border-top: 1px solid var(--drawer-line);
+  border-radius: 18px 18px 0 0;
   background: var(--drawer-surface);
   color: var(--drawer-text);
   box-shadow: var(--aov-shadow-lg);
@@ -27,9 +28,10 @@
   background: var(--aov-overlay);
   animation-duration: 240ms;
 }
+/* The grabber says the sheet can be dragged; the whole sheet drags, not only this bar. */
 .public-bottom-handle[data-vaul-handle] {
   width: 64px;
-  height: 24px;
+  height: 22px;
   flex-shrink: 0;
   margin: 0 auto;
   background: transparent;
@@ -40,50 +42,32 @@
 .public-bottom-handle::before {
   content: "";
   position: absolute;
-  top: 10px;
-  left: 14px;
-  width: 36px;
-  height: 3px;
+  top: 8px;
+  left: 12px;
+  width: 40px;
+  height: 4px;
   border-radius: var(--aov-radius-pill);
   background: var(--drawer-muted);
-  opacity: 0.4;
+  opacity: 0.45;
 }
 .public-bottom-handle [data-vaul-handle-hitarea] {
   width: 64px;
   height: 24px;
 }
+/* The title alone, no close button: the sheet closes by a tap above it or a drag down. */
 .public-bottom-heading {
-  position: relative;
   display: flex;
   align-items: center;
-  min-height: 40px;
-  padding: 0 52px 12px 16px;
-  border-bottom: 1px solid var(--drawer-line);
+  min-height: 32px;
+  padding: 2px 20px 10px;
   text-align: left;
 }
 .public-bottom-heading [data-slot="drawer-title"] {
   margin: 0;
-  font-size: 15px;
-  line-height: 22px;
+  font-size: 16px;
+  line-height: 24px;
   font-weight: 700;
   color: inherit;
-}
-.public-bottom-close {
-  position: absolute;
-  top: 0;
-  right: 8px;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: var(--aov-radius-control);
-  background: transparent;
-  color: var(--drawer-muted);
-}
-.public-bottom-close:hover {
-  background: var(--drawer-line);
-  color: var(--drawer-text);
 }
 /*
  * A drawer whose content runs to its edges sets --public-bottom-body-padding on itself, and one that paints the area

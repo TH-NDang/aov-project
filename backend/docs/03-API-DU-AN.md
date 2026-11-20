@@ -2742,7 +2742,13 @@ biên tập/nguồn, tối đa 32768 ký tự; public không trả ghi chú này
   UNKNOWN/NONE/VERIFIED,components[{itemId,quantity}],stats[{key,value,unit}]. Chỉ VERIFIED nhận
   thành phần đã xác nhận; không cho tự ghép chính nó, chu trình hoặc UUID không tồn tại.
 - Arcana: color RED/PURPLE/GREEN,tier,stats. Chỉ số chưa biết được để rỗng trong nháp.
-- Enchantment: branchCode,tier,position. Tier 1–3, position có thể null khi chưa biết.
+- Enchantment: branchCode,tier,position,activation PASSIVE/ACTIVE/TALENT_UPGRADE/UNKNOWN,
+  cooldownSeconds,cooldownMaxSeconds,maxUses,availableFromSeconds,availableUntilSeconds. Tier 1–3,
+  position có thể null khi chưa biết. activation mặc định UNKNOWN và không chặn xuất bản. Hồi chiêu là
+  số giây lớn hơn 0; cooldownMaxSeconds chỉ có khi có cooldownSeconds và không nhỏ hơn nó (hồi chiêu
+  tăng dần qua mỗi lần dùng). maxUses từ 1, để trống là không giới hạn. availableFromSeconds và
+  availableUntilSeconds là giây tính từ đầu trận, không âm; khi có cả hai thì mốc sau lớn hơn mốc
+  trước. Public trả các trường này như gameplay; bản dịch không được đổi chúng.
 - Spell: cooldownSeconds,unlockLevel,unlockType ACCOUNT_CREATION/LEVEL/UNKNOWN,availability
   AVAILABLE/REMOVED/UNKNOWN,legacy,displayOrder,chargeRechargeSeconds,maxCharges,defaultStateKey,
   states[{key,iconAssetId,translations}],referenceImages[{assetId,notes}]. Có thể xuất bản khi

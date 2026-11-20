@@ -133,7 +133,8 @@ test("phones select patches directly on the rail and open only the options in a 
     const changes = buttons.find((button) => button.textContent?.includes("Chỉ thay đổi"))!
     await act(async () => changes.click())
     assert.equal(changes.getAttribute("aria-pressed"), "true")
-    await act(async () => buttons.find((button) => button.textContent?.trim() === "Close")!.click())
+    // A bottom sheet has no visible close; its hidden one, for screen readers, still closes it.
+    await act(async () => buttons.find((button) => button.textContent?.trim() === "Đóng")!.click())
     assert.equal(document.querySelector('[data-slot="sheet-content"]'), null)
   })
 })
@@ -141,7 +142,7 @@ test("phones select patches directly on the rail and open only the options in a 
 test("catalog navigation remembers the season or patch, pins empty selections and respects explicit links", async () => {
   await withDocument(async (root, dom) => {
     const { MemoryRouter, useNavigate, useSearchParams } = await import("react-router")
-    const { useCatalogScopePreference, catalogTabTarget, useSavedCatalogScope } =
+    const { useCatalogScopePreference, useSavedCatalogScope } =
       await import("../src/features/publishing/components/catalog/catalog-scope-memory")
     const { CatalogTimeline } = await import("../src/features/publishing/components/catalog/catalog-timeline")
     const { catalogOverview } = await import("./fixtures/hero-catalog-data")
@@ -179,14 +180,6 @@ test("catalog navigation remembers the season or patch, pins empty selections an
     assert.ok(patch("old-season-patch")?.querySelector('[aria-label="Mốc đã chọn"]'))
     assert.ok(patch("current-patch"), "The current patch stays visible even in a different season")
     assert.equal(patch("early-season-patch"), null)
-    assert.equal(
-      catalogTabTarget("/arcana?color=RED&season=season-new&patch=patch-early", saved),
-      "/arcana?color=RED&season=season-old&patch=patch-old",
-    )
-    assert.equal(
-      catalogTabTarget("/hero?hero=editing&patch=patch-early", saved),
-      "/hero?hero=editing&patch=patch-early",
-    )
     await act(async () => go("/spells?emptyPatches=show&show=changes&season=season-old&patch=patch-old"))
     const trigger = dom.window.document.querySelector<HTMLButtonElement>(
       'button[aria-label="Tùy chọn dòng thời gian"]',

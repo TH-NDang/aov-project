@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { LocalTime } from "@aov/ui/components/local-time"
 import { WikiIcon } from "../../components/wiki-icon"
-import { WikiSearch } from "../../components/wiki-search"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { usePublishedChanges } from "../../lib/wiki-patch-changes"
 import { seasonUpdatesQuery } from "./home-api"
@@ -12,8 +11,8 @@ import { patchDayLabel } from "../../lib/patch-day-label"
 import { SITE_NAME } from "../../lib/seo/page-meta"
 
 /**
- * The opening of the home page: what the Wiki is, the search that reaches every published name, and one line about the
- * version the data comes from.
+ * The opening of the home page: what the Wiki is and one line about the version the data comes from. Search lives in
+ * the header on every page.
  */
 export function HomeIntro() {
   const scope = useWikiContext()
@@ -40,7 +39,6 @@ export function HomeIntro() {
             "Look up heroes, equipment and every change in Arena of Valor",
           )}
         </h1>
-        <WikiSearch size="hero" />
         {current && (
           <Link className="wiki-home-patch-pill" to={href(`/updates/${current.code}`)}>
             <span className="wiki-home-live" aria-hidden="true" />

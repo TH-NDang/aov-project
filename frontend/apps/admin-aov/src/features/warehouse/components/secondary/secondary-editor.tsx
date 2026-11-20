@@ -328,7 +328,8 @@ export function SecondaryEditor({
         onOpenAutoFocus={focusSheet}
         showCloseButton={false}
       >
-        <SheetHeader className="shrink-0 flex-row flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+        {/* One row at every width, as the hero's: the icon, the name over one line of facts, then the controls. */}
+        <SheetHeader className="shrink-0 flex-row flex-nowrap items-center gap-3 px-4 py-3">
           {!isNew &&
             (kind === "spells" ? (
               <SpellArtwork
@@ -345,21 +346,19 @@ export function SecondaryEditor({
                 alt={name}
                 frameAspectRatio={1}
                 preview
-                className="size-12 shrink-0 rounded-full"
+                className="size-10 shrink-0 rounded-full"
               />
             ))}
-          <div className="min-w-40 flex-1">
+          <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1">
-              <SheetTitle className="type-section-title break-words">{isNew ? `Tạo ${kindName}` : name}</SheetTitle>
+              <SheetTitle className="type-section-title truncate">{isNew ? `Tạo ${kindName}` : name}</SheetTitle>
               {!isNew && <CopyCode code={initialCode} />}
             </div>
-            {facts.some(Boolean) && (
-              <p className="type-body flex flex-wrap items-center gap-x-3 gap-y-1">
-                {facts.filter(Boolean).map((fact) => (
-                  <span key={fact}>{fact}</span>
-                ))}
-              </p>
-            )}
+            <p className="type-meta flex min-w-0 items-center gap-x-2 overflow-hidden whitespace-nowrap">
+              {facts.filter(Boolean).map((fact) => (
+                <span key={fact}>{fact}</span>
+              ))}
+            </p>
             <SheetDescription className="sr-only">
               {isNew ? `Điền thông tin ${kindName} rồi lưu nháp.` : `Mã ${initialCode}`}
             </SheetDescription>
@@ -373,6 +372,7 @@ export function SecondaryEditor({
             language={
               isNew ? undefined : (
                 <LanguagePicker
+                  variant="menu"
                   translations={content.translations}
                   value={language}
                   onChange={chooseLanguage}

@@ -320,6 +320,7 @@ export function HeroSkinsView({
                     size="icon"
                     className="size-8 shrink-0"
                     aria-label="Chỉnh sửa cách nhận và giá"
+                    data-direct-edit
                     title="Chỉnh sửa cách nhận và giá"
                     disabled={busy}
                     onClick={() => setEditingPrice(true)}

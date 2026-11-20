@@ -5,8 +5,9 @@
   tài khoản. Wiki luôn dùng theme tối.
 - Hai bố cục chọn bằng `usePageLayout`: thanh rộng từ 900px, một hàng compact dưới 900px. Nguyên tắc chung nằm ở
   `frontend/docs/RESPONSIVE.md`.
-- Không có cột mục lục bên trái và không có thanh điều hướng cố định ở đáy màn hình: trên wide các mục nằm trên thanh,
-  trên compact nằm trong tấm mục lục mở từ header.
+- Thanh đầu trang không chứa các mục của Wiki. Trên wide, các mục nằm ở trang chủ (các ô mục) và ở sidebar bên trái
+  của mọi trang danh sách và tham khảo (xem `layout.md`); trên compact nằm trong tấm mục lục mở từ header. Không có
+  thanh điều hướng cố định ở đáy màn hình.
 - Logo hiện tại: `public/images/mole-logo-v4.png`, tạo bằng công cụ imagegen tích hợp. Header, chân trang, favicon và
   trạng thái trống dùng bản 160px `public/images/mole-logo-v4-160.png`. Các phiên bản trước và prompt được lưu lại bên
   dưới để tham khảo.
@@ -16,26 +17,23 @@
 - Cao 56px (`--wiki-header-height`), dính ở đầu trang, nền màu thanh gần đặc (`--header-bg`) có blur, vạch vàng mờ ở
   dưới (`--header-line`). Nội dung thanh nằm trong cùng cột với trang: rộng tối đa `--aov-page-max`, lề `--wiki-gutter`,
   nên logo thẳng hàng với mép nội dung.
-- Trái: logo chuột chũi 32px dẫn về trang chủ; chữ AOV WiKi kèm mũi tên là nút mở menu chuyển ứng dụng. Danh sách
-  (`SECTIONS` trong `wiki-header.tsx`) gồm AOV WiKi và AOV Stream, có logo, mô tả và nhãn **Đang xem**. Chọn Stream mở
-  frontend Stream trong cùng tab.
-- Giữa: các mục chính (`TopNavigation`) là Tướng, Trang phục, Kho trang bị, Chế độ chơi, Cập nhật, Thuật ngữ. Kho trang
-  bị là một menu gồm Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, mỗi mục có hình. Mục đang ở có chữ vàng và gạch chân vàng;
-  khi đang ở một phần của kho thì nút Kho trang bị được đánh dấu. Đường dẫn, hình và nhóm của các mục nằm trong
-  `src/lib/wiki-sections.ts`.
-- Phải: ô tìm kiếm chung (cao 36px, rộng 280px), nút thị trường dữ liệu (cờ và mã thị trường, mở bảng chọn thị trường)
-  và tài khoản.
-- Dưới 1180px: ẩn chữ AOV WiKi, chỉ còn logo và mũi tên; ô tìm kiếm còn 220px.
-- Dưới 1024px: ô tìm kiếm thành nút kính lúp. Bấm thì ô nhập thay chỗ các mục và nút chuyển thành dấu đóng; đóng tìm
-  kiếm thì focus về lại nút.
+- Trái: logo chuột chũi 32px dẫn về trang chủ; chữ AOV WiKi kèm mũi tên mảnh (không có ô nền riêng) là nút mở menu
+  chuyển ứng dụng. Menu (`SECTIONS` trong `wiki-header.tsx`, kiểu chung `public-app-brand.css` của `@aov/ui`, Stream
+  dùng cùng kiểu) có tiêu đề nhỏ "Chọn ứng dụng" rồi mỗi ứng dụng một hàng cao 56px: logo 36px, tên "AOV Wiki" hoặc
+  "AOV Stream" dạng chữ thường, một dòng mô tả cắt bằng dấu ba chấm. Ứng dụng đang dùng có nền vàng nhạt và dấu tích;
+  ứng dụng kia có mũi tên, sáng lên khi rê chuột. Chọn Stream mở frontend Stream trong cùng tab.
+- Giữa: ô tìm kiếm chung, cao 36px, rộng tối đa 420px, nằm giữa phần logo và phần tiện ích, hiện ở mọi bề rộng.
+- Phải: nút thị trường dữ liệu (cờ và mã thị trường, mở bảng chọn thị trường) và tài khoản.
+- Ô tìm kiếm, nút thị trường và nút tài khoản cùng một kiểu: không viền, bo tròn, nền mờ `--aov-text` 6% (9% khi rê
+  chuột). Ô tìm kiếm có viền vàng khi đang gõ.
 - Trang tướng (`variant="hero"`): thanh nằm trên ảnh tướng, trong suốt ở đầu trang; trong 100px cuộn đầu tiên nền, vạch
   dưới và độ blur tăng dần. `useScrollProgressVar` ghi `--header-solid` thẳng lên thẻ header, không cập nhật state hay
   render lại React theo mỗi lần cuộn. Trong lúc thanh còn trong, ô tìm kiếm và các nút có nền riêng để đọc được trên ảnh.
 
 ## Tìm kiếm chung
 
-- `WikiSearch` là ô tìm duy nhất của Wiki: trên thanh đầu trang (`size="bar"`), ô lớn ở trang chủ và trang không tìm
-  thấy (`size="hero"`), và hàng tìm kiếm của header compact (`size="sheet"`).
+- `WikiSearch` là ô tìm duy nhất của Wiki: trên thanh đầu trang (`size="bar"`), ô lớn ở trang không tìm thấy
+  (`size="hero"`), và hàng tìm kiếm của header compact (`size="sheet"`).
 - Gõ chữ thì danh sách gợi ý mở dưới ô: tối đa 8 tên đã xuất bản thuộc tướng, trang bị, phù hiệu, bảng ngọc, phụ trợ và
   thuật ngữ, mỗi tên có hình và loại. Tên trùng khớp đứng trước, rồi tên bắt đầu bằng từ khóa, rồi tên chứa từ khóa; tìm
   không phân biệt dấu và tính cả tên khác. Tên lấy từ `GET /reference-catalog` theo thị trường, ngôn ngữ và mốc dữ liệu
@@ -55,9 +53,11 @@ Một hàng cao 48px (`WikiHeaderCompact`):
 - Giữa: tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
   trang này tự có `h1` mang tên riêng, nên header chỉ ghi tên mục (`pageTitleIsHeading`). Kho trang bị ghi chung "Kho
   trang bị", bốn phần là dãy tab dính ngay dưới header.
-- Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành nút đóng và ô nhập; danh sách gợi ý trải gần hết bề ngang
-  dưới header.
-- Mục lục (`LibraryContents` trong `src/components/library-contents.tsx`) mở tấm trượt từ phải, rộng tối đa 320px, liệt
+- Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành nút quay lại và ô nhập bo tròn, và bên dưới header mở
+  một màn tìm kiếm phủ kín trang: chưa gõ thì có lưới "Đi nhanh tới" chín mục và một dòng gợi ý cách tìm; gõ chữ thì
+  danh sách gợi ý chiếm cả màn, mỗi hàng cao 52px.
+- Mục lục (`LibraryContents` trong `src/components/library-contents.tsx`, cùng danh sách `LibraryNavigation` với sidebar
+  của bố cục wide) mở tấm trượt từ phải, rộng tối đa 320px, liệt
   kê mọi mục theo bốn nhóm Sổ tay nhân vật, Kho trang bị, Lối chơi, Tham khảo (`LibraryNavigation` trong
   `src/components/library-navigation.tsx`). Mục đang xem được đánh dấu; chọn một mục thì tấm đóng.
 - Nền: các trang danh sách có nền đặc. Trang chủ, trang tướng, trang một chế độ và các trang không thuộc thư viện bắt
@@ -71,8 +71,11 @@ Một hàng cao 48px (`WikiHeaderCompact`):
   (`PublicAccountSummary`, không mở popup tài khoản lồng nhau), hai ô Wiki/Stream, rồi nhóm cài đặt ngôn ngữ, múi giờ,
   định dạng ngày, tiền tệ và thị trường dữ liệu.
 - Logo ứng dụng 32px; hàng cài đặt cao 48px. Nội dung cuộn khi màn hình thấp, giữ khoảng đệm theo vùng an toàn phía dưới.
-- Thanh kéo 36×3px nằm trong vùng 64×24px và chỉ vùng này nhận thao tác kéo đóng; cuộn/chọn bên trong không kéo theo
-  drawer. Nền phía sau giữ nguyên kích thước, phủ mờ nhẹ; hiệu ứng mở 240ms và tắt khi người dùng bật giảm chuyển động.
+- Mọi drawer dưới trên điện thoại (`PublicDrawer` trong `@aov/ui`, dùng chung với Stream) cao vừa nội dung, tối đa 85%
+  màn hình, nên phía trên luôn còn một dải trang phủ mờ; chạm vào đó, nhấn Escape, hoặc kéo drawer xuống từ bất kỳ đâu
+  (khi nội dung đã cuộn lên đầu) đều đóng. Không có nút X hiện ra; một nút đóng ẩn chỉ dành cho trình đọc màn hình.
+  Thanh nắm 40×4px ở đầu, tiêu đề 16px căn trái, góc trên bo 18px. Nền phía sau giữ nguyên kích thước; hiệu ứng mở
+  240ms và tắt khi người dùng bật giảm chuyển động.
 
 ## Cách viết style
 

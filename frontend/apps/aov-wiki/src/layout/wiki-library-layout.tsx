@@ -1,6 +1,7 @@
 import { type CSSProperties, type ReactNode } from "react"
 import { Outlet, useLocation, useMatch } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { LibraryNavigation } from "../components/library-navigation"
 import { WikiHeader } from "../components/wiki-header"
 import { warehouseKind } from "../lib/warehouse-types"
 import { SECTION_NAMES } from "../lib/wiki-sections"
@@ -9,7 +10,10 @@ import { useWikiContext, useWikiText } from "../context/wiki-context"
 import { libraryPageMeta, type PageMeta } from "../lib/seo/page-meta"
 import { usePageHead } from "../lib/seo/use-page-head"
 
-/** The frame of every list and reference page: the header with the sections, then the page at full width. */
+/**
+ * The frame of every list and reference page: the header, then on wide screens a sidebar with every section beside the
+ * page. The compact layout reaches the sections from the contents button in its header.
+ */
 export function WikiLibraryLayout() {
   const { locale } = useWikiContext()
   const t = useWikiText()
@@ -48,14 +52,20 @@ export function WikiLibraryLayout() {
         pageTitleIsHeading={!isModeDetail && !isPatchDetail}
         section={active}
       />
-      <main
-        id="main"
-        className={layout === "compact" ? "wiki-library-main-compact" : "wiki-library-main"}
-        data-cover={layout === "compact" && isModeDetail ? "" : undefined}
-        tabIndex={-1}
-      >
-        <Outlet />
-      </main>
+      {layout === "compact" ? (
+        <main id="main" className="wiki-library-main-compact" data-cover={isModeDetail ? "" : undefined} tabIndex={-1}>
+          <Outlet />
+        </main>
+      ) : (
+        <div className="wiki-library-body">
+          <aside className="wiki-library-sidebar">
+            <LibraryNavigation layout="sidebar" active={active} />
+          </aside>
+          <main id="main" className="wiki-library-main" tabIndex={-1}>
+            <Outlet />
+          </main>
+        </div>
+      )}
     </div>
   )
 }
@@ -72,12 +82,26 @@ export function HeroDetailLayout({
   style?: CSSProperties
 }) {
   usePageHead(meta)
+  const layout = usePageLayout()
+  const main = (
+    <main id="main" className="wiki-hero-detail-main" tabIndex={-1}>
+      {children}
+    </main>
+  )
+  // Wide screens keep the sections beside the hero, as on the list pages; the artwork then fills the page column.
   return (
     <div className="wiki-hero-detail-shell" style={style}>
       <WikiHeader variant="hero" backTo={backTo} section="heroes" />
-      <main id="main" className="wiki-hero-detail-main" tabIndex={-1}>
-        {children}
-      </main>
+      {layout === "compact" ? (
+        main
+      ) : (
+        <div className="wiki-library-body" data-page="hero">
+          <aside className="wiki-library-sidebar">
+            <LibraryNavigation layout="sidebar" active="heroes" />
+          </aside>
+          {main}
+        </div>
+      )}
     </div>
   )
 }

@@ -2,6 +2,18 @@
 .wiki-warehouse-page {
   /* The compact layout's tab bar runs edge to edge under the header. */
   --public-tab-bar-margin: -12px calc(-1 * var(--wiki-gutter)) 12px;
+  /* One look for every entry that opens: a fine edge, a surface lit a little from above, and on hover a lift with a
+     gold edge and glow. */
+  --wiki-entry-line: color-mix(in srgb, var(--aov-line) 80%, transparent);
+  --wiki-entry-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--aov-raised) 70%, var(--aov-surface)),
+    var(--aov-surface) 70%
+  );
+  --wiki-entry-hover-line: color-mix(in srgb, var(--aov-accent) 50%, var(--aov-line));
+  --wiki-entry-glow: 0 14px 28px -18px color-mix(in srgb, var(--aov-accent) 75%, transparent);
+  --wiki-entry-transition:
+    background 160ms, border-color 160ms, box-shadow 160ms, transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
   color: var(--aov-text);
 }
 .wiki-warehouse-page :is(button, a) {
@@ -131,6 +143,23 @@
   flex-wrap: wrap;
   overflow: visible;
 }
+/* A second, narrowing row of chips is drawn lighter than the groups above it, after a short caption. */
+.wiki-warehouse-chips[data-secondary] .wiki-warehouse-chip {
+  height: 28px;
+  border-color: var(--aov-line);
+  padding: 0 9px;
+  background: transparent;
+}
+.wiki-warehouse-chips[data-secondary] .wiki-warehouse-chip[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+}
+.wiki-warehouse-chips-caption {
+  flex: none;
+  margin-right: 2px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
 .wiki-warehouse-chip-pair {
   display: inline-flex;
   flex: none;
@@ -179,6 +208,33 @@
 .wiki-warehouse-chip[aria-pressed="true"] small {
   color: inherit;
 }
+/* A chip with a colour of its own (an enchantment branch) rings its picture in it and is marked in it once chosen. */
+.wiki-warehouse-chip[data-tone] {
+  height: 36px;
+  padding: 0 12px 0 4px;
+}
+.wiki-warehouse-chip[data-tone] .wiki-warehouse-chip-art {
+  --wiki-warehouse-art-size: 28px;
+  border: 1.5px solid color-mix(in srgb, var(--chip-tone) 70%, transparent);
+  border-radius: 50%;
+  padding: 2px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--chip-tone) 30%, transparent), transparent 72%);
+}
+/* On a phone a branch chip is its emblem alone, so the four branches and "all" fit one line. */
+@media (max-width: 899.98px) {
+  .wiki-warehouse-chip[data-tone]:has(.wiki-warehouse-chip-name[data-hideable]) {
+    padding: 0 4px;
+  }
+  .wiki-warehouse-chip[data-tone]:has(.wiki-warehouse-chip-name[data-hideable]) :is(.wiki-warehouse-chip-name, small) {
+    display: none;
+  }
+}
+.wiki-warehouse-chip[data-tone][aria-pressed="true"] {
+  border-color: var(--chip-tone);
+  background: color-mix(in srgb, var(--chip-tone) 16%, transparent);
+  box-shadow: 0 0 14px -6px var(--chip-tone);
+  color: color-mix(in srgb, var(--chip-tone) 55%, var(--aov-text));
+}
 /* A ring drawn outside would be cut by a row that scrolls sideways. */
 .wiki-warehouse-chip:focus-visible,
 .wiki-warehouse-clear:focus-visible {
@@ -190,6 +246,7 @@
   height: var(--wiki-warehouse-art-size, 20px);
   flex: none;
   border-radius: var(--wiki-warehouse-art-radius, 4px);
+  box-shadow: none;
 }
 .wiki-warehouse-clear {
   font: var(--wiki-type-meta);
@@ -389,7 +446,12 @@
   height: var(--wiki-warehouse-art-size, 44px);
   flex-shrink: 0;
   border-radius: var(--wiki-warehouse-art-radius, var(--aov-radius-control));
+  /* A fine ring sets the picture off the card, the way the game frames its icons. */
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--aov-text) 12%, transparent);
   object-fit: contain;
+  /* A card the pointer rests on sets the scale, so its picture grows a little. */
+  transform: scale(var(--wiki-entry-art-scale, 1));
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .wiki-warehouse-art-fallback {
   display: grid;
@@ -523,8 +585,6 @@
 
 /* ---------- Detail: the same parts in the panel and in the sheet ---------- */
 .wiki-warehouse-detail[data-slot="sheet-content"] {
-  width: min(480px, 100vw);
-  max-width: 480px;
   gap: 0;
   border: 0;
   padding: 0;
@@ -584,6 +644,30 @@
   width: 56px;
   height: 56px;
   border-radius: var(--aov-radius-card);
+}
+/* An enchantment reads in its branch's colour: a lit band behind its picture, which sits in a round rim like the
+   branch emblem, and the branch line above in that colour. */
+.wiki-warehouse-detail-identity[data-branch] {
+  border: 1px solid color-mix(in srgb, var(--branch-color) 30%, var(--aov-line));
+  border-radius: var(--aov-radius-card);
+  padding: 14px;
+  background: radial-gradient(
+    120% 150% at 0% 0%,
+    color-mix(in srgb, var(--branch-color) 20%, transparent),
+    transparent 65%
+  );
+}
+.wiki-warehouse-detail-identity[data-branch] > .wiki-warehouse-art {
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--branch-color);
+  border-radius: 50%;
+  padding: 5px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--branch-color) 28%, transparent), transparent 72%);
+  box-shadow: 0 0 18px -4px color-mix(in srgb, var(--branch-color) 60%, transparent);
+}
+.wiki-warehouse-detail-bar[data-branch] > span:first-child {
+  color: color-mix(in srgb, var(--branch-color) 75%, var(--aov-text));
 }
 .wiki-warehouse-detail-identity > div {
   min-width: 0;
@@ -913,23 +997,14 @@
     height: 80px;
   }
 }
-/* On a phone the detail comes up from the bottom, as tall as the entry needs. */
-@media (max-width: 640px) {
+/* A side panel on wide screens; on a phone the shared bottom sheet sizes it to the entry. */
+@media (min-width: 900px) {
   .wiki-warehouse-detail[data-slot="sheet-content"] {
-    inset: auto 0 0;
-    width: 100%;
-    max-width: none;
-    height: auto;
-    min-height: 240px;
-    max-height: min(90dvh, 780px);
-    border-radius: var(--aov-radius-media) var(--aov-radius-media) 0 0;
+    width: min(480px, 100vw);
+    max-width: 480px;
   }
-  .wiki-warehouse-detail[data-state="open"] {
-    animation: wiki-warehouse-rise 220ms ease-out;
-  }
-  .wiki-warehouse-detail[data-state="closed"] {
-    animation: wiki-warehouse-fall 180ms ease-in;
-  }
+}
+@media (max-width: 640px) {
   .wiki-warehouse-detail-bar {
     padding-left: 16px;
   }
@@ -939,27 +1014,5 @@
   }
   .wiki-warehouse-detail-scroll {
     padding: 2px 16px max(20px, env(safe-area-inset-bottom));
-  }
-}
-@keyframes wiki-warehouse-rise {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-@keyframes wiki-warehouse-fall {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wiki-warehouse-detail[data-slot="sheet-content"] {
-    transition: none;
-    animation: none;
   }
 }

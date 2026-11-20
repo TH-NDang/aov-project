@@ -1,22 +1,34 @@
 import { catalogScopePatch, resolveCatalogScope, type CatalogFilter } from "@/lib/catalog-scope"
 import { useCatalogScopePreference } from "@/features/publishing/components/catalog/catalog-scope-memory"
 import { HeroTimeline } from "@/features/publishing/components/workspace/hero-timeline"
-import { useEffect, useEffectEvent, useId, useRef, useState } from "react"
-import { Link, useBeforeUnload, useLocation, useNavigate } from "react-router"
+import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react"
+import { Link, useBeforeUnload, useNavigate } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, FileUp, Layers, MoreHorizontal, Plus, Save, Trash2, X, ChevronDown } from "lucide-react"
+import {
+  ArrowLeft,
+  FileUp,
+  Layers,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Save,
+  Send,
+  Trash2,
+  X,
+  ChevronDown,
+} from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
-import { replacingPageTab, usePageCloseGuard } from "@/app/layout/page-tabs"
 import { errorMessage } from "@/lib/api/errors"
 
 import { createPublishingApi, publishingKeys } from "@/lib/api/publishing-api"
@@ -36,13 +48,15 @@ import { HeroRevisionHistory } from "@/features/publishing/components/workspace/
 import { HeroPatchTimeline } from "@/features/publishing/components/patch-changes/hero-patch-view"
 
 import { HeroLanguagePicker } from "@/features/publishing/components/editing/hero-language-picker"
-import { cn } from "@aov/ui/lib/utils"
+import { LanguageMenuItem, LanguageSheet, type LanguageRow } from "@/components/language-sheet"
 import { HeroReviewNotice } from "@/features/publishing/components/workspace/hero-review-notice"
 import { reviewTab, type HeroReviewItem } from "@/features/publishing/model/import/hero-source-review"
 import {
   missingTranslationFields,
   translatedText,
   translationFields,
+  translationStatus,
+  translationStatusLabel,
   type TranslationField,
   type TranslationTarget,
 } from "@/features/publishing/model/hero-translation-model"
@@ -82,12 +96,12 @@ import {
 import { useHeroLocation } from "@/features/publishing/components/workspace/use-hero-location"
 import { HeroNavigationGuard } from "@/features/publishing/components/workspace/hero-navigation-guard"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
-import { DraftStatusControl } from "@/app/drafts/draft-status"
+import { DraftStatusMenuItem, DraftStatusSheet, draftStatusSummary } from "@/app/drafts/draft-status"
 import { HeroDraftChanges, savedHeroSections } from "@/features/publishing/components/patch-changes/hero-draft-changes"
 import { PublishButton } from "@/features/publishing/components/workspace/publish-button"
 import { HeroWorkspaceTabs } from "@/features/publishing/components/workspace/hero-workspace-tabs"
 import { captureFocus, type CaptureTarget } from "@/features/publishing/model/captures/patch-capture-model"
-import { PatchCaptureToggle } from "@/features/publishing/components/captures/patch-capture-panel"
+import { PatchCaptureMenuItem } from "@/features/publishing/components/captures/patch-capture-panel"
 import { usePatchCaptureWorkspace } from "@/features/publishing/api/use-patch-captures"
 import {
   dirtyHeroSections,
@@ -103,7 +117,8 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { CAUSE_NAMES } from "@/lib/version-causes"
 import { VersionFacts } from "@/features/publishing/components/setup/version-facts"
 import {
-  HeroVersionMenu,
+  HeroVersionMenuItem,
+  HeroVersionSheet,
   REVISION_STATES as STATES,
 } from "@/features/publishing/components/workspace/hero-version-menu"
 import { Input } from "@aov/ui/components/input"
@@ -131,7 +146,6 @@ export function PublishingWorkspace({
 }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { pathname } = useLocation()
   const capabilities = useSession().actor?.capabilities ?? []
   const canWrite = capabilities.includes("hero:write")
   const canPublish = capabilities.includes("hero:publish")
@@ -139,6 +153,10 @@ export function PublishingWorkspace({
   const requestedRevision = revisionId ?? heroLocationId(urlParams.get("revision"))
   const [selectedId, setSelectedId] = useState(requestedRevision)
   const [editing, setEditing] = useState(false)
+  // A draft reads like the published page. Its one pencil in the header opens the editor of the part on screen at
+  // once; this is set from the click until that editor opens. Kept per hero, so another hero is not affected.
+  const [editAskedFor, setEditAskedFor] = useState<string | null>(null)
+  const editAsked = !!heroId && editAskedFor === heroId
   const [profilePart, setProfilePart] = useState<ProfileEditorPart>("information")
   // The skin whose own pencil opened the skin editor; the section pencil opens all of them.
   const [skinFocus, setSkinFocus] = useState<string | null>(null)
@@ -354,7 +372,6 @@ export function PublishingWorkspace({
     }
   })
   const canLeave = () => !busy
-  usePageCloseGuard(canLeave, !!heroId && !onUnsavedChange)
 
   function switchHero(next: HeroRow) {
     if (busy || next.id === heroId) return
@@ -376,12 +393,7 @@ export function PublishingWorkspace({
     const params = switchHeroLocation(urlParams, nextId)
     params.delete("revision")
     if (onUnsavedChange) void navigate({ search: `?${params}` }, { preventScrollReset: true, replace })
-    else
-      void navigate(heroPageLocation(nextId, params), {
-        preventScrollReset: true,
-        replace,
-        state: replace ? replacingPageTab(pathname) : undefined,
-      })
+    else void navigate(heroPageLocation(nextId, params), { preventScrollReset: true, replace })
   }
   // Opening the hero that holds forms lands on its default form, as the Wiki does. A link to one of its revisions, such
   // as the shared part's own page or a row of the readiness overview, still opens it.
@@ -538,12 +550,14 @@ export function PublishingWorkspace({
     setSelectedId(openDraft.id)
     updateLocation({ revision: openDraft.id, compare: null, changes: null })
     setEditing(false)
+    setEditAskedFor(heroId)
   }
   function forkDraft(request: NewDraft) {
     if (!revision) return
     void run(async () => {
       await openRevision(await api.fork(revision, request.cause as Cause, request.patchVariantId ?? null))
       updateLocation({ view: request.cause === "TRANSLATION" ? "translations" : "overview" })
+      if (request.cause !== "TRANSLATION") setEditAskedFor(heroId)
     }, "Đã tạo bản nháp từ phiên bản đang xem.")
   }
   const canMoveBaseline =
@@ -601,6 +615,63 @@ export function PublishingWorkspace({
 
   const headerRef = useRef<HTMLElement>(null)
   const wideHeader = useWideBox(headerRef, 672)
+  const stickyRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  // Where the part being opened stood on screen, so its editor opens in the same place.
+  const editPlace = useRef<number | null>(null)
+  // The pencil's click renders the parts' own pencils; before the page is painted, the one of the part on screen is
+  // pressed, so its editor opens with no second click.
+  // The parts render with the content, so a pencil pressed while it loads waits for it.
+  const previewShown = !!preview
+  useLayoutEffect(() => {
+    const panel = panelRef.current
+    if (!editAsked || !writable || view !== "overview" || !panel) return
+    const pencils = [
+      ...panel.querySelectorAll<HTMLButtonElement>(
+        'button[aria-label^="Chỉnh sửa"]:not([data-direct-edit]):not([aria-disabled="true"]):not(:disabled)',
+      ),
+    ]
+    if (!pencils.length) return
+    // The part on screen is the one that fills most of the view under the bar, not a tail left above it.
+    const barBottom = stickyRef.current?.getBoundingClientRect().bottom ?? 0
+    const part = (pencil: HTMLElement) => pencil.closest("section") ?? pencil.parentElement ?? pencil
+    const shown = (pencil: HTMLElement) => {
+      const box = part(pencil).getBoundingClientRect()
+      return Math.min(box.bottom, window.innerHeight) - Math.max(box.top, barBottom)
+    }
+    const chosen = pencils.reduce((best, pencil) => (shown(pencil) > shown(best) ? pencil : best), pencils[0]!)
+    editPlace.current = Math.max(part(chosen).getBoundingClientRect().top, barBottom)
+    setEditAskedFor(null)
+    chosen.click()
+  }, [editAsked, writable, view, previewShown])
+  useLayoutEffect(() => {
+    const top = editPlace.current
+    editPlace.current = null
+    const editor = editorRef.current
+    if (!editing || top === null || !editor) return
+    let scroller = editor.parentElement
+    while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement
+    if (scroller) scroller.scrollTop += editor.getBoundingClientRect().top - top
+  }, [editing])
+  // The single pencil on a draft, as on the warehouse sheets: it opens the part on screen in its editor.
+  const editLabel = editing ? "Lưu hoặc hủy phần đang sửa trước" : "Sửa tướng"
+  const editPencil = writable && (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon-sm"
+      className="bg-background"
+      disabled={busy || editing}
+      aria-label={editLabel}
+      title={editLabel}
+      onClick={() => {
+        if (view !== "overview") updateLocation({ view: "overview" })
+        setEditAskedFor(heroId)
+      }}
+    >
+      <Pencil />
+    </Button>
+  )
   const [publishOpen, setPublishOpen] = useState(false)
   const unsavedSections = SECTIONS.filter(([key]) => dirty.has(key)).map(([key, , label]) => ({ key, label }))
   const chooseRevision = (next: string) => {
@@ -629,43 +700,58 @@ export function PublishingWorkspace({
         open={triggerClassName ? publishOpen : undefined}
         onOpenChange={triggerClassName ? setPublishOpen : undefined}
         triggerClassName={triggerClassName}
+        compact={!wideHeader}
       />
     )
-  // The version as "#n"; on a narrow header its menu also holds the reading language and the main action.
-  const versionMenu = (narrow: boolean) =>
-    revision && (
-      <HeroVersionMenu
-        revision={revision}
-        revisions={revisions.data}
-        rulesets={rulesets.data}
-        selectedId={selectedId}
-        busy={busy}
-        narrow={narrow}
-        onChoose={chooseRevision}
-        language={
-          narrow && preview && !translating
-            ? {
-                content: preview.content,
-                locale: location.readLocale,
-                disabled: busy || (editing && section !== "SKILLS"),
-                onChange: setContentLocale,
-              }
-            : undefined
-        }
-        publish={
-          narrow && headerAction === "publish"
-            ? {
-                publishing,
-                onSelect: () => {
-                  // Gaps open the same list the header button shows; with none, the click publishes.
-                  if (issues.length || unsavedSections.length) setTimeout(() => setPublishOpen(true))
-                  else publishRevision()
-                },
-              }
-            : undefined
-        }
+  // The versions open from a row of the ⋯ menu, in a sheet of their own, so the header keeps one row of controls.
+  const [versionsOpen, setVersionsOpen] = useState(false)
+  const versionSheet = revision && (
+    <HeroVersionSheet
+      open={versionsOpen}
+      onOpenChange={setVersionsOpen}
+      revision={revision}
+      revisions={revisions.data}
+      rulesets={rulesets.data}
+      selectedId={selectedId}
+      disabled={busy}
+      onChoose={chooseRevision}
+    />
+  )
+  // On a phone publishing is a row of the ⋯ menu too; what blocks it opens beside a hidden anchor in the header.
+  const publishBlocked = issues.length > 0 || unsavedSections.length > 0
+  const publishInMenu = headerAction === "publish" && !!revision && !wideHeader
+  const menuKeepsFocus = useRef(false)
+  // The draft's state is a row of the menu too; a warning still shows as a dot on the ⋯ button.
+  const [draftStatusOpen, setDraftStatusOpen] = useState(false)
+  const draftSummary =
+    writable && revision
+      ? draftStatusSummary(localDraft, {
+          sections: dirty.size,
+          changed: new Set([...dirty, ...savedSections]).size,
+          alwaysShown: true,
+        })
+      : null
+  const draftStatusSheet = writable && revision && (
+    <DraftStatusSheet
+      key={revision.id}
+      open={draftStatusOpen}
+      onOpenChange={setDraftStatusOpen}
+      draft={localDraft}
+      disabled={busy}
+      alwaysShown
+      discardLabel="Bỏ thay đổi chưa lưu"
+    >
+      <HeroDraftChanges
+        before={initialCopy}
+        after={localDraft.value}
+        saved={savedChanges.data}
+        savedFailed={savedChanges.isError}
+        locale={locale}
+        name={heroName}
+        revisionNo={revision.revisionNo}
       />
-    )
+    </DraftStatusSheet>
+  )
   // The single pencil on a published version: it opens the draft in progress or starts one of the chosen kind.
   const draftPencil = revision && (
     <DraftPencil
@@ -685,12 +771,13 @@ export function PublishingWorkspace({
   // The drawer closes like every other sheet: a quiet × at the end of the header row, past a divider.
   const closeButton = onClose && (
     <>
-      <span aria-hidden className="mx-0.5 h-5 w-px shrink-0 bg-border" />
+      {/* A sheet rising from the bottom on a phone closes by a tap above it or a pull down, so it shows no X. */}
+      <span aria-hidden className="mx-0.5 h-5 w-px shrink-0 bg-border group-data-[side=bottom]/sheet:hidden" />
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="shrink-0 text-muted-foreground"
+        className="shrink-0 text-muted-foreground group-data-[side=bottom]/sheet:hidden"
         title="Đóng trang tướng"
         aria-label="Đóng trang tướng"
         disabled={busy}
@@ -700,14 +787,91 @@ export function PublishingWorkspace({
       </Button>
     </>
   )
+  const [languageOpen, setLanguageOpen] = useState(false)
+  const languageRows: LanguageRow[] = languageOptions.map((option) => {
+    const progress = preview ? translationStatus(preview.content, option.value) : undefined
+    return {
+      code: option.value,
+      label: option.label,
+      status: progress ? translationStatusLabel(progress) : undefined,
+      done: progress?.completedFields,
+      total: progress?.totalFields,
+      complete: !!progress && progress.totalFields > 0 && !progress.missing.length,
+    }
+  })
+  const readingIncomplete = languageRows.some((row) => row.code === location.readLocale && !row.complete && !!row.total)
+  const languageSheet = preview && revision && !translating && (
+    <LanguageSheet
+      open={languageOpen}
+      onOpenChange={setLanguageOpen}
+      rows={languageRows}
+      value={location.readLocale}
+      onChange={setContentLocale}
+      disabled={editing && section !== "SKILLS"}
+      onEdit={translateInto}
+      editLabel={(label) => `Dịch sang ${label}`}
+      note={`Nội dung của bản #${revision.revisionNo}. Phần chưa dịch hiển thị bằng ngôn ngữ nguồn.`}
+    />
+  )
   const actionsMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon-sm" aria-label="Thao tác tướng" className="shrink-0 bg-background">
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label="Thao tác tướng"
+          className="relative shrink-0 bg-background"
+        >
           <MoreHorizontal className="size-4" />
+          {draftSummary?.warning && (
+            <span aria-hidden className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-(--aov-warning)" />
+          )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent
+        align="end"
+        className="w-64"
+        onCloseAutoFocus={(event) => {
+          // Focus going back to ⋯ would close the publish conditions as soon as they open.
+          if (menuKeepsFocus.current) event.preventDefault()
+          menuKeepsFocus.current = false
+        }}
+      >
+        {publishInMenu && (
+          <>
+            <DropdownMenuItem
+              disabled={busy}
+              onSelect={() => {
+                if (publishBlocked) {
+                  menuKeepsFocus.current = true
+                  setPublishOpen(true)
+                } else publishRevision()
+              }}
+            >
+              <Send />
+              <span className="flex-1">{publishing ? "Đang xuất bản…" : "Xuất bản"}</span>
+              {publishBlocked && (
+                <span className="size-1.5 rounded-full bg-(--aov-warning)" aria-label="Còn mục cần sửa" />
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        {/* What used to sit around the name: the version, the reading language and the original screenshots. */}
+        {revision && <HeroVersionMenuItem revision={revision} disabled={busy} onOpen={() => setVersionsOpen(true)} />}
+        {draftSummary && !draftSummary.hidden && (
+          <DraftStatusMenuItem summary={draftSummary} onOpen={() => setDraftStatusOpen(true)} />
+        )}
+        {preview && revision && !translating && (
+          <LanguageMenuItem
+            value={location.readLocale}
+            incomplete={readingIncomplete}
+            disabled={busy}
+            onOpen={() => setLanguageOpen(true)}
+          />
+        )}
+        <PatchCaptureMenuItem />
+        {((canPublish && heroId && formsOwner) || writable) && <DropdownMenuSeparator />}
         {canPublish && heroId && formsOwner && (
           <DropdownMenuItem disabled={busy} onSelect={() => setFormsOpen(true)}>
             <Layers />
@@ -930,17 +1094,21 @@ export function PublishingWorkspace({
         />
       ) : (
         // The header and the tab row stay at the top together while the page scrolls, as a sheet's do.
-        <div className="sticky top-0 z-20 -mx-1 bg-background px-1 pt-1 [overflow-anchor:none]">
-          <header ref={headerRef} className="relative">
-            {/* The name and the controls wrap as two whole groups, so no button can end up alone on a line. */}
-            <div
-              className={
-                wideHeader
-                  ? "flex flex-wrap items-center justify-end gap-x-4 gap-y-3"
-                  : "flex min-w-0 items-center gap-1.5"
-              }
-            >
-              <div className={cn("flex min-w-0 items-center gap-2.5", wideHeader ? "flex-auto" : "flex-1 gap-2")}>
+        <div ref={stickyRef} className="sticky top-0 z-20 -mx-1 bg-background px-1 pt-1 [overflow-anchor:none]">
+          <header
+            ref={headerRef}
+            className="relative"
+            data-revision={selectedId}
+            data-reading-locale={location.readLocale}
+            data-reading-status={languageRows.find((row) => row.code === location.readLocale)?.status}
+          >
+            {/*
+              One row at every width, as the warehouse sheets: the picture and the name with its status line, then the
+              same three controls (version, the main action, the menu, which also holds the reading language). Only the
+              name gives way.
+            */}
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
                 {!onUnsavedChange && (
                   <Button variant="ghost" size="icon" asChild>
                     <Link
@@ -954,15 +1122,12 @@ export function PublishingWorkspace({
                     </Link>
                   </Button>
                 )}
-                {/* A narrow header gives the name the room; the scrolled name bar still shows the picture. */}
-                {wideHeader && (
-                  <HeroAsset
-                    id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
-                    alt={`Ảnh tướng ${heroName}`}
-                    className="size-9 shrink-0 rounded-full"
-                    frameAspectRatio={1}
-                  />
-                )}
+                <HeroAsset
+                  id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
+                  alt={`Ảnh tướng ${heroName}`}
+                  className="size-8 shrink-0 rounded-full"
+                  frameAspectRatio={1}
+                />
                 <div className="min-w-0">
                   {/* Switching hero belongs to the name, so its button follows it on the same line. */}
                   <div className="flex min-w-0 items-center gap-1">
@@ -971,89 +1136,52 @@ export function PublishingWorkspace({
                     </h1>
                     {quickSwitcher}
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
-                  </p>
+                  {/* The line under the name: why this version exists, then its review and draft status as small chips. */}
+                  <div className="flex min-w-0 items-center gap-1.5 overflow-hidden [&_button]:h-6 [&_button]:gap-1 [&_button]:px-1.5 [&_button]:text-xs [&_button_svg]:size-3.5">
+                    {preview && (
+                      <HeroReviewNotice
+                        skills={preview.content.SKILLS?.skills ?? []}
+                        locale={location.readLocale}
+                        disabled={busy}
+                        onReview={
+                          writable && !editorDisabled
+                            ? () => {
+                                updateLocation({ view: "overview", section: "SKILLS", tab: "skills" })
+                                setEditing(true)
+                                setReviewOpen(true)
+                              }
+                            : undefined
+                        }
+                        onNavigate={(item) => {
+                          if (!item.section) return
+                          setEditing(false)
+                          setReviewTarget(item)
+                          updateLocation({
+                            view: "overview",
+                            section: item.section,
+                            tab: reviewTab(item.section),
+                            skill: item.skillKey,
+                          })
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
-                <PatchCaptureToggle />
-                {preview && (
-                  <HeroReviewNotice
-                    skills={preview.content.SKILLS?.skills ?? []}
-                    locale={location.readLocale}
-                    disabled={busy}
-                    onReview={
-                      writable && !editorDisabled
-                        ? () => {
-                            updateLocation({ view: "overview", section: "SKILLS", tab: "skills" })
-                            setEditing(true)
-                            setReviewOpen(true)
-                          }
-                        : undefined
-                    }
-                    onNavigate={(item) => {
-                      if (!item.section) return
-                      setEditing(false)
-                      setReviewTarget(item)
-                      updateLocation({
-                        view: "overview",
-                        section: item.section,
-                        tab: reviewTab(item.section),
-                        skill: item.skillKey,
-                      })
-                    }}
-                  />
-                )}
-                {writable && (
-                  <DraftStatusControl
-                    key={revision.id}
-                    draft={localDraft}
-                    disabled={busy}
-                    sections={dirty.size}
-                    changed={new Set([...dirty, ...savedSections]).size}
-                    alwaysShown
-                    discardLabel="Bỏ thay đổi chưa lưu"
-                  >
-                    <HeroDraftChanges
-                      before={initialCopy}
-                      after={localDraft.value}
-                      saved={savedChanges.data}
-                      savedFailed={savedChanges.isError}
-                      locale={locale}
-                      name={heroName}
-                      revisionNo={revision.revisionNo}
-                    />
-                  </DraftStatusControl>
-                )}
               </div>
-              {wideHeader ? (
-                <div className="flex min-w-0 shrink-0 items-center gap-2">
-                  {versionMenu(false)}
-                  {preview && revision && !translating && (
-                    <HeroLanguagePicker
-                      content={preview.content}
-                      locale={location.readLocale}
-                      revisionNo={revision.revisionNo}
-                      disabled={busy}
-                      languagesDisabled={editing && section !== "SKILLS"}
-                      onChange={setContentLocale}
-                      onTranslate={translateInto}
-                    />
-                  )}
-                  {headerAction === "publish" && revision && publishButton()}
-                  {headerAction === "draft" && draftPencil}
-                  {actionsMenu}
-                  {closeButton}
-                </div>
-              ) : (
-                // One row on a narrow header: the version menu also holds the language and the main action.
-                <div className="relative flex shrink-0 items-center gap-1.5">
-                  {versionMenu(true)}
-                  {headerAction === "draft" && draftPencil}
-                  {headerAction === "publish" && revision && publishButton("sr-only")}
-                  {actionsMenu}
-                  {closeButton}
-                </div>
-              )}
+              <div className="flex shrink-0 items-center gap-1.5">
+                {headerAction === "publish" &&
+                  revision &&
+                  (publishInMenu
+                    ? publishButton("pointer-events-none invisible absolute size-8 p-0")
+                    : publishButton())}
+                {headerAction === "draft" && draftPencil}
+                {editPencil}
+                {actionsMenu}
+                {languageSheet}
+                {versionSheet}
+                {draftStatusSheet}
+                {closeButton}
+              </div>
             </div>
             {(formSwitcher || sharedPart) && (
               <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -1130,7 +1258,7 @@ export function PublishingWorkspace({
                   )}
                 </div>
               )}
-              <div role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
+              <div ref={panelRef} role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
                 {view === "overview" && (
                   <HeroContent
                     revision={revision}
@@ -1145,7 +1273,8 @@ export function PublishingWorkspace({
                     reveal={contentReveal}
                     content={preview.content}
                     locale={locale}
-                    editable={!!writable}
+                    editable={!!writable && editAsked}
+                    loreEditable={!!writable}
                     busy={busy}
                     heroId={heroId}
                     selectedSkillKey={heroLocationId(urlParams.get("skill"))}

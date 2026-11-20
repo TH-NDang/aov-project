@@ -1,10 +1,9 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { act } from "react"
-import { createMemoryRouter, RouterProvider } from "react-router"
+import { createMemoryRouter, Outlet, RouterProvider } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { HotkeysProvider } from "../src/app/hotkeys"
-import { PageTabPanels, PageTabsProvider, usePageTabs } from "../src/app/layout/page-tabs"
 import { mediaTabLocation, readMediaTab } from "../src/features/media/model/media-location"
 import type { Request } from "@/lib/api/publishing-api"
 import { createWindow, flush, installWindow, waitFor } from "./fixtures/dom"
@@ -19,7 +18,7 @@ test("media tab locations preserve filters and keep portrait as the canonical de
   assert.equal(filters.get("tab"), "cover")
 })
 
-test("media query tabs restore back/forward state and legacy links never create separate page sessions", async () => {
+test("media query tabs restore back/forward state and legacy links land on the workspace", async () => {
   const dom = createWindow("http://localhost/media/head?ruleset=rule&q=airi")
   let restoreGlobals = () => {}
   const requests: string[] = []
@@ -41,30 +40,10 @@ test("media query tabs restore back/forward state and legacy links never create 
     },
   })
   const { MediaWorkspace, LegacyMediaRedirect } = await import("../src/features/media/components/media-workspace")
-  function SessionLinks() {
-    const { sessions } = usePageTabs()
-    return (
-      <nav aria-label="App page tabs">
-        {sessions.map((session) => (
-          <a key={session.path} href={session.to}>
-            {session.path}
-          </a>
-        ))}
-      </nav>
-    )
-  }
-  function Shell() {
-    return (
-      <PageTabsProvider>
-        <SessionLinks />
-        <PageTabPanels />
-      </PageTabsProvider>
-    )
-  }
   const router = createMemoryRouter(
     [
       {
-        element: <Shell />,
+        element: <Outlet />,
         children: [
           { path: "/hero/media", element: <MediaWorkspace request={request} /> },
           { path: "/portraits", handle: { pageTab: false }, element: <LegacyMediaRedirect /> },
@@ -93,10 +72,6 @@ test("media query tabs restore back/forward state and legacy links never create 
     })
     await waitFor(() => selected() === label)
   }
-  const appTabs = () =>
-    Array.from(document.querySelectorAll('nav[aria-label="App page tabs"] a')).map((element) =>
-      element.getAttribute("href"),
-    )
   try {
     await act(async () =>
       root.render(
@@ -110,8 +85,6 @@ test("media query tabs restore back/forward state and legacy links never create 
     await waitFor(() => selected() === "Head" && requests.some((path) => path.includes("role=HEAD")))
     assert.equal(router.state.location.pathname, "/hero/media")
     assert.equal(router.state.location.hash, "#image")
-    assert.equal(appTabs().length, 1)
-    assert.ok(appTabs()[0]?.startsWith("/hero/media?"))
     assert.deepEqual(
       [...document.querySelectorAll("h1")].map((heading) => heading.textContent),
       ["Không gian ảnh"],
@@ -124,7 +97,6 @@ test("media query tabs restore back/forward state and legacy links never create 
     assert.equal(new URLSearchParams(router.state.location.search).get("q"), "airi")
     await clickTab("Bậc trang phục")
     await waitFor(() => requests.some((path) => path.startsWith("/admin/skin-badge-groups?")))
-    assert.equal(appTabs().length, 1)
     await act(async () => {
       await router.navigate(-1)
     })
@@ -149,8 +121,6 @@ test("media query tabs restore back/forward state and legacy links never create 
         await router.navigate(path)
       })
       await waitFor(() => selected() === label && router.state.location.pathname === "/hero/media")
-      assert.equal(appTabs().length, 1)
-      assert.ok(appTabs().every((to) => to?.startsWith("/hero/media")))
     }
     for (const [typed, destination] of [
       ["", "Bậc trang phục"],

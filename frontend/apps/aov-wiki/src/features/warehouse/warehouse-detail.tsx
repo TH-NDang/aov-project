@@ -3,17 +3,21 @@ import { ItemOverview } from "@aov/ui/components/warehouse/item-overview"
 import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
 import { arcanaGroupLabel } from "@aov/ui/components/warehouse/arcana-cards"
 import { warehouseViewGroups } from "./warehouse-view"
+import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
+import { enchantmentUseFacts } from "@aov/ui/lib/enchantment-use"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import {
   useEffect,
   useRef,
   useState,
   type ComponentProps,
+  type CSSProperties,
   type ElementType,
   type ReactNode,
   type RefObject,
 } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/components/sheet"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImageCredit } from "../../components/wiki-image-credit"
@@ -142,8 +146,18 @@ function DetailContent({
   const name = warehouseName(entry, scope.locale)
   const settings = references.data
   const items = entries.filter((e) => e.kind === "items")
-  const sameTier =
+  // An enchantment wears its branch's colour; beside the branch on a wide screen, its neighbours are already in view.
+  const wide = usePageLayout() === "wide"
+  const branchTone =
     entry.kind === "enchantments"
+      ? enchantmentBranchColor({
+          code: entry.content.branchCode,
+          color: groups.find((group) => group.code === entry.content.branchCode)?.color ?? null,
+        })
+      : undefined
+  const toneStyle = branchTone ? ({ "--branch-color": branchTone } as CSSProperties) : undefined
+  const sameTier =
+    entry.kind === "enchantments" && !wide
       ? entries.filter(
           (e) =>
             e.kind === "enchantments" &&
@@ -225,7 +239,7 @@ function DetailContent({
 
   return (
     <>
-      <div className="wiki-warehouse-detail-bar">
+      <div className="wiki-warehouse-detail-bar" data-branch={branchTone ? "" : undefined} style={toneStyle}>
         <span>{eyebrow(entry, groups, scope.locale, wikiText(scope.locale, ...SECTION_NAMES[kind]))}</span>
         {/* Where the picture comes from sits with the other tools, so nothing covers the picture itself. */}
         {artwork?.currentVersion && (
@@ -250,7 +264,7 @@ function DetailContent({
         {close}
       </div>
       <div className="wiki-warehouse-detail-scroll">
-        <div className="wiki-warehouse-detail-identity">
+        <div className="wiki-warehouse-detail-identity" data-branch={branchTone ? "" : undefined} style={toneStyle}>
           <WarehouseArtwork entry={entry} kind={kind} assetId={artworkId} />
           <div>
             <Title>{entryTitle(entry, scope.locale)}</Title>
@@ -334,6 +348,10 @@ function DetailContent({
             ) : (
               <>
                 {spellFacts.length > 0 && <Facts rows={spellFacts} />}
+                {/* How the enchantment is used, before what it does: passive or active, cooldown, uses, minutes. */}
+                {entry.kind === "enchantments" && enchantmentUseFacts(entry.content, ui).length > 0 && (
+                  <Facts rows={enchantmentUseFacts(entry.content, ui)} />
+                )}
                 {arcana && statRows.length > 0 && (
                   <section>
                     <h3>{ui("Chỉ số", "Stats")}</h3>
@@ -552,11 +570,8 @@ export function WarehouseDetail({
     )
   }
 
-  const close = (
-    <SheetClose className="wiki-warehouse-detail-tool" aria-label={closeLabel}>
-      <WikiIcon name="close" size={18} />
-    </SheetClose>
-  )
+  // The sheet rises from the bottom on a phone, where a tap above it or a pull down closes it, so it shows no X.
+  const close = null
   return (
     <Sheet
       open={!!selectedId}
@@ -566,6 +581,7 @@ export function WarehouseDetail({
     >
       <SheetContent
         side="right"
+        fitContent
         showCloseButton={false}
         className="wiki-warehouse-detail"
         onCloseAutoFocus={(event) => {

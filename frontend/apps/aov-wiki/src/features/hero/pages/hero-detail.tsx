@@ -24,7 +24,7 @@ import { HeroGlyph } from "../../../components/hero-glyph"
 import { HeroQuickSwitch } from "../components/hero-quick-switch"
 import { HeroDetailLoading } from "../components/hero-loading"
 import { HeroLaterObservationNote } from "../components/hero-later-observation"
-import { WikiIcon } from "../../../components/wiki-icon"
+import { WikiBreadcrumb } from "../../../components/wiki-breadcrumb"
 import { WikiImage } from "../../../components/wiki-image"
 import { WikiImageCredit as ImageCredit } from "../../../components/wiki-image-credit"
 import "./hero-detail.css"
@@ -82,12 +82,16 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
 
   const identity = (
     <>
-      {/* The header marks the section; a wide page adds one quiet way back, a compact one has it in its header. */}
+      {/* A wide page shows where the hero sits in the Wiki; a compact one has its way back in the header. */}
       {layout !== "compact" && (
-        <Link className="wiki-hero-profile-back" to={scope.href(returnTo)}>
-          <WikiIcon name="chevronLeft" size={16} />
-          {wikiText(locale, "Thư viện Tướng", "Hero library")}
-        </Link>
+        <WikiBreadcrumb
+          className="wiki-hero-profile-breadcrumb"
+          steps={[
+            { label: wikiText(locale, "Trang chủ", "Home"), to: scope.href("/") },
+            { label: wikiText(locale, "Tướng", "Heroes"), to: scope.href(returnTo) },
+            { label: hero.name },
+          ]}
+        />
       )}
       <div className="wiki-hero-profile-identity">
         <span className="wiki-hero-profile-head" aria-hidden="true">

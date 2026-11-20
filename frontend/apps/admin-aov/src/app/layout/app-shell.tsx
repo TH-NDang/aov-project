@@ -1,5 +1,6 @@
-import type { CSSProperties } from "react"
-import { useLocation } from "react-router"
+import { useRef, type CSSProperties } from "react"
+import { useContentScrollMemory } from "./use-content-scroll-memory"
+import { Outlet, useLocation } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { useSession } from "@/app/auth/auth-gate"
 import { selfProfile, userKeys } from "@/features/users/user-api"
@@ -10,7 +11,8 @@ import { ImportWorkspaceHost } from "./import-workspace-host"
 import { SidebarInset, SidebarProvider } from "@aov/ui/components/sidebar"
 import { AppSidebar } from "./app-sidebar"
 import { SiteHeader } from "./site-header"
-import { PageTabPanels, PageTabsProvider } from "./page-tabs"
+import { AdminBreadcrumb } from "./admin-breadcrumb"
+import { CommandSearchProvider } from "./command-search"
 import { useHotkeys } from "../hotkeys"
 
 function readSidebarCookie(): boolean {
@@ -37,10 +39,12 @@ function AccountPreferences() {
 export function AppShell() {
   const { enabled } = useHotkeys()
   const importing = useLocation().pathname === "/hero/import"
+  const content = useRef<HTMLDivElement>(null)
+  useContentScrollMemory(content)
   return (
     <BackgroundTasksProvider>
       <AccountPreferences />
-      <PageTabsProvider>
+      <CommandSearchProvider>
         <SidebarProvider
           defaultOpen={readSidebarCookie()}
           keyboardShortcutEnabled={enabled}
@@ -48,14 +52,19 @@ export function AppShell() {
         >
           <AppSidebar />
           <SidebarInset className="h-svh min-w-0 overflow-hidden">
-            <SiteHeader />
-            <div className={`${importing ? "hidden" : "flex"} min-h-0 flex-1 flex-col`}>
-              <PageTabPanels />
+            <SiteHeader content={content} />
+            {/* One page at a time; its own scroll region sits under the phone bar and remembers where each visit was. */}
+            <div
+              ref={content}
+              className={`${importing ? "hidden" : "flex"} min-h-0 min-w-0 flex-1 flex-col overflow-auto`}
+            >
+              <AdminBreadcrumb />
+              <Outlet />
             </div>
             <ImportWorkspaceHost />
           </SidebarInset>
         </SidebarProvider>
-      </PageTabsProvider>
+      </CommandSearchProvider>
     </BackgroundTasksProvider>
   )
 }

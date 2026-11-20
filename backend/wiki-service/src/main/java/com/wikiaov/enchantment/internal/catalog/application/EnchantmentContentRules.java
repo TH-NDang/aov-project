@@ -41,6 +41,35 @@ class EnchantmentContentRules {
                 || content.position() != null && content.position() < 0) {
             fail("Invalid enchantment position.");
         }
+        validateUse(content);
+    }
+
+    /** How the enchantment is used: a known activation, a positive cooldown or range, uses and a match time window. */
+    private void validateUse(EnchantmentContent content) {
+        if (!EnchantmentContent.ACTIVATIONS.contains(content.activation())) {
+            fail("Unknown enchantment activation.");
+        }
+
+        var cooldown = content.cooldownSeconds();
+        var longest = content.cooldownMaxSeconds();
+        if (cooldown != null && cooldown.signum() <= 0 || longest != null && longest.signum() <= 0) {
+            fail("A cooldown must be more than zero seconds.");
+        }
+        if (longest != null && (cooldown == null || longest.compareTo(cooldown) < 0)) {
+            fail("The longest cooldown needs a first cooldown and cannot be shorter than it.");
+        }
+        if (content.maxUses() != null && content.maxUses() < 1) {
+            fail("Uses per match must be at least one.");
+        }
+
+        var from = content.availableFromSeconds();
+        var until = content.availableUntilSeconds();
+        if (from != null && from < 0 || until != null && until < 0) {
+            fail("Match times cannot be negative.");
+        }
+        if (from != null && until != null && until <= from) {
+            fail("An enchantment must become available before it stops being available.");
+        }
     }
 
     private void validateIcon(UUID id) {

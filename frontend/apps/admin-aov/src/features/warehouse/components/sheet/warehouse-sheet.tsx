@@ -1,11 +1,12 @@
-import { useState, type ReactNode } from "react"
-import { Archive, Check, ChevronDown, Copy, LoaderCircle, Pencil, X } from "lucide-react"
+import { cloneElement, isValidElement, useState, type ReactElement, type ReactNode } from "react"
+import { Archive, Check, ChevronDown, Copy, LoaderCircle, MoreHorizontal, Pencil, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -78,8 +79,9 @@ export function CopyCode({ code }: { code: string }) {
 }
 
 /**
- * The right side of a sheet header, in one row of equal-height controls: the version, discarding the draft, saving,
- * publishing, the single pencil and closing. On a narrow screen the row drops below the name rather than squeezing it.
+ * The right side of a sheet header, in one row of equal-height controls: publishing or saving, the single pencil, a ⋯
+ * menu headed by the version that holds the reading language and discarding the draft, and closing. The row never wraps.
+ * Callers pass the language picker in its `menu` form.
  */
 export function SheetActions({
   version,
@@ -106,37 +108,13 @@ export function SheetActions({
   publish?: { disabled: boolean; title?: string; quiet?: boolean; onClick: () => void }
   onClose: () => void
   closeDisabled?: boolean
-  /** The language icon, first in the row: it sets what the page reads and edits in. */
+  /** The reading language: a `LanguagePicker variant="menu"`, placed as a row of the ⋯ menu and the sheet it opens. */
   language?: ReactNode
 }) {
+  const [languageOpen, setLanguageOpen] = useState(false)
+  const picker = isValidElement(language) ? (language as ReactElement<Record<string, unknown>>) : null
   return (
-    <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-      {version && (
-        <span className={`type-meta mr-1 whitespace-nowrap ${editing ? "text-primary" : ""}`}>{version}</span>
-      )}
-      {language}
-      {discard && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="text-muted-foreground hover:text-destructive"
-          disabled={disabled}
-          title="Bỏ nháp"
-          aria-label="Bỏ nháp"
-          onClick={async () => {
-            const confirmed = await confirmAction({
-              title: "Bỏ bản nháp này?",
-              description: discard.description,
-              confirmLabel: "Bỏ nháp",
-              cancelLabel: "Giữ bản nháp",
-            })
-            if (confirmed) discard.onConfirm()
-          }}
-        >
-          <Archive />
-        </Button>
-      )}
+    <div className="ml-auto flex shrink-0 items-center justify-end gap-1.5">
       {publish && (
         <Button
           type="button"
@@ -170,12 +148,58 @@ export function SheetActions({
           {editing ? <Check /> : <Pencil />}
         </Button>
       )}
-      <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+      {(version || language || discard) && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="bg-background"
+              disabled={disabled}
+              title="Thêm thao tác"
+              aria-label="Thêm thao tác"
+            >
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            {/* The version on screen heads the menu, so the header keeps its controls alone. */}
+            {version && (
+              <DropdownMenuLabel className={`type-meta ${editing ? "text-primary" : ""}`}>{version}</DropdownMenuLabel>
+            )}
+            {version && (language || discard) && <DropdownMenuSeparator />}
+            {picker && cloneElement(picker, { part: "item", onOpen: () => setLanguageOpen(true) })}
+            {language && discard && <DropdownMenuSeparator />}
+            {discard && (
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={async () => {
+                  const confirmed = await confirmAction({
+                    title: "Bỏ bản nháp này?",
+                    description: discard.description,
+                    confirmLabel: "Bỏ nháp",
+                    cancelLabel: "Giữ bản nháp",
+                  })
+                  if (confirmed) discard.onConfirm()
+                }}
+              >
+                <Archive />
+                Bỏ nháp
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+      {/* The language sheet lives outside the menu, which closes as the sheet opens. */}
+      {picker && cloneElement(picker, { part: "sheet", open: languageOpen, onOpenChange: setLanguageOpen })}
+      {/* A sheet rising from the bottom on a phone closes by a tap above it or a pull down, so it shows no X. */}
+      <span aria-hidden className="mx-1 h-5 w-px bg-border group-data-[side=bottom]/sheet:hidden" />
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="text-muted-foreground"
+        className="text-muted-foreground group-data-[side=bottom]/sheet:hidden"
         disabled={closeDisabled}
         title="Đóng"
         aria-label="Đóng"

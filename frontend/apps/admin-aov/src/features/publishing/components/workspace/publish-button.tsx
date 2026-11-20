@@ -23,6 +23,7 @@ export function PublishButton({
   open: requestedOpen,
   onOpenChange,
   triggerClassName,
+  compact = false,
 }: {
   busy: boolean
   publishing: boolean
@@ -42,6 +43,8 @@ export function PublishButton({
   onOpenChange?: (open: boolean) => void
   /** A narrow header hides the button and keeps it only as the anchor of its popover. */
   triggerClassName?: string
+  /** A phone's header shows the icon alone; the name stays for screen readers and in the tooltip. */
+  compact?: boolean
 }) {
   const [localOpen, setLocalOpen] = useState(false)
   const open = requestedOpen ?? localOpen
@@ -64,6 +67,8 @@ export function PublishButton({
           variant={blocked ? "outline" : "default"}
           disabled={busy}
           className={triggerClassName}
+          size={compact ? "icon-sm" : "default"}
+          title={compact ? "Xuất bản" : undefined}
           aria-label={blocked ? "Xuất bản · xem mục còn thiếu" : undefined}
           onClick={(event) => {
             if (blocked) return
@@ -74,7 +79,7 @@ export function PublishButton({
           }}
         >
           {blocked ? <AlertTriangle className="size-4 text-(--aov-warning)" /> : <Send className="size-4" />}
-          {publishing ? "Đang xuất bản…" : "Xuất bản"}
+          <span className={compact ? "sr-only" : undefined}>{publishing ? "Đang xuất bản…" : "Xuất bản"}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent

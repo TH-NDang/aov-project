@@ -1,12 +1,12 @@
 .public-account-panel.public-preferences-drawer {
   width: 100%;
-  max-height: calc(100dvh - 56px);
+  max-height: min(85dvh, calc(100dvh - 48px));
   margin-top: 0;
   padding: 0 0 max(16px, env(safe-area-inset-bottom));
   overflow: visible;
-  border: 1px solid var(--account-line);
-  border-bottom: 0;
-  border-radius: var(--aov-radius-media) var(--aov-radius-media) 0 0;
+  border: 0;
+  border-top: 1px solid var(--account-line);
+  border-radius: 18px 18px 0 0;
   touch-action: pan-y;
   animation-duration: 240ms;
 }
@@ -19,7 +19,7 @@
 }
 .public-preferences-handle[data-vaul-handle] {
   width: 64px;
-  height: 24px;
+  height: 22px;
   flex-shrink: 0;
   margin: 0 auto;
   background: transparent;
@@ -30,13 +30,13 @@
 .public-preferences-handle::before {
   content: "";
   position: absolute;
-  top: 10px;
-  left: 14px;
-  width: 36px;
-  height: 3px;
+  top: 8px;
+  left: 12px;
+  width: 40px;
+  height: 4px;
   border-radius: var(--aov-radius-pill);
   background: var(--account-muted);
-  opacity: 0.3;
+  opacity: 0.45;
 }
 .public-preferences-handle:active {
   cursor: grabbing;
@@ -51,31 +51,14 @@
 }
 .public-preferences-header {
   position: relative;
-  padding: 0 48px 12px;
-  text-align: center;
+  padding: 2px 20px 12px;
+  text-align: left;
 }
 .public-preferences-header [data-slot="drawer-title"] {
   color: var(--account-text);
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 700;
   line-height: 24px;
-}
-.public-preferences-header button {
-  position: absolute;
-  top: -6px;
-  right: 8px;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 36px;
-  border: 0;
-  border-radius: var(--aov-radius-control);
-  background: transparent;
-  color: var(--account-muted);
-  cursor: pointer;
-}
-.public-preferences-header button:hover {
-  color: var(--account-text);
-  background: var(--account-fill);
 }
 .public-preferences-body {
   display: flex;

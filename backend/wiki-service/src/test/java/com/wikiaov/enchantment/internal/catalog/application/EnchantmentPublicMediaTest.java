@@ -59,7 +59,8 @@ class EnchantmentPublicMediaTest {
 
     private EnchantmentView view(UUID icon) {
         return new EnchantmentView(UUID.randomUUID(), "sample", null,
-                new EnchantmentContent(icon, "vuc-hon-mang", 2, 0, List.of(), null), List.of());
+                new EnchantmentContent(icon, "vuc-hon-mang", 2, 0, null, null, null, null, null, null, List.of(), null),
+                List.of());
     }
 
     private MediaAssetReference asset(UUID id) {

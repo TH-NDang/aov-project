@@ -231,20 +231,21 @@ export function ItemEditor({
         onOpenAutoFocus={focusSheet}
         showCloseButton={false}
       >
-        <SheetHeader className="shrink-0 flex-row flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+        {/* One row at every width, as the hero's: the icon, the name over one line of facts, then the controls. */}
+        <SheetHeader className="shrink-0 flex-row flex-nowrap items-center gap-3 px-4 py-3">
           <HeroAsset
             id={value.iconAssetId}
             alt={name}
-            className="size-12 shrink-0 rounded-lg"
+            className="size-10 shrink-0 rounded-lg"
             frameAspectRatio={1}
             preview
           />
-          <div className="min-w-40 flex-1">
+          <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1">
-              <SheetTitle className="type-section-title break-words">{name}</SheetTitle>
+              <SheetTitle className="type-section-title truncate">{name}</SheetTitle>
               <CopyCode code={entry.code} />
             </div>
-            <div className="type-body flex flex-wrap items-center gap-x-3 gap-y-1">
+            <div className="type-meta flex min-w-0 items-center gap-x-2 overflow-hidden whitespace-nowrap">
               {value.categoryCode && (
                 <span className="inline-flex items-center gap-1">
                   <ItemCategoryIcon category={category} />
@@ -264,6 +265,7 @@ export function ItemEditor({
             onClose={close}
             language={
               <LanguagePicker
+                variant="menu"
                 translations={value.translations}
                 value={language}
                 onChange={chooseLanguage}

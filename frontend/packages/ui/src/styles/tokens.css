@@ -41,42 +41,50 @@
   --aov-brand-stream-accent: #aebbe3;
   --aov-brand-stream-wordmark: #b6bfdf;
 
-  /* AOV Wiki: a deep ink-blue page like the game's lobby, cards one step lighter, marks in a rich gold. Fixed, not themed. */
-  --aov-wiki-night: #0d1322;
-  --aov-wiki-bar: #080c16;
-  --aov-wiki-panel: #1d2840;
-  --aov-wiki-panel-high: #26344f;
-  --aov-wiki-panel-deep: #161f33;
-  --aov-wiki-line: #26324b;
-  --aov-wiki-line-strong: #3b4b6b;
-  --aov-wiki-gold: #f2c26a;
-  --aov-wiki-gold-bright: #ffdf9e;
-  --aov-wiki-text: #f5f0e6;
-  --aov-wiki-text-soft: #c8d0de;
-  --aov-wiki-text-muted: #8f9cb5;
+  /*
+   * AOV Wiki, "soft night": a near-neutral graphite page with no blue cast, cards one step lighter, marks in a muted
+   * champagne gold, so the artwork carries the colour and long reading stays easy on the eyes. Fixed, not themed.
+   */
+  --aov-wiki-night: #121419;
+  --aov-wiki-bar: #0c0e12;
+  --aov-wiki-panel: #20242d;
+  --aov-wiki-panel-high: #2a2f3a;
+  --aov-wiki-panel-deep: #191c23;
+  --aov-wiki-line: #262b35;
+  --aov-wiki-line-strong: #363d4a;
+  --aov-wiki-gold: #d8bc84;
+  --aov-wiki-gold-bright: #ecd6a8;
+  --aov-wiki-text: #ececea;
+  --aov-wiki-text-soft: #c4c8cf;
+  --aov-wiki-text-muted: #8c929d;
   --aov-wiki-success: #52e0a0;
   --aov-wiki-danger: #ff7d7d;
   --aov-wiki-warning: #ffc75e;
   --aov-wiki-info: #8db9ff;
 
-  /* AOV Stream, from its owl logo: night indigo, periwinkle feathers, gold eyes, cream face. */
-  --aov-stream-night: #141d31;
-  --aov-stream-dusk: #1e2742;
-  --aov-stream-indigo: #2a3354;
-  --aov-stream-indigo-line: #3a4570;
-  --aov-stream-feather: #555f8e;
-  --aov-stream-feather-light: #7d87b1;
+  /*
+   * AOV Stream, "lavender": the owl's periwinkle feathers lead. A violet-black night and lavender marks in the dark
+   * theme, a lavender mist and a deep periwinkle in the light one. Gold, tan and cream stay for the logo only.
+   */
+  --aov-stream-night: #121220;
+  --aov-stream-dusk: #1a1a2b;
+  --aov-stream-indigo: #24243a;
+  --aov-stream-indigo-line: #2c2c44;
+  --aov-stream-feather: #6b6b88;
+  --aov-stream-feather-light: #a5a6c4;
+  --aov-stream-lavender: #a5a8ff;
+  --aov-stream-lavender-bright: #c9cbff;
   --aov-stream-gold: #d3a857;
-  --aov-stream-periwinkle-deep: #38427a;
+  --aov-stream-periwinkle-deep: #5552d4;
   --aov-stream-tan: #eac98f;
   --aov-stream-cream: #fff4d7;
-  --aov-stream-text-soft: #d3d6e6;
-  --aov-stream-text-muted: #a9b0cf;
-  --aov-stream-mist: #eff0f7;
-  --aov-stream-mist-sunken: #e3e5f1;
-  --aov-stream-mist-line: #d3d7e8;
-  --aov-stream-ink: #1c2a3b;
-  --aov-stream-ink-soft: #353654;
+  --aov-stream-text-soft: #c9c9de;
+  --aov-stream-text-muted: #9a9cb8;
+  --aov-stream-mist: #f6f6fb;
+  --aov-stream-mist-sunken: #ececf6;
+  --aov-stream-mist-line: #e1e1ee;
+  --aov-stream-ink: #1b1b2e;
+  --aov-stream-ink-soft: #3b3b55;
 
   /* In-game gold: a price in gold and its coin, in the coin's amber rather than the brand accent. */
   --aov-game-gold: light-dark(oklch(66.6% 0.179 58.318), oklch(82.8% 0.189 84.429));

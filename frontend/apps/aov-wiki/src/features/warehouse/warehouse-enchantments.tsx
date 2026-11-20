@@ -1,6 +1,8 @@
-import type { CSSProperties } from "react"
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
+import type { CSSProperties } from "react"
+import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
+import { enchantmentColumn } from "@aov/ui/lib/warehouse-content"
 import { enchantmentRows, type WarehouseEnchantment } from "./use-item-catalog"
 import { WarehouseArtwork } from "./warehouse-artwork"
 import { EmptyGroup, romanTier } from "./warehouse-parts"
@@ -28,12 +30,13 @@ function EnchantmentNode({
     <button
       type="button"
       className="wiki-enchantment-node"
+      style={{ gridColumn: enchantmentColumn(entry.content.position) ?? undefined }}
       aria-pressed={selected}
       aria-label={wikiText(locale, `Xem ${name}`, `View ${name}`)}
       onClick={(event) => onOpen(entry, event.currentTarget)}
     >
       <WarehouseArtwork entry={entry} kind="enchantments" />
-      <span>
+      <span title={summary ? `${name} · ${summary}` : name}>
         <strong>{name}</strong>
         {summary && <small>{summary}</small>}
       </span>
@@ -70,9 +73,16 @@ export function EnchantmentCatalog({
         const members = rows.filter((entry) => entry.content.branchCode === code)
         const tiers = [...new Set(members.map((entry) => entry.content.tier))]
         return (
-          <section key={code} className="wiki-enchantment-branch" aria-label={name}>
+          <section
+            key={code}
+            className="wiki-enchantment-branch"
+            aria-label={name}
+            style={
+              { "--branch-color": enchantmentBranchColor({ code, color: branch?.color ?? null }) } as CSSProperties
+            }
+          >
             <header>
-              {icon && <WikiImage className="wiki-enchantment-branch-art" src={icon} alt="" width="40" height="40" />}
+              {icon && <WikiImage className="wiki-enchantment-branch-art" src={icon} alt="" width="44" height="44" />}
               <div>
                 <h2>
                   {name}
@@ -89,8 +99,8 @@ export function EnchantmentCatalog({
                   <span title={label} aria-hidden="true">
                     {romanTier(tier)}
                   </span>
-                  {/* Two or three enchantments share the row evenly, so a tier of two leaves no hole. */}
-                  <div style={{ "--nodes": nodes.length } as CSSProperties}>
+                  {/* Three places in every tier, each enchantment in its own, so the columns line up down the branch. */}
+                  <div>
                     {nodes.map((entry) => (
                       <EnchantmentNode
                         key={entry.id}

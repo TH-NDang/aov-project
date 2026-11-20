@@ -45,8 +45,8 @@ lục bên trái và không có thanh điều hướng ở đáy màn hình.
 
 | Trang | Compact | Wide |
 |---|---|---|
-| Đầu trang | Một hàng cao 48px: logo (trang chủ) hoặc nút về trang chủ hoặc quay lại, tên trang, tìm kiếm, mục lục, "⋯". Bấm tìm kiếm thì cả hàng thành nút đóng và ô nhập | Một thanh cao 56px: logo và menu chuyển ứng dụng, các mục Tướng, Trang phục, Kho trang bị (menu bốn phần), Chế độ chơi, Cập nhật, Thuật ngữ, ô tìm kiếm, thị trường và tài khoản. Dưới 1180px ẩn chữ AOV WiKi; dưới 1024px ô tìm kiếm thành nút, bấm thì ô nhập thay chỗ các mục |
-| Điều hướng mục | Nút mục lục mở tấm trượt bên phải với mọi mục theo nhóm | Các mục nằm trên thanh đầu trang |
+| Đầu trang | Một hàng cao 48px: logo (trang chủ) hoặc nút về trang chủ hoặc quay lại, tên trang, tìm kiếm, mục lục, "⋯". Bấm tìm kiếm thì cả hàng thành nút đóng và ô nhập | Một thanh cao 56px: logo và menu chuyển ứng dụng, ô tìm kiếm ở giữa, thị trường và tài khoản |
+| Điều hướng mục | Nút mục lục mở tấm trượt bên phải với mọi mục theo nhóm | Trang chủ có các ô mục; trang danh sách và tham khảo có sidebar các mục bên trái, dưới 1180px chỉ còn icon |
 | Đầu trang danh sách | Tên trang nằm trên header, trang không lặp lại. Trang con (một chế độ, một bản cập nhật) tự có đường quay lại và tên | `CatalogHeading`: tiêu đề, một dòng mờ, phiên bản dữ liệu hoặc một nút bên phải; trang con có đường quay lại phía trên tiêu đề |
 | Trang chủ | Ảnh tướng của ngày ở trên, header trong suốt đè lên → tiêu đề, ô tìm lớn, dòng bản đang áp dụng → 9 ô mục thành 3 × 3, icon trên tên, không có số đếm → Thay đổi ở bản đang áp dụng, hai tướng một hàng → Các bản cập nhật → Vai trò | Ảnh tướng của ngày phủ nửa phải, tiêu đề và ô tìm lớn bên trái → 9 ô mục trên một hàng (3 × 3 dưới 1180px) → Thay đổi ở bản đang áp dụng bên trái, Các bản cập nhật và 6 vai trò ở cột phải 340px (300px dưới 1180px) |
 | Chi tiết tướng | Ảnh, tên, vai trò, giá và nút Video trên ảnh → Phiên bản dữ liệu → Một dòng "Thay đổi ở bản này", bấm để mở xuống → Tổng quan gọn → Bộ kỹ năng → Build đề cử (khi có) → Trang phục → Video → Lịch sử thay đổi. Nút nổi mở drawer các phần | Màn đầu: tên, vai trò, giá và Tổng quan bên trái, ảnh tướng phủ bên phải, mờ dần vào nền. Sau đó: Phiên bản dữ liệu → Thay đổi ở bản này → Bộ kỹ năng → Build đề cử → Trang phục → Video → Lịch sử thay đổi, đặt thẳng trên nền. Từ 1180px có cột "Trên trang này" bên phải, dưới đó dùng nút nổi |
@@ -153,19 +153,21 @@ với tên `--aov-wiki-*` và được `wiki.css` gán vào các token chung.
 
 ### AOV Stream: màu của logo cú
 
-Chàm đêm, lông xanh tím, mắt vàng, mặt kem. Màu nằm trong `tokens.css` với tên `--aov-stream-*`. Trang theo chế độ sáng
-hoặc tối của người xem, riêng thanh trên và chân trang luôn màu chàm đêm.
+Bảng màu "Oải hương" lấy từ lông cú: đêm ngả tím, nhấn tím oải hương; vàng mắt cú và mặt kem chỉ còn trong logo, để
+Stream khác hẳn màu vàng của Wiki. Màu nằm trong `tokens.css` với tên `--aov-stream-*`. Trang theo chế độ sáng hoặc tối
+của người xem, riêng thanh trên và chân trang luôn màu đêm ngả tím.
 
 | Nội dung | Cách trình bày |
 |---|---|
-| Nền trang | Một màu phẳng: sương xanh nhạt ở giao diện sáng, chàm đêm ở giao diện tối; không họa tiết |
-| Mục đang ở trên thanh trên | Khối bo góc màu chàm giống nền logo, chữ kem đậm, ngôi sao vàng nhỏ ở góc |
-| Chữ logo | Vẽ bằng nét tròn đậm cho hợp con cú: AOV màu kem của mặt cú, Stream màu xanh tím của lông, kèm ngôi sao nhỏ của logo |
+| Nền trang | Một màu phẳng: sương tím nhạt ở giao diện sáng, đêm ngả tím ở giao diện tối; không họa tiết |
+| Thanh trên và chân trang | Theo giao diện: nền trắng ở giao diện sáng, đêm ngả tím ở giao diện tối. Logo cú 32px, các mục dạng tab chữ: mục đang ở chữ đậm và vạch màu nhấn ở chân thanh. Ô tìm kiếm ở giữa và các nút tròn dùng nền mờ, không viền |
+| Tìm kiếm trên điện thoại | Bấm nút tìm kiếm thì thanh thành nút quay lại và ô nhập; bên dưới mở một màn phủ kín trang với lối tắt Bảng tin, Giải đấu, Khám phá và một dòng gợi ý, đến khi người xem tìm |
+| Chữ logo | Cùng một kiểu với Wiki (`PublicAppWordmark`): "AOV" đậm màu chữ, tên sản phẩm màu nhấn có ánh chuyển nhẹ, cùng cỡ chữ ở hai app |
 | Đầu trang danh sách | `.tn-page-head`: tiêu đề 28/36, một dòng mờ (ẩn trên compact), tối đa một nút bên phải |
 | Đầu một giải, một trận | Nền `.hub-art` màu sinh từ tên, vì các giải chưa có ảnh riêng; chỉ cao vừa nội dung |
 | Tiêu đề mục | `.tn-heading`: 18/24 đậm, số đếm mờ, một liên kết bên phải |
 | Thẻ | Nền thẻ, bo 10px, không viền; rê chuột đổi nền, không xê dịch thẻ. Thẻ trận nhỏ `.tn-match` giữ viền mảnh |
-| Màu nhấn | Giao diện sáng: chàm của cú. Giao diện tối: vàng mắt cú. Liên kết, chip và tab đang chọn theo màu này |
+| Màu nhấn | Giao diện sáng: xanh tím đậm của lông cú. Giao diện tối: tím oải hương. Liên kết, chip và tab đang chọn theo màu này |
 | Chip | `.hub-pills`: một hàng cuộn ngang, chip đang chọn tô đặc màu nhấn |
 | Tab | `.cp-tabs`: chữ 14px; tab đang mở giữ màu chữ thường, đậm hơn và có vạch màu nhấn bên dưới; một hàng cuộn ngang |
 | Logo đội và giải | Nằm trên ô `--hub-plate`, để logo vẽ cho nền tối vẫn thấy ở giao diện sáng |

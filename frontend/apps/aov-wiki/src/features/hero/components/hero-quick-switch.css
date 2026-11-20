@@ -37,9 +37,6 @@
 
 /* The list of heroes: a sheet from the left with the search and the filters above a grid of hero cards. */
 .wiki-hero-switch-panel[data-slot="sheet-content"] {
-  width: min(760px, calc(100vw - 44px));
-  max-width: 760px;
-  height: 100dvh;
   gap: 0;
   border-color: var(--aov-line);
   background: var(--aov-bg);
@@ -191,5 +188,13 @@
   }
   .wiki-hero-switch-grid {
     gap: 8px;
+  }
+}
+/* A side panel on wide screens; on a phone the shared bottom sheet takes most of the screen. */
+@media (min-width: 900px) {
+  .wiki-hero-switch-panel[data-slot="sheet-content"] {
+    width: min(760px, calc(100vw - 44px));
+    max-width: 760px;
+    height: 100dvh;
   }
 }

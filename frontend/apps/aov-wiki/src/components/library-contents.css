@@ -1,7 +1,5 @@
 /* The contents sheet of the compact header: a title, a close button, then every section. */
 .wiki-library-sheet[data-slot="sheet-content"] {
-  width: min(86vw, 320px);
-  max-width: 320px;
   gap: 0;
   border-color: var(--aov-line);
   background: var(--aov-popover);
@@ -35,4 +33,11 @@
   min-height: 0;
   overflow-y: auto;
   padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+/* A side sheet on wide screens; on a phone the shared bottom sheet spans the width. */
+@media (min-width: 900px) {
+  .wiki-library-sheet[data-slot="sheet-content"] {
+    width: min(86vw, 320px);
+    max-width: 320px;
+  }
 }

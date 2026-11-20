@@ -3,7 +3,6 @@ import type { PublicationOverview } from "../../api/publication-overview"
 import { type CatalogFilter } from "@/lib/catalog-scope"
 
 const storageKey = "aov.admin.catalog-scope.v1"
-const catalogPaths = new Set(["/hero", "/items", "/arcana", "/enchantments", "/spells", "/game-configuration"])
 
 function read() {
   try {
@@ -60,20 +59,4 @@ export function useCatalogScopePreference(
   }
   const savedSeason = data.seasons.find((s) => s.id === saved.get("season"))
   return savedSeason ? { seasonId: savedSeason.id, variantId: "" } : requested
-}
-
-/** Revisiting an admin list tab keeps its filters but follows the shared time selection. */
-export function catalogTabTarget(to: string, selection: string) {
-  if (!selection) return to
-  const url = new URL(to, "http://localhost")
-  if (!catalogPaths.has(url.pathname) || url.searchParams.has("item") || url.searchParams.has("hero")) return to
-  const saved = new URLSearchParams(selection)
-  const ruleset = url.searchParams.get("ruleset")
-  if (ruleset && saved.has("ruleset") && ruleset !== saved.get("ruleset")) return to
-  for (const key of ["season", "patch"]) {
-    const value = saved.get(key)
-    if (value) url.searchParams.set(key, value)
-    else url.searchParams.delete(key)
-  }
-  return url.pathname + url.search + url.hash
 }

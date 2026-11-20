@@ -6,6 +6,7 @@ import { AppLoading, RouteError } from "./route-error"
 import { LegacyMediaRedirect, MediaWorkspace } from "@/features/media/components/media-workspace"
 import { MovedRedirect } from "./moved-redirect"
 import { HeroCrumb, TournamentCrumb } from "./layout/entity-crumbs"
+import { setBreadcrumbRoutes } from "./layout/breadcrumb-routes"
 
 const handle = (crumb: RouteHandle["crumb"]): RouteHandle => ({ crumb })
 const title = (text: string) => handle(() => text)
@@ -41,11 +42,8 @@ const routes: RouteObject[] = [
         path: "users",
         handle: title("Người dùng"),
         lazy: async () => ({ Component: (await import("@/features/users/users-page")).UsersPage }),
-      },
-      {
-        path: "users/:userId",
-        handle: title("Chi tiết người dùng"),
-        lazy: async () => ({ Component: (await import("@/features/users/user-detail-page")).UserDetailPage }),
+        // A user opens in a drawer over the list, which stays mounted with its search and scroll.
+        children: [{ path: ":userId", handle: title("Chi tiết người dùng") }],
       },
       {
         errorElement: <RouteError />,
@@ -322,16 +320,19 @@ const routes: RouteObject[] = [
           },
           {
             path: "tournaments/:tournamentId",
-            handle: handle((match) => (
-              <TournamentCrumb tournamentId={match.params.tournamentId} fallback="Chi tiết giải" />
-            )),
+            handle: {
+              ...handle((match) => (
+                <TournamentCrumb tournamentId={match.params.tournamentId} fallback="Chi tiết giải" />
+              )),
+              ownTrail: true,
+            },
             lazy: async () => ({
               Component: (await import("@/features/competition/competition-workspace")).CompetitionWorkspace,
             }),
           },
           {
             path: "tournaments/:tournamentId/matches/:seriesId",
-            handle: title("Trận đấu"),
+            handle: { ...title("Trận đấu"), ownTrail: true },
             lazy: async () => ({ Component: (await import("@/features/esports/pages/match-page")).MatchPage }),
           },
           {
@@ -354,6 +355,8 @@ const routes: RouteObject[] = [
     ],
   },
 ]
+
+setBreadcrumbRoutes(routes)
 
 export const router =
   import.meta.env.VITE_ROUTER === "memory"

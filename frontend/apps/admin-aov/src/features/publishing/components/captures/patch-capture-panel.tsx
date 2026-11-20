@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
+import { DropdownMenuCheckboxItem } from "@aov/ui/components/dropdown-menu"
 import { Kbd } from "@aov/ui/components/kbd"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { cn } from "@aov/ui/lib/utils"
@@ -148,27 +149,26 @@ function CaptureResizeHandle({
   )
 }
 
-/** Header toggle for the whole panel; hidden for an account that cannot open source files. */
-export function PatchCaptureToggle() {
+/**
+ * The row of the hero's ⋯ menu that opens and closes the frame of the hero's original screenshots, with how many
+ * there are. Absent while there are none to show.
+ */
+export function PatchCaptureMenuItem() {
   const captures = usePatchCaptureContext()
   if (!captures || captures.state.status === "idle" || captures.state.status === "unavailable") return null
   const count = captures.groups.length ? captures.groups.flatMap((group) => group.images).length : null
-  const label = captures.open ? "Đóng khung ảnh gốc" : "Mở khung ảnh gốc của tướng"
   return (
-    <Button
-      type="button"
-      variant={captures.open ? "secondary" : "outline"}
-      size="sm"
-      className="shrink-0"
-      aria-pressed={captures.open}
-      aria-label={label}
-      title={label}
-      onClick={captures.toggle}
+    <DropdownMenuCheckboxItem
+      checked={captures.open}
+      onCheckedChange={captures.toggle}
+      // The icon leads like the other rows; the tick of an open frame moves to the end.
+      className="pr-8 pl-2 [&>span:first-child]:right-2 [&>span:first-child]:left-auto"
+      aria-label={captures.open ? "Đóng khung ảnh gốc" : "Mở khung ảnh gốc của tướng"}
     >
-      <Images className="size-4" />
-      <span className="@max-5xl:sr-only">Ảnh gốc</span>
-      {count !== null && <span className="text-xs tabular-nums text-muted-foreground">{count}</span>}
-    </Button>
+      <Images />
+      <span className="min-w-0 flex-1 truncate">Ảnh gốc của tướng</span>
+      {count !== null && <span className="type-meta shrink-0 tabular-nums">{count}</span>}
+    </DropdownMenuCheckboxItem>
   )
 }
 

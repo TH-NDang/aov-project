@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "locale": "vi-VN",
+  "source": "Game screenshots of the enchantment screen sent by the owner on 2026-11-20, one per enchantment with its full text (Tóm tắt/Chi tiết); written out by the rules of frontend/docs/QUY-UOC-VIET.md section 5.",
+  "changeNote": "Sửa theo ảnh chụp màn hình phù hiệu trong game ngày 20/11/2026: mô tả liền câu, bổ sung phần bị cụt, cách dùng, hồi chiêu, số lần dùng và mốc thời gian.",
+  "enchantments": {
+    "tuong-phan": {
+      "summary": "Tăng sát thương",
+      "description": "Sát thương gây ra cho tướng địch tăng 3% nhưng sát thương phải chịu cũng tăng lên 2% (tướng cận chiến chỉ thêm 1%).",
+      "activation": "PASSIVE"
+    },
+    "sung-man": {
+      "summary": "Hồi năng lượng",
+      "description": "Tung chiêu hoặc đòn đánh thường trúng tướng địch sẽ được hồi 8% năng lượng tối đa. Hồi chiêu: 5 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 5
+    },
+    "thanh-chau": {
+      "summary": "Giảm hồi chiêu",
+      "description": "Chiêu cuối được giảm thời gian hồi chiêu thêm 10% (nhưng không được vượt quá 40% tối đa).",
+      "activation": "PASSIVE"
+    },
+    "bi-quyet": {
+      "summary": "Chí mạng, công phép",
+      "description": "Bạn được nhận thêm 16% chí mạng và thêm 8% công phép từ trang bị.",
+      "activation": "PASSIVE"
+    },
+    "xuyen-tam": {
+      "summary": "Xuyên giáp",
+      "description": "Nhận 18–60 xuyên giáp/xuyên giáp phép.",
+      "activation": "PASSIVE"
+    },
+    "tinh-linh": {
+      "summary": "Tăng sát thương",
+      "description": "Đòn đánh thường thứ 3 liên tiếp trúng một tướng địch sẽ nhận được một vòng sáng tiểu thiên thần quanh cơ thể trong 5 giây. Tiểu thiên thần sẽ tự động công kích kẻ địch bị chủ nhân tấn công trong phạm vi 9.5m. Tốc đánh bằng tốc đánh của chủ nhân và lực công kích bằng 2% máu tối đa của mục tiêu chuyển thành sát thương chuẩn. Hồi chiêu: 10 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 10
+    },
+    "than-quang": {
+      "summary": "Tăng sát thương",
+      "description": "Tung chiêu hoặc đánh thường đầu tiên trúng tướng địch sẽ tạo thành sát thương sấm sét gây 80 (+8 mỗi cấp tướng) (+30% công phép) sát thương phép. Những chiêu hoặc đòn đánh thường tung sau đó sẽ giảm thời gian hồi chiêu 1 giây (khoảng cách giữa 2 lần giảm hồi chiêu phải lớn hơn 0.5 giây). Hồi chiêu: 12 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 12
+    },
+    "thanh-thuan": {
+      "summary": "Phòng ngự",
+      "description": "Trong thời gian ngắn nhận sát thương vượt quá 30% máu của bản thân sẽ lập tức được nhận lá chắn miễn 400 (+30 mỗi cấp tướng) sát thương và 20% hút máu phép trong 6 giây, hạ hoặc phụ hạ trong thời gian này sẽ kéo dài hút máu phép 3 giây. Hồi chiêu: 30 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 30
+    },
+    "hap-huyet": {
+      "summary": "Hồi phục",
+      "description": "Hạ hoặc phụ hạ sẽ được hồi 9% máu bản thân đã mất và 15% năng lượng.",
+      "activation": "PASSIVE"
+    },
+    "du-anh": {
+      "summary": "Lướt tăng sát thương",
+      "description": "Mỗi khi dùng lướt sẽ được cộng dồn 1 dư ảnh trong 4 giây, tối đa cộng dồn 3 dư ảnh. Đòn đánh thường sau đấy sẽ tiêu hao hết toàn bộ số dư ảnh. Mỗi dư ảnh gây 30 (+5 mỗi cấp tướng) (+10% công vật lý thêm) sát thương vật lý.",
+      "activation": "PASSIVE"
+    },
+    "ma-hoa": {
+      "summary": "Tăng sát thương",
+      "description": "Tung chiêu hoặc đòn đánh thường trúng tướng địch sẽ gây 50 (+5 mỗi cấp tướng) (+15% công phép) sát thương phép. Hồi chiêu: 8 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 8
+    },
+    "cuong-cong": {
+      "summary": "Tăng sát thương",
+      "description": "Nhận 10–38 công vật lý và 15–57 công phép.",
+      "activation": "PASSIVE"
+    },
+    "co-thu": {
+      "summary": "Kháng hiệu ứng",
+      "description": "Nhận được 12.5% kháng hiệu ứng.",
+      "activation": "PASSIVE"
+    },
+    "san-nha": {
+      "name": "Sân nhà",
+      "summary": "Sát thương, tốc chạy",
+      "description": "Khi ở trong phạm vi nửa bản đồ phe ta (trong rừng hoặc gần trụ chưa bị phá hủy), tướng sẽ được tăng 3% tốc chạy và 3% sát thương gây ra. Rời khỏi khu vực sẽ mất hiệu ứng này.",
+      "activation": "PASSIVE"
+    },
+    "dau-khi": {
+      "summary": "Sát thương kéo dài",
+      "description": "Tung chiêu hoặc đánh thường trúng tướng địch sẽ được tăng 2 tốc chạy trong 3 giây (tướng đánh xa mỗi đòn được cộng dồn 1 tầng, tướng đánh gần mỗi đòn được cộng dồn 2 tầng), tối đa cộng dồn 10 tầng. Khi đủ 10 tầng sẽ được hồi 10% máu bản thân đã mất và nhận thêm 15% xuyên giáp và xuyên giáp phép.",
+      "activation": "PASSIVE"
+    },
+    "ma-chu": {
+      "summary": "Sát thương chí mạng",
+      "description": "Tung chiêu hoặc đòn đánh thường trúng tướng địch sẽ cộng dồn 1.5 giây dấu ấn, đủ 3 dấu ấn sẽ gây trong phạm vi 2.5m quanh mục tiêu 36 (+4 mỗi cấp tướng) (+25% công vật lý thêm) (+15% công phép) sát thương phép. Sau 1 giây gây tiếp trong phạm vi 2.5m quanh mục tiêu sát thương phép tương đương 6% máu đã mất của nạn nhân (mỗi 100 công vật lý thêm hoặc 200 công phép tăng 1%). Hồi chiêu: 15 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 15
+    },
+    "ma-tinh": {
+      "summary": "Giảm hồi chiêu",
+      "description": "Sau khi tung chiêu cuối lập tức giảm 30% thời gian hồi các chiêu khác và 20% giảm hồi chiêu cuối trong 6 giây. Hạ hoặc phụ hạ sẽ kéo dài hiệu ứng thêm 3 giây. Hồi chiêu: 30 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 30
+    },
+    "nhay-ben": {
+      "summary": "Chạy sông",
+      "description": "Trên đường sông được nhận thêm 10 tốc chạy và hồi thêm 20 máu cùng 10 năng lượng mỗi 5 giây.",
+      "activation": "PASSIVE"
+    },
+    "am-kich": {
+      "summary": "Tăng sát thương",
+      "description": "Ở trong bụi cỏ tung đòn đánh thường sẽ cộng thêm 4% sát thương chuẩn dựa trên lượng máu của kẻ địch khi đó. Rời khỏi bụi cỏ sau 4 giây vẫn nhận được hiệu quả này. Hồi chiêu: 10 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 10
+    },
+    "canh-gac": {
+      "summary": "Phòng ngự",
+      "description": "Khi đứng gần trụ (phạm vi 6m), bản thân sẽ được nhận 15% kháng hiệu ứng và 10% miễn thương.",
+      "activation": "PASSIVE"
+    },
+    "bom-mau": {
+      "summary": "Hồi máu",
+      "description": "Hiệu quả hồi máu và lá chắn của bản thân tăng 10%. Nếu máu của mục tiêu thấp dưới 50%, hiệu quả này sẽ tăng thêm 10% nữa (bao gồm trang bị, kỹ năng phụ trợ).",
+      "activation": "PASSIVE"
+    },
+    "sinh-ton": {
+      "summary": "Lượng máu",
+      "description": "Lính và quái rừng bị hạ gục phụ cận khiến bản thân được tăng máu tối đa vĩnh viễn (lính cộng 1 tầng, quái rừng nhỏ cộng 2 tầng, quái rừng to cộng 3 tầng, mỗi tầng được 8 máu, tối đa được cộng 100 tầng).",
+      "activation": "PASSIVE"
+    },
+    "cuu-vien": {
+      "name": "Cứu viện",
+      "summary": "Trị liệu",
+      "description": "Mỗi 15 giây tạo ra một gói máu nhỏ bay đến đồng đội hoặc bản thân (tùy theo tỷ lệ máu) có lượng máu thấp nhất và hồi 210 (+15 mỗi cấp tướng) máu.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 15
+    },
+    "troi-buoc": {
+      "summary": "Sát thương khống chế",
+      "description": "Khi tung chiêu khống chế trúng tướng địch (khiêu khích, hất tung, đánh lui, làm choáng, hóa đá...) sẽ giúp bản thân nhận hiệu quả thiêu đốt, mỗi 0.5 giây gây sát thương phép bằng 2% lượng máu tối đa trong 3 giây. Tướng địch bị thiêu đốt sẽ giảm 30 (+3 mỗi cấp tướng) giáp phép. Hồi chiêu: 20 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 20
+    },
+    "moc-giap": {
+      "summary": "Phòng ngự",
+      "description": "Gánh chịu sát thương sẽ cộng dồn (mỗi giây tính 1 lần) trong 3 giây, đủ 4 lần giúp bản thân gây sát thương phép bằng 2% máu tối đa của bản thân trong phạm vi 4m đồng thời hồi 5% máu tối đa, mỗi khi trúng thêm 1 tướng địch sẽ giúp hồi thêm 2% máu tối đa. Hồi chiêu: 10 giây.",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 10
+    },
+    "du-hiep": {
+      "summary": "Giao tranh",
+      "description": "Rời khỏi giao tranh một lúc sẽ khiến đòn đánh thường kế tiếp làm chậm địch 30% trong 1 giây và gắn lên địch một dấu ấn bùng nổ. Sau 3 giây nó sẽ nổ tung gây 8% máu tối đa của bản thân thành sát thương phép.",
+      "activation": "PASSIVE"
+    },
+    "qua-cau-bang-suong": {
+      "summary": "Kích hoạt",
+      "description": "Sau khi trận đấu bắt đầu 4 phút, bạn sẽ nhận được Quả cầu băng sương. Sau khi sử dụng sẽ được miễn sát thương nhưng không thể công kích, di chuyển và khi kết thúc sẽ nhận được lá chắn, chỉ dùng 1 lần.",
+      "activation": "ACTIVE",
+      "maxUses": 1,
+      "availableFromSeconds": 240
+    },
+    "sieu-hoi-mau": {
+      "summary": "Bảo mệnh",
+      "description": "Đổi Hồi máu thành Siêu hồi máu: Lập tức hồi 660 máu và 210 năng lượng cho bản thân.\nCơ chế trong mùa: Đổi \"Té nước\" thành \"Siêu té nước\".",
+      "activation": "TALENT_UPGRADE"
+    },
+    "mat-ngu": {
+      "summary": "Giảm hồi chiêu",
+      "description": "Kỹ năng phụ trợ của bạn được giảm hồi chiêu thêm 15% (Trừng trị chỉ giảm thời gian dự trữ).",
+      "activation": "PASSIVE"
+    },
+    "uy-ap": {
+      "summary": "Dọn lính",
+      "description": "Mỗi 25 giây, tung chiêu hoặc tung đòn đánh thường vào lính sẽ hạ 1 lính. Sau khi tích lũy hạ lính 10 lần, bản thân sẽ nhận được 200 vàng và làm mới phù hiệu này (vô hiệu với Xe công thành và Lính siêu cấp).",
+      "activation": "PASSIVE",
+      "cooldownSeconds": 25
+    },
+    "tho-san": {
+      "summary": "Hạ tăng sát thương",
+      "description": "Nhận một cộng dồn khi vào trận, mỗi lần hạ hoặc phụ hạ một tướng khác nhau sẽ nhận thêm một cộng dồn, tối đa 6. Mỗi cộng dồn tăng 8 công vật lý và 12 công phép.",
+      "activation": "PASSIVE"
+    },
+    "luyen-kim": {
+      "summary": "Phát triển",
+      "description": "Mỗi 20 giây nhận một cộng dồn Luyện kim, tối đa nhận 3 cộng dồn. Tung chiêu hoặc đánh thường lên tướng địch hoặc trụ sẽ giúp bản thân nhận 16 vàng và tiêu hao 1 cộng dồn Luyện kim. Hạn mức tối đa vàng nhận được là 800.",
+      "activation": "PASSIVE"
+    },
+    "chuyen-sinh": {
+      "summary": "Đầu thai",
+      "description": "Sau khi tử vong sẽ nhận được phù hiệu \"Hồi sinh\". Sau khi sử dụng sẽ hồi sinh trong tế đàn. \"Hồi sinh\" càng về sau sẽ càng tăng thêm thời gian hồi chiêu. Tối đa dùng 2 lần. Sau 12 phút sẽ cấm sử dụng, số lần chưa dùng sẽ chuyển thành 300/600 vàng. Hồi chiêu: 100–310 giây.",
+      "activation": "ACTIVE",
+      "cooldownSeconds": 100,
+      "cooldownMaxSeconds": 310,
+      "maxUses": 2,
+      "availableUntilSeconds": 720
+    }
+  }
+}

@@ -16,7 +16,7 @@ import { SITE_NAME } from "../lib/seo/page-meta"
 import "./wiki-header.css"
 import { useWikiContext, wikiText, useWikiText } from "../context/wiki-context"
 import { WikiPreferenceControls } from "../context/wiki-preferences"
-import { wikiSections, type WikiSectionKey, SECTION_NAMES } from "../lib/wiki-sections"
+import type { WikiSectionKey } from "../lib/wiki-sections"
 import { LibraryContents } from "./library-contents"
 import { WikiIcon } from "./wiki-icon"
 import { WikiSearch } from "./wiki-search"
@@ -197,51 +197,6 @@ function MoreMenu() {
   )
 }
 
-const WAREHOUSE_KEYS = ["items", "enchantments", "arcana", "spells"] as const
-const sectionOf = (key: WikiSectionKey) => wikiSections.find((section) => section.key === key)!
-
-/** The main sections, always in the top bar on wide screens; the four parts of the armory share one menu. */
-function TopNavigation({ active }: { active?: WikiSectionKey }) {
-  const { href, locale } = useWikiContext()
-  const t = useWikiText()
-  const inWarehouse = WAREHOUSE_KEYS.some((key) => key === active)
-  const link = (key: WikiSectionKey, label = t(...SECTION_NAMES[key])) => (
-    <Link key={key} to={href(sectionOf(key).path)} aria-current={active === key ? "page" : undefined}>
-      {label}
-    </Link>
-  )
-  return (
-    <nav className="wiki-topnav" aria-label={wikiText(locale, "Các mục của Wiki", "Wiki sections")}>
-      {link("heroes")}
-      {link("skins")}
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger className="wiki-topnav-menu" data-current={inWarehouse || undefined}>
-          {t("Kho trang bị", "Armory")}
-          <Icon name="chevron" className="size-4" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          sideOffset={6}
-          className="wiki-topnav-panel"
-          drawerTitle={t("Kho trang bị", "Armory")}
-        >
-          {WAREHOUSE_KEYS.map((key) => (
-            <DropdownMenuItem key={key} asChild>
-              <Link to={href(sectionOf(key).path)} aria-current={active === key ? "page" : undefined}>
-                <WikiIcon name={sectionOf(key).icon} size={28} className="size-7" />
-                {t(...SECTION_NAMES[key])}
-              </Link>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {link("modes")}
-      {link("updates", t("Cập nhật", "Updates"))}
-      {link("terms")}
-    </nav>
-  )
-}
-
 interface WikiHeaderProps {
   variant?: "home" | "library" | "hero"
   pageTitle?: string
@@ -249,7 +204,7 @@ interface WikiHeaderProps {
   pageTitleIsHeading?: boolean
   /** Where the compact layout's back button leads, for a page below the main sections. */
   backTo?: string
-  /** The section to mark in the navigation. */
+  /** The section to mark in the compact contents sheet; the wide layout marks it in the library sidebar. */
   section?: WikiSectionKey
   /** Fills the compact bar from the first pixel, for a page with no artwork under it. */
   solid?: boolean
@@ -325,38 +280,23 @@ function WikiHeaderCompact({
   )
 }
 
-function WikiHeaderWide({ variant = "home", section }: WikiHeaderProps) {
-  const { href, locale } = useWikiContext()
+/** The brand, the search and the tools. The sections are on the home page and in the sidebar of every section page. */
+function WikiHeaderWide({ variant = "home" }: WikiHeaderProps) {
+  const { href } = useWikiContext()
   const t = useWikiText()
   // Hero headers darken over the first 100px of scroll, as they start on top of the artwork.
   const headerRef = useRef<HTMLElement>(null)
   useScrollProgressVar(headerRef, 100)
-  // A narrow bar shows the search as a button; pressing it swaps the sections for the field.
-  const [searching, setSearching] = useState(false)
-  const searchButton = useRef<HTMLButtonElement>(null)
-  useFocusAfterClose(searching, searchButton)
   return (
     <header ref={headerRef} data-variant={variant} className="wiki-header">
-      <div className="wiki-header-inner" data-searching={searching || undefined}>
+      <div className="wiki-header-inner">
         <div className="public-app-theme wiki-header-brand" data-appearance="wiki">
           <a className="wiki-header-logo" href={href("/")} aria-label={`${SITE_NAME} — ${t("Trang chủ", "Home")}`}>
             <img src={WIKI_LOGO_URL} alt="" width={32} height={32} fetchPriority="high" />
           </a>
           <SectionSelector />
         </div>
-        <TopNavigation active={section} />
-        {/* A new field for each opening, so it takes focus as it mounts. */}
-        {searching ? <WikiSearch key="open" autoFocus onDone={() => setSearching(false)} /> : <WikiSearch key="bar" />}
-        <button
-          ref={searchButton}
-          type="button"
-          className="wiki-header-search-toggle"
-          aria-label={searching ? wikiText(locale, "Đóng tìm kiếm", "Close search") : t("Tìm kiếm", "Search")}
-          aria-expanded={searching}
-          onClick={() => setSearching((value) => !value)}
-        >
-          <Icon name={searching ? "close" : "search"} />
-        </button>
+        <WikiSearch />
         <nav className="wiki-header-tools" aria-label={t("Tiện ích", "Utilities")}>
           <WikiPreferenceControls />
           <WikiAccountMenu />

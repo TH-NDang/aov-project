@@ -1,3 +1,6 @@
+import type { CSSProperties } from "react"
+import { EnchantmentSetTools } from "./warehouse-enchantment-set-tools"
+import { enchantmentBranchColor } from "@aov/ui/lib/enchantment-colors"
 import { useRef, type ReactNode } from "react"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { ItemCategoryArtwork } from "@aov/ui/components/item-category-icons"
@@ -91,6 +94,7 @@ function Chip({
   pressed,
   count,
   label,
+  tone,
   onClick,
   children,
 }: {
@@ -98,20 +102,52 @@ function Chip({
   count?: number
   /** The accessible name, where the visible text is an abbreviation. */
   label?: string
+  /** A colour of its own, such as an enchantment branch's: the chip's picture is ringed with it and it marks the choice. */
+  tone?: string
   onClick: () => void
   children: ReactNode
 }) {
   return (
-    <button type="button" className="wiki-warehouse-chip" aria-pressed={pressed} aria-label={label} onClick={onClick}>
+    <button
+      type="button"
+      className="wiki-warehouse-chip"
+      aria-pressed={pressed}
+      aria-label={label}
+      data-tone={tone ? "" : undefined}
+      style={tone ? ({ "--chip-tone": tone } as CSSProperties) : undefined}
+      onClick={onClick}
+    >
       {children}
       {count !== undefined && <small>{count}</small>}
     </button>
   )
 }
 
-function ChipGroup({ label, wrap = false, children }: { label: string; wrap?: boolean; children: ReactNode }) {
+function ChipGroup({
+  label,
+  wrap = false,
+  caption,
+  children,
+}: {
+  label: string
+  wrap?: boolean
+  /** A short visible name before the chips; such a group is a secondary one and is drawn lighter. */
+  caption?: string
+  children: ReactNode
+}) {
   return (
-    <div className="wiki-warehouse-chips" role="group" aria-label={label} data-wrap={wrap || undefined}>
+    <div
+      className="wiki-warehouse-chips"
+      role="group"
+      aria-label={label}
+      data-wrap={wrap || undefined}
+      data-secondary={caption ? "" : undefined}
+    >
+      {caption && (
+        <span className="wiki-warehouse-chips-caption" aria-hidden>
+          {caption}
+        </span>
+      )}
       {children}
     </div>
   )
@@ -365,7 +401,7 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
       {/* The line stays in place while the catalog loads, so the catalog does not move when the chips arrive. */}
       <div className="wiki-warehouse-subbar">
         {stats.length > 0 && (
-          <ChipGroup label={text("Lọc theo chỉ số", "Filter by stat")} wrap>
+          <ChipGroup label={text("Lọc theo chỉ số", "Filter by stat")} caption={statsLabel} wrap>
             {statChips.slice(0, -2)}
             {/* The last two wrap together, so a chip never stands alone on a line. */}
             <span className="wiki-warehouse-chip-pair">{statChips.slice(-2)}</span>
@@ -521,10 +557,38 @@ function ArcanaControls({ search, onSearch, entries, allEntries, group, params, 
   )
 }
 
-function EnchantmentControls({ search, onSearch, entries, groups, group, onFilters, loading }: ControlsProps) {
+/** The branches alone: a catalog of a few dozen, drawn branch by branch, needs no search. */
+function EnchantmentControls({ entries, groups, group, params, onFilters, loading }: ControlsProps) {
   const { locale } = useWikiContext()
-  const roomy = useMediaQuery(ONE_LINE)
   const text = useWikiText()
+  // The branches as trees, or the game's set screen where a player builds one set.
+  const building = params.get("view") === "set"
+  const trees = text("Cây hệ", "Branches")
+  const builder = text("Xếp bộ", "Build a set")
+  const viewSwitch = (
+    <div className="wiki-warehouse-switch" role="group" aria-label={text("Kiểu xem", "View")} data-labels>
+      <button
+        type="button"
+        aria-pressed={!building}
+        aria-label={trees}
+        title={trees}
+        onClick={() => onFilters({ view: null, set: null })}
+      >
+        <WikiIcon name="board" size={18} />
+        <span>{trees}</span>
+      </button>
+      <button
+        type="button"
+        aria-pressed={building}
+        aria-label={builder}
+        title={builder}
+        onClick={() => onFilters({ view: "set", group: null })}
+      >
+        <WikiIcon name="cards" size={18} />
+        <span>{builder}</span>
+      </button>
+    </div>
+  )
   const branches = groups.length > 0 && (
     <ChipGroup label={text("Hệ phù hiệu", "Enchantment branch")}>
       <Chip pressed={!group} onClick={() => onFilters({ group: null })}>
@@ -532,37 +596,40 @@ function EnchantmentControls({ search, onSearch, entries, groups, group, onFilte
       </Chip>
       {groups.map((branch) => {
         const icon = branch.icon?.currentVersion?.url
+        const name = warehouseText(branch.translations, locale)?.name || branch.code
         return (
           <Chip
             key={branch.code}
             pressed={group === branch.code}
+            label={icon ? name : undefined}
             count={
               loading
                 ? undefined
                 : entries.filter((entry) => entry.kind === "enchantments" && entry.content.branchCode === branch.code)
                     .length
             }
+            tone={enchantmentBranchColor(branch)}
             onClick={() => onFilters({ group: group === branch.code ? null : branch.code })}
           >
             {icon && <WikiImage className="wiki-warehouse-chip-art" src={icon} alt="" width="20" height="20" />}
-            {warehouseText(branch.translations, locale)?.name || branch.code}
+            {/* A phone shows the emblem alone; the name stays the button's accessible name. */}
+            <span className="wiki-warehouse-chip-name" data-hideable={icon ? "" : undefined}>
+              {name}
+            </span>
           </Chip>
         )
       })}
     </ChipGroup>
   )
+  // The view switch leads its own line, with the set tools at its end while building; the branch chips get the
+  // whole line below, so nothing covers them.
   return (
     <div className="wiki-warehouse-controls">
       <div className="wiki-warehouse-toolbar">
-        <SearchField
-          value={search}
-          onChange={onSearch}
-          label={text("Tìm phù hiệu", "Search enchantments")}
-          placeholder={text("Tìm phù hiệu…", "Search enchantments…")}
-        />
-        {roomy && branches}
+        {viewSwitch}
+        {building && <EnchantmentSetTools entries={entries} onFilters={onFilters} />}
       </div>
-      {!roomy && branches}
+      {!building && branches}
     </div>
   )
 }

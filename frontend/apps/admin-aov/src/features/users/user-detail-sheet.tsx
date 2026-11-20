@@ -1,12 +1,11 @@
 import { useState } from "react"
-import { Link, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { ArrowLeft, CalendarDays, Clock3, Globe2, Pencil, RefreshCw, UserRound } from "lucide-react"
+import { CalendarDays, Clock3, Globe2, Pencil, RefreshCw, UserRound } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
-import { Page, PageHeader } from "@/components/page-header"
 import { Button } from "@aov/ui/components/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { getProfile, profileError, userKeys, type UserProfile } from "./user-api"
 import { ProfileForm } from "./profile-form"
 import { LocalTime } from "@aov/ui/components/local-time"
@@ -22,8 +21,21 @@ function languageName(locale: string) {
   }
 }
 
-export function UserDetailPage() {
-  const { userId = "" } = useParams()
+/**
+ * One user's profile in a drawer at the right of the users list, so the list keeps its search and scroll behind it.
+ * The address still names the user (`/users/:userId`), so the drawer can be linked and reopened.
+ */
+export function UserDetailSheet({ userId, onClose }: { userId: string | undefined; onClose: () => void }) {
+  return (
+    <Sheet open={!!userId} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-md">
+        {userId && <UserDetail userId={userId} />}
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+function UserDetail({ userId }: { userId: string }) {
   const { actor } = useSession()
   const canRead = actor?.capabilities.includes("user:read") === true
   const canWrite = actor?.capabilities.includes("user:write") === true
@@ -54,69 +66,54 @@ export function UserDetailPage() {
   }
 
   return (
-    <Page>
-      <div>
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/users">
-            <ArrowLeft />
-            Danh sách người dùng
-          </Link>
-        </Button>
-      </div>
-      <PageHeader
-        title="Chi tiết người dùng"
-        actions={
-          canRead &&
-          validId && (
-            <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>
-              <RefreshCw className={query.isFetching ? "animate-spin" : undefined} />
-              Tải lại
+    <>
+      <SheetHeader className="border-b pr-12">
+        <SheetTitle>Chi tiết người dùng</SheetTitle>
+        <SheetDescription className="sr-only">Hồ sơ của người dùng đang chọn</SheetDescription>
+      </SheetHeader>
+      <div className="space-y-5 p-4">
+        {!canRead ? (
+          <p role="alert" className="rounded-xl border p-4 text-sm">
+            Bạn chưa có quyền xem hồ sơ người dùng. Cần quyền user:read từ quản trị viên.
+          </p>
+        ) : !validId ? (
+          <p role="alert" className="rounded-xl border p-4 text-sm">
+            Đường dẫn người dùng không hợp lệ. Hãy chọn một hồ sơ từ danh sách.
+          </p>
+        ) : query.isPending ? (
+          <p role="status" className="rounded-xl border p-4 text-sm">
+            Đang tải hồ sơ người dùng…
+          </p>
+        ) : query.isError ? (
+          <div role="alert" className="space-y-3 rounded-xl border p-4">
+            <p className="text-sm">{profileError(query.error)}</p>
+            <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
+              Thử lại
             </Button>
-          )
-        }
-      />
-      {!canRead ? (
-        <div role="alert" className="rounded-xl border p-6">
-          Bạn chưa có quyền xem hồ sơ người dùng. Cần quyền user:read từ quản trị viên.
-        </div>
-      ) : !validId ? (
-        <div role="alert" className="rounded-xl border p-6">
-          Đường dẫn người dùng không hợp lệ. Hãy chọn một hồ sơ từ danh sách.
-        </div>
-      ) : query.isPending ? (
-        <div role="status" className="rounded-xl border p-6">
-          Đang tải hồ sơ người dùng…
-        </div>
-      ) : query.isError ? (
-        <div role="alert" className="space-y-3 rounded-xl border p-6">
-          <p>{profileError(query.error)}</p>
-          <Button variant="outline" onClick={() => void query.refetch()}>
-            Thử lại
-          </Button>
-        </div>
-      ) : (
-        <div className="grid max-w-6xl items-start gap-6 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]">
-          <section className="admin-panel min-w-0 overflow-hidden">
-            <div className="h-20 bg-gradient-to-br from-primary/20 via-primary/5 to-muted" />
-            <div className="space-y-5 px-6 pb-6">
-              <Avatar className="-mt-12 size-24 border-4 border-card">
+          </div>
+        ) : (
+          <>
+            <section className="flex items-center gap-4">
+              <Avatar className="size-16">
                 <AvatarImage
                   key={query.data.avatarUrl}
                   src={query.data.avatarUrl ?? undefined}
                   alt={`Ảnh đại diện của ${query.data.displayName}`}
                   referrerPolicy="no-referrer"
                 />
-                <AvatarFallback className="text-2xl">
+                <AvatarFallback className="text-base">
                   {query.data.displayName.slice(0, 2).toUpperCase() || <UserRound />}
                 </AvatarFallback>
               </Avatar>
-              <div className="space-y-1">
+              <div className="min-w-0 flex-1">
                 <h2 className="type-section-title break-words">{query.data.displayName}</h2>
-                <p className="text-sm text-muted-foreground">Hồ sơ người dùng</p>
+                <p className="type-meta break-all font-mono select-text">{query.data.id}</p>
               </div>
+            </section>
+            <div className="flex gap-2">
               {canWrite && (
                 <Button
-                  className="w-full"
+                  className="flex-1"
                   onClick={() => {
                     setReloadError("")
                     setEditing(query.data)
@@ -126,23 +123,26 @@ export function UserDetailPage() {
                   Chỉnh sửa hồ sơ
                 </Button>
               )}
-              <div className="space-y-2 border-t pt-4">
-                <p className="text-xs font-medium text-muted-foreground">Mã người dùng</p>
-                <p className="break-all font-mono text-xs select-text">{query.data.id}</p>
-              </div>
+              <Button
+                variant="outline"
+                disabled={query.isFetching}
+                onClick={() => void query.refetch()}
+                aria-label="Tải lại hồ sơ"
+              >
+                <RefreshCw className={query.isFetching ? "animate-spin" : undefined} />
+                {!canWrite && "Tải lại"}
+              </Button>
             </div>
-          </section>
-          <div className="min-w-0 space-y-6">
-            <section className="space-y-4 admin-section py-5 sm:py-6">
-              <h2 className="type-section-title">Giới thiệu</h2>
-              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+            <section className="space-y-2 border-t pt-4">
+              <h3 className="type-label text-muted-foreground">Giới thiệu</h3>
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                 {query.data.biography.trim() || "Người dùng chưa thêm giới thiệu."}
               </p>
             </section>
-            <section className="space-y-5 admin-section py-5 sm:py-6">
-              <h2 className="type-section-title">Thông tin hồ sơ</h2>
-              <dl className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
+            <section className="space-y-3 border-t pt-4">
+              <h3 className="type-label text-muted-foreground">Thông tin hồ sơ</h3>
+              <dl className="grid gap-4">
+                <div className="space-y-1">
                   <dt className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Globe2 className="size-4" />
                     Ngôn ngữ
@@ -152,21 +152,21 @@ export function UserDetailPage() {
                     <span className="font-normal text-muted-foreground">({query.data.locale})</span>
                   </dd>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <dt className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock3 className="size-4" />
                     Múi giờ
                   </dt>
                   <dd className="break-words text-sm font-medium">{query.data.timeZone}</dd>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <dt className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarDays className="size-4" />
                     Ngày tạo hồ sơ
                   </dt>
                   <dd className="text-sm font-medium">{displayDate(query.data.createdAt)}</dd>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <dt className="flex items-center gap-2 text-sm text-muted-foreground">
                     <RefreshCw className="size-4" />
                     Cập nhật gần nhất
@@ -175,9 +175,9 @@ export function UserDetailPage() {
                 </div>
               </dl>
             </section>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
       <Dialog
         open={!!editing && canRead && canWrite}
         onOpenChange={(open) => {
@@ -206,6 +206,6 @@ export function UserDetailPage() {
           )}
         </DialogContent>
       </Dialog>
-    </Page>
+    </>
   )
 }

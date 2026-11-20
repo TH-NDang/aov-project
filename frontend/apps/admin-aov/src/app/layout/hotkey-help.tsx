@@ -16,10 +16,7 @@ const COMMON_KEYS: Hotkey[] = [
   { keys: ["Ctrl / ⌘", "K"], action: "Tìm trang và dữ liệu" },
   { keys: ["/"], action: "Tìm trong trang đang xem", context: "Trang có ô tìm kiếm; Esc để xóa." },
   { keys: ["Ctrl / ⌘", "B"], action: "Thu gọn / mở sidebar" },
-  { keys: ["Ctrl / ⌘", "1…8"], action: "Mở tab theo vị trí", context: "Đếm từ trái sang phải; có thể dùng Alt + 1…8." },
-  { keys: ["Ctrl / ⌘", "9"], action: "Mở tab cuối cùng", context: "Có thể dùng Alt + 9." },
-  { keys: ["Ctrl / ⌘", "W"], action: "Đóng tab đang xem", context: "Có thể dùng Alt + W." },
-  { keys: ["Esc"], action: "Đóng popup hoặc hủy kéo tab" },
+  { keys: ["Esc"], action: "Đóng popup hoặc drawer" },
 ]
 
 function HotkeyList({ items }: { items: Hotkey[] }) {

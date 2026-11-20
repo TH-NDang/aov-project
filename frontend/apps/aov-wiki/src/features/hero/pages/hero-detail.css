@@ -76,19 +76,10 @@
   right: 16px;
   bottom: 16px;
 }
-/* One quiet way back to the hero list: the header already marks the section. */
-.wiki-hero-profile-back {
-  font: var(--wiki-type-meta);
-  display: inline-flex;
-  align-items: center;
+/* The trail above the name: Home, Heroes, then the hero. */
+.wiki-hero-profile-breadcrumb {
   justify-self: start;
-  gap: 2px;
   margin: 0 0 14px -4px;
-  color: var(--aov-muted);
-  text-decoration: none;
-}
-.wiki-hero-profile-back:is(:hover, :focus-visible) {
-  color: var(--aov-accent);
 }
 .wiki-hero-profile-identity {
   display: flex;
@@ -200,10 +191,6 @@
     flex-direction: column;
     justify-content: flex-end;
     padding: 60px var(--wiki-gutter) 12px;
-  }
-  /* The compact header holds the way back. */
-  .wiki-hero-profile-back {
-    display: none;
   }
   /* The name and the chips fill the foot of the picture, so its credit moves up under the header. */
   .wiki-hero-art-credit {
