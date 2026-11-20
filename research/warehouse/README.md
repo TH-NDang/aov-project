@@ -70,3 +70,14 @@ python research/warehouse/publish-item-drafts.py --apply
 ```
 
 Ngày 20/11/2026: xuất bản 113 bản nháp `TRANSLATION_UPDATE` (mô tả tiếng Việt đã sửa và bản tiếng Anh) trên VPS và trên dữ liệu dev; bản nháp của Kiếm ngắn trên VPS không đổi gì nên để nguyên.
+
+## Chỉ số cố định và chỉ số từ hiệu ứng của trang bị (ADR-033)
+
+`item-gameplay.json` ghi cho từng món `stats` (các dòng "+N" của mô tả, theo bộ mã `CatalogStats`) và `effects` (mỗi hiệu ứng theo thứ tự mô tả viết: cách dùng, duy nhất, hồi chiêu, số lần cộng dồn và các chỉ số hiệu ứng cho thêm). Khung được sinh bằng chính bộ đọc mô tả của Wiki từ mô tả đã xuất bản ngày 20/11/2026; phần chỉ số của các câu như "Nhận 32–60 (+3% máu bản thân thêm) xuyên giáp phép, tối đa không vượt quá 150 điểm" được đọc tay từng câu. Sát thương, lá chắn và hồi máu không được ghi.
+
+`apply-item-gameplay.py` so từng món với bản mới nhất, tách bản sửa nội dung (`CONTENT_CORRECTION`) cho món khác dữ liệu, ghi `stats` và `effects` rồi chỉ xuất bản khi có `--publish`. Mô tả, công thức và vị trí cửa hàng giữ nguyên. Món đang có bản nháp được để nguyên. `--only` giới hạn theo mã món. Mỗi lần ghi vào `.local-state/item-gameplay.jsonl`. Backend phải có ADR-033 trước khi chạy `--apply`: backend cũ từ chối trường `effects`.
+
+```powershell
+python research/warehouse/apply-item-gameplay.py
+python research/warehouse/apply-item-gameplay.py --apply --publish
+```
