@@ -49,6 +49,16 @@ class CorrectEnchantmentsTest(unittest.TestCase):
     def test_a_code_the_catalog_lacks_is_reported(self):
         self.assertEqual(module.plan([], CORRECTIONS)["unknown"], ["a"])
 
+    def test_a_translation_leaves_the_gameplay_as_it_was(self):
+        content = row("a", cooldown=10)["content"]
+        content["activation"] = "ACTIVE"
+        translated = module.corrected(content, {"name": "Name", "description": "New."}, "en-US")
+        self.assertEqual((translated["activation"], translated["cooldownSeconds"]), ("ACTIVE", 10))
+
+    def test_the_english_file_covers_the_same_enchantments(self):
+        english = module.load_corrections(module.HERE / "enchantment-translations-en.json")["enchantments"]
+        self.assertEqual(set(english), set(module.load_corrections()["enchantments"]))
+
     def test_the_reviewed_file_covers_thirty_three_enchantments(self):
         self.assertEqual(len(module.load_corrections()["enchantments"]), 33)
 

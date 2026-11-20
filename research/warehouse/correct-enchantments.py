@@ -1,6 +1,6 @@
-"""Apply reviewed enchantment corrections as CONTENT_CORRECTION drafts through the admin API.
+"""Apply reviewed enchantment corrections or translations as drafts through the admin API.
 
-Reads enchantment-corrections.json, compares every entry with the published enchantment of the same code and, for
+Reads enchantment-corrections.json (or the file given with --file), compares every entry with the published enchantment of the same code and, for
 those that differ, forks a correction draft, writes the corrected text and gameplay into it, and publishes it only with
 --publish. Nothing is written without --apply. An enchantment that already has an open draft is left alone.
 Every write is appended to .local-state/enchantment-corrections.jsonl, so a run can be followed and undone.
@@ -32,10 +32,12 @@ def load_corrections(path=CORRECTIONS):
 
 
 def corrected(content, change, locale):
-    """The content with the correction applied: the use fields as given, the locale's text replaced, the rest kept."""
+    """The content with the change applied: the locale's text replaced and, for a change that names an activation, the
+    use fields as given (a missing one becomes empty); everything else is kept."""
     result = copy.deepcopy(content)
-    for field in USE_FIELDS:
-        result[field] = change.get(field)
+    if "activation" in change:
+        for field in USE_FIELDS:
+            result[field] = change.get(field)
     translations = result.setdefault("translations", [])
     text = next((row for row in translations if row.get("locale") == locale), None)
     if text is None:
@@ -108,11 +110,12 @@ def main():
     parser.add_argument("--backend", default="http://localhost:8080")
     parser.add_argument("--keycloak", default="http://localhost:8081")
     parser.add_argument("--ruleset", default="aov-standard")
+    parser.add_argument("--file", default=str(CORRECTIONS), help="A corrections or translations file.")
     args = parser.parse_args()
     if args.publish and not args.apply:
         parser.error("--publish needs --apply.")
 
-    corrections = load_corrections()
+    corrections = load_corrections(args.file)
     api = load_api(args.backend, args.keycloak)
     ruleset = next(row for row in api.call("/admin/rulesets") if row["code"] == args.ruleset)
     locale = corrections["locale"]
@@ -135,7 +138,7 @@ def main():
         row = by_code[code]
         draft = api.call(f"/admin/enchantments/{row['id']}/drafts", "POST", {
             "rulesetId": ruleset["id"], "sourceRevisionId": row["revision"]["id"],
-            "cause": "CONTENT_CORRECTION", "changeNote": note})
+            "cause": corrections.get("cause", "CONTENT_CORRECTION"), "changeNote": note})
         ledger({"code": code, "step": "forked", "id": row["id"], "revisionId": draft["revision"]["id"]})
         content = corrected(draft["content"], corrections["enchantments"][code], locale)
         saved = api.call(f"/admin/enchantments/{row['id']}/drafts/{draft['revision']['id']}", "PUT", {

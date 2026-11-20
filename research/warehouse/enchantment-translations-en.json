@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "locale": "en-US",
+  "cause": "TRANSLATION_UPDATE",
+  "source": "English for the Vietnamese text of enchantment-corrections.json. Names keep the English names verified on 2026-11-14 (Liquipedia and English guides); Cứu viện, Mộc giáp and Sân nhà have no verified English name yet and keep their Vietnamese one.",
+  "changeNote": "English translation of the enchantment text corrected from the game screenshots of 2026-11-20.",
+  "enchantments": {
+    "tuong-phan": {
+      "name": "Axe of Sacrifice",
+      "summary": "Damage boost",
+      "description": "Damage dealt to enemy heroes is increased by 3%, but damage taken is also increased by 2% (melee heroes only take 1% more)."
+    },
+    "sung-man": {
+      "name": "Mana Refill",
+      "summary": "Mana recovery",
+      "description": "Hitting an enemy hero with an ability or a normal attack restores 8% of your Max Mana. Cooldown: 5 seconds."
+    },
+    "thanh-chau": {
+      "name": "Opal Bead",
+      "summary": "Cooldown reduction",
+      "description": "Your ultimate gains a further 10% cooldown reduction (but cannot go above the 40% maximum)."
+    },
+    "bi-quyet": {
+      "name": "Blessing",
+      "summary": "Critical, Ability Power",
+      "description": "Gain an extra 16% Critical Chance and 8% more Ability Power from items."
+    },
+    "xuyen-tam": {
+      "name": "Holy Verdict",
+      "summary": "Armor pierce",
+      "description": "Gain 18–60 Armor Pierce/Magic Pierce."
+    },
+    "tinh-linh": {
+      "name": "Holy Summoner",
+      "summary": "Damage boost",
+      "description": "The 3rd consecutive normal attack that hits the same enemy hero summons a little angel that circles you for 5 seconds. The little angel automatically attacks enemies its master attacks within 9.5m. It attacks at its master's attack speed, and each hit deals 2% of the target's Max HP as true damage. Cooldown: 10 seconds."
+    },
+    "than-quang": {
+      "name": "Holy Thunder",
+      "summary": "Damage boost",
+      "description": "The first ability or normal attack that hits an enemy hero calls down lightning that deals 80 (+8 per hero level) (+30% Ability Power) magic damage. Abilities and normal attacks after that reduce this cooldown by 1 second (at least 0.5 seconds apart). Cooldown: 12 seconds."
+    },
+    "thanh-thuan": {
+      "name": "Angelic Guardian",
+      "summary": "Defense",
+      "description": "Taking damage above 30% of your HP within a short time immediately grants a shield that absorbs 400 (+30 per hero level) damage and 20% magic lifesteal for 6 seconds; a kill or assist during this time extends the magic lifesteal by 3 seconds. Cooldown: 30 seconds."
+    },
+    "hap-huyet": {
+      "name": "Devourer",
+      "summary": "Recovery",
+      "description": "A kill or an assist restores 9% of your lost HP and 15% Mana."
+    },
+    "du-anh": {
+      "name": "Shadow Blade",
+      "summary": "Dash damage",
+      "description": "Each dash grants 1 afterimage for 4 seconds, stacking up to 3 afterimages. Your next normal attack consumes all afterimages. Each afterimage deals 30 (+5 per hero level) (+10% bonus Attack Damage) physical damage."
+    },
+    "ma-hoa": {
+      "name": "Raging Inferno",
+      "summary": "Damage boost",
+      "description": "Hitting an enemy hero with an ability or a normal attack deals 50 (+5 per hero level) (+15% Ability Power) magic damage. Cooldown: 8 seconds."
+    },
+    "cuong-cong": {
+      "name": "Deadly Claw",
+      "summary": "Damage boost",
+      "description": "Gain 10–38 Attack Damage and 15–57 Ability Power."
+    },
+    "co-thu": {
+      "name": "Numbness",
+      "summary": "Resistance",
+      "description": "Gain 12.5% Resistance."
+    },
+    "san-nha": {
+      "name": "Sân nhà",
+      "summary": "Damage, Movement Speed",
+      "description": "While on your team's half of the map (in the jungle or near a tower that still stands), your hero gains 3% Movement Speed and deals 3% more damage. Leaving the area removes this effect."
+    },
+    "dau-khi": {
+      "name": "Burning Grudge",
+      "summary": "Sustained damage",
+      "description": "Hitting an enemy hero with an ability or a normal attack grants 2 Movement Speed for 3 seconds (ranged heroes gain 1 stack per hit, melee heroes 2 stacks), stacking up to 10 times. At 10 stacks you restore 10% of your lost HP and gain 15% Armor Pierce and Magic Pierce."
+    },
+    "ma-chu": {
+      "name": "Curse of Death",
+      "summary": "Critical damage",
+      "description": "Hitting an enemy hero with an ability or a normal attack applies a mark for 1.5 seconds; at 3 marks, it deals 36 (+4 per hero level) (+25% bonus Attack Damage) (+15% Ability Power) magic damage within 2.5m around the target. 1 second later it deals magic damage equal to 6% of the victim's lost HP within 2.5m around the target (+1% per 100 bonus Attack Damage or 200 Ability Power). Cooldown: 15 seconds."
+    },
+    "ma-tinh": {
+      "name": "Devil's Awakening",
+      "summary": "Cooldown reduction",
+      "description": "After you cast your ultimate, the cooldowns of your other abilities are immediately reduced by 30% and your ultimate gains 20% cooldown reduction for 6 seconds. A kill or assist extends the effect by 3 seconds. Cooldown: 30 seconds."
+    },
+    "nhay-ben": {
+      "name": "Riddle Step",
+      "summary": "River roaming",
+      "description": "While in the river, gain 10 Movement Speed and restore an extra 20 HP and 10 Mana every 5 seconds."
+    },
+    "am-kich": {
+      "name": "Defense Line",
+      "summary": "Damage boost",
+      "description": "A normal attack made from inside the brush deals extra true damage equal to 4% of the enemy's HP at that moment. The effect lasts for 4 seconds after leaving the brush. Cooldown: 10 seconds."
+    },
+    "canh-gac": {
+      "name": "Tower Sentry",
+      "summary": "Defense",
+      "description": "While standing near a tower (within 6m), gain 15% Resistance and 10% damage reduction."
+    },
+    "bom-mau": {
+      "name": "Regrowth",
+      "summary": "Healing",
+      "description": "Your healing and shield effects are increased by 10%. If the target is below 50% HP, the effect increases by another 10% (including items and talents)."
+    },
+    "sinh-ton": {
+      "name": "Nature's Gift",
+      "summary": "Max HP",
+      "description": "Minions and jungle monsters killed nearby permanently increase your Max HP (a minion gives 1 stack, a small jungle monster 2 stacks, a large jungle monster 3 stacks; each stack gives 8 HP, up to 100 stacks)."
+    },
+    "cuu-vien": {
+      "name": "Cứu viện",
+      "summary": "Ally healing",
+      "description": "Every 15 seconds, creates a small health pack that flies to the ally or yourself with the lowest HP (by HP ratio) and restores 210 (+15 per hero level) HP."
+    },
+    "troi-buoc": {
+      "name": "Nature's Rage",
+      "summary": "Control damage",
+      "description": "When a control ability hits an enemy hero (taunt, knock up, knock back, stun, petrify...), you gain a burning effect that deals magic damage equal to 2% of your Max HP every 0.5 seconds for 3 seconds. Burning enemy heroes lose 30 (+3 per hero level) Magic Defense. Cooldown: 20 seconds."
+    },
+    "moc-giap": {
+      "name": "Mộc giáp",
+      "summary": "Defense",
+      "description": "Taking damage builds a stack (counted once per second) that lasts 3 seconds. At 4 stacks you deal magic damage equal to 2% of your Max HP within 4m and restore 5% of your Max HP, plus 2% more Max HP for each additional enemy hero hit. Cooldown: 10 seconds."
+    },
+    "du-hiep": {
+      "name": "Forest Wanderer",
+      "summary": "Combat",
+      "description": "After being out of combat for a while, your next normal attack slows the enemy by 30% for 1 second and places an explosive mark on them. After 3 seconds it explodes, dealing 8% of your Max HP as magic damage."
+    },
+    "qua-cau-bang-suong": {
+      "name": "Evanescence",
+      "summary": "Active",
+      "description": "4 minutes after the match starts, you receive an Arctic Orb. Using it makes you immune to damage but unable to attack or move, and grants a shield when it ends. It can be used only once."
+    },
+    "sieu-hoi-mau": {
+      "name": "Enhanced Restore",
+      "summary": "Survival",
+      "description": "Replaces Restore with Enhanced Restore: instantly restores 660 HP and 210 Mana to yourself.\nSeasonal mechanic: replaces \"Water Splash\" with \"Super Water Splash\"."
+    },
+    "mat-ngu": {
+      "name": "Arcane Whisper",
+      "summary": "Cooldown reduction",
+      "description": "Your talent's cooldown is reduced by a further 15% (for Punish, only the recharge time is reduced)."
+    },
+    "uy-ap": {
+      "name": "Minion Kill",
+      "summary": "Wave clear",
+      "description": "Every 25 seconds, hitting a minion with an ability or a normal attack kills 1 minion. After 10 such kills, you receive 200 gold and this enchantment resets (it has no effect on siege minions and super minions)."
+    },
+    "tho-san": {
+      "name": "Gunslinger",
+      "summary": "Kills boost damage",
+      "description": "Gain one stack when the match starts; each kill or assist on a different hero grants one more stack, up to 6. Each stack grants 8 Attack Damage and 12 Ability Power."
+    },
+    "luyen-kim": {
+      "name": "Alchemy",
+      "summary": "Growth",
+      "description": "Gain one Alchemy stack every 20 seconds, up to 3 stacks. Hitting an enemy hero or a tower with an ability or a normal attack grants 16 gold and consumes 1 Alchemy stack. You can gain up to 800 gold this way."
+    },
+    "chuyen-sinh": {
+      "name": "Rewind",
+      "summary": "Rebirth",
+      "description": "After dying, you receive the enchantment \"Revive\". Using it revives you at the altar. Each later \"Revive\" has a longer cooldown. It can be used up to 2 times. After 12 minutes it can no longer be used, and each unused use turns into 300/600 gold. Cooldown: 100–310 seconds."
+    }
+  }
+}
