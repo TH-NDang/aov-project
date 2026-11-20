@@ -17,6 +17,9 @@
     radial-gradient(90% 120% at 25% 30%, color-mix(in srgb, var(--esb-tone) 26%, transparent), transparent 70%),
     linear-gradient(160deg, color-mix(in srgb, var(--esb-tone) 10%, var(--aov-bg, #121419)), var(--aov-bg, #121419));
   color: var(--aov-text, #eee);
+}
+.esb-shell {
+  min-width: 0;
   container: esb / inline-size;
 }
 .esb-stage {

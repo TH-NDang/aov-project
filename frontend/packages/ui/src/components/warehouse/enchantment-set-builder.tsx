@@ -245,84 +245,92 @@ export function EnchantmentSetBuilder({
     focus?.kind === "branch" ? branchOf(focus.code) : focused ? branchOf(focused.branchCode) : primary
 
   return (
-    <section ref={root} className="esb" style={tone(primary?.code)} aria-label={text("Bộ phù hiệu", "Enchantment set")}>
-      <div className="esb-stage">
-        <div className="esb-row">
-          {branchSpot(1, "start")}
-          {line(primary?.code, "l1")}
-          {enchantmentSpot(1)}
-          {line(primary?.code, "l2")}
-          {enchantmentSpot(2)}
-          {line(primary?.code, "l3")}
-          {enchantmentSpot(3, "end")}
-        </div>
-        <div className="esb-row esb-row-side">
-          <div className="esb-pair">
-            {branchSpot(4, "start")}
-            {line(entryOf(4)?.branchCode, "l4")}
-            {enchantmentSpot(4)}
+    // The shell measures the room the set has, so the set itself can change layout by it.
+    <div className="esb-shell">
+      <section
+        ref={root}
+        className="esb"
+        style={tone(primary?.code)}
+        aria-label={text("Bộ phù hiệu", "Enchantment set")}
+      >
+        <div className="esb-stage">
+          <div className="esb-row">
+            {branchSpot(1, "start")}
+            {line(primary?.code, "l1")}
+            {enchantmentSpot(1)}
+            {line(primary?.code, "l2")}
+            {enchantmentSpot(2)}
+            {line(primary?.code, "l3")}
+            {enchantmentSpot(3, "end")}
           </div>
-          <div className="esb-pair">
-            {branchSpot(5)}
-            {line(entryOf(5)?.branchCode, "l5")}
-            {enchantmentSpot(5, "end")}
-          </div>
-        </div>
-      </div>
-      <aside className="esb-panel" aria-live="polite" style={tone(focusedBranch?.code)}>
-        {focus?.kind === "branch" && focusedBranch ? (
-          <div className="esb-panel-branch">
-            <span className="esb-panel-emblem">{focusedBranch.icon}</span>
-            <strong>{focusedBranch.name}</strong>
-            {focusedBranch.suitability && (
-              <p>
-                <span>{text("Thích hợp:", "Suits:")}</span> {focusedBranch.suitability}
-              </p>
-            )}
-          </div>
-        ) : focused ? (
-          <>
-            <div className="esb-panel-head">
-              <span className="esb-panel-art">
-                {focused.icon}
-                <span className="esb-tier">{ROMAN[focused.tier]}</span>
-              </span>
-              <span>
-                <strong>{focused.name}</strong>
-                <small>{branchOf(focused.branchCode)?.name}</small>
-              </span>
+          <div className="esb-row esb-row-side">
+            <div className="esb-pair">
+              {branchSpot(4, "start")}
+              {line(entryOf(4)?.branchCode, "l4")}
+              {enchantmentSpot(4)}
             </div>
-            <div className="esb-panel-body">
-              {brief ? (
-                <>
-                  {focused.summary && <p className="esb-panel-summary">{focused.summary}</p>}
-                  <dl>
-                    {enchantmentUseFacts(focused.use ?? {}, text).map((fact) => (
-                      <div key={fact.key}>
-                        <dt>{fact.label}</dt>
-                        <dd>{fact.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </>
-              ) : (
-                focused.description && <div>{renderText(focused.description)}</div>
+            <div className="esb-pair">
+              {branchSpot(5)}
+              {line(entryOf(5)?.branchCode, "l5")}
+              {enchantmentSpot(5, "end")}
+            </div>
+          </div>
+        </div>
+        <aside className="esb-panel" aria-live="polite" style={tone(focusedBranch?.code)}>
+          {focus?.kind === "branch" && focusedBranch ? (
+            <div className="esb-panel-branch">
+              <span className="esb-panel-emblem">{focusedBranch.icon}</span>
+              <strong>{focusedBranch.name}</strong>
+              {focusedBranch.suitability && (
+                <p>
+                  <span>{text("Thích hợp:", "Suits:")}</span> {focusedBranch.suitability}
+                </p>
               )}
             </div>
-            <div className="esb-switch" role="group" aria-label={text("Cách đọc", "View")}>
-              <button type="button" aria-pressed={brief} onClick={() => setBrief(true)}>
-                {text("Tóm tắt", "Summary")}
-              </button>
-              <button type="button" aria-pressed={!brief} onClick={() => setBrief(false)}>
-                {text("Chi tiết", "Details")}
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="esb-panel-empty">{text("Chọn một phù hiệu để xem.", "Pick an enchantment to read it.")}</p>
-        )}
-        {actions && <div className="esb-actions">{actions}</div>}
-      </aside>
-    </section>
+          ) : focused ? (
+            <>
+              <div className="esb-panel-head">
+                <span className="esb-panel-art">
+                  {focused.icon}
+                  <span className="esb-tier">{ROMAN[focused.tier]}</span>
+                </span>
+                <span>
+                  <strong>{focused.name}</strong>
+                  <small>{branchOf(focused.branchCode)?.name}</small>
+                </span>
+              </div>
+              <div className="esb-panel-body">
+                {brief ? (
+                  <>
+                    {focused.summary && <p className="esb-panel-summary">{focused.summary}</p>}
+                    <dl>
+                      {enchantmentUseFacts(focused.use ?? {}, text).map((fact) => (
+                        <div key={fact.key}>
+                          <dt>{fact.label}</dt>
+                          <dd>{fact.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </>
+                ) : (
+                  focused.description && <div>{renderText(focused.description)}</div>
+                )}
+              </div>
+              <div className="esb-switch" role="group" aria-label={text("Cách đọc", "View")}>
+                <button type="button" aria-pressed={brief} onClick={() => setBrief(true)}>
+                  {text("Tóm tắt", "Summary")}
+                </button>
+                <button type="button" aria-pressed={!brief} onClick={() => setBrief(false)}>
+                  {text("Chi tiết", "Details")}
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="esb-panel-empty">{text("Chọn một phù hiệu để xem.", "Pick an enchantment to read it.")}</p>
+          )}
+          {actions && <div className="esb-actions">{actions}</div>}
+        </aside>
+      </section>
+    </div>
   )
 }
