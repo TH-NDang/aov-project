@@ -170,12 +170,13 @@ export function SheetActions({
           {editing ? <Check /> : <Pencil />}
         </Button>
       )}
-      <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+      {/* A sheet rising from the bottom on a phone closes by a tap above it or a pull down, so it shows no X. */}
+      <span aria-hidden className="mx-1 h-5 w-px bg-border group-data-[side=bottom]/sheet:hidden" />
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="text-muted-foreground"
+        className="text-muted-foreground group-data-[side=bottom]/sheet:hidden"
         disabled={closeDisabled}
         title="Đóng"
         aria-label="Đóng"

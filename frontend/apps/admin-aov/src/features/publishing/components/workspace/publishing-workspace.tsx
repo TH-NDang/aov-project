@@ -677,12 +677,13 @@ export function PublishingWorkspace({
   // The drawer closes like every other sheet: a quiet × at the end of the header row, past a divider.
   const closeButton = onClose && (
     <>
-      <span aria-hidden className="mx-0.5 h-5 w-px shrink-0 bg-border" />
+      {/* A sheet rising from the bottom on a phone closes by a tap above it or a pull down, so it shows no X. */}
+      <span aria-hidden className="mx-0.5 h-5 w-px shrink-0 bg-border group-data-[side=bottom]/sheet:hidden" />
       <Button
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="shrink-0 text-muted-foreground"
+        className="shrink-0 text-muted-foreground group-data-[side=bottom]/sheet:hidden"
         title="Đóng trang tướng"
         aria-label="Đóng trang tướng"
         disabled={busy}

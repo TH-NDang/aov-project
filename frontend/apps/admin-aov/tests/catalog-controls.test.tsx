@@ -133,7 +133,8 @@ test("phones select patches directly on the rail and open only the options in a 
     const changes = buttons.find((button) => button.textContent?.includes("Chỉ thay đổi"))!
     await act(async () => changes.click())
     assert.equal(changes.getAttribute("aria-pressed"), "true")
-    await act(async () => buttons.find((button) => button.textContent?.trim() === "Close")!.click())
+    // A bottom sheet has no visible close; its hidden one, for screen readers, still closes it.
+    await act(async () => buttons.find((button) => button.textContent?.trim() === "Đóng")!.click())
     assert.equal(document.querySelector('[data-slot="sheet-content"]'), null)
   })
 })

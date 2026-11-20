@@ -3,6 +3,7 @@ import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react
 import { toast } from "sonner"
 import { Toaster } from "@aov/ui/components/sonner"
 import { TooltipProvider } from "@aov/ui/components/tooltip"
+import { SheetPhoneSideProvider } from "@aov/ui/components/sheet"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 import { ThemeProvider, useTheme } from "./theme"
 import { HotkeysProvider } from "./hotkeys"
@@ -47,10 +48,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <HotkeysProvider>
           <TooltipProvider delayDuration={200}>
-            <DraftPersistenceGuard />
-            {children}
-            <ConfirmDialogHost />
-            <ThemedToaster />
+            {/* On phones every detail sheet rises from the bottom, like the public apps' drawers. */}
+            <SheetPhoneSideProvider side="bottom">
+              <DraftPersistenceGuard />
+              {children}
+              <ConfirmDialogHost />
+              <ThemedToaster />
+            </SheetPhoneSideProvider>
           </TooltipProvider>
         </HotkeysProvider>
       </QueryClientProvider>
