@@ -233,7 +233,8 @@ function SheetContent({
           className,
           // A bottom sheet has the rounded top of a drawer and at most most of the screen; these come after the caller's
           // classes so a side sheet's width or height never carries over on a phone.
-          edge === "bottom" && (fullHeight ? "h-[92dvh]" : "h-auto"),
+          // A short sheet still rises to half the screen, so its content sits where the eye is, not at the bottom edge.
+          edge === "bottom" && (fullHeight ? "h-[92dvh]" : "h-auto min-h-[50dvh]"),
           edge === "bottom" &&
             "inset-x-0 top-auto bottom-0 max-h-[92dvh] w-full max-w-none rounded-t-[18px] data-[state=closed]:duration-200 data-[state=open]:duration-300 border-x-0 border-b-0 pb-[env(safe-area-inset-bottom)] sm:max-w-none",
         )}
