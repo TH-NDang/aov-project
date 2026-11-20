@@ -1,19 +1,38 @@
 import * as React from "react"
-import { Package } from "lucide-react"
-import { createArtworkIcon } from "./artwork-icon"
+import { Footprints, HeartHandshake, Package, Shield, Sword, Trees, WandSparkles, type LucideIcon } from "lucide-react"
 
-const artwork = new URL("../assets/item-category-art.svg?no-inline", import.meta.url).href
 type CategoryIconProps = React.SVGProps<SVGSVGElement> & { size?: number | string }
 type CategoryIcon = React.ComponentType<CategoryIconProps>
 
-/** Uploaded group artwork takes priority over these shared category illustrations. */
+/** A line icon of the set the interface already uses, in the group's own colour from the status tokens. */
+function tinted(Icon: LucideIcon, tone: string): CategoryIcon {
+  return function CategoryIcon({ size = 24, style, ...props }: CategoryIconProps) {
+    return <Icon size={size} strokeWidth={2} style={{ color: tone, ...style }} {...props} />
+  }
+}
+
+/** Each shop group's own colour, from the status tokens; its icon is drawn in it and a page may mark the group with it. */
+const TONES: Record<string, string> = {
+  cong: "var(--aov-warning)",
+  phep: "var(--aov-stream-lavender)",
+  thu: "var(--aov-info)",
+  "toc-chay": "var(--aov-wiki-success)",
+  "di-rung": "var(--aov-success)",
+  "phu-tro": "var(--aov-danger)",
+}
+
+export function itemCategoryTone(code: string | null | undefined): string | undefined {
+  return code ? TONES[code] : undefined
+}
+
+/** Uploaded group artwork takes priority over these shared category icons. */
 const fallbackIcons: Record<string, CategoryIcon> = {
-  cong: createArtworkIcon(artwork, "attack"),
-  phep: createArtworkIcon(artwork, "magic"),
-  thu: createArtworkIcon(artwork, "defense"),
-  "toc-chay": createArtworkIcon(artwork, "movement"),
-  "di-rung": createArtworkIcon(artwork, "jungle"),
-  "phu-tro": createArtworkIcon(artwork, "support"),
+  cong: tinted(Sword, TONES.cong),
+  phep: tinted(WandSparkles, TONES.phep),
+  thu: tinted(Shield, TONES.thu),
+  "toc-chay": tinted(Footprints, TONES["toc-chay"]),
+  "di-rung": tinted(Trees, TONES["di-rung"]),
+  "phu-tro": tinted(HeartHandshake, TONES["phu-tro"]),
 }
 
 export function itemCategoryFallback(code: string | null | undefined): CategoryIcon {

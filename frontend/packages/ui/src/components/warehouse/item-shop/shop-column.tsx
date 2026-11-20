@@ -12,6 +12,7 @@ import { positioned, type CardRegion, type Entry } from "./shop-geometry"
  */
 export function ShopColumn({
   column,
+  label,
   sections,
   placements,
   external,
@@ -24,6 +25,8 @@ export function ShopColumn({
   renderCard,
 }: {
   column: number
+  /** The column's name; its number when left out. */
+  label?: string
   sections: ItemShopSection[]
   placements: ItemShopLayout["placements"]
   external: ItemShopLayout["external"]
@@ -43,12 +46,13 @@ export function ShopColumn({
   const groups = [...new Set(references.map((p) => p.categoryCode))]
   return (
     <section
-      aria-label={`${t("Cột", "Column")} ${column + 1}`}
+      aria-label={label ?? `${t("Cột", "Column")} ${column + 1}`}
+      data-shop-column={column}
       className="grid min-w-0 grid-rows-subgrid"
       style={{ gridColumn: column + 1, gridRow: `1 / span ${lastTrack + Number(groups.length > 0)}` }}
     >
       <h3 className="shop-column-label sticky top-0 z-10 mx-auto flex w-fit items-center gap-1.5 self-start rounded-full border bg-card px-3 py-0.5 text-xs font-semibold">
-        {t("Cột", "Column")} {column + 1}
+        {label ?? `${t("Cột", "Column")} ${column + 1}`}
         <span className="font-normal tabular-nums text-muted-foreground">
           {new Set(native.map((p) => p.item.id)).size} {t("món", "items")}
         </span>

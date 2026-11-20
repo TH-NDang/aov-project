@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
   formatItemStatValue,
+  itemEffectFacts,
   itemProfile,
   itemMatchesStatFilters,
   itemReaderContent,
@@ -306,4 +307,17 @@ test("stat names follow the reader's language, whatever language the description
 test("values read as gains, except a stat stored as a penalty", () => {
   assert.equal(formatItemStatValue({ value: 30, percent: true }), "+30%")
   assert.equal(formatItemStatValue({ value: -5, percent: false }), "-5")
+})
+
+test("an effect's cooldown is read whether it leads or follows the number", () => {
+  assert.equal(itemEffectFacts("Trở thành bất khả xâm phạm. Hồi chiêu: 75 giây.").cooldownSeconds, "75")
+  assert.equal(itemEffectFacts("Sống lại sau 2 giây; 150 giây hồi chiêu.").cooldownSeconds, "150")
+  assert.equal(itemEffectFacts("kéo dài 5 giây (hồi chiêu 0.3 giây)").cooldownSeconds, "0.3")
+  assert.equal(itemEffectFacts("Becomes untargetable. Cooldown: 75 seconds.").cooldownSeconds, "75")
+})
+
+test("an effect's stacks are read and a plain duration is not taken for a cooldown", () => {
+  const facts = itemEffectFacts("Gây sát thương sẽ trừ 6% Giáp, cộng dồn lên đến 4 lần, kéo dài 5 giây")
+  assert.deepEqual(facts, { cooldownSeconds: null, maxStacks: 4 })
+  assert.equal(itemEffectFacts("Stacks up to 3 times.").maxStacks, 3)
 })

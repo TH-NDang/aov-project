@@ -138,8 +138,12 @@ export function GraphCard({
       <button
         type="button"
         className="shop-item-select group flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left focus-visible:outline-2 focus-visible:outline-ring"
-        onClick={onSelect}
+        // A second click on the chosen card opens it: the first one shows its recipe on the board.
+        onClick={selected && showOpenButton ? onOpen : onSelect}
         onDoubleClick={showOpenButton ? onOpen : undefined}
+        title={
+          selected && showOpenButton ? t("Bấm lần nữa để mở chi tiết", "Click again to open the details") : undefined
+        }
         aria-label={`${t("Chọn trang bị", "Select item")} ${name}`}
         aria-pressed={selected}
       >
@@ -213,20 +217,21 @@ export function GraphCard({
         </span>
       </button>
       {showOpenButton && (
+        // Always in view; on the chosen card it grows into a labelled button, the obvious next step.
         <Button
           type="button"
-          variant="ghost"
-          size="icon-sm"
+          variant={selected ? "default" : "ghost"}
+          size={selected ? "sm" : "icon-sm"}
           className={cn(
-            "shop-item-open absolute top-0.5 right-0.5 z-30 size-6 bg-card/90",
-            locked &&
-              "opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100",
+            "shop-item-open absolute top-1 right-1 z-30",
+            selected ? "h-7 gap-1 px-2 shadow-sm" : "size-7 bg-card/90 text-muted-foreground hover:text-foreground",
           )}
           aria-label={`${t("Xem trang bị", "View item")} ${name}`}
           title={locked ? t("Mở chi tiết", "Open details") : t("Mở bản nháp", "Open draft")}
           onClick={onOpen}
         >
-          <PanelRightOpen className="size-3.5" />
+          <PanelRightOpen className="size-4" />
+          {selected && t("Mở", "Open")}
         </Button>
       )}
       {editable &&

@@ -330,7 +330,9 @@ export function ItemEditor({
                       ? "Áp dụng chỉnh sửa trước khi xuất bản"
                       : visibleMissing.length
                         ? "Cần hoàn thiện trước khi xuất bản"
-                        : undefined,
+                        : entry.revision.state === "PUBLISHED" && openDraftNo
+                          ? `Xuất bản bản nháp #${openDraftNo}`
+                          : undefined,
                     onClick: onPublish,
                   }
                 : undefined

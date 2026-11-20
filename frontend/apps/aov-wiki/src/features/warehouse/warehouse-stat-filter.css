@@ -1,0 +1,152 @@
+/* The toolbar button: the same height and shape as the search beside it. */
+.wiki-stat-filter-trigger {
+  display: inline-flex;
+  height: 36px;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 12px 0 10px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-meta);
+  font-weight: 600;
+  transition:
+    border-color 140ms,
+    background 140ms;
+}
+.wiki-stat-filter-trigger:hover,
+.wiki-stat-filter-trigger[data-state="open"] {
+  border-color: var(--aov-line-strong);
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-stat-filter-trigger[data-active] {
+  border-color: color-mix(in srgb, var(--aov-accent) 60%, transparent);
+  color: var(--aov-accent-strong);
+}
+.wiki-stat-filter-count {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: var(--aov-radius-pill);
+  padding: 0 6px;
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+  font: 700 0.75rem/1 var(--wiki-font-reading);
+}
+
+/* The panel: every stat as a tile with its mark, its name and how many items it would leave. */
+.wiki-stat-filter-panel.wiki-stat-filter-panel {
+  display: grid;
+  width: min(440px, calc(100vw - 32px));
+  gap: 12px;
+  border-color: var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 14px;
+  background: var(--aov-popover);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-stat-filter-head {
+  display: grid;
+  gap: 2px;
+}
+.wiki-stat-filter-head > strong {
+  color: var(--aov-text);
+  font: var(--wiki-type-category);
+}
+.wiki-stat-filter-head > span {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-stat-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.wiki-stat-filter-choice {
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-control);
+  padding: 6px 10px 6px 8px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-meta);
+  text-align: left;
+  transition:
+    border-color 140ms,
+    background 140ms;
+}
+.wiki-stat-filter-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-stat-filter-choice > small {
+  color: var(--aov-muted);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-stat-filter-choice:not(:disabled):hover {
+  border-color: var(--aov-line-strong);
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-stat-filter-choice[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.wiki-stat-filter-choice[aria-pressed="true"] > small {
+  color: inherit;
+}
+.wiki-stat-filter-choice:disabled {
+  opacity: 0.45;
+}
+.wiki-stat-filter-reset {
+  justify-self: start;
+  min-height: 32px;
+  color: var(--aov-accent);
+  font: var(--wiki-type-meta);
+  font-weight: 600;
+}
+
+/* The stats being filtered on, as chips under the toolbar. */
+.wiki-stat-chosen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.wiki-stat-chosen-chip {
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 45%, transparent);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 10px 0 4px;
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+  font: var(--wiki-type-meta);
+}
+.wiki-stat-chosen-chip > svg {
+  opacity: 0.7;
+}
+.wiki-stat-chosen-chip:hover > svg {
+  opacity: 1;
+}
+.wiki-stat-chosen-clear {
+  min-height: 32px;
+  padding: 0 6px;
+  color: var(--aov-accent);
+  font: var(--wiki-type-meta);
+}

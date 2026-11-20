@@ -30,7 +30,7 @@ import {
   useWarehouseContext,
 } from "../components/catalog/warehouse-controls"
 import { ItemSearch, itemSearchMatches } from "../components/items/item-search"
-import { ItemStatFilter } from "@aov/ui/components/warehouse/item-facts"
+import { ItemChosenStats, ItemStatFilterMenu } from "@aov/ui/components/warehouse/item-stat-filter-menu"
 import { itemMatchesStatFilters, itemReaderContent, itemStatFilterCounts } from "@aov/ui/lib/item-description"
 import { type WarehouseEntry, type WarehouseMetadata } from "../model/warehouse-types"
 import { warehouseName, warehouseText, type ItemContent } from "@aov/ui/lib/warehouse-content"
@@ -76,6 +76,9 @@ function initialItem(locale: string, name: string): ItemContent {
     notes: null,
   }
 }
+/** The shop's three columns, as players read them: what an item starts from, passes through and ends as. */
+const SHOP_COLUMNS = ["Cơ bản", "Nâng cấp", "Hoàn chỉnh"]
+
 export function BackendItemsPage() {
   const context = useWarehouseContext()
   const scope = useWarehouseScope("items", context.rulesetId, context.locale)
@@ -496,28 +499,34 @@ export function BackendItemsPage() {
         (scope.showAll || scope.changes.isSuccess) && <WarehouseScopeEmpty scope={scope} />
       ) : (
         <>
-          <ItemStatFilter
-            className="max-sm:shrink-0 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:[&>button]:shrink-0 max-sm:[&>button]:whitespace-nowrap"
-            value={activeStats}
-            counts={statCounts}
-            onChange={(value) => setStatParam(value.join(","))}
-          />
-          <ItemShopGraph
-            items={rows}
-            categories={categories}
-            locale={context.locale}
-            selectedId={focusId}
-            onFocus={setFocusId}
-            category={category}
-            onCategory={setGroup}
-            onSelect={select}
-            editable={canWrite && !busy}
-            matches={matches}
-            extraRows={extraRows}
-            onExtraRowsChange={setExtraRows}
-            onConnect={connect}
-            onMove={move}
-          />
+          <ItemChosenStats value={activeStats} onChange={(value) => setStatParam(value.join(","))} />
+          {/* The board grows with the page: three columns share the width, between 232px and 360px each. */}
+          <div className="@container [--shop-column-width:clamp(232px,calc((100cqi-152px)/3),360px)]">
+            <ItemShopGraph
+              columnLabels={SHOP_COLUMNS}
+              toolbar={
+                <ItemStatFilterMenu
+                  value={activeStats}
+                  counts={statCounts}
+                  onChange={(value) => setStatParam(value.join(","))}
+                />
+              }
+              items={rows}
+              categories={categories}
+              locale={context.locale}
+              selectedId={focusId}
+              onFocus={setFocusId}
+              category={category}
+              onCategory={setGroup}
+              onSelect={select}
+              editable={canWrite && !busy}
+              matches={matches}
+              extraRows={extraRows}
+              onExtraRowsChange={setExtraRows}
+              onConnect={connect}
+              onMove={move}
+            />
+          </div>
           {!rows.length && !displayedCatalog.isError && (
             <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
               Chưa có trang bị trong bộ quy tắc này.
@@ -572,10 +581,16 @@ export function BackendItemsPage() {
               ? (section) => openEntry(existingDraft, section)
               : undefined
           }
+          // A published item with a draft in progress publishes that draft from here, so the draft does not have to
+          // be opened first to find the button.
           onPublish={
-            canPublish && selected.revision.state === "DRAFT" && !edits.has(selected.id)
-              ? () => void publish(selected)
-              : undefined
+            !canPublish || edits.has(selected.id)
+              ? undefined
+              : selected.revision.state === "DRAFT"
+                ? () => void publish(selected)
+                : existingDraft
+                  ? () => void publish(existingDraft)
+                  : undefined
           }
           onDiscard={canWrite && selected.revision.state === "DRAFT" ? () => void discard(selected) : undefined}
         />

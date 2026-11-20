@@ -141,6 +141,80 @@
   flex-wrap: wrap;
   overflow: visible;
 }
+/* Groups that switch what the catalog shows read as tabs on a rule: no fill, the chosen one lit and underlined in
+   gold. The rule runs the full width, so the tabs sit like a lid on the catalog below. */
+.wiki-warehouse-chips[data-tabs] {
+  gap: 2px;
+  border-bottom: 1px solid var(--aov-line);
+}
+.wiki-warehouse-chips[data-tabs] .wiki-warehouse-chip {
+  height: 46px;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--aov-radius-control) var(--aov-radius-control) 0 0;
+  padding: 0 14px;
+  background: none;
+  color: var(--aov-muted);
+  font: var(--wiki-type-body);
+  font-weight: 600;
+}
+/* The groups' pictures are painted in many colours; on a tile of one size and shape, quiet until their tab is
+   chosen, the row reads as one set. */
+.wiki-warehouse-chip-tile {
+  display: contents;
+}
+.wiki-warehouse-chips[data-tabs] .wiki-warehouse-chip-tile {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--aov-line);
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 35%, var(--aov-raised), var(--aov-sunken));
+  filter: saturate(0.55) brightness(0.88);
+  transition:
+    filter 160ms,
+    border-color 160ms,
+    box-shadow 160ms;
+}
+.wiki-warehouse-chips[data-tabs] .wiki-warehouse-chip-tile > * {
+  width: 22px;
+  height: 22px;
+}
+.wiki-warehouse-chips[data-tabs] .wiki-warehouse-chip:hover .wiki-warehouse-chip-tile {
+  filter: none;
+}
+/* The chosen tab takes its group's own colour: its tile filled with it, a thick underline and a glow from below. */
+.wiki-warehouse-chips[data-tabs] .wiki-warehouse-chip {
+  --tab-tone: var(--chip-accent, var(--aov-accent));
+}
+.wiki-warehouse-chips[data-tabs] .wiki-warehouse-chip[aria-pressed="true"] .wiki-warehouse-chip-tile {
+  border-color: color-mix(in srgb, var(--tab-tone) 75%, transparent);
+  background: radial-gradient(
+    circle at 50% 30%,
+    color-mix(in srgb, var(--tab-tone) 34%, var(--aov-raised)),
+    color-mix(in srgb, var(--tab-tone) 12%, var(--aov-sunken))
+  );
+  box-shadow: 0 0 14px -3px color-mix(in srgb, var(--tab-tone) 85%, transparent);
+  color: var(--tab-tone);
+  filter: none;
+}
+.wiki-warehouse-chips[data-tabs] .wiki-warehouse-chip small {
+  border-radius: var(--aov-radius-pill);
+  padding: 0 6px;
+  background: var(--aov-surface);
+  font-weight: 400;
+}
+.wiki-warehouse-chips[data-tabs] .wiki-warehouse-chip[aria-pressed="true"] {
+  background: linear-gradient(0deg, color-mix(in srgb, var(--tab-tone) 16%, transparent), transparent 85%);
+  box-shadow: inset 0 -3px 0 var(--tab-tone);
+  color: var(--aov-text);
+}
+.wiki-warehouse-chips[data-tabs] .wiki-warehouse-chip[aria-pressed="true"] small {
+  background: color-mix(in srgb, var(--tab-tone) 26%, transparent);
+  color: var(--aov-text);
+}
 /* A second, narrowing row of chips is drawn lighter than the groups above it, after a short caption. */
 .wiki-warehouse-chips[data-secondary] .wiki-warehouse-chip {
   height: 28px;
@@ -444,8 +518,8 @@
   height: var(--wiki-warehouse-art-size, 44px);
   flex-shrink: 0;
   border-radius: var(--wiki-warehouse-art-radius, var(--aov-radius-control));
-  /* A fine ring sets the picture off the card, the way the game frames its icons. */
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--aov-text) 12%, transparent);
+  /* A fine ring sets the picture off the card, the way the game frames its icons; a catalog may light it. */
+  box-shadow: var(--wiki-warehouse-art-ring, 0 0 0 1px color-mix(in srgb, var(--aov-text) 12%, transparent));
   object-fit: contain;
   /* A card the pointer rests on sets the scale, so its picture grows a little. */
   transform: scale(var(--wiki-entry-art-scale, 1));

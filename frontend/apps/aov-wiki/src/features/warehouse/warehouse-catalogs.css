@@ -102,21 +102,16 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
-/* Two or three rows abreast where there is room; a row left alone at the end takes the whole line. */
+/* Two or three rows abreast where there is room. A row left alone at the end keeps its column's width, so every row
+   of a tier has the same shape. */
 @container wiki-warehouse (min-width: 680px) and (max-width: 1039.98px) {
   .wiki-item-rows {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .wiki-item-rows > :last-child:nth-child(2n + 1) {
-    grid-column: 1 / -1;
   }
 }
 @container wiki-warehouse (min-width: 1040px) {
   .wiki-item-rows {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .wiki-item-rows > :last-child:nth-child(3n + 1) {
-    grid-column: 1 / -1;
   }
 }
 .wiki-item-row {
@@ -130,6 +125,45 @@
   background: var(--wiki-entry-bg);
   text-align: left;
   transition: var(--wiki-entry-transition);
+}
+/* A finished item's picture is ringed in gold, as on the board. */
+.wiki-item-row[data-tier="3"] {
+  --wiki-warehouse-art-ring:
+    0 0 0 1px color-mix(in srgb, var(--aov-accent) 55%, transparent),
+    0 0 14px -4px color-mix(in srgb, var(--aov-accent) 70%, transparent);
+}
+/* A tier heads its rows as a board column heads its cards: pips for the tier over a rule, gold for tier III. */
+.wiki-item-tiers > .wiki-warehouse-section[data-tier] > .wiki-warehouse-heading {
+  --pip-off: color-mix(in srgb, var(--aov-text) 18%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--aov-line);
+  padding-bottom: 8px;
+}
+.wiki-item-tiers > .wiki-warehouse-section[data-tier] > .wiki-warehouse-heading::before {
+  content: "";
+  width: 22px;
+  height: 6px;
+  flex: none;
+  background:
+    radial-gradient(circle, var(--pip-1, var(--pip-off)) 2.5px, transparent 3px) 0 0 / 6px 6px no-repeat,
+    radial-gradient(circle, var(--pip-2, var(--pip-off)) 2.5px, transparent 3px) 8px 0 / 6px 6px no-repeat,
+    radial-gradient(circle, var(--pip-3, var(--pip-off)) 2.5px, transparent 3px) 16px 0 / 6px 6px no-repeat;
+}
+.wiki-item-tiers > .wiki-warehouse-section[data-tier="1"] > .wiki-warehouse-heading {
+  --pip-1: var(--aov-accent);
+}
+.wiki-item-tiers > .wiki-warehouse-section[data-tier="2"] > .wiki-warehouse-heading {
+  --pip-1: var(--aov-accent);
+  --pip-2: var(--aov-accent);
+}
+.wiki-item-tiers > .wiki-warehouse-section[data-tier="3"] > .wiki-warehouse-heading {
+  --pip-1: var(--aov-accent);
+  --pip-2: var(--aov-accent);
+  --pip-3: var(--aov-accent);
+  border-image: linear-gradient(90deg, var(--aov-accent), color-mix(in srgb, var(--aov-accent) 8%, transparent)) 1;
+  color: var(--aov-accent-strong);
 }
 .wiki-item-row-main {
   display: flex;
@@ -320,14 +354,58 @@
     padding: 8px 4px;
   }
 }
-/* The column labels stay as headings for assistive technology; the board shows its columns without them. */
+/* Each column is headed by its name, tier pips and how many items it holds. The finished column is marked in gold. */
 .wiki-item-board .shop-column-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  --pip-off: color-mix(in srgb, var(--aov-text) 18%, transparent);
+  --pip-1: var(--aov-accent);
+  --pip-2: var(--pip-off);
+  --pip-3: var(--pip-off);
+  /* The board scrolls inside its own box, so the head moves with it rather than sticking under the page header. */
+  position: relative;
+  width: 100%;
+  margin: 0;
+  gap: 8px;
+  border: 0;
+  border-bottom: 1px solid var(--aov-line);
+  border-radius: 0;
+  padding: 10px 2px 8px;
+  background: none;
+  color: var(--aov-text);
+  font: var(--wiki-type-category);
+}
+.wiki-item-board .shop-column-label::before {
+  content: "";
+  width: 22px;
+  height: 6px;
+  flex: none;
+  background:
+    radial-gradient(circle, var(--pip-1) 2.5px, transparent 3px) 0 0 / 6px 6px no-repeat,
+    radial-gradient(circle, var(--pip-2) 2.5px, transparent 3px) 8px 0 / 6px 6px no-repeat,
+    radial-gradient(circle, var(--pip-3) 2.5px, transparent 3px) 16px 0 / 6px 6px no-repeat;
+}
+.wiki-item-board .shop-column-label > span {
+  margin-left: auto;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-item-board [data-shop-column="1"] > .shop-column-label {
+  --pip-2: var(--aov-accent);
+}
+.wiki-item-board [data-shop-column="2"] > .shop-column-label {
+  --pip-2: var(--aov-accent);
+  --pip-3: var(--aov-accent);
+  border-image: linear-gradient(90deg, var(--aov-accent), color-mix(in srgb, var(--aov-accent) 10%, transparent)) 1;
+  color: var(--aov-accent-strong);
+}
+@container warehouse (max-width: 500px) {
+  .wiki-item-board .shop-column-label {
+    gap: 6px;
+    font: var(--wiki-type-meta);
+    font-weight: 600;
+  }
+  .wiki-item-board .shop-column-label > span {
+    display: none;
+  }
 }
 .wiki-item-board .shop-cell {
   border-color: transparent;
@@ -338,12 +416,27 @@
   grid-auto-rows: max-content;
   align-content: start;
 }
-/* Below the shared utilities, so the outline of the chosen item and of its ingredients still shows. */
+/* Below the shared utilities, so the outline of the chosen item and of its ingredients still shows. A finished item,
+   in the last column or the finished band of the middle one, has a gold edge; a basic one sits quieter. */
 @layer components {
   .wiki-item-board [data-item-node] {
     border-color: var(--wiki-entry-line);
     background: var(--wiki-entry-bg);
   }
+  .wiki-item-board [data-shop-column="0"] [data-item-node] {
+    background: color-mix(in srgb, var(--aov-surface) 70%, transparent);
+  }
+  .wiki-item-board :is([data-shop-column="2"], section > section) [data-item-node] {
+    border-color: color-mix(in srgb, var(--aov-accent) 26%, var(--aov-line));
+    background:
+      radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--aov-accent) 9%, transparent), transparent 60%),
+      var(--wiki-entry-bg);
+  }
+}
+.wiki-item-board :is([data-shop-column="2"], section > section) .shop-item-art > :first-child {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--aov-accent) 55%, transparent),
+    0 0 16px -4px color-mix(in srgb, var(--aov-accent) 70%, transparent);
 }
 .wiki-item-board [data-item-node] {
   min-height: 60px;

@@ -394,7 +394,8 @@ function DetailContent({
             )}
             <WarehouseUpdates entry={entry} />
             <SubjectVideos kind={VIDEO_KINDS[entry.kind]} id={entry.id} />
-            {!entry.revision.effectiveFromPatchVariantId && (
+            {/* Where the data comes from matters to an editor, not to a reader choosing an item. */}
+            {!entry.revision.effectiveFromPatchVariantId && entry.kind !== "items" && (
               <p className="wiki-warehouse-detail-note">
                 <WikiIcon name="clock" size={14} />
                 {content.availability === "REMOVED"

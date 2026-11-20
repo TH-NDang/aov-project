@@ -1,24 +1,43 @@
 import type { ReactNode } from "react"
+import { Hourglass, Layers } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import {
   formatItemStatValue,
+  itemEffectFacts,
   ITEM_STAT_FILTERS,
-  itemStatDefinition,
   type ItemTextContent,
   type ItemTextStat,
 } from "@aov/ui/lib/item-description"
-import { gameplayIcons } from "../gameplay-icons"
+import { ItemStatIcon } from "./item-stat-icons"
 import { useWarehouseText } from "./warehouse-view"
 
 function StatArt({ stat, size }: { stat: Pick<ItemTextStat, "key">; size: number }) {
-  const definition = itemStatDefinition(stat.key)
-  const Art = definition && gameplayIcons[definition.icon]
-  return Art ? <Art size={size} className="shrink-0" /> : <span className="shrink-0" style={{ width: size }} />
+  return <ItemStatIcon group={statFilterKey(stat)} size={size} className="shrink-0" />
 }
 
-function PassiveTag({ children }: { children: ReactNode }) {
+/** The reader-facing stat group a stat belongs to (`ITEM_STAT_FILTERS`), for pages that mark each group. */
+function statFilterKey(stat: Pick<ItemTextStat, "key">) {
+  return ITEM_STAT_FILTERS.find((filter) => stat.key && filter.stats.includes(stat.key))?.key
+}
+
+function PassiveTag({ children, strong = false }: { children: ReactNode; strong?: boolean }) {
   return (
-    <span className="rounded bg-muted px-1 text-xs font-normal whitespace-nowrap text-muted-foreground">
+    <span
+      className={cn(
+        "rounded px-1.5 text-xs font-medium whitespace-nowrap",
+        strong ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
+/** A figure pulled out of an effect, such as its cooldown, as a small chip under its text. */
+function EffectFact({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border bg-background/60 px-2 py-0.5 text-xs text-foreground tabular-nums [&_svg]:size-3.5 [&_svg]:text-muted-foreground">
+      {icon}
       {children}
     </span>
   )
@@ -75,7 +94,7 @@ export function ItemStatChips({
         <span
           key={index}
           title={`${formatItemStatValue(stat)} ${stat.label}`}
-          className="inline-flex items-center gap-0.5 text-xs tabular-nums"
+          className="item-stat-chip inline-flex items-center gap-0.5 text-xs tabular-nums"
         >
           <StatArt stat={stat} size={14} />
           {formatItemStatValue(stat)}
@@ -98,19 +117,36 @@ export function ItemPassiveList({
 }) {
   const t = useWarehouseText()
   return (
-    <div className="space-y-3">
-      {content.passives.map((passive, index) => (
-        <div key={index} className="space-y-0.5">
-          {(passive.name || passive.unique || passive.active) && (
+    <div className="space-y-2">
+      {content.passives.map((passive, index) => {
+        const facts = itemEffectFacts(passive.text)
+        return (
+          <div key={index} className="space-y-1.5 rounded-lg border bg-muted/20 p-3">
             <h4 className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
               {passive.name}
-              {passive.active && <PassiveTag>{t("Kích hoạt", "Active")}</PassiveTag>}
+              <PassiveTag strong={passive.active}>
+                {passive.active ? t("Kích hoạt", "Active") : t("Nội tại", "Passive")}
+              </PassiveTag>
               {passive.unique && <UniqueTag />}
             </h4>
-          )}
-          <div className="type-body">{renderText(passive.text, language)}</div>
-        </div>
-      ))}
+            <div className="type-body">{renderText(passive.text, language)}</div>
+            {(facts.cooldownSeconds || facts.maxStacks) && (
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {facts.cooldownSeconds && (
+                  <EffectFact icon={<Hourglass aria-hidden />}>
+                    {t(`Hồi chiêu ${facts.cooldownSeconds} giây`, `Cooldown ${facts.cooldownSeconds} s`)}
+                  </EffectFact>
+                )}
+                {facts.maxStacks && (
+                  <EffectFact icon={<Layers aria-hidden />}>
+                    {t(`Cộng dồn tối đa ${facts.maxStacks} lần`, `Stacks up to ${facts.maxStacks} times`)}
+                  </EffectFact>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
       {content.passives.some((passive) => passive.unique) && (
         <p className="type-meta">
           {t(
@@ -124,54 +160,6 @@ export function ItemPassiveList({
           {note}
         </p>
       ))}
-    </div>
-  )
-}
-
-/** Stat chips for narrowing a catalog; several together mean an item must give all of them. */
-export function ItemStatFilter({
-  value,
-  counts,
-  onChange,
-  className,
-}: {
-  value: readonly string[]
-  /** How many items would match with this chip on. Chips that match nothing are left out unless already on. */
-  counts: Readonly<Record<string, number>>
-  onChange: (value: string[]) => void
-  className?: string
-}) {
-  const t = useWarehouseText()
-  const options = ITEM_STAT_FILTERS.filter((filter) => counts[filter.key] || value.includes(filter.key))
-  if (!options.length) return null
-  return (
-    <div
-      role="group"
-      aria-label={t("Lọc theo chỉ số", "Filter by stat")}
-      className={cn("flex flex-wrap gap-1", className)}
-    >
-      {options.map((filter) => {
-        const active = value.includes(filter.key)
-        const Art = gameplayIcons[filter.icon]
-        return (
-          <button
-            key={filter.key}
-            type="button"
-            aria-pressed={active}
-            className={cn(
-              "inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg border px-2 text-sm transition-colors",
-              active
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-transparent bg-muted/60 text-muted-foreground hover:text-foreground",
-            )}
-            onClick={() => onChange(active ? value.filter((key) => key !== filter.key) : [...value, filter.key])}
-          >
-            <Art size={18} />
-            {t(filter.vi, filter.en)}
-            <span className="text-xs tabular-nums text-muted-foreground">{counts[filter.key] ?? 0}</span>
-          </button>
-        )
-      })}
     </div>
   )
 }

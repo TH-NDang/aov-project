@@ -292,6 +292,38 @@ export function parseItemDescription(description: string | null | undefined, loc
   return content
 }
 
+/** The figures a reader looks for in an effect, read from its text as the game writes them. */
+export interface ItemEffectFacts {
+  /** The cooldown as written, such as "0.3" or "75", in seconds. */
+  cooldownSeconds: string | null
+  /** How many times the effect stacks at most. */
+  maxStacks: number | null
+}
+
+const COOLDOWN_PATTERNS = [
+  /h[oồ]i\s+chi[eê]u\s*:?\s*(\d+(?:[.,]\d+)?)\s*gi[aâ]y/i,
+  /(\d+(?:[.,]\d+)?)\s*gi[aâ]y\s+h[oồ]i\s+chi[eê]u/i,
+  /cooldown\s*:?\s*(\d+(?:\.\d+)?)\s*s(?:econds?)?\b/i,
+  /(\d+(?:\.\d+)?)\s*-?\s*seconds?\s+cooldown/i,
+]
+const STACK_PATTERNS = [
+  /c[oộ]ng\s+d[oồ]n\s+(?:l[eê]n\s+)?(?:đ[eế]n\s+|t[oố]i\s+đa\s+)?(\d+)\s+l[aầ]n/i,
+  /stacks?\s+up\s+to\s+(\d+)\s+times/i,
+]
+
+/**
+ * Cooldown and stacks of an effect, whichever way the text words them: the cooldown before or after its seconds, in
+ * brackets or not, and "stacks up to N times", in Vietnamese and in English. The tests list the wordings.
+ */
+export function itemEffectFacts(text: string): ItemEffectFacts {
+  const cooldown = COOLDOWN_PATTERNS.map((pattern) => pattern.exec(text)).find(Boolean)
+  const stacks = STACK_PATTERNS.map((pattern) => pattern.exec(text)).find(Boolean)
+  return {
+    cooldownSeconds: cooldown ? cooldown[1].replace(",", ".") : null,
+    maxStacks: stacks ? Number(stacks[1]) : null,
+  }
+}
+
 export function itemStatDefinition(key: ItemStatKey | null) {
   return key ? ITEM_STATS.find((stat) => stat.key === key) : undefined
 }

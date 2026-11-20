@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from "react"
+import { useId, useMemo, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import {
   DndContext,
@@ -48,6 +48,10 @@ interface Props {
   onExtraRowsChange?: (rows: number) => void
   /** False when selecting a card is already enough to read it. */
   showOpenButton?: boolean
+  /** Names for the columns, left to right, in place of their numbers. */
+  columnLabels?: readonly string[]
+  /** A tool at the end of the group row, such as a filter. */
+  toolbar?: ReactNode
 }
 
 /**
@@ -70,6 +74,8 @@ export function ItemShopGraph({
   extraRows: more = 0,
   onExtraRowsChange: setMore = () => {},
   showOpenButton = true,
+  columnLabels,
+  toolbar,
 }: Props) {
   const t = useWarehouseText()
   const [variant, setVariant] = useState("")
@@ -172,6 +178,7 @@ export function ItemShopGraph({
         missingIcons={missingIcons}
         variants={variants}
         variant={variant}
+        toolbar={toolbar}
         onCategory={(code) => {
           // The category change comes last: both can write to the URL, and it also clears the selection.
           onFocus(null)
@@ -230,6 +237,7 @@ export function ItemShopGraph({
                   <ShopColumn
                     key={column}
                     column={column}
+                    label={columnLabels?.[column]}
                     sections={sections}
                     placements={placements}
                     external={external}

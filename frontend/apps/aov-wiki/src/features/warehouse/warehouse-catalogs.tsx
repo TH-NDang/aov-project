@@ -58,6 +58,7 @@ function ItemRow({
     <button
       type="button"
       className="wiki-item-row"
+      data-tier={entry.content.tier ?? undefined}
       aria-pressed={selected}
       aria-label={wikiText(locale, `Xem ${name}`, `View ${name}`)}
       onClick={(event) => onOpen(event.currentTarget)}
@@ -129,7 +130,12 @@ function ItemList({
           ? `${wikiText(locale, "Cấp", "Tier")} ${romanTier(section.value)}`
           : wikiText(locale, "Chưa phân cấp", "Tier not assigned")
         return (
-          <section key={section.key} className="wiki-warehouse-section" aria-label={title}>
+          <section
+            key={section.key}
+            className="wiki-warehouse-section"
+            data-tier={section.value ?? undefined}
+            aria-label={title}
+          >
             <GroupHeading title={title} count={totals.get(section.key) ?? section.entries.length} />
             {rows(section.entries)}
           </section>
@@ -160,6 +166,12 @@ function ItemBoard({
     "Pick an item to read it and see its recipe lines.",
   )
   const board = groups.find((group) => group.code === view.category)
+  // The shop's three columns, as a player reads them: what an item starts from, what it passes through, what it ends as.
+  const columns = [
+    wikiText(locale, "Cơ bản", "Basic"),
+    wikiText(locale, "Nâng cấp", "Upgraded"),
+    wikiText(locale, "Hoàn chỉnh", "Finished"),
+  ]
   const open = (id: string | null) => {
     const entry = id ? items.find((item) => item.id === id) : undefined
     if (entry) onSelect(entry, document.activeElement instanceof HTMLButtonElement ? document.activeElement : undefined)
@@ -189,6 +201,7 @@ function ItemBoard({
         onCategory={onGroupChange}
         editable={false}
         showOpenButton={false}
+        columnLabels={columns}
       />
     </div>
   )

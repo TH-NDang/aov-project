@@ -1,7 +1,6 @@
 import { useId, useState, type ReactNode } from "react"
 import { useWarehouseText, WarehouseAsset } from "./warehouse-view"
 import { warehouseName, type ItemContent, type WarehouseEntry } from "@aov/ui/lib/warehouse-content"
-import type { ItemSimilarity } from "@aov/ui/lib/item-description"
 import { cn } from "@aov/ui/lib/utils"
 import { formatGameNumber } from "@aov/ui/lib/game-number"
 
@@ -206,45 +205,5 @@ export function ItemRecipeView<E extends Item>({
         </section>
       )}
     </>
-  )
-}
-
-/** A short list of other items worth comparing against the one on screen, each saying what it has in common. */
-export function ItemSimilarList<E extends Item>({
-  title,
-  entries,
-  locale,
-  onView,
-}: {
-  title: string
-  entries: ItemSimilarity<E>[]
-  locale: string
-  onView?: (item: E) => void
-}) {
-  const t = useWarehouseText()
-  if (!entries.length) return null
-  return (
-    <section className="space-y-2">
-      <h3 className="type-section-title">{title}</h3>
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-x-3 gap-y-1">
-        {entries.map(({ item, reasons }) => (
-          <li key={item.id}>
-            <ItemNode
-              item={item}
-              locale={locale}
-              note={
-                reasons.length
-                  ? `${t("Cùng", "Shares")}: ${reasons
-                      .slice(0, 3)
-                      .map((reason) => t(reason.vi, reason.en))
-                      .join(" · ")}`
-                  : undefined
-              }
-              onView={onView}
-            />
-          </li>
-        ))}
-      </ul>
-    </section>
   )
 }
