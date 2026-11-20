@@ -1,7 +1,9 @@
 import { BackgroundTaskStatus } from "./background-task-status"
 import { Link, useLocation } from "react-router"
 import { useEffect, useRef, useState } from "react"
-import { ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react"
+import { ChevronRight, PanelRightClose, PanelRightOpen, Search } from "lucide-react"
+import { Kbd } from "@aov/ui/components/kbd"
+import { useCommandSearch } from "./command-search"
 import { Button } from "@aov/ui/components/button"
 import { AovMark, AovWordmark } from "@aov/ui/components/aov-brand"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
@@ -143,6 +145,7 @@ export function AppSidebar() {
   const { isMobile, setOpenMobile, state, toggleSidebar } = useSidebar()
   const counts = useAttentionCounts()
   const collapsed = state === "collapsed" && !isMobile
+  const search = useCommandSearch()
 
   return (
     <Sidebar collapsible="icon">
@@ -188,6 +191,21 @@ export function AppSidebar() {
                 </Button>
               </div>
             )}
+          </SidebarMenuItem>
+          {/* Search lives at the top of the sidebar, so no page needs a bar of its own above it. */}
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Tìm kiếm · Ctrl K"
+              className="border bg-background/60 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                if (isMobile) setOpenMobile(false)
+                search.open()
+              }}
+            >
+              <Search />
+              <span className="flex-1">Tìm kiếm…</span>
+              <Kbd className="group-data-[collapsible=icon]:hidden">Ctrl K</Kbd>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

@@ -1,8 +1,8 @@
 import { useMemo, type ReactNode } from "react"
 import { Link, matchRoutes, useLocation, type UIMatch } from "react-router"
 import { ChevronRight } from "lucide-react"
-import { cn } from "@aov/ui/lib/utils"
 import { breadcrumbRoutes } from "./breadcrumb-routes"
+import { activeNavItem } from "@/app/nav"
 import type { RouteHandle } from "./site-header"
 
 type Step = { to: string; label: ReactNode }
@@ -36,40 +36,34 @@ export function breadcrumbTrail(pathname: string): Step[] {
   return steps
 }
 
-/** Where the open page sits in Admin; every step but the last is a link back. Replaces the old row of page tabs. */
+/**
+ * A thin trail above a page that sits under another one (a tournament's match, a hero's translations): the pages above
+ * it as links, then its own name. A first-level page and any page the sidebar lists show nothing, since the title and
+ * the sidebar already say where the reader is.
+ */
 export function AdminBreadcrumb() {
   const { pathname } = useLocation()
-  const steps = useMemo(() => breadcrumbTrail(pathname), [pathname])
+  // The dashboard is every page's root, so it is left out of the trail.
+  const steps = useMemo(() => breadcrumbTrail(pathname).filter((step) => step.to !== "/"), [pathname])
+  // A page the sidebar lists (the image workspace under Heroes, say) is reached from there, not from a parent page.
+  const navItem = activeNavItem(pathname)
+  const ownTrail = (matchRoutes(breadcrumbRoutes(), pathname)?.at(-1)?.route.handle as RouteHandle | undefined)
+    ?.ownTrail
+  if (steps.length < 2 || ownTrail || navItem?.to.split("?")[0] === pathname) return null
   return (
-    <nav aria-label="Vị trí trang" className="min-w-0 flex-1">
-      <ol className="flex min-w-0 items-center gap-1 type-body">
+    <nav aria-label="Vị trí trang" className="px-4 pt-3 md:px-6 md:pt-4">
+      <ol className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 type-meta">
         {steps.map((step, index) => {
           const last = index === steps.length - 1
           return (
-            <li
-              key={step.to}
-              className={cn(
-                "flex min-w-0 items-center gap-1",
-                last ? "font-semibold text-foreground" : "shrink",
-                // On phones only the page itself and the step right above it stay.
-                index < steps.length - 2 && "max-md:hidden",
-              )}
-            >
-              {index > 0 && (
-                <ChevronRight
-                  aria-hidden="true"
-                  className={cn("size-3.5 shrink-0 text-muted-foreground/60", !last && "max-md:hidden")}
-                />
-              )}
+            <li key={step.to} className="flex min-w-0 items-center gap-1">
+              {index > 0 && <ChevronRight aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground/60" />}
               {last ? (
-                <span aria-current="page" className="truncate">
+                <span aria-current="page" className="truncate text-foreground">
                   {step.label}
                 </span>
               ) : (
-                <Link
-                  to={step.to}
-                  className="truncate rounded-sm px-1 text-muted-foreground transition-colors hover:text-foreground"
-                >
+                <Link to={step.to} className="truncate rounded-sm hover:text-foreground hover:underline">
                   {step.label}
                 </Link>
               )}

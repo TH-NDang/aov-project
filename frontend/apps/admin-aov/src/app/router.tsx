@@ -320,16 +320,19 @@ const routes: RouteObject[] = [
           },
           {
             path: "tournaments/:tournamentId",
-            handle: handle((match) => (
-              <TournamentCrumb tournamentId={match.params.tournamentId} fallback="Chi tiết giải" />
-            )),
+            handle: {
+              ...handle((match) => (
+                <TournamentCrumb tournamentId={match.params.tournamentId} fallback="Chi tiết giải" />
+              )),
+              ownTrail: true,
+            },
             lazy: async () => ({
               Component: (await import("@/features/competition/competition-workspace")).CompetitionWorkspace,
             }),
           },
           {
             path: "tournaments/:tournamentId/matches/:seriesId",
-            handle: title("Trận đấu"),
+            handle: { ...title("Trận đấu"), ownTrail: true },
             lazy: async () => ({ Component: (await import("@/features/esports/pages/match-page")).MatchPage }),
           },
           {
