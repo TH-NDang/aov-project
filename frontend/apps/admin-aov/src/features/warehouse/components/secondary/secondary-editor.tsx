@@ -358,8 +358,6 @@ export function SecondaryEditor({
               {facts.filter(Boolean).map((fact) => (
                 <span key={fact}>{fact}</span>
               ))}
-              {/* A phone has no room for the version beside the controls, so it reads here. */}
-              <span className="sm:hidden">{isNew ? "Mới" : versionLabel(revisionNo, revisionState, editingPage)}</span>
             </p>
             <SheetDescription className="sr-only">
               {isNew ? `Điền thông tin ${kindName} rồi lưu nháp.` : `Mã ${initialCode}`}

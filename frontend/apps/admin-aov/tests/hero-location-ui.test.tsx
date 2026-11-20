@@ -258,10 +258,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await mount()
     await waitFor(() => !!document.querySelector("#hero-content-media"))
     assert.equal(new URLSearchParams(router.state.location.search).get("revision"), "fixture-previous")
-    assert.equal(
-      document.querySelector<HTMLElement>('[aria-label="Phiên bản dữ liệu"]')!.dataset.revision,
-      "fixture-previous",
-    )
+    assert.equal(document.querySelector<HTMLElement>("header[data-revision]")!.dataset.revision, "fixture-previous")
     assert.equal(
       fixture.writes.length,
       2,

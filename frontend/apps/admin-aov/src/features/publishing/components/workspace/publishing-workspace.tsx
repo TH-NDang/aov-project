@@ -4,7 +4,20 @@ import { HeroTimeline } from "@/features/publishing/components/workspace/hero-ti
 import { useEffect, useEffectEvent, useId, useRef, useState } from "react"
 import { Link, useBeforeUnload, useNavigate } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, FileUp, Layers, MoreHorizontal, Plus, Save, Trash2, X, ChevronDown } from "lucide-react"
+import {
+  ArrowLeft,
+  Check,
+  FileUp,
+  Layers,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Save,
+  Send,
+  Trash2,
+  X,
+  ChevronDown,
+} from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
@@ -89,7 +102,7 @@ import { HeroDraftChanges, savedHeroSections } from "@/features/publishing/compo
 import { PublishButton } from "@/features/publishing/components/workspace/publish-button"
 import { HeroWorkspaceTabs } from "@/features/publishing/components/workspace/hero-workspace-tabs"
 import { captureFocus, type CaptureTarget } from "@/features/publishing/model/captures/patch-capture-model"
-import { PatchCaptureToggle } from "@/features/publishing/components/captures/patch-capture-panel"
+import { PatchCaptureMenuItem } from "@/features/publishing/components/captures/patch-capture-panel"
 import { usePatchCaptureWorkspace } from "@/features/publishing/api/use-patch-captures"
 import {
   dirtyHeroSections,
@@ -105,13 +118,15 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { CAUSE_NAMES } from "@/lib/version-causes"
 import { VersionFacts } from "@/features/publishing/components/setup/version-facts"
 import {
-  HeroVersionMenu,
+  HeroVersionMenuItem,
+  HeroVersionSheet,
   REVISION_STATES as STATES,
 } from "@/features/publishing/components/workspace/hero-version-menu"
 import { Input } from "@aov/ui/components/input"
 
 import { PublishingFrame } from "./publishing-frame"
 import { useWideBox } from "@/hooks/use-wide-box"
+import { useKeepInPlace } from "@/hooks/use-keep-in-place"
 
 const api = createPublishingApi(backendRequest)
 const CAUSES: Record<Cause, string> = CAUSE_NAMES
@@ -140,6 +155,11 @@ export function PublishingWorkspace({
   const requestedRevision = revisionId ?? heroLocationId(urlParams.get("revision"))
   const [selectedId, setSelectedId] = useState(requestedRevision)
   const [editing, setEditing] = useState(false)
+  // A draft reads like the published page until its one pencil in the header turns the parts' own pencils on, as the
+  // warehouse sheets do. Kept per hero, so another hero opens in reading mode.
+  const [editModeFor, setEditModeFor] = useState<string | null>(null)
+  const editMode = !!heroId && editModeFor === heroId
+  const setEditMode = (on: boolean) => setEditModeFor(on ? heroId : null)
   const [profilePart, setProfilePart] = useState<ProfileEditorPart>("information")
   // The skin whose own pencil opened the skin editor; the section pencil opens all of them.
   const [skinFocus, setSkinFocus] = useState<string | null>(null)
@@ -500,6 +520,7 @@ export function PublishingWorkspace({
     updateLocation({ view: "overview" })
     setSection(next)
     setProfilePart("information")
+    setEditMode(true)
     setEditing(true)
     setError("")
   }
@@ -533,12 +554,14 @@ export function PublishingWorkspace({
     setSelectedId(openDraft.id)
     updateLocation({ revision: openDraft.id, compare: null, changes: null })
     setEditing(false)
+    setEditMode(true)
   }
   function forkDraft(request: NewDraft) {
     if (!revision) return
     void run(async () => {
       await openRevision(await api.fork(revision, request.cause as Cause, request.patchVariantId ?? null))
       updateLocation({ view: request.cause === "TRANSLATION" ? "translations" : "overview" })
+      setEditMode(true)
     }, "Đã tạo bản nháp từ phiên bản đang xem.")
   }
   const canMoveBaseline =
@@ -566,6 +589,7 @@ export function PublishingWorkspace({
     } else if (SECTIONS.some(([key]) => key === fix)) {
       if (writable) {
         setProfilePart("information")
+        setEditMode(true)
         setEditing(true)
       } else setReviewTarget({ note: "", section: fix as Section })
     }
@@ -596,6 +620,25 @@ export function PublishingWorkspace({
 
   const headerRef = useRef<HTMLElement>(null)
   const wideHeader = useWideBox(headerRef, 672)
+  const stickyRef = useRef<HTMLDivElement>(null)
+  const keepInPlace = useKeepInPlace(stickyRef)
+  // The single pencil on a draft: it turns the parts' pencils on and off, leaving the reader where they were.
+  const editLabel = editing ? "Lưu hoặc hủy phần đang sửa trước" : editMode ? "Xong, quay lại chế độ đọc" : "Sửa tướng"
+  const editPencil = writable && (
+    <Button
+      type="button"
+      variant={editMode ? "secondary" : "outline"}
+      size="icon-sm"
+      className={editMode ? undefined : "bg-background"}
+      disabled={busy || editing}
+      aria-pressed={editMode}
+      aria-label={editLabel}
+      title={editLabel}
+      onClick={() => keepInPlace(() => setEditMode(!editMode))}
+    >
+      {editMode ? <Check /> : <Pencil />}
+    </Button>
+  )
   const [publishOpen, setPublishOpen] = useState(false)
   const unsavedSections = SECTIONS.filter(([key]) => dirty.has(key)).map(([key, , label]) => ({ key, label }))
   const chooseRevision = (next: string) => {
@@ -627,19 +670,24 @@ export function PublishingWorkspace({
         compact={!wideHeader}
       />
     )
-  // The version as "#n" with its list; a narrow header drops the state word from its label, nothing else moves.
-  const versionMenu = (narrow: boolean) =>
-    revision && (
-      <HeroVersionMenu
-        revision={revision}
-        revisions={revisions.data}
-        rulesets={rulesets.data}
-        selectedId={selectedId}
-        busy={busy}
-        narrow={narrow}
-        onChoose={chooseRevision}
-      />
-    )
+  // The versions open from a row of the ⋯ menu, in a sheet of their own, so the header keeps one row of controls.
+  const [versionsOpen, setVersionsOpen] = useState(false)
+  const versionSheet = revision && (
+    <HeroVersionSheet
+      open={versionsOpen}
+      onOpenChange={setVersionsOpen}
+      revision={revision}
+      revisions={revisions.data}
+      rulesets={rulesets.data}
+      selectedId={selectedId}
+      disabled={busy}
+      onChoose={chooseRevision}
+    />
+  )
+  // On a phone publishing is a row of the ⋯ menu too; what blocks it opens beside a hidden anchor in the header.
+  const publishBlocked = issues.length > 0 || unsavedSections.length > 0
+  const publishInMenu = headerAction === "publish" && !!revision && !wideHeader
+  const menuKeepsFocus = useRef(false)
   // The single pencil on a published version: it opens the draft in progress or starts one of the chosen kind.
   const draftPencil = revision && (
     <DraftPencil
@@ -708,19 +756,47 @@ export function PublishingWorkspace({
           <MoreHorizontal className="size-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-60">
-        {/* The reading language sits here rather than as its own header button; it opens the language sheet. */}
-        {preview && revision && !translating && (
+      <DropdownMenuContent
+        align="end"
+        className="w-64"
+        onCloseAutoFocus={(event) => {
+          // Focus going back to ⋯ would close the publish conditions as soon as they open.
+          if (menuKeepsFocus.current) event.preventDefault()
+          menuKeepsFocus.current = false
+        }}
+      >
+        {publishInMenu && (
           <>
-            <LanguageMenuItem
-              value={location.readLocale}
-              incomplete={readingIncomplete}
+            <DropdownMenuItem
               disabled={busy}
-              onOpen={() => setLanguageOpen(true)}
-            />
-            {((canPublish && heroId && formsOwner) || writable) && <DropdownMenuSeparator />}
+              onSelect={() => {
+                if (publishBlocked) {
+                  menuKeepsFocus.current = true
+                  setPublishOpen(true)
+                } else publishRevision()
+              }}
+            >
+              <Send />
+              <span className="flex-1">{publishing ? "Đang xuất bản…" : "Xuất bản"}</span>
+              {publishBlocked && (
+                <span className="size-1.5 rounded-full bg-(--aov-warning)" aria-label="Còn mục cần sửa" />
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
           </>
         )}
+        {/* What used to sit around the name: the version, the reading language and the original screenshots. */}
+        {revision && <HeroVersionMenuItem revision={revision} disabled={busy} onOpen={() => setVersionsOpen(true)} />}
+        {preview && revision && !translating && (
+          <LanguageMenuItem
+            value={location.readLocale}
+            incomplete={readingIncomplete}
+            disabled={busy}
+            onOpen={() => setLanguageOpen(true)}
+          />
+        )}
+        <PatchCaptureMenuItem />
+        {((canPublish && heroId && formsOwner) || writable) && <DropdownMenuSeparator />}
         {canPublish && heroId && formsOwner && (
           <DropdownMenuItem disabled={busy} onSelect={() => setFormsOpen(true)}>
             <Layers />
@@ -943,10 +1019,11 @@ export function PublishingWorkspace({
         />
       ) : (
         // The header and the tab row stay at the top together while the page scrolls, as a sheet's do.
-        <div className="sticky top-0 z-20 -mx-1 bg-background px-1 pt-1 [overflow-anchor:none]">
+        <div ref={stickyRef} className="sticky top-0 z-20 -mx-1 bg-background px-1 pt-1 [overflow-anchor:none]">
           <header
             ref={headerRef}
             className="relative"
+            data-revision={selectedId}
             data-reading-locale={location.readLocale}
             data-reading-status={languageRows.find((row) => row.code === location.readLocale)?.status}
           >
@@ -986,10 +1063,6 @@ export function PublishingWorkspace({
                   </div>
                   {/* The line under the name: why this version exists, then its review and draft status as small chips. */}
                   <div className="flex min-w-0 items-center gap-1.5 overflow-hidden [&_button]:h-6 [&_button]:gap-1 [&_button]:px-1.5 [&_button]:text-xs [&_button_svg]:size-3.5">
-                    <p className="truncate text-xs text-muted-foreground">
-                      {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
-                    </p>
-                    <PatchCaptureToggle />
                     {preview && (
                       <HeroReviewNotice
                         skills={preview.content.SKILLS?.skills ?? []}
@@ -1042,11 +1115,16 @@ export function PublishingWorkspace({
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
-                {versionMenu(!wideHeader)}
-                {headerAction === "publish" && revision && publishButton()}
+                {headerAction === "publish" &&
+                  revision &&
+                  (publishInMenu
+                    ? publishButton("pointer-events-none invisible absolute size-8 p-0")
+                    : publishButton())}
                 {headerAction === "draft" && draftPencil}
+                {editPencil}
                 {actionsMenu}
                 {languageSheet}
+                {versionSheet}
                 {closeButton}
               </div>
             </div>
@@ -1140,7 +1218,7 @@ export function PublishingWorkspace({
                     reveal={contentReveal}
                     content={preview.content}
                     locale={locale}
-                    editable={!!writable}
+                    editable={!!writable && (editMode || editing)}
                     busy={busy}
                     heroId={heroId}
                     selectedSkillKey={heroLocationId(urlParams.get("skill"))}

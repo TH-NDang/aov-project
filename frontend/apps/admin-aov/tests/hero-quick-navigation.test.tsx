@@ -114,6 +114,12 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
       (button) => button.getAttribute("aria-label") === label && !button.closest('[aria-hidden="true"]'),
     )!
   const click = (node: HTMLElement) => act(async () => node.click())
+  // A draft's parts show their pencils once the header pencil turns editing on.
+  const editSection = async (label: string) => {
+    const pencil = visibleButton("Sửa tướng")
+    if (pencil) await click(pencil)
+    await click(visibleButton(`Chỉnh sửa ${label}`))
+  }
   const switchTo = async (name: string) => {
     await click(visibleButton("Chuyển tướng nhanh"))
     await waitFor(() => !!visibleButton(`Chuyển sang ${name}`))
@@ -136,7 +142,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
       () => !!visibleButton("Chuyển tướng nhanh") && !!document.querySelector('[aria-label="Tất cả kỹ năng"]'),
     )
     assert.ok(document.querySelector('[role="dialog"]'), "The first hero must remain in the drawer")
-    await click(visibleButton("Chỉnh sửa Kỹ năng"))
+    await editSection("Kỹ năng")
     const draftName = () =>
       [...document.querySelectorAll("label")]
         .find((label) => label.textContent === "Tên chiêu")!
@@ -198,7 +204,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     assert.equal(new URLSearchParams(router.state.location.search).get("tab"), "skills")
     assert.equal(new URLSearchParams(router.state.location.search).get("skillLayout"), "flat")
     assert.equal(new URLSearchParams(router.state.location.search).get("hero"), null)
-    await click(visibleButton("Chỉnh sửa Kỹ năng"))
+    await editSection("Kỹ năng")
     // New uploads must name their owner first.
     const quickSwitcher = visibleButton("Chuyển tướng nhanh")
     await click(visibleButton("Chỉnh sửa ảnh kỹ năng"))

@@ -79,9 +79,9 @@ export function CopyCode({ code }: { code: string }) {
 }
 
 /**
- * The right side of a sheet header, in one row of equal-height controls: the version, publishing or saving, the single
- * pencil, a ⋯ menu that holds the reading language and discarding the draft, and closing. The row never wraps: on a
- * phone the version moves under the name. Callers pass the language picker in its `submenu` form.
+ * The right side of a sheet header, in one row of equal-height controls: publishing or saving, the single pencil, a ⋯
+ * menu headed by the version that holds the reading language and discarding the draft, and closing. The row never wraps.
+ * Callers pass the language picker in its `menu` form.
  */
 export function SheetActions({
   version,
@@ -115,12 +115,6 @@ export function SheetActions({
   const picker = isValidElement(language) ? (language as ReactElement<Record<string, unknown>>) : null
   return (
     <div className="ml-auto flex shrink-0 items-center justify-end gap-1.5">
-      {/* On a phone the version reads under the name instead, so the controls keep one row. */}
-      {version && (
-        <span className={`type-meta mr-1 whitespace-nowrap max-sm:hidden ${editing ? "text-primary" : ""}`}>
-          {version}
-        </span>
-      )}
       {publish && (
         <Button
           type="button"
@@ -154,7 +148,7 @@ export function SheetActions({
           {editing ? <Check /> : <Pencil />}
         </Button>
       )}
-      {(language || discard) && (
+      {(version || language || discard) && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -170,6 +164,11 @@ export function SheetActions({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
+            {/* The version on screen heads the menu, so the header keeps its controls alone. */}
+            {version && (
+              <DropdownMenuLabel className={`type-meta ${editing ? "text-primary" : ""}`}>{version}</DropdownMenuLabel>
+            )}
+            {version && (language || discard) && <DropdownMenuSeparator />}
             {picker && cloneElement(picker, { part: "item", onOpen: () => setLanguageOpen(true) })}
             {language && discard && <DropdownMenuSeparator />}
             {discard && (

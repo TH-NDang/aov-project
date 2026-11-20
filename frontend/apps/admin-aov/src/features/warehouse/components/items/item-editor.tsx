@@ -254,10 +254,6 @@ export function ItemEditor({
               )}
               {value.tier !== null && <span>Cấp {value.tier}</span>}
               <ItemPrice amount={value.price} locale={locale} />
-              {/* A phone has no room for the version beside the controls, so it reads here. */}
-              <span className="sm:hidden">
-                {versionLabel(entry.revision.revisionNo, entry.revision.state, editing)}
-              </span>
             </div>
             <SheetDescription className="sr-only">Mã {entry.code}</SheetDescription>
           </div>

@@ -1,21 +1,8 @@
-import { ChevronDown, Send } from "lucide-react"
-import { Button } from "@aov/ui/components/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@aov/ui/components/dropdown-menu"
+import { History } from "lucide-react"
+import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { cn } from "@aov/ui/lib/utils"
-import type { Content, Revision, Ruleset } from "@/lib/hero-types"
-import { HeroLanguageIcon, HeroLanguageItems } from "../editing/hero-language-picker"
+import type { Revision, Ruleset } from "@/lib/hero-types"
 
 export const REVISION_STATES: Record<Revision["state"], string> = {
   DRAFT: "Bản nháp",
@@ -23,90 +10,99 @@ export const REVISION_STATES: Record<Revision["state"], string> = {
   DISCARDED: "Đã hủy",
 }
 
+/** The row of the hero's ⋯ menu that names the version on screen and opens the list of versions. */
+export function HeroVersionMenuItem({
+  revision,
+  disabled,
+  onOpen,
+}: {
+  revision: Revision
+  disabled?: boolean
+  onOpen: () => void
+}) {
+  return (
+    <DropdownMenuItem
+      disabled={disabled}
+      className="gap-2"
+      aria-label="Phiên bản dữ liệu"
+      data-revision={revision.id}
+      onSelect={onOpen}
+    >
+      <History />
+      <span className="min-w-0 flex-1 truncate">Phiên bản #{revision.revisionNo}</span>
+      <span className="type-meta shrink-0">{REVISION_STATES[revision.state]}</span>
+    </DropdownMenuItem>
+  )
+}
+
 /**
- * The version of a hero as "#n" with the list of its versions. On a narrow header the menu also holds the reading
- * language and the main action, passed as `language` and `publish`.
+ * Every version of the hero, newest first as the server lists them, one large row each. A sheet rather than a menu, so
+ * it reads well on a phone, where it rises from the bottom.
  */
-export function HeroVersionMenu({
+export function HeroVersionSheet({
+  open,
+  onOpenChange,
   revision,
   revisions,
   rulesets,
   selectedId,
-  busy,
-  narrow,
+  disabled,
   onChoose,
-  language,
-  publish,
 }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
   revision: Revision
   revisions: Revision[] | undefined
   rulesets: Ruleset[] | undefined
   selectedId: string
-  busy: boolean
-  narrow: boolean
+  disabled: boolean
   onChoose: (revisionId: string) => void
-  language?: { content: Content; locale: string; disabled: boolean; onChange: (locale: string) => void }
-  publish?: { publishing: boolean; onSelect: () => void }
 }) {
+  const rows = revisions ?? [revision]
+  const manyRulesets = new Set(rows.map((row) => row.rulesetId)).size > 1
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          aria-label="Phiên bản dữ liệu"
-          title={`Phiên bản #${revision.revisionNo} · ${REVISION_STATES[revision.state]}`}
-          data-revision={selectedId}
-          disabled={busy}
-          className={cn("h-8 shrink-0 bg-background font-normal", narrow ? "gap-1 px-2" : "gap-1.5 px-2.5")}
-        >
-          <span className="type-meta whitespace-nowrap tabular-nums">
-            {/* A narrow header keeps the number alone; the full name stays in the tooltip and the list. */}
-            {narrow ? `#${revision.revisionNo}` : `Bản ${revision.revisionNo} · ${REVISION_STATES[revision.state]}`}
-          </span>
-          <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel className="type-label">Phiên bản dữ liệu</DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={selectedId} onValueChange={onChoose}>
-          {(revisions ?? [revision]).map((row) => (
-            <DropdownMenuRadioItem key={row.id} value={row.id}>
-              #{row.revisionNo} · {REVISION_STATES[row.state]}
-              {new Set(revisions?.map((item) => item.rulesetId)).size > 1
-                ? ` · ${rulesets?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}`
-                : ""}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-        {language && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger
-                disabled={language.disabled}
-                className="gap-2"
-                aria-label="Ngôn ngữ hiển thị nội dung"
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" fitContent className="w-full gap-0 overflow-y-auto sm:max-w-sm">
+        <SheetHeader className="border-b pr-12">
+          <SheetTitle className="type-section-title">Phiên bản dữ liệu</SheetTitle>
+          <SheetDescription className="type-meta">Chọn phiên bản để xem; bản nháp là nơi sửa.</SheetDescription>
+        </SheetHeader>
+        <div role="radiogroup" aria-label="Phiên bản dữ liệu" className="grid gap-1 p-2">
+          {rows.map((row) => {
+            const checked = row.id === selectedId
+            return (
+              <button
+                key={row.id}
+                type="button"
+                role="radio"
+                aria-checked={checked}
+                data-revision={row.id}
+                disabled={disabled}
+                className={cn(
+                  "flex min-h-12 min-w-0 items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
+                  checked ? "bg-primary/10" : "hover:bg-muted",
+                )}
+                onClick={() => {
+                  onChoose(row.id)
+                  onOpenChange(false)
+                }}
               >
-                <HeroLanguageIcon locale={language.locale} />
-                Ngôn ngữ
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-80 max-w-[calc(100vw-2rem)] rounded-xl p-1.5">
-                <HeroLanguageItems content={language.content} locale={language.locale} onChange={language.onChange} />
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          </>
-        )}
-        {publish && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={busy} onSelect={publish.onSelect}>
-              <Send />
-              {publish.publishing ? "Đang xuất bản…" : "Xuất bản"}
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+                <span className={cn("type-label w-8 shrink-0 tabular-nums", checked && "text-primary")}>
+                  #{row.revisionNo}
+                </span>
+                <span className={cn("type-body min-w-0 flex-1 truncate", checked && "font-semibold text-primary")}>
+                  {REVISION_STATES[row.state]}
+                </span>
+                {manyRulesets && (
+                  <span className="type-meta shrink-0">
+                    {rulesets?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </SheetContent>
+    </Sheet>
   )
 }
