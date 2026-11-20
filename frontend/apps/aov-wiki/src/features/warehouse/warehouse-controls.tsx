@@ -54,11 +54,14 @@ function SearchField({
   onChange,
   label,
   placeholder,
+  result,
 }: {
   value: string
   onChange: (value: string) => void
   label: string
   placeholder: string
+  /** While a search is typed, how many entries it leaves, with their unit, such as "12 items". */
+  result?: string
 }) {
   const { locale } = useWikiContext()
   const input = useRef<HTMLInputElement>(null)
@@ -74,6 +77,11 @@ function SearchField({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
       />
+      {value && result && (
+        <span className="wiki-warehouse-search-result" role="status">
+          {result}
+        </span>
+      )}
       {value && (
         <button
           type="button"
@@ -301,7 +309,7 @@ function ItemViewSwitch({ view, listing, labels }: { view: ItemCatalogView; list
   )
 }
 
-function ItemControls({ search, onSearch, groups, group, onFilters, itemView: view, loading }: ControlsProps) {
+function ItemControls({ search, onSearch, entries, groups, group, onFilters, itemView: view, loading }: ControlsProps) {
   const compact = usePageLayout() === "compact"
   const { text, sorts, items } = useItemLabels()
   const stats = itemStatOptions(view)
@@ -322,6 +330,7 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
             onChange={onSearch}
             label={text("Tìm trang bị", "Search equipment")}
             placeholder={text("Tìm trang bị…", "Search items…")}
+            result={items(entries.length)}
           />
           <PublicFilterSheet
             title={text("Lọc trang bị", "Filter equipment")}
@@ -387,7 +396,8 @@ function ItemControls({ search, onSearch, groups, group, onFilters, itemView: vi
           value={search}
           onChange={onSearch}
           label={text("Tìm trang bị", "Search equipment")}
-          placeholder={text("Tìm theo tên, hiệu ứng…", "Search names, effects…")}
+          placeholder={text("Tìm theo tên, chỉ số, hiệu ứng…", "Search names, stats, effects…")}
+          result={items(entries.length)}
         />
         {stats.length > 0 && <StatFilterButton view={view} options={stats} />}
         <div className="wiki-warehouse-toolbar-end">
