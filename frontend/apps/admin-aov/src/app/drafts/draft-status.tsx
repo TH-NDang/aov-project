@@ -1,37 +1,36 @@
 import { useState, type ReactNode } from "react"
 import { Check, GitCompareArrows, HardDrive, LoaderCircle, RotateCcw, TriangleAlert } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import type { useLocalDraft } from "./use-local-draft"
 
 type DraftStatusValue = Pick<
   ReturnType<typeof useLocalDraft>,
   "ready" | "dirty" | "conflict" | "invalid" | "persistence" | "error" | "discard" | "flush" | "keepMine"
 >
-export function DraftStatusControl({
-  draft,
-  disabled,
-  sections,
-  changed = sections,
-  alwaysShown = false,
-  discardLabel,
-  children,
-}: {
-  draft: DraftStatusValue
-  disabled: boolean
-  /** Parts that exist only on this device so far. */
-  sections: number
-  /** Parts that differ at all, saved or not. */
-  changed?: number
-  /** For a record that is itself a draft, whose saved changes are worth showing with nothing left to save. */
-  alwaysShown?: boolean
-  discardLabel?: string
-  children?: ReactNode
-}) {
+/**
+ * Where a record's draft stands, in words and an icon: restoring, saving, kept on this device, in conflict, or simply
+ * changed. `hidden` when there is nothing worth showing.
+ */
+export function draftStatusSummary(
+  draft: DraftStatusValue,
+  {
+    sections,
+    changed = sections,
+    alwaysShown = false,
+  }: {
+    /** Parts that exist only on this device so far. */
+    sections: number
+    /** Parts that differ at all, saved or not. */
+    changed?: number
+    /** For a record that is itself a draft, whose saved changes are worth showing with nothing left to save. */
+    alwaysShown?: boolean
+  },
+) {
   const warning = draft.conflict || draft.invalid || !!draft.error
   const pending = !draft.ready || draft.persistence === "pending"
   const idle = !warning && !pending && !draft.dirty
-  if (idle && !alwaysShown) return null
   const label = idle
     ? "Thay đổi trong bản nháp"
     : draft.conflict
@@ -45,41 +44,78 @@ export function DraftStatusControl({
             : draft.persistence === "saved"
               ? "Nháp trên thiết bị"
               : "Nháp trong phiên này"
-  const Icon = warning ? TriangleAlert : pending ? LoaderCircle : idle ? GitCompareArrows : HardDrive
   const description = sections
     ? `${label} · ${sections} phần chưa lưu`
     : changed
       ? `${label} · ${changed} phần đã đổi`
       : label
+  return {
+    hidden: idle && !alwaysShown,
+    warning,
+    pending,
+    label,
+    description,
+    changed,
+    Icon: warning ? TriangleAlert : pending ? LoaderCircle : idle ? GitCompareArrows : HardDrive,
+  }
+}
+
+export type DraftStatusSummary = ReturnType<typeof draftStatusSummary>
+
+/** The row of a ⋯ menu that names where the draft stands and opens its sheet. */
+export function DraftStatusMenuItem({ summary, onOpen }: { summary: DraftStatusSummary; onOpen: () => void }) {
+  const { Icon } = summary
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label={description}
-          title={description}
-          className={`h-8 shrink-0 gap-1.5 px-2 ${warning ? "text-(--aov-warning)" : "text-muted-foreground"}`}
-        >
-          <Icon aria-hidden className={`size-4 ${pending && !warning ? "animate-spin" : ""}`} />
-          {warning ? (
-            <span className="type-label">{label}</span>
-          ) : (
-            changed > 0 && <span className="type-label tabular-nums">{changed}</span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        collisionPadding={12}
-        aria-label="Trạng thái bản nháp"
-        className="w-80 max-w-[calc(100vw-1.5rem)] p-2"
-      >
-        <DraftStatus draft={draft} disabled={disabled} discardLabel={discardLabel} />
-        {draft.ready && (draft.dirty || alwaysShown) && !draft.invalid && children}
-      </PopoverContent>
-    </Popover>
+    <DropdownMenuItem
+      aria-label={summary.description}
+      className={summary.warning ? "text-(--aov-warning) focus:text-(--aov-warning)" : undefined}
+      onSelect={onOpen}
+    >
+      <Icon aria-hidden className={summary.pending && !summary.warning ? "animate-spin" : undefined} />
+      <span className="min-w-0 flex-1 truncate">{summary.label}</span>
+      {!summary.warning && summary.changed > 0 && (
+        <span className="type-meta shrink-0 tabular-nums">{summary.changed}</span>
+      )}
+    </DropdownMenuItem>
+  )
+}
+
+/**
+ * The draft's state with its actions (discard what is unsaved, retry, keep mine), then what changed. A sheet rather than
+ * a popover, so it reads well on a phone, where it rises from the bottom.
+ */
+export function DraftStatusSheet({
+  open,
+  onOpenChange,
+  draft,
+  disabled,
+  alwaysShown = false,
+  discardLabel,
+  children,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  draft: DraftStatusValue
+  disabled: boolean
+  alwaysShown?: boolean
+  discardLabel?: string
+  children?: ReactNode
+}) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" fitContent className="w-full gap-0 overflow-y-auto sm:max-w-sm">
+        <SheetHeader className="border-b pr-12">
+          <SheetTitle className="type-section-title">Bản nháp</SheetTitle>
+          <SheetDescription className="type-meta">
+            Những gì đã đổi so với bản gốc, và nháp trên thiết bị này.
+          </SheetDescription>
+        </SheetHeader>
+        <div aria-label="Trạng thái bản nháp" className="space-y-2 p-3 pb-6">
+          <DraftStatus draft={draft} disabled={disabled} discardLabel={discardLabel} />
+          {draft.ready && (draft.dirty || alwaysShown) && !draft.invalid && children}
+        </div>
+      </SheetContent>
+    </Sheet>
   )
 }
 

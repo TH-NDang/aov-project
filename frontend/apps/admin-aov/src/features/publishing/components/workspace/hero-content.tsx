@@ -82,6 +82,7 @@ function HeroContentBody({
   busy,
   onEdit,
   onNeedsDraft,
+  loreEditable = false,
   onTranslate,
   canWrite = false,
   issues,
@@ -118,6 +119,8 @@ function HeroContentBody({
   /** `focus` names the one skin to open, when the pencil of a single skin was used. */
   onEdit: (section: Section, profilePart?: "information" | "lore", focus?: string) => void
   onNeedsDraft?: () => void
+  /** The lore window keeps its pencil on a draft while the page reads. */
+  loreEditable?: boolean
   /** Prices and skin acquisition follow the shop, so they only ask for the right to write. */
   canWrite?: boolean
   issues?: string[]
@@ -229,6 +232,7 @@ function HeroContentBody({
     editable,
     busy,
     locked: !!editing,
+    loreEditable,
     onEdit,
     onNeedsDraft,
     onTranslate,

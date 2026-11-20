@@ -1,12 +1,11 @@
 import { catalogScopePatch, resolveCatalogScope, type CatalogFilter } from "@/lib/catalog-scope"
 import { useCatalogScopePreference } from "@/features/publishing/components/catalog/catalog-scope-memory"
 import { HeroTimeline } from "@/features/publishing/components/workspace/hero-timeline"
-import { useEffect, useEffectEvent, useId, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react"
 import { Link, useBeforeUnload, useNavigate } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft,
-  Check,
   FileUp,
   Layers,
   MoreHorizontal,
@@ -97,7 +96,7 @@ import {
 import { useHeroLocation } from "@/features/publishing/components/workspace/use-hero-location"
 import { HeroNavigationGuard } from "@/features/publishing/components/workspace/hero-navigation-guard"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
-import { DraftStatusControl } from "@/app/drafts/draft-status"
+import { DraftStatusMenuItem, DraftStatusSheet, draftStatusSummary } from "@/app/drafts/draft-status"
 import { HeroDraftChanges, savedHeroSections } from "@/features/publishing/components/patch-changes/hero-draft-changes"
 import { PublishButton } from "@/features/publishing/components/workspace/publish-button"
 import { HeroWorkspaceTabs } from "@/features/publishing/components/workspace/hero-workspace-tabs"
@@ -126,7 +125,6 @@ import { Input } from "@aov/ui/components/input"
 
 import { PublishingFrame } from "./publishing-frame"
 import { useWideBox } from "@/hooks/use-wide-box"
-import { useKeepInPlace } from "@/hooks/use-keep-in-place"
 
 const api = createPublishingApi(backendRequest)
 const CAUSES: Record<Cause, string> = CAUSE_NAMES
@@ -155,11 +153,10 @@ export function PublishingWorkspace({
   const requestedRevision = revisionId ?? heroLocationId(urlParams.get("revision"))
   const [selectedId, setSelectedId] = useState(requestedRevision)
   const [editing, setEditing] = useState(false)
-  // A draft reads like the published page until its one pencil in the header turns the parts' own pencils on, as the
-  // warehouse sheets do. Kept per hero, so another hero opens in reading mode.
-  const [editModeFor, setEditModeFor] = useState<string | null>(null)
-  const editMode = !!heroId && editModeFor === heroId
-  const setEditMode = (on: boolean) => setEditModeFor(on ? heroId : null)
+  // A draft reads like the published page. Its one pencil in the header opens the editor of the part on screen at
+  // once; this is set from the click until that editor opens. Kept per hero, so another hero is not affected.
+  const [editAskedFor, setEditAskedFor] = useState<string | null>(null)
+  const editAsked = !!heroId && editAskedFor === heroId
   const [profilePart, setProfilePart] = useState<ProfileEditorPart>("information")
   // The skin whose own pencil opened the skin editor; the section pencil opens all of them.
   const [skinFocus, setSkinFocus] = useState<string | null>(null)
@@ -520,7 +517,6 @@ export function PublishingWorkspace({
     updateLocation({ view: "overview" })
     setSection(next)
     setProfilePart("information")
-    setEditMode(true)
     setEditing(true)
     setError("")
   }
@@ -554,14 +550,14 @@ export function PublishingWorkspace({
     setSelectedId(openDraft.id)
     updateLocation({ revision: openDraft.id, compare: null, changes: null })
     setEditing(false)
-    setEditMode(true)
+    setEditAskedFor(heroId)
   }
   function forkDraft(request: NewDraft) {
     if (!revision) return
     void run(async () => {
       await openRevision(await api.fork(revision, request.cause as Cause, request.patchVariantId ?? null))
       updateLocation({ view: request.cause === "TRANSLATION" ? "translations" : "overview" })
-      setEditMode(true)
+      if (request.cause !== "TRANSLATION") setEditAskedFor(heroId)
     }, "Đã tạo bản nháp từ phiên bản đang xem.")
   }
   const canMoveBaseline =
@@ -589,7 +585,6 @@ export function PublishingWorkspace({
     } else if (SECTIONS.some(([key]) => key === fix)) {
       if (writable) {
         setProfilePart("information")
-        setEditMode(true)
         setEditing(true)
       } else setReviewTarget({ note: "", section: fix as Section })
     }
@@ -621,22 +616,60 @@ export function PublishingWorkspace({
   const headerRef = useRef<HTMLElement>(null)
   const wideHeader = useWideBox(headerRef, 672)
   const stickyRef = useRef<HTMLDivElement>(null)
-  const keepInPlace = useKeepInPlace(stickyRef)
-  // The single pencil on a draft: it turns the parts' pencils on and off, leaving the reader where they were.
-  const editLabel = editing ? "Lưu hoặc hủy phần đang sửa trước" : editMode ? "Xong, quay lại chế độ đọc" : "Sửa tướng"
+  const panelRef = useRef<HTMLDivElement>(null)
+  // Where the part being opened stood on screen, so its editor opens in the same place.
+  const editPlace = useRef<number | null>(null)
+  // The pencil's click renders the parts' own pencils; before the page is painted, the one of the part on screen is
+  // pressed, so its editor opens with no second click.
+  // The parts render with the content, so a pencil pressed while it loads waits for it.
+  const previewShown = !!preview
+  useLayoutEffect(() => {
+    const panel = panelRef.current
+    if (!editAsked || !writable || view !== "overview" || !panel) return
+    const pencils = [
+      ...panel.querySelectorAll<HTMLButtonElement>(
+        'button[aria-label^="Chỉnh sửa"]:not([data-direct-edit]):not([aria-disabled="true"]):not(:disabled)',
+      ),
+    ]
+    if (!pencils.length) return
+    // The part on screen is the one that fills most of the view under the bar, not a tail left above it.
+    const barBottom = stickyRef.current?.getBoundingClientRect().bottom ?? 0
+    const part = (pencil: HTMLElement) => pencil.closest("section") ?? pencil.parentElement ?? pencil
+    const shown = (pencil: HTMLElement) => {
+      const box = part(pencil).getBoundingClientRect()
+      return Math.min(box.bottom, window.innerHeight) - Math.max(box.top, barBottom)
+    }
+    const chosen = pencils.reduce((best, pencil) => (shown(pencil) > shown(best) ? pencil : best), pencils[0]!)
+    editPlace.current = Math.max(part(chosen).getBoundingClientRect().top, barBottom)
+    setEditAskedFor(null)
+    chosen.click()
+  }, [editAsked, writable, view, previewShown])
+  useLayoutEffect(() => {
+    const top = editPlace.current
+    editPlace.current = null
+    const editor = editorRef.current
+    if (!editing || top === null || !editor) return
+    let scroller = editor.parentElement
+    while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement
+    if (scroller) scroller.scrollTop += editor.getBoundingClientRect().top - top
+  }, [editing])
+  // The single pencil on a draft, as on the warehouse sheets: it opens the part on screen in its editor.
+  const editLabel = editing ? "Lưu hoặc hủy phần đang sửa trước" : "Sửa tướng"
   const editPencil = writable && (
     <Button
       type="button"
-      variant={editMode ? "secondary" : "outline"}
+      variant="outline"
       size="icon-sm"
-      className={editMode ? undefined : "bg-background"}
+      className="bg-background"
       disabled={busy || editing}
-      aria-pressed={editMode}
       aria-label={editLabel}
       title={editLabel}
-      onClick={() => keepInPlace(() => setEditMode(!editMode))}
+      onClick={() => {
+        if (view !== "overview") updateLocation({ view: "overview" })
+        setEditAskedFor(heroId)
+      }}
     >
-      {editMode ? <Check /> : <Pencil />}
+      <Pencil />
     </Button>
   )
   const [publishOpen, setPublishOpen] = useState(false)
@@ -688,6 +721,37 @@ export function PublishingWorkspace({
   const publishBlocked = issues.length > 0 || unsavedSections.length > 0
   const publishInMenu = headerAction === "publish" && !!revision && !wideHeader
   const menuKeepsFocus = useRef(false)
+  // The draft's state is a row of the menu too; a warning still shows as a dot on the ⋯ button.
+  const [draftStatusOpen, setDraftStatusOpen] = useState(false)
+  const draftSummary =
+    writable && revision
+      ? draftStatusSummary(localDraft, {
+          sections: dirty.size,
+          changed: new Set([...dirty, ...savedSections]).size,
+          alwaysShown: true,
+        })
+      : null
+  const draftStatusSheet = writable && revision && (
+    <DraftStatusSheet
+      key={revision.id}
+      open={draftStatusOpen}
+      onOpenChange={setDraftStatusOpen}
+      draft={localDraft}
+      disabled={busy}
+      alwaysShown
+      discardLabel="Bỏ thay đổi chưa lưu"
+    >
+      <HeroDraftChanges
+        before={initialCopy}
+        after={localDraft.value}
+        saved={savedChanges.data}
+        savedFailed={savedChanges.isError}
+        locale={locale}
+        name={heroName}
+        revisionNo={revision.revisionNo}
+      />
+    </DraftStatusSheet>
+  )
   // The single pencil on a published version: it opens the draft in progress or starts one of the chosen kind.
   const draftPencil = revision && (
     <DraftPencil
@@ -752,8 +816,16 @@ export function PublishingWorkspace({
   const actionsMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon-sm" aria-label="Thao tác tướng" className="shrink-0 bg-background">
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label="Thao tác tướng"
+          className="relative shrink-0 bg-background"
+        >
           <MoreHorizontal className="size-4" />
+          {draftSummary?.warning && (
+            <span aria-hidden className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-(--aov-warning)" />
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -787,6 +859,9 @@ export function PublishingWorkspace({
         )}
         {/* What used to sit around the name: the version, the reading language and the original screenshots. */}
         {revision && <HeroVersionMenuItem revision={revision} disabled={busy} onOpen={() => setVersionsOpen(true)} />}
+        {draftSummary && !draftSummary.hidden && (
+          <DraftStatusMenuItem summary={draftSummary} onOpen={() => setDraftStatusOpen(true)} />
+        )}
         {preview && revision && !translating && (
           <LanguageMenuItem
             value={location.readLocale}
@@ -1090,27 +1165,6 @@ export function PublishingWorkspace({
                         }}
                       />
                     )}
-                    {writable && (
-                      <DraftStatusControl
-                        key={revision.id}
-                        draft={localDraft}
-                        disabled={busy}
-                        sections={dirty.size}
-                        changed={new Set([...dirty, ...savedSections]).size}
-                        alwaysShown
-                        discardLabel="Bỏ thay đổi chưa lưu"
-                      >
-                        <HeroDraftChanges
-                          before={initialCopy}
-                          after={localDraft.value}
-                          saved={savedChanges.data}
-                          savedFailed={savedChanges.isError}
-                          locale={locale}
-                          name={heroName}
-                          revisionNo={revision.revisionNo}
-                        />
-                      </DraftStatusControl>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1125,6 +1179,7 @@ export function PublishingWorkspace({
                 {actionsMenu}
                 {languageSheet}
                 {versionSheet}
+                {draftStatusSheet}
                 {closeButton}
               </div>
             </div>
@@ -1203,7 +1258,7 @@ export function PublishingWorkspace({
                   )}
                 </div>
               )}
-              <div role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
+              <div ref={panelRef} role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
                 {view === "overview" && (
                   <HeroContent
                     revision={revision}
@@ -1218,7 +1273,8 @@ export function PublishingWorkspace({
                     reveal={contentReveal}
                     content={preview.content}
                     locale={locale}
-                    editable={!!writable && (editMode || editing)}
+                    editable={!!writable && editAsked}
+                    loreEditable={!!writable}
                     busy={busy}
                     heroId={heroId}
                     selectedSkillKey={heroLocationId(urlParams.get("skill"))}

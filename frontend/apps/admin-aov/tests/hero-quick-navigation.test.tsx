@@ -114,11 +114,22 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
       (button) => button.getAttribute("aria-label") === label && !button.closest('[aria-hidden="true"]'),
     )!
   const click = (node: HTMLElement) => act(async () => node.click())
-  // A draft's parts show their pencils once the header pencil turns editing on.
-  const editSection = async (label: string) => {
-    const pencil = visibleButton("Sửa tướng")
-    if (pencil) await click(pencil)
-    await click(visibleButton(`Chỉnh sửa ${label}`))
+  // The header pencil opens the part on screen in its editor.
+  const editPart = async (selector: string) => {
+    // jsdom has no layout: the part asked for is the one placed on screen, under the header, so the pencil opens it.
+    const part = document.querySelector<HTMLElement>(selector)!
+    part.getBoundingClientRect = () => ({
+      top: 100,
+      bottom: 600,
+      left: 0,
+      right: 0,
+      width: 0,
+      height: 500,
+      x: 0,
+      y: 100,
+      toJSON: () => ({}),
+    })
+    await click(visibleButton("Sửa tướng"))
   }
   const switchTo = async (name: string) => {
     await click(visibleButton("Chuyển tướng nhanh"))
@@ -142,7 +153,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
       () => !!visibleButton("Chuyển tướng nhanh") && !!document.querySelector('[aria-label="Tất cả kỹ năng"]'),
     )
     assert.ok(document.querySelector('[role="dialog"]'), "The first hero must remain in the drawer")
-    await editSection("Kỹ năng")
+    await editPart('section[aria-label="Kỹ năng"]')
     const draftName = () =>
       [...document.querySelectorAll("label")]
         .find((label) => label.textContent === "Tên chiêu")!
@@ -204,7 +215,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     assert.equal(new URLSearchParams(router.state.location.search).get("tab"), "skills")
     assert.equal(new URLSearchParams(router.state.location.search).get("skillLayout"), "flat")
     assert.equal(new URLSearchParams(router.state.location.search).get("hero"), null)
-    await editSection("Kỹ năng")
+    await editPart('section[aria-label="Kỹ năng"]')
     // New uploads must name their owner first.
     const quickSwitcher = visibleButton("Chuyển tướng nhanh")
     await click(visibleButton("Chỉnh sửa ảnh kỹ năng"))

@@ -38,6 +38,11 @@ export interface HeroOverviewProps {
   onEdit: (section: Section, profilePart?: ProfileEditorPart) => void
   /** A revision that cannot change still offers its pencil to someone who can start a draft from it. */
   onNeedsDraft?: () => void
+  /**
+   * The lore window keeps its own pencil on a draft even while the page reads: in that window it is the one pencil, as
+   * the header's is on the page.
+   */
+  loreEditable?: boolean
   /** Prices follow the shop and change without a draft, so they only ask for the right to write. */
   canWrite?: boolean
   /** What still stands in the way of publishing this draft. */
@@ -124,7 +129,8 @@ function OverviewSummary({ text }: { text: string }) {
 /** The lore sits behind one icon on the hero card and opens in its own window when someone wants to read it. */
 function LoreButton(props: HeroOverviewProps & { name: string }) {
   const { content, profile, locale, busy, onTranslate, name } = props
-  const { canStartEditing, editLabel, start, locked } = useOverviewEditing(props)
+  const editing = useOverviewEditing({ ...props, editable: props.editable || !!props.loreEditable })
+  const { canStartEditing, editLabel, start, locked } = editing
   const [open, setOpen] = useState(false)
   if (!profile?.lore && !canStartEditing) return null
   const label = profile?.lore ? "Đọc cốt truyện" : "Cốt truyện · chưa có"

@@ -54,11 +54,22 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
 
   const button = (label: string) =>
     [...document.querySelectorAll<HTMLButtonElement>("button")].find((node) => node.textContent?.includes(label))!
-  // A draft's parts show their pencils once the header pencil turns editing on.
-  const editSection = async (label: string) => {
-    const pencil = document.querySelector<HTMLButtonElement>('button[aria-label="Sửa tướng"]')
-    if (pencil) await click(pencil)
-    await click(document.querySelector<HTMLButtonElement>(`button[aria-label="Chỉnh sửa ${label}"]`)!)
+  // The header pencil opens the part on screen in its editor.
+  const editPart = async (selector: string) => {
+    // jsdom has no layout: the part asked for is the one placed on screen, under the header, so the pencil opens it.
+    const part = document.querySelector<HTMLElement>(selector)!
+    part.getBoundingClientRect = () => ({
+      top: 100,
+      bottom: 600,
+      left: 0,
+      right: 0,
+      width: 0,
+      height: 500,
+      x: 0,
+      y: 100,
+      toJSON: () => ({}),
+    })
+    await click(document.querySelector<HTMLButtonElement>('button[aria-label="Sửa tướng"]')!)
   }
   const input = (label: string) => {
     const field = [...document.querySelectorAll("label")].find((node) => node.textContent?.includes(label))
@@ -141,7 +152,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.equal(fixture.writes.length, 0)
     await click(mainTab("overview"))
     assert.equal(readLocale().value, "en-US")
-    await editSection("Thông tin")
+    await editPart("#hero-PROFILE")
     assert.ok(
       document.querySelector('[aria-label="Đối chiếu bản dịch"]'),
       "Editing fallback text must open the target translation, never the source profile",
@@ -161,7 +172,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.equal(translationLocale().value, "en-US")
     await click(mainTab("overview"))
     await chooseReading("vi-VN")
-    await editSection("Thông tin")
+    await editPart("#hero-PROFILE")
     assert.doesNotMatch(
       document.querySelector('[aria-label="Chỉnh sửa nội dung"]')!.textContent!,
       /Xem hồ sơ|Chỉnh sửa bản nháp/,
@@ -186,7 +197,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await click(mainTab("overview"))
     assert.equal(readLocale().value, "zh-TW")
     await chooseReading("vi-VN")
-    await editSection("Thông tin")
+    await editPart("#hero-PROFILE")
     assert.equal(document.querySelector('[aria-label="Các phần nội dung"]'), null)
     assert.doesNotMatch(
       document.querySelector('[aria-label="Chỉnh sửa nội dung"]')!.textContent!,
@@ -197,9 +208,12 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     const unload = new dom.window.Event("beforeunload", { cancelable: true })
     dom.window.dispatchEvent(unload)
     assert.equal(unload.defaultPrevented, true)
-    const draftControl = document.querySelector<HTMLButtonElement>('header button[aria-label*="phần chưa lưu"]')!
-    assert.ok(draftControl)
     assert.equal(document.querySelector('[aria-label="Trạng thái bản nháp"]'), null)
+    await act(async () => {
+      actionsMenu().dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    })
+    const draftControl = document.querySelector<HTMLElement>('[role="menuitem"][aria-label*="phần chưa lưu"]')!
+    assert.ok(draftControl)
     await click(draftControl)
     assert.ok(
       document.querySelector('[aria-label="Trạng thái bản nháp"]')?.textContent?.includes("Bỏ thay đổi chưa lưu"),
@@ -237,7 +251,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     cache.clear()
     await mount()
     await waitFor(() => document.body.textContent!.includes("Unsaved hero"))
-    await editSection("Thông tin")
+    await editPart("#hero-PROFILE")
     assert.equal(input("Tên tướng").value, "Unsaved hero", "An unmounted page must restore its persisted working copy")
     assert.equal(fixture.writes.length, 0, "Restoring a local draft must not write to the backend")
     await click(button("Hủy chỉnh sửa phần này"))
@@ -245,7 +259,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.equal(fixture.writes.length, 0)
     assert.ok(!document.body.textContent!.includes("Unsaved hero"))
 
-    await editSection("Thông tin")
+    await editPart("#hero-PROFILE")
     await type(input("Tên tướng"), "Saved hero")
     await click(button("Lưu phần này"))
     await waitFor(() => fixture.writes.length === 1 && !document.querySelector('[aria-label="Chỉnh sửa nội dung"]'))
@@ -254,7 +268,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.deepEqual(fixture.content.SKILLS, fixtureContent.SKILLS)
     assert.equal(fixture.content.PROFILE!.translations[0].name, "Saved hero")
 
-    await editSection("Thông tin")
+    await editPart("#hero-PROFILE")
     await type(input("Tên tướng"), "Conflicting hero")
     conflict = true
     await click(button("Lưu phần này"))
@@ -283,7 +297,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.equal(fixture.content.PROFILE!.translations.find((text) => text.locale === "en-US")?.name, "Airi English")
     assert.deepEqual(fixture.content.PROFILE!.roles, original.roles)
     await click(mainTab("overview"))
-    await editSection("Thông tin")
+    await editPart("#hero-PROFILE")
     await type(input("Tên tướng"), "Pending profile name")
     await type(input("Ghi chú thay đổi"), "Pending information note")
     await click(mainTab("overview"))
@@ -325,7 +339,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     )
     assert.equal(fixture.content.PROFILE!.translations[0].lore, "A separately saved story.")
     assert.match(document.body.textContent!, /Pending profile name/)
-    await editSection("Thông tin")
+    await editPart("#hero-PROFILE")
     assert.equal(input("Ghi chú thay đổi").value, "Pending information note")
     await click(button("Hủy chỉnh sửa phần này"))
     assert.equal(fixture.content.PROFILE!.translations[0].lore, "A separately saved story.")
