@@ -42,7 +42,6 @@
   }
 }
 .wiki-library-main-compact {
-  --public-tab-bar-top: var(--wiki-header-height);
   min-width: 0;
   min-height: calc(100svh - var(--wiki-header-height));
   padding: 12px var(--wiki-gutter) 24px;

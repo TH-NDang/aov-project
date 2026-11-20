@@ -3,7 +3,6 @@ import { useParams, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { NARROW_ITEM_LAYOUT, preferredItemLayout, useMediaQuery, type ItemLayout } from "./warehouse-layout"
-import { WarehouseTabs } from "./warehouse-tabs"
 import { warehouseKind, type WarehouseKind } from "../../lib/warehouse-types"
 
 /** How many placeholders stand in for each catalog, close to what its first screen holds. */
@@ -44,10 +43,7 @@ export function WarehouseRouteLoading() {
       {wide ? (
         <div className="wiki-warehouse-loading-heading wiki-skeleton" />
       ) : (
-        <>
-          <WarehouseTabs active={kind} />
-          <div className="wiki-warehouse-version" />
-        </>
+        <div className="wiki-warehouse-version" />
       )}
       <div className="wiki-warehouse-controls">
         <div className="wiki-warehouse-toolbar">

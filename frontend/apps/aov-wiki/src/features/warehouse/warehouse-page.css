@@ -1,7 +1,5 @@
 /* The armory: search and filters, then the catalog at full width. An open entry stands in a panel beside it. */
 .wiki-warehouse-page {
-  /* The compact layout's tab bar runs edge to edge under the header. */
-  --public-tab-bar-margin: -12px calc(-1 * var(--wiki-gutter)) 12px;
   /* One look for every entry that opens: a fine edge, a surface lit a little from above, and on hover a lift with a
      gold edge and glow. */
   --wiki-entry-line: color-mix(in srgb, var(--aov-line) 80%, transparent);
@@ -19,7 +17,7 @@
 .wiki-warehouse-page :is(button, a) {
   -webkit-tap-highlight-color: transparent;
 }
-/* The version stands at the right of the title on wide layouts and in a line of its own under the tabs on compact. */
+/* The version stands at the right of the title on wide layouts and in a line of its own under the filters on compact. */
 .wiki-warehouse-version {
   display: flex;
   min-width: 0;

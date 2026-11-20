@@ -60,7 +60,8 @@ Một hàng cao 48px (`WikiHeaderCompact`):
   của bố cục wide) mở tấm trượt từ phải, rộng tối đa 320px, liệt
   kê mọi mục theo bốn nhóm Sổ tay nhân vật, Kho trang bị, Lối chơi, Tham khảo (`LibraryNavigation` trong
   `src/components/library-navigation.tsx`). Mục đang xem được đánh dấu; chọn một mục thì tấm đóng.
-- Nền: các trang danh sách có nền đặc. Trang chủ, trang tướng, trang một chế độ và các trang không thuộc thư viện bắt
+- Nền: các trang danh sách có nền đặc. Trên điện thoại, kho trang bị (`clear`) để thanh trong suốt trên khung minh họa
+  đầu trang, rồi phủ mờ dần (nền tối trong mờ và blur) trong 100px cuộn đầu tiên. Trang chủ, trang tướng, trang một chế độ và các trang không thuộc thư viện bắt
   đầu trong suốt rồi đặc dần trong 100px cuộn đầu tiên; ảnh mở đầu của trang chủ và trang tướng nằm ngay dưới header.
   Ở biến thể `hero` (trang tướng, trang một chế độ) mỗi nút có đĩa nền mờ riêng.
 - Nút cao 40px, vòng nền hiện khi rê chuột hoặc khi tấm của nút đang mở.

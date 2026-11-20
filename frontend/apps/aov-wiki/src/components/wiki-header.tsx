@@ -208,6 +208,8 @@ interface WikiHeaderProps {
   section?: WikiSectionKey
   /** Fills the compact bar from the first pixel, for a page with no artwork under it. */
   solid?: boolean
+  /** Leaves the compact bar clear over a scene at the top of the page; it frosts over as the page scrolls. */
+  clear?: boolean
 }
 
 /** One row: the way back, where you are, then search, the contents and the sheet with everything else. */
@@ -218,6 +220,7 @@ function WikiHeaderCompact({
   backTo,
   section,
   solid = false,
+  clear = false,
 }: WikiHeaderProps) {
   const { href, locale } = useWikiContext()
   const t = useWikiText()
@@ -243,7 +246,14 @@ function WikiHeaderCompact({
       </header>
     )
   return (
-    <header ref={headerRef} className="wiki-compact-header" data-variant={variant} data-solid={solid || undefined}>
+    <header
+      ref={headerRef}
+      className="wiki-compact-header"
+      data-variant={variant}
+      data-solid={solid || undefined}
+      data-clear={clear || undefined}
+      data-titled={pageTitle ? "" : undefined}
+    >
       {backTo ? (
         <Link className="wiki-compact-button" to={href(backTo)} aria-label={wikiText(locale, "Quay lại", "Back")}>
           <WikiIcon name="chevronLeft" size={22} />

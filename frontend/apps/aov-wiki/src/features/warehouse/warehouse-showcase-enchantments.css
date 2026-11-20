@@ -1,0 +1,124 @@
+/* The enchantments' phone scene: a set of round pieces, the primary branch climbing along a line of its colour. */
+.wiki-enchantment-scene {
+  position: absolute;
+  inset: 0;
+  /* The primary branch's light, from behind its tier III piece. */
+  background: radial-gradient(42% 70% at 82% 34%, color-mix(in srgb, var(--scene-tone) 30%, transparent), transparent);
+  transition: opacity 360ms ease;
+  animation: wiki-enchantment-scene-light 600ms ease backwards;
+}
+/* The set on show fades before the next branch takes the lead. */
+.wiki-enchantment-scene[data-leaving] {
+  opacity: 0;
+}
+@keyframes wiki-enchantment-scene-light {
+  from {
+    opacity: 0;
+  }
+}
+/* A new set is put together: tier I, II, III, then the two secondary pieces, and the line once they stand. */
+@keyframes wiki-enchantment-scene-piece-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.6);
+  }
+}
+@keyframes wiki-enchantment-scene-line-in {
+  from {
+    opacity: 0;
+  }
+}
+/* Under the two lines: which branch leads the set on show, with a dot of its colour. */
+.wiki-enchantment-scene-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  transition: opacity 360ms ease;
+}
+.wiki-enchantment-scene-caption::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--scene-tone);
+  box-shadow: 0 0 8px var(--scene-tone);
+}
+.wiki-enchantment-scene-caption[data-leaving] {
+  opacity: 0;
+}
+.wiki-enchantment-scene-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+}
+.wiki-enchantment-scene-lines > polyline {
+  stroke: color-mix(in srgb, var(--scene-tone) 70%, transparent);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 4px var(--scene-tone));
+  animation: wiki-enchantment-scene-line-in 500ms ease 300ms backwards;
+}
+.wiki-enchantment-scene-lines > line {
+  stroke: color-mix(in srgb, var(--aov-wiki-gold) 45%, transparent);
+  stroke-width: 1px;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.wiki-enchantment-scene-piece {
+  position: absolute;
+  top: var(--piece-y);
+  left: var(--piece-x);
+  width: calc(var(--piece-size) * var(--scene-scale, 1));
+  height: calc(var(--piece-size) * var(--scene-scale, 1));
+  transform: translate(-50%, -50%);
+  animation: wiki-enchantment-scene-piece-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1.2) backwards;
+  animation-delay: calc(var(--piece-order) * 110ms);
+}
+.wiki-enchantment-scene-piece > img {
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--piece-tone);
+  border-radius: 50%;
+  background: var(--aov-wiki-bar);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--piece-tone) 18%, transparent),
+    0 0 16px color-mix(in srgb, var(--piece-tone) 45%, transparent);
+  object-fit: cover;
+}
+/* The tier III piece crowns the set: a second ring and a wider light. */
+.wiki-enchantment-scene-piece[data-top] > img {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--piece-tone) 25%, transparent),
+    0 0 0 7px color-mix(in srgb, var(--piece-tone) 8%, transparent),
+    0 0 30px color-mix(in srgb, var(--piece-tone) 60%, transparent);
+}
+.wiki-enchantment-scene-tier {
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  min-width: 20px;
+  border: 1px solid var(--piece-tone);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 4px;
+  background: var(--aov-wiki-bar);
+  color: var(--aov-text);
+  font: 700 0.75rem/0.875rem var(--wiki-font-reading);
+  text-align: center;
+  transform: translateX(-50%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiki-enchantment-scene,
+  .wiki-enchantment-scene-piece,
+  .wiki-enchantment-scene-lines > polyline {
+    animation: none;
+  }
+}

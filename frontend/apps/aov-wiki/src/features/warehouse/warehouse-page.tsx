@@ -3,6 +3,8 @@ import { PatchChangesRow, type ChangedSubject } from "../../components/patch-cha
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
 import { PublishedWarehouseView } from "./warehouse-view"
 import { WarehouseHeading } from "./warehouse-heading"
+import { ShowcasePieces, WarehouseShowcase, showcaseImages } from "./warehouse-showcase"
+import { EnchantmentShowcase } from "./warehouse-showcase-enchantments"
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -27,7 +29,6 @@ import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { notFoundMeta, warehouseEntryMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
-import { WarehouseTabs } from "./warehouse-tabs"
 
 /** The catalog until it loads; one array, so the lists made from it are not worked out again on every render. */
 const NO_ENTRIES: PublishedWarehouseRecord[] = []
@@ -57,6 +58,7 @@ export default function WarehousePage() {
   const metadata = useQuery(warehouseGroupsQuery(kind, scope.locale))
   const entries = catalog.data ?? NO_ENTRIES
   const groups = metadata.data ?? []
+  const showcase = useMemo(() => (kind === "enchantments" ? [] : showcaseImages(entries)), [entries, kind])
   const filtered = useMemo(
     () => entries.filter((entry) => matchesWarehouseSearch(entry, search, scope.locale)),
     [entries, search, scope.locale],
@@ -210,8 +212,14 @@ export default function WarehousePage() {
           title={sectionName}
           count={catalog.isPending ? undefined : entries.length}
           action={<div className="wiki-warehouse-version">{version}</div>}
+          showcase={(intro) =>
+            kind === "enchantments" ? (
+              <EnchantmentShowcase intro={intro} entries={entries} groups={groups} />
+            ) : (
+              <WarehouseShowcase {...intro} scene={<ShowcasePieces images={showcase} wide={intro.wide} />} />
+            )
+          }
         />
-        {!wide && <WarehouseTabs active={kind} />}
         <WarehouseControls
           kind={kind}
           search={search}
