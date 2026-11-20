@@ -59,3 +59,14 @@ python -m unittest discover -s research/warehouse -p "test_*.py"
 Lệnh đầu chỉ đọc. Mục đang có bản nháp mở bị bỏ qua và được liệt kê kèm nguyên nhân của bản nháp đó; phải xuất bản hoặc bỏ bản nháp ấy trước. Mỗi bước ghi vào `.local-state/enchantment-corrections.jsonl`.
 
 Với bản đã triển khai, chạy từ máy của người có quyền, đặt khóa của client `wiki-importer` vào `WIKI_IMPORTER_CLIENT_SECRET` trong shell của mình (công cụ không in hay lưu khóa) rồi thêm `--backend https://athahub.com --keycloak https://athahub.com/idp`. `--apply --discard-translation-drafts` lưu nội dung các bản nháp dịch đang chặn vào `.local-state/` rồi bỏ chúng.
+
+## Xuất bản bản nháp trang bị
+
+`publish-item-drafts.py` đọc mọi trang bị, so từng bản nháp đang mở với bản đã xuất bản mà nó tách ra, và chỉ xuất bản những bản nháp thật sự thay đổi nội dung; bản nháp không đổi gì được để nguyên. Lệnh không có `--apply` chỉ in danh sách và các trường mỗi bản nháp thay đổi. `--cause TRANSLATION_UPDATE` giới hạn theo nguyên nhân của bản nháp. Mỗi lần xuất bản ghi vào `.local-state/item-draft-publishes.jsonl`. Cách đăng nhập vào bản đã triển khai giống `correct-enchantments.py`.
+
+```powershell
+python research/warehouse/publish-item-drafts.py
+python research/warehouse/publish-item-drafts.py --apply
+```
+
+Ngày 20/11/2026: xuất bản 113 bản nháp `TRANSLATION_UPDATE` (mô tả tiếng Việt đã sửa và bản tiếng Anh) trên VPS và trên dữ liệu dev; bản nháp của Kiếm ngắn trên VPS không đổi gì nên để nguyên.
