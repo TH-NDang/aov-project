@@ -21,6 +21,7 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.registry.application.PlayerMerge;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -74,7 +75,19 @@ public interface TournamentAdminApi {
     View<Player> getPlayer(UUID id);
 
     @Operation(operationId = "tournamentAdminApi_createPlayer", summary = "Create a player")
-    View<Player> createPlayer(Create<Player> request);
+    View<Player> createPlayer(Create<Player> request, boolean allowSameName,
+            @Parameter(hidden = true) HttpServletRequest http);
+
+    /** Moves the second profile of one person into {@code intoId} and puts it in the trash (spec 04). */
+    record MergePlayer(
+            Long version,
+            UUID intoId,
+            Long intoVersion
+    ) {
+    }
+
+    @Operation(operationId = "tournamentAdminApi_mergePlayer", summary = "Merge a player into another")
+    PlayerMerge.Result mergePlayer(UUID id, MergePlayer request);
 
     @Operation(operationId = "tournamentAdminApi_updatePlayer", summary = "Change a player")
     View<Player> updatePlayer(UUID id, Update<Player> request);

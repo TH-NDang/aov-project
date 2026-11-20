@@ -224,7 +224,8 @@ public class PageProfiles {
     }
 
     @PreAuthorize("hasAuthority('tournament:write') and hasAuthority('tournament:read')")
-    public Profile create(PageContent.Kind kind, String code, UUID entityId, PageContent content) {
+    public Profile create(PageContent.Kind kind, String code, UUID entityId, PageContent content,
+            boolean allowSameName) {
         var actor = CommunityActor.require();
         PageChecks.content(content);
         assets.acquire(content.avatarUrl(), content.coverUrl());
@@ -238,7 +239,7 @@ public class PageProfiles {
         if (kind.identity()) {
             var identity = entityId == null
                     ? identities.create(identityKind(kind), code, content.name(), content.country(),
-                            content.avatarUrl(), actor.key())
+                            content.avatarUrl(), actor.key(), allowSameName)
                     : identities.read(identityKind(kind), entityId);
             entityId = identity.id();
         } else if (entityId != null) {

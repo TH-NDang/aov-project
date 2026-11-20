@@ -596,6 +596,42 @@ Script `research/community-links/` (ADR-032), chạy tay, không phải migratio
    lần. Mỗi lần ghi vào sổ để hoàn tác.
 3. Chạy trên dữ liệu thật cần người dùng đồng ý riêng. Phần không khớp chắc chắn ở lại trong "Liên kết cần xem".
 
+## Tuyển thủ trùng tên và gộp hồ sơ (20/11/2026)
+
+Lần nhập Liquipedia ngày 05/11 tạo một hồ sơ cho mỗi cách viết tên mà trang giải dùng: "Kiral" và "KiraL", "Anh Duy"
+và "AnhDuy", "01.30" và "01:30". Khi mã đã có, script thêm hậu tố quốc gia (`kiral-vn`) thay vì dùng hồ sơ có sẵn,
+nên một người có hai hồ sơ, đội hình và ghế chia ra hai nơi. Ngày 20/11 còn 49 cặp như vậy trên dữ liệu thật; không
+cặp nào cùng ngồi trong một ván.
+
+### Tên trùng khi tạo
+
+- Hai tên là một khi `tournament.name_key` (V023) giống nhau: gấp như `normalize_reference_search` rồi bỏ mọi ký tự
+  không phải chữ hay số. "Anh Duy", "AnhDuy" và "anh-duy" là một tên; "7K²" và "7K2" thì không.
+- `POST /admin/players` từ chối (409 `TOURNAMENT_PLAYER_SAME_NAME`) khi tên thi đấu hoặc một tên gọi khác của hồ sơ
+  mới trùng tên thi đấu hoặc tên gọi khác của một tuyển thủ chưa xóa cùng quốc gia. Lỗi kèm `players`
+  [{id,code,nickname,country}], tối đa 5 hồ sơ.
+- Người trùng tên thật thì gửi lại với `?allowSameName=true`. Hồ sơ không có quốc gia không bị kiểm tra.
+- Sửa hồ sơ không kiểm tra; hồ sơ do page cộng đồng tạo cũng không, vì page đã chọn hồ sơ của mình.
+- Script nhập phải tra hồ sơ có sẵn theo tên và quốc gia trước, và coi 409 là "đã có", không thêm hậu tố để tạo mới.
+
+### Gộp hai hồ sơ của một người
+
+`POST /admin/players/{id}/merge {version,intoId,intoVersion}` gộp hồ sơ `{id}` vào `intoId` trong một giao dịch:
+
+1. Từ chối khi hai hồ sơ cùng ngồi trong một ván (400, đó là hai người), khi ván đã công bố hoặc lịch sử công bố có
+   tên hồ sơ bị gộp (409, bản công bố không đổi), hoặc khi version lệch.
+2. Dòng đội hình: dòng của hồ sơ bị gộp ở cùng giải và đội với một dòng chưa xóa của hồ sơ giữ lại thì vào thùng
+   rác; các dòng khác chuyển sang hồ sơ giữ lại.
+3. Ghế và MVP của ván, MVP của trận, giải thưởng của giải: id của hồ sơ bị gộp được thay bằng id hồ sơ giữ lại, kể cả
+   trong bản ghi đã ở thùng rác. Lịch sử kế hoạch giải giữ nguyên.
+4. Hồ sơ giữ lại thêm tên thi đấu và tên gọi khác của hồ sơ bị gộp vào tên gọi khác (tối đa 20). Trường nào còn
+   trống (họ tên, ảnh, ngày sinh, vị trí, trạng thái, tướng tủ) thì lấy từ hồ sơ bị gộp.
+5. Hồ sơ bị gộp vào thùng rác theo quy tắc xóa thường. Nếu nó còn được dùng (page đã sửa, dòng đội hình mà hồ sơ giữ
+   lại đã có ở thùng rác) thì cả lần gộp bị hủy với 409 `TOURNAMENT_RECORD_IN_USE` và danh sách nơi dùng.
+
+Trả `{player, moved:{rosterLines,repeatedRosterLines,tournaments,series,games}}`. Khôi phục hồ sơ bị gộp không trả
+lại các liên kết đã chuyển.
+
 ## Cơ sở dữ liệu
 
 V006 tạo schema community và các bảng page, page_audit, page_member, page_claim, page_invitation,
@@ -693,6 +729,8 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /admin/tournaments/parts?parentId= | Các phần chưa xóa của một giải chính, hoặc mọi phần khi bỏ `parentId`: [{id,parentId,name,logoUrl,competitionType,status,tier,region,startsOn,endsOn}] |
 | GET /admin/teams?q=&sort=&tournamentId=&state=&page=&size= | sort RECENT (mặc định), NAME, UPDATED. Dòng có thêm `lastActiveOn`, `context` TOURNAMENT khi thuộc giải; hai trường này không có khi không áp dụng |
 | GET /admin/players?q=&sort=&teamId=&tournamentId=&state=&page=&size= | Như trên; `context` là TEAM_IN_TOURNAMENT, TEAM hoặc TOURNAMENT |
+| POST /admin/players?allowSameName= | Tạo tuyển thủ; 409 `TOURNAMENT_PLAYER_SAME_NAME` khi trùng tên cùng quốc gia (xem "Tuyển thủ trùng tên và gộp hồ sơ") |
+| POST /admin/players/{id}/merge | {version,intoId,intoVersion}: gộp hồ sơ vào `intoId` rồi đưa nó vào thùng rác |
 | GET /admin/reference-catalog?q=&kind= | Khớp tên rồi hoạt động gần nhất; tra theo `ids` không xếp hạng |
 | GET /admin/series?q=&tournamentId=, /admin/games?tournamentId= | Trận/ván; trong một giải theo lịch, xuyên giải theo độ khớp rồi mới nhất |
 | GET /admin/tournaments/stats | [{tournamentId,teams,matches,played}], không tải từng trận |

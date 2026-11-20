@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useBeforeUnload } from "react-router"
+import { Link, useBeforeUnload } from "react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { ArrowRight } from "lucide-react"
 import {
@@ -18,6 +18,7 @@ import { profileSlug } from "../model/profile-slug"
 import { ProfileImageField } from "./profile-image-field"
 import { ProfileCountryPicker } from "./profile-country-picker"
 import { ProfilePersonRoles } from "./profile-person-roles"
+import { sameNamePlayers } from "../../tournaments/model/same-name-players"
 
 export function CreateProfileSheet({
   kind,
@@ -48,14 +49,20 @@ export function CreateProfileSheet({
   const [avatarUrl, setAvatarUrl] = useState("")
   const [uploading, setUploading] = useState(false)
   const create = useMutation({
-    mutationFn: () =>
-      pageApi.create(kind, code, {
-        ...emptyProfile(name),
-        country: country || null,
-        ...(isIndividualProfile(kind) ? { personRoles } : {}),
-        avatarUrl: avatarUrl || null,
-        sources: source ? [{ label: "Nguồn hồ sơ", url: source }] : [],
-      }),
+    mutationFn: (allowSameName: boolean) =>
+      pageApi.create(
+        kind,
+        code,
+        {
+          ...emptyProfile(name),
+          country: country || null,
+          ...(isIndividualProfile(kind) ? { personRoles } : {}),
+          avatarUrl: avatarUrl || null,
+          sources: source ? [{ label: "Nguồn hồ sơ", url: source }] : [],
+        },
+        undefined,
+        allowSameName,
+      ),
     meta: { silent: true, successMessage: "Đã tạo hồ sơ." },
     onSuccess: async (entry) => {
       await client.invalidateQueries({ queryKey: pageKeys.all })
@@ -64,6 +71,7 @@ export function CreateProfileSheet({
     },
   })
   const busy = uploading || create.isPending
+  const namesakes = create.isError ? sameNamePlayers(create.error) : null
   useBeforeUnload((event) => {
     if (busy) {
       event.preventDefault()
@@ -87,7 +95,7 @@ export function CreateProfileSheet({
           onSubmit={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            if (!busy && (kind !== "PERSON" || personRoles.length)) create.mutate()
+            if (!busy && (kind !== "PERSON" || personRoles.length)) create.mutate(false)
           }}
         >
           <fieldset disabled={busy} className="min-w-0 space-y-5">
@@ -169,10 +177,34 @@ export function CreateProfileSheet({
               Hồ sơ được tạo độc lập tài khoản đăng nhập. Bạn có thể bổ sung người đại diện sau.
             </p>
           </fieldset>
-          {create.isError && (
-            <p role="alert" className="type-body text-destructive">
-              {pageError(create.error)}
-            </p>
+          {namesakes ? (
+            <div role="alert" className="space-y-3 rounded-md border border-(--aov-warning) p-3">
+              <p className="type-body">
+                Đã có tuyển thủ cùng quốc gia mang tên này. Nếu là cùng một người, dùng hồ sơ có sẵn để đội hình và trận
+                đấu không bị chia ra hai nơi.
+              </p>
+              <ul className="type-body space-y-1">
+                {namesakes.map((player) => (
+                  <li key={player.id}>
+                    <Link className="underline" to={`/players?q=${encodeURIComponent(player.nickname)}`}>
+                      {player.nickname}
+                    </Link>{" "}
+                    <span className="type-meta">
+                      {player.code} · {player.country}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Button type="button" variant="outline" disabled={busy} onClick={() => create.mutate(true)}>
+                Đây là người khác, vẫn tạo
+              </Button>
+            </div>
+          ) : (
+            create.isError && (
+              <p role="alert" className="type-body text-destructive">
+                {pageError(create.error)}
+              </p>
+            )
           )}
           <Button type="submit" disabled={busy || (kind === "PERSON" && !personRoles.length)}>
             {uploading ? "Đang tải ảnh…" : create.isPending ? "Đang tạo…" : submitLabel}
