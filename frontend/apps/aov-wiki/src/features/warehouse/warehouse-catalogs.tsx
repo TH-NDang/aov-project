@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 import { ItemStatChips } from "@aov/ui/components/warehouse/item-facts"
@@ -13,6 +13,7 @@ import { EnchantmentSetView } from "./warehouse-enchantment-set"
 import { warehouseItemLayout } from "./warehouse-item-layout"
 import { EmptyGroup, GroupHeading, romanTier } from "./warehouse-parts"
 import { SpellCatalog } from "./warehouse-spells"
+import { TierJumps, tierSectionId } from "./warehouse-tier-jumps"
 import {
   type PublishedWarehouseRecord,
   type WarehouseEntry,
@@ -99,6 +100,23 @@ function ItemList({
   const byTier = view.sort === "tier"
   const totals = new Map(byTier ? warehouseItemLayout(view.listed, "").map((s) => [s.key, s.entries.length]) : [])
   const sections = byTier ? warehouseItemLayout(revealed.rows, "").reverse() : null
+  // Every tier of the whole list, not only the rows revealed so far, so a jump can reach one further down.
+  const tiers = byTier ? warehouseItemLayout(view.listed, "").reverse() : []
+  const [jumping, setJumping] = useState<string | null>(null)
+  function jump(key: string) {
+    const tier = tiers.find((section) => section.key === key)
+    const first = tier ? view.listed.indexOf(tier.entries[0]) : -1
+    if (first >= 0 && first + ITEM_BATCH > kept) setReach({ scope, rows: first + ITEM_BATCH })
+    setJumping(key)
+  }
+  // Once the tier is in the list, the page scrolls to its heading.
+  useEffect(() => {
+    if (!jumping) return
+    const section = document.getElementById(tierSectionId(jumping))
+    if (!section) return
+    section.scrollIntoView({ behavior: "smooth", block: "start" })
+    setJumping(null)
+  }, [jumping, revealed.rows.length])
   const more = (
     <InfiniteScroll query={revealed.loader} label={wikiText(locale, "Đang tải thêm trang bị", "Loading more items")} />
   )
@@ -132,6 +150,7 @@ function ItemList({
         return (
           <section
             key={section.key}
+            id={tierSectionId(section.key)}
             className="wiki-warehouse-section"
             data-tier={section.value ?? undefined}
             aria-label={title}
@@ -142,6 +161,14 @@ function ItemList({
         )
       })}
       {more}
+      <TierJumps
+        tiers={tiers.map((tier) => ({
+          key: tier.key,
+          label: tier.value ? romanTier(tier.value) : "?",
+          count: tier.entries.length,
+        }))}
+        onJump={jump}
+      />
     </div>
   )
 }

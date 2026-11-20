@@ -96,6 +96,10 @@
   display: grid;
   min-width: 0;
   gap: 8px;
+  /* The tier jumps tuck past the list's right edge; clipping keeps the page from scrolling sideways after them, and
+     the margin leaves room for the rows' hover glow. Clip is not a scroll container, so the jumps still stick. */
+  overflow-x: clip;
+  overflow-clip-margin: 12px;
 }
 .wiki-item-rows {
   display: grid;
@@ -125,6 +129,10 @@
   background: var(--wiki-entry-bg);
   text-align: left;
   transition: var(--wiki-entry-transition);
+}
+/* A jump to a tier lands its heading just under the page header. */
+.wiki-item-tiers > .wiki-warehouse-section {
+  scroll-margin-top: calc(var(--wiki-header-height) + 12px);
 }
 /* A finished item's picture is ringed in gold, as on the board. */
 .wiki-item-row[data-tier="3"] {
