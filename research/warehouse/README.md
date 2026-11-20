@@ -57,3 +57,5 @@ python -m unittest discover -s research/warehouse -p "test_*.py"
 `enchantment-translations-en.json` là bản tiếng Anh của cùng nội dung, áp dụng bằng `--file research/warehouse/enchantment-translations-en.json` thành bản nháp `TRANSLATION_UPDATE`; tệp không ghi cách dùng nên số liệu gameplay giữ nguyên. Ngày 20/11/2026 trên dữ liệu dev: bỏ 33 bản nháp tiếng Anh cũ (lưu lại trong `.local-state/`), xuất bản 33 bản sửa tiếng Việt rồi 33 bản dịch tiếng Anh.
 
 Lệnh đầu chỉ đọc. Mục đang có bản nháp mở bị bỏ qua và được liệt kê kèm nguyên nhân của bản nháp đó; phải xuất bản hoặc bỏ bản nháp ấy trước. Mỗi bước ghi vào `.local-state/enchantment-corrections.jsonl`.
+
+Với bản đã triển khai, chạy từ máy của người có quyền, đặt khóa của client `wiki-importer` vào `WIKI_IMPORTER_CLIENT_SECRET` trong shell của mình (công cụ không in hay lưu khóa) rồi thêm `--backend https://athahub.com --keycloak https://athahub.com/idp`. `--apply --discard-translation-drafts` lưu nội dung các bản nháp dịch đang chặn vào `.local-state/` rồi bỏ chúng.

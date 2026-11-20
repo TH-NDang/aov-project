@@ -4,15 +4,23 @@ Reads enchantment-corrections.json (or the file given with --file), compares eve
 those that differ, forks a correction draft, writes the corrected text and gameplay into it, and publishes it only with
 --publish. Nothing is written without --apply. An enchantment that already has an open draft is left alone.
 Every write is appended to .local-state/enchantment-corrections.jsonl, so a run can be followed and undone.
+
+Against the local stack it signs in like the other research tools. Against a deployed stack (an https --backend) it
+signs in as the wiki-importer service account with the secret in WIKI_IMPORTER_CLIENT_SECRET, which the person running
+it sets in their own shell; the tool never prints or stores it.
 """
 
 import argparse
 import copy
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
-from urllib.parse import urlencode
+import time
+from urllib.error import HTTPError
+from urllib.parse import urlencode, urlparse
+from urllib.request import Request, urlopen
 
 
 HERE = Path(__file__).resolve().parent
@@ -80,7 +88,51 @@ def plan(listed, corrections):
     return result
 
 
+class RemoteApi:
+    """The admin API of a deployed stack, as the wiki-importer service account."""
+
+    def __init__(self, backend, keycloak, client_id, secret):
+        for url in (backend, keycloak):
+            if urlparse(url).scheme != "https":
+                raise ValueError("A deployed stack is reached over https only.")
+        backend = backend.rstrip("/")
+        self.base = backend if backend.endswith("/api/wiki/v1") else backend + "/api/wiki/v1"
+        self.keycloak = keycloak.rstrip("/")
+        self.client_id, self.secret = client_id, secret
+        self.token, self.expires = None, 0
+
+    def authenticate(self):
+        body = urlencode({"grant_type": "client_credentials", "client_id": self.client_id,
+                          "client_secret": self.secret}).encode()
+        request = Request(self.keycloak + "/realms/wikiaov/protocol/openid-connect/token", data=body)
+        try:
+            with urlopen(request, timeout=30) as response:
+                result = json.load(response)
+        except HTTPError as error:
+            raise RuntimeError(f"Sign-in refused: {error.code}. Check WIKI_IMPORTER_CLIENT_SECRET.") from None
+        self.token = result["access_token"]
+        self.expires = time.monotonic() + result["expires_in"] - 30
+
+    def call(self, path, method="GET", body=None):
+        if not self.token or time.monotonic() >= self.expires:
+            self.authenticate()
+        data = None if body is None else json.dumps(body, ensure_ascii=False).encode()
+        request = Request(self.base + path, method=method, data=data, headers={
+            "Authorization": "Bearer " + self.token, "Content-Type": "application/json", "Accept": "application/json"})
+        try:
+            with urlopen(request, timeout=45) as response:
+                text = response.read().decode()
+                return json.loads(text) if text else None
+        except HTTPError as error:
+            raise RuntimeError(f"{method} {path}: {error.code} {error.read().decode()}") from None
+
+
 def load_api(backend, keycloak):
+    if urlparse(backend).scheme == "https":
+        secret = os.getenv("WIKI_IMPORTER_CLIENT_SECRET")
+        if not secret:
+            raise SystemExit("Set WIKI_IMPORTER_CLIENT_SECRET in your shell to sign in to a deployed stack.")
+        return RemoteApi(backend, keycloak, os.getenv("WIKI_IMPORTER_CLIENT_ID", "wiki-importer"), secret)
     spec = importlib.util.spec_from_file_location("patch_import_helpers", ROOT / "research/patches/2026/import-patches.py")
     helpers = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(helpers)
@@ -111,6 +163,8 @@ def main():
     parser.add_argument("--keycloak", default="http://localhost:8081")
     parser.add_argument("--ruleset", default="aov-standard")
     parser.add_argument("--file", default=str(CORRECTIONS), help="A corrections or translations file.")
+    parser.add_argument("--discard-translation-drafts", action="store_true",
+                        help="With --apply: save, then discard the open TRANSLATION_UPDATE drafts in the way.")
     args = parser.parse_args()
     if args.publish and not args.apply:
         parser.error("--publish needs --apply.")
@@ -130,6 +184,21 @@ def main():
         print("Open drafts to publish or discard first: " + ", ".join(causes))
     if not args.apply:
         print("Dry run: " + ", ".join(work["change"]))
+        return 0
+
+    if args.discard_translation_drafts:
+        # The open translation drafts are kept in a file first, so their text is not lost with them.
+        busy = [row for row in listed if row["code"] in work["busy"] and row["revision"]["cause"] == "TRANSLATION_UPDATE"]
+        saved = {row["code"]: api.call(f"/admin/enchantments/{row['id']}/revisions/{row['revision']['id']}")
+                 for row in busy}
+        STATE.mkdir(exist_ok=True)
+        backup = STATE / f"translation-drafts-{int(time.time())}.json"
+        backup.write_text(json.dumps(saved, ensure_ascii=False, indent=2), encoding="utf-8")
+        for row in busy:
+            api.call(f"/admin/enchantments/{row['id']}/drafts/{row['revision']['id']}/discard", "POST", {
+                "expectedVersion": row["revision"]["version"], "changeNote": corrections["changeNote"]})
+            ledger({"code": row["code"], "step": "discarded-translation", "revisionId": row["revision"]["id"]})
+        print(f"Discarded {len(busy)} translation drafts; their text is in {backup}.")
         return 0
 
     by_code = {row["code"]: row for row in listed}
